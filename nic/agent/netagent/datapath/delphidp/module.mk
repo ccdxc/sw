@@ -12,7 +12,6 @@ MODULE_DEPS     := ${NICDIR}/proto/hal/acl.proto          \
                    ${NICDIR}/proto/hal/dos.proto          \
                    ${NICDIR}/proto/hal/debug.proto        \
                    ${NICDIR}/proto/hal/interface.proto    \
-                   ${NICDIR}/proto/hal/hal.proto          \
                    ${NICDIR}/proto/hal/l2segment.proto    \
                    ${NICDIR}/proto/hal/kh.proto           \
                    ${NICDIR}/proto/hal/internal.proto     \

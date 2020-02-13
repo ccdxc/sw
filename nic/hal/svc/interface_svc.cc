@@ -155,12 +155,7 @@ InterfaceServiceImpl::InterfaceCreate(ServerContext* context,
         hal::interface_create(spec, response);
     }
     hal::hal_cfg_db_close();
-#if 0
-    // once batch of uplinks are created, we can declare that HAL is up
-    if (req->request(0).type() == intf::IF_TYPE_UPLINK) {
-        hal::svc::set_hal_status(hal::HAL_STATUS_UP);
-    }
-#endif
+    
     return Status::OK;
 }
 

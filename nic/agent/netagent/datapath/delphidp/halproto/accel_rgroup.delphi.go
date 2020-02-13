@@ -15,7 +15,6 @@ It is generated from these files:
 	event.proto
 	fwlog.proto
 	gft.proto
-	hal.proto
 	interface.proto
 	internal.proto
 	ipsec.proto
@@ -356,7 +355,6 @@ It has these top-level messages:
 	GftExactMatchFlowEntryStatus
 	GftExactMatchFlowEntryResponse
 	GftExactMatchFlowEntryResponseMsg
-	HalStatus
 	LifQStateMapEntry
 	PktFilter
 	BcastPktFilter

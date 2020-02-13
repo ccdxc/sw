@@ -38,7 +38,7 @@ var BroadcastFwdPolicy_value = map[string]int32{
 func (x BroadcastFwdPolicy) String() string {
 	return proto.EnumName(BroadcastFwdPolicy_name, int32(x))
 }
-func (BroadcastFwdPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{0} }
+func (BroadcastFwdPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{0} }
 
 // MulticastFwdPolicy defines various forwarding options to deal with
 // multicast traffic
@@ -67,7 +67,7 @@ var MulticastFwdPolicy_value = map[string]int32{
 func (x MulticastFwdPolicy) String() string {
 	return proto.EnumName(MulticastFwdPolicy_name, int32(x))
 }
-func (MulticastFwdPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{1} }
+func (MulticastFwdPolicy) EnumDescriptor() ([]byte, []int) { return fileDescriptor14, []int{1} }
 
 // L2SegmentSpec message is used to do add/mod of vlan
 type L2SegmentSpec struct {
@@ -193,7 +193,7 @@ type L2SegmentSpecReactor interface {
 func (m *L2SegmentSpec) Reset()                    { *m = L2SegmentSpec{} }
 func (m *L2SegmentSpec) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentSpec) ProtoMessage()               {}
-func (*L2SegmentSpec) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{0} }
+func (*L2SegmentSpec) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{0} }
 
 func (m *L2SegmentSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -308,7 +308,7 @@ type L2SegmentRequestMsg struct {
 func (m *L2SegmentRequestMsg) Reset()                    { *m = L2SegmentRequestMsg{} }
 func (m *L2SegmentRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentRequestMsg) ProtoMessage()               {}
-func (*L2SegmentRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{1} }
+func (*L2SegmentRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{1} }
 
 func (m *L2SegmentRequestMsg) GetRequest() []*L2SegmentSpec {
 	if m != nil {
@@ -332,7 +332,7 @@ type L2SegmentStatusEpd struct {
 func (m *L2SegmentStatusEpd) Reset()                    { *m = L2SegmentStatusEpd{} }
 func (m *L2SegmentStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentStatusEpd) ProtoMessage()               {}
-func (*L2SegmentStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{2} }
+func (*L2SegmentStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{2} }
 
 func (m *L2SegmentStatusEpd) GetHwL2SegId() uint32 {
 	if m != nil {
@@ -383,7 +383,7 @@ type L2SegmentStatusCpd struct {
 func (m *L2SegmentStatusCpd) Reset()                    { *m = L2SegmentStatusCpd{} }
 func (m *L2SegmentStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentStatusCpd) ProtoMessage()               {}
-func (*L2SegmentStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{3} }
+func (*L2SegmentStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{3} }
 
 // L2SegmentStatus represents the current status of the L2 segment
 type L2SegmentStatus struct {
@@ -506,7 +506,7 @@ type L2SegmentStatusReactor interface {
 func (m *L2SegmentStatus) Reset()                    { *m = L2SegmentStatus{} }
 func (m *L2SegmentStatus) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentStatus) ProtoMessage()               {}
-func (*L2SegmentStatus) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{4} }
+func (*L2SegmentStatus) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{4} }
 
 type isL2SegmentStatus_L2SegStatus interface{ isL2SegmentStatus_L2SegStatus() }
 
@@ -673,7 +673,7 @@ type L2SegmentResponse struct {
 func (m *L2SegmentResponse) Reset()                    { *m = L2SegmentResponse{} }
 func (m *L2SegmentResponse) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentResponse) ProtoMessage()               {}
-func (*L2SegmentResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{5} }
+func (*L2SegmentResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{5} }
 
 func (m *L2SegmentResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -697,7 +697,7 @@ type L2SegmentResponseMsg struct {
 func (m *L2SegmentResponseMsg) Reset()                    { *m = L2SegmentResponseMsg{} }
 func (m *L2SegmentResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentResponseMsg) ProtoMessage()               {}
-func (*L2SegmentResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{6} }
+func (*L2SegmentResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{6} }
 
 func (m *L2SegmentResponseMsg) GetResponse() []*L2SegmentResponse {
 	if m != nil {
@@ -716,7 +716,7 @@ type L2SegmentDeleteRequest struct {
 func (m *L2SegmentDeleteRequest) Reset()                    { *m = L2SegmentDeleteRequest{} }
 func (m *L2SegmentDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentDeleteRequest) ProtoMessage()               {}
-func (*L2SegmentDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{7} }
+func (*L2SegmentDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{7} }
 
 func (m *L2SegmentDeleteRequest) GetKeyOrHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -740,7 +740,7 @@ type L2SegmentDeleteRequestMsg struct {
 func (m *L2SegmentDeleteRequestMsg) Reset()                    { *m = L2SegmentDeleteRequestMsg{} }
 func (m *L2SegmentDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentDeleteRequestMsg) ProtoMessage()               {}
-func (*L2SegmentDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{8} }
+func (*L2SegmentDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{8} }
 
 func (m *L2SegmentDeleteRequestMsg) GetRequest() []*L2SegmentDeleteRequest {
 	if m != nil {
@@ -757,7 +757,7 @@ type L2SegmentDeleteResponse struct {
 func (m *L2SegmentDeleteResponse) Reset()                    { *m = L2SegmentDeleteResponse{} }
 func (m *L2SegmentDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentDeleteResponse) ProtoMessage()               {}
-func (*L2SegmentDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{9} }
+func (*L2SegmentDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{9} }
 
 func (m *L2SegmentDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -774,7 +774,7 @@ type L2SegmentDeleteResponseMsg struct {
 func (m *L2SegmentDeleteResponseMsg) Reset()                    { *m = L2SegmentDeleteResponseMsg{} }
 func (m *L2SegmentDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentDeleteResponseMsg) ProtoMessage()               {}
-func (*L2SegmentDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{10} }
+func (*L2SegmentDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{10} }
 
 func (m *L2SegmentDeleteResponseMsg) GetResponse() []*L2SegmentDeleteResponse {
 	if m != nil {
@@ -792,7 +792,7 @@ type L2SegmentGetRequest struct {
 func (m *L2SegmentGetRequest) Reset()                    { *m = L2SegmentGetRequest{} }
 func (m *L2SegmentGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentGetRequest) ProtoMessage()               {}
-func (*L2SegmentGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{11} }
+func (*L2SegmentGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{11} }
 
 func (m *L2SegmentGetRequest) GetKeyOrHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -816,7 +816,7 @@ type L2SegmentGetRequestMsg struct {
 func (m *L2SegmentGetRequestMsg) Reset()                    { *m = L2SegmentGetRequestMsg{} }
 func (m *L2SegmentGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentGetRequestMsg) ProtoMessage()               {}
-func (*L2SegmentGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{12} }
+func (*L2SegmentGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{12} }
 
 func (m *L2SegmentGetRequestMsg) GetRequest() []*L2SegmentGetRequest {
 	if m != nil {
@@ -834,7 +834,7 @@ type L2SegmentStats struct {
 func (m *L2SegmentStats) Reset()                    { *m = L2SegmentStats{} }
 func (m *L2SegmentStats) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentStats) ProtoMessage()               {}
-func (*L2SegmentStats) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{13} }
+func (*L2SegmentStats) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{13} }
 
 func (m *L2SegmentStats) GetNumEndpoints() uint32 {
 	if m != nil {
@@ -862,7 +862,7 @@ type L2SegmentGetResponse struct {
 func (m *L2SegmentGetResponse) Reset()                    { *m = L2SegmentGetResponse{} }
 func (m *L2SegmentGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentGetResponse) ProtoMessage()               {}
-func (*L2SegmentGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{14} }
+func (*L2SegmentGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{14} }
 
 func (m *L2SegmentGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -900,7 +900,7 @@ type L2SegmentGetResponseMsg struct {
 func (m *L2SegmentGetResponseMsg) Reset()                    { *m = L2SegmentGetResponseMsg{} }
 func (m *L2SegmentGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L2SegmentGetResponseMsg) ProtoMessage()               {}
-func (*L2SegmentGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{15} }
+func (*L2SegmentGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor14, []int{15} }
 
 func (m *L2SegmentGetResponseMsg) GetResponse() []*L2SegmentGetResponse {
 	if m != nil {
@@ -932,9 +932,9 @@ func init() {
 	proto.RegisterEnum("halproto.MulticastFwdPolicy", MulticastFwdPolicy_name, MulticastFwdPolicy_value)
 }
 
-func init() { proto.RegisterFile("l2segment.proto", fileDescriptor15) }
+func init() { proto.RegisterFile("l2segment.proto", fileDescriptor14) }
 
-var fileDescriptor15 = []byte{
+var fileDescriptor14 = []byte{
 	// 1487 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x6e, 0xdb, 0xc6,
 	0x16, 0x0e, 0x6d, 0xc5, 0x96, 0x8e, 0x7e, 0x2c, 0x4f, 0x9c, 0x44, 0x71, 0x6e, 0x2c, 0x87, 0xf7,

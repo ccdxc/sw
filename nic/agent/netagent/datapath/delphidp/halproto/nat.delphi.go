@@ -24,7 +24,7 @@ type NatPoolSpec struct {
 func (m *NatPoolSpec) Reset()                    { *m = NatPoolSpec{} }
 func (m *NatPoolSpec) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolSpec) ProtoMessage()               {}
-func (*NatPoolSpec) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{0} }
+func (*NatPoolSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{0} }
 
 func (m *NatPoolSpec) GetKeyOrHandle() *NatPoolKeyHandle {
 	if m != nil {
@@ -54,7 +54,7 @@ type NatPoolRequestMsg struct {
 func (m *NatPoolRequestMsg) Reset()                    { *m = NatPoolRequestMsg{} }
 func (m *NatPoolRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolRequestMsg) ProtoMessage()               {}
-func (*NatPoolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{1} }
+func (*NatPoolRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{1} }
 
 func (m *NatPoolRequestMsg) GetRequest() []*NatPoolSpec {
 	if m != nil {
@@ -72,7 +72,7 @@ type NatPoolStatus struct {
 func (m *NatPoolStatus) Reset()                    { *m = NatPoolStatus{} }
 func (m *NatPoolStatus) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolStatus) ProtoMessage()               {}
-func (*NatPoolStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{2} }
+func (*NatPoolStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{2} }
 
 func (m *NatPoolStatus) GetPoolHandle() uint64 {
 	if m != nil {
@@ -90,7 +90,7 @@ type NatPoolResponse struct {
 func (m *NatPoolResponse) Reset()                    { *m = NatPoolResponse{} }
 func (m *NatPoolResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolResponse) ProtoMessage()               {}
-func (*NatPoolResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{3} }
+func (*NatPoolResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{3} }
 
 func (m *NatPoolResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -114,7 +114,7 @@ type NatPoolResponseMsg struct {
 func (m *NatPoolResponseMsg) Reset()                    { *m = NatPoolResponseMsg{} }
 func (m *NatPoolResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolResponseMsg) ProtoMessage()               {}
-func (*NatPoolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{4} }
+func (*NatPoolResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{4} }
 
 func (m *NatPoolResponseMsg) GetResponse() []*NatPoolResponse {
 	if m != nil {
@@ -131,7 +131,7 @@ type NatPoolDeleteRequest struct {
 func (m *NatPoolDeleteRequest) Reset()                    { *m = NatPoolDeleteRequest{} }
 func (m *NatPoolDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolDeleteRequest) ProtoMessage()               {}
-func (*NatPoolDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{5} }
+func (*NatPoolDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{5} }
 
 func (m *NatPoolDeleteRequest) GetKeyOrHandle() *NatPoolKeyHandle {
 	if m != nil {
@@ -148,7 +148,7 @@ type NatPoolDeleteRequestMsg struct {
 func (m *NatPoolDeleteRequestMsg) Reset()                    { *m = NatPoolDeleteRequestMsg{} }
 func (m *NatPoolDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolDeleteRequestMsg) ProtoMessage()               {}
-func (*NatPoolDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{6} }
+func (*NatPoolDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{6} }
 
 func (m *NatPoolDeleteRequestMsg) GetRequest() []*NatPoolDeleteRequest {
 	if m != nil {
@@ -165,7 +165,7 @@ type NatPoolDeleteResponse struct {
 func (m *NatPoolDeleteResponse) Reset()                    { *m = NatPoolDeleteResponse{} }
 func (m *NatPoolDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolDeleteResponse) ProtoMessage()               {}
-func (*NatPoolDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{7} }
+func (*NatPoolDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{7} }
 
 func (m *NatPoolDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -182,7 +182,7 @@ type NatPoolDeleteResponseMsg struct {
 func (m *NatPoolDeleteResponseMsg) Reset()                    { *m = NatPoolDeleteResponseMsg{} }
 func (m *NatPoolDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolDeleteResponseMsg) ProtoMessage()               {}
-func (*NatPoolDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{8} }
+func (*NatPoolDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{8} }
 
 func (m *NatPoolDeleteResponseMsg) GetResponse() []*NatPoolDeleteResponse {
 	if m != nil {
@@ -199,7 +199,7 @@ type NatPoolGetRequest struct {
 func (m *NatPoolGetRequest) Reset()                    { *m = NatPoolGetRequest{} }
 func (m *NatPoolGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolGetRequest) ProtoMessage()               {}
-func (*NatPoolGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{9} }
+func (*NatPoolGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{9} }
 
 func (m *NatPoolGetRequest) GetKeyOrHandle() *NatPoolKeyHandle {
 	if m != nil {
@@ -216,7 +216,7 @@ type NatPoolGetRequestMsg struct {
 func (m *NatPoolGetRequestMsg) Reset()                    { *m = NatPoolGetRequestMsg{} }
 func (m *NatPoolGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolGetRequestMsg) ProtoMessage()               {}
-func (*NatPoolGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{10} }
+func (*NatPoolGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{10} }
 
 func (m *NatPoolGetRequestMsg) GetRequest() []*NatPoolGetRequest {
 	if m != nil {
@@ -232,7 +232,7 @@ type NatPoolStats struct {
 func (m *NatPoolStats) Reset()                    { *m = NatPoolStats{} }
 func (m *NatPoolStats) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolStats) ProtoMessage()               {}
-func (*NatPoolStats) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{11} }
+func (*NatPoolStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{11} }
 
 // NatPoolGetResponse captures all the information for a given NAT pool
 type NatPoolGetResponse struct {
@@ -245,7 +245,7 @@ type NatPoolGetResponse struct {
 func (m *NatPoolGetResponse) Reset()                    { *m = NatPoolGetResponse{} }
 func (m *NatPoolGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolGetResponse) ProtoMessage()               {}
-func (*NatPoolGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{12} }
+func (*NatPoolGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{12} }
 
 func (m *NatPoolGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -283,7 +283,7 @@ type NatPoolGetResponseMsg struct {
 func (m *NatPoolGetResponseMsg) Reset()                    { *m = NatPoolGetResponseMsg{} }
 func (m *NatPoolGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPoolGetResponseMsg) ProtoMessage()               {}
-func (*NatPoolGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{13} }
+func (*NatPoolGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{13} }
 
 func (m *NatPoolGetResponseMsg) GetResponse() []*NatPoolGetResponse {
 	if m != nil {
@@ -302,7 +302,7 @@ type NatRuleAction struct {
 func (m *NatRuleAction) Reset()                    { *m = NatRuleAction{} }
 func (m *NatRuleAction) String() string            { return proto.CompactTextString(m) }
 func (*NatRuleAction) ProtoMessage()               {}
-func (*NatRuleAction) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{14} }
+func (*NatRuleAction) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{14} }
 
 func (m *NatRuleAction) GetSrcNatAction() NatAction {
 	if m != nil {
@@ -342,7 +342,7 @@ type NatRuleSpec struct {
 func (m *NatRuleSpec) Reset()                    { *m = NatRuleSpec{} }
 func (m *NatRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*NatRuleSpec) ProtoMessage()               {}
-func (*NatRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{15} }
+func (*NatRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{15} }
 
 func (m *NatRuleSpec) GetRuleId() uint64 {
 	if m != nil {
@@ -374,7 +374,7 @@ type NatPolicySpec struct {
 func (m *NatPolicySpec) Reset()                    { *m = NatPolicySpec{} }
 func (m *NatPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicySpec) ProtoMessage()               {}
-func (*NatPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{16} }
+func (*NatPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{16} }
 
 func (m *NatPolicySpec) GetKeyOrHandle() *NatPolicyKeyHandle {
 	if m != nil {
@@ -398,7 +398,7 @@ type NatPolicyRequestMsg struct {
 func (m *NatPolicyRequestMsg) Reset()                    { *m = NatPolicyRequestMsg{} }
 func (m *NatPolicyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyRequestMsg) ProtoMessage()               {}
-func (*NatPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{17} }
+func (*NatPolicyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{17} }
 
 func (m *NatPolicyRequestMsg) GetRequest() []*NatPolicySpec {
 	if m != nil {
@@ -415,7 +415,7 @@ type NatPolicyStatus struct {
 func (m *NatPolicyStatus) Reset()                    { *m = NatPolicyStatus{} }
 func (m *NatPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyStatus) ProtoMessage()               {}
-func (*NatPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{18} }
+func (*NatPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{18} }
 
 func (m *NatPolicyStatus) GetNatPolicyHandle() uint64 {
 	if m != nil {
@@ -433,7 +433,7 @@ type NatPolicyResponse struct {
 func (m *NatPolicyResponse) Reset()                    { *m = NatPolicyResponse{} }
 func (m *NatPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyResponse) ProtoMessage()               {}
-func (*NatPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{19} }
+func (*NatPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{19} }
 
 func (m *NatPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -457,7 +457,7 @@ type NatPolicyResponseMsg struct {
 func (m *NatPolicyResponseMsg) Reset()                    { *m = NatPolicyResponseMsg{} }
 func (m *NatPolicyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyResponseMsg) ProtoMessage()               {}
-func (*NatPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{20} }
+func (*NatPolicyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{20} }
 
 func (m *NatPolicyResponseMsg) GetResponse() []*NatPolicyResponse {
 	if m != nil {
@@ -474,7 +474,7 @@ type NatPolicyDeleteRequest struct {
 func (m *NatPolicyDeleteRequest) Reset()                    { *m = NatPolicyDeleteRequest{} }
 func (m *NatPolicyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteRequest) ProtoMessage()               {}
-func (*NatPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{21} }
+func (*NatPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{21} }
 
 func (m *NatPolicyDeleteRequest) GetKeyOrHandle() *NatPolicyKeyHandle {
 	if m != nil {
@@ -491,7 +491,7 @@ type NatPolicyDeleteRequestMsg struct {
 func (m *NatPolicyDeleteRequestMsg) Reset()                    { *m = NatPolicyDeleteRequestMsg{} }
 func (m *NatPolicyDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteRequestMsg) ProtoMessage()               {}
-func (*NatPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{22} }
+func (*NatPolicyDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{22} }
 
 func (m *NatPolicyDeleteRequestMsg) GetRequest() []*NatPolicyDeleteRequest {
 	if m != nil {
@@ -508,7 +508,7 @@ type NatPolicyDeleteResponse struct {
 func (m *NatPolicyDeleteResponse) Reset()                    { *m = NatPolicyDeleteResponse{} }
 func (m *NatPolicyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteResponse) ProtoMessage()               {}
-func (*NatPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{23} }
+func (*NatPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{23} }
 
 func (m *NatPolicyDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -525,7 +525,7 @@ type NatPolicyDeleteResponseMsg struct {
 func (m *NatPolicyDeleteResponseMsg) Reset()                    { *m = NatPolicyDeleteResponseMsg{} }
 func (m *NatPolicyDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyDeleteResponseMsg) ProtoMessage()               {}
-func (*NatPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{24} }
+func (*NatPolicyDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{24} }
 
 func (m *NatPolicyDeleteResponseMsg) GetResponse() []*NatPolicyDeleteResponse {
 	if m != nil {
@@ -542,7 +542,7 @@ type NatPolicyGetRequest struct {
 func (m *NatPolicyGetRequest) Reset()                    { *m = NatPolicyGetRequest{} }
 func (m *NatPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetRequest) ProtoMessage()               {}
-func (*NatPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{25} }
+func (*NatPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{25} }
 
 func (m *NatPolicyGetRequest) GetKeyOrHandle() *NatPolicyKeyHandle {
 	if m != nil {
@@ -559,7 +559,7 @@ type NatPolicyGetRequestMsg struct {
 func (m *NatPolicyGetRequestMsg) Reset()                    { *m = NatPolicyGetRequestMsg{} }
 func (m *NatPolicyGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetRequestMsg) ProtoMessage()               {}
-func (*NatPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{26} }
+func (*NatPolicyGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{26} }
 
 func (m *NatPolicyGetRequestMsg) GetRequest() []*NatPolicyGetRequest {
 	if m != nil {
@@ -578,7 +578,7 @@ type NatRuleStats struct {
 func (m *NatRuleStats) Reset()                    { *m = NatRuleStats{} }
 func (m *NatRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*NatRuleStats) ProtoMessage()               {}
-func (*NatRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{27} }
+func (*NatRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{27} }
 
 func (m *NatRuleStats) GetNumTcpSessions() uint32 {
 	if m != nil {
@@ -609,7 +609,7 @@ type NatPolicyStats struct {
 func (m *NatPolicyStats) Reset()                    { *m = NatPolicyStats{} }
 func (m *NatPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyStats) ProtoMessage()               {}
-func (*NatPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{28} }
+func (*NatPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{28} }
 
 func (m *NatPolicyStats) GetStats() []*NatRuleStats {
 	if m != nil {
@@ -629,7 +629,7 @@ type NatPolicyGetResponse struct {
 func (m *NatPolicyGetResponse) Reset()                    { *m = NatPolicyGetResponse{} }
 func (m *NatPolicyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetResponse) ProtoMessage()               {}
-func (*NatPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{29} }
+func (*NatPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{29} }
 
 func (m *NatPolicyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -667,7 +667,7 @@ type NatPolicyGetResponseMsg struct {
 func (m *NatPolicyGetResponseMsg) Reset()                    { *m = NatPolicyGetResponseMsg{} }
 func (m *NatPolicyGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatPolicyGetResponseMsg) ProtoMessage()               {}
-func (*NatPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{30} }
+func (*NatPolicyGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{30} }
 
 func (m *NatPolicyGetResponseMsg) GetResponse() []*NatPolicyGetResponse {
 	if m != nil {
@@ -686,7 +686,7 @@ type NatMappingSpec struct {
 func (m *NatMappingSpec) Reset()                    { *m = NatMappingSpec{} }
 func (m *NatMappingSpec) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingSpec) ProtoMessage()               {}
-func (*NatMappingSpec) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{31} }
+func (*NatMappingSpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{31} }
 
 func (m *NatMappingSpec) GetKeyOrHandle() *NatMappingKeyHandle {
 	if m != nil {
@@ -717,7 +717,7 @@ type NatMappingRequestMsg struct {
 func (m *NatMappingRequestMsg) Reset()                    { *m = NatMappingRequestMsg{} }
 func (m *NatMappingRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingRequestMsg) ProtoMessage()               {}
-func (*NatMappingRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{32} }
+func (*NatMappingRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{32} }
 
 func (m *NatMappingRequestMsg) GetRequest() []*NatMappingSpec {
 	if m != nil {
@@ -737,7 +737,7 @@ type NatMappingStatus struct {
 func (m *NatMappingStatus) Reset()                    { *m = NatMappingStatus{} }
 func (m *NatMappingStatus) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingStatus) ProtoMessage()               {}
-func (*NatMappingStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{33} }
+func (*NatMappingStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{33} }
 
 func (m *NatMappingStatus) GetHandle() uint64 {
 	if m != nil {
@@ -776,7 +776,7 @@ type NatMappingResponse struct {
 func (m *NatMappingResponse) Reset()                    { *m = NatMappingResponse{} }
 func (m *NatMappingResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingResponse) ProtoMessage()               {}
-func (*NatMappingResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{34} }
+func (*NatMappingResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{34} }
 
 func (m *NatMappingResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -800,7 +800,7 @@ type NatMappingResponseMsg struct {
 func (m *NatMappingResponseMsg) Reset()                    { *m = NatMappingResponseMsg{} }
 func (m *NatMappingResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingResponseMsg) ProtoMessage()               {}
-func (*NatMappingResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{35} }
+func (*NatMappingResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{35} }
 
 func (m *NatMappingResponseMsg) GetResponse() []*NatMappingResponse {
 	if m != nil {
@@ -817,7 +817,7 @@ type NatMappingDeleteRequest struct {
 func (m *NatMappingDeleteRequest) Reset()                    { *m = NatMappingDeleteRequest{} }
 func (m *NatMappingDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingDeleteRequest) ProtoMessage()               {}
-func (*NatMappingDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{36} }
+func (*NatMappingDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{36} }
 
 func (m *NatMappingDeleteRequest) GetKeyOrHandle() *NatMappingKeyHandle {
 	if m != nil {
@@ -834,7 +834,7 @@ type NatMappingDeleteRequestMsg struct {
 func (m *NatMappingDeleteRequestMsg) Reset()                    { *m = NatMappingDeleteRequestMsg{} }
 func (m *NatMappingDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingDeleteRequestMsg) ProtoMessage()               {}
-func (*NatMappingDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{37} }
+func (*NatMappingDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{37} }
 
 func (m *NatMappingDeleteRequestMsg) GetRequest() []*NatMappingDeleteRequest {
 	if m != nil {
@@ -851,7 +851,7 @@ type NatMappingDeleteResponse struct {
 func (m *NatMappingDeleteResponse) Reset()                    { *m = NatMappingDeleteResponse{} }
 func (m *NatMappingDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingDeleteResponse) ProtoMessage()               {}
-func (*NatMappingDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{38} }
+func (*NatMappingDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{38} }
 
 func (m *NatMappingDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -868,7 +868,7 @@ type NatMappingDeleteResponseMsg struct {
 func (m *NatMappingDeleteResponseMsg) Reset()                    { *m = NatMappingDeleteResponseMsg{} }
 func (m *NatMappingDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingDeleteResponseMsg) ProtoMessage()               {}
-func (*NatMappingDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{39} }
+func (*NatMappingDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{39} }
 
 func (m *NatMappingDeleteResponseMsg) GetResponse() []*NatMappingDeleteResponse {
 	if m != nil {
@@ -885,7 +885,7 @@ type NatMappingGetRequest struct {
 func (m *NatMappingGetRequest) Reset()                    { *m = NatMappingGetRequest{} }
 func (m *NatMappingGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingGetRequest) ProtoMessage()               {}
-func (*NatMappingGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{40} }
+func (*NatMappingGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{40} }
 
 func (m *NatMappingGetRequest) GetKeyOrHandle() *NatMappingKeyHandle {
 	if m != nil {
@@ -902,7 +902,7 @@ type NatMappingGetRequestMsg struct {
 func (m *NatMappingGetRequestMsg) Reset()                    { *m = NatMappingGetRequestMsg{} }
 func (m *NatMappingGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingGetRequestMsg) ProtoMessage()               {}
-func (*NatMappingGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{41} }
+func (*NatMappingGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{41} }
 
 func (m *NatMappingGetRequestMsg) GetRequest() []*NatMappingGetRequest {
 	if m != nil {
@@ -921,7 +921,7 @@ type NatMappingStats struct {
 func (m *NatMappingStats) Reset()                    { *m = NatMappingStats{} }
 func (m *NatMappingStats) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingStats) ProtoMessage()               {}
-func (*NatMappingStats) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{42} }
+func (*NatMappingStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{42} }
 
 func (m *NatMappingStats) GetNumTcpSessions() uint32 {
 	if m != nil {
@@ -955,7 +955,7 @@ type NatMappingGetResponse struct {
 func (m *NatMappingGetResponse) Reset()                    { *m = NatMappingGetResponse{} }
 func (m *NatMappingGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingGetResponse) ProtoMessage()               {}
-func (*NatMappingGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{43} }
+func (*NatMappingGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{43} }
 
 func (m *NatMappingGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -993,7 +993,7 @@ type NatMappingGetResponseMsg struct {
 func (m *NatMappingGetResponseMsg) Reset()                    { *m = NatMappingGetResponseMsg{} }
 func (m *NatMappingGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*NatMappingGetResponseMsg) ProtoMessage()               {}
-func (*NatMappingGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{44} }
+func (*NatMappingGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{44} }
 
 func (m *NatMappingGetResponseMsg) GetResponse() []*NatMappingGetResponse {
 	if m != nil {
@@ -1050,9 +1050,9 @@ func init() {
 	proto.RegisterType((*NatMappingGetResponseMsg)(nil), "halproto.NatMappingGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("nat.proto", fileDescriptor18) }
+func init() { proto.RegisterFile("nat.proto", fileDescriptor17) }
 
-var fileDescriptor18 = []byte{
+var fileDescriptor17 = []byte{
 	// 1572 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4d, 0x6f, 0xdb, 0xc6,
 	0x16, 0x0d, 0x2d, 0x7f, 0x5e, 0xdb, 0x8a, 0x3d, 0x51, 0x6c, 0xd9, 0x71, 0x22, 0x3f, 0xe2, 0x21,

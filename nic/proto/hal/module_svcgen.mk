@@ -13,7 +13,6 @@ MODULE_DEPS         := ${MODULE_SRC_DIR}/acl.proto          \
                        ${MODULE_SRC_DIR}/dos.proto          \
                        ${MODULE_SRC_DIR}/debug.proto        \
                        ${MODULE_SRC_DIR}/interface.proto    \
-                       ${MODULE_SRC_DIR}/hal.proto          \
                        ${MODULE_SRC_DIR}/l2segment.proto    \
                        ${MODULE_SRC_DIR}/kh.proto           \
                        ${MODULE_SRC_DIR}/internal.proto     \

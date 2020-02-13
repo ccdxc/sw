@@ -37,7 +37,7 @@ var IfStatus_value = map[string]int32{
 func (x IfStatus) String() string {
 	return proto.EnumName(IfStatus_name, int32(x))
 }
-func (IfStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (IfStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 // Types of LIF ports
 type LifPortType int32
@@ -68,7 +68,7 @@ var LifPortType_value = map[string]int32{
 func (x LifPortType) String() string {
 	return proto.EnumName(LifPortType_name, int32(x))
 }
-func (LifPortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{1} }
+func (LifPortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{1} }
 
 // Different purposes of LIF queues. This is not the same as
 // Queue type (type_num field in LifQStateMapEntry). This is
@@ -139,7 +139,7 @@ var LifQPurpose_value = map[string]int32{
 func (x LifQPurpose) String() string {
 	return proto.EnumName(LifQPurpose_name, int32(x))
 }
-func (LifQPurpose) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{2} }
+func (LifQPurpose) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{2} }
 
 // types of interfaces
 type IfType int32
@@ -176,7 +176,7 @@ var IfType_value = map[string]int32{
 func (x IfType) String() string {
 	return proto.EnumName(IfType_name, int32(x))
 }
-func (IfType) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{3} }
+func (IfType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{3} }
 
 // RSS Type
 type LifRssType int32
@@ -222,7 +222,7 @@ var LifRssType_value = map[string]int32{
 func (x LifRssType) String() string {
 	return proto.EnumName(LifRssType_name, int32(x))
 }
-func (LifRssType) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{4} }
+func (LifRssType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{4} }
 
 // ------------------------------------------------------------------------------
 // if interface type is IF_TYPE_ENIC, one of the following vnic types must be
@@ -260,7 +260,7 @@ var IfEnicType_value = map[string]int32{
 func (x IfEnicType) String() string {
 	return proto.EnumName(IfEnicType_name, int32(x))
 }
-func (IfEnicType) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{5} }
+func (IfEnicType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{5} }
 
 // ------------------------------------------------------------------------------
 // if interface type is IF_TYPE_TUNNEL, one of the following encap types must be
@@ -291,7 +291,7 @@ var IfTunnelEncapType_value = map[string]int32{
 func (x IfTunnelEncapType) String() string {
 	return proto.EnumName(IfTunnelEncapType_name, int32(x))
 }
-func (IfTunnelEncapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor11, []int{6} }
+func (IfTunnelEncapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor10, []int{6} }
 
 // A single entry in the LIF to Qstate map.
 // This entry represents a single type.
@@ -321,7 +321,7 @@ type LifQStateMapEntry struct {
 func (m *LifQStateMapEntry) Reset()                    { *m = LifQStateMapEntry{} }
 func (m *LifQStateMapEntry) String() string            { return proto.CompactTextString(m) }
 func (*LifQStateMapEntry) ProtoMessage()               {}
-func (*LifQStateMapEntry) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{0} }
+func (*LifQStateMapEntry) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{0} }
 
 func (m *LifQStateMapEntry) GetTypeNum() uint32 {
 	if m != nil {
@@ -361,7 +361,7 @@ type PktFilter struct {
 func (m *PktFilter) Reset()                    { *m = PktFilter{} }
 func (m *PktFilter) String() string            { return proto.CompactTextString(m) }
 func (*PktFilter) ProtoMessage()               {}
-func (*PktFilter) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{1} }
+func (*PktFilter) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{1} }
 
 func (m *PktFilter) GetReceiveBroadcast() bool {
 	if m != nil {
@@ -395,7 +395,7 @@ type BcastPktFilter struct {
 func (m *BcastPktFilter) Reset()                    { *m = BcastPktFilter{} }
 func (m *BcastPktFilter) String() string            { return proto.CompactTextString(m) }
 func (*BcastPktFilter) ProtoMessage()               {}
-func (*BcastPktFilter) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{2} }
+func (*BcastPktFilter) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{2} }
 
 func (m *BcastPktFilter) GetArp() bool {
 	if m != nil {
@@ -438,7 +438,7 @@ type McastPktFilter struct {
 func (m *McastPktFilter) Reset()                    { *m = McastPktFilter{} }
 func (m *McastPktFilter) String() string            { return proto.CompactTextString(m) }
 func (*McastPktFilter) ProtoMessage()               {}
-func (*McastPktFilter) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{3} }
+func (*McastPktFilter) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{3} }
 
 func (m *McastPktFilter) GetIpv6NeighAdv() bool {
 	if m != nil {
@@ -625,7 +625,7 @@ type LifSpecReactor interface {
 func (m *LifSpec) Reset()                    { *m = LifSpec{} }
 func (m *LifSpec) String() string            { return proto.CompactTextString(m) }
 func (*LifSpec) ProtoMessage()               {}
-func (*LifSpec) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{4} }
+func (*LifSpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{4} }
 
 func (m *LifSpec) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -873,7 +873,7 @@ type LifRequestMsg struct {
 func (m *LifRequestMsg) Reset()                    { *m = LifRequestMsg{} }
 func (m *LifRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifRequestMsg) ProtoMessage()               {}
-func (*LifRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{5} }
+func (*LifRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{5} }
 
 func (m *LifRequestMsg) GetRequest() []*LifSpec {
 	if m != nil {
@@ -995,7 +995,7 @@ type LifStatusReactor interface {
 func (m *LifStatus) Reset()                    { *m = LifStatus{} }
 func (m *LifStatus) String() string            { return proto.CompactTextString(m) }
 func (*LifStatus) ProtoMessage()               {}
-func (*LifStatus) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{6} }
+func (*LifStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{6} }
 
 func (m *LifStatus) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -1041,7 +1041,7 @@ type LifQState struct {
 func (m *LifQState) Reset()                    { *m = LifQState{} }
 func (m *LifQState) String() string            { return proto.CompactTextString(m) }
 func (*LifQState) ProtoMessage()               {}
-func (*LifQState) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{7} }
+func (*LifQState) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{7} }
 
 func (m *LifQState) GetTypeNum() uint32 {
 	if m != nil {
@@ -1069,7 +1069,7 @@ type LifRdmaData struct {
 func (m *LifRdmaData) Reset()                    { *m = LifRdmaData{} }
 func (m *LifRdmaData) String() string            { return proto.CompactTextString(m) }
 func (*LifRdmaData) ProtoMessage()               {}
-func (*LifRdmaData) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{8} }
+func (*LifRdmaData) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{8} }
 
 func (m *LifRdmaData) GetPtBaseAddr() uint64 {
 	if m != nil {
@@ -1118,7 +1118,7 @@ type LifResponse struct {
 func (m *LifResponse) Reset()                    { *m = LifResponse{} }
 func (m *LifResponse) String() string            { return proto.CompactTextString(m) }
 func (*LifResponse) ProtoMessage()               {}
-func (*LifResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{9} }
+func (*LifResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{9} }
 
 func (m *LifResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1163,7 +1163,7 @@ type LifResponseMsg struct {
 func (m *LifResponseMsg) Reset()                    { *m = LifResponseMsg{} }
 func (m *LifResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifResponseMsg) ProtoMessage()               {}
-func (*LifResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{10} }
+func (*LifResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{10} }
 
 func (m *LifResponseMsg) GetResponse() []*LifResponse {
 	if m != nil {
@@ -1188,7 +1188,7 @@ type QStateGetReq struct {
 func (m *QStateGetReq) Reset()                    { *m = QStateGetReq{} }
 func (m *QStateGetReq) String() string            { return proto.CompactTextString(m) }
 func (*QStateGetReq) ProtoMessage()               {}
-func (*QStateGetReq) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{11} }
+func (*QStateGetReq) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{11} }
 
 func (m *QStateGetReq) GetLifHandle() uint64 {
 	if m != nil {
@@ -1225,7 +1225,7 @@ type GetQStateRequestMsg struct {
 func (m *GetQStateRequestMsg) Reset()                    { *m = GetQStateRequestMsg{} }
 func (m *GetQStateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*GetQStateRequestMsg) ProtoMessage()               {}
-func (*GetQStateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{12} }
+func (*GetQStateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{12} }
 
 func (m *GetQStateRequestMsg) GetReqs() []*QStateGetReq {
 	if m != nil {
@@ -1245,7 +1245,7 @@ type QStateGetResp struct {
 func (m *QStateGetResp) Reset()                    { *m = QStateGetResp{} }
 func (m *QStateGetResp) String() string            { return proto.CompactTextString(m) }
 func (*QStateGetResp) ProtoMessage()               {}
-func (*QStateGetResp) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{13} }
+func (*QStateGetResp) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{13} }
 
 func (m *QStateGetResp) GetErrorCode() int32 {
 	if m != nil {
@@ -1275,7 +1275,7 @@ type GetQStateResponseMsg struct {
 func (m *GetQStateResponseMsg) Reset()                    { *m = GetQStateResponseMsg{} }
 func (m *GetQStateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*GetQStateResponseMsg) ProtoMessage()               {}
-func (*GetQStateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{14} }
+func (*GetQStateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{14} }
 
 func (m *GetQStateResponseMsg) GetResps() []*QStateGetResp {
 	if m != nil {
@@ -1295,7 +1295,7 @@ type P4ProgLabel struct {
 func (m *P4ProgLabel) Reset()                    { *m = P4ProgLabel{} }
 func (m *P4ProgLabel) String() string            { return proto.CompactTextString(m) }
 func (*P4ProgLabel) ProtoMessage()               {}
-func (*P4ProgLabel) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{15} }
+func (*P4ProgLabel) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{15} }
 
 func (m *P4ProgLabel) GetHandle() string {
 	if m != nil {
@@ -1333,7 +1333,7 @@ type QStateSetReq struct {
 func (m *QStateSetReq) Reset()                    { *m = QStateSetReq{} }
 func (m *QStateSetReq) String() string            { return proto.CompactTextString(m) }
 func (*QStateSetReq) ProtoMessage()               {}
-func (*QStateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{16} }
+func (*QStateSetReq) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{16} }
 
 func (m *QStateSetReq) GetLifHandle() uint64 {
 	if m != nil {
@@ -1377,7 +1377,7 @@ type SetQStateRequestMsg struct {
 func (m *SetQStateRequestMsg) Reset()                    { *m = SetQStateRequestMsg{} }
 func (m *SetQStateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*SetQStateRequestMsg) ProtoMessage()               {}
-func (*SetQStateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{17} }
+func (*SetQStateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{17} }
 
 func (m *SetQStateRequestMsg) GetReqs() []*QStateSetReq {
 	if m != nil {
@@ -1395,7 +1395,7 @@ type QStateSetResp struct {
 func (m *QStateSetResp) Reset()                    { *m = QStateSetResp{} }
 func (m *QStateSetResp) String() string            { return proto.CompactTextString(m) }
 func (*QStateSetResp) ProtoMessage()               {}
-func (*QStateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{18} }
+func (*QStateSetResp) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{18} }
 
 func (m *QStateSetResp) GetErrorCode() int32 {
 	if m != nil {
@@ -1411,7 +1411,7 @@ type SetQStateResponseMsg struct {
 func (m *SetQStateResponseMsg) Reset()                    { *m = SetQStateResponseMsg{} }
 func (m *SetQStateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*SetQStateResponseMsg) ProtoMessage()               {}
-func (*SetQStateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{19} }
+func (*SetQStateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{19} }
 
 func (m *SetQStateResponseMsg) GetResps() []*QStateSetResp {
 	if m != nil {
@@ -1429,7 +1429,7 @@ type LifDeleteRequest struct {
 func (m *LifDeleteRequest) Reset()                    { *m = LifDeleteRequest{} }
 func (m *LifDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*LifDeleteRequest) ProtoMessage()               {}
-func (*LifDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{20} }
+func (*LifDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{20} }
 
 func (m *LifDeleteRequest) GetKeyOrHandle() *LifKeyHandle {
 	if m != nil {
@@ -1446,7 +1446,7 @@ type LifDeleteRequestMsg struct {
 func (m *LifDeleteRequestMsg) Reset()                    { *m = LifDeleteRequestMsg{} }
 func (m *LifDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifDeleteRequestMsg) ProtoMessage()               {}
-func (*LifDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{21} }
+func (*LifDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{21} }
 
 func (m *LifDeleteRequestMsg) GetRequest() []*LifDeleteRequest {
 	if m != nil {
@@ -1463,7 +1463,7 @@ type LifDeleteResponse struct {
 func (m *LifDeleteResponse) Reset()                    { *m = LifDeleteResponse{} }
 func (m *LifDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*LifDeleteResponse) ProtoMessage()               {}
-func (*LifDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{22} }
+func (*LifDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{22} }
 
 func (m *LifDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1480,7 +1480,7 @@ type LifDeleteResponseMsg struct {
 func (m *LifDeleteResponseMsg) Reset()                    { *m = LifDeleteResponseMsg{} }
 func (m *LifDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifDeleteResponseMsg) ProtoMessage()               {}
-func (*LifDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{23} }
+func (*LifDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{23} }
 
 func (m *LifDeleteResponseMsg) GetResponse() []*LifDeleteResponse {
 	if m != nil {
@@ -1508,7 +1508,7 @@ type LifTxStats struct {
 func (m *LifTxStats) Reset()                    { *m = LifTxStats{} }
 func (m *LifTxStats) String() string            { return proto.CompactTextString(m) }
 func (*LifTxStats) ProtoMessage()               {}
-func (*LifTxStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{24} }
+func (*LifTxStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{24} }
 
 func (m *LifTxStats) GetFramesOk() uint64 {
 	if m != nil {
@@ -1625,7 +1625,7 @@ type LifRxStats struct {
 func (m *LifRxStats) Reset()                    { *m = LifRxStats{} }
 func (m *LifRxStats) String() string            { return proto.CompactTextString(m) }
 func (*LifRxStats) ProtoMessage()               {}
-func (*LifRxStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{25} }
+func (*LifRxStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{25} }
 
 func (m *LifRxStats) GetFramesTotal() uint64 {
 	if m != nil {
@@ -1810,7 +1810,7 @@ type DataLifStats struct {
 func (m *DataLifStats) Reset()                    { *m = DataLifStats{} }
 func (m *DataLifStats) String() string            { return proto.CompactTextString(m) }
 func (*DataLifStats) ProtoMessage()               {}
-func (*DataLifStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{26} }
+func (*DataLifStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{26} }
 
 func (m *DataLifStats) GetTxStats() *LifTxStats {
 	if m != nil {
@@ -1842,7 +1842,7 @@ type CpuQueueStats struct {
 func (m *CpuQueueStats) Reset()                    { *m = CpuQueueStats{} }
 func (m *CpuQueueStats) String() string            { return proto.CompactTextString(m) }
 func (*CpuQueueStats) ProtoMessage()               {}
-func (*CpuQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{27} }
+func (*CpuQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{27} }
 
 func (m *CpuQueueStats) GetCpucbId() CpucbId {
 	if m != nil {
@@ -1921,7 +1921,7 @@ type CpuLifStats struct {
 func (m *CpuLifStats) Reset()                    { *m = CpuLifStats{} }
 func (m *CpuLifStats) String() string            { return proto.CompactTextString(m) }
 func (*CpuLifStats) ProtoMessage()               {}
-func (*CpuLifStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{28} }
+func (*CpuLifStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{28} }
 
 func (m *CpuLifStats) GetCpuQueueStats() []*CpuQueueStats {
 	if m != nil {
@@ -1941,7 +1941,7 @@ type LifStats struct {
 func (m *LifStats) Reset()                    { *m = LifStats{} }
 func (m *LifStats) String() string            { return proto.CompactTextString(m) }
 func (*LifStats) ProtoMessage()               {}
-func (*LifStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{29} }
+func (*LifStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{29} }
 
 type isLifStats_Lifs interface{ isLifStats_Lifs() }
 
@@ -2059,7 +2059,7 @@ type LifGetRequest struct {
 func (m *LifGetRequest) Reset()                    { *m = LifGetRequest{} }
 func (m *LifGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*LifGetRequest) ProtoMessage()               {}
-func (*LifGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{30} }
+func (*LifGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{30} }
 
 func (m *LifGetRequest) GetKeyOrHandle() *LifKeyHandle {
 	if m != nil {
@@ -2075,7 +2075,7 @@ type LifGetRequestMsg struct {
 func (m *LifGetRequestMsg) Reset()                    { *m = LifGetRequestMsg{} }
 func (m *LifGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifGetRequestMsg) ProtoMessage()               {}
-func (*LifGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{31} }
+func (*LifGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{31} }
 
 func (m *LifGetRequestMsg) GetRequest() []*LifGetRequest {
 	if m != nil {
@@ -2096,7 +2096,7 @@ type LifGetResponse struct {
 func (m *LifGetResponse) Reset()                    { *m = LifGetResponse{} }
 func (m *LifGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*LifGetResponse) ProtoMessage()               {}
-func (*LifGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{32} }
+func (*LifGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{32} }
 
 func (m *LifGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2141,7 +2141,7 @@ type LifGetResponseMsg struct {
 func (m *LifGetResponseMsg) Reset()                    { *m = LifGetResponseMsg{} }
 func (m *LifGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*LifGetResponseMsg) ProtoMessage()               {}
-func (*LifGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{33} }
+func (*LifGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{33} }
 
 func (m *LifGetResponseMsg) GetResponse() []*LifGetResponse {
 	if m != nil {
@@ -2160,7 +2160,7 @@ type LifRssSpec struct {
 func (m *LifRssSpec) Reset()                    { *m = LifRssSpec{} }
 func (m *LifRssSpec) String() string            { return proto.CompactTextString(m) }
 func (*LifRssSpec) ProtoMessage()               {}
-func (*LifRssSpec) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{34} }
+func (*LifRssSpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{34} }
 
 func (m *LifRssSpec) GetType() uint32 {
 	if m != nil {
@@ -2192,7 +2192,7 @@ type EnicInfo struct {
 func (m *EnicInfo) Reset()                    { *m = EnicInfo{} }
 func (m *EnicInfo) String() string            { return proto.CompactTextString(m) }
 func (*EnicInfo) ProtoMessage()               {}
-func (*EnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{35} }
+func (*EnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{35} }
 
 func (m *EnicInfo) GetL2SegmentKeyHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -2223,7 +2223,7 @@ type EnicClassicInfo struct {
 func (m *EnicClassicInfo) Reset()                    { *m = EnicClassicInfo{} }
 func (m *EnicClassicInfo) String() string            { return proto.CompactTextString(m) }
 func (*EnicClassicInfo) ProtoMessage()               {}
-func (*EnicClassicInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{36} }
+func (*EnicClassicInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{36} }
 
 func (m *EnicClassicInfo) GetL2SegmentKeyHandle() []*L2SegmentKeyHandle {
 	if m != nil {
@@ -2253,7 +2253,7 @@ type IfEnicInfo struct {
 func (m *IfEnicInfo) Reset()                    { *m = IfEnicInfo{} }
 func (m *IfEnicInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfEnicInfo) ProtoMessage()               {}
-func (*IfEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{37} }
+func (*IfEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{37} }
 
 type isIfEnicInfo_EnicTypeInfo interface{ isIfEnicInfo_EnicTypeInfo() }
 
@@ -2393,7 +2393,7 @@ type IfUplinkInfo struct {
 func (m *IfUplinkInfo) Reset()                    { *m = IfUplinkInfo{} }
 func (m *IfUplinkInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfUplinkInfo) ProtoMessage()               {}
-func (*IfUplinkInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{38} }
+func (*IfUplinkInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{38} }
 
 func (m *IfUplinkInfo) GetPortNum() uint32 {
 	if m != nil {
@@ -2425,7 +2425,7 @@ type IfUplinkPCInfo struct {
 func (m *IfUplinkPCInfo) Reset()                    { *m = IfUplinkPCInfo{} }
 func (m *IfUplinkPCInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfUplinkPCInfo) ProtoMessage()               {}
-func (*IfUplinkPCInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{39} }
+func (*IfUplinkPCInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{39} }
 
 func (m *IfUplinkPCInfo) GetNativeL2SegmentId() uint64 {
 	if m != nil {
@@ -2449,7 +2449,7 @@ type IfTunnelVxlanInfo struct {
 func (m *IfTunnelVxlanInfo) Reset()                    { *m = IfTunnelVxlanInfo{} }
 func (m *IfTunnelVxlanInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfTunnelVxlanInfo) ProtoMessage()               {}
-func (*IfTunnelVxlanInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{40} }
+func (*IfTunnelVxlanInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{40} }
 
 func (m *IfTunnelVxlanInfo) GetLocalTep() *IPAddress {
 	if m != nil {
@@ -2475,7 +2475,7 @@ type IfTunnelGREInfo struct {
 func (m *IfTunnelGREInfo) Reset()                    { *m = IfTunnelGREInfo{} }
 func (m *IfTunnelGREInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfTunnelGREInfo) ProtoMessage()               {}
-func (*IfTunnelGREInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{41} }
+func (*IfTunnelGREInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{41} }
 
 func (m *IfTunnelGREInfo) GetSource() *IPAddress {
 	if m != nil {
@@ -2523,7 +2523,7 @@ type IfTunnelProprietaryMpls struct {
 func (m *IfTunnelProprietaryMpls) Reset()                    { *m = IfTunnelProprietaryMpls{} }
 func (m *IfTunnelProprietaryMpls) String() string            { return proto.CompactTextString(m) }
 func (*IfTunnelProprietaryMpls) ProtoMessage()               {}
-func (*IfTunnelProprietaryMpls) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{42} }
+func (*IfTunnelProprietaryMpls) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{42} }
 
 func (m *IfTunnelProprietaryMpls) GetSubstrateIp() *IPAddress {
 	if m != nil {
@@ -2622,7 +2622,7 @@ type IfTunnelInfo struct {
 func (m *IfTunnelInfo) Reset()                    { *m = IfTunnelInfo{} }
 func (m *IfTunnelInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfTunnelInfo) ProtoMessage()               {}
-func (*IfTunnelInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{43} }
+func (*IfTunnelInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{43} }
 
 type isIfTunnelInfo_EncapInfo interface{ isIfTunnelInfo_EncapInfo() }
 
@@ -2783,7 +2783,7 @@ type IfCPUInfo struct {
 func (m *IfCPUInfo) Reset()                    { *m = IfCPUInfo{} }
 func (m *IfCPUInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfCPUInfo) ProtoMessage()               {}
-func (*IfCPUInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{44} }
+func (*IfCPUInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{44} }
 
 func (m *IfCPUInfo) GetLifKeyOrHandle() *LifKeyHandle {
 	if m != nil {
@@ -2800,7 +2800,7 @@ type IfAppRedirInfo struct {
 func (m *IfAppRedirInfo) Reset()                    { *m = IfAppRedirInfo{} }
 func (m *IfAppRedirInfo) String() string            { return proto.CompactTextString(m) }
 func (*IfAppRedirInfo) ProtoMessage()               {}
-func (*IfAppRedirInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{45} }
+func (*IfAppRedirInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{45} }
 
 func (m *IfAppRedirInfo) GetLifKeyOrHandle() *LifKeyHandle {
 	if m != nil {
@@ -2931,7 +2931,7 @@ type InterfaceSpecReactor interface {
 func (m *InterfaceSpec) Reset()                    { *m = InterfaceSpec{} }
 func (m *InterfaceSpec) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceSpec) ProtoMessage()               {}
-func (*InterfaceSpec) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{46} }
+func (*InterfaceSpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{46} }
 
 type isInterfaceSpec_IfInfo interface{ isInterfaceSpec_IfInfo() }
 
@@ -3211,7 +3211,7 @@ type InterfaceRequestMsg struct {
 func (m *InterfaceRequestMsg) Reset()                    { *m = InterfaceRequestMsg{} }
 func (m *InterfaceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceRequestMsg) ProtoMessage()               {}
-func (*InterfaceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{47} }
+func (*InterfaceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{47} }
 
 func (m *InterfaceRequestMsg) GetRequest() []*InterfaceSpec {
 	if m != nil {
@@ -3232,7 +3232,7 @@ type UplinkResponseInfo struct {
 func (m *UplinkResponseInfo) Reset()                    { *m = UplinkResponseInfo{} }
 func (m *UplinkResponseInfo) String() string            { return proto.CompactTextString(m) }
 func (*UplinkResponseInfo) ProtoMessage()               {}
-func (*UplinkResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{48} }
+func (*UplinkResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{48} }
 
 func (m *UplinkResponseInfo) GetUplinkLportId() uint32 {
 	if m != nil {
@@ -3278,7 +3278,7 @@ type EnicL2SegInfo struct {
 func (m *EnicL2SegInfo) Reset()                    { *m = EnicL2SegInfo{} }
 func (m *EnicL2SegInfo) String() string            { return proto.CompactTextString(m) }
 func (*EnicL2SegInfo) ProtoMessage()               {}
-func (*EnicL2SegInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{49} }
+func (*EnicL2SegInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{49} }
 
 func (m *EnicL2SegInfo) GetL2SegmentKeyOrHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -3302,7 +3302,7 @@ type SmartEnicInfo struct {
 func (m *SmartEnicInfo) Reset()                    { *m = SmartEnicInfo{} }
 func (m *SmartEnicInfo) String() string            { return proto.CompactTextString(m) }
 func (*SmartEnicInfo) ProtoMessage()               {}
-func (*SmartEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{50} }
+func (*SmartEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{50} }
 
 func (m *SmartEnicInfo) GetInpPropMacVlanIdxHost() uint32 {
 	if m != nil {
@@ -3326,7 +3326,7 @@ type ClassicEnicInfo struct {
 func (m *ClassicEnicInfo) Reset()                    { *m = ClassicEnicInfo{} }
 func (m *ClassicEnicInfo) String() string            { return proto.CompactTextString(m) }
 func (*ClassicEnicInfo) ProtoMessage()               {}
-func (*ClassicEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{51} }
+func (*ClassicEnicInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{51} }
 
 func (m *ClassicEnicInfo) GetInpPropNatL2SegClassic() uint32 {
 	if m != nil {
@@ -3355,7 +3355,7 @@ type EnicResponseInfo struct {
 func (m *EnicResponseInfo) Reset()                    { *m = EnicResponseInfo{} }
 func (m *EnicResponseInfo) String() string            { return proto.CompactTextString(m) }
 func (*EnicResponseInfo) ProtoMessage()               {}
-func (*EnicResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{52} }
+func (*EnicResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{52} }
 
 type isEnicResponseInfo_EnicTypeInfo interface{ isEnicResponseInfo_EnicTypeInfo() }
 
@@ -3486,7 +3486,7 @@ type CpuIfResponseInfo struct {
 func (m *CpuIfResponseInfo) Reset()                    { *m = CpuIfResponseInfo{} }
 func (m *CpuIfResponseInfo) String() string            { return proto.CompactTextString(m) }
 func (*CpuIfResponseInfo) ProtoMessage()               {}
-func (*CpuIfResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{53} }
+func (*CpuIfResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{53} }
 
 func (m *CpuIfResponseInfo) GetCpuLportId() uint32 {
 	if m != nil {
@@ -3511,7 +3511,7 @@ type TunnelIfResponseInfo struct {
 func (m *TunnelIfResponseInfo) Reset()                    { *m = TunnelIfResponseInfo{} }
 func (m *TunnelIfResponseInfo) String() string            { return proto.CompactTextString(m) }
 func (*TunnelIfResponseInfo) ProtoMessage()               {}
-func (*TunnelIfResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{54} }
+func (*TunnelIfResponseInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{54} }
 
 func (m *TunnelIfResponseInfo) GetInpMapNatIdx() []uint32 {
 	if m != nil {
@@ -3542,7 +3542,7 @@ type AppRedirIfInfo struct {
 func (m *AppRedirIfInfo) Reset()                    { *m = AppRedirIfInfo{} }
 func (m *AppRedirIfInfo) String() string            { return proto.CompactTextString(m) }
 func (*AppRedirIfInfo) ProtoMessage()               {}
-func (*AppRedirIfInfo) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{55} }
+func (*AppRedirIfInfo) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{55} }
 
 func (m *AppRedirIfInfo) GetLportId() uint32 {
 	if m != nil {
@@ -3670,7 +3670,7 @@ type InterfaceStatusReactor interface {
 func (m *InterfaceStatus) Reset()                    { *m = InterfaceStatus{} }
 func (m *InterfaceStatus) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceStatus) ProtoMessage()               {}
-func (*InterfaceStatus) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{56} }
+func (*InterfaceStatus) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{56} }
 
 type isInterfaceStatus_IfResponseInfo interface{ isInterfaceStatus_IfResponseInfo() }
 
@@ -3906,7 +3906,7 @@ type InterfaceResponse struct {
 func (m *InterfaceResponse) Reset()                    { *m = InterfaceResponse{} }
 func (m *InterfaceResponse) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceResponse) ProtoMessage()               {}
-func (*InterfaceResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{57} }
+func (*InterfaceResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{57} }
 
 func (m *InterfaceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -3930,7 +3930,7 @@ type InterfaceResponseMsg struct {
 func (m *InterfaceResponseMsg) Reset()                    { *m = InterfaceResponseMsg{} }
 func (m *InterfaceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceResponseMsg) ProtoMessage()               {}
-func (*InterfaceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{58} }
+func (*InterfaceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{58} }
 
 func (m *InterfaceResponseMsg) GetResponse() []*InterfaceResponse {
 	if m != nil {
@@ -3947,7 +3947,7 @@ type InterfaceDeleteRequest struct {
 func (m *InterfaceDeleteRequest) Reset()                    { *m = InterfaceDeleteRequest{} }
 func (m *InterfaceDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceDeleteRequest) ProtoMessage()               {}
-func (*InterfaceDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{59} }
+func (*InterfaceDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{59} }
 
 func (m *InterfaceDeleteRequest) GetKeyOrHandle() *InterfaceKeyHandle {
 	if m != nil {
@@ -3964,7 +3964,7 @@ type InterfaceDeleteRequestMsg struct {
 func (m *InterfaceDeleteRequestMsg) Reset()                    { *m = InterfaceDeleteRequestMsg{} }
 func (m *InterfaceDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceDeleteRequestMsg) ProtoMessage()               {}
-func (*InterfaceDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{60} }
+func (*InterfaceDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{60} }
 
 func (m *InterfaceDeleteRequestMsg) GetRequest() []*InterfaceDeleteRequest {
 	if m != nil {
@@ -3981,7 +3981,7 @@ type InterfaceDeleteResponse struct {
 func (m *InterfaceDeleteResponse) Reset()                    { *m = InterfaceDeleteResponse{} }
 func (m *InterfaceDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceDeleteResponse) ProtoMessage()               {}
-func (*InterfaceDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{61} }
+func (*InterfaceDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{61} }
 
 func (m *InterfaceDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -3998,7 +3998,7 @@ type InterfaceDeleteResponseMsg struct {
 func (m *InterfaceDeleteResponseMsg) Reset()                    { *m = InterfaceDeleteResponseMsg{} }
 func (m *InterfaceDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceDeleteResponseMsg) ProtoMessage()               {}
-func (*InterfaceDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{62} }
+func (*InterfaceDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{62} }
 
 func (m *InterfaceDeleteResponseMsg) GetResponse() []*InterfaceDeleteResponse {
 	if m != nil {
@@ -4018,7 +4018,7 @@ type InterfaceStats struct {
 func (m *InterfaceStats) Reset()                    { *m = InterfaceStats{} }
 func (m *InterfaceStats) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceStats) ProtoMessage()               {}
-func (*InterfaceStats) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{63} }
+func (*InterfaceStats) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{63} }
 
 func (m *InterfaceStats) GetNumTxPackets() uint32 {
 	if m != nil {
@@ -4056,7 +4056,7 @@ type InterfaceGetRequest struct {
 func (m *InterfaceGetRequest) Reset()                    { *m = InterfaceGetRequest{} }
 func (m *InterfaceGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceGetRequest) ProtoMessage()               {}
-func (*InterfaceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{64} }
+func (*InterfaceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{64} }
 
 func (m *InterfaceGetRequest) GetKeyOrHandle() *InterfaceKeyHandle {
 	if m != nil {
@@ -4073,7 +4073,7 @@ type InterfaceGetRequestMsg struct {
 func (m *InterfaceGetRequestMsg) Reset()                    { *m = InterfaceGetRequestMsg{} }
 func (m *InterfaceGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceGetRequestMsg) ProtoMessage()               {}
-func (*InterfaceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{65} }
+func (*InterfaceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{65} }
 
 func (m *InterfaceGetRequestMsg) GetRequest() []*InterfaceGetRequest {
 	if m != nil {
@@ -4093,7 +4093,7 @@ type InterfaceGetResponse struct {
 func (m *InterfaceGetResponse) Reset()                    { *m = InterfaceGetResponse{} }
 func (m *InterfaceGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceGetResponse) ProtoMessage()               {}
-func (*InterfaceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{66} }
+func (*InterfaceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{66} }
 
 func (m *InterfaceGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -4132,7 +4132,7 @@ type InterfaceGetResponseMsg struct {
 func (m *InterfaceGetResponseMsg) Reset()                    { *m = InterfaceGetResponseMsg{} }
 func (m *InterfaceGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceGetResponseMsg) ProtoMessage()               {}
-func (*InterfaceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{67} }
+func (*InterfaceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{67} }
 
 func (m *InterfaceGetResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -4158,7 +4158,7 @@ type InterfaceL2SegmentSpec struct {
 func (m *InterfaceL2SegmentSpec) Reset()                    { *m = InterfaceL2SegmentSpec{} }
 func (m *InterfaceL2SegmentSpec) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceL2SegmentSpec) ProtoMessage()               {}
-func (*InterfaceL2SegmentSpec) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{68} }
+func (*InterfaceL2SegmentSpec) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{68} }
 
 func (m *InterfaceL2SegmentSpec) GetL2SegmentKeyOrHandle() *L2SegmentKeyHandle {
 	if m != nil {
@@ -4183,7 +4183,7 @@ type InterfaceL2SegmentRequestMsg struct {
 func (m *InterfaceL2SegmentRequestMsg) Reset()                    { *m = InterfaceL2SegmentRequestMsg{} }
 func (m *InterfaceL2SegmentRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceL2SegmentRequestMsg) ProtoMessage()               {}
-func (*InterfaceL2SegmentRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{69} }
+func (*InterfaceL2SegmentRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{69} }
 
 func (m *InterfaceL2SegmentRequestMsg) GetRequest() []*InterfaceL2SegmentSpec {
 	if m != nil {
@@ -4200,7 +4200,7 @@ type InterfaceL2SegmentResponse struct {
 func (m *InterfaceL2SegmentResponse) Reset()                    { *m = InterfaceL2SegmentResponse{} }
 func (m *InterfaceL2SegmentResponse) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceL2SegmentResponse) ProtoMessage()               {}
-func (*InterfaceL2SegmentResponse) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{70} }
+func (*InterfaceL2SegmentResponse) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{70} }
 
 func (m *InterfaceL2SegmentResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -4217,7 +4217,7 @@ type InterfaceL2SegmentResponseMsg struct {
 func (m *InterfaceL2SegmentResponseMsg) Reset()                    { *m = InterfaceL2SegmentResponseMsg{} }
 func (m *InterfaceL2SegmentResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*InterfaceL2SegmentResponseMsg) ProtoMessage()               {}
-func (*InterfaceL2SegmentResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor11, []int{71} }
+func (*InterfaceL2SegmentResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor10, []int{71} }
 
 func (m *InterfaceL2SegmentResponseMsg) GetResponse() []*InterfaceL2SegmentResponse {
 	if m != nil {
@@ -4312,9 +4312,9 @@ func init() {
 	proto.RegisterEnum("halproto.IfTunnelEncapType", IfTunnelEncapType_name, IfTunnelEncapType_value)
 }
 
-func init() { proto.RegisterFile("interface.proto", fileDescriptor11) }
+func init() { proto.RegisterFile("interface.proto", fileDescriptor10) }
 
-var fileDescriptor11 = []byte{
+var fileDescriptor10 = []byte{
 	// 5455 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x3c, 0x4d, 0x6f, 0x24, 0xc7,
 	0x75, 0x6a, 0x72, 0x48, 0xce, 0xbc, 0xf9, 0x60, 0xb3, 0xc9, 0x5d, 0x0e, 0x29, 0xad, 0xb8, 0xea,

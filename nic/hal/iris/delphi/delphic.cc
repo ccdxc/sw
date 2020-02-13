@@ -9,11 +9,9 @@
 #include "nic/hal/iris/upgrade/upg_ipc.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
-#include "nic/hal/iris/delphi/utils/utils.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
-#include "gen/proto/hal.delphi.hpp"
 #include "gen/proto/device.delphi.hpp"
 
 namespace hal {
@@ -58,8 +56,6 @@ delphi_client_start (void *ctxt)
 //------------------------------------------------------------------------------
 delphi_client::delphi_client(delphi::SdkPtr &sdk)
 {
-    dobj::HalStatusPtr    status;
-
     sdk_ = sdk;
     sysmgr_ = hal::sysmgr::create_sysmgr_client(sdk_);
     upgsdk_ =
@@ -81,15 +77,6 @@ delphi_client::delphi_client(delphi::SdkPtr &sdk)
     // mount interface status objects
     delphi::objects::InterfaceStatus::Mount(sdk, delphi::ReadWriteMode);
 
-    // mount hal status objects
-    delphi::objects::HalStatus::Mount(sdk, delphi::ReadWriteMode);
-
-    // create HAL status (singleton) obj with STATUS_NONE
-    status = std::make_shared<dobj::HalStatus>();
-    if (status) {
-        status->set_state(::hal::HalState::HAL_STATE_NONE);
-        sdk_->SetObject(status);
-    }
 }
 
 // OnMountComplete gets called when all the objects are mounted
@@ -144,16 +131,6 @@ delphi_client::sdk (void)
 std::string delphi_client::Name()
 {
     return "hal";
-}
-
-// API to update HAL status
-void
-set_hal_status (hal::hal_status_t hal_status)
-{
-    if (!g_delphic) {
-        return;
-    }
-    set_hal_status(hal_status, g_delphic->sdk());
 }
 
 void

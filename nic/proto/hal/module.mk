@@ -15,7 +15,6 @@ MODULE_SRCS         := ${MODULE_DIR}/acl.proto          \
                        ${MODULE_DIR}/dos.proto          \
                        ${MODULE_DIR}/debug.proto        \
                        ${MODULE_DIR}/interface.proto    \
-                       ${MODULE_DIR}/hal.proto          \
                        ${MODULE_DIR}/l2segment.proto    \
                        ${MODULE_DIR}/kh.proto           \
                        ${MODULE_DIR}/internal.proto     \

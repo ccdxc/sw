@@ -93,7 +93,6 @@ nic/build/aarch64/iris/lib/libhal_src.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc_gen.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libhal_svc.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhaldelphi.so                          /nic/lib/
-nic/build/aarch64/iris/lib/libhaldelphiutils.so                     /nic/lib/
 nic/build/aarch64/iris/lib/libhalsysmgr.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libhalupgrade.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libhaltrace.so                           /nic/lib/

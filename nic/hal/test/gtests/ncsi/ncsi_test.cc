@@ -123,7 +123,6 @@ TEST_F(ncsi_test, test1)
 
     // notify sysmgr that we are up
     hal::svc::hal_init_done();
-    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
     // raise HAL_UP event
     sdk::ipc::broadcast(hal::core::EVENT_ID_HAL_UP, NULL, 0);
 

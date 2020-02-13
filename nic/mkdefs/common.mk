@@ -279,7 +279,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
-                               nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
+                               nicmgrproto sdkcapri_asicrw_if commonproto \
                                ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
                                vmotion flowstatsproto ${NIC_HAL_NICMGR_SOLIBS} penipc
 

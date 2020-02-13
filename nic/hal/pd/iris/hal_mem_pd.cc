@@ -1306,7 +1306,6 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     SDK_ASSERT(sdk::asic::pd::asicpd_deparser_init() == SDK_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_program_hbm_table_base_addr() == SDK_RET_OK);
     g_hal_state_pd->init_flow_table();
-    hal::svc::set_hal_status(hal::HAL_STATUS_MEM_INIT_DONE);
 
     return HAL_RET_OK;
 }

@@ -50,7 +50,7 @@ var RdmaServiceType_value = map[string]int32{
 func (x RdmaServiceType) String() string {
 	return proto.EnumName(RdmaServiceType_name, int32(x))
 }
-func (RdmaServiceType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{0} }
+func (RdmaServiceType) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
 
 // types of Update QP operations
 type RdmaQpUpdateOper int32
@@ -144,7 +144,7 @@ var RdmaQpUpdateOper_value = map[string]int32{
 func (x RdmaQpUpdateOper) String() string {
 	return proto.EnumName(RdmaQpUpdateOper_name, int32(x))
 }
-func (RdmaQpUpdateOper) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{1} }
+func (RdmaQpUpdateOper) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
 
 // **********************   Memory Window(MW)  *********************//
 // RdmaMemWindow object
@@ -170,7 +170,7 @@ var RdmaMemoryWindowType_value = map[string]int32{
 func (x RdmaMemoryWindowType) String() string {
 	return proto.EnumName(RdmaMemoryWindowType_name, int32(x))
 }
-func (RdmaMemoryWindowType) EnumDescriptor() ([]byte, []int) { return fileDescriptor27, []int{2} }
+func (RdmaMemoryWindowType) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
 
 // **********************    Queue Pair  ********************************//
 // RdmaQp object
@@ -211,7 +211,7 @@ type RdmaQpSpec struct {
 func (m *RdmaQpSpec) Reset()                    { *m = RdmaQpSpec{} }
 func (m *RdmaQpSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpSpec) ProtoMessage()               {}
-func (*RdmaQpSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{0} }
+func (*RdmaQpSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
 
 func (m *RdmaQpSpec) GetQpNum() uint32 {
 	if m != nil {
@@ -410,7 +410,7 @@ type RdmaQpRequestMsg struct {
 func (m *RdmaQpRequestMsg) Reset()                    { *m = RdmaQpRequestMsg{} }
 func (m *RdmaQpRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpRequestMsg) ProtoMessage()               {}
-func (*RdmaQpRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{1} }
+func (*RdmaQpRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
 
 func (m *RdmaQpRequestMsg) GetRequest() []*RdmaQpSpec {
 	if m != nil {
@@ -433,7 +433,7 @@ type RdmaQpResponse struct {
 func (m *RdmaQpResponse) Reset()                    { *m = RdmaQpResponse{} }
 func (m *RdmaQpResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpResponse) ProtoMessage()               {}
-func (*RdmaQpResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{2} }
+func (*RdmaQpResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
 
 func (m *RdmaQpResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -485,7 +485,7 @@ type RdmaQpResponseMsg struct {
 func (m *RdmaQpResponseMsg) Reset()                    { *m = RdmaQpResponseMsg{} }
 func (m *RdmaQpResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpResponseMsg) ProtoMessage()               {}
-func (*RdmaQpResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{3} }
+func (*RdmaQpResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{3} }
 
 func (m *RdmaQpResponseMsg) GetResponse() []*RdmaQpResponse {
 	if m != nil {
@@ -517,7 +517,7 @@ type RdmaQpUpdateSpec struct {
 func (m *RdmaQpUpdateSpec) Reset()                    { *m = RdmaQpUpdateSpec{} }
 func (m *RdmaQpUpdateSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpUpdateSpec) ProtoMessage()               {}
-func (*RdmaQpUpdateSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{4} }
+func (*RdmaQpUpdateSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{4} }
 
 func (m *RdmaQpUpdateSpec) GetQpNum() uint32 {
 	if m != nil {
@@ -632,7 +632,7 @@ type RdmaQpUpdateRequestMsg struct {
 func (m *RdmaQpUpdateRequestMsg) Reset()                    { *m = RdmaQpUpdateRequestMsg{} }
 func (m *RdmaQpUpdateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpUpdateRequestMsg) ProtoMessage()               {}
-func (*RdmaQpUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{5} }
+func (*RdmaQpUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5} }
 
 func (m *RdmaQpUpdateRequestMsg) GetRequest() []*RdmaQpUpdateSpec {
 	if m != nil {
@@ -649,7 +649,7 @@ type RdmaQpUpdateResponse struct {
 func (m *RdmaQpUpdateResponse) Reset()                    { *m = RdmaQpUpdateResponse{} }
 func (m *RdmaQpUpdateResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpUpdateResponse) ProtoMessage()               {}
-func (*RdmaQpUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{6} }
+func (*RdmaQpUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{6} }
 
 func (m *RdmaQpUpdateResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -666,7 +666,7 @@ type RdmaQpUpdateResponseMsg struct {
 func (m *RdmaQpUpdateResponseMsg) Reset()                    { *m = RdmaQpUpdateResponseMsg{} }
 func (m *RdmaQpUpdateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaQpUpdateResponseMsg) ProtoMessage()               {}
-func (*RdmaQpUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{7} }
+func (*RdmaQpUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{7} }
 
 func (m *RdmaQpUpdateResponseMsg) GetResponse() []*RdmaQpUpdateResponse {
 	if m != nil {
@@ -686,7 +686,7 @@ type RdmaAhSpec struct {
 func (m *RdmaAhSpec) Reset()                    { *m = RdmaAhSpec{} }
 func (m *RdmaAhSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAhSpec) ProtoMessage()               {}
-func (*RdmaAhSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{8} }
+func (*RdmaAhSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{8} }
 
 func (m *RdmaAhSpec) GetAhid() uint64 {
 	if m != nil {
@@ -717,7 +717,7 @@ type RdmaAhRequestMsg struct {
 func (m *RdmaAhRequestMsg) Reset()                    { *m = RdmaAhRequestMsg{} }
 func (m *RdmaAhRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAhRequestMsg) ProtoMessage()               {}
-func (*RdmaAhRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{9} }
+func (*RdmaAhRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{9} }
 
 func (m *RdmaAhRequestMsg) GetRequest() []*RdmaAhSpec {
 	if m != nil {
@@ -734,7 +734,7 @@ type RdmaAhResponse struct {
 func (m *RdmaAhResponse) Reset()                    { *m = RdmaAhResponse{} }
 func (m *RdmaAhResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAhResponse) ProtoMessage()               {}
-func (*RdmaAhResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{10} }
+func (*RdmaAhResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{10} }
 
 func (m *RdmaAhResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -751,7 +751,7 @@ type RdmaAhResponseMsg struct {
 func (m *RdmaAhResponseMsg) Reset()                    { *m = RdmaAhResponseMsg{} }
 func (m *RdmaAhResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAhResponseMsg) ProtoMessage()               {}
-func (*RdmaAhResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{11} }
+func (*RdmaAhResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{11} }
 
 func (m *RdmaAhResponseMsg) GetResponse() []*RdmaAhResponse {
 	if m != nil {
@@ -783,7 +783,7 @@ type RdmaCqSpec struct {
 func (m *RdmaCqSpec) Reset()                    { *m = RdmaCqSpec{} }
 func (m *RdmaCqSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaCqSpec) ProtoMessage()               {}
-func (*RdmaCqSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{12} }
+func (*RdmaCqSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{12} }
 
 func (m *RdmaCqSpec) GetCqNum() uint32 {
 	if m != nil {
@@ -898,7 +898,7 @@ type RdmaCqRequestMsg struct {
 func (m *RdmaCqRequestMsg) Reset()                    { *m = RdmaCqRequestMsg{} }
 func (m *RdmaCqRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaCqRequestMsg) ProtoMessage()               {}
-func (*RdmaCqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{13} }
+func (*RdmaCqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{13} }
 
 func (m *RdmaCqRequestMsg) GetRequest() []*RdmaCqSpec {
 	if m != nil {
@@ -915,7 +915,7 @@ type RdmaCqResponse struct {
 func (m *RdmaCqResponse) Reset()                    { *m = RdmaCqResponse{} }
 func (m *RdmaCqResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaCqResponse) ProtoMessage()               {}
-func (*RdmaCqResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{14} }
+func (*RdmaCqResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{14} }
 
 func (m *RdmaCqResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -932,7 +932,7 @@ type RdmaCqResponseMsg struct {
 func (m *RdmaCqResponseMsg) Reset()                    { *m = RdmaCqResponseMsg{} }
 func (m *RdmaCqResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaCqResponseMsg) ProtoMessage()               {}
-func (*RdmaCqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{15} }
+func (*RdmaCqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{15} }
 
 func (m *RdmaCqResponseMsg) GetResponse() []*RdmaCqResponse {
 	if m != nil {
@@ -955,7 +955,7 @@ type RdmaEqSpec struct {
 func (m *RdmaEqSpec) Reset()                    { *m = RdmaEqSpec{} }
 func (m *RdmaEqSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaEqSpec) ProtoMessage()               {}
-func (*RdmaEqSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{16} }
+func (*RdmaEqSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{16} }
 
 func (m *RdmaEqSpec) GetEqId() uint32 {
 	if m != nil {
@@ -1007,7 +1007,7 @@ type RdmaEqRequestMsg struct {
 func (m *RdmaEqRequestMsg) Reset()                    { *m = RdmaEqRequestMsg{} }
 func (m *RdmaEqRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaEqRequestMsg) ProtoMessage()               {}
-func (*RdmaEqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{17} }
+func (*RdmaEqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{17} }
 
 func (m *RdmaEqRequestMsg) GetRequest() []*RdmaEqSpec {
 	if m != nil {
@@ -1025,7 +1025,7 @@ type RdmaEqResponse struct {
 func (m *RdmaEqResponse) Reset()                    { *m = RdmaEqResponse{} }
 func (m *RdmaEqResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaEqResponse) ProtoMessage()               {}
-func (*RdmaEqResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{18} }
+func (*RdmaEqResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{18} }
 
 func (m *RdmaEqResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1049,7 +1049,7 @@ type RdmaEqResponseMsg struct {
 func (m *RdmaEqResponseMsg) Reset()                    { *m = RdmaEqResponseMsg{} }
 func (m *RdmaEqResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaEqResponseMsg) ProtoMessage()               {}
-func (*RdmaEqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{19} }
+func (*RdmaEqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{19} }
 
 func (m *RdmaEqResponseMsg) GetResponse() []*RdmaEqResponse {
 	if m != nil {
@@ -1082,7 +1082,7 @@ type RdmaMemRegSpec struct {
 func (m *RdmaMemRegSpec) Reset()                    { *m = RdmaMemRegSpec{} }
 func (m *RdmaMemRegSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemRegSpec) ProtoMessage()               {}
-func (*RdmaMemRegSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{20} }
+func (*RdmaMemRegSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{20} }
 
 func (m *RdmaMemRegSpec) GetHwLifId() uint64 {
 	if m != nil {
@@ -1204,7 +1204,7 @@ type RdmaMemRegRequestMsg struct {
 func (m *RdmaMemRegRequestMsg) Reset()                    { *m = RdmaMemRegRequestMsg{} }
 func (m *RdmaMemRegRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemRegRequestMsg) ProtoMessage()               {}
-func (*RdmaMemRegRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{21} }
+func (*RdmaMemRegRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{21} }
 
 func (m *RdmaMemRegRequestMsg) GetRequest() []*RdmaMemRegSpec {
 	if m != nil {
@@ -1221,7 +1221,7 @@ type RdmaMemRegResponse struct {
 func (m *RdmaMemRegResponse) Reset()                    { *m = RdmaMemRegResponse{} }
 func (m *RdmaMemRegResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemRegResponse) ProtoMessage()               {}
-func (*RdmaMemRegResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{22} }
+func (*RdmaMemRegResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{22} }
 
 func (m *RdmaMemRegResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1238,7 +1238,7 @@ type RdmaMemRegResponseMsg struct {
 func (m *RdmaMemRegResponseMsg) Reset()                    { *m = RdmaMemRegResponseMsg{} }
 func (m *RdmaMemRegResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemRegResponseMsg) ProtoMessage()               {}
-func (*RdmaMemRegResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{23} }
+func (*RdmaMemRegResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{23} }
 
 func (m *RdmaMemRegResponseMsg) GetResponse() []*RdmaMemRegResponse {
 	if m != nil {
@@ -1263,7 +1263,7 @@ type RdmaAllocLkeySpec struct {
 func (m *RdmaAllocLkeySpec) Reset()                    { *m = RdmaAllocLkeySpec{} }
 func (m *RdmaAllocLkeySpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAllocLkeySpec) ProtoMessage()               {}
-func (*RdmaAllocLkeySpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{24} }
+func (*RdmaAllocLkeySpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{24} }
 
 func (m *RdmaAllocLkeySpec) GetHwLifId() uint64 {
 	if m != nil {
@@ -1329,7 +1329,7 @@ type RdmaAllocLkeyRequestMsg struct {
 func (m *RdmaAllocLkeyRequestMsg) Reset()                    { *m = RdmaAllocLkeyRequestMsg{} }
 func (m *RdmaAllocLkeyRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAllocLkeyRequestMsg) ProtoMessage()               {}
-func (*RdmaAllocLkeyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{25} }
+func (*RdmaAllocLkeyRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{25} }
 
 func (m *RdmaAllocLkeyRequestMsg) GetRequest() []*RdmaAllocLkeySpec {
 	if m != nil {
@@ -1346,7 +1346,7 @@ type RdmaAllocLkeyResponse struct {
 func (m *RdmaAllocLkeyResponse) Reset()                    { *m = RdmaAllocLkeyResponse{} }
 func (m *RdmaAllocLkeyResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAllocLkeyResponse) ProtoMessage()               {}
-func (*RdmaAllocLkeyResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{26} }
+func (*RdmaAllocLkeyResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{26} }
 
 func (m *RdmaAllocLkeyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1363,7 +1363,7 @@ type RdmaAllocLkeyResponseMsg struct {
 func (m *RdmaAllocLkeyResponseMsg) Reset()                    { *m = RdmaAllocLkeyResponseMsg{} }
 func (m *RdmaAllocLkeyResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAllocLkeyResponseMsg) ProtoMessage()               {}
-func (*RdmaAllocLkeyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{27} }
+func (*RdmaAllocLkeyResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{27} }
 
 func (m *RdmaAllocLkeyResponseMsg) GetResponse() []*RdmaAllocLkeyResponse {
 	if m != nil {
@@ -1387,7 +1387,7 @@ type RdmaMemWindowSpec struct {
 func (m *RdmaMemWindowSpec) Reset()                    { *m = RdmaMemWindowSpec{} }
 func (m *RdmaMemWindowSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemWindowSpec) ProtoMessage()               {}
-func (*RdmaMemWindowSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{28} }
+func (*RdmaMemWindowSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{28} }
 
 func (m *RdmaMemWindowSpec) GetHwLifId() uint64 {
 	if m != nil {
@@ -1460,7 +1460,7 @@ type RdmaMemWindowRequestMsg struct {
 func (m *RdmaMemWindowRequestMsg) Reset()                    { *m = RdmaMemWindowRequestMsg{} }
 func (m *RdmaMemWindowRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemWindowRequestMsg) ProtoMessage()               {}
-func (*RdmaMemWindowRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{29} }
+func (*RdmaMemWindowRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{29} }
 
 func (m *RdmaMemWindowRequestMsg) GetRequest() []*RdmaMemWindowSpec {
 	if m != nil {
@@ -1477,7 +1477,7 @@ type RdmaMemWindowResponse struct {
 func (m *RdmaMemWindowResponse) Reset()                    { *m = RdmaMemWindowResponse{} }
 func (m *RdmaMemWindowResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemWindowResponse) ProtoMessage()               {}
-func (*RdmaMemWindowResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{30} }
+func (*RdmaMemWindowResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{30} }
 
 func (m *RdmaMemWindowResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1494,7 +1494,7 @@ type RdmaMemWindowResponseMsg struct {
 func (m *RdmaMemWindowResponseMsg) Reset()                    { *m = RdmaMemWindowResponseMsg{} }
 func (m *RdmaMemWindowResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaMemWindowResponseMsg) ProtoMessage()               {}
-func (*RdmaMemWindowResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{31} }
+func (*RdmaMemWindowResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{31} }
 
 func (m *RdmaMemWindowResponseMsg) GetResponse() []*RdmaMemWindowResponse {
 	if m != nil {
@@ -1515,7 +1515,7 @@ type RdmaAqSpec struct {
 func (m *RdmaAqSpec) Reset()                    { *m = RdmaAqSpec{} }
 func (m *RdmaAqSpec) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAqSpec) ProtoMessage()               {}
-func (*RdmaAqSpec) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{32} }
+func (*RdmaAqSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{32} }
 
 func (m *RdmaAqSpec) GetAqNum() uint32 {
 	if m != nil {
@@ -1567,7 +1567,7 @@ type RdmaAqRequestMsg struct {
 func (m *RdmaAqRequestMsg) Reset()                    { *m = RdmaAqRequestMsg{} }
 func (m *RdmaAqRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAqRequestMsg) ProtoMessage()               {}
-func (*RdmaAqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{33} }
+func (*RdmaAqRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{33} }
 
 func (m *RdmaAqRequestMsg) GetRequest() []*RdmaAqSpec {
 	if m != nil {
@@ -1585,7 +1585,7 @@ type RdmaAqResponse struct {
 func (m *RdmaAqResponse) Reset()                    { *m = RdmaAqResponse{} }
 func (m *RdmaAqResponse) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAqResponse) ProtoMessage()               {}
-func (*RdmaAqResponse) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{34} }
+func (*RdmaAqResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{34} }
 
 func (m *RdmaAqResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1609,7 +1609,7 @@ type RdmaAqResponseMsg struct {
 func (m *RdmaAqResponseMsg) Reset()                    { *m = RdmaAqResponseMsg{} }
 func (m *RdmaAqResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*RdmaAqResponseMsg) ProtoMessage()               {}
-func (*RdmaAqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor27, []int{35} }
+func (*RdmaAqResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{35} }
 
 func (m *RdmaAqResponseMsg) GetResponse() []*RdmaAqResponse {
 	if m != nil {
@@ -1660,9 +1660,9 @@ func init() {
 	proto.RegisterEnum("halproto.RdmaMemoryWindowType", RdmaMemoryWindowType_name, RdmaMemoryWindowType_value)
 }
 
-func init() { proto.RegisterFile("rdma.proto", fileDescriptor27) }
+func init() { proto.RegisterFile("rdma.proto", fileDescriptor26) }
 
-var fileDescriptor27 = []byte{
+var fileDescriptor26 = []byte{
 	// 2331 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x59, 0xcd, 0x72, 0xdb, 0xc8,
 	0x11, 0x5e, 0xfe, 0x88, 0xa2, 0x5a, 0x22, 0x05, 0x8d, 0xf5, 0xc3, 0x95, 0xbd, 0xb6, 0xcc, 0xf5,

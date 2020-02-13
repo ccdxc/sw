@@ -14,7 +14,6 @@
 #include "linkmgr_utils.hpp"
 #include "linkmgr_internal.hpp"
 #include "delphi/linkmgr_delphi.hpp"
-#include "nic/hal/iris/delphi/utils/utils.hpp"
 
 using hal::hal_cfg_db_open;
 using hal::hal_cfg_db_close;
@@ -232,9 +231,6 @@ PortServiceImpl::PortCreate(ServerContext *context,
             port_status = std::make_shared<dobj::PortStatus>(response->status());
             port_status->mutable_key_or_handle()->set_port_id(spec.key_or_handle().port_id());
             linkmgr::delphi_sdk_get()->QueueUpdate(port_status);
-        } else {
-            hal::svc::set_hal_status(hal::HAL_STATUS_INIT_ERR,
-                                     linkmgr::delphi_sdk_get());
         }
     }
     hal_cfg_db_close();

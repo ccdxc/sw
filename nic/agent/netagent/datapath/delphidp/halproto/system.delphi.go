@@ -280,7 +280,7 @@ var ApiCounter_value = map[string]int32{
 func (x ApiCounter) String() string {
 	return proto.EnumName(ApiCounter_name, int32(x))
 }
-func (ApiCounter) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{0} }
+func (ApiCounter) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{0} }
 
 // BufferDropStats captures instantaneous drop counts due to buffering drops
 type BufferDropReasons int32
@@ -338,7 +338,7 @@ var BufferDropReasons_value = map[string]int32{
 func (x BufferDropReasons) String() string {
 	return proto.EnumName(BufferDropReasons_name, int32(x))
 }
-func (BufferDropReasons) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{1} }
+func (BufferDropReasons) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{1} }
 
 // Table types
 type TableType int32
@@ -369,7 +369,7 @@ var TableType_value = map[string]int32{
 func (x TableType) String() string {
 	return proto.EnumName(TableType_name, int32(x))
 }
-func (TableType) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{2} }
+func (TableType) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{2} }
 
 // OflowFifoDropStats captures instantaneous drop counts at the overflow fifo interface
 type OflowFifoDropType int32
@@ -403,7 +403,7 @@ var OflowFifoDropType_value = map[string]int32{
 func (x OflowFifoDropType) String() string {
 	return proto.EnumName(OflowFifoDropType_name, int32(x))
 }
-func (OflowFifoDropType) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{3} }
+func (OflowFifoDropType) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{3} }
 
 type SystemGetType int32
 
@@ -436,7 +436,7 @@ var SystemGetType_value = map[string]int32{
 func (x SystemGetType) String() string {
 	return proto.EnumName(SystemGetType_name, int32(x))
 }
-func (SystemGetType) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{4} }
+func (SystemGetType) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{4} }
 
 type ForwardingMode int32
 
@@ -463,7 +463,7 @@ var ForwardingMode_value = map[string]int32{
 func (x ForwardingMode) String() string {
 	return proto.EnumName(ForwardingMode_name, int32(x))
 }
-func (ForwardingMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{5} }
+func (ForwardingMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{5} }
 
 type FeatureProfile int32
 
@@ -499,7 +499,7 @@ var FeatureProfile_value = map[string]int32{
 func (x FeatureProfile) String() string {
 	return proto.EnumName(FeatureProfile_name, int32(x))
 }
-func (FeatureProfile) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{6} }
+func (FeatureProfile) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{6} }
 
 type MicroSegMode int32
 
@@ -520,7 +520,7 @@ var MicroSegMode_value = map[string]int32{
 func (x MicroSegMode) String() string {
 	return proto.EnumName(MicroSegMode_name, int32(x))
 }
-func (MicroSegMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{7} }
+func (MicroSegMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{7} }
 
 type MicroSegStatus int32
 
@@ -544,7 +544,7 @@ var MicroSegStatus_value = map[string]int32{
 func (x MicroSegStatus) String() string {
 	return proto.EnumName(MicroSegStatus_name, int32(x))
 }
-func (MicroSegStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{8} }
+func (MicroSegStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{8} }
 
 // Forwarding Mode
 type ForwardMode int32
@@ -569,7 +569,7 @@ var ForwardMode_value = map[string]int32{
 func (x ForwardMode) String() string {
 	return proto.EnumName(ForwardMode_name, int32(x))
 }
-func (ForwardMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{9} }
+func (ForwardMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{9} }
 
 // Policy Mode
 type PolicyMode int32
@@ -597,7 +597,7 @@ var PolicyMode_value = map[string]int32{
 func (x PolicyMode) String() string {
 	return proto.EnumName(PolicyMode_name, int32(x))
 }
-func (PolicyMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{10} }
+func (PolicyMode) EnumDescriptor() ([]byte, []int) { return fileDescriptor28, []int{10} }
 
 type ApiStatsEntry struct {
 	ApiType       ApiCounter `protobuf:"varint,1,opt,name=api_type,json=apiType,enum=sys.ApiCounter" json:"api_type,omitempty"`
@@ -609,7 +609,7 @@ type ApiStatsEntry struct {
 func (m *ApiStatsEntry) Reset()                    { *m = ApiStatsEntry{} }
 func (m *ApiStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*ApiStatsEntry) ProtoMessage()               {}
-func (*ApiStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{0} }
+func (*ApiStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{0} }
 
 func (m *ApiStatsEntry) GetApiType() ApiCounter {
 	if m != nil {
@@ -647,7 +647,7 @@ type ApiStatsResponse struct {
 func (m *ApiStatsResponse) Reset()                    { *m = ApiStatsResponse{} }
 func (m *ApiStatsResponse) String() string            { return proto.CompactTextString(m) }
 func (*ApiStatsResponse) ProtoMessage()               {}
-func (*ApiStatsResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{1} }
+func (*ApiStatsResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{1} }
 
 func (m *ApiStatsResponse) GetApiEntries() []*ApiStatsEntry {
 	if m != nil {
@@ -664,7 +664,7 @@ type DropStatsEntry struct {
 func (m *DropStatsEntry) Reset()                    { *m = DropStatsEntry{} }
 func (m *DropStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*DropStatsEntry) ProtoMessage()               {}
-func (*DropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{2} }
+func (*DropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{2} }
 
 func (m *DropStatsEntry) GetReasons() *DropReasons {
 	if m != nil {
@@ -688,7 +688,7 @@ type EgressDropStatsEntry struct {
 func (m *EgressDropStatsEntry) Reset()                    { *m = EgressDropStatsEntry{} }
 func (m *EgressDropStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*EgressDropStatsEntry) ProtoMessage()               {}
-func (*EgressDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{3} }
+func (*EgressDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{3} }
 
 func (m *EgressDropStatsEntry) GetReasons() *EgressDropReasons {
 	if m != nil {
@@ -712,7 +712,7 @@ type BufferDropStatsEntry struct {
 func (m *BufferDropStatsEntry) Reset()                    { *m = BufferDropStatsEntry{} }
 func (m *BufferDropStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*BufferDropStatsEntry) ProtoMessage()               {}
-func (*BufferDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{4} }
+func (*BufferDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{4} }
 
 func (m *BufferDropStatsEntry) GetReasons() BufferDropReasons {
 	if m != nil {
@@ -735,7 +735,7 @@ type BufferDropStats struct {
 func (m *BufferDropStats) Reset()                    { *m = BufferDropStats{} }
 func (m *BufferDropStats) String() string            { return proto.CompactTextString(m) }
 func (*BufferDropStats) ProtoMessage()               {}
-func (*BufferDropStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{5} }
+func (*BufferDropStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{5} }
 
 func (m *BufferDropStats) GetStatsEntries() []*BufferDropStatsEntry {
 	if m != nil {
@@ -761,7 +761,7 @@ type TableStatsEntry struct {
 func (m *TableStatsEntry) Reset()                    { *m = TableStatsEntry{} }
 func (m *TableStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableStatsEntry) ProtoMessage()               {}
-func (*TableStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{6} }
+func (*TableStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{6} }
 
 func (m *TableStatsEntry) GetTableType() TableType {
 	if m != nil {
@@ -841,7 +841,7 @@ type TableStats struct {
 func (m *TableStats) Reset()                    { *m = TableStats{} }
 func (m *TableStats) String() string            { return proto.CompactTextString(m) }
 func (*TableStats) ProtoMessage()               {}
-func (*TableStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{7} }
+func (*TableStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{7} }
 
 func (m *TableStats) GetTableStats() []*TableStatsEntry {
 	if m != nil {
@@ -862,7 +862,7 @@ type BufferStats struct {
 func (m *BufferStats) Reset()                    { *m = BufferStats{} }
 func (m *BufferStats) String() string            { return proto.CompactTextString(m) }
 func (*BufferStats) ProtoMessage()               {}
-func (*BufferStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{8} }
+func (*BufferStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{8} }
 
 func (m *BufferStats) GetSopCountIn() uint32 {
 	if m != nil {
@@ -907,7 +907,7 @@ type OflowFifoDropStatsEntry struct {
 func (m *OflowFifoDropStatsEntry) Reset()                    { *m = OflowFifoDropStatsEntry{} }
 func (m *OflowFifoDropStatsEntry) String() string            { return proto.CompactTextString(m) }
 func (*OflowFifoDropStatsEntry) ProtoMessage()               {}
-func (*OflowFifoDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{9} }
+func (*OflowFifoDropStatsEntry) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{9} }
 
 func (m *OflowFifoDropStatsEntry) GetType() OflowFifoDropType {
 	if m != nil {
@@ -930,7 +930,7 @@ type OflowFifoDropStats struct {
 func (m *OflowFifoDropStats) Reset()                    { *m = OflowFifoDropStats{} }
 func (m *OflowFifoDropStats) String() string            { return proto.CompactTextString(m) }
 func (*OflowFifoDropStats) ProtoMessage()               {}
-func (*OflowFifoDropStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{10} }
+func (*OflowFifoDropStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{10} }
 
 func (m *OflowFifoDropStats) GetEntry() []*OflowFifoDropStatsEntry {
 	if m != nil {
@@ -951,7 +951,7 @@ type OflowFifoStats struct {
 func (m *OflowFifoStats) Reset()                    { *m = OflowFifoStats{} }
 func (m *OflowFifoStats) String() string            { return proto.CompactTextString(m) }
 func (*OflowFifoStats) ProtoMessage()               {}
-func (*OflowFifoStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{11} }
+func (*OflowFifoStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{11} }
 
 func (m *OflowFifoStats) GetSopCountIn() uint32 {
 	if m != nil {
@@ -1000,7 +1000,7 @@ type PacketBufferPortStats struct {
 func (m *PacketBufferPortStats) Reset()                    { *m = PacketBufferPortStats{} }
 func (m *PacketBufferPortStats) String() string            { return proto.CompactTextString(m) }
 func (*PacketBufferPortStats) ProtoMessage()               {}
-func (*PacketBufferPortStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{12} }
+func (*PacketBufferPortStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{12} }
 
 func (m *PacketBufferPortStats) GetPacketBufferPort() *PacketBufferPort {
 	if m != nil {
@@ -1038,7 +1038,7 @@ type PacketBufferStats struct {
 func (m *PacketBufferStats) Reset()                    { *m = PacketBufferStats{} }
 func (m *PacketBufferStats) String() string            { return proto.CompactTextString(m) }
 func (*PacketBufferStats) ProtoMessage()               {}
-func (*PacketBufferStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{13} }
+func (*PacketBufferStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{13} }
 
 func (m *PacketBufferStats) GetPortStats() []*PacketBufferPortStats {
 	if m != nil {
@@ -1055,7 +1055,7 @@ type Status struct {
 func (m *Status) Reset()                    { *m = Status{} }
 func (m *Status) String() string            { return proto.CompactTextString(m) }
 func (*Status) ProtoMessage()               {}
-func (*Status) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{14} }
+func (*Status) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{14} }
 
 type SystemGetRequest struct {
 	Request SystemGetType `protobuf:"varint,1,opt,name=request,enum=sys.SystemGetType" json:"request,omitempty"`
@@ -1064,7 +1064,7 @@ type SystemGetRequest struct {
 func (m *SystemGetRequest) Reset()                    { *m = SystemGetRequest{} }
 func (m *SystemGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*SystemGetRequest) ProtoMessage()               {}
-func (*SystemGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{15} }
+func (*SystemGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{15} }
 
 func (m *SystemGetRequest) GetRequest() SystemGetType {
 	if m != nil {
@@ -1084,7 +1084,7 @@ type SystemResponse struct {
 func (m *SystemResponse) Reset()                    { *m = SystemResponse{} }
 func (m *SystemResponse) String() string            { return proto.CompactTextString(m) }
 func (*SystemResponse) ProtoMessage()               {}
-func (*SystemResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{16} }
+func (*SystemResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{16} }
 
 func (m *SystemResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1128,7 +1128,7 @@ type Stats struct {
 func (m *Stats) Reset()                    { *m = Stats{} }
 func (m *Stats) String() string            { return proto.CompactTextString(m) }
 func (*Stats) ProtoMessage()               {}
-func (*Stats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{17} }
+func (*Stats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{17} }
 
 func (m *Stats) GetDropStats() *DropStats {
 	if m != nil {
@@ -1187,7 +1187,7 @@ type DropStats struct {
 func (m *DropStats) Reset()                    { *m = DropStats{} }
 func (m *DropStats) String() string            { return proto.CompactTextString(m) }
 func (*DropStats) ProtoMessage()               {}
-func (*DropStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{18} }
+func (*DropStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{18} }
 
 func (m *DropStats) GetDropEntries() []*DropStatsEntry {
 	if m != nil {
@@ -1203,7 +1203,7 @@ type EgressDropStats struct {
 func (m *EgressDropStats) Reset()                    { *m = EgressDropStats{} }
 func (m *EgressDropStats) String() string            { return proto.CompactTextString(m) }
 func (*EgressDropStats) ProtoMessage()               {}
-func (*EgressDropStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{19} }
+func (*EgressDropStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{19} }
 
 func (m *EgressDropStats) GetDropEntries() []*EgressDropStatsEntry {
 	if m != nil {
@@ -1220,7 +1220,7 @@ type FTEError struct {
 func (m *FTEError) Reset()                    { *m = FTEError{} }
 func (m *FTEError) String() string            { return proto.CompactTextString(m) }
 func (*FTEError) ProtoMessage()               {}
-func (*FTEError) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{20} }
+func (*FTEError) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{20} }
 
 func (m *FTEError) GetFteError() string {
 	if m != nil {
@@ -1245,7 +1245,7 @@ type FTEFeatureStats struct {
 func (m *FTEFeatureStats) Reset()                    { *m = FTEFeatureStats{} }
 func (m *FTEFeatureStats) String() string            { return proto.CompactTextString(m) }
 func (*FTEFeatureStats) ProtoMessage()               {}
-func (*FTEFeatureStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{21} }
+func (*FTEFeatureStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{21} }
 
 func (m *FTEFeatureStats) GetFeatureName() string {
 	if m != nil {
@@ -1291,7 +1291,7 @@ type FTEStatsInfo struct {
 func (m *FTEStatsInfo) Reset()                    { *m = FTEStatsInfo{} }
 func (m *FTEStatsInfo) String() string            { return proto.CompactTextString(m) }
 func (*FTEStatsInfo) ProtoMessage()               {}
-func (*FTEStatsInfo) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{22} }
+func (*FTEStatsInfo) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{22} }
 
 func (m *FTEStatsInfo) GetConnPerSecond() uint64 {
 	if m != nil {
@@ -1414,7 +1414,7 @@ type FTEStats struct {
 func (m *FTEStats) Reset()                    { *m = FTEStats{} }
 func (m *FTEStats) String() string            { return proto.CompactTextString(m) }
 func (*FTEStats) ProtoMessage()               {}
-func (*FTEStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{23} }
+func (*FTEStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{23} }
 
 func (m *FTEStats) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1456,7 +1456,7 @@ type SessionSummaryStats struct {
 func (m *SessionSummaryStats) Reset()                    { *m = SessionSummaryStats{} }
 func (m *SessionSummaryStats) String() string            { return proto.CompactTextString(m) }
 func (*SessionSummaryStats) ProtoMessage()               {}
-func (*SessionSummaryStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{24} }
+func (*SessionSummaryStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{24} }
 
 func (m *SessionSummaryStats) GetTotalActiveSessions() uint64 {
 	if m != nil {
@@ -1612,7 +1612,7 @@ type QCtr struct {
 func (m *QCtr) Reset()                    { *m = QCtr{} }
 func (m *QCtr) String() string            { return proto.CompactTextString(m) }
 func (*QCtr) ProtoMessage()               {}
-func (*QCtr) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{25} }
+func (*QCtr) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{25} }
 
 func (m *QCtr) GetSendPkts() uint64 {
 	if m != nil {
@@ -1737,7 +1737,7 @@ type QGlobalInfo struct {
 func (m *QGlobalInfo) Reset()                    { *m = QGlobalInfo{} }
 func (m *QGlobalInfo) String() string            { return proto.CompactTextString(m) }
 func (*QGlobalInfo) ProtoMessage()               {}
-func (*QGlobalInfo) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{26} }
+func (*QGlobalInfo) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{26} }
 
 func (m *QGlobalInfo) GetGcPindex() uint32 {
 	if m != nil {
@@ -1836,7 +1836,7 @@ type QInfo struct {
 func (m *QInfo) Reset()                    { *m = QInfo{} }
 func (m *QInfo) String() string            { return proto.CompactTextString(m) }
 func (*QInfo) ProtoMessage()               {}
-func (*QInfo) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{27} }
+func (*QInfo) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{27} }
 
 func (m *QInfo) GetQueueId() uint32 {
 	if m != nil {
@@ -1896,7 +1896,7 @@ type FTEInfo struct {
 func (m *FTEInfo) Reset()                    { *m = FTEInfo{} }
 func (m *FTEInfo) String() string            { return proto.CompactTextString(m) }
 func (*FTEInfo) ProtoMessage()               {}
-func (*FTEInfo) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{28} }
+func (*FTEInfo) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{28} }
 
 func (m *FTEInfo) GetQueueId() uint32 {
 	if m != nil {
@@ -1926,7 +1926,7 @@ type PMDStats struct {
 func (m *PMDStats) Reset()                    { *m = PMDStats{} }
 func (m *PMDStats) String() string            { return proto.CompactTextString(m) }
 func (*PMDStats) ProtoMessage()               {}
-func (*PMDStats) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{29} }
+func (*PMDStats) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{29} }
 
 func (m *PMDStats) GetFteInfo() []*FTEInfo {
 	if m != nil {
@@ -1943,7 +1943,7 @@ type ForwardingModeResponse struct {
 func (m *ForwardingModeResponse) Reset()                    { *m = ForwardingModeResponse{} }
 func (m *ForwardingModeResponse) String() string            { return proto.CompactTextString(m) }
 func (*ForwardingModeResponse) ProtoMessage()               {}
-func (*ForwardingModeResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{30} }
+func (*ForwardingModeResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{30} }
 
 func (m *ForwardingModeResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1967,7 +1967,7 @@ type FeatureProfileResponse struct {
 func (m *FeatureProfileResponse) Reset()                    { *m = FeatureProfileResponse{} }
 func (m *FeatureProfileResponse) String() string            { return proto.CompactTextString(m) }
 func (*FeatureProfileResponse) ProtoMessage()               {}
-func (*FeatureProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{31} }
+func (*FeatureProfileResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{31} }
 
 func (m *FeatureProfileResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1991,7 +1991,7 @@ type MicroSegEvent struct {
 func (m *MicroSegEvent) Reset()                    { *m = MicroSegEvent{} }
 func (m *MicroSegEvent) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegEvent) ProtoMessage()               {}
-func (*MicroSegEvent) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{32} }
+func (*MicroSegEvent) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{32} }
 
 func (m *MicroSegEvent) GetStatus() MicroSegStatus {
 	if m != nil {
@@ -2009,7 +2009,7 @@ type MicroSegSpec struct {
 func (m *MicroSegSpec) Reset()                    { *m = MicroSegSpec{} }
 func (m *MicroSegSpec) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegSpec) ProtoMessage()               {}
-func (*MicroSegSpec) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{33} }
+func (*MicroSegSpec) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{33} }
 
 func (m *MicroSegSpec) GetMicroSegMode() MicroSegMode {
 	if m != nil {
@@ -2033,7 +2033,7 @@ type MicroSegRequestMsg struct {
 func (m *MicroSegRequestMsg) Reset()                    { *m = MicroSegRequestMsg{} }
 func (m *MicroSegRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegRequestMsg) ProtoMessage()               {}
-func (*MicroSegRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{34} }
+func (*MicroSegRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{34} }
 
 func (m *MicroSegRequestMsg) GetRequest() []*MicroSegSpec {
 	if m != nil {
@@ -2050,7 +2050,7 @@ type MicroSegResponse struct {
 func (m *MicroSegResponse) Reset()                    { *m = MicroSegResponse{} }
 func (m *MicroSegResponse) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegResponse) ProtoMessage()               {}
-func (*MicroSegResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{35} }
+func (*MicroSegResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{35} }
 
 func (m *MicroSegResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2073,7 +2073,7 @@ type MicroSegResponseMsg struct {
 func (m *MicroSegResponseMsg) Reset()                    { *m = MicroSegResponseMsg{} }
 func (m *MicroSegResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegResponseMsg) ProtoMessage()               {}
-func (*MicroSegResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{36} }
+func (*MicroSegResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{36} }
 
 func (m *MicroSegResponseMsg) GetResponse() []*MicroSegResponse {
 	if m != nil {
@@ -2089,7 +2089,7 @@ type MicroSegUpdateRequest struct {
 func (m *MicroSegUpdateRequest) Reset()                    { *m = MicroSegUpdateRequest{} }
 func (m *MicroSegUpdateRequest) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegUpdateRequest) ProtoMessage()               {}
-func (*MicroSegUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{37} }
+func (*MicroSegUpdateRequest) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{37} }
 
 func (m *MicroSegUpdateRequest) GetMicroSegMode() MicroSegMode {
 	if m != nil {
@@ -2105,7 +2105,7 @@ type MicroSegUpdateRequestMsg struct {
 func (m *MicroSegUpdateRequestMsg) Reset()                    { *m = MicroSegUpdateRequestMsg{} }
 func (m *MicroSegUpdateRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegUpdateRequestMsg) ProtoMessage()               {}
-func (*MicroSegUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{38} }
+func (*MicroSegUpdateRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{38} }
 
 func (m *MicroSegUpdateRequestMsg) GetRequest() []*MicroSegUpdateRequest {
 	if m != nil {
@@ -2121,7 +2121,7 @@ type MicroSegUpdateResponse struct {
 func (m *MicroSegUpdateResponse) Reset()                    { *m = MicroSegUpdateResponse{} }
 func (m *MicroSegUpdateResponse) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegUpdateResponse) ProtoMessage()               {}
-func (*MicroSegUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{39} }
+func (*MicroSegUpdateResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{39} }
 
 func (m *MicroSegUpdateResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2137,7 +2137,7 @@ type MicroSegUpdateResponseMsg struct {
 func (m *MicroSegUpdateResponseMsg) Reset()                    { *m = MicroSegUpdateResponseMsg{} }
 func (m *MicroSegUpdateResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MicroSegUpdateResponseMsg) ProtoMessage()               {}
-func (*MicroSegUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{40} }
+func (*MicroSegUpdateResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{40} }
 
 func (m *MicroSegUpdateResponseMsg) GetResponse() []*MicroSegUpdateResponse {
 	if m != nil {
@@ -2155,7 +2155,7 @@ type SysSpec struct {
 func (m *SysSpec) Reset()                    { *m = SysSpec{} }
 func (m *SysSpec) String() string            { return proto.CompactTextString(m) }
 func (*SysSpec) ProtoMessage()               {}
-func (*SysSpec) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{41} }
+func (*SysSpec) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{41} }
 
 func (m *SysSpec) GetFwdMode() ForwardMode {
 	if m != nil {
@@ -2178,7 +2178,7 @@ type SysSpecStatus struct {
 func (m *SysSpecStatus) Reset()                    { *m = SysSpecStatus{} }
 func (m *SysSpecStatus) String() string            { return proto.CompactTextString(m) }
 func (*SysSpecStatus) ProtoMessage()               {}
-func (*SysSpecStatus) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{42} }
+func (*SysSpecStatus) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{42} }
 
 // System Spec Response
 type SysSpecResponse struct {
@@ -2189,7 +2189,7 @@ type SysSpecResponse struct {
 func (m *SysSpecResponse) Reset()                    { *m = SysSpecResponse{} }
 func (m *SysSpecResponse) String() string            { return proto.CompactTextString(m) }
 func (*SysSpecResponse) ProtoMessage()               {}
-func (*SysSpecResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{43} }
+func (*SysSpecResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{43} }
 
 func (m *SysSpecResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2214,7 +2214,7 @@ type SysSpecGetResponse struct {
 func (m *SysSpecGetResponse) Reset()                    { *m = SysSpecGetResponse{} }
 func (m *SysSpecGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*SysSpecGetResponse) ProtoMessage()               {}
-func (*SysSpecGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{44} }
+func (*SysSpecGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor28, []int{44} }
 
 func (m *SysSpecGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -2289,9 +2289,9 @@ func init() {
 	proto.RegisterEnum("halproto.PolicyMode", PolicyMode_name, PolicyMode_value)
 }
 
-func init() { proto.RegisterFile("system.proto", fileDescriptor29) }
+func init() { proto.RegisterFile("system.proto", fileDescriptor28) }
 
-var fileDescriptor29 = []byte{
+var fileDescriptor28 = []byte{
 	// 4500 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x7b, 0x4b, 0x93, 0xdb, 0x56,
 	0x76, 0xbf, 0xd8, 0x0f, 0x75, 0xf3, 0xf0, 0x05, 0xa2, 0x5f, 0x54, 0xb7, 0x64, 0x49, 0xb4, 0x2d,

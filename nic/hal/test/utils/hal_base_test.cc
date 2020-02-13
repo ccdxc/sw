@@ -85,7 +85,6 @@ grpc_server_run (void *ctxt)
 #if 0
     // notify sysmgr that we are up
     hal::svc::hal_init_done();
-    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
     // raise HAL_UP event
     sdk::ipc::broadcast(event_id_t::EVENT_ID_HAL_UP, NULL, 0);
 #endif

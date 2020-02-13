@@ -22,7 +22,7 @@ type Oif struct {
 func (m *Oif) Reset()                    { *m = Oif{} }
 func (m *Oif) String() string            { return proto.CompactTextString(m) }
 func (*Oif) ProtoMessage()               {}
-func (*Oif) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{0} }
+func (*Oif) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{0} }
 
 func (m *Oif) GetInterface() *InterfaceKeyHandle {
 	if m != nil {
@@ -60,7 +60,7 @@ type OifListEpd struct {
 func (m *OifListEpd) Reset()                    { *m = OifListEpd{} }
 func (m *OifListEpd) String() string            { return proto.CompactTextString(m) }
 func (*OifListEpd) ProtoMessage()               {}
-func (*OifListEpd) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{1} }
+func (*OifListEpd) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{1} }
 
 func (m *OifListEpd) GetRepIndex() uint32 {
 	if m != nil {
@@ -76,7 +76,7 @@ type OifListCpd struct {
 func (m *OifListCpd) Reset()                    { *m = OifListCpd{} }
 func (m *OifListCpd) String() string            { return proto.CompactTextString(m) }
 func (*OifListCpd) ProtoMessage()               {}
-func (*OifListCpd) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{2} }
+func (*OifListCpd) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{2} }
 
 type OifList struct {
 	Id             uint32 `protobuf:"fixed32,1,opt,name=id" json:"id,omitempty"`
@@ -92,7 +92,7 @@ type OifList struct {
 func (m *OifList) Reset()                    { *m = OifList{} }
 func (m *OifList) String() string            { return proto.CompactTextString(m) }
 func (*OifList) ProtoMessage()               {}
-func (*OifList) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{3} }
+func (*OifList) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{3} }
 
 type isOifList_PdInfo interface{ isOifList_PdInfo() }
 
@@ -237,7 +237,7 @@ type MulticastEntryStatusEpd struct {
 func (m *MulticastEntryStatusEpd) Reset()                    { *m = MulticastEntryStatusEpd{} }
 func (m *MulticastEntryStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryStatusEpd) ProtoMessage()               {}
-func (*MulticastEntryStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{4} }
+func (*MulticastEntryStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{4} }
 
 func (m *MulticastEntryStatusEpd) GetRegMacTblIdx() uint32 {
 	if m != nil {
@@ -253,7 +253,7 @@ type MulticastEntryStatusCpd struct {
 func (m *MulticastEntryStatusCpd) Reset()                    { *m = MulticastEntryStatusCpd{} }
 func (m *MulticastEntryStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryStatusCpd) ProtoMessage()               {}
-func (*MulticastEntryStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{5} }
+func (*MulticastEntryStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{5} }
 
 type MulticastEntryStatus struct {
 	Handle  uint64   `protobuf:"fixed64,1,opt,name=handle" json:"handle,omitempty"`
@@ -267,7 +267,7 @@ type MulticastEntryStatus struct {
 func (m *MulticastEntryStatus) Reset()                    { *m = MulticastEntryStatus{} }
 func (m *MulticastEntryStatus) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryStatus) ProtoMessage()               {}
-func (*MulticastEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{6} }
+func (*MulticastEntryStatus) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{6} }
 
 type isMulticastEntryStatus_PdInfo interface{ isMulticastEntryStatus_PdInfo() }
 
@@ -398,7 +398,7 @@ type MulticastEntrySpec struct {
 func (m *MulticastEntrySpec) Reset()                    { *m = MulticastEntrySpec{} }
 func (m *MulticastEntrySpec) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntrySpec) ProtoMessage()               {}
-func (*MulticastEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{7} }
+func (*MulticastEntrySpec) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{7} }
 
 func (m *MulticastEntrySpec) GetKeyOrHandle() *MulticastEntryKeyHandle {
 	if m != nil {
@@ -421,7 +421,7 @@ type MulticastEntryRequestMsg struct {
 func (m *MulticastEntryRequestMsg) Reset()                    { *m = MulticastEntryRequestMsg{} }
 func (m *MulticastEntryRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryRequestMsg) ProtoMessage()               {}
-func (*MulticastEntryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{8} }
+func (*MulticastEntryRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{8} }
 
 func (m *MulticastEntryRequestMsg) GetRequest() []*MulticastEntrySpec {
 	if m != nil {
@@ -438,7 +438,7 @@ type MulticastEntryResponse struct {
 func (m *MulticastEntryResponse) Reset()                    { *m = MulticastEntryResponse{} }
 func (m *MulticastEntryResponse) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryResponse) ProtoMessage()               {}
-func (*MulticastEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{9} }
+func (*MulticastEntryResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{9} }
 
 func (m *MulticastEntryResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -461,7 +461,7 @@ type MulticastEntryResponseMsg struct {
 func (m *MulticastEntryResponseMsg) Reset()                    { *m = MulticastEntryResponseMsg{} }
 func (m *MulticastEntryResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryResponseMsg) ProtoMessage()               {}
-func (*MulticastEntryResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{10} }
+func (*MulticastEntryResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{10} }
 
 func (m *MulticastEntryResponseMsg) GetResponse() []*MulticastEntryResponse {
 	if m != nil {
@@ -477,7 +477,7 @@ type MulticastEntryDeleteRequest struct {
 func (m *MulticastEntryDeleteRequest) Reset()                    { *m = MulticastEntryDeleteRequest{} }
 func (m *MulticastEntryDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteRequest) ProtoMessage()               {}
-func (*MulticastEntryDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{11} }
+func (*MulticastEntryDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{11} }
 
 func (m *MulticastEntryDeleteRequest) GetKeyOrHandle() *MulticastEntryKeyHandle {
 	if m != nil {
@@ -494,7 +494,7 @@ func (m *MulticastEntryDeleteRequestMsg) Reset()         { *m = MulticastEntryDe
 func (m *MulticastEntryDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteRequestMsg) ProtoMessage()    {}
 func (*MulticastEntryDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor17, []int{12}
+	return fileDescriptor16, []int{12}
 }
 
 func (m *MulticastEntryDeleteRequestMsg) GetRequest() []*MulticastEntryDeleteRequest {
@@ -511,7 +511,7 @@ type MulticastEntryDeleteResponse struct {
 func (m *MulticastEntryDeleteResponse) Reset()                    { *m = MulticastEntryDeleteResponse{} }
 func (m *MulticastEntryDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteResponse) ProtoMessage()               {}
-func (*MulticastEntryDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{13} }
+func (*MulticastEntryDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{13} }
 
 func (m *MulticastEntryDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -528,7 +528,7 @@ func (m *MulticastEntryDeleteResponseMsg) Reset()         { *m = MulticastEntryD
 func (m *MulticastEntryDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MulticastEntryDeleteResponseMsg) ProtoMessage()    {}
 func (*MulticastEntryDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor17, []int{14}
+	return fileDescriptor16, []int{14}
 }
 
 func (m *MulticastEntryDeleteResponseMsg) GetResponse() []*MulticastEntryDeleteResponse {
@@ -545,7 +545,7 @@ type MulticastEntryGetRequest struct {
 func (m *MulticastEntryGetRequest) Reset()                    { *m = MulticastEntryGetRequest{} }
 func (m *MulticastEntryGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryGetRequest) ProtoMessage()               {}
-func (*MulticastEntryGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{15} }
+func (*MulticastEntryGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{15} }
 
 func (m *MulticastEntryGetRequest) GetKeyOrHandle() *MulticastEntryKeyHandle {
 	if m != nil {
@@ -561,7 +561,7 @@ type MulticastEntryGetRequestMsg struct {
 func (m *MulticastEntryGetRequestMsg) Reset()                    { *m = MulticastEntryGetRequestMsg{} }
 func (m *MulticastEntryGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryGetRequestMsg) ProtoMessage()               {}
-func (*MulticastEntryGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{16} }
+func (*MulticastEntryGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{16} }
 
 func (m *MulticastEntryGetRequestMsg) GetRequest() []*MulticastEntryGetRequest {
 	if m != nil {
@@ -578,7 +578,7 @@ type MulticastEntryStats struct {
 func (m *MulticastEntryStats) Reset()                    { *m = MulticastEntryStats{} }
 func (m *MulticastEntryStats) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryStats) ProtoMessage()               {}
-func (*MulticastEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{17} }
+func (*MulticastEntryStats) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{17} }
 
 func (m *MulticastEntryStats) GetNumOifs() uint32 {
 	if m != nil {
@@ -597,7 +597,7 @@ type MulticastEntryGetResponse struct {
 func (m *MulticastEntryGetResponse) Reset()                    { *m = MulticastEntryGetResponse{} }
 func (m *MulticastEntryGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryGetResponse) ProtoMessage()               {}
-func (*MulticastEntryGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{18} }
+func (*MulticastEntryGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{18} }
 
 func (m *MulticastEntryGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -634,7 +634,7 @@ type MulticastEntryGetResponseMsg struct {
 func (m *MulticastEntryGetResponseMsg) Reset()                    { *m = MulticastEntryGetResponseMsg{} }
 func (m *MulticastEntryGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MulticastEntryGetResponseMsg) ProtoMessage()               {}
-func (*MulticastEntryGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor17, []int{19} }
+func (*MulticastEntryGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{19} }
 
 func (m *MulticastEntryGetResponseMsg) GetResponse() []*MulticastEntryGetResponse {
 	if m != nil {
@@ -666,9 +666,9 @@ func init() {
 	proto.RegisterType((*MulticastEntryGetResponseMsg)(nil), "halproto.MulticastEntryGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("multicast.proto", fileDescriptor17) }
+func init() { proto.RegisterFile("multicast.proto", fileDescriptor16) }
 
-var fileDescriptor17 = []byte{
+var fileDescriptor16 = []byte{
 	// 978 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xdd, 0x6e, 0x1b, 0x45,
 	0x14, 0xae, 0x7f, 0xea, 0x9f, 0xe3, 0xc4, 0x69, 0x06, 0x1a, 0x9c, 0x04, 0xea, 0xb0, 0x2d, 0x6d,

@@ -39,7 +39,7 @@ var SessionAffinity_value = map[string]int32{
 func (x SessionAffinity) String() string {
 	return proto.EnumName(SessionAffinity_name, int32(x))
 }
-func (SessionAffinity) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{0} }
+func (SessionAffinity) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{0} }
 
 // supported LB algorithms
 type LBAlgorithm int32
@@ -79,7 +79,7 @@ var LBAlgorithm_value = map[string]int32{
 func (x LBAlgorithm) String() string {
 	return proto.EnumName(LBAlgorithm_name, int32(x))
 }
-func (LBAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{1} }
+func (LBAlgorithm) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{1} }
 
 // protocol types (i.e., traffic types) that can be load balanced based
 type L4LBProtocol int32
@@ -104,7 +104,7 @@ var L4LBProtocol_value = map[string]int32{
 func (x L4LBProtocol) String() string {
 	return proto.EnumName(L4LBProtocol_name, int32(x))
 }
-func (L4LBProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{2} }
+func (L4LBProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{2} }
 
 // IP protocol type supported for LB probes
 type L4LBProbeProtocol int32
@@ -132,7 +132,7 @@ var L4LBProbeProtocol_value = map[string]int32{
 func (x L4LBProbeProtocol) String() string {
 	return proto.EnumName(L4LBProbeProtocol_name, int32(x))
 }
-func (L4LBProbeProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{3} }
+func (L4LBProbeProtocol) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{3} }
 
 // L4LbStatus status reflects the current status of either whole service
 // or each backend service instance at any given time
@@ -158,7 +158,7 @@ var L4LbStatus_value = map[string]int32{
 func (x L4LbStatus) String() string {
 	return proto.EnumName(L4LbStatus_name, int32(x))
 }
-func (L4LbStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor16, []int{4} }
+func (L4LbStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor15, []int{4} }
 
 // LB algorithm and any parameters needed by these algorithms
 type LBMethod struct {
@@ -168,7 +168,7 @@ type LBMethod struct {
 func (m *LBMethod) Reset()                    { *m = LBMethod{} }
 func (m *LBMethod) String() string            { return proto.CompactTextString(m) }
 func (*LBMethod) ProtoMessage()               {}
-func (*LBMethod) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{0} }
+func (*LBMethod) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{0} }
 
 func (m *LBMethod) GetAlgorithm() LBAlgorithm {
 	if m != nil {
@@ -188,7 +188,7 @@ type HealthCheck struct {
 func (m *HealthCheck) Reset()                    { *m = HealthCheck{} }
 func (m *HealthCheck) String() string            { return proto.CompactTextString(m) }
 func (*HealthCheck) ProtoMessage()               {}
-func (*HealthCheck) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{1} }
+func (*HealthCheck) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{1} }
 
 func (m *HealthCheck) GetProbePort() uint32 {
 	if m != nil {
@@ -228,7 +228,7 @@ type L4LbServiceKey struct {
 func (m *L4LbServiceKey) Reset()                    { *m = L4LbServiceKey{} }
 func (m *L4LbServiceKey) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceKey) ProtoMessage()               {}
-func (*L4LbServiceKey) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{2} }
+func (*L4LbServiceKey) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{2} }
 
 func (m *L4LbServiceKey) GetServiceIpAddress() *IPAddress {
 	if m != nil {
@@ -262,7 +262,7 @@ type L4LbServiceKeyHandle struct {
 func (m *L4LbServiceKeyHandle) Reset()                    { *m = L4LbServiceKeyHandle{} }
 func (m *L4LbServiceKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceKeyHandle) ProtoMessage()               {}
-func (*L4LbServiceKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{3} }
+func (*L4LbServiceKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{3} }
 
 type isL4LbServiceKeyHandle_KeyOrHandle interface{ isL4LbServiceKeyHandle_KeyOrHandle() }
 
@@ -381,7 +381,7 @@ type L4LbServiceSpec struct {
 func (m *L4LbServiceSpec) Reset()                    { *m = L4LbServiceSpec{} }
 func (m *L4LbServiceSpec) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceSpec) ProtoMessage()               {}
-func (*L4LbServiceSpec) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{4} }
+func (*L4LbServiceSpec) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{4} }
 
 func (m *L4LbServiceSpec) GetKeyOrHandle() *L4LbServiceKeyHandle {
 	if m != nil {
@@ -441,7 +441,7 @@ type L4LbServiceRequestMsg struct {
 func (m *L4LbServiceRequestMsg) Reset()                    { *m = L4LbServiceRequestMsg{} }
 func (m *L4LbServiceRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceRequestMsg) ProtoMessage()               {}
-func (*L4LbServiceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{5} }
+func (*L4LbServiceRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{5} }
 
 func (m *L4LbServiceRequestMsg) GetRequest() []*L4LbServiceSpec {
 	if m != nil {
@@ -459,7 +459,7 @@ type L4LbServiceStatus struct {
 func (m *L4LbServiceStatus) Reset()                    { *m = L4LbServiceStatus{} }
 func (m *L4LbServiceStatus) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceStatus) ProtoMessage()               {}
-func (*L4LbServiceStatus) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{6} }
+func (*L4LbServiceStatus) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{6} }
 
 func (m *L4LbServiceStatus) GetServiceStatus() L4LbStatus {
 	if m != nil {
@@ -484,7 +484,7 @@ type L4LbServiceResponse struct {
 func (m *L4LbServiceResponse) Reset()                    { *m = L4LbServiceResponse{} }
 func (m *L4LbServiceResponse) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceResponse) ProtoMessage()               {}
-func (*L4LbServiceResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{7} }
+func (*L4LbServiceResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{7} }
 
 func (m *L4LbServiceResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -508,7 +508,7 @@ type L4LbServiceResponseMsg struct {
 func (m *L4LbServiceResponseMsg) Reset()                    { *m = L4LbServiceResponseMsg{} }
 func (m *L4LbServiceResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceResponseMsg) ProtoMessage()               {}
-func (*L4LbServiceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{8} }
+func (*L4LbServiceResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{8} }
 
 func (m *L4LbServiceResponseMsg) GetResponse() []*L4LbServiceResponse {
 	if m != nil {
@@ -528,7 +528,7 @@ type L4LbServiceDeleteRequest struct {
 func (m *L4LbServiceDeleteRequest) Reset()                    { *m = L4LbServiceDeleteRequest{} }
 func (m *L4LbServiceDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceDeleteRequest) ProtoMessage()               {}
-func (*L4LbServiceDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{9} }
+func (*L4LbServiceDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{9} }
 
 func (m *L4LbServiceDeleteRequest) GetKeyOrHandle() *L4LbServiceKeyHandle {
 	if m != nil {
@@ -545,7 +545,7 @@ type L4LbServiceDeleteRequestMsg struct {
 func (m *L4LbServiceDeleteRequestMsg) Reset()                    { *m = L4LbServiceDeleteRequestMsg{} }
 func (m *L4LbServiceDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceDeleteRequestMsg) ProtoMessage()               {}
-func (*L4LbServiceDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{10} }
+func (*L4LbServiceDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{10} }
 
 func (m *L4LbServiceDeleteRequestMsg) GetRequest() []*L4LbServiceDeleteRequest {
 	if m != nil {
@@ -561,7 +561,7 @@ type L4LbServiceDeleteResponse struct {
 func (m *L4LbServiceDeleteResponse) Reset()                    { *m = L4LbServiceDeleteResponse{} }
 func (m *L4LbServiceDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceDeleteResponse) ProtoMessage()               {}
-func (*L4LbServiceDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{11} }
+func (*L4LbServiceDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{11} }
 
 func (m *L4LbServiceDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -578,7 +578,7 @@ type L4LbServiceDeleteResponseMsg struct {
 func (m *L4LbServiceDeleteResponseMsg) Reset()                    { *m = L4LbServiceDeleteResponseMsg{} }
 func (m *L4LbServiceDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceDeleteResponseMsg) ProtoMessage()               {}
-func (*L4LbServiceDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{12} }
+func (*L4LbServiceDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{12} }
 
 func (m *L4LbServiceDeleteResponseMsg) GetResponse() []*L4LbServiceDeleteResponse {
 	if m != nil {
@@ -599,7 +599,7 @@ type L4LbServiceStats struct {
 func (m *L4LbServiceStats) Reset()                    { *m = L4LbServiceStats{} }
 func (m *L4LbServiceStats) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceStats) ProtoMessage()               {}
-func (*L4LbServiceStats) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{13} }
+func (*L4LbServiceStats) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{13} }
 
 func (m *L4LbServiceStats) GetNumActiveBackends() uint32 {
 	if m != nil {
@@ -645,7 +645,7 @@ type L4LbBackendKey struct {
 func (m *L4LbBackendKey) Reset()                    { *m = L4LbBackendKey{} }
 func (m *L4LbBackendKey) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendKey) ProtoMessage()               {}
-func (*L4LbBackendKey) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{14} }
+func (*L4LbBackendKey) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{14} }
 
 func (m *L4LbBackendKey) GetBackendIpAddress() *IPAddress {
 	if m != nil {
@@ -672,7 +672,7 @@ type L4LbBackendKeyHandle struct {
 func (m *L4LbBackendKeyHandle) Reset()                    { *m = L4LbBackendKeyHandle{} }
 func (m *L4LbBackendKeyHandle) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendKeyHandle) ProtoMessage()               {}
-func (*L4LbBackendKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{15} }
+func (*L4LbBackendKeyHandle) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{15} }
 
 type isL4LbBackendKeyHandle_KeyOrHandle interface{ isL4LbBackendKeyHandle_KeyOrHandle() }
 
@@ -786,7 +786,7 @@ type L4LbBackendSpec struct {
 func (m *L4LbBackendSpec) Reset()                    { *m = L4LbBackendSpec{} }
 func (m *L4LbBackendSpec) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendSpec) ProtoMessage()               {}
-func (*L4LbBackendSpec) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{16} }
+func (*L4LbBackendSpec) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{16} }
 
 func (m *L4LbBackendSpec) GetBackendKeyOrHandle() *L4LbBackendKeyHandle {
 	if m != nil {
@@ -810,7 +810,7 @@ type L4LbBackendRequestMsg struct {
 func (m *L4LbBackendRequestMsg) Reset()                    { *m = L4LbBackendRequestMsg{} }
 func (m *L4LbBackendRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendRequestMsg) ProtoMessage()               {}
-func (*L4LbBackendRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{17} }
+func (*L4LbBackendRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{17} }
 
 func (m *L4LbBackendRequestMsg) GetRequest() []*L4LbBackendSpec {
 	if m != nil {
@@ -828,7 +828,7 @@ type L4LbBackendStatus struct {
 func (m *L4LbBackendStatus) Reset()                    { *m = L4LbBackendStatus{} }
 func (m *L4LbBackendStatus) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendStatus) ProtoMessage()               {}
-func (*L4LbBackendStatus) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{18} }
+func (*L4LbBackendStatus) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{18} }
 
 func (m *L4LbBackendStatus) GetStatus() L4LbStatus {
 	if m != nil {
@@ -853,7 +853,7 @@ type L4LbBackendResponse struct {
 func (m *L4LbBackendResponse) Reset()                    { *m = L4LbBackendResponse{} }
 func (m *L4LbBackendResponse) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendResponse) ProtoMessage()               {}
-func (*L4LbBackendResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{19} }
+func (*L4LbBackendResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{19} }
 
 func (m *L4LbBackendResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -877,7 +877,7 @@ type L4LbBackendResponseMsg struct {
 func (m *L4LbBackendResponseMsg) Reset()                    { *m = L4LbBackendResponseMsg{} }
 func (m *L4LbBackendResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendResponseMsg) ProtoMessage()               {}
-func (*L4LbBackendResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{20} }
+func (*L4LbBackendResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{20} }
 
 func (m *L4LbBackendResponseMsg) GetResponse() []*L4LbBackendResponse {
 	if m != nil {
@@ -895,7 +895,7 @@ type L4LbBackendDeleteRequest struct {
 func (m *L4LbBackendDeleteRequest) Reset()                    { *m = L4LbBackendDeleteRequest{} }
 func (m *L4LbBackendDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendDeleteRequest) ProtoMessage()               {}
-func (*L4LbBackendDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{21} }
+func (*L4LbBackendDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{21} }
 
 func (m *L4LbBackendDeleteRequest) GetKeyOrHandle() *L4LbBackendKeyHandle {
 	if m != nil {
@@ -912,7 +912,7 @@ type L4LbBackendDeleteRequestMsg struct {
 func (m *L4LbBackendDeleteRequestMsg) Reset()                    { *m = L4LbBackendDeleteRequestMsg{} }
 func (m *L4LbBackendDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendDeleteRequestMsg) ProtoMessage()               {}
-func (*L4LbBackendDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{22} }
+func (*L4LbBackendDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{22} }
 
 func (m *L4LbBackendDeleteRequestMsg) GetRequest() []*L4LbBackendDeleteRequest {
 	if m != nil {
@@ -929,7 +929,7 @@ type L4LbBackendDeleteResponseMsg struct {
 func (m *L4LbBackendDeleteResponseMsg) Reset()                    { *m = L4LbBackendDeleteResponseMsg{} }
 func (m *L4LbBackendDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendDeleteResponseMsg) ProtoMessage()               {}
-func (*L4LbBackendDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{23} }
+func (*L4LbBackendDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{23} }
 
 func (m *L4LbBackendDeleteResponseMsg) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -949,7 +949,7 @@ type L4LbBackendStats struct {
 func (m *L4LbBackendStats) Reset()                    { *m = L4LbBackendStats{} }
 func (m *L4LbBackendStats) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendStats) ProtoMessage()               {}
-func (*L4LbBackendStats) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{24} }
+func (*L4LbBackendStats) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{24} }
 
 func (m *L4LbBackendStats) GetNumActiveSessions() uint32 {
 	if m != nil {
@@ -988,7 +988,7 @@ type L4LbBackendGetRequest struct {
 func (m *L4LbBackendGetRequest) Reset()                    { *m = L4LbBackendGetRequest{} }
 func (m *L4LbBackendGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendGetRequest) ProtoMessage()               {}
-func (*L4LbBackendGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{25} }
+func (*L4LbBackendGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{25} }
 
 func (m *L4LbBackendGetRequest) GetKeyOrHandle() *L4LbBackendKeyHandle {
 	if m != nil {
@@ -1005,7 +1005,7 @@ type L4LbBackendGetRequestMsg struct {
 func (m *L4LbBackendGetRequestMsg) Reset()                    { *m = L4LbBackendGetRequestMsg{} }
 func (m *L4LbBackendGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendGetRequestMsg) ProtoMessage()               {}
-func (*L4LbBackendGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{26} }
+func (*L4LbBackendGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{26} }
 
 func (m *L4LbBackendGetRequestMsg) GetRequest() []*L4LbBackendGetRequest {
 	if m != nil {
@@ -1024,7 +1024,7 @@ type L4LbBackendGetResponse struct {
 func (m *L4LbBackendGetResponse) Reset()                    { *m = L4LbBackendGetResponse{} }
 func (m *L4LbBackendGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendGetResponse) ProtoMessage()               {}
-func (*L4LbBackendGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{27} }
+func (*L4LbBackendGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{27} }
 
 func (m *L4LbBackendGetResponse) GetSpec() *L4LbBackendSpec {
 	if m != nil {
@@ -1055,7 +1055,7 @@ type L4LbBackendGetResponseMsg struct {
 func (m *L4LbBackendGetResponseMsg) Reset()                    { *m = L4LbBackendGetResponseMsg{} }
 func (m *L4LbBackendGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbBackendGetResponseMsg) ProtoMessage()               {}
-func (*L4LbBackendGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{28} }
+func (*L4LbBackendGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{28} }
 
 func (m *L4LbBackendGetResponseMsg) GetResponse() []*L4LbBackendGetResponse {
 	if m != nil {
@@ -1073,7 +1073,7 @@ type L4LbServiceGetRequest struct {
 func (m *L4LbServiceGetRequest) Reset()                    { *m = L4LbServiceGetRequest{} }
 func (m *L4LbServiceGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceGetRequest) ProtoMessage()               {}
-func (*L4LbServiceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{29} }
+func (*L4LbServiceGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{29} }
 
 func (m *L4LbServiceGetRequest) GetKeyOrHandle() *L4LbServiceKeyHandle {
 	if m != nil {
@@ -1090,7 +1090,7 @@ type L4LbServiceGetRequestMsg struct {
 func (m *L4LbServiceGetRequestMsg) Reset()                    { *m = L4LbServiceGetRequestMsg{} }
 func (m *L4LbServiceGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceGetRequestMsg) ProtoMessage()               {}
-func (*L4LbServiceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{30} }
+func (*L4LbServiceGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{30} }
 
 func (m *L4LbServiceGetRequestMsg) GetRequest() []*L4LbServiceGetRequest {
 	if m != nil {
@@ -1110,7 +1110,7 @@ type L4LbServiceGetResponse struct {
 func (m *L4LbServiceGetResponse) Reset()                    { *m = L4LbServiceGetResponse{} }
 func (m *L4LbServiceGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceGetResponse) ProtoMessage()               {}
-func (*L4LbServiceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{31} }
+func (*L4LbServiceGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{31} }
 
 func (m *L4LbServiceGetResponse) GetSpec() *L4LbServiceSpec {
 	if m != nil {
@@ -1148,7 +1148,7 @@ type L4LbServiceGetResponseMsg struct {
 func (m *L4LbServiceGetResponseMsg) Reset()                    { *m = L4LbServiceGetResponseMsg{} }
 func (m *L4LbServiceGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*L4LbServiceGetResponseMsg) ProtoMessage()               {}
-func (*L4LbServiceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor16, []int{32} }
+func (*L4LbServiceGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor15, []int{32} }
 
 func (m *L4LbServiceGetResponseMsg) GetResponse() []*L4LbServiceGetResponse {
 	if m != nil {
@@ -1198,9 +1198,9 @@ func init() {
 	proto.RegisterEnum("halproto.L4LbStatus", L4LbStatus_name, L4LbStatus_value)
 }
 
-func init() { proto.RegisterFile("l4lb.proto", fileDescriptor16) }
+func init() { proto.RegisterFile("l4lb.proto", fileDescriptor15) }
 
-var fileDescriptor16 = []byte{
+var fileDescriptor15 = []byte{
 	// 1595 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xdb, 0x52, 0xdb, 0x56,
 	0x17, 0xc6, 0x86, 0x00, 0x59, 0x06, 0x23, 0x76, 0x42, 0x30, 0xe4, 0x40, 0xa2, 0xfc, 0x99, 0xf0,

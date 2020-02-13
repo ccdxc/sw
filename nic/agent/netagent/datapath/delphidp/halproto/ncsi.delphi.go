@@ -24,7 +24,7 @@ type VlanFilterRequest struct {
 func (m *VlanFilterRequest) Reset()                    { *m = VlanFilterRequest{} }
 func (m *VlanFilterRequest) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterRequest) ProtoMessage()               {}
-func (*VlanFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{0} }
+func (*VlanFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{0} }
 
 func (m *VlanFilterRequest) GetId() uint32 {
 	if m != nil {
@@ -54,7 +54,7 @@ type VlanFilterRequestMsg struct {
 func (m *VlanFilterRequestMsg) Reset()                    { *m = VlanFilterRequestMsg{} }
 func (m *VlanFilterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterRequestMsg) ProtoMessage()               {}
-func (*VlanFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{1} }
+func (*VlanFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{1} }
 
 func (m *VlanFilterRequestMsg) GetRequest() []*VlanFilterRequest {
 	if m != nil {
@@ -69,7 +69,7 @@ type VlanFilterStatus struct {
 func (m *VlanFilterStatus) Reset()                    { *m = VlanFilterStatus{} }
 func (m *VlanFilterStatus) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterStatus) ProtoMessage()               {}
-func (*VlanFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{2} }
+func (*VlanFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{2} }
 
 type VlanFilterResponse struct {
 	ApiStatus ApiStatus         `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -79,7 +79,7 @@ type VlanFilterResponse struct {
 func (m *VlanFilterResponse) Reset()                    { *m = VlanFilterResponse{} }
 func (m *VlanFilterResponse) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterResponse) ProtoMessage()               {}
-func (*VlanFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{3} }
+func (*VlanFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{3} }
 
 func (m *VlanFilterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -102,7 +102,7 @@ type VlanFilterResponseMsg struct {
 func (m *VlanFilterResponseMsg) Reset()                    { *m = VlanFilterResponseMsg{} }
 func (m *VlanFilterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterResponseMsg) ProtoMessage()               {}
-func (*VlanFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{4} }
+func (*VlanFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{4} }
 
 func (m *VlanFilterResponseMsg) GetResponse() []*VlanFilterResponse {
 	if m != nil {
@@ -119,7 +119,7 @@ type VlanFilterGetRequest struct {
 func (m *VlanFilterGetRequest) Reset()                    { *m = VlanFilterGetRequest{} }
 func (m *VlanFilterGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterGetRequest) ProtoMessage()               {}
-func (*VlanFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{5} }
+func (*VlanFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{5} }
 
 func (m *VlanFilterGetRequest) GetVlanId() uint32 {
 	if m != nil {
@@ -142,7 +142,7 @@ type VlanFilterGetRequestMsg struct {
 func (m *VlanFilterGetRequestMsg) Reset()                    { *m = VlanFilterGetRequestMsg{} }
 func (m *VlanFilterGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterGetRequestMsg) ProtoMessage()               {}
-func (*VlanFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{6} }
+func (*VlanFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{6} }
 
 func (m *VlanFilterGetRequestMsg) GetRequest() []*VlanFilterGetRequest {
 	if m != nil {
@@ -159,7 +159,7 @@ type VlanFilterGetResponse struct {
 func (m *VlanFilterGetResponse) Reset()                    { *m = VlanFilterGetResponse{} }
 func (m *VlanFilterGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterGetResponse) ProtoMessage()               {}
-func (*VlanFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{7} }
+func (*VlanFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{7} }
 
 func (m *VlanFilterGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -182,7 +182,7 @@ type VlanFilterGetResponseMsg struct {
 func (m *VlanFilterGetResponseMsg) Reset()                    { *m = VlanFilterGetResponseMsg{} }
 func (m *VlanFilterGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanFilterGetResponseMsg) ProtoMessage()               {}
-func (*VlanFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{8} }
+func (*VlanFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{8} }
 
 func (m *VlanFilterGetResponseMsg) GetResponse() []*VlanFilterGetResponse {
 	if m != nil {
@@ -201,7 +201,7 @@ type MacFilterRequest struct {
 func (m *MacFilterRequest) Reset()                    { *m = MacFilterRequest{} }
 func (m *MacFilterRequest) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterRequest) ProtoMessage()               {}
-func (*MacFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{9} }
+func (*MacFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{9} }
 
 func (m *MacFilterRequest) GetId() uint32 {
 	if m != nil {
@@ -231,7 +231,7 @@ type MacFilterRequestMsg struct {
 func (m *MacFilterRequestMsg) Reset()                    { *m = MacFilterRequestMsg{} }
 func (m *MacFilterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterRequestMsg) ProtoMessage()               {}
-func (*MacFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{10} }
+func (*MacFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{10} }
 
 func (m *MacFilterRequestMsg) GetRequest() []*MacFilterRequest {
 	if m != nil {
@@ -246,7 +246,7 @@ type MacFilterStatus struct {
 func (m *MacFilterStatus) Reset()                    { *m = MacFilterStatus{} }
 func (m *MacFilterStatus) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterStatus) ProtoMessage()               {}
-func (*MacFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{11} }
+func (*MacFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{11} }
 
 type MacFilterResponse struct {
 	ApiStatus ApiStatus        `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -256,7 +256,7 @@ type MacFilterResponse struct {
 func (m *MacFilterResponse) Reset()                    { *m = MacFilterResponse{} }
 func (m *MacFilterResponse) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterResponse) ProtoMessage()               {}
-func (*MacFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{12} }
+func (*MacFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{12} }
 
 func (m *MacFilterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -279,7 +279,7 @@ type MacFilterResponseMsg struct {
 func (m *MacFilterResponseMsg) Reset()                    { *m = MacFilterResponseMsg{} }
 func (m *MacFilterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterResponseMsg) ProtoMessage()               {}
-func (*MacFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{13} }
+func (*MacFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{13} }
 
 func (m *MacFilterResponseMsg) GetResponse() []*MacFilterResponse {
 	if m != nil {
@@ -296,7 +296,7 @@ type MacFilterGetRequest struct {
 func (m *MacFilterGetRequest) Reset()                    { *m = MacFilterGetRequest{} }
 func (m *MacFilterGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterGetRequest) ProtoMessage()               {}
-func (*MacFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{14} }
+func (*MacFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{14} }
 
 func (m *MacFilterGetRequest) GetMacAddr() uint64 {
 	if m != nil {
@@ -319,7 +319,7 @@ type MacFilterGetRequestMsg struct {
 func (m *MacFilterGetRequestMsg) Reset()                    { *m = MacFilterGetRequestMsg{} }
 func (m *MacFilterGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterGetRequestMsg) ProtoMessage()               {}
-func (*MacFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{15} }
+func (*MacFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{15} }
 
 func (m *MacFilterGetRequestMsg) GetRequest() []*MacFilterGetRequest {
 	if m != nil {
@@ -336,7 +336,7 @@ type MacFilterGetResponse struct {
 func (m *MacFilterGetResponse) Reset()                    { *m = MacFilterGetResponse{} }
 func (m *MacFilterGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterGetResponse) ProtoMessage()               {}
-func (*MacFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{16} }
+func (*MacFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{16} }
 
 func (m *MacFilterGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -359,7 +359,7 @@ type MacFilterGetResponseMsg struct {
 func (m *MacFilterGetResponseMsg) Reset()                    { *m = MacFilterGetResponseMsg{} }
 func (m *MacFilterGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MacFilterGetResponseMsg) ProtoMessage()               {}
-func (*MacFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{17} }
+func (*MacFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{17} }
 
 func (m *MacFilterGetResponseMsg) GetResponse() []*MacFilterGetResponse {
 	if m != nil {
@@ -381,7 +381,7 @@ type BcastFilterRequest struct {
 func (m *BcastFilterRequest) Reset()                    { *m = BcastFilterRequest{} }
 func (m *BcastFilterRequest) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterRequest) ProtoMessage()               {}
-func (*BcastFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{18} }
+func (*BcastFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{18} }
 
 func (m *BcastFilterRequest) GetId() uint32 {
 	if m != nil {
@@ -432,7 +432,7 @@ type BcastFilterRequestMsg struct {
 func (m *BcastFilterRequestMsg) Reset()                    { *m = BcastFilterRequestMsg{} }
 func (m *BcastFilterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterRequestMsg) ProtoMessage()               {}
-func (*BcastFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{19} }
+func (*BcastFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{19} }
 
 func (m *BcastFilterRequestMsg) GetRequest() []*BcastFilterRequest {
 	if m != nil {
@@ -447,7 +447,7 @@ type BcastFilterDeleteRequest struct {
 func (m *BcastFilterDeleteRequest) Reset()                    { *m = BcastFilterDeleteRequest{} }
 func (m *BcastFilterDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterDeleteRequest) ProtoMessage()               {}
-func (*BcastFilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{20} }
+func (*BcastFilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{20} }
 
 type BcastFilterDeleteRequestMsg struct {
 	Request []*BcastFilterDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -456,7 +456,7 @@ type BcastFilterDeleteRequestMsg struct {
 func (m *BcastFilterDeleteRequestMsg) Reset()                    { *m = BcastFilterDeleteRequestMsg{} }
 func (m *BcastFilterDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterDeleteRequestMsg) ProtoMessage()               {}
-func (*BcastFilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{21} }
+func (*BcastFilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{21} }
 
 func (m *BcastFilterDeleteRequestMsg) GetRequest() []*BcastFilterDeleteRequest {
 	if m != nil {
@@ -471,7 +471,7 @@ type BcastFilterStatus struct {
 func (m *BcastFilterStatus) Reset()                    { *m = BcastFilterStatus{} }
 func (m *BcastFilterStatus) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterStatus) ProtoMessage()               {}
-func (*BcastFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{22} }
+func (*BcastFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{22} }
 
 type BcastFilterResponse struct {
 	ApiStatus ApiStatus          `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -481,7 +481,7 @@ type BcastFilterResponse struct {
 func (m *BcastFilterResponse) Reset()                    { *m = BcastFilterResponse{} }
 func (m *BcastFilterResponse) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterResponse) ProtoMessage()               {}
-func (*BcastFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{23} }
+func (*BcastFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{23} }
 
 func (m *BcastFilterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -504,7 +504,7 @@ type BcastFilterResponseMsg struct {
 func (m *BcastFilterResponseMsg) Reset()                    { *m = BcastFilterResponseMsg{} }
 func (m *BcastFilterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterResponseMsg) ProtoMessage()               {}
-func (*BcastFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{24} }
+func (*BcastFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{24} }
 
 func (m *BcastFilterResponseMsg) GetResponse() []*BcastFilterResponse {
 	if m != nil {
@@ -520,7 +520,7 @@ type BcastFilterDeleteResponse struct {
 func (m *BcastFilterDeleteResponse) Reset()                    { *m = BcastFilterDeleteResponse{} }
 func (m *BcastFilterDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterDeleteResponse) ProtoMessage()               {}
-func (*BcastFilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{25} }
+func (*BcastFilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{25} }
 
 func (m *BcastFilterDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -536,7 +536,7 @@ type BcastFilterDeleteResponseMsg struct {
 func (m *BcastFilterDeleteResponseMsg) Reset()                    { *m = BcastFilterDeleteResponseMsg{} }
 func (m *BcastFilterDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterDeleteResponseMsg) ProtoMessage()               {}
-func (*BcastFilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{26} }
+func (*BcastFilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{26} }
 
 func (m *BcastFilterDeleteResponseMsg) GetResponse() []*BcastFilterDeleteResponse {
 	if m != nil {
@@ -552,7 +552,7 @@ type BcastFilterGetRequest struct {
 func (m *BcastFilterGetRequest) Reset()                    { *m = BcastFilterGetRequest{} }
 func (m *BcastFilterGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterGetRequest) ProtoMessage()               {}
-func (*BcastFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{27} }
+func (*BcastFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{27} }
 
 func (m *BcastFilterGetRequest) GetChannel() uint32 {
 	if m != nil {
@@ -568,7 +568,7 @@ type BcastFilterGetRequestMsg struct {
 func (m *BcastFilterGetRequestMsg) Reset()                    { *m = BcastFilterGetRequestMsg{} }
 func (m *BcastFilterGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterGetRequestMsg) ProtoMessage()               {}
-func (*BcastFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{28} }
+func (*BcastFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{28} }
 
 func (m *BcastFilterGetRequestMsg) GetRequest() []*BcastFilterGetRequest {
 	if m != nil {
@@ -585,7 +585,7 @@ type BcastFilterGetResponse struct {
 func (m *BcastFilterGetResponse) Reset()                    { *m = BcastFilterGetResponse{} }
 func (m *BcastFilterGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterGetResponse) ProtoMessage()               {}
-func (*BcastFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{29} }
+func (*BcastFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{29} }
 
 func (m *BcastFilterGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -608,7 +608,7 @@ type BcastFilterGetResponseMsg struct {
 func (m *BcastFilterGetResponseMsg) Reset()                    { *m = BcastFilterGetResponseMsg{} }
 func (m *BcastFilterGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*BcastFilterGetResponseMsg) ProtoMessage()               {}
-func (*BcastFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{30} }
+func (*BcastFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{30} }
 
 func (m *BcastFilterGetResponseMsg) GetResponse() []*BcastFilterGetResponse {
 	if m != nil {
@@ -632,7 +632,7 @@ type McastFilterRequest struct {
 func (m *McastFilterRequest) Reset()                    { *m = McastFilterRequest{} }
 func (m *McastFilterRequest) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterRequest) ProtoMessage()               {}
-func (*McastFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{31} }
+func (*McastFilterRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{31} }
 
 func (m *McastFilterRequest) GetId() uint32 {
 	if m != nil {
@@ -697,7 +697,7 @@ type McastFilterRequestMsg struct {
 func (m *McastFilterRequestMsg) Reset()                    { *m = McastFilterRequestMsg{} }
 func (m *McastFilterRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterRequestMsg) ProtoMessage()               {}
-func (*McastFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{32} }
+func (*McastFilterRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{32} }
 
 func (m *McastFilterRequestMsg) GetRequest() []*McastFilterRequest {
 	if m != nil {
@@ -712,7 +712,7 @@ type McastFilterStatus struct {
 func (m *McastFilterStatus) Reset()                    { *m = McastFilterStatus{} }
 func (m *McastFilterStatus) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterStatus) ProtoMessage()               {}
-func (*McastFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{33} }
+func (*McastFilterStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{33} }
 
 type McastFilterResponse struct {
 	ApiStatus ApiStatus          `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -722,7 +722,7 @@ type McastFilterResponse struct {
 func (m *McastFilterResponse) Reset()                    { *m = McastFilterResponse{} }
 func (m *McastFilterResponse) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterResponse) ProtoMessage()               {}
-func (*McastFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{34} }
+func (*McastFilterResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{34} }
 
 func (m *McastFilterResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -745,7 +745,7 @@ type McastFilterResponseMsg struct {
 func (m *McastFilterResponseMsg) Reset()                    { *m = McastFilterResponseMsg{} }
 func (m *McastFilterResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterResponseMsg) ProtoMessage()               {}
-func (*McastFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{35} }
+func (*McastFilterResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{35} }
 
 func (m *McastFilterResponseMsg) GetResponse() []*McastFilterResponse {
 	if m != nil {
@@ -760,7 +760,7 @@ type McastFilterDeleteRequest struct {
 func (m *McastFilterDeleteRequest) Reset()                    { *m = McastFilterDeleteRequest{} }
 func (m *McastFilterDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterDeleteRequest) ProtoMessage()               {}
-func (*McastFilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{36} }
+func (*McastFilterDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{36} }
 
 type McastFilterDeleteRequestMsg struct {
 	Request []*McastFilterDeleteRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -769,7 +769,7 @@ type McastFilterDeleteRequestMsg struct {
 func (m *McastFilterDeleteRequestMsg) Reset()                    { *m = McastFilterDeleteRequestMsg{} }
 func (m *McastFilterDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterDeleteRequestMsg) ProtoMessage()               {}
-func (*McastFilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{37} }
+func (*McastFilterDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{37} }
 
 func (m *McastFilterDeleteRequestMsg) GetRequest() []*McastFilterDeleteRequest {
 	if m != nil {
@@ -785,7 +785,7 @@ type McastFilterDeleteResponse struct {
 func (m *McastFilterDeleteResponse) Reset()                    { *m = McastFilterDeleteResponse{} }
 func (m *McastFilterDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterDeleteResponse) ProtoMessage()               {}
-func (*McastFilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{38} }
+func (*McastFilterDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{38} }
 
 func (m *McastFilterDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -801,7 +801,7 @@ type McastFilterDeleteResponseMsg struct {
 func (m *McastFilterDeleteResponseMsg) Reset()                    { *m = McastFilterDeleteResponseMsg{} }
 func (m *McastFilterDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterDeleteResponseMsg) ProtoMessage()               {}
-func (*McastFilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{39} }
+func (*McastFilterDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{39} }
 
 func (m *McastFilterDeleteResponseMsg) GetResponse() []*McastFilterDeleteResponse {
 	if m != nil {
@@ -817,7 +817,7 @@ type McastFilterGetRequest struct {
 func (m *McastFilterGetRequest) Reset()                    { *m = McastFilterGetRequest{} }
 func (m *McastFilterGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterGetRequest) ProtoMessage()               {}
-func (*McastFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{40} }
+func (*McastFilterGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{40} }
 
 func (m *McastFilterGetRequest) GetChannel() uint32 {
 	if m != nil {
@@ -833,7 +833,7 @@ type McastFilterGetRequestMsg struct {
 func (m *McastFilterGetRequestMsg) Reset()                    { *m = McastFilterGetRequestMsg{} }
 func (m *McastFilterGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterGetRequestMsg) ProtoMessage()               {}
-func (*McastFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{41} }
+func (*McastFilterGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{41} }
 
 func (m *McastFilterGetRequestMsg) GetRequest() []*McastFilterGetRequest {
 	if m != nil {
@@ -850,7 +850,7 @@ type McastFilterGetResponse struct {
 func (m *McastFilterGetResponse) Reset()                    { *m = McastFilterGetResponse{} }
 func (m *McastFilterGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterGetResponse) ProtoMessage()               {}
-func (*McastFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{42} }
+func (*McastFilterGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{42} }
 
 func (m *McastFilterGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -873,7 +873,7 @@ type McastFilterGetResponseMsg struct {
 func (m *McastFilterGetResponseMsg) Reset()                    { *m = McastFilterGetResponseMsg{} }
 func (m *McastFilterGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*McastFilterGetResponseMsg) ProtoMessage()               {}
-func (*McastFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{43} }
+func (*McastFilterGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{43} }
 
 func (m *McastFilterGetResponseMsg) GetResponse() []*McastFilterGetResponse {
 	if m != nil {
@@ -891,7 +891,7 @@ type VlanModeRequest struct {
 func (m *VlanModeRequest) Reset()                    { *m = VlanModeRequest{} }
 func (m *VlanModeRequest) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeRequest) ProtoMessage()               {}
-func (*VlanModeRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{44} }
+func (*VlanModeRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{44} }
 
 func (m *VlanModeRequest) GetEnable() bool {
 	if m != nil {
@@ -914,7 +914,7 @@ type VlanModeRequestMsg struct {
 func (m *VlanModeRequestMsg) Reset()                    { *m = VlanModeRequestMsg{} }
 func (m *VlanModeRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeRequestMsg) ProtoMessage()               {}
-func (*VlanModeRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{45} }
+func (*VlanModeRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{45} }
 
 func (m *VlanModeRequestMsg) GetRequest() []*VlanModeRequest {
 	if m != nil {
@@ -929,7 +929,7 @@ type VlanModeStatus struct {
 func (m *VlanModeStatus) Reset()                    { *m = VlanModeStatus{} }
 func (m *VlanModeStatus) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeStatus) ProtoMessage()               {}
-func (*VlanModeStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{46} }
+func (*VlanModeStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{46} }
 
 type VlanModeResponse struct {
 	ApiStatus ApiStatus       `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -939,7 +939,7 @@ type VlanModeResponse struct {
 func (m *VlanModeResponse) Reset()                    { *m = VlanModeResponse{} }
 func (m *VlanModeResponse) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeResponse) ProtoMessage()               {}
-func (*VlanModeResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{47} }
+func (*VlanModeResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{47} }
 
 func (m *VlanModeResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -962,7 +962,7 @@ type VlanModeResponseMsg struct {
 func (m *VlanModeResponseMsg) Reset()                    { *m = VlanModeResponseMsg{} }
 func (m *VlanModeResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeResponseMsg) ProtoMessage()               {}
-func (*VlanModeResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{48} }
+func (*VlanModeResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{48} }
 
 func (m *VlanModeResponseMsg) GetResponse() []*VlanModeResponse {
 	if m != nil {
@@ -977,7 +977,7 @@ type VlanModeGetRequest struct {
 func (m *VlanModeGetRequest) Reset()                    { *m = VlanModeGetRequest{} }
 func (m *VlanModeGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeGetRequest) ProtoMessage()               {}
-func (*VlanModeGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{49} }
+func (*VlanModeGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{49} }
 
 type VlanModeGetRequestMsg struct {
 	Request []*VlanModeGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -986,7 +986,7 @@ type VlanModeGetRequestMsg struct {
 func (m *VlanModeGetRequestMsg) Reset()                    { *m = VlanModeGetRequestMsg{} }
 func (m *VlanModeGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeGetRequestMsg) ProtoMessage()               {}
-func (*VlanModeGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{50} }
+func (*VlanModeGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{50} }
 
 func (m *VlanModeGetRequestMsg) GetRequest() []*VlanModeGetRequest {
 	if m != nil {
@@ -1003,7 +1003,7 @@ type VlanModeGetResponse struct {
 func (m *VlanModeGetResponse) Reset()                    { *m = VlanModeGetResponse{} }
 func (m *VlanModeGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeGetResponse) ProtoMessage()               {}
-func (*VlanModeGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{51} }
+func (*VlanModeGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{51} }
 
 func (m *VlanModeGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1026,7 +1026,7 @@ type VlanModeGetResponseMsg struct {
 func (m *VlanModeGetResponseMsg) Reset()                    { *m = VlanModeGetResponseMsg{} }
 func (m *VlanModeGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*VlanModeGetResponseMsg) ProtoMessage()               {}
-func (*VlanModeGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{52} }
+func (*VlanModeGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{52} }
 
 func (m *VlanModeGetResponseMsg) GetResponse() []*VlanModeGetResponse {
 	if m != nil {
@@ -1046,7 +1046,7 @@ type ChannelRequest struct {
 func (m *ChannelRequest) Reset()                    { *m = ChannelRequest{} }
 func (m *ChannelRequest) String() string            { return proto.CompactTextString(m) }
 func (*ChannelRequest) ProtoMessage()               {}
-func (*ChannelRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{53} }
+func (*ChannelRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{53} }
 
 func (m *ChannelRequest) GetTxEnable() bool {
 	if m != nil {
@@ -1083,7 +1083,7 @@ type ChannelRequestMsg struct {
 func (m *ChannelRequestMsg) Reset()                    { *m = ChannelRequestMsg{} }
 func (m *ChannelRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ChannelRequestMsg) ProtoMessage()               {}
-func (*ChannelRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{54} }
+func (*ChannelRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{54} }
 
 func (m *ChannelRequestMsg) GetRequest() []*ChannelRequest {
 	if m != nil {
@@ -1098,7 +1098,7 @@ type ChannelStatus struct {
 func (m *ChannelStatus) Reset()                    { *m = ChannelStatus{} }
 func (m *ChannelStatus) String() string            { return proto.CompactTextString(m) }
 func (*ChannelStatus) ProtoMessage()               {}
-func (*ChannelStatus) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{55} }
+func (*ChannelStatus) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{55} }
 
 type ChannelResponse struct {
 	ApiStatus ApiStatus      `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -1108,7 +1108,7 @@ type ChannelResponse struct {
 func (m *ChannelResponse) Reset()                    { *m = ChannelResponse{} }
 func (m *ChannelResponse) String() string            { return proto.CompactTextString(m) }
 func (*ChannelResponse) ProtoMessage()               {}
-func (*ChannelResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{56} }
+func (*ChannelResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{56} }
 
 func (m *ChannelResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1131,7 +1131,7 @@ type ChannelResponseMsg struct {
 func (m *ChannelResponseMsg) Reset()                    { *m = ChannelResponseMsg{} }
 func (m *ChannelResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ChannelResponseMsg) ProtoMessage()               {}
-func (*ChannelResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{57} }
+func (*ChannelResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{57} }
 
 func (m *ChannelResponseMsg) GetResponse() []*ChannelResponse {
 	if m != nil {
@@ -1147,7 +1147,7 @@ type ChannelGetRequest struct {
 func (m *ChannelGetRequest) Reset()                    { *m = ChannelGetRequest{} }
 func (m *ChannelGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*ChannelGetRequest) ProtoMessage()               {}
-func (*ChannelGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{58} }
+func (*ChannelGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{58} }
 
 func (m *ChannelGetRequest) GetChannel() uint32 {
 	if m != nil {
@@ -1163,7 +1163,7 @@ type ChannelGetRequestMsg struct {
 func (m *ChannelGetRequestMsg) Reset()                    { *m = ChannelGetRequestMsg{} }
 func (m *ChannelGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*ChannelGetRequestMsg) ProtoMessage()               {}
-func (*ChannelGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{59} }
+func (*ChannelGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{59} }
 
 func (m *ChannelGetRequestMsg) GetRequest() []*ChannelGetRequest {
 	if m != nil {
@@ -1180,7 +1180,7 @@ type ChannelGetResponse struct {
 func (m *ChannelGetResponse) Reset()                    { *m = ChannelGetResponse{} }
 func (m *ChannelGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*ChannelGetResponse) ProtoMessage()               {}
-func (*ChannelGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{60} }
+func (*ChannelGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{60} }
 
 func (m *ChannelGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1203,7 +1203,7 @@ type ChannelGetResponseMsg struct {
 func (m *ChannelGetResponseMsg) Reset()                    { *m = ChannelGetResponseMsg{} }
 func (m *ChannelGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*ChannelGetResponseMsg) ProtoMessage()               {}
-func (*ChannelGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor19, []int{61} }
+func (*ChannelGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor18, []int{61} }
 
 func (m *ChannelGetResponseMsg) GetResponse() []*ChannelGetResponse {
 	if m != nil {
@@ -1277,9 +1277,9 @@ func init() {
 	proto.RegisterType((*ChannelGetResponseMsg)(nil), "halproto.ChannelGetResponseMsg")
 }
 
-func init() { proto.RegisterFile("ncsi.proto", fileDescriptor19) }
+func init() { proto.RegisterFile("ncsi.proto", fileDescriptor18) }
 
-var fileDescriptor19 = []byte{
+var fileDescriptor18 = []byte{
 	// 1510 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x59, 0xeb, 0x6e, 0x13, 0x47,
 	0x14, 0x66, 0x43, 0x48, 0x9c, 0x13, 0x72, 0xf1, 0x38, 0xb6, 0xd7, 0x76, 0xb8, 0xd4, 0x52, 0x2b,
