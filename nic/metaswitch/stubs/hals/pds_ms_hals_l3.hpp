@@ -32,6 +32,8 @@ public:
 
     NBB_BYTE nhpi_squash_cascaded_hops() { return ATG_YES;}
 
+    NBB_BYTE nhpi_disable_ecmp_extension() { return ATG_YES;}
+
     NBB_BYTE ropi_update_route(ATG_ROPI_UPDATE_ROUTE *update_route);
     
     NBB_BYTE ropi_delete_route(ATG_ROPI_ROUTE_ID route_id);
