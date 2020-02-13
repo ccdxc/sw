@@ -577,14 +577,12 @@
           "default": "customer",
           "description": "Type of the Vrf. Infra type creates a overlay VRF in the datapath. This is automatically created on bringup. Customer type creates a VRF in the datapath. default and infra vrf under default tenant are automatically created during init time."
         },
-        "v4-route-table-id": {
-          "type": "integer",
-          "format": "int64",
+        "v4-route-table": {
+          "type": "string",
           "description": "V4RouteTableID is the allocated routing table for the VRF."
         },
-        "v6-route-table-id": {
-          "type": "integer",
-          "format": "int64",
+        "v6-route-table": {
+          "type": "string",
           "description": "V6RouteTableID is the allocated routing table for the VRF."
         },
         "router-mac": {

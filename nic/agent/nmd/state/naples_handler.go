@@ -293,9 +293,11 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	statusObj := agentTypes.DistributedServiceCardStatus{
 		DSCMode:     n.config.Status.Mode,
 		DSCName:     n.config.Status.DSCName,
-		MgmtIP:      n.config.Status.IPConfig.IPAddress,
 		MgmtIntf:    mgmtIntf,
 		Controllers: controllers,
+	}
+	if n.config.Status.IPConfig != nil {
+		statusObj.MgmtIP = n.config.Status.IPConfig.IPAddress
 	}
 
 	if len(n.DSCInterfaceIPs) != 0 {

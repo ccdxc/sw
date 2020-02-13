@@ -638,6 +638,19 @@ func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[s
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
+	if m.IPConfig != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "IPConfig"
+			if errs := m.IPConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+
 	if m.Pause != nil {
 		{
 			dlmtr := "."
@@ -671,6 +684,10 @@ func (m *NetworkInterfaceSpec) Normalize() {
 	m.AdminStatus = IFStatus_normal[strings.ToLower(m.AdminStatus)]
 
 	m.IPAllocType = IPAllocTypes_normal[strings.ToLower(m.IPAllocType)]
+
+	if m.IPConfig != nil {
+		m.IPConfig.Normalize()
+	}
 
 	if m.Pause != nil {
 		m.Pause.Normalize()

@@ -111,14 +111,22 @@ func printSubnet(subnet *pds.Subnet) {
 	if len(spec.GetHostIf()) > 0 {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
-	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3d\n",
+	ingSecPol, egSecPol := "", ""
+	if x := spec.GetIngV4SecurityPolicyId(); x != nil {
+		ingSecPol = uuid.FromBytesOrNil(x[0]).String()
+	}
+	if x := spec.GetEgV4SecurityPolicyId(); x != nil {
+		egSecPol = uuid.FromBytesOrNil(x[0]).String()
+	}
+
+	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
-		uuid.FromBytesOrNil(spec.GetIngV4SecurityPolicyId()[0]).String(),
-		uuid.FromBytesOrNil(spec.GetEgV4SecurityPolicyId()[0]).String(),
+		ingSecPol,
+		egSecPol,
 		spec.GetToS())
 }

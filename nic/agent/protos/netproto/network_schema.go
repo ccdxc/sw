@@ -126,17 +126,17 @@ var typesMapNetwork = map[string]*api.Struct{
 
 			"IPAMPolicy": api.Field{Name: "IPAMPolicy", CLITag: api.CLIInfo{ID: "ipam-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipam-policy", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"V4RouteTableID": api.Field{Name: "V4RouteTableID", CLITag: api.CLIInfo{ID: "v4-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v4-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"V4RouteTableID": api.Field{Name: "V4RouteTableID", CLITag: api.CLIInfo{ID: "v4-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v4-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"V6RouteTableID": api.Field{Name: "V6RouteTableID", CLITag: api.CLIInfo{ID: "v6-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v6-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"V6RouteTableID": api.Field{Name: "V6RouteTableID", CLITag: api.CLIInfo{ID: "v6-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v6-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IngV4SecurityPolicyID": api.Field{Name: "IngV4SecurityPolicyID", CLITag: api.CLIInfo{ID: "ing-v4-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ing-v4-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"IngV4SecurityPolicyID": api.Field{Name: "IngV4SecurityPolicyID", CLITag: api.CLIInfo{ID: "ing-v4-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ing-v4-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"EgV4SecurityPolicyID": api.Field{Name: "EgV4SecurityPolicyID", CLITag: api.CLIInfo{ID: "eg-v4-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "eg-v4-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"EgV4SecurityPolicyID": api.Field{Name: "EgV4SecurityPolicyID", CLITag: api.CLIInfo{ID: "eg-v4-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "eg-v4-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"IngV6SecurityPolicyID": api.Field{Name: "IngV6SecurityPolicyID", CLITag: api.CLIInfo{ID: "ing-v6-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ing-v6-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"IngV6SecurityPolicyID": api.Field{Name: "IngV6SecurityPolicyID", CLITag: api.CLIInfo{ID: "ing-v6-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ing-v6-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"EgV6SecurityPolicyID": api.Field{Name: "EgV6SecurityPolicyID", CLITag: api.CLIInfo{ID: "eg-v6-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "eg-v6-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"EgV6SecurityPolicyID": api.Field{Name: "EgV6SecurityPolicyID", CLITag: api.CLIInfo{ID: "eg-v6-sec-pol-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "eg-v6-sec-pol-id", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"RouteImportExport": api.Field{Name: "RouteImportExport", CLITag: api.CLIInfo{ID: "route-import-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-import-export", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RDSpec"},
 		},

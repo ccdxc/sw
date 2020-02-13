@@ -42,7 +42,7 @@ service NetworkV1 {
 
     option (venice.apiRestService) = {
          Object: "NetworkInterface"
-         Method: [ "post", "put", "get", "list", "watch" ]
+         Method: [ "put", "get", "list", "watch" ]
     };
 
     option (venice.apiRestService) = {

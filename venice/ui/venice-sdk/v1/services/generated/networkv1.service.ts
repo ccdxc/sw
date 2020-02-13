@@ -121,25 +121,6 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkNetworkInterfaceList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create NetworkInterface object */
-  public AddNetworkInterface(body: INetworkNetworkInterface, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces';
-    const opts = {
-      eventID: 'AddNetworkInterface',
-      objType: 'NetworkNetworkInterface',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    body = TrimUIFields(body)
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), null, trimDefaults)
-    }
-    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get NetworkInterface object */
   public GetNetworkInterface(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces/{O.Name}';

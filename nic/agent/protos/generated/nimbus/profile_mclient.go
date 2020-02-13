@@ -208,6 +208,7 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 	evt.Profile.ObjectMeta.Labels = make(map[string]string)
 	evt.Profile.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
+	log.Infof("Profile: processProfileEvent | Evt: %+v", evt)
 	// unlock the object once we are done
 	defer client.unlockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
 

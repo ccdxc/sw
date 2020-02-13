@@ -35,16 +35,16 @@ import (
 type API struct {
 	sync.Mutex
 	sync.WaitGroup
-	tsmWG, tpmWG                    sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
-	WatchCtx                        context.Context
-	PipelineAPI                     types.PipelineAPI
-	InfraAPI                        types.InfraAPI
-	ResolverClient                  resolver.Interface
-	RestServer                      *http.Server
-	npmClient, tsmClient, tpmClient *rpckit.RPCClient
-	cancelWatcher                   context.CancelFunc
-	factory                         *rpckit.RPCClientFactory
-	npmURL, tpmURL, tsmURL          string
+	tsmWG, tpmWG                              sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
+	WatchCtx                                  context.Context
+	PipelineAPI                               types.PipelineAPI
+	InfraAPI                                  types.InfraAPI
+	ResolverClient                            resolver.Interface
+	RestServer                                *http.Server
+	npmClient, tsmClient, tpmClient, ifClient *rpckit.RPCClient
+	cancelWatcher                             context.CancelFunc
+	factory                                   *rpckit.RPCClientFactory
+	npmURL, tpmURL, tsmURL                    string
 }
 
 // RestServer implements REST APIs
@@ -203,6 +203,12 @@ func (c *API) Start(ctx context.Context) error {
 			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
 			rpckit.WithRemoteServerName(types.Tpm))
 
+		c.ifClient, _ = c.factory.NewRPCClient(
+			c.InfraAPI.GetDscName(),
+			c.npmURL,
+			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
+			rpckit.WithRemoteServerName(types.Npm))
+
 		if c.npmClient != nil && c.tpmClient != nil && c.tsmClient != nil {
 			log.Infof("Controller API: %s", types.InfoConnectedToNPM)
 			log.Infof("Controller API: %s", types.InfoConnectedToTSM)
@@ -260,16 +266,9 @@ func (c *API) Start(ctx context.Context) error {
 		}()
 
 		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Network", "Endpoint"}, c.PipelineAPI); err != nil {
+			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
-		}()
-
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"SecurityProfile"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-
 		}()
 
 		go func() {
@@ -290,6 +289,10 @@ func (c *API) Start(ctx context.Context) error {
 			}
 
 		}()
+
+		// Start Interface update
+
+		go c.netIfWorker(ctx)
 
 		c.tsmWG.Add(1)
 		tsmWatchCtx, tsmWatchCancel := context.WithCancel(c.WatchCtx)
@@ -554,27 +557,67 @@ func (c *API) runFlowExportPolicyWatcher(ctx context.Context) error {
 	}
 }
 
-// TODO Start netif worker here. Start handling continuous updates and not just once. This may not be needed since interface_mclient is already doing this
-//// createNpmNetIfs creates network-interface object in npm to reflect the interface status to the user
-//func (c *API) netifWorker() {
-//
-//	netIfRPCClient := netproto.NewInterfaceApiClient(c.npmClient.ClientConn)
-//	idPrefix := c.InfraAPI.GetDscName()
-//
-//	// fetch interfaes discovered by hw and populate them in npm
-//	intf := &netproto.Interface{
-//		TypeMeta: api.TypeMeta{Kind: "Interface"},
-//	}
-//	interfaces, _ := c.PipelineAPI.HandleInterface(types.List, intf)
-//	for _, i := range interfaces {
-//		netif := *i
-//		netif.ObjectMeta.Name = idPrefix + "-" + netif.ObjectMeta.Name
-//		if _, err := netIfRPCClient.CreateInterface(context.Background(), &netif); err != nil {
-//			log.Errorf("Error resp from netctrler for netif create {%+v}. Err: %v", netif, err)
-//			continue
-//		}
-//	}
-//}
+func (c *API) netIfWorker(ctx context.Context) {
+	log.Infof("Starting Netif worker")
+	ifClient := netproto.NewInterfaceApiV1Client(c.ifClient.ClientConn)
+	var operUpd netproto.InterfaceApiV1_InterfaceOperUpdateClient
+	var err error
+	nctx, cancel := context.WithCancel(context.Background())
+	getUpdCl := func() netproto.InterfaceApiV1_InterfaceOperUpdateClient {
+		for {
+			if operUpd == nil {
+				operUpd, err = ifClient.InterfaceOperUpdate(context.TODO())
+				if err != nil {
+					log.Errorf("unable to start the Interface oper update stream (%s)", err)
+					operUpd = nil
+				} else {
+					return operUpd
+				}
+				time.Sleep(time.Second)
+			}
+		}
+	}
+
+	for {
+		select {
+		case ev := <-c.InfraAPI.UpdateIfChannel():
+			log.Infof("Got event [%v]", ev)
+			switch ev.Oper {
+			case types.Create:
+				resp, err := ifClient.CreateInterface(nctx, &ev.Intf)
+				if err != nil {
+					log.Errorf("create interface failed (%s)", err)
+				}
+				log.Infof("Created interface [%v]", resp)
+			case types.Update:
+				ifev := netproto.InterfaceEvent{
+					EventType: api.EventType_UpdateEvent,
+					Interface: ev.Intf,
+				}
+				log.Infof("Updating interface state [%s]", ifev)
+				if getUpdCl() != nil {
+					operUpd.Send(&ifev)
+				}
+
+			case types.Delete:
+				ifev := netproto.InterfaceEvent{
+					EventType: api.EventType_DeleteEvent,
+					Interface: ev.Intf,
+				}
+				log.Infof("Deleting interface state [%s]", ifev)
+				if getUpdCl() != nil {
+					operUpd.Send(&ifev)
+				}
+			}
+		case <-ctx.Done():
+			if operUpd != nil {
+				operUpd.CloseSend()
+			}
+			cancel()
+			return
+		}
+	}
+}
 
 // addVeniceCoordinateRoutes responds to mode change request
 func (c *API) addVeniceCoordinateRoutes(r *mux.Router) {

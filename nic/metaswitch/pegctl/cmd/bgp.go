@@ -67,7 +67,7 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 	req := &pegasusClient.BGPRequest{}
 	respMsg, err := client.BGPGet(context.Background(), req)
 	if err != nil {
-		return errors.New("Getting global config failed")
+		return fmt.Errorf("Getting global config failed (%s)", err)
 	}
 
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
@@ -91,7 +91,7 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	req := &pegasusClient.BGPPeerRequest{}
 	respMsg, err := client.BGPPeerGet(context.Background(), req)
 	if err != nil {
-		return errors.New("Getting Peers failed")
+		return fmt.Errorf("Getting Peers failed (%s)", err)
 	}
 
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
@@ -119,7 +119,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 	req := &pegasusClient.BGPPeerAfRequest{}
 	respMsg, err := client.BGPPeerAfGet(context.Background(), req)
 	if err != nil {
-		return errors.New("Getting PeerAfs failed")
+		return fmt.Errorf("Getting PeerAfs failed (%s)", err)
 	}
 
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {

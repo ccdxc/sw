@@ -1394,6 +1394,11 @@ func (i *IrisAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPol
 	return nil, err
 }
 
+// HandleRouteTable handles CRUDs for RouteTable object
+func (i *IrisAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error) {
+	return nil, types.ErrNotImplemented
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (i *IrisAPI) ReplayConfigs() error {
 	// Replay Network Object

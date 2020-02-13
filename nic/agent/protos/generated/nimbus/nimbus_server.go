@@ -320,6 +320,21 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "RouteTable":
+			objlist, err := eh.server.ListRouteTables(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "RoutingConfig":
 			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nil)
 			if err != nil {
@@ -471,6 +486,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
 
+			case "RouteTable":
+				if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
+					err = eh.statusReactor.(RouteTableStatusReactor).OnRouteTableOperUpdate(nodeID,
+						object.Message.(*netproto.RouteTable))
+					if err != nil {
+						log.Errorf("Error updating RouteTable oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.RouteTable).GetObjectMeta())
+
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
 					err = eh.statusReactor.(RoutingConfigStatusReactor).OnRoutingConfigOperUpdate(nodeID,
@@ -574,6 +599,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
+
+			case "RouteTable":
+				if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
+					err = eh.statusReactor.(RouteTableStatusReactor).OnRouteTableOperDelete(nodeID,
+						object.Message.(*netproto.RouteTable))
+					if err != nil {
+						log.Errorf("Error updating RouteTable oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.RouteTable).GetObjectMeta())
 
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
@@ -871,6 +906,16 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
 			}
 
+		case "RouteTable":
+			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
 		case "RoutingConfig":
 			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
@@ -1016,6 +1061,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Profile":
 			objlist, err := eh.server.ListProfiles(context.Background(), watcher.Filters[kind])
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "RouteTable":
+			objlist, err := eh.server.ListRouteTables(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1202,6 +1262,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 			case "Profile":
 				obj, err := ProfileFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "RouteTable":
+				obj, err := RouteTableFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

@@ -45,6 +45,9 @@ type InfraAPI interface {
 	// NotifyVeniceConnection updates venice connection status from netagent
 	NotifyVeniceConnection()
 
+	// UpdateIfChannel returns a channel for propogating interface state to the netagent
+	UpdateIfChannel() chan UpdateIfEvent
+
 	Close() error
 }
 
@@ -90,8 +93,11 @@ type PipelineAPI interface {
 	//HandleFlowExportPolicy handles CRUDs for NetworkSecurityPolicy object
 	HandleFlowExportPolicy(oper Operation, obj netproto.FlowExportPolicy) ([]netproto.FlowExportPolicy, error)
 
-	// HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
+	// HandleRoutingConfig handles CRUDs for RoutingConfig object
 	HandleRoutingConfig(oper Operation, obj netproto.RoutingConfig) ([]netproto.RoutingConfig, error)
+
+	// HandleRouteTable handles CRUDs for RouteTable object
+	// HandleRouteTable(oper Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error)
 
 	//HandleProfile handles CRUDs for Profile object
 	HandleProfile(oper Operation, obj netproto.Profile) ([]netproto.Profile, error)

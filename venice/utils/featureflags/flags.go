@@ -97,9 +97,9 @@ func Update(in []cluster.Feature) []error {
 				reterrs = append(reterrs, fmt.Errorf("duplicate feature in request [%v]", v.FeatureKey))
 			} else {
 				fmap[v.FeatureKey] = true
-				updFeatures.networkLevelSecurityPolicy = true
+				updFeatures.appSecurity = true
 			}
-			updFeatures.appSecurity = true
+
 		default:
 			// for compatibility reasons these errors are only reported as unknowns but do not fail the API.
 			log.Errorf("Unknown feature flag encountered [%v]", v)

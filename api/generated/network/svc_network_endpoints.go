@@ -3209,7 +3209,8 @@ func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
 
 //
 func makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in *NetworkInterface) string {
-	return fmt.Sprint("/configs/network/v1", "/networkinterfaces")
+	return ""
+
 }
 
 //
@@ -3917,24 +3918,7 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchVirtualRouter(ctx context.Contex
 
 // AutoAddNetworkInterface CRUD method for NetworkInterface
 func (r *EndpointsNetworkV1RestClient) AutoAddNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
-	path := makeURINetworkV1AutoAddNetworkInterfaceCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoAddNetworkInterface(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*NetworkInterface), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateNetworkInterface CRUD method for NetworkInterface

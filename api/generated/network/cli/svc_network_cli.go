@@ -261,23 +261,7 @@ func restDeleteNetworkInterface(hostname, token string, obj interface{}) error {
 }
 
 func restPostNetworkInterface(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.NetworkInterface); ok {
-		nv, err := restcl.NetworkV1().NetworkInterface().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for NetworkInterface object")
 }
 
 func restPutNetworkInterface(hostname, token string, obj interface{}) error {
@@ -534,8 +518,6 @@ func init() {
 	cl.AddRestDeleteFunc("network.VirtualRouter", "v1", restDeleteVirtualRouter)
 	cl.AddRestPutFunc("network.VirtualRouter", "v1", restPutVirtualRouter)
 	cl.AddRestGetFunc("network.VirtualRouter", "v1", restGetVirtualRouter)
-
-	cl.AddRestPostFunc("network.NetworkInterface", "v1", restPostNetworkInterface)
 
 	cl.AddRestPutFunc("network.NetworkInterface", "v1", restPutNetworkInterface)
 	cl.AddRestGetFunc("network.NetworkInterface", "v1", restGetNetworkInterface)

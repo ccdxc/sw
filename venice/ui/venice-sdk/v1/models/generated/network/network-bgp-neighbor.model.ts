@@ -16,6 +16,7 @@ export interface INetworkBGPNeighbor {
     'multi-hop': number;
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
     'password'?: string;
+    'source-from-loopback'?: boolean;
     '_ui'?: any;
 }
 
@@ -35,6 +36,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
     /** Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128. */
     'password': string = null;
+    /** Use loopback interface as source IP address for protocol session. */
+    'source-from-loopback': boolean = null;
     public static propInfo: { [prop in keyof INetworkBGPNeighbor]: PropInfoItem } = {
         'shutdown': {
             description:  `Shutdown this neighbor session.`,
@@ -68,6 +71,11 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             description:  `Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128.`,
             required: false,
             type: 'string'
+        },
+        'source-from-loopback': {
+            description:  `Use loopback interface as source IP address for protocol session.`,
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -148,6 +156,13 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         } else {
             this['password'] = null
         }
+        if (values && values['source-from-loopback'] != null) {
+            this['source-from-loopback'] = values['source-from-loopback'];
+        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('source-from-loopback')) {
+            this['source-from-loopback'] = NetworkBGPNeighbor.propInfo['source-from-loopback'].default;
+        } else {
+            this['source-from-loopback'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -161,6 +176,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
                 'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, maxValueValidator(256), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
                 'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
+                'source-from-loopback': CustomFormControl(new FormControl(this['source-from-loopback']), NetworkBGPNeighbor.propInfo['source-from-loopback']),
             });
         }
         return this._formGroup;
@@ -178,6 +194,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             this._formGroup.controls['multi-hop'].setValue(this['multi-hop']);
             this._formGroup.controls['enable-address-families'].setValue(this['enable-address-families']);
             this._formGroup.controls['password'].setValue(this['password']);
+            this._formGroup.controls['source-from-loopback'].setValue(this['source-from-loopback']);
         }
     }
 }

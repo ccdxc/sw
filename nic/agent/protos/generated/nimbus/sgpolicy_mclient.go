@@ -208,6 +208,7 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 	evt.NetworkSecurityPolicy.ObjectMeta.Labels = make(map[string]string)
 	evt.NetworkSecurityPolicy.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
+	log.Infof("NetworkSecurityPolicy: processNetworkSecurityPolicyEvent | Evt: %+v", evt)
 	// unlock the object once we are done
 	defer client.unlockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
 

@@ -1584,7 +1584,7 @@ func (a *restObjNetworkV1NetworkInterface) Watch(ctx context.Context, options *a
 func (a *restObjNetworkV1NetworkInterface) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
 		return true
 	case apiintf.GetOper:

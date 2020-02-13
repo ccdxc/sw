@@ -47,13 +47,15 @@ func (r *addResolver) resolvedCheck(key string, obj Object) bool {
 	refObjsResolved := true
 	for key, refs := range node.Refs {
 		_, dKind, _ := getSKindDKindFieldKey(key)
-		objDB := r.md.getObjdb(dKind)
+		objDB := r.md.getObjdb(memDbKind(dKind))
+
 		objDB.Lock()
 		for _, ref := range refs {
 			refObj, ok := objDB.objects[getRefKey(ref)]
 			//Referred Object not present or still not resolved.
 			if !ok {
 				refObjsResolved = false
+				log.Infof("found unresolved reference while for [%v][%v][%v]", key, dKind, ref)
 			} else {
 				refObj.Lock()
 				refObjsResolved = refObj.isResolved()
@@ -102,6 +104,7 @@ func (r *deleteResolver) resolvedCheck(key string, obj Object) bool {
 				refObjsPresent = true
 				break
 			}
+
 		}
 		objDB.Unlock()
 		if refObjsPresent {

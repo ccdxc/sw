@@ -12,6 +12,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -35,9 +36,20 @@ func HandleSubnet(infraAPI types.InfraAPI, client halapi.SubnetSvcClient, msc ms
 	}
 }
 
+type rtImpExp struct {
+	rt  *netproto.RouteDistinguisher
+	imp bool
+	exp bool
+}
+
 func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
-	subnetReq := convertNetworkToSubnet(nw, vpcID, uplinkIDs)
+
+	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
+	if err != nil {
+		return errors.Wrapf(types.ErrBadRequest, "Subnet %s | failed to get Vrf %s | Err: %v", nw.GetKey(), nw.Spec.VrfName, err)
+	}
+
 	log.Infof("SubnetReq: %+v", subnetReq)
 
 	ctx := context.TODO()
@@ -48,11 +60,16 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	}
 
 	resp, err := client.SubnetCreate(context.Background(), subnetReq)
+	if err != nil {
+		log.Errorf("Subnet: %s Create failed | Err: %v", nw.GetKey(), err)
+		return errors.Wrapf(types.ErrDatapathHandling, "Subnet: %s Create failed | Err: %v", nw.GetKey(), err)
+	}
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", nw.GetKind(), nw.GetKey())); err != nil {
 			return err
 		}
 	}
+	log.Infof("Subnet: %s Create returned | Status: %s | Response: %+v", nw.GetKey(), resp.ApiStatus, resp.Response)
 
 	eviReq := msTypes.EvpnEviRequest{
 		Request: []*msTypes.EvpnEviSpec{
@@ -60,13 +77,13 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				Id:       uid.Bytes(),
 				SubnetId: uid.Bytes(),
 				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
+				AutoRT:   msTypes.EvpnCfg_EVPN_CFG_MANUAL,
 				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
 				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
-				EVIId:    uint32(nw.Status.NetworkID),
 			},
 		},
 	}
-
+	log.Infof("Evpn EVI request [%+v]", eviReq)
 	evresp, err := msc.EvpnEviSpecCreate(ctx, &eviReq)
 	if err != nil {
 		log.Errorf("failed to create EVI for subnet [%v/%v]", nw.Tenant, nw.Name)
@@ -78,38 +95,67 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to create EVI for subnet [%v/%v](%v)", nw.Tenant, nw.Name, evresp.ApiStatus)
 		return err
 	}
+
 	// Create the RT import and export
-	eviRtReq := &msTypes.EvpnEviRtRequest{}
-	for _, rt := range nw.Spec.RouteImportExport.ExportRTs {
-		evirt := msTypes.EvpnEviRtSpec{
-			Id:       uid.Bytes(),
-			SubnetId: uid.Bytes(),
-			RT:       utils.RDToBytes(rt),
-			RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
-			EVIId:    uint32(nw.Status.NetworkID),
+	// XXX-TODO(sanjayt): Add logic to convert a RT to IMPORT-EXPORT if the same RT exists in import and export.
+	//   MS does not like it if the same key repeats in import and export.
+	if nw.Spec.RouteImportExport != nil {
+		var rts []*rtImpExp
+		isEqual := func(a, b *netproto.RouteDistinguisher) bool {
+			return a.Type == b.Type && a.AssignedValue == b.AssignedValue && a.AdminValue == b.AdminValue
 		}
-		eviRtReq.Request = append(eviRtReq.Request, &evirt)
-	}
-	for _, rt := range nw.Spec.RouteImportExport.ImportRTs {
-		evirt := msTypes.EvpnEviRtSpec{
-			Id:       uid.Bytes(),
-			SubnetId: uid.Bytes(),
-			RT:       utils.RDToBytes(rt),
-			RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
-			EVIId:    uint32(nw.Status.NetworkID),
+		eviRtReq := &msTypes.EvpnEviRtRequest{}
+	outerLoop1:
+		for _, rt := range nw.Spec.RouteImportExport.ExportRTs {
+			for _, r := range rts {
+				if isEqual(r.rt, rt) {
+					r.exp = true
+					continue outerLoop1
+				}
+			}
+			rts = append(rts, &rtImpExp{rt: rt, exp: true})
 		}
-		eviRtReq.Request = append(eviRtReq.Request, &evirt)
-		log.Infof("add EVI RT")
+
+	outerLoop2:
+		for _, rt := range nw.Spec.RouteImportExport.ImportRTs {
+			for _, r := range rts {
+				if isEqual(r.rt, rt) {
+					r.imp = true
+					continue outerLoop2
+				}
+			}
+			rts = append(rts, &rtImpExp{rt: rt, imp: true})
+		}
+
+		for _, rt := range rts {
+			var rtype msTypes.EvpnRtType
+			switch {
+			case rt.imp && rt.exp:
+				rtype = msTypes.EvpnRtType_EVPN_RT_IMPORT_EXPORT
+			case rt.exp:
+				rtype = msTypes.EvpnRtType_EVPN_RT_EXPORT
+			case rt.imp:
+				rtype = msTypes.EvpnRtType_EVPN_RT_IMPORT
+			}
+			evirt := msTypes.EvpnEviRtSpec{
+				Id:       uid.Bytes(),
+				SubnetId: uid.Bytes(),
+				RT:       utils.RDToBytes(rt.rt),
+				RTType:   rtype,
+			}
+			log.Infof("add Evi RT [%+v]", evirt)
+			eviRtReq.Request = append(eviRtReq.Request, &evirt)
+		}
+		evrtresp, err := msc.EvpnEviRtSpecCreate(ctx, eviRtReq)
+		if err != nil {
+			log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+		}
+		if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+			log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
+			return err
+		}
+		log.Infof("subnet EVI RT create [%v/%v] got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
 	}
-	evrtresp, err := msc.EvpnEviRtSpecCreate(ctx, eviRtReq)
-	if err != nil {
-		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
-	}
-	if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
-		return err
-	}
-	log.Infof("subnet create [%v/%v] got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
 
 	dat, _ := nw.Marshal()
 
@@ -122,10 +168,17 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 
 func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
-	subnetReq := convertNetworkToSubnet(nw, vpcID, uplinkIDs)
+	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
+	if err != nil {
+		return errors.Wrapf(types.ErrBadRequest, "Subnet: %v Convertion failed | Err: err", nw.GetKey(), err)
+	}
 	resp, err := client.SubnetUpdate(context.Background(), subnetReq)
+	if err != nil {
+		log.Errorf("Subnet: %s Update failed | Err: %v", nw.GetKey(), err)
+		return errors.Wrapf(types.ErrDatapathHandling, "Subnet: %s Update failed | Err: %v", nw.GetKey(), err)
+	}
 	if resp != nil {
-		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", nw.GetKind(), nw.GetKey())); err != nil {
+		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Subnet: %s Update Failed | %s", nw.GetKind(), nw.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -152,7 +205,6 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
 				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
 				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
-				EVIId:    uint32(nw.Status.NetworkID),
 			},
 		},
 	}
@@ -168,11 +220,18 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to update EVI for subnet [%v/%v](%v)", nw.Tenant, nw.Name, evresp.ApiStatus)
 		return err
 	}
-
+	curRts := curNw.Spec.RouteImportExport
+	newRts := nw.Spec.RouteImportExport
+	if curRts == nil {
+		curRts = &netproto.RDSpec{}
+	}
+	if newRts == nil {
+		newRts = &netproto.RDSpec{}
+	}
 	var rtDelReq, rtAddReq msTypes.EvpnEviRtRequest
-	for _, r := range curNw.Spec.RouteImportExport.ExportRTs {
+	for _, r := range curRts.ExportRTs {
 		found := false
-		for _, r1 := range nw.Spec.RouteImportExport.ExportRTs {
+		for _, r1 := range newRts.ExportRTs {
 			if r == r1 {
 				found = true
 			}
@@ -183,15 +242,14 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				SubnetId: uid.Bytes(),
 				RT:       utils.RDToBytes(r),
 				RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
-				EVIId:    uint32(nw.Status.NetworkID),
 			}
 			rtAddReq.Request = append(rtAddReq.Request, &ert)
 			log.Infof("add EVI RT export [%v]", ert)
 		}
 	}
-	for _, r := range nw.Spec.RouteImportExport.ExportRTs {
+	for _, r := range newRts.ExportRTs {
 		found := false
-		for _, r1 := range curNw.Spec.RouteImportExport.ExportRTs {
+		for _, r1 := range curRts.ExportRTs {
 			if r == r1 {
 				found = true
 			}
@@ -202,15 +260,14 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				SubnetId: uid.Bytes(),
 				RT:       utils.RDToBytes(r),
 				RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
-				EVIId:    uint32(nw.Status.NetworkID),
 			}
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 			log.Infof("del EVI RT export [%v]", ert)
 		}
 	}
-	for _, r := range curNw.Spec.RouteImportExport.ImportRTs {
+	for _, r := range curRts.ImportRTs {
 		found := false
-		for _, r1 := range nw.Spec.RouteImportExport.ImportRTs {
+		for _, r1 := range newRts.ImportRTs {
 			if r == r1 {
 				found = true
 			}
@@ -221,15 +278,14 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				SubnetId: uid.Bytes(),
 				RT:       utils.RDToBytes(r),
 				RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
-				EVIId:    uint32(nw.Status.NetworkID),
 			}
 			rtAddReq.Request = append(rtAddReq.Request, &ert)
 			log.Infof("add EVI RT import [%v]", ert)
 		}
 	}
-	for _, r := range nw.Spec.RouteImportExport.ImportRTs {
+	for _, r := range newRts.ImportRTs {
 		found := false
-		for _, r1 := range curNw.Spec.RouteImportExport.ImportRTs {
+		for _, r1 := range curRts.ImportRTs {
 			if r == r1 {
 				found = true
 			}
@@ -240,7 +296,6 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				SubnetId: uid.Bytes(),
 				RT:       utils.RDToBytes(r),
 				RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
-				EVIId:    uint32(nw.Status.NetworkID),
 			}
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 			log.Infof("del EVI RT import [%v]", ert)
@@ -299,7 +354,6 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			SubnetId: uid.Bytes(),
 			RT:       utils.RDToBytes(rt),
 			RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
-			EVIId:    uint32(nw.Status.NetworkID),
 		}
 		eviRtReq.Request = append(eviRtReq.Request, &evirt)
 		log.Infof("del EVI RT export [%v]", evirt)
@@ -310,7 +364,6 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			SubnetId: uid.Bytes(),
 			RT:       utils.RDToBytes(rt),
 			RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
-			EVIId:    uint32(nw.Status.NetworkID),
 		}
 		eviRtReq.Request = append(eviRtReq.Request, &evirt)
 		log.Infof("del EVI RT import [%v]", evirt)
@@ -333,7 +386,6 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
 				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
 				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
-				EVIId:    uint32(curNw.Status.NetworkID),
 			},
 		},
 	}
@@ -353,6 +405,9 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		Id: utils.ConvertID64(nw.Status.NetworkID),
 	}
 	resp, err := client.SubnetDelete(context.Background(), subnetDelReq)
+	if err != nil {
+		log.Errorf("Subnet: %s failed to delete| Err: %v", nw.GetKey(), err)
+	}
 	if resp != nil {
 		if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("Subnet: %s", nw.GetKey())); err != nil {
 			return err
@@ -366,7 +421,7 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	return nil
 }
 
-func convertNetworkToSubnet(nw netproto.Network, vpcID uint64, uplinkIDs []uint64) *halapi.SubnetRequest {
+func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplinkIDs []uint64) (*halapi.SubnetRequest, error) {
 	var v6Prefix *halapi.IPv6Prefix
 	var v4Prefix *halapi.IPv4Prefix
 	var v4VrIP uint32
@@ -376,6 +431,17 @@ func convertNetworkToSubnet(nw netproto.Network, vpcID uint64, uplinkIDs []uint6
 	v4Prefix = nil
 	v4VrIP = 0
 	v6VrIP = nil
+	vrf, err := validator.ValidateVrf(infraAPI, nw.Tenant, nw.Namespace, nw.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Get VRF failed for %s | %s", nw.GetKind(), nw.GetKey())
+		return nil, err
+	}
+	log.Infof("Subnet %+v: Vrf %+v: ", nw, vrf)
+	vrfuid, err := uuid.FromString(vrf.UUID)
+	vrMac := nw.Spec.RouterMAC
+	if vrMac == "" {
+		vrMac = vrf.Spec.RouterMAC
+	}
 	if nw.Spec.V6Address != nil {
 		v6Prefix = &halapi.IPv6Prefix{
 			Len:  nw.Spec.V6Address[0].PrefixLen,
@@ -391,15 +457,20 @@ func convertNetworkToSubnet(nw netproto.Network, vpcID uint64, uplinkIDs []uint6
 		v4VrIP = nw.Spec.V4Address[0].Address.V4Address
 	}
 
+	uid, err := uuid.FromString(nw.UUID)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Network: Parsing UUID %s | %s Err: %v", nw.GetKey(), nw.UUID, err))
+		return nil, err
+	}
 	return &halapi.SubnetRequest{
 		BatchCtxt: nil,
 		Request: []*halapi.SubnetSpec{
 			{
-				Id:                  utils.ConvertID64(nw.Status.NetworkID)[0],
-				VPCId:               utils.ConvertID64(vpcID)[0],
+				Id:                  uid.Bytes(),
+				VPCId:               vrfuid.Bytes(),
 				IPv4VirtualRouterIP: v4VrIP,
 				IPv6VirtualRouterIP: v6VrIP,
-				VirtualRouterMac:    utils.MacStrtoUint64(nw.Spec.RouterMAC),
+				VirtualRouterMac:    utils.MacStrtoUint64(vrMac),
 				FabricEncap: &halapi.Encap{
 					Type: halapi.EncapType_ENCAP_TYPE_VXLAN,
 					Value: &halapi.EncapVal{
@@ -408,15 +479,13 @@ func convertNetworkToSubnet(nw netproto.Network, vpcID uint64, uplinkIDs []uint6
 						},
 					},
 				},
-				V4Prefix:              v4Prefix,
-				V6Prefix:              v6Prefix,
-				V4RouteTableId:        utils.ConvertID32(nw.Spec.V4RouteTableID)[0],
-				V6RouteTableId:        utils.ConvertID32(nw.Spec.V6RouteTableID)[0],
-				IngV4SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV4SecurityPolicyID...),
-				EgV4SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV4SecurityPolicyID...),
-				IngV6SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV6SecurityPolicyID...),
-				EgV6SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV6SecurityPolicyID...),
+				V4Prefix: v4Prefix,
+				V6Prefix: v6Prefix,
+				// IngV4SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV4SecurityPolicyID...),
+				// EgV4SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV4SecurityPolicyID...),
+				// IngV6SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV6SecurityPolicyID...),
+				// EgV6SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV6SecurityPolicyID...),
 			},
 		},
-	}
+	}, nil
 }

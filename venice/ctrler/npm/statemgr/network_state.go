@@ -73,16 +73,43 @@ func ipv4toMac(macPrefix []byte, ip net.IP) net.HardwareAddr {
 
 func convertNetwork(nw *NetworkState) *netproto.Network {
 	creationTime, _ := types.TimestampProto(time.Now())
-	nt := netproto.Network{
+
+	ntn := netproto.Network{
 		TypeMeta:   nw.Network.TypeMeta,
 		ObjectMeta: agentObjectMeta(nw.Network.ObjectMeta),
 		Spec: netproto.NetworkSpec{
-			VlanID: nw.Network.Spec.VlanID,
+			VlanID:     nw.Network.Spec.VlanID,
+			VrfName:    nw.Network.Spec.VirtualRouter,
+			VxLANVNI:   nw.Network.Spec.VxlanVNI,
+			IPAMPolicy: nw.Network.Spec.IPAMPolicy,
 		},
 	}
-	nt.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	ntn.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
-	return &nt
+	if nw.Network.Spec.IPv4Subnet != "" {
+		ipn, err := ParseToIPPrefix(nw.Network.Spec.IPv4Subnet)
+		if err != nil {
+			log.Errorf("failed to parse IP Subnet [%v](%s)", nw.Network.Spec.IPv4Subnet, err)
+			return nil
+		}
+		ntn.Spec.V4Address = append(ntn.Spec.V4Address, *ipn)
+	}
+
+	if nw.Network.Spec.RouteImportExport != nil {
+		ntn.Spec.RouteImportExport = &netproto.RDSpec{
+			AddressFamily: nw.Network.Spec.RouteImportExport.AddressFamily,
+			RDAuto:        nw.Network.Spec.RouteImportExport.RDAuto,
+		}
+		ntn.Spec.RouteImportExport.RD = cloneRD(nw.Network.Spec.RouteImportExport.RD)
+		for _, r := range nw.Network.Spec.RouteImportExport.ImportRTs {
+			ntn.Spec.RouteImportExport.ImportRTs = append(ntn.Spec.RouteImportExport.ImportRTs, cloneRD(r))
+		}
+		for _, r := range nw.Network.Spec.RouteImportExport.ExportRTs {
+			ntn.Spec.RouteImportExport.ExportRTs = append(ntn.Spec.RouteImportExport.ExportRTs, cloneRD(r))
+		}
+	}
+
+	return &ntn
 }
 
 // allocIPv4Addr allocates new IP address

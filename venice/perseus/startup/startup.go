@@ -62,7 +62,7 @@ func registerDebugHandlers(handler *services.ServiceHandlers) {
 // OnStart restore state and start services as applicable
 func OnStart(resolverURLs []string) {
 	env.ResolverClient = resolver.New(&resolver.Config{Name: "2", Servers: resolverURLs})
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, resolverURLs[0]) //globals.APIServer)
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer)
 	ServiceHandlers := services.NewServiceHandlers()
 	registerDebugHandlers(ServiceHandlers)
 	log.Infof("ServiceHandlers registered %v", ServiceHandlers)

@@ -15,6 +15,7 @@ import "github.com/pensando/sw/api/protos/orchestration.proto";
 import "tenant.proto";
 import "route.proto";
 import "smartnic.proto";
+import "sgpolicy.proto";
 
 
 // ----------------------------- Network Object -----------------------------
@@ -27,27 +28,31 @@ enum NetworkType {
 // spec part of network object
 message NetworkSpec {
     // type of network. (vlan/vxlan/routed etc)
-    string Type    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(NetworkType)"];
+    string Type                 = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(NetworkType)"];
     // IPv4 subnet CIDR
-    string IPv4Subnet  = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-subnet,omitempty"];
+    string IPv4Subnet           = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-subnet,omitempty", (venice.check) = "EmptyOr(CIDR())"];
     // IPv4 gateway for this subnet
-    string IPv4Gateway = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty"];
+    string IPv4Gateway          = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateway,omitempty", (venice.check) = "EmptyOr(IPAddr())"];
     // IPv6 subnet CIDR
-    string IPv6Subnet  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-subnet,omitempty"];
+    string IPv6Subnet           = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-subnet,omitempty"];
     // IPv6 gateway
-    string IPv6Gateway = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
+    string IPv6Gateway          = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // Vlan ID for the network
-    uint32 VlanID      = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vlan-id,omitempty"];
+    uint32 VlanID               = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vlan-id,omitempty", (venice.check) = "IntRange(0,4095)"];
     // Vxlan VNI for the network
-    uint32 VxlanVNI    = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty"];
+    uint32 VxlanVNI             = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty", (venice.check) = "IntRange(0,16777215)"];
     // VirtualRouter specifies the VRF this network belongs to
-    string VirtualRouter = 8 [(gogoproto.jsontag) = "virtual-router,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/VirtualRouter"}];
+    string VirtualRouter        = 8 [(gogoproto.jsontag) = "virtual-router,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/VirtualRouter"}];
     // Relay Configuration if any
-    string IPAMPolicy = 9 [(gogoproto.jsontag) = "ipam-policy,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/IPAMPolicy"}];
+    string IPAMPolicy           = 9 [(gogoproto.jsontag) = "ipam-policy,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/IPAMPolicy"}];
     // RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.
-    RDSpec RouteImportExport  = 10 [(gogoproto.jsontag) = "route-imoport-export,omitempty"];
+    RDSpec RouteImportExport    = 10 [(gogoproto.jsontag) = "route-import-export,omitempty"];
     // If supplied, this network will only be applied to the orchestrators specified.
     repeated OrchestratorInfo Orchestrators = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orchestrators,omitempty"];
+    // Security Policy to apply in the ingress direction
+    repeated string IngressSecurityPolicy    = 12 [(gogoproto.jsontag) = "ingress-security-policy,omitempty",  (venice.objRelation) = {Type: "NamedRef", To: "security/NetworkSecurityPolicy"}];
+    // Security Policy to apply in the egress direction
+    repeated string EgressSecurityPolicy = 13 [(gogoproto.jsontag) = "egress-security-policy,omitempty",  (venice.objRelation) = {Type: "NamedRef", To: "security/NetworkSecurityPolicy"}];
 }
 
 message OrchestratorInfo {

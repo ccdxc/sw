@@ -263,6 +263,29 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		if path == "" {
 			dlmtr = ""
 		}
+		tag := path + dlmtr + "egress-security-policy"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "NetworkSecurityPolicy",
+			}
+		}
+
+		for _, v := range m.EgressSecurityPolicy {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"networksecuritypolicies/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
 		tag := path + dlmtr + "ipam-policy"
 		uref, ok := resp[tag]
 		if !ok {
@@ -276,6 +299,29 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"ipam-policies/"+tenant+"/"+m.IPAMPolicy)
 		}
 
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "ingress-security-policy"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "NetworkSecurityPolicy",
+			}
+		}
+
+		for _, v := range m.IngressSecurityPolicy {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/security/"+"networksecuritypolicies/"+tenant+"/"+v)
+
+		}
 		if len(uref.Refs) > 0 {
 			resp[tag] = uref
 		}
@@ -447,6 +493,23 @@ func init() {
 	validatorMapNetwork = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapNetwork["NetworkSpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkSpec)
+		if err := validators.EmptyOr(validators.IPAddr, m.IPv4Gateway, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"IPv4Gateway", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkSpec)
+		if err := validators.EmptyOr(validators.CIDR, m.IPv4Subnet, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"IPv4Subnet", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkSpec)
 
@@ -456,6 +519,30 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "4095")
+
+		if err := validators.IntRange(m.VlanID, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"VlanID", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapNetwork["NetworkSpec"]["all"] = append(validatorMapNetwork["NetworkSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "16777215")
+
+		if err := validators.IntRange(m.VxlanVNI, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"VxlanVNI", err.Error())
 		}
 		return nil
 	})

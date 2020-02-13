@@ -104,7 +104,7 @@ func (c *client) connect() error {
 	for !connected {
 		err := c.mclient.Dial()
 		if err != nil {
-			log.Errorf("Error connecting to delphi hub. Retrying.. Err: %v", err)
+			//log.Errorf("Error connecting to delphi hub. Retrying.. Err: %v", err)
 			time.Sleep(time.Second)
 		} else {
 			connected = true

@@ -1,6 +1,10 @@
 package types
 
-import "github.com/gorilla/mux"
+import (
+	"github.com/gorilla/mux"
+
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+)
 
 //DistributedServiceCardStatus captures the NAPLES status object
 type DistributedServiceCardStatus struct {
@@ -32,3 +36,9 @@ type DSCStaticRoute struct {
 
 // SubRouterAddFunc adds subrouters
 type SubRouterAddFunc func(*mux.Router)
+
+// UpdateIfEvent is event for updating interface status
+type UpdateIfEvent struct {
+	Oper Operation
+	Intf netproto.Interface
+}

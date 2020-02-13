@@ -55,6 +55,7 @@ type pegasusCfg struct {
 func (c *configCache) setConfig(in network.RoutingConfig) {
 	cache.config = &in
 }
+
 func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, error) {
 	ret := &pegasusCfg{}
 	if c.config == nil {
@@ -104,6 +105,89 @@ func (m *ServiceHandlers) connectToPegasus() {
 			continue
 		}
 		m.pegasusClient = pegasusClient.NewBGPSvcClient(conn)
+		break
+	}
+}
+
+func (m *ServiceHandlers) setupLBIf() {
+	lbuid := uuid.NewV4().Bytes()
+	lbreq := pdstypes.InterfaceRequest{
+		Request: []*pdstypes.InterfaceSpec{
+			{
+				Id:          lbuid,
+				Type:        pdstypes.IfType_IF_TYPE_LOOPBACK,
+				AdminStatus: pdstypes.IfStatus_IF_STATUS_UP,
+				Ifinfo: &pdstypes.InterfaceSpec_LoopbackIfSpec{
+					LoopbackIfSpec: &pdstypes.LoopbackIfSpec{},
+				},
+			},
+		},
+	}
+	for {
+		conn, err := grpc.Dial(m.pegasusURL, grpc.WithInsecure())
+		if err != nil {
+			log.Errorf("failed to connect to if client 9%s)", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		m.ifClient = pdstypes.NewIfSvcClient(conn)
+		m.routeSvc = pegasusClient.NewCPRouteSvcClient(conn)
+		break
+	}
+	retries := 0
+	for retries < 5 {
+		resp, err := m.ifClient.InterfaceCreate(context.TODO(), &lbreq)
+		if err != nil {
+			log.Errorf("failed to create Loopback (%s)", err)
+			retries++
+			time.Sleep(time.Second)
+			continue
+		}
+		if resp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("failed to create Loopback Status: (%s)", resp.ApiStatus)
+			retries++
+			time.Sleep(time.Second)
+			continue
+		}
+		log.Infof("Created loopback interface got response [%s][%+v]", resp.ApiStatus, resp.Response)
+
+		route := pegasusClient.CPStaticRouteRequest{
+			Request: []*pegasusClient.CPStaticRouteSpec{
+				{
+					PrefixLen: 0,
+					State:     pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+					Override:  false,
+					DestAddr: &pdstypes.IPAddress{
+						Af: pdstypes.IPAF_IP_AF_INET,
+						V4OrV6: &pdstypes.IPAddress_V4Addr{
+							V4Addr: ip2uint32("0.0.0.0"),
+						},
+					},
+					NextHopAddr: &pdstypes.IPAddress{
+						Af: pdstypes.IPAF_IP_AF_INET,
+						V4OrV6: &pdstypes.IPAddress_V4Addr{
+							V4Addr: ip2uint32("0.0.0.0"),
+						},
+					},
+					InterfaceId: lbuid,
+				},
+			},
+		}
+		log.Infof("Setting Static Route [%+v]", route)
+		rresp, err := m.routeSvc.CPStaticRouteCreate(context.TODO(), &route)
+		if err != nil {
+			log.Errorf("failed to create static default route (%s)", err)
+			retries++
+			time.Sleep(time.Second)
+			continue
+		}
+		if rresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("failed to create static default route Status: (%s)", rresp.ApiStatus)
+			retries++
+			time.Sleep(time.Second)
+			continue
+		}
+		log.Infof("Created static default route got response [%s][%+v]", resp.ApiStatus, rresp.Response)
 		break
 	}
 }
@@ -189,17 +273,19 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 		}
 		log.Infof("Updating pegasus with Config [%+v]", req.Request)
 		resp, err := m.pegasusClient.BGPCreate(ctx, &req)
-		if err != nil {
-			log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
-		} else {
-			log.Infof("BGP Global Spec Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.ApiStatus)
+		if err != nil || resp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
+			return
 		}
+		log.Infof("BGP Global Spec Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.ApiStatus)
+
 		unknLocal := &pdstypes.IPAddress{
 			Af: pdstypes.IPAF_IP_AF_INET,
 		}
 		peerReq := pegasusClient.BGPPeerRequest{}
 		peerAfReq := pegasusClient.BGPPeerAfRequest{}
 		for _, n := range rtConfig.Spec.BGPConfig.Neighbors {
+			log.Infof("Got neighbor [%+v]", n)
 			peer := pegasusClient.BGPPeerSpec{
 				Id:           uid.Bytes(),
 				State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
@@ -210,6 +296,10 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				SendExtComm:  true,
 				ConnectRetry: 5,
 				Password:     []byte(n.Password),
+			}
+			// Temp till perseus dynamic add for DSC is available
+			if n.SourceFromLoopback {
+				peer.RRClient = pegasusClient.BGPPeerRRClient_BGP_PEER_RR_CLIENT
 			}
 			log.Infof("Add create peer [%+v]", peer)
 			peerReq.Request = append(peerReq.Request, &peer)
@@ -235,17 +325,18 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 			}
 		}
 		presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
-		if err != nil {
-			log.Infof("Peer create Request returned (%v)[%v]", err, presp)
-		} else {
-			log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
+		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("Peer create Request returned (%v)[%+v]", err, presp)
+			return
 		}
+
+		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		afresp, err := m.pegasusClient.BGPPeerAfCreate(ctx, &peerAfReq)
-		if err != nil {
-			log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp)
-		} else {
-			log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp.ApiStatus)
+		if err != nil || afresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("PeerAF create Request returned (%v)[%+v]", err, afresp)
 		}
+		log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp.ApiStatus)
+
 		m.updated = true
 		pReq = peerReq
 		once.Do(m.pollStatus)

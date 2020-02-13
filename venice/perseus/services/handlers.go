@@ -7,11 +7,11 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/venice/globals"
-
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/types"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -32,6 +32,8 @@ type ServiceHandlers struct {
 	pegasusURL    string
 	cfgWatcherSvc types.CfgWatcherService
 	pegasusClient pegasusClient.BGPSvcClient
+	ifClient      pdstypes.IfSvcClient
+	routeSvc      pegasusClient.CPRouteSvcClient
 	apiclient     apiclient.Services
 	snicMap       map[string]snic
 }
@@ -48,6 +50,7 @@ func NewServiceHandlers() *ServiceHandlers {
 	m.snicMap = make(map[string]snic)
 	m.pegasusURL = globals.Localhost + ":" + globals.PegasusGRPCPort
 	m.connectToPegasus()
+	m.setupLBIf()
 	return &m
 }
 
@@ -107,7 +110,9 @@ func (m *ServiceHandlers) handleDeleteSmartNICObject(evtNIC *cmd.DistributedServ
 func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.NetworkInterface) {
 	snic := m.snicMap[evtIntf.ObjectMeta.Name]
 	snic.name = evtIntf.ObjectMeta.Name
-	snic.ip = evtIntf.Spec.IPConfig.IPAddress
+	if evtIntf.Spec.IPConfig != nil {
+		snic.ip = evtIntf.Spec.IPConfig.IPAddress
+	}
 	m.snicMap[evtIntf.ObjectMeta.Name] = snic
 	m.configurePeer(snic)
 }

@@ -8,14 +8,16 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -111,34 +113,70 @@ func ConvertIPAddresses(addresses ...string) (ipAddresses []*halapi.IPAddress) {
 
 // MacStrtoUint64 converts a MAC string to uint64
 func MacStrtoUint64(macStr string) uint64 {
-	var bytes [6]uint64
 	var mac uint64
 
-	fmt.Sscanf(macStr, "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1], &bytes[2], &bytes[3], &bytes[4], &bytes[5])
+	addr, err := net.ParseMAC(macStr)
+	if err != nil {
+		return 0
+	}
 
-	mac = (bytes[0] << 40)
-	mac |= (bytes[1] << 32)
-	mac |= (bytes[2] << 24)
-	mac |= (bytes[3] << 16)
-	mac |= (bytes[4] << 8)
-	mac |= bytes[5]
+	for _, x := range addr {
+		mac = mac*256 + uint64(x)
+	}
 
 	return mac
+}
+
+// ConvertIPAddress converts IP Address string to hal ip address. TODO v6
+func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
+	addr := net.ParseIP(address)
+	v4Addr := &halapi.IPAddress{
+		Af: halapi.IPAF_IP_AF_INET,
+		V4OrV6: &halapi.IPAddress_V4Addr{
+			V4Addr: utils.Ipv4Touint32(addr),
+		},
+	}
+	ipAddress = v4Addr
+	return
+}
+
+// ConvertIPPrefix converts IP Address string to hal ip prefix. TODO v6
+func ConvertIPPrefix(address string) (ipAddress *halapi.IPPrefix, err error) {
+	addr, net, err := net.ParseCIDR(address)
+	if err != nil {
+		return nil, err
+	}
+	if addr.To4() == nil {
+		// Does not support V6.
+		return nil, fmt.Errorf("only ipv4 supported")
+	}
+	len, _ := net.Mask.Size()
+	v4Addr := &halapi.IPPrefix{
+		Addr: &halapi.IPAddress{
+			Af: halapi.IPAF_IP_AF_INET,
+			V4OrV6: &halapi.IPAddress_V4Addr{
+				V4Addr: utils.Ipv4Touint32(addr),
+			},
+		},
+		Len: uint32(len),
+	}
+	ipAddress = v4Addr
+	return
 }
 
 // RDToBytes converts the RouteDistinguisher to bytes
 func RDToBytes(r *netproto.RouteDistinguisher) []byte {
 	var ret = make([]byte, 8)
-	switch r.Type {
-	case netproto.RouteDistinguisher_Type0.String():
+	switch strings.ToLower(r.Type) {
+	case strings.ToLower(netproto.RouteDistinguisher_Type0.String()):
 		binary.BigEndian.PutUint16(ret[0:2], uint16(0))
 		binary.BigEndian.PutUint16(ret[2:4], uint16(r.AdminValue))
 		binary.BigEndian.PutUint32(ret[4:8], uint32(r.AssignedValue))
-	case netproto.RouteDistinguisher_Type1.String():
+	case strings.ToLower(netproto.RouteDistinguisher_Type1.String()):
 		binary.BigEndian.PutUint16(ret[0:2], uint16(1))
 		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
 		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))
-	case netproto.RouteDistinguisher_Type2.String():
+	case strings.ToLower(netproto.RouteDistinguisher_Type2.String()):
 		binary.BigEndian.PutUint16(ret[0:2], uint16(2))
 		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
 		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))

@@ -1337,14 +1337,14 @@
           },
           {
             "name": "ip-config.ip-address",
-            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "ip-config.default-gw",
-            "description": "DefaultGW contains the default gateway's IP address.",
+            "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1421,14 +1421,14 @@
           },
           {
             "name": "ip-config.ip-address",
-            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "ip-config.default-gw",
-            "description": "DefaultGW contains the default gateway's IP address.",
+            "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6028,11 +6028,13 @@
       "properties": {
         "ip-address": {
           "type": "string",
-          "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format."
+          "example": "10.1.1.1/24, ff02::5/32 ",
+          "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block."
         },
         "default-gw": {
           "type": "string",
-          "description": "DefaultGW contains the default gateway's IP address."
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address."
         },
         "dns-servers": {
           "type": "array",

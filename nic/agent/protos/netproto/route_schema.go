@@ -133,6 +133,26 @@ var typesMapRoute = map[string]*api.Struct{
 			"uuid":                  api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
+	"netproto.RouteTableEvent": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RouteTableEvent{}) },
+		Fields: map[string]api.Field{
+			"EventType": api.Field{Name: "EventType", CLITag: api.CLIInfo{ID: "event-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "event-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_ENUM"},
+
+			"RouteTable": api.Field{Name: "RouteTable", CLITag: api.CLIInfo{ID: "route-table", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "route-table", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RouteTable"},
+		},
+	},
+	"netproto.RouteTableEventList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RouteTableEventList{}) },
+		Fields: map[string]api.Field{
+			"routeTableEvents": api.Field{Name: "routeTableEvents", CLITag: api.CLIInfo{ID: "routeTableEvents", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RouteTableEvent"},
+		},
+	},
+	"netproto.RouteTableList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RouteTableList{}) },
+		Fields: map[string]api.Field{
+			"routeTables": api.Field{Name: "routeTables", CLITag: api.CLIInfo{ID: "routeTables", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RouteTable"},
+		},
+	},
 	"netproto.RouteTableSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RouteTableSpec{}) },
 		Fields: map[string]api.Field{},
@@ -205,7 +225,7 @@ var typesMapRoute = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"EventType": api.Field{Name: "EventType", CLITag: api.CLIInfo{ID: "event-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "event-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_ENUM"},
 
-			"RoutingConfig": api.Field{Name: "RoutingConfig", CLITag: api.CLIInfo{ID: "ipam-policy", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipam-policy", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RoutingConfig"},
+			"RoutingConfig": api.Field{Name: "RoutingConfig", CLITag: api.CLIInfo{ID: "routing-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "routing-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RoutingConfig"},
 		},
 	},
 	"netproto.RoutingConfigEventList": &api.Struct{

@@ -135,7 +135,7 @@ message NetworkInterfaceStatus {
         // TB Added for SR-IOV: HOST_VF
     }
 
-    string Name                                 = 1 [(gogoproto.jsontag) = "dsc,omitempty"];
+    string Name                                 = 1 [(gogoproto.jsontag) = "name,omitempty"];
     string DSC                                  = 2 [(gogoproto.jsontag) = "dsc,omitempty"];
     string Type                                 = 3 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFType)",
                                                    (gogoproto.jsontag) = "type,omitempty"];

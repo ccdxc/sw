@@ -6,6 +6,7 @@ Interface InterfaceApiV1
 Network NetworkApiV1
 NetworkSecurityPolicy NetworkSecurityPolicyApiV1
 Profile ProfileApiV1
+RouteTable RouteTableApiV1
 RoutingConfig RoutingConfigApiV1
 SecurityProfile SecurityProfileApiV1
 Vrf VrfApiV1

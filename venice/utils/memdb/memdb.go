@@ -288,9 +288,16 @@ func getKeyForGraphDB(skind, dkind, key string) string {
 	return skind + "-" + dkind + "-" + key
 }
 
+func memDbKind(in string) string {
+	if in == "VirtualRouter" {
+		return "Vrf"
+	}
+	return in
+}
+
 func getSKindDKindFieldKey(key string) (string, string, string) {
 	parts := strings.Split(key, "-")
-	return parts[0], parts[1], parts[2]
+	return memDbKind(parts[0]), memDbKind(parts[1]), parts[2]
 }
 
 //AddObjectWithReferences add object with refs
@@ -432,6 +439,7 @@ func (md *Memdb) updateReferences(key string, obj Object, refs map[string]apiint
 		}
 	}
 
+	log.Infof("updating Node with references for [%v][%v]", key, node.Refs)
 	md.objGraph.UpdateNode(&node)
 }
 

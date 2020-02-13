@@ -19,20 +19,22 @@ export interface IClusterIPConfig {
 export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. */
+    /** IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block. */
     'ip-address': string = null;
-    /** DefaultGW contains the default gateway's IP address. */
+    /** DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address. */
     'default-gw': string = null;
     /** DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard. */
     'dns-servers': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterIPConfig]: PropInfoItem } = {
         'ip-address': {
-            description:  `IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.`,
+            description:  `IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block.`,
+            hint:  '10.1.1.1/24, ff02::5/32 ',
             required: false,
             type: 'string'
         },
         'default-gw': {
-            description:  `DefaultGW contains the default gateway's IP address.`,
+            description:  `DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address.`,
+            hint:  '10.1.1.1, ff02::5 ',
             required: false,
             type: 'string'
         },

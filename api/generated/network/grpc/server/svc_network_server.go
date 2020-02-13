@@ -406,11 +406,7 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoAddNetworkInterface = srv.AddMethod("AutoAddNetworkInterface",
 			apisrvpkg.NewMethod(srv, pkgMessages["network.NetworkInterface"], pkgMessages["network.NetworkInterface"], "network", "AutoAddNetworkInterface")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(network.NetworkInterface)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/networkinterfaces/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoAddRouteTable = srv.AddMethod("AutoAddRouteTable",

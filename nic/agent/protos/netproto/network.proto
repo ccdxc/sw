@@ -82,22 +82,22 @@ message NetworkSpec {
     string IPAMPolicy                       = 8 [(gogoproto.jsontag) = "ipam-policy,omitempty"];
 
     // V4RouteTableID is the allocated routing table for the VRF
-    uint32 V4RouteTableID                   = 9 [(gogoproto.jsontag) = "v4-route-table-id,omitempty"];
+    string V4RouteTableID                   = 9 [(gogoproto.jsontag) = "v4-route-table-id,omitempty"];
 
     // V6RouteTableID is the allocated routing table for the VRF
-    uint32 V6RouteTableID                   = 10 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
+    string V6RouteTableID                   = 10 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
 
     // Ingress v4 Security Policies applied to this network
-    repeated uint32 IngV4SecurityPolicyID   = 11 [(gogoproto.jsontag) = "ing-v4-sec-pol-id,omitempty"];
+    repeated string IngV4SecurityPolicyID   = 11 [(gogoproto.jsontag) = "ing-v4-sec-pol-id,omitempty"];
 
     // Egress v4 Security Policies applied to this network
-    repeated uint32 EgV4SecurityPolicyID    = 12 [(gogoproto.jsontag) = "eg-v4-sec-pol-id,omitempty"];
+    repeated string EgV4SecurityPolicyID    = 12 [(gogoproto.jsontag) = "eg-v4-sec-pol-id,omitempty"];
 
     // Ingress v6 Security Policies applied to this network
-    repeated uint32 IngV6SecurityPolicyID   = 13 [(gogoproto.jsontag) = "ing-v6-sec-pol-id,omitempty"];
+    repeated string IngV6SecurityPolicyID   = 13 [(gogoproto.jsontag) = "ing-v6-sec-pol-id,omitempty"];
 
     // Egress v6 Security Policies applied to this network
-    repeated uint32 EgV6SecurityPolicyID    = 14 [(gogoproto.jsontag) = "eg-v6-sec-pol-id,omitempty"];
+    repeated string EgV6SecurityPolicyID    = 14 [(gogoproto.jsontag) = "eg-v6-sec-pol-id,omitempty"];
 
     // RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the network
     RDSpec RouteImportExport                = 15 [(gogoproto.jsontag) = "route-import-export,omitempty"];

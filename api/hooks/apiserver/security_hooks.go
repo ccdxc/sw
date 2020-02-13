@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pensando/sw/venice/utils/featureflags"
+
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/security"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -114,6 +116,10 @@ func (s *securityHooks) enforceMaxNetworkSecurityPolicyPreCommitHook(ctx context
 
 	if ctx == nil || kvs == nil {
 		return i, false, fmt.Errorf("enforceMaxNetworkSecurityPolicyPreCommitHook called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+	}
+
+	if featureflags.IsNetworkSecPolicyEnabled() {
+		return i, true, nil
 	}
 
 	switch oper {
@@ -430,7 +436,7 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 	}
 
 	// validate ALG types
-	if app.Spec.ALG != nil && app.Spec.ALG.Type != "" {
+	if featureflags.AreALGsEnabled() && app.Spec.ALG != nil && app.Spec.ALG.Type != "" {
 
 		switch app.Spec.ALG.Type {
 		case security.ALG_ICMP.String():

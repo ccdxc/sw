@@ -577,7 +577,6 @@
               "cluster"
             ],
             "RestMethods": [
-              "post",
               "put",
               "get",
               "list",

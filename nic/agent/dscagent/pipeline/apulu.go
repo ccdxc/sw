@@ -6,7 +6,6 @@ package pipeline
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -47,6 +46,7 @@ type ApuluAPI struct {
 	PortClient              halapi.PortSvcClient
 	CPRouteSvcClient        msapi.CPRouteSvcClient
 	MirrorClient            halapi.MirrorSvcClient
+	RouteSvcClient          halapi.RouteSvcClient
 }
 
 // NewPipelineAPI returns the implemetor of PipelineAPI
@@ -67,6 +67,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		InterfaceClient:         halapi.NewIfSvcClient(conn),
 		PortClient:              halapi.NewPortSvcClient(conn),
 		EventClient:             halapi.NewEventSvcClient(conn),
+		RouteSvcClient:          halapi.NewRouteSvcClient(conn),
 		CPRouteSvcClient:        msapi.NewCPRouteSvcClient(conn),
 		RoutingClient:           msapi.NewBGPSvcClient(conn),
 		EvpnClient:              msapi.NewEvpnSvcClient(conn),
@@ -132,6 +133,42 @@ func (a *ApuluAPI) PipelineInit() error {
 		return err
 	}
 
+	// Create the Loopback interface
+	lb := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "loopbackTEP",
+			UUID:      uuid.NewV4().String(),
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        netproto.InterfaceSpec_LOOPBACK.String(),
+			AdminStatus: netproto.IFStatus_UP.String(),
+		},
+	}
+
+	ifName, err := utils.GetIfName(lb.UUID[24:], utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, loopback 0, err %v",
+			lb.UUID, err))
+		return err
+	}
+	lb.Name = ifName
+
+	if _, err := a.HandleInterface(types.Create, lb); err != nil {
+		log.Errorf("Init: Failed to create loopback interface: Err: %s", err)
+	}
+	// Temp inject loopback so venice can be updated
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: lb,
+	}
+	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+
 	// initialize stream for Lif events
 	a.initEventStream()
 	return nil
@@ -157,6 +194,7 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 		return
 	}
 
+	log.Infof("Handle Vrf received [%s][%+v]", oper, vrf)
 	// Handle Get and LIST. This doesn't need any pipeline specific APIs
 	switch oper {
 	case types.Get:
@@ -233,8 +271,8 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 		}
 		vrf = existingVrf
 	}
-	log.Infof("Vrf: %v | Op: %s | %s", vrf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Vrf: %v | Op: %s | %s", vrf, oper, types.InfoHandleObjEnd)
+	log.Infof("Vrf: %+v | Op: %s | %s", vrf, oper, types.InfoHandleObjBegin)
+	defer log.Infof("Vrf: %v | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, a.EvpnClient, oper, vrf)
@@ -343,10 +381,10 @@ func (a *ApuluAPI) HandleNetwork(oper types.Operation, network netproto.Network)
 	// Perform object validations
 	uplinkIDs, vrf, err := validator.ValidateNetwork(a.InfraAPI, network)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Network: %v | Op: %s | Err: %s", network, oper, err)
 		return nil, err
 	}
-	log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjBegin)
+	log.Infof("Network: %v | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjBegin)
 	defer log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
@@ -465,7 +503,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
 	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
 
-	err = apulu.HandleInterface(a.InfraAPI, a.InterfaceClient, oper, intf)
+	err = apulu.HandleInterface(a.InfraAPI, a.InterfaceClient, a.SubnetClient, oper, intf)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -927,6 +965,89 @@ func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.Rout
 	return
 }
 
+// HandleRouteTable handles CRUDs for RouteTable object
+func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.RouteTable) (retRts []netproto.RouteTable, err error) {
+	a.Lock()
+	defer a.Unlock()
+
+	err = utils.ValidateMeta(oper, routetableObj.Kind, routetableObj.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var obj netproto.RouteTable
+
+		err = a.retrieveObject(routetableObj.Kind, routetableObj.GetKey(), obj.Unmarshal)
+		if err == nil {
+			retRts = append(retRts, obj)
+		}
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = a.InfraAPI.List(routetableObj.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "RouteTable: %s | Err: %v", routetableObj.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "RouteTable: %s | Err: %v", routetableObj.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var obj netproto.RouteTable
+			err := proto.Unmarshal(o, &obj)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "RouteTable: %s | Err: %v", obj.GetKey(), err))
+				continue
+			}
+			retRts = append(retRts, obj)
+		}
+
+		return
+	case types.Create:
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingRtcfg netproto.RouteTable
+		err = a.retrieveObject(routetableObj.Kind, routetableObj.GetKey(), existingRtcfg.Unmarshal)
+		if err != nil {
+			return
+		}
+
+		// Check for idempotency
+		if proto.Equal(&routetableObj.Spec, &existingRtcfg.Spec) {
+			return nil, nil
+		}
+	case types.Delete:
+		var existingRtcfg netproto.RouteTable
+		err = a.retrieveObject(routetableObj.Kind, routetableObj.GetKey(), existingRtcfg.Unmarshal)
+		if err != nil {
+			return
+		}
+		routetableObj = existingRtcfg
+	}
+	log.Infof("RouteTable: %v | Op: %s | %s", routetableObj, oper, types.InfoHandleObjBegin)
+	defer log.Infof("RouteTable: %v | Op: %s | %s", routetableObj, oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	err = validator.ValidateRouteTable(a.InfraAPI, routetableObj)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	err = apulu.HandleRouteTable(a.InfraAPI, a.RouteSvcClient, oper, routetableObj)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (a *ApuluAPI) ReplayConfigs() error {
 	// Replay vrf objects
@@ -1025,8 +1146,12 @@ func handleHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifSt
 			OperStatus: status.GetStatus().String(),
 		},
 	}
-	b, _ := json.MarshalIndent(i, "", "   ")
-	fmt.Println(string(b))
+	log.Infof("Creating host interface [%+v]", i)
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: i,
+	}
+	a.InfraAPI.UpdateIfChannel() <- ifEvnt
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", i.GetKey(), err))
@@ -1080,6 +1205,13 @@ func handleUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.Po
 			},
 		},
 	}
+	log.Infof("Creating Uplink interface [%+v]", i)
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: i,
+	}
+	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", i.GetKey(), err))
@@ -1259,7 +1391,7 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 			Spec: netproto.InterfaceSpec{
 				Type:        netproto.InterfaceSpec_L3.String(),
 				VrfName:     "underlay-vpc",
-				IPAddress:   obj.IPAddress,
+				IPAddress:   fmt.Sprintf("%s/%d", obj.IPAddress, obj.DestPrefixLen),
 				Network:     strconv.Itoa(int(obj.DestPrefixLen)),
 				AdminStatus: "UP",
 			},

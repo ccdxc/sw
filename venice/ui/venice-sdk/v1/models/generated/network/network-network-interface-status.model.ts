@@ -13,6 +13,7 @@ import { NetworkNetworkInterfaceHostStatus, INetworkNetworkInterfaceHostStatus }
 import { NetworkNetworkInterfaceUplinkStatus, INetworkNetworkInterfaceUplinkStatus } from './network-network-interface-uplink-status.model';
 
 export interface INetworkNetworkInterfaceStatus {
+    'name'?: string;
     'dsc'?: string;
     'type': NetworkNetworkInterfaceStatus_type;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status;
@@ -28,6 +29,7 @@ export interface INetworkNetworkInterfaceStatus {
 export class NetworkNetworkInterfaceStatus extends BaseModel implements INetworkNetworkInterfaceStatus {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
+    'name': string = null;
     'dsc': string = null;
     'type': NetworkNetworkInterfaceStatus_type = null;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status = null;
@@ -39,6 +41,10 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     /** Set only if interface is on Venice Node. */
     'cluster-node': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
+        'name': {
+            required: false,
+            type: 'string'
+        },
         'dsc': {
             required: false,
             type: 'string'
@@ -116,6 +122,13 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         if (values && values['_ui']) {
             this['_ui'] = values['_ui']
         }
+        if (values && values['name'] != null) {
+            this['name'] = values['name'];
+        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('name')) {
+            this['name'] = NetworkNetworkInterfaceStatus.propInfo['name'].default;
+        } else {
+            this['name'] = null
+        }
         if (values && values['dsc'] != null) {
             this['dsc'] = values['dsc'];
         } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('dsc')) {
@@ -175,6 +188,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'name': CustomFormControl(new FormControl(this['name']), NetworkNetworkInterfaceStatus.propInfo['name']),
                 'dsc': CustomFormControl(new FormControl(this['dsc']), NetworkNetworkInterfaceStatus.propInfo['dsc']),
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(NetworkNetworkInterfaceStatus_type), ]), NetworkNetworkInterfaceStatus.propInfo['type']),
                 'oper-status': CustomFormControl(new FormControl(this['oper-status'], [required, enumValidator(NetworkNetworkInterfaceStatus_oper_status), ]), NetworkNetworkInterfaceStatus.propInfo['oper-status']),
@@ -204,6 +218,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this._formGroup.controls['name'].setValue(this['name']);
             this._formGroup.controls['dsc'].setValue(this['dsc']);
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['oper-status'].setValue(this['oper-status']);

@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
-
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -23,8 +23,13 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	// convert agentNetif -> veniceNetif
 	creationTime, _ := types.TimestampProto(time.Now())
 	netif := &network.NetworkInterface{
-		TypeMeta:   agentNetif.TypeMeta,
+		TypeMeta: api.TypeMeta{
+			Kind: "NetworkInterface",
+		},
 		ObjectMeta: agentNetif.ObjectMeta,
+		Spec: network.NetworkInterfaceSpec{
+			AdminStatus: network.IFStatus_UP.String(),
+		},
 		Status: network.NetworkInterfaceStatus{
 			DSC: nodeID,
 			// TBD: PrimaryMac: "tbf",
@@ -43,15 +48,25 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 
 	switch agentNetif.Spec.Type {
 	case "UPLINK_ETH":
+		netif.Spec.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String()
+		netif.Spec.IPAllocType = network.IPAllocTypes_Static.String()
 		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String()
 	case "UPLINK_MGMT":
+		netif.Spec.Type = network.NetworkInterfaceStatus_UPLINK_MGMT.String()
+		netif.Spec.IPAllocType = network.IPAllocTypes_DHCP.String()
 		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_MGMT.String()
 	case "HOST_PF":
+		netif.Spec.Type = network.NetworkInterfaceStatus_HOST_PF.String()
+		netif.Spec.IPAllocType = network.IPAllocTypes_DHCP.String()
 		netif.Status.Type = network.NetworkInterfaceStatus_HOST_PF.String()
 	case "LOOPBACK":
+		netif.Spec.Type = network.NetworkInterfaceStatus_LOOPBACK_TEP.String()
+		netif.Spec.IPAllocType = network.IPAllocTypes_Static.String()
 		netif.Status.Type = network.NetworkInterfaceStatus_LOOPBACK_TEP.String()
 	default:
-		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String() // TBD: what if we receive unrecognized type, perhaps ingore it?
+		netif.Spec.Type = network.NetworkInterfaceStatus_NONE.String()
+		netif.Spec.IPAllocType = network.IPAllocTypes_Static.String()
+		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String()
 	}
 	netif.Tenant = ""
 	netif.Namespace = ""
@@ -123,16 +138,19 @@ func (sm *Statemgr) GetNetworkInterfaceWatchOptions() *api.ListWatchOptions {
 
 // OnNetworkInterfaceCreate is empty implementation for interface handling
 func (sm *Statemgr) OnNetworkInterfaceCreate(obj *ctkit.NetworkInterface) error {
+	log.Infof("Statemanager got OnNetworkInterfaceCreate [%v]", obj.Name)
 	return nil
 }
 
 // OnNetworkInterfaceUpdate is empty implementation for interface handling
 func (sm *Statemgr) OnNetworkInterfaceUpdate(oldObj *ctkit.NetworkInterface, newObj *network.NetworkInterface) error {
+	log.Infof("Statemanager got OnNetworkInterfaceUpdate [%v]", newObj.Name)
 	return nil
 }
 
 // OnNetworkInterfaceDelete is empty implementation for interface handling
 func (sm *Statemgr) OnNetworkInterfaceDelete(obj *ctkit.NetworkInterface) error {
+	log.Infof("Statemanager got OnNetworkInterfaceDelete [%v]", obj.Name)
 	return nil
 }
 
@@ -154,9 +172,7 @@ func (sma *SmNetworkInterface) CompleteRegistration() {
 	// if featureflags.IsOVerlayRoutingEnabled() == false {
 	// 	return
 	// }
-
-	smgrNetworkInterface = &SmNetworkInterface{}
-
+	log.Infof("Got CompleteRegistration for SmNetworkInterface")
 	sma.sm.SetNetworkInterfaceReactor(smgrNetworkInterface)
 }
 
@@ -166,7 +182,7 @@ func init() {
 		sm: mgr,
 	}
 
-	mgr.Register("statemgrroute", smgrNetworkInterface)
+	mgr.Register("statemgrnetif", smgrNetworkInterface)
 }
 
 // NewNetworkInterfaceState creates a new NetworkInterfaceState
@@ -181,15 +197,15 @@ func NewNetworkInterfaceState(intf *ctkit.NetworkInterface, sma *SmNetworkInterf
 func convertIFTypeToAgentProto(in string) string {
 	switch in {
 	case network.IFType_NONE.String():
-		return netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_NONE)]
+		return netproto.InterfaceSpec_NONE.String()
 	case network.IFType_HOST_PF.String():
-		return netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_HOST_PF)]
+		return netproto.InterfaceSpec_HOST_PF.String()
 	case network.IFType_UPLINK_ETH.String():
-		return netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_ETH)]
+		return netproto.InterfaceSpec_UPLINK_ETH.String()
 	case network.IFType_UPLINK_MGMT.String():
-		return netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_MGMT)]
+		return netproto.InterfaceSpec_UPLINK_MGMT.String()
 	case network.IFType_LOOPBACK_TEP.String():
-		return netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_LOOPBACK)]
+		return netproto.InterfaceSpec_LOOPBACK.String()
 	default:
 		return "unknown"
 	}
@@ -197,17 +213,17 @@ func convertIFTypeToAgentProto(in string) string {
 
 func convertAgentIFToAPIProto(in string) string {
 	switch in {
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_NONE)]:
+	case netproto.InterfaceSpec_NONE.String():
 		return network.IFType_NONE.String()
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_HOST_PF)]:
+	case netproto.InterfaceSpec_HOST_PF.String():
 		return network.IFType_HOST_PF.String()
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_ETH)]:
+	case netproto.InterfaceSpec_UPLINK_ETH.String():
 		return network.IFType_UPLINK_ETH.String()
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_MGMT)]:
+	case netproto.InterfaceSpec_UPLINK_MGMT.String():
 		return network.IFType_UPLINK_MGMT.String()
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_L3)]:
+	case netproto.InterfaceSpec_L3.String():
 		return network.IFType_NONE.String()
-	case netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_LOOPBACK)]:
+	case netproto.InterfaceSpec_LOOPBACK.String():
 		return network.IFType_LOOPBACK_TEP.String()
 	default:
 		return "unknown"
@@ -216,6 +232,9 @@ func convertAgentIFToAPIProto(in string) string {
 
 func convertNetworkInterfaceObject(ifcfg *NetworkInterfaceState) *netproto.Interface {
 	agIf := &netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:          ifcfg.NetworkInterfaceState.Tenant,
 			Namespace:       ifcfg.NetworkInterfaceState.Namespace,
@@ -224,6 +243,7 @@ func convertNetworkInterfaceObject(ifcfg *NetworkInterfaceState) *netproto.Inter
 			ResourceVersion: ifcfg.NetworkInterfaceState.ResourceVersion,
 		},
 		Spec: netproto.InterfaceSpec{
+			Type:        convertIFTypeToAgentProto(ifcfg.NetworkInterfaceState.Spec.Type),
 			AdminStatus: ifcfg.NetworkInterfaceState.Spec.AdminStatus,
 			Speed:       ifcfg.NetworkInterfaceState.Spec.Speed,
 			MTU:         ifcfg.NetworkInterfaceState.Spec.MTU,
@@ -279,13 +299,12 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceCreate(ctkitNetif *ctkit.Networ
 		log.Errorf("error creating network interface state")
 	}
 
-	err = sma.sm.AddObject(convertNetworkInterfaceObject(ifcfg))
-	return nil
+	return sma.sm.mbus.AddObjectWithReferences(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)), convertNetworkInterfaceObject(ifcfg), references(ctkitNetif))
 }
 
 // OnNetworkInterfaceUpdate handles update event
 func (sma *SmNetworkInterface) OnNetworkInterfaceUpdate(old *ctkit.NetworkInterface, new *network.NetworkInterface) error {
-	log.Info("received OnNetworkInterfaceCreate", old.Spec, new.Spec)
+	log.Info("received OnNetworkInterfaceUpdate", old.Spec, new.Spec)
 
 	_, ok := ref.ObjDiff(old.Spec, new.Spec)
 	if (old.GenerationID == old.GenerationID) && !ok {
@@ -296,8 +315,11 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceUpdate(old *ctkit.NetworkInterf
 	// update old state
 	old.ObjectMeta = new.ObjectMeta
 	old.Spec = new.Spec
-
-	return nil
+	oldpol, err := NewNetworkInterfaceState(old, sma)
+	if err != nil {
+		log.Errorf("error updating network interface state")
+	}
+	return sma.sm.mbus.UpdateObjectWithReferences(old.MakeKey(string(apiclient.GroupNetwork)), convertNetworkInterfaceObject(oldpol), references(old))
 }
 
 // OnNetworkInterfaceDelete deletes an networkInterface

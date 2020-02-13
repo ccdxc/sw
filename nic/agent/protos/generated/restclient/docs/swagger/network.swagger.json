@@ -589,44 +589,38 @@
           "description": "IPAMPolicy attached to this VRF."
         },
         "v4-route-table-id": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "description": "V4RouteTableID is the allocated routing table for the VRF."
         },
         "v6-route-table-id": {
-          "type": "integer",
-          "format": "int64",
+          "type": "string",
           "description": "V6RouteTableID is the allocated routing table for the VRF."
         },
         "ing-v4-sec-pol-id": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "description": "Ingress v4 Security Policies applied to this network."
         },
         "eg-v4-sec-pol-id": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "description": "Egress v4 Security Policies applied to this network."
         },
         "ing-v6-sec-pol-id": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "description": "Ingress v6 Security Policies applied to this network."
         },
         "eg-v6-sec-pol-id": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "description": "Egress v6 Security Policies applied to this network."
         },

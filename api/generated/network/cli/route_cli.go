@@ -84,6 +84,13 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "source-from-loopback",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeRoutingConfigOper(obj interface{}) error {

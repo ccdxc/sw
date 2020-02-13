@@ -52,23 +52,23 @@ var typesMapVrf = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"ipam-policy":       api.CLIInfo{Path: "Spec.IPAMPolicy", Skip: false, Insert: "", Help: ""},
-			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"router-mac":        api.CLIInfo{Path: "Spec.RouterMAC", Skip: false, Insert: "", Help: ""},
-			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
-			"v4-route-table-id": api.CLIInfo{Path: "Spec.V4RouteTableID", Skip: false, Insert: "", Help: ""},
-			"v6-route-table-id": api.CLIInfo{Path: "Spec.V6RouteTableID", Skip: false, Insert: "", Help: ""},
-			"vrf-id":            api.CLIInfo{Path: "Status.VrfID", Skip: false, Insert: "", Help: ""},
-			"vrf-type":          api.CLIInfo{Path: "Spec.VrfType", Skip: false, Insert: "", Help: ""},
-			"vxlan-vni":         api.CLIInfo{Path: "Spec.VxLANVNI", Skip: false, Insert: "", Help: ""},
+			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"ipam-policy":      api.CLIInfo{Path: "Spec.IPAMPolicy", Skip: false, Insert: "", Help: ""},
+			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"router-mac":       api.CLIInfo{Path: "Spec.RouterMAC", Skip: false, Insert: "", Help: ""},
+			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"v4-route-table":   api.CLIInfo{Path: "Spec.V4RouteTable", Skip: false, Insert: "", Help: ""},
+			"v6-route-table":   api.CLIInfo{Path: "Spec.V6RouteTable", Skip: false, Insert: "", Help: ""},
+			"vrf-id":           api.CLIInfo{Path: "Status.VrfID", Skip: false, Insert: "", Help: ""},
+			"vrf-type":         api.CLIInfo{Path: "Spec.VrfType", Skip: false, Insert: "", Help: ""},
+			"vxlan-vni":        api.CLIInfo{Path: "Spec.VxLANVNI", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"netproto.VrfEvent": &api.Struct{
@@ -96,9 +96,9 @@ var typesMapVrf = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"VrfType": api.Field{Name: "VrfType", CLITag: api.CLIInfo{ID: "vrf-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vrf-type", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"V4RouteTableID": api.Field{Name: "V4RouteTableID", CLITag: api.CLIInfo{ID: "v4-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v4-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"V4RouteTable": api.Field{Name: "V4RouteTable", CLITag: api.CLIInfo{ID: "v4-route-table", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v4-route-table", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"V6RouteTableID": api.Field{Name: "V6RouteTableID", CLITag: api.CLIInfo{ID: "v6-route-table-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v6-route-table-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+			"V6RouteTable": api.Field{Name: "V6RouteTable", CLITag: api.CLIInfo{ID: "v6-route-table", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "v6-route-table", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"RouterMAC": api.Field{Name: "RouterMAC", CLITag: api.CLIInfo{ID: "router-mac", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "router-mac", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

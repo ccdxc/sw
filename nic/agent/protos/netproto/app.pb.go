@@ -115,6 +115,9 @@
 		RouteTableSpec
 		RouteTableStatus
 		RouteTable
+		RouteTableEvent
+		RouteTableEventList
+		RouteTableList
 		EVPNConfig
 		BGPNeighbor
 		BGPConfig

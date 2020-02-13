@@ -4,19 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"io"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/featureflags"
-
-	"github.com/pensando/sw/venice/utils/objstore/client"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
@@ -25,9 +23,11 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -103,6 +103,30 @@ func TestNodeObject(t *testing.T) {
 			}
 		})
 	}
+
+	// Test Precommit Hook
+	kvs := &mocks.FakeKvStore{}
+	txn := &mocks.FakeTxn{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+
+	rcfg := network.RoutingConfig{}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		inO := into.(*network.RoutingConfig)
+		*inO = rcfg
+		return nil
+	}
+
+	nd := cluster.Node{
+		Spec: cluster.NodeSpec{
+			RoutingConfig: "xyz",
+		},
+	}
+
+	_, kvw, err := cl.nodePreCommitHook(ctx, kvs, txn, "/test/key1", apiintf.CreateOper, false, nd)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, kvw, "expecging kvwrite to be true")
+	Assert(t, len(txn.Cmps) == 1, "expecting one comparator on the treansaction [%v]", txn.Cmps)
 }
 
 func TestClusterObject(t *testing.T) {
@@ -1615,4 +1639,30 @@ func TestFeatureFlagsHooks(t *testing.T) {
 
 	ch.restoreFeatureFlags(kvs, l)
 	Assert(t, featureflags.IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
+}
+
+func TestRouteTableHooks(t *testing.T) {
+	txn := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+
+	tn := cluster.Tenant{}
+
+	_, kvw, err := clusterHooks.createDefaultRouteTable(ctx, kvs, txn, "/test/key1", apiintf.CreateOper, false, tn)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, kvw, "expecting kvwrite to be true")
+	Assert(t, len(txn.Ops) == 1, "expecting 1 txn operation to be added [%v]", txn.Ops)
+	txn.Ops = nil
+	txn.Cmps = nil
+
+	_, kvw, err = clusterHooks.deleteDefaultRouteTable(ctx, kvs, txn, "/test/key1", apiintf.CreateOper, false, tn)
+	AssertOk(t, err, "expecting to succeed")
+	Assert(t, kvw, "expecting kvwrite to be true")
+	Assert(t, len(txn.Ops) == 1, "expecting 1 txn operation to be added [%v]", txn.Ops)
 }

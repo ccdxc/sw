@@ -19,19 +19,19 @@ message VirtualRouterSpec {
         Tenant      = 1;
         Infra       = 2;
     }
-    string Type                                 = 1 [(gogoproto.jsontag) = "type,", (venice.check) = "StrEnum(VirtualRouterSpec.VPCTypes)"];
+    string Type                     = 1 [(gogoproto.jsontag) = "type,", (venice.check) = "StrEnum(VirtualRouterSpec.VPCTypes)"];
 
     // Default Router MAC Address to use for this Virtual Router.
-    string RouterMACAddress                     = 2 [(gogoproto.jsontag) = "router-mac-address,omitempty"];
+    string RouterMACAddress         = 2 [(gogoproto.jsontag) = "router-mac-address,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 
     // VxlAN VNI for the Virtual Router.
-    uint32 VxLanVNI                             = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty"];
+    uint32 VxLanVNI                 = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "vxlan-vni,omitempty", (venice.check) = "IntRange(0,16777215)"];
 
     // RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.
-    RDSpec RouteImportExport           			= 4 [(gogoproto.jsontag) = "route-import-export,omitempty"];
+    RDSpec RouteImportExport        = 4 [(gogoproto.jsontag) = "route-import-export,omitempty"];
 
     // Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.
-    network.IPAMPolicy DefaultIPAMPolicy        = 5 [(gogoproto.jsontag) = "default-ipam-policy,omitempty"];
+    string DefaultIPAMPolicy        = 5 [(gogoproto.jsontag) = "default-ipam-policy,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/IPAMPolicy"}];
 }
 
 message VirtualRouterStatus {

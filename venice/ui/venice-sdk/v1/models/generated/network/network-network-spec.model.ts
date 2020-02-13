@@ -17,12 +17,14 @@ export interface INetworkNetworkSpec {
     'ipv4-gateway'?: string;
     'ipv6-subnet'?: string;
     'ipv6-gateway'?: string;
-    'vlan-id'?: number;
-    'vxlan-vni'?: number;
+    'vlan-id': number;
+    'vxlan-vni': number;
     'virtual-router'?: string;
     'ipam-policy'?: string;
-    'route-imoport-export'?: INetworkRDSpec;
+    'route-import-export'?: INetworkRDSpec;
     'orchestrators'?: Array<INetworkOrchestratorInfo>;
+    'ingress-security-policy'?: Array<string>;
+    'egress-security-policy'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -32,26 +34,30 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     '_ui': any = {};
     /** Type of network. (vlan/vxlan/routed etc). */
     'type': NetworkNetworkSpec_type = null;
-    /** IPv4 subnet CIDR. */
+    /** IPv4 subnet CIDR. Should be a valid v4 or v6 CIDR block. */
     'ipv4-subnet': string = null;
-    /** IPv4 gateway for this subnet. */
+    /** IPv4 gateway for this subnet. Should be a valid v4 or v6 IP address. */
     'ipv4-gateway': string = null;
     /** IPv6 subnet CIDR. */
     'ipv6-subnet': string = null;
     /** IPv6 gateway. */
     'ipv6-gateway': string = null;
-    /** Vlan ID for the network. */
+    /** Vlan ID for the network. Value should be between 0 and 4095. */
     'vlan-id': number = null;
-    /** Vxlan VNI for the network. */
+    /** Vxlan VNI for the network. Value should be between 0 and 16777215. */
     'vxlan-vni': number = null;
     /** VirtualRouter specifies the VRF this network belongs to. */
     'virtual-router': string = null;
     /** Relay Configuration if any. */
     'ipam-policy': string = null;
     /** RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported. */
-    'route-imoport-export': NetworkRDSpec = null;
+    'route-import-export': NetworkRDSpec = null;
     /** If supplied, this network will only be applied to the orchestrators specified. */
     'orchestrators': Array<NetworkOrchestratorInfo> = null;
+    /** Security Policy to apply in the ingress direction. */
+    'ingress-security-policy': Array<string> = null;
+    /** Security Policy to apply in the egress direction. */
+    'egress-security-policy': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkNetworkSpec]: PropInfoItem } = {
         'type': {
             enum: NetworkNetworkSpec_type,
@@ -61,12 +67,14 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             type: 'string'
         },
         'ipv4-subnet': {
-            description:  `IPv4 subnet CIDR.`,
+            description:  `IPv4 subnet CIDR. Should be a valid v4 or v6 CIDR block.`,
+            hint:  '10.1.1.1/24, ff02::5/32 ',
             required: false,
             type: 'string'
         },
         'ipv4-gateway': {
-            description:  `IPv4 gateway for this subnet.`,
+            description:  `IPv4 gateway for this subnet. Should be a valid v4 or v6 IP address.`,
+            hint:  '10.1.1.1, ff02::5 ',
             required: false,
             type: 'string'
         },
@@ -81,13 +89,13 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             type: 'string'
         },
         'vlan-id': {
-            description:  `Vlan ID for the network.`,
-            required: false,
+            description:  `Vlan ID for the network. Value should be between 0 and 4095.`,
+            required: true,
             type: 'number'
         },
         'vxlan-vni': {
-            description:  `Vxlan VNI for the network.`,
-            required: false,
+            description:  `Vxlan VNI for the network. Value should be between 0 and 16777215.`,
+            required: true,
             type: 'number'
         },
         'virtual-router': {
@@ -100,7 +108,7 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             required: false,
             type: 'string'
         },
-        'route-imoport-export': {
+        'route-import-export': {
             description:  `RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported.`,
             required: false,
             type: 'object'
@@ -109,6 +117,16 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             description:  `If supplied, this network will only be applied to the orchestrators specified.`,
             required: false,
             type: 'object'
+        },
+        'ingress-security-policy': {
+            description:  `Security Policy to apply in the ingress direction.`,
+            required: false,
+            type: 'Array<string>'
+        },
+        'egress-security-policy': {
+            description:  `Security Policy to apply in the egress direction.`,
+            required: false,
+            type: 'Array<string>'
         },
     }
 
@@ -134,8 +152,10 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['route-imoport-export'] = new NetworkRDSpec();
+        this['route-import-export'] = new NetworkRDSpec();
         this['orchestrators'] = new Array<NetworkOrchestratorInfo>();
+        this['ingress-security-policy'] = new Array<string>();
+        this['egress-security-policy'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -212,14 +232,28 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             this['ipam-policy'] = null
         }
         if (values) {
-            this['route-imoport-export'].setValues(values['route-imoport-export'], fillDefaults);
+            this['route-import-export'].setValues(values['route-import-export'], fillDefaults);
         } else {
-            this['route-imoport-export'].setValues(null, fillDefaults);
+            this['route-import-export'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<NetworkOrchestratorInfo>(this, 'orchestrators', values['orchestrators'], NetworkOrchestratorInfo);
         } else {
             this['orchestrators'] = [];
+        }
+        if (values && values['ingress-security-policy'] != null) {
+            this['ingress-security-policy'] = values['ingress-security-policy'];
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ingress-security-policy')) {
+            this['ingress-security-policy'] = [ NetworkNetworkSpec.propInfo['ingress-security-policy'].default];
+        } else {
+            this['ingress-security-policy'] = [];
+        }
+        if (values && values['egress-security-policy'] != null) {
+            this['egress-security-policy'] = values['egress-security-policy'];
+        } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('egress-security-policy')) {
+            this['egress-security-policy'] = [ NetworkNetworkSpec.propInfo['egress-security-policy'].default];
+        } else {
+            this['egress-security-policy'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -233,18 +267,20 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
                 'ipv4-gateway': CustomFormControl(new FormControl(this['ipv4-gateway']), NetworkNetworkSpec.propInfo['ipv4-gateway']),
                 'ipv6-subnet': CustomFormControl(new FormControl(this['ipv6-subnet']), NetworkNetworkSpec.propInfo['ipv6-subnet']),
                 'ipv6-gateway': CustomFormControl(new FormControl(this['ipv6-gateway']), NetworkNetworkSpec.propInfo['ipv6-gateway']),
-                'vlan-id': CustomFormControl(new FormControl(this['vlan-id']), NetworkNetworkSpec.propInfo['vlan-id']),
-                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni']), NetworkNetworkSpec.propInfo['vxlan-vni']),
+                'vlan-id': CustomFormControl(new FormControl(this['vlan-id'], [required, maxValueValidator(4095), ]), NetworkNetworkSpec.propInfo['vlan-id']),
+                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni'], [required, maxValueValidator(16777215), ]), NetworkNetworkSpec.propInfo['vxlan-vni']),
                 'virtual-router': CustomFormControl(new FormControl(this['virtual-router']), NetworkNetworkSpec.propInfo['virtual-router']),
                 'ipam-policy': CustomFormControl(new FormControl(this['ipam-policy']), NetworkNetworkSpec.propInfo['ipam-policy']),
-                'route-imoport-export': CustomFormGroup(this['route-imoport-export'].$formGroup, NetworkNetworkSpec.propInfo['route-imoport-export'].required),
+                'route-import-export': CustomFormGroup(this['route-import-export'].$formGroup, NetworkNetworkSpec.propInfo['route-import-export'].required),
                 'orchestrators': new FormArray([]),
+                'ingress-security-policy': CustomFormControl(new FormControl(this['ingress-security-policy']), NetworkNetworkSpec.propInfo['ingress-security-policy']),
+                'egress-security-policy': CustomFormControl(new FormControl(this['egress-security-policy']), NetworkNetworkSpec.propInfo['egress-security-policy']),
             });
             // generate FormArray control elements
             this.fillFormArray<NetworkOrchestratorInfo>('orchestrators', this['orchestrators'], NetworkOrchestratorInfo);
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('route-imoport-export') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('route-imoport-export').get(field);
+            Object.keys((this._formGroup.get('route-import-export') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('route-import-export').get(field);
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
@@ -271,8 +307,10 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             this._formGroup.controls['vxlan-vni'].setValue(this['vxlan-vni']);
             this._formGroup.controls['virtual-router'].setValue(this['virtual-router']);
             this._formGroup.controls['ipam-policy'].setValue(this['ipam-policy']);
-            this['route-imoport-export'].setFormGroupValuesToBeModelValues();
+            this['route-import-export'].setFormGroupValuesToBeModelValues();
             this.fillModelArray<NetworkOrchestratorInfo>(this, 'orchestrators', this['orchestrators'], NetworkOrchestratorInfo);
+            this._formGroup.controls['ingress-security-policy'].setValue(this['ingress-security-policy']);
+            this._formGroup.controls['egress-security-policy'].setValue(this['egress-security-policy']);
         }
     }
 }

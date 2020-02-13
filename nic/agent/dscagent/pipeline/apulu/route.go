@@ -59,17 +59,29 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Errorf("RoutingConfig: %s | Err: Create with existing routing config[%s]", rtCfg.GetKey(), currentRoutingConfig.GetKey())
 		return errors.Wrapf(types.ErrBadRequest, "RoutingConfig: %s | Err: Create with existing routing config[%s]", rtCfg.GetKey(), currentRoutingConfig.GetKey())
 	}
+	log.Infof("RoutingConfig: %s Begin create", rtCfg.GetKey())
 	uid, err := uuid.FromString(rtCfg.UUID)
 	if err != nil {
 		log.Errorf("failed to parse UUID (%v)", err)
 		return err
 	}
+	dsccfg := infraAPI.GetConfig()
 	ctx := context.TODO()
+	rid := rtCfg.Spec.BGPConfig.RouterId
+	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
+	if rip.IsUnspecified() {
+		if dsccfg.LoopbackIP != "" {
+			rid = dsccfg.LoopbackIP
+		} else {
+			rid = dsccfg.DSCInterfaceIPs[0].IPAddress
+		}
+	}
+
 	req := msTypes.BGPRequest{
 		Request: &msTypes.BGPSpec{
 			Id:       uid.Bytes(),
 			LocalASN: rtCfg.Spec.BGPConfig.ASNumber,
-			RouterId: ip2uint32(rtCfg.Spec.BGPConfig.RouterId),
+			RouterId: ip2uint32(rid),
 		},
 	}
 	resp, err := client.BGPCreate(ctx, &req)
@@ -93,6 +105,38 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	peerReq := msTypes.BGPPeerRequest{}
 	peerAFReq := msTypes.BGPPeerAfRequest{}
 	for _, n := range rtCfg.Spec.BGPConfig.Neighbors {
+		rip := net.ParseIP(n.IPAddress)
+		// if set to 0.0.0.0 auto configure the neighborts learnt via DHCP
+		if rip.IsUnspecified() {
+			for _, i := range dsccfg.DSCInterfaceIPs {
+				peer := msTypes.BGPPeerSpec{
+					Id:           uid.Bytes(),
+					State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
+					PeerAddr:     ip2PDSType(i.GatewayIP),
+					LocalAddr:    unknLocal,
+					RemoteASN:    n.RemoteAS,
+					SendComm:     true,
+					SendExtComm:  true,
+					ConnectRetry: 5,
+				}
+				log.Infof("Add create peer [%+v]", peer)
+				peerReq.Request = append(peerReq.Request, &peer)
+
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:          uid.Bytes(),
+					PeerAddr:    ip2PDSType(i.GatewayIP),
+					LocalAddr:   unknLocal,
+					Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
+					Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
+					Disable:     false,
+					NexthopSelf: false,
+					DefaultOrig: false,
+				}
+				log.Infof("Add create peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			}
+			continue
+		}
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
 			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
@@ -179,6 +223,13 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
 	currentRoutingConfig = &rtCfg
+
+	dat, _ := rtCfg.Marshal()
+
+	if err := infraAPI.Store(rtCfg.Kind, rtCfg.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err)
+	}
 	return nil
 }
 
@@ -316,6 +367,12 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
 	currentRoutingConfig = &rtCfg
+	dat, _ := rtCfg.Marshal()
+
+	if err := infraAPI.Store(rtCfg.Kind, rtCfg.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err)
+	}
 	return nil
 }
 
@@ -362,5 +419,33 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
 	currentRoutingConfig = nil
+
+	if err := infraAPI.Delete(rtCfg.Kind, rtCfg.GetKey()); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreDelete, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err)
+	}
+	return nil
+}
+
+// HandleRouteTable handles crud operations on vrf TODO use VPCClient here
+func HandleRouteTable(infraAPI types.InfraAPI, rtSvc pdstypes.RouteSvcClient, oper types.Operation, rtCfg netproto.RouteTable) error {
+	log.Infof("HandleRouteTable: oper %v Object: %v", oper, rtCfg)
+	switch oper {
+	case types.Create, types.Update:
+		// PDSA does not need Netagent to create routing table currently. It setups the route table automatically. But still expects
+		//  a UUID
+		dat, _ := rtCfg.Marshal()
+		if err := infraAPI.Store(rtCfg.Kind, rtCfg.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "RouteTable: Update %s | Err: %v", rtCfg.GetKey(), err))
+			return errors.Wrapf(types.ErrBoltDBStoreUpdate, "RouteTable: %s | Err: %v", rtCfg.GetKey(), err)
+		}
+	case types.Delete:
+		if err := infraAPI.Delete(rtCfg.Kind, rtCfg.GetKey()); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "RouteTable: Delete %s | Err: %v", rtCfg.GetKey(), err))
+			return errors.Wrapf(types.ErrBoltDBStoreDelete, "RouteTable: %s | Err: %v", rtCfg.GetKey(), err)
+		}
+	default:
+		return errors.Wrapf(types.ErrUnsupportedOp, "Op: %s", oper)
+	}
 	return nil
 }

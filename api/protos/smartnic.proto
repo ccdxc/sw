@@ -104,10 +104,10 @@ message DistributedServiceCardSpec {
 // IPConfig defines the static IP configuration for a DistributedServiceCard
 message IPConfig {
     // IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format
-    string IPAddress            = 1 [(gogoproto.jsontag) = "ip-address,omitempty"];
+    string IPAddress            = 1 [(gogoproto.jsontag) = "ip-address,omitempty", (venice.check) = "EmptyOr(CIDR())"];
 
     // DefaultGW contains the default gateway's IP address
-    string DefaultGW            = 2 [(gogoproto.jsontag) = "default-gw,omitempty"];
+    string DefaultGW            = 2 [(gogoproto.jsontag) = "default-gw,omitempty", (venice.check) = "EmptyOr(IPAddr())"];
 
     // DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard
     repeated string DNSServers  = 3 [(gogoproto.jsontag) = "dns-servers,omitempty"];

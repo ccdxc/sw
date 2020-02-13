@@ -263,29 +263,26 @@ func (m *VirtualRouterSpec) References(tenant string, path string, resp map[stri
 			dlmtr = ""
 		}
 		tag := path + dlmtr + "default-ipam-policy"
-
-		if m.DefaultIPAMPolicy != nil {
-			m.DefaultIPAMPolicy.References(tenant, tag, resp)
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "IPAMPolicy",
+			}
 		}
 
+		if m.DefaultIPAMPolicy != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"ipam-policies/"+tenant+"/"+m.DefaultIPAMPolicy)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
 	}
 }
 
 func (m *VirtualRouterSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-
-	if m.DefaultIPAMPolicy != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "DefaultIPAMPolicy"
-			if errs := m.DefaultIPAMPolicy.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
-		}
-	}
 
 	if m.RouteImportExport != nil {
 		{
@@ -316,10 +313,6 @@ func (m *VirtualRouterSpec) Validate(ver, path string, ignoreStatus bool, ignore
 }
 
 func (m *VirtualRouterSpec) Normalize() {
-
-	if m.DefaultIPAMPolicy != nil {
-		m.DefaultIPAMPolicy.Normalize()
-	}
 
 	if m.RouteImportExport != nil {
 		m.RouteImportExport.Normalize()
@@ -392,6 +385,15 @@ func init() {
 	validatorMapVrf = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapVrf["VirtualRouterSpec"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapVrf["VirtualRouterSpec"]["all"] = append(validatorMapVrf["VirtualRouterSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*VirtualRouterSpec)
+		if err := validators.EmptyOr(validators.MacAddr, m.RouterMACAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"RouterMACAddress", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapVrf["VirtualRouterSpec"]["all"] = append(validatorMapVrf["VirtualRouterSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*VirtualRouterSpec)
 
@@ -401,6 +403,18 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapVrf["VirtualRouterSpec"]["all"] = append(validatorMapVrf["VirtualRouterSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*VirtualRouterSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "16777215")
+
+		if err := validators.IntRange(m.VxLanVNI, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"VxLanVNI", err.Error())
 		}
 		return nil
 	})

@@ -9,14 +9,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { NetworkVirtualRouterSpec_type,  } from './enums';
 import { NetworkRDSpec, INetworkRDSpec } from './network-rd-spec.model';
-import { NetworkIPAMPolicy, INetworkIPAMPolicy } from './network-ipam-policy.model';
 
 export interface INetworkVirtualRouterSpec {
     'type': NetworkVirtualRouterSpec_type;
     'router-mac-address'?: string;
-    'vxlan-vni'?: number;
+    'vxlan-vni': number;
     'route-import-export'?: INetworkRDSpec;
-    'default-ipam-policy'?: INetworkIPAMPolicy;
+    'default-ipam-policy'?: string;
     '_ui'?: any;
 }
 
@@ -25,14 +24,14 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
     'type': NetworkVirtualRouterSpec_type = null;
-    /** Default Router MAC Address to use for this Virtual Router. */
+    /** Default Router MAC Address to use for this Virtual Router. Should be a valid MAC address. */
     'router-mac-address': string = null;
-    /** VxlAN VNI for the Virtual Router. */
+    /** VxlAN VNI for the Virtual Router. Value should be between 0 and 16777215. */
     'vxlan-vni': number = null;
     /** RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported. */
     'route-import-export': NetworkRDSpec = null;
     /** Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this. */
-    'default-ipam-policy': NetworkIPAMPolicy = null;
+    'default-ipam-policy': string = null;
     public static propInfo: { [prop in keyof INetworkVirtualRouterSpec]: PropInfoItem } = {
         'type': {
             enum: NetworkVirtualRouterSpec_type,
@@ -41,13 +40,14 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
             type: 'string'
         },
         'router-mac-address': {
-            description:  `Default Router MAC Address to use for this Virtual Router.`,
+            description:  `Default Router MAC Address to use for this Virtual Router. Should be a valid MAC address.`,
+            hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },
         'vxlan-vni': {
-            description:  `VxlAN VNI for the Virtual Router.`,
-            required: false,
+            description:  `VxlAN VNI for the Virtual Router. Value should be between 0 and 16777215.`,
+            required: true,
             type: 'number'
         },
         'route-import-export': {
@@ -58,7 +58,7 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
         'default-ipam-policy': {
             description:  `Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.`,
             required: false,
-            type: 'object'
+            type: 'string'
         },
     }
 
@@ -85,7 +85,6 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['route-import-export'] = new NetworkRDSpec();
-        this['default-ipam-policy'] = new NetworkIPAMPolicy();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -124,10 +123,12 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
         } else {
             this['route-import-export'].setValues(null, fillDefaults);
         }
-        if (values) {
-            this['default-ipam-policy'].setValues(values['default-ipam-policy'], fillDefaults);
+        if (values && values['default-ipam-policy'] != null) {
+            this['default-ipam-policy'] = values['default-ipam-policy'];
+        } else if (fillDefaults && NetworkVirtualRouterSpec.hasDefaultValue('default-ipam-policy')) {
+            this['default-ipam-policy'] = NetworkVirtualRouterSpec.propInfo['default-ipam-policy'].default;
         } else {
-            this['default-ipam-policy'].setValues(null, fillDefaults);
+            this['default-ipam-policy'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -138,18 +139,13 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(NetworkVirtualRouterSpec_type), ]), NetworkVirtualRouterSpec.propInfo['type']),
                 'router-mac-address': CustomFormControl(new FormControl(this['router-mac-address']), NetworkVirtualRouterSpec.propInfo['router-mac-address']),
-                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni']), NetworkVirtualRouterSpec.propInfo['vxlan-vni']),
+                'vxlan-vni': CustomFormControl(new FormControl(this['vxlan-vni'], [required, maxValueValidator(16777215), ]), NetworkVirtualRouterSpec.propInfo['vxlan-vni']),
                 'route-import-export': CustomFormGroup(this['route-import-export'].$formGroup, NetworkVirtualRouterSpec.propInfo['route-import-export'].required),
-                'default-ipam-policy': CustomFormGroup(this['default-ipam-policy'].$formGroup, NetworkVirtualRouterSpec.propInfo['default-ipam-policy'].required),
+                'default-ipam-policy': CustomFormControl(new FormControl(this['default-ipam-policy']), NetworkVirtualRouterSpec.propInfo['default-ipam-policy']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('route-import-export') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('route-import-export').get(field);
-                control.updateValueAndValidity();
-            });
-            // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('default-ipam-policy') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('default-ipam-policy').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -166,7 +162,7 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
             this._formGroup.controls['router-mac-address'].setValue(this['router-mac-address']);
             this._formGroup.controls['vxlan-vni'].setValue(this['vxlan-vni']);
             this['route-import-export'].setFormGroupValuesToBeModelValues();
-            this['default-ipam-policy'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['default-ipam-policy'].setValue(this['default-ipam-policy']);
         }
     }
 }

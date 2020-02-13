@@ -92,7 +92,7 @@ func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
 		sclient, err = svcsclient.NewGrpcAPIClient(globals.Perseus, k.apiServerAddr, env.Logger, rpckit.WithRemoteServerName(globals.APIServer))
 	}
 	if err != nil {
-		k.logger.Errorf("#### RPC client creation failed with error: %v", err)
+		k.logger.Errorf("#### RPC client to [%v] creation failed with error: %v", k.apiServerAddr, err)
 		return nil, errors.NewInternalError(err)
 	}
 	return sclient, err

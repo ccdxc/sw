@@ -42,10 +42,10 @@ message RDSpec {
     RouteDistinguisher RD       = 3 [(gogoproto.jsontag) = "rd,omitempty"];
 
     // Route Targets to Export.
-    repeated RouteDistinguisher ExportRDs   = 4 [(gogoproto.jsontag) = "rd-export,omitempty"];
+    repeated RouteDistinguisher ExportRTs   = 4 [(gogoproto.jsontag) = "rt-export,omitempty"];
 
     // Route Targets to Import.
-    repeated RouteDistinguisher ImportRDs   = 5 [(gogoproto.jsontag) = "rd-import,omitempty"];
+    repeated RouteDistinguisher ImportRTs   = 5 [(gogoproto.jsontag) = "rt-import,omitempty"];
 }
 
 message Route {
@@ -111,6 +111,9 @@ message BGPNeighbor {
     string Password                         = 6 [(venice.storageTransformer) = "Secret()",
                                                 (gogoproto.jsontag) = "password,omitempty",
                                                 (venice.check) = "EmptyOr(StrLen(1, 128))"];
+
+    // use loopback interface as source IP address for protocol session
+    bool SourceFromLoopback                 = 7 [(gogoproto.jsontag) = "source-from-loopback,omitempty"];
 }
 
 message BGPConfig {

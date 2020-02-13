@@ -195,15 +195,15 @@ func (m *RDSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *RDSpec) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.ExportRDs {
-		if m.ExportRDs[k] != nil {
-			i := m.ExportRDs[k]
+	for k := range m.ExportRTs {
+		if m.ExportRTs[k] != nil {
+			i := m.ExportRTs[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
-	for k := range m.ImportRDs {
-		if m.ImportRDs[k] != nil {
-			i := m.ImportRDs[k]
+	for k := range m.ImportRTs {
+		if m.ImportRTs[k] != nil {
+			i := m.ImportRTs[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
@@ -512,22 +512,22 @@ func (m *RDSpec) References(tenant string, path string, resp map[string]apiintf.
 
 func (m *RDSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-	for k, v := range m.ExportRDs {
+	for k, v := range m.ExportRTs {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sExportRDs[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sExportRTs[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
-	for k, v := range m.ImportRDs {
+	for k, v := range m.ImportRTs {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sImportRDs[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sImportRTs[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -565,17 +565,17 @@ func (m *RDSpec) Normalize() {
 
 	m.AddressFamily = BGPAddressFamily_normal[strings.ToLower(m.AddressFamily)]
 
-	for k, v := range m.ExportRDs {
+	for k, v := range m.ExportRTs {
 		if v != nil {
 			v.Normalize()
-			m.ExportRDs[k] = v
+			m.ExportRTs[k] = v
 		}
 	}
 
-	for k, v := range m.ImportRDs {
+	for k, v := range m.ImportRTs {
 		if v != nil {
 			v.Normalize()
-			m.ImportRDs[k] = v
+			m.ImportRTs[k] = v
 		}
 	}
 

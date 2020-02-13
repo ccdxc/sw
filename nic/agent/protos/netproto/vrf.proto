@@ -55,10 +55,10 @@ message VrfSpec {
                                     (gogoproto.nullable) = true, (gogoproto.jsontag) = "vrf-type,omitempty"];
 
     // V4RouteTableID is the allocated routing table for the VRF
-    uint32 V4RouteTableID       = 2 [(gogoproto.jsontag) = "v4-route-table-id,omitempty"];
+    string V4RouteTable       = 2 [(gogoproto.jsontag) = "v4-route-table,omitempty"];
 
     // V6RouteTableID is the allocated routing table for the VRF
-    uint32 V6RouteTableID       = 3 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
+    string V6RouteTable       = 3 [(gogoproto.jsontag) = "v6-route-table,omitempty"];
 
     // RouterMAC for the VRF
     string RouterMAC            = 4  [(gogoproto.jsontag) = "router-mac,omitempty"];

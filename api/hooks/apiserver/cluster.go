@@ -193,7 +193,7 @@ func (cl *clusterHooks) createDefaultVirtualRouter(ctx context.Context, kv kvsto
 	vrf.SelfLink = vrf.MakeURI("configs", vrf.APIVersion, string(apiclient.GroupNetwork))
 	vrf.Name = "default"
 	vrf.Tenant = r.Name
-	vrf.Namespace = r.Namespace
+	vrf.Namespace = globals.DefaultNamespace
 	vrf.GenerationID = "1"
 	vrf.UUID = uuid.NewV4().String()
 	ts, err := types.TimestampProto(time.Now())
@@ -223,9 +223,62 @@ func (cl *clusterHooks) deleteDefaultVirtualRouter(ctx context.Context, kv kvsto
 	vrf.SelfLink = vrf.MakeURI("configs", vrf.APIVersion, string(apiclient.GroupNetwork))
 	vrf.Name = "default"
 	vrf.Tenant = r.Name
-	vrf.Namespace = r.Namespace
+	vrf.Namespace = globals.DefaultNamespace
 	vrfk := vrf.MakeKey(string(apiclient.GroupNetwork))
 	err := txn.Delete(vrfk)
+	if err != nil {
+		return r, true, errors.New("adding delete operation to transaction failed")
+	}
+	return r, true, nil
+}
+
+// createDefaultRoutingTable is a pre-commit hook to creates default RouteTable when a tenant is created
+func (cl *clusterHooks) createDefaultRouteTable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "createDefaultVirtualRouter", "msg", fmt.Sprintf("API server hook to create default VRF called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	rt := &network.RouteTable{}
+	rt.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	rt.APIVersion = apiSrv.GetVersion()
+	rt.SelfLink = rt.MakeURI("configs", rt.APIVersion, string(apiclient.GroupNetwork))
+	rt.Name = "default.default"
+	rt.Tenant = r.Name
+	rt.Namespace = globals.DefaultNamespace
+	rt.GenerationID = "1"
+	rt.UUID = uuid.NewV4().String()
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return i, true, err
+	}
+	rt.CreationTime, rt.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
+	rtk := rt.MakeKey(string(apiclient.GroupNetwork))
+	err = txn.Create(rtk, rt)
+	if err != nil {
+		return r, true, errors.New("adding create operation to transaction failed")
+	}
+	return r, true, nil
+}
+
+// deleteDefaultRoutingTable is a pre-commit hook to delete default RouteTable when a tenant is deleted
+func (cl *clusterHooks) deleteDefaultRouteTable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "deleteDefaultVirtualRouter", "msg", fmt.Sprintf("API server hook to delete default firewall profile called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	rt := &network.RouteTable{}
+	rt.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	rt.APIVersion = apiSrv.GetVersion()
+	rt.SelfLink = rt.MakeURI("configs", rt.APIVersion, string(apiclient.GroupNetwork))
+	rt.Name = "default.default"
+	rt.Tenant = r.Name
+	rt.Namespace = globals.DefaultNamespace
+	rtk := rt.MakeKey(string(apiclient.GroupNetwork))
+	err := txn.Delete(rtk)
 	if err != nil {
 		return r, true, errors.New("adding delete operation to transaction failed")
 	}
@@ -367,6 +420,25 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 	adminRoleBindingKey := login.NewRoleBinding(globals.AdminRoleBinding, r.GetName(), globals.AdminRole, "", "").MakeKey("auth")
 	if err := txn.Delete(adminRoleBindingKey); err != nil {
 		cl.logger.ErrorLog("method", "deleteDefaultRoles", "msg", "error adding delete admin role binding to transaction", "error", err)
+		return r, true, err
+	}
+	return r, true, nil
+}
+
+func (cl *clusterHooks) deleteDefaultAlertPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "deleteDefaultAlertPolicy", "msg", fmt.Sprintf("API server hook to delete default alert policy called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	cl.logger.DebugLog("method", "deleteDefaultAlertPolicy", "msg", fmt.Sprintf("API server hook called to delete default alert policy for tenant [%v]", r.Name))
+
+	alertPolicy := &monitoring.AlertPolicy{}
+	alertPolicy.Defaults("all")
+	alertPolicy.Name = "default-event-based-alerts"
+	alertPolicy.Tenant = r.GetName()
+	alertPolicy.Namespace = globals.DefaultNamespace
+	if err := txn.Delete(alertPolicy.MakeKey(string(apiclient.GroupMonitoring))); err != nil {
 		return r, true, err
 	}
 	return r, true, nil
@@ -1007,6 +1079,28 @@ func (cl *clusterHooks) checkFFBootstrap(ctx context.Context, kv kvstore.Interfa
 	return ff, true, nil
 }
 
+func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	node, ok := i.(cluster.Node)
+	if !ok {
+		return i, false, fmt.Errorf("invalid kind processing Node object")
+	}
+	rcfg := network.RoutingConfig{
+		ObjectMeta: api.ObjectMeta{
+			Name:   node.Spec.RoutingConfig,
+			Tenant: globals.DefaultTenant,
+		},
+	}
+	rkey := rcfg.MakeKey(string(apiclient.GroupNetwork))
+	if node.Spec.RoutingConfig != "" {
+		err := kvs.Get(ctx, rkey, &rcfg)
+		if err != nil {
+			return i, false, fmt.Errorf("Routing configuration not found")
+		}
+	}
+	txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
+	return i, true, nil
+}
+
 func (cl *clusterHooks) applyFeatureFlags(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
 	ff := i.(cluster.License)
 	featureflags.Update(ff.Spec.Features)
@@ -1034,6 +1128,8 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 
 	svc.GetCrudService("Node", apiintf.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Node", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
+	svc.GetCrudService("Node", apiintf.UpdateOper).WithPreCommitHook(r.nodePreCommitHook)
+	svc.GetCrudService("Node", apiintf.CreateOper).WithPreCommitHook(r.nodePreCommitHook)
 	svc.GetCrudService("Cluster", apiintf.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
 	svc.GetCrudService("Cluster", apiintf.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).WithPreCommitHook(r.populateExistingTLSConfig).GetRequestType().WithValidate(r.validateClusterConfig)
 	svc.GetCrudService("DistributedServiceCard", apiintf.CreateOper).WithPreCommitHook(r.smartNICPreCommitHook)
@@ -1053,10 +1149,13 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultVirtualRouter)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRouteTable)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultAlertPolicy)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRouteTable)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultAlertPolicy)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultTelemetryPolicies)
 
 	svc.GetCrudService("License", apiintf.CreateOper).GetRequestType().WithValidate(r.validateFFBootstrap)

@@ -63,6 +63,16 @@
       "Type": "NamedRef",
       "To": "network/IPAMPolicy",
       "Field": "IPAMPolicy"
+    },
+    {
+      "Type": "NamedRef",
+      "To": "security/NetworkSecurityPolicy",
+      "Field": "IngressSecurityPolicy"
+    },
+    {
+      "Type": "NamedRef",
+      "To": "security/NetworkSecurityPolicy",
+      "Field": "EgressSecurityPolicy"
     }
   ],
   "network.OrchestratorInfo": [
@@ -77,6 +87,13 @@
       "Type": "WeakRef",
       "To": "network/VirtualRouter",
       "Field": "TargetVirtualRouter"
+    }
+  ],
+  "network.VirtualRouterSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "network/IPAMPolicy",
+      "Field": "DefaultIPAMPolicy"
     }
   ],
   "network.VirtualRouterStatus": [

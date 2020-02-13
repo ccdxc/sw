@@ -674,67 +674,6 @@
         "tags": [
           "network/v1"
         ]
-      },
-      "post": {
-        "summary": "Create NetworkInterface object",
-        "operationId": "AddNetworkInterface",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/networkNetworkInterface"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/networkNetworkInterfaceCreate"
-            }
-          }
-        ],
-        "tags": [
-          "network/v1"
-        ]
       }
     },
     "/configs/network/v1/networkinterfaces/{O.Name}": {
@@ -937,14 +876,14 @@
           },
           {
             "name": "ip-config.ip-address",
-            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format.",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "ip-config.default-gw",
-            "description": "DefaultGW contains the default gateway's IP address.",
+            "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -967,7 +906,7 @@
             "type": "string"
           },
           {
-            "name": "status.dsc",
+            "name": "status.name",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1487,14 +1426,14 @@
           },
           {
             "name": "spec.ipv4-subnet",
-            "description": "IPv4 subnet CIDR.",
+            "description": "IPv4 subnet CIDR. Should be a valid v4 or v6 CIDR block.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.ipv4-gateway",
-            "description": "IPv4 gateway for this subnet.",
+            "description": "IPv4 gateway for this subnet. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1515,7 +1454,7 @@
           },
           {
             "name": "spec.vlan-id",
-            "description": "Vlan ID for the network.",
+            "description": "Vlan ID for the network. Value should be between 0 and 4095.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1523,7 +1462,7 @@
           },
           {
             "name": "spec.vxlan-vni",
-            "description": "Vxlan VNI for the network.",
+            "description": "Vxlan VNI for the network. Value should be between 0 and 16777215.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1544,14 +1483,14 @@
             "type": "string"
           },
           {
-            "name": "route-imoport-export.address-family",
+            "name": "route-import-export.address-family",
             "description": "Address family where this config applies.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "route-imoport-export.rd-auto",
+            "name": "route-import-export.rd-auto",
             "description": "True indicates the system will generate the RD automatically.",
             "in": "query",
             "required": false,
@@ -1580,6 +1519,26 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "spec.ingress-security-policy",
+            "description": "Security Policy to apply in the ingress direction.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.egress-security-policy",
+            "description": "Security Policy to apply in the egress direction.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "status.workloads",
@@ -3425,14 +3384,14 @@
           },
           {
             "name": "spec.ipv4-subnet",
-            "description": "IPv4 subnet CIDR.",
+            "description": "IPv4 subnet CIDR. Should be a valid v4 or v6 CIDR block.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.ipv4-gateway",
-            "description": "IPv4 gateway for this subnet.",
+            "description": "IPv4 gateway for this subnet. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3453,7 +3412,7 @@
           },
           {
             "name": "spec.vlan-id",
-            "description": "Vlan ID for the network.",
+            "description": "Vlan ID for the network. Value should be between 0 and 4095.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3461,7 +3420,7 @@
           },
           {
             "name": "spec.vxlan-vni",
-            "description": "Vxlan VNI for the network.",
+            "description": "Vxlan VNI for the network. Value should be between 0 and 16777215.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3482,14 +3441,14 @@
             "type": "string"
           },
           {
-            "name": "route-imoport-export.address-family",
+            "name": "route-import-export.address-family",
             "description": "Address family where this config applies.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
-            "name": "route-imoport-export.rd-auto",
+            "name": "route-import-export.rd-auto",
             "description": "True indicates the system will generate the RD automatically.",
             "in": "query",
             "required": false,
@@ -3518,6 +3477,26 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "spec.ingress-security-policy",
+            "description": "Security Policy to apply in the ingress direction.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spec.egress-security-policy",
+            "description": "Security Policy to apply in the egress direction.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "status.workloads",
@@ -4354,14 +4333,14 @@
           },
           {
             "name": "spec.router-mac-address",
-            "description": "Default Router MAC Address to use for this Virtual Router.",
+            "description": "Default Router MAC Address to use for this Virtual Router. Should be a valid MAC address.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.vxlan-vni",
-            "description": "VxlAN VNI for the Virtual Router.",
+            "description": "VxlAN VNI for the Virtual Router. Value should be between 0 and 16777215.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4406,72 +4385,8 @@
             "format": "int64"
           },
           {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.type",
+            "name": "spec.default-ipam-policy",
+            "description": "Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5020,14 +4935,14 @@
           },
           {
             "name": "spec.router-mac-address",
-            "description": "Default Router MAC Address to use for this Virtual Router.",
+            "description": "Default Router MAC Address to use for this Virtual Router. Should be a valid MAC address.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.vxlan-vni",
-            "description": "VxlAN VNI for the Virtual Router.",
+            "description": "VxlAN VNI for the Virtual Router. Value should be between 0 and 16777215.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -5072,79 +4987,8 @@
             "format": "int64"
           },
           {
-            "name": "T.kind",
-            "description": "Kind represents the type of the API object.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "T.api-version",
-            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "spec.type",
+            "name": "spec.default-ipam-policy",
+            "description": "Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7316,11 +7160,13 @@
       "properties": {
         "ip-address": {
           "type": "string",
-          "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format."
+          "example": "10.1.1.1/24, ff02::5/32 ",
+          "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block."
         },
         "default-gw": {
           "type": "string",
-          "description": "DefaultGW contains the default gateway's IP address."
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address."
         },
         "dns-servers": {
           "type": "array",
@@ -7602,6 +7448,11 @@
           "minLength": 1,
           "maxLength": 128,
           "description": "Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128."
+        },
+        "source-from-loopback": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "use loopback interface as source IP address for protocol session."
         }
       }
     },
@@ -7916,25 +7767,6 @@
         }
       }
     },
-    "networkNetworkInterfaceCreate": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMeta",
-          "description": "Object name is Serial-Number of the SmartNIC."
-        },
-        "spec": {
-          "$ref": "#/definitions/networkNetworkInterfaceSpec",
-          "description": "NetworkInterfaceSpec contains the configuration of the network adapter."
-        }
-      }
-    },
     "networkNetworkInterfaceHostStatus": {
       "type": "object",
       "properties": {
@@ -8048,7 +7880,7 @@
         "oper-status"
       ],
       "properties": {
-        "dsc": {
+        "name": {
           "type": "string"
         },
         "dsc": {
@@ -8150,7 +7982,9 @@
     "networkNetworkSpec": {
       "type": "object",
       "required": [
-        "type"
+        "type",
+        "vlan-id",
+        "vxlan-vni"
       ],
       "properties": {
         "type": {
@@ -8164,11 +7998,13 @@
         },
         "ipv4-subnet": {
           "type": "string",
-          "description": "IPv4 subnet CIDR."
+          "example": "10.1.1.1/24, ff02::5/32 ",
+          "description": "IPv4 subnet CIDR. Should be a valid v4 or v6 CIDR block."
         },
         "ipv4-gateway": {
           "type": "string",
-          "description": "IPv4 gateway for this subnet."
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "IPv4 gateway for this subnet. Should be a valid v4 or v6 IP address."
         },
         "ipv6-subnet": {
           "type": "string",
@@ -8181,12 +8017,14 @@
         "vlan-id": {
           "type": "integer",
           "format": "int64",
-          "description": "Vlan ID for the network."
+          "maximum": 4095,
+          "description": "Vlan ID for the network. Value should be between 0 and 4095."
         },
         "vxlan-vni": {
           "type": "integer",
           "format": "int64",
-          "description": "Vxlan VNI for the network."
+          "maximum": 16777215,
+          "description": "Vxlan VNI for the network. Value should be between 0 and 16777215."
         },
         "virtual-router": {
           "type": "string",
@@ -8196,7 +8034,7 @@
           "type": "string",
           "description": "Relay Configuration if any."
         },
-        "route-imoport-export": {
+        "route-import-export": {
           "$ref": "#/definitions/networkRDSpec",
           "description": "RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported."
         },
@@ -8206,6 +8044,20 @@
             "$ref": "#/definitions/networkOrchestratorInfo"
           },
           "description": "If supplied, this network will only be applied to the orchestrators specified."
+        },
+        "ingress-security-policy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Security Policy to apply in the ingress direction."
+        },
+        "egress-security-policy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Security Policy to apply in the egress direction."
         }
       },
       "description": "spec part of network object."
@@ -8323,14 +8175,14 @@
           "$ref": "#/definitions/networkRouteDistinguisher",
           "description": "If Import and Export RDs are not specified, RD is used uniformly as RD, and import and export route-targets."
         },
-        "rd-export": {
+        "rt-export": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkRouteDistinguisher"
           },
           "description": "Route Targets to Export."
         },
-        "rd-import": {
+        "rt-import": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/networkRouteDistinguisher"
@@ -8831,7 +8683,8 @@
     "networkVirtualRouterSpec": {
       "type": "object",
       "required": [
-        "type"
+        "type",
+        "vxlan-vni"
       ],
       "properties": {
         "type": {
@@ -8845,19 +8698,21 @@
         },
         "router-mac-address": {
           "type": "string",
-          "description": "Default Router MAC Address to use for this Virtual Router."
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "Default Router MAC Address to use for this Virtual Router. Should be a valid MAC address."
         },
         "vxlan-vni": {
           "type": "integer",
           "format": "int64",
-          "description": "VxlAN VNI for the Virtual Router."
+          "maximum": 16777215,
+          "description": "VxlAN VNI for the Virtual Router. Value should be between 0 and 16777215."
         },
         "route-import-export": {
           "$ref": "#/definitions/networkRDSpec",
           "description": "RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported."
         },
         "default-ipam-policy": {
-          "$ref": "#/definitions/networkIPAMPolicy",
+          "type": "string",
           "description": "Default IPAM policy for networks belonging to this Virtual Router. Any IPAM Policy specified in the Network overrides this."
         }
       }

@@ -28,6 +28,20 @@ service RoutingConfigApiV1 {
     rpc RoutingConfigOperUpdate (stream RoutingConfigEvent) returns (api.TypeMeta) {};
 }
 
+service RouteTableApiV1 {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "RouteTable",
+        Method: ["list", "get", "post", "put", "delete"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/route-tables"
+    };
+
+    rpc ListRouteTables (api.ListWatchOptions) returns (RouteTableList) {};
+    rpc WatchRouteTables (api.ListWatchOptions) returns (stream RouteTableEventList) {};
+    rpc RouteTableOperUpdate (stream RouteTableEvent) returns (api.TypeMeta) {};
+}
+
 message RouteDistinguisher {
     enum RDType {
         Type0 = 0;
@@ -68,6 +82,18 @@ message RouteTable {
     RouteTableStatus Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
+message RouteTableEvent {
+    api.EventType   EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    RouteTable      RouteTable      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "route-table,omitempty"];
+}
+
+message RouteTableEventList {
+    repeated RouteTableEvent routeTableEvents = 1;
+}
+message RouteTableList {
+    repeated RouteTable routeTables = 1;
+}
+
 message EVPNConfig {
     bool Shutdown = 1 [(gogoproto.jsontag) = "shutdown,omitempty"];
 }
@@ -103,7 +129,7 @@ message RoutingConfigStatus {
 
 message RoutingConfigEvent {
     api.EventType    EventType       = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    RoutingConfig    RoutingConfig   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "ipam-policy,omitempty"];
+    RoutingConfig    RoutingConfig   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "routing-config,omitempty"];
 }
 
 message RoutingConfigEventList {

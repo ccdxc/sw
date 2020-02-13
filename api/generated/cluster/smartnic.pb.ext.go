@@ -254,6 +254,9 @@ func (m *DistributedServiceCardSpec) Clone(into interface{}) (interface{}, error
 // Default sets up the defaults for the object
 func (m *DistributedServiceCardSpec) Defaults(ver string) bool {
 	var ret bool
+	if m.IPConfig != nil {
+		ret = m.IPConfig.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
@@ -286,6 +289,9 @@ func (m *DistributedServiceCardStatus) Defaults(ver string) bool {
 		i := m.Conditions[k]
 		ret = i.Defaults(ver) || ret
 	}
+	if m.IPConfig != nil {
+		ret = m.IPConfig.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
@@ -312,7 +318,8 @@ func (m *IPConfig) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *IPConfig) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -490,6 +497,19 @@ func (m *DistributedServiceCardSpec) References(tenant string, path string, resp
 
 func (m *DistributedServiceCardSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
+	if m.IPConfig != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "IPConfig"
+			if errs := m.IPConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	if vs, ok := validatorMapSmartnic["DistributedServiceCardSpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -507,6 +527,10 @@ func (m *DistributedServiceCardSpec) Validate(ver, path string, ignoreStatus boo
 }
 
 func (m *DistributedServiceCardSpec) Normalize() {
+
+	if m.IPConfig != nil {
+		m.IPConfig.Normalize()
+	}
 
 	m.MgmtMode = DistributedServiceCardSpec_MgmtModes_normal[strings.ToLower(m.MgmtMode)]
 
@@ -528,6 +552,19 @@ func (m *DistributedServiceCardStatus) Validate(ver, path string, ignoreStatus b
 		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
+		}
+	}
+
+	if m.IPConfig != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "IPConfig"
+			if errs := m.IPConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
 		}
 	}
 
@@ -569,6 +606,10 @@ func (m *DistributedServiceCardStatus) Normalize() {
 
 	}
 
+	if m.IPConfig != nil {
+		m.IPConfig.Normalize()
+	}
+
 	if m.SystemInfo != nil {
 		m.SystemInfo.Normalize()
 	}
@@ -581,6 +622,19 @@ func (m *IPConfig) References(tenant string, path string, resp map[string]apiint
 
 func (m *IPConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	if vs, ok := validatorMapSmartnic["IPConfig"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapSmartnic["IPConfig"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -708,6 +762,24 @@ func init() {
 		m := i.(*DistributedServiceCardStatus)
 		if err := validators.EmptyOr(validators.MacAddr, m.PrimaryMAC, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"PrimaryMAC", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["IPConfig"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapSmartnic["IPConfig"]["all"] = append(validatorMapSmartnic["IPConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*IPConfig)
+		if err := validators.EmptyOr(validators.IPAddr, m.DefaultGW, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"DefaultGW", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["IPConfig"]["all"] = append(validatorMapSmartnic["IPConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*IPConfig)
+		if err := validators.EmptyOr(validators.CIDR, m.IPAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"IPAddress", err.Error())
 		}
 		return nil
 	})

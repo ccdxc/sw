@@ -59,7 +59,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
 			"cluster-node":     api.CLIInfo{Path: "Status.ClusterNode", Skip: false, Insert: "", Help: ""},
 			"device-id":        api.CLIInfo{Path: "Status.IFHostStatus.DeviceID", Skip: false, Insert: "", Help: ""},
-			"dsc":              api.CLIInfo{Path: "Status.Name", Skip: false, Insert: "", Help: ""},
+			"dsc":              api.CLIInfo{Path: "Status.DSC", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
 			"ip-alloc-type":    api.CLIInfo{Path: "Spec.IPAllocType", Skip: false, Insert: "", Help: ""},
@@ -69,7 +69,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"mac-address":      api.CLIInfo{Path: "Spec.MACAddress", Skip: false, Insert: "", Help: ""},
 			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
 			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"name":             api.CLIInfo{Path: "Status.Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"oper-status":      api.CLIInfo{Path: "Status.OperStatus", Skip: false, Insert: "", Help: ""},
 			"pid":              api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverPid", Skip: false, Insert: "", Help: ""},
@@ -120,7 +120,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 	"network.NetworkInterfaceStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(NetworkInterfaceStatus{}) },
 		Fields: map[string]api.Field{
-			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"DSC": api.Field{Name: "DSC", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 

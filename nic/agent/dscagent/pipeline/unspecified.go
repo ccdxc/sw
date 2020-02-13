@@ -1443,6 +1443,11 @@ func (i *FakeAgentAPI) HandleRoutingConfig(oper types.Operation, obj netproto.Ro
 	return nil, err
 }
 
+// HandleRouteTable handles CRUDs for RouteTable object
+func (i *FakeAgentAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error) {
+	return nil, types.ErrNotImplemented
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (i *FakeAgentAPI) ReplayConfigs() error {
 	return nil

@@ -86,7 +86,7 @@ func TestCrudOps(t *testing.T) {
 			Spec: network.NetworkInterfaceSpec{
 				Type: intType,
 				IPConfig: &cluster.IPConfig{
-					IPAddress: "9.9.9.9",
+					IPAddress: "9.9.9.9/32",
 				},
 				AdminStatus: "up",
 				IPAllocType: "static",

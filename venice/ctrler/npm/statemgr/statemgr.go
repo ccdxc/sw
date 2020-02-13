@@ -67,6 +67,7 @@ type Statemgr struct {
 	SecurityGroupReactor          ctkit.SecurityGroupHandler
 	AppReactor                    ctkit.AppHandler
 	VirtualRouterReactor          ctkit.VirtualRouterHandler
+	RouteTableReactor             ctkit.RouteTableHandler
 	NetworkReactor                ctkit.NetworkHandler
 	FirewallProfileReactor        ctkit.FirewallProfileHandler
 	DistributedServiceCardReactor ctkit.DistributedServiceCardHandler
@@ -162,6 +163,11 @@ func (sm *Statemgr) SetAppReactor(handler ctkit.AppHandler) {
 // SetVirtualRouterReactor sets the VirtualRouter reactor
 func (sm *Statemgr) SetVirtualRouterReactor(handler ctkit.VirtualRouterHandler) {
 	sm.VirtualRouterReactor = handler
+}
+
+// SetRouteTableReactor sets the VirtualRouter reactor
+func (sm *Statemgr) SetRouteTableReactor(handler ctkit.RouteTableHandler) {
+	sm.RouteTableReactor = handler
 }
 
 // SetNetworkReactor sets the Network reactor
@@ -308,6 +314,8 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 
 	sm.SetVirtualRouterReactor(reactor)
 
+	sm.SetRouteTableReactor(reactor)
+
 	sm.SetNetworkReactor(reactor)
 
 	sm.SetFirewallProfileReactor(reactor)
@@ -390,6 +398,10 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	}
 
 	err = ctrler.VirtualRouter().Watch(sm.VirtualRouterReactor)
+	if err != nil {
+		logger.Fatalf("Error watching virtual router")
+	}
+	err = ctrler.RouteTable().Watch(sm.RouteTableReactor)
 	if err != nil {
 		logger.Fatalf("Error watching virtual router")
 	}
@@ -539,6 +551,7 @@ func agentObjectMeta(vmeta api.ObjectMeta) api.ObjectMeta {
 		Name:            vmeta.Name,
 		GenerationID:    vmeta.GenerationID,
 		ResourceVersion: vmeta.ResourceVersion,
+		UUID:            vmeta.UUID,
 	}
 }
 

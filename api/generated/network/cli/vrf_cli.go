@@ -15,6 +15,13 @@ import (
 // CreateVirtualRouterFlags specifies flags for VirtualRouter create operation
 var CreateVirtualRouterFlags = []gen.CliFlag{
 	{
+		ID:     "default-ipam-policy",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "router-mac-address",
 		Type:   "String",
 		Help:   "",

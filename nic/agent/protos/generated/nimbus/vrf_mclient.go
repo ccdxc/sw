@@ -208,6 +208,7 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 	evt.Vrf.ObjectMeta.Labels = make(map[string]string)
 	evt.Vrf.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
+	log.Infof("Vrf: processVrfEvent | Evt: %+v", evt)
 	// unlock the object once we are done
 	defer client.unlockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
 

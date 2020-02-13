@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
@@ -227,14 +229,47 @@ func createVirtualRouter(t *testing.T, stateMgr *Statemgr, tenant, virtualRouter
 			Tenant:    tenant,
 		},
 		Spec: network.VirtualRouterSpec{
-			Type: "Tenant",
+			Type:             "Tenant",
+			RouterMACAddress: "aaaa.bbbb.cccc",
+			VxLanVNI:         10000,
+			RouteImportExport: &network.RDSpec{
+				AddressFamily: network.BGPAddressFamily_EVPN.String(),
+				RDAuto:        false,
+				ExportRTs: []*network.RouteDistinguisher{
+					{
+						Type:          network.RouteDistinguisher_Type0.String(),
+						AssignedValue: 100,
+						AdminValue:    200,
+					},
+				},
+				ImportRTs: []*network.RouteDistinguisher{
+					{
+						Type:          network.RouteDistinguisher_Type0.String(),
+						AssignedValue: 200,
+						AdminValue:    300,
+					},
+					{
+						Type:          network.RouteDistinguisher_Type0.String(),
+						AssignedValue: 400,
+						AdminValue:    500,
+					},
+				},
+			},
 		},
 		Status: network.VirtualRouterStatus{},
 	}
 
+	vrs := &VirtualRouterState{}
+	ctVr := &ctkit.VirtualRouter{
+		VirtualRouter: vr,
+		HandlerCtx:    vrs,
+	}
+	vrs.VirtualRouter = ctVr
+	// Test convert
+	nvr := convertVirtualRouter(vrs)
+	log.Infof("Converted VRF is [%+v]", nvr)
 	// create a virtual router
 	stateMgr.ctrler.VirtualRouter().Create(&vr)
-
 	AssertEventually(t, func() (bool, interface{}) {
 
 		_, err := stateMgr.FindVirtualRouter(tenant, "default", virtualRouter)
@@ -2445,6 +2480,8 @@ func TestNetworkInterfaceConvert(t *testing.T) {
 	for _, v := range tests {
 		Assert(t, convertIFTypeToAgentProto(v.api) == v.agent, "convert form api to netproto failed [%v][%v]", convertIFTypeToAgentProto(v.api), v.agent)
 		Assert(t, convertAgentIFToAPIProto(v.agent) == v.api, "convert form netproto to api failed [%v][%v]", convertAgentIFToAPIProto(v.agent), v.api)
+		agentNetif.Spec.Type = v.agent
+		Assert(t, convertNetifObj("testnode", agentNetif) != nil, "failed to convert")
 	}
 }
 
@@ -2481,6 +2518,77 @@ func TestNetworkInterfaceCRUD(t *testing.T) {
 	// delete the smartNic
 	err = stateMgr.ctrler.NetworkInterface().Delete(&netif)
 	AssertOk(t, err, "Error deleting the smartNic")
+
+	// Statemngr empty functions
+	cif := &ctkit.NetworkInterface{
+		NetworkInterface: netif,
+	}
+	err = stateMgr.OnNetworkInterfaceCreate(cif)
+	AssertOk(t, err, "expecting to pass")
+
+	err = stateMgr.OnNetworkInterfaceUpdate(cif, &netif)
+	AssertOk(t, err, "expecting to pass")
+
+	err = stateMgr.OnNetworkInterfaceDelete(cif)
+	AssertOk(t, err, "expecting to pass")
+
+	netif.Spec.Pause = &network.PauseSpec{
+		Type: network.PauseType_PRIORITY.String(),
+	}
+
+	cif.HandlerCtx = &NetworkInterfaceState{}
+	nifstate, err := networkInterfaceStateFromObj(cif)
+	nifstate.NetworkInterfaceState = cif
+	AssertOk(t, err, "expecting to succeed creating Netif State")
+	npif := convertNetworkInterfaceObject(nifstate)
+	opts := stateMgr.GetInterfaceWatchOptions()
+	Assert(t, opts != nil, "expecting non-nul options")
+
+	err = stateMgr.OnInterfaceOperUpdate("node1", npif)
+	AssertOk(t, err, "expecting to pass")
+
+}
+
+func TestRouteTableObj(t *testing.T) {
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	sma := SmRouteTable{
+		sm: stateMgr,
+	}
+	rt := network.RouteTable{
+		TypeMeta: api.TypeMeta{Kind: "RouteTable"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "Test",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: network.RouteTableSpec{},
+	}
+	// Statemngr empty functions
+	crt := &ctkit.RouteTable{
+		RouteTable: rt,
+	}
+	err = sma.OnRouteTableCreate(crt)
+	AssertOk(t, err, "expecting to pass")
+
+	err = sma.OnRouteTableUpdate(crt, &rt)
+	AssertOk(t, err, "expecting to pass")
+
+	err = sma.OnRouteTableDelete(crt)
+	Assert(t, err != nil, "expecting to fail since object does not exist")
+
+	crt.HandlerCtx = &RouteTableState{}
+	rtstate, err := RouteTableFromObj(crt)
+	rtstate.RouteTable = crt
+	AssertOk(t, err, "expecting to succeed creating Netif State")
+	_ = convertRouteTable(rtstate)
+	opts := sma.GetRouteTableWatchOptions()
+	Assert(t, opts != nil, "expecting non-nul options")
+
 }
 
 /*

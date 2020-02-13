@@ -14,8 +14,8 @@ export interface INetworkRDSpec {
     'address-family': NetworkRDSpec_address_family;
     'rd-auto'?: boolean;
     'rd'?: INetworkRouteDistinguisher;
-    'rd-export'?: Array<INetworkRouteDistinguisher>;
-    'rd-import'?: Array<INetworkRouteDistinguisher>;
+    'rt-export'?: Array<INetworkRouteDistinguisher>;
+    'rt-import'?: Array<INetworkRouteDistinguisher>;
     '_ui'?: any;
 }
 
@@ -30,9 +30,9 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
     /** If Import and Export RDs are not specified, RD is used uniformly as RD, and import and export route-targets. */
     'rd': NetworkRouteDistinguisher = null;
     /** Route Targets to Export. */
-    'rd-export': Array<NetworkRouteDistinguisher> = null;
+    'rt-export': Array<NetworkRouteDistinguisher> = null;
     /** Route Targets to Import. */
-    'rd-import': Array<NetworkRouteDistinguisher> = null;
+    'rt-import': Array<NetworkRouteDistinguisher> = null;
     public static propInfo: { [prop in keyof INetworkRDSpec]: PropInfoItem } = {
         'address-family': {
             enum: NetworkRDSpec_address_family,
@@ -51,12 +51,12 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
             required: false,
             type: 'object'
         },
-        'rd-export': {
+        'rt-export': {
             description:  `Route Targets to Export.`,
             required: false,
             type: 'object'
         },
-        'rd-import': {
+        'rt-import': {
             description:  `Route Targets to Import.`,
             required: false,
             type: 'object'
@@ -86,8 +86,8 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['rd'] = new NetworkRouteDistinguisher();
-        this['rd-export'] = new Array<NetworkRouteDistinguisher>();
-        this['rd-import'] = new Array<NetworkRouteDistinguisher>();
+        this['rt-export'] = new Array<NetworkRouteDistinguisher>();
+        this['rt-import'] = new Array<NetworkRouteDistinguisher>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -120,14 +120,14 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
             this['rd'].setValues(null, fillDefaults);
         }
         if (values) {
-            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rd-export', values['rd-export'], NetworkRouteDistinguisher);
+            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rt-export', values['rt-export'], NetworkRouteDistinguisher);
         } else {
-            this['rd-export'] = [];
+            this['rt-export'] = [];
         }
         if (values) {
-            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rd-import', values['rd-import'], NetworkRouteDistinguisher);
+            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rt-import', values['rt-import'], NetworkRouteDistinguisher);
         } else {
-            this['rd-import'] = [];
+            this['rt-import'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -139,26 +139,26 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
                 'address-family': CustomFormControl(new FormControl(this['address-family'], [required, enumValidator(NetworkRDSpec_address_family), ]), NetworkRDSpec.propInfo['address-family']),
                 'rd-auto': CustomFormControl(new FormControl(this['rd-auto']), NetworkRDSpec.propInfo['rd-auto']),
                 'rd': CustomFormGroup(this['rd'].$formGroup, NetworkRDSpec.propInfo['rd'].required),
-                'rd-export': new FormArray([]),
-                'rd-import': new FormArray([]),
+                'rt-export': new FormArray([]),
+                'rt-import': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<NetworkRouteDistinguisher>('rd-export', this['rd-export'], NetworkRouteDistinguisher);
+            this.fillFormArray<NetworkRouteDistinguisher>('rt-export', this['rt-export'], NetworkRouteDistinguisher);
             // generate FormArray control elements
-            this.fillFormArray<NetworkRouteDistinguisher>('rd-import', this['rd-import'], NetworkRouteDistinguisher);
+            this.fillFormArray<NetworkRouteDistinguisher>('rt-import', this['rt-import'], NetworkRouteDistinguisher);
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('rd') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('rd').get(field);
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('rd-export') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('rd-export').get(field);
+            Object.keys((this._formGroup.get('rt-export') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rt-export').get(field);
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('rd-import') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('rd-import').get(field);
+            Object.keys((this._formGroup.get('rt-import') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('rt-import').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -174,8 +174,8 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
             this._formGroup.controls['address-family'].setValue(this['address-family']);
             this._formGroup.controls['rd-auto'].setValue(this['rd-auto']);
             this['rd'].setFormGroupValuesToBeModelValues();
-            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rd-export', this['rd-export'], NetworkRouteDistinguisher);
-            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rd-import', this['rd-import'], NetworkRouteDistinguisher);
+            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rt-export', this['rt-export'], NetworkRouteDistinguisher);
+            this.fillModelArray<NetworkRouteDistinguisher>(this, 'rt-import', this['rt-import'], NetworkRouteDistinguisher);
         }
     }
 }

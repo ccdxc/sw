@@ -15,6 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -265,9 +266,9 @@ func Ipv4Touint32(ip net.IP) uint32 {
 		return 0
 	}
 	if len(ip) == 16 {
-		return binary.BigEndian.Uint32(ip[12:16])
+		return binary.LittleEndian.Uint32(ip[12:16])
 	}
-	return binary.BigEndian.Uint32(ip)
+	return binary.LittleEndian.Uint32(ip)
 }
 
 func ifIndexToSlot(ifIndex uint32) uint32 {
@@ -326,4 +327,21 @@ func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string,
 	}
 	return "", errors.Wrapf(types.ErrInvalidInterfaceType,
 		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)
+}
+
+// GetIfIndex returns a IfIndex given a type and port paramenters
+func GetIfIndex(subType string, slot, parent, port uint32) uint32 {
+	switch subType {
+	case netproto.InterfaceSpec_HOST_PF.String():
+		return ((ifTypeLif & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
+	case netproto.InterfaceSpec_UPLINK_ETH.String():
+		return ((ifTypeEth & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
+	case netproto.InterfaceSpec_UPLINK_MGMT.String():
+		return ((ifTypeEth & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
+	case netproto.InterfaceSpec_L3.String():
+		return ((ifTypeL3 & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
+	case netproto.InterfaceSpec_LOOPBACK.String():
+		return ((ifTypeLoopback & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
+	}
+	return 0
 }

@@ -1700,8 +1700,6 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.CreateOper)
 
-	e.svcProf["AutoAddNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.CreateOper)
-
 	e.svcProf["AutoAddRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.CreateOper)
 
 	e.svcProf["AutoAddVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.CreateOper)

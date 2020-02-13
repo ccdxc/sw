@@ -9,8 +9,10 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/interfaces"
 	apiutils "github.com/pensando/sw/api/utils"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
@@ -38,23 +40,32 @@ func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *clu
 }
 
 func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	updNIC, ok := i.(cluster.DistributedServiceCard)
+	if !ok {
+		cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return i, true, errInvalidInputType
+	}
 
 	if oper == apiintf.CreateOper {
-		nic, ok := i.(cluster.DistributedServiceCard)
-		if !ok {
-			return i, true, errInvalidInputType
-		}
 		var nicIPAddr string // create modules with empty IP address if smartnic doesn't have an IP yet
-		if nic.Status.IPConfig != nil {
-			nicIPAddr = nic.Status.IPConfig.IPAddress
+		if updNIC.Status.IPConfig != nil {
+			nicIPAddr = updNIC.Status.IPConfig.IPAddress
 		}
-		modObjs := diagnostics.NewNaplesModules(nic.Name, nicIPAddr, apisrvpkg.MustGetAPIServer().GetVersion())
+		modObjs := diagnostics.NewNaplesModules(updNIC.Name, nicIPAddr, apisrvpkg.MustGetAPIServer().GetVersion())
 		for _, modObj := range modObjs {
 			if err := txn.Create(modObj.MakeKey("diagnostics"), modObj); err != nil {
 				cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg",
-					fmt.Sprintf("error adding module obj [%s] to transaction for smart nic [%s] creation", modObj.Name, nic.Name), "error", err)
+					fmt.Sprintf("error adding module obj [%s] to transaction for smart nic [%s] creation", modObj.Name, updNIC.Name), "error", err)
 				continue // TODO: throw an event
 			}
+		}
+		if updNIC.Spec.RoutingConfig != "" {
+			rtCfg := network.RoutingConfig{
+				ObjectMeta: api.ObjectMeta{
+					Name: updNIC.Spec.RoutingConfig,
+				},
+			}
+			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rtCfg.MakeKey(string(apiclient.GroupNetwork))), ">", 0))
 		}
 		return i, true, nil
 	}
@@ -147,6 +158,14 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			if len(errs) > 0 {
 				return i, true, fmt.Errorf("Modification of DistributedServiceCard object fields %s is not allowed", strings.Join(errs, ", "))
 			}
+		}
+		if updNIC.Spec.RoutingConfig != "" {
+			rtCfg := network.RoutingConfig{
+				ObjectMeta: api.ObjectMeta{
+					Name: updNIC.Spec.RoutingConfig,
+				},
+			}
+			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rtCfg.MakeKey(string(apiclient.GroupNetwork))), ">", 0))
 		}
 	}
 

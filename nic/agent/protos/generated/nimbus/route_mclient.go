@@ -23,6 +23,291 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type RouteTableReactor interface {
+	HandleRouteTable(oper types.Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error)
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
+}
+type RouteTableOStream struct {
+	sync.Mutex
+	stream netproto.RouteTableApiV1_RouteTableOperUpdateClient
+}
+
+// WatchRouteTables runs RouteTable watcher loop
+func (client *NimbusClient) WatchRouteTables(ctx context.Context, reactor RouteTableReactor) {
+	// setup wait group
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+	client.debugStats.AddInt("ActiveRouteTableWatch", 1)
+
+	// make sure rpc client is good
+	if client.rpcClient == nil || client.rpcClient.ClientConn == nil || client.rpcClient.ClientConn.GetState() != connectivity.Ready {
+		log.Errorf("RPC client is disconnected. Exiting watch")
+		return
+	}
+
+	// start the watch
+	watchOptions := reactor.GetWatchOptions(ctx, "RouteTable")
+	routetableRPCClient := netproto.NewRouteTableApiV1Client(client.rpcClient.ClientConn)
+	stream, err := routetableRPCClient.WatchRouteTables(ctx, &watchOptions)
+	if err != nil {
+		log.Errorf("Error watching RouteTable. Err: %v", err)
+		return
+	}
+
+	// start oper update stream
+	opStream, err := routetableRPCClient.RouteTableOperUpdate(ctx)
+	if err != nil {
+		log.Errorf("Error starting RouteTable oper updates. Err: %v", err)
+		return
+	}
+
+	ostream := &RouteTableOStream{stream: opStream}
+
+	// get a list of objects
+	objList, err := routetableRPCClient.ListRouteTables(ctx, &watchOptions)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if !ok || st.Code() == codes.Unavailable {
+			log.Errorf("Error getting RouteTable list. Err: %v", err)
+			return
+		}
+	} else {
+		// perform a diff of the states
+		client.diffRouteTables(objList, reactor, ostream)
+	}
+
+	// start grpc stream recv
+	recvCh := make(chan *netproto.RouteTableEvent, evChanLength)
+	go client.watchRouteTableRecvLoop(stream, recvCh)
+
+	// loop till the end
+	for {
+		evtWork := func(evt *netproto.RouteTableEvent) {
+			client.debugStats.AddInt("RouteTableWatchEvents", 1)
+			log.Infof("Ctrlerif: agent %s got RouteTable watch event: Type: {%+v} RouteTable:{%+v}", client.clientName, evt.EventType, evt.RouteTable.ObjectMeta)
+			client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+			go client.processRouteTableEvent(*evt, reactor, ostream)
+			//Give it some time to increment waitgrp
+			time.Sleep(100 * time.Microsecond)
+		}
+		//Give priority to evnt work.
+		select {
+		case evt, ok := <-recvCh:
+			if !ok {
+				log.Warnf("RouteTable Watch channel closed. Exisint RouteTableWatch")
+				return
+			}
+			evtWork(evt)
+		// periodic resync (Disabling as we have aggregate watch support)
+		case <-time.After(resyncInterval):
+			//Give priority to evt work
+			//Wait for batch interval for inflight work
+			time.Sleep(5 * DefaultWatchHoldInterval)
+			select {
+			case evt, ok := <-recvCh:
+				if !ok {
+					log.Warnf("RouteTable Watch channel closed. Exisint RouteTableWatch")
+					return
+				}
+				evtWork(evt)
+				continue
+			default:
+			}
+			// get a list of objects
+			objList, err := routetableRPCClient.ListRouteTables(ctx, &watchOptions)
+			if err != nil {
+				st, ok := status.FromError(err)
+				if !ok || st.Code() == codes.Unavailable {
+					log.Errorf("Error getting RouteTable list. Err: %v", err)
+					return
+				}
+			} else {
+				client.debugStats.AddInt("RouteTableWatchResyncs", 1)
+				// perform a diff of the states
+				client.diffRouteTables(objList, reactor, ostream)
+			}
+		}
+	}
+}
+
+// watchRouteTableRecvLoop receives from stream and write it to a channel
+func (client *NimbusClient) watchRouteTableRecvLoop(stream netproto.RouteTableApiV1_WatchRouteTablesClient, recvch chan<- *netproto.RouteTableEvent) {
+	defer close(recvch)
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// loop till the end
+	for {
+		// receive from stream
+		objList, err := stream.Recv()
+		if err != nil {
+			log.Errorf("Error receiving from watch channel. Exiting RouteTable watch. Err: %v", err)
+			return
+		}
+		for _, evt := range objList.RouteTableEvents {
+			recvch <- evt
+		}
+	}
+}
+
+// diffRouteTable diffs local state with controller state
+// FIXME: this is not handling deletes today
+func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, reactor RouteTableReactor, ostream *RouteTableOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.RouteTable)
+	for _, obj := range objList.RouteTables {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.RouteTable{
+		TypeMeta: api.TypeMeta{Kind: "RouteTable"},
+	}
+
+	localObjs, err := reactor.HandleRouteTable(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Err: %v", types.Operation(types.List), err))
+	}
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.RouteTableEvent{
+					EventType:  api.EventType_DeleteEvent,
+					RouteTable: lobj,
+				}
+				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+				client.processRouteTableEvent(evt, reactor, ostream)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.RouteTables {
+		evt := netproto.RouteTableEvent{
+			EventType:  api.EventType_UpdateEvent,
+			RouteTable: *obj,
+		}
+		client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+		client.processRouteTableEvent(evt, reactor, ostream)
+	}
+}
+
+// processRouteTableEvent handles RouteTable event
+func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent, reactor RouteTableReactor, ostream *RouteTableOStream) error {
+	var err error
+	client.waitGrp.Add(1)
+	defer client.waitGrp.Done()
+
+	// add venice label to the object
+	evt.RouteTable.ObjectMeta.Labels = make(map[string]string)
+	evt.RouteTable.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	log.Infof("RouteTable: processRouteTableEvent | Evt: %+v", evt)
+	// unlock the object once we are done
+	defer client.unlockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+
+	// retry till successful
+	for iter := 0; iter < maxOpretry; iter++ {
+		switch evt.EventType {
+		case api.EventType_CreateEvent:
+			fallthrough
+		case api.EventType_UpdateEvent:
+			_, err = reactor.HandleRouteTable(types.Get, evt.RouteTable)
+			if err != nil {
+				// create the RouteTable
+				_, err = reactor.HandleRouteTable(types.Create, evt.RouteTable)
+				if err != nil {
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Create), evt.RouteTable.GetKey(), err))
+					client.debugStats.AddInt("CreateRouteTableError", 1)
+				} else {
+					client.debugStats.AddInt("CreateRouteTable", 1)
+				}
+			} else {
+				// update the RouteTable
+				_, err = reactor.HandleRouteTable(types.Update, evt.RouteTable)
+				if err != nil {
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Update), evt.RouteTable.GetKey(), err))
+					client.debugStats.AddInt("UpdateRouteTableError", 1)
+				} else {
+					client.debugStats.AddInt("UpdateRouteTable", 1)
+				}
+			}
+
+		case api.EventType_DeleteEvent:
+			// update the RouteTable
+			_, err = reactor.HandleRouteTable(types.Delete, evt.RouteTable)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Delete), evt.RouteTable.GetKey(), err))
+				client.debugStats.AddInt("DeleteRouteTableError", 1)
+			} else {
+				client.debugStats.AddInt("DeleteRouteTable", 1)
+			}
+		}
+
+		if ostream == nil {
+			return err
+		}
+		// send oper status and return if there is no error
+		if err == nil {
+			robj := netproto.RouteTableEvent{
+				EventType: evt.EventType,
+				RouteTable: netproto.RouteTable{
+					TypeMeta:   evt.RouteTable.TypeMeta,
+					ObjectMeta: evt.RouteTable.ObjectMeta,
+					Status:     evt.RouteTable.Status,
+				},
+			}
+
+			// send oper status
+			ostream.Lock()
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
+			robj.RouteTable.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+			err := ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send RouteTable oper Status, %s", err)
+				client.debugStats.AddInt("RouteTableOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("RouteTableOperSent", 1)
+			}
+			ostream.Unlock()
+
+			return err
+		}
+
+		// else, retry after some time, with backoff
+		time.Sleep(time.Second * time.Duration(2*iter))
+	}
+
+	return nil
+}
+
+func (client *NimbusClient) processRouteTableDynamic(evt api.EventType,
+	object *netproto.RouteTable, reactor RouteTableReactor) error {
+
+	routetableEvt := netproto.RouteTableEvent{
+		EventType:  evt,
+		RouteTable: *object,
+	}
+
+	// add venice label to the object
+	routetableEvt.RouteTable.ObjectMeta.Labels = make(map[string]string)
+	routetableEvt.RouteTable.ObjectMeta.Labels["CreatedBy"] = "Venice"
+
+	client.lockObject(routetableEvt.RouteTable.GetObjectKind(), routetableEvt.RouteTable.ObjectMeta)
+
+	err := client.processRouteTableEvent(routetableEvt, reactor, nil)
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
+	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
+	return err
+}
+
 type RoutingConfigReactor interface {
 	HandleRoutingConfig(oper types.Operation, routingconfigObj netproto.RoutingConfig) ([]netproto.RoutingConfig, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
@@ -208,6 +493,7 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 	evt.RoutingConfig.ObjectMeta.Labels = make(map[string]string)
 	evt.RoutingConfig.ObjectMeta.Labels["CreatedBy"] = "Venice"
 
+	log.Infof("RoutingConfig: processRoutingConfigEvent | Evt: %+v", evt)
 	// unlock the object once we are done
 	defer client.unlockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
 

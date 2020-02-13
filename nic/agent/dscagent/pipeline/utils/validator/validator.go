@@ -91,6 +91,7 @@ func ValidateNetwork(i types.InfraAPI, network netproto.Network) (uplinkIDs []ui
 		intfs []netproto.Interface
 		dat   [][]byte
 	)
+	log.Infof("validating VRF for network [%v/%v/%v]", network.Tenant, network.Namespace, network.Spec.VrfName)
 	vrf, err = ValidateVrf(i, network.Tenant, network.Namespace, network.Spec.VrfName)
 	if err != nil {
 		return
@@ -271,6 +272,10 @@ func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto
 		name = types.DefaultVrf
 	}
 
+	if namespace == "" {
+		namespace = types.DefaultNamespace
+	}
+
 	v := netproto.Vrf{
 		TypeMeta: api.TypeMeta{
 			Kind: "Vrf",
@@ -281,16 +286,28 @@ func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto
 			Name:      name,
 		},
 	}
-
+	dumpVrfs := func() {
+		rs, err := i.List(v.Kind)
+		if err != nil {
+			log.Infof("did not find any vrfs (%s)", err)
+			return
+		}
+		for _, r := range rs {
+			vf := netproto.Vrf{}
+			log.Infof("unmarshal is %v/%v", vf.Unmarshal(r))
+		}
+	}
+	log.Infof("Trying to find VRF [%v/%v/%v][%+v]", tenant, namespace, name, v)
 	dat, err := i.Read(v.Kind, v.GetKey())
 	if err != nil {
-		log.Error(errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", vrf.GetKey(), types.ErrObjNotFound))
-		return vrf, errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", vrf.GetKey(), types.ErrObjNotFound)
+		dumpVrfs()
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", v.GetKey(), types.ErrObjNotFound))
+		return vrf, errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", v.GetKey(), types.ErrObjNotFound)
 	}
 	err = vrf.Unmarshal(dat)
 	if err != nil {
-		log.Error(errors.Wrapf(types.ErrUnmarshal, "Vrf: %s | Err: %v", vrf.GetKey(), err))
-		return vrf, errors.Wrapf(types.ErrUnmarshal, "Vrf: %s | Err: %v", vrf.GetKey(), err)
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "Vrf: %s | Err: %v", v.GetKey(), err))
+		return vrf, errors.Wrapf(types.ErrUnmarshal, "Vrf: %s | Err: %v", v.GetKey(), err)
 	}
 
 	return
@@ -304,6 +321,11 @@ func ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile)
 
 // ValidateRoutingConfig validates RoutingConfig object
 func ValidateRoutingConfig(i types.InfraAPI, rtCfg netproto.RoutingConfig) error {
+	return nil
+}
+
+// ValidateRouteTable validates RotueTable object
+func ValidateRouteTable(i types.InfraAPI, rtCfg netproto.RouteTable) error {
 	return nil
 }
 

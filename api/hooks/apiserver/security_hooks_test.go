@@ -3,20 +3,22 @@ package impl
 import (
 	"context"
 	"fmt"
+
 	"strings"
 	"testing"
 
 	"github.com/pensando/sw/venice/globals"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	apiintf "github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/venice/utils/kvstore/store"
-	"github.com/pensando/sw/venice/utils/runtime"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/utils/featureflags"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -251,6 +253,13 @@ func TestMaxNetworkSecurityPolicyEnforcement(t *testing.T) {
 		svc:    mocks.NewFakeService(),
 		logger: log.GetNewLogger(logConfig),
 	}
+
+	// Disable network level security policies
+	fts := []cluster.Feature{
+		{FeatureKey: featureflags.SecurityALG, License: ""},
+	}
+	featureflags.Update(fts)
+
 	// create sg policy
 	rules := []security.SGRule{
 		{
@@ -3045,6 +3054,12 @@ func TestAppAlgConfig(t *testing.T) {
 		},
 	}
 
+	// enable ALG if not enabled already
+	fts := []cluster.Feature{
+		{FeatureKey: featureflags.SecurityALG, License: ""},
+	}
+	featureflags.Update(fts)
+
 	errs := s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) == 0, "failed to create app. Error: %v", errs)
 
@@ -3214,7 +3229,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) != 0, "Invalid protocol name must fail.  Error: %v", errs)
+	Assert(t, len(errs) != 0, "Invalid protocol name [%v] must fail.  Error: %v", app.Spec.ALG, errs)
 
 	// invalid icmp type
 	app = security.App{

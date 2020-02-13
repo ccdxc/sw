@@ -144,6 +144,11 @@ func (i *badInfraAPI) GetConfig() (cfg types.DistributedServiceCardStatus) {
 	}
 }
 
+// UpdateIfChannel returns a channel for propogating interface state to the netagent
+func (i *badInfraAPI) UpdateIfChannel() chan types.UpdateIfEvent {
+	return nil
+}
+
 func (i *badInfraAPI) Close() error {
 	return errors.New("failed to close")
 }

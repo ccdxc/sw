@@ -39,6 +39,8 @@ var typesMapRoute = map[string]*api.Struct{
 			"EnableAddressFamilies": api.Field{Name: "EnableAddressFamilies", CLITag: api.CLIInfo{ID: "enable-address-families", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-address-families", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SourceFromLoopback": api.Field{Name: "SourceFromLoopback", CLITag: api.CLIInfo{ID: "source-from-loopback", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-from-loopback", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"network.EVPNConfig": &api.Struct{
@@ -56,9 +58,9 @@ var typesMapRoute = map[string]*api.Struct{
 
 			"RD": api.Field{Name: "RD", CLITag: api.CLIInfo{ID: "rd", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rd", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
 
-			"ExportRDs": api.Field{Name: "ExportRDs", CLITag: api.CLIInfo{ID: "rd-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rd-export", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
+			"ExportRTs": api.Field{Name: "ExportRTs", CLITag: api.CLIInfo{ID: "rt-export", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rt-export", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
 
-			"ImportRDs": api.Field{Name: "ImportRDs", CLITag: api.CLIInfo{ID: "rd-import", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rd-import", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
+			"ImportRTs": api.Field{Name: "ImportRTs", CLITag: api.CLIInfo{ID: "rt-import", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rt-import", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.RouteDistinguisher"},
 		},
 	},
 	"network.Route": &api.Struct{
@@ -196,6 +198,7 @@ var typesMapRoute = map[string]*api.Struct{
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"shutdown":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Shutdown", Skip: false, Insert: "", Help: ""},
+			"source-from-loopback":    api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].SourceFromLoopback", Skip: false, Insert: "", Help: ""},
 			"tenant":                  api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":                    api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},

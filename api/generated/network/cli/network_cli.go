@@ -15,6 +15,20 @@ import (
 // CreateNetworkFlags specifies flags for Network create operation
 var CreateNetworkFlags = []gen.CliFlag{
 	{
+		ID:     "egress-security-policy",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "ingress-security-policy",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "ipam-policy",
 		Type:   "String",
 		Help:   "",

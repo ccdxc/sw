@@ -257,8 +257,8 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 		netObj := createNetwork(Tenants[i%2],
 			Namespaces[0],
 			fmt.Sprintf("net%02x", i),
-			fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
-			fmt.Sprintf("12.%x.%x.254", i/256, i%256))
+			fmt.Sprintf("12.%d.%d.0/24", i/256, i%256),
+			fmt.Sprintf("12.%d.%d.254", i/256, i%256))
 		log.Infof("Creating Network uuid: %s name: %s", netObj.ObjectMeta.UUID, netObj.Name)
 		if _, err := apiClient.NetworkV1().Network().Create(ctx, netObj); err != nil {
 			log.Errorf("Failed to create tenant object: %s err: %v", netObj.Name, err)
@@ -435,8 +435,8 @@ func DefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient.Servi
 			netObj := createNetwork(globals.DefaultTenant,
 				Namespaces[0],
 				fmt.Sprintf("net%02x", i),
-				fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
-				fmt.Sprintf("12.%x.%x.254", i/256, i%256))
+				fmt.Sprintf("12.%d.%d.0/24", i/256, i%256),
+				fmt.Sprintf("12.%d.%d.254", i/256, i%256))
 			log.Infof("Creating Network uuid: %s name: %s", netObj.ObjectMeta.UUID, netObj.Name)
 			if _, err := apiClient.NetworkV1().Network().Create(ctx, netObj); err != nil {
 				log.Errorf("Failed to create network object: %s err: %v", netObj.Name, err)
@@ -481,8 +481,8 @@ func DeleteDefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient
 			netObj := createNetwork(globals.DefaultTenant,
 				Namespaces[0],
 				fmt.Sprintf("net%02x", i),
-				fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
-				fmt.Sprintf("12.%x.%x.254", i/256, i%256))
+				fmt.Sprintf("12.%d.%d.0/24", i/256, i%256),
+				fmt.Sprintf("12.%d.%d.254", i/256, i%256))
 			log.Infof("Deleting Network uuid: %s name: %s", netObj.ObjectMeta.UUID, netObj.Name)
 			if _, err := apiClient.NetworkV1().Network().Delete(ctx, netObj.GetObjectMeta()); err != nil {
 				log.Errorf("Failed to Delete network object: %s err: %v", netObj.Name, err)

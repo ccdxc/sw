@@ -297,10 +297,10 @@ mgmt_svc_init (grpc::ServerBuilder* server_builder)
     server_builder->RegisterService(&evpn_svc);
     server_builder->RegisterService(&cp_route_svc);
 
-    if (PDS_MOCK_MODE()) {
+//    if (PDS_MOCK_MODE()) {
         SDK_TRACE_INFO("Registering CP test proto");
         server_builder->RegisterService(&cp_test_svc);
-    }
+//    }
 
     SDK_TRACE_INFO("Mgmt SVC init successful");
 }

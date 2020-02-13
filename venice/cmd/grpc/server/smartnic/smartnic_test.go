@@ -1206,6 +1206,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 }
 
 func TestSmartNICConfigByUserErrorCases(t *testing.T) {
+	t.Skip("skipping since this use case is not supported")
 	// Init required components
 	testSetup()
 	defer testTeardown()
@@ -1248,7 +1249,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 		},
 		Spec: cmd.DistributedServiceCardSpec{
 			IPConfig: &cmd.IPConfig{
-				IPAddress: "remotehost", // unreachable hostname for testing error case
+				IPAddress: "169.254.255.255/32", // unreachable hostname for testing error case
 			},
 			ID:          hostID,
 			MgmtMode:    cmd.DistributedServiceCardSpec_NETWORK.String(),

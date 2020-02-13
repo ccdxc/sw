@@ -110,7 +110,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		for _, mgmtMode := range cluster.DistributedServiceCardSpec_MgmtModes_name {
 			nwManaged := mgmtMode == cluster.DistributedServiceCardSpec_NETWORK.String()
 			txn = kv.NewTxn()
-			_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nil)
+			_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.DeleteOper, false, nic)
 			Assert(t, r == true && (err == nil || (nwManaged && admitted)),
 				"smartNICPreCommitHook returned unexpected result, op: DELETE, phase: %s, err: %v", phase, err)
 			Assert(t, (nwManaged && admitted) || !txn.IsEmpty(), "transaction should contain module object")

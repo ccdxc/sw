@@ -19,6 +19,7 @@ type API struct {
 	sync.Mutex
 	config                    types.DistributedServiceCardStatus
 	primaryStore, backupStore emstore.Emstore
+	ifUpdCh                   chan types.UpdateIfEvent
 }
 
 // NewInfraAPI returns a new instance of InfraAPI. First db path is interpreted as primary and the second is secondary
@@ -56,6 +57,7 @@ func NewInfraAPI(primaryDBPath, backupDBPath string) (*API, error) {
 		return nil, errors.Wrapf(types.ErrBackupStoreCreate, "Infra API: Err: %v", err)
 	}
 
+	i.ifUpdCh = make(chan types.UpdateIfEvent, 100)
 	return &i, nil
 }
 
@@ -158,4 +160,9 @@ func (i *API) NotifyVeniceConnection() {
 	i.Lock()
 	defer i.Unlock()
 	i.config.IsConnectedToVenice = true
+}
+
+// UpdateIfChannel returns a channel for propogating interface state to the netagent
+func (i *API) UpdateIfChannel() chan types.UpdateIfEvent {
+	return i.ifUpdCh
 }

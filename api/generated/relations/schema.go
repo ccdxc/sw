@@ -34,12 +34,17 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 	"network.NetworkSpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
 		{Type: "NamedRef", To: "network/IPAMPolicy", Field: "IPAMPolicy"},
+		{Type: "NamedRef", To: "security/NetworkSecurityPolicy", Field: "IngressSecurityPolicy"},
+		{Type: "NamedRef", To: "security/NetworkSecurityPolicy", Field: "EgressSecurityPolicy"},
 	},
 	"network.OrchestratorInfo": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "orchestration/Orchestrator", Field: "Name"},
 	},
 	"network.Route": []apiintf.ObjRelation{
 		{Type: "WeakRef", To: "network/VirtualRouter", Field: "TargetVirtualRouter"},
+	},
+	"network.VirtualRouterSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/IPAMPolicy", Field: "DefaultIPAMPolicy"},
 	},
 	"network.VirtualRouterStatus": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/RouteTable", Field: "RouteTable"},

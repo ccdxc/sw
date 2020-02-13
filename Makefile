@@ -611,6 +611,11 @@ dind-cluster:
 	$(MAKE) venice-image
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
 
+dind-cluster-cp:
+	$(MAKE) dind-cluster-stop
+	$(MAKE) venice-image
+	./test/e2e/dind/do.py -configFile ${E2E_CP_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
+
 dind-cluster-stop:
 	./test/e2e/dind/do.py -delete
 
@@ -625,8 +630,14 @@ e2e:
 	#./test/e2e/dind/do.py -delete
 
 e2e-cp:
-	$(MAKE) -C nic docker/pegasus
-	E2E_CONFIG=${E2E_CP_CONFIG} $(MAKE) e2e
+	if [ -z ${BYPASS_PEGASUS} ]; then \
+		$(MAKE) -C nic docker/pegasus; \
+	fi
+	$(MAKE) dind-cluster
+	$(MAKE) e2e-cp-test
+
+e2e-cp-test:
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CP_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 
 # this assumes that venice is already compiled and starts with cluster creation
 e2e-ci:
