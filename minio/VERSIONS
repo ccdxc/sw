@@ -1,5 +1,5 @@
 # format: <name> <version>
-third_party_libs 1.1.168
+third_party_libs 1.1.170
 lkl_libs 1.1.11
 vpp f955142a60508be482a4cf37d6bd54759ca9bd47
 openssl_libs 1.1.0.2

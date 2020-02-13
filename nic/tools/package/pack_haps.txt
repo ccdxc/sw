@@ -153,7 +153,7 @@ nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/
 nic/sdk/third-party/libev/aarch64/lib/libev.so.4                    /nic/lib/
 nic/sdk/third-party/libev/aarch64/lib/libev.so                      /nic/lib/
-nic/third-party/liblmdb/aarch64/lib/liblmdb.so                      /nic/lib/
+nic/sdk/third-party/liblmdb/aarch64/lib/liblmdb.so                  /nic/lib/
 nic/sdk/third-party/sknobs/aarch64/lib/libsknobs.so                 /nic/lib/
 nic/hal/third-party/judy/aarch64/lib/libJudy.so.1                   /nic/lib/
 nic/build/aarch64/iris/lib/libdelphi*.so                            /nic/lib/

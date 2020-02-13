@@ -28,3 +28,4 @@ third-party/gmp
 third-party/ncurses
 third-party/edit
 platform/capri/capri_tm_rw.cc
+third-party/liblmdb/
