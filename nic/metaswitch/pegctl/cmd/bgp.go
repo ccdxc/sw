@@ -6,10 +6,10 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/spf13/cobra"
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -74,8 +74,9 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Operation failed with error")
 	}
 
-	bodyBytes, _ := json.MarshalIndent(respMsg.Response, "", "    ")
-	fmt.Println(string(bodyBytes))
+	m := jsonpb.Marshaler{Indent: "\t"}
+	response, _ := m.MarshalToString(respMsg)
+	fmt.Println(string(response))
 
 	return nil
 }
@@ -99,8 +100,9 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(respMsg.Response) != 0 {
-		bodyBytes, _ := json.MarshalIndent(respMsg.Response, "", "    ")
-		fmt.Println(string(bodyBytes))
+		m := jsonpb.Marshaler{Indent: "\t"}
+		response, _ := m.MarshalToString(respMsg)
+		fmt.Println(string(response))
 	} else {
 		fmt.Println("Got empty response")
 	}
@@ -127,8 +129,9 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(respMsg.Response) != 0 {
-		bodyBytes, _ := json.MarshalIndent(respMsg.Response, "", "    ")
-		fmt.Println(string(bodyBytes))
+		m := jsonpb.Marshaler{Indent: "\t"}
+		response, _ := m.MarshalToString(respMsg)
+		fmt.Println(string(response))
 	} else {
 		fmt.Println("Got empty response")
 	}
@@ -155,8 +158,9 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(respMsg.Response) != 0 {
-		bodyBytes, _ := json.MarshalIndent(respMsg.Response, "", "    ")
-		fmt.Println(string(bodyBytes))
+		m := jsonpb.Marshaler{Indent: "\t"}
+		response, _ := m.MarshalToString(respMsg)
+		fmt.Println(string(response))
 	} else {
 		fmt.Println("Got empty response")
 	}

@@ -929,6 +929,10 @@
                 </li>
               
                 <li>
+                  <a href="#pds.BGPPeerState"><span class="badge">E</span>BGPPeerState</a>
+                </li>
+              
+                <li>
                   <a href="#pds.BGPSafi"><span class="badge">E</span>BGPSafi</a>
                 </li>
               
@@ -5821,14 +5825,14 @@ session if an all 0 IP address is provided </p></td>
               
                 <tr>
                   <td>Status</td>
-                  <td><a href="#uint32">uint32</a></td>
+                  <td><a href="#pds.BGPPeerState">BGPPeerState</a></td>
                   <td></td>
                   <td><p>BGP session status </p></td>
                 </tr>
               
                 <tr>
                   <td>PrevStatus</td>
-                  <td><a href="#uint32">uint32</a></td>
+                  <td><a href="#pds.BGPPeerState">BGPPeerState</a></td>
                   <td></td>
                   <td><p>BGP session previous status </p></td>
                 </tr>
@@ -6033,6 +6037,59 @@ as cluster ID </p></td>
               <tr>
                 <td>BGP_PEER_RR_MESHED_CLIENT</td>
                 <td>2</td>
+                <td><p></p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="pds.BGPPeerState">BGPPeerState</h3>
+        <p>BGP peer last_state</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>BGP_PEER_STATE_NONE</td>
+                <td>0</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_IDLE</td>
+                <td>1</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_CONNECT</td>
+                <td>2</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_ACTIVE</td>
+                <td>3</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_OPENSENT</td>
+                <td>4</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_OPENCONFIRM</td>
+                <td>5</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_PEER_STATE_ESTABLISHED</td>
+                <td>6</td>
                 <td><p></p></td>
               </tr>
             

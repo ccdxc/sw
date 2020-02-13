@@ -215,6 +215,7 @@
   
     - [BGPAfi](#pds.BGPAfi)
     - [BGPPeerRRClient](#pds.BGPPeerRRClient)
+    - [BGPPeerState](#pds.BGPPeerState)
     - [BGPSafi](#pds.BGPSafi)
     - [NLRISrc](#pds.NLRISrc)
   
@@ -2128,8 +2129,8 @@ BGP peer status
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | Id | [bytes](#bytes) |  | unique key/identifier of peer |
-| Status | [uint32](#uint32) |  | BGP session status |
-| PrevStatus | [uint32](#uint32) |  | BGP session previous status |
+| Status | [BGPPeerState](#pds.BGPPeerState) |  | BGP session status |
+| PrevStatus | [BGPPeerState](#pds.BGPPeerState) |  | BGP session previous status |
 | LastErrorRcvd | [bytes](#bytes) |  | last error received |
 | LastErrorSent | [bytes](#bytes) |  | Last error sent |
 | LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | internal only BGP local IP address |
@@ -2225,6 +2226,23 @@ BGP peer RR client
 | BGP_PEER_RR_NONE | 0 |  |
 | BGP_PEER_RR_CLIENT | 1 |  |
 | BGP_PEER_RR_MESHED_CLIENT | 2 |  |
+
+
+
+<a name="pds.BGPPeerState"/>
+
+### BGPPeerState
+BGP peer last_state
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_PEER_STATE_NONE | 0 |  |
+| BGP_PEER_STATE_IDLE | 1 |  |
+| BGP_PEER_STATE_CONNECT | 2 |  |
+| BGP_PEER_STATE_ACTIVE | 3 |  |
+| BGP_PEER_STATE_OPENSENT | 4 |  |
+| BGP_PEER_STATE_OPENCONFIRM | 5 |  |
+| BGP_PEER_STATE_ESTABLISHED | 6 |  |
 
 
 
