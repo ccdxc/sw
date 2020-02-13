@@ -1,5 +1,5 @@
 meta:
-    name    : tso
+    name    : tso_regr
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 32
@@ -12,6 +12,7 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500', '4096', '9000']
             pktsize            : [  2048, 8192, 32768 ]
             vlantag            : [ 'off']
@@ -23,11 +24,12 @@ testcases:
             iperfthreads     :  1
     -   name    : TSO_REGR_VLAN
         testcase: testcases.drivers.drivertso
-        disable : False
+        disable : True
         ignore  : True
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500', '4096', '9000']
             pktsize            : [  2048, 8192, 32768 ]
             vlantag            : [ 'on' ]
@@ -39,11 +41,12 @@ testcases:
             iperfthreads     :  1
     -   name    : TSO_REGR_VXLAN
         testcase: testcases.drivers.drivertso
-        disable : False
+        disable : True
         ignore  : True
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500', '4096', '9000']
             pktsize            : [  2048, 8192, 32768 ]
             vlantag            : [ 'off' ]
@@ -55,11 +58,12 @@ testcases:
             iperfthreads     :  1
     -   name    : TSO_REGR_VLAN_VXLAN
         testcase: testcases.drivers.drivertso
-        disable : False
+        disable : True
         ignore  : True
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500', '4096', '9000']
             pktsize            : [  2048, 8192, 32768 ]
             vlantag            : [ 'on' ]

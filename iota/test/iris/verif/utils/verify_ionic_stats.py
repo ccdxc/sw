@@ -1,11 +1,13 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
+import iota.test.utils.ionic_utils as ionic_utils
 
 IONIC_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth"
 
 def Main(tc):
     for node in api.GetNaplesHostnames():
+        ionic_utils.checkForIonicError(node)
         for i in api.GetNaplesHostInterfaces(node):
             req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
 

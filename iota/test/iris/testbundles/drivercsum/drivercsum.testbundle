@@ -1,0 +1,69 @@
+meta:
+    name    : drivercsum
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 24
+
+testcases:
+    -   name    : DRIVER_CSUM_INVALID
+        testcase: testcases.drivers.drivercsum
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            vlantag            : [ 'off']
+            vxlan              : [ 'off']
+            csum               : [ 'invalid']
+            tx_check_sum       : [ 'off', 'on']
+            rx_check_sum       : [ 'off', 'on']
+            proto              : [ 'icmp', 'udp', 'tcp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+    -   name    : DRIVER_CSUM_VALID
+        testcase: testcases.drivers.drivercsum
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            vlantag            : [ 'off']
+            vxlan              : [ 'off']
+            csum               : [ 'valid']
+            tx_check_sum       : [ 'off', 'on']
+            rx_check_sum       : [ 'off', 'on']
+            proto              : [ 'icmp', 'udp', 'tcp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+    -   name    : DRIVER_VLAN_CSUM_INVALID
+        testcase: testcases.drivers.drivercsum
+        disable : True
+        ignore  : True
+        iterators :
+            type               : nested
+            vlantag            : [ 'on']
+            vxlan              : [ 'off']
+            csum               : [ 'invalid']
+            tx_check_sum       : [ 'off', 'on']
+            rx_check_sum       : [ 'off', 'on']
+            proto              : [ 'icmp', 'udp', 'tcp']
+            ipproto            : [ 'v4', 'v6']
+            vxlan_ip           : [ 'v4', 'v6']
+        args    :
+            type: host
+    -   name    : DRIVER_VLAN_CSUM_VALID
+        testcase: testcases.drivers.drivercsum
+        disable : True
+        ignore  : True
+        iterators :
+            type               : nested
+            vlantag            : [ 'on']
+            vxlan              : [ 'off']
+            csum               : [ 'valid']
+            tx_check_sum       : [ 'off', 'on']
+            rx_check_sum       : [ 'off', 'on']
+            proto              : [ 'icmp', 'udp', 'tcp']
+            ipproto            : [ 'v4', 'v6']
+            vxlan_ip           : [ 'v4', 'v6']
+        args    :
+            type: host

@@ -3,140 +3,12 @@ import time
 import copy
 from scapy.all import rdpcap
 import iota.harness.api as api
+import iota.test.utils.naples_host as host
+import iota.test.utils.ionic_utils as ionic_utils
+import iota.test.utils.ionic_stats as ionic_stats
 import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
-
-VXLAN_SERVER_IP = "100.1.1.1"
-VXLAN_CLIENT_IP = "100.1.1.2"
-VXLAN_SERVER_IPV6 = "3000::1"
-VXLAN_CLIENT_IPV6 = "3000::2"
-
-# In netstat output for FreeBSD, first one is received bad checksum counter.
-NETSTAT_INVALID_CHECKSUM = 'sudo netstat -s | grep "discarded for bad checksums" | cut -c1-3'
-
-
-def addBSDVxLAN(node, local_ip, remote_ip, vxlan_ip):
-    if api.GetNodeOs(node) != host.OS_TYPE_BSD:
-        return api.types.status.SUCCESS
-    api.Logger.info("Creating VxLAN on %s with local: %s remote: %s VxLAN IP: %s"
-                    % (node, local_ip, remote_ip, vxlan_ip))
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(req, node, 'sudo ifconfig vxlan0 destroy')
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.info("vxlan0 doesn't exit on %s" % (node))
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(
-        req, node, 'sudo ifconfig vxlan create vxlanid 100 vxlanlocal %s vxlanremote %s'
-        % (local_ip, remote_ip))
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error("Failed to create vxlan0 on %s" % (node))
-        return api.types.status.FAILURE
-
-    cmd = resp.commands[0]
-    if cmd.exit_code != 0:
-        api.Logger.error("Failed to create vxlan0, stderr: %s"
-                         % (cmd.stderr))
-        api.PrintCommandResults(cmd)
-        return api.types.status.FAILURE
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(
-        req, node, 'sudo ifconfig vxlan0 inet6 accept_rtadv')
-    api.Trigger_AddHostCommand(
-        req, node, 'sudo ifconfig vxlan0 %s' % (vxlan_ip))
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error(
-            "Failed to  configure IP %s on vxlan0 on %s" % (vxlan_ip, node))
-        return api.types.status.FAILURE
-
-    cmd = resp.commands[0]
-    if cmd.exit_code != 0:
-        api.Logger.error("Failed to  configure IP %s on vxlan0 on %s, stderr: %s"
-                         % (vxlan_ip, node, cmd.stderr))
-        api.PrintCommandResults(cmd)
-        return api.types.status.FAILURE
-
-    time.sleep(2)
-    return api.types.status.SUCCESS
-
-
-def addLinuxVxLAN(node, local_ip, remote_ip, vxlan_ip):
-    if api.GetNodeOs(node) != host.OS_TYPE_LINUX:
-        return api.types.status.SUCCESS
-    api.Logger.info("Creating VxLAN on %s with local: %s remote: %s VxLAN IP: %s"
-                    % (node, local_ip, remote_ip, vxlan_ip))
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(req, node, 'sudo ip link delele vxlan0')
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.info("vxlan0 doesn't exit on %s" % (node))
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(
-        req, node, 'sudo ip link add vxlan0 type vxlan id 100 local %s remote %s dstport 4789'
-        % (local_ip, remote_ip))
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error("Failed to create vxlan0 on %s" % (node))
-        return api.types.status.FAILURE
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(
-        req, node, 'sudo ifconfig vxlan0 %s' % (vxlan_ip))
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error(
-            "Failed to  configure IP %s on vxlan0 on %s" % (vxlan_ip, node))
-        return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
-
-
-def addVxLAN(node, local_ip, remote_ip, vxlan_ip):
-    if api.GetNodeOs(node) == host.OS_TYPE_BSD:
-        return addBSDVxLAN(node, local_ip, remote_ip, vxlan_ip)
-
-    return addLinuxVxLAN(node, local_ip, remote_ip, vxlan_ip)
-
-
-def setupVxLAN(ipv4, srv, cli):
-
-    if ipv4:
-        srv_addr = srv.ip_address
-        cli_addr = cli.ip_address
-    else:
-        srv_addr = srv.ipv6_address
-        cli_addr = cli.ipv6_address
-
-    if ipv4:
-        vxlan_ip_str = VXLAN_SERVER_IP
-    else:
-        vxlan_ip_str = "inet6 " + VXLAN_SERVER_IPV6 + "/120"
-
-    status = addVxLAN(srv.node_name, srv_addr,
-                      cli_addr, vxlan_ip_str)
-    if status != api.types.status.SUCCESS:
-        api.Logger.error("Failed to setup server VxLAN")
-        return api.types.status.FAILURE
-
-    if ipv4:
-        vxlan_ip_str = VXLAN_CLIENT_IP
-    else:
-        vxlan_ip_str = "inet6 " + VXLAN_CLIENT_IPV6 + "/120"
-    status = addVxLAN(cli.node_name, cli_addr,
-                      srv_addr, vxlan_ip_str)
-    if status != api.types.status.SUCCESS:
-        api.Logger.error("Failed to setup client VxLAN")
-        return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
-
 
 def startTcpDump(node, intf, src_port, filename):
 
@@ -152,76 +24,51 @@ def startTcpDump(node, intf, src_port, filename):
     for cmd in resp.commands:
         if cmd.exit_code != 0:
             api.Logger.error(
-                "Failed to start tcpdump for %s on %s, stderr: %s"
-                % (intf, node, cmd.stderr))
+                "Failed to start tcpdump for %s on %s\n"
+                % (intf, node))
             api.PrintCommandResults(cmd)
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
-
-def getNetstatBadCsum(node):
-    if api.GetNodeOs(node) != host.OS_TYPE_BSD:
-        return 0
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-
-    api.Trigger_AddHostCommand(req, node, NETSTAT_INVALID_CHECKSUM)
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error(
-            "Failed to start netstat on %s" % (node))
-        return -1
-
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            if cmd.stdout is not None:
-                api.Logger.error("Received bad checksum counter is non-zero(%s)"
-                                 % (cmd.stdout))
-                api.PrintCommandResults(cmd)
-                return -1
-
-    return int(cmd.stdout)
-
-
 def VerifyNetStat(tc):
-    srv_bad_csum = getNetstatBadCsum(tc.nodes[0])
+    status = api.types.status.SUCCESS
+
+    proto = getattr(tc.iterators, "proto", 'tcp')
+    srv_bad_csum = ionic_stats.getNetstatBadCsum(tc.srv, proto)
     # Compare the bad csum counter before and after the test on receiver.
     if tc.srv_bad_csum != srv_bad_csum:
         api.Logger.error("Server got bad checksum packets, before: %d, after: %d"
                          % (tc.srv_bad_csum, srv_bad_csum))
-        return api.types.status.FAILURE
-    cli_bad_csum = getNetstatBadCsum(tc.nodes[1])
+        status = api.types.status.FAILURE
+    cli_bad_csum = ionic_stats.getNetstatBadCsum(tc.cli, proto)
     # Compare the bad csum counter before and after the test on receiver.
     if tc.cli_bad_csum != cli_bad_csum:
         api.Logger.error("Client got bad checksum packets, before: %d, after: %d"
                          % (tc.cli_bad_csum, cli_bad_csum))
-        return api.types.status.FAILURE
+        status = api.types.status.FAILURE
 
     api.Logger.info("Bad checksum counter for client: %d, server: %d"
                     % (cli_bad_csum, srv_bad_csum))
-    return api.types.status.SUCCESS
+    return status
 
 # Retransmission count is only for Client.
-
-
 def VerifyRetrans(tc):
     if tc.resp is None:
         api.Logger.error("Failed to read client iperf output")
-        return api.types.status.FAILURE
+        return api.types.status.FAILURE, 0, 0
 
     cmd = tc.resp.commands[0]
     if cmd.exit_code != 0:
         if cmd.stdout is not None:
-            api.Logger.error("Client iperf didn't run, stdout: %s stderr: %s"
-                             % (cmd.stdout, cmd.stderr))
+            api.Logger.error("Client iperf didn't run\n");
             api.PrintCommandResults(cmd)
-            return api.types.status.FAILURE
+            return api.types.status.FAILURE, 0, 0
 
     if len(tc.resp.commands) < 2:
         api.Logger.error("Client commands after iperf didn't run")
         api.PrintCommandResults(cmd)
-        return api.types.status.FAILURE
+        return api.types.status.FAILURE, 0, 0
 
     # Second client command is to grep for retrans
     cmd = tc.resp.commands[1]
@@ -236,10 +83,7 @@ def VerifyRetrans(tc):
         bw_str = cmd.stdout
         bw = int(float(tc.resp.commands[2].stdout) / (1024 * 1024))
 
-    api.Logger.info("Client iperf retransmission counter: %d BW: %d Mbps"
-                    % (retran, bw))
-
-    return api.types.status.SUCCESS
+    return api.types.status.SUCCESS, retran, bw
 
 
 def VerifyMSS(tc):
@@ -255,20 +99,18 @@ def VerifyMSS(tc):
 
 def verifySingle(tc):
     status = VerifyNetStat(tc)
-    if status != api.types.status.SUCCESS:
-        return status
 
-    status = VerifyRetrans(tc)
-    if status != api.types.status.SUCCESS:
-        return status
-
+    status1, retran, bw = VerifyRetrans(tc)
+    if status1 == api.types.status.SUCCESS:
+        status = status1
+        
  #   status = VerifyMSS(tc)
  #   if status != api.types.status.SUCCESS:
  #       return status
-    return api.types.status.SUCCESS
+    return status, retran, bw
 
 
-def triggerSingle(tc, srv, cli):
+def runIperfTest(tc, srv, cli):
     if api.IsDryrun():
         return api.types.status.SUCCESS
 
@@ -292,11 +134,9 @@ def triggerSingle(tc, srv, cli):
             (srv.interface, srv.ip_address, cli.interface, cli.ip_address)
 
     api.Logger.info("Starting TSO test %s" % (tc.cmd_descr))
-    api.Logger.info("proto: %s/%s Pkt size: %d Threads: %d"
-                    % (proto, ipproto, pktsize, number_of_iperf_threads))
 
-    tc.srv_bad_csum = getNetstatBadCsum(srv.node_name)
-    tc.cli_bad_csum = getNetstatBadCsum(cli.node_name)
+    tc.srv_bad_csum = ionic_stats.getNetstatBadCsum(srv, proto)
+    tc.cli_bad_csum = ionic_stats.getNetstatBadCsum(cli, proto)
 
     for i in range(number_of_iperf_threads):
         if proto == 'tcp':
@@ -351,12 +191,61 @@ def triggerSingle(tc, srv, cli):
 
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
-            api.Logger.error("Failed to start client iperf, stderr: %s"
-                             % (cmd.stderr))
+            api.Logger.error("Failed to start client iperf\n");
             api.PrintCommandResults(cmd)
             return api.types.status.FAILURE
 
-    return verifySingle(tc)
+    status, retran, bw = verifySingle(tc)
+    vlan = getattr(tc.iterators, 'vlantag', 'off')
+    vxlan = getattr(tc.iterators, 'vxlan', 'off')
+    tso = getattr(tc.iterators, 'tso_offload', 'off')
+    
+    api.Logger.info("Result TSO: %s VLAN: %s VXLAN: %s Proto: %s/%s Pkt size: %d Threads: %d"
+                    " Bandwidth: %d Mbps"
+                    % (tso, vlan, vxlan, proto, ipproto, pktsize,
+                       number_of_iperf_threads, bw))
+    return status
+
+def runTest(tc, srv, cli):
+    vlan = getattr(tc.iterators, 'vlantag', 'off')
+    vxlan = getattr(tc.iterators, 'vxlan', 'off')
+    
+    if vlan == 'on' or vxlan == 'on':
+        cli_intf = cli.parent_interface
+        srv_intf = srv.parent_interface
+    else:
+        cli_intf = cli.interface
+        srv_intf = srv.interface
+        
+    ipproto = getattr(tc.iterators, "ipproto", 'v4')
+    if ipproto == 'v4':
+        cli_before_tso_stats = ionic_stats.getTSOIPv4Stats(cli, cli_intf)
+    else:
+        cli_before_tso_stats = ionic_stats.getTSOIPv6Stats(cli, cli_intf)
+        
+    status = runIperfTest(tc, srv, cli)
+    if status != api.types.status.SUCCESS:
+        return status
+    
+    if ipproto == 'v4':
+        cli_after_tso_stats = ionic_stats.getTSOIPv4Stats(cli, cli_intf)
+    else:
+        cli_after_tso_stats = ionic_stats.getTSOIPv6Stats(cli, cli_intf)
+        
+    api.Logger.info("TSO Client stats ip: %s before: %s after: %s"
+                     % (ipproto, str(cli_before_tso_stats), str(cli_after_tso_stats)))
+
+    tso = getattr(tc.iterators, 'tso_offload', 'off')
+#    if cli_before_tso_stats == cli_after_tso_stats and tso == 'on':
+#        api.Logger.error("For TSO ON, counters are same, before: %s after: %s"
+#                         %(str(cli_before_tso_stats), str(cli_after_tso_stats)))
+#        return api.types.status.FAILURE
+    
+    if cli_before_tso_stats != cli_after_tso_stats and tso == 'off':
+        api.Logger.error("For TSO OFF, counters are not matching, before: %s after: %s"
+                         %(str(cli_before_tso_stats), str(cli_after_tso_stats)))
+        return api.types.status.FAILURE  
+    return status
 
 
 def getRemoteWorkloadPairs(tc):
@@ -405,7 +294,6 @@ def Setup(tc):
             api.Logger.info("Setting driver features :Failed")
             return api.types.status.FAILURE
 
-    api.Logger.info("Setting driver features : Success")
     return api.types.status.SUCCESS
 
 
@@ -416,12 +304,18 @@ def Trigger(tc):
     for pair in tc.workload_pairs:
         srv = pair[0]
         cli = pair[1]
+        if not cli.IsNaples():
+            cli = pair[0]
+            srv = pair[1]
+            
+        tc.srv = srv
+        tc.cli = cli
         vxlan = False
         if getattr(tc.iterators, 'vxlan', 'off') == 'on':
             vxlan = True
 
         if not vxlan:
-            status = triggerSingle(tc, srv, cli)
+            status = runTest(tc, srv, cli)
             if status != api.types.status.SUCCESS:
                 return status
 
@@ -433,18 +327,20 @@ def Trigger(tc):
             srv_vxlan = copy.deepcopy(srv)
             cli_vxlan = copy.deepcopy(cli)
 
-            status = setupVxLAN(ipv4, srv, cli)
+            status = ionic_utils.setupVxLAN(ipv4, srv, cli)
             if status != api.types.status.SUCCESS:
                 return status
 
             # ipproto selects which IP version is used.
             srv_vxlan.interface = "vxlan0@" + srv.interface
-            srv_vxlan.ip_address = VXLAN_SERVER_IP
-            srv_vxlan.ipv6_address = VXLAN_SERVER_IPV6
+            srv_vxlan.ip_address = ionic_utils.VXLAN_SERVER_IP
+            srv_vxlan.ipv6_address = ionic_utils.VXLAN_SERVER_IPV6
             cli_vxlan.interface = "vxlan0@" + cli.interface
-            cli_vxlan.ip_address = VXLAN_CLIENT_IP
-            cli_vxlan.ipv6_address = VXLAN_CLIENT_IPV6
-            status = triggerSingle(tc, srv_vxlan, cli_vxlan)
+            cli_vxlan.ip_address = ionic_utils.VXLAN_CLIENT_IP
+            cli_vxlan.ipv6_address = ionic_utils.VXLAN_CLIENT_IPV6
+            tc.srv = srv_vxlan
+            tc.cli = cli_vxlan
+            status = runTest(tc, srv_vxlan, cli_vxlan)
             if status != api.types.status.SUCCESS:
                 return status
 

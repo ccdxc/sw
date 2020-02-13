@@ -7,11 +7,12 @@ meta:
 testcases:
     -   name    : TSO
         testcase: testcases.drivers.drivertso
-        disable : True
+        disable : False
         ignore  : True
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]
             vlantag            : [ 'off']
@@ -28,6 +29,7 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]
             vlantag            : [ 'on' ]
@@ -44,6 +46,7 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]
             vlantag            : [ 'off' ]
@@ -60,6 +63,7 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]
             vlantag            : [ 'on' ]

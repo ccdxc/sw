@@ -338,3 +338,77 @@ def BsdLifReset(node, intf):
         return -1
 
     return 0
+
+def runHostCmd(node, hostCmd, fail = False):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, hostCmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to run host cmd: %s on host: %s"
+                         %(hostCmd, node));
+        return api.types.status.FAILURE
+
+    for cmd in resp.commands:
+        if cmd.exit_code != 0 and not fail:
+            api.Logger.error("HOST CMD: %s failed, exit code: %d  stdout: %s stderr: %s" %
+                             (hostCmd, cmd.exit_code, cmd.stdout, cmd.stderr))
+            api.PrintCommandResults(cmd)
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS, cmd.stdout
+
+def runNaplesCmd(node, napleCmd, fail = False):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(req, node, napleCmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to run Naples cmd: %s on host: %s"
+                         %(napleCmd, node));
+        return api.types.status.FAILURE
+
+    for cmd in resp.commands:
+        if cmd.exit_code != 0 and not fail:
+            api.Logger.error("NAPLES CMD: %s failed, exit code: %d  stdout: %s stderr: %s" %
+                             (napleCmd, cmd.exit_code, cmd.stdout, cmd.stderr))
+            api.PrintCommandResults(cmd)
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS, cmd.stdout
+
+# Look for ionic error string and collect some debug data
+def checkForBsdIonicError(node):
+    if api.GetNodeOs(node) != OS_TYPE_BSD:
+        return api.types.status.FAILURE
+
+    status = runHostCmd(node, 'dmesg')
+    status = runHostCmd(node, 'sysctl dev.ionic ')
+    status = runHostCmd(node, 'vmstat -i ')
+
+    # Check for errors
+    status = runHostCmd(node, 'dmesg | grep "adminq is hung"', True)
+    if status == api.types.status.SUCCESS:
+        api.Logger.error("CHECK_ERR: Nicmgr not responding?")
+
+    status = runHostCmd(node, 'dmesg | grep "fw heartbeat stuck"', True)
+    if status == api.types.status.SUCCESS:
+        api.Logger.error("CHECK_ERR: Nicmgr crashed?")
+
+    return api.types.status.SUCCESS
+
+def checkNaplesForError(node):
+    status = runNaplesCmd(node, '/nic/bin/halctl show port')
+    if status != api.types.status.SUCCESS:
+        api.Logger.error("CHECK_ERR: HAL running??")
+
+    return status
+
+def checkForIonicError(node):
+    if not api.IsNaplesNode(node):
+        return api.types.status.SUCCESS
+    
+    if api.GetNodeOs(node) == OS_TYPE_BSD:
+        status = checkForBsdIonicError(node)
+        if status != api.types.status.SUCCESS:
+            return status
+
+    return checkNaplesForError(node)
