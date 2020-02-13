@@ -18,6 +18,8 @@ private:
     static Apictx *get_apictx(int index) { return &apictx_[index]; }
 
     void *main_table_;
+    apistats astats_[PDS_FLOW_HINT_POOLS_MAX];
+    tablestats tstats_[PDS_FLOW_HINT_POOLS_MAX];
 
 private:
     sdk_ret_t ctxinit_(sdk_table_api_op_t op,
@@ -27,8 +29,6 @@ protected:
     sdk::table::properties_t *props_;
 
     virtual sdk_ret_t genhash_(sdk_table_api_params_t *params) = 0;
-    virtual apistats *astats(void) = 0;
-    virtual tablestats *tstats(void) = 0;
     virtual uint32_t thread_id(void) = 0;
 
 public:
@@ -45,14 +45,15 @@ public:
     sdk_ret_t remove(sdk_table_api_params_t *params);
     sdk_ret_t get(sdk_table_api_params_t *params);
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
-                        sdk_table_stats_t *table_stats);
+                        sdk_table_stats_t *table_stats,
+                        bool use_local_thread_id=true, uint32_t id=0);
     sdk_ret_t iterate(sdk_table_api_params_t *params);
     sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state,
                     sdk_table_api_params_t *params);
-    sdk_ret_t clear_stats(void);
+    sdk_ret_t clear_stats(bool use_local_thread_id=true, uint32_t id=0);
 
     virtual base_table_entry_t *get_entry(int index) = 0;
-    virtual void set_thread_id(uint32_t) = 0;
+    virtual void set_thread_id(uint32_t id) = 0;
 };
 
 }   // namespace table

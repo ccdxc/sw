@@ -61,7 +61,16 @@ protected:
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
         
         ftl_mock_init();
-        table_create();
+
+        sdk_table_factory_params_t params = { 0 };
+        params.entry_trace_en = true;
+
+#ifdef IRIS
+        table = flow_hash_info::factory(&params);
+#else
+        table = flow_hash::factory(&params);
+#endif
+        assert(table);
 
         num_insert = 0;
         num_remove = 0;
@@ -86,19 +95,6 @@ protected:
         SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
-    }
-
-    virtual void table_create() {
-        sdk_table_factory_params_t params = { 0 };
-        params.entry_trace_en = true;
-        params.disable_tl_stats = true;
-
-#ifdef IRIS
-        table = flow_hash_info::factory(&params);
-#else
-        table = flow_hash::factory(&params);
-#endif
-        assert(table);
     }
 
 private:

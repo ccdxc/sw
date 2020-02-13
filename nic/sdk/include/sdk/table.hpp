@@ -147,8 +147,6 @@ typedef struct sdk_table_factory_params_ {
     //table_health_state_t health_state_; // health state
     // Health monitoring callback
     //table_health_monitor_func_t health_monitor_func;
-    // Disable thread local stats
-    bool disable_tl_stats;
 } sdk_table_factory_params_t;
 
 typedef struct sdk_table_api_params_ {
@@ -232,6 +230,23 @@ struct sdk_table_api_stats_ {
         release += v->release;
         release_fail += v->release_fail;
     }
+
+    void print(char *buf, size_t max_len) {
+        snprintf(buf, max_len,"\nInsert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
+                 "Insert_fail_recirc %lu\n"
+                 "Remove %lu, Remove_not_found %lu, Remove_fail %lu\n"
+                 "Update %lu, Update_fail %lu\n"
+                 "Get %lu, Get_fail %lu\n"
+                 "Reserve %lu, reserve_fail %lu\n"
+                 "Release %lu, Release_fail %lu\n",
+                 insert, insert_duplicate, insert_fail,
+                 insert_recirc_fail,
+                 remove, remove_not_found, remove_fail,
+                 update, update_fail,
+                 get, get_fail,
+                 reserve, reserve_fail,
+                 release, release_fail);
+    }
 };
 
 typedef struct sdk_table_stats_ sdk_table_stats_t;
@@ -255,6 +270,20 @@ struct sdk_table_stats_ {
         for(auto i=0; i < SDK_TABLE_MAX_RECIRC; i++) {
             insert_lvl[i] += v->insert_lvl[i];
             remove_lvl[i] += v->remove_lvl[i];
+        }
+    }
+
+    void print(char *buf, size_t max_len) {
+        char *cur = buf;
+        cur += snprintf(buf, max_len, "\nTbl_entries %lu, Tbl_collision %lu\n"
+                        "Tbl_insert %lu, Tbl_remove %lu, Tbl_read %lu, Tbl_write %lu\n",
+                        entries, collisions,
+                        insert, remove, read, write);
+
+        for(auto i=0; i < SDK_TABLE_MAX_RECIRC; i++) {
+            cur += snprintf(cur, buf + max_len - cur,
+                            "Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
+                            i, insert_lvl[i], remove_lvl[i]);
         }
     }
 };

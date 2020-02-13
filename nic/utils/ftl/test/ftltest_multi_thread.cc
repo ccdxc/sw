@@ -77,6 +77,7 @@ protected:
     void get_stats() {
         sdk_table_stats_t tstat;
         sdk_table_api_stats_t astat;
+        char buff[10000];
 
         for (auto i=0; i < g_no_of_threads; i++) {
             auto f = enqueue_job(i, &multi_thread::get_stats_,
@@ -84,6 +85,11 @@ protected:
             f.get();
             table_stats.accumulate(&tstat);
             api_stats.accumulate(&astat);
+            SDK_TRACE_INFO("=================== STATS THREAD ID: %d ===================", i);
+            astat.print(buff, 10000);
+            SDK_TRACE_INFO("%s", buff);
+            tstat.print(buff, 10000);
+            SDK_TRACE_INFO("%s", buff);
         }
     }
 
@@ -91,18 +97,6 @@ protected:
         for (auto i=0; i < g_no_of_threads; i++) {
             enqueue_job(i, &multi_thread::set_thread_id, this, i);
         }
-    }
-
-    virtual void table_create() {
-        sdk_table_factory_params_t params = { 0 };
-        params.entry_trace_en = true;
-
-#ifdef IRIS
-        table = flow_hash_info::factory(&params);
-#else
-        table = flow_hash::factory(&params);
-#endif
-        assert(table);
     }
 
 private:
@@ -142,6 +136,7 @@ private:
 TEST_F(multi_thread, num16K)
 {
     insert_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    get_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     update_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     remove_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
 }

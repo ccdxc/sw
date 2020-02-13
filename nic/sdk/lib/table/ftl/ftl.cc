@@ -90,8 +90,6 @@ ftl_base::init_(sdk_table_factory_params_t *params) {
     FTL_TRACE_INFO("- stable base_mem_pa:%#lx base_mem_va:%#lx",
                    props_->stable_base_mem_pa, props_->stable_base_mem_va);
 
-    clear_stats();
-
     return SDK_RET_OK;
 }
 
@@ -128,7 +126,7 @@ ftl_base::ctxinit_(sdk_table_api_op_t op,
     }
 
     index = 0;
-    get_apictx(index)->init(op, params, props_, tstats(), thread_id(),
+    get_apictx(index)->init(op, params, props_, &tstats_[thread_id()], thread_id(),
                             this, get_entry(index), params->entry_size);
     return SDK_RET_OK;
 }
@@ -154,7 +152,7 @@ __label__ done;
 
 done:
     time_profile_end(sdk::utils::time_profile::TABLE_LIB_FTL_INSERT);
-    astats()->insert(ret);
+    astats_[thread_id()].insert(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -182,7 +180,7 @@ ftl_base::update(sdk_table_api_params_t *params) {
     }
 
 update_return:
-    astats()->update(ret);
+    astats_[thread_id()].update(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -210,7 +208,7 @@ ftl_base::remove(sdk_table_api_params_t *params) {
     }
 
 remove_return:
-    astats()->remove(ret);
+    astats_[thread_id()].remove(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -238,7 +236,7 @@ ftl_base::get(sdk_table_api_params_t *params) {
     }
 
 get_return:
-    astats()->get(ret);
+    astats_[thread_id()].get(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -249,12 +247,14 @@ get_return:
 //---------------------------------------------------------------------------
 sdk_ret_t
 ftl_base::stats_get(sdk_table_api_stats_t *api_stats,
-                       sdk_table_stats_t *table_stats) {
+                    sdk_table_stats_t *table_stats,
+                    bool use_local_thread_id, uint32_t id) {
     FTL_API_BEGIN_();
-    astats()->get(api_stats);
-    tstats()->get(table_stats);
+    id = likely(use_local_thread_id) ? thread_id() : id;
+    SDK_ASSERT(id < PDS_FLOW_HINT_POOLS_MAX);
+    astats_[id].get(api_stats);
+    tstats_[id].get(table_stats);
     FTL_API_END_(SDK_RET_OK);
-
     return SDK_RET_OK;
 }
 
@@ -294,7 +294,9 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "clear r:%d", ret);
     
     if (clear_thread_local_state) {
-        (void)clear_stats();
+        for(auto i=0; i < PDS_FLOW_HINT_POOLS_MAX; i++) {
+            (void)clear_stats(false, i);
+        }
     }
 
 done:
@@ -303,12 +305,12 @@ done:
 }
 
 sdk_ret_t
-ftl_base::clear_stats(void) {
+ftl_base::clear_stats(bool use_local_thread_id, uint32_t id) {
     FTL_API_BEGIN_();
-
-    astats()->clear();
-    tstats()->clear();
-
+    id = likely(use_local_thread_id) ? thread_id() : id;
+    SDK_ASSERT(id < PDS_FLOW_HINT_POOLS_MAX);
+    astats_[id].clear();
+    tstats_[id].clear();
     FTL_API_END_(SDK_RET_OK);
     return SDK_RET_OK;
 }

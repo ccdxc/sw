@@ -109,7 +109,6 @@ flow_table_pd::init() {
     oflow_table_size_ = ctinfo.tabledepth;
 
     // params.entry_trace_en = true;
-    params.disable_tl_stats = true;
     table_ = flow_hash_info::factory(&params);
     SDK_ASSERT_RETURN(table_, HAL_RET_OOM);
     return HAL_RET_OK;
