@@ -1,6 +1,8 @@
 
 import copy
 import struct
+import random
+from itertools import islice
 from socket import inet_aton
 from scapy.utils import checksum
 from scapy.layers.l2 import Ether, Dot1Q
@@ -435,9 +437,18 @@ def InitEthTxTsoPackets(tc, obj, args=None):
     return packets
 
 
-def GetPayload(tc, obj, args=None):
-    return [0] * args.size
+def GenPayload():
+    '''Generate the bytes 0..255 followed by prng bytes seeded with zero'''
+    # start with 0..255
+    for x in range(256):
+        yield x
+    # then prng bytes seeded with zero
+    r = random.Random(0)
+    while True:
+        yield r.randrange(0, 256)
 
+def GetPayload(tc, obj, args=None):
+    return list(islice(GenPayload(), args.size))
 
 def Debug(tc, obj=None, args=None):
     pass
