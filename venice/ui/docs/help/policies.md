@@ -12,7 +12,17 @@ In this Network Security Policy section, network security rules are created.  Th
 <load-table group:security obj:SecuritySGRule
             omitHeader: true >
 
-To add another rule, click on "+RULE".  
+If a policy already exist, you are able to modify the rules of the policy.  To do this, hover over to the right side of the policy and a pencil icon will appear to edit the policy.  To remove the policy, click on the trash can icon to delete the policy.
+
+When modifying an existing policy, you can do the following:
+
+	Change the order of the rule.  To change the order, click on the check box of the rule you want to change.  Then enter in the number where you want the rule to be moved to.  Then click on box "Change Order" to commit the change.
+
+	Insert a new rule.  Hover over the entry and to the right side of the entry a "+" sign will appear.  Click on it to insert a new rule.
+	
+	Editing or deleting one or more existing rules.  To modify or delete one or more existing rules, select the rules on the check-box and right above rules list, the pencil and trash bin icon will appear.  To modify the selected rules, click on the pencil icon.  To remove the selected rules, click on the trash bin icon.
+
+
 
 ## Example:
 

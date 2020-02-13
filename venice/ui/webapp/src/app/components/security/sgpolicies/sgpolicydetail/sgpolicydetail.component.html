@@ -218,13 +218,12 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <!-- uncomment to enable "insert rule before" -->
-    <!-- <mat-icon *roleGuard="'monitoringfwlogpolicy_update'"
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_update'"
               class="sgpolicy-icons-button global-table-action-icon sgpolicy-insert-icon"
               (click)="onAdd(rowData, true)"
               matTooltip="Insert Rule Before"
               svgIcon="add-above">
-    </mat-icon> -->
+    </mat-icon>
     <mat-icon *roleGuard="'monitoringfwlogpolicy_update'"
               class="sgpolicy-icons-button global-table-action-icon sgpolicy-insert-icon"
               (click)="onAdd(rowData)"
