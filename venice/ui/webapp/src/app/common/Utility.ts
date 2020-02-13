@@ -1956,7 +1956,7 @@ export class Utility {
   }
 
   public static isNaplesNeedReboot(naples: Readonly<ClusterDistributedServiceCard>): boolean {
-    if (naples) {
+    if (naples && naples.status && naples.status.conditions) {  // VS-1274. When a DSC is of DSC.status["admission-phase] === "decommissioned”.     status.conditions  property  is missing out.
       for (const cond of naples.status.conditions) {
         if (cond && cond.type === ClusterDSCCondition_type.reboot_needed) {
           return true;
