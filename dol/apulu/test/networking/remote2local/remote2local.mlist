@@ -6,7 +6,7 @@ feature:
     module      : networking
     runorder    : 200
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
 

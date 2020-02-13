@@ -5,7 +5,7 @@ feature:
     module      : networking
     runorder    : 9020
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
