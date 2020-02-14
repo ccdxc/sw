@@ -16,7 +16,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.DHCP_RELAY, node)
         self.Id = next(ResmgrClient[node].DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
         self.Vpc = vpc
         self.ServerIp = serverip
@@ -41,7 +41,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc)
+        spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC)
         utils.GetRpcIPAddr(self.ServerIp, spec.ServerIP)
         utils.GetRpcIPAddr(self.AgentIp, spec.AgentIP)
         return
@@ -49,7 +49,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
-        if spec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc):
+        if spec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC):
             return False
         if spec.ServerIP != self.ServerIp:
             return False

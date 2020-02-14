@@ -8,6 +8,7 @@ from infra.common.logging import logger
 from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -34,7 +35,7 @@ class SubnetObject(base.ConfigObjectBase):
         else:
             self.SubnetId = next(ResmgrClient[node].SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
-        self.UUID = utils.PdsUuid(self.SubnetId)
+        self.UUID = utils.PdsUuid(self.SubnetId, self.ObjType)
         self.VPC = parent
         self.PfxSel = parent.PfxSel
         self.IPPrefix = {}
@@ -80,7 +81,7 @@ class SubnetObject(base.ConfigObjectBase):
             else:
                 self.HostIfIdx = next(ResmgrClient[node].HostIfIdxAllocator)
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid) if self.HostIfIdx else None
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, ObjectTypes.INTERFACE, node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
@@ -177,7 +178,7 @@ class SubnetObject(base.ConfigObjectBase):
             if hostIf != None:
                 self.HostIf = hostIf
                 self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
-                self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, None) if self.HostIfIdx else None
+                self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, ObjectTypes.INTERFACE, None) if self.HostIfIdx else None
         return
 
     def RollbackAttributes(self):
@@ -200,16 +201,16 @@ class SubnetObject(base.ConfigObjectBase):
         if self.IpV6Valid:
             spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
-        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
-        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE)
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
             if self.HostIfUuid:
@@ -223,17 +224,17 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
             return False
-        if spec.V4RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId):
+        if spec.V4RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE):
             return False
-        if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId):
+        if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE):
             return False
-        if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0]):
+        if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0], ObjectTypes.POLICY):
             return False
-        if spec.IngV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV6SecurityPolicyIds[0]):
+        if spec.IngV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV6SecurityPolicyIds[0], ObjectTypes.POLICY):
             return False
-        if spec.EgV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV4SecurityPolicyIds[0]):
+        if spec.EgV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV4SecurityPolicyIds[0], ObjectTypes.POLICY):
             return False
-        if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0]):
+        if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0], ObjectTypes.POLICY):
             return False
         if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
             return False
@@ -244,7 +245,7 @@ class SubnetObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, ObjectTypes.SUBNET, 'id') != self.GetKey():
             return False
         return True
 

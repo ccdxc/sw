@@ -45,7 +45,7 @@ class VpcObject(base.ConfigObjectBase):
         else:
             self.VPCId = next(ResmgrClient[node].VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
-        self.UUID = utils.PdsUuid(self.VPCId)
+        self.UUID = utils.PdsUuid(self.VPCId, self.ObjType)
         self.IPPrefix = {}
         self.Nat46_pfx = None
         self.V4RouteTableId = 0
@@ -228,8 +228,8 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.Type = self.Type
-        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
-        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, api.ObjectTypes.ROUTE)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, api.ObjectTypes.ROUTE)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.ToS = self.Tos
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
@@ -252,7 +252,7 @@ class VpcObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.VPC, 'id') != self.GetKey():
             return False
         if spec['type'] != self.Type:
             return False

@@ -128,7 +128,7 @@ class PolicyObject(base.ConfigObjectBase):
             self.PolicyId = next(ResmgrClient[node].V4SecurityPolicyIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
-        self.UUID = utils.PdsUuid(self.PolicyId)
+        self.UUID = utils.PdsUuid(self.PolicyId, self.ObjType)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
         self.PolicyType = policytype
         self.Level = level

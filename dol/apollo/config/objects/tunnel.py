@@ -7,6 +7,7 @@ from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.agent.api as api
@@ -29,7 +30,7 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             self.Id = next(ResmgrClient[node].TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
@@ -81,6 +82,7 @@ class TunnelObject(base.ConfigObjectBase):
                 else:
                     self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
+                print("type: ", spec.type)
                 if spec.type == 'underlay':
                     self.__nhtype = topo.NhType.UNDERLAY
                     self.NEXTHOP = None
@@ -108,7 +110,7 @@ class TunnelObject(base.ConfigObjectBase):
         dupObj = copy.copy(self)
         dupObj.Id = next(ResmgrClient[self.Node].TunnelIdAllocator)
         dupObj.GID("DupTunnel%d"%dupObj.Id)
-        dupObj.UUID = utils.PdsUuid(dupObj.Id)
+        dupObj.UUID = utils.PdsUuid(dupObj.Id, dupObj.ObjType)
         self.Duplicate = dupObj
         return dupObj
 
@@ -161,7 +163,7 @@ class TunnelObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        spec.VPCId = utils.PdsUuid.GetUUIDfromId(0) # TODO: Create Underlay VPC
+        spec.VPCId = utils.PdsUuid.GetUUIDfromId(0, ObjectTypes.VPC) # TODO: Create Underlay VPC
         utils.GetRpcEncap(self.Node, self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
         utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)
@@ -176,9 +178,9 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.Node, self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
-            spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId)
+            spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId, ObjectTypes.NEXTHOP)
         elif self.IsUnderlayEcmp():
-            spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId)
+            spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
         return
 
     def ValidateSpec(self, spec):
@@ -208,7 +210,7 @@ class TunnelObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.TUNNEL, 'id') != self.GetKey():
             return False
         return True
 
@@ -357,6 +359,7 @@ class TunnelObjectClient(base.ConfigClientBase):
             if not __isTunFeatureSupported(t.type):
                 continue
             for c in range(t.count):
+                print("creating tunnel")
                 obj = TunnelObject(node, parent, t, False)
                 self.Objs[node].update({obj.Id: obj})
         EzAccessStoreClient[node].SetTunnels(self.Objects(node))

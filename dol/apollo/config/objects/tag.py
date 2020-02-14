@@ -44,7 +44,7 @@ class TagObject(base.ConfigObjectBase):
             self.TagTblId = next(ResmgrClient[node].V4TagIdAllocator)
             self.AddrFamily = 'IPV4'
             self.GID('IPv4TagTbl%d' %self.TagTblId)
-        self.UUID = utils.PdsUuid(self.TagTblId)
+        self.UUID = utils.PdsUuid(self.TagTblId, self.ObjType)
         self.Rules = rules
         ##########################################################################
         self.DeriveOperInfo()
@@ -87,7 +87,7 @@ class TagObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.TAG, 'id') != self.GetKey():
             return False
         if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False

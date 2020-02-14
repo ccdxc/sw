@@ -38,7 +38,7 @@ class VnicObject(base.ConfigObjectBase):
         else:
             self.VnicId = next(ResmgrClient[node].VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
-        self.UUID = utils.PdsUuid(self.VnicId)
+        self.UUID = utils.PdsUuid(self.VnicId, self.ObjType)
         self.SUBNET = parent
         if hasattr(spec, 'vmac'):
             self.MACAddr =  spec.vmac
@@ -152,16 +152,16 @@ class VnicObject(base.ConfigObjectBase):
             spec.RxMirrorSessionId.append(int(rxmirror))
         for txmirror in self.TxMirror:
             spec.TxMirrorSessionId.append(int(txmirror))
-        spec.V4MeterId = utils.PdsUuid.GetUUIDfromId(self.V4MeterId)
-        spec.V6MeterId = utils.PdsUuid.GetUUIDfromId(self.V6MeterId)
+        spec.V4MeterId = utils.PdsUuid.GetUUIDfromId(self.V4MeterId, api.ObjectTypes.METER)
+        spec.V6MeterId = utils.PdsUuid.GetUUIDfromId(self.V6MeterId, api.ObjectTypes.METER)
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, api.ObjectTypes.POLICY))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, api.ObjectTypes.POLICY))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, api.ObjectTypes.POLICY))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
+            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, api.ObjectTypes.POLICY))
         if utils.IsPipelineApulu():
             if self.UseHostIf and self.SUBNET.HostIfUuid:
                 spec.HostIf = self.SUBNET.HostIfUuid.GetUuid()
@@ -191,27 +191,27 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if spec.SourceGuardEnable != self.SourceGuard:
             return False
-        if spec.V4MeterId != utils.PdsUuid.GetUUIDfromId(self.V4MeterId):
+        if spec.V4MeterId != utils.PdsUuid.GetUUIDfromId(self.V4MeterId, api.ObjectTypes.METER):
             return False
-        if spec.V6MeterId != utils.PdsUuid.GetUUIDfromId(self.V6MeterId):
+        if spec.V6MeterId != utils.PdsUuid.GetUUIDfromId(self.V6MeterId, api.ObjectTypes.METER):
             return False
         # TODO: validate policyid, policer
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.VNIC, 'id') != self.GetKey():
             return False
         if utils.IsPipelineApulu():
             if self.UseHostIf and self.SUBNET.HostIfUuid:
-                if (utils.GetYamlSpecAttr(spec, 'hostif')) != self.SUBNET.HostIfUuid.GetUuid():
+                if (utils.GetYamlSpecAttr(spec, api.ObjectTypes.INTERFACE, 'hostif')) != self.SUBNET.HostIfUuid.GetUuid():
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False
         if spec['sourceguardenable'] != self.SourceGuard:
             return False
-        if utils.GetYamlSpecAttr(spec, 'v4meterid') != utils.PdsUuid.GetUUIDfromId(self.V4MeterId):
+        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.METER, 'v4meterid') != utils.PdsUuid.GetUUIDfromId(self.V4MeterId, api.ObjectTypes.METER):
             return False
-        if utils.GetYamlSpecAttr(spec, 'v6meterid') != utils.PdsUuid.GetUUIDfromId(self.V6MeterId):
+        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.METER, 'v6meterid') != utils.PdsUuid.GetUUIDfromId(self.V6MeterId, api.ObjectTypes.METER):
             return False
         return True
 

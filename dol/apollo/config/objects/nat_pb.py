@@ -21,7 +21,7 @@ class NatPbObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.NAT_PB, node)
         self.Id = next(ResmgrClient[node].NatPoolIdAllocator)
         self.GID('NatPortBlock%d'%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         self.VPC = parent
         self.Addr = addr
         self.PortLo = port_lo

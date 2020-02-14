@@ -80,7 +80,7 @@ PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, "big")
 
 class PdsUuid:
 
-    def __init__(self, value, node_uuid=None):
+    def __init__(self, value, type, node_uuid=None):
 
         if node_uuid:
             node_uuid = int(node_uuid, 16)
@@ -88,7 +88,8 @@ class PdsUuid:
 
         if isinstance(value, int):
             self.Id = value
-            self.Uuid = PdsUuid.GetUUIDfromId(self.Id, node_uuid)
+            self.Type = type
+            self.Uuid = PdsUuid.GetUUIDfromId(self.Id, self.Type, node_uuid)
         elif isinstance(value, bytes):
             self.Uuid = value
             self.Id = PdsUuid.GetIdfromUUID(self.Uuid)
@@ -120,16 +121,18 @@ class PdsUuid:
 
     @staticmethod
     def GetIdfromUUID(uuid):
-        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)
+        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END-1], PDS_UUID_BYTE_ORDER)
 
     @staticmethod
-    def GetUUIDfromId(id, node_uuid=None):
+    def GetUUIDfromId(id, type, node_uuid=None):
         if not node_uuid:
             node_uuid = PDS_UUID_SYSTEM_MAC
         # uuid is of 16 bytes
         uuid = bytearray(PDS_UUID_LEN)
         # first 8 bytes ==> id
-        uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
+        uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END-1] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
+        if type != api.ObjectTypes.INTERFACE:
+            uuid[PDS_UUID_ID_OFFSET_END-1:PDS_UUID_ID_OFFSET_END] = type.to_bytes(1, PDS_UUID_BYTE_ORDER)
         # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)
@@ -160,8 +163,8 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
-def GetYamlSpecAttr(spec, attr):
-    return PdsUuid(spec[attr]).GetUuid()
+def GetYamlSpecAttr(spec, type, attr):
+    return PdsUuid(spec[attr], type).GetUuid()
 
 def ValidateRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:

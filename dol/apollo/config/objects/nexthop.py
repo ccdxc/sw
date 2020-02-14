@@ -13,6 +13,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.objects.base as base
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 from apollo.config.objects.interface import client as InterfaceClient
 from apollo.config.objects.tunnel    import client as TunnelClient
 import copy
@@ -33,7 +34,7 @@ class NexthopObject(base.ConfigObjectBase):
         else:
             self.NexthopId = next(ResmgrClient[node].NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
-        self.UUID = utils.PdsUuid(self.NexthopId)
+        self.UUID = utils.PdsUuid(self.NexthopId, self.ObjType)
         self.VPC = parent
         nh_type = getattr(spec, 'type', 'ip')
         self.DualEcmp = utils.IsDualEcmp(spec)
@@ -100,7 +101,7 @@ class NexthopObject(base.ConfigObjectBase):
         dupObj = copy.copy(self)
         dupObj.NexthopId = next(ResmgrClient[self.Node].NexthopIdAllocator)
         dupObj.GID('DupNexthop%d'%dupObj.NexthopId)
-        dupObj.UUID = utils.PdsUuid(dupObj.NexthopId)
+        dupObj.UUID = utils.PdsUuid(dupObj.NexthopId, dupObj.ObjType)
         self.Duplicate = dupObj
         return dupObj
 
@@ -151,10 +152,10 @@ class NexthopObject(base.ConfigObjectBase):
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         elif self.__type == topo.NhType.UNDERLAY:
-            spec.UnderlayNhInfo.L3Interface = utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId)
+            spec.UnderlayNhInfo.L3Interface = utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId, ObjectTypes.INTERFACE)
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == topo.NhType.OVERLAY:
-            spec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId)
+            spec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL)
         return
 
     def PopulateSpec(self, grpcmsg):
@@ -175,12 +176,12 @@ class NexthopObject(base.ConfigObjectBase):
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
         elif self.__type == topo.NhType.UNDERLAY:
-            if spec.UnderlayNhInfo.L3Interface != utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId):
+            if spec.UnderlayNhInfo.L3Interface != utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId, ObjectTypes.INTERFACE):
                 return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
         elif self.__type != topo.NhType.OVERLAY:
-            if spec.TunnelId != utils.PdsUuid.GetUUIDfromId(self.TunnelId):
+            if spec.TunnelId != utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL):
                 return False
         return True
 

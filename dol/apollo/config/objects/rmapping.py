@@ -26,7 +26,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         else:
             self.MappingId = next(ResmgrClient[node].RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
-        self.UUID = utils.PdsUuid(self.MappingId)
+        self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.SUBNET = parent
         if (hasattr(spec, 'rmacaddr')):
             self.MACAddr = spec.rmacaddr

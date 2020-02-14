@@ -121,7 +121,7 @@ class MeterObject(base.ConfigObjectBase):
             self.MeterId = next(ResmgrClient[node].V4MeterIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Meter%d'%self.MeterId)
-        self.UUID = utils.PdsUuid(self.MeterId)
+        self.UUID = utils.PdsUuid(self.MeterId, self.ObjType)
         self.Rules = rules
         self.DeriveOperInfo()
         self.Show()

@@ -32,7 +32,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         else:
             self.MappingId = next(ResmgrClient[node].LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
-        self.UUID = utils.PdsUuid(self.MappingId)
+        self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.VNIC = parent
         self.PublicIPAddr = None
         self.SourceGuard = parent.SourceGuard

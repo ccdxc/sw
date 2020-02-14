@@ -31,7 +31,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         else:
             self.Id = next(ResmgrClient[node].NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         self.Nexthops = {}
         self.DualEcmp = utils.IsDualEcmp(spec)
         self.Type = None

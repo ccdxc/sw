@@ -6,6 +6,7 @@ from infra.common.logging import logger
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
@@ -71,11 +72,11 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.RspanSpec.Encap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.RspanSpec.Encap.value.VlanId = self.VlanId
         elif self.SpanType == 'ERSPAN':
-            spec.ErspanSpec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId)
+            spec.ErspanSpec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL)
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID
-            spec.ErspanSpec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId)
+            spec.ErspanSpec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId, ObjectTypes.VPC)
         else:
             assert(0)
         return

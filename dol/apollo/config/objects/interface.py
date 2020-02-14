@@ -58,7 +58,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
                 node_uuid = None
             else:
                 node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-            self.Port = utils.PdsUuid(self.ethifidx, node_uuid)
+            # using INTERFACE type for port TODO
+            self.Port = utils.PdsUuid(self.ethifidx, api.ObjectTypes.INTERFACE, node_uuid)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
@@ -96,7 +97,7 @@ class InterfaceObject(base.ConfigObjectBase):
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
-        self.UUID = utils.PdsUuid(self.InterfaceId)
+        self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
@@ -119,7 +120,7 @@ class InterfaceObject(base.ConfigObjectBase):
         dupObj = copy.copy(self)
         dupObj.InterfaceId = next(ResmgrClient[self.Node].InterfaceIdAllocator)
         dupObj.GID("DupInterface ID:%s"%dupObj.InterfaceId)
-        dupObj.UUID = utils.PdsUuid(dupObj.InterfaceId)
+        dupObj.UUID = utils.PdsUuid(dupObj.InterfaceId, dupObj.ObjType)
         self.Duplicate = dupObj
         return dupObj
 
@@ -148,7 +149,7 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.Type = interface_pb2.IF_TYPE_L3
             spec.L3IfSpec.PortId = self.IfInfo.Port.GetUuid()
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
-            spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId)
+            spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
         return
 

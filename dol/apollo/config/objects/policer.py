@@ -26,7 +26,7 @@ class PolicerObject(base.ConfigObjectBase):
         self.rate = spec.rate
         self.burst = spec.burst
         self.GID('Policer%d'%self.PolicerId)
-        self.UUID = utils.PdsUuid(self.PolicerId)
+        self.UUID = utils.PdsUuid(self.PolicerId, api.ObjectTypes.POLICER)
         self.DeriveOperInfo()
         self.Show()
         return

@@ -348,7 +348,9 @@ class ConfigClientBase(base.ConfigClientBase):
                 cfgObj = self.GetObjectByKey(node, key)
                 if not utils.ValidateObject(cfgObj, resp):
                     logger.error("GRPC read validation failed for ", obj)
-                    cfgObj.Show()
+                    if cfgObj:
+                        cfgObj.Show()
+                    logger.info(f"Key:{key} Spec:{resp.Spec}")
                     return False
                 if hasattr(cfgObj, 'Status'):
                     cfgObj.Status.Update(resp.Status)

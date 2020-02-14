@@ -21,6 +21,7 @@ import apollo.config.objects.lmapping as lmapping
 from apollo.config.objects.nexthop import client as NexthopClient
 from apollo.config.objects.nexthop_group import client as NexthopGroupClient
 from apollo.config.objects.tunnel import client as TunnelClient
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
 DEFAULT_ROUTE_PRIORITY = 0
 MIN_ROUTE_PRIORITY = 65535
@@ -81,7 +82,7 @@ class RouteTableObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
             self.NEXTHOP = NexthopClient.GetV4Nexthop(node, parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
-        self.UUID = utils.PdsUuid(self.RouteTblId)
+        self.UUID = utils.PdsUuid(self.RouteTblId, self.ObjType)
         self.routes = routes
         self.TUNNEL = tunobj
         self.NhGroup = None
@@ -164,13 +165,13 @@ class RouteTableObject(base.ConfigObjectBase):
 
     def PopulateNh(self, rtspec, route):
         if route.NextHopType == "vpcpeer":
-            rtspec.VPCId = utils.PdsUuid.GetUUIDfromId(route.PeerVPCId)
+            rtspec.VPCId = utils.PdsUuid.GetUUIDfromId(route.PeerVPCId, ObjectTypes.VPC)
         elif route.NextHopType == "tep":
-            rtspec.TunnelId = utils.PdsUuid.GetUUIDfromId(route.TunnelId)
+            rtspec.TunnelId = utils.PdsUuid.GetUUIDfromId(route.TunnelId, ObjectTypes.TUNNEL)
         elif route.NextHopType == "nh":
-            rtspec.NexthopId = utils.PdsUuid.GetUUIDfromId(route.NexthopId)
+            rtspec.NexthopId = utils.PdsUuid.GetUUIDfromId(route.NexthopId, ObjectTypes.NEXTHOP)
         elif route.NextHopType == "nhg":
-            rtspec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(route.NexthopGroupId)
+            rtspec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(route.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
