@@ -24,6 +24,7 @@ import nat_pb2_grpc as nat_pb2_grpc
 import bgp_pb2_grpc as bgp_pb2_grpc
 import cp_route_pb2_grpc as cp_route_pb2_grpc
 import evpn_pb2_grpc as evpn_pb2_grpc
+import policer_pb2_grpc as policer_pb2_grpc
 
 import device_pb2 as device_pb2
 import interface_pb2 as interface_pb2
@@ -43,6 +44,7 @@ import nat_pb2 as nat_pb2
 import bgp_pb2 as bgp_pb2
 import cp_route_pb2 as cp_route_pb2
 import evpn_pb2 as evpn_pb2
+import policer_pb2 as policer_pb2
 
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
@@ -89,7 +91,8 @@ class ObjectTypes(enum.IntEnum):
     BGP_NLRI_PREFIX = 23
     EVPN = 24
     CP_ROUTE = 25
-    MAX = 26
+    POLICER = 26
+    MAX = 27
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -237,6 +240,8 @@ class ApolloAgentClient:
                                                     self.__channel, 'EVPN')
         self.__stubs[ObjectTypes.CP_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
                                                         self.__channel, 'CPStaticRoute')
+        self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
+                                                      self.__channel, 'Policer')
         return
 
     def __create_msgreq_table(self):
@@ -262,6 +267,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.BGP_PEER_AF] = ClientModule(bgp_pb2, 'BGPPeerAf')
         self.__msgreqs[ObjectTypes.EVPN] = ClientModule(evpn_pb2, 'EVPN')
         self.__msgreqs[ObjectTypes.CP_ROUTE] = ClientModule(cp_route_pb2, 'CP_ROUTE')
+        self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
         return
 
     def GetGRPCMsgReq(self, objtype, op):

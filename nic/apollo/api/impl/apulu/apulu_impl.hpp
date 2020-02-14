@@ -332,6 +332,27 @@ sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                             uint16_t vpc_hw_id, uint16_t bd_hw_id,
                             uint16_t vnic_hw_id, bool learn_en);
 
+#define POLICER_WRITE_HW_ENTRY(hw, val)       \
+do {                                          \
+    uint64_t tmpval = (val);                  \
+    tmpval >>= 32;                            \
+    (hw)[0] = (val) & 0xff;                   \
+    (hw)[1] = ((val) >> 8) & 0xff;            \
+    (hw)[2] = ((val) >> 16) & 0xff;           \
+    (hw)[3] = ((val) >> 24) & 0xff;           \
+    (hw)[4] = (tmpval) & 0xff;                \
+} while(0)
+
+#define POLICER_READ_HW_ENTRY(hw, val)        \
+do {                                          \
+    (val) = (hw)[4];                          \
+    (val) <<= 32;                             \
+    (val) |= (hw)[0];                         \
+    (val) |= (hw)[1] << 8;                    \
+    (val) |= (hw)[2] << 16;                   \
+    (val) |= (hw)[3] << 24;                   \
+} while(0)
+
 #define PROGRAM_POLICER_TABLE_ENTRY(policer, tbl, tid, aid, idx, upd)          \
 {                                                                              \
     sdk_ret_t ret;                                                             \
@@ -352,23 +373,9 @@ sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                                     PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
                                     &rate_tokens, &burst_tokens);              \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
-        tbl ## _data.tbl ## _info.burst[0] = burst_tokens & 0xff;              \
-        tbl ## _data.tbl ## _info.burst[1] = (burst_tokens >> 8) & 0xff;       \
-        tbl ## _data.tbl ## _info.burst[2] = (burst_tokens >> 16) & 0xff;      \
-        tbl ## _data.tbl ## _info.burst[3] = (burst_tokens >> 24) & 0xff;      \
-        tbl ## _data.tbl ## _info.burst[4] = (burst_tokens >> 32) & 0xff;      \
-                                                                               \
-        tbl ## _data.tbl ## _info.rate[0] = rate_tokens & 0xff;                \
-        tbl ## _data.tbl ## _info.rate[1] = (rate_tokens >> 8) & 0xff;         \
-        tbl ## _data.tbl ## _info.rate[2] = (rate_tokens >> 16) & 0xff;        \
-        tbl ## _data.tbl ## _info.rate[3] = (rate_tokens >> 24) & 0xff;        \
-        tbl ## _data.tbl ## _info.rate[4] = (rate_tokens >> 32) & 0xff;        \
-                                                                               \
-        tbl ## _data.tbl ## _info.tbkt[0] = burst_tokens & 0xff;               \
-        tbl ## _data.tbl ## _info.tbkt[1] = (burst_tokens >> 8) & 0xff;        \
-        tbl ## _data.tbl ## _info.tbkt[2] = (burst_tokens >> 16) & 0xff;       \
-        tbl ## _data.tbl ## _info.tbkt[3] = (burst_tokens >> 24) & 0xff;       \
-        tbl ## _data.tbl ## _info.tbkt[4] = (burst_tokens >> 32) & 0xff;       \
+        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.burst, burst_tokens); \
+        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.rate, rate_tokens);   \
+        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.tbkt, burst_tokens);  \
     }                                                                          \
     if (upd) {                                                                 \
         memset(&tbl ## _data_mask.tbl ## _info, 0xFF,                          \

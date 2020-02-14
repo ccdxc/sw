@@ -14,6 +14,7 @@ import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
 from apollo.config.objects.meter  import client as MeterClient
 from apollo.config.objects.policy import client as PolicyClient
+from apollo.config.objects.policer import client as PolicerClient
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 
@@ -64,6 +65,10 @@ class VnicObject(base.ConfigObjectBase):
         self.EgV4SecurityPolicyIds = []
         self.EgV6SecurityPolicyIds = []
         self.Status = VnicStatus()
+        policerid = getattr(spec, 'rxpolicer', 0)
+        self.RxPolicer = PolicerClient.GetPolicerObject(node, policerid)
+        policerid = getattr(spec, 'txpolicer', 0)
+        self.TxPolicer = PolicerClient.GetPolicerObject(node, policerid)
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
         # get num of policies [0-5] in rrob order if needed
@@ -104,6 +109,8 @@ class VnicObject(base.ConfigObjectBase):
                 logger.info("- HostIfIdx:%s" % hex(self.SUBNET.HostIfIdx))
             if self.SUBNET.HostIfUuid:
                 logger.info("- HostIf:%s" % self.SUBNET.HostIfUuid)
+        logger.info(f"- IngressPolicer:{self.RxPolicer}")
+        logger.info(f"- EgressPolicer:{self.TxPolicer}")
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
@@ -159,6 +166,10 @@ class VnicObject(base.ConfigObjectBase):
             if self.UseHostIf and self.SUBNET.HostIfUuid:
                 spec.HostIf = self.SUBNET.HostIfUuid.GetUuid()
             spec.FlowLearnEn = True
+        if self.RxPolicer:
+            spec.RxPolicerId = self.RxPolicer.UUID.GetUuid()
+        if self.TxPolicer:
+            spec.TxPolicerId = self.TxPolicer.UUID.GetUuid()
         return
 
     def ValidateSpec(self, spec):

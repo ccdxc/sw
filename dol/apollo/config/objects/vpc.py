@@ -19,6 +19,7 @@ from apollo.config.objects.metaswitch.bgp_peeraf import client as BGPPeerAfClien
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.policy as policy
+import apollo.config.objects.policer as policer
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tunnel as tunnel
@@ -370,6 +371,9 @@ class VpcObjectClient(base.ConfigClientBase):
 
         # Create Policy object.
         policy.client.CreateObjects(node)
+
+        # Create Policer object.
+        policer.client.CreateObjects(node)
 
         # Create Route object.
         route.client.CreateObjects(node)

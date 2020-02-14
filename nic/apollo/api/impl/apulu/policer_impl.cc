@@ -291,17 +291,8 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
             PDS_TRACE_ERR("Failed to read rx policer table at index %u", hw_id_);
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        rate  = rx_data.vnic_policer_rx_info.rate[0];
-        rate |= rx_data.vnic_policer_rx_info.rate[1] << 8;
-        rate |= rx_data.vnic_policer_rx_info.rate[2] << 16;
-        rate |= rx_data.vnic_policer_rx_info.rate[3] << 24;
-        rate |= rx_data.vnic_policer_rx_info.rate[4] << 32;
-
-        burst  = rx_data.vnic_policer_rx_info.burst[0];
-        burst |= rx_data.vnic_policer_rx_info.burst[1] << 8;
-        burst |= rx_data.vnic_policer_rx_info.burst[2] << 16;
-        burst |= rx_data.vnic_policer_rx_info.burst[3] << 24;
-        burst |= rx_data.vnic_policer_rx_info.burst[4] << 32;
+        POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.rate, rate);
+        POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.burst, burst);
 
         if (rx_data.vnic_policer_rx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;
@@ -321,17 +312,8 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
             PDS_TRACE_ERR("Failed to read policer table at index %u", hw_id_);
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        rate  = tx_data.vnic_policer_tx_info.rate[0];
-        rate |= tx_data.vnic_policer_tx_info.rate[1] << 8;
-        rate |= tx_data.vnic_policer_tx_info.rate[2] << 16;
-        rate |= tx_data.vnic_policer_tx_info.rate[3] << 24;
-        rate |= tx_data.vnic_policer_tx_info.rate[4] << 32;
-
-        burst  = tx_data.vnic_policer_tx_info.burst[0];
-        burst |= tx_data.vnic_policer_tx_info.burst[1] << 8;
-        burst |= tx_data.vnic_policer_tx_info.burst[2] << 16;
-        burst |= tx_data.vnic_policer_tx_info.burst[3] << 24;
-        burst |= tx_data.vnic_policer_tx_info.burst[4] << 32;
+        POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.rate, rate);
+        POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.burst, burst);
 
         if (tx_data.vnic_policer_tx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;

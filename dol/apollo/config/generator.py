@@ -25,6 +25,7 @@ from apollo.config.objects.meter import client as MeterClient
 from apollo.config.objects.mirror import client as MirrorClient
 from apollo.config.objects.dhcprelay import client as DHCPRelayClient
 from apollo.config.objects.nat_pb import client as NATPbClient
+from apollo.config.objects.policer import client as PolicerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPClient
 from apollo.config.objects.metaswitch.bgp import client as BGPPeerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPPeerAfClient
@@ -54,6 +55,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.BGP.name.lower()] = BGPClient
     ObjectInfo[APIObjTypes.BGP_PEER.name.lower()] = BGPPeerClient
     ObjectInfo[APIObjTypes.BGP_PEER_AF.name.lower()] = BGPPeerAfClient
+    ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
     return
 
 def __validate_object_config(node, client):
@@ -89,6 +91,9 @@ def __generate(node, topospec):
 
     # Generate Mirror session configuration before vnic
     MirrorClient.GenerateObjects(node, topospec)
+
+    # Generate Policer config
+    PolicerClient.GenerateObjects(node, topospec)
 
     # Generate VPC configuration
     VpcClient.GenerateObjects(node, topospec)
@@ -153,6 +158,7 @@ def __read(node):
     # BGPPbClient.ReadObjects(node)
     # LmappingClient.ReadObjects(node)
     # RmappingClient.ReadObjects(node)
+    PolicerClient.ReadObjects(node)
     return
 
 def Main(node, topospec, ip=None):

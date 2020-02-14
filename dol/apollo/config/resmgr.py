@@ -51,6 +51,7 @@ class Resmgr(base.ConfigObjectBase):
     MAX_ROUTES_PER_ROUTE_TBL = 63 if utils.IsPipelineArtemis() else 1023
     MAX_POLICY = 1023
     MAX_POLICY_PER_VNIC = 5
+    MAX_POLICER_PER_DIRECTION = 1024
     MAX_MIRROR = 8
     MAX_TAG = 1
     MAX_METER = 64
@@ -122,6 +123,7 @@ class Resmgr(base.ConfigObjectBase):
         self.PortIdAllocator = iter(irange(1, 4))
         self.DhcpIdAllocator = iter(irange(1, 16))
         self.NatPoolIdAllocator = iter(irange(1, 1000))
+        self.PolicerIdAllocator = iter(irange(1, 2048))
 
         # ---------------------------------------------------------------------------------
         # Artemis specific configs

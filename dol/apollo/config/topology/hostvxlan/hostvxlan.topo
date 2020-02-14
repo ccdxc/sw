@@ -88,6 +88,8 @@ node:
                   ipcount : 4             # Local IP mapping per vnic
                   srcguard : false        # true or false (default false)
                   public  : true
+                  rxpolicer: 1
+                  txpolicer: 2
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
           nexthop:
@@ -137,7 +139,7 @@ node:
             - type : specific
               policytype : default
               direction : bidir
-          nat46 : true
+          nat46: true
         - stack  : dual # dual, ipv4 , ipv6
           count : 2
           type  : tenant
@@ -151,6 +153,8 @@ node:
                   srcguard: false         # true or false (default false)
                   public  : false
                   tagged  : false         # true or false (default true)
+                  rxpolicer: 3
+                  txpolicer: 4
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
             - count     : 1
@@ -162,6 +166,8 @@ node:
                   srcguard: false
                   public  : true
                   tagged  : false
+                  rxpolicer: 5
+                  txpolicer: 6
               rmap:
                 - count : 4
           nat:
@@ -261,6 +267,37 @@ node:
                   - type : specific
                     policytype : default
                     direction : bidir
+    policer:
+      - id: 1
+        direction: ingress
+        type: pps
+        rate: 750000
+        burst: 7500000
+      - id: 2
+        direction: egress
+        type: bps
+        rate: 850000
+        burst: 8500000
+      - id: 3
+        direction: ingress
+        type: pps
+        rate: 950000
+        burst: 9500000
+      - id: 4
+        direction: egress
+        type: pps
+        rate: 400000
+        burst: 1400000
+      - id: 5
+        direction: ingress
+        type: bps
+        rate: 500000
+        burst: 1500000
+      - id: 6
+        direction: egress
+        type: pps
+        rate: 600000
+        burst: 1600000
 
 # ECMP:
 # Object types and order of creation of objects for different kinds of ECMP.
