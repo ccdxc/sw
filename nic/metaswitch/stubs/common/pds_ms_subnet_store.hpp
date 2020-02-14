@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_rt_store.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
@@ -24,6 +25,10 @@ public:
     pds_subnet_spec_t& spec(void) {return pds_spec_;}
     const pds_subnet_spec_t& spec(void) const {return pds_spec_;}
 //    ms_bd_id_t key(void) const {return pds_spec_.key.id;}
+
+public:
+    // to store import RTs for ORF support
+    rt_store_t rt_store;
 
 private:  
     pds_subnet_spec_t  pds_spec_;  // PDS owned

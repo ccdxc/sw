@@ -12,6 +12,8 @@ extern "C" {
 #include <o0mac.h>
 #include <a0cust.h>
 #include <a0mib.h>
+#include "smsiincl.h"
+#include "smsincl.h"
 }
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -210,5 +212,78 @@ is_pds_obj_key_invalid (const pds_obj_key_t& key) {
     static pds_obj_key_t invalid_key = {0};
     return (key == invalid_key);
 }
+
+enum class rt_type_e {
+    EVI = 1,
+    VRF
+};
+
+static inline char *
+rt2str (const uint8_t *rt) {
+    static thread_local char buf[3*AMB_BGP_EXT_COMM_LEN];
+    sprintf (buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
+             rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7]);
+    return buf;
+}
+static inline char *
+rt2msstr (const uint8_t *rt) {
+    static thread_local char buf[2*AMB_BGP_EXT_COMM_LEN];
+    sprintf (buf, "%02X%02X%02X%02X%02X%02X%02X%02X",
+             rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7]);
+    return buf;
+}
+
+typedef struct ms_rt_s ms_rt_t;
+struct ms_rt_s {
+    uint8_t rt[AMB_BGP_EXT_COMM_LEN];
+
+    ms_rt_s (const unsigned char rt_[]){ memcpy(rt,rt_,AMB_BGP_EXT_COMM_LEN);}
+    ms_rt_s ()=default;
+
+    bool operator==(const ms_rt_t& other) const {
+        if (!memcmp(rt, other.rt, AMB_BGP_EXT_COMM_LEN)) {
+            return true;
+        }
+        return false;
+    }
+    char *str (void) const {
+        return rt2str(rt);
+    }
+    char *ms_str (void) const {
+        return rt2msstr(rt);
+    }
+    bool equal (const uint8_t rt_[]) {
+        if (!memcmp(rt, rt_, AMB_BGP_EXT_COMM_LEN)) {
+            return true;
+        }
+        return false;
+    }
+};
+
+typedef struct pend_rt_s pend_rt_t;
+struct pend_rt_s {
+    using ms_id_t=uint32_t;
+    uint8_t rt[AMB_BGP_EXT_COMM_LEN];
+    rt_type_e type;
+    ms_id_t src_id; //subnet/vpc ms_id
+
+    pend_rt_s (const unsigned char rt_[], rt_type_e type_, ms_id_t id_){
+        memcpy(rt,rt_,AMB_BGP_EXT_COMM_LEN);
+        type = type_;
+        src_id = id_;
+    }
+    pend_rt_s ()=default;
+
+    bool operator==(const ms_rt_t& other) const {
+        if (!memcmp(rt, other.rt, AMB_BGP_EXT_COMM_LEN)) {
+            return true;
+        }
+        return false;
+    }
+
+    char *str (void) const {
+        return rt2str(rt);
+    }
+};
 } // End namespace
 #endif

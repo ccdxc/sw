@@ -109,6 +109,23 @@ public:
     uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid);
 
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
+    void set_rt_pending_add_(const uint8_t *rt, rt_type_e type,
+                             pend_rt_t::ms_id_t id) {
+        SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
+                          rt, type, id);
+        rt_pending_add_.push_back(pend_rt_t(rt, type, id));
+    }
+    void set_rt_pending_delete_(const uint8_t *rt, rt_type_e type,
+                             pend_rt_t::ms_id_t id) {
+        SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
+                          rt, type, id);
+        rt_pending_delete_.push_back(pend_rt_t(rt, type, id));
+    }
+    void clear_rt_pending_() {
+        rt_pending_add_.clear();
+        rt_pending_delete_.clear();
+    }
+    void redo_rt_pending_();
 
 private:
     static mgmt_state_t* g_state_;
@@ -122,6 +139,8 @@ private:
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_store_;
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_pending_create_;
     std::vector<pds_obj_key_t> uuid_pending_delete_;
+    std::vector<pend_rt_t> rt_pending_add_;
+    std::vector<pend_rt_t> rt_pending_delete_;
     mib_idx_gen_indexer_t mib_indexer_;
     slab_uptr_t slabs_ [PDS_MS_MGMT_MAX_SLAB_ID];
 

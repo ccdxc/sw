@@ -10,6 +10,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_slab_object.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_rt_store.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
@@ -37,6 +38,10 @@ public:
     ms_vrf_id_t key(void) const {return prop_.vrf_id; }
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};
+
+public:
+    // to store import RTs for ORF support
+    rt_store_t rt_store;
 
 private:
     properties_t prop_;

@@ -4,6 +4,7 @@
 //---------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
@@ -53,10 +54,12 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
         // Any internal MIB IDs allocated will be released here
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         mgmt_ctxt.state()->release_pending_uuid();
+        mgmt_ctxt.state()->redo_rt_pending_();
     } else {
         // Commit pending UUID operations to permanent store
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         mgmt_ctxt.state()->commit_pending_uuid();
+        mgmt_ctxt.state()->clear_rt_pending_();
     }
     g_cv_resp_.notify_all();
 }
@@ -87,7 +90,56 @@ uuid_obj_t* mgmt_state_t::lookup_uuid(const pds_obj_key_t& uuid) {
     return nullptr;
 }
 
-bool 
+// failed to add/delete RT from MS
+void mgmt_state_t::redo_rt_pending_ () {
+    auto state_ctxt = state_t::thread_context();
+    subnet_obj_t* subnet_obj = nullptr;
+    vpc_obj_t* vpc_obj = nullptr;
+
+    // remove RTs from the stores it is added
+    for (auto& rt: rt_pending_add_) {
+        if (rt.type == rt_type_e::EVI) {
+            subnet_obj = state_ctxt.state()->subnet_store().get(rt.src_id);
+            if (subnet_obj) {
+                SDK_TRACE_VERBOSE ("EVI RT %s is removed from subnet-id %d"
+                                 "due to failure", rt2str(rt.rt), rt.src_id);
+                subnet_obj->rt_store.del(rt.rt);
+            }
+        } else if (rt.type == rt_type_e::VRF) {
+            vpc_obj = state_ctxt.state()->vpc_store().get(rt.src_id);
+            if (vpc_obj) {
+                SDK_TRACE_VERBOSE ("VRF RT %s is removed from subnet-id %d"
+                                 "due to failure", rt2str(rt.rt), rt.src_id);
+                vpc_obj->rt_store.del(rt.rt);
+            }
+        }
+    }
+
+    // add RTs back to the stores from which it is already deleted
+    for (auto& rt: rt_pending_delete_) {
+        if (rt.type == rt_type_e::EVI) {
+            subnet_obj = state_ctxt.state()->subnet_store().get(rt.src_id);
+            if (subnet_obj) {
+                SDK_TRACE_DEBUG ("EVI RT %s is added back to subnet-id %d"
+                                 "due to failure", rt2str(rt.rt), rt.src_id);
+                subnet_obj->rt_store.add(rt.rt);
+            }
+        } else if (rt.type == rt_type_e::VRF) {
+            vpc_obj = state_ctxt.state()->vpc_store().get(rt.src_id);
+            if (vpc_obj) {
+                SDK_TRACE_DEBUG ("VRF RT %s is added back to subnet-id %d"
+                                 "due to failure", rt2str(rt.rt), rt.src_id);
+                vpc_obj->rt_store.add(rt.rt);
+            }
+        }
+    }
+
+    //clear the lists
+    rt_pending_add_.clear();
+    rt_pending_delete_.clear();
+}
+
+bool
 mgmt_state_init (void)
 {
     try { 
