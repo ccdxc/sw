@@ -213,6 +213,48 @@
           "Description": "Total Number of sessions that errored out during creation",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "NumTcpHalfOpenSessions",
+          "DisplayName": "Half Open TCP Sessions",
+          "Description": "Total Number of Half Open TCP sessions",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NumOtherActiveSessions",
+          "DisplayName": "Other Active Sessions",
+          "Description": "Total Number of sessions other than TCP/UDP/ICMP",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NumTcpSessionLimitDrops",
+          "DisplayName": "TCP Session limit exceed drops",
+          "Description": "Total Number of sessions dropped due to TCP session limit",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NumUdpSessionLimitDrops",
+          "DisplayName": "UDP Session limit exceed drops",
+          "Description": "Total Number of sessions dropped due to UDP session limit",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NumIcmpSessionLimitDrops",
+          "DisplayName": "ICMP Session limit exceed drops",
+          "Description": "Total Number of sessions dropped due to ICMP session limit",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NumOtherSessionLimitDrops",
+          "DisplayName": "Other Session limit exceed drops",
+          "Description": "Total Number of sessions other than TCP/UDP/ICMP dropped due to session limit",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [

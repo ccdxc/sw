@@ -2126,6 +2126,72 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "NumTcpHalfOpenSessions",
+      "displayName": "Half Open TCP Sessions",
+      "description": "Total Number of Half Open TCP sessions",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "NumOtherActiveSessions",
+      "displayName": "Other Active Sessions",
+      "description": "Total Number of sessions other than TCP/UDP/ICMP",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "NumTcpSessionLimitDrops",
+      "displayName": "TCP Session limit exceed drops",
+      "description": "Total Number of sessions dropped due to TCP session limit",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "NumUdpSessionLimitDrops",
+      "displayName": "UDP Session limit exceed drops",
+      "description": "Total Number of sessions dropped due to UDP session limit",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "NumIcmpSessionLimitDrops",
+      "displayName": "ICMP Session limit exceed drops",
+      "description": "Total Number of sessions dropped due to ICMP session limit",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "NumOtherSessionLimitDrops",
+      "displayName": "Other Session limit exceed drops",
+      "description": "Total Number of sessions other than TCP/UDP/ICMP dropped due to session limit",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",

@@ -36,6 +36,12 @@ func init() {
 		"NumIcmpErrors",
 		"NumTcpCxnsetupTimeouts",
 		"NumSessionCreateErrors",
+		"NumTcpHalfOpenSessions",
+		"NumOtherActiveSessions",
+		"NumTcpSessionLimitDrops",
+		"NumUdpSessionLimitDrops",
+		"NumIcmpSessionLimitDrops",
+		"NumOtherSessionLimitDrops",
 	}
 
 }
