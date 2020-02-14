@@ -234,7 +234,7 @@ class Node(object):
                 self.__devices[name] = device
                 device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
                 device.SetNicConsoleIP(getattr(nic, "ConsoleIP", ""))
-                device.SetNicConsolePort(getattr(nic, "NicConsolePort", ""))
+                device.SetNicConsolePort(getattr(nic, "ConsolePort", ""))
                 device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                 device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
                 for port in getattr(nic, "Ports", []):

@@ -83,8 +83,10 @@ class Workload:
                     self.exposed_tcp_ports.append(exposed_port.Port)
                 if exposed_port.Proto == "udp":
                     self.exposed_udp_ports.append(exposed_port.Port)
-            Logger.info("Worklaod %s exposed tcp ports %s" % (self.workload_name, self.exposed_tcp_ports))
-            Logger.info("Workload %s exposed udp ports %s" % (self.workload_name, self.exposed_udp_ports))
+            if len(self.exposed_tcp_ports) != 0:
+               Logger.info("Worklaod %s exposed tcp ports %s" % (self.workload_name, self.exposed_tcp_ports))
+            if len(self.exposed_udp_ports) != 0:
+               Logger.info("Workload %s exposed udp ports %s" % (self.workload_name, self.exposed_udp_ports))
         return
 
     def init(self, workload_name, node_name, ip_address, interface=None):

@@ -411,7 +411,15 @@ class EntityManagement:
             else:
                 raise
 
+    def clear_buffer(self):
+        try:
+            #Clear buffer 
+            self.hdl.read_nonblocking(1000000000, timeout = 1)
+        except:
+            pass
+
     def RunCommandOnConsoleWithOutput(self, cmd, trySync=False):
+        self.clear_buffer()
         self.__run_cmd(cmd, trySync)
         return self.hdl.before.decode('utf-8')
 
