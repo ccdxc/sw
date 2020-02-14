@@ -660,7 +660,7 @@ var k8sModules = map[string]protos.Module{
 			Name: globals.OrchHub,
 		},
 		Spec: protos.ModuleSpec{
-			Type:      protos.ModuleSpec_DaemonSet,
+			Type:      protos.ModuleSpec_Deployment,
 			NumCopies: 1,
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
