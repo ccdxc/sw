@@ -4,13 +4,10 @@
 action nacl_permit(force_flow_hit, policer_index, log_en,
                    ingress_mirror_en, egress_mirror_en,
                    ingress_mirror_session_id, egress_mirror_session_id,
-                   qid_en, qid,
-                   rewrite_en, rewrite_index, rewrite_flags,
+                   qid_en, qid, rewrite_en, rewrite_index, rewrite_flags,
                    tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
-                   tunnel_originate,
-                   dst_lport_en, dst_lport, discard_drop, 
-                   egress_drop, 
-                   stats_idx) {
+                   tunnel_originate, dst_lport_en, dst_lport, discard_drop,
+                   egress_drop, stats_idx) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.force_flow_hit, force_flow_hit);
     modify_field(scratch_metadata.qid_en, qid_en);
@@ -70,9 +67,15 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     }
 }
 
-action nacl_deny(stats_idx) {
+action nacl_deny(stats_idx, drop_reason_valid, drop_reason) {
     modify_field(control_metadata.nacl_stats_idx, stats_idx);
-    modify_field(control_metadata.drop_reason, DROP_NACL);
+    modify_field(scratch_metadata.flag, drop_reason_valid);
+    modify_field(scratch_metadata.size8, drop_reason);
+    if ((drop_reason_valid == 1) and (drop_reason <= DROP_MAX)) {
+        modify_field(control_metadata.drop_reason, scratch_metadata.size8);
+    } else {
+        modify_field(control_metadata.drop_reason, DROP_NACL);
+    }
     drop_packet();
 }
 
@@ -81,7 +84,6 @@ table nacl {
     reads {
         entry_inactive.nacl                 : ternary;
         capri_intrinsic.lif                 : ternary;
-        // control_metadata.nic_mode           : ternary;
         control_metadata.from_cpu           : ternary;
         flow_lkp_metadata.lkp_dir           : ternary;
         flow_lkp_metadata.lkp_type          : ternary;

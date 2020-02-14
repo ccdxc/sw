@@ -65,9 +65,14 @@ nacl_permit:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 nacl_deny:
-  phvwr       p.control_metadata_nacl_stats_idx, d.u.nacl_deny_d.stats_idx
-  phvwr.e     p.control_metadata_drop_reason[DROP_NACL], 1
-  phvwr       p.capri_intrinsic_drop, 1
+  seq           c1, d.u.nacl_deny_d.drop_reason_valid, 1
+  sle.c1        c1, d.u.nacl_deny_d.drop_reason, DROP_MAX
+  phvwr.!c1     p.control_metadata_drop_reason[DROP_NACL], 1
+  add           r1, offsetof(p, control_metadata_drop_reason), \
+                    d.u.nacl_deny_d.drop_reason
+  phvwrp.c1     r1, 0, 1, 1
+  phvwr.e       p.control_metadata_nacl_stats_idx, d.u.nacl_deny_d.stats_idx
+  phvwr.f       p.capri_intrinsic_drop, 1
 
 /*****************************************************************************/
 /* error function                                                            */
