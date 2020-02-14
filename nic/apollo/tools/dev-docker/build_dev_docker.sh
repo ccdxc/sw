@@ -130,6 +130,9 @@ copy_files() {
 
     # libdir
     mkdir -p $LIBDIR
+
+    # exclude list
+    rm -rf $DST/nic/metaswitch/pegctl
 }
 
 script_exit() {
