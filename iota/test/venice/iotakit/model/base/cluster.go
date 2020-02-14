@@ -928,8 +928,15 @@ func (sm *SysModel) JoinNaplesToVenice(nodes []*testbed.TestNode) error {
 		if testbed.IsNaplesHW(node.Personality) {
 			for _, naples := range node.NaplesConfigs.Configs {
 				trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
+				//Hack for now until we push full profile
+				trig.AddCommand(fmt.Sprintf("halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
 			}
 		}
+	}
+
+	resp, err = trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error update public key on naples. Err: %v", err)
 	}
 
 	// check the response
