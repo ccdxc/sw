@@ -207,15 +207,17 @@ class _Testbed:
                         if not switch_ctx:
                             switch_ctx = msg.data_switches.add()
                             switch_ips[nw.SwitchIP] = switch_ctx
-                        switch_ctx.username = nw.SwitchUsername
-                        switch_ctx.password = nw.SwitchPassword
-                        switch_ctx.ip = nw.SwitchIP
+
+                            switch_ctx.username = nw.SwitchUsername
+                            switch_ctx.password = nw.SwitchPassword
+                            switch_ctx.ip = nw.SwitchIP
+                            # This should from testsuite eventually or each testcase should be able to set
+                            switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
+                            # igmp disabled for now
+                            switch_ctx.igmp_disabled = True
+                            setUpSwitchQos(switch_ctx)
+
                         switch_ctx.ports.append(nw.Name)
-                        #This should from testsuite eventually or each testcase should be able to set
-                        switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
-                        #igmp disabled for now
-                        switch_ctx.igmp_disabled = True
-                        setUpSwitchQos(switch_ctx)
 
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
