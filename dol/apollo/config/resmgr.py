@@ -62,6 +62,10 @@ class Resmgr(base.ConfigObjectBase):
     MAX_BGP_SESSIONS = 5
     MAX_BGP_PEER_AF_SESSIONS = 5
     MAX_BGP_PEERS = 10
+    MAX_EVPN_EVI = 50
+    MAX_EVPN_EVI_RT = 50
+    MAX_EVPN_IP_VRF = 50
+    MAX_EVPN_IP_VRF_RT = 50
 
     NICMGR_HOST_LIF_BASE = 72
     NICMGR_HOST_LIF_COUNT = 1
@@ -124,6 +128,10 @@ class Resmgr(base.ConfigObjectBase):
         self.DhcpIdAllocator = iter(irange(1, 16))
         self.NatPoolIdAllocator = iter(irange(1, 1000))
         self.PolicerIdAllocator = iter(irange(1, 2048))
+        self.EvpnEviIdAllocator = iter(irange(1, 50))
+        self.EvpnEviRtIdAllocator = iter(irange(1, 50))
+        self.EvpnIpVrfIdAllocator = iter(irange(1, 50))
+        self.EvpnIpVrfRtIdAllocator = iter(irange(1, 50))
 
         # ---------------------------------------------------------------------------------
         # Artemis specific configs

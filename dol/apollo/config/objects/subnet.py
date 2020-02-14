@@ -17,6 +17,8 @@ import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
 from apollo.config.objects.policy import client as PolicyClient
 import apollo.config.objects.route as route
+import apollo.config.objects.metaswitch.evpnevi as evpnevi
+import apollo.config.objects.metaswitch.evpnevirt as evpnevirt
 import apollo.config.utils as utils
 
 import subnet_pb2 as subnet_pb2
@@ -99,6 +101,11 @@ class SubnetObject(base.ConfigObjectBase):
         # Generate VNIC and Remote Mapping configuration
         vnic.client.GenerateObjects(node, self, spec)
         rmapping.client.GenerateObjects(node, self, spec)
+
+        # Generate Metaswitch Objects configuration
+        evpnevi.client.GenerateObjects(node,  spec)
+        evpnevirt.client.GenerateObjects(node,  spec)
+
         return
 
     def __repr__(self):
@@ -381,6 +388,9 @@ class SubnetObjectClient(base.ConfigClientBase):
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects(node)
         rmapping.client.CreateObjects(node)
+        # Create Metaswitch objects
+        evpnevi.client.CreateObjects(node)
+        evpnevirt.client.CreateObjects(node)
         return True
 
 client = SubnetObjectClient()

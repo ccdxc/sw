@@ -29,6 +29,8 @@ import apollo.config.objects.meter as meter
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 import apollo.config.objects.nat_pb as nat_pb
+import apollo.config.objects.metaswitch.evpnipvrf as evpnipvrf
+import apollo.config.objects.metaswitch.evpnipvrfrt as evpnipvrfrt
 
 import vpc_pb2 as vpc_pb2
 
@@ -127,6 +129,10 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate Meter configuration
         meter.client.GenerateObjects(node, self, spec)
+
+        # Generate Metaswitch configuration
+        evpnipvrf.client.GenerateObjects(node, spec)
+        evpnipvrfrt.client.GenerateObjects(node, spec)
 
         self.V4RouteTableId = route.client.GetRouteV4TableId(node, self.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(node, self.VPCId)
@@ -392,6 +398,9 @@ class VpcObjectClient(base.ConfigClientBase):
         BGPPeerClient.CreateObjects(node)
         BGPPeerAfClient.CreateObjects(node)
 
+        # Create Metaswitch objects
+        evpnipvrf.client.CreateObjects(node)
+        evpnipvrfrt.client.CreateObjects(node)
         return
 
 client = VpcObjectClient()

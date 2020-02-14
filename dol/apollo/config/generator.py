@@ -29,6 +29,10 @@ from apollo.config.objects.policer import client as PolicerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPClient
 from apollo.config.objects.metaswitch.bgp import client as BGPPeerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPPeerAfClient
+from apollo.config.objects.metaswitch.evpnevi import client as EvpnEviClient
+from apollo.config.objects.metaswitch.evpnevirt import client as EvpnEviRtClient
+from apollo.config.objects.metaswitch.evpnipvrf import client as EvpnIpVrfClient
+from apollo.config.objects.metaswitch.evpnipvrfrt import client as EvpnIpVrfRtClient
 import apollo.config.store as store
 import apollo.config.utils as utils
 
@@ -56,6 +60,10 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.BGP_PEER.name.lower()] = BGPPeerClient
     ObjectInfo[APIObjTypes.BGP_PEER_AF.name.lower()] = BGPPeerAfClient
     ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
+    ObjectInfo[APIObjTypes.EVPN_EVI.name.lower()] = EvpnEviClient
+    ObjectInfo[APIObjTypes.EVPN_EVI_RT.name.lower()] = EvpnEviRtClient
+    ObjectInfo[APIObjTypes.EVPN_IP_VRF.name.lower()] = EvpnIpVrfClient
+    ObjectInfo[APIObjTypes.EVPN_IP_VRF_RT.name.lower()] = EvpnIpVrfRtClient
     return
 
 def __validate_object_config(node, client):
