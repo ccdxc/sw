@@ -132,7 +132,7 @@ copy_files() {
     mkdir -p $LIBDIR
 
     # exclude list
-    rm -rf $DST/nic/metaswitch/pegctl
+    rm -rf $DST/nic/metaswitch/rtrctl
 }
 
 script_exit() {

@@ -293,6 +293,7 @@ install:
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
 	@cp -p ${PWD}/nic/tools/fakefwupdate tools/docker-files/netagent/fwupdate
 	@cp -p ${PWD}/bin/cbin/ntsa tools/docker-files/netagent/ntsa
+	@cp -p ${PWD}/bin/cbin/rtrctl tools/docker-files/perseus/rtrctl
 	@cp -p ${PWD}/nic/conf/naples-tsa.json tools/docker-files/netagent/naples-tsa.json
 	@echo  ${GIT_VERSION} > tools/docker-files/netagent/VERSION
 	@cp -p ${PWD}/venice/vtsa/cmd/vtsa/vtsa.json tools/docker-files/vtsa/vtsa.json

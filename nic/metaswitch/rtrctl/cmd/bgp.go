@@ -14,7 +14,7 @@ import (
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
-	"github.com/pensando/sw/nic/metaswitch/pegctl/utils"
+	"github.com/pensando/sw/nic/metaswitch/rtrctl/utils"
 )
 
 var bgpShowCmd = &cobra.Command{

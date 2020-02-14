@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = pegctl.gobin
+MODULE_TARGET   = rtrctl.gobin
 MODULE_PREREQS  = agent_pdsproto.submake pdsgen.proto ms_pdsproto.submake
 MODULE_PIPELINE = apulu
 MODULE_ARCH     = x86_64
