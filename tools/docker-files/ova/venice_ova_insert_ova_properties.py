@@ -54,9 +54,9 @@ deployment_section = '''
     <DeploymentOptionSection xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1">
       <Info>The list of deployment options</Info>
       <Configuration ovf:id="lab">
-        <Label ovf:msgid="config.lab.label">Lab</Label>
+        <Label ovf:msgid="config.lab.label">Trials</Label>
         <Description ovf:msgid="config.lab.description">
-IMPORTANT: This configuration is only supported for lab testing
+IMPORTANT: This configuration is only supported for trial up to 4 DSCs
 
 This configuration requires the following:
 * 4 vCPU
@@ -67,11 +67,22 @@ This configuration requires the following:
       <Configuration ovf:id="production">
         <Label ovf:msgid="config.production.label">Production</Label>
         <Description ovf:msgid="config.production.description">
-IMPORTANT: This configuration is required for production deployment
+IMPORTANT: This configuration is required for production deployment up to 100 DSCs
 
 This configuration requires the following:
-* 12 vCPU
-* 32GB RAM
+* 16 vCPU
+* 64GB RAM
+* 100GB Storage
+        </Description>
+      </Configuration>
+      <Configuration ovf:id="scale">
+        <Label ovf:msgid="config.scale.label">Scale</Label>
+        <Description ovf:msgid="config.production.description">
+IMPORTANT: This configuration is required for production deployment up to 1000 DSCs
+
+This configuration requires the following:
+* 32 vCPU
+* 128GB RAM
 * 100GB Storage
         </Description>
       </Configuration>
@@ -151,11 +162,22 @@ cpu_mem_section = [
     <Item xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" xmlns:vmw="http://www.vmware.com/schema/ovf" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" configuration="production">
       <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
       <rasd:Description>Number of Virtual CPUs</rasd:Description>
-      <rasd:ElementName>12 virtual CPU(s)</rasd:ElementName>
+      <rasd:ElementName>16 virtual CPU(s)</rasd:ElementName>
       <rasd:InstanceID>1</rasd:InstanceID>
       <rasd:ResourceType>3</rasd:ResourceType>
-      <rasd:VirtualQuantity>12</rasd:VirtualQuantity>
-      <vmw:CoresPerSocket ovf:required="false">6</vmw:CoresPerSocket>
+      <rasd:VirtualQuantity>16</rasd:VirtualQuantity>
+      <vmw:CoresPerSocket ovf:required="false">8</vmw:CoresPerSocket>
+    </Item>
+    ''',
+    '''
+    <Item xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" xmlns:vmw="http://www.vmware.com/schema/ovf" xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1" configuration="scale">
+      <rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+      <rasd:Description>Number of Virtual CPUs</rasd:Description>
+      <rasd:ElementName>32 virtual CPU(s)</rasd:ElementName>
+      <rasd:InstanceID>1</rasd:InstanceID>
+      <rasd:ResourceType>3</rasd:ResourceType>
+      <rasd:VirtualQuantity>32</rasd:VirtualQuantity>
+      <vmw:CoresPerSocket ovf:required="false">16</vmw:CoresPerSocket>
     </Item>
     ''',
     '''
@@ -172,10 +194,20 @@ cpu_mem_section = [
     <Item xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" configuration="production">
       <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
       <rasd:Description>Memory Size</rasd:Description>
-      <rasd:ElementName>32768MB of memory</rasd:ElementName>
+      <rasd:ElementName>65536MB of memory</rasd:ElementName>
       <rasd:InstanceID>2</rasd:InstanceID>
       <rasd:ResourceType>4</rasd:ResourceType>
-      <rasd:VirtualQuantity>32768</rasd:VirtualQuantity>
+      <rasd:VirtualQuantity>65536</rasd:VirtualQuantity>
+    </Item>
+    ''',
+    '''
+    <Item xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData" configuration="scale">
+      <rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
+      <rasd:Description>Memory Size</rasd:Description>
+      <rasd:ElementName>131072MB of memory</rasd:ElementName>
+      <rasd:InstanceID>2</rasd:InstanceID>
+      <rasd:ResourceType>4</rasd:ResourceType>
+      <rasd:VirtualQuantity>131072</rasd:VirtualQuantity>
     </Item>
     '''
 ]

@@ -50,8 +50,8 @@ def curl_send(**data):
             break
         except Exception, e:
             req_error = str(e)
-            write_log("* error sending request to " + data["url"] +": " + str(e), 1)
-        write_log("* retrying....", 1)
+            write_log("* unable to send request to " + data["url"] +": " + str(e), 1)
+        write_log("* service may not be up yet. retrying....", 1)
         time.sleep(opts.waittime)
     if req_error == "":
         # we were able to contact server

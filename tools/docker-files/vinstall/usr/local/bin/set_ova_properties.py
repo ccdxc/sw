@@ -10,6 +10,7 @@ import sys
 import pycurl
 import json
 import re
+import time
 import datetime
 import md5
 import time
@@ -89,8 +90,20 @@ def get_ovf_properties():
     # If it is DHCP, we will need to determine what the IP is so we can use to bootstrap venice
     if ( properties["ipaddress"] == "" ):
         properties["addrconf"] = "dhcp"
+        # Try to parse the IP address. Since DHCP may take a while we will need to loop 
+        start_time = int(time.time())
         cmd = "ip addr show dev " + properties["ifname"] + " | grep 'inet ' | awk '{print $2}'"
-        output = subprocess.check_output(cmd, shell=True)
+        while True:
+            if ( ( int(time.time()) - start_time ) > 300 ):
+                write_log("* DHCP is specified but unable to determine the IP address of %s. Giving up." % properties["ifname"])
+                sys.exit(1)
+            output = subprocess.check_output(cmd, shell=True)
+            # Check that it has the IP address
+            if re.search("(\d+\.){3}\d+\/\d+", output):
+                output = output.strip()
+                break
+            write_log("* DHCP is specified but unable to determine the IP address of %s. Retrying.." % properties["ifname"])
+            time.sleep(30)
         ( addr, cidr_len ) = output.split('/')
         properties["ipaddress"] = addr
         properties["masklen"] = cidr_len
