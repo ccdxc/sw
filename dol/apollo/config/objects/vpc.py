@@ -7,6 +7,14 @@ from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.objects.nexthop import client as NhClient
+from apollo.config.objects.nexthop_group import client as NhGroupClient
+from apollo.config.objects.interface import client as InterfaceClient
+from apollo.config.objects.port import client as PortClient
+from apollo.config.objects.vnic import client as VnicClient
+from apollo.config.objects.metaswitch.bgp import client as BGPClient
+from apollo.config.objects.metaswitch.bgp_peer import client as BGPPeerClient
+from apollo.config.objects.metaswitch.bgp_peeraf import client as BGPPeerAfClient
 
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -14,14 +22,9 @@ import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tunnel as tunnel
-from apollo.config.objects.nexthop import client as NhClient
-from apollo.config.objects.nexthop_group import client as NhGroupClient
-from apollo.config.objects.interface import client as InterfaceClient
-from apollo.config.objects.port import client as PortClient
 import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
-from apollo.config.objects.vnic import client as VnicClient
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
 import apollo.config.objects.nat_pb as nat_pb
@@ -159,6 +162,9 @@ class VpcObject(base.ConfigObjectBase):
                 Resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
             nat_pb.client.GenerateObjects(node, self, spec)
 
+        # Generate BGP configuration
+        BGPClient.GenerateObjects(node, self, spec)
+        BGPPeerClient.GenerateObjects(node, self, spec)
         return
 
     def __repr__(self):
@@ -355,8 +361,7 @@ class VpcObjectClient(base.ConfigClientBase):
         # Write the flow and nexthop config to agent hook file
         if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)
-        if utils.IsPipelineApulu() and not \
-                (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+        if utils.IsPipelineApulu():
             # Associate Nexthop objects
             NhGroupClient.CreateAllocator(node)
             NhClient.AssociateObjects(node)
@@ -389,6 +394,12 @@ class VpcObjectClient(base.ConfigClientBase):
 
         # Create NAT Port Block Objects
         nat_pb.client.CreateObjects(node)
+
+        # Create BGP Objects
+        BGPClient.CreateObjects(node)
+        BGPPeerClient.CreateObjects(node)
+        BGPPeerAfClient.CreateObjects(node)
+
         return
 
 client = VpcObjectClient()

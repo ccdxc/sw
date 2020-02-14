@@ -25,6 +25,9 @@ from apollo.config.objects.meter import client as MeterClient
 from apollo.config.objects.mirror import client as MirrorClient
 from apollo.config.objects.dhcprelay import client as DHCPRelayClient
 from apollo.config.objects.nat_pb import client as NATPbClient
+from apollo.config.objects.metaswitch.bgp import client as BGPClient
+from apollo.config.objects.metaswitch.bgp import client as BGPPeerClient
+from apollo.config.objects.metaswitch.bgp import client as BGPPeerAfClient
 import apollo.config.store as store
 import apollo.config.utils as utils
 
@@ -48,6 +51,9 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient
     ObjectInfo[APIObjTypes.DHCP_RELAY.name.lower()] = DHCPRelayClient
     ObjectInfo[APIObjTypes.NAT_PB.name.lower()] = NATPbClient
+    ObjectInfo[APIObjTypes.BGP.name.lower()] = BGPClient
+    ObjectInfo[APIObjTypes.BGP_PEER.name.lower()] = BGPPeerClient
+    ObjectInfo[APIObjTypes.BGP_PEER_AF.name.lower()] = BGPPeerAfClient
     return
 
 def __validate_object_config(node, client):
@@ -144,6 +150,7 @@ def __read(node):
     RouteTableClient.ReadObjects(node)
     # DHCPRelayClient.ReadObjects(node)
     NATPbClient.ReadObjects(node)
+    # BGPPbClient.ReadObjects(node)
     # LmappingClient.ReadObjects(node)
     # RmappingClient.ReadObjects(node)
     return

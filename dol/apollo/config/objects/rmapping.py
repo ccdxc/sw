@@ -11,6 +11,7 @@ from apollo.config.resmgr import Resmgr
 import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
+import apollo.config.topo as topo
 import ipaddress
 
 class RemoteMappingObject(base.ConfigObjectBase):

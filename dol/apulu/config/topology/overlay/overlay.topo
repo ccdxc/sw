@@ -14,6 +14,13 @@ node:
         gateway         : None # Taken from resmgr
         encap           : vxlan # vxlan or mplsodup
         overlayrouting  : true
+# Tunnel, nexthop and route-tables are retained for pkt generation. They are
+# not pushed to the model
+        tunnel      :
+            - count : 16
+              type  : underlay
+            - count : 16
+              type  : underlay-ecmp
     uplink:
        - entry:
            id      : uplink0
@@ -36,7 +43,7 @@ node:
         # underlay vpc
         - stack  : ipv4 # dual, ipv4 , ipv6
           count : 1
-          type  : underlay 
+          type  : underlay
           routetbl: # Only for read op
              - type: specific # route table with only default routes
                routetype: only_default
@@ -110,7 +117,7 @@ node:
           count : 1
           type  : tenant
           subnet:
-            - count       : 2
+            - count     : 2
               v4prefixlen : 24
               v6prefixlen : 64
               vnic: # Only for read op
@@ -122,12 +129,10 @@ node:
                 - count : 4
               evpnevi:
                 - id    : 1
-              evpnevi:
                 - id    : 2
               evpnevirt:
                 - id    : 1
                   rt    : 0:1000
-              evpnevirt:
                 - id    : 2
                   rt    : 0:1001
           nexthop: # Only for read op

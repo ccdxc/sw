@@ -29,8 +29,6 @@ MAX_ROUTE_PRIORITY = 1
 class RouteObject():
     def __init__(self, node, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
         super().__init__()
-        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
-            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         self.Id = next(ResmgrClient[node].RouteIdAllocator)
         self.ipaddr = ipaddress
         self.Priority = priority
@@ -71,6 +69,8 @@ class RouteObject():
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
         super().__init__(api.ObjectTypes.ROUTE, node)
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(ResmgrClient[node].V6RouteTableIdAllocator)

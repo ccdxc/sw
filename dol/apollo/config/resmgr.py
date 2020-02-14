@@ -58,6 +58,9 @@ class Resmgr(base.ConfigObjectBase):
     MAX_OVERLAY_NHS = 8
     MAX_DHCP_RELAY = 16
     MAX_NAT_PB = 1024
+    MAX_BGP_SESSIONS = 5
+    MAX_BGP_PEER_AF_SESSIONS = 5
+    MAX_BGP_PEERS = 10
 
     NICMGR_HOST_LIF_BASE = 72
     NICMGR_HOST_LIF_COUNT = 1
@@ -111,7 +114,6 @@ class Resmgr(base.ConfigObjectBase):
         self.RemoteInternetNonNatTunAllocator = None
         self.RemoteInternetNatTunAllocator = None
         self.RemoteMplsVnicTunAllocator = None
-        self.UnderlayTunAllocator = None
         self.PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/16').hosts()
         self.PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
         self.IGWVxlanIdAllocator = iter(irange(50001, 51024))
@@ -178,6 +180,12 @@ class Resmgr(base.ConfigObjectBase):
         self.HostIfs = dict()
         # Host interface index allocator for IOTA
         self.HostIfIdxAllocator = iter(irange(0x80000048, 0x8000004F))
+
+        # Metaswitch
+        self.BgpIdAllocator = iter(irange(1, 10))
+        self.BgpPeerIdAllocator = iter(irange(1, 10))
+        self.BgpPeerAfIdAllocator = iter(irange(1, 10))
+
         return
 
     def Show(self):

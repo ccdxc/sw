@@ -21,6 +21,9 @@ import meter_pb2_grpc as meter_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
 import dhcp_pb2_grpc as dhcp_pb2_grpc
 import nat_pb2_grpc as nat_pb2_grpc
+import bgp_pb2_grpc as bgp_pb2_grpc
+import cp_route_pb2_grpc as cp_route_pb2_grpc
+import evpn_pb2_grpc as evpn_pb2_grpc
 
 import device_pb2 as device_pb2
 import interface_pb2 as interface_pb2
@@ -37,6 +40,9 @@ import vpc_pb2 as vpc_pb2
 import vnic_pb2 as vnic_pb2
 import dhcp_pb2 as dhcp_pb2
 import nat_pb2 as nat_pb2
+import bgp_pb2 as bgp_pb2
+import cp_route_pb2 as cp_route_pb2
+import evpn_pb2 as evpn_pb2
 
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
@@ -77,7 +83,13 @@ class ObjectTypes(enum.IntEnum):
     DHCP_RELAY = 17
     NAT_PB = 18
     RMAPPING = 19
-    MAX = 20
+    BGP = 20
+    BGP_PEER = 21
+    BGP_PEER_AF = 22
+    BGP_NLRI_PREFIX = 23
+    EVPN = 24
+    CP_ROUTE = 25
+    MAX = 26
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -215,6 +227,16 @@ class ApolloAgentClient:
                                                       self.__channel, 'DHCPRelay')
         self.__stubs[ObjectTypes.NAT_PB] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                       self.__channel, 'NatPortBlock')
+        self.__stubs[ObjectTypes.BGP] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                   self.__channel, 'BGP')
+        self.__stubs[ObjectTypes.BGP_PEER] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                        self.__channel, 'BGPPeer')
+        self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                           self.__channel, 'BGPPeerAf')
+        self.__stubs[ObjectTypes.EVPN] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+                                                    self.__channel, 'EVPN')
+        self.__stubs[ObjectTypes.CP_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
+                                                        self.__channel, 'CPStaticRoute')
         return
 
     def __create_msgreq_table(self):
@@ -235,6 +257,11 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
         self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
         self.__msgreqs[ObjectTypes.NAT_PB] = ClientModule(nat_pb2, 'NatPortBlock')
+        self.__msgreqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')
+        self.__msgreqs[ObjectTypes.BGP_PEER] = ClientModule(bgp_pb2, 'BGPPeer')
+        self.__msgreqs[ObjectTypes.BGP_PEER_AF] = ClientModule(bgp_pb2, 'BGPPeerAf')
+        self.__msgreqs[ObjectTypes.EVPN] = ClientModule(evpn_pb2, 'EVPN')
+        self.__msgreqs[ObjectTypes.CP_ROUTE] = ClientModule(cp_route_pb2, 'CP_ROUTE')
         return
 
     def GetGRPCMsgReq(self, objtype, op):
