@@ -3,6 +3,10 @@
 /*****************************************************************************/
 action ingress_tx_stats(ucast_bytes, ucast_pkts, mcast_bytes, mcast_pkts,
                         bcast_bytes, bcast_pkts, pad1, pad2) {
+    if (recirc_header.valid == TRUE) {
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+        // return
+    }
     if (capri_intrinsic.drop == TRUE) {
         // drop stats update implemented using memwr in ASM
         modify_field(scratch_metadata.lif, control_metadata.src_lif);
@@ -341,11 +345,6 @@ control process_stats {
     if (control_metadata.flow_miss_ingress == FALSE) {
         apply(flow_stats);
     }
-    // if ((control_metadata.nic_mode == NIC_MODE_SMART) and
-    //     (control_metadata.flow_miss_ingress == FALSE)) {
-    //     apply(flow_stats);
-    // }
-    apply(ingress_tx_stats);
     apply(nacl_stats);
 }
 

@@ -13,6 +13,9 @@ struct phv_                 p;
 %%
 
 ingress_tx_stats:
+    seq         c1, k.recirc_header_valid, TRUE
+    phvwr.c1.e  p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
+
     or          r1, k.flow_lkp_metadata_pkt_type, k.capri_intrinsic_drop, 2
     phvwr       p.capri_p4_intrinsic_valid, TRUE
     .brbegin

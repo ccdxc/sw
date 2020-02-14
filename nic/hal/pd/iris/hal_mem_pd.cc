@@ -1197,8 +1197,8 @@ hal_pd_lif_stats_region_init (void)
     uint64_t                    stats_base_addr;
 
     stats_base_addr = get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
-    // reset bit 31 (saves one ASM instruction)
-    stats_base_addr &= ~((uint64_t)1 << 31);
+    // subtract 2G (saves ASM instructions)
+    stats_base_addr -= ((uint64_t)1 << 31);
 
     rc = p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);
@@ -1223,8 +1223,8 @@ hal_pd_hwerr_stats_region_init (void)
     uint64_t                    stats_base_addr;
 
     stats_base_addr = get_mem_addr(CAPRI_HBM_REG_P4_HWERR_STATS);
-    // reset bit 31 (saves one ASM instruction)
-    stats_base_addr &= ~((uint64_t)1 << 31);
+    // subtract 2G (saves ASM instructions)
+    stats_base_addr -= ((uint64_t)1 << 31);
 
     rc = p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);

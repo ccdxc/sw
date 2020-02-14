@@ -368,6 +368,7 @@ control ingress {
         process_session_state();
         process_stats();
     }
+    apply(ingress_tx_stats);
 }
 
 /*****************************************************************************/

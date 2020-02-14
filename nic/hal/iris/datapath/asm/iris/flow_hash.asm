@@ -94,8 +94,7 @@ flow_hash_recirc:
   ori           r2, r2, 0x80000000
   phvwrpair.e   p.control_metadata_ingress_bypass, 1, \
                     p.recirc_header_overflow_entry_index, r2
-  phvwrpair     p.capri_intrinsic_tm_oport, TM_PORT_INGRESS, \
-                p.capri_intrinsic_tm_iq, k.qos_metadata_qos_class_id[4:0]
+  phvwr.f       p.capri_intrinsic_tm_iq, k.qos_metadata_qos_class_id[4:0]
 
 flow_hash_exit:
   nop.e
