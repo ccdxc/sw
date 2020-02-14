@@ -93,6 +93,7 @@ func TestCrudOps(t *testing.T) {
 			},
 			Status: network.NetworkInterfaceStatus{
 				Name:       name,
+				DSC:        name,
 				Type:       intType,
 				OperStatus: "up",
 			},

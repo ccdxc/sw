@@ -19,10 +19,11 @@ import (
 )
 
 type snic struct {
-	name  string
-	phase string
-	ip    string
-	uuid  string
+	name   string
+	phase  string
+	ip     string
+	uuid   string
+	pushed bool
 }
 
 // ServiceHandlers holds all the servies to be supported
@@ -54,10 +55,19 @@ func NewServiceHandlers() *ServiceHandlers {
 	return &m
 }
 
-var cfgAsn uint32
+// CfgAsn is the ASN for the RR config
+var CfgAsn uint32
 
-func (m *ServiceHandlers) configurePeer(nic snic) {
-	if nic.phase != "admitted" || nic.ip == "" || nic.uuid == "" {
+func (m *ServiceHandlers) configurePeers() {
+	for _, nic := range m.snicMap {
+		if nic.pushed == false {
+			m.configurePeer(nic, false)
+		}
+	}
+}
+
+func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
+	if nic.phase != "admitted" || nic.ip == "" || nic.uuid == "" || CfgAsn == 0 {
 		// wait for all information to be right
 		// might have to handle case where nic was admitted previously
 		// TODO
@@ -74,7 +84,7 @@ func (m *ServiceHandlers) configurePeer(nic snic) {
 		Id:           uid.Bytes(),
 		PeerAddr:     ip2PDSType(nic.ip),
 		LocalAddr:    ip2PDSType(""),
-		RemoteASN:    cfgAsn,
+		RemoteASN:    CfgAsn,
 		SendComm:     true,
 		SendExtComm:  true,
 		ConnectRetry: 5,
@@ -84,11 +94,18 @@ func (m *ServiceHandlers) configurePeer(nic snic) {
 	peerReq.Request = append(peerReq.Request, &peer)
 
 	ctx := context.TODO()
-	presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
-	if err != nil {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
+	if deleteOp != true {
+		presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
+		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("Peer create Request returned (%v)[%+v]", err, presp)
+		}
+		nic.pushed = true
 	} else {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
+		presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerReq)
+		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+			log.Errorf("Peer delete Request returned (%v)[%+v]", err, presp)
+		}
+		nic.pushed = false
 	}
 	m.updated = true
 	pReq = peerReq
@@ -100,24 +117,30 @@ func (m *ServiceHandlers) handleCreateUpdateSmartNICObject(evtNIC *cmd.Distribut
 	snic.name = evtNIC.ObjectMeta.Name
 	snic.phase = evtNIC.Status.AdmissionPhase
 	snic.uuid = evtNIC.UUID
+	snic.pushed = false
 	m.snicMap[evtNIC.ObjectMeta.Name] = snic
-	m.configurePeer(snic)
+	m.configurePeer(snic, false)
 }
 
 func (m *ServiceHandlers) handleDeleteSmartNICObject(evtNIC *cmd.DistributedServiceCard) {
 }
 
 func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.NetworkInterface) {
-	snic := m.snicMap[evtIntf.ObjectMeta.Name]
-	snic.name = evtIntf.ObjectMeta.Name
+	snic := m.snicMap[evtIntf.Status.DSC]
+	snic.name = evtIntf.Status.DSC
+	snic.pushed = false
 	if evtIntf.Spec.IPConfig != nil {
 		snic.ip = evtIntf.Spec.IPConfig.IPAddress
 	}
-	m.snicMap[evtIntf.ObjectMeta.Name] = snic
-	m.configurePeer(snic)
+	m.snicMap[evtIntf.Status.DSC] = snic
+	m.configurePeer(snic, false)
 }
 
 func (m *ServiceHandlers) handleDeleteNetIntfObject(evtIntf *network.NetworkInterface) {
+	snic := m.snicMap[evtIntf.Status.DSC]
+	if snic.pushed == true {
+		m.configurePeer(snic, true)
+	}
 }
 
 func isEvtTypeCreatedupdated(et kvstore.WatchEventType) bool {

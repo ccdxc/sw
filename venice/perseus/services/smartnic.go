@@ -201,7 +201,8 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 		log.Errorf("failed to parse UUID (%v)", err)
 		return
 	}
-	cfgAsn = evtRtConfig.Spec.BGPConfig.ASNumber
+	CfgAsn = evtRtConfig.Spec.BGPConfig.ASNumber
+	m.configurePeers()
 	req := pegasusClient.BGPRequest{
 		Request: &pegasusClient.BGPSpec{
 			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,

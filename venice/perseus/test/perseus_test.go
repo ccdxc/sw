@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
+	"github.com/pensando/sw/venice/perseus/services"
 	"github.com/pensando/sw/venice/perseus/startup"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
@@ -188,8 +189,8 @@ func TestMain(m *testing.M) {
 	env.Options = options.NewServerRunOptions()
 	env.Logger = l
 	s := []string{"localhost:" + tinfo.apiserverport}
-
-	startup.OnStart(s)
+	services.CfgAsn = 1
+	startup.OnStart(s, "")
 	time.Sleep(10 * time.Second)
 
 	rcode := m.Run()

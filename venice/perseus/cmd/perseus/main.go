@@ -51,7 +51,7 @@ func main() {
 
 	env.Options = options.NewServerRunOptions()
 
-	startup.OnStart(strings.Split(*resolverURLs, ","))
+	startup.OnStart(strings.Split(*resolverURLs, ","), globals.APIServer)
 
 	env.Logger.Infof("Launching server %s is running", globals.Perseus)
 
