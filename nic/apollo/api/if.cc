@@ -138,17 +138,20 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
     type_ = spec->type;
     admin_state_ = spec->admin_state;
     switch (type_) {
-     case PDS_IF_TYPE_UPLINK:
-         ifindex_ =
-             catalog::logical_port_to_ifindex(spec->uplink_info.port_num);
-         ifindex_ = ETH_IFINDEX_TO_UPLINK_IFINDEX(ifindex_);
-         PDS_TRACE_DEBUG("Initializing uplink interface %s, ifindex 0x%x, "
-                         "port %u", spec->key.str(), ifindex_,
-                         spec->uplink_info.port_num);
-         if_info_.uplink_.port_ = spec->uplink_info.port_num;
-         break;
+    case PDS_IF_TYPE_UPLINK:
+        {
+            if_entry *phy_intf;
+            phy_intf = if_db()->find(&spec->uplink_info.port);
+            ifindex_ = phy_intf->ifindex();
+            ifindex_ = ETH_IFINDEX_TO_UPLINK_IFINDEX(ifindex_);
+            PDS_TRACE_DEBUG("Initializing uplink interface %s, ifindex 0x%x, "
+                            "port %s", spec->key.str(), ifindex_,
+                            spec->uplink_info.port.str());
+            if_info_.uplink_.port_ = spec->uplink_info.port;
+        }
+        break;
 
-     case PDS_IF_TYPE_L3:
+    case PDS_IF_TYPE_L3:
          ifindex_ = L3_IFINDEX(l3_if_idxr_++);
          PDS_TRACE_DEBUG("Initializing L3 interface %s, ifindex 0x%x, "
                          "port %s", spec->key.str(), ifindex_,
@@ -161,13 +164,13 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
                 ETH_ADDR_LEN);
          break;
 
-     case PDS_IF_TYPE_NONE:
+    case PDS_IF_TYPE_NONE:
         break;
 
-     default:
+    default:
          return sdk::SDK_RET_INVALID_ARG;
          break;
-     }
+    }
      return SDK_RET_OK;
 }
 
@@ -235,7 +238,7 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
 
     switch (spec->type) {
     case PDS_IF_TYPE_UPLINK:
-        spec->uplink_info.port_num = if_info_.uplink_.port_;
+        spec->uplink_info.port = if_info_.uplink_.port_;
         break;
     case PDS_IF_TYPE_L3:
         spec->l3_if_info.port = if_info_.l3_.port_;
@@ -297,7 +300,15 @@ if_entry::delay_delete(void) {
 uint8_t
 if_entry::port(void) const {
     if (type_ == PDS_IF_TYPE_UPLINK) {
-        return if_info_.uplink_.port_;
+        if_entry *phy_intf;
+
+        phy_intf = if_db()->find(&if_info_.uplink_.port_);
+        if (!phy_intf) {
+            PDS_TRACE_ERR("port %s not found for uplink intf %s",
+                          if_info_.uplink_.port_.str(), key_.str());
+            return PDS_PORT_INVALID;
+        }
+        return (ETH_IFINDEX_TO_PARENT_PORT(phy_intf->ifindex()) - 1);
     } else if (type_ == PDS_IF_TYPE_L3) {
         if_entry *phy_intf;
 

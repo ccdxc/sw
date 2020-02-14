@@ -538,7 +538,7 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
     case PDS_IF_TYPE_UPLINK:
         {
             auto proto_uplink = proto_spec->mutable_uplinkspec();
-            proto_uplink->set_portid(api_spec->uplink_info.port_num);
+            proto_uplink->set_portid(api_spec->uplink_info.port.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_IF_TYPE_L3:
@@ -658,8 +658,8 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
         break;
 
     case pds::IF_TYPE_UPLINK:
-        // TODO:
-        PDS_TRACE_ERR("Uplink interface type not handled");
+        pds_obj_key_proto_to_api_spec(&api_spec->uplink_info.port,
+                                      proto_spec.uplinkspec().portid());
         break;
 
     default:

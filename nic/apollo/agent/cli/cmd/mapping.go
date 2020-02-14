@@ -83,7 +83,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		cmdCtxt = &pds.CommandCtxt{
 			Version: 1,
 			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			CommandFilter: &pds.CommandCtxt_MappingDumpFilter{
+			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
 				MappingDumpFilter: &pds.MappingDumpFilter{
 					Key:  key,
 					Type: mType,
@@ -94,7 +94,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		cmdCtxt = &pds.CommandCtxt{
 			Version: 1,
 			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			CommandFilter: &pds.CommandCtxt_MappingDumpFilter{
+			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
 				MappingDumpFilter: &pds.MappingDumpFilter{
 					Type: mType,
 				},

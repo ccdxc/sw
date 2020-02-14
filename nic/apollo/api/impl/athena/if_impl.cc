@@ -130,9 +130,9 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
                 intf->ifindex(), sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
         // program the lif id in the TM
         tm_port =
-            g_pds_state.catalogue()->logical_port_to_tm_port(spec->uplink_info.port_num);
+            g_pds_state.catalogue()->ifindex_to_tm_port(intf->ifindex());
         PDS_TRACE_DEBUG("Creating uplink if 0x%x, port %u, hw_id_ %u, "
-                        "tm_port %u", spec->key.id, spec->uplink_info.port_num,
+                        "tm_port %u", spec->key.id, spec->uplink_info.port.str(),
                         hw_id_, tm_port);
         ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
         if (ret != SDK_RET_OK) {

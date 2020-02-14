@@ -41,7 +41,7 @@ enum IfStatus {
 // Uplink configuration (if interface type is IF_TYPE_UPLINK)
 message UplinkSpec {
   // physical port id corresponding to this interface
-  uint32 PortId       = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes  PortId       = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // Untagged ingress packets are considered as coming with this VLAN id
   // Egress packet tagged with this VLAN id are sent untagge
   uint32 NativeVlanId = 2;

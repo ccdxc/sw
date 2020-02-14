@@ -101,7 +101,7 @@ message AddressRange {
 
 // Address object is the prefix or range
 message Address {
-  oneof   Address {
+  oneof address {
     // IPv4 or IPv6 prefix
     IPSubnet     Prefix = 1;
     // IPv4 or IPv6 address range
@@ -128,12 +128,12 @@ enum RuleDir {
 message RuleL3Match {
   // IP Protocol
   uint32               Protocol  = 1 [(gogoproto.moretags) = "meta:range:0-255"];
-  oneof SrcMatch {
+  oneof srcmatch {
     types.IPPrefix     SrcPrefix = 2; // Src IP Prefix
     types.AddressRange SrcRange  = 3; // Src IP Range
     uint32             SrcTag    = 4; // Src Tag
   }
-  oneof DstMatch {
+  oneof dstmatch {
     types.IPPrefix     DstPrefix = 5; // Dst IP Prefix
     types.AddressRange DstRange  = 6; // Dst IP Range
     uint32             DstTag    = 7; // Dst Tag
@@ -158,7 +158,7 @@ message ICMPMatch {
 
 // L4 rule match criteria
 message RuleL4Match {
-  oneof L4Info {
+  oneof l4info {
     // port match criteria
     PortMatch Ports    = 1;
     // ICMP match criteria
@@ -197,7 +197,7 @@ enum EncapType {
 // another MPLS tag (along with the destination tunnel IP) can identify the
 // destination VNIC
 message EncapVal {
-  oneof Val {
+  oneof val {
     // MPLS tag corresponding to the VNIC or mapping
     uint32  VlanId   = 1;    // VLAN tag
     uint32  MPLSTag  = 2;    // MPLS tag/slot

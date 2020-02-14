@@ -45,7 +45,7 @@ typedef enum pds_if_state_e {
 
 /// \brief uplink specific configuration
 typedef struct pds_uplink_info_s {
-    uint8_t    port_num;    ///< uplink port# this interface corresponds to
+    pds_obj_key_t   port;    ///< uplink port# this interface corresponds to
 } __PACK__ pds_uplink_info_t;
 
 /// \brief uplink port-channel specific configuration

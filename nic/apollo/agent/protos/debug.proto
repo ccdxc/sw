@@ -418,7 +418,7 @@ message MappingDumpFilter {
 message CommandCtxt {
   int64               Version           = 1;
   Command             Cmd               = 2;
-  oneof CommandFilter {
+  oneof commandfilter {
     MappingDumpFilter MappingDumpFilter = 3;
   }
 }

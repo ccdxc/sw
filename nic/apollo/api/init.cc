@@ -102,15 +102,14 @@ create_uplinks (void)
 
     PDS_TRACE_DEBUG("Creating uplinks ...");
     for (uint32_t port = 1;
-         port <= g_pds_state.catalogue()->num_fp_ports(); port++) {
-         eth_ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
-                                   port, ETH_IF_DEFAULT_CHILD_PORT);
+        port <= g_pds_state.catalogue()->num_fp_ports(); port++) {
+        eth_ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
+                                  port, ETH_IF_DEFAULT_CHILD_PORT);
         ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
         spec.key = uuid_from_objid(ifindex);
         spec.type = PDS_IF_TYPE_UPLINK;
         spec.admin_state = PDS_IF_STATE_UP;
-        spec.uplink_info.port_num =
-            sdk::lib::catalog::ifindex_to_logical_port(eth_ifindex);
+        spec.uplink_info.port = uuid_from_objid(eth_ifindex);
         PDS_TRACE_DEBUG("Creating uplink %s", spec.key.str());
         ret = pds_if_create(&spec, PDS_BATCH_CTXT_INVALID);
         if (ret != SDK_RET_OK) {

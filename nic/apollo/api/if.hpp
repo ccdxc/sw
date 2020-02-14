@@ -272,7 +272,7 @@ private:
         } port_;
         ///< uplink specific information
         struct {
-            uint8_t port_;
+            pds_obj_key_t port_;
         } uplink_;
         ///< L3 interface specific information
         struct {
