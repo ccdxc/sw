@@ -65,4 +65,10 @@ message SessionSummaryMetrics {
     delphi.Counter num_icmp_errors               = 10  [(venice.metricsField) = {DisplayName: "ICMP Error Sent" Description: "Total Number of ICMP Errors sent as a result of SFW Reject"}];
     delphi.Counter num_tcp_cxnsetup_timeouts     = 11  [(venice.metricsField) = {DisplayName: "Connection-timeout Sessions" Description: "Total Number of sessions that timed out at connection setup"}];
     delphi.Counter num_session_create_errors     = 12  [(venice.metricsField) = {DisplayName: "Session Create Errors" Description: "Total Number of sessions that errored out during creation"}];
+    delphi.Counter num_tcp_half_open_sessions    = 13  [(venice.metricsField) = {DisplayName: "Half Open TCP Sessions" Description: "Total Number of Half Open TCP sessions"}];
+    delphi.Counter num_other_active_sessions     = 14  [(venice.metricsField) = {DisplayName: "Other Active Sessions" Description: "Total Number of sessions other than TCP/UDP/ICMP"}];
+    delphi.Counter num_tcp_session_limit_drops   = 15  [(venice.metricsField) = {DisplayName: "TCP Session limit exceed drops" Description: "Total Number of sessions dropped due to TCP session limit"}];
+    delphi.Counter num_udp_session_limit_drops   = 16  [(venice.metricsField) = {DisplayName: "UDP Session limit exceed drops" Description: "Total Number of sessions dropped due to UDP session limit"}];
+    delphi.Counter num_icmp_session_limit_drops  = 17  [(venice.metricsField) = {DisplayName: "ICMP Session limit exceed drops" Description: "Total Number of sessions dropped due to ICMP session limit"}];
+    delphi.Counter num_other_session_limit_drops = 18  [(venice.metricsField) = {DisplayName: "Other Session limit exceed drops" Description: "Total Number of sessions other than TCP/UDP/ICMP dropped due to session limit"}];
 }

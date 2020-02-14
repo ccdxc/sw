@@ -212,7 +212,7 @@ process_tcp_syn(fte::ctx_t& ctx)
     }
 
     tcp_flags = cpu_rxhdr->tcp_flags;
-    if (tcp_flags & TCP_FLAG_SYN) {
+    if ((tcp_flags & TCP_FLAG_SYN) && (!ctx.existing_session())) {
         // Start TCP connection setup timer
         // if we have a session
         ctx.register_completion_handler(start_tcp_cxnsetup_timer);

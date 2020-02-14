@@ -602,6 +602,7 @@ public:
     void set_sess_get_resp(session::SessionGetResponse* val) { sess_get_resp_ = val; }
     hal::session_t* session() { return session_; }
     bool existing_session() const { return session_ != NULL; }
+    hal_ret_t apply_session_limit(void);
 
     const lifqid_t& arm_lifq() const { return arm_lifq_; }
     void set_arm_lifq(const lifqid_t& arm_lifq) {arm_lifq_= arm_lifq;}

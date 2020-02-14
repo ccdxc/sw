@@ -27,7 +27,12 @@ var (
 	icmpTimeout         uint32
 	idleTimeout         uint32
 	tcpCxnsetupTimeout  uint32
+	tcpCloseTimeout     uint32
 	tcpHalfcloseTimeout uint32
+	tcpHalfOpenSessionLimit   uint32
+	udpActiveSessionLimit     uint32
+	icmpActiveSessionLimit    uint32
+	otherActiveSessionLimit   uint32
 	regID               uint32
 	regAddr             uint64
 	regData             uint32
@@ -248,9 +253,14 @@ func init() {
 	secProfDebugCmd.Flags().Uint32Var(&icmpTimeout, "icmp-timeout", 6, "ICMP session aging timeout in range 0-172800 (0 means no aging)")
 	secProfDebugCmd.Flags().Uint32Var(&idleTimeout, "idle-timeout", 90, "Session aging timeout for non TCP/UDP/ICMP in range 0-172800 (0 means no aging)")
 	secProfDebugCmd.Flags().Uint32Var(&tcpCxnsetupTimeout, "tcp-cxnsetup-timeout", 30, "TCP Connection setup timeout for 3-way handshake in range 0-60 (0 means no timeout)")
+	secProfDebugCmd.Flags().Uint32Var(&tcpCloseTimeout, "tcp-close-timeout", 15, "TCP Close timeout when RST is received in range 0-300 (0 means no timeout)")
 	secProfDebugCmd.Flags().Uint32Var(&tcpHalfcloseTimeout, "tcp-halfclose-timeout", 120, "TCP Half close timeout when FIN is received on one direction in range 0-172800 (0 means no timeout)")
 	secProfDebugCmd.Flags().StringVar(&ipNormalization, "ip-normalization", "off", "Turn IP Normalization on/off")
 	secProfDebugCmd.Flags().StringVar(&tcpNormalization, "tcp-normalization", "off", "Turn TCP Normalization on/off")
+	secProfDebugCmd.Flags().Uint32Var(&tcpHalfOpenSessionLimit, "tcp-half-open-session-limit", 0, "TCP half open session limit in range 0-128000 (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&udpActiveSessionLimit, "udp-active-session-limit", 0, "UDP active session limit in range 0-128000 (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&icmpActiveSessionLimit, "icmp-active-session-limit", 0, "ICMP active session limit in range 0-128000 (0 means no limit)")
+	secProfDebugCmd.Flags().Uint32Var(&otherActiveSessionLimit, "other-active-session-limit", 0, "Other active session limit in range 0-128000 (0 means no limit)")
 	secProfDebugCmd.MarkFlagRequired("id")
 
 	tcpProxyDebugCmd.Flags().Uint32Var(&tcpProxyMss, "mss", 9216, "TCP Maximum Segment Size in range 68-10000")
@@ -1089,6 +1099,13 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			secProf.TcpCnxnSetupTimeout = tcpCxnsetupTimeout
 		}
+		if cmd.Flags().Changed("tcp-close-timeout") {
+			if isTimeoutValid("TCP-CLOSE", tcpCloseTimeout) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.TcpCloseTimeout = tcpCloseTimeout
+		}
 		if cmd.Flags().Changed("tcp-halfclose-timeout") {
 			if isTimeoutValid("TCP-HALF-CLOSE", tcpHalfcloseTimeout) != true {
 				fmt.Printf("Invalid argument\n")
@@ -1096,6 +1113,35 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			secProf.TcpHalfClosedTimeout = tcpHalfcloseTimeout
 		}
+		if cmd.Flags().Changed("tcp-half-open-session-limit") {
+			if isSessLimitValid("TCP-HALF-OPEN-SESS-LIMIT", tcpHalfOpenSessionLimit) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.TcpHalfOpenSessionLimit = tcpHalfOpenSessionLimit
+		}
+		if cmd.Flags().Changed("udp-active-session-limit") {
+			if isSessLimitValid("UDP-ACTIVE-SESS-LIMIT", udpActiveSessionLimit) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.UdpActiveSessionLimit = udpActiveSessionLimit
+		}
+		if cmd.Flags().Changed("icmp-active-session-limit") {
+			if isSessLimitValid("ICMP-ACTIVE-SESS-LIMIT", icmpActiveSessionLimit) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.IcmpActiveSessionLimit = icmpActiveSessionLimit
+		}
+		if cmd.Flags().Changed("other-active-session-limit") {
+			if isSessLimitValid("OTHER-ACTIVE-SESS-LIMIT", otherActiveSessionLimit) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			secProf.OtherActiveSessionLimit = otherActiveSessionLimit
+		}
+
 		reqMsg = &halproto.SecurityProfileRequestMsg{
 			Request: []*halproto.SecurityProfileSpec{secProf},
 		}
@@ -1184,6 +1230,10 @@ func isTimeoutValid(str string, val uint32) bool {
 		if val > 60 {
 			return false
 		}
+	case "TCP-CLOSE":
+		if val > 300 {
+			return false
+		}
 	case "TCP-HALF-CLOSE":
 		if val > 172800 {
 			return false
@@ -1198,6 +1248,18 @@ func isTimeoutValid(str string, val uint32) bool {
 		}
 	case "ICMP-IDLE":
 		if val > 172800 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func isSessLimitValid(str string, val uint32) bool {
+	switch str {
+	case "TCP-HALF-OPEN-SESS-LIMIT", "UDP-ACTIVE-SESS-LIMIT",
+         "ICMP-ACTIVE-SESS-LIMIT", "OTHER-ACTIVE-SESS-LIMIT":
+		if val > 128000 {
 			return false
 		}
 	}

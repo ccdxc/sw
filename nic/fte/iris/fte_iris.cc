@@ -25,6 +25,10 @@
 // ------------------------------------------------------
 thread_local fwlog::FWEvent t_fwlg;
 
+namespace hal {
+extern hal::session_stats_t  *g_session_stats;
+}
+
 namespace fte {
 //------------------------------------------------------------------------------
 // extract flow key from packet
@@ -1295,6 +1299,89 @@ ctx_t::send_queued_pkts_new (hal::pd::cpupkt_ctxt_t* arm_ctx)
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Apply session limits for various flow types
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::apply_session_limit(void)
+{
+    hal_ret_t                    ret = HAL_RET_OK;
+    uint8_t                      id = fte_id();
+    int8_t                       tcp_flags;
+    hal::vrf_t                  *vrf = NULL;
+    hal::nwsec_profile_t        *nwsec_prof = NULL;
+    const fte::cpu_rxhdr_t      *cpurxhdr = cpu_rxhdr();
+
+    // validation only for new session create
+    if (existing_session() || hal_cleanup()) {
+        goto end;
+    }
+
+    vrf = svrf();
+    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
+
+    // check for flood protection limits
+    // fetch the security profile, if any
+    if (vrf->nwsec_profile_handle == HAL_HANDLE_INVALID) {
+        goto end;
+    }
+    nwsec_prof =
+        hal::find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+
+    if (nwsec_prof == NULL) {
+        goto end;
+    }
+
+    // check for flood protection limits
+    switch (key_.flow_type) {
+    case hal::FLOW_TYPE_V4: //intentional fall-through
+    case hal::FLOW_TYPE_V6:
+        if (key_.proto == types::IPPROTO_TCP) {
+            //check if it is tcp half open session and then apply limit
+            tcp_flags = cpurxhdr->tcp_flags;
+            if (!(tcp_flags & TCP_FLAG_SYN)) {
+                // if not a SYN packet then skip half-open session limit validation
+                goto end;
+            }
+            if ((nwsec_prof->tcp_half_open_session_limit) &&
+                    (hal::g_session_stats[id].tcp_half_open_sessions >=
+                     nwsec_prof->tcp_half_open_session_limit)) {
+                ret = HAL_RET_FLOW_LIMT_REACHED;
+                hal::g_session_stats[id].tcp_session_drop_count++;
+            }
+        } else if (key_.proto == types::IPPROTO_UDP) {
+            if ((nwsec_prof->udp_active_session_limit) &&
+                    (hal::g_session_stats[id].udp_sessions >=
+                     nwsec_prof->udp_active_session_limit)) {
+                ret = HAL_RET_FLOW_LIMT_REACHED;
+                hal::g_session_stats[id].udp_session_drop_count++;
+            }
+        } else if (key_.proto == types::IPPROTO_ICMP) {
+            if ((nwsec_prof->icmp_active_session_limit) &&
+                    (hal::g_session_stats[id].icmp_sessions >=
+                     nwsec_prof->icmp_active_session_limit)) {
+                ret = HAL_RET_FLOW_LIMT_REACHED;
+                hal::g_session_stats[id].icmp_session_drop_count++;
+            }
+        }
+        break;
+    case hal::FLOW_TYPE_L2: //intentional fall-through
+    default:
+        if ((nwsec_prof->other_active_session_limit) &&
+                (hal::g_session_stats[id].other_active_sessions >=
+                 nwsec_prof->other_active_session_limit)) {
+            ret = HAL_RET_FLOW_LIMT_REACHED;
+            hal::g_session_stats[id].other_session_drop_count++;
+        }
+        break;
+    }
+end:
+    if (ret != HAL_RET_OK) {
+        hal::g_session_stats[id].drop_sessions++;
+    }
+    return ret;
 }
 
 }

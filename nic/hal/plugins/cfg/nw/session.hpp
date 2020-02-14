@@ -502,6 +502,7 @@ struct session_s {
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
     uint16_t            syncing_session:1;        // Session in the midst of syncing by vMotion
+    uint16_t            is_in_half_open_state:1;  // TCP Session is in Half-open state
     uint64_t            sfw_rule_id;              // sfw rule id
 
     flow_t              *iflow;                   // initiator flow

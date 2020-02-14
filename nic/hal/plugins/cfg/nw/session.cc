@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <atomic>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
@@ -87,6 +88,9 @@ sdk_spinlock_t          g_flow_telemetry_slock;
 flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
 flow_telemetry_state_t *g_flow_telemetry_state_age_tail_p;
 uint16_t                g_age_timer_ticks;
+
+//atomic state to indicate if session stats update in progress or not.
+volatile uint8_t g_session_stats_updt_locked_ = 0;
 
 #define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
@@ -2420,6 +2424,14 @@ dequeue_flow_telemetry_state_from_age_list (
 }
 
 inline void
+update_session_stats_thr_safe(uint64_t *stat_ptr, bool decr)
+{
+    while(__sync_lock_test_and_set(&g_session_stats_updt_locked_, 1));
+    decr ? (*stat_ptr)--:(*stat_ptr)++;
+    __sync_lock_release(&g_session_stats_updt_locked_);
+}
+
+inline void
 update_global_session_stats (session_t *session, bool decr=false)
 {
     flow_key_t key = session->iflow->config.key;
@@ -2430,15 +2442,24 @@ update_global_session_stats (session_t *session, bool decr=false)
 
     if (key.flow_type == FLOW_TYPE_L2) {
         HAL_SESSION_STATS_PTR(session->fte_id)->l2_sessions += (decr)?(-1):1;
+        HAL_SESSION_STATS_PTR(session->fte_id)->other_active_sessions += (decr)?(-1):1;
     } else if (key.flow_type == FLOW_TYPE_V4 ||
                key.flow_type == FLOW_TYPE_V6) {
         if (key.proto == types::IPPROTO_TCP) {
             HAL_SESSION_STATS_PTR(session->fte_id)->tcp_sessions += (decr)?(-1):1;
+            // update half open session count on delete
+            if ((session->is_in_half_open_state) && (decr)) {
+                session->is_in_half_open_state = 0;
+                update_session_stats_thr_safe(
+                        &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+            }
         } else if (key.proto == types::IPPROTO_UDP) {
             HAL_SESSION_STATS_PTR(session->fte_id)->udp_sessions += (decr)?(-1):1;
         } else if (key.proto == types::IPPROTO_ICMP) {
             HAL_SESSION_STATS_PTR(session->fte_id)->icmp_sessions += (decr)?(-1):1;
         }
+    } else {
+        HAL_SESSION_STATS_PTR(session->fte_id)->other_active_sessions += (decr)?(-1):1;
     }
 
     HAL_SESSION_STATS_PTR(session->fte_id)->total_active_sessions += (decr)?(-1):1;
@@ -3013,6 +3034,13 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
             create_flow_proto_state(rflow);
         }
     }
+    // update half open session count if state has moved beyond SYN_ACK_RCVD
+    if ((tcp_session) && (session->is_in_half_open_state) &&
+        (session_state_p->iflow_state.state >= session::FLOW_TCP_STATE_SYN_ACK_RCVD)) {
+        session->is_in_half_open_state = 0;
+        update_session_stats_thr_safe(
+                &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+    }
 
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
@@ -3377,6 +3405,12 @@ session_age_cb (void *entry, void *ctxt)
                                                                  session->hal_handle;
             session->deleting = 1;
 
+            // update half open session count if session is agedout
+            if (session->is_in_half_open_state) {
+                session->is_in_half_open_state = 0;
+                update_session_stats_thr_safe(
+                        &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+            }
             // Stop processing if we have reached the maximum limit per FTE
             // We will process the rest in the next round
             if (args->num_del_sess[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL)
@@ -3724,6 +3758,12 @@ schedule_tcp_close_timer (session_t *session)
         //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
+    // update half open session count for sessions that are in TCP close state
+    if (session->is_in_half_open_state) {
+        session->is_in_half_open_state = 0;
+        update_session_stats_thr_safe(
+                &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+    }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_CLOSE_WAIT,
@@ -3814,6 +3854,12 @@ schedule_tcp_half_closed_timer (session_t *session)
         //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
+    // update half open session count for sessions that are in TCP close state
+    if (session->is_in_half_open_state) {
+        session->is_in_half_open_state = 0;
+        update_session_stats_thr_safe(
+                &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+    }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
@@ -3848,6 +3894,12 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (session == NULL) {
         HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing", session_handle);
         return;
+    }
+    // On cxn setup timer expiry, update half open session count
+    if (session->is_in_half_open_state) {
+        session->is_in_half_open_state = 0;
+        update_session_stats_thr_safe(
+                &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
     }
 
     args.session = session;
@@ -3906,6 +3958,11 @@ schedule_tcp_cxnsetup_timer (session_t *session)
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
+    session->is_in_half_open_state = 1;
+    // Keep track of number of TCP half open sessions
+    update_session_stats_thr_safe(
+            &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, false);
+
     HAL_TRACE_VERBOSE("TCP Cxn Setup timer started for session {}",
                       session->hal_handle);
 
@@ -3923,6 +3980,14 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
 
     if (role == hal::FLOW_ROLE_INITIATOR) {
         flow = session->iflow;
+        // once the session moves beyond SYN_ACK_RCVD state,
+        // then update the half open session count.
+        if ((session->is_in_half_open_state) &&
+            (tcp_state >= session::FLOW_TCP_STATE_SYN_ACK_RCVD)) {
+            session->is_in_half_open_state = 0;
+            update_session_stats_thr_safe(
+                    &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+        }
     } else {
         flow = session->rflow;
     }
