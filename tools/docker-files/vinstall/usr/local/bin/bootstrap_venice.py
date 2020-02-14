@@ -47,6 +47,7 @@ def curl_send(**data):
         try: 
             c.perform()
             code = c.getinfo(pycurl.HTTP_CODE)
+            req_error = ""
             break
         except Exception, e:
             req_error = str(e)
@@ -64,7 +65,7 @@ def curl_send(**data):
             write_log("* server returned: " + str(code) + " " + str(body))
     else:
        # we were not able to contact server, log exact error
-       write_log("* error sending request to " + data["url"] +": " + req_error)
+       write_log("* error sending request to " + data["url"] +": " + req_error, 1)
     return code
 
 def is_apigw_running():
@@ -75,6 +76,20 @@ def is_apigw_running():
         return True
     else:
         return False
+
+def is_pencmd_running():
+    cmd = "docker ps | grep pen-cmd | wc -l"
+    start_time = int(time.time())
+    while True:
+        if ( ( int(time.time()) - start_time ) > opts.timeout ):
+            write_log("* pen-cmd is not running. aborting")
+            break
+        output = subprocess.check_output(cmd, shell=True)
+        if int(output) > 0:
+            return True
+        write_log("* waiting for pen-cmd to start")
+        time.sleep(opts.waittime)
+    return False
 
 def check_reachability():
     for ip in opts.VENICE_IP:
@@ -239,6 +254,11 @@ write_log("* - auto-admit dsc: " + str(opts.autoadmit))
 write_log("* checking for reachability")
 
 if not check_reachability():
+    print "\n"
+    write_log("* aborting....")
+    sys.exit()
+
+if not is_pencmd_running():
     print "\n"
     write_log("* aborting....")
     sys.exit()
