@@ -21,8 +21,17 @@ class StatusObjectBase(base.StatusObjectBase):
         self.HwId = -1
         return
 
+    def __repr__(self):
+        return f"{self.ObjType.name} Status HwID:{self.HwId}"
+
+    def Show(self):
+        logger.info(f"  - {self}")
+
     def GetHwId(self):
         return self.HwId
+
+    def Update(self, status):
+        self.HwId = status.HwId
 
 class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self, objtype, node):

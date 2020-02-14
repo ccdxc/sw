@@ -27,9 +27,10 @@ class InterfaceStatus(base.StatusObjectBase):
         self.LifId = None
         return
 
-    def Update(self, iftype, status):
-        if iftype == topo.InterfaceTypes.UPLINK:
-            self.LifId = status.UplinkIfStatus.LifId
+    def Update(self, status):
+        uplinkIfStatus = getattr(status, 'UplinkIfStatus', None)
+        if uplinkIfStatus:
+            self.LifId = uplinkIfStatus.LifId
         return
 
 class InterfaceSpec_:
@@ -309,7 +310,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                         inf.Show()
                         return False
                     # update status for this interface object
-                    inf.Status.Update(inf.Type, resp.Status)
+                    inf.Status.Update(resp.Status)
         return (numObjs == self.GetNumHwObjects(node))
 
 

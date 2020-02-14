@@ -18,6 +18,10 @@ from apollo.config.objects.tunnel    import client as TunnelClient
 import copy
 import nh_pb2 as nh_pb2
 
+class NexthopStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.NEXTHOP)
+
 class NexthopObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec):
         super().__init__(api.ObjectTypes.NEXTHOP, node)
@@ -63,6 +67,7 @@ class NexthopObject(base.ConfigObjectBase):
         else:
             self.__type = topo.NhType.NONE
         self.Mutable = utils.IsUpdateSupported()
+        self.Status = NexthopStatus()
         self.DeriveOperInfo()
         self.Show()
         return
@@ -88,6 +93,7 @@ class NexthopObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Nexthop object:", self)
         logger.info("- %s" % repr(self))
+        self.Status.Show()
         return
 
     def Dup(self):

@@ -16,6 +16,10 @@ import tunnel_pb2 as tunnel_pb2
 import ipaddress
 import copy
 
+class TunnelStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.TUNNEL)
+
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
         super().__init__(api.ObjectTypes.TUNNEL, node)
@@ -95,6 +99,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
+        self.Status = TunnelStatus()
         self.DeriveOperInfo()
         self.Show()
         return
@@ -120,6 +125,7 @@ class TunnelObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("Tunnel Object: %s" % self)
         logger.info("- %s" % repr(self))
+        self.Status.Show()
         return
 
     def UpdateAttributes(self):

@@ -16,6 +16,10 @@ import apollo.config.objects.nexthop as nexthop
 
 import nh_pb2 as nh_pb2
 
+class NexthopGroupStatus(base.StatusObjectBase):
+    def __init__(self):
+        super().__init__(api.ObjectTypes.NEXTHOPGROUP)
+
 class NexthopGroupObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec):
         super().__init__(api.ObjectTypes.NEXTHOPGROUP, node)
@@ -38,6 +42,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
             self.NumNexthops = ResmgrClient[node].UnderlayNumNexthopsAllocator.rrnext()
         self.Mutable = utils.IsUpdateSupported()
+        self.Status = NexthopGroupStatus()
         self.DeriveOperInfo()
         self.Show()
         return
@@ -66,6 +71,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         logger.info("- Type %s" % type)
         if self.DualEcmp:
             logger.info("- Dual ecmp")
+        self.Status.Show()
         return
 
     def UpdateAttributes(self):

@@ -254,7 +254,10 @@ def ValidateRead(obj, resps):
             if ValidateGrpcResponse(resp):
                 readresponse = GetAttrFromResponse(obj, resp, 'Response')
                 for response in readresponse:
-                    if not ValidateObject(obj, response):
+                    if ValidateObject(obj, response):
+                        if hasattr(obj, 'Status'):
+                            obj.Status.Update(response.Status)
+                    else:
                         logger.info(f"ValidateRead failed for {obj}, received resp {resp} & expected status {expApiStatus}")
                         return False
         else:

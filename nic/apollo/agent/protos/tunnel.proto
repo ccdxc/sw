@@ -82,6 +82,8 @@ message TunnelSpec {
 
 // operational status of the tunnel, if any
 message TunnelStatus {
+    // tunnel hw id
+    uint32 HwId = 1;
 }
 
 // stats of the tunnel, if any

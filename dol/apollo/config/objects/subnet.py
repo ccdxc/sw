@@ -23,18 +23,6 @@ import subnet_pb2 as subnet_pb2
 class SubnetStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.SUBNET)
-        return
-
-    def Update(self, status):
-        self.HwId = status.HwId
-        return
-
-    def __repr__(self):
-        return "HwID:%d" % (self.HwId)
-
-    def Show(self):
-        logger.info("- SUBNET status object:")
-        logger.info("  - %s" % repr(self))
 
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, poolid):

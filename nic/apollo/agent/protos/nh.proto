@@ -69,6 +69,8 @@ message NexthopSpec {
 
 // operational status of nexthop, if any
 message NexthopStatus {
+    // nexthop hw id
+    uint32 HwId = 1;
 }
 
 // stats of a nexthop, if any
@@ -153,6 +155,8 @@ message NhGroupSpec {
 
 // operational status of nexthop group, if any
 message NhGroupStatus {
+    // nexthop group hw id
+    uint32 HwId = 1;
 }
 
 // stats of a nexthop group, if any

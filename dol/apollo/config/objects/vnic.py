@@ -23,18 +23,6 @@ import types_pb2 as types_pb2
 class VnicStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VNIC)
-        return
-
-    def Update(self, status):
-        self.HwId = status.HwId
-        return
-
-    def __repr__(self):
-        return "HwID:%d" % (self.HwId)
-
-    def Show(self):
-        logger.info("- VNIC status object:")
-        logger.info("  - %s" % repr(self))
 
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, rxmirror, txmirror):

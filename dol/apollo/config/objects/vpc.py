@@ -34,18 +34,6 @@ import vpc_pb2 as vpc_pb2
 class VpcStatus(base.StatusObjectBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VPC)
-        return
-
-    def Update(self, status):
-        self.HwId = status.HwId
-        return
-
-    def __repr__(self):
-        return "HwID:%d" % (self.HwId)
-
-    def Show(self):
-        logger.info("- VPC status object:")
-        logger.info("  - %s" % repr(self))
 
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, node, spec, index, maxcount):

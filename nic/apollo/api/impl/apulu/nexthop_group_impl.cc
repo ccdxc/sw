@@ -320,6 +320,7 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 void
 nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status) {
     status->hw_id = hw_id_;
+    status->nh_base_idx = nh_base_hw_id_;
 }
 
 sdk_ret_t
