@@ -24,7 +24,7 @@ mgmt_ifs=""
 for net in /sys/class/net/* ; do
     n=`basename $net`
     if [ ! -e $net/device/vendor ] ; then
-	continue
+    continue
     fi
     v=`cat $net/device/vendor`
     if [ $v != "0x1dd8" ] ; then
@@ -47,19 +47,26 @@ dhcp_disable() {
         return
     elif [[ $os_str == *"CentOS"* || $os_str == *"Red Hat"* ]]; then
         echo "CentOS/RHEL: Explicitly disabling DHCP on Naples IFs"
-
+        # Create network interface scripts
         for i in $ifs
         do
             echo "$i"
             echo "DEVICE=$i" > /etc/sysconfig/network-scripts/ifcfg-$i
             echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$i
             echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "IPV6ADDR=IPv6-IP-Address" >> /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "IPV6_DEFAULTGW=IPv6-IP-Gateway-Address" >> /etc/sysconfig/network-scripts/ifcfg-$i
         done
+        # Global enable IPV6
+        echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
+        # Restart network cervices, RHEL 8 and RHEL 7 do it differently. 
         if [[ $os_version == *"8"* ]]; then
             nmcli connection load /etc/sysconfig/network-scripts/ifcfg-$i
         else
-	    sudo service network restart
+        sudo service network restart
         fi
+        # Bringup all interfaces
         for i in $ifs
         do
             ifconfig $i up
