@@ -28,7 +28,7 @@
 #define NEXTHOP_TABLE_SIZE                                  65536
 #define CHECKSUM_TABLE_SIZE                                 32
 #define VPC_TABLE_SIZE                                      1024
-#define BD_TABLE_SIZE                                       1024
+#define BD_TABLE_SIZE                                       2048
 #define COPP_TABLE_SIZE                                     1024
 #define METER_TABLE_SIZE                                    2048
 
