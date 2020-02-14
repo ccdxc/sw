@@ -129,21 +129,11 @@ static int ionic_query_device(struct ib_device *ibdev,
 		IB_DEVICE_MEM_MGT_EXTENSIONS |
 		IB_DEVICE_MEM_WINDOW_TYPE_2B |
 		0;
-#ifdef HAVE_IBDEV_MAX_SEND_RECV_SGE
-	attr->max_send_sge =
-		min(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
-		    ionic_spec);
-	attr->max_recv_sge =
-		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    ionic_spec);
-	attr->max_sge_rd = attr->max_send_sge;
-#else
 	attr->max_sge =
 		min3(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
 		     ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
 		     ionic_spec);
 	attr->max_sge_rd = attr->max_sge;
-#endif
 	attr->max_cq = dev->inuse_cqid.inuse_size;
 	attr->max_cqe = IONIC_MAX_CQ_DEPTH;
 	attr->max_mr = dev->inuse_mrid.inuse_size;
@@ -159,13 +149,6 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->max_mcast_grp = 0;
 	attr->max_mcast_qp_attach = 0;
 	attr->max_ah = dev->inuse_ahid.inuse_size;
-#ifdef IONIC_SRQ_XRC
-	attr->max_srq = dev->size_srqid;
-	attr->max_srq_wr = IONIC_MAX_DEPTH;
-	attr->max_srq_sge =
-		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    ionic_spec);
-#endif /* IONIC_SRQ_XRC */
 	attr->max_fast_reg_page_list_len =
 		(dev->inuse_restbl.inuse_size / 2) <<
 		(dev->cl_stride - dev->pte_stride);
@@ -194,23 +177,10 @@ static int ionic_query_port(struct ib_device *ibdev, u8 port,
 		attr->phys_state = IB_PORT_PHYS_STATE_DISABLED;
 	}
 
-#ifdef HAVE_NETDEV_MAX_MTU
-	attr->max_mtu = ib_mtu_int_to_enum(ndev->max_mtu);
-#else
 	attr->max_mtu = IB_MTU_4096;
-#endif
-#ifdef HAVE_NETDEV_IF_MTU
 	attr->active_mtu = ib_mtu_int_to_enum(ndev->if_mtu);
-#else
-	attr->active_mtu = ib_mtu_int_to_enum(ndev->mtu);
-#endif
 	attr->gid_tbl_len = IONIC_GID_TBL_LEN;
-#ifdef HAVE_PORT_ATTR_IP_GIDS
-	attr->ip_gids = true;
-	attr->port_cap_flags = 0;
-#else
 	attr->port_cap_flags = IB_PORT_IP_BASED_GIDS;
-#endif
 	attr->max_msg_sz = 0x80000000;
 	attr->pkey_tbl_len = IONIC_PKEY_TBL_LEN;
 	attr->max_vl_num = 1;
@@ -239,7 +209,6 @@ static struct net_device *ionic_get_netdev(struct ib_device *ibdev, u8 port)
 	return dev->ndev;
 }
 
-#ifdef HAVE_REQUIRED_IB_GID
 static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 			   union ib_gid *gid)
 {
@@ -254,14 +223,9 @@ static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 	return rc;
 }
 
-#ifdef HAVE_IB_GID_DEV_PORT_INDEX
 static int ionic_add_gid(struct ib_device *ibdev, u8 port,
 			 unsigned int index, const union ib_gid *gid,
 			 const struct ib_gid_attr *attr, void **context)
-#else
-static int ionic_add_gid(const union ib_gid *gid,
-			 const struct ib_gid_attr *attr, void **context)
-#endif
 {
 	if (attr->gid_type == IB_GID_TYPE_IB)
 		return -EINVAL;
@@ -269,16 +233,11 @@ static int ionic_add_gid(const union ib_gid *gid,
 	return 0;
 }
 
-#ifdef HAVE_IB_GID_DEV_PORT_INDEX
 static int ionic_del_gid(struct ib_device *ibdev, u8 port,
 			 unsigned int index, void **context)
-#else
-static int ionic_del_gid(const struct ib_gid_attr *attr, void **context)
-#endif
 {
 	return 0;
 }
-#endif /* HAVE_IB_GID_DEV_PORT_INDEX */
 
 static int ionic_query_pkey(struct ib_device *ibdev, u8 port, u16 index,
 			    u16 *pkey)
@@ -309,6 +268,7 @@ static int ionic_modify_device(struct ib_device *ibdev, int mask,
 	return 0;
 }
 
+/* TODO remove for Linux 4.14+ */
 static int ionic_modify_port(struct ib_device *ibdev, u8 port, int mask,
 			     struct ib_port_modify *attr)
 {
@@ -330,33 +290,13 @@ static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 	return 0;
 }
 
-#ifdef HAVE_GET_DEV_FW_STR_LEN
 static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str,
 				 size_t str_len)
-#else
-static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str)
-#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-#ifndef HAVE_GET_DEV_FW_STR_LEN
-	size_t str_len = IB_FW_VERSION_NAME_MAX;
-#endif
 
 	strlcpy(str, dev->info->fw_version, str_len);
 }
-
-#ifdef HAVE_GET_VECTOR_AFFINITY
-static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
-						       int comp_vector)
-{
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-
-	if (comp_vector < 0 || comp_vector >= dev->eq_count)
-		return NULL;
-
-	return irq_get_affinity_mask(dev->eq_vec[comp_vector]->irq);
-}
-#endif
 
 void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
 {
@@ -419,29 +359,19 @@ static void ionic_kill_ibdev_cb(void *dev_ptr)
 }
 
 static const struct ib_device_ops ionic_dev_ops = {
-#ifdef HAVE_RDMA_DEV_OPS_EXT
-	.owner			= THIS_MODULE,
-	.driver_id		= RDMA_DRIVER_IONIC,
-	.uverbs_abi_ver		= IONIC_ABI_VERSION,
-#endif
 	.query_device		= ionic_query_device,
 	.query_port		= ionic_query_port,
 	.get_link_layer		= ionic_get_link_layer,
 	.get_netdev		= ionic_get_netdev,
-#ifdef HAVE_REQUIRED_IB_GID
 	.query_gid		= ionic_query_gid,
 	.add_gid		= ionic_add_gid,
 	.del_gid		= ionic_del_gid,
-#endif
 	.query_pkey		= ionic_query_pkey,
 	.modify_device		= ionic_modify_device,
 	.modify_port		= ionic_modify_port,
 
 	.get_port_immutable	= ionic_get_port_immutable,
 	.get_dev_fw_str		= ionic_get_dev_fw_str,
-#ifdef HAVE_GET_VECTOR_AFFINITY
-	.get_vector_affinity	= ionic_get_vector_affinity,
-#endif
 };
 
 static struct ionic_ibdev *ionic_create_ibdev(void *handle,
@@ -634,15 +564,8 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 		goto err_cqid;
 
 	dev->size_qpid = le32_to_cpu(ident->rdma.sq_qtype.qid_count);
-	dev->size_srqid = 0;
-#ifdef IONIC_SRQ_XRC
-	/* prefer srqids after qpids */
-	dev->size_srqid = le32_to_cpu(ident->rdma.rq_qtype.qid_count);
-	dev->next_srqid = dev->size_qpid;
-#endif /* IONIC_SRQ_XRC */
 
-	rc = ionic_resid_init(&dev->inuse_qpid, max(dev->size_qpid,
-						    dev->size_srqid));
+	rc = ionic_resid_init(&dev->inuse_qpid, dev->size_qpid);
 	if (rc)
 		goto err_qpid;
 
@@ -669,14 +592,10 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	if (rc)
 		goto err_register;
 
-#ifndef HAVE_RDMA_DEV_OPS_EXT
 	ibdev->owner = THIS_MODULE;
-#endif
 	ibdev->dev.parent = dev->hwdev;
 
-#ifndef HAVE_IB_REGISTER_DEVICE_NAME
 	strlcpy(ibdev->name, "ionic_%d", IB_DEVICE_NAME_MAX);
-#endif
 	strlcpy(ibdev->node_desc, DEVICE_DESCRIPTION, IB_DEVICE_NODE_DESC_MAX);
 
 	ibdev->node_type = RDMA_NODE_IB_CA;
@@ -687,9 +606,7 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 
 	addrconf_ifid_eui48((u8 *)&ibdev->node_guid, ndev);
 
-#ifndef HAVE_RDMA_DEV_OPS_EXT
 	ibdev->uverbs_abi_ver = IONIC_ABI_VERSION;
-#endif
 	ibdev->uverbs_cmd_mask =
 		BIT_ULL(IB_USER_VERBS_CMD_GET_CONTEXT)		|
 		BIT_ULL(IB_USER_VERBS_CMD_QUERY_DEVICE)		|
@@ -702,19 +619,9 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	ionic_datapath_setops(dev);
 	ionic_controlpath_setops(dev);
 	ionic_stats_setops(dev);
-#ifdef IONIC_SRQ_XRC
-	ionic_srq_setops(dev);
-#endif /* IONIC_SRQ_XRC */
 
-#ifdef HAVE_REQUIRED_DMA_DEVICE
 	ibdev->dma_device = ibdev->dev.parent;
-#endif
 
-#ifdef HAVE_RDMA_DRIVER_ID
-#ifndef HAVE_RDMA_DEV_OPS_EXT
-	ibdev->driver_id = RDMA_DRIVER_IONIC;
-#endif
-#endif
 	rc = ib_register_device(ibdev, NULL);
 	if (rc)
 		goto err_register;

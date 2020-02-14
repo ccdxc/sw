@@ -125,7 +125,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd,
 						 void *private_data)
 {
-	struct ionic_dev *dev = to_ionic_dev(ibdev);
+	struct ionic_dev *dev;
 	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
@@ -133,6 +133,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	ionic_debug_file_init();
 
+	dev = to_ionic_dev(ibdev);
 	ctx = verbs_init_and_alloc_context(ibdev, cmd_fd, ctx, vctx,
 					   RDMA_DRIVER_IONIC);
 	if (!ctx) {
@@ -269,6 +270,14 @@ static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev
 {
 	struct ionic_dev *dev;
 
+	static_assert(sizeof(struct ionic_v1_cqe) == 32, "bad size");
+	static_assert(sizeof(struct ionic_v1_base_hdr) == 16, "bad size");
+	static_assert(sizeof(struct ionic_v1_recv_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_common_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
+
 	dev = calloc(1, sizeof(*dev));
 	if (!dev)
 		return NULL;
@@ -283,14 +292,6 @@ static void ionic_uninit_device(struct verbs_device *vdev)
 	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
 
 	free(dev);
-
-	static_assert(sizeof(struct ionic_v1_cqe) == 32, "bad size");
-	static_assert(sizeof(struct ionic_v1_base_hdr) == 16, "bad size");
-	static_assert(sizeof(struct ionic_v1_recv_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_common_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
 }
 
 static const struct verbs_device_ops ionic_dev_ops = {

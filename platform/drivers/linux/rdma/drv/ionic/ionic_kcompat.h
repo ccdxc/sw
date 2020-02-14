@@ -6,19 +6,17 @@
 #ifndef IONIC_KCOMPAT
 #define IONIC_KCOMPAT
 
-#include <linux/version.h>
-#include <linux/netdevice.h>
 #include <rdma/ib_pack.h>
 #include <rdma/ib_verbs.h>
-
-/* marks code inserted to silence false positive warnings */
-#define IONIC_STATIC_ANALYSIS_HINTS_NOT_FOR_UPSTREAM 1
 
 /****************************************************************************
  *
  * Compatibility for kernel-only features (not affected by OFA version)
  *
  */
+#include <linux/version.h>
+#include <linux/netdevice.h>
+
 #if defined(RHEL_RELEASE_VERSION)
 #define IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
 	(RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(RH_MAJ, RH_MIN))
@@ -42,14 +40,53 @@
 #endif
 
 #if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99)
-/* Create an xarray that includes a radix_tree_root and a spinlock */
+#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99)
+/* 4.17, 4.18, 4.19: A radix_tree now includes a spinlock called xa_lock */
+#define HAVE_RADIX_TREE_LOCK
+#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99)
+/* 4.20: xa_for_each() has extra arguments */
+#define HAVE_XARRAY
+#define HAVE_XARRAY_FOR_EACH_ARGS
+#else /* 5.0 and later */
+#define HAVE_XARRAY
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99)
+/* Use dma_zalloc_coherent() */
+#define HAVE_ZALLOC_COHERENT
+#else
+/* Use dma_alloc_coherent() */
+#endif
+
+#define IF_LLADDR(ndev) (ndev->dev_addr)
+
+#ifdef HAVE_XARRAY
+#ifdef HAVE_XARRAY_FOR_EACH_ARGS
+#include <linux/xarray.h>
+#undef xa_for_each
+#define xa_for_each(xa, index, entry)					\
+	for (entry = xa_find(xa, &index, ULONG_MAX, XA_PRESENT); entry;	\
+	     entry = xa_find_after(xa, &index, ULONG_MAX, XA_PRESENT))
+#endif /* HAVE_XARRAY_FOR_EACH_ARGS */
+#else /* HAVE_XARRAY */
+/* Create an xarray from a radix_tree_root */
 #include <linux/radix-tree.h>
 
+#ifdef HAVE_RADIX_TREE_LOCK
+#define xarray       radix_tree_root
+#define xa_tree
+#define xa_init(_xa) INIT_RADIX_TREE((_xa), GFP_KERNEL)
+#else
 struct xarray {
 	spinlock_t x_lock;
 	struct radix_tree_root x_tree;
 };
 #define xa_tree(_xa) &(_xa)->x_tree
+static inline void xa_init(struct xarray *xa)
+{
+	spin_lock_init(&xa->x_lock);
+	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
+}
 
 #define xa_lock(_xa) spin_lock(&(_xa)->x_lock)
 #define xa_unlock(_xa) spin_unlock(&(_xa)->x_lock)
@@ -60,35 +97,7 @@ struct xarray {
 #define xa_unlock_irqrestore(_xa, _flags)				\
 	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
 
-static inline void xa_init(struct xarray *xa)
-{
-	spin_lock_init(&xa->x_lock);
-	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
-}
-
-#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99)
-/* 4.17, 4.18, 4.19: A radix_tree now includes a spinlock called xa_lock */
-#include <linux/radix-tree.h>
-
-#define xarray       radix_tree_root
-#define xa_tree
-#define xa_init(_xa) INIT_RADIX_TREE(xa_tree(_xa), GFP_KERNEL)
-
-#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99)
-#define HAVE_XARRAY
-
-/* 4.20: xa_for_each() has extra arguments */
-#include <linux/xarray.h>
-#undef xa_for_each
-#define xa_for_each(xa, index, entry)					\
-	for (entry = xa_find(xa, &index, ULONG_MAX, XA_PRESENT); entry;	\
-	     entry = xa_find_after(xa, &index, ULONG_MAX, XA_PRESENT))
-
-#else /* 5.0 and later */
-#define HAVE_XARRAY
-#endif
-
-#ifndef HAVE_XARRAY
+#endif /* HAVE_RADIX_TREE_LOCK */
 
 #define xa_iter radix_tree_iter
 #define xa_for_each_slot(_xa, _slot, _iter)				\
@@ -119,9 +128,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 	radix_tree_delete(xa_tree(xa), idx);
 	xa_unlock_irq(xa);
 }
-
 #endif /* HAVE_XARRAY */
-
 
 /****************************************************************************
  *
@@ -152,22 +159,8 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,4, /* OFA */ 4_10a)
-
-static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
-{
-	if (mtu >= 4096)
-		return IB_MTU_4096;
-	else if (mtu >= 2048)
-		return IB_MTU_2048;
-	else if (mtu >= 1024)
-		return IB_MTU_1024;
-	else if (mtu >= 512)
-		return IB_MTU_512;
-	else
-		return IB_MTU_256;
-}
-
 #else /* 4.10.0 and later */
+#define HAVE_IB_MTU_INT_TO_ENUM
 #define HAVE_GET_DEV_FW_STR
 #define HAVE_CREATE_AH_UDATA
 #define HAVE_EX_CMD_MODIFY_QP
@@ -179,66 +172,20 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,12, /* RHEL */ 7,5, /* OFA */ 4_12)
-
-#define rdma_ah_attr ib_ah_attr
-#define rdma_ah_read_grh(attr) (&(attr)->grh)
-
-static inline void rdma_ah_set_sl(struct rdma_ah_attr *attr, u8 sl)
-{
-	attr->sl = sl;
-}
-
-static inline void rdma_ah_set_port_num(struct rdma_ah_attr *attr, u8 port_num)
-{
-	attr->port_num = port_num;
-}
-
-static inline void rdma_ah_set_grh(struct rdma_ah_attr *attr,
-				   union ib_gid *dgid, u32 flow_label,
-				   u8 sgid_index, u8 hop_limit,
-				   u8 traffic_class)
-{
-	struct ib_global_route *grh = rdma_ah_read_grh(attr);
-
-	attr->ah_flags = IB_AH_GRH;
-	if (dgid)
-		grh->dgid = *dgid;
-	grh->flow_label = flow_label;
-	grh->sgid_index = sgid_index;
-	grh->hop_limit = hop_limit;
-	grh->traffic_class = traffic_class;
-}
-
-static inline void rdma_ah_set_dgid_raw(struct rdma_ah_attr *attr, void *dgid)
-{
-	struct ib_global_route *grh = rdma_ah_read_grh(attr);
-
-	memcpy(grh->dgid.raw, dgid, sizeof(grh->dgid));
-}
-
 #else /* 4.12.0 and later */
+#define HAVE_RDMA_AH_ATTR
 #define HAVE_RDMA_AH_ATTR_TYPE_ROCE
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 4_14a)
-static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
-				   u8 *speed, u8 *width)
-{
-	*width = IB_WIDTH_4X;
-	*speed = IB_SPEED_EDR;
-	return 0;
-}
+#else
+#define HAVE_IB_GET_ETH_SPEED
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 4_14b)
-static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
-{
-	return (srq_type == IB_SRQT_XRC);
-}
-
 #define HAVE_GET_DEV_FW_STR_LEN
-
 #else /* 4.14.0 and later */
+#define HAVE_IB_SRQ_HAS_CQ
 #define HAVE_SRQ_EXT_CQ
 #endif
 
@@ -279,9 +226,8 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #define rdma_wr(wr) rdma_wr((struct ib_send_wr *)(wr))
 #define atomic_wr(wr) atomic_wr((struct ib_send_wr *)(wr))
 #define reg_wr(wr) reg_wr((struct ib_send_wr *)(wr))
-#define CONST
 #else
-#define CONST const
+#define HAVE_CONST_IB_WR
 #define HAVE_IBDEV_MAX_SEND_RECV_SGE
 #endif
 
@@ -291,30 +237,153 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99, /* OFA */ 4_20)
-#define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
-	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
-			   IB_LINK_LAYER_ETHERNET)
+#define HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
 #else
 #define HAVE_IB_REGISTER_DEVICE_NAME
 #define HAVE_RDMA_DEV_SYSFS_GROUP
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 5_0)
+#define HAVE_CUSTOM_IB_SET_DEVICE_OPS
+#define RDMA_CREATE_AH_SLEEPABLE 0
+#else
+#define HAVE_CREATE_AH_FLAGS
+#endif
 
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.1 and later */
+#define HAVE_IB_REGISTER_DEVICE_NAME_ONLY
+#define HAVE_IB_ALLOC_DEV_CONTAINER
+#define HAVE_IB_ALLOC_UCTX_OBJ
+#define HAVE_IB_DEALLOC_UCTX_VOID
+#define HAVE_IB_ALLOC_PD_OBJ
+#define HAVE_IB_DEALLOC_PD_VOID
+#define HAVE_IB_UMEM_GET_UDATA
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.2 and later */
+#define HAVE_IB_ALLOC_AH_OBJ
+#define HAVE_IB_DESTROY_AH_VOID
+#define HAVE_IB_ALLOC_SRQ_OBJ
+#define HAVE_IB_DESTROY_SRQ_VOID
+#define HAVE_IB_API_UDATA
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.3 and later */
+#define HAVE_RDMA_DEV_OPS_EXT
+#define HAVE_IB_ALLOC_CQ_OBJ
+#define HAVE_IB_DESTROY_CQ_VOID
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
+#else /* 5.4 and later */
+#define HAVE_IB_PORT_PHYS_STATE
+#endif
+
+#ifndef HAVE_IB_MTU_INT_TO_ENUM
+static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
+{
+	if (mtu >= 4096)
+		return IB_MTU_4096;
+	else if (mtu >= 2048)
+		return IB_MTU_2048;
+	else if (mtu >= 1024)
+		return IB_MTU_1024;
+	else if (mtu >= 512)
+		return IB_MTU_512;
+	else
+		return IB_MTU_256;
+}
+
+#endif /* HAVE_IB_MTU_INT_TO_ENUM */
+#ifndef HAVE_RDMA_AH_ATTR
+#define rdma_ah_attr ib_ah_attr
+#define rdma_ah_read_grh(attr) (&(attr)->grh)
+
+static inline void rdma_ah_set_sl(struct rdma_ah_attr *attr, u8 sl)
+{
+	attr->sl = sl;
+}
+
+static inline void rdma_ah_set_port_num(struct rdma_ah_attr *attr, u8 port_num)
+{
+	attr->port_num = port_num;
+}
+
+static inline void rdma_ah_set_grh(struct rdma_ah_attr *attr,
+				   union ib_gid *dgid, u32 flow_label,
+				   u8 sgid_index, u8 hop_limit,
+				   u8 traffic_class)
+{
+	struct ib_global_route *grh = rdma_ah_read_grh(attr);
+
+	attr->ah_flags = IB_AH_GRH;
+	if (dgid)
+		grh->dgid = *dgid;
+	grh->flow_label = flow_label;
+	grh->sgid_index = sgid_index;
+	grh->hop_limit = hop_limit;
+	grh->traffic_class = traffic_class;
+}
+
+static inline void rdma_ah_set_dgid_raw(struct rdma_ah_attr *attr, void *dgid)
+{
+	struct ib_global_route *grh = rdma_ah_read_grh(attr);
+
+	memcpy(grh->dgid.raw, dgid, sizeof(grh->dgid));
+}
+
+#endif /* HAVE_RDMA_AH_ATTR */
+#ifndef HAVE_IB_GET_ETH_SPEED
+static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
+				   u8 *speed, u8 *width)
+{
+	*width = IB_WIDTH_4X;
+	*speed = IB_SPEED_EDR;
+	return 0;
+}
+
+#endif /* HAVE_IB_GET_ETH_SPEED */
+#ifndef HAVE_IB_SRQ_HAS_CQ
+static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
+{
+	return (srq_type == IB_SRQT_XRC);
+}
+
+#endif /* HAVE_IB_SRQ_HAS_CQ */
+#ifdef HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
+#define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
+	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
+			   IB_LINK_LAYER_ETHERNET)
+
+#endif
+#ifdef HAVE_CUSTOM_IB_SET_DEVICE_OPS
 struct ib_device_ops {
-	int (*post_send)(struct ib_qp *qp, CONST struct ib_send_wr *send_wr,
-			 CONST struct ib_send_wr **bad_send_wr);
-	int (*post_recv)(struct ib_qp *qp, CONST struct ib_recv_wr *recv_wr,
-			 CONST struct ib_recv_wr **bad_recv_wr);
+#ifdef HAVE_CONST_IB_WR
+	int (*post_send)(struct ib_qp *qp, const struct ib_send_wr *send_wr,
+			 const struct ib_send_wr **bad_send_wr);
+	int (*post_recv)(struct ib_qp *qp, const struct ib_recv_wr *recv_wr,
+			 const struct ib_recv_wr **bad_recv_wr);
+	int (*post_srq_recv)(struct ib_srq *srq,
+			     const struct ib_recv_wr *recv_wr,
+			     const struct ib_recv_wr **bad_recv_wr);
+#else
+	int (*post_send)(struct ib_qp *qp, struct ib_send_wr *send_wr,
+			 struct ib_send_wr **bad_send_wr);
+	int (*post_recv)(struct ib_qp *qp, struct ib_recv_wr *recv_wr,
+			 struct ib_recv_wr **bad_recv_wr);
+	int (*post_srq_recv)(struct ib_srq *srq,
+			     struct ib_recv_wr *recv_wr,
+			     struct ib_recv_wr **bad_recv_wr);
+#endif /* HAVE_CONST_IB_WR */
 	void (*drain_rq)(struct ib_qp *qp);
 	void (*drain_sq)(struct ib_qp *qp);
 	int (*poll_cq)(struct ib_cq *cq, int num_entries, struct ib_wc *wc);
 	int (*peek_cq)(struct ib_cq *cq, int wc_cnt);
 	int (*req_notify_cq)(struct ib_cq *cq, enum ib_cq_notify_flags flags);
 	int (*req_ncomp_notif)(struct ib_cq *cq, int wc_cnt);
-	int (*post_srq_recv)(struct ib_srq *srq,
-			     CONST struct ib_recv_wr *recv_wr,
-			     CONST struct ib_recv_wr **bad_recv_wr);
 	int (*query_device)(struct ib_device *device,
 			    struct ib_device_attr *device_attr,
 			    struct ib_udata *udata);
@@ -447,44 +516,10 @@ struct ib_device_ops {
 			    struct rdma_hw_stats *stats, u8 port, int index);
 };
 
-#define HAVE_CUSTOM_IB_SET_DEVICE_OPS
 void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops);
 
-#undef dma_alloc_coherent
-#define dma_alloc_coherent dma_zalloc_coherent
-#define RDMA_CREATE_AH_SLEEPABLE 0
-#else
-#define HAVE_CREATE_AH_FLAGS
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_0)
-#else /* 5.1 and later */
-#define HAVE_IB_REGISTER_DEVICE_NAME_ONLY
-#define HAVE_IB_ALLOC_DEV_CONTAINER
-#define HAVE_IB_ALLOC_UCTX_OBJ
-#define HAVE_IB_DEALLOC_UCTX_VOID
-#define HAVE_IB_ALLOC_PD_OBJ
-#define HAVE_IB_DEALLOC_PD_VOID
-#define HAVE_IB_UMEM_GET_UDATA
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_0)
-#else /* 5.2 and later */
-#define HAVE_IB_ALLOC_AH_OBJ
-#define HAVE_IB_DESTROY_AH_VOID
-#define HAVE_IB_ALLOC_SRQ_OBJ
-#define HAVE_IB_DESTROY_SRQ_VOID
-#define HAVE_IB_API_UDATA
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_0)
-#else /* 5.3 and later */
-#define HAVE_RDMA_DEV_OPS_EXT
-#define HAVE_IB_ALLOC_CQ_OBJ
-#define HAVE_IB_DESTROY_CQ_VOID
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
+#endif /* HAVE_CUSTOM_IB_SET_DEVICE_OPS */
+#ifndef HAVE_IB_PORT_PHYS_STATE
 enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_SLEEP = 1,
 	IB_PORT_PHYS_STATE_POLLING = 2,
@@ -494,9 +529,16 @@ enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_LINK_ERROR_RECOVERY = 6,
 	IB_PORT_PHYS_STATE_PHY_TEST = 7,
 };
-#else /* 5.4 and later */
-#endif
 
+#endif /* HAVE_IB_PORT_PHYS_STATE */
+#ifdef HAVE_RDMA_DRIVER_ID
+#include <rdma/rdma_user_ioctl_cmds.h>
+/* Upstream: QIB, EFA, SIW, <us> */
+enum {
+	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
+};
+
+#endif /* HAVE_RDMA_DRIVER_ID */
 /**
  * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format
  * @header:UD header struct
@@ -506,15 +548,5 @@ enum ib_port_phys_state {
  * format in the buffer @buf.
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
-
-#define IF_LLADDR(ndev) (ndev->dev_addr)
-
-#ifdef HAVE_RDMA_DRIVER_ID
-#include <rdma/rdma_user_ioctl_cmds.h>
-/* Upstream: QIB, EFA, SIW, <us> */
-enum {
-	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
-};
-#endif
 
 #endif /* IONIC_KCOMPAT */

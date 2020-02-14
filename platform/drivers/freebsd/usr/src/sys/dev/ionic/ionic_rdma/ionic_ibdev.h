@@ -50,9 +50,6 @@
 #include "ionic_queue.h"
 #include "ionic_res.h"
 
-#ifdef HAVE_XARRAY
-#include <linux/xarray.h>
-#endif
 
 #define DRIVER_NAME		"ionic_rdma"
 #define DRIVER_SHORTNAME	"ionr"
@@ -159,8 +156,6 @@ struct ionic_ibdev {
 	struct ionic_resid_bits	inuse_cqid;
 	struct ionic_resid_bits	inuse_qpid;
 	int			size_qpid;
-	int			size_srqid;
-	int			next_srqid;
 
 	struct work_struct	reset_work;
 	bool			reset_posted;
@@ -321,10 +316,7 @@ struct ionic_rq_meta {
 };
 
 struct ionic_qp {
-	union {
-		struct ib_qp	ibqp;
-		struct ib_srq	ibsrq;
-	};
+	struct ib_qp		ibqp;
 	enum ib_qp_state	state;
 
 	u32			qpid;
@@ -335,7 +327,6 @@ struct ionic_qp {
 	bool			has_ah;
 	bool			has_sq;
 	bool			has_rq;
-	bool			is_srq;
 
 	bool			sig_all;
 
@@ -472,11 +463,6 @@ static inline struct ionic_qp *to_ionic_qp(struct ib_qp *ibqp)
 	return container_of(ibqp, struct ionic_qp, ibqp);
 }
 
-static inline struct ionic_qp *to_ionic_srq(struct ib_srq *ibsrq)
-{
-	return container_of(ibsrq, struct ionic_qp, ibsrq);
-}
-
 static inline struct ionic_ah *to_ionic_ah(struct ib_ah *ibah)
 {
 	return container_of(ibah, struct ionic_ah, ibah);
@@ -578,11 +564,6 @@ void ionic_notify_flush_cq(struct ionic_cq *cq);
 
 /* ionic_datapath.c */
 void ionic_datapath_setops(struct ionic_ibdev *dev);
-
-#ifdef IONIC_SRQ_XRC
-/* ionic_srq.c */
-void ionic_srq_setops(struct ionic_ibdev *dev);
-#endif
 
 /* ionic_stats.c */
 void ionic_stats_setops(struct ionic_ibdev *dev);

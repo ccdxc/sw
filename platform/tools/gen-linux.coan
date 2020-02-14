@@ -1,0 +1,4 @@
+-DNOT_UPSTREAM
+-U__FreeBSD__
+
+-UIONIC_SRQ_XRC

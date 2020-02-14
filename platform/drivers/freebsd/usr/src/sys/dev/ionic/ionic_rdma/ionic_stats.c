@@ -276,9 +276,6 @@ err_dma:
 }
 
 static const struct ib_device_ops ionic_stats_ops = {
-#ifdef HAVE_RDMA_DEV_OPS_EXT
-	.driver_id		= RDMA_DRIVER_IONIC,
-#endif
 	.alloc_hw_stats		= ionic_alloc_hw_stats,
 	.get_hw_stats		= ionic_get_hw_stats,
 };

@@ -122,15 +122,11 @@ struct ionic_rq_meta {
 };
 
 struct ionic_qp {
-	union {
-		struct verbs_qp		vqp;
-		struct verbs_srq	vsrq;
-	};
+	struct verbs_qp		vqp;
 
 	uint32_t		qpid;
 	bool			has_sq;
 	bool			has_rq;
-	bool			is_srq;
 
 	bool			sig_all;
 
@@ -192,11 +188,6 @@ static inline struct ionic_cq *to_ionic_cq(struct ibv_cq *ibcq)
 static inline struct ionic_qp *to_ionic_qp(struct ibv_qp *ibqp)
 {
 	return container_of(ibqp, struct ionic_qp, vqp.qp);
-}
-
-static inline struct ionic_qp *to_ionic_srq(struct ibv_srq *ibsrq)
-{
-	return container_of(ibsrq, struct ionic_qp, vsrq.srq);
 }
 
 static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)

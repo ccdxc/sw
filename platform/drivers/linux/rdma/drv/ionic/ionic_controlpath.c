@@ -14,8 +14,8 @@
 
 #ifdef HAVE_IB_API_UDATA
 #include <rdma/uverbs_ioctl.h>
-#endif
 
+#endif
 #define ionic_set_ecn(tos)   (((tos) | 2u) & ~1u)
 #define ionic_clear_ecn(tos)  ((tos) & ~3u)
 
@@ -481,7 +481,6 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 
 	if (attr->ah_flags != IB_AH_GRH)
 		return -EINVAL;
-
 #ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
 	if (attr->type != RDMA_AH_ATTR_TYPE_ROCE)
 		return -EINVAL;
@@ -530,7 +529,6 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 #else
 	ether_addr_copy(hdr->eth.smac_h, smac);
 #endif
-
 #ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
 	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
 #else
@@ -1827,10 +1825,6 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			cpu_to_le32(qp->sq_res.tbl_pos);
 		wr.wqe.qp.sq_map_count = cpu_to_le32(sq_buf->tbl_pages);
 		wr.wqe.qp.sq_dma_addr = ionic_pgtbl_dma(sq_buf, 0);
-#ifdef IONIC_SRQ_XRC
-	} else if (attr->xrcd) {
-		wr.wqe.qp.sq_tbl_index_xrcd_id = 0;
-#endif /* IONIC_SRQ_XRC */
 	}
 
 	if (qp->has_rq) {
@@ -1842,11 +1836,6 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			cpu_to_le32(qp->rq_res.tbl_pos);
 		wr.wqe.qp.rq_map_count = cpu_to_le32(rq_buf->tbl_pages);
 		wr.wqe.qp.rq_dma_addr = ionic_pgtbl_dma(rq_buf, 0);
-#ifdef IONIC_SRQ_XRC
-	} else if (attr->srq) {
-		wr.wqe.qp.rq_tbl_index_srq_id =
-			cpu_to_le32(to_ionic_srq(attr->srq)->qpid);
-#endif /* IONIC_SRQ_XRC */
 	}
 
 	ionic_admin_post(dev, &wr);
@@ -2673,13 +2662,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	qp->has_sq = true;
 	qp->has_rq = true;
-#ifdef IONIC_SRQ_XRC
-	qp->has_sq = attr->qp_type != IB_QPT_XRC_TGT;
-	qp->has_rq = !attr->srq &&
-		attr->qp_type != IB_QPT_XRC_INI &&
-		attr->qp_type != IB_QPT_XRC_TGT;
-	qp->is_srq = attr->srq;
-#endif /* IONIC_SRQ_XRC */
 
 	if (qp->has_ah) {
 		rc = ionic_get_ahid(dev, &qp->ahid);

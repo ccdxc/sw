@@ -38,11 +38,9 @@
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 
-/* XXX remove this section for release */
 static bool ionic_xxx_aq_dbell = true;
 module_param_named(ionic_rdma_xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
-/* XXX remove above section for release */
 
 /* not a valid queue position or negative error status */
 #define IONIC_ADMIN_POSTED 0x10000
@@ -832,35 +830,6 @@ out:
 		kref_put(&cq->cq_kref, ionic_cq_complete);
 }
 
-#ifdef IONIC_SRQ_XRC
-static void ionic_srq_event(struct ionic_ibdev *dev, struct ionic_qp *qp,
-			    u8 code)
-{
-	struct ib_event ibev;
-
-	ibev.device = &dev->ibdev;
-	ibev.element.srq = &qp->ibsrq;
-
-	switch (code) {
-	case IONIC_V1_EQE_SRQ_LEVEL:
-		ibev.event = IB_EVENT_SRQ_LIMIT_REACHED;
-		break;
-
-	case IONIC_V1_EQE_QP_ERR:
-		ibev.event = IB_EVENT_SRQ_ERR;
-		break;
-
-	default:
-		dev_dbg(&dev->ibdev.dev,
-			"unrecognized srqid %#x code %u\n",
-			qpid, code);
-		return;
-	}
-
-	if (qp->ibsrq.event_handler)
-		qp->ibsrq.event_handler(&ibev, qp->ibsrq.srq_context);
-}
-#endif /* IONIC_SRQ_XRC */
 
 static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 {
@@ -880,12 +849,6 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 		goto out;
 	}
 
-#ifdef IONIC_SRQ_XRC
-	if (qp->is_srq) {
-		ionic_srq_event(dev, qp, code);
-		goto out;
-	}
-#endif /* IONIC_SRQ_XRC */
 
 	ibev.device = &dev->ibdev;
 	ibev.element.qp = &qp->ibqp;

@@ -4,11 +4,11 @@
  */
 
 #include <linux/interrupt.h>
-#include <linux/irq.h>
-#include <linux/mman.h>
 #include <linux/module.h>
 #include <linux/printk.h>
 #include <linux/pci.h>
+#include <linux/irq.h>
+#include <linux/mman.h>
 #include <net/addrconf.h>
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
@@ -18,7 +18,6 @@
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
-
 #ifdef HAVE_IB_API_UDATA
 #include <rdma/uverbs_ioctl.h>
 #endif
@@ -150,13 +149,6 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->max_mcast_grp = 0;
 	attr->max_mcast_qp_attach = 0;
 	attr->max_ah = dev->inuse_ahid.inuse_size;
-#ifdef IONIC_SRQ_XRC
-	attr->max_srq = dev->size_srqid;
-	attr->max_srq_wr = IONIC_MAX_DEPTH;
-	attr->max_srq_sge =
-		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    ionic_spec);
-#endif /* IONIC_SRQ_XRC */
 	attr->max_fast_reg_page_list_len =
 		(dev->inuse_restbl.inuse_size / 2) <<
 		(dev->cl_stride - dev->pte_stride);
@@ -300,7 +292,7 @@ static int ionic_modify_device(struct ib_device *ibdev, int mask,
 	return 0;
 }
 
-/* TODO remove for 4.14+ */
+/* TODO remove for Linux 4.14+ */
 static int ionic_modify_port(struct ib_device *ibdev, u8 port, int mask,
 			     struct ib_port_modify *attr)
 {
@@ -348,8 +340,8 @@ static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
 
 	return irq_get_affinity_mask(dev->eq_vec[comp_vector]->irq);
 }
-#endif
 
+#endif
 void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
 {
 	struct ib_event ev;
@@ -641,15 +633,8 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 		goto err_cqid;
 
 	dev->size_qpid = le32_to_cpu(ident->rdma.sq_qtype.qid_count);
-	dev->size_srqid = 0;
-#ifdef IONIC_SRQ_XRC
-	/* prefer srqids after qpids */
-	dev->size_srqid = le32_to_cpu(ident->rdma.rq_qtype.qid_count);
-	dev->next_srqid = dev->size_qpid;
-#endif /* IONIC_SRQ_XRC */
 
-	rc = ionic_resid_init(&dev->inuse_qpid, max(dev->size_qpid,
-						    dev->size_srqid));
+	rc = ionic_resid_init(&dev->inuse_qpid, dev->size_qpid);
 	if (rc)
 		goto err_qpid;
 
@@ -709,9 +694,6 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	ionic_datapath_setops(dev);
 	ionic_controlpath_setops(dev);
 	ionic_stats_setops(dev);
-#ifdef IONIC_SRQ_XRC
-	ionic_srq_setops(dev);
-#endif /* IONIC_SRQ_XRC */
 
 #ifdef HAVE_REQUIRED_DMA_DEVICE
 	ibdev->dma_device = ibdev->dev.parent;

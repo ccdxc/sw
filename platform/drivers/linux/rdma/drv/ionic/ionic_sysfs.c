@@ -219,14 +219,6 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "size_qpid:\t%u\n", dev->size_qpid);
 	seq_printf(s, "next_qpid:\t%u\n", dev->inuse_qpid.next_id);
 
-#ifdef IONIC_SRQ_XRC
-	/* includes inuse_qpid: subtract inuse_qpid to get only srqid */
-	seq_printf(s, "inuse_srqid:\t%u\n",
-		   bitmap_weight(dev->inuse_qpid.inuse,
-				 dev->size_srqid));
-	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
-	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
-#endif /* IONIC_SRQ_XRC */
 
 	seq_printf(s, "inuse_restbl:\t%u\n",
 		   bitmap_weight(dev->inuse_restbl.inuse,

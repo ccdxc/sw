@@ -125,13 +125,16 @@ static int ionic_init_context(struct verbs_device *vdev,
 			      struct ibv_context *ibctx,
 			      int cmd_fd)
 {
-	struct ionic_dev *dev = to_ionic_dev(&vdev->device);
-	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+	struct ionic_dev *dev;
+	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
 	int rc, version, level;
 
 	ionic_debug_file_init();
+
+	dev = to_ionic_dev(&vdev->device);
+	ctx = to_ionic_ctx(ibctx);
 
 	ibctx->cmd_fd = cmd_fd;
 
@@ -291,6 +294,14 @@ found:
 	if (abi_version < 1 || abi_version > IONIC_ABI_VERSION)
 		return NULL;
 
+	static_assert(sizeof(struct ionic_v1_cqe) == 32, "bad size");
+	static_assert(sizeof(struct ionic_v1_base_hdr) == 16, "bad size");
+	static_assert(sizeof(struct ionic_v1_recv_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_common_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
+	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
+
 	dev = calloc(1, sizeof(*dev));
 	if (!dev)
 		return NULL;
@@ -308,12 +319,4 @@ found:
 static __attribute__((constructor)) void ionic_register_driver(void)
 {
 	verbs_register_driver("ionic", ionic_alloc_device);
-
-	static_assert(sizeof(struct ionic_v1_cqe) == 32, "bad size");
-	static_assert(sizeof(struct ionic_v1_base_hdr) == 16, "bad size");
-	static_assert(sizeof(struct ionic_v1_recv_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_common_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
-	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
 }

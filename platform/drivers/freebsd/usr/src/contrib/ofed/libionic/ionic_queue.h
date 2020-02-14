@@ -33,11 +33,11 @@
 #ifndef IONIC_QUEUE_H
 #define IONIC_QUEUE_H
 
-#include <assert.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <assert.h>
+#include <stdatomic.h>
 #include <sys/endian.h>
 
 static inline void mmio_write64_le(uint64_t *reg, uint64_t val)

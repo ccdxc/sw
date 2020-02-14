@@ -552,15 +552,8 @@ static int ionic_set_ah_attr(struct ionic_ibdev *dev,
 	}
 
 	memset(ah_attr, 0, sizeof(*ah_attr));
-#ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
-	ah_attr->type = RDMA_AH_ATTR_TYPE_ROCE;
-#endif
 	if (hdr->eth_present) {
-#ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
-		memcpy(&ah_attr->roce.dmac, &hdr->eth.dmac_h, ETH_ALEN);
-#else
 		memcpy(&ah_attr->dmac, &hdr->eth.dmac_h, ETH_ALEN);
-#endif
 	}
 	rdma_ah_set_sl(ah_attr, vlan >> 13);
 	rdma_ah_set_port_num(ah_attr, 1);
@@ -1413,13 +1406,8 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 		if (rc)
 			goto err_q;
 
-#ifdef HAVE_IB_UMEM_GET_UDATA
-		cq->umem = ib_umem_get(udata, req.cq.addr, req.cq.size,
-				       IB_ACCESS_LOCAL_WRITE, 0);
-#else
 		cq->umem = ib_umem_get(ibctx, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
-#endif
 		if (IS_ERR(cq->umem)) {
 			rc = PTR_ERR(cq->umem);
 			goto err_q;
@@ -1561,11 +1549,7 @@ static bool pd_local_privileged(struct ib_pd *pd)
 
 static bool pd_remote_privileged(struct ib_pd *pd)
 {
-#ifdef HAVE_IB_PD_FLAGS
 	return pd->flags & IB_PD_UNSAFE_GLOBAL_RKEY;
-#else
-	return false;
-#endif
 }
 
 static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
@@ -1609,10 +1593,6 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			cpu_to_le32(qp->sq_res.tbl_pos);
 		wr.wqe.qp.sq_map_count = cpu_to_le32(sq_buf->tbl_pages);
 		wr.wqe.qp.sq_dma_addr = ionic_pgtbl_dma(sq_buf, 0);
-#ifdef IONIC_SRQ_XRC
-	} else if (attr->xrcd) {
-		wr.wqe.qp.sq_tbl_index_xrcd_id = 0;
-#endif /* IONIC_SRQ_XRC */
 	}
 
 	if (qp->has_rq) {
@@ -1624,11 +1604,6 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			cpu_to_le32(qp->rq_res.tbl_pos);
 		wr.wqe.qp.rq_map_count = cpu_to_le32(rq_buf->tbl_pages);
 		wr.wqe.qp.rq_dma_addr = ionic_pgtbl_dma(rq_buf, 0);
-#ifdef IONIC_SRQ_XRC
-	} else if (attr->srq) {
-		wr.wqe.qp.rq_tbl_index_srq_id =
-			cpu_to_le32(to_ionic_srq(attr->srq)->qpid);
-#endif /* IONIC_SRQ_XRC */
 	}
 
 	ionic_admin_post(dev, &wr);
@@ -2446,13 +2421,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	qp->has_sq = true;
 	qp->has_rq = true;
-#ifdef IONIC_SRQ_XRC
-	qp->has_sq = attr->qp_type != IB_QPT_XRC_TGT;
-	qp->has_rq = !attr->srq &&
-		attr->qp_type != IB_QPT_XRC_INI &&
-		attr->qp_type != IB_QPT_XRC_TGT;
-	qp->is_srq = attr->srq;
-#endif /* IONIC_SRQ_XRC */
 
 	if (qp->has_ah) {
 		rc = ionic_get_ahid(dev, &qp->ahid);
@@ -2868,9 +2836,7 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	init_attr->qp_type = ibqp->qp_type;
 	init_attr->create_flags = 0;
 	init_attr->port_num = 0;
-#ifdef HAVE_QP_RWQ_IND_TBL
 	init_attr->rwq_ind_tbl = ibqp->rwq_ind_tbl;
-#endif
 #ifdef HAVE_QP_INIT_SRC_QPN
 	init_attr->source_qpn = 0;
 #endif
@@ -2935,9 +2901,6 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 }
 
 static const struct ib_device_ops ionic_controlpath_ops = {
-#ifdef HAVE_RDMA_DEV_OPS_EXT
-	.driver_id		= RDMA_DRIVER_IONIC,
-#endif
 	.alloc_ucontext		= ionic_alloc_ucontext,
 	.dealloc_ucontext	= ionic_dealloc_ucontext,
 	.mmap			= ionic_mmap,

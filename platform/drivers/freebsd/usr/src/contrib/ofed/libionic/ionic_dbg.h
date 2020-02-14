@@ -44,17 +44,17 @@ extern FILE *IONIC_DEBUG_FILE;
 
 #define IONIC_DEFAULT_DEBUG_FILE stderr
 
-#define _ionic_dbg(file, fmt, args...)					\
+#define _ionic_dbg(file, fmt, ...)					\
 	fprintf(file, "%s:%d: " fmt "\n",				\
-		__func__, __LINE__, ##args)
+		__func__, __LINE__, ##__VA_ARGS__)
 
-#define ionic_dbg(ctx, fmt, args...) do {				\
+#define ionic_dbg(ctx, fmt, ...) do {					\
 	if ((IONIC_DEBUG) && unlikely(ctx->dbg_file))			\
-		_ionic_dbg(ctx->dbg_file, fmt, ##args);			\
+		_ionic_dbg(ctx->dbg_file, fmt, ##__VA_ARGS__);		\
 } while (0)
 
-#define ionic_err(fmt, args...)						\
-	_ionic_dbg(IONIC_DEBUG_FILE, fmt, ##args)
+#define ionic_err(fmt, ...)						\
+	_ionic_dbg(IONIC_DEBUG_FILE, fmt, ##__VA_ARGS__)
 
 static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
 				   const void *ptr, size_t size)

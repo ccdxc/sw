@@ -26,18 +26,20 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 	if (q->depth_log2 + q->stride_log2 < PAGE_SHIFT)
 		q->depth_log2 = PAGE_SHIFT - q->stride_log2;
 
-#ifdef IONIC_STATIC_ANALYSIS_HINTS_NOT_FOR_UPSTREAM
 	/* freebsd clang warns of bit shift by enormous amount in BIT_ULL */
 	if (WARN_ON(q->depth_log2 > 16))
 		return -EINVAL;
 	if (WARN_ON(q->stride_log2 > 16))
 		return -EINVAL;
-#endif
 
 	q->size = BIT_ULL(q->depth_log2 + q->stride_log2);
 	q->mask = BIT(q->depth_log2) - 1;
 
+#ifdef HAVE_ZALLOC_COHERENT
+	q->ptr = dma_zalloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
+#else
 	q->ptr = dma_alloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
+#endif
 	if (!q->ptr)
 		return -ENOMEM;
 

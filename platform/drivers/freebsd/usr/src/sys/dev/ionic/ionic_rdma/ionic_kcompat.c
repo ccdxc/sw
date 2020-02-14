@@ -304,15 +304,12 @@ void sysfs_remove_groups(struct kobject *kobj,
 		sysfs_remove_group(kobj, groups[i]);
 }
 
-#ifdef HAVE_CUSTOM_IB_SET_DEVICE_OPS
 void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
 {
 #define SET_DEVICE_OP(name) \
 	(dev->name = dev->name ?: ops->name)
 
-#ifdef HAVE_REQUIRED_IB_GID
 	SET_DEVICE_OP(add_gid);
-#endif
 	SET_DEVICE_OP(alloc_hw_stats);
 	SET_DEVICE_OP(alloc_mr);
 	SET_DEVICE_OP(alloc_mw);
@@ -329,9 +326,7 @@ void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
 	SET_DEVICE_OP(dealloc_pd);
 	SET_DEVICE_OP(dealloc_ucontext);
 	SET_DEVICE_OP(dealloc_xrcd);
-#ifdef HAVE_REQUIRED_IB_GID
 	SET_DEVICE_OP(del_gid);
-#endif
 	SET_DEVICE_OP(dereg_mr);
 	SET_DEVICE_OP(destroy_ah);
 	SET_DEVICE_OP(destroy_cq);
@@ -341,17 +336,12 @@ void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
 	SET_DEVICE_OP(disassociate_ucontext);
 	SET_DEVICE_OP(drain_rq);
 	SET_DEVICE_OP(drain_sq);
-#ifdef HAVE_GET_DEV_FW_STR
 	SET_DEVICE_OP(get_dev_fw_str);
-#endif
 	SET_DEVICE_OP(get_dma_mr);
 	SET_DEVICE_OP(get_hw_stats);
 	SET_DEVICE_OP(get_link_layer);
 	SET_DEVICE_OP(get_netdev);
 	SET_DEVICE_OP(get_port_immutable);
-#ifdef HAVE_GET_VECTOR_AFFINITY
-	SET_DEVICE_OP(get_vector_affinity);
-#endif
 	SET_DEVICE_OP(map_mr_sg);
 	SET_DEVICE_OP(mmap);
 	SET_DEVICE_OP(modify_ah);
@@ -367,9 +357,7 @@ void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
 	SET_DEVICE_OP(post_srq_recv);
 	SET_DEVICE_OP(query_ah);
 	SET_DEVICE_OP(query_device);
-#ifdef HAVE_REQUIRED_IB_GID
 	SET_DEVICE_OP(query_gid);
-#endif
 	SET_DEVICE_OP(query_pkey);
 	SET_DEVICE_OP(query_port);
 	SET_DEVICE_OP(query_qp);
@@ -381,4 +369,3 @@ void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
 	SET_DEVICE_OP(resize_cq);
 #undef SET_DEVICE_OP
 }
-#endif /* HAVE_CUSTOM_IB_SET_DEVICE_OPS */
