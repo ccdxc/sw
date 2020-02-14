@@ -11,6 +11,7 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/fte/fte_core.hpp"
+#include "gen/proto/system.pb.h"
 
 namespace hal {
 namespace plugins {
@@ -68,6 +69,7 @@ private:
     bool parse_pipeline(const pt::ptree &tree, pipeline_t *pipeline);
     void parse_plugins(const pt::ptree &tree, const std::string &plugin_path);
     void parse_pipelines(const pt::ptree &tree);
+    sys::ForwardMode parse_fwdmode_string_to_enum(const std::string& fwdmode);
 
     void register_features(plugin_t *plugin);
     void register_plugin(plugin_t *plugin);

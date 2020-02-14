@@ -576,7 +576,7 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
 
     sfw::sfw_info_t *sfw_info;
 
-    if (ctx.protobuf_request()) {
+    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
 

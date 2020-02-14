@@ -6,6 +6,7 @@
 #include "lib/periodic/periodic.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/iris/include/hal_state.hpp"
 
 namespace session {
 std::ostream& operator<<(std::ostream& os, const session::FlowTCPState& val)
@@ -102,12 +103,13 @@ net_conntrack_configured(fte::ctx_t &ctx)
         return ctx.sess_spec()->conn_track_en();
     }
 
-    if (ctx.key().proto != types::IPPROTO_TCP) {
+    if (ctx.key().proto != types::IPPROTO_TCP || 
+        (hal::g_hal_state->is_policy_enforced() == false)) {
         return false;
     }
 
     // lookup Security profile
-    if (ctx.svrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
+    if (ctx.svrf() && ctx.svrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
         hal::nwsec_profile_t  *nwsec_prof =
             find_nwsec_profile_by_handle(ctx.svrf()->nwsec_profile_handle);
         if (nwsec_prof != NULL) {

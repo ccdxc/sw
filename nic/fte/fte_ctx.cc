@@ -79,6 +79,7 @@ ctx_t::get_proxy_mirror_flow(hal::flow_role_t role)
 
 void ctx_t::swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey)
 {
+    rkey->lkpvrf = key.lkpvrf;
     rkey->flow_type = key.flow_type;
     rkey->svrf_id = key.dvrf_id;
     rkey->dvrf_id = key.svrf_id;
@@ -149,11 +150,12 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
 
     HAL_TRACE_DEBUG("fte: extracted flow key {}", key_);
 
-
-    // Lookup ep, intf, l2seg, vrf
-    ret = lookup_flow_objs();
-    if (ret != HAL_RET_OK) {
-        return ret;
+    if (hal::g_hal_state->is_microseg_enabled()) { 
+        // Lookup ep, intf, l2seg, vrf
+        ret = lookup_flow_objs();
+        if (ret != HAL_RET_OK) {
+            return ret;
+        }
     }
 
     // Lookup old session

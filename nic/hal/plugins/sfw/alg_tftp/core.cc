@@ -349,7 +349,7 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
                                   ctx.feature_state(FTE_FEATURE_SFW);
     fte::feature_session_state_t  *alg_state = NULL;
 
-    if (ctx.protobuf_request() ||
+    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request() ||
         ctx.role() == hal::FLOW_ROLE_RESPONDER) {
         return fte::PIPELINE_CONTINUE;
     }

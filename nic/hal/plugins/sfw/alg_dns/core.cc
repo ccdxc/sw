@@ -423,7 +423,7 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     fte::flow_update_t               flowupd;
 
     sfw_info = sfw::sfw_feature_state(ctx);
-    if (ctx.protobuf_request()) {
+    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
 

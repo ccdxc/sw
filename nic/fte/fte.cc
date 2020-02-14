@@ -249,12 +249,13 @@ typedef struct pipeline_s pipeline_t;
 struct pipeline_s
 {
     STAILQ_ENTRY(pipeline_s) entries;
-    lifqid_t lifq;
-    lifqid_t lifq_mask;
-    std::string name;
-    uint16_t num_features_outbound;
-    uint16_t num_features_inbound;
-    feature_t *features[0];
+    lifqid_t         lifq;
+    lifqid_t         lifq_mask;
+    sys::ForwardMode fwdmode; 
+    std::string      name;
+    uint16_t         num_features_outbound;
+    uint16_t         num_features_inbound;
+    feature_t       *features[0];
 };
 
 static STAILQ_HEAD(pipeline_list_s_, pipeline_s) g_pipeline_list_ =
@@ -274,12 +275,14 @@ pipeline_add_(pipeline_t *pipeline)
 }
 
 static inline pipeline_t *
-pipeline_lookup_(const lifqid_t& lifq)
+pipeline_lookup_(sys::ForwardMode fwdmode, const lifqid_t& lifq)
 {
     pipeline_t *pipeline;
 
     STAILQ_FOREACH(pipeline, &g_pipeline_list_, entries) {
-        if (pipeline->lifq.lif == (lifq.lif & pipeline->lifq_mask.lif) &&
+        if ((pipeline->fwdmode == sys::FWD_MODE_ANY || 
+             pipeline->fwdmode == fwdmode) && 
+            pipeline->lifq.lif == (lifq.lif & pipeline->lifq_mask.lif) &&
             pipeline->lifq.qtype == (lifq.qtype & pipeline->lifq_mask.qtype) &&
             pipeline->lifq.qid == (lifq.qid & pipeline->lifq_mask.qid)) {
             return pipeline;
@@ -370,8 +373,8 @@ static bool CpucbId_Parse(const std::string& queue, uint32_t *qid)
 }
 
 hal_ret_t
-register_pipeline(const std::string& name, lifqid_t& lifq,
-                  const std::string& lif, const std::string& qid,
+register_pipeline(const std::string& name, const sys::ForwardMode fwdmode,
+                  lifqid_t& lifq, const std::string& lif, const std::string& qid,
                   const std::vector<std::string> &features_outbound,
                   const std::vector<std::string> &features_inbound,
                   const lifqid_t& lifq_mask)
@@ -391,9 +394,9 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
             lifq.qid = atoi(qid.c_str());
         }
     }
-    HAL_TRACE_DEBUG("name={} lifq={}", name, lifq);
+    HAL_TRACE_DEBUG("name={} lifq={} fwdmode={}", name, lifq, fwdmode);
 
-    if ((pipeline = pipeline_lookup_(lifq)) != nullptr) {
+    if ((pipeline = pipeline_lookup_(fwdmode, lifq)) != nullptr) {
         HAL_TRACE_ERR("fte: skipping duplicate pipline {} lifq={} old-name={}",
                       name, lifq, pipeline->name);
         return HAL_RET_ENTRY_EXISTS;
@@ -403,6 +406,7 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
     pipeline->lifq = lifq;
     pipeline->lifq_mask = lifq_mask;
     pipeline->name = name;
+    pipeline->fwdmode = fwdmode;
 
     // Initialize feature blocks
     feature_t **features = pipeline->features;
@@ -447,7 +451,7 @@ execute_pipeline(ctx_t &ctx)
     pipeline_action_t rc;
 
     do {
-        pipeline_t *pipeline = pipeline_lookup_(ctx.arm_lifq());
+        pipeline_t *pipeline = pipeline_lookup_(hal::g_hal_state->fwd_mode(), ctx.arm_lifq());
         if (!pipeline) {
             HAL_TRACE_ERR("fte: pipeline not registered for lifq {} - ignoring packet",
                           ctx.arm_lifq());

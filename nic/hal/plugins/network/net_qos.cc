@@ -22,7 +22,6 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
     bool qos_class_en = false;
     uint32_t qos_class_id = 0;
     hal::if_t *dif = ctx.dif();
-    hal::if_t *sif = ctx.sif();
     bool proxy_enabled;
     bool proxy_flow;
     static hal::qos_class_t *def_qos = find_qos_class_by_group(hal::QOS_GROUP_DEFAULT);
@@ -33,20 +32,20 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
     HAL_TRACE_VERBOSE("proxy_enabled {} proxy_flow {} "
                       "enic_dif {} enic_sif {}",
                       proxy_enabled, proxy_flow,
-                      dif && (dif->if_type == intf::IF_TYPE_ENIC),
-                      sif && (sif->if_type == intf::IF_TYPE_ENIC));
+                      ctx.dif() && (ctx.dif()->if_type == intf::IF_TYPE_ENIC),
+                      ctx.sif() && (ctx.sif()->if_type == intf::IF_TYPE_ENIC));
 
-    if (dif && (dif->if_type == intf::IF_TYPE_ENIC)) {
+    if (ctx.dif() && (ctx.dif()->if_type == intf::IF_TYPE_ENIC)) {
         hal::lif_t *dlif = if_get_lif(dif);
         rx_qos_class = lif_get_rx_qos_class(dlif);
-    } else if (sif && (sif->if_type == intf::IF_TYPE_ENIC)) {
-        hal::lif_t *slif = if_get_lif(sif);
+    } else if (ctx.sif() && (ctx.sif()->if_type == intf::IF_TYPE_ENIC)) {
+        hal::lif_t *slif = if_get_lif(ctx.sif());
         if (slif) tx_qos_class = lif_get_tx_qos_class(slif);
     }
 
     if (proxy_enabled) {
         if (proxy_flow) {
-            if (dif && (dif->if_type == intf::IF_TYPE_ENIC)) {
+            if (ctx.dif() && (ctx.dif()->if_type == intf::IF_TYPE_ENIC)) {
                 // The flow is coming from uplink towards the p4plus.
                 // Use the proxy classes
                 if (rx_qos_class && rx_qos_class->no_drop) {
@@ -55,17 +54,17 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
                     qos_group = QOS_GROUP_RX_PROXY_DROP;
                 }
                 qos_class = find_qos_class_by_group(qos_group);
-            } else if (sif && (sif->if_type == intf::IF_TYPE_ENIC)) {
+            } else if (ctx.sif() && (ctx.sif()->if_type == intf::IF_TYPE_ENIC)) {
                 // The flow is the proxy flow towards the uplink. Use the
                 // qos-class of the src lif
                 qos_class = tx_qos_class;
             }
         } else {
-            if (dif && (dif->if_type == intf::IF_TYPE_ENIC)) {
+            if (ctx.dif() && (ctx.dif()->if_type == intf::IF_TYPE_ENIC)) {
                 // The flow is towards the host
                 // Use the host rx class
                 qos_class = rx_qos_class;
-            } else if (sif && (sif->if_type == intf::IF_TYPE_ENIC)) {
+            } else if (ctx.sif() && (ctx.sif()->if_type == intf::IF_TYPE_ENIC)) {
                 // The flow is coming from host towards the p4plus.
                 // Use the proxy classes
                 if (tx_qos_class && tx_qos_class->no_drop) {
@@ -74,10 +73,10 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
                     qos_group = hal::QOS_GROUP_TX_PROXY_DROP;
                 }
                 qos_class = find_qos_class_by_group(qos_group);
-            }
+            } 
         }
     } else {
-        if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
+        if (ctx.dif() && ctx.dif()->if_type == intf::IF_TYPE_ENIC) {
             // The flow is towards the host
             // Use the host rx class
             qos_class = rx_qos_class;
@@ -93,7 +92,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
         pd::pd_qos_class_get_qos_class_id_args_t args;
         pd::pd_func_args_t pd_func_args = {0};
         args.qos_class = qos_class;
-        args.dest_if = dif;
+        args.dest_if = ctx.dif();
         args.qos_class_id = &qos_class_id;
         pd_func_args.pd_qos_class_get_qos_class_id = &args;
         ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_QOS_CLASSID, &pd_func_args);
@@ -101,7 +100,7 @@ update_flow_from_qos_spec(fte::ctx_t& ctx)
         if (ret != HAL_RET_OK) {
             return ret;
         }
-        HAL_TRACE_VERBOSE("qos_class_en {} qos_class {} qos_class_id {}",
+        HAL_TRACE_DEBUG("qos_class_en {} qos_class {} qos_class_id {}",
                           qos_class_en, qos_class->key, qos_class_id);
     }
 

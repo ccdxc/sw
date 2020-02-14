@@ -389,6 +389,11 @@ public:
     void set_policy_mode(PolicyMode policy_mode) { policy_mode_ = policy_mode; }
     PolicyMode policy_mode(void) { return policy_mode_; }
 
+    bool is_microseg_enabled(void) { return (fwd_mode_ == sys::FWD_MODE_MICROSEG); }
+    bool is_policy_enforced(void) { return (policy_mode_ == sys::POLICY_MODE_ENFORCE); }
+    bool is_flow_aware(void)      { return (policy_mode_ == sys::POLICY_MODE_FLOW_AWARE); }
+    bool is_base_net(void)        { return (policy_mode_ == sys::POLICY_MODE_BASE_NET); }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -488,7 +493,7 @@ private:
     void         *fte_stats_;
 
     // vmotion object
-    vmotion *vmotion_;
+    vmotion      *vmotion_;
 
     // Unified Modes
     ForwardMode   fwd_mode_;
@@ -862,6 +867,11 @@ public:
 
     void set_policy_mode(PolicyMode policy_mode) { oper_db_->set_policy_mode(policy_mode); }
     PolicyMode policy_mode(void) { return oper_db_->policy_mode(); }
+
+    bool is_microseg_enabled(void) { return oper_db_->is_microseg_enabled(); }
+    bool is_policy_enforced(void) { return oper_db_->is_policy_enforced(); }
+    bool is_flow_aware(void) { return oper_db_->is_flow_aware(); }
+    bool is_base_net(void) { return oper_db_->is_base_net(); }
 
 private:
     // following come from shared memory or non-linux HBM memory

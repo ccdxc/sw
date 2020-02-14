@@ -140,13 +140,18 @@ protected:
     virtual void TearDown() { }
 
     // Will be called at the beginning of all test cases in this class
-    static void SetUpTestCase(std::string c_file="hal.json") {
+    static void SetUpTestCase(std::string c_file="hal.json", 
+                sys::ForwardMode fwdmode=sys::FWD_MODE_MICROSEG, 
+                sys::PolicyMode policymode=sys::POLICY_MODE_ENFORCE) {
         hal_ret_t                   ret;
         DeviceRequest               nic_req;
         DeviceResponseMsg           nic_rsp;
- 
+
         hal_base_test::SetUpTestCase(false, c_file);
         sleep(1);
+
+        hal::g_hal_state->set_fwd_mode(fwdmode);
+        hal::g_hal_state->set_policy_mode(policymode);
 
         // Set device mode as Smart switch
         nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_SWITCH);

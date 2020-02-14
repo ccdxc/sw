@@ -559,8 +559,7 @@ system_get (const SystemGetRequest *req, SystemResponse *rsp)
     //unlock the cfg_db as fte dont need it, if needed fte has to take the lock again
     hal::hal_cfg_db_close();
 
-    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
+    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
 
         if ((req_type == sys::SYSTEM_GET_FTE_STATS) ||
             (req_type == sys::SYSTEM_GET_ALL_STATS)) {

@@ -382,11 +382,9 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 
     HAL_TRACE_INFO("Starting FTE instance");
     HAL_TRACE_FLUSH();
-    if (hal_cfg->device_cfg.forwarding_mode != hal::HAL_FORWARDING_MODE_CLASSIC) {
-        if (hal::is_platform_type_hw() && !getenv("DISABLE_FWLOG")) {
-            logger_ = ipc_logger::factory();
-            SDK_ASSERT(logger_);
-        }
+    if (hal::is_platform_type_hw() && !getenv("DISABLE_FWLOG")) {
+       logger_ = ipc_logger::factory();
+       SDK_ASSERT(logger_);
     }
 
     /*
@@ -988,7 +986,15 @@ void inst_t::process_arq_new ()
                 drop_pkt = true;
                 ctx_->set_drop();
             }
-            if ((drop_pkt == false) && hal::g_session_stats &&
+
+            if (hal::g_hal_state->is_base_net()) {
+                HAL_TRACE_ERR("FTE should not receive any pkts in Base Net.");
+                drop_pkt = true;
+                ctx_->set_drop();
+                continue;
+            }
+
+            if ((drop_pkt == false) && hal::g_session_stats && 
                 hal::g_session_stats[id_].total_active_sessions >= max_sessions_) {
                 drop_pkt = true;
                 stats_.fte_hbm_stats->qstats.max_session_drop_pkts++;
@@ -1206,29 +1212,6 @@ fte_stats_get (uint8_t fte_id, bool clear_on_read)
 done:
     return fn_ctx.fte_stats;
 }
-
-#if 0
-fte_stats_t& fte_stats_t::operator+=(const fte_stats_t& rhs) {
-    cps += rhs.cps;
-    flow_miss_pkts += rhs.flow_miss_pkts;
-    redirect_pkts += rhs.redirect_pkts;
-    cflow_pkts += rhs.cflow_pkts;
-    tcp_close_pkts += rhs.tcp_close_pkts;
-    softq_req += rhs.softq_req;
-    queued_tx_pkts += rhs.queued_tx_pkts;
-    for (uint8_t idx=0; idx<HAL_RET_ERR; idx++)
-        fte_errors[idx] += rhs.fte_errors[idx];
-    for (uint8_t idx=0; idx<get_num_features(); idx++) {
-        feature_stats[idx].drop_pkts += \
-                                  rhs.feature_stats[idx].drop_pkts;
-        for (uint8_t rc=0; rc<HAL_RET_ERR; rc++)
-            feature_stats[idx].drop_reason[rc] += \
-                                            rhs.feature_stats[idx].drop_reason[rc];
-    }
-
-    return *this;
-}
-#endif
 
 std::ostream& operator<<(std::ostream& os, const fte_stats_t& val)
 {

@@ -755,7 +755,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 
     response->mutable_status()->set_session_handle(session->hal_handle);
     response->mutable_status()->set_session_syncing(session->syncing_session);
-    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
+    response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id((vrf)?vrf->vrf_id:0);
     response->mutable_spec()->set_conn_track_en(session->conn_track_en);
 
     flow_to_flow_resp(session->iflow,
@@ -2494,10 +2494,10 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->tcp_cxntrack_timer = NULL;
 
     vrf = vrf_lookup_by_handle(args->vrf_handle);
-    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
+    //SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
 
     // fetch the security profile, if any
-    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof =
             find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     } else {
@@ -2641,10 +2641,10 @@ session_update(const session_args_t *args, session_t *session)
     HAL_TRACE_VERBOSE("Updating session {:p} VRF: {}", (void *)session, args->vrf_handle);
 
     vrf = vrf_lookup_by_handle(args->vrf_handle);
-    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
+    //SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
 
     // fetch the security profile, if any
-    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     }
 
@@ -3363,13 +3363,15 @@ session_age_cb (void *entry, void *ctxt)
 	    HAL_TRACE_VERBOSE("Aged session: {}", session->iflow->config.key);
 #endif
         /*
+         *  Send out TCP tickles only if connection tracking is enabled
+         *
          *  Send out TCP tickle if it is a TCP session and start a timer for 2
          *  seconds. We send 3 tickles (keepalives) before we send out TCP RST
          *  and proceed to delete the session
          */
-        if ((session->iflow->config.key.proto == IPPROTO_TCP) &&
+        if (session->conn_track_en && ((session->iflow->config.key.proto == IPPROTO_TCP) &&
             (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED ||
-             session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)) {
+             session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED))) {
             tklectx = (tcptkle_timer_ctx_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                                                      sizeof(tcptkle_timer_ctx_t));
             SDK_ASSERT_RETURN((tklectx != NULL), false);

@@ -168,6 +168,7 @@ end:
     return ret;
 }
 
+#if 0
 static hal_ret_t
 telemetry_pick_dest_if (fte::ctx_t &ctx)
 {
@@ -216,6 +217,7 @@ telemetry_pick_dest_if (fte::ctx_t &ctx)
 
     return ret;
 }
+#endif
 
 fte::pipeline_action_t
 telemetry_exec_delete (fte::ctx_t &ctx)
@@ -321,7 +323,9 @@ telemetry_exec (fte::ctx_t &ctx)
         ctx.set_valid_rflow(false);
         ctx.set_is_ipfix_flow(true);
         ctx.register_completion_handler(telemetry_completion_hdlr);
+#if 0
         telemetry_pick_dest_if(ctx);
+#endif
         ret = ctx.update_flow(ipfix_upd);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error updating flow policy action!");

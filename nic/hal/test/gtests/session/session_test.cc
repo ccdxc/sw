@@ -67,6 +67,8 @@ protected:
   static void SetUpTestCase() {
     hal_base_test::SetUpTestCase(false);
     hal_test_utils_slab_disable_delete();
+    hal::g_hal_state->set_fwd_mode(sys::FWD_MODE_MICROSEG);
+    hal::g_hal_state->set_policy_mode(sys::POLICY_MODE_ENFORCE);
   }
 
 };
@@ -1947,6 +1949,107 @@ TEST_F(session_test, test11)
     hal::session_delete_all(&delrsp);
     hal::hal_cfg_db_close();
 }
+
+// ----------------------------------------------------------------------------
+// Creating a session
+// ----------------------------------------------------------------------------
+TEST_F(session_test, test12)
+{
+    hal_ret_t                   ret;
+    VrfSpec                  ten_spec;
+    VrfResponse              ten_rsp;
+    L2SegmentSpec               l2seg_spec;
+    L2SegmentResponse           l2seg_rsp;
+    InterfaceSpec               up_spec;
+    InterfaceResponse           up_rsp;
+    SessionSpec                 sess_spec;
+    SessionResponse             sess_rsp;
+    NetworkSpec                 nw_spec, nw_spec1;
+    NetworkResponse             nw_rsp, nw_rsp1;
+    ::google::protobuf::uint32  ip1 = 0x0a000003;
+    ::google::protobuf::uint32  ip2 = 0x0a000004;
+    NetworkKeyHandle                *nkh = NULL;
+
+    // Switch mode to transparent
+    hal::g_hal_state->set_fwd_mode(sys::FWD_MODE_TRANSPARENT);
+    hal::g_hal_state->set_policy_mode(sys::POLICY_MODE_FLOW_AWARE);
+
+    // Create vrf
+    ten_spec.mutable_key_or_handle()->set_vrf_id(1003);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(ten_spec, &ten_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create network
+    nw_spec.set_rmac(0x0000DEADBEEE);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(24);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0a000000);
+    nw_spec.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1003);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec, &nw_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t nw_hdl = nw_rsp.mutable_status()->mutable_key_or_handle()->nw_handle();
+
+    nw_spec1.set_rmac(0x0000DEADBEEF);
+    nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->set_prefix_len(24);
+    nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_ip_af(types::IP_AF_INET);
+    nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_ip_prefix()->mutable_address()->set_v4_addr(0x0b000000);
+    nw_spec1.mutable_key_or_handle()->mutable_nw_key()->mutable_vrf_key_handle()->set_vrf_id(1003);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::network_create(nw_spec1, &nw_rsp1);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create L2 Segment
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(1003);
+    nkh = l2seg_spec.add_network_key_handle();
+    nkh->set_nw_handle(nw_hdl);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(1004);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(11);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
+    hal::hal_cfg_db_close();
+
+    // Create Session
+    sess_spec.mutable_vrf_key_handle()->set_vrf_id(1003);
+    sess_spec.set_session_id(1005);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip1);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip2);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_tcp_udp()->set_sport(1000);
+    sess_spec.mutable_initiator_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_tcp_udp()->set_dport(2000);
+    sess_spec.mutable_initiator_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_sip(ip2);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->mutable_v4_key()->set_dip(ip1);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v4_key()->set_ip_proto(types::IPPROTO_TCP);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_tcp_udp()->set_sport(2000);
+    sess_spec.mutable_responder_flow()->mutable_flow_key()->
+        mutable_v4_key()->mutable_tcp_udp()->set_dport(1000);
+    sess_spec.mutable_responder_flow()->mutable_flow_data()->
+        mutable_flow_info()->set_flow_action(session::FLOW_ACTION_ALLOW);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = fte::session_create(sess_spec, &sess_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    uint64_t sess_hdl = sess_rsp.mutable_status()->session_handle();
+    ret = fte::session_update_async(hal::find_session_by_handle(sess_hdl),
+                                   (1 << fte::feature_id("pensando.io/network:fwding")));
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    HAL_TRACE_DEBUG("Session Handle: {}", sess_hdl);
+} 
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -322,11 +322,8 @@ hal_init (hal_cfg_t *hal_cfg)
     // notify sysmgr that we are up
     //svc::hal_init_done();
     if (!getenv("DISABLE_FTE")) {
-        if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
-            // starting fte thread for fte-span
-            tid = HAL_THREAD_ID_FTE_MIN;
-            hal_thread_start(tid, hal_thread_get(tid));
-        } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+        if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+            HAL_TRACE_DEBUG("Number of IPC instances: {}", hal_cfg->num_data_cores);
             // set the number of instances as read from config
             // Number of instances is equal to number of data cores == 1.
             ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
@@ -345,6 +342,11 @@ hal_init (hal_cfg_t *hal_cfg)
     } else {
         // FTE disabled
         fte::disable_fte();
+    }
+
+    if (getenv("MICROSEG_ENABLE")) {
+        g_hal_state->set_fwd_mode(sys::FWD_MODE_MICROSEG);
+        g_hal_state->set_policy_mode(sys::POLICY_MODE_ENFORCE);
     }
 
     // vmotion thread init

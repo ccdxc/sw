@@ -9,13 +9,8 @@
             "auto_load" : "true",
             "deps"      : [],
             "features"  : [
-                "stage-marker",
-                "fwding",
-                "fwding-pre-stage",
-                "tunnel",
-                "qos",
-                "rdma",
-                "ingress-checks"
+                "ingress-checks",
+                "qos"
             ]
         },
         {
@@ -239,7 +234,7 @@
     "pipelines": [
         {
             "name": "flow-miss",
-            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "selector": { "fwd_mode": "FWD_MODE_MICROSEG", "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
             "outbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
@@ -301,10 +296,33 @@
            ]
         },
         {
+            "name": "flow-miss-transparent",
+            "selector": { "fwd_mode": "FWD_MODE_TRANSPARENT", "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "outbound_features": [
+                "pensando.io/telemetry:telemetry",
+                "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
+                "pensando.io/sfw:alg_ftp",
+                "pensando.io/sfw:alg_tftp",
+                "pensando.io/sfw:alg_dns",
+                "pensando.io/sfw:alg_rpc",
+                "pensando.io/sfw:alg_rtsp"
+            ],
+            "inbound_features": [
+                "pensando.io/telemetry:telemetry",
+                "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
+                "pensando.io/sfw:alg_ftp",
+                "pensando.io/sfw:alg_tftp",
+                "pensando.io/sfw:alg_dns",
+                "pensando.io/sfw:alg_rpc",
+                "pensando.io/sfw:alg_rtsp"
+           ]
+        },
+        {
             "name": "tcp-close",
             "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
             "outbound_features": [
-                 "pensando.io/dol:test",
                  "pensando.io/sfw:conntrack"
             ]
         },

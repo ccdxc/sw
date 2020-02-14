@@ -495,9 +495,10 @@ message MicroSegUpdateResponseMsg {
 
 // Forwarding Mode
 enum ForwardMode {
-  FWD_MODE_NONE           = 0;
-  FWD_MODE_TRANSPARENT    = 1;
-  FWD_MODE_MICROSEG       = 2;
+    FWD_MODE_NONE           = 0;
+    FWD_MODE_TRANSPARENT    = 1;
+    FWD_MODE_MICROSEG       = 2;
+    FWD_MODE_ANY            = 3;
 }
 
 // Policy Mode

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "nic/include/base.hpp"
+#include "gen/proto/system.pb.h"
 
 namespace fte {
 
@@ -27,6 +28,7 @@ inline bool operator==(const lifqid_t& lifq1, const lifqid_t& lifq2)
 
 //  FTE Pipeline
 hal_ret_t register_pipeline(const std::string& name,
+                            const sys::ForwardMode fwdmode,
                             lifqid_t& lifq,
                             const std::string& lif,
                             const std::string& qid,

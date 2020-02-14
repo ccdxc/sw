@@ -370,6 +370,8 @@ def run_hal(args):
         os.environ["DISABLE_AGING"] = "1"
     if args.nicmgr_gtest:
         os.environ["DISABLE_NICMGR_HAL_THREAD"] = "1"
+    if args.microseg_enable:
+       os.environ["MICROSEG_ENABLE"] = "1"
 
     #hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(nic_dir)
@@ -1401,6 +1403,8 @@ def main():
                         help="Skip cleanup during shut down")
     parser.add_argument("--enable-aging", dest='enable_aging', action="store_true",
                         help="Enable aging in HAL")
+    parser.add_argument("--microseg-enable", dest='microseg_enable', action="store_true",
+                        help="Enable microseg mode in HAL")
 
     args = parser.parse_args()
 

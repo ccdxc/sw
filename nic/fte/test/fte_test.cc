@@ -90,15 +90,15 @@ TEST_F(fte_test, register_pipeline) {
     lifqid_t lifq = {1,1,1};
     add_feature("f1");
     vector<string> features {"f1"};
-    auto rc = register_pipeline("p1", lifq, "1", "1", features);
+    auto rc = register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "1", "1", features);
     EXPECT_EQ(rc, HAL_RET_OK);
 }
 
 // register duplicate pipeline
 TEST_F(fte_test, register_pipeline_dup) {
     lifqid_t lifq = {1,1,1};
-    auto rc = register_pipeline("p1", lifq, "1", "1", {});
-    rc = register_pipeline("p2", lifq, "1", "1", {});
+    auto rc = register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "1", "1", {});
+    rc = register_pipeline("p2", sys::FWD_MODE_ANY, lifq, "1", "1", {});
     EXPECT_EQ(rc, HAL_RET_ENTRY_EXISTS);
 }
 
@@ -107,7 +107,7 @@ TEST_F(fte_test, register_pipeline_unk) {
     lifqid_t lifq = {1,1,1};
     add_feature( "f1");
     vector<string> features {"f1", "f2"};
-    auto rc = register_pipeline("p1", lifq, "1", "1", features);
+    auto rc = register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "1", "1", features);
     //EXPECT_EQ(rc, HAL_RET_INVALID_ARG);
     EXPECT_EQ(rc, HAL_RET_OK);
 }
@@ -122,10 +122,10 @@ TEST_F(fte_test, execute_pipeline) {
 
     vector<string> features {"f1", "f2", "f3"};
     lifqid_t lifq = {SERVICE_LIF_TCP_PROXY,1,1};
-    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
+    register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
     features = {"f1","f3"};
     lifq = {SERVICE_LIF_TCP_PROXY,1,2};
-    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
+    register_pipeline("p2", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     ctx_t ctx = {};
 
@@ -164,7 +164,7 @@ TEST_F(fte_test, execute_pipeline_end) {
 
     vector<string> features{"f1", "f2", "f4", "f3"};
     lifqid_t lifq = {SERVICE_LIF_TLS_PROXY,1,1};
-    register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
+    register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
     ctx_t ctx = {};
     ctx.set_arm_lifq({SERVICE_LIF_TLS_PROXY,1,1});
@@ -185,7 +185,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
     // p1 - run f1
     lifqid_t lifq = {SERVICE_LIF_TCP_PROXY,1,1}; 
     vector<string> features{"f1"};
-    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
+    register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - run f2 and goto p1
     add_feature("restart-p1");
@@ -195,7 +195,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
         });
     features = {"f2", "restart-p1"};
     lifq = {SERVICE_LIF_TCP_PROXY,1,2};
-    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
+    register_pipeline("p2", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "2", features);
 
     // p3 - run f3 and goto p2
     add_feature("restart-p2");
@@ -205,7 +205,7 @@ TEST_F(fte_test, execute_pipeline_restart) {
         });
     features = {"f3", "restart-p2"};
     lifq = {SERVICE_LIF_TCP_PROXY,1,3};
-    register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "3", features);
+    register_pipeline("p3", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "3", features);
 
     // execute p3
     ctx_t ctx={};
@@ -231,22 +231,22 @@ TEST_F(fte_test, execute_pipeline_wildcard) {
     // p1 - {1, 1, 1} f1
     features = {"f1"};
     lifqid_t lifq = {SERVICE_LIF_TCP_PROXY,1,1};
-    register_pipeline("p1", lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
+    register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "1", features);
 
     // p2 - {1, 1, *} f2
     features = {"f2"};
     lifq = {SERVICE_LIF_TCP_PROXY,1,0};
-    register_pipeline("p2", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0x7, 0});
+    register_pipeline("p2", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0x7, 0});
 
     // p3 - {1, *, *} f3
     features = {"f3"};
     lifq = {SERVICE_LIF_TCP_PROXY,0,0};
-    register_pipeline("p3", lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0, 0});
+    register_pipeline("p3", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TCP_PROXY", "0", features, {}, {0x7FF, 0, 0});
 
     // p4 - {*, *, *} f4
     features  = {"f4"};
     lifq = {SERVICE_LIF_TCP_PROXY,0,0};
-    register_pipeline("p4", lifq, "", "0", features, {}, {0, 0, 0});
+    register_pipeline("p4", sys::FWD_MODE_ANY, lifq, "", "0", features, {}, {0, 0, 0});
 
     ctx_t ctx={};
 
@@ -311,7 +311,7 @@ TEST_F(fte_test, ctx_state) {
 
     vector<string> features{"f1", "f2"};
     lifqid_t  lifq = {SERVICE_LIF_TLS_PROXY,1,1};
-    register_pipeline("p1", lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
+    register_pipeline("p1", sys::FWD_MODE_ANY, lifq, "SERVICE_LIF_TLS_PROXY", "1", features);
 
 
     uint16_t num_features;

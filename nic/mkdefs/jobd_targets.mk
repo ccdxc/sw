@@ -37,7 +37,7 @@ jobd/dol/fte: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/fte2
 jobd/dol/fte2: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte2 --lite
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte2 --lite --microseg-enable
 
 .PHONY: jobd/dol/ftevxlan
 jobd/dol/ftevxlan: ${JOBD_PREREQS}
@@ -53,11 +53,11 @@ jobd/dol/norm: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/eth
 jobd/dol/eth: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo eth --feature eth
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo eth --feature eth --microseg-enable
 
 .PHONY: jobd/dol/acl
 jobd/dol/acl: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo acl --feature acl
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo acl --feature acl --microseg-enable
 
 .PHONY: jobd/dol/proxy
 jobd/dol/proxy: ${JOBD_PREREQS}
@@ -89,7 +89,7 @@ jobd/dol/firewall: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/pin
 jobd/dol/pin: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte2,hostpin --hostpin --lite
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte2,hostpin --hostpin --lite --microseg-enable
 	#${NICDIR}/run.py ${COVERAGE_OPTS} --topo fte --feature fte,fte2,ftevxlan,hpvxlan,hostpin --hostpin --lite
 
 .PHONY: jobd/dol/multicast
@@ -110,7 +110,7 @@ jobd/dol/dos: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/recirc
 jobd/dol/recirc: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo recirc --feature recirc
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo recirc --feature recirc --microseg-enable
 
 .PHONY: jobd/dol/classic
 jobd/dol/classic: ${JOBD_PREREQS}

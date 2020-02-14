@@ -77,7 +77,7 @@ update_rewrite_info(fte::ctx_t&ctx)
     if ((ctx.sl2seg() == ctx.dl2seg())  && (ctx.l3_tunnel_flow() == TRUE)) {
         HAL_TRACE_DEBUG("l3-tunnel flow always route");
         dmac = hal::ep_get_mac_addr(ctx.dep());
-        smac = hal::is_forwarding_mode_host_pinned() ? hal::ep_get_mac_addr(ctx.sep()) : hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
+        smac = hal::ep_get_mac_addr(ctx.sep());
 
         flowupd.header_rewrite.flags.dec_ttl = true;
         if (MAC_TO_UINT64(*dmac) != 0) {
@@ -232,8 +232,7 @@ update_flow(fte::ctx_t&ctx)
     // solicitation to be dropped because it
     // runs in smart swithc. Hence the check
     if (is_broadcast(ctx) ||
-        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
-         is_multicast_dmac(ctx))) {
+         is_multicast_dmac(ctx)) {
         HAL_TRACE_DEBUG("Ignore session create");
         ctx.set_ignore_session_create(true);
         ret = HAL_RET_OK;

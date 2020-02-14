@@ -117,9 +117,8 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
     }
     session->deleting = 1;
 
-    HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} in Vrf id {} force_delete: {}",
-                    session->hal_handle,
-                    (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id, force_delete);
+    HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} force_delete: {}",
+                    session->hal_handle, force_delete);
 
     HAL_TRACE_VERBOSE("num features: {} feature state size: {}", num_features, fstate_size);
 
@@ -203,9 +202,8 @@ session_update_in_fte (hal_handle_t session_handle, uint64_t featureid_bitmap)
         return HAL_RET_OK;
     }
 
-    HAL_TRACE_DEBUG("fte:: Received session update for session id {} in Vrf id {}",
-                    session->hal_handle,
-                    (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
+    HAL_TRACE_DEBUG("fte:: Received session update for session id {}",
+                    session->hal_handle);
 
     HAL_TRACE_VERBOSE("feature_bitmap: {} num features: {} feature state size: {}", featureid_bitmap, num_features, fstate_size);
 
@@ -386,9 +384,8 @@ session_get (hal::session_t *session, SessionGetResponse *response)
     flow_t           iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
 
     HAL_TRACE_VERBOSE("--------------------- API Start ------------------------");
-    HAL_TRACE_VERBOSE("fte:: Session handle {} Get in Vrf id {}",
-                     session->hal_handle,
-                     (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
+    HAL_TRACE_VERBOSE("fte:: Session handle {} Get",
+                     session->hal_handle);
 
     feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
     if (!feature_state) {

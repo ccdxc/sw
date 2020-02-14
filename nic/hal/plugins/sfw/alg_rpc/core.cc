@@ -364,7 +364,7 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     sfw_info_t                   *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t              *l4_sess = NULL;
 
-    if (ctx.protobuf_request()) {
+    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
 

@@ -731,7 +731,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                                    (sfw_info_t*)ctx.feature_state(\
                                       FTE_FEATURE_SFW);
 
-    if (ctx.protobuf_request()) {
+    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
 

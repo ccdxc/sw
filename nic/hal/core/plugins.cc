@@ -89,6 +89,7 @@ struct pipeline_t {
     bool wildcard_qid;
     uint32_t qtype_mask;
     fte::lifqid_t lifq;    // get rid of this
+    sys::ForwardMode fwdmode; 
     std::string   lif;
     std::string   qid;
     std::vector<std::string> outbound_features;
@@ -100,6 +101,7 @@ struct pipeline_t {
 std::ostream& operator<<(std::ostream& os, const pipeline_t& val)
 {
     os << "{ name=" << val.name;
+    os << ", forward mode=" << val.fwdmode;
     os << ", wildcard_qid=" << val.wildcard_qid;
     os << ", qtype_mask=" << val.qtype_mask;
     os << ", lifq=" << val.lifq;
@@ -223,6 +225,17 @@ void plugin_manager_t::parse_plugins(const pt::ptree &tree,
     }
 }
 
+sys::ForwardMode 
+plugin_manager_t::parse_fwdmode_string_to_enum(const std::string& fwdmode)
+{
+   if (sys::ForwardMode_Name(sys::FWD_MODE_TRANSPARENT) == fwdmode) {
+       return sys::FWD_MODE_TRANSPARENT;
+   } else if (sys::ForwardMode_Name(sys::FWD_MODE_MICROSEG) == fwdmode) {
+       return sys::FWD_MODE_MICROSEG;
+   } else {
+       return sys::FWD_MODE_NONE;
+   }
+}
 
 //------------------------------------------------------------------------------
 // Parse pipeline info
@@ -237,6 +250,12 @@ bool plugin_manager_t::parse_pipeline(const pt::ptree &tree, pipeline_t *pipelin
     }
 
     // parse selector
+    if (auto fwdmode = tree.get_optional<std::string>("selector.fwd_mode")) {
+        pipeline->fwdmode = parse_fwdmode_string_to_enum(*fwdmode);
+    } else {
+        pipeline->fwdmode = sys::FWD_MODE_ANY;
+    }
+
     if (auto lif = tree.get_optional<std::string>("selector.lif")) {
         pipeline->lif = *lif;
     } else  {
@@ -329,7 +348,7 @@ void plugin_manager_t::register_pipeline(pipeline_t *pipeline)
     if (pipeline->qtype_mask) {
         mask.qtype = pipeline->qtype_mask;
     }
-    fte::register_pipeline(pipeline->name, pipeline->lifq,
+    fte::register_pipeline(pipeline->name, pipeline->fwdmode, pipeline->lifq,
                            pipeline->lif, pipeline->qid,
                            pipeline->outbound_features,
                            pipeline->inbound_features,

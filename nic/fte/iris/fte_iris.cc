@@ -59,9 +59,8 @@ ctx_t::extract_flow_key()
     SDK_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
 
     key_.dir = cpu_rxhdr_->lkp_dir;
-
-    flow_lkupid_ = cpu_rxhdr_->lkp_vrf;
-    args.flow_lkupid = flow_lkupid_;
+    key_.lkpvrf = cpu_rxhdr_->lkp_vrf;
+    args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
     pd_func_args.pd_get_object_from_flow_lkupid = &args;
@@ -71,15 +70,11 @@ ctx_t::extract_flow_key()
         return HAL_RET_L2SEG_NOT_FOUND;
     }
 
-    key_.lkpvrf = flow_lkupid_;
     if (obj_id == hal::HAL_OBJ_ID_L2SEG) {
         sl2seg_ = (hal::l2seg_t *)obj;
-        svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
-        key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
     } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
         SDK_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
         use_vrf_ = svrf_ = (hal::vrf_t *)obj;
-        key_.svrf_id = key_.dvrf_id  = svrf_->vrf_id;
     } else {
         HAL_TRACE_ERR("fte: Invalid obj id: {}", obj_id);
         return HAL_RET_ERR;
@@ -163,17 +158,18 @@ ctx_t::extract_flow_key()
     return HAL_RET_OK;
 }
 
-//------------------------------------------------------------------------------
-// Lookup teannt/ep/if/l2seg from flow lookup key
-//------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::lookup_flow_objs()
+ctx_t::lookup_flow_objs (void)
 {
     ether_header_t *ethhdr = NULL;
-    hal::pd::pd_func_args_t  pd_func_args = {0};
-    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t l2seg_args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
 
-    if (svrf_ == NULL && dvrf_ == NULL) {
+    // Derive the objects for flow-miss
+    if (sl2seg_ != NULL) {
+        svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
+        key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
+    } else {
         HAL_TRACE_VERBOSE("Looking up vrf for id: {}", key_.svrf_id);
         svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
         if (svrf_ == NULL) {
@@ -206,21 +202,7 @@ ctx_t::lookup_flow_objs()
             HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
                               dep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
         }
-    } else if (existing_session()) {
-        sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
-                                      session_->iflow->config.l2_info.smac);
-        dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
-                                      session_->iflow->config.l2_info.dmac);
-
-        HAL_TRACE_VERBOSE("L2 lookup sep: {} dep: {} seg_id:{} smac: {} dmac:{}",
-                          (sep_ != NULL) ? "found" : "not found",
-                          (dep_ != NULL) ? "found" : "not found",
-                          session_->iflow->config.l2_info.l2seg_id,
-                          macaddr2str(session_->iflow->config.l2_info.smac),
-                          macaddr2str(session_->iflow->config.l2_info.dmac));
-    } 
-
-    if (protobuf_request() && sess_status_) {
+    } else if (protobuf_request() && sess_status_) {
         l2seg_id_t l2seg_id = sess_status_->l2seg_id();
         sl2seg_ = hal::find_l2seg_by_id(l2seg_id);
         mac_addr_t smac = {0};
@@ -238,10 +220,24 @@ ctx_t::lookup_flow_objs()
             HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
                               dep_->hal_handle, l2seg_id, macaddr2str(dep_->l2_key.mac_addr));
         }
-    }
 
-    if ((sep_ == NULL || dep_ == NULL) && 
-        hal::is_platform_type_sim()) {
+        key_.lkpvrf = sess_status_->lookup_vrf();
+        HAL_TRACE_VERBOSE("Session Status Lookup vrf {}", key_.lkpvrf);
+    } else if (existing_session()) {
+        sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+                                      session_->iflow->config.l2_info.smac);
+        dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+                                      session_->iflow->config.l2_info.dmac);
+
+        HAL_TRACE_VERBOSE("L2 lookup sep: {} dep: {} seg_id:{} smac: {} dmac:{}",
+                          (sep_ != NULL) ? "found" : "not found",
+                          (dep_ != NULL) ? "found" : "not found",
+                          session_->iflow->config.l2_info.l2seg_id,
+                          macaddr2str(session_->iflow->config.l2_info.smac),
+                          macaddr2str(session_->iflow->config.l2_info.dmac));
+    } 
+
+    if (hal::is_platform_type_sim() && (sep_ == NULL || dep_ == NULL)) {
         hal::ep_t *sep = NULL, *dep = NULL;
 
         //Lookup src and dest EPs
@@ -249,9 +245,10 @@ ctx_t::lookup_flow_objs()
         if (sep_ == NULL) sep_ = sep;
         if (dep_ == NULL) dep_ = dep;
 
-        HAL_TRACE_VERBOSE("L3 lookup sep: {} dep: {}", (sep_ != NULL)?"found":"not found", 
+        HAL_TRACE_VERBOSE("L3 lookup sep: {} dep: {}", (sep_ != NULL)?"found":"not found",
                         (dep_ != NULL)?"found":"not found");
     }
+
     if (sep_) {
         sep_handle_ = sep_->hal_handle;
         if (protobuf_request()) {
@@ -265,11 +262,10 @@ ctx_t::lookup_flow_objs()
             SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
         sif_ = hal::find_if_by_handle(sep_->if_handle);
-        SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+        SDK_ASSERT_RETURN(sif_, HAL_RET_IF_NOT_FOUND);
     }
 
     if (dep_) {
-        dep_handle_ = dep_->hal_handle;
         if (sep_ && dep_->l2seg_handle == sep_->l2seg_handle) {
             dl2seg_ = sl2seg_;
         } else {
@@ -284,7 +280,7 @@ ctx_t::lookup_flow_objs()
              hal::lif_t *dlif = if_get_lif(dif_);
              if (dlif == NULL) {
                  /* Ignore the lookup as we don't know the lif yet */
-                 HAL_TRACE_VERBOSE("fte: dest lif not found or discovered yet.");
+                 HAL_TRACE_DEBUG("fte: dest lif not found or discovered yet.");
              }
         }
     } else {
@@ -297,16 +293,13 @@ ctx_t::lookup_flow_objs()
         }
     }
 
-    if (sess_status_) {
-        key_.lkpvrf = sess_status_->lookup_vrf();
-        HAL_TRACE_VERBOSE("Session Status Lookup vrf {}", key_.lkpvrf);
-    } else if (protobuf_request() || hal::is_platform_type_sim()) {
+    if (protobuf_request() || hal::is_platform_type_sim()) {
         HAL_TRACE_VERBOSE("Looking up flow lookup vrf sl2seg_: {:p}", (void *)sl2seg_);
         if (sl2seg_) {
-            args.l2seg = sl2seg_;
-            pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+            l2seg_args.l2seg = sl2seg_;
+            pd_func_args.pd_l2seg_get_flow_lkupid = &l2seg_args;
             hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-            key_.lkpvrf = args.hwid;
+            key_.lkpvrf = l2seg_args.hwid;
         } else {
             hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
             vrf_args.vrf = svrf_;
@@ -316,14 +309,15 @@ ctx_t::lookup_flow_objs()
         }
         HAL_TRACE_VERBOSE("Lookup vrf {}", key_.lkpvrf);
     }
+
     rkey_.lkpvrf = key_.lkpvrf;
     if ((sl2seg_ != dl2seg_) && (dl2seg_ != NULL)) {
-        args.l2seg = dl2seg_;
-        pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+        l2seg_args.l2seg = dl2seg_;
+        pd_func_args.pd_l2seg_get_flow_lkupid = &l2seg_args;
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
-        rkey_.lkpvrf = args.hwid;
+        rkey_.lkpvrf = l2seg_args.hwid;
     }
-    HAL_TRACE_VERBOSE("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
+    HAL_TRACE_DEBUG("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
 
     return HAL_RET_OK;
 }
@@ -825,7 +819,7 @@ ctx_t::update_flow_table()
     } else {
         session_args.flow_hash   = 0;
     }
-    session_args.vrf_handle  = svrf_->hal_handle;
+    session_args.vrf_handle  = (svrf_)?svrf_->hal_handle:HAL_HANDLE_INVALID;
     session_args.sep_handle  = sep_handle_;
     session_args.dep_handle  = dep_handle_;
     session_args.sl2seg_handle = sl2seg_?sl2seg_->hal_handle:HAL_HANDLE_INVALID;
@@ -1002,12 +996,15 @@ ctx_t::update_for_snat(hal::flow_role_t role, const header_rewrite_info_t& heade
             key->svrf_id = header.ipv6.svrf_id;
         }
 
+#if TBD_WHAT_TODO
         svrf_ =  hal::vrf_lookup_by_id(key->svrf_id);
 
         if (svrf_ == NULL) {
             HAL_TRACE_ERR("SNAT vrf not found vrf={}", key->svrf_id);
             return HAL_RET_VRF_NOT_FOUND;
         }
+#endif
+
     }
 
     if (header.valid_flds.sip) {
@@ -1054,7 +1051,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    post_xmit_cb_t cb)
 {
     txpkt_info_t *pkt_info;
-    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
         HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
@@ -1068,6 +1064,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         pkt_info->cpu_header = *cpu_header;
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
+#ifdef TBD_WHAT_TODO 
         // change lif/vlan for uplink pkts
         // - Vxlan: P4 terminates vxlan and doesn't send outer headers to FTE. 
         //          So FTE can inject the same packet.
@@ -1101,6 +1098,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                 }
             }
         }
+#endif
     }
 
     pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;
@@ -1199,19 +1197,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         args.ring_number = pkt_info->ring_number;
         pd_func_args.pd_cpupkt_send = &args;
         ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
-#if 0
-        ret = hal::pd::cpupkt_send(arm_ctx,
-                                   pkt_info->wring_type,
-                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
-                                   fte_id() : pkt_info->lifq.qid,
-                                   &pkt_info->cpu_header,
-                                   &pkt_info->p4plus_header,
-                                   pkt_info->pkt, pkt_info->pkt_len,
-                                   pkt_info->lifq.lif, pkt_info->lifq.qtype,
-                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
-                                   fte_id() : pkt_info->lifq.qid,  pkt_info->ring_number);
-#endif
-
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
         }
@@ -1267,19 +1252,6 @@ ctx_t::send_queued_pkts_new (hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     pd_func_args.pd_cpupkt_send_new = &args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND_NEW, &pd_func_args);
-#if 0
-        ret = hal::pd::cpupkt_send(arm_ctx,
-                                   pkt_info->wring_type,
-                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
-                                   fte_id() : pkt_info->lifq.qid,
-                                   &pkt_info->cpu_header,
-                                   &pkt_info->p4plus_header,
-                                   pkt_info->pkt, pkt_info->pkt_len,
-                                   pkt_info->lifq.lif, pkt_info->lifq.qtype,
-                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
-                                   fte_id() : pkt_info->lifq.qid,  pkt_info->ring_number);
-#endif
-
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
     }
