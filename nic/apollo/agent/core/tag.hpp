@@ -9,20 +9,13 @@
 
 namespace core {
 
-typedef void (*tag_get_cb_t)(const pds_tag_info_t *spec, void *ctxt);
-
-typedef struct tag_db_cb_ctxt_s {
-    tag_get_cb_t cb;
-    void         *ctxt;
-} tag_db_cb_ctxt_t;
-
 sdk_ret_t tag_create(pds_obj_key_t *key, pds_tag_spec_t *spec,
                      pds_batch_ctxt_t bctxt);
 sdk_ret_t tag_update(pds_obj_key_t *key, pds_tag_spec_t *spec,
                      pds_batch_ctxt_t bctxt);
 sdk_ret_t tag_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
 sdk_ret_t tag_get(pds_obj_key_t *key, pds_tag_info_t *info);
-sdk_ret_t tag_get_all(tag_get_cb_t tag_get_cb, void *ctxt);
+sdk_ret_t tag_get_all(tag_read_cb_t tag_read_cb, void *ctxt);
 
 }    // namespace core
 

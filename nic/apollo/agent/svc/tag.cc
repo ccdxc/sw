@@ -15,7 +15,7 @@ TagSvcImpl::TagCreate(ServerContext *context,
                       pds::TagResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_tag_spec_t *api_spec;
+    pds_tag_spec_t api_spec;
     pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -40,24 +40,18 @@ TagSvcImpl::TagCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_tag_spec_t *)
-                    core::agent_state::state()->tag_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_tag_spec_t));
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = pds_tag_proto_to_api_spec(api_spec, request);
+        ret = pds_tag_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
-            core::agent_state::state()->tag_slab()->free(api_spec);
             goto end;
         }
-        ret = core::tag_create(&key, api_spec, bctxt);
+        ret = core::tag_create(&key, &api_spec, bctxt);
         // free the rules memory
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
-            api_spec->rules = NULL;
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -87,7 +81,7 @@ TagSvcImpl::TagUpdate(ServerContext *context,
                       pds::TagResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_tag_spec_t *api_spec;
+    pds_tag_spec_t api_spec;
     pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -112,24 +106,18 @@ TagSvcImpl::TagUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_tag_spec_t *)
-                    core::agent_state::state()->tag_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_tag_spec_t));
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = pds_tag_proto_to_api_spec(api_spec, request);
+        ret = pds_tag_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
-            core::agent_state::state()->tag_slab()->free(api_spec);
             goto end;
         }
-        ret = core::tag_update(&key, api_spec, bctxt);
+        ret = core::tag_update(&key, &api_spec, bctxt);
         // free the rules memory
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec->rules);
-            api_spec->rules = NULL;
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;

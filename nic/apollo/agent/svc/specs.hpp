@@ -1123,7 +1123,7 @@ pds_tag_api_stats_to_proto (const pds_tag_stats_t *api_stats,
 
 // populate proto buf from tag API info
 static inline void
-pds_tag_api_info_to_proto (const pds_tag_info_t *api_info, void *ctxt)
+pds_tag_api_info_to_proto (pds_tag_info_t *api_info, void *ctxt)
 {
     pds::TagGetResponse *proto_rsp = (pds::TagGetResponse *)ctxt;
     auto tag = proto_rsp->add_response();

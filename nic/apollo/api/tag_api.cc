@@ -72,6 +72,40 @@ pds_tag_read (_In_ pds_obj_key_t *key, _Out_ pds_tag_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_tag_read_args_s {
+    tag_read_cb_t cb;
+    void *ctxt;
+} pds_tag_read_args_t;
+
+bool
+pds_tag_info_from_entry (void *entry, void *ctxt)
+{
+    tag_entry *tag = (tag_entry *)entry;
+    pds_tag_read_args_t *args = (pds_tag_read_args_t *)ctxt;
+    pds_tag_info_t info;
+
+    memset(&info, 0, sizeof(pds_tag_info_t));
+
+    // call entry read
+    tag->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_tag_read_all (tag_read_cb_t tag_read_cb, void *ctxt)
+{
+    pds_tag_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = tag_read_cb;
+
+    return tag_db()->walk(pds_tag_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_tag_update (_In_ pds_tag_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {

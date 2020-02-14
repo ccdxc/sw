@@ -21,7 +21,7 @@
 #define PDS_MAX_TAG                 64       ///< Maximum tags
 #define PDS_MAX_PREFIX_PER_TAG      16383    ///< Maximum prefix per tag
 
-/// \brief tag policy rule
+/// \brief tag rule
 typedef struct pds_tag_rule_s {
     uint32_t       tag;             ///< tag value
     uint32_t       priority;        ///< priority of the rule (numerically
@@ -36,7 +36,7 @@ typedef struct pds_tag_spec_s    pds_tag_spec_t;
 struct pds_tag_spec_s {
     pds_obj_key_t     key;             ///< key
     uint8_t           af;              ///< address family - v4 or v6
-    uint32_t          num_rules;       ///< number of tag policy rules
+    uint32_t          num_rules;       ///< number of tag tag rules
     pds_tag_rule_t    *rules;          ///< metering rules
 
     // constructor
@@ -112,6 +112,14 @@ sdk_ret_t pds_tag_create(pds_tag_spec_t *spec,
 /// \param[out] info tag information
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_tag_read(pds_obj_key_t *key, pds_tag_info_t *info);
+
+typedef void (*tag_read_cb_t)(pds_tag_info_t *info, void *ctxt);
+
+/// \brief      read all tag
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_tag_read_all(tag_read_cb_t tag_read_cb, void *ctxt);
 
 /// \brief update tag
 /// \param[in] spec tag configuration
