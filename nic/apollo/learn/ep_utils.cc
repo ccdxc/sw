@@ -62,6 +62,8 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
                       ip_entry->key2str(), ret);
         return ret;
     }
+
+    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str());
     return delete_ip_entry(ip_entry);
 }
 
@@ -101,6 +103,7 @@ delete_mac_entry (ep_mac_entry *mac_entry)
 
     timer_stop(mac_entry->timer());
     mac_entry->set_state(EP_STATE_DELETED);
+    learn_db()->vnic_obj_id_free(mac_entry->vnic_obj_id());
 
     ret = mac_entry->del_from_db();
     if (ret != SDK_RET_OK) {
@@ -136,13 +139,20 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
     }
 
     mac_entry->walk_ip_list(delete_ip_mapping_cb, (void *)&bctxt);
-    delete_vnic(mac_entry, bctxt);
+    ret = delete_vnic(mac_entry, bctxt);
+    if (ret != SDK_RET_OK) {
+        pds_batch_destroy(bctxt);
+        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
+                      mac_entry->key2str(), ret);
+        return ret;
+    }
 
     ret = pds_batch_commit(bctxt);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to commit API batch, error code %u", ret);
         return SDK_RET_ERR;
     }
+    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str());
 
     // delete sw state for all IP entries
     mac_entry->walk_ip_list(delete_ip_entry_cb, nullptr);

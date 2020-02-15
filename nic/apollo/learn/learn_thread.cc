@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/learn/ep_learn_local.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_thread.hpp"
 
@@ -77,9 +78,7 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     LEARN_COUNTER_ADD(rx_pkts, rx_count);
 
     for (uint16_t i = 0; i < rx_count; i++) {
-        // ep_learn_process_pkt((void *)rx_pkts[i]);
-        // drop the packets until learn local code is checked in
-        learn_lif->drop_packets(&rx_pkts[i], 1);
+        process_learn_pkt((void *)rx_pkts[i]);
     }
 }
 

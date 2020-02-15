@@ -21,12 +21,12 @@ namespace learn {
 #define MAX_NUM_ARP_PROBES          3
 
 /// \brief initialize aging timer
-void learn_ep_aging_timer_init(sdk::event_thread::timer_t *timer, void *ctx,
-                               pds_mapping_type_t map_type);
+void aging_timer_init(sdk::event_thread::timer_t *timer, void *ctx,
+                      pds_mapping_type_t map_type);
 
-/// \brief start or restart aging timer
+/// \brief reset aging timer to configured timeout value and restart
 static inline void
-learn_ep_aging_timer_restart (sdk::event_thread::timer_t *timer)
+aging_timer_restart (sdk::event_thread::timer_t *timer)
 {
     // TODO: see if timer_again() is better
     // there is no harm calling timer_stop() without timer_start()
@@ -40,7 +40,7 @@ learn_ep_aging_timer_restart (sdk::event_thread::timer_t *timer)
 
 /// \brief stop aging timer
 static inline void
-learn_ep_aging_timer_stop (sdk::event_thread::timer_t *timer)
+aging_timer_stop (sdk::event_thread::timer_t *timer)
 {
     sdk::event_thread::timer_stop(timer);
 }

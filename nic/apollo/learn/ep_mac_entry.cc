@@ -40,8 +40,8 @@ ep_mac_entry::factory(ep_mac_key_t *key, uint32_t vnic_obj_id) {
         new (ep_mac) ep_mac_entry();
         memcpy(&ep_mac->key_, key, sizeof(ep_mac_key_t));
         ep_mac->vnic_obj_id_ = vnic_obj_id;
-        learn_ep_aging_timer_init(&ep_mac->aging_timer_, (void *)ep_mac,
-                                  PDS_MAPPING_TYPE_L2);
+        aging_timer_init(&ep_mac->aging_timer_, (void *)ep_mac,
+                         PDS_MAPPING_TYPE_L2);
     }
     return ep_mac;
 }

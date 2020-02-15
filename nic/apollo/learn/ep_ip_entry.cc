@@ -38,8 +38,8 @@ ep_ip_entry::factory(ep_ip_key_t *key, uint32_t vnic_obj_id) {
         new (ep_ip) ep_ip_entry();
         ep_ip->key_ = *key;
         ep_ip->vnic_obj_id_ = vnic_obj_id;
-        learn_ep_aging_timer_init(&ep_ip->aging_timer_, (void *)ep_ip,
-                                  PDS_MAPPING_TYPE_L3);
+        aging_timer_init(&ep_ip->aging_timer_, (void *)ep_ip,
+                         PDS_MAPPING_TYPE_L3);
     }
     return ep_ip;
 }
