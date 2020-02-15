@@ -81,7 +81,6 @@ def Setup(tc):
     api.Logger.info("Using seed : %s"%(tc.seed))
     tc.serverHandle = None
     tc.clientHandle = None
-
     StoreCurrentHalLogLevel(tc)
     SetHalLogsLevelToError(tc)
 
@@ -159,10 +158,12 @@ def Verify(tc):
 
         if tc.iterators.proto == 'tcp':
             return  TRexIotaWrapper.validateTcpStats(ct, st, int(tc.iterators.cps),
-                                          int(tc.iterators.duration))
+                                                     int(tc.iterators.duration),
+                                                     tolerance=tc.args.drop_tol)
         elif tc.iterators.proto == 'udp':
             return  TRexIotaWrapper.validateUdpStats(ct, st, int(tc.iterators.cps),
-                                          int(tc.iterators.duration))
+                                                     int(tc.iterators.duration),
+                                                     tolerance=tc.args.drop_tol)
         else:
             raise Exception("Unknown protocol %s"%tc.iterators.proto)
 

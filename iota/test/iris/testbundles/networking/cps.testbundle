@@ -8,27 +8,30 @@ testcases:
         testcase: testcases.networking.conn_per_sec
         stress  : True
         args    :
-            type: local_only
+            type     : local_only
+            drop_tol : 10.0 #percent
         iterators:
-            type      : simple
+            type      : nested
             proto     : [ tcp, udp ]
-            cps       : [ 900, 900 ]
-            duration  : [ 300, 300 ]
+            cps       : [ 900 ]
+            duration  : [ 300 ]
     -   name    : Cps_Remote_Workloads
         testcase: testcases.networking.conn_per_sec
         stress  : True
         args    :
-            type: remote_only
+            type     : remote_only
+            drop_tol : 10.0 #percent
         iterators:
-            type      : simple
+            type      : nested
             proto     : [ tcp, udp ]
-            cps       : [ 900, 900 ]
-            duration  : [ 300, 300 ]
+            cps       : [ 900 ]
+            duration  : [ 300 ]
     -   name    : session_scale
         testcase: testcases.networking.session_scale
         stress  : True
         ignore  : True
         args    :
+             stats_show_interval: 60
              latency_pps: 10
              switch_port_flap_interval: 10
              sec_policy_interval: 30

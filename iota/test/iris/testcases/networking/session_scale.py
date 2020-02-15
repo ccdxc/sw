@@ -134,7 +134,7 @@ def securityPolicyChangeEvent(tc):
 
 def getPeriodicEvents(tc):
     # TRex Stats
-    statsInterval = 10 #sec
+    statsInterval = getattr(tc.args, "stats_show_interval", 60) #sec
     tc.events.append(pt.PeriodicTimer(statsInterval, showStats, args=[tc]))
 
     # Switch Port Flap
@@ -180,8 +180,12 @@ def startTrex(tc):
 
 def barrier(tc):
     for w in tc.workloadPeers.keys():
-        w.trexHandle.wait_on_traffic()
-        api.Logger.info("Stopped traffic on %s"%(w.workload_name))
+        try:
+            w.trexHandle.wait_on_traffic()
+            api.Logger.info("Stopped traffic on %s"%(w.workload_name))
+        except Exception as e:
+            traceback.print_exc()
+            api.Logger.error("Trex wait failed for %s : %s"%(w.workload_name, e))
 
 def Setup(tc):
     tc.workloadPeers = {}
@@ -212,14 +216,7 @@ def Trigger(tc):
         # Start the events and let the party begin.
         getPeriodicEvents(tc)
         startPeriodicEvents(tc)
-
-        try:
-            barrier(tc)
-        except:
-            api.Logger.error("Barrier failed..")
-            cancelPeriodicEvents(tc)
-            raise
-
+        barrier(tc)
         cancelPeriodicEvents(tc)
         return api.types.status.SUCCESS
     except Exception as e:
@@ -247,6 +244,10 @@ def verifySessions(tc):
 
 def Verify(tc):
     try:
+        # Disconnect and stop Trex, so that we dont get any more packets from Trex.
+        # Without this session verification will fail.
+        cleanup(tc)
+
         ret = verifySessions(tc)
         if ret != api.types.status.SUCCESS:
             return ret
