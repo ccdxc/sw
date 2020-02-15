@@ -16,9 +16,9 @@
     "application/json"
   ],
   "paths": {
-    "//": {
+    "/api/collectors/": {
       "get": {
-        "summary": "List all Interface Objects",
+        "summary": "List all Collector Objects",
         "operationId": "",
         "responses": {
           "200": {
@@ -26,17 +26,17 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/netprotoInterface"
+                "$ref": "#/definitions/netprotoCollector"
               }
             }
           }
         },
         "tags": [
-          "Interface"
+          "Collector"
         ]
       },
       "post": {
-        "summary": "Creates a Interface Object",
+        "summary": "Creates a Collector Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -58,18 +58,18 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/netprotoInterface"
+              "$ref": "#/definitions/netprotoCollector"
             }
           }
         ],
         "tags": [
-          "Interface"
+          "Collector"
         ]
       }
     },
-    "//{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+    "/api/collectors/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
-        "summary": "Deletes a Interface Object",
+        "summary": "Deletes a Collector Object",
         "operationId": "",
         "responses": {
           "200": {
@@ -104,7 +104,7 @@
           }
         ],
         "tags": [
-          "Interface"
+          "Collector"
         ]
       }
     }
@@ -446,7 +446,7 @@
         }
       }
     },
-    "netprotoInterface": {
+    "netprotoCollector": {
       "type": "object",
       "properties": {
         "kind": {
@@ -459,281 +459,75 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/netprotoInterfaceSpec"
+          "$ref": "#/definitions/netprotoCollectorSpec"
         },
         "status": {
-          "$ref": "#/definitions/netprotoInterfaceStatus"
+          "$ref": "#/definitions/netprotoCollectorStatus"
         }
-      },
-      "description": "Interface object."
+      }
     },
-    "netprotoInterfaceEvent": {
+    "netprotoCollectorEvent": {
       "type": "object",
       "properties": {
         "event-type": {
           "$ref": "#/definitions/apiEventType"
         },
-        "interface": {
-          "$ref": "#/definitions/netprotoInterface"
+        "collector": {
+          "$ref": "#/definitions/netprotoCollector"
         }
       },
-      "description": "interaface watch event."
+      "description": "Collector watch event."
     },
-    "netprotoInterfaceEventList": {
+    "netprotoCollectorEventList": {
       "type": "object",
       "properties": {
-        "InterfaceEvents": {
+        "CollectorEvents": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/netprotoInterfaceEvent"
+            "$ref": "#/definitions/netprotoCollectorEvent"
           }
         }
       },
-      "description": "interface watch events batched."
+      "description": "collector watch events batched."
     },
-    "netprotoInterfaceHostStatus": {
+    "netprotoCollectorList": {
       "type": "object",
       "properties": {
-        "host-ifname": {
-          "type": "string",
-          "description": "interface name seen by the host driver."
-        }
-      },
-      "description": "InterfaceHostStatus is populated for PF and VF."
-    },
-    "netprotoInterfaceList": {
-      "type": "object",
-      "properties": {
-        "interfaces": {
+        "Collectors": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/netprotoInterface"
+            "$ref": "#/definitions/netprotoCollector"
           }
         }
       }
     },
-    "netprotoInterfaceSpec": {
+    "netprotoCollectorSpec": {
       "type": "object",
       "required": [
-        "type",
-        "admin-status"
+        "destination"
       ],
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "none",
-            "host-pf",
-            "uplink-eth",
-            "uplink-mgmt",
-            "l3",
-            "loopback"
-          ],
-          "default": "none"
-        },
-        "admin-status": {
-          "type": "string",
-          "enum": [
-            "up",
-            "down"
-          ],
-          "default": "up"
-        },
         "vrf-name": {
-          "type": "string",
-          "description": "VrfName specifies the name of the VRF that the current Interface belongs to."
-        },
-        "speed": {
-          "type": "string",
-          "description": "Inteface speed."
-        },
-        "mtu": {
-          "type": "integer",
-          "format": "int64",
-          "description": "Mtu of the interface."
-        },
-        "pause": {
-          "$ref": "#/definitions/netprotoPauseSpec",
-          "description": "Pause Spec."
-        },
-        "ip-address": {
-          "type": "string",
-          "description": "IPConfig has the IP address for the interface if specified."
-        },
-        "network": {
-          "type": "string",
-          "description": "Network that the interface is attached to, if any."
-        },
-        "TxCollectors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Tx Collectors."
-        },
-        "RxCollectors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Rx Collectors."
-        }
-      },
-      "description": "InterfaceSpec captures all the interface level configuration."
-    },
-    "netprotoInterfaceStatus": {
-      "type": "object",
-      "required": [
-        "oper-status"
-      ],
-      "properties": {
-        "dsc": {
           "type": "string"
         },
+        "destination": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Length of string should be between 1 and 2048."
+        }
+      },
+      "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."
+    },
+    "netprotoCollectorStatus": {
+      "type": "object",
+      "properties": {
         "id": {
           "type": "string",
           "format": "uint64"
-        },
-        "dsc": {
-          "type": "string"
-        },
-        "oper-status": {
-          "type": "string",
-          "enum": [
-            "up",
-            "down"
-          ],
-          "default": "up"
-        },
-        "primary-mac": {
-          "type": "string",
-          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
-          "description": "Should be a valid MAC address."
-        },
-        "if-host-status": {
-          "$ref": "#/definitions/netprotoInterfaceHostStatus"
-        },
-        "if-uplink-status": {
-          "$ref": "#/definitions/netprotoInterfaceUplinkStatus"
-        },
-        "mirror-enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        },
-        "if-uuid": {
-          "type": "string"
         }
       },
-      "description": "InterfaceStatus."
-    },
-    "netprotoInterfaceUplinkStatus": {
-      "type": "object",
-      "properties": {
-        "link-speed": {
-          "type": "string",
-          "description": "LinkSpeed auto-negotiated."
-        },
-        "transceiver-status": {
-          "$ref": "#/definitions/netprotoTransceiverStatus"
-        },
-        "uplink-port-id": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "netprotoPauseSpec": {
-      "type": "object",
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "disable",
-            "link",
-            "priority"
-          ],
-          "default": "disable",
-          "description": "Pause type."
-        },
-        "tx-pause-enabled": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "TX Pause enabled."
-        },
-        "rx-pause-enabled": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "RX Pause enabled."
-        }
-      }
-    },
-    "netprotoTransceiverStatus": {
-      "type": "object",
-      "required": [
-        "state",
-        "cable-type",
-        "pid"
-      ],
-      "properties": {
-        "state": {
-          "type": "string",
-          "enum": [
-            "state_na",
-            "state_removed",
-            "state_inserted",
-            "state_pending",
-            "state_sprom_read",
-            "state_sprom_read_err"
-          ],
-          "default": "state_na"
-        },
-        "cable-type": {
-          "type": "string",
-          "enum": [
-            "none",
-            "copper",
-            "fiber"
-          ],
-          "default": "none"
-        },
-        "pid": {
-          "type": "string",
-          "enum": [
-            "unknown",
-            "qsfp_100g_cr4",
-            "qsfp_40gbase_cr4",
-            "sfp_25gbase_cr_s",
-            "sfp_25gbase_cr_l",
-            "sfp_25gbase_cr_n",
-            "qsfp_100g_aoc",
-            "qsfp_100g_acc",
-            "qsfp_100g_sr4",
-            "qsfp_100g_lr4",
-            "qsfp_100g_er4",
-            "qsfp_40gbase_er4",
-            "qsfp_40gbase_sr4",
-            "qsfp_40gbase_lr4",
-            "qsfp_40gbase_aoc",
-            "sfp_25gbase_sr",
-            "sfp_25gbase_lr",
-            "sfp_25gbase_er",
-            "sfp_25gbase_aoc",
-            "sfp_10gbase_sr",
-            "sfp_10gbase_lr",
-            "sfp_10gbase_lrm",
-            "sfp_10gbase_er",
-            "sfp_10gbase_aoc",
-            "sfp_10gbase_cu",
-            "qsfp_100g_cwdm4",
-            "qsfp_100g_psm4",
-            "pid_na"
-          ],
-          "default": "unknown"
-        }
-      }
+      "description": "CollectorStatus captures the sg policy status."
     }
   }
 }

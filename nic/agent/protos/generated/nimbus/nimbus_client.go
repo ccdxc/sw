@@ -138,6 +138,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "App":
 		err = client.processAppDynamic(evt.EventType, object.Message.(*netproto.App), reactor.(AppReactor))
 
+	case "Collector":
+		err = client.processCollectorDynamic(evt.EventType, object.Message.(*netproto.Collector), reactor.(CollectorReactor))
+
 	case "Endpoint":
 		err = client.processEndpointDynamic(evt.EventType, object.Message.(*netproto.Endpoint), reactor.(EndpointReactor))
 
@@ -238,6 +241,75 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 		if err == nil {
 			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "App", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffCollectorsDynamic diffs local state with controller state
+func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorList, reactor CollectorReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Collector)
+	for _, obj := range objList.Collectors {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+	}
+
+	localObjs, err := reactor.HandleCollector(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Collector | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListCollector()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.CollectorEvent{
+					EventType: api.EventType_DeleteEvent,
+					Collector: lobj,
+				}
+				log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
+				client.processCollectorEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Collectors {
+		evt := netproto.CollectorEvent{
+			EventType: api.EventType_UpdateEvent,
+			Collector: *obj,
+		}
+		client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
+		err := client.processCollectorEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Collector", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
 				EventType: api.EventType_UpdateEvent,
@@ -969,6 +1041,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
 					return
 
+				case "Collector":
+					msglist := lobj.objects.(*netproto.CollectorList)
+					msglist.Collectors = append(msglist.Collectors, obj.Message.(*netproto.Collector))
+					return
+
 				case "Endpoint":
 					msglist := lobj.objects.(*netproto.EndpointList)
 					msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
@@ -1030,6 +1107,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			listObj.objects = &netproto.AppList{}
 			msglist := listObj.objects.(*netproto.AppList)
 			msglist.Apps = append(msglist.Apps, obj.Message.(*netproto.App))
+
+		case "Collector":
+			listObj.objects = &netproto.CollectorList{}
+			msglist := listObj.objects.(*netproto.CollectorList)
+			msglist.Collectors = append(msglist.Collectors, obj.Message.(*netproto.Collector))
 
 		case "Endpoint":
 			listObj.objects = &netproto.EndpointList{}
@@ -1100,6 +1182,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 		case "App":
 			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream)
 
+		case "Collector":
+			client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream)
+
 		case "Endpoint":
 			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream)
 
@@ -1164,6 +1249,18 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Kind = kind
 			aggKind.Group = "netproto"
 			listWatchOptions := reactor.(AppReactor).GetWatchOptions(ctx, "App")
+			aggKind.Options = listWatchOptions
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "Collector":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(CollectorReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "CollectorReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(CollectorReactor).GetWatchOptions(ctx, "Collector")
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 

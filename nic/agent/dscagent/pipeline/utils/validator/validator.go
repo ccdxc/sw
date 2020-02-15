@@ -388,20 +388,3 @@ func generateRuleHash(r *netproto.PolicyRule, key string) uint64 {
 	h.Write(rule)
 	return h.Sum64()
 }
-
-func validateInterfaceMirrorSession(i types.InfraAPI, sessions []*netproto.MirrorSession) error {
-	for _, ms := range sessions {
-		if _, err := i.Read(ms.Kind, ms.GetKey()); err != nil {
-			return errors.Wrapf(types.ErrInvalidInterfaceTxMirrorSession, "Mirror Session : %s", ms.GetKey())
-		}
-	}
-	return nil
-}
-
-// ValidateInterfaceMirrorSession validates mirror sessions in interface object
-func ValidateInterfaceMirrorSession(i types.InfraAPI, intf netproto.Interface) error {
-	if err := validateInterfaceMirrorSession(i, intf.Spec.TxMirrorSessions); err != nil {
-		return err
-	}
-	return validateInterfaceMirrorSession(i, intf.Spec.RxMirrorSessions)
-}

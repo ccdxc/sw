@@ -72,6 +72,8 @@ import (
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/sgs/", &postData, &resp)
                         {{else if strEq $crudObject "Endpoint"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/endpoints/", &{{lower .}}Data, &resp)
+                        {{else if strEq $crudObject "Collector"}}
+                            err := netutils.HTTPPost("http://"+cl.agentURL+"/api/collectors/", &{{lower .}}Data, &resp)
                         {{else if (or (strEq $crudObject "Tenant") (strEq $crudObject "Namespace"))}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "Interface"}}
@@ -143,6 +145,8 @@ import (
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/sgs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             	{{else if strEq $crudObject "Endpoint"}}
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/endpoints/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+                            	{{else if strEq $crudObject "Collector"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/collectors/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             	{{else if strEq $crudObject "Tenant"}}
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                            		{{else if strEq $crudObject "NetworkSecurityPolicy"}}
@@ -193,6 +197,8 @@ import (
                             			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/sgs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Endpoint"}}
                             			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/endpoints/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+                        			{{else if strEq $crudObject "Collector"}}
+                            			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/collectors/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Tenant"}}
                              			err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/tenants/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Namespace"}}

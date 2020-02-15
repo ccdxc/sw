@@ -1,5 +1,7 @@
 
 App AppApiV1
+Collector CollectorApiV1
+Collector CollectorApiV1
 Endpoint EndpointApiV1
 IPAMPolicy IPAMPolicyApiV1
 Interface InterfaceApiV1
@@ -9,5 +11,4 @@ Profile ProfileApiV1
 RouteTable RouteTableApiV1
 RoutingConfig RoutingConfigApiV1
 SecurityProfile SecurityProfileApiV1
-Vrf VrfApiV1
 Vrf VrfApiV1

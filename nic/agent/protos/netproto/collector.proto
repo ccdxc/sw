@@ -1,0 +1,63 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+syntax = "proto3";
+// Trouble shooting: Mirroring APIs
+
+package netproto;
+// Mandatory imports.
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "match.proto";
+
+
+// ---------------------------- Collector API ----------------------------
+service CollectorApiV1 {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Collector",
+        Method: ["list", "get", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/collectors"
+    };
+    //    TODO uncomment this when TSM uses nimbus
+
+    rpc ListCollectors (api.ListWatchOptions) returns (CollectorList) {};
+    rpc WatchCollectors (api.ListWatchOptions) returns (stream CollectorEventList) {};
+    rpc CollectorOperUpdate (stream CollectorEvent) returns (api.TypeMeta) {};
+}
+
+message Collector {
+    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    CollectorSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    CollectorStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
+message CollectorSpec {
+    string VrfName     = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    string Destination = 2 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+}
+
+// CollectorStatus captures the sg policy status
+message CollectorStatus {
+    uint64 Collector  = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+
+message CollectorList {
+    repeated Collector Collectors  = 1;
+}
+
+// Collector watch event
+message CollectorEvent {
+    api.EventType           EventType               = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Collector   Collector     = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collector,omitempty"];
+}
+
+// collector watch events batched
+message CollectorEventList {
+    repeated CollectorEvent CollectorEvents  = 1;
+}

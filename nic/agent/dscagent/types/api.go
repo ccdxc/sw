@@ -72,6 +72,9 @@ type PipelineAPI interface {
 	// HandleTunnel handles CRUDs for Tunnel object
 	HandleTunnel(oper Operation, obj netproto.Tunnel) ([]netproto.Tunnel, error)
 
+	// HandleCollector handles CRUDs for Collector object
+	HandleCollector(oper Operation, obj netproto.Collector) ([]netproto.Collector, error)
+
 	// HandleApp handls CRUDs for App object
 	HandleApp(oper Operation, obj netproto.App) ([]netproto.App, error)
 

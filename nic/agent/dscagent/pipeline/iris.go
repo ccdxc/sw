@@ -624,12 +624,6 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		return nil, err
 	}
 
-	// Perform mirror session validations
-	if err = validator.ValidateInterfaceMirrorSession(i.InfraAPI, intf); err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
 	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
 
@@ -1662,6 +1656,11 @@ func (i *IrisAPI) initLifStream() {
 // HandleCPRoutingConfig unimplemented
 func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+}
+
+// HandleVrf handles CRUD Methods for Collector Object
+func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
+	return nil, nil
 }
 
 // TODO Remove PortCreates once the linkmgr changes are stable

@@ -15,6 +15,7 @@ It is generated from these files:
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
 	delphi/vrf.proto
+	delphi/collector.proto
 
 It has these top-level messages:
 	App
@@ -27,6 +28,7 @@ It has these top-level messages:
 	NetworkSecurityPolicy
 	SecurityProfile
 	Vrf
+	Collector
 */
 package dnetproto
 

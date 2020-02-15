@@ -95,11 +95,11 @@ message InterfaceSpec {
     // Network that the interface is attached to, if any.
     string Network           = 8  [(gogoproto.jsontag) = "network,omitemtpy"];
 
-    // Tx MirrorSessions
-    repeated MirrorSession TxMirrorSessions = 9;
+    // Tx Collectors
+    repeated string TxCollectors = 9;
 
-    // Rx MirrorSessions
-    repeated MirrorSession RxMirrorSessions = 10;
+    // Rx Collectors
+    repeated string RxCollectors = 10;
 }
 
 // InterfaceHostStatus is populated for PF and VF

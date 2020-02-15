@@ -230,6 +230,21 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "Collector":
+			objlist, err := eh.server.ListCollectors(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "Endpoint":
 			objlist, err := eh.server.ListEndpoints(context.Background(), nil)
 			if err != nil {
@@ -426,6 +441,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.App).GetObjectMeta())
 
+			case "Collector":
+				if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
+					err = eh.statusReactor.(CollectorStatusReactor).OnCollectorOperUpdate(nodeID,
+						object.Message.(*netproto.Collector))
+					if err != nil {
+						log.Errorf("Error updating Collector oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Collector).GetObjectMeta())
+
 			case "Endpoint":
 				if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
 					err = eh.statusReactor.(EndpointStatusReactor).OnEndpointOperUpdate(nodeID,
@@ -539,6 +564,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.App).GetObjectMeta())
+
+			case "Collector":
+				if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
+					err = eh.statusReactor.(CollectorStatusReactor).OnCollectorOperDelete(nodeID,
+						object.Message.(*netproto.Collector))
+					if err != nil {
+						log.Errorf("Error updating Collector oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Collector).GetObjectMeta())
 
 			case "Endpoint":
 				if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
@@ -846,6 +881,16 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
 			}
 
+		case "Collector":
+			if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(CollectorStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
 		case "Endpoint":
 			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
@@ -971,6 +1016,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "App":
 			objlist, err := eh.server.ListApps(context.Background(), watcher.Filters[kind])
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "Collector":
+			objlist, err := eh.server.ListCollectors(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1196,6 +1256,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 			case "App":
 				obj, err := AppFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Collector":
+				obj, err := CollectorFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

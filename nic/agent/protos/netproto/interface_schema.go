@@ -52,6 +52,8 @@ var typesMapInterface = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
+			"RxCollectors":     api.CLIInfo{Path: "Spec.RxCollectors", Skip: false, Insert: "", Help: ""},
+			"TxCollectors":     api.CLIInfo{Path: "Spec.TxCollectors", Skip: false, Insert: "", Help: ""},
 			"admin-status":     api.CLIInfo{Path: "Spec.AdminStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
@@ -130,9 +132,9 @@ var typesMapInterface = map[string]*api.Struct{
 
 			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"TxMirrorSessions": api.Field{Name: "TxMirrorSessions", CLITag: api.CLIInfo{ID: "TxMirrorSessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.MirrorSession"},
+			"TxCollectors": api.Field{Name: "TxCollectors", CLITag: api.CLIInfo{ID: "TxCollectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"RxMirrorSessions": api.Field{Name: "RxMirrorSessions", CLITag: api.CLIInfo{ID: "RxMirrorSessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.MirrorSession"},
+			"RxCollectors": api.Field{Name: "RxCollectors", CLITag: api.CLIInfo{ID: "RxCollectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.InterfaceStatus": &api.Struct{
