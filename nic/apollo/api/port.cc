@@ -113,7 +113,6 @@ update_port (const pds_obj_key_t *key, port_args_t *api_port_info)
 {
     sdk_ret_t ret;
     if_entry *intf;
-    port_args_t port_info;
 
     intf = if_db()->find(key);
     if (intf == NULL) {
@@ -121,28 +120,14 @@ update_port (const pds_obj_key_t *key, port_args_t *api_port_info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    memset(&port_info, 0, sizeof(port_info));
-    ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port %s info, err %u", key->str(), ret);
-        return ret;
-    }
-    port_info.port_num = intf->ifindex();
+    // sdk port_num is logical port
+    api_port_info->port_num =
+        sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex());
 
-    port_info.user_admin_state = api_port_info->user_admin_state;
-    port_info.admin_state = api_port_info->admin_state;
-    port_info.port_speed = api_port_info->port_speed;
-    port_info.fec_type = api_port_info->fec_type;
-    port_info.auto_neg_cfg = api_port_info->auto_neg_cfg;
-    port_info.auto_neg_enable = api_port_info->auto_neg_enable;
-    port_info.debounce_time = api_port_info->debounce_time;
-    port_info.mtu = api_port_info->mtu;
-    port_info.pause = api_port_info->pause;
-    port_info.loopback_mode = api_port_info->loopback_mode;
-    port_info.num_lanes_cfg = api_port_info->num_lanes_cfg;
-    port_info.num_lanes = api_port_info->num_lanes;
+    // update port_args based on the xcvr state
+    sdk::linkmgr::port_args_set_by_xcvr_state(api_port_info);
 
-    ret = sdk::linkmgr::port_update(intf->port_info(), &port_info);
+    ret = sdk::linkmgr::port_update(intf->port_info(), api_port_info);
     return ret;
 }
 
