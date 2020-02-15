@@ -5,6 +5,8 @@
 #ifndef __VPP_INFRA_IPC_VPP_HDLR_H__
 #define __VPP_INFRA_IPC_VPP_HDLR_H__
 
+#define PDS_MAX_KEY_LEN 16
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,8 +24,6 @@ void pds_ipc_init(void);
 void pds_ipc_read_fd(int fd);
 
 #ifndef __cplusplus
-
-#define PDS_MAX_KEY_LEN 16
 
 // inline functions
 always_inline u8

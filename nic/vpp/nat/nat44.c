@@ -7,6 +7,7 @@
 #include <vnet/plugin/plugin.h>
 #include <vppinfra/clib.h>
 #include <nic/vpp/impl/nat.h>
+#include "pdsa_uds_hdlr.h"
 #include "nat_api.h"
 
 // TODO move to right place
@@ -147,6 +148,7 @@ typedef struct pds_nat_main_s {
     u8 *hw_index_pool;
     nat_vpc_config_t vpc_config[PDS_MAX_VPC];
     u8 proto_map[255];
+    u8 nat_proto_map[NAT_PROTO_NUM + 1];
 } pds_nat_main_t;
 
 static pds_nat_main_t nat_main;
@@ -163,6 +165,10 @@ nat_init(void)
     nat_main.proto_map[IP_PROTOCOL_UDP] = NAT_PROTO_UDP;
     nat_main.proto_map[IP_PROTOCOL_TCP] = NAT_PROTO_TCP;
     nat_main.proto_map[IP_PROTOCOL_ICMP] = NAT_PROTO_ICMP;
+
+    nat_main.nat_proto_map[NAT_PROTO_TCP] = IP_PROTOCOL_TCP;
+    nat_main.nat_proto_map[NAT_PROTO_UDP] = IP_PROTOCOL_UDP;
+    nat_main.nat_proto_map[NAT_PROTO_ICMP] = IP_PROTOCOL_ICMP;
 }
 
 always_inline nat_port_block_t *
@@ -847,4 +853,68 @@ nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices)
     *total_alloc_indices = pool_elts(nat_main.hw_index_pool);
 
     return NAT_ERR_OK;
+}
+
+//
+// Get SNAT usage
+//
+void
+nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
+                                  nat_type_t nat_type,
+                                  pds_nat_iterate_params_t *params)
+{
+    nat_port_block_t *pb;
+    nat_vpc_config_t *vpc;
+    nat_port_block_t *nat_pb;
+    pds_nat_port_block_export_t *pb_out = params->pb;
+
+    ASSERT(vpc_id < PDS_MAX_VPC);
+
+    vpc = &nat_main.vpc_config[vpc_id];
+
+    nat_pb = vpc->nat_pb[nat_type][nat_proto - 1];
+
+    pool_foreach (pb, nat_pb,
+    ({
+        pds_id_set(pb_out->id, pb->id);
+        pb_out->addr = pb->addr.as_u32;
+        pb_out->start_port = pb->start_port;
+        pb_out->end_port = pb->end_port;
+        if (nat_type == NAT_TYPE_INTERNET) {
+            pb_out->address_type = NAT_ADDRESS_TYPE_INTERNET;
+        } else {
+            pb_out->address_type = NAT_ADDRESS_TYPE_INFRA;
+        }
+        pb_out->protocol = nat_main.nat_proto_map[nat_proto];
+        pb_out->in_use_cnt = clib_bitmap_count_set_bits(pb->port_bitmap);
+        pb_out->session_cnt = pb->num_flow_alloc;
+
+        params->itercb(params);
+    }));
+}
+
+//
+// Iterate over NAT port blocks
+//
+void
+nat_pb_iterate(pds_nat_iterate_params_t *params)
+{
+    for (int i = 0; i < PDS_MAX_VPC; i++) {
+        if (nat_main.vpc_config[i].num_port_blocks == 0) {
+            continue;
+        }
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_TYPE_INTERNET,
+                                          params);
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_TYPE_INTERNET,
+                                          params);
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_TYPE_INTERNET,
+                                          params);
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_TYPE_INFRA,
+                                          params);
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_TYPE_INFRA,
+                                          params);
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_TYPE_INFRA,
+                                          params);
+    }
+    return;
 }

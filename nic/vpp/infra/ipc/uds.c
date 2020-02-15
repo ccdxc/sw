@@ -82,6 +82,7 @@ vpp_uds_init()
 
     s->config = SOCKET_FILE;
     s->flags = CLIB_SOCKET_F_IS_SERVER |
+        CLIB_SOCKET_F_SEQPACKET |
         CLIB_SOCKET_F_ALLOW_GROUP_WRITE;    /* PF_LOCAL socket only */
 
     // makedir of file socket

@@ -98,6 +98,7 @@ typedef enum cli_cmd_e {
     CLI_CMD_API_ENGINE_STATS_DUMP,
     CLI_CMD_FLOW_DUMP,
     CLI_CMD_STORE_STATS_DUMP,
+    CLI_CMD_NAT_PB_DUMP,
     CLI_CMD_MAX = 255,
 } cli_cmd_t;
 

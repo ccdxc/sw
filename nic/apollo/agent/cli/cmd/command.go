@@ -16,62 +16,9 @@ import (
 var CmdSocket string = "/var/run/cmd_server_sock"
 var vppUdsPath string = "/run/vpp/pds.sock"
 
-// function to handle flow dump command over unix domain sockets
-// param[in] cmd     Command context to be sent
-// return    err     Error
-func HandleFlowDumpCommand(cmdCtxt *pds.CommandCtxt) error {
-	// marshall cmdCtxt
-	iovec, err := proto.Marshal(cmdCtxt)
-	if err != nil {
-		fmt.Printf("Marshall command failed with error %v\n", err)
-		return err
-	}
-
-	c, err := net.Dial("unix", vppUdsPath)
-	if err != nil {
-		fmt.Printf("Could not connect to unix domain socket\n")
-		return err
-	}
-	defer c.Close()
-
-	udsConn := c.(*net.UnixConn)
-	udsFile, err := udsConn.File()
-	if err != nil {
-		return err
-	}
-
-	socket := int(udsFile.Fd())
-	defer udsFile.Close()
-
-	err = syscall.Sendmsg(socket, iovec, nil, nil, 0)
-	if err != nil {
-		fmt.Printf("Sendmsg failed with error %v\n", err)
-		return err
-	}
-
-	flowPrintHeader()
-	// read from the socket until the no more entries are received
-	resp := make([]byte, 256)
-	for {
-		n, _, _, _, err := syscall.Recvmsg(socket, resp, nil, 0)
-		if err != nil {
-			fmt.Printf("Recvmsg failed with error %v\n", err)
-			return err
-		}
-
-		flowMsg := &pds.FlowMsg{}
-		err = proto.Unmarshal(resp[:n], flowMsg)
-		if err != nil {
-			fmt.Printf("Command failed with %v error\n", err)
-			return err
-		}
-		if flowMsg.FlowEntryCount == 0 {
-			break
-		} else {
-			flowPrintEntry(flowMsg.FlowEntry)
-		}
-	}
-	return nil
+type PrintObject interface {
+	PrintHeader()
+	HandleObject([]byte) bool
 }
 
 // function to handle commands over unix domain sockets
@@ -102,4 +49,56 @@ func HandleCommand(cmdCtxt *pds.CommandCtxt) (*pds.CommandResponse, error) {
 	}
 
 	return cmdResp, nil
+}
+
+// function to handle show object command over unix domain sockets
+// param[in] cmd     Command context to be sent
+// return    err     Error
+func HandleUdsShowObject(cmdCtxt *pds.CommandCtxt, i PrintObject) error {
+	// marshall cmdCtxt
+	iovec, err := proto.Marshal(cmdCtxt)
+	if err != nil {
+		fmt.Printf("Marshall command failed with error %v\n", err)
+		return err
+	}
+
+	c, err := net.Dial("unixpacket", vppUdsPath)
+	if err != nil {
+		fmt.Printf("Could not connect to unix domain socket\n")
+		return err
+	}
+	defer c.Close()
+
+	udsConn := c.(*net.UnixConn)
+	udsFile, err := udsConn.File()
+	if err != nil {
+		return err
+	}
+
+	socket := int(udsFile.Fd())
+	defer udsFile.Close()
+
+	err = syscall.Sendmsg(socket, iovec, nil, nil, 0)
+	if err != nil {
+		fmt.Printf("Sendmsg failed with error %v\n", err)
+		return err
+	}
+
+	i.PrintHeader()
+	// read from the socket until the no more entries are received
+	resp := make([]byte, 256)
+	for {
+		n, _, _, _, err := syscall.Recvmsg(socket, resp, nil, syscall.MSG_WAITALL)
+		if err != nil {
+			fmt.Printf("Recvmsg failed with error %v\n", err)
+			return err
+		}
+
+		done := i.HandleObject(resp[:n])
+		if done {
+			// Last message
+			return nil
+		}
+	}
+	return nil
 }

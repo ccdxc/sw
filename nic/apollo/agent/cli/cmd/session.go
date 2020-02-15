@@ -10,10 +10,16 @@ import (
 	"io"
 	"strings"
 
+	"github.com/golang/protobuf/proto"
+
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/spf13/cobra"
 )
+
+type myFlowMsg struct {
+	msg *pds.FlowMsg
+}
 
 var (
 	sessionStatsID string
@@ -289,7 +295,10 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 			Cmd:     pds.Command_CMD_FLOW_DUMP,
 		}
 
-		err := HandleFlowDumpCommand(cmdCtxt)
+		flow := myFlowMsg{}
+		msg := pds.FlowMsg{}
+		flow.msg = &msg
+		err := HandleUdsShowObject(cmdCtxt, flow)
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -484,4 +493,27 @@ func sessionStatsPrintEntry(resp *pds.SessionStatsGetResponse) {
 			stats.GetResponderFlowPkts(),
 			stats.GetResponderFlowBytes())
 	}
+}
+
+// PrintObject interface
+func (flowMsg myFlowMsg) PrintHeader() {
+	flowPrintHeader()
+}
+
+func (flowMsg myFlowMsg) HandleObject(data []byte) (done bool) {
+	err := proto.Unmarshal(data, flowMsg.msg)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		done = true
+		return
+	}
+	if flowMsg.msg.FlowEntryCount == 0 {
+		// Last message
+		done = true
+		return
+	}
+	flowPrintEntry(flowMsg.msg.FlowEntry)
+
+	done = false
+	return
 }
