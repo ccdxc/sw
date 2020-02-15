@@ -7,3 +7,7 @@ meta:
 testcases:
     -   name    : IP normalization tests
         testcase: testcases.security.ip_norm
+    -   name    : ICMP normalization tests
+        testcase: testcases.security.icmp_norm
+        args    :
+            type: remote_only

@@ -104,14 +104,15 @@ message AclInternalSelector {
 // For production builds this needs to be removed
 // TODO: REMOVE
 message AclInternalActionInfo {
-  bool            mac_sa_rewrite_en = 1;    // MAC SA rewrite
-  uint64          mac_sa            = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC SA to rewrite with
-  bool            mac_da_rewrite_en = 3;    // MAC DA rewrite
-  uint64          mac_da            = 4 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC DA to rewrite with
-  bool            ttl_dec_en        = 5;    // Perform a ttl decrement
-  types.EncapInfo encap_info        = 6;    // encap info
-  types.CpucbId   qid               = 7;    // qid
-  bool            qid_valid         = 8;    // qid is valid
+  bool                mac_sa_rewrite_en = 1;    // MAC SA rewrite
+  uint64              mac_sa            = 2 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC SA to rewrite with
+  bool                mac_da_rewrite_en = 3;    // MAC DA rewrite
+  uint64              mac_da            = 4 [(gogoproto.moretags) = "venice:constraints={range:0-0xffffffffffff}"];    // MAC DA to rewrite with
+  bool                ttl_dec_en        = 5;    // Perform a ttl decrement
+  types.EncapInfo     encap_info        = 6;    // encap info
+  types.CpucbId       qid               = 7;    // qid
+  bool                qid_valid         = 8;    // qid is valid
+  types.DropReasons   drop_reason       = 9;    // Drop reason associated with this NACL action
 }
 
 // AclSelector has all the match criteria for an ACL entry

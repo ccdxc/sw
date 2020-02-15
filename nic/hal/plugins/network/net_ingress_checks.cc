@@ -51,8 +51,6 @@ is_multicast_dmac(fte::ctx_t &ctx) {
 static inline hal_ret_t
 perform_ingress_checks(fte::ctx_t&ctx)
 {
-    bool src_local = 0;
-    bool dst_local = 0; 
     bool broadcast_pkt = is_broadcast(ctx);
     bool mcast_dmac = is_multicast_dmac(ctx);
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};

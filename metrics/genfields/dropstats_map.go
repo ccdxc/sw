@@ -32,6 +32,7 @@ func init() {
 		"DropSrcLifMismatch",
 		"DropVfIpLabelMismatch",
 		"DropVfBadRrDstIp",
+		"DropIcmpFragPkt",
 	}
 
 	msgFieldMaps["EgressDropMetrics"] = []string{

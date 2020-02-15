@@ -327,6 +327,17 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "DropIcmpFragPkt",
+      "displayName": "ICMP/ICMPv6-Fragment Drops",
+      "description": "ICMP/ICMPv6 fragmented packet drops",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",

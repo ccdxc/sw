@@ -155,10 +155,130 @@ drop_reason_codes_to_bitmap (drop_reason_codes_t *codes)
     if (codes->drop_parser_icrc_error) val |= 1ull << DROP_PARSER_ICRC_ERR;
     if (codes->drop_parse_len_error) val |= 1ull << DROP_PARSER_LEN_ERR;
     if (codes->drop_hardware_error) val |= 1ull << DROP_HARDWARE_ERR;
+    if (codes->drop_icmp_frag_pkt) val |= 1ull << DROP_ICMP_FRAGMENT_PKT;
     return val;
 }
 
 #endif
+
+// ----------------------------------------------------------------------------
+// Util to get p4_nacl_drop_reason from drop_reason_code.
+// This reason code will be set in p4 NACL action data; this function
+// expects only one reason code to be set in codes.
+// Returns:
+// drop_action_data  - One of set NACL drop reson code;
+//                     if more than one code is set in codes,
+//                     then returned value is undeterministic.
+// num_codes         - Number of reason codes set, used for config validity.
+// ----------------------------------------------------------------------------
+static uint8_t
+p4_nacl_drop_reason (drop_reason_codes_t *codes, uint8_t &drop_action_data)
+{
+    uint8_t num_codes = 0;
+
+    if (codes->drop_malformed_pkt) {
+        drop_action_data = DROP_MALFORMED_PKT; 
+        num_codes++;
+    }
+    if (codes->drop_input_mapping) {
+        drop_action_data = DROP_INPUT_MAPPING;
+        num_codes++;
+    }
+    if (codes->drop_input_mapping_dejavu) {
+        drop_action_data = DROP_INPUT_MAPPING_DEJAVU;
+        num_codes++;
+    }
+    if (codes->drop_flow_hit) {
+        drop_action_data = DROP_FLOW_HIT;
+        num_codes++;
+    }
+    if (codes->drop_flow_miss) {
+        drop_action_data = DROP_FLOW_MISS;
+        num_codes++;
+    }
+    if (codes->drop_nacl) {
+        drop_action_data = DROP_NACL;
+        num_codes++;
+    }
+    if (codes->drop_ipsg) {
+        drop_action_data = DROP_IPSG;
+        num_codes++;
+    }
+    if (codes->drop_ip_normalization) {
+        drop_action_data = DROP_IP_NORMALIZATION;
+        num_codes++;
+    }
+    if (codes->drop_tcp_normalization) {
+        drop_action_data = DROP_TCP_NORMALIZATION;
+        num_codes++;
+    }
+    if (codes->drop_tcp_rst_with_invalid_ack_num) {
+        drop_action_data = DROP_TCP_RST_WITH_INVALID_ACK_NUM;
+        num_codes++;
+    }
+    if (codes->drop_tcp_non_syn_first_pkt) {
+        drop_action_data = DROP_TCP_NON_SYN_FIRST_PKT;
+        num_codes++;
+    }
+    if (codes->drop_icmp_normalization) {
+        drop_action_data = DROP_ICMP_NORMALIZATION;
+        num_codes++;
+    }
+    if (codes->drop_input_properties_miss) {
+        drop_action_data = DROP_INPUT_PROPERTIES_MISS;
+        num_codes++;
+    }
+    if (codes->drop_tcp_out_of_window) {
+        drop_action_data = DROP_TCP_OUT_OF_WINDOW;
+        num_codes++;
+    }
+    if (codes->drop_tcp_split_handshake) {
+        drop_action_data = DROP_TCP_SPLIT_HANDSHAKE;
+        num_codes++;
+    }
+    if (codes->drop_tcp_win_zero_drop) {
+        drop_action_data = DROP_TCP_WIN_ZERO_DROP;
+        num_codes++;
+    }
+    if (codes->drop_tcp_data_after_fin) {
+        drop_action_data = DROP_TCP_DATA_AFTER_FIN;
+        num_codes++;
+    }
+    if (codes->drop_tcp_non_rst_pkt_after_rst) {
+        drop_action_data = DROP_TCP_NON_RST_PKT_AFTER_RST;
+        num_codes++;
+    }
+    if (codes->drop_tcp_invalid_responder_first_pkt) {
+        drop_action_data = DROP_TCP_INVALID_RESPONDER_FIRST_PKT;
+        num_codes++;
+    }
+    if (codes->drop_tcp_unexpected_pkt) {
+        drop_action_data = DROP_TCP_UNEXPECTED_PKT;
+        num_codes++;
+    }
+    if (codes->drop_src_lif_mismatch) {
+        drop_action_data = DROP_SRC_LIF_MISMATCH;
+        num_codes++;
+    }
+    if (codes->drop_parser_icrc_error) {
+        drop_action_data = DROP_PARSER_ICRC_ERR;
+        num_codes++;
+    }
+    if (codes->drop_parse_len_error) {
+        drop_action_data = DROP_PARSER_LEN_ERR;
+        num_codes++;
+    }
+    if (codes->drop_hardware_error) {
+        drop_action_data = DROP_HARDWARE_ERR;
+        num_codes++;
+    }
+    if (codes->drop_icmp_frag_pkt) {
+        drop_action_data = DROP_ICMP_FRAGMENT_PKT;
+        num_codes++;
+    }
+
+    return num_codes;
+}
 
 static hal_ret_t
 acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
@@ -321,7 +441,23 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_DENY:
-            data.action_id = NACL_NACL_DENY_ID;
+            {
+                uint8_t drop_action_data = 0;
+                uint8_t num_drop_reason_codes = 0;
+                data.action_id = NACL_NACL_DENY_ID;
+
+                num_drop_reason_codes =
+                    p4_nacl_drop_reason (&as->int_as.drop_reason,
+                                         drop_action_data);
+                // return error if more than one reason code is set
+                if (num_drop_reason_codes > 1 ) {
+                    HAL_TRACE_ERR("Acl {} more than one drop reason specified "
+                            "for DENY action ", pi_acl->key);
+                    return HAL_RET_INVALID_ARG;
+                }
+                data.action_u.nacl_nacl_deny.drop_reason_valid = drop_action_data ? 1 : 0;
+                data.action_u.nacl_nacl_deny.drop_reason = drop_action_data;
+            }
             break;
         default:
             data.action_id = NACL_NOP_ID;

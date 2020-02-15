@@ -1649,6 +1649,7 @@ public:
         DROP_MONITOR_RULE_CREATE_(drop_parser_icrc_error);
         DROP_MONITOR_RULE_CREATE_(drop_parse_len_error);
         DROP_MONITOR_RULE_CREATE_(drop_hardware_error);
+        DROP_MONITOR_RULE_CREATE_(drop_icmp_frag_pkt);
 
         return 0;
     }

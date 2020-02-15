@@ -86,6 +86,8 @@ hal_update_drop_stats (SystemResponse *rsp) {
             dm.drop_vf_ip_label_mismatch = entry.drop_count();
         } else if (entry.reasons().drop_vf_bad_rr_dst_ip() == true) {
             dm.drop_vf_bad_rr_dst_ip = entry.drop_count();
+        } else if (entry.reasons().drop_icmp_frag_pkt() == true) {
+            dm.drop_icmp_frag_pkt = entry.drop_count();
         }
     }
     delphi::objects::DropMetrics::Publish(0, &dm);

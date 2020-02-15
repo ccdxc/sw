@@ -59,12 +59,14 @@ namespace hal {
 
 #define HAL_MAX_ACLS 512
 
-#define ACL_IP_FRAGMENT_DROP_ENTRY_ID    0
-#define ACL_FTE_SPAN_ENTRY_ID            1
-#define ACL_QUIESCE_ENTRY_ID             2
-#define ACL_EPLEARN_ENTRY_ID_BEGIN       3
-#define ACL_EPLEARN_ENTRY_ID_END         7
-#define ACL_NCSI_BCAST_ARP               8
+#define ACL_ICMP_FRAGMENT_DROP_ENTRY_ID  0
+#define ACL_ICMPV6_FRAG_DROP_ENTRY_ID    1
+#define ACL_IP_FRAGMENT_DROP_ENTRY_ID    2
+#define ACL_FTE_SPAN_ENTRY_ID            3
+#define ACL_QUIESCE_ENTRY_ID             4
+#define ACL_EPLEARN_ENTRY_ID_BEGIN       5
+#define ACL_EPLEARN_ENTRY_ID_END         10
+#define ACL_NCSI_BCAST_ARP               11
 #define ACL_NCSI_BCAST_DHCP_CLIENT       ACL_NCSI_BCAST_ARP + 2
 #define ACL_NCSI_BCAST_DHCP_SERVER       ACL_NCSI_BCAST_DHCP_CLIENT + 2
 #define ACL_NCSI_BCAST_NETBIOS_NS        ACL_NCSI_BCAST_DHCP_SERVER + 2
@@ -78,20 +80,22 @@ namespace hal {
 #define ACL_NCSI_MCAST_IPV6_MLD_LR       ACL_NCSI_MCAST_IPV6_MLD_LQ + 2
 #define ACL_NCSI_MCAST_IPV6_MLD_LD       ACL_NCSI_MCAST_IPV6_MLD_LR + 2
 #define ACL_NCSI_MCAST_IPV6_NSOL         ACL_NCSI_MCAST_IPV6_MLD_LD + 2
-#define ACL_NCSI_MCAST_ALL               ACL_NCSI_MCAST_IPV6_NSOL + 2           // Last entry: 37
+#define ACL_NCSI_MCAST_ALL               ACL_NCSI_MCAST_IPV6_NSOL + 2           // Last entry: 39
 
 
-#define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
-#define ACL_HOSTPIN_HOST_MGMT_DROP             1
-#define ACL_FTE_SPAN_PRIORITY                  2
-#define ACL_RARP_ENTRY_PRIORITY                3
-#define ACL_QUIESCE_ENTRY_PRIORITY             4
-#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       5
-#define ACL_EPLEARN_ENTRY_PRIORITY_END         9
-#define ACL_SNAKE_TEST_PRIORITY_BEGIN          10
-#define ACL_SNAKE_TEST_PRIORITY_END            25
-#define ACL_RDMA_SNIFFER_PRIORITY              26
-#define ACL_NCSI_BCAST_ARP_PRIORITY            27
+#define ACL_ICMP_FRAGMENT_DROP_ENTRY_PRIORITY  0
+#define ACL_ICMPV6_FRAGMENT_DROP_ENTRY_PRIORITY  0
+#define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    1
+#define ACL_HOSTPIN_HOST_MGMT_DROP             2
+#define ACL_FTE_SPAN_PRIORITY                  3
+#define ACL_RARP_ENTRY_PRIORITY                4
+#define ACL_QUIESCE_ENTRY_PRIORITY             5
+#define ACL_EPLEARN_ENTRY_PRIORITY_BEGIN       6
+#define ACL_EPLEARN_ENTRY_PRIORITY_END         11
+#define ACL_SNAKE_TEST_PRIORITY_BEGIN          12
+#define ACL_SNAKE_TEST_PRIORITY_END            26
+#define ACL_RDMA_SNIFFER_PRIORITY              27
+#define ACL_NCSI_BCAST_ARP_PRIORITY            28
 #define ACL_NCSI_BCAST_DHCP_CLIENT_PRIORITY    ACL_NCSI_BCAST_ARP_PRIORITY + 2
 #define ACL_NCSI_BCAST_DHCP_SERVER_PRIORITY    ACL_NCSI_BCAST_DHCP_CLIENT_PRIORITY + 2
 #define ACL_NCSI_BCAST_NETBIOS_NS_PRIORITY     ACL_NCSI_BCAST_DHCP_SERVER_PRIORITY + 2
@@ -105,7 +109,7 @@ namespace hal {
 #define ACL_NCSI_MCAST_IPV6_MLD_LR_PRIORITY    ACL_NCSI_MCAST_IPV6_MLD_LQ_PRIORITY + 2
 #define ACL_NCSI_MCAST_IPV6_MLD_LD_PRIORITY    ACL_NCSI_MCAST_IPV6_MLD_LR_PRIORITY + 2
 #define ACL_NCSI_MCAST_IPV6_NSOL_PRIORITY      ACL_NCSI_MCAST_IPV6_MLD_LD_PRIORITY + 2
-#define ACL_NCSI_MCAST_ALL_PRIORITY            ACL_NCSI_MCAST_IPV6_NSOL_PRIORITY + 2        // Last entry: 55
+#define ACL_NCSI_MCAST_ALL_PRIORITY            ACL_NCSI_MCAST_IPV6_NSOL_PRIORITY + 2        // Last entry: 56
 
 
 typedef struct acl_eth_match_spec_s {
@@ -210,6 +214,7 @@ typedef struct acl_internal_action_spec_s {
     bool           qid_en;
     uint32_t       rw_idx;              // rewrite index
     uint32_t       tnnl_vnid;           // tunnel vnid / encap vlan
+    drop_reason_codes_t drop_reason;    //drop reason code. only one code can be set
 } __PACK__ acl_internal_action_spec_t;
 #endif
 

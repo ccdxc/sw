@@ -196,6 +196,13 @@
           "Description": "number of packets dropped due to packets VF bad RR destination IP",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "DropIcmpFragPkt",
+          "DisplayName": "ICMP/ICMPv6-Fragment Drops",
+          "Description": "ICMP/ICMPv6 fragmented packet drops",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [

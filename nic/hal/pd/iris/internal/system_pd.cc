@@ -454,6 +454,8 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_VF_IP_LABEL_MISMATCH));
     stats_entry->mutable_reasons()->set_drop_vf_bad_rr_dst_ip(
             drop_reason & (1 << DROP_VF_BAD_RR_DST_IP));
+    stats_entry->mutable_reasons()->set_drop_icmp_frag_pkt(
+            drop_reason & (1 << DROP_ICMP_FRAGMENT_PKT));
 
     uint64_t drop_stats_pkts = 0;
     memcpy(&drop_stats_pkts,

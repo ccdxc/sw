@@ -579,6 +579,7 @@ pd_drop_monitor_rule_create(pd_func_args_t *pd_func_args)
     PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_parser_icrc_error, DROP_PARSER_ICRC_ERR);
     PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_parse_len_error, DROP_PARSER_LEN_ERR);
     PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_hardware_error, DROP_HARDWARE_ERR);
+    PROGRAM_DROP_STATS_TABLE(args->rule->codes.drop_icmp_frag_pkt, DROP_ICMP_FRAGMENT_PKT);
 
 end:
     return ret;

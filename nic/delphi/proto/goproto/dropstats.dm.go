@@ -67,6 +67,8 @@ type DropMetrics struct {
 
 	DropVfBadRrDstIp metrics.Counter
 
+	DropIcmpFragPkt metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -132,6 +134,8 @@ func (mtr *DropMetrics) Size() int {
 	sz += mtr.DropVfIpLabelMismatch.Size()
 
 	sz += mtr.DropVfBadRrDstIp.Size()
+
+	sz += mtr.DropIcmpFragPkt.Size()
 
 	return sz
 }
@@ -222,6 +226,9 @@ func (mtr *DropMetrics) Unmarshal() error {
 
 	mtr.DropVfBadRrDstIp = mtr.metrics.GetCounter(offset)
 	offset += mtr.DropVfBadRrDstIp.Size()
+
+	mtr.DropIcmpFragPkt = mtr.metrics.GetCounter(offset)
+	offset += mtr.DropIcmpFragPkt.Size()
 
 	return nil
 }
@@ -364,6 +371,11 @@ func (mtr *DropMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.DropVfBadRrDstIp.Size()
+
+	if fldName == "DropIcmpFragPkt" {
+		return offset
+	}
+	offset += mtr.DropIcmpFragPkt.Size()
 
 	return offset
 }
@@ -527,6 +539,12 @@ func (mtr *DropMetrics) SetDropVfIpLabelMismatch(val metrics.Counter) error {
 // SetDropVfBadRrDstIp sets cunter in shared memory
 func (mtr *DropMetrics) SetDropVfBadRrDstIp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DropVfBadRrDstIp"))
+	return nil
+}
+
+// SetDropIcmpFragPkt sets cunter in shared memory
+func (mtr *DropMetrics) SetDropIcmpFragPkt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("DropIcmpFragPkt"))
 	return nil
 }
 

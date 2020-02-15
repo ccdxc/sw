@@ -1231,41 +1231,46 @@ extract_action_spec (acl_action_spec_t *as,
     // For production builds this needs to be removed
     // TODO: REMOVE
     if (ainfo.has_internal_actions()) {
-        if (as->action != acl::ACL_ACTION_REDIRECT) {
-            HAL_TRACE_ERR("Redirect action fields specified for "
-                          "non-redirect action {}",
-                          as->action);
-            ret = HAL_RET_INVALID_ARG;
-            goto end;
-        }
-        as->int_as.mac_sa_rewrite = ainfo.internal_actions().mac_sa_rewrite_en();
-        as->int_as.mac_da_rewrite = ainfo.internal_actions().mac_da_rewrite_en();
-        as->int_as.ttl_dec = ainfo.internal_actions().ttl_dec_en();
-        as->int_as.qid = ainfo.internal_actions().qid();
-        as->int_as.qid_en = ainfo.internal_actions().qid_valid();
+        if ((as->action == acl::ACL_ACTION_DENY) &&
+            (ainfo.internal_actions().has_drop_reason())) {
+            drop_reason_spec_to_codes(ainfo.internal_actions().drop_reason(), &as->int_as.drop_reason);
+        } else {
+            if (as->action != acl::ACL_ACTION_REDIRECT) {
+                HAL_TRACE_ERR("Redirect action fields specified for "
+                        "non-redirect action {}",
+                        as->action);
+                ret = HAL_RET_INVALID_ARG;
+                goto end;
+            }
+            as->int_as.mac_sa_rewrite = ainfo.internal_actions().mac_sa_rewrite_en();
+            as->int_as.mac_da_rewrite = ainfo.internal_actions().mac_da_rewrite_en();
+            as->int_as.ttl_dec = ainfo.internal_actions().ttl_dec_en();
+            as->int_as.qid = ainfo.internal_actions().qid();
+            as->int_as.qid_en = ainfo.internal_actions().qid_valid();
 
-        if (ainfo.internal_actions().has_encap_info()) {
-            as->int_as.tnnl_vnid = ainfo.internal_actions().encap_info().encap_value();
-        }
+            if (ainfo.internal_actions().has_encap_info()) {
+                as->int_as.tnnl_vnid = ainfo.internal_actions().encap_info().encap_value();
+            }
 
-        if (as->int_as.mac_sa_rewrite) {
-            MAC_UINT64_TO_ADDR(rw_key.mac_sa, ainfo.internal_actions().mac_sa());
-        }
+            if (as->int_as.mac_sa_rewrite) {
+                MAC_UINT64_TO_ADDR(rw_key.mac_sa, ainfo.internal_actions().mac_sa());
+            }
 
-        if (as->int_as.mac_da_rewrite) {
-            MAC_UINT64_TO_ADDR(rw_key.mac_da, ainfo.internal_actions().mac_da());
-        }
+            if (as->int_as.mac_da_rewrite) {
+                MAC_UINT64_TO_ADDR(rw_key.mac_da, ainfo.internal_actions().mac_da());
+            }
 
-        pd::pd_rw_entry_find_or_alloc_args_t r_args;
-        pd::pd_func_args_t pd_func_args = {0};
-        rw_key.rw_act = REWRITE_REWRITE_ID;
-        r_args.args = &rw_key;
-        r_args.rw_idx = &as->int_as.rw_idx;
-        pd_func_args.pd_rw_entry_find_or_alloc = &r_args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, &pd_func_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to find/alloc rw entry");
-            goto end;
+            pd::pd_rw_entry_find_or_alloc_args_t r_args;
+            pd::pd_func_args_t pd_func_args = {0};
+            rw_key.rw_act = REWRITE_REWRITE_ID;
+            r_args.args = &rw_key;
+            r_args.rw_idx = &as->int_as.rw_idx;
+            pd_func_args.pd_rw_entry_find_or_alloc = &r_args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_RWENTRY_FIND_OR_ALLOC, &pd_func_args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to find/alloc rw entry");
+                goto end;
+            }
         }
     }
 #endif

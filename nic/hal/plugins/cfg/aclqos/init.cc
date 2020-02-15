@@ -118,6 +118,52 @@ end:
     return ret;
 }
 
+hal_ret_t
+hal_nic_acl_create(uint32_t acl_id, uint32_t priority,
+                   bool ip_frag, acl::AclAction acl_action)
+{
+    hal_ret_t     ret;
+    AclSpec       spec;
+    AclResponse   rsp;
+    AclSelector   *match;
+    AclActionInfo *action;
+    IPSelector    *ip_selector;
+
+    spec.Clear();
+
+    match = spec.mutable_match();
+    action = spec.mutable_action();
+
+    spec.mutable_key_or_handle()->set_acl_id(acl_id);
+    spec.set_priority(priority);
+
+    // Drop IP fragmented packets
+    match->mutable_internal_key()->set_ip_frag(ip_frag);
+    match->mutable_internal_mask()->set_ip_frag(ip_frag);
+    action->set_action(acl_action);
+
+    switch (acl_id) {
+    case ACL_ICMP_FRAGMENT_DROP_ENTRY_ID:
+        ip_selector = match->mutable_ip_selector();
+        ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        ip_selector->set_ip_protocol(types::IPProtocol::IPPROTO_ICMP);
+        action->mutable_internal_actions()->mutable_drop_reason()->set_drop_icmp_frag_pkt(true);
+        break;
+    case ACL_ICMPV6_FRAG_DROP_ENTRY_ID:
+        ip_selector = match->mutable_ip_selector();
+        ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET6);
+        ip_selector->set_ip_protocol(types::IPProtocol::IPPROTO_ICMPV6);
+        action->mutable_internal_actions()->mutable_drop_reason()->set_drop_icmp_frag_pkt(true);
+        break;
+    default:
+        break;
+    }
+
+    ret = hal::acl_create(spec, &rsp);
+
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // install smart-nic mode specific ACLs
 //------------------------------------------------------------------------------
@@ -125,30 +171,38 @@ hal_ret_t
 hal_smart_nic_acl_config_init (void)
 {
     hal_ret_t     ret;
-    AclSpec       spec;
-    AclResponse   rsp;
-    AclSelector   *match;
-    AclActionInfo *action;
 
-    // Drop IP fragmented packets
-    spec.Clear();
-    match = spec.mutable_match();
-    action = spec.mutable_action();
+    ret = hal_nic_acl_create(ACL_ICMP_FRAGMENT_DROP_ENTRY_ID,
+            ACL_ICMP_FRAGMENT_DROP_ENTRY_PRIORITY,
+            true, acl::AclAction::ACL_ACTION_DENY);
 
-    spec.mutable_key_or_handle()->set_acl_id(ACL_IP_FRAGMENT_DROP_ENTRY_ID);
-    spec.set_priority(ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
+        HAL_TRACE_ERR("ICMP Fragment drop acl entry create failed ret {}", ret);
+        goto end;
+    }
 
-    match->mutable_internal_key()->set_ip_frag(true);
-    match->mutable_internal_mask()->set_ip_frag(true);
+    HAL_TRACE_DEBUG("ICMP Fragment drop acl entry created");
 
-    action->set_action(acl::AclAction::ACL_ACTION_DENY);
+    ret = hal_nic_acl_create(ACL_ICMPV6_FRAG_DROP_ENTRY_ID,
+            ACL_ICMPV6_FRAGMENT_DROP_ENTRY_PRIORITY,
+            true, acl::AclAction::ACL_ACTION_DENY);
 
-    ret = hal::acl_create(spec, &rsp);
+    if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
+        HAL_TRACE_ERR("ICMPv6 Fragment drop acl entry create failed ret {}", ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("ICMPv6 Fragment drop acl entry created");
+
+    ret = hal_nic_acl_create(ACL_IP_FRAGMENT_DROP_ENTRY_ID,
+            ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY,
+            true, acl::AclAction::ACL_ACTION_DENY);
+
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
         HAL_TRACE_ERR("IP Fragment drop acl entry create failed ret {}", ret);
         goto end;
     }
-    HAL_TRACE_DEBUG("IP fragment drop acl entry created");
+    HAL_TRACE_DEBUG("IP Fragment drop acl entry created");
+
     return HAL_RET_OK;
 
 end:

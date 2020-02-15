@@ -134,6 +134,7 @@ typedef struct drop_reason_codes_s {
     bool    drop_parser_icrc_error;
     bool    drop_parse_len_error;
     bool    drop_hardware_error;
+    bool    drop_icmp_frag_pkt;
 } __PACK__ drop_reason_codes_t;
 
 static inline void
@@ -163,6 +164,7 @@ drop_reason_spec_to_codes (const types::DropReasons &spec,
     codes->drop_parser_icrc_error = spec.drop_parser_icrc_error();
     codes->drop_parse_len_error = spec.drop_parse_len_error();
     codes->drop_hardware_error = spec.drop_hardware_error();
+    codes->drop_icmp_frag_pkt = spec.drop_icmp_frag_pkt();
     return;
 }
 

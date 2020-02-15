@@ -43,6 +43,7 @@ message DropMetrics {
     delphi.Counter   drop_src_lif_mismatch            = 26  [(venice.metricsField) = {DisplayName: "Source-LIF-mismatch Drops" Description: "number of packets dropped due to packets received on unexpected source LIF"}];
     delphi.Counter   drop_vf_ip_label_mismatch        = 27  [(venice.metricsField) = {DisplayName: "VF-IP-Label-mismatch Drops" Description: "number of packets dropped due to packets VF IP Label mismatch"}];
     delphi.Counter   drop_vf_bad_rr_dst_ip            = 28  [(venice.metricsField) = {DisplayName: "VF-Bad-RR-Destination-IP Drops" Description: "number of packets dropped due to packets VF bad RR destination IP"}];
+    delphi.Counter   drop_icmp_frag_pkt               = 29  [(venice.metricsField) = {DisplayName: "ICMP/ICMPv6-Fragment Drops" Description: "ICMP/ICMPv6 fragmented packet drops"}];
 }
 
 message EgressDropMetrics {
