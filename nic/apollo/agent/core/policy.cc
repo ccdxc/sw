@@ -68,7 +68,6 @@ sdk_ret_t
 policy_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
-    pds_policy_spec_t *spec;
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_policy_delete(key, bctxt)) != SDK_RET_OK) {
@@ -84,7 +83,6 @@ sdk_ret_t
 policy_get (pds_obj_key_t *key, pds_policy_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    pds_policy_spec_t *spec;
 
     memset(info, 0, sizeof(pds_policy_info_t));
     if (!agent_state::state()->pds_mock_mode()) {

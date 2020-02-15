@@ -28,7 +28,7 @@ public:
     static sltcam* factory(sdk_table_factory_params_t *params);
     static void destroy(sltcam *sltcam);
 
-    // All Public APIs
+    // public APIs
     sdk_ret_t insert(sdk_table_api_params_t *params);
     sdk_ret_t remove(sdk_table_api_params_t *params);
     sdk_ret_t get(sdk_table_api_params_t *params);
@@ -38,12 +38,12 @@ public:
     sdk_ret_t release(sdk_table_api_params_t *params);
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
                         sdk_table_stats_t *table_stats);
-    sdk_ret_t txn_start();
-    sdk_ret_t txn_end();
+    sdk_ret_t txn_start(void);
+    sdk_ret_t txn_end(void);
 
     // DEV USAGE ONLY:
     // Api to check sanity of the internal state
-    sdk_ret_t sanitize();
+    sdk_ret_t sanitize(void);
 
 private:
     sltcam() {

@@ -14,24 +14,24 @@ using sltctx = sdk::table::sltcam_internal::sltctx;
 namespace sdk {
 namespace table {
 
-#define SLTCAM_API_BEGIN(_name) {\
-        SLTCAM_TRACE_DEBUG("%s sltcam begin: %s %s",\
-                            "--", _name, "--");\
+#define SLTCAM_API_BEGIN(_name) {                            \
+        SLTCAM_TRACE_DEBUG("%s sltcam begin: %s %s",         \
+                            "--", _name, "--");              \
 }
 
-#define SLTCAM_API_END(_name, _status) {\
-        SLTCAM_TRACE_DEBUG("%s sltcam end: %s (r:%d) %s",\
-                            "--", _name, _status, "--");\
+#define SLTCAM_API_END(_name, _status) {                     \
+        SLTCAM_TRACE_DEBUG("%s sltcam end: %s (r:%d) %s",    \
+                            "--", _name, _status, "--");     \
 }
 
-#define SLTCAM_API_BEGIN_() {\
-        SLTCAM_API_BEGIN(props_.name);\
-        SDK_SPINLOCK_LOCK(&slock_);\
+#define SLTCAM_API_BEGIN_() {                                \
+        SLTCAM_API_BEGIN(props_.name);                       \
+        SDK_SPINLOCK_LOCK(&slock_);                          \
 }
 
-#define SLTCAM_API_END_(_status) {\
-        SLTCAM_API_END(props_.name, (_status));\
-        SDK_SPINLOCK_UNLOCK(&slock_);\
+#define SLTCAM_API_END_(_status) {                           \
+        SLTCAM_API_END(props_.name, (_status));              \
+        SDK_SPINLOCK_UNLOCK(&slock_);                        \
 }
 
 //---------------------------------------------------------------------------
@@ -145,14 +145,20 @@ sltcam::read_(sltctx *ctx) {
 //----------------------------------------------------------------------------
 sdk_ret_t
 sltcam::alloc_(sltctx *ctx) {
+    indexer::status irs;
+
     SDK_ASSERT(ctx->tcam_index_valid == false);
-    indexer::status irs = indexer_->alloc(&ctx->tcam_index,
-                                          !ctx->params->highest);
+    if (ctx->params->num_handles) {
+        irs = indexer_->alloc(&ctx->tcam_index, !ctx->params->highest,
+                              ctx->params->num_handles);
+    } else {
+        irs = indexer_->alloc(&ctx->tcam_index, !ctx->params->highest);
+    }
     if (irs != indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     ctx->tcam_index_valid = true;
-    SLTCAM_TRACE_DEBUG("hw index:%d", ctx->tcam_index);
+    SLTCAM_TRACE_DEBUG("hw index:%u", ctx->tcam_index);
     return sdk::SDK_RET_OK;
 }
 
@@ -161,8 +167,20 @@ sltcam::alloc_(sltctx *ctx) {
 //----------------------------------------------------------------------------
 sdk_ret_t
 sltcam::dealloc_(sltctx *ctx) {
+    indexer::status irs;
     SDK_ASSERT(ctx->tcam_index_valid);
-    indexer::status irs = indexer_->free(ctx->tcam_index);
+
+    if (ctx->params->num_handles) {
+        for (uint32_t i = 0; i < ctx->params->num_handles; i++) {
+            irs = indexer_->free(ctx->tcam_index + i);
+            if (irs != indexer::SUCCESS) {
+                SLTCAM_TRACE_ERR("Failed to free index %u", ctx->tcam_index + i);
+                // continue to free other indices as much as possible
+            }
+        }
+    } else {
+        irs = indexer_->free(ctx->tcam_index);
+    }
     if (irs != indexer::SUCCESS) {
         return sdk::SDK_RET_ERR;
     }
@@ -172,8 +190,8 @@ sltcam::dealloc_(sltctx *ctx) {
 
 static sltctx*
 create_sltctx(sdk::table::sdk_table_api_op_t op,
-                  sdk::table::sdk_table_api_params_t *params,
-                  sdk::table::sltcam_internal::properties *props) {
+              sdk::table::sdk_table_api_params_t *params,
+              sdk::table::sltcam_internal::properties *props) {
     static sltctx ctx;
     ctx.init();
     ctx.params = params;
@@ -222,6 +240,7 @@ __label__ done;
 
     // Allocate a tcam entry if not already reserved.
     if (ctx->params->handle.valid() == false) {
+        ctx->params->num_handles = 1;
         ret = alloc_(ctx);
         if (ret != sdk::SDK_RET_OK) {
             SLTCAM_TRACE_ERR_GOTO(done, "alloc, r:%d", ret);
@@ -351,6 +370,7 @@ __label__ done;
     txn_.release(ctx);
 
     // Free the tcam entry
+    ctx->params->num_handles = 1;
     ret = dealloc_(ctx);
     if (ret != sdk::SDK_RET_OK) {
         // At this point, not much can be done, print err and proceed
@@ -454,7 +474,7 @@ __label__ done;
     SLTCAM_API_BEGIN_();
 
     auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_RELEASE,
-                                 params, &props_);
+                             params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
     // Allocate the entry

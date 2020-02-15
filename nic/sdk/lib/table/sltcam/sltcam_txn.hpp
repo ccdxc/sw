@@ -27,8 +27,15 @@ private:
 
 private:
     sdk_ret_t alloc_(sltctx *ctx) {
+        indexer::status irs;
         SDK_ASSERT(ctx->tcam_index_valid);
-        indexer::status irs = indexer_->alloc_withid(ctx->tcam_index);
+
+        if (ctx->params->num_handles) {
+            irs = indexer_->alloc_withid(ctx->tcam_index,
+                                         ctx->tcam_index_valid);
+        } else {
+            irs = indexer_->alloc_withid(ctx->tcam_index);
+        }
         if (irs != indexer::SUCCESS) {
             return sdk::SDK_RET_ENTRY_EXISTS;
         }
@@ -37,7 +44,20 @@ private:
 
     sdk_ret_t dealloc_(sltctx *ctx) {
         SDK_ASSERT(ctx->tcam_index_valid);
-        indexer::status irs = indexer_->free(ctx->tcam_index);
+        indexer::status irs;
+
+        if (ctx->params->num_handles) {
+            for (uint32_t i = 0; i < ctx->params->num_handles; i++) {
+                irs = indexer_->free(ctx->tcam_index + i);
+                if (irs != indexer::SUCCESS) {
+                    SLTCAM_TRACE_ERR("Failed to free index %u",
+                                     ctx->tcam_index + i);
+                    // continue to free other indices as much as possible
+                }
+            }
+        } else {
+            irs = indexer_->free(ctx->tcam_index);
+        }
         if (irs != indexer::SUCCESS) {
             return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }

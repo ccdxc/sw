@@ -178,6 +178,9 @@ typedef struct sdk_table_api_params_ {
     // Handle of the entry, encoding differs for each table.
     handle_t handle;
     // [Input]
+    // number of handles to reserve, used in reservation related APIs
+    uint32_t num_handles;
+    // [Input]
     // Iterator callback function
     iterate_t itercb;
     // [Input]
