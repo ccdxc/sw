@@ -44,7 +44,7 @@ testbundles:
         - flowstats/flowstats.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - networking/upgrade.testbundle
-        #- networking/telemetry.testbundle
+        - networking/telemetry.testbundle
         - linktest/linktest.testbundle
         - firewall/policy.testbundle
         - aging/aging.testbundle
