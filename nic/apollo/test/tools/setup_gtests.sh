@@ -20,6 +20,7 @@ export VAL_CMD=valgrind
 
 function finish () {
     # auto invoked on any exit
+    ${NICDIR}/tools/print-cores.sh
     echo "===== Collecting logs ====="
     ${NICDIR}/apollo/test/tools/savelogs.sh
     rm -f ${NICDIR}/conf/pipeline.json
