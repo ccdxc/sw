@@ -61,7 +61,8 @@ typedef struct pds_vpc_spec_s {
 
 /// \brief VPC status
 typedef struct pds_vpc_status_s {
-    uint16_t hw_id;    ///< hardware id
+    uint16_t hw_id;       ///< hardware id
+    uint16_t bd_hw_id;    ///< VPC's BD h/w id, if exists
 } __PACK__ pds_vpc_status_t;
 
 /// \brief VPC statistics

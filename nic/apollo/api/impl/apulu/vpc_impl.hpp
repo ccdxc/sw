@@ -167,6 +167,10 @@ public:
     /// \return    h/w id assigned to the vpc
     uint16_t hw_id(void) const { return hw_id_; }
 
+    /// \brief     return vpc's BD h/w id
+    /// \return    BD h/w id assigned to the vpc
+    uint16_t bd_hw_id(void) const { return bd_hw_id_; }
+
     /// \brief      get the key from entry in hash table context
     /// \param[in]  entry in the hash table context
     /// \return     hw id from the entry
@@ -183,7 +187,8 @@ public:
 private:
     /// \brief  constructor
     vpc_impl() {
-        hw_id_   = 0xFFFF;
+        hw_id_  = 0xFFFF;
+        bd_hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
         ht_ctxt_.reset();
     }
@@ -191,6 +196,7 @@ private:
     /// \brief  constructor with spec
     vpc_impl(pds_vpc_spec_t *spec) {
         hw_id_ = 0xFFFF;
+        bd_hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
         key_ = spec->key;
         ht_ctxt_.reset();
@@ -226,6 +232,7 @@ private:
 
 private:
     uint16_t    hw_id_;
+    uint16_t    bd_hw_id_;
     handle_t    vni_hdl_;
     /// PI specific info
     struct {

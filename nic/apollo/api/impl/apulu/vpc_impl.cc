@@ -92,6 +92,15 @@ vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         }
         hw_id_ = idx;
 
+        // reserve a bd id for this vpc
+        ret = subnet_impl_db()->subnet_idxr()->alloc(&idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate BD hw id for vpc %s, err %u",
+                           spec->key.str(), ret);
+            return ret;
+        }
+        bd_hw_id_ = idx;
+
         // reserve an entry in VNI table
         vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
@@ -122,6 +131,10 @@ vpc_impl::release_resources(api_base *api_obj) {
         vpc_impl_db()->vpc_idxr()->free(hw_id_);
     }
 
+    if (bd_hw_id_ != 0xFFFF) {
+        subnet_impl_db()->subnet_idxr()->free(bd_hw_id_);
+    }
+
     if (vni_hdl_.valid()) {
         tparams.handle = vni_hdl_;
         vpc_impl_db()->vni_tbl()->release(&tparams);
@@ -140,6 +153,10 @@ vpc_impl::nuke_resources(api_base *api_obj) {
         vpc_impl_db()->vpc_idxr()->free(hw_id_);
     }
 
+    if (bd_hw_id_ != 0xFFFF) {
+        subnet_impl_db()->subnet_idxr()->free(bd_hw_id_);
+    }
+
     if (vni_hdl_.valid()) {
         vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
@@ -155,6 +172,7 @@ vpc_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
                         api_obj_ctxt_t *obj_ctxt) {
 
     msg->cfg_msg.vpc.status.hw_id = hw_id_;
+    msg->cfg_msg.vpc.status.bd_hw_id = bd_hw_id_;
     return SDK_RET_OK;
 }
 
@@ -240,7 +258,7 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
-    vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.bd_id = bd_hw_id_;
     vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     vni_data.vni_info.is_l3_vnid = TRUE;
@@ -272,7 +290,7 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
-    vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.bd_id = bd_hw_id_;
     vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     vni_data.vni_info.is_l3_vnid = TRUE;
@@ -285,9 +303,8 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
                       spec->key.str(), ret);
     }
 
-    // delete old impl and insert cloned impl into ht
-    vpc_impl_db()->remove(hw_id_);
-    vpc_impl_db()->insert(hw_id_, this);
+    // update the vpc db
+    vpc_impl_db()->update(hw_id_, this);
     return ret;
 }
 
@@ -352,12 +369,12 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
     p4pd_error_t p4pd_ret;
+    pds_vpc_status_t *status;
     vni_actiondata_t vni_data;
     vpc_actiondata_t vpc_data;
     vni_swkey_t vni_key = { 0 };
     sdk_table_api_params_t tparams = { 0 };
     pds_vpc_info_t *vpcinfo = (pds_vpc_info_t *)info;
-    pds_vpc_status_t *status;
 
     spec = &vpcinfo->spec;
     status = &vpcinfo->status;
@@ -380,10 +397,8 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
                       spec->key.str(), vni_key.vxlan_1_vni, ret);
         return ret;
     }
-
-    // validate values read from hw table with sw state
-    SDK_ASSERT(vni_data.vni_info.bd_id == hw_id_);
     status->hw_id = hw_id_;
+    status->bd_hw_id = vni_data.vni_info.bd_id;
     return SDK_RET_OK;
 }
 

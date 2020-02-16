@@ -77,6 +77,7 @@ private:
     rte_indexer *subnet_idxr(void) const { return subnet_idxr_; }
     ht *impl_ht(void) const { return impl_ht_; }
     // subnet_impl class is friend of subnet_impl_state
+    friend class vpc_impl;
     friend class subnet_impl;
 
 private:

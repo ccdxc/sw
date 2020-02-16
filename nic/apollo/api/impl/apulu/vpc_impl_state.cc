@@ -87,22 +87,29 @@ vpc_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-vpc_impl_state::insert(uint16_t hw_id, vpc_impl *impl) {
-    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
-    return SDK_RET_OK;
-}
-
 vpc_impl *
 vpc_impl_state::find(uint16_t hw_id) {
     return (vpc_impl *)impl_ht_->lookup(&hw_id);
 }
 
 sdk_ret_t
+vpc_impl_state::insert(uint16_t hw_id, vpc_impl *impl) {
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl_state::update(uint16_t hw_id, vpc_impl *impl) {
+    impl_ht_->remove(&hw_id);
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_impl_state::remove(uint16_t hw_id) {
     vpc_impl *vpc = NULL;
 
-    vpc = (vpc_impl *) impl_ht_->remove(&hw_id);
+    vpc = (vpc_impl *)impl_ht_->remove(&hw_id);
     if (!vpc) {
         PDS_TRACE_ERR("Failed to find vpc impl for hw id %u", hw_id);
         return SDK_RET_ENTRY_NOT_FOUND;

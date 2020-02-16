@@ -62,15 +62,21 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief      API to find vpc impl obj using hw id
+    /// \return     vpc impl object
+    vpc_impl *find(uint16_t hw_id);
+
     /// \brief      API to insert vpc impl into hash table
     /// \param[in]  key     vpc key
     /// \param[in]  impl    vpc impl object
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(uint16_t hw_id, vpc_impl *impl);
 
-    /// \brief      API to find vpc impl obj using hw id
-    /// \return     vpc impl object
-    vpc_impl *find(uint16_t hw_id);
+    /// \brief      API to update vpc impl in the hash table
+    /// \param[in]  key     vpc key
+    /// \param[in]  impl    vpc impl object to be updated with
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(uint16_t hw_id, vpc_impl *impl);
 
     /// \brief      API to remove hw id and vpc key from the hash table
     /// \return     SDK_RET_OK on success, failure status code on error
