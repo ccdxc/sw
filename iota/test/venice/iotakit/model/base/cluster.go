@@ -929,7 +929,7 @@ func (sm *SysModel) JoinNaplesToVenice(nodes []*testbed.TestNode) error {
 			for _, naples := range node.NaplesConfigs.Configs {
 				trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
 				//Hack for now until we push full profile
-				trig.AddCommand(fmt.Sprintf("halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("/nic/bin/halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
 			}
 		}
 	}
