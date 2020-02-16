@@ -21,10 +21,19 @@ static pds_epoch_t    g_api_epoch_ = 0xDEADFEED;
 
 /// \brief    wrapper function to allocate an API msg
 /// \return   pointer to allocated API msg or NULL
-static inline void *
+static inline api_msg_t *
 api_msg_alloc (void)
 {
-    return api_msg_slab()->alloc();
+    void      *mem;
+    api_msg_t *api_msg;
+
+    mem = api_msg_slab()->alloc();
+    if (unlikely(mem == NULL)) {
+        return NULL;
+    }
+
+    api_msg = new (mem) api_msg_t();
+    return api_msg;
 }
 
 /// \brief    wrapper function to free an api msg
@@ -58,7 +67,6 @@ pds_batch_ctxt_t
 api_batch_start (pds_batch_params_t *batch_params)
 {
     api_msg_t *api_msg;
-    void      *mem;
 
     if (unlikely((batch_params == NULL) ||
                  (batch_params->epoch == PDS_EPOCH_INVALID))) {
@@ -66,12 +74,11 @@ api_batch_start (pds_batch_params_t *batch_params)
     }
 
     // allocate IPC msg for this batch & initialize the context
-    mem = api::api_msg_alloc();
-    if (unlikely(mem == NULL)) {
+    api_msg = api::api_msg_alloc();
+    if (unlikely(api_msg == NULL)) {
         return PDS_BATCH_CTXT_INVALID;
     }
 
-    api_msg = new (mem) api_msg_t();
     api_msg->msg_id = api::API_MSG_ID_BATCH;
     api_msg->batch.epoch = batch_params->epoch;
     api_msg->batch.async = batch_params->async;

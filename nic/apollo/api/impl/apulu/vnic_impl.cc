@@ -120,11 +120,6 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             hw_id_ = idx;
         } else {
             lif = lif_impl_db()->find(&spec->host_if);
-            if (lif == NULL) {
-                PDS_TRACE_ERR("lif %s not found, vnic %s create failed",
-                              spec->host_if.str(), spec->key.str());
-                return SDK_RET_INVALID_ARG;
-            }
             // inherit vnic hw id of the corresponding lif
             if (lif->type() != sdk::platform::LIF_TYPE_HOST) {
                 PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",

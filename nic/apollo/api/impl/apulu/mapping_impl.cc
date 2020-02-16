@@ -602,12 +602,6 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     switch (spec->nh_type) {
         case PDS_NH_TYPE_OVERLAY:
             tep = tep_find(&spec->tep);
-            if (unlikely(tep == NULL)) {
-                PDS_TRACE_ERR("tep %s for mapping (vpc %s ip %s) not found",
-                              spec->tep.str(), spec->key.vpc.str(),
-                              ipaddr2str(&spec->key.ip_addr));
-                return SDK_RET_INVALID_ARG;
-            }
             tep_impl_obj = (tep_impl *)tep->impl();
             mapping_data.nexthop_type = NEXTHOP_TYPE_TUNNEL;
             mapping_data.nexthop_id = tep_impl_obj->hw_id();
@@ -615,12 +609,6 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 
         case PDS_NH_TYPE_OVERLAY_ECMP:
             nh_group = nexthop_group_find(&spec->nh_group);
-            if (unlikely(nh_group == NULL)) {
-                PDS_TRACE_ERR("nhgroup %s for mapping (vpc %s ip %s) not found",
-                              spec->nh_group.str(), spec->key.vpc.str(),
-                              ipaddr2str(&spec->key.ip_addr));
-                return SDK_RET_INVALID_ARG;
-            }
             nhgroup_impl = (nexthop_group_impl *)nh_group->impl();
             mapping_data.nexthop_type = NEXTHOP_TYPE_ECMP;
             mapping_data.nexthop_id = nhgroup_impl->hw_id();
