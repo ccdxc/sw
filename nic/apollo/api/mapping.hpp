@@ -15,12 +15,13 @@
 
 // mapping internal specification
 typedef struct pds_mapping_spec_s {
-    pds_mapping_key_t key;                // mapping key
-    pds_obj_key_t subnet;              // subnet this IP is part of
-    pds_encap_t fabric_encap;             // fabric encap for this mapping
-    mac_addr_t overlay_mac;               // MAC for this IP
-    pds_nh_type_t nh_type;                // nexthop type information for
-                                          // the mapping
+    pds_obj_key_t key;                        // mapping's key (aka. uuid)
+    pds_mapping_key_t skey;                   // secondary key of mapping
+    pds_obj_key_t subnet;                     // subnet this IP is part of
+    pds_encap_t fabric_encap;                 // fabric encap for this mapping
+    mac_addr_t overlay_mac;                   // MAC for this IP
+    pds_nh_type_t nh_type;                    // nexthop type information for
+                                              // the mapping
     bool is_local;
     union {
         // information specific to remote mappings
@@ -29,14 +30,14 @@ typedef struct pds_mapping_spec_s {
                                               // 1. device IP for local vnic
                                               // 2. remote TEP for remote vnic
                                               //    if provider IP is not valid
-            pds_obj_key_t nh_group; // nexthop group mapping is behind
-            pds_obj_key_t nexthop;        // nexthop (used in case traffic
+            pds_obj_key_t nh_group;           // nexthop group mapping is behind
+            pds_obj_key_t nexthop;            // nexthop (used in case traffic
                                               // is going out natively without
                                               // encap)
         };
         // information specific to local IP mappings
         struct {
-            pds_obj_key_t vnic;              // vnic for local IP
+            pds_obj_key_t vnic;               // vnic for local IP
             bool public_ip_valid;             // true if public IP is valid
             ip_addr_t public_ip;              // public IP address
             bool provider_ip_valid;           // true if provider IP is valid
@@ -105,7 +106,18 @@ public:
      * @return    mapping instace corresponding to the key or NULL if entry is
      *            not found
      */
-    static mapping_entry *build(pds_mapping_key_t *key);
+    static mapping_entry *build(pds_obj_key_t *key);
+
+    /**
+     * @brief    build object given its 2nd-ary key from the (sw and/or
+     *           hw state we have) and return an instance of the object (this
+     *           is useful for stateless objects to be operated on by framework
+     *           during DELETE or UPDATE operations)
+     * @param[in] skey    2nd-ary key of object instance of interest
+     * @return    mapping instace corresponding to the key or NULL if entry is
+     *            not found
+     */
+    static mapping_entry *build(pds_mapping_key_t *skey);
 
     /**
      * @brief    free a stateless entry's temporary s/w only resources like
@@ -214,12 +226,12 @@ public:
          * class will only increase temporary usage of memory (and some cycles
          * to copy key bytes into this class)
          */
-        if (key_.type == PDS_MAPPING_TYPE_L3) {
-            return "mapping-(" + std::string(key_.vpc.str()) + ", " +
-                       std::string(ipaddr2str(&key_.ip_addr)) + ")";
-        } else if (key_.type == PDS_MAPPING_TYPE_L2) {
-            return "mapping-(" + std::string(key_.subnet.str()) + ", " +
-                       std::string(macaddr2str(key_.mac_addr)) + ")";
+        if (skey_.type == PDS_MAPPING_TYPE_L3) {
+            return "mapping-(" + std::string(skey_.vpc.str()) + ", " +
+                       std::string(ipaddr2str(&skey_.ip_addr)) + ")";
+        } else if (skey_.type == PDS_MAPPING_TYPE_L2) {
+            return "mapping-(" + std::string(skey_.subnet.str()) + ", " +
+                       std::string(macaddr2str(skey_.mac_addr)) + ")";
         } else {
             SDK_ASSERT(FALSE);
         }
@@ -227,11 +239,19 @@ public:
 
     /**
      * @brief read config
-     * @param[in]  key Pointer to the key object
+     * @param[in]  key pointer to the key object
      * @param[out] info Pointer to the info object
      * @return   SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read(pds_mapping_key_t *key, pds_mapping_info_t *info);
+    sdk_ret_t read(pds_obj_key_t *id, pds_mapping_info_t *info);
+
+    /**
+     * @brief read config
+     * @param[in]  key pointer to the mapping's identifier
+     * @param[out] info Pointer to the info object
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t read(pds_mapping_key_t *id, pds_mapping_info_t *info);
 
     /// \brief     helper function to get key given mapping entry
     /// \param[in] entry    pointer to mapping instance
@@ -239,6 +259,14 @@ public:
     static void *mapping_key_func_get(void *entry) {
         mapping_entry *mapping = (mapping_entry *)entry;
         return (void *)&(mapping->key_);
+    }
+
+    /// \brief     helper function to get 2nd-ary key given mapping entry
+    /// \param[in] entry    pointer to mapping instance
+    /// \return    pointer to the mapping instance's 2nd-ary key
+    static void *mapping_skey_func_get(void *entry) {
+        mapping_entry *mapping = (mapping_entry *)entry;
+        return (void *)&(mapping->skey_);
     }
 
     /**
@@ -251,7 +279,13 @@ public:
      * @brief    return the mapping object's key
      * @return    key of the mapping object
      */
-    pds_mapping_key_t& key(void) { return key_; }
+    pds_obj_key_t& key(void) { return key_; }
+
+    /**
+     * @brief    return the mapping object's identifier fields
+     * @return    id of the mapping object
+     */
+    pds_mapping_key_t& skey(void) { return skey_; }
 
     /**
      * @brief set object is local or remote
@@ -301,12 +335,14 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_mapping_key_t key_; /**< key of this mapping */
-    bool public_ip_valid_;  /**< true if public IP is valid */
-    ip_addr_t public_ip_;   /**< public IP, if its valid */
-    bool is_local_;         /**< is it local or remote object */
-    ht_ctxt_t ht_ctxt_;     /**< hash table context */
-    impl_base *impl_;       /**< impl object instance */
+    pds_obj_key_t key_;       /**< key of this mapping */
+    pds_mapping_key_t skey_;  /**< 2nd-ary key for this mapping */
+    bool public_ip_valid_;    /**< true if public IP is valid */
+    ip_addr_t public_ip_;     /**< public IP, if its valid */
+    bool is_local_;           /**< is it local or remote object */
+    ht_ctxt_t ht_ctxt_;       /**< hash table context for primary key db */
+    ht_ctxt_t skey_ht_ctxt_;  /**< hash table context for 2nd-ary key db */
+    impl_base *impl_;         /**< impl object instance */
 
     /**< mapping_state is friend of mapping_entry */
     friend class mapping_state;

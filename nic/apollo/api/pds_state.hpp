@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/platform/utils/program.hpp"
+#include "nic/sdk/lib/kvstore/kvstore.hpp"
 #include "nic/apollo/api/device_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
 #include "nic/apollo/api/vpc_state.hpp"
@@ -124,6 +125,7 @@ public:
     void set_scale_profile(pds_scale_profile_t profile) {
         scale_profile_ = profile;
     }
+    sdk::lib::kvstore *kvstore(void) const { return kvstore_; }
     pds_scale_profile_t scale_profile(void) const { return scale_profile_; }
     void set_vpp_ipc_mock(bool mock) { vpp_ipc_mock_ = mock; }
     bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
@@ -214,7 +216,9 @@ public:
     void set_system_mac(mac_addr_t mac) {
         memcpy(system_mac_, mac, sizeof(system_mac_));
     }
-    void set_upg_event_cb(pds_upg_event_cb_t event_cb) { upg_event_cb_ = event_cb; }
+    void set_upg_event_cb(pds_upg_event_cb_t event_cb) {
+        upg_event_cb_ = event_cb;
+    }
     pds_upg_event_cb_t upg_event_cb(void) { return upg_event_cb_; }
     learn_state *learn_db(void) {
         return (learn_state *)state_[PDS_STATE_LEARN];
@@ -239,6 +243,7 @@ private:
     pds_event_cb_t          event_cb_;
     pds_upg_event_cb_t      upg_event_cb_;
     mac_addr_t              system_mac_;
+    sdk::lib::kvstore       *kvstore_;
 };
 extern pds_state g_pds_state;
 

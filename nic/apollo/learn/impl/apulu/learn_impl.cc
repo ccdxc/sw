@@ -10,14 +10,14 @@
 
 #include "nic/sdk/include/sdk/l2.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
-#include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
+#include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/api/impl/apulu/nacl_data.h"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
-#include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "nic/apollo/packet/apulu/p4_cpu_hdr.h"
 
@@ -168,7 +168,7 @@ remote_mapping_find (pds_mapping_key_t *key)
     // remote mapping spec but just the presence of mapping
     pds_remote_mapping_info_t info;
 
-    return pds_remote_mapping_read(key, &info);
+    return api::pds_remote_mapping_read(key, &info);
 }
 
 }    // namespace impl

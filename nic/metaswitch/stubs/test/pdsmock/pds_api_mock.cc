@@ -192,7 +192,7 @@ sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_local_mapping_read(pds_mapping_key_t *key,
+sdk_ret_t pds_local_mapping_read(pds_mapping_key_t *skey,
                                  pds_local_mapping_info_t *info) {
     return SDK_RET_OK;
 }
@@ -202,27 +202,17 @@ sdk_ret_t pds_local_mapping_update(pds_local_mapping_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_local_mapping_delete(pds_mapping_key_t *key,
-                                   pds_batch_ctxt_t bctxt) {
-    return SDK_RET_OK;
-}
-
 sdk_ret_t pds_remote_mapping_create(pds_remote_mapping_spec_s *spec,
                                     pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_remote_mapping_read(pds_mapping_key_t *key,
+sdk_ret_t pds_remote_mapping_read(pds_mapping_key_t *skey,
                                   pds_remote_mapping_info_t *info) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_remote_mapping_update(pds_remote_mapping_spec_s *spec,
-                                    pds_batch_ctxt_t bctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *key,
                                     pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }
@@ -530,6 +520,7 @@ sdk_ret_t pds_teardown() {
 
 namespace sdk {
 namespace platform {
+
 int readFruKey(std::string key, std::string &value)
 {
     // Fill some dummy values
@@ -543,15 +534,29 @@ int readFruKey(std::string key, std::string &value)
     }
     return -1;
 }
-}
-}
-namespace api {
-    pds_state g_pds_state;
-    pds_state::pds_state() { }
-    pds_state::~pds_state() { }
 
-    sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
-        info->status.state = PDS_IF_STATE_UP;
-        return SDK_RET_OK;
-    }
+}    // namespace platform
+}    // namespace sdk
+
+namespace api {
+
+pds_state g_pds_state;
+pds_state::pds_state() { }
+pds_state::~pds_state() { }
+
+sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
+    info->status.state = PDS_IF_STATE_UP;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_local_mapping_delete(pds_mapping_key_t *skey,
+                                   pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *skey,
+                                    pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+
 }    // namespace api

@@ -28,6 +28,7 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     this->vpc = vpc;
     this->subnet = subnet;
     extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
+    key_build(&this->key);
     this->vnic_mac_u64 = vnic_mac;
 
     this->fabric_encap.type = encap_type;
@@ -54,6 +55,7 @@ void
 remote_mapping_feeder::iter_next(int width) {
     vnic_mac_u64 += width;
     test::increment_ip_addr(&vnic_ip_pfx.addr, width);
+    key_build(&this->key);
     //increment_encap(&fabric_encap, width);
     curr_tep_vnic_cnt++;
 
@@ -65,14 +67,23 @@ remote_mapping_feeder::iter_next(int width) {
 }
 
 void
-remote_mapping_feeder::key_build(pds_mapping_key_t *key) const {
-    key->type = map_type;
+remote_mapping_feeder::key_build(pds_obj_key_t *key) const {
+    // TODO: can we encode vpc, IP or subnet, MAC here ?
+    //       won't work with IPv6
+    //       how about storing based uuid and increment ?
+    uint32_t vpc_id, subnet_id;
+
+    memset(key, 0, sizeof(*key));
+    memcpy(&key->id[0], &map_type, sizeof(uint8_t));
     if (map_type == PDS_MAPPING_TYPE_L3) {
-        key->vpc = vpc;
-        key->ip_addr = vnic_ip_pfx.addr;
+        vpc_id = objid_from_uuid(vpc);
+        sprintf(&key->id[1], "%08x", vpc_id);
+        memcpy(&key->id[5], &vnic_ip_pfx.addr.addr.v4_addr,
+               sizeof(ipv4_addr_t));
     } else {
-        key->subnet = subnet;
-        MAC_UINT64_TO_ADDR(key->mac_addr, vnic_mac_u64);
+        subnet_id = objid_from_uuid(subnet);
+        memcpy(&key->id[1], &subnet_id, sizeof(uint32_t));
+        MAC_UINT64_TO_ADDR(&key->id[5], vnic_mac_u64);
     }
 }
 
@@ -80,6 +91,14 @@ void
 remote_mapping_feeder::spec_build(pds_remote_mapping_spec_t *spec) const {
     memset(spec, 0, sizeof(*spec));
     key_build(&spec->key);
+    spec->skey.type = map_type;
+    if (map_type == PDS_MAPPING_TYPE_L3) {
+        spec->skey.vpc = vpc;
+        spec->skey.ip_addr = vnic_ip_pfx.addr;
+    } else {
+        spec->skey.subnet = subnet;
+        MAC_UINT64_TO_ADDR(spec->skey.mac_addr, vnic_mac_u64);
+    }
     spec->subnet = subnet;
     spec->fabric_encap = fabric_encap;
     MAC_UINT64_TO_ADDR(spec->vnic_mac, vnic_mac_u64);
@@ -91,23 +110,24 @@ remote_mapping_feeder::spec_build(pds_remote_mapping_spec_t *spec) const {
 }
 
 bool
-remote_mapping_feeder::key_compare(const pds_mapping_key_t *key) const {
-
-    if (map_type != key->type)
+remote_mapping_feeder::key_compare(const pds_obj_key_t *key) const {
+    if (this->key != *key)
         return false;
-
-    if (map_type == PDS_MAPPING_TYPE_L3)
-        return ((vpc == key->vpc) &&
-                IPADDR_EQ(&vnic_ip_pfx.addr, &key->ip_addr));
-
-    // L2 key type
-    return ((subnet == key->subnet) &&
-            (vnic_mac_u64 == MAC_TO_UINT64(key->mac_addr)));
-
+    return true;
 }
 
 bool
 remote_mapping_feeder::spec_compare(const pds_remote_mapping_spec_t *spec) const {
+    if (map_type != spec->skey.type)
+        return false;
+
+    if (map_type == PDS_MAPPING_TYPE_L3)
+        return ((vpc == spec->skey.vpc) &&
+                IPADDR_EQ(&vnic_ip_pfx.addr, &spec->skey.ip_addr));
+
+    // L2 key type
+    return ((subnet == spec->skey.subnet) &&
+            (vnic_mac_u64 == MAC_TO_UINT64(spec->skey.mac_addr)));
 
     // skipping comparing subnet id and tep/nh_group hw id since the
     // hw id's retured via read are different from those configured.

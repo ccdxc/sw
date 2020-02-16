@@ -491,8 +491,8 @@ public:
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
-        uint32_t vpc_id = test::objid_from_uuid(local_spec->key.vpc);
-        ip_addr_t ip_addr = local_spec->key.ip_addr;
+        uint32_t vpc_id = test::objid_from_uuid(local_spec->skey.vpc);
+        ip_addr_t ip_addr = local_spec->skey.ip_addr;
 
         assert(vpc_id);
         if (vpc_id > DOL_MAX_VPC) {
@@ -541,8 +541,8 @@ public:
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
-        uint32_t vpc_id = test::objid_from_uuid(remote_spec->key.vpc);
-        ip_addr_t ip_addr = remote_spec->key.ip_addr;
+        uint32_t vpc_id = test::objid_from_uuid(remote_spec->skey.vpc);
+        ip_addr_t ip_addr = remote_spec->skey.ip_addr;
 
         assert(vpc_id);
         if (vpc_id > DOL_MAX_VPC) {

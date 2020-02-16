@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <string.h>
 #include "include/sdk/mem.hpp"
 #include "lib/kvstore/kvstore_lmdb.hpp"
 
@@ -18,18 +19,17 @@ sdk_ret_t
 kvstore_lmdb::init(const char *dbpath) {
     int rv;
 
-     rv = mdb_env_create(&db_);
+     rv = mdb_env_create(&env_);
      if (likely(rv == 0)) {
-         rv = mdb_env_open(db_, dbpath, MDB_NOSUBDIR, S_IRUSR | S_IWUSR);
-         if (rv < 0) {
-             mdb_env_close(db_);
-             goto error;
+         rv = mdb_env_set_mapsize(env_, 20 << 20);
+         if (likely(rv == 0)) {
+             rv = mdb_env_open(env_, dbpath, MDB_NOSUBDIR, S_IRUSR | S_IWUSR);
+             if (likely(rv == 0)) {
+                 return SDK_RET_OK;
+             }
+             mdb_env_close(env_);
          }
      }
-     return SDK_RET_OK;
-
-error:
-
      SDK_TRACE_ERR("kvstore init with %s failed, err %d", dbpath, rv);
      return SDK_RET_ERR;
 }
@@ -58,74 +58,9 @@ kvstore_lmdb::destroy(kvstore *kvs) {
 
     // if there is any outstanding transaction, abort it
     lmdb->txn_abort();
-    mdb_env_close(lmdb->db_);
+    mdb_env_close(lmdb->env_);
     lmdb->~kvstore_lmdb();
     SDK_FREE(SDK_MEM_ALLOC_KVSTORE, lmdb);
-}
-
-sdk_ret_t
-kvstore_lmdb::insert(void *key, size_t key_sz, void *data, size_t data_sz) {
-    int rv;
-    sdk_ret_t ret;
-    MDB_val db_key;
-    MDB_val db_val;
-    bool new_txn = false;
-
-    // if this is not inside a transaction, open new transaction
-    if (!txn_hdl_) {
-        ret = txn_start();
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        new_txn = true;
-    }
-    // update the database
-    db_key.mv_data = key;
-    db_key.mv_size = key_sz;
-    db_val.mv_data = data;
-    db_val.mv_size = data_sz;
-    rv = mdb_put(txn_hdl_, db_dbi_, &db_key, &db_val, 0);
-    if (rv) {
-        SDK_TRACE_ERR("kvstore insert failed, err %d", rv);
-        ret = SDK_RET_ERR;
-        // fall thru
-    }
-    // if a new transaction is opened, close it
-    if (new_txn == true) {
-        txn_commit();
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-kvstore_lmdb::remove(void *key, size_t key_sz) {
-    int rv;
-    sdk_ret_t ret;
-    MDB_val db_key;
-    bool new_txn = false;
-
-    // if this is not inside a transaction, open new transaction
-    if (!txn_hdl_) {
-        ret = txn_start();
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        new_txn = true;
-    }
-    // update the database
-    db_key.mv_data = key;
-    db_key.mv_size = key_sz;
-    rv = mdb_del(txn_hdl_, db_dbi_, &db_key, NULL);
-    if (rv) {
-        SDK_TRACE_ERR("kvstore insert failed, err %d", rv);
-        ret = SDK_RET_ERR;
-        // fall thru
-    }
-    // if a new transaction is opened, close it
-    if (new_txn == true) {
-        txn_commit();
-    }
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -137,7 +72,7 @@ kvstore_lmdb::txn_start(void) {
                       "already");
         return SDK_RET_TXN_EXISTS;
     }
-    rv = mdb_txn_begin(db_, NULL, 0, &txn_hdl_);
+    rv = mdb_txn_begin(env_, NULL, 0, &txn_hdl_);
     if (rv) {
         SDK_TRACE_ERR("Failed to start new transaction, err %d", rv);
         return SDK_RET_ERR;
@@ -166,7 +101,7 @@ kvstore_lmdb::txn_commit(void) {
         // fall thru
     }
     txn_hdl_ = NULL;
-    mdb_dbi_close(db_, db_dbi_);
+    mdb_dbi_close(env_, db_dbi_);
     return ret;
 }
 
@@ -178,8 +113,108 @@ kvstore_lmdb::txn_abort(void) {
     }
     mdb_txn_abort(txn_hdl_);
     txn_hdl_ = NULL;
-    mdb_dbi_close(db_, db_dbi_);
+    mdb_dbi_close(env_, db_dbi_);
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+kvstore_lmdb::find(void *key, size_t key_sz, void *data, size_t *data_sz) {
+    int rv;
+    sdk_ret_t ret;
+    MDB_val db_key;
+    MDB_val db_val;
+    bool new_txn = false;
+
+    // if this is not inside a transaction, open new transaction
+    if (!txn_hdl_) {
+        ret = txn_start();
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        new_txn = true;
+    }
+    // lookup the key
+    db_key.mv_data = key;
+    db_key.mv_size = key_sz;
+    rv = mdb_get(txn_hdl_, db_dbi_, &db_key, &db_val);
+    if (rv) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    // if a new transaction is opened, close it
+    if (new_txn == true) {
+        txn_commit();
+    }
+    if (db_val.mv_size > *data_sz) {
+        return SDK_RET_INVALID_ARG;
+    }
+    *data_sz = db_val.mv_size;
+    memcpy(data, db_val.mv_data, db_val.mv_size);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+kvstore_lmdb::insert(void *key, size_t key_sz, void *data, size_t data_sz) {
+    int rv;
+    MDB_val db_key;
+    MDB_val db_val;
+    bool new_txn = false;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    // if this is not inside a transaction, open new transaction
+    if (!txn_hdl_) {
+        ret = txn_start();
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        new_txn = true;
+    }
+    // update the database
+    db_key.mv_data = key;
+    db_key.mv_size = key_sz;
+    db_val.mv_data = data;
+    db_val.mv_size = data_sz;
+    rv = mdb_put(txn_hdl_, db_dbi_, &db_key, &db_val, 0);
+    if (rv) {
+        SDK_TRACE_ERR("kvstore insert failed, err %d", rv);
+        ret = SDK_RET_ERR;
+        // fall thru
+    }
+    // if a new transaction is opened, close it
+    if (new_txn == true) {
+        txn_commit();
+    }
+    return ret;
+}
+
+sdk_ret_t
+kvstore_lmdb::remove(void *key, size_t key_sz) {
+    int rv;
+    MDB_val db_key;
+    bool new_txn = false;
+    sdk_ret_t ret = SDK_RET_OK;
+
+    // if this is not inside a transaction, open new transaction
+    if (!txn_hdl_) {
+        ret = txn_start();
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        new_txn = true;
+    }
+    // update the database
+    db_key.mv_data = key;
+    db_key.mv_size = key_sz;
+    rv = mdb_del(txn_hdl_, db_dbi_, &db_key, NULL);
+    if (rv) {
+        SDK_TRACE_ERR("kvstore insert failed, err %d", rv);
+        ret = SDK_RET_ERR;
+        // fall thru
+    }
+    // if a new transaction is opened, close it
+    if (new_txn == true) {
+        txn_commit();
+    }
+    return ret;
 }
 
 }    // namespace lib

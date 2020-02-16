@@ -745,9 +745,9 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
         if (proto_ctxt->mappingdumpfilter().has_key()) {
             auto key = proto_ctxt->mappingdumpfilter().key();
             cmd_ctxt->args.mapping_dump.key_valid = true;
-            pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.mapping_dump.key.vpc,
+            pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.vpc,
                                           key.ipkey().vpcid());
-            ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
+            ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.ip_addr,
                                           key.ipkey().ipaddr());
         }
         cmd_ctxt->args.mapping_dump.type =
@@ -3631,26 +3631,26 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
         return;
     }
 
-    switch (local_spec->key.type) {
+    proto_spec->set_id(local_spec->key.id, PDS_MAX_KEY_LEN);
+    switch (local_spec->skey.type) {
     case PDS_MAPPING_TYPE_L2:
         {
             auto key = proto_spec->mutable_mackey();
-            key->set_macaddr(MAC_TO_UINT64(local_spec->key.mac_addr));
-            key->set_subnetid(local_spec->key.subnet.id, PDS_MAX_KEY_LEN);
+            key->set_macaddr(MAC_TO_UINT64(local_spec->skey.mac_addr));
+            key->set_subnetid(local_spec->skey.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
         {
             auto key = proto_spec->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
-                                          &local_spec->key.ip_addr);
-            key->set_vpcid(local_spec->key.vpc.id, PDS_MAX_KEY_LEN);
+                                          &local_spec->skey.ip_addr);
+            key->set_vpcid(local_spec->skey.vpc.id, PDS_MAX_KEY_LEN);
         }
         break;
     default:
         return;
     }
-
     proto_spec->set_subnetid(local_spec->subnet.id, PDS_MAX_KEY_LEN);
     proto_spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
@@ -3674,12 +3674,13 @@ static inline sdk_ret_t
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
 {
+    pds_obj_key_proto_to_api_spec(&local_spec->key, proto_spec.id());
     switch (proto_spec.mac_or_ip_case()) {
     case pds::MappingSpec::kIPKey:
-        local_spec->key.type = PDS_MAPPING_TYPE_L3;
-        pds_obj_key_proto_to_api_spec(&local_spec->key.vpc,
+        local_spec->skey.type = PDS_MAPPING_TYPE_L3;
+        pds_obj_key_proto_to_api_spec(&local_spec->skey.vpc,
                                       proto_spec.ipkey().vpcid());
-        ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
+        ipaddr_proto_spec_to_api_spec(&local_spec->skey.ip_addr,
                                       proto_spec.ipkey().ipaddr());
         pds_obj_key_proto_to_api_spec(&local_spec->subnet,
                                       proto_spec.subnetid());
@@ -3735,20 +3736,21 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
         return;
     }
 
-    switch (remote_spec->key.type) {
+    proto_spec->set_id(remote_spec->key.id, PDS_MAX_KEY_LEN);
+    switch (remote_spec->skey.type) {
     case PDS_MAPPING_TYPE_L2:
         {
             auto key = proto_spec->mutable_mackey();
-            key->set_macaddr(MAC_TO_UINT64(remote_spec->key.mac_addr));
-            key->set_subnetid(remote_spec->key.subnet.id, PDS_MAX_KEY_LEN);
+            key->set_macaddr(MAC_TO_UINT64(remote_spec->skey.mac_addr));
+            key->set_subnetid(remote_spec->skey.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
         {
             auto key = proto_spec->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
-                                          &remote_spec->key.ip_addr);
-            key->set_vpcid(remote_spec->key.vpc.id, PDS_MAX_KEY_LEN);
+                                          &remote_spec->skey.ip_addr);
+            key->set_vpcid(remote_spec->skey.vpc.id, PDS_MAX_KEY_LEN);
         }
         break;
     default:
@@ -3828,21 +3830,22 @@ static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                       const pds::MappingSpec &proto_spec)
 {
+    pds_obj_key_proto_to_api_spec(&remote_spec->key, proto_spec.id());
     switch (proto_spec.mac_or_ip_case()) {
     case pds::MappingSpec::kMACKey:
-        remote_spec->key.type = PDS_MAPPING_TYPE_L2;
-        pds_obj_key_proto_to_api_spec(&remote_spec->key.subnet,
+        remote_spec->skey.type = PDS_MAPPING_TYPE_L2;
+        pds_obj_key_proto_to_api_spec(&remote_spec->skey.subnet,
                                       proto_spec.mackey().subnetid());
-        MAC_UINT64_TO_ADDR(remote_spec->key.mac_addr,
+        MAC_UINT64_TO_ADDR(remote_spec->skey.mac_addr,
                            proto_spec.mackey().macaddr());
-        remote_spec->subnet = remote_spec->key.subnet;
+        remote_spec->subnet = remote_spec->skey.subnet;
         break;
 
     case pds::MappingSpec::kIPKey:
-        remote_spec->key.type = PDS_MAPPING_TYPE_L3;
-        pds_obj_key_proto_to_api_spec(&remote_spec->key.vpc,
+        remote_spec->skey.type = PDS_MAPPING_TYPE_L3;
+        pds_obj_key_proto_to_api_spec(&remote_spec->skey.vpc,
                                       proto_spec.ipkey().vpcid());
-        ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
+        ipaddr_proto_spec_to_api_spec(&remote_spec->skey.ip_addr,
                                       proto_spec.ipkey().ipaddr());
         pds_obj_key_proto_to_api_spec(&remote_spec->subnet,
                                       proto_spec.subnetid());

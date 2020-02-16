@@ -11,11 +11,11 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd \
                   lpmitree_${PIPELINE} rfc_${PIPELINE} pdsrfc \
-                  bm_allocator sdklinkmgr sdklinkmgrcsr \
+                  bm_allocator sdklinkmgr sdklinkmgrcsr kvstore_lmdb \
                   memhash sltcam ${NIC_${PIPELINE}_NICMGR_LIBS} slhash
 MODULE_LDLIBS   = ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                   ${${PIPELINE}_GTEST_COMMON_LDLIBS} \
-                  AAPL edit ncurses
+                  AAPL edit ncurses lmdb
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}

@@ -28,19 +28,20 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     this->vpc = vpc;
     this->subnet = subnet;
     test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
+    key_build(&this->key);
     this->vnic = vnic;
     this->vnic_mac_u64 = vnic_mac;
 
     this->fabric_encap.type = encap_type;
     switch(encap_type) {
-        case PDS_ENCAP_TYPE_MPLSoUDP:
-            this->fabric_encap.val.mpls_tag = encap_val;
-            break;
-        case PDS_ENCAP_TYPE_VXLAN:
-            this->fabric_encap.val.vnid = encap_val;
-            break;
-        default:
-            this->fabric_encap.val.value = encap_val;
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        this->fabric_encap.val.mpls_tag = encap_val;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        this->fabric_encap.val.vnid = encap_val;
+        break;
+    default:
+        this->fabric_encap.val.value = encap_val;
     }
 
     this->public_ip_valid = public_ip_valid;
@@ -56,6 +57,7 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
 void
 local_mapping_feeder::iter_next(int width) {
     increment_ip_addr(&vnic_ip_pfx.addr, width);
+    key_build(&this->key);
     if (public_ip_valid)
         increment_ip_addr(&public_ip_pfx.addr, width);
 
@@ -69,14 +71,23 @@ local_mapping_feeder::iter_next(int width) {
 }
 
 void
-local_mapping_feeder::key_build(pds_mapping_key_t *key) const {
-    key->type = map_type;
+local_mapping_feeder::key_build(pds_obj_key_t *key) const {
+    // TODO: can we encode vpc, IP or subnet, MAC here ?
+    //       won't work with IPv6
+    //       how about storing based uuid and increment ?
+    uint32_t vpc_id, subnet_id;
+
+    memset(key, 0, sizeof(*key));
+    memcpy(&key->id[0], &map_type, sizeof(uint8_t));
     if (map_type == PDS_MAPPING_TYPE_L3) {
-        key->vpc = vpc;
-        key->ip_addr = vnic_ip_pfx.addr;
+        vpc_id = objid_from_uuid(vpc);
+        sprintf(&key->id[1], "%08x", vpc_id);
+        memcpy(&key->id[5], &vnic_ip_pfx.addr.addr.v4_addr,
+               sizeof(ipv4_addr_t));
     } else {
-        key->subnet = subnet;
-        MAC_UINT64_TO_ADDR(key->mac_addr, vnic_mac_u64);
+        subnet_id = objid_from_uuid(subnet);
+        memcpy(&key->id[1], &subnet_id, sizeof(uint32_t));
+        MAC_UINT64_TO_ADDR(&key->id[5], vnic_mac_u64);
     }
 }
 
@@ -84,10 +95,16 @@ void
 local_mapping_feeder::spec_build(pds_local_mapping_spec_t *spec) const {
     memset(spec, 0, sizeof(*spec));
     key_build(&spec->key);
-
+    spec->skey.type = map_type;
+    if (map_type == PDS_MAPPING_TYPE_L3) {
+        spec->skey.vpc = vpc;
+        spec->skey.ip_addr = vnic_ip_pfx.addr;
+    } else {
+        spec->skey.subnet = subnet;
+        MAC_UINT64_TO_ADDR(spec->skey.mac_addr, vnic_mac_u64);
+    }
     spec->vnic = vnic;
     spec->subnet = subnet;
-
     spec->fabric_encap = fabric_encap;
     MAC_UINT64_TO_ADDR(spec->vnic_mac, vnic_mac_u64);
     spec->public_ip_valid = public_ip_valid;
@@ -96,22 +113,25 @@ local_mapping_feeder::spec_build(pds_local_mapping_spec_t *spec) const {
 }
 
 bool
-local_mapping_feeder::key_compare(const pds_mapping_key_t *key) const {
-
-    if (map_type != key->type)
+local_mapping_feeder::key_compare(const pds_obj_key_t *key) const {
+    if (this->key != *key)
         return false;
-
-    if (map_type == PDS_MAPPING_TYPE_L3)
-        return ((vpc == key->vpc) &&
-                IPADDR_EQ(&vnic_ip_pfx.addr, &key->ip_addr));
-
-    // L2 key type
-    return ((subnet == key->subnet) &&
-            (vnic_mac_u64 == MAC_TO_UINT64(key->mac_addr)));
+    return true;
 }
 
 bool
 local_mapping_feeder::spec_compare(const pds_local_mapping_spec_t *spec) const {
+
+    if (map_type != spec->skey.type)
+        return false;
+
+    if (map_type == PDS_MAPPING_TYPE_L3)
+        return ((vpc == spec->skey.vpc) &&
+                IPADDR_EQ(&vnic_ip_pfx.addr, &spec->skey.ip_addr));
+
+    // L2 key type
+    return ((subnet == spec->skey.subnet) &&
+            (vnic_mac_u64 == MAC_TO_UINT64(spec->skey.mac_addr)));
 
     // skipping comparing vnic.id and subnet.id as the hw id's returned
     // through read are not the same as id's assigned.

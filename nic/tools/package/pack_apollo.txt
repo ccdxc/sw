@@ -68,6 +68,8 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblmdb.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libkvstore_lmdb.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
@@ -266,7 +268,7 @@ nic/vpp/conf/vpp_3_workers.conf                                   /nic/conf/vpp/
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so.1                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk.so                          /nic/lib/
 
-# Metaswitch
+# metaswitch
 nic/third-party/metaswitch/output/$ARCH/debug/libsi.so            /nic/lib/
 nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
 nic/third-party/libxml2/$ARCH/lib/libxml2.so.2                    /nic/lib/

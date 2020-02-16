@@ -20,6 +20,7 @@ namespace api {
 class local_mapping_feeder : public feeder {
 public:
     // spec fields
+    pds_obj_key_t key;
     pds_mapping_type_t map_type;
     pds_obj_key_t vpc;
     pds_obj_key_t subnet;
@@ -51,6 +52,7 @@ public:
         this->num_vnics = feeder.num_vnics;
         this->num_ip_per_vnic = feeder.num_ip_per_vnic;
         this->curr_vnic_ip_cnt = feeder.curr_vnic_ip_cnt;
+        key_build(&this->key);
 
         this->num_obj = feeder.num_obj;
     }
@@ -73,11 +75,11 @@ public:
     void iter_next(int width = 1);
 
     // build routines
-    void key_build(pds_mapping_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_local_mapping_spec_t *spec) const;
 
     // compare routines
-    bool key_compare(const pds_mapping_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_local_mapping_spec_t *spec) const;
     bool status_compare(const pds_mapping_status_t *status1,
                         const pds_mapping_status_t *status2) const;
@@ -107,9 +109,9 @@ operator<<(std::ostream& os, const local_mapping_feeder& obj) {
 using pds_local_mapping_key_t = pds_mapping_key_t;
 
 API_CREATE(local_mapping);
-API_READ_TMP(local_mapping);
+API_READ(local_mapping);
 API_UPDATE(local_mapping);
-API_DELETE_TMP(local_mapping);
+API_DELETE(local_mapping);
 
 }    // namespace api
 }    // namespace test

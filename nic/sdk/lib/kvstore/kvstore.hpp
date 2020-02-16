@@ -21,12 +21,14 @@ class kvstore {
 public:
     static kvstore *factory(const char *dbpath);
     static void destroy(kvstore *kvs);
-    virtual sdk_ret_t insert(void *key, size_t key_sz,
-                             void *data, size_t data_sz) = 0;
-    virtual sdk_ret_t remove(void *key, size_t key_sz) = 0;
     virtual sdk_ret_t txn_start(void) = 0;
     virtual sdk_ret_t txn_commit(void) = 0;
     virtual sdk_ret_t txn_abort(void) = 0;
+    virtual sdk_ret_t find(_Out_ void *key, _In_ size_t key_sz,
+                           _Out_ void *data, _Inout_ size_t *data_sz) = 0;
+    virtual sdk_ret_t insert(void *key, size_t key_sz,
+                             void *data, size_t data_sz) = 0;
+    virtual sdk_ret_t remove(void *key, size_t key_sz) = 0;
 
 protected:
     kvstore() {}

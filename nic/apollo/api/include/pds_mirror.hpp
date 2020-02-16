@@ -32,7 +32,7 @@ typedef struct pds_erspan_spec_s {
     pds_obj_key_t vpc;                ///< vpc of the destination IP
     union {
         pds_obj_key_t tep;            ///< tep ID of ERSPAN destination
-        pds_mapping_key_t mapping;    ///< local/remote mapping destination
+        pds_obj_key_t mapping;        ///< local/remote mapping destination
     };
     ip_addr_t src_ip;                 ///< IP address of ERSPAN source
     uint32_t dscp;                    ///< DSCP value to use in the packet

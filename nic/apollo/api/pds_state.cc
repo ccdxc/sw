@@ -33,6 +33,10 @@ pds_state::~pds_state() {
 
 sdk_ret_t
 pds_state::init(void) {
+    kvstore_ = sdk::lib::kvstore::factory("/tmp/pdsagent.db");
+    if (kvstore_ == NULL) {
+        return SDK_RET_ERR;
+    }
     state_[PDS_STATE_DEVICE] = new device_state();
     state_[PDS_STATE_LIF] = new lif_state();
     state_[PDS_STATE_IF] = new if_state();
@@ -40,13 +44,12 @@ pds_state::init(void) {
     state_[PDS_STATE_VPC] = new vpc_state();
     state_[PDS_STATE_SUBNET] = new subnet_state();
     state_[PDS_STATE_VNIC] = new vnic_state();
-    state_[PDS_STATE_MAPPING] = new mapping_state();
+    state_[PDS_STATE_MAPPING] = new mapping_state(kvstore_);
     state_[PDS_STATE_ROUTE_TABLE] = new route_table_state();
     state_[PDS_STATE_POLICY] = new policy_state();
     state_[PDS_STATE_MIRROR] = new mirror_session_state();
     state_[PDS_STATE_METER] = new meter_state();
     state_[PDS_STATE_TAG] = new tag_state();
-    state_[PDS_STATE_MAPPING] = new mapping_state();
     state_[PDS_STATE_SVC_MAPPING] = new svc_mapping_state();
     state_[PDS_STATE_VPC_PEER] = new vpc_peer_state();
     state_[PDS_STATE_NEXTHOP] = new nexthop_state();

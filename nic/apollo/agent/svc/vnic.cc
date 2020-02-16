@@ -148,8 +148,8 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
                         const pds::VnicDeleteRequest *proto_req,
                         pds::VnicDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 

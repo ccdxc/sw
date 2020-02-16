@@ -26,6 +26,7 @@ mapping_entry::mapping_entry() {
     is_local_ = false;
     public_ip_valid_ = false;
     ht_ctxt_.reset();
+    skey_ht_ctxt_.reset();
 }
 
 mapping_entry *
@@ -96,19 +97,35 @@ mapping_entry::free(mapping_entry *mapping) {
 }
 
 mapping_entry *
-mapping_entry::build(pds_mapping_key_t *key) {
+mapping_entry::build(pds_mapping_key_t *skey) {
     mapping_entry *mapping;
 
     // create mapping entry with defaults, if any
     mapping = mapping_db()->alloc();
     if (mapping) {
         new (mapping) mapping_entry();
-        memcpy(&mapping->key_, key, sizeof(*key));
+        memcpy(&mapping->skey_, skey, sizeof(*skey));
         mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_MAPPING,
-                                          key, mapping);
+                                          &mapping->skey_, mapping);
         if (mapping->impl_ == NULL) {
             mapping_entry::destroy(mapping);
             return NULL;
+        }
+    }
+    return mapping;
+}
+
+mapping_entry *
+mapping_entry::build(pds_obj_key_t *key) {
+    pds_mapping_key_t skey;
+    mapping_entry *mapping = NULL;
+
+    // find the 2nd-ary key corresponding to this primary key
+    if (mapping_db()->skey(key, &skey) == SDK_RET_OK) {
+        // and then build the object
+        mapping = mapping_entry::build(&skey);
+        if (mapping) {
+            memcpy(&mapping->key_, key, sizeof(*key));
         }
     }
     return mapping;
@@ -129,14 +146,15 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_mapping_spec_t *spec = &api_ctxt->api_params->mapping_spec;
 
     if (spec->is_local) {
-        if (spec->key.type != PDS_MAPPING_TYPE_L3) {
+        if (spec->skey.type != PDS_MAPPING_TYPE_L3) {
             // local L2 mapping will come down in the form of vnics, not as
             // local mappings
             PDS_TRACE_ERR("local mapppings can't be non-L3");
             return SDK_RET_INVALID_OP;
         }
     }
-    memcpy(&key_, &spec->key, sizeof(pds_mapping_key_t));
+    memcpy(&key_, &spec->key, sizeof(key_));
+    memcpy(&skey_, &spec->skey, sizeof(skey_));
     return SDK_RET_OK;
 }
 
@@ -181,8 +199,23 @@ mapping_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 }
 
 sdk_ret_t
-mapping_entry::read(pds_mapping_key_t *key, pds_mapping_info_t *info) {
-    return impl_->read_hw(this, (impl::obj_key_t *)key,
+mapping_entry::read(pds_obj_key_t *key, pds_mapping_info_t *info) {
+    pds_mapping_key_t  skey;
+
+    // find the 2nd-ary key corresponding to this primary key
+    if (mapping_db()->skey(key, &skey) == SDK_RET_OK) {
+        // and then read from h/w
+        memcpy(&info->spec.key, key, sizeof(*key));
+        memcpy(&info->spec.skey, &skey, sizeof(skey));
+        return impl_->read_hw(this, (impl::obj_key_t *)&skey,
+                              (impl::obj_info_t *)info);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+mapping_entry::read(pds_mapping_key_t *skey, pds_mapping_info_t *info) {
+    return impl_->read_hw(this, (impl::obj_key_t *)skey,
                           (impl::obj_info_t *)info);
 }
 

@@ -19,7 +19,6 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                               pds::MappingResponse *proto_rsp) {
     pds_batch_ctxt_t bctxt;
     sdk_ret_t ret = SDK_RET_OK;
-    Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -95,7 +94,6 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
                               pds::MappingResponse *proto_rsp) {
     pds_batch_ctxt_t bctxt;
     sdk_ret_t ret = SDK_RET_OK;
-    Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -166,12 +164,11 @@ Status
 MappingSvcImpl::MappingDelete(ServerContext *context,
                               const pds::MappingDeleteRequest *proto_req,
                               pds::MappingDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    sdk_ret_t ret = SDK_RET_OK;
-    Status status = Status::OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_mapping_key_t key;
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -193,27 +190,7 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        auto proto_key = proto_req->id(i);
-        switch (proto_key.keyinfo_case()) {
-        case pds::MappingKey::kIPKey:
-            key.type = PDS_MAPPING_TYPE_L3;
-            pds_obj_key_proto_to_api_spec(&key.vpc, proto_key.ipkey().vpcid());
-            ipaddr_proto_spec_to_api_spec(&key.ip_addr,
-                                          proto_key.ipkey().ipaddr());
-            break;
-
-        case pds::MappingKey::kMACKey:
-            key.type = PDS_MAPPING_TYPE_L2;
-            pds_obj_key_proto_to_api_spec(&key.subnet,
-                                          proto_key.mackey().subnetid());
-            MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
-            break;
-
-        default:
-            ret = SDK_RET_INVALID_ARG;
-            goto end;
-            break;
-        }
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_local_mapping_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -241,7 +218,7 @@ MappingSvcImpl::MappingGet(ServerContext *context,
                            const pds::MappingGetRequest *proto_req,
                            pds::MappingGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_mapping_key_t key;
+    pds_obj_key_t key;
     pds_local_mapping_info_t local_info;
     pds_remote_mapping_info_t remote_info;
 
@@ -251,26 +228,7 @@ MappingSvcImpl::MappingGet(ServerContext *context,
     }
     proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     for (int i = 0; i < proto_req->id_size(); i++) {
-        auto proto_key = proto_req->id(i);
-        switch (proto_key.keyinfo_case()) {
-        case pds::MappingKey::kIPKey:
-            key.type = PDS_MAPPING_TYPE_L3;
-            pds_obj_key_proto_to_api_spec(&key.vpc, proto_key.ipkey().vpcid());
-            ipaddr_proto_spec_to_api_spec(&key.ip_addr,
-                                          proto_key.ipkey().ipaddr());
-            break;
-
-        case pds::MappingKey::kMACKey:
-            key.type = PDS_MAPPING_TYPE_L2;
-            pds_obj_key_proto_to_api_spec(&key.subnet,
-                                          proto_key.mackey().subnetid());
-            MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
-            break;
-
-        default:
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-            return Status::OK;
-        }
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_local_mapping_read(&key, &local_info);
         if (ret == SDK_RET_OK) {
             pds_local_mapping_api_info_to_proto(&local_info, proto_rsp);

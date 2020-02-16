@@ -31,8 +31,13 @@
 #define PDS_MAX_KEY_LEN               16
 #define PDSM_MAX_KEY_STR_LEN          36
 
-// generic API object key
+// forward declaration for generic API object key
 typedef struct pds_obj_key_s pds_obj_key_t;
+
+// invalid object key (all 0s)
+extern const pds_obj_key_t k_pds_obj_key_invalid;
+
+// generic API object key
 struct pds_obj_key_s {
     char id[PDS_MAX_KEY_LEN + 1];
 
@@ -71,8 +76,10 @@ struct pds_obj_key_s {
         }
         return false;
     }
+    bool valid(void) const {
+        return this->operator!=(k_pds_obj_key_invalid);
+    }
 } __PACK__;
-extern const pds_obj_key_t k_pds_obj_key_invalid;    // invalid key (all 0s)
 
 // helper class for hash computation of the object key
 class pds_obj_key_hash {
@@ -180,7 +187,7 @@ typedef enum pds_mapping_type_e {
     PDS_MAPPING_TYPE_L3   = 2,
 } pds_mapping_type_t;
 
-/// \brief    mapping key
+/// \brief    2nd-ary/internal key of mapping
 typedef struct pds_mapping_key_s {
     pds_mapping_type_t type;
     union {

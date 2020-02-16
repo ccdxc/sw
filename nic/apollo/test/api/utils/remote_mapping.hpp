@@ -21,6 +21,7 @@ namespace api {
 class remote_mapping_feeder : public feeder {
 public:
     // spec fields
+    pds_obj_key_t key;
     pds_mapping_type_t map_type;
     pds_obj_key_t vpc;
     pds_obj_key_t subnet;
@@ -49,6 +50,7 @@ public:
         this->vnic_ip_pfx = feeder.vnic_ip_pfx;
         this->nh_type = feeder.nh_type;
         this->nh_id = feeder.nh_id;
+        key_build(&this->key);
 
         this->num_teps = feeder.num_teps;
         this->num_vnic_per_tep = feeder.num_vnic_per_tep;
@@ -74,11 +76,11 @@ public:
     void iter_next(int width = 1);
 
     // build routines
-    void key_build(pds_mapping_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_remote_mapping_spec_t *spec) const;
 
     // compare routines
-    bool key_compare(const pds_mapping_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_remote_mapping_spec_t *spec) const;
     bool status_compare(const pds_mapping_status_t *status1,
                         const pds_mapping_status_t *status2) const;
@@ -107,9 +109,9 @@ operator<<(std::ostream& os, const remote_mapping_feeder& obj) {
 using pds_remote_mapping_key_t = pds_mapping_key_t;
 
 API_CREATE(remote_mapping);
-API_READ_TMP(remote_mapping);
+API_READ(remote_mapping);
 API_UPDATE(remote_mapping);
-API_DELETE_TMP(remote_mapping);
+API_DELETE(remote_mapping);
 
 }    // namespace api
 }    // namespace test

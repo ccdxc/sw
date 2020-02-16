@@ -22,23 +22,25 @@ class kvstore_lmdb : public kvstore {
 public:
     static kvstore *factory(const char *dbpath);
     static void destroy(kvstore *kvs);
-    virtual sdk_ret_t insert(void *key, size_t key_sz,
-                             void *data, size_t data_sz) override;
-    virtual sdk_ret_t remove(void *key, size_t key_sz) override;
     virtual sdk_ret_t txn_start(void) override;
     virtual sdk_ret_t txn_commit(void) override;
     virtual sdk_ret_t txn_abort(void) override;
+    virtual sdk_ret_t find(_Out_ void *key, _In_ size_t key_sz,
+                           _Out_ void *data, _Inout_ size_t *data_sz) override;
+    virtual sdk_ret_t insert(void *key, size_t key_sz,
+                             void *data, size_t data_sz) override;
+    virtual sdk_ret_t remove(void *key, size_t key_sz) override;
 
 private:
     kvstore_lmdb() {
-        db_ = NULL;
+        env_ = NULL;
         txn_hdl_ = NULL;
     }
     ~kvstore_lmdb() {}
     sdk_ret_t init(const char *dbpath);
 
 private:
-    MDB_env *db_;
+    MDB_env *env_;
     MDB_txn *txn_hdl_;
     MDB_dbi db_dbi_;
 };

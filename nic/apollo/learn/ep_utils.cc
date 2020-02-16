@@ -9,10 +9,10 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/include/pds_mapping.hpp"
-#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 
@@ -29,7 +29,7 @@ delete_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
     mapping_key.type = PDS_MAPPING_TYPE_L3;
     mapping_key.vpc = ep_ip_key->vpc;
     mapping_key.ip_addr = ep_ip_key->ip_addr ;
-    return pds_local_mapping_delete(&mapping_key, bctxt);
+    return api::pds_local_mapping_delete(&mapping_key, bctxt);
 }
 
 static sdk_ret_t

@@ -68,6 +68,8 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblmdb.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libkvstore_lmdb.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/

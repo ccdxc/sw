@@ -17,10 +17,11 @@
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
 
 static sdk_ret_t
 pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                        pds_mapping_key_t *key, pds_mapping_spec_t *spec)
+                        pds_obj_key_t *key, pds_mapping_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -42,7 +43,7 @@ pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline mapping_entry *
-pds_mapping_entry_find (pds_mapping_key_t *key)
+pds_mapping_entry_find (pds_obj_key_t *key)
 {
     // mapping does not have any entry database, as the calls are single thread,
     // we can use static entry
@@ -58,101 +59,7 @@ pds_mapping_entry_find (pds_mapping_key_t *key)
 }
 
 //----------------------------------------------------------------------------
-// Mapping API entry point implementation
-//----------------------------------------------------------------------------
-
-static inline void
-pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
-                                pds_local_mapping_spec_t *local_spec)
-{
-    memset(spec, 0, sizeof(pds_mapping_spec_t));
-    spec->key = local_spec->key;
-    spec->subnet = local_spec->subnet;
-    spec->fabric_encap = local_spec->fabric_encap;
-    memcpy(&spec->overlay_mac, &local_spec->vnic_mac, sizeof(mac_addr_t));
-    // local mapping always point to local VTEP (i.e., MyTEP) IP
-    spec->nh_type = PDS_NH_TYPE_OVERLAY;
-    spec->is_local = true;
-    spec->vnic = local_spec->vnic;
-    spec->public_ip_valid = local_spec->public_ip_valid;
-    spec->public_ip = local_spec->public_ip;
-    spec->provider_ip_valid = local_spec->provider_ip_valid;
-    spec->provider_ip = local_spec->provider_ip;
-    spec->num_tags = local_spec->num_tags;
-    for (uint32_t i = 0; i < local_spec->num_tags; i++) {
-        spec->tags[i] = local_spec->tags[i];
-    }
-}
-
-static inline void
-pds_remote_spec_to_mapping_spec (pds_mapping_spec_t *spec,
-                                 pds_remote_mapping_spec_t *remote_spec)
-{
-    memset(spec, 0, sizeof(pds_mapping_spec_t));
-    spec->key = remote_spec->key;
-    spec->subnet = remote_spec->subnet;
-    spec->fabric_encap = remote_spec->fabric_encap;
-    memcpy(&spec->overlay_mac, &remote_spec->vnic_mac, sizeof(mac_addr_t));
-    spec->nh_type = remote_spec->nh_type;
-    if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
-        spec->tep = remote_spec->tep;
-    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_ECMP) {
-        spec->nh_group = remote_spec->nh_group;
-    }
-    spec->provider_ip_valid = remote_spec->provider_ip_valid;
-    spec->provider_ip = remote_spec->provider_ip;
-    spec->is_local = false;
-    spec->num_tags = remote_spec->num_tags;
-    for (uint32_t i = 0; i < remote_spec->num_tags; i++) {
-        spec->tags[i] = remote_spec->tags[i];
-    }
-}
-
-static inline void
-pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
-                                pds_mapping_spec_t *spec)
-{
-    memset(local_spec, 0, sizeof(pds_local_mapping_spec_t));
-    local_spec->key = spec->key;
-    local_spec->subnet = spec->subnet;
-    local_spec->fabric_encap = spec->fabric_encap;
-    memcpy(&local_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
-    local_spec->vnic = spec->vnic;
-    local_spec->public_ip_valid = spec->public_ip_valid;
-    local_spec->public_ip = spec->public_ip;
-    local_spec->provider_ip_valid = spec->provider_ip_valid;
-    local_spec->provider_ip = spec->provider_ip;
-    local_spec->num_tags = spec->num_tags;
-    for (uint32_t i = 0; i < spec->num_tags; i++) {
-        local_spec->tags[i] = spec->tags[i];
-    }
-}
-
-static inline void
-pds_mapping_spec_to_remote_spec (pds_remote_mapping_spec_t *remote_spec,
-                                 pds_mapping_spec_t *spec)
-{
-    memset(remote_spec, 0, sizeof(pds_remote_mapping_spec_t));
-    remote_spec->key = spec->key;
-    remote_spec->subnet = spec->subnet;
-    remote_spec->fabric_encap = spec->fabric_encap;
-    remote_spec->nh_type = spec->nh_type;
-    if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
-        remote_spec->tep = spec->tep;
-    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY_ECMP) {
-        remote_spec->nh_group = spec->nh_group;
-    }
-    memcpy(&remote_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
-    remote_spec->provider_ip_valid = spec->provider_ip_valid;
-    remote_spec->provider_ip = spec->provider_ip;
-    remote_spec->num_tags = spec->num_tags;
-    for (uint32_t i = 0; i < spec->num_tags; i++) {
-        remote_spec->tags[i] = spec->tags[i];
-    }
-}
-
-//----------------------------------------------------------------------------
-// Mapping create routines
+// mapping create routines
 //----------------------------------------------------------------------------
 
 sdk_ret_t
@@ -162,7 +69,8 @@ pds_local_mapping_create (_In_ pds_local_mapping_spec_t *local_spec,
     pds_mapping_spec_t spec;
 
     pds_local_spec_to_mapping_spec(&spec, local_spec);
-    return pds_mapping_api_handle(bctxt, API_OP_CREATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_CREATE,
+                                  (pds_obj_key_t *)NULL, &spec);
 }
 
 sdk_ret_t
@@ -176,7 +84,8 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
         return SDK_RET_INVALID_ARG;
     }
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);
-    return pds_mapping_api_handle(bctxt, API_OP_CREATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_CREATE,
+                                  (pds_obj_key_t *)NULL, &spec);
 }
 
 //----------------------------------------------------------------------------
@@ -184,15 +93,16 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-pds_local_mapping_read (pds_mapping_key_t *key,
+pds_local_mapping_read (pds_obj_key_t *key,
                         pds_local_mapping_info_t *local_info)
 {
     pds_mapping_info_t info;
-    mapping_entry *entry = NULL;
     sdk_ret_t rv = SDK_RET_OK;
+    mapping_entry *entry = NULL;
 
-    if (key == NULL || local_info == NULL)
+    if ((key == NULL) || (local_info == NULL)) {
         return SDK_RET_INVALID_ARG;
+    }
 
     if ((entry = pds_mapping_entry_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
@@ -209,14 +119,14 @@ pds_local_mapping_read (pds_mapping_key_t *key,
 }
 
 sdk_ret_t
-pds_remote_mapping_read (pds_mapping_key_t *key,
+pds_remote_mapping_read (pds_obj_key_t *key,
                          pds_remote_mapping_info_t *remote_info)
 {
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
     sdk_ret_t rv = SDK_RET_OK;
 
-    if (key == NULL || remote_info == NULL) {
+    if ((key == NULL) || (remote_info == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
@@ -235,7 +145,7 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
 }
 
 //----------------------------------------------------------------------------
-// Mapping update routines
+// mapping update routines
 //----------------------------------------------------------------------------
 
 sdk_ret_t
@@ -245,7 +155,8 @@ pds_local_mapping_update (_In_ pds_local_mapping_spec_t *local_spec,
     pds_mapping_spec_t spec;
 
     pds_local_spec_to_mapping_spec(&spec, local_spec);
-    return pds_mapping_api_handle(bctxt, API_OP_UPDATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_UPDATE,
+                                  (pds_obj_key_t *)NULL, &spec);
 }
 
 sdk_ret_t
@@ -255,23 +166,22 @@ pds_remote_mapping_update (_In_ pds_remote_mapping_spec_t *remote_spec,
     pds_mapping_spec_t spec;
 
     pds_remote_spec_to_mapping_spec(&spec, remote_spec);
-    return pds_mapping_api_handle(bctxt, API_OP_UPDATE, NULL, &spec);
+    return pds_mapping_api_handle(bctxt, API_OP_UPDATE,
+                                  (pds_obj_key_t *)NULL, &spec);
 }
 
 //----------------------------------------------------------------------------
-// Mapping delete routines
+// mapping delete routines
 //----------------------------------------------------------------------------
 
 sdk_ret_t
-pds_local_mapping_delete (_In_ pds_mapping_key_t *key,
-                          _In_ pds_batch_ctxt_t bctxt)
+pds_local_mapping_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }
 
 sdk_ret_t
-pds_remote_mapping_delete (_In_ pds_mapping_key_t *key,
-                           _In_ pds_batch_ctxt_t bctxt)
+pds_remote_mapping_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

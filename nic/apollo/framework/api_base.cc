@@ -96,7 +96,13 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // mapping is a stateless object, so we need to construct the object
         // from the datapath tables
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return mapping_entry::build(&api_ctxt->api_params->mapping_key);
+            if (api_ctxt->api_params->mapping_key.valid()) {
+                // use primary key
+                return mapping_entry::build(&api_ctxt->api_params->mapping_key);
+            } else {
+                // use 2nd-ary key
+                return mapping_entry::build(&api_ctxt->api_params->mapping_skey);
+            }
         }
         return mapping_entry::build(&api_ctxt->api_params->mapping_spec.key);
 
@@ -344,7 +350,13 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_MAPPING:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return mapping_db()->find(&api_ctxt->api_params->mapping_key);
+            if (api_ctxt->api_params->mapping_key.valid()) {
+                // use primary key
+                return mapping_db()->find(&api_ctxt->api_params->mapping_key);
+            } else {
+                // use 2nd-ary key
+                return mapping_db()->find(&api_ctxt->api_params->mapping_skey);
+            }
         }
         return mapping_db()->find(&api_ctxt->api_params->mapping_spec.key);
 

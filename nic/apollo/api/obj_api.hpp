@@ -17,14 +17,13 @@
 static inline sdk_ret_t
 pds_obj_api_validate (api_op_t op, void *key, void *spec)
 {
-    if (op == API_OP_DELETE && key) {
+    if ((op == API_OP_DELETE) && key) {
         return SDK_RET_OK;
     }
 
-    if ((op == API_OP_CREATE || op == API_OP_UPDATE) && spec) {
+    if (((op == API_OP_CREATE) || (op == API_OP_UPDATE)) && spec) {
         return SDK_RET_OK;
     }
-
     return sdk::SDK_RET_INVALID_ARG;
 }
 

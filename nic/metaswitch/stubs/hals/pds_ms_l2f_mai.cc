@@ -11,7 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
-#include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <l2f_integ_api.hpp>
 #include <thread>
@@ -31,7 +31,7 @@ extern int l2f_proc_id;
 
 namespace pds_ms {
 
-void 
+void
 l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex)
 {
@@ -96,7 +96,7 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     NBB_DESTROY_THREAD_CONTEXT
 }
 
-void 
+void
 l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac)
 {
@@ -198,12 +198,12 @@ void l2f_mai_t::resolve_teps_(state_t* state) {
         store_info_.tep_obj_list.push_back(tep_obj);
     }
     // For now assuming only a single TEP to get ECMP index
-    store_info_.hal_oecmp_idx = 
+    store_info_.hal_oecmp_idx =
         store_info_.tep_obj_list.back()->hal_oecmp_idx_guard->idx();
 }
 
 pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
-    pds_mapping_key_t key; 
+    pds_mapping_key_t key;
     memset(&key, 0, sizeof(key));
     if (ips_info_.has_ip) {
         key.type = PDS_MAPPING_TYPE_L3;
@@ -220,7 +220,9 @@ pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
 pds_remote_mapping_spec_t l2f_mai_t::make_pds_mapping_spec_(void) {
     pds_remote_mapping_spec_t spec;
     memset(&spec, 0, sizeof(spec));
-    spec.key = make_pds_mapping_key_();
+    // TODO: fix this !!!
+    //spec.key = ; // generate uuid on the fly
+    spec.skey = make_pds_mapping_key_();
     spec.subnet = store_info_.subnet_obj->spec().key;
     spec.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
     spec.nh_group = msidx2pdsobjkey(store_info_.hal_oecmp_idx);
@@ -265,7 +267,7 @@ pds_batch_ctxt_guard_t l2f_mai_t::make_batch_pds_spec_() {
     // TODO Batch multiple PDS Remote Mapping calls instead of creating
     // a new PDS Batch commit for every MAC-IP HAL Stub invocation
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
-                           PDS_BATCH_PARAMS_ASYNC, 
+                           PDS_BATCH_PARAMS_ASYNC,
                            hal_callback,
                            cookie_uptr_.get()};
     auto bctxt = pds_batch_start(&bp);
@@ -279,7 +281,7 @@ pds_batch_ctxt_guard_t l2f_mai_t::make_batch_pds_spec_() {
     if (op_delete_) { // Delete
         auto key = make_pds_mapping_key_();
         if (!PDS_MOCK_MODE()) {
-            pds_remote_mapping_delete(&key, bctxt);
+            api::pds_remote_mapping_delete(&key, bctxt);
         }
     } else { // Add or update
         add_pds_mapping_spec_(bctxt);
@@ -297,7 +299,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                    ips_info_.tep_ip_list.size(),
                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
 
-    //---------------------------------------------------------------------- 
+    //----------------------------------------------------------------------
     // Unlike other stub integration components, MAI integration comp
     // adds the Remote MAC to the store immediately without waiting for
     // async HAL response since the MAC store is accessed for MAI IP updates
@@ -316,7 +318,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         if (store_info_.mac_obj == nullptr) {
             // New FDB entry - Populate cache
             mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
-            std::unique_ptr<mac_obj_t> mac_obj_uptr 
+            std::unique_ptr<mac_obj_t> mac_obj_uptr
                 (new mac_obj_t(key));
             store_info_.mac_obj = mac_obj_uptr.get();
             store_info_.bd_obj->mac_store().
@@ -327,11 +329,11 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
             // when MS MAI Stub sent IP out-of-seq before MAC.
             // Create everything now
             op_create_ = true;
-        } 
+        }
         resolve_teps_(state_ctxt.state());
 
         cookie_uptr_.reset(new cookie_t);
-        pds_bctxt_guard = make_batch_pds_spec_(); 
+        pds_bctxt_guard = make_batch_pds_spec_();
 
         // Check if there are IP addresses associated
         // Add to batch
@@ -349,14 +351,14 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         mac_addr_t l_mac;
         MAC_ADDR_COPY(l_mac, update_fdb_mac->mac_address);
 
-        cookie_uptr_->send_ips_reply = 
+        cookie_uptr_->send_ips_reply =
             [update_fdb_mac, l_bd_id, l_mac, l_op_create] (bool pds_status,
                                                            bool ips_mock) -> void {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
                 // ----------------------------------------------------------------
-                SDK_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS " 
-                                "response %s ++++++++++", l_bd_id, macaddr2str(l_mac), 
+                SDK_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS "
+                                "response %s ++++++++++", l_bd_id, macaddr2str(l_mac),
                                 (pds_status) ? "Success" : "Failure");
 
                 if (!pds_status && l_op_create) {
@@ -391,13 +393,13 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                     auto key = l2f::FdbMac::get_key(*update_fdb_mac);
                     auto it = fdb_store.find(key);
                     if (it == fdb_store.end()) {
-                        auto send_response = 
+                        auto send_response =
                             l2f::FdbMac::set_ips_rc(&update_fdb_mac->ips_hdr,
                                                     (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                         SDK_ASSERT(send_response);
                         SDK_TRACE_DEBUG ("++++++++ MS BD %d MAC %s: Send Async IPS "
                                          "reply %s stateless mode +++++++++++",
-                                         l_bd_id, macaddr2str(l_mac), 
+                                         l_bd_id, macaddr2str(l_mac),
                                          (pds_status) ? "Success" : "Failure");
                         bdpi_join->send_ips_reply(&update_fdb_mac->ips_hdr);
                     } else {
@@ -417,10 +419,10 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                 while (0);
                 NBS_RELEASE_SHARED_DATA();
                 NBS_EXIT_SHARED_CONTEXT();
-                NBB_DESTROY_THREAD_CONTEXT    
+                NBB_DESTROY_THREAD_CONTEXT
             };
 
-        // All processing complete, only batch commit remains - 
+        // All processing complete, only batch commit remains -
         // safe to release the cookie_uptr_ unique_ptr
         cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -468,13 +470,13 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
       // Do Not access/modify global state after this
 
     cookie_uptr_.reset(new cookie_t);
-    pds_bctxt_guard = make_batch_pds_spec_(); 
+    pds_bctxt_guard = make_batch_pds_spec_();
 
     ms_bd_id_t l_bd_id = ips_info_.bd_id;
     mac_addr_t l_mac;
     MAC_ADDR_COPY(l_mac, key->mac_address);
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [l_bd_id, l_mac] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -485,7 +487,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
                             (pds_status) ? "Success" : "Failure");
 
         };
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -548,7 +550,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
         resolve_teps_(state_ctxt.state());
         cookie_uptr_.reset(new cookie_t);
 
-        pds_bctxt_guard = make_batch_pds_spec_(); 
+        pds_bctxt_guard = make_batch_pds_spec_();
 
     } // End of state thread_context
       // Do Not access/modify global state after this
@@ -556,7 +558,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     auto l_bd_id = ips_info_.bd_id;
     auto l_ip = ips_info_.ip_address;
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [l_bd_id, l_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -568,7 +570,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
 
         };
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -601,12 +603,12 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
       // Do Not access/modify global state after this
 
     cookie_uptr_.reset(new cookie_t);
-    pds_bctxt_guard = make_batch_pds_spec_(); 
+    pds_bctxt_guard = make_batch_pds_spec_();
 
     auto l_bd_id = ips_info_.bd_id;
     auto l_ip = ips_info_.ip_address;
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [l_bd_id, l_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -618,7 +620,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
 
         };
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -633,7 +635,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
                     l_bd_id, ipaddr2str(&l_ip));
 }
 
-void l2f_mai_t::batch_pds_mapping_del_spec(bd_obj_t* bd_obj, 
+void l2f_mai_t::batch_pds_mapping_del_spec(bd_obj_t* bd_obj,
                                            const mac_addr_t& mac,
                                            pds_batch_ctxt_t bctxt) {
     ips_info_.bd_id = bd_obj->properties().bd_id;
@@ -641,7 +643,7 @@ void l2f_mai_t::batch_pds_mapping_del_spec(bd_obj_t* bd_obj,
     store_info_.bd_obj = bd_obj;
     auto key = make_pds_mapping_key_();
     if (!PDS_MOCK_MODE()) {
-        pds_remote_mapping_delete(&key, bctxt);
+        api::pds_remote_mapping_delete(&key, bctxt);
     }
 }
 

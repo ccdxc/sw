@@ -114,7 +114,7 @@ mapping_impl_state::table_transaction_end(void) {
 }
 
 void
-mapping_dump_cb(sdk_table_api_params_t *params)
+mapping_dump_cb (sdk_table_api_params_t *params)
 {
     int fd = *(int *)(params->cbdata);
 
@@ -149,10 +149,10 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
         sdk_ret_t                   ret;
         vpc_entry                   *vpc;
 
-        vpc = vpc_db()->find(&mapping_args->key.vpc);
+        vpc = vpc_db()->find(&mapping_args->skey.vpc);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                              vpc->hw_id(),
-                                             &mapping_args->key.ip_addr,
+                                             &mapping_args->skey.ip_addr,
                                              true);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                        NULL, &local_ip_mapping_data,
@@ -182,13 +182,15 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     memset(&stats, 0, sizeof(pds_table_stats_t));
     p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_RX, &tinfo);
     stats.table_name = tinfo.tablename;
-    remote_vnic_mapping_rx_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    remote_vnic_mapping_rx_tbl_->stats_get(&stats.api_stats,
+                                           &stats.table_stats);
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
     p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_TX, &tinfo);
     stats.table_name = tinfo.tablename;
-    remote_vnic_mapping_tx_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    remote_vnic_mapping_tx_tbl_->stats_get(&stats.api_stats,
+                                           &stats.table_stats);
     cb(&stats, ctxt);
 
     return SDK_RET_OK;

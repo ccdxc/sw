@@ -258,9 +258,9 @@ process_new_ip (local_learn_ctxt_t *ctxt)
     }
 
     // create local l3 mapping
-    spec.key.type = PDS_MAPPING_TYPE_L3;
-    spec.key.vpc = ctxt->ip_key.vpc;
-    spec.key.ip_addr = ctxt->ip_key.ip_addr;
+    spec.skey.type = PDS_MAPPING_TYPE_L3;
+    spec.skey.vpc = ctxt->ip_key.vpc;
+    spec.skey.ip_addr = ctxt->ip_key.ip_addr;
     spec.vnic = api::uuid_from_objid(vnic_obj_id);
     spec.subnet = ctxt->mac_key.subnet;
     spec.num_tags = 0;

@@ -68,8 +68,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RemoteMappingID:%d|Subnet: %s |VPC: %s " %\
-               (self.MappingId, self.SUBNET.UUID, self.SUBNET.VPC.UUID)
+        return "RemoteMapping: %s |Subnet: %s |VPC: %s " %\
+               (self.UUID, self.SUBNET.UUID, self.SUBNET.VPC.UUID)
 
     def Show(self):
         logger.info("RemoteMapping object:", self)
@@ -83,12 +83,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return super().IsFilterMatch(selectors.flow.filters)
 
     def PopulateKey(self, grpcmsg):
-        if grpcmsg.__class__.__name__ == 'MappingDeleteRequest' or grpcmsg.__class__.__name__ == 'MappingGetRequest':
-            key = grpcmsg.Id.add()
-            key.IPKey.VPCId = self.SUBNET.VPC.GetKey()
-            utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
-        else:
-            grpcmsg.Id.append(self.GetKey())
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
@@ -105,6 +100,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
+        if spec.Id != self.GetKey():
+            return False
         if spec.IPKey.VPCId != self.SUBNET.VPC.GetKey():
             return False
         if not utils.ValidateRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr):

@@ -79,7 +79,7 @@ typedef enum mapping_dump_type_e {
 
 typedef struct mapping_dump_args_s {
     bool key_valid;
-    pds_mapping_key_t key;
+    pds_mapping_key_t skey;
     mapping_dump_type_t type;
 } mapping_dump_args_t;
 

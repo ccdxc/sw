@@ -18,13 +18,15 @@ service MappingSvc {
   rpc MappingDelete (MappingDeleteRequest) returns (MappingDeleteResponse) {}
 }
 
+// L3MappingKey is the 2nd-ary key of the remote IP mapping
 message L3MappingKey {
-  // virtual private cloud mapping belongs to
+  // virtual private cloud of the IP mapping
   bytes           VPCId = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // private/overlay IP of the mapping
   types.IPAddress IPAddr = 2;
 }
 
+// L2MappingKey is the 2nd-ary key of the remote MAC mapping
 message L2MappingKey {
   // subnet id of this MAC
   bytes  SubnetId = 1;
@@ -32,7 +34,7 @@ message L2MappingKey {
   uint64 MACAddr  = 2;
 }
 
-// MappingKey uniquely identifies the IP in the entire fabric
+// MappingKey is the 2nd-ary key and uniquely identifies a IP/MAC mapping
 message MappingKey {
   oneof keyinfo {
     // IP mapping key
@@ -116,7 +118,7 @@ message MappingResponse {
 
 // mapping get request
 message MappingGetRequest {
-  repeated MappingKey Id = 1;
+  repeated bytes Id = 1;
 }
 
 // mapping get response
@@ -134,8 +136,8 @@ message MappingDumpRequest {
 // mapping delete request
 message MappingDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt     BatchCtxt = 1;
-  repeated MappingKey Id        = 2;
+  types.BatchCtxt BatchCtxt = 1;
+  repeated bytes  Id        = 2;
 }
 
 // mapping delete response

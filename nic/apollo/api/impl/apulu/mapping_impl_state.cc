@@ -276,10 +276,10 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             sdk_ret_t                   ret;
             vpc_entry                   *vpc;
 
-            vpc = vpc_db()->find(&mapping_args->key.vpc);
+            vpc = vpc_db()->find(&mapping_args->skey.vpc);
             PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                                  ((vpc_impl *)vpc->impl())->hw_id(),
-                                                 &mapping_args->key.ip_addr);
+                                                 &mapping_args->skey.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                            NULL, &local_ip_mapping_data, 0,
                                            sdk::table::handle_t::null());
@@ -297,11 +297,10 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             sdk_ret_t             ret;
             vpc_entry             *vpc;
 
-            vpc = vpc_db()->find(&mapping_args->key.vpc);
-
+            vpc = vpc_db()->find(&mapping_args->skey.vpc);
             PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
                                            ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &mapping_args->key.ip_addr);
+                                           &mapping_args->skey.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key, NULL,
                                            &mapping_data, 0,
                                            sdk::table::handle_t::null());

@@ -285,7 +285,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in LOCAL_IP_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->key.ip_addr, true);
+                                         &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
                                    NULL, NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_ip_mapping_tbl()->reserve(&tparams);
@@ -300,7 +300,7 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in REMOTE_VNIC_MAPPING_TX for overlay IP
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vpc->hw_id(),
-                                               &spec->key.ip_addr, true);
+                                               &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->reserve(&tparams);
@@ -400,7 +400,7 @@ mapping_impl::reserve_remote_ip_mapping_resources_(api_base *api_obj,
     // reserve an entry in REMOTE_VNIC_MAPPING_TX table
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vpc->hw_id(),
-                                               &spec->key.ip_addr, true);
+                                               &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, NULL, 0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->reserve(&tparams);
@@ -448,13 +448,13 @@ mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry             *vpc;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    vpc = vpc_db()->find(&spec->key.vpc);
+    vpc = vpc_db()->find(&spec->skey.vpc);
 
     PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %s, ip %s), "
                     "local %u, subnet %s, tep %s, vnic %s, "
                     "pub_ip_valid %u, pub_ip %s, "
                     "prov_ip_valid %u, prov_ip %s",
-                    spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                    spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
                     is_local_, spec->subnet.str(), spec->tep.str(),
                     spec->vnic.str(), spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip),
@@ -659,7 +659,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
 
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
                                                vpc->hw_id(),
-                                               &spec->key.ip_addr, true);
+                                               &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_APPDATA(&remote_vnic_mapping_tx_data,
                                                  nh_id,
                                                  &spec->fabric_encap);
@@ -673,7 +673,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program entry in REMOTE_VNIC_MAPPING_TX "
                       "table for (vpc %u, IP %s), err %u\n", vpc->hw_id(),
-                      ipaddr2str(&spec->key.ip_addr), ret);
+                      ipaddr2str(&spec->skey.ip_addr), ret);
         goto error;
     }
 
@@ -729,7 +729,7 @@ mapping_impl::add_nat_entries_(pds_mapping_spec_t *spec) {
         }
 
         // add public to private IP xlation NAT entry
-        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.ip_addr);
+        PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->skey.ip_addr);
         PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(&api_params,
                                 handle_.local_.public_ip_to_overlay_ip_nat_hdl_,
                                 &nat_data, NULL);
@@ -760,7 +760,7 @@ mapping_impl::add_local_ip_mapping_entries_(vpc_entry *vpc,
     vnic_impl_obj = (vnic_impl *)vnic_db()->find(&spec->vnic)->impl();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
-                                         &spec->key.ip_addr, true);
+                                         &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_ip_mapping_data, vpc->hw_id(),
                                            handle_.local_.overlay_ip_to_public_ip_nat_hdl_,
                                            IP_TYPE_OVERLAY);
@@ -843,12 +843,12 @@ mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     subnet_entry          *subnet;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    vpc = vpc_db()->find(&spec->key.vpc);
+    vpc = vpc_db()->find(&spec->skey.vpc);
     subnet = subnet_db()->find(&spec->subnet);
     PDS_TRACE_DEBUG("Programming mapping (vpc %s, ip %s), subnet %s, tep %s, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %s",
-                    spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                    spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
                     spec->subnet.str(), spec->tep.str(),
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.str());
@@ -959,7 +959,7 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     vnic_hw_id = vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag;
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_hw_id,
-                                         &spec->key.ip_addr, true);
+                                         &spec->skey.ip_addr, true);
     // prepare the api parameters to read the LOCAL_IP_MAPPING table
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
                                    NULL, &local_ip_mapping_data,
@@ -971,8 +971,9 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     }
     // Make sure the VPC are matching , return error otherwise
     if (local_ip_mapping_data.vpc_id != vpc->hw_id()) {
-        PDS_TRACE_ERR("LOCAL_IP_MAPPING table, vpc value mismatch read %u, expected %u",
-                      local_ip_mapping_data.vpc_id, vpc->hw_id());
+        PDS_TRACE_ERR("LOCAL_IP_MAPPING table, vpc value mismatch read %u, "
+                      "expected %u", local_ip_mapping_data.vpc_id,
+                      vpc->hw_id());
         return SDK_RET_ERR;
     }
 
@@ -992,8 +993,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     uint32_t                            nh_index, tep_index;
 
     PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
-                                               vpc->hw_id(), &spec->key.ip_addr,
-                                               true);
+                                               vpc->hw_id(),
+                                               &spec->skey.ip_addr, true);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &remote_vnic_mapping_tx_key,
                                    NULL, &remote_vnic_mapping_tx_data,
                                    REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,

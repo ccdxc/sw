@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/lib/kvstore/kvstore.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -185,11 +186,11 @@ sysmon_init (void)
 sdk_ret_t
 pds_init (pds_init_params_t *params)
 {
-    sdk_ret_t     ret;
-    asic_cfg_t    asic_cfg;
-    std::string   mem_json;
-    std::string   mac_str;
-    mac_addr_t    mac_addr;
+    sdk_ret_t         ret;
+    asic_cfg_t        asic_cfg;
+    std::string       mem_json;
+    std::string       mac_str;
+    mac_addr_t        mac_addr;
 
     // TODO read from device.conf
     sdk::lib::device_profile_t device_profile = { 0 };

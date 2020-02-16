@@ -349,8 +349,8 @@ public:
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
-        uint32_t vpc_id = test::pdsobjkey2int(local_spec->key.vpc);
-        ip_addr_t ip_addr = local_spec->key.ip_addr;
+        uint32_t vpc_id = test::pdsobjkey2int(local_spec->skey.vpc);
+        ip_addr_t ip_addr = local_spec->skey.ip_addr;
 
         assert(vpc_id);
         if (vpc_id > MAX_VPCS) {
@@ -405,8 +405,8 @@ public:
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
-        uint32_t vpc_id = test::pdsobjkey2int(remote_spec->key.vpc);
-        ip_addr_t ip_addr = remote_spec->key.ip_addr;
+        uint32_t vpc_id = test::pdsobjkey2int(remote_spec->skey.vpc);
+        ip_addr_t ip_addr = remote_spec->skey.ip_addr;
 
         assert(vpc_id);
         if (vpc_id > MAX_VPCS) {
@@ -477,17 +477,17 @@ public:
         memset(&remote_spec, 0, sizeof(remote_spec));
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             epdb[vpc].vpc_id = vpc;
-            local_spec.key.type = PDS_MAPPING_TYPE_L3;
-            local_spec.key.vpc = test::int2pdsobjkey(vpc);
-            remote_spec.key.type = PDS_MAPPING_TYPE_L3;
-            remote_spec.key.vpc = test::int2pdsobjkey(vpc);
+            local_spec.skey.type = PDS_MAPPING_TYPE_L3;
+            local_spec.skey.vpc = test::int2pdsobjkey(vpc);
+            remote_spec.skey.type = PDS_MAPPING_TYPE_L3;
+            remote_spec.skey.vpc = test::int2pdsobjkey(vpc);
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
-                local_spec.key.ip_addr.af = IP_AF_IPV4;
-                local_spec.key.ip_addr.addr.v4_addr = 0x0a000001 + lid;
+                local_spec.skey.ip_addr.af = IP_AF_IPV4;
+                local_spec.skey.ip_addr.addr.v4_addr = 0x0a000001 + lid;
                 add_local_ep(&local_spec);
-                remote_spec.key.ip_addr.af = IP_AF_IPV4;
+                remote_spec.skey.ip_addr.af = IP_AF_IPV4;
                 for (uint32_t rid = 0; rid < MAX_REMOTE_EPS; rid++) {
-                    remote_spec.key.ip_addr.addr.v4_addr = 0x1400001 + rid;
+                    remote_spec.skey.ip_addr.addr.v4_addr = 0x1400001 + rid;
                     add_remote_ep(&remote_spec);
                 }
             }
