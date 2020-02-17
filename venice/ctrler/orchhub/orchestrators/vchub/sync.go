@@ -14,7 +14,7 @@ import (
 )
 
 func (v *VCHub) sync() {
-	v.Log.Infof("VCHub %v synching.", v)
+	v.Log.Infof("VCHub %v synching........", v)
 	// Check that probe session is connected
 	count := 3
 	for !v.probe.IsSessionReady() && count > 0 {
@@ -95,7 +95,7 @@ func (v *VCHub) sync() {
 }
 
 func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
-	v.Log.Debug("Syncing hosts")
+	v.Log.Infof("Syncing hosts on DC %s============", dc.Name)
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {
 		hostName := createHostName(v.VcID, dc.Self.Value, vcHost.Self.Value)
@@ -148,7 +148,7 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 }
 
 func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, pgs []mo.DistributedVirtualPortgroup) {
-	v.Log.Debug("Syncing networks")
+	v.Log.Infof("Syncing networks on DC %s============", dc.Name)
 	// SYNCING DVS AND PG
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)
@@ -213,7 +213,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 
 			_, ok := pgNameMap[pgName]
 			if !ok {
-				v.Log.Infof("No venice network info is available for this pg %s", pgName)
+				v.Log.Infof("No venice network info is available for this pg %s in DC %s", pgName, dcName)
 				continue
 			}
 
@@ -276,7 +276,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 }
 
 func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup, vmkMap map[string]bool) {
-	v.Log.Debug("Syncing vms")
+	v.Log.Infof("Syncing vms on DC %s============", dc.Name)
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)
 	penDvs := penDC.GetPenDVS(createDVSName(dcName))

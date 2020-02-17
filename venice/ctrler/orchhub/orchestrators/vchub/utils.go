@@ -84,22 +84,27 @@ func createDVSName(dcName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultDVSPrefix, dcName)
 }
 
+func isObjForVC(labels map[string]string, vcID string) bool {
+	if labels == nil {
+		return false
+	}
+	vc, ok := labels[utils.OrchNameKey]
+	if !ok || vc != vcID {
+		return false
+	}
+	return true
+}
+
 func isObjForDC(labels map[string]string, vcID string, dcName string) bool {
 	if labels == nil {
 		return false
 	}
 	vc, ok := labels[utils.OrchNameKey]
-	if !ok {
+	dc, dcOk := labels[NamespaceKey]
+	if !ok || !dcOk {
 		return false
 	}
-	dc, ok := labels[NamespaceKey]
-	if !ok {
-		return false
-	}
-	if vc != vcID {
-		return false
-	}
-	if dc != dcName {
+	if vc != vcID || dc != dcName {
 		return false
 	}
 	return true

@@ -1,6 +1,8 @@
 package vchub
 
 import (
+	"context"
+	"fmt"
 	"reflect"
 	"sort"
 
@@ -16,7 +18,7 @@ import (
 )
 
 func (v *VCHub) handleHost(m defs.VCEventMsg) {
-	v.Log.Debugf("Got handle host event for host %s in DC %s", m.Key, m.DcID)
+	v.Log.Infof("Got handle host event for host %s in DC %s", m.Key, m.DcID)
 	penDC := v.GetDC(m.DcName)
 	if penDC == nil {
 		return
@@ -153,8 +155,15 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	if existingHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
-		v.StateMgr.Controller().Host().Create(hostObj)
-		v.pCache.RevalidateKind(workloadKind)
+		err := v.StateMgr.Controller().Host().Create(hostObj)
+		if err != nil {
+			err = v.fixStaleHost(hostObj)
+		}
+		if err == nil {
+			v.pCache.RevalidateKind(workloadKind)
+		} else {
+			v.Log.Infof("Host create failed for %s - %s", hostObj.Name, err)
+		}
 	}
 
 	v.syncHostVmkNics(penDC, penDVS, m.Key, hConfig)
@@ -173,6 +182,50 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		// Only thing that can be updated in a host is the labels
 		// once it is written
 	}
+}
+
+func (v *VCHub) fixStaleHost(host *cluster.Host) error {
+	// check if there is another host with the same MACAddr (DSC)
+	// If that host belongs to this VC it is likely that vcenter host-id changed for some
+	// reason, delete that host and create new one.
+	// TODO: If host was moved from one VCenter to another, we can just check if it has
+	// some VC association and do the same?? (linked VC case)
+	// List hosts
+	opts := api.ListWatchOptions{}
+	hosts, err := v.StateMgr.Controller().Host().List(context.Background(), &opts)
+	if err != nil {
+		v.Log.Errorf("fixStaleHost Failed to get host list. Err : %v", err)
+		return err
+	}
+	var hostFound *cluster.Host
+searchHosts:
+	for _, eh := range hosts {
+		for i, dsc := range eh.Spec.DSCs {
+			if i >= len(host.Spec.DSCs) {
+				continue
+			}
+			if dsc.MACAddress == host.Spec.DSCs[i].MACAddress {
+				hostFound = &eh.Host
+				break searchHosts
+			}
+		}
+	}
+	if hostFound == nil {
+		return fmt.Errorf("No duplicate Host entry found")
+	}
+
+	vcID, ok := hostFound.Labels[utils.OrchNameKey]
+	if !ok {
+		return fmt.Errorf("Duplicate Host %s is being used by non-VC application", hostFound.Name)
+	}
+
+	if !isObjForVC(hostFound.Labels, v.VcID) {
+		// host found, but not used by this VC
+		v.Log.Infof("Deleting host that belonged to another VC %s", vcID)
+	}
+	v.deleteHost(hostFound)
+	err = v.StateMgr.Controller().Host().Create(host)
+	return err
 }
 
 func (v *VCHub) deleteHost(obj *cluster.Host) {
@@ -196,9 +249,31 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 			penDC.delHostNameKey(hostName)
 		}
 	}
+	v.Log.Infof("Deleting host %s", obj.Name)
 	// Delete from apiserver
-	v.StateMgr.Controller().Host().Delete(obj)
+	if err := v.StateMgr.Controller().Host().Delete(obj); err != nil {
+		v.Log.Errorf("Could not delete host from Venice %s", obj.Name)
+	}
 	return
+}
+
+// DeleteHosts deletes all host objects from API server for this VCHub instance
+func (v *VCHub) DeleteHosts() {
+	// List hosts
+	opts := api.ListWatchOptions{}
+	hosts, err := v.StateMgr.Controller().Host().List(context.Background(), &opts)
+	if err != nil {
+		v.Log.Errorf("Failed to get host list. Err : %v", err)
+	}
+	for _, host := range hosts {
+		if !isObjForVC(host.Labels, v.VcID) {
+			// Filter out hosts not for this Orch
+			v.Log.Debugf("Skipping host %s", host.Name)
+			continue
+		}
+		// Delete host
+		v.deleteHost(&host.Host)
+	}
 }
 
 func (v *VCHub) findHost(hostName string) *cluster.Host {

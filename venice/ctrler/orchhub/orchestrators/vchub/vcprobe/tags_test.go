@@ -68,7 +68,7 @@ func TestTags(t *testing.T) {
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
 	}
-	vcp := NewVCProbe(storeCh, state)
+	vcp := NewVCProbe(storeCh, nil, state)
 	vcp.Start()
 
 	defer func() {
@@ -234,7 +234,7 @@ func TestTagWriting(t *testing.T) {
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
 	}
-	vcp := NewVCProbe(storeCh, state)
+	vcp := NewVCProbe(storeCh, nil, state)
 	vcp.Start()
 
 	defer func() {

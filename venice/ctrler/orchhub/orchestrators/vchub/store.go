@@ -22,15 +22,24 @@ func (v *VCHub) startEventsListener() {
 		case <-v.Ctx.Done():
 			return
 
+		case m, active := <-v.vcEventCh:
+			if !active {
+				return
+			}
+			switch m.MsgType {
+			case defs.VCNotification:
+				// These are notifications from vcenter's EventManager
+				v.handleVCNotification(m.Val.(defs.VCNotificationMsg))
+			default:
+				v.Log.Errorf("Unknown event %s", m.MsgType)
+			}
 		case m, active := <-v.vcReadCh:
 			if !active {
 				return
 			}
-
 			switch m.MsgType {
-			case defs.VCNotification:
-				v.handleVCNotification(m.Val.(defs.VCNotificationMsg))
 			case defs.VCEvent:
+				// These are watch events
 				v.handleVCEvent(m.Val.(defs.VCEventMsg))
 			default:
 				v.Log.Errorf("Unknown event %s", m.MsgType)

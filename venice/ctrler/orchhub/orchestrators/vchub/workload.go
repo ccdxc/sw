@@ -65,7 +65,7 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 }
 
 func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
-	v.Log.Debugf("Got handle workload event for %s in DC %s", m.Key, m.DcName)
+	v.Log.Infof("Got handle workload event for %s in DC %s", m.Key, m.DcName)
 	meta := &api.ObjectMeta{
 		Name: createVMWorkloadName(m.Originator, m.DcID, m.Key),
 		// TODO: Don't use default tenant
@@ -94,7 +94,8 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 	wlDcName := v.getDCNameForHost(workloadObj.Spec.HostName)
 	if wlDcName != "" && wlDcName != m.DcName {
 		// wlDcName can be "" for new workloads or for workloads where host is not yet set (corner case)
-		v.Log.Infof("Ignore Workload event - incorrect DC")
+		v.Log.Infof("Ignore Workload event - incorrect DC, workload DC %s, Watch DC %s",
+			wlDcName, m.DcName)
 		return
 	}
 	if m.UpdateType == types.ObjectUpdateKindLeave {
@@ -108,7 +109,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 			v.Log.Debugf("Ignore VM Delete Event - VM has moved to another DC %s", wlDcName)
 			return
 		}
-		v.Log.Debugf("VM Delete Event")
+		v.Log.Debugf("VM Delete Event - %s in DC %s", workloadObj.Name, wlDcName)
 		v.deleteWorkload(workloadObj)
 		return
 	}
@@ -135,12 +136,18 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		}
 	}
 
-	if existingWorkload != nil && len(workloadObj.Spec.Interfaces) != len(existingWorkload.Spec.Interfaces) && v.isWorkloadMigrating(existingWorkload) {
-		// TODO: vCenter seems to send an update with stale vnic config - need to invastigate
+	if existingWorkload != nil && v.isWorkloadMigrating(existingWorkload) {
+		// vCenter seems to send an update with stale vnic config - need to invastigate
 		// HACK - don't accept vnic changes during vMotion
-		v.Log.Debugf("Interfaces cannot be changed during vMotion")
-		return
+		// If config prop was sent with wrond info.. it will result in change in Spec.Interfaces, if
+		// not, validateVnicInformation will revalidate PG's to make sure we have reliable information
+		if len(workloadObj.Spec.Interfaces) != len(existingWorkload.Spec.Interfaces) ||
+			!v.validateVnicInformation(existingWorkload) {
+			v.Log.Debugf("Interfaces cannot be changed during vMotion")
+			return
+		}
 	}
+
 	if v.OrchConfig != nil {
 		utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 		if workloadObj.Spec.HostName != "" {
@@ -162,14 +169,14 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		v.Log.Infof("Ignore COLD VMotionStart Event for VM %s", m.VMKey)
 		return
 	}
-	dc := v.GetDCFromID(m.DcID)
+	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
+	var hostKey string
+	dcID := m.DcID
+	dc := v.GetDCFromID(dcID)
 	if dc == nil {
 		v.Log.Errorf("Ignore vMotion for %s - from DC %s not found", m.VMKey, m.DcID)
 		return
 	}
-	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
-	var hostKey string
-	dcID := m.DcID
 	if m.DstHostKey != "" {
 		hostKey = m.DstHostKey
 	} else if m.DstHostName != "" {
@@ -191,6 +198,11 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		dcID = destDC.dcRef.Value
 	} else {
 		v.Log.Errorf("Ignore VMotion Start event for VM %s - dest host name or key not specified")
+		return
+	}
+	destDc := v.GetDCFromID(dcID)
+	if destDc == nil {
+		v.Log.Errorf("Ignore vMotion for %s - dest DC %s not found", m.VMKey, dcID)
 		return
 	}
 	hostName := createHostName(v.VcID, dcID, hostKey)
@@ -233,15 +245,19 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 	// change the host to new host and allocate useg vlans from the new host's pool
 	// TODO: Try to keep the same useg vlan values if free
 	wlCopy.Spec.HostName = hostName
-	_ = v.reassignUsegs(dc.Name, &wlCopy)
+	_ = v.reassignUsegs(destDc.Name, &wlCopy)
 
 	// Start migration action will copy information from spec to status and install new
 	// config into the spec
 	if _, err := v.StateMgr.Controller().Workload().StartMigration(&wlCopy); err != nil {
 		v.Log.Errorf("Could not start migration on workload %s - %s", wlName, err)
-		v.Log.Debugf("workload {{+%v}}", wlCopy)
-		// XXX free the useg allocation done on new host
+		// free the useg allocation done on new host
+		if err := v.releaseUsegVlans(&wlCopy, false /*old*/); err != nil {
+			v.Log.Errorf("%s", err)
+			return
+		}
 	}
+	// Old VnicInfo is retained as vMotion can be aborted.
 }
 
 func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
@@ -273,27 +289,13 @@ func (v *VCHub) handleVMotionDone(m defs.VMotionDoneMsg) {
 	// workload update with new host information. Especially when workload migrates across
 	// DCs, new DVS port information is not avaialable here
 
+	// The Done message seems to be generated after VMConfig update. If is processed earlier,
+	// we may not have new vnic information if DVS(DC) changed... for now lets not process this
+	// event and rely on VM update.
 	v.Log.Debugf("VMotionDoneMsg for VM %s in DC %s", m.VMKey, m.DcID)
-	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
-	wlObj := v.pCache.GetWorkloadByName(wlName)
-	if wlObj == nil {
-		v.Log.Errorf("Cannot Complete vMotion for %s - no workload found", wlName)
-		return
-	}
-	if !v.isWorkloadMigrating(wlObj) {
-		v.Log.Errorf("Cannot Complete vMotion for %s - not migrating", wlName)
-		return
-	}
-	// update useg vlan overrides in vCenter, indicate to dataplane to complete migration (last sync etc)
-	if wlObj.Status.MigrationStatus != nil && wlObj.Status.MigrationStatus.Stage == stageMigrationStart {
-		// If workload update watch is processed ahead of this event, it may have already signalled
-		// migration completion.
-		_ = v.finishMigration(m.DcID, wlObj)
-	}
-	v.Log.Debugf("VMotionDoneMsg for VM %s in DC %s - Completed", m.VMKey, m.DcID)
 }
 
-func (v *VCHub) finishMigration(dcID string, wlObj *workload.Workload) error {
+func (v *VCHub) finishMigration(wlObj *workload.Workload) error {
 	wlName := wlObj.Name
 	newDCName := v.getDCNameForHost(wlObj.Spec.HostName)
 	newDC := v.GetDC(newDCName)
@@ -302,6 +304,10 @@ func (v *VCHub) finishMigration(dcID string, wlObj *workload.Workload) error {
 		v.Log.Errorf("%s", errMsg)
 		return errMsg
 	}
+	// There is not need to remove vlan overrides from old DVS. If old and new DVSs are the same
+	// those will get overwritten. If they are different, we can leave them on old DVS and those
+	// will get overwritten when the same port gets used again. Also vCenter seems to clearing it
+	// anyway
 	newDcID := newDC.dcRef.Value
 	if err := v.setVlanOverride(newDcID, wlObj); err != nil {
 		v.Log.Errorf("Cannot Complete vMotion for %s - not set vlan overrides", wlName)
@@ -310,7 +316,7 @@ func (v *VCHub) finishMigration(dcID string, wlObj *workload.Workload) error {
 	// TODO: There should be no interfaces added/removed during migration,
 	// if they are, handle them here?
 	// release the old useg vlans (from the status)
-	if err := v.releaseOldUsegVlans(wlObj); err != nil {
+	if err := v.releaseUsegVlans(wlObj, true /*old*/); err != nil {
 		v.Log.Errorf("Cannot Complete vMotion for %s - %s", wlName, err)
 		return err
 	}
@@ -321,12 +327,14 @@ func (v *VCHub) finishMigration(dcID string, wlObj *workload.Workload) error {
 	return nil
 }
 
-func (v *VCHub) releaseOldUsegVlans(wlObj *workload.Workload) error {
-	// free the old useg vlans which are stored in the status of workload object
-	// these vlans are usegs vlans that were used before migration
-	hostName := wlObj.Status.HostName
-	if hostName == "" {
-		return fmt.Errorf("Cannot free microseg vlans for workload %s - No host", wlObj.Name)
+func (v *VCHub) releaseUsegVlans(wlObj *workload.Workload, old bool) error {
+	var hostName string
+	if old {
+		// free the old useg vlans which are stored in the status of workload object
+		// these vlans are useg vlans that were used before migration
+		hostName = wlObj.Status.HostName
+	} else {
+		hostName = wlObj.Spec.HostName
 	}
 	dcName := v.getDCNameForHost(hostName)
 	dc := v.GetDC(dcName)
@@ -335,10 +343,19 @@ func (v *VCHub) releaseOldUsegVlans(wlObj *workload.Workload) error {
 	}
 	// TODO: Remove hardcoded dvs name
 	dvs := dc.GetPenDVS(createDVSName(dc.Name))
-	for _, intf := range wlObj.Status.Interfaces {
-		err := dvs.UsegMgr.ReleaseVlanForVnic(intf.MACAddress, hostName)
-		if err != nil {
-			return fmt.Errorf("Failed to release vlan %d on host %s", intf.MicroSegVlan, hostName)
+	if old {
+		for _, intf := range wlObj.Status.Interfaces {
+			err := dvs.UsegMgr.ReleaseVlanForVnic(intf.MACAddress, hostName)
+			if err != nil {
+				return fmt.Errorf("Failed to release vlan %d on host %s", intf.MicroSegVlan, hostName)
+			}
+		}
+	} else {
+		for _, intf := range wlObj.Spec.Interfaces {
+			err := dvs.UsegMgr.ReleaseVlanForVnic(intf.MACAddress, hostName)
+			if err != nil {
+				return fmt.Errorf("Failed to release vlan %d on host %s", intf.MicroSegVlan, hostName)
+			}
 		}
 	}
 	return nil
@@ -368,7 +385,8 @@ func (v *VCHub) setVlanOverride(dcID string, wlObj *workload.Workload) error {
 func (v *VCHub) reassignUsegs(dcName string, wlObj *workload.Workload) error {
 	// assign new useg vlans for workload interfaces. Try to reuse existing value if available on
 	// the new host.
-	// Do not set overrides in this function
+	// Do not set overrides in this function - we do not have port information when DVS changed
+	// it is done when VM config update with new host is received.
 
 	hostName := wlObj.Spec.HostName
 	if len(hostName) == 0 {
@@ -519,7 +537,7 @@ func (v *VCHub) syncUsegs(dcID, dcName, vmKey string, existingWorkload, workload
 					// HACK: vcenter seems to send partial object update where host is updated but
 					// vnic config is not.. check it before calling if migration done
 					// If migration done event is not already processed, mark migration complete
-					if err := v.finishMigration(dcID, existingWorkload); err != nil {
+					if err := v.finishMigration(existingWorkload); err != nil {
 						v.Log.Errorf("Cannot Finish migration for %s", vmKey)
 					}
 					return
@@ -600,7 +618,6 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 			err = dvs.SetVlanOverride(entry.Port, vlan)
 			if err != nil {
 				v.Log.Errorf("Override vlan failed for workload %s, %s", workload.Name, err)
-				// XXX free the useg vlan and reset interface vlan to 0
 			}
 		}
 	}
@@ -728,6 +745,31 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 		res = append(res, vnic)
 	}
 	return res
+}
+
+func (v *VCHub) validateVnicInformation(wlObj *workload.Workload) bool {
+	wlVnics := v.getWorkloadVnics(wlObj.Name)
+	if wlVnics == nil {
+		return false
+	}
+	dcName := v.getDCNameForHost(wlObj.Spec.HostName)
+	dc := v.GetDC(dcName)
+	if dc == nil {
+		return false
+	}
+	for _, entry := range wlVnics.Interfaces {
+		pgObj := dc.GetPGByID(entry.PG)
+		if pgObj == nil {
+			v.Log.Errorf("Incorrect PG %s on Vnic for workload %s", entry.PG, wlObj.Name)
+			return false
+		}
+		_, err := v.StateMgr.Controller().Network().Find(&pgObj.NetworkMeta)
+		if err != nil {
+			v.Log.Errorf("Cannot map Vnic PG %s to Venice Network", entry.PG)
+			return false
+		}
+	}
+	return true
 }
 
 // GetVeth checks if the base virtual device is a vnic and returns a pointer to

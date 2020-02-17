@@ -62,7 +62,7 @@ func TestVmotion(t *testing.T) {
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
@@ -217,13 +217,20 @@ func TestVmotion(t *testing.T) {
 		VMKey:        vm1.Self.Value,
 		DstHostKey:   penHost2.Obj.Self.Value,
 		DcID:         dc.Obj.Self.Value,
-		HotMigration: true,
+		HotMigration: false,
 	}
 	m := defs.VCNotificationMsg{
 		Type: defs.VMotionStart,
 		Msg:  startMsg1,
 	}
 
+	vchub.handleVCNotification(m)
+
+	startMsg1.HotMigration = true
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
 	vchub.handleVCNotification(m)
 
 	err = dc.UpdateVMHost(vm1, "host2")
@@ -245,6 +252,10 @@ func TestVmotion(t *testing.T) {
 
 	// Send erroneous vmotion start events and test that vm does not move
 	// send start to host2 again
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
 	vchub.handleVCNotification(m)
 	// use DstHost name similar to EventEx
 	startMsg1.DstHostKey = ""
@@ -264,13 +275,22 @@ func TestVmotion(t *testing.T) {
 	}
 	vchub.handleVCNotification(m)
 
-	startMsg1.DcID = "junkDC"
+	startMsg1.DstHostName = "junkHost"
+	startMsg1.DstDcName = "junkDC"
 	m = defs.VCNotificationMsg{
 		Type: defs.VMotionStart,
 		Msg:  startMsg1,
 	}
 	vchub.handleVCNotification(m)
 
+	startMsg1.DstHostName = ""
+	startMsg1.DstDcName = ""
+	startMsg1.DcID = "junkDC"
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
 	startMsg1.DcID = ""
 	m = defs.VCNotificationMsg{
 		Type: defs.VMotionStart,

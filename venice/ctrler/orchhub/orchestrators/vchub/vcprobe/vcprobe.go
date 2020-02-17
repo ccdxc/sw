@@ -27,6 +27,7 @@ type VCProbe struct {
 	*defs.State
 	*session.Session
 	outbox      chan<- defs.Probe2StoreMsg
+	eventCh     chan<- defs.Probe2StoreMsg
 	tp          *tagsProbe
 	Started     bool
 	vcProbeLock sync.Mutex
@@ -68,11 +69,12 @@ type ProbeInf interface {
 }
 
 // NewVCProbe returns a new probe
-func NewVCProbe(hOutbox chan<- defs.Probe2StoreMsg, state *defs.State) *VCProbe {
+func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State) *VCProbe {
 	probe := &VCProbe{
 		State:   state,
 		Started: false,
 		outbox:  hOutbox,
+		eventCh: hEventCh,
 		Session: session.NewSession(state.Ctx, state.VcURL, state.Log),
 	}
 	probe.newTagsProbe()
@@ -659,7 +661,7 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 	// TODO: create a new high priority channel for events
 	switch msgType {
 	case defs.VMotionStart:
-		v.outbox <- defs.Probe2StoreMsg{
+		v.eventCh <- defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,
@@ -667,7 +669,7 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 			},
 		}
 	case defs.VMotionFailed:
-		v.outbox <- defs.Probe2StoreMsg{
+		v.eventCh <- defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,
@@ -675,7 +677,7 @@ func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg in
 			},
 		}
 	case defs.VMotionDone:
-		v.outbox <- defs.Probe2StoreMsg{
+		v.eventCh <- defs.Probe2StoreMsg{
 			MsgType: defs.VCNotification,
 			Val: defs.VCNotificationMsg{
 				Type: msgType,

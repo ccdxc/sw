@@ -76,6 +76,7 @@ func TestListAndWatch(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	eventCh := make(chan defs.Probe2StoreMsg, 24)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
@@ -105,7 +106,7 @@ func TestListAndWatch(t *testing.T) {
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
 	}
-	vcp := NewVCProbe(storeCh, state)
+	vcp := NewVCProbe(storeCh, eventCh, state)
 	vcp.Start()
 
 	defer func() {
@@ -254,6 +255,7 @@ func TestDVSAndPG(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	eventCh := make(chan defs.Probe2StoreMsg, 24)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
@@ -279,7 +281,7 @@ func TestDVSAndPG(t *testing.T) {
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
 	}
-	vcp := NewVCProbe(storeCh, state)
+	vcp := NewVCProbe(storeCh, eventCh, state)
 	vcp.Start()
 
 	defer func() {
@@ -436,6 +438,7 @@ func TestEventReceiver(t *testing.T) {
 	AssertOk(t, err, "Failed to create vm1")
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	eventCh := make(chan defs.Probe2StoreMsg, 24)
 	ctx, cancel := context.WithCancel(context.Background())
 	state := &defs.State{
 		VcURL: vcURL,
@@ -450,7 +453,7 @@ func TestEventReceiver(t *testing.T) {
 	}()
 	vmEventArg := types.VmEventArgument{Vm: vm1.Reference()}
 	destHost := types.HostEventArgument{Host: penHost1.Obj.Reference()}
-	vcp := NewVCProbe(storeCh, state)
+	vcp := NewVCProbe(storeCh, eventCh, state)
 
 	// build a bunch of events and call event receiver
 	events1 := []types.BaseEvent{

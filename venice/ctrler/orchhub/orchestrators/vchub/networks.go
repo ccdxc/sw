@@ -11,7 +11,7 @@ import (
 )
 
 func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
-	v.Log.Infof("Handling network event. %v", nw)
+	v.Log.Infof("Handling network event nw %v", nw)
 
 	switch evtType {
 	case kvstore.Created:
@@ -65,7 +65,7 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 }
 
 func (v *VCHub) handlePG(m defs.VCEventMsg) {
-	v.Log.Debugf("Got handle PG event")
+	v.Log.Infof("Got handle PG event for PG %s in DC %s", m.Key, m.DcName)
 	// If non-pensando PG, check whether we need to reserve useg space for it
 	// If it is pensando PG, verify pvlan config has not been modified
 
@@ -91,14 +91,19 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 		pgConfig = &config
 	}
 
-	if pgConfig == nil {
+	if pgConfig == nil || pgConfig.DistributedVirtualSwitch == nil {
+		v.Log.Errorf("Insufficient PG config %p", pgConfig)
 		return
 	}
 
 	// Check if it is for our DVS
 	penDC := v.GetDC(m.DcName)
+	if penDC == nil {
+		v.Log.Errorf("DC not found for %s", m.DcName)
+		return
+	}
 	dvs := penDC.GetPenDVS(createDVSName(m.DcName))
-	if pgConfig.DistributedVirtualSwitch.Reference() != dvs.DvsRef {
+	if pgConfig.DistributedVirtualSwitch.Reference().Value != dvs.DvsRef.Value {
 		// Not for pensando DVS
 		return
 	}
@@ -110,7 +115,7 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 		// Put object name back
 		err := v.probe.RenamePG(m.DcName, pgConfig.Name, penPG.PgName)
 		if err != nil {
-			v.Log.Errorf("Failed to renamed PG, %s", err)
+			v.Log.Errorf("Failed to rename PG, %s", err)
 		}
 		// Don't check vlan config now, name change will trigger another event
 		return
@@ -120,6 +125,7 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	if penPG == nil {
 		// Not pensando PG
 		// TODO: reserve vlan	if in useg space
+		v.Log.Infof("Not a pensando PG - %s", m.Key)
 	} else {
 		// Pensando PG, reset config if changed
 		_, secondary, err := dvs.UsegMgr.GetVlansForPG(pgConfig.Name)

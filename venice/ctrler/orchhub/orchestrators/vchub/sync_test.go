@@ -99,7 +99,7 @@ func TestVCSyncPG(t *testing.T) {
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
@@ -220,7 +220,7 @@ func TestVCSyncHost(t *testing.T) {
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
@@ -264,17 +264,41 @@ func TestVCSyncHost(t *testing.T) {
 	AssertOk(t, err, "failed host2 create")
 	err = dvs.AddHost(hostSystem2)
 	AssertOk(t, err, "failed to add Host to DVS")
-	pNicMac = net.HardwareAddr{}
-	pNicMac = append(pNicMac, globals.PensandoOUI[0])
-	pNicMac = append(pNicMac, globals.PensandoOUI[1])
-	pNicMac = append(pNicMac, globals.PensandoOUI[2])
-	pNicMac = append(pNicMac, 0xbb)
-	pNicMac = append(pNicMac, 0x00)
-	pNicMac = append(pNicMac, 0x00)
+	pNicMac2 := net.HardwareAddr{}
+	pNicMac2 = append(pNicMac2, globals.PensandoOUI[0])
+	pNicMac2 = append(pNicMac2, globals.PensandoOUI[1])
+	pNicMac2 = append(pNicMac2, globals.PensandoOUI[2])
+	pNicMac2 = append(pNicMac2, 0xbb)
+	pNicMac2 = append(pNicMac2, 0x00)
+	pNicMac2 = append(pNicMac2, 0x00)
 	// Make it Pensando host
-	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac))
+	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac2))
 
 	// CREATING HOSTS
+	staleHost2 := cluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00001"),
+			Namespace: "default",
+			// Don't set Tenant as object is not scoped inside Tenant in proto file.
+			Labels: map[string]string{},
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Host",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					ID:         "test",
+					MACAddress: conv.MacString(pNicMac),
+				},
+			},
+		},
+	}
+	utils.AddOrchNameLabel(staleHost2.Labels, "AnotherVC")
+	addNamespaceLabel(staleHost2.Labels, "AnotherDC")
+	sm.Controller().Host().Create(&staleHost2)
+
+	// Create a another stale host with same mac addr but different VC id
 	staleHost := cluster.Host{
 		ObjectMeta: api.ObjectMeta{
 			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
@@ -288,14 +312,17 @@ func TestVCSyncHost(t *testing.T) {
 		Spec: cluster.HostSpec{
 			DSCs: []cluster.DistributedServiceCardID{
 				cluster.DistributedServiceCardID{
-					ID: "test",
+					ID:         "test",
+					MACAddress: conv.MacString(pNicMac),
 				},
 			},
 		},
 	}
 	utils.AddOrchNameLabel(staleHost.Labels, orchConfig.Name)
 	addNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
-	sm.Controller().Host().Create(&staleHost)
+	// replace stale host with same mac but different VC by this one
+	vchub.fixStaleHost(&staleHost)
+
 	host1 := cluster.Host{
 		ObjectMeta: api.ObjectMeta{
 			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
@@ -316,7 +343,6 @@ func TestVCSyncHost(t *testing.T) {
 	}
 	utils.AddOrchNameLabel(host1.Labels, orchConfig.Name)
 	addNamespaceLabel(host1.Labels, dc1.Obj.Name)
-	sm.Controller().Host().Create(&host1)
 
 	time.Sleep(1 * time.Second)
 
@@ -403,7 +429,7 @@ func TestVCSyncVM(t *testing.T) {
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
@@ -689,7 +715,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
@@ -904,6 +930,7 @@ func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestrati
 	vchub.cancel = cancel
 	vchub.DcMap = map[string]*PenDC{}
 	vchub.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
+	vchub.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	vchub.setupPCache()
 
 	return vchub

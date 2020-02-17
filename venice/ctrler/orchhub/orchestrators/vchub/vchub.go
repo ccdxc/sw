@@ -29,6 +29,7 @@ type VCHub struct {
 	cancel       context.CancelFunc
 	vcOpsChannel chan *kvstore.WatchEvent
 	vcReadCh     chan defs.Probe2StoreMsg
+	vcEventCh    chan defs.Probe2StoreMsg
 	pCache       *pcache.PCache
 	probe        vcprobe.ProbeInf
 	DcMapLock    sync.Mutex
@@ -102,6 +103,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.DcMap = map[string]*PenDC{}
 	v.DcID2NameMap = map[string]string{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
+	v.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.opts = opts
 	v.setupPCache()
 
@@ -131,7 +133,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
-	v.probe = vcprobe.NewVCProbe(v.vcReadCh, v.State)
+	v.probe = vcprobe.NewVCProbe(v.vcReadCh, v.vcEventCh, v.State)
 	v.probe.Start()
 }
 
@@ -150,6 +152,8 @@ func (v *VCHub) Destroy(cleanRemote bool) {
 	v.Wg.Wait()
 
 	v.probe.ClearState()
+
+	v.DeleteHosts()
 	v.Log.Infof("VCHub Destroyed")
 }
 
