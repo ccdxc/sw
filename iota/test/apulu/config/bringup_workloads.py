@@ -6,10 +6,30 @@ import sys
 
 import iota.harness.api as api
 import iota.harness.infra.utils.parser as parser
+import iota.harness.infra.resmgr as resmgr
+
 import iota.test.apulu.config.api as config_api
 
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
+__max_udp_ports = 1
+__max_tcp_ports = 1
+
+portUdpAllocator = resmgr.TestbedPortAllocator(205)
+portTcpAllocator = resmgr.TestbedPortAllocator(4500)
+
+def _add_exposed_ports(wl_msg):
+    if  wl_msg.workload_type != topo_svc.WORKLOAD_TYPE_CONTAINER:
+        return
+    for p in ["4500", "4501", "4507"]:
+        tcp_port = wl_msg.exposed_ports.add()
+        tcp_port.Port = p
+        tcp_port.Proto = "tcp"
+
+    for _ in range(__max_udp_ports):
+        udp_port = wl_msg.exposed_ports.add()
+        udp_port.Port = "1001"
+        udp_port.Proto = "udp"      
 
 
 def __add_workloads():
@@ -33,6 +53,8 @@ def __add_workloads():
         wl_msg.parent_interface = wl_msg.interface
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
+        wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
+        _add_exposed_ports(wl_msg)
         api.Logger.info("Workload-name %s node-name %s, ip-prefix %s mac %s" % (wl_msg.workload_name, wl_msg.node_name, wl_msg.ip_prefix, str(ep.macaddr)))
 
     if len(req.workloads):
@@ -84,6 +106,7 @@ def __readd_classic_workloads(target_node = None):
         wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
+        wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
 
     if len(req.workloads):
         resp = api.AddWorkloads(req, skip_store=True)

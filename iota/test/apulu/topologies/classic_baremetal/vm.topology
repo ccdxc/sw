@@ -1,0 +1,37 @@
+meta:
+    name: 2Naples_VM
+    description: 2Naples VM Topology
+
+nodes:
+    - node: node1
+      name: node1
+      role: auto
+      workloads:
+        esx:
+            type       : WORKLOAD_TYPE_VM
+            image      : "build-199"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 25
+        linux:
+            type    : WORKLOAD_TYPE_CONTAINER
+            #image   : "trexcisco/trex:latest"
+            image   : "registry.test.pensando.io:5000/pensando/nic:1.40"
+
+
+    - node: node2
+      name: node2
+      role: auto
+      workloads:
+        esx:
+            type    : WORKLOAD_TYPE_VM
+            image   : "build-199"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 25
+        linux:
+            type    : WORKLOAD_TYPE_CONTAINER
+            #image   : "trexcisco/trex:latest"
+            image   : "registry.test.pensando.io:5000/pensando/nic:1.40"

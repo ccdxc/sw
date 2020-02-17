@@ -142,6 +142,8 @@ jobs:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/apulu-networking:
     labels: ["2xhourly"]
+  iota/test/standalone/sanity/apulu-networking-scale:
+    labels: ["daily"]
   iota/test/standalone/regression/esx:
     labels: ["daily"]
   iota/test/standalone/regression/freebsd:
@@ -200,6 +202,7 @@ dependencies:
   dol/apollo:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   dol/apulu:
     - reference: nic/apollo
   dol/artemis:
@@ -219,6 +222,8 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["test/venice", "test/iris"]
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
+      exclude_dirs: ["test/venice", "test/iris"]
   metrics:
     - reference: venice/ui
   minio:
@@ -230,6 +235,7 @@ dependencies:
   #  - reference: iota/test/standalone/sanity/freebsd
   #  - reference: iota/test/standalone/sanity/linux
      - reference: iota/test/standalone/sanity/apulu-networking
+     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/customer-docker
     - reference: nic/apollo/tools/athena/customer-docker
@@ -249,10 +255,12 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/conf:
     - reference: iota/test/standalone/sanity/linux
   nic/conf/apulu:
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/debug_cli:
     - reference: iota/test/standalone/sanity/linux
   nic/delphi:
@@ -279,6 +287,7 @@ dependencies:
   nic/metaswitch:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/p4-hlir:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -305,6 +314,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
   nic/tools:
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
@@ -324,6 +334,7 @@ dependencies:
   nic/vpp:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/conf/apollo:
     - reference: nic/apollo
   nic/conf/artemis:
@@ -350,6 +361,8 @@ dependencies:
       exclude_dirs: ["freebsd","esxi"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["freebsd","esxi"]
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
+      exclude_dirs: ["freebsd","esxi"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/captrace:
@@ -373,6 +386,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
     - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/pciemgrd:

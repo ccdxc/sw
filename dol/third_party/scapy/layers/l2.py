@@ -236,6 +236,8 @@ class Dot1Q(Packet):
             
 conf.neighbor.register_l3(Ether, Dot1Q, lambda l2,l3: conf.neighbor.resolve(l2,l3.payload))
 
+class Dot1AD(Dot1Q): pass
+
 class STP(Packet):
     name = "Spanning Tree Protocol"
     fields_desc = [ ShortField("proto", 0),

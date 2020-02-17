@@ -1,0 +1,19 @@
+meta:
+    name    : cps
+    os      : [ linux ]
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : session_scale
+        testcase: testcases.networking.session_scale
+        stress  : True
+        ignore  : True
+        args    :
+             latency_pps: 1
+             switch_port_flap_interval: 10
+             sec_policy_interval: 30
+        iterators:
+            type             : simple
+            max_active_flow  : [32000]
+            cps              : [8]
+            duration         : [10]
