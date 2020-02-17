@@ -83,7 +83,7 @@ class SubnetObject(base.ConfigObjectBase):
             else:
                 self.HostIfIdx = next(ResmgrClient[node].HostIfIdxAllocator)
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, ObjectTypes.INTERFACE, node_uuid) if self.HostIfIdx else None
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid=node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
@@ -185,7 +185,7 @@ class SubnetObject(base.ConfigObjectBase):
             if hostIf != None:
                 self.HostIf = hostIf
                 self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
-                self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, ObjectTypes.INTERFACE, None) if self.HostIfIdx else None
+                self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
         return
 
     def RollbackAttributes(self):
@@ -252,7 +252,7 @@ class SubnetObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, ObjectTypes.SUBNET, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         return True
 

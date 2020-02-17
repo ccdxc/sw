@@ -210,7 +210,7 @@ class TunnelObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.TUNNEL, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         return True
 

@@ -200,7 +200,7 @@ class EzAccessStore:
             node_uuid = node_uuid.replace('.', '')
             if node_uuid == '':
                 return None
-            return node_uuid
+            return int(node_uuid, 16)
         return None
 
     @staticmethod

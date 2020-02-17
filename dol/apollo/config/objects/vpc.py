@@ -258,7 +258,7 @@ class VpcObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.VPC, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if spec['type'] != self.Type:
             return False

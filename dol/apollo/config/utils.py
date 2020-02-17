@@ -63,32 +63,43 @@ def LifIfindex2LifId(lififindex):
 PENSANDO_NIC_MAC = 0x022222111111
 PDS_UUID_MAGIC_BYTE_VAL = 0x4242
 PDS_UUID_BYTE_ORDER = "little"
+PDS_NODE_UUID_BYTE_ORDER = "big"
 
 PDS_UUID_LEN = 16
-PDS_UUID_ID_LEN = 8
+PDS_UUID_ID_LEN = 4
+PDS_UUID_OBJTYPE_LEN = 2
+PDS_UUID_RESERVED_LEN = 2
 PDS_UUID_MAGIC_BYTE_LEN = 2
 PDS_UUID_SYSTEM_MAC_LEN = 6
 
 PDS_UUID_ID_OFFSET_START = 0
 PDS_UUID_ID_OFFSET_END = PDS_UUID_ID_OFFSET_START + PDS_UUID_ID_LEN
-PDS_UUID_MAGIC_BYTE_OFFSET_START = PDS_UUID_ID_OFFSET_END
+
+PDS_UUID_OBJTYPE_OFFSET_START = PDS_UUID_ID_OFFSET_END
+PDS_UUID_OBJTYPE_OFFSET_END = PDS_UUID_OBJTYPE_OFFSET_START + PDS_UUID_OBJTYPE_LEN
+
+PDS_UUID_RESERVED_OFFSET_START = PDS_UUID_OBJTYPE_OFFSET_END
+PDS_UUID_RESERVED_OFFSET_END = PDS_UUID_RESERVED_OFFSET_START + PDS_UUID_RESERVED_LEN
+
+PDS_UUID_MAGIC_BYTE_OFFSET_START = PDS_UUID_RESERVED_OFFSET_END
 PDS_UUID_MAGIC_BYTE_OFFSET_END = PDS_UUID_MAGIC_BYTE_OFFSET_START + PDS_UUID_MAGIC_BYTE_LEN
+
 PDS_UUID_SYSTEM_MAC_OFFSET_START = PDS_UUID_MAGIC_BYTE_OFFSET_END
 
 PDS_UUID_MAGIC_BYTE = PDS_UUID_MAGIC_BYTE_VAL.to_bytes(PDS_UUID_MAGIC_BYTE_LEN, PDS_UUID_BYTE_ORDER)
-PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, "big")
+# only for SIM
+PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, PDS_NODE_UUID_BYTE_ORDER)
 
 class PdsUuid:
 
-    def __init__(self, value, type, node_uuid=None):
+    def __init__(self, value, objtype=None, node_uuid=None):
 
         if node_uuid:
-            node_uuid = int(node_uuid, 16)
-            node_uuid = node_uuid.to_bytes(6, "big")
+            node_uuid = node_uuid.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, PDS_NODE_UUID_BYTE_ORDER)
 
         if isinstance(value, int):
             self.Id = value
-            self.Type = type
+            self.Type = objtype
             self.Uuid = PdsUuid.GetUUIDfromId(self.Id, self.Type, node_uuid)
         elif isinstance(value, bytes):
             self.Uuid = value
@@ -113,26 +124,39 @@ class PdsUuid:
 
     @staticmethod
     def GetUuidString(uuid):
+        # keep this inline with pds_obj_key_s.str()
         uuid_id = PdsUuid.GetIdfromUUID(uuid)
+        uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid)
+        uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid)
         uuid_magic = int.from_bytes(uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END], PDS_UUID_BYTE_ORDER)
-        uuid_mac = int.from_bytes(uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:], "big")
-        uuidstr = hex(uuid_id) + "-" + hex(uuid_magic) + "-" + hex(uuid_mac)
+        uuid_mac = int.from_bytes(uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:], PDS_NODE_UUID_BYTE_ORDER)
+        uuidstr = f"{uuid_id:08x}-{uuid_objtype:04x}-{uuid_rsvd:04x}-{uuid_magic:04x}-{uuid_mac:012x}"
         return uuidstr
 
     @staticmethod
     def GetIdfromUUID(uuid):
-        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END-1], PDS_UUID_BYTE_ORDER)
+        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)
 
     @staticmethod
-    def GetUUIDfromId(id, type, node_uuid=None):
+    def GetObjTypefromUUID(uuid):
+        return int.from_bytes(uuid[PDS_UUID_OBJTYPE_OFFSET_START:PDS_UUID_OBJTYPE_OFFSET_END], PDS_UUID_BYTE_ORDER)
+
+    @staticmethod
+    def GetReservedValfromUUID(uuid):
+        return int.from_bytes(uuid[PDS_UUID_RESERVED_OFFSET_START:PDS_UUID_RESERVED_OFFSET_END], PDS_UUID_BYTE_ORDER)
+
+    @staticmethod
+    def GetUUIDfromId(id, objtype=None, node_uuid=None):
         if not node_uuid:
             node_uuid = PDS_UUID_SYSTEM_MAC
         # uuid is of 16 bytes
         uuid = bytearray(PDS_UUID_LEN)
-        # first 8 bytes ==> id
-        uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END-1] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
-        if type != api.ObjectTypes.INTERFACE:
-            uuid[PDS_UUID_ID_OFFSET_END-1:PDS_UUID_ID_OFFSET_END] = type.to_bytes(1, PDS_UUID_BYTE_ORDER)
+        # first 4 bytes ==> id
+        uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
+        # next 2 bytes ==> object type (except HAL created objects like lifs & ports)
+        if objtype:
+            uuid[PDS_UUID_OBJTYPE_OFFSET_START:PDS_UUID_OBJTYPE_OFFSET_END] = objtype.to_bytes(PDS_UUID_OBJTYPE_LEN, PDS_UUID_BYTE_ORDER)
+        # next 2 bytes ==> reserved (0x0000)
         # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)
@@ -163,8 +187,8 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
-def GetYamlSpecAttr(spec, type, attr):
-    return PdsUuid(spec[attr], type).GetUuid()
+def GetYamlSpecAttr(spec, attr):
+    return PdsUuid(spec[attr]).GetUuid()
 
 def ValidateRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:

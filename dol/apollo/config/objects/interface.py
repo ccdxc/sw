@@ -58,8 +58,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
                 node_uuid = None
             else:
                 node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-            # using INTERFACE type for port TODO
-            self.Port = utils.PdsUuid(self.ethifidx, api.ObjectTypes.INTERFACE, node_uuid)
+            self.Port = utils.PdsUuid(self.ethifidx, node_uuid=node_uuid)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)

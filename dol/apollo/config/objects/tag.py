@@ -87,7 +87,7 @@ class TagObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.TAG, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False

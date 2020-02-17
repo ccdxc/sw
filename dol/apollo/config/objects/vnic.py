@@ -199,19 +199,19 @@ class VnicObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, api.ObjectTypes.VNIC, 'id') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if utils.IsPipelineApulu():
             if self.UseHostIf and self.SUBNET.HostIfUuid:
-                if (utils.GetYamlSpecAttr(spec, api.ObjectTypes.INTERFACE, 'hostif')) != self.SUBNET.HostIfUuid.GetUuid():
+                if (utils.GetYamlSpecAttr(spec, 'hostif')) != self.SUBNET.HostIfUuid.GetUuid():
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False
         if spec['sourceguardenable'] != self.SourceGuard:
             return False
-        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.METER, 'v4meterid') != utils.PdsUuid.GetUUIDfromId(self.V4MeterId, api.ObjectTypes.METER):
+        if utils.GetYamlSpecAttr(spec, 'v4meterid') != utils.PdsUuid.GetUUIDfromId(self.V4MeterId, api.ObjectTypes.METER):
             return False
-        if utils.GetYamlSpecAttr(spec, api.ObjectTypes.METER, 'v6meterid') != utils.PdsUuid.GetUUIDfromId(self.V6MeterId, api.ObjectTypes.METER):
+        if utils.GetYamlSpecAttr(spec, 'v6meterid') != utils.PdsUuid.GetUUIDfromId(self.V6MeterId, api.ObjectTypes.METER):
             return False
         return True
 
