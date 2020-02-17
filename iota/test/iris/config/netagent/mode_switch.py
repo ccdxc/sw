@@ -69,7 +69,7 @@ def Main(step):
             check_state_cmd = "show naples --json"
             time.sleep(30)
             common.AddPenctlCommand(req, n, check_state_cmd)
-            api.Trigger_AddNaplesCommand(req, n, "touch /data/no_watchdog")
+            #api.Trigger_AddNaplesCommand(req, n, "touch /data/no_watchdog")
             resp = api.Trigger(req)
             cmd = resp.commands[0]
             api.PrintCommandResults(cmd)
