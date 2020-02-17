@@ -52,6 +52,21 @@ func TestNetworkCreateList(t *testing.T) {
 		},
 	}
 
+	clusterConfig := &cluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Cluster",
+		},
+		Spec: cluster.ClusterSpec{
+			AutoAdmitDSCs: true,
+		},
+	}
+
+	err = sm.Controller().Cluster().Create(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
+
 	_, err = CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 	Assert(t, (err == nil), "network could not be created")
 
@@ -91,6 +106,9 @@ func TestNetworkCreateList(t *testing.T) {
 
 	nw, err = sm.ctrler.Network().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v networks", len(nw))
+
+	clusterItems, err := sm.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
+	Assert(t, len(clusterItems) == 1, "failed to get cluster config")
 
 	return
 }

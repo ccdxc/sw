@@ -228,6 +228,7 @@ func TestTagWriting(t *testing.T) {
 	state := &defs.State{
 		VcURL:      u,
 		VcID:       vcID,
+		ClusterID:  "testCluster",
 		Ctx:        ctx,
 		Log:        logger,
 		StateMgr:   sm,
@@ -275,7 +276,7 @@ func TestTagWriting(t *testing.T) {
 		tagsMap[t.Name] = t
 	}
 
-	tag, ok := tagsMap[defs.VCTagManaged]
+	tag, ok := tagsMap[defs.CreateVCTagManagedTag(state.ClusterID)]
 	Assert(t, ok, "tagsObj did not have tag VCTagManaged")
 	AssertEquals(t, defs.VCTagManagedDescription, tag.Description, "tag description did not match")
 
@@ -287,7 +288,7 @@ func TestTagWriting(t *testing.T) {
 	AssertOk(t, err, "failed to tag vm1 with vlan tag")
 
 	expMap = map[string][]string{
-		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.VCTagManaged),
+		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.CreateVCTagManagedTag(state.ClusterID)),
 			fmt.Sprintf("%s:%s%d", defs.VCTagCategory, defs.VCTagVlanPrefix, 1000)},
 	}
 	th.verifyTags(expMap)
@@ -297,7 +298,7 @@ func TestTagWriting(t *testing.T) {
 	AssertOk(t, err, "failed to remove tag vlan ")
 
 	expMap = map[string][]string{
-		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.VCTagManaged)},
+		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.CreateVCTagManagedTag(state.ClusterID))},
 	}
 	th.verifyTags(expMap)
 

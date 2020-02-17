@@ -34,25 +34,31 @@ type itemKey struct {
 type tagsProbe struct {
 	*defs.State
 	*session.Session
-	outbox       chan<- defs.Probe2StoreMsg
-	vmsOnKey     map[itemKey]*DeltaStrSet // vms that have catID:tagID
-	vmInfo       map[string]*DeltaStrSet  // tags on a VM
-	tagMap       map[string]*tagEntry     // catID:tagID to tag info
-	catMap       map[string]string        // catID to cat info
-	writeTagInfo map[string]string        // Tag/cat Name to ID. These cat/tags are objects we write to vc objects
+	outbox         chan<- defs.Probe2StoreMsg
+	vmsOnKey       map[itemKey]*DeltaStrSet // vms that have catID:tagID
+	vmInfo         map[string]*DeltaStrSet  // tags on a VM
+	tagMap         map[string]*tagEntry     // catID:tagID to tag info
+	catMap         map[string]string        // catID to cat info
+	writeTagInfo   map[string]string        // Tag/cat Name to ID. These cat/tags are objects we write to vc objects
+	managedTagName string
 }
 
 // newTagsProbe creates a new instance of tagsProbe
 func (v *VCProbe) newTagsProbe() {
+	tagName := defs.VCTagManagedDefault
+	if len(v.State.ClusterID) != 0 {
+		tagName = defs.CreateVCTagManagedTag(v.State.ClusterID)
+	}
 	v.tp = &tagsProbe{
-		State:        v.State,
-		Session:      v.Session,
-		outbox:       v.outbox,
-		vmsOnKey:     make(map[itemKey]*DeltaStrSet),
-		vmInfo:       make(map[string]*DeltaStrSet),
-		tagMap:       make(map[string]*tagEntry),
-		catMap:       make(map[string]string),
-		writeTagInfo: make(map[string]string),
+		State:          v.State,
+		Session:        v.Session,
+		outbox:         v.outbox,
+		vmsOnKey:       make(map[itemKey]*DeltaStrSet),
+		vmInfo:         make(map[string]*DeltaStrSet),
+		tagMap:         make(map[string]*tagEntry),
+		catMap:         make(map[string]string),
+		writeTagInfo:   make(map[string]string),
+		managedTagName: tagName,
 	}
 }
 
@@ -139,39 +145,38 @@ func (t *tagsProbe) SetupVCTags() {
 
 	// Create VCTagManaged
 	retryUntilSuccessful(func() bool {
-		if _, ok := t.writeTagInfo[defs.VCTagManaged]; ok {
+		if _, ok := t.writeTagInfo[t.managedTagName]; ok {
 			t.Log.Debugf("Pensando managed tag already exists")
 			return true
 		}
 		tag := &tags.Tag{
-			Name:        defs.VCTagManaged,
+			Name:        t.managedTagName,
 			Description: defs.VCTagManagedDescription,
 			CategoryID:  tagCategory.Name,
 		}
 		tagID, err := tc.CreateTag(t.ClientCtx, tag)
 		if err == nil {
-			t.writeTagInfo[defs.VCTagManaged] = tagID
+			t.writeTagInfo[t.managedTagName] = tagID
 			t.Log.Debugf("Pensando managed tag created")
 			return true
 		}
 		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
 		return false
 	})
-
 }
 
 func (t *tagsProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
 	t.Log.Debugf("Tagging object %s as pensando managed", ref.Value)
-	return tc.AttachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
+	return tc.AttachTag(t.ClientCtx, t.writeTagInfo[t.managedTagName], ref)
 }
 
 func (t *tagsProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
 	t.Log.Debugf("Removing tag managed from object %s", ref.Value)
-	return tc.DetachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
+	return tc.DetachTag(t.ClientCtx, t.writeTagInfo[t.managedTagName], ref)
 }
 
 func (t *tagsProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {

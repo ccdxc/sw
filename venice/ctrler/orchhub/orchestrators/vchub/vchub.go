@@ -10,6 +10,7 @@ import (
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
@@ -107,12 +108,21 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.opts = opts
 	v.setupPCache()
 
+	clusterItems, err := v.StateMgr.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		logger.Errorf("Failed to get cluster object, %s", err)
+	} else if len(clusterItems) == 0 {
+		logger.Errorf("Cluster list returned 0 objects, %s", err)
+	} else {
+		cluster := clusterItems[0]
+		state.ClusterID = defs.CreateClusterID(cluster.Cluster)
+	}
+
 	for _, opt := range opts {
 		if opt != nil {
 			opt(v)
 		}
 	}
-
 	// Store related go routines
 	v.Wg.Add(1)
 	go v.startEventsListener()

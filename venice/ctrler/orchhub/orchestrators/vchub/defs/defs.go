@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -25,11 +27,24 @@ const VCTagVlanPrefix = "VLAN: "
 // VCTagVlanDescription is the description for VCTagVlan
 const VCTagVlanDescription = "VLAN that will be used when packets leave the DSCs."
 
+// VCTagManagedDefault is the tag to apply to objects we manage if clusterID is not present
+const VCTagManagedDefault = "Pensando Managed"
+
 // VCTagManaged is the tag to apply to objects we manage
-const VCTagManaged = "Pensando Managed"
+const vcTagManaged = "Pensando Managed - %s"
 
 // VCTagManagedDescription is the description for VCTagManaged
 const VCTagManagedDescription = "This object is managed by Pensando and should not be renamed or modified."
+
+// CreateVCTagManagedTag generates tag name for VCTagManaged
+func CreateVCTagManagedTag(clusterID string) string {
+	return fmt.Sprintf(vcTagManaged, clusterID)
+}
+
+// CreateClusterID generates clusterID
+func CreateClusterID(clusterObj cluster.Cluster) string {
+	return clusterObj.Name + strings.Split(clusterObj.UUID, "-")[0]
+}
 
 // DefaultPrefix is the naming prefix for objects we create in vcenter
 const DefaultPrefix = "#Pen-"
@@ -187,6 +202,7 @@ type TagMsg struct {
 type State struct {
 	VcURL      *url.URL
 	VcID       string
+	ClusterID  string
 	Ctx        context.Context
 	Log        log.Logger
 	StateMgr   *statemgr.Statemgr

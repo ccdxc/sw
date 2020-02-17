@@ -16,6 +16,7 @@ import (
 	// need tsdb
 	// _ "github.com/pensando/sw/venice/utils/tsdb"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
@@ -81,9 +82,29 @@ func TestVCWrite(t *testing.T) {
 		return
 	}
 
+	clusterConfig := &cluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Cluster",
+		},
+		Spec: cluster.ClusterSpec{
+			AutoAdmitDSCs: true,
+		},
+	}
+
+	err = sm.Controller().Cluster().Create(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
+	clusterItems, err := sm.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get cluster config")
+
+	clusterID := defs.CreateClusterID(clusterItems[0].Cluster)
+
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
+	AssertOk(t, err, "failed to create orch config")
 
 	vchub := LaunchVCHub(sm, orchConfig, logger, WithScheme("http"))
 
@@ -136,7 +157,8 @@ func TestVCWrite(t *testing.T) {
 				if len(attachedTags) != 1 {
 					return false, fmt.Errorf("DC didn't have expected tags, had %v", attachedTags)
 				}
-				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DC didn't have managed tag")
+				AssertEquals(t, defs.CreateVCTagManagedTag(clusterID), attachedTags[0].Name, "DC didn't have managed tag")
+				AssertEquals(t, defs.VCTagManagedDescription, attachedTags[0].Description, "DC didn't have managed tag")
 
 				dvs := dc.GetPenDVS(createDVSName(name))
 				if dvs == nil {
@@ -150,7 +172,7 @@ func TestVCWrite(t *testing.T) {
 				if len(attachedTags) != 1 {
 					return false, fmt.Errorf("DVS didn't have expected tags, had %v", attachedTags)
 				}
-				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DVS didn't have managed tag")
+				AssertEquals(t, defs.CreateVCTagManagedTag(clusterID), attachedTags[0].Name, "DVS didn't have managed tag")
 
 				for _, pgName := range pgNames {
 					pgObj := dvs.GetPenPG(pgName)
@@ -165,7 +187,7 @@ func TestVCWrite(t *testing.T) {
 						return false, fmt.Errorf("PG didn't have expected tags, had %v", attachedTags)
 					}
 					expTags := []string{
-						fmt.Sprintf("%s", defs.VCTagManaged),
+						fmt.Sprintf("%s", defs.CreateVCTagManagedTag(clusterID)),
 						fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 100),
 					}
 					for _, tag := range attachedTags {

@@ -172,7 +172,12 @@ func (s *Statemgr) startWatchers() error {
 	// We setup Watch for the orchestrator at the end so that the probes created by
 	// the orchestrator has all the objects for reconciliation.
 
-	err := s.ctrler.Network().Watch(s)
+	err := s.ctrler.Cluster().Watch(s)
+	if err != nil {
+		return fmt.Errorf("Error establishing watch on cluster. Err: %v", err)
+	}
+
+	err = s.ctrler.Network().Watch(s)
 	if err != nil {
 		return fmt.Errorf("Error establishing watch on network. Err: %v", err)
 	}
