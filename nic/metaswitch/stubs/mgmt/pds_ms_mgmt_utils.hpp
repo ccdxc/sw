@@ -60,6 +60,8 @@ extern "C" {
 #define PDS_MS_EVPN_ENT_INDEX     2 // Use a different entity id than BGP
                                     // Required to redistribute routes to EVPN
                                     // (Type 5 test) 
+#define PDS_MS_BGP_ROUTE_MAP_DEF_INDEX  1
+#define PDS_MS_BGP_ROUTE_MAP_DEF_NUBMER 1
 using namespace std;
 
 sdk_ret_t pds_ms_api_to_sdk_ret(types::ApiStatus api_err);
@@ -245,6 +247,7 @@ NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
                                 bool      op_update=false);
 NBB_VOID cp_route_pre_set(pds::CPStaticRouteSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, bool op_update=false);
+NBB_VOID update_bgp_route_map_table (NBB_ULONG correlator);
 } // namespace pds
 
 namespace pds_ms {

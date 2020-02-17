@@ -6,10 +6,57 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "qb0mib.h"
 using namespace pds_ms;
 
 namespace pds {
+NBB_VOID
+update_bgp_route_map_table (NBB_ULONG correlator)
+{
+    BgpRouteMapSpec spec;
+    std::string str;
+    NBB_ULONG len = 0;
+
+    auto state_ctxt = state_t::thread_context();
+    // walk-through subnets
+    state_ctxt.state()->subnet_store().
+        walk([&str] (ms_bd_id_t bd_id, subnet_obj_t& subnet_obj) -> bool {
+                // walk-through (import) rt list of each subnet
+                subnet_obj.rt_store.walk([&str] (ms_rt_t &obj) -> void {
+                    str=str+obj.ms_str()+',';
+                    });
+                return true;
+                });
+    // walk-through vpcs
+    state_ctxt.state()->vpc_store().
+        walk([&str] (ms_vrf_id_t vrf_id, vpc_obj_t& vpc_obj) -> bool {
+                // walk-through (import) rt list of each vpc
+                vpc_obj.rt_store.walk([&str] (ms_rt_t &obj) -> void {
+                    str=str+obj.ms_str()+',';
+                    });
+                return true;
+                });
+
+    SDK_TRACE_VERBOSE ("****** bgpRouteMapTable ext-comm:: %s (len=%d)\n",
+                       str.c_str(), str.length());
+
+    // set length appropriately
+    if (!str.empty()) {
+        len = str.length()-1;
+    }
+
+    spec.set_rmindex (PDS_MS_BGP_RM_ENT_INDEX);
+    spec.set_index (PDS_MS_BGP_ROUTE_MAP_DEF_INDEX);
+    spec.set_number (PDS_MS_BGP_ROUTE_MAP_DEF_NUBMER);
+    spec.set_afi (AMB_BGP_AFI_L2VPN);
+    spec.set_afidefined (true);
+    spec.set_safi (AMB_BGP_EVPN);
+    spec.set_safidefined (true);
+    spec.set_orfassociation (AMB_BGP_ORF_ASSOC_LOCAL);
+    spec.set_matchextcomm (str.c_str(), len);
+    pds_ms_set_amb_bgp_route_map (spec, AMB_ROW_ACTIVE, correlator);
+}
 
 static NBB_VOID 
 bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
@@ -151,6 +198,7 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
                                        BGP_AFI_L2VPN, BGP_SAFI_EVPN);
         pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
     }
+
 }
 
 NBB_VOID
@@ -363,9 +411,12 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
         v_amb_bgp_rm_ent->i3_ent_index = PDS_MS_I3_ENT_INDEX;;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_I3_ENT_INDEX);
 
+#if 0
+        // TODO: Update-groups to be enabled when ORF support for update-groups
+        // is added. this should be enabled only on RRs
         v_amb_bgp_rm_ent->update_groups = AMB_TRUE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_UPDATE_GROUPS);
-
+#endif
         v_amb_bgp_rm_ent->agg_split_horizon = AMB_FALSE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_AGG_SPLT_HORIZON);
     }
@@ -393,6 +444,16 @@ bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec    &req,
     v_amb_bgp_peer_af->rm_ent_index        = PDS_MS_BGP_RM_ENT_INDEX;
     oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer_af->rm_ent_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_RM_ENT_INDEX);
+
+    if (req.afi() == AMB_BGP_AFI_L2VPN && req.safi() == AMB_BGP_EVPN &&
+        req.disable() != true) {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        if (!mgmt_ctxt.state()->rr_mode()) {
+            // always set import map for peer evpn af, if not in rr-mode
+            v_amb_bgp_peer_af->import_map = PDS_MS_BGP_ROUTE_MAP_DEF_INDEX;
+            AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_IMP_MAP);
+        }
+    }
 }
 } // end namespace pds
 
@@ -680,8 +741,8 @@ pds_ms_fill_amb_bgp_orf_cap (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     data->safi                       = conf->safi;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_SAFI);
 
-    oid[AMB_BGP_ORF_CAP_ORF_TYPE_INDEX] = AMB_BGP_ORF_CAP_TYPE_PREFIX;
-    data->orf_type                      = AMB_BGP_ORF_CAP_TYPE_PREFIX;
+    oid[AMB_BGP_ORF_CAP_ORF_TYPE_INDEX] = AMB_BGP_ORF_CAP_TYPE_EXT_COM;
+    data->orf_type                      = AMB_BGP_ORF_CAP_TYPE_EXT_COM;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_ORF_TYPE);
 
     data->admin_status = AMB_BGP_ADMIN_STATUS_UP;
@@ -689,6 +750,9 @@ pds_ms_fill_amb_bgp_orf_cap (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 
     data->send_receive = AMB_BGP_ORF_CAP_SR_BOTH;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_SEND_RECV);
+
+    SDK_TRACE_VERBOSE ("BGP ORF Cap is enbaled for Afi/Safi %d/%d",
+                        conf->afi, conf->safi);
 
     NBB_TRC_EXIT();
     return;
@@ -828,8 +892,7 @@ pds_ms_bgp_create (pds_ms_config_t *conf)
     conf->safi               = AMB_BGP_EVPN;
     conf->partner_index      = PDS_MS_EVPN_ENT_INDEX;
     pds_ms_row_update_bgp_rm_afm_join (conf);
-    // TODO: Enable ORF cap on L2VPN AF
-    // pds_ms_row_update_bgp_orf_cap (conf);
+    pds_ms_row_update_bgp_orf_cap (conf);
 
     // bgpRmAfiSafiTable
     conf->entity_index      = 1;

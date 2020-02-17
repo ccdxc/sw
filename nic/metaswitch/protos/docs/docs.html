@@ -1164,14 +1164,6 @@
             <ul>
               
                 <li>
-                  <a href="#pds.BgpExtCommGroupSpec"><span class="badge">M</span>BgpExtCommGroupSpec</a>
-                </li>
-              
-                <li>
-                  <a href="#pds.BgpExtCommListSpec"><span class="badge">M</span>BgpExtCommListSpec</a>
-                </li>
-              
-                <li>
                   <a href="#pds.BgpRouteMapSpec"><span class="badge">M</span>BgpRouteMapSpec</a>
                 </li>
               
@@ -7918,89 +7910,8 @@ outgoing interface UUID needed on pegasus </p></td>
       <p></p>
 
       
-        <h3 id="pds.BgpExtCommGroupSpec">BgpExtCommGroupSpec</h3>
-        <p></p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>RmEntIndex</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ExtCommListIdx</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ExtCommListEntryIdx</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ExtComm</td>
-                  <td><a href="#bytes">bytes</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="pds.BgpExtCommListSpec">BgpExtCommListSpec</h3>
-        <p></p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>RmEntIndex</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ExtCommListIndex</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ExtCommIndex</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
         <h3 id="pds.BgpRouteMapSpec">BgpRouteMapSpec</h3>
-        <p></p>
+        <p>spec to configure ext-comm ORF route map table</p>
 
         
           <table class="field-table">
@@ -8059,8 +7970,8 @@ outgoing interface UUID needed on pegasus </p></td>
                 </tr>
               
                 <tr>
-                  <td>ExtCommIndex</td>
-                  <td><a href="#uint32">uint32</a></td>
+                  <td>MatchExtComm</td>
+                  <td><a href="#bytes">bytes</a></td>
                   <td></td>
                   <td><p> </p></td>
                 </tr>

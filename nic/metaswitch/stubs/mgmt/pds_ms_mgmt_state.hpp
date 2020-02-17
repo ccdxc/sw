@@ -91,6 +91,9 @@ public:
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
     void set_pds_mock_mode(bool val) { pds_mock_mode_ = val; }
 
+    bool rr_mode(void) const { return rr_mode_;  }
+    void set_rr_mode(bool val) { rr_mode_ = val; }
+
     void set_pending_uuid_create(const pds_obj_key_t& uuid, 
                                  uuid_obj_uptr_t&& obj);
     void release_pending_uuid() {
@@ -109,17 +112,17 @@ public:
     uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid);
 
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
-    void set_rt_pending_add_(const uint8_t *rt, rt_type_e type,
+    void set_rt_pending_add_(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
-                          rt, type, id);
-        rt_pending_add_.push_back(pend_rt_t(rt, type, id));
+                          rt_str, type, id);
+        rt_pending_add_.emplace_back(rt_str, type, id);
     }
-    void set_rt_pending_delete_(const uint8_t *rt, rt_type_e type,
+    void set_rt_pending_delete_(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
-                          rt, type, id);
-        rt_pending_delete_.push_back(pend_rt_t(rt, type, id));
+                          rt_str, type, id);
+        rt_pending_delete_.emplace_back(rt_str, type, id);
     }
     void clear_rt_pending_() {
         rt_pending_add_.clear();
@@ -136,6 +139,7 @@ private:
     static std::condition_variable g_cv_resp_;
     static types::ApiStatus g_ms_response_;
     bool pds_mock_mode_ = false;
+    bool rr_mode_ = false;
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_store_;
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_pending_create_;
     std::vector<pds_obj_key_t> uuid_pending_delete_;

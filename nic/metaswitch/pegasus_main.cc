@@ -10,6 +10,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/apollo/agent/svc/interface.hpp"
@@ -173,6 +174,11 @@ int main(void)
     // Wait for nbase to be ready
     while (!g_nbase_thread->ready()) {
         pthread_yield();
+    }
+    // set rr_mode
+    {
+        auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
+        mgmt_ctxt.state()->set_rr_mode(true);
     }
     svc_reg();
 

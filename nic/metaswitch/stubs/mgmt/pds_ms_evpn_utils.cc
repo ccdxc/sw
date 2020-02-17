@@ -75,6 +75,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                          SDK_RET_ENTRY_NOT_FOUND);
         }
         if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
+            bool update_orf = false;
             auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
             req.set_eviid(subnet_uuid_obj->ms_id());
             auto state_ctxt = state_t::thread_context();
@@ -84,6 +85,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                     (op_update && req.rttype() == EVPN_RT_EXPORT)) {
                     // either delete RT or updated so that RT is no more
                     // in import list, remove the RT from the subnet
+                    update_orf = true;
                     subnet_obj->rt_store.del((unsigned char *)req.rt().c_str());
 
                     // in case of failure, we need to add the RT back to subnet
@@ -98,6 +100,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                         (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
                     // RT is added or updated so that RT is in import list now
                     // add RT to subnet list
+                    update_orf = true;
                     subnet_obj->rt_store.add ((unsigned char *)req.rt().c_str());
 
                     // in case of failure, we need to delete the RT from subnet
@@ -109,11 +112,9 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                 }
             }
 
-            // TODO: debug purpose, remove after ORF implementation
-            // TODO: update ORF routemaptable, if required
-            auto rt_list = subnet_obj->rt_store.list();
-            for (auto& rt_: rt_list) {
-                SDK_TRACE_VERBOSE ("****** EVI RT: %s",rt_.str());
+            // update RT in bgpRouteMapTable
+            if (update_orf) {
+                update_bgp_route_map_table(test_correlator);
             }
 
             SDK_TRACE_DEBUG("EVPN EVI RT request: %s evi-index: %d",
@@ -200,6 +201,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             return;
         }
         if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
+            bool update_orf = false;
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
             std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
             req.set_vrfname(vrf_name);
@@ -210,6 +212,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
                     (op_update && req.rttype() == EVPN_RT_EXPORT)) {
                     // either delete RT or updated so that RT is no more
                     // in import list, remove the RT from the vpc
+                    update_orf = true;
                     vpc_obj->rt_store.del((unsigned char *)req.rt().c_str());
 
                     // in case of failure, we need to add the RT back to vpc
@@ -224,6 +227,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
                         (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
                     // RT is added or updated so that RT is in import list now
                     // add RT to vpc list
+                    update_orf = true;
                     vpc_obj->rt_store.add((unsigned char *)req.rt().c_str());
 
                     // in case of failure, we need to delete the RT from vpc
@@ -235,11 +239,9 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
                 }
             }
 
-            // TODO: debug purpose, remove after ORF implementation
-            // TODO: update ORF routemaptable, if required
-            auto rt_list = vpc_obj->rt_store.list();
-            for (auto& rt_: rt_list) {
-                SDK_TRACE_VERBOSE ("***** VRF RT: %s",rt_.str());
+            // update RT in bgpRouteMapTable
+            if (update_orf) {
+                update_bgp_route_map_table(test_correlator);
             }
 
             SDK_TRACE_DEBUG

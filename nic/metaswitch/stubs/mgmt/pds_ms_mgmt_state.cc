@@ -97,39 +97,43 @@ void mgmt_state_t::redo_rt_pending_ () {
     vpc_obj_t* vpc_obj = nullptr;
 
     // remove RTs from the stores it is added
-    for (auto& rt: rt_pending_add_) {
-        if (rt.type == rt_type_e::EVI) {
-            subnet_obj = state_ctxt.state()->subnet_store().get(rt.src_id);
+    for (auto& obj: rt_pending_add_) {
+        if (obj.type == rt_type_e::EVI) {
+            subnet_obj = state_ctxt.state()->subnet_store().get(obj.src_id);
             if (subnet_obj) {
-                SDK_TRACE_VERBOSE ("EVI RT %s is removed from subnet-id %d"
-                                 "due to failure", rt2str(rt.rt), rt.src_id);
-                subnet_obj->rt_store.del(rt.rt);
+                SDK_TRACE_VERBOSE ("EVI RT %s is removed from subnet-id %d "
+                                   "due to failure",
+                                   rt2str(obj.rt_str), obj.src_id);
+                subnet_obj->rt_store.del(obj.rt_str);
             }
-        } else if (rt.type == rt_type_e::VRF) {
-            vpc_obj = state_ctxt.state()->vpc_store().get(rt.src_id);
+        } else if (obj.type == rt_type_e::VRF) {
+            vpc_obj = state_ctxt.state()->vpc_store().get(obj.src_id);
             if (vpc_obj) {
-                SDK_TRACE_VERBOSE ("VRF RT %s is removed from subnet-id %d"
-                                 "due to failure", rt2str(rt.rt), rt.src_id);
-                vpc_obj->rt_store.del(rt.rt);
+                SDK_TRACE_VERBOSE ("VRF RT %s is removed from vpc-id %d "
+                                   "due to failure",
+                                   rt2str(obj.rt_str), obj.src_id);
+                vpc_obj->rt_store.del(obj.rt_str);
             }
         }
     }
 
     // add RTs back to the stores from which it is already deleted
-    for (auto& rt: rt_pending_delete_) {
-        if (rt.type == rt_type_e::EVI) {
-            subnet_obj = state_ctxt.state()->subnet_store().get(rt.src_id);
+    for (auto& obj: rt_pending_delete_) {
+        if (obj.type == rt_type_e::EVI) {
+            subnet_obj = state_ctxt.state()->subnet_store().get(obj.src_id);
             if (subnet_obj) {
-                SDK_TRACE_DEBUG ("EVI RT %s is added back to subnet-id %d"
-                                 "due to failure", rt2str(rt.rt), rt.src_id);
-                subnet_obj->rt_store.add(rt.rt);
+                SDK_TRACE_VERBOSE ("EVI RT %s is added back to subnet-id %d "
+                                   "due to failure",
+                                   rt2str(obj.rt_str), obj.src_id);
+                subnet_obj->rt_store.add(obj.rt_str);
             }
-        } else if (rt.type == rt_type_e::VRF) {
-            vpc_obj = state_ctxt.state()->vpc_store().get(rt.src_id);
+        } else if (obj.type == rt_type_e::VRF) {
+            vpc_obj = state_ctxt.state()->vpc_store().get(obj.src_id);
             if (vpc_obj) {
-                SDK_TRACE_DEBUG ("VRF RT %s is added back to subnet-id %d"
-                                 "due to failure", rt2str(rt.rt), rt.src_id);
-                vpc_obj->rt_store.add(rt.rt);
+                SDK_TRACE_VERBOSE ("VRF RT %s is added back to vpc-id %d "
+                                   "due to failure",
+                                   rt2str(obj.rt_str), obj.src_id);
+                vpc_obj->rt_store.add(obj.rt_str);
             }
         }
     }

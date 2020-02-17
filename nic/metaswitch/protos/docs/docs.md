@@ -286,8 +286,6 @@
   
 
 - [internal.proto](#internal.proto)
-    - [BgpExtCommGroupSpec](#pds.BgpExtCommGroupSpec)
-    - [BgpExtCommListSpec](#pds.BgpExtCommListSpec)
     - [BgpRouteMapSpec](#pds.BgpRouteMapSpec)
     - [EvpnBdSpec](#pds.EvpnBdSpec)
     - [EvpnIfBindCfgSpec](#pds.EvpnIfBindCfgSpec)
@@ -3070,45 +3068,10 @@ Evpn service definition
 
 
 
-<a name="pds.BgpExtCommGroupSpec"/>
-
-### BgpExtCommGroupSpec
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| RmEntIndex | [uint32](#uint32) |  |  |
-| ExtCommListIdx | [uint32](#uint32) |  |  |
-| ExtCommListEntryIdx | [uint32](#uint32) |  |  |
-| ExtComm | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="pds.BgpExtCommListSpec"/>
-
-### BgpExtCommListSpec
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| RmEntIndex | [uint32](#uint32) |  |  |
-| ExtCommListIndex | [uint32](#uint32) |  |  |
-| ExtCommIndex | [uint32](#uint32) |  |  |
-
-
-
-
-
-
 <a name="pds.BgpRouteMapSpec"/>
 
 ### BgpRouteMapSpec
-
+spec to configure ext-comm ORF route map table
 
 
 | Field | Type | Label | Description |
@@ -3120,7 +3083,7 @@ Evpn service definition
 | AfiDefined | [uint32](#uint32) |  |  |
 | Safi | [uint32](#uint32) |  |  |
 | SafiDefined | [uint32](#uint32) |  |  |
-| ExtCommIndex | [uint32](#uint32) |  |  |
+| MatchExtComm | [bytes](#bytes) |  |  |
 | OrfAssociation | [uint32](#uint32) |  |  |
 
 

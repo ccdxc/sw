@@ -219,70 +219,72 @@ enum class rt_type_e {
 };
 
 static inline char *
-rt2str (const uint8_t *rt) {
+rt2str (const uint8_t *rt_str) {
     static thread_local char buf[3*AMB_BGP_EXT_COMM_LEN];
     sprintf (buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-             rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7]);
+             rt_str[0], rt_str[1], rt_str[2], rt_str[3],
+             rt_str[4], rt_str[5], rt_str[6], rt_str[7]);
     return buf;
 }
 static inline char *
-rt2msstr (const uint8_t *rt) {
+rt2msstr (const uint8_t *rt_str) {
     static thread_local char buf[2*AMB_BGP_EXT_COMM_LEN];
     sprintf (buf, "%02X%02X%02X%02X%02X%02X%02X%02X",
-             rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7]);
+             rt_str[0], rt_str[1], rt_str[2], rt_str[3],
+             rt_str[4], rt_str[5], rt_str[6], rt_str[7]);
     return buf;
 }
 
-typedef struct ms_rt_s ms_rt_t;
-struct ms_rt_s {
-    uint8_t rt[AMB_BGP_EXT_COMM_LEN];
+struct ms_rt_t {
+    uint8_t rt_str[AMB_BGP_EXT_COMM_LEN];
 
-    ms_rt_s (const unsigned char rt_[]){ memcpy(rt,rt_,AMB_BGP_EXT_COMM_LEN);}
-    ms_rt_s ()=default;
+    ms_rt_t (const unsigned char rt_str_[]) {
+        memcpy(rt_str,rt_str_,AMB_BGP_EXT_COMM_LEN);
+    }
+    ms_rt_t() = default;
 
     bool operator==(const ms_rt_t& other) const {
-        if (!memcmp(rt, other.rt, AMB_BGP_EXT_COMM_LEN)) {
+        if (!memcmp(rt_str, other.rt_str, AMB_BGP_EXT_COMM_LEN)) {
             return true;
         }
         return false;
     }
     char *str (void) const {
-        return rt2str(rt);
+        return rt2str(rt_str);
     }
     char *ms_str (void) const {
-        return rt2msstr(rt);
+        return rt2msstr(rt_str);
     }
-    bool equal (const uint8_t rt_[]) {
-        if (!memcmp(rt, rt_, AMB_BGP_EXT_COMM_LEN)) {
+    bool equal (const uint8_t rt_str_[]) {
+        if (!memcmp(rt_str, rt_str_, AMB_BGP_EXT_COMM_LEN)) {
             return true;
         }
         return false;
     }
 };
 
-typedef struct pend_rt_s pend_rt_t;
-struct pend_rt_s {
+struct pend_rt_t {
     using ms_id_t=uint32_t;
-    uint8_t rt[AMB_BGP_EXT_COMM_LEN];
+    uint8_t rt_str[AMB_BGP_EXT_COMM_LEN];
     rt_type_e type;
     ms_id_t src_id; //subnet/vpc ms_id
 
-    pend_rt_s (const unsigned char rt_[], rt_type_e type_, ms_id_t id_){
-        memcpy(rt,rt_,AMB_BGP_EXT_COMM_LEN);
+    pend_rt_t (const unsigned char rt_str_[], rt_type_e type_, ms_id_t id_) {
+        memcpy(rt_str, rt_str_, AMB_BGP_EXT_COMM_LEN);
         type = type_;
         src_id = id_;
     }
-    pend_rt_s ()=default;
+    pend_rt_t() = default;
 
     bool operator==(const ms_rt_t& other) const {
-        if (!memcmp(rt, other.rt, AMB_BGP_EXT_COMM_LEN)) {
+        if (!memcmp(rt_str, other.rt_str, AMB_BGP_EXT_COMM_LEN)) {
             return true;
         }
         return false;
     }
 
     char *str (void) const {
-        return rt2str(rt);
+        return rt2str(rt_str);
     }
 };
 } // End namespace

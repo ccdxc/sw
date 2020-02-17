@@ -105,6 +105,7 @@ message LimInterfaceSpec {
   uint32      IfId   = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
 }
 
+// spec to configure ext-comm ORF route map table
 message BgpRouteMapSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_BGP_MAP_OID_LEN",
@@ -118,29 +119,6 @@ message BgpRouteMapSpec {
   uint32 AfiDefined     = 5 [(venice.pdsaFields) = {Field:"ma_afi_def"}];
   uint32 Safi           = 6 [(venice.pdsaFields) = {Field:"ma_safi"}];
   uint32 SafiDefined    = 7 [(venice.pdsaFields) = {Field:"ma_safi_def"}];
-  uint32 ExtCommIndex   = 8 [(venice.pdsaFields) = {Field:"ma_ext_community_list"}];
+  bytes  MatchExtComm   = 8 [(venice.pdsaFields) = {Field:"ma_ext_comm_exp"}];
   uint32 OrfAssociation = 9 [(venice.pdsaFields) = {Field:"orf_assoc"}];
-}
-
-message BgpExtCommListSpec {
-  option (venice.pdsaSetGlobOpts) = {
-    OidLen: "AMB_BGP_XCML_OID_LEN",
-    Mib:    "bgpExtCommListTable"
-  };
-
-  uint32 RmEntIndex       = 1 [(venice.pdsaFields) = {Field:"rm_ent_index", SetKeyOidIndex:"AMB_BGP_XCML_RM_ENT_INDEX_INDEX"}];
-  uint32 ExtCommListIndex = 2 [(venice.pdsaFields) = {Field:"ext_comm_list_index", SetKeyOidIndex:"AMB_BGP_XCML_XCOMM_LIST_INDEX"}];
-  uint32 ExtCommIndex     = 3 [(venice.pdsaFields) = {Field:"ext_comm_index", SetKeyOidIndex:"AMB_BGP_XCML_XCOMM_INDEX"}];
-}
-
-message BgpExtCommGroupSpec {
-  option (venice.pdsaSetGlobOpts) = {
-    OidLen: "AMB_BGP_XCMG_OID_LEN",
-    Mib:    "bgpExtCommGroupTable"
-  };
-
-  uint32 RmEntIndex          = 1 [(venice.pdsaFields) = {Field:"rm_ent_index", SetKeyOidIndex:"AMB_BGP_XCMG_RM_ENT_INDEX_INDEX"}];
-  uint32 ExtCommListIdx      = 2 [(venice.pdsaFields) = {Field:"ext_comm_list_idx", SetKeyOidIndex:"AMB_BGP_XCMG_XCML_INDEX"}];
-  uint32 ExtCommListEntryIdx = 3 [(venice.pdsaFields) = {Field:"ext_comm_list_entry_idx", SetKeyOidIndex:"AMB_BGP_XCMG_XCML_ENTRY_INDEX"}];
-  bytes  ExtComm             = 4 [(venice.pdsaFields) = {Field:"ext_comm", SetKeyOidIndex:"AMB_BGP_XCMG_EXT_COMMUNITY"}]; 
 }
