@@ -733,7 +733,7 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     SDK_ASSERT_TRACE_RETURN(device != NULL, HAL_RET_ERR, "Device conf file error");
 
     device_cfg->forwarding_mode = (hal::hal_forwarding_mode_t)device->get_forwarding_mode();
-    device_cfg->feature_profile = (hal::hal_feature_profile_t)device->get_feature_profile();
+    device_cfg->feature_profile = device->get_feature_profile();
     device_cfg->admin_state = device->get_port_admin_state() ?
         port_admin_state_t::PORT_ADMIN_STATE_DOWN : port_admin_state_t::PORT_ADMIN_STATE_UP;
     g_mgmt_if_mac = device->get_mgmt_if_mac();

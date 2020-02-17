@@ -696,25 +696,25 @@ hal_ret_t
 feature_profile_get (FeatureProfileResponse *rsp)
 {
     switch (hal::g_hal_cfg.device_cfg.feature_profile) {
-    case HAL_FEATURE_PROFILE_NONE:
+    case sdk::lib::FEATURE_PROFILE_NONE:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_NONE);
         break;
-    case HAL_FEATURE_PROFILE_BASE:
+    case sdk::lib::FEATURE_PROFILE_BASE:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_BASE);
         break;
-    case HAL_FEATURE_PROFILE_STORAGE:
+    case sdk::lib::FEATURE_PROFILE_STORAGE:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_STORAGE);
         break;
-    case HAL_FEATURE_PROFILE_SRIOV:
+    case sdk::lib::FEATURE_PROFILE_SRIOV:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_SRIOV);
         break;
-    case HAL_FEATURE_PROFILE_VIRTUALIZED:
+    case sdk::lib::FEATURE_PROFILE_VIRTUALIZED:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_VIRTUALIZED);
         break;
-    case HAL_FEATURE_PROFILE_PROXY:
+    case sdk::lib::FEATURE_PROFILE_PROXY:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_PROXY);
         break;
-    case HAL_FEATURE_PROFILE_DEVELOPER:
+    case sdk::lib::FEATURE_PROFILE_DEVELOPER:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_DEVELOPER);
         break;
     default:

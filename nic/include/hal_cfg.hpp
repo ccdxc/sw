@@ -38,18 +38,6 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_APOLLO,
 } hal_feature_set_t;
 
-#define FEATURE_PROFILES(ENTRY)                                                                     \
-    ENTRY(HAL_FEATURE_PROFILE_NONE,                  0, "HAL_FEATURE_PROFILE_NONE")                 \
-    ENTRY(HAL_FEATURE_PROFILE_BASE,                  1, "HAL_FEATURE_PROFILE_BASE")                 \
-    ENTRY(HAL_FEATURE_PROFILE_STORAGE,               2, "HAL_FEATURE_PROFILE_STORAGE")              \
-    ENTRY(HAL_FEATURE_PROFILE_SRIOV,                 3, "HAL_FEATURE_PROFILE_SRIOV")                \
-    ENTRY(HAL_FEATURE_PROFILE_VIRTUALIZED,           4, "HAL_FEATURE_PROFILE_VIRTUALIZED")          \
-    ENTRY(HAL_FEATURE_PROFILE_PROXY,                 5, "HAL_FEATURE_PROFILE_PROXY")                \
-    ENTRY(HAL_FEATURE_PROFILE_DEVELOPER,             6, "HAL_FEATURE_PROFILE_DEVELOPER")
- DEFINE_ENUM(hal_feature_profile_t, FEATURE_PROFILES)
- DEFINE_ENUM_TO_STR(hal_feature_profile_t, FEATURE_PROFILES)
-#undef FEATURE_PROFILE
-
 #define UPLINK_FLOOD_MODES(ENTRY)                                                                   \
      ENTRY(HAL_UPLINK_FLOOD_MODE_NONE,   0, "HAL_UPLINK_FLOOD_MODE_NONE")                           \
      ENTRY(HAL_UPLINK_FLOOD_MODE_RPF,    1, "HAL_UPLINK_FLOOD_MODE_RPF")                            \
@@ -69,7 +57,7 @@ typedef enum hal_feature_set_s {
 
 typedef struct device_cfg_s {
     hal_forwarding_mode_t forwarding_mode;
-    hal_feature_profile_t feature_profile;
+    sdk::lib::dev_feature_profile_t feature_profile;
     port_admin_state_t admin_state; // default port admin state
     sdk::lib::device_profile_t *device_profile;
     uint32_t mgmt_vlan;
