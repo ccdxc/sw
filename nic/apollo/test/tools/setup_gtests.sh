@@ -57,8 +57,9 @@ function run_sdk_gtest () {
 }
 
 function run_valgrind_gtest () {
-    TEST_NAME=${PIPELINE}_$1_test
-    TEST_LOG=${PDSPKG_TOPDIR}/valgrind_${PIPELINE}_scale_test_1vpc.log
+    TEST_OBJECT=$1
+    TEST_NAME=${PIPELINE}_${TEST_OBJECT}_test
+    TEST_LOG=${PDSPKG_TOPDIR}/valgrind_${TEST_NAME}_log.txt
     # TODO: check if function arg parsing can be re-used
     for cmdargs in "$@"
     do
@@ -69,8 +70,8 @@ function run_valgrind_gtest () {
             *)
         esac
     done
-    echo "`date +%x_%H:%M:%S:%N` : Running ${TEST_NAME} > ${TEST_LOG} "
-    ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${TEST_LOG} --suppressions=${PDSPKG_TOPDIR}/apollo/test/tools/valgrind_suppression.txt ${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/bin/${TEST_NAME} -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml"
+    echo "`date +%x_%H:%M:%S:%N` : Running ${TEST_NAME} > ${TEST_LOG}.stdout "
+    ${VAL_CMD} --track-origins=yes --leak-check=summary --show-leak-kinds=definite -v --log-file=${TEST_LOG} --suppressions=${PDSPKG_TOPDIR}/apollo/test/tools/valgrind_suppression.txt ${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/bin/${TEST_NAME} -c hal.json ${TEST_CFG} --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${TEST_NAME}.xml" > ${TEST_LOG}.stdout
     #$GDB ${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/bin/${PIPELINE}_scale_test -c hal.json -i ${PDSPKG_TOPDIR}/apollo/test/scale/scale_cfg_1vpc.json -f ${PIPELINE}
 
     # check valgrind log for leaks

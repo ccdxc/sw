@@ -86,17 +86,19 @@ mem_hash::factory(sdk_table_factory_params_t *params) {
 
 sdk_ret_t
 mem_hash::init_(sdk_table_factory_params_t *params) {
+    void *mem;
     p4pd_error_t p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
 
-    props_ = (sdk::table::properties_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES,
-                                                 sizeof(sdk::table::properties_t));
-    if (props_ == NULL) {
+    mem = SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES,
+                     sizeof(sdk::table::properties_t));
+    if (mem == NULL) {
         return SDK_RET_OOM;
     }
 
     SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
 
+    props_ = new (mem) sdk::table::properties_t();
     props_->ptable_id = params->table_id;
     props_->num_hints = params->num_hints;
     props_->max_recircs = params->max_recircs;
@@ -197,6 +199,7 @@ mem_hash::destroy(mem_hash *table) {
 }
 
 mem_hash::~mem_hash() {
+    props_->~properties_t();
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES, props_);
     SDK_SPINLOCK_DESTROY(&slock_);
 }

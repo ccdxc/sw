@@ -93,6 +93,7 @@ void
 slhash::destroy(slhash *slh)
 {
     if (slh) {
+        sdk::table::sltcam::destroy(slh->tcam_);
         slh->~slhash();
         SDK_FREE(SDK_MEM_TYPE_SLHASH, slh);
     }

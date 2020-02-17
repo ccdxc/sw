@@ -49,9 +49,11 @@ public:
         valid_ = false;
         reserved_count_ = 0;
         table_size_ = 0;
+        indexer_ = NULL;
     }
 
     ~txn() {
+        indexer::destroy(indexer_);
     }
 
     sdk_ret_t init(uint32_t table_size) {

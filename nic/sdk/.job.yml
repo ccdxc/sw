@@ -16,4 +16,4 @@ image:
   work_dir: "/sw/nic"
 
 logfiles:
-  - /sw/nic/sdk_sanity_logs.tar.gz
+  - /sw/nic/sdk/sdk_sanity_logs.tar.gz

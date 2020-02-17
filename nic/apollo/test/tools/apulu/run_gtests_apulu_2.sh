@@ -8,6 +8,7 @@ source ${CUR_DIR}/../setup_gtests.sh
 setup
 
 # run all gtests
+run_gtest batch
 run_gtest policy LOG="/dev/null"
 run_gtest rte_bitmap
 
