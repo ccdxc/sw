@@ -22,11 +22,9 @@
 
 namespace api {
 
-/**
- * @defgroup PDS_POLICY - security policy functionality
- * @ingroup PDS_POLICY
- * @{
- */
+/// \defgroup PDS_POLICY - security policy functionality
+/// \ingroup PDS_POLICY
+/// @{
 
 typedef struct policy_upd_ctxt_s {
     policy *policy_obj;
@@ -42,10 +40,6 @@ policy *
 policy::factory(pds_policy_spec_t *spec) {
     policy    *new_policy;
 
-    if (spec->policy_type != POLICY_TYPE_FIREWALL) {
-        /**< we don't support any other policy type currently */
-        return NULL;
-    }
     /**< create security policy instance with defaults, if any */
     new_policy = policy_db()->alloc();
     if (new_policy) {
@@ -344,6 +338,6 @@ policy::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICY, this);
 }
 
-/** @} */    // end of PDS_POLICY
+/// @}    // end of PDS_POLICY
 
 }    // namespace api

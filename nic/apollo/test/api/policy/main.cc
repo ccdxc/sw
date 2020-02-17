@@ -64,13 +64,13 @@ TEST_F(policy, policy_workflow_b1) {
 
     // v4 policy
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
+                IP_AF_IPV4, "10.0.0.0/16", 1);
     workflow_b1<policy_feeder>(feeder);
 
     if (!apulu()) {
         // v6 policy
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
+                IP_AF_IPV6, "2001::1/64", 1);
         workflow_b1<policy_feeder>(feeder);
     }
 }
@@ -85,17 +85,17 @@ TEST_F(policy, policy_workflow_b2) {
 
     // v4 policy
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
+                 IP_AF_IPV4, "10.0.0.0/16", 1);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.0/16", 1);
+                  IP_AF_IPV4, "11.0.0.0/16", 1);
     workflow_b2<policy_feeder>(feeder1, feeder1A);
 
     if (!apulu()) {
         // v6 policy
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "1001::1/64", 1);
+                     IP_AF_IPV6, "1001::1/64", 1);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
+                     IP_AF_IPV6, "2001::1/64", 1);
         workflow_b2<policy_feeder>(feeder1, feeder1A);
     }
 }
@@ -107,13 +107,13 @@ TEST_F(policy, policy_workflow_1) {
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16",
+                IP_AF_IPV4, "10.0.0.0/16",
                 g_num_policy);
     workflow_1<policy_feeder>(feeder);
 
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                    IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_1<policy_feeder>(feeder);
     }
@@ -127,14 +127,14 @@ TEST_F(policy, policy_workflow_2) {
 
     // setup
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                IP_AF_IPV4, "10.0.0.1/16",
                 g_num_policy);
     // trigger
     workflow_2<policy_feeder>(feeder);
 
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                    IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_2<policy_feeder>(feeder);
     }
@@ -150,22 +150,22 @@ TEST_F(policy, policy_workflow_3) {
 
     // setup
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", 20);
+                 IP_AF_IPV4, "10.0.0.1/16", 20);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", 20);
+                 IP_AF_IPV4, "11.0.0.1/16", 20);
     feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16", 20);
+                 IP_AF_IPV4, "12.0.0.1/16", 20);
 
     // trigger
     workflow_3<policy_feeder>(feeder1, feeder2, feeder3);
 
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 20);
+                     IP_AF_IPV6, "2001::1/64", 20);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64", 20);
+                     IP_AF_IPV6, "3001::1/64", 20);
         feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64", 20);
+                     IP_AF_IPV6, "4001::1/64", 20);
         workflow_3<policy_feeder>(feeder1, feeder2, feeder3);
     }
 }
@@ -177,12 +177,12 @@ TEST_F(policy, policy_workflow_4) {
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", 20);
+                IP_AF_IPV4, "10.0.0.1/16", 20);
     workflow_4<policy_feeder>(feeder);
 
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 20);
+                    IP_AF_IPV6, "2001::1/64", 20);
         workflow_4<policy_feeder>(feeder);
     }
 }
@@ -196,20 +196,20 @@ TEST_F(policy, policy_workflow_5) {
     policy_feeder feeder1, feeder2, feeder3;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", 20);
+                 IP_AF_IPV4, "10.0.0.1/16", 20);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", 20);
+                 IP_AF_IPV4, "11.0.0.1/16", 20);
     feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16", 20);
+                 IP_AF_IPV4, "12.0.0.1/16", 20);
     workflow_5<policy_feeder>(feeder1, feeder2, feeder3);
 
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 20);
+                     IP_AF_IPV6, "2001::1/64", 20);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64", 20);
+                     IP_AF_IPV6, "3001::1/64", 20);
         feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64", 20);
+                     IP_AF_IPV6, "4001::1/64", 20);
         workflow_5<policy_feeder>(feeder1, feeder2, feeder3);
     }
 }
@@ -221,26 +221,26 @@ TEST_F(policy, policy_workflow_6) {
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
 		 g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
 		  g_num_policy);
     feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                  IP_AF_IPV4, "12.0.0.1/16",
 		  g_num_policy);
     workflow_6<policy_feeder>(feeder1, feeder1A, feeder1B);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64",
+                      IP_AF_IPV6, "4001::1/64",
                       g_num_policy);
         workflow_6<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
@@ -254,26 +254,26 @@ TEST_F(policy, policy_workflow_7) {
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
 		 g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
 		  g_num_policy);
     feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                  IP_AF_IPV4, "12.0.0.1/16",
 		  g_num_policy);
     workflow_7<policy_feeder>(feeder1, feeder1A, feeder1B);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64",
+                      IP_AF_IPV6, "4001::1/64",
                       g_num_policy);
         workflow_7<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
@@ -289,26 +289,26 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
                   g_num_policy);
     feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                  IP_AF_IPV4, "12.0.0.1/16",
                   g_num_policy);
     workflow_8<policy_feeder>(feeder1, feeder1A, feeder1B);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         feeder1B.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64",
+                      IP_AF_IPV6, "4001::1/64",
                       g_num_policy);
         workflow_8<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
@@ -324,20 +324,20 @@ TEST_F(policy, DISABLED_policy_workflow_9) {
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
                   g_num_policy);
     workflow_9<policy_feeder>(feeder1, feeder1A);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         workflow_9<policy_feeder>(feeder1, feeder1A);
     }
@@ -355,22 +355,22 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
     uint32_t num_policy = 20;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  num_policy);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "13.0.0.1/16",
+                 IP_AF_IPV4, "13.0.0.1/16",
                  num_policy);
     feeder2A.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "14.0.0.1/16",
+                  IP_AF_IPV4, "14.0.0.1/16",
                   num_policy);
     feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "17.0.0.1/16",
+                 IP_AF_IPV4, "17.0.0.1/16",
                  num_policy + 1);
     feeder3A.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "18.0.0.1/16",
+                  IP_AF_IPV4, "18.0.0.1/16",
                   num_policy + 1);
     feeder4.init(key4, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "21.0.0.1/16",
+                 IP_AF_IPV4, "21.0.0.1/16",
                  num_policy);
     workflow_10<policy_feeder>(
         feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
@@ -378,22 +378,22 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
 #if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      num_policy);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2101::1/64",
+                     IP_AF_IPV6, "2101::1/64",
                      num_policy);
         feeder2A.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2201::1/64",
+                      IP_AF_IPV6, "2201::1/64",
                       num_policy);
         feeder3.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2301::1/64",
+                     IP_AF_IPV6, "2301::1/64",
                      num_policy + 1);
         feeder3A.init(key3, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2401::1/64",
+                      IP_AF_IPV6, "2401::1/64",
                       num_policy + 1);
         feeder4.init(key4, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2501::1/64",
+                     IP_AF_IPV6, "2501::1/64",
                      num_policy);
         workflow_10<policy_feeder>(
             feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
@@ -408,14 +408,14 @@ TEST_F(policy, policy_workflow_neg_1) {
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                IP_AF_IPV4, "10.0.0.1/16",
                 g_num_policy);
     workflow_neg_1<policy_feeder>(feeder);
 
 #if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                    IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_neg_1<policy_feeder>(feeder);
     }
@@ -434,14 +434,14 @@ TEST_F(policy, policy_workflow_neg_2) {
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                IP_AF_IPV4, "10.0.0.1/16",
                 g_num_policy + 3);
     workflow_neg_2<policy_feeder>(feeder);
 
 #if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                    IP_AF_IPV6, "2001::1/64",
                     g_num_policy + 3);
         workflow_neg_2<policy_feeder>(feeder);
     }
@@ -455,14 +455,14 @@ TEST_F(policy, policy_workflow_neg_3) {
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                IP_AF_IPV4, "10.0.0.1/16",
                 g_num_policy);
     workflow_neg_3<policy_feeder>(feeder);
 
 #if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                    POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                    IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_neg_3<policy_feeder>(feeder);
     }
@@ -477,18 +477,18 @@ TEST_F(policy, policy_workflow_neg_4) {
     uint32_t num_policy = 20;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", num_policy);
+                 IP_AF_IPV4, "10.0.0.1/16", num_policy);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", num_policy);
+                 IP_AF_IPV4, "11.0.0.1/16", num_policy);
     workflow_neg_4<policy_feeder>(feeder1, feeder2);
 
 #if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6,
+                     IP_AF_IPV6,
                      "2001::1/64", num_policy);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6,
+                     IP_AF_IPV6,
                      "3001::1/64", num_policy);
         workflow_neg_4<policy_feeder>(feeder1, feeder2);
     }
@@ -502,20 +502,20 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
                   g_num_policy);
     workflow_neg_5<policy_feeder>(feeder1, feeder1A);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         workflow_neg_5<policy_feeder>(feeder1, feeder1A);
     }
@@ -529,20 +529,20 @@ TEST_F(policy, policy_workflow_neg_6) {
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  g_num_policy);
     feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
                   g_num_policy);
     workflow_neg_6<policy_feeder>(feeder1, feeder1A);
 
 #if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         workflow_neg_6<policy_feeder>(feeder1, feeder1A);
     }
@@ -556,26 +556,26 @@ TEST_F(policy, policy_workflow_neg_7) {
     policy_feeder feeder1, feeder1A, feeder2;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  g_num_policy);
     feeder1A.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                  IP_AF_IPV4, "11.0.0.1/16",
                   g_num_policy);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                 IP_AF_IPV4, "12.0.0.1/16",
                  g_num_policy);
     workflow_neg_7<policy_feeder>(feeder1, feeder1A, feeder2);
 
 #if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
+                     IP_AF_IPV6, "2001::1/64",
                      g_num_policy);
         feeder1A.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "3001::1/64",
+                      IP_AF_IPV6, "3001::1/64",
                       g_num_policy);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "4001::1/64",
+                     IP_AF_IPV6, "4001::1/64",
                      g_num_policy);
         workflow_neg_7<policy_feeder>(feeder1, feeder1A, feeder2);
     }
@@ -590,18 +590,18 @@ TEST_F(policy, policy_workflow_neg_8) {
     uint32_t num_policy = 20;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", num_policy);
+                 IP_AF_IPV4, "10.0.0.1/16", num_policy);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", num_policy);
+                 IP_AF_IPV4, "11.0.0.1/16", num_policy);
     workflow_neg_8<policy_feeder>(feeder1, feeder2);
 
 #if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6,
+                     IP_AF_IPV6,
                      "2001::1/64", num_policy);
         feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                     POLICY_TYPE_FIREWALL, IP_AF_IPV6,
+                     IP_AF_IPV6,
                      "3001::1/64", num_policy);
         workflow_neg_8<policy_feeder>(feeder1, feeder2);
     }
@@ -618,10 +618,10 @@ TEST_F(policy, policy_workflow_neg_9) {
 
     // setup
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                 IP_AF_IPV4, "10.0.0.1/16",
                  num_policy);
     feeder2.init(key2, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "13.0.0.1/16",
+                 IP_AF_IPV4, "13.0.0.1/16",
                  num_policy);
 
     // trigger

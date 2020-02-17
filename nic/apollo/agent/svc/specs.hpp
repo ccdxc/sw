@@ -2024,7 +2024,6 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     sdk_ret_t ret;
 
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    api_spec->policy_type = POLICY_TYPE_FIREWALL;
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.addrfamily());
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;

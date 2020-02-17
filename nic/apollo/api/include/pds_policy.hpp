@@ -100,18 +100,11 @@ typedef struct rule_s {
     rule_action_data_t    action_data;    ///< action and related information
 } __PACK__ rule_t;
 
-/// \brief    policy type
-typedef enum policy_type_s {
-    POLICY_TYPE_NONE     = 0,
-    POLICY_TYPE_FIREWALL = 1,
-} policy_type_t;
-
 /// \brief    generic policy specification
 typedef struct pds_policy_spec_s    pds_policy_spec_t;
 /// \brief    generic policy specification
 struct pds_policy_spec_s {
     pds_obj_key_t       key;            ///< policy key
-    policy_type_t       policy_type;    ///< type of policy
     uint8_t             af;             ///< Address family
     rule_dir_t          direction;      ///< Policy enforcement direction
     uint32_t            num_rules;      ///< Number of rules in the list
@@ -130,7 +123,6 @@ struct pds_policy_spec_s {
             return *this;
         }
         key = policy.key;
-        policy_type = policy.policy_type;
         af = policy.af;
         direction = policy.direction;
         num_rules = policy.num_rules;

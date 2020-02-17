@@ -25,13 +25,13 @@ public:
     policy_feeder() { };
     policy_feeder(policy_feeder& feeder) {
         init(feeder.spec.key, feeder.stateful_rules,
-             feeder.spec.direction, feeder.spec.policy_type, feeder.spec.af,
+             feeder.spec.direction, feeder.spec.af,
              feeder.cidr_str, feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
     void init(pds_obj_key_t key, uint16_t num_rules, rule_dir_t direction,
-              policy_type_t type, uint8_t af, std::string cidr_str,
+              uint8_t af, std::string cidr_str,
               uint32_t num_policy = 1);
 
     // Iterate helper routines

@@ -98,7 +98,6 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->policy_spec;
 
     memset(&policy, 0, sizeof(policy));
-    policy.policy_type = spec->policy_type;
     policy.af = spec->af;
     policy.direction = spec->direction;
     policy.max_rules = (policy.af ==IP_AF_IPV4)? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:

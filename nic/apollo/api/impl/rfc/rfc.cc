@@ -55,16 +55,14 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
             std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
             std::to_string(rule->match.l4_match.dport_range.port_hi) + "]) ";
     }
-    if (policy->policy_type == POLICY_TYPE_FIREWALL) {
-        rule_str += "action = ";
-        if (rule->action_data.fw_action.action == SECURITY_RULE_ACTION_ALLOW) {
-            rule_str += "A";
-        } else if (rule->action_data.fw_action.action ==
-                       SECURITY_RULE_ACTION_DENY) {
-            rule_str += "D";
-        } else {
-            rule_str += "U";
-        }
+    rule_str += "action = ";
+    if (rule->action_data.fw_action.action == SECURITY_RULE_ACTION_ALLOW) {
+        rule_str += "A";
+    } else if (rule->action_data.fw_action.action ==
+                   SECURITY_RULE_ACTION_DENY) {
+        rule_str += "D";
+    } else {
+        rule_str += "U";
     }
     rule_str += ", prio = " + std::to_string(rule->priority);
     PDS_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
