@@ -56,7 +56,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     u16 vpc_id;
     u8 protocol;
     nat_hw_index_t xlate_idx, xlate_idx_rflow;
-    nat_type_t nat_address_type = NAT_TYPE_INTERNET;
+    nat_addr_type_t nat_address_type = NAT_ADDR_TYPE_INTERNET;
 
     vpc_id = vnet_buffer2(p0)->pds_nat_data.vpc_id;
     ip40 = vlib_buffer_get_current(p0);
@@ -86,7 +86,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     }
 
     if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
-        nat_address_type = NAT_TYPE_INFRA;
+        nat_address_type = NAT_ADDR_TYPE_INFRA;
     }
     if (nat_flow_alloc(vpc_id, dip, dport, protocol, pvt_ip, pvt_port,
                        nat_address_type, &sip, &sport, &xlate_idx,

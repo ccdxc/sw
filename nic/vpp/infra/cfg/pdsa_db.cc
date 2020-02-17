@@ -9,7 +9,7 @@
 // static data
 vpp_config_data vpp_config_data::singleton;
 vpp_config_batch vpp_config_batch::singleton;
-std::list<commit_cbs_t> vpp_config_batch::commit_cbs;
+std::list<object_cbs_t> vpp_config_batch::object_cbs;
 
 #define foreach_config_data_element                 \
         _(VPC, vpc)                                 \
@@ -296,14 +296,16 @@ void
 vpp_config_batch::register_cbs (obj_id_t id,
                                pds_cfg_set_cb set_cb_fn,
                                pds_cfg_del_cb del_cb_fn,
-                               pds_cfg_act_cb act_cb_fn) {
-    commit_cbs_t cbs;
+                               pds_cfg_act_cb act_cb_fn,
+                               pds_cfg_get_cb get_cb_fn) {
+    object_cbs_t cbs;
 
     cbs.obj_id = id;
     cbs.set_cb = set_cb_fn;
     cbs.del_cb = del_cb_fn;
     cbs.act_cb = act_cb_fn;
-    vpp_config_batch::commit_cbs.push_back(cbs);
+    cbs.get_cb = get_cb_fn;
+    vpp_config_batch::object_cbs.push_back(cbs);
 }
 
 void
@@ -410,7 +412,7 @@ vpp_config_batch::commit (void) {
 
     // commit changes to plugin
     for (; it != batch_op.end(); it++) {
-        for (auto cit = commit_cbs.begin(); cit != commit_cbs.end(); cit++) {
+        for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
             if ((*cit).obj_id != (*it).obj_id) {
                 continue;
             }
@@ -436,8 +438,8 @@ vpp_config_batch::commit (void) {
         assert(ret == sdk::SDK_RET_OK);
         // all good, activate the configuration
         for(it = batch_op.begin(); it != batch_op.end(); it++) {
-            for (auto cit = commit_cbs.begin();
-                 cit != commit_cbs.end(); cit++) {
+            for (auto cit = object_cbs.begin();
+                 cit != object_cbs.end(); cit++) {
                 if ((*cit).obj_id != (*it).obj_id) {
                     continue;
                 }
@@ -462,7 +464,7 @@ vpp_config_batch::commit (void) {
 
     do {
         it--;
-        for (auto cit = commit_cbs.begin(); cit != commit_cbs.end(); cit++) {
+        for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
             if ((*cit).obj_id != (*it).obj_id) {
                 continue;
             }
@@ -487,6 +489,22 @@ vpp_config_batch::commit (void) {
     return ret;
 }
 
+sdk::sdk_ret_t
+vpp_config_batch::read (pds_cfg_msg_t &msg) {
+    for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
+        if ((*cit).obj_id != msg.obj_id) {
+            continue;
+        }
+
+        if ((*cit).get_cb) {
+            (*cit).get_cb(&msg);
+            return sdk::SDK_RET_OK;;
+        }
+    }
+    // we don't really fail even if we can't find a CB
+    return sdk::SDK_RET_OK;;
+}
+
 // register callbacks from plugins for messages
 // return 0 indicates  registered successfully
 // return non-zero indicates registration fail (invalid param)
@@ -494,7 +512,8 @@ int
 pds_cfg_register_callbacks (obj_id_t id,
                             pds_cfg_set_cb set_cb_fn,
                             pds_cfg_del_cb del_cb_fn,
-                            pds_cfg_act_cb act_cb_fn ) {
+                            pds_cfg_act_cb act_cb_fn,
+                            pds_cfg_get_cb get_cb_fn ) {
     if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
         return -1;
     }
@@ -509,7 +528,7 @@ pds_cfg_register_callbacks (obj_id_t id,
         return -1;
     }
 
-    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn);
+    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn, get_cb_fn);
 
     return 0;
 }

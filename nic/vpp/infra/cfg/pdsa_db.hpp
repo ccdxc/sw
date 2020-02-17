@@ -17,12 +17,14 @@
 typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_get_cb)(pds_cfg_msg_t *msg);
 
 // function prototypes
 int pds_cfg_register_callbacks(obj_id_t id,
                                pds_cfg_set_cb set_cb_fn,
                                pds_cfg_del_cb del_cb_fn,
-                               pds_cfg_act_cb act_cb_fn);
+                               pds_cfg_act_cb act_cb_fn,
+                               pds_cfg_get_cb get_cb_fn = NULL);
 
 typedef struct {
     obj_id_t      obj_id;
@@ -36,7 +38,8 @@ typedef struct {
     pds_cfg_set_cb set_cb;
     pds_cfg_del_cb del_cb;
     pds_cfg_act_cb act_cb;
-} commit_cbs_t;
+    pds_cfg_get_cb get_cb;
+} object_cbs_t;
 
 // represents all the configuration data that is required by all VPP plugins.
 // this is the authoritative copy, and plugins are notified (through
@@ -74,7 +77,7 @@ class vpp_config_batch {
     std::list<batch_op_t> batch_op;
     std::map<obj_id_t, size_t> pool_sz;
 
-    static std::list<commit_cbs_t> commit_cbs;
+    static std::list<object_cbs_t> object_cbs;
     static vpp_config_batch singleton;
 
 private:
@@ -95,12 +98,14 @@ public:
     static void register_cbs(obj_id_t id,
                              pds_cfg_set_cb set_cb_fn,
                              pds_cfg_del_cb del_cb_fn,
-                             pds_cfg_act_cb act_cb_fn);
+                             pds_cfg_act_cb act_cb_fn,
+                             pds_cfg_get_cb get_cb_fn);
 
     static vpp_config_batch &get(void) { return singleton; }
 public:
     sdk::sdk_ret_t create(const pds_msg_list_t *msglist);
     sdk::sdk_ret_t commit(void);
+    sdk::sdk_ret_t read(pds_cfg_msg_t &msg);
     void clear(void);
 };
 

@@ -54,14 +54,14 @@ test_nat_add_pb (vlib_main_t *vm,
     }
 
     ret = nat_port_block_add(id_str, vpc_id, ip, proto, start_port, end_port,
-                             NAT_TYPE_INTERNET);
+                             NAT_ADDR_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
         goto done;
     }
 
     ret = nat_port_block_commit(id_str, vpc_id, ip, proto, start_port, end_port,
-                             NAT_TYPE_INTERNET);
+                             NAT_ADDR_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
     } else {
@@ -115,7 +115,7 @@ test_nat_add_flow (vlib_main_t *vm,
     }
 
     ret = nat_flow_alloc(vpc_id, dip, dport, proto, sip, sport,
-                         NAT_TYPE_INTERNET, &public_ip, &public_port,
+                         NAT_ADDR_TYPE_INTERNET, &public_ip, &public_port,
                          &xlate_idx, &xlate_idx_rflow);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat flow add failed! ret = %d\n", ret);
@@ -179,7 +179,7 @@ test_nat_del_flow (vlib_main_t *vm,
     }
 
     ret = nat_flow_dealloc(vpc_id, dip, dport, proto, sip, sport, pvt_ip,
-                           pvt_port, NAT_TYPE_INTERNET);
+                           pvt_port, NAT_ADDR_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat flow del failed! ret = %d\n", ret);
     } else {
@@ -220,7 +220,7 @@ test_nat_usage (vlib_main_t *vm,
         goto done;
     }
 
-    ret = nat_usage(vpc_id, proto, NAT_TYPE_INTERNET, &num_ports,
+    ret = nat_usage(vpc_id, proto, NAT_ADDR_TYPE_INTERNET, &num_ports,
                     &num_ports_alloc, &num_flows_alloc);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat usage failed! ret = %d\n", ret);

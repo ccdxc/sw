@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"math"
 
 	"github.com/golang/protobuf/proto"
 
@@ -36,7 +37,7 @@ var (
 
 func init() {
 	showCmd.AddCommand(natShowCmd)
-	showCmd.Flags().StringVarP(&natPbId, "id", "i", "", "Specify NAT Port Block ID")
+	natShowCmd.Flags().StringVarP(&natPbId, "id", "i", "", "Specify NAT Port Block ID")
 }
 
 func natShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -95,18 +96,27 @@ func natShowCmdHandler(cmd *cobra.Command, args []string) {
 func printNatPbHeader() {
 	hdrLine := strings.Repeat("-", 124)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-15s%-10s%-10s%-10s%-10s%-10s\n",
-		"ID", "Address", "Protocol", "Port Lo", "Port Hi", "InUseCnt", "SessionCnt")
+	fmt.Printf("%-40s%-20s%-10s%-10s%-10s%-10s%-10s\n",
+		"ID", "Prefix", "Protocol", "Port Lo", "Port Hi", "InUseCnt", "SessionCnt")
 	fmt.Println(hdrLine)
 }
 
 func printNatPb(nat *pds.NatPortBlock) {
 	spec := nat.GetSpec()
 	stats := nat.GetStats()
-	fmt.Printf("%-40s%-15s%-10d%-10d%-10d%-10d%-10d\n",
+	var ipv4prefix pds.IPv4Prefix
+	if spec.GetNatAddress().GetRange() != nil {
+		diff := spec.GetNatAddress().GetRange().GetIPv4Range().GetHigh().GetV4Addr() -
+				spec.GetNatAddress().GetRange().GetIPv4Range().GetLow().GetV4Addr() + 1
+		ipv4prefix.Addr = spec.GetNatAddress().GetRange().GetIPv4Range().GetLow().GetV4Addr()
+		ipv4prefix.Len = 32 - uint32(math.Log2(float64(diff)))
+	} else {
+		ipv4prefix.Addr = spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetAddr().GetV4Addr()
+		ipv4prefix.Len = spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetLen()
+	}
+	fmt.Printf("%-40s%-20s%-10d%-10d%-10d%-10d%-10d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
-		//utils.IPPrefixToStr(spec.GetNatAddress().GetPrefix().GetIPv4Subnet()),
-		utils.IPAddrToStr(spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetAddr()),
+		utils.IPv4PrefixToStr(&ipv4prefix),
 		spec.GetProtocol(),
 		spec.GetPorts().GetPortLow(),
 		spec.GetPorts().GetPortHigh(),

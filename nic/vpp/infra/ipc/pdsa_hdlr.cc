@@ -155,6 +155,7 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     pds_msg_t *msg, response;
     sdk::sdk_ret_t retcode;
     auto config_data = vpp_config_data::get();
+    auto config_batch = vpp_config_batch::get();
     std::map<int, pds_cmd_cb>::iterator cb_fun_it;
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
@@ -180,6 +181,7 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
         return;
     }
 
+    // read in the spec from the cfg store
     if (!config_data.exists(msg->cfg_msg)) {
         retcode = sdk::SDK_RET_ENTRY_NOT_FOUND;
         goto error;
@@ -187,6 +189,9 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     memcpy(&response.cfg_msg, &msg->cfg_msg, sizeof(pds_cfg_msg_t));
     config_data.get(response.cfg_msg);
+
+    // read in status/stats from node plugin
+    config_batch.read(response.cfg_msg);
 
     ipc_log_notice("Execution success of command msg [count:%u]",
                    g_type_count[PDS_MSG_TYPE_CMD]);

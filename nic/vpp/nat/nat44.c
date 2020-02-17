@@ -52,7 +52,7 @@ typedef struct nat_vpc_config_s {
     // number of port blocks
     u16 num_port_blocks;
     // pool of port blocks
-    nat_port_block_t *nat_pb[NAT_TYPE_NUM][NAT_PROTO_NUM];
+    nat_port_block_t *nat_pb[NAT_ADDR_TYPE_NUM][NAT_PROTO_NUM];
 
     // allocated
 
@@ -132,7 +132,7 @@ typedef CLIB_PACKED (union nat_src_key_s {
 // public ip --> port block
 typedef CLIB_PACKED (union nat_pub_key_s {
     struct {
-        u8 nat_type;
+        u8 nat_addr_type;
         u8 nat_proto;
         ip4_address_t pub_ip;
     };
@@ -171,23 +171,38 @@ nat_init(void)
     nat_main.nat_proto_map[NAT_PROTO_ICMP] = IP_PROTOCOL_ICMP;
 }
 
+//
+// Helper functions
+//
 always_inline nat_port_block_t *
-nat_get_port_block_from_pub_ip(nat_vpc_config_t *vpc, nat_type_t nat_type,
+nat_get_port_block_from_pub_ip(nat_vpc_config_t *vpc, nat_addr_type_t nat_addr_type,
                                nat_proto_t nat_proto, ip4_address_t addr)
 {
     uword *data;
 
     nat_pub_key_t pub_key = { 0 };
 
-    pub_key.nat_type = (u8)nat_type;
+    pub_key.nat_addr_type = (u8)nat_addr_type;
     pub_key.nat_proto = nat_proto;
     pub_key.pub_ip = addr;
     data = hash_get(vpc->nat_public_ip_ht, pub_key.as_u64);
     if (data) {
-        return pool_elt_at_index(vpc->nat_pb[nat_type][nat_proto - 1], *data);
+        return pool_elt_at_index(vpc->nat_pb[nat_addr_type][nat_proto - 1], *data);
     }
 
     return NULL;
+}
+
+always_inline nat_proto_t
+get_nat_proto_from_proto(u8 protocol)
+{
+    return nat_main.proto_map[protocol];
+}
+
+always_inline nat_proto_t
+get_proto_from_nat_proto(nat_proto_t nat_proto)
+{
+    return nat_main.nat_proto_map[nat_proto];
 }
 
 //
@@ -196,7 +211,7 @@ nat_get_port_block_from_pub_ip(nat_vpc_config_t *vpc, nat_type_t nat_type,
 nat_err_t
 nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
                    u8 protocol, u16 start_port, u16 end_port,
-                   nat_type_t nat_type)
+                   nat_addr_type_t nat_addr_type)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
@@ -204,16 +219,16 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
     nat_pub_key_t pub_key = { 0 };
 
     ASSERT(vpc_id < PDS_MAX_VPC);
-    ASSERT(nat_type < NAT_TYPE_NUM);
+    ASSERT(nat_addr_type < NAT_ADDR_TYPE_NUM);
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (nat_proto == NAT_PROTO_UNKNOWN) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
 
-    if (nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, addr)) {
+    if (nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, addr)) {
         // Entry already exists
         // This can happen in rollback case
 
@@ -228,7 +243,7 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
     }
 
     clib_spinlock_lock(&vpc->lock);
-    pool_get_zero(vpc->nat_pb[nat_type][nat_proto - 1], pb);
+    pool_get_zero(vpc->nat_pb[nat_addr_type][nat_proto - 1], pb);
     vpc->num_port_blocks++;
     pds_id_set(pb->id, id);
     pb->addr = addr;
@@ -236,11 +251,11 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
     pb->end_port = end_port;
     pb->state = NAT_PB_STATE_ADDED;
 
-    pub_key.nat_type = (u8)nat_type;
+    pub_key.nat_addr_type = (u8)nat_addr_type;
     pub_key.nat_proto = nat_proto;
     pub_key.pub_ip = addr;
     hash_set(vpc->nat_public_ip_ht, pub_key.as_u64,
-             pb - vpc->nat_pb[nat_type][nat_proto - 1]);
+             pb - vpc->nat_pb[nat_addr_type][nat_proto - 1]);
     clib_spinlock_unlock(&vpc->lock);
 
     return NAT_ERR_OK;
@@ -252,23 +267,23 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
 nat_err_t
 nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
                       ip4_address_t addr, u8 protocol, u16 start_port,
-                      u16 end_port, nat_type_t nat_type)
+                      u16 end_port, nat_addr_type_t nat_addr_type)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
     nat_proto_t nat_proto;
 
     ASSERT(vpc_id < PDS_MAX_VPC);
-    ASSERT(nat_type < NAT_TYPE_NUM);
+    ASSERT(nat_addr_type < NAT_ADDR_TYPE_NUM);
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (nat_proto == NAT_PROTO_UNKNOWN) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
 
-    pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, addr);
+    pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, addr);
     if (!pb) {
         // Entry does not exist
         return NAT_ERR_NOT_FOUND;
@@ -288,11 +303,11 @@ nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
 
 always_inline void
 nat_port_block_del_inline(nat_vpc_config_t *vpc, nat_port_block_t *pb,
-                          nat_proto_t nat_proto, nat_type_t nat_type)
+                          nat_proto_t nat_proto, nat_addr_type_t nat_addr_type)
 {
     clib_spinlock_lock(&vpc->lock);
     hash_unset(vpc->nat_public_ip_ht, pb->addr.as_u32);
-    pool_put(vpc->nat_pb[nat_type][nat_proto - 1], pb);
+    pool_put(vpc->nat_pb[nat_addr_type][nat_proto - 1], pb);
     vpc->num_port_blocks--;
     if (vpc->num_port_blocks == 0) {
         hash_free(vpc->nat_flow_ht);
@@ -306,7 +321,7 @@ nat_port_block_del_inline(nat_vpc_config_t *vpc, nat_port_block_t *pb,
 nat_err_t
 nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
                    ip4_address_t addr, u8 protocol, u16 start_port,
-                   u16 end_port, nat_type_t nat_type)
+                   u16 end_port, nat_addr_type_t nat_addr_type)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
@@ -316,12 +331,12 @@ nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (nat_proto == NAT_PROTO_UNKNOWN) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
 
-    pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, addr);
+    pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, addr);
     if (!pb) {
         // Entry does not exist.
         return NAT_ERR_NOT_FOUND;
@@ -343,23 +358,23 @@ nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
 nat_err_t
 nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
                       ip4_address_t addr, u8 protocol, u16 start_port,
-                      u16 end_port, nat_type_t nat_type)
+                      u16 end_port, nat_addr_type_t nat_addr_type)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
     nat_proto_t nat_proto;
 
     ASSERT(vpc_id < PDS_MAX_VPC);
-    ASSERT(nat_type < NAT_TYPE_NUM);
+    ASSERT(nat_addr_type < NAT_ADDR_TYPE_NUM);
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (nat_proto == NAT_PROTO_UNKNOWN) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
 
-    pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, addr);
+    pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, addr);
     if (!pb) {
         // This should not happen
         return NAT_ERR_NOT_FOUND;
@@ -368,7 +383,7 @@ nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
         pb->state = NAT_PB_STATE_OK;
         return NAT_ERR_OK;
     } else if (pb->state == NAT_PB_STATE_DELETED) {
-        nat_port_block_del_inline(vpc, pb, nat_proto, nat_type);
+        nat_port_block_del_inline(vpc, pb, nat_proto, nat_addr_type);
         return NAT_ERR_OK;
     } else if (pb->state == NAT_PB_STATE_UPDATED) {
         pb->addr = addr;
@@ -377,6 +392,46 @@ nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
         pb->state = NAT_PB_STATE_OK;
         return NAT_ERR_OK;
     }
+
+    return NAT_ERR_OK;
+}
+
+//
+// Read SNAT port block stats
+//
+nat_err_t
+nat_port_block_get_stats(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
+                         u8 protocol, nat_addr_type_t nat_addr_type,
+                         pds_nat_port_block_export_t *export_pb)
+{
+    nat_port_block_t *pb;
+    nat_vpc_config_t *vpc;
+    nat_port_block_t *nat_pb;
+    nat_proto_t nat_proto;
+    u32 in_use_cnt = 0, session_cnt = 0;
+
+    ASSERT(vpc_id < PDS_MAX_VPC);
+    ASSERT(nat_addr_type < NAT_ADDR_TYPE_NUM);
+
+    vpc = &nat_main.vpc_config[vpc_id];
+
+    nat_proto = get_nat_proto_from_proto(protocol);
+    if (nat_proto == NAT_PROTO_UNKNOWN) {
+        return NAT_ERR_INVALID_PROTOCOL;
+    }
+
+    nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
+
+    pool_foreach (pb, nat_pb,
+    ({
+        if (pds_id_equals(id, pb->id)) {
+            in_use_cnt += clib_bitmap_count_set_bits(pb->port_bitmap);
+            session_cnt += pb->num_flow_alloc;
+        }
+    }));
+
+    export_pb->in_use_cnt = in_use_cnt;
+    export_pb->session_cnt = session_cnt;
 
     return NAT_ERR_OK;
 }
@@ -587,7 +642,7 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
 
 always_inline nat_port_block_t *
 nat_get_pool_for_pvt_ip(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb,
-                        ip4_address_t pvt_ip, nat_type_t nat_type,
+                        ip4_address_t pvt_ip, nat_addr_type_t nat_addr_type,
                         nat_proto_t nat_proto)
 {
     uword *data;
@@ -597,7 +652,7 @@ nat_get_pool_for_pvt_ip(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb,
     data = hash_get_mem(vpc->nat_pvt_ip_ht, &pvt_ip);
     if (data) {
         public_ip.as_u32 = NAT_PVT_IP_HT_PUBLIC_IP(*data);
-        pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto,
+        pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto,
                                             public_ip);
     }
 
@@ -630,7 +685,7 @@ nat_get_random_pool(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb)
 nat_err_t
 nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
                u8 protocol, ip4_address_t pvt_ip, u16 pvt_port,
-               nat_type_t nat_type, ip4_address_t *sip, u16 *sport,
+               nat_addr_type_t nat_addr_type, ip4_address_t *sip, u16 *sport,
                nat_hw_index_t *xlate_idx, nat_hw_index_t *xlate_idx_rflow)
 {
     nat_port_block_t *pb = NULL;
@@ -646,14 +701,14 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
         return NAT_ERR_NO_RESOURCE;
     }
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (PREDICT_FALSE(nat_proto == NAT_PROTO_UNKNOWN)) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
 
     clib_spinlock_lock(&vpc->lock);
 
-    nat_pb = vpc->nat_pb[nat_type][nat_proto - 1];
+    nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
     if (PREDICT_FALSE(pool_elts(nat_pb) == 0)) {
         return NAT_ERR_NO_RESOURCE;
     }
@@ -664,7 +719,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
     if (*sport == 0) {
         // endpoint not found
         // Check if pvt_ip has been used
-        pb = nat_get_pool_for_pvt_ip(vpc, nat_pb, pvt_ip, nat_type, nat_proto);
+        pb = nat_get_pool_for_pvt_ip(vpc, nat_pb, pvt_ip, nat_addr_type, nat_proto);
         if (!pb) {
             // Try random pool
             pb = nat_get_random_pool(vpc, nat_pb);
@@ -689,7 +744,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
 
     } else {
         // src endpoint found, reuse public ip, port mapping
-        pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, *sip);
+        pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, *sip);
         if (pb) {
             nat_flow_key_t key = { 0 };
             key.dip = dip;
@@ -749,7 +804,7 @@ nat_flow_dealloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
 nat_err_t
 nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
                  ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
-                 u16 pvt_port, nat_type_t nat_type)
+                 u16 pvt_port, nat_addr_type_t nat_addr_type)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
@@ -767,7 +822,7 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
     key.sport = sport;
     key.protocol = protocol;
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (PREDICT_FALSE(nat_proto == NAT_PROTO_UNKNOWN)) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
@@ -785,7 +840,7 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
     hash_unset_mem_free(&vpc->nat_flow_ht, &key);
     hash_unset_mem_free(&vpc->nat_pvt_ip_ht, &pvt_ip);
 
-    pb = nat_get_port_block_from_pub_ip(vpc, nat_type, nat_proto, sip);
+    pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, sip);
     if (pb) {
         ret = nat_flow_dealloc_inline(vpc_id, dip, dport, sip,
                                       sport, pb);
@@ -809,7 +864,7 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
 // Get SNAT usage
 //
 nat_err_t
-nat_usage(u32 vpc_id, u8 protocol, nat_type_t nat_type,
+nat_usage(u32 vpc_id, u8 protocol, nat_addr_type_t nat_addr_type,
           u32 *num_ports_total, u32 *num_ports_alloc,
           u32 *num_flows_alloc)
 {
@@ -818,7 +873,7 @@ nat_usage(u32 vpc_id, u8 protocol, nat_type_t nat_type,
     nat_proto_t nat_proto;
     nat_port_block_t *nat_pb;
 
-    nat_proto = nat_main.proto_map[protocol];
+    nat_proto = get_nat_proto_from_proto(protocol);
     if (nat_proto == NAT_PROTO_UNKNOWN) {
         return NAT_ERR_INVALID_PROTOCOL;
     }
@@ -831,7 +886,7 @@ nat_usage(u32 vpc_id, u8 protocol, nat_type_t nat_type,
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_pb = vpc->nat_pb[nat_type][nat_proto - 1];
+    nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
 
     pool_foreach (pb, nat_pb,
     ({
@@ -860,7 +915,7 @@ nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices)
 //
 void
 nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
-                                  nat_type_t nat_type,
+                                  nat_addr_type_t nat_addr_type,
                                   pds_nat_iterate_params_t *params)
 {
     nat_port_block_t *pb;
@@ -872,7 +927,7 @@ nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
 
     vpc = &nat_main.vpc_config[vpc_id];
 
-    nat_pb = vpc->nat_pb[nat_type][nat_proto - 1];
+    nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
 
     pool_foreach (pb, nat_pb,
     ({
@@ -880,12 +935,12 @@ nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
         pb_out->addr = pb->addr.as_u32;
         pb_out->start_port = pb->start_port;
         pb_out->end_port = pb->end_port;
-        if (nat_type == NAT_TYPE_INTERNET) {
-            pb_out->address_type = NAT_ADDRESS_TYPE_INTERNET;
+        if (nat_addr_type == NAT_ADDR_TYPE_INTERNET) {
+            pb_out->address_type = NAT_ADDR_TYPE_INTERNET;
         } else {
-            pb_out->address_type = NAT_ADDRESS_TYPE_INFRA;
+            pb_out->address_type = NAT_ADDR_TYPE_INFRA;
         }
-        pb_out->protocol = nat_main.nat_proto_map[nat_proto];
+        pb_out->protocol = get_proto_from_nat_proto(nat_proto);
         pb_out->in_use_cnt = clib_bitmap_count_set_bits(pb->port_bitmap);
         pb_out->session_cnt = pb->num_flow_alloc;
 
@@ -903,17 +958,17 @@ nat_pb_iterate(pds_nat_iterate_params_t *params)
         if (nat_main.vpc_config[i].num_port_blocks == 0) {
             continue;
         }
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_TYPE_INTERNET,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INTERNET,
                                           params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_TYPE_INTERNET,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INTERNET,
                                           params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_TYPE_INTERNET,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INTERNET,
                                           params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_TYPE_INFRA,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INFRA,
                                           params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_TYPE_INFRA,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INFRA,
                                           params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_TYPE_INFRA,
+        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INFRA,
                                           params);
     }
     return;

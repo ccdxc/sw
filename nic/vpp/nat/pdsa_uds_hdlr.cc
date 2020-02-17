@@ -17,10 +17,10 @@ vpp_uds_nat_iterate(pds_nat_iterate_params_t *params)
     pds::NatPortBlockSpec *spec = nat_msg.mutable_spec();
     pds::NatPortBlockStats *stats = nat_msg.mutable_stats();
 
-    spec->set_id((const char *)pb->id);
-    if (pb->address_type == NAT_ADDRESS_TYPE_INFRA) {
+    spec->set_id((const char *)pb->id, PDS_MAX_KEY_LEN);
+    if (pb->address_type == NAT_ADDR_TYPE_INFRA) {
         spec->set_addresstype(types::ADDR_TYPE_SERVICE);
-    } else if (pb->address_type == NAT_ADDRESS_TYPE_INTERNET) {
+    } else if (pb->address_type == NAT_ADDR_TYPE_INTERNET) {
         spec->set_addresstype(types::ADDR_TYPE_PUBLIC);
     }
     auto nat_pfx = spec->mutable_nataddress()->mutable_prefix()->mutable_ipv4subnet();
