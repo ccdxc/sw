@@ -379,7 +379,7 @@ func (a *ApuluAPI) HandleNetwork(oper types.Operation, network netproto.Network)
 		network = existingNetwork
 	}
 	// Perform object validations
-	uplinkIDs, vrf, err := validator.ValidateNetwork(a.InfraAPI, network)
+	uplinkIDs, vrf, err := validator.ValidateNetwork(a.InfraAPI, oper, network)
 	if err != nil {
 		log.Errorf("Network: %v | Op: %s | Err: %s", network, oper, err)
 		return nil, err

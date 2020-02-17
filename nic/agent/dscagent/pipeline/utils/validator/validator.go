@@ -85,7 +85,7 @@ func ValidateInterface(intf netproto.Interface) (err error) {
 }
 
 // ValidateNetwork performs named reference validations on vrf and unique VLAN IDs
-func ValidateNetwork(i types.InfraAPI, network netproto.Network) (uplinkIDs []uint64, vrf netproto.Vrf, err error) {
+func ValidateNetwork(i types.InfraAPI, oper types.Operation, network netproto.Network) (uplinkIDs []uint64, vrf netproto.Vrf, err error) {
 	// Named reference validations
 	var (
 		intfs []netproto.Interface
@@ -95,6 +95,24 @@ func ValidateNetwork(i types.InfraAPI, network netproto.Network) (uplinkIDs []ui
 	vrf, err = ValidateVrf(i, network.Tenant, network.Namespace, network.Spec.VrfName)
 	if err != nil {
 		return
+	}
+
+	// Check for duplicate vlans
+	if oper != types.Delete {
+		dat, _ = i.List(network.Kind)
+
+		for _, o := range dat {
+			var nt netproto.Network
+			err := nt.Unmarshal(o)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", nt.GetKey(), err))
+				continue
+			}
+			if nt.Spec.VlanID == network.Spec.VlanID {
+				log.Error(errors.Wrapf(types.ErrDuplicateVLANID, "Found duplicate VLAN: %d in Networks %v and %v", network.Spec.VlanID, nt.GetKey(), network.GetKey()))
+				return nil, vrf, errors.Wrapf(types.ErrDuplicateVLANID, "Found duplicate VLAN: %d in Networks %v and %v", network.Spec.VlanID, nt.GetKey(), network.GetKey())
+			}
+		}
 	}
 
 	intf := &netproto.Interface{

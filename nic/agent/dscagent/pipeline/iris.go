@@ -80,7 +80,6 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*IrisAPI, error) {
 
 	if err := i.PipelineInit(); err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelineInit, "Iris Init: %v", err))
-		return nil, errors.Wrapf(types.ErrPipelineInit, "Iris Init: %v", err)
 	}
 
 	return &i, nil
@@ -388,7 +387,7 @@ func (i *IrisAPI) HandleNetwork(oper types.Operation, network netproto.Network) 
 		network = existingNetwork
 	}
 	// Perform object validations
-	uplinkIDs, vrf, err := validator.ValidateNetwork(i.InfraAPI, network)
+	uplinkIDs, vrf, err := validator.ValidateNetwork(i.InfraAPI, oper, network)
 	if err != nil {
 		log.Error(err)
 		return nil, err
