@@ -42,11 +42,33 @@ SDK_DEFINE_ENUM_TO_STR(asic_type_t, ASIC_TYPE)
 SDK_DEFINE_MAP_EXTERN(asic_type_t, ASIC_TYPE)
 // #undef ASIC_TYPE
 
+#define BOOT_TYPE(ENTRY)                                                    \
+    ENTRY(SDK_BOOT_TYPE_COLD,      0, "SDK_BOOT_TYPE_COLD")                 \
+    ENTRY(SDK_BOOT_TYPE_ISSU,      1, "SDK_BOOT_TYPE_ISSU")                 \
+
+SDK_DEFINE_ENUM(boot_type_t, BOOT_TYPE)
+SDK_DEFINE_ENUM_TO_STR(boot_type_t, BOOT_TYPE)
+SDK_DEFINE_MAP_EXTERN(boot_type_t, BOOT_TYPE)
+// #undef BOOT_TYPE
+
+static inline bool
+boot_type_cold(boot_type_t type)
+{
+    return type == SDK_BOOT_TYPE_COLD;
+}
+
+static inline bool
+boot_type_issu(boot_type_t type)
+{
+    return type == SDK_BOOT_TYPE_ISSU;
+}
+
 }    // namespace platform
 }    // namespace sdk
 
 using sdk::platform::platform_type_t;
 using sdk::platform::asic_type_t;
+using sdk::platform::boot_type_t;
 
 #endif    // __SDK_PLATFORM_HPP__
 
