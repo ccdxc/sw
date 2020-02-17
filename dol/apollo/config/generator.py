@@ -56,14 +56,14 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient
     ObjectInfo[APIObjTypes.DHCP_RELAY.name.lower()] = DHCPRelayClient
     ObjectInfo[APIObjTypes.NAT_PB.name.lower()] = NATPbClient
+    ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
     ObjectInfo[APIObjTypes.BGP.name.lower()] = BGPClient
     ObjectInfo[APIObjTypes.BGP_PEER.name.lower()] = BGPPeerClient
     ObjectInfo[APIObjTypes.BGP_PEER_AF.name.lower()] = BGPPeerAfClient
-    ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
-    ObjectInfo[APIObjTypes.EVPN_EVI.name.lower()] = EvpnEviClient
-    ObjectInfo[APIObjTypes.EVPN_EVI_RT.name.lower()] = EvpnEviRtClient
-    ObjectInfo[APIObjTypes.EVPN_IP_VRF.name.lower()] = EvpnIpVrfClient
-    ObjectInfo[APIObjTypes.EVPN_IP_VRF_RT.name.lower()] = EvpnIpVrfRtClient
+    ObjectInfo[APIObjTypes.BGP_EVPN_EVI.name.lower()] = EvpnEviClient
+    ObjectInfo[APIObjTypes.BGP_EVPN_EVI_RT.name.lower()] = EvpnEviRtClient
+    ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF.name.lower()] = EvpnIpVrfClient
+    ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF_RT.name.lower()] = EvpnIpVrfRtClient
     return
 
 def __validate_object_config(node, client):

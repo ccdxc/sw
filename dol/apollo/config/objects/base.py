@@ -36,7 +36,7 @@ class StatusObjectBase(base.StatusObjectBase):
 class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self, objtype, node):
         super().__init__()
-        self.ControlPlane = False
+        self.BatchUnaware = False
         self.Origin = topo.OriginTypes.FIXED
         self.UUID = None
         # marked HwHabitant when object is in hw
@@ -63,7 +63,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return grpcreq()
 
     def __populate_BatchContext(self, grpcmsg, cookie):
-        if getattr(self, "ControlPlane", False) is False:
+        if getattr(self, "BatchUnaware", False) is False:
             grpcmsg.BatchCtxt.BatchCookie = cookie
         return
 

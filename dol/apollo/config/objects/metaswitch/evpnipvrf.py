@@ -15,8 +15,8 @@ import evpn_pb2 as evpn_pb2
 
 class EvpnIpVrfObject(base.ConfigObjectBase):
     def __init__(self, node, evpnipvrfspec):
-        super().__init__(api.ObjectTypes.EVPN_IP_VRF, node)
-        self.ControlPlane = True
+        super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF, node)
+        self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnIpVrfIdAllocator)
         self.GID("EvpnIPVrf%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
@@ -75,7 +75,7 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
 
 class EvpnIpVrfObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.EVPN_IP_VRF, Resmgr.MAX_EVPN_IP_VRF)
+        super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF, Resmgr.MAX_BGP_EVPN_IP_VRF)
         return
 
     def GenerateObjects(self, node, vpcspec):

@@ -85,16 +85,16 @@ class ObjectTypes(enum.IntEnum):
     DHCP_RELAY = 17
     NAT_PB = 18
     RMAPPING = 19
-    BGP = 20
-    BGP_PEER = 21
-    BGP_PEER_AF = 22
-    BGP_NLRI_PREFIX = 23
-    CP_ROUTE = 24
-    POLICER = 25
-    EVPN_EVI = 26
-    EVPN_EVI_RT = 27
-    EVPN_IP_VRF = 28
-    EVPN_IP_VRF_RT = 29
+    POLICER = 20
+    BGP = 21
+    BGP_PEER = 22
+    BGP_PEER_AF = 23
+    BGP_NLRI_PREFIX = 24
+    BGP_EVPN_EVI = 25
+    BGP_EVPN_EVI_RT = 26
+    BGP_EVPN_IP_VRF = 27
+    BGP_EVPN_IP_VRF_RT = 28
+    STATIC_ROUTE = 29
     MAX = 30
 
 class ClientModule:
@@ -233,24 +233,24 @@ class ApolloAgentClient:
                                                       self.__channel, 'DHCPRelay')
         self.__stubs[ObjectTypes.NAT_PB] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                       self.__channel, 'NatPortBlock')
+        self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
+                                                      self.__channel, 'Policer')
         self.__stubs[ObjectTypes.BGP] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
                                                    self.__channel, 'BGP')
         self.__stubs[ObjectTypes.BGP_PEER] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
                                                         self.__channel, 'BGPPeer')
         self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
                                                            self.__channel, 'BGPPeerAf')
-        self.__stubs[ObjectTypes.CP_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
-                                                        self.__channel, 'CPStaticRoute')
-        self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
-                                                      self.__channel, 'Policer')
-        self.__stubs[ObjectTypes.EVPN_EVI] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+        self.__stubs[ObjectTypes.BGP_EVPN_EVI] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
                                                     self.__channel, 'EvpnEviSpec')
-        self.__stubs[ObjectTypes.EVPN_EVI_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+        self.__stubs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
                                                     self.__channel, 'EvpnEviRtSpec')
-        self.__stubs[ObjectTypes.EVPN_IP_VRF] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+        self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
                                                     self.__channel, 'EvpnIpVrfSpec')
-        self.__stubs[ObjectTypes.EVPN_IP_VRF_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
+        self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
                                                     self.__channel, 'EvpnIpVrfRtSpec')
+        self.__stubs[ObjectTypes.STATIC_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
+                                                        self.__channel, 'CPStaticRoute')
         return
 
     def __create_msgreq_table(self):
@@ -271,15 +271,15 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
         self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
         self.__msgreqs[ObjectTypes.NAT_PB] = ClientModule(nat_pb2, 'NatPortBlock')
+        self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
         self.__msgreqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')
         self.__msgreqs[ObjectTypes.BGP_PEER] = ClientModule(bgp_pb2, 'BGPPeer')
         self.__msgreqs[ObjectTypes.BGP_PEER_AF] = ClientModule(bgp_pb2, 'BGPPeerAf')
-        self.__msgreqs[ObjectTypes.CP_ROUTE] = ClientModule(cp_route_pb2, 'CP_ROUTE')
-        self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
-        self.__msgreqs[ObjectTypes.EVPN_EVI] = ClientModule(evpn_pb2, 'EvpnEvi')
-        self.__msgreqs[ObjectTypes.EVPN_EVI_RT] = ClientModule(evpn_pb2, 'EvpnEviRt')
-        self.__msgreqs[ObjectTypes.EVPN_IP_VRF] = ClientModule(evpn_pb2, 'EvpnIpVrf')
-        self.__msgreqs[ObjectTypes.EVPN_IP_VRF_RT] = ClientModule(evpn_pb2, 'EvpnIpVrfRt')
+        self.__msgreqs[ObjectTypes.BGP_EVPN_EVI] = ClientModule(evpn_pb2, 'EvpnEvi')
+        self.__msgreqs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientModule(evpn_pb2, 'EvpnEviRt')
+        self.__msgreqs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientModule(evpn_pb2, 'EvpnIpVrf')
+        self.__msgreqs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientModule(evpn_pb2, 'EvpnIpVrfRt')
+        self.__msgreqs[ObjectTypes.STATIC_ROUTE] = ClientModule(cp_route_pb2, 'CPStaticRoute')
         return
 
     def GetGRPCMsgReq(self, objtype, op):

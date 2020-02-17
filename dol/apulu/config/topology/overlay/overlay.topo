@@ -80,34 +80,29 @@ node:
               policytype : default
               direction : bidir
           bgpglobal:
-            - id            : 1
-              localasn      : 100
+            - localasn      : 100
               routerid      : 1.1.1.1
           # underlay bgp peer 1
           bgppeer:
-            - id            : 1
-              peeraddr      : 10.1.1.2
+            - peeraddr      : 10.1.1.2
               localaddr     : 0.0.0.0
               bgppeeraf:
                 - afi       : ipv4
                   safi      : unicast
             # underlay bgp peer 2
-            - id            : 2
-              peeraddr      : 11.1.1.2
+            - peeraddr      : 11.1.1.2
               localaddr     : 0.0.0.0
               bgppeeraf:
                 - afi       : ipv4
                   safi      : unicast
             # bgp evpn peer 3
-            - id            : 3
-              peeraddr      : 2.2.2.2
+            - peeraddr      : 2.2.2.2
               localaddr     : 1.1.1.1
               bgppeeraf:
                 - afi       : l2vpn
                   safi      : evpn
             # bgp evpn peer 4
-            - id            : 4
-              peeraddr      : 10.1.1.3
+            - peeraddr      : 10.1.1.3
               localaddr     : 1.1.1.1
               bgppeeraf:
                 - afi       : l2vpn

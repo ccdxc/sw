@@ -15,8 +15,8 @@ import evpn_pb2 as evpn_pb2
 
 class EvpnIpVrfRtObject(base.ConfigObjectBase):
     def __init__(self, node, evpnipvrfrtspec):
-        super().__init__(api.ObjectTypes.EVPN_IP_VRF_RT, node)
-        self.ControlPlane = True
+        super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF_RT, node)
+        self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnIpVrfIdAllocator)
         self.GID("EvpnIPVrfRt%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
@@ -76,8 +76,8 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
 
 class EvpnIpVrfRtObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.EVPN_IP_VRF_RT,\
-                         Resmgr.MAX_EVPN_IP_VRF_RT)
+        super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF_RT,\
+                         Resmgr.MAX_BGP_EVPN_IP_VRF_RT)
         return
 
     def GetDhcpRelayObject(self, node):

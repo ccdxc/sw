@@ -15,8 +15,8 @@ import bgp_pb2 as bgp_pb2
 class BgpPeerAfObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
         super().__init__(api.ObjectTypes.BGP_PEER_AF, node)
-        self.ControlPlane = True
-        self.Id = getattr(spec, "id", next(ResmgrClient[node].BgpPeerAfIdAllocator))
+        self.BatchUnaware = True
+        self.Id = next(ResmgrClient[node].BgpPeerAfIdAllocator)
         self.UUID = utils.PdsUuid(self.Id)
         self.GID("BGPPeerAf%d"%self.Id)
         self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", "0.0.0.0"))

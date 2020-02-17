@@ -14,7 +14,7 @@ import apollo.config.objects.base as base
 class BgpObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
         super().__init__(api.ObjectTypes.BGP, node)
-        self.ControlPlane = True
+        self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].BgpIdAllocator)
         self.GID("BGP%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)

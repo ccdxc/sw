@@ -17,9 +17,8 @@ import bgp_pb2 as bgp_pb2
 class BgpPeerObject(base.ConfigObjectBase):
     def __init__(self, node, spec, peeraf_obj):
         super().__init__(api.ObjectTypes.BGP_PEER, node)
-        self.Id = spec.id
-        self.ControlPlane = True
-        #self.Id = next(ResmgrClient[node].BgpPeerIdAllocator)
+        self.BatchUnaware = True
+        self.Id = next(ResmgrClient[node].BgpPeerIdAllocator)
         self.UUID = utils.PdsUuid(self.Id)
         self.GID("BGPPeer%d"%self.Id)
         self.State = getattr(spec, "adminstate", None)
@@ -49,7 +48,6 @@ class BgpPeerObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("BGP Peer Object: %s" % self)
         logger.info("- %s" % repr(self))
-        logger.info(self.PeerAf.Show())
         return
 
     def PopulateKey(self, grpcmsg):

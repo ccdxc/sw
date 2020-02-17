@@ -15,8 +15,8 @@ import evpn_pb2 as evpn_pb2
 
 class EvpnEviRtObject(base.ConfigObjectBase):
     def __init__(self, node, evpnevirtspec):
-        super().__init__(api.ObjectTypes.EVPN_EVI_RT, node)
-        self.ControlPlane = True
+        super().__init__(api.ObjectTypes.BGP_EVPN_EVI_RT, node)
+        self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnEviRtIdAllocator)
         self.GID("EvpnEvi%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
@@ -76,7 +76,7 @@ class EvpnEviRtObject(base.ConfigObjectBase):
 
 class EvpnEviRtObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.EVPN_EVI_RT, Resmgr.MAX_EVPN_EVI_RT)
+        super().__init__(api.ObjectTypes.BGP_EVPN_EVI_RT, Resmgr.MAX_BGP_EVPN_EVI_RT)
         return
 
     def GenerateObjects(self, node, subnetspec):
