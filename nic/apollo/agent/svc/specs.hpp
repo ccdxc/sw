@@ -781,7 +781,7 @@ pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
     case lif_type_t::LIF_TYPE_HOST_MGMT:
         return types::LIF_TYPE_HOST_MGMT;
     case lif_type_t::LIF_TYPE_MNIC_OOB_MGMT:
-        return types::LIF_TYPE_OOB_MGMTT;
+        return types::LIF_TYPE_OOB_MGMT;
     case lif_type_t::LIF_TYPE_MNIC_INBAND_MGMT:
         return types::LIF_TYPE_INBAND_MGMT;
     case lif_type_t::LIF_TYPE_MNIC_INTERNAL_MGMT:

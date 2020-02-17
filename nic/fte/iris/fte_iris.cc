@@ -1286,11 +1286,6 @@ ctx_t::apply_session_limit(void)
     hal::nwsec_profile_t        *nwsec_prof = NULL;
     const fte::cpu_rxhdr_t      *cpurxhdr = cpu_rxhdr();
 
-    // validation only for new session create
-    if (existing_session() || hal_cleanup()) {
-        goto end;
-    }
-
     vrf = svrf();
     SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
 
@@ -1302,7 +1297,7 @@ ctx_t::apply_session_limit(void)
     nwsec_prof =
         hal::find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
 
-    if (nwsec_prof == NULL) {
+    if (nwsec_prof == NULL || cpurxhdr == NULL) {
         goto end;
     }
 

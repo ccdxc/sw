@@ -28,7 +28,7 @@ flow_info:
   phvwr         p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
   seq           c1, d.u.flow_info_d.flow_only_policy, TRUE
   bcf           [c1], flow_info_policy_only
-  nop.e
+  nop.!c1.e
   nop
 
 flow_info_multicast:
@@ -275,7 +275,7 @@ flow_miss_unicast_reg_mac_miss:
   seq           c1, k.control_metadata_flow_learn, FALSE
   bcf           [c1], flow_miss_unicast_prom_mgmt_mseg_bm
   seq           c1, k.l4_metadata_policy_enf_cfg_en, TRUE
-  bcf           [c1], flow_miss_unicast_sup_redirect
+  bcf           [c1], flow_miss_unicast_sup_copy_prom_mgmt
   seq           c1, k.l4_metadata_flow_learn_cfg_en, TRUE
   bcf           [c1], flow_miss_unicast_sup_copy_prom_mgmt_prom_mseg_bm
   // Prom Mgmt & Prom MSeg/BM

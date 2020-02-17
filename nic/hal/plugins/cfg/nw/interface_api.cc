@@ -157,6 +157,28 @@ if_get_enicif_type (if_t *pi_if)
 }
 
 //----------------------------------------------------------------------------
+// returns enic's lif type
+//----------------------------------------------------------------------------
+types::LifType
+if_get_enicif_lif_type (if_t *pi_if)
+{
+    lif_t *lif = NULL;
+    // Check if if is enicif
+    if (pi_if->if_type == intf::IF_TYPE_ENIC) {
+        if (pi_if->enic_type == intf::IF_ENIC_TYPE_USEG ||
+            pi_if->enic_type == intf::IF_ENIC_TYPE_PVLAN) {
+            return types::LIF_TYPE_HOST;
+        } else {
+            lif = if_get_lif(pi_if);
+            if (lif) {
+                return lif->type;
+            }
+        }
+    }
+    return types::LIF_TYPE_NONE;
+}
+
+//----------------------------------------------------------------------------
 // get the encap vlan
 //----------------------------------------------------------------------------
 vlan_id_t

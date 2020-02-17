@@ -350,8 +350,16 @@ l2seg_oifl_set_hi (l2seg_t *l2seg, oif_list_id_t base_oifl_id)
         OIFL_CHECK_RET(ret);
         ret = oif_list_set_honor_ingress(l2seg_mc_mgmt_oifl(base_oifl_id));
         OIFL_CHECK_RET(ret);
+        /*
+         * Transparent flow aware: 
+         *  - UUC packet from Uplink. 
+         *    - flow miss: Does prom mgmt replications and SUP copy
+         *    - from cpu:  Does prom host replications.
+         */
+#if 0
         ret = oif_list_set_honor_ingress(l2seg_pr_mgmt_oifl(base_oifl_id));
         OIFL_CHECK_RET(ret);
+#endif
     }
 #if 0
     ret = oif_list_set_honor_ingress(l2seg_bc_mgmt_oifl(base_oifl_id));
@@ -1091,6 +1099,9 @@ end:
     return ret;
 }
 
+/*
+ * Function called for ENICs and non-designated uplinks for SWM
+ */
 hal_ret_t
 l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
                           bool only_non_designated, bool update_bcast, 
@@ -1104,6 +1115,7 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
     oif_t           oif;
     uint32_t        if_idx = 0;
     if_t            *uplink_if = NULL;
+    types::LifType  lif_type = types::LIF_TYPE_NONE;      
 
     HAL_TRACE_DEBUG("Updating l2seg: {} for if: {}, add: {}, only_non_design: {}, "
                     "update_bcast: {}, update_mcast: {}, update_prmsc: {}",
@@ -1111,6 +1123,10 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
                     update_bcast, update_mcast, update_prmsc);
 
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
+
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        lif_type = if_get_enicif_lif_type(hal_if);
+    }
 
     // TODO: Have to see how for BM L2seg it will work.
     if (l2seg_is_mgmt(l2seg)) {
@@ -1180,7 +1196,13 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
         }
         if (update_prmsc) {
             if (is_mgmt) {
-                ret = oif_list_add_oif(l2seg_pr_mgmt_oifl(base_oifl_id), &oif);
+                if (hal::g_hal_state->fwd_mode() == sys::FWD_MODE_TRANSPARENT &&
+                    lif_type == types::LIF_TYPE_HOST) { 
+                    ret = oif_list_add_oif(l2seg_pr_mseg_bm_oifl(base_oifl_id), &oif);
+                } else {
+                    // ENICs on ARM and non-designated uplink
+                    ret = oif_list_add_oif(l2seg_pr_mgmt_oifl(base_oifl_id), &oif);
+                }
                 ret = oif_list_add_oif(l2seg_pr_mgmt_mseg_bm_oifl(base_oifl_id), &oif);
             } else {
                 // customer l2seg
@@ -1223,7 +1245,17 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
         }
         if (update_prmsc) {
             if (is_mgmt) {
+#if 0
                 ret = oif_list_remove_oif(l2seg_pr_mgmt_oifl(base_oifl_id), &oif);
+                ret = oif_list_remove_oif(l2seg_pr_mgmt_mseg_bm_oifl(base_oifl_id), &oif);
+#endif
+                if (hal::g_hal_state->fwd_mode() == sys::FWD_MODE_TRANSPARENT &&
+                    lif_type == types::LIF_TYPE_HOST) { 
+                    ret = oif_list_remove_oif(l2seg_pr_mseg_bm_oifl(base_oifl_id), &oif);
+                } else {
+                    // ENICs on ARM and non-designated uplink
+                    ret = oif_list_remove_oif(l2seg_pr_mgmt_oifl(base_oifl_id), &oif);
+                }
                 ret = oif_list_remove_oif(l2seg_pr_mgmt_mseg_bm_oifl(base_oifl_id), &oif);
             } else {
                 // customer l2seg

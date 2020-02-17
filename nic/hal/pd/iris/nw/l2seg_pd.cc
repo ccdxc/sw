@@ -2103,6 +2103,8 @@ get_clear_prom_repl (l2seg_t *l2seg, uint32_t num_prom_lifs,
     *clear_prom = 0;
     *dst_lport = 0;
 
+    return;
+
 #if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&

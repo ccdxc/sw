@@ -166,6 +166,21 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         if (flow_miss()) {
             // Create new session
             ret = create_session();
+
+            // TBD if session limits needs to be applied for
+            // transparent policy-enforced, then we need to 
+            // get the limits from a default profile 
+            if (hal::g_hal_state->is_policy_enforced()) { 
+                // check for flood protection limits
+                ret = apply_session_limit();
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_VERBOSE ("fte: exceeded session limits, skip session create, ret={}", ret);
+                    /*
+                     * Set drop bit so any packet-resources can be freed by the CPU-PMD.
+                     */
+                    set_drop();
+                }
+            }
         } else {
             ret = HAL_RET_OK;
         }
@@ -347,7 +362,9 @@ ctx_t::init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
 
     init_ctxt_from_session(session);
 
-    ret = lookup_flow_objs();
+    if (hal::g_hal_state->is_microseg_enabled()) {
+        ret = lookup_flow_objs();
+    }
 
     return HAL_RET_OK;
 }

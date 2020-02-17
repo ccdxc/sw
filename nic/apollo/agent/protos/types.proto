@@ -217,7 +217,7 @@ enum LifType {
   LIF_TYPE_NONE          = 0;
   LIF_TYPE_HOST          = 1;
   LIF_TYPE_HOST_MGMT     = 2;
-  LIF_TYPE_OOB_MGMTT     = 3;
+  LIF_TYPE_OOB_MGMT      = 3;
   LIF_TYPE_INBAND_MGMT   = 4;
   LIF_TYPE_INTERNAL_MGMT = 5;
   LIF_TYPE_DATAPATH      = 6;

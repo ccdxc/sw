@@ -1001,18 +1001,6 @@ void inst_t::process_arq_new ()
                 ctx_->set_drop();
             }
 
-            if ((!drop_pkt) && (!ctx_->existing_session())) {
-                // check for flood protection limits
-                ret = ctx_->apply_session_limit();
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_VERBOSE ("fte: exceeded session limits, skip session create, ret={}", ret);
-                    /*
-                     * Set drop bit so any packet-resources can be freed by the CPU-PMD.
-                     */
-                    drop_pkt = true;
-                    ctx_->set_drop();
-                }
-            }
             if (!drop_pkt) {
 
                 // process the packet and update flow table

@@ -55,7 +55,7 @@ def GetMACAddress(node, interface):
 def EnablePromiscuous(node, interface):
     result = api.types.status.SUCCESS
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    cmd = "ip link set dev " + interface + " promisc on"
+    cmd = "ip link set dev " + interface + " promisc on up"
     api.Trigger_AddNaplesCommand(req, node, cmd)
     resp = api.Trigger(req)
     if resp.commands[0].exit_code != 0:

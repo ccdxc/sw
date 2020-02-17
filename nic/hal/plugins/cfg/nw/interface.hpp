@@ -409,6 +409,7 @@ sdk_ret_t port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt);
 void port_event_cb (port_event_info_t *port_event_info);
 uint32_t uplink_if_get_idx (if_t *hal_if);
 bool enicif_is_swm(if_t *hal_if);
+hal_ret_t enicif_update_host_prom(bool add);
 
 }    // namespace hal
 

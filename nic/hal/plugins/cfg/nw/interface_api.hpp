@@ -46,6 +46,7 @@ void if_free_hwlif_id(uint32_t hwlif_id);
 
 // Interface APIs for EnicIf
 intf::IfEnicType if_get_enicif_type(if_t *pi_if);
+types::LifType if_get_enicif_lif_type(if_t *pi_if);
 vlan_id_t if_get_encap_vlan(if_t *pi_if);
 mac_addr_t *if_get_mac_addr(if_t *pi_if);
 void *if_enicif_get_pd_l2seg(if_t *pi_if);

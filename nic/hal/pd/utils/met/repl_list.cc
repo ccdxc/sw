@@ -357,7 +357,8 @@ ReplList::cleanup_last_repl_table_entry()
 
     SDK_ASSERT(last_repl_tbl_entry_);
     SDK_ASSERT(num_repl_tbl_entries_ == 1);
-    SDK_ASSERT(last_repl_tbl_entry_->get_num_repl_entries() == 0);
+    // Repl list is empty
+    // SDK_ASSERT(last_repl_tbl_entry_->get_num_repl_entries() == 0);
 
     if (get_attached_list_index()) {
         rs = detach_frm_repl_list();

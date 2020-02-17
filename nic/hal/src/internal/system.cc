@@ -14,6 +14,7 @@
 #include "nic/hal/iris/delphi/delphic.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 
 namespace hal {
 
@@ -813,10 +814,17 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // 1. Cleanup config from nicmgr.
             hal::svc::micro_seg_mode_notify((spec->fwd_mode() == sys::FWD_MODE_MICROSEG) ?
                                             sys::MICRO_SEG_ENABLE:sys::MICRO_SEG_DISABLE);
-            // 2. Set up mode in hal state
+
+            // 2. Remove host enics from mseg prom list
+            ret = enicif_update_host_prom(false);
+
+            // 3. Set up mode in hal state
             hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
 
-            // 3. Install ACLs for micro seg mode.
+            // 4. Add host enics to mgmt prom list
+            ret = enicif_update_host_prom(true);
+
+            // 5. Install ACLs for micro seg mode.
             ret = hal_acl_micro_seg_init();
         }
     }

@@ -535,6 +535,42 @@ end:
     return ret;
 }
 
+static bool
+enicif_process_host_cb (void *ht_entry, void *ctxt)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    bool *add = (bool *)ctxt;
+    if_t *hal_if = NULL;
+    lif_t *lif = NULL;
+    l2seg_t *l2seg = NULL;
+
+    hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        lif = find_lif_by_handle(hal_if->lif_handle);
+        if (lif->type == types::LIF_TYPE_HOST) {
+            if (lif->packet_filters.receive_promiscuous) {
+                l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+                ret = l2seg_update_oiflist_oif(l2seg, hal_if, *add,
+                                               false, false, false, true);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to update prom for host enicif: {}",
+                                  hal_if->if_id);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+hal_ret_t
+enicif_update_host_prom (bool add)
+{
+    HAL_TRACE_DEBUG("Reprogramming oifls for host encifs: {}", add ? "add" : "del");
+    g_hal_state->if_id_ht()->walk(enicif_process_host_cb, &add);
+}
+
 hal_ret_t
 enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
                                 lif_t *lif, bool add)

@@ -76,20 +76,20 @@ action flow_miss() {
             } else {
                 if (l4_metadata.policy_enf_cfg_en == TRUE) {
                     // Sup Redirect
-                    modify_field(control_metadata.dst_lport, CPU_LPORT);
-                    modify_field(control_metadata.cpu_copy, TRUE);
-                    modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
-                    modify_field(rewrite_metadata.rewrite_index, 0);
-                    modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
-                    // // Prom Mgmt
-                    // modify_field(capri_intrinsic.tm_replicate_en, TRUE);
-                    // add_to_field(capri_intrinsic.tm_replicate_ptr, 2);
-                    // if (control_metadata.uuc_fl_pe_sup_en == TRUE) {
-                    //     // Sup Copy
-                    //     modify_field(capri_intrinsic.tm_cpu, TRUE);
-                    // } else {
-                    //     // Do we need to explicitly DROP ?
-                    // }
+                    // modify_field(control_metadata.dst_lport, CPU_LPORT);
+                    // modify_field(control_metadata.cpu_copy, TRUE);
+                    // modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
+                    // modify_field(rewrite_metadata.rewrite_index, 0);
+                    // modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
+                    // Prom Mgmt
+                    modify_field(capri_intrinsic.tm_replicate_en, TRUE);
+                    add_to_field(capri_intrinsic.tm_replicate_ptr, 2);
+                    if (control_metadata.uuc_fl_pe_sup_en == TRUE) {
+                        // Sup Copy
+                        modify_field(capri_intrinsic.tm_cpu, TRUE);
+                    } else {
+                        // Do we need to explicitly DROP ?
+                    }
                 } else {
                     if (l4_metadata.flow_learn_cfg_en == TRUE) {
                         // Prom Mgmt & Prom MSeg/BM
