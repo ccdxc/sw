@@ -1,13 +1,7 @@
 #! /bin/bash
 
-TOOLS_DIR=`dirname $0`
-ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
-NICDIR=`readlink -f $ABS_TOOLS_DIR/../../`
-DOLDIR=`readlink -f $NICDIR/../dol/`
-export PERSISTENT_LOG_DIR=$NICDIR
 DRYRUN=0
 START_VPP=0
-export CONFIG_PATH=$NICDIR/conf
 
 # set file size limit to 30GB so that model logs will not exceed that.
 ulimit -f $((30*1024*1024))
@@ -29,16 +23,18 @@ if [ $DRYRUN == 0 ] && [ $FEATURE == 'rfc' -o $PIPELINE == 'apulu' ]; then
     START_VPP=1
 fi
 
+CUR_DIR=$( readlink -f $( dirname $0 ) )
+source $CUR_DIR/setup_env_sim.sh $PIPELINE
+
 set -x
-echo $NICDIR
 
 function stop_process () {
     echo "===== Nuking processes ====="
     if [ $START_VPP == 1 ]; then
-        sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
+        sudo $PDSPKG_TOPDIR/vpp/tools/stop-vpp-sim.sh $PDSPKG_TOPDIR $PIPELINE
     fi
     #dump backtrace of agent process to file, useful for debugging if process hangs
-    pstack `pgrep pdsagent` &> $NICDIR/pdsagent_bt.log
+    pstack `pgrep pdsagent` &> $PDSPKG_TOPDIR/pdsagent_bt.log
     pkill agent
     pkill cap_model
 }
@@ -46,7 +42,7 @@ function stop_process () {
 function start_vpp () {
     if [ $START_VPP == 1 ]; then
         echo "Starting VPP"
-        sudo $NICDIR/vpp/tools/start-vpp-sim.sh ${CMDARGS}
+        sudo $PDSPKG_TOPDIR/vpp/tools/start-vpp-sim.sh ${CMDARGS}
         if [[ $? != 0 ]]; then
             echo "Failed to bring up VPP"
             exit 1
@@ -55,28 +51,28 @@ function start_vpp () {
 }
 
 function start_process () {
-    $NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
-    $NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
+    $PDSPKG_TOPDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
+    $PDSPKG_TOPDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
     start_vpp
 }
 
 function remove_stale_files () {
     echo "===== Cleaning stale files ====="
-    rm -f $NICDIR/out.sh
-    rm -f $NICDIR/conf/pipeline.json
-    rm -f $NICDIR/conf/gen/dol_agentcfg.json
+    rm -f $PDSPKG_TOPDIR/out.sh
+    rm -f $PDSPKG_TOPDIR/conf/pipeline.json
+    rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
     rm -rf /sysconfig/config0
 }
 
 function remove_logs () {
     # NOT to be used post run
     echo "===== Cleaning log & core files ====="
-    rm -f ${NICDIR}/*log* ${NICDIR}/core*
+    rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
 }
 
 function collect_logs () {
     echo "===== Collecting logs ====="
-    ${NICDIR}/apollo/test/tools/savelogs.sh
+    ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
 }
 
 function finish () {

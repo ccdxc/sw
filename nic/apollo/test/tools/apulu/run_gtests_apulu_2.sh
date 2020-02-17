@@ -1,10 +1,10 @@
 #! /bin/bash
 
 export PIPELINE=apulu
-export NICDIR=`pwd`
+CUR_DIR=$( readlink -f $( dirname $0 ) )
 
 # initial setup
-source ${NICDIR}/apollo/test/tools/setup_gtests.sh
+source ${CUR_DIR}/../setup_gtests.sh
 setup
 
 # run all gtests

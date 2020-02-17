@@ -1,10 +1,10 @@
 #! /bin/bash
 
 export PIPELINE=apulu
-export NICDIR=`pwd`
+CUR_DIR=$( readlink -f $( dirname $0 ) )
 
 # initial setup
-source ${NICDIR}/apollo/test/tools/setup_gtests.sh
+source ${CUR_DIR}/../setup_gtests.sh
 setup
 
 # run all gtests
@@ -27,7 +27,7 @@ run_gtest mapping LOG="/dev/null"
 run_gtest mirror_session
 run_gtest svc_mapping
 run_gtest ftl
-run_gtest scale LOG="/dev/null" CFG=" -i ${NICDIR}/apollo/test/scale/${PIPELINE}/scale_cfg.json "
+run_gtest scale LOG="/dev/null" CFG=" -i ${CUR_DIR}/../../scale/${PIPELINE}/scale_cfg.json "
 
 # end of script
 clean_exit
