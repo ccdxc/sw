@@ -8,6 +8,7 @@
     - [DescriptorProto.ExtensionRange](#google.protobuf.DescriptorProto.ExtensionRange)
     - [DescriptorProto.ReservedRange](#google.protobuf.DescriptorProto.ReservedRange)
     - [EnumDescriptorProto](#google.protobuf.EnumDescriptorProto)
+    - [EnumDescriptorProto.EnumReservedRange](#google.protobuf.EnumDescriptorProto.EnumReservedRange)
     - [EnumOptions](#google.protobuf.EnumOptions)
     - [EnumValueDescriptorProto](#google.protobuf.EnumValueDescriptorProto)
     - [EnumValueOptions](#google.protobuf.EnumValueOptions)
@@ -381,6 +382,29 @@ Describes an enum type.
 | name | [string](#string) | optional |  |
 | value | [EnumValueDescriptorProto](#google.protobuf.EnumValueDescriptorProto) | repeated |  |
 | options | [EnumOptions](#google.protobuf.EnumOptions) | optional |  |
+| reserved_range | [EnumDescriptorProto.EnumReservedRange](#google.protobuf.EnumDescriptorProto.EnumReservedRange) | repeated | Range of reserved numeric values. Reserved numeric values may not be used by enum values in the same enum declaration. Reserved ranges may not overlap. |
+| reserved_name | [string](#string) | repeated | Reserved enum value names, which may not be reused. A given name may only be reserved once. |
+
+
+
+
+
+
+<a name="google.protobuf.EnumDescriptorProto.EnumReservedRange"/>
+
+### EnumDescriptorProto.EnumReservedRange
+Range of reserved numeric values. Reserved values may not be used by
+entries in the same enum. Reserved ranges may not overlap.
+
+Note that this is distinct from DescriptorProto.ReservedRange in that it
+is inclusive such that it can appropriately represent the entire int32
+domain.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| start | [int32](#int32) | optional | Inclusive. |
+| end | [int32](#int32) | optional | Inclusive. |
 
 
 
@@ -565,7 +589,9 @@ files it parses.
 | swift_prefix | [string](#string) | optional | By default Swift generators will take the proto package and CamelCase it replacing &#39;.&#39; with underscore and use that to prefix the types/symbols defined. When this options is provided, they will use this value instead to prefix the types/symbols defined. |
 | php_class_prefix | [string](#string) | optional | Sets the php class prefix which is prepended to all php generated classes from this .proto. Default is empty. |
 | php_namespace | [string](#string) | optional | Use this option to change the namespace of php generated classes. Default is empty. When this option is empty, the package name will be used for determining the namespace. |
-| uninterpreted_option | [UninterpretedOption](#google.protobuf.UninterpretedOption) | repeated | The parser stores options it doesn&#39;t recognize here. See above. |
+| php_metadata_namespace | [string](#string) | optional | Use this option to change the namespace of php generated metadata classes. Default is empty. When this option is empty, the proto file name will be used for determining the namespace. |
+| ruby_package | [string](#string) | optional | Use this option to change the package of ruby generated classes. Default is empty. When this option is not set, the package name will be used for determining the ruby package. |
+| uninterpreted_option | [UninterpretedOption](#google.protobuf.UninterpretedOption) | repeated | The parser stores options it doesn&#39;t recognize here. See the documentation for the &#34;Options&#34; section above. |
 
 
 
@@ -1151,7 +1177,9 @@ where {year} is always expressed using four digits while {month}, {day},
 {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
 seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
 are optional. The &#34;Z&#34; suffix indicates the timezone (&#34;UTC&#34;); the timezone
-is required, though only UTC (as indicated by &#34;Z&#34;) is presently supported.
+is required. A proto3 JSON serializer should always use UTC (as indicated by
+&#34;Z&#34;) when printing the Timestamp type and a proto3 JSON parser should be
+able to accept both UTC and other timezones (as indicated by an offset).
 
 For example, &#34;2017-01-15T01:30:15.01Z&#34; encodes 15.01 seconds past
 01:30 UTC on January 15, 2017.
@@ -1162,8 +1190,8 @@ method. In Python, a standard `datetime.datetime` object can be converted
 to this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)
 with the time format spec &#39;%Y-%m-%dT%H:%M:%S.%fZ&#39;. Likewise, in Java, one
 can use the Joda Time&#39;s [`ISODateTimeFormat.dateTime()`](
-http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime())
-to obtain a formatter capable of generating timestamps in this format.
+http://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime--
+) to obtain a formatter capable of generating timestamps in this format.
 
 
 | Field | Type | Label | Description |
@@ -1740,7 +1768,7 @@ Types of lif
 | LIF_TYPE_NONE | 0 |  |
 | LIF_TYPE_HOST | 1 |  |
 | LIF_TYPE_HOST_MGMT | 2 |  |
-| LIF_TYPE_OOB_MGMTT | 3 |  |
+| LIF_TYPE_OOB_MGMT | 3 |  |
 | LIF_TYPE_INBAND_MGMT | 4 |  |
 | LIF_TYPE_INTERNAL_MGMT | 5 |  |
 | LIF_TYPE_DATAPATH | 6 |  |
