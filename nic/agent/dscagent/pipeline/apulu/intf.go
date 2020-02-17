@@ -46,7 +46,7 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		return errors.Wrapf(types.ErrDatapathHandling, "Interface: %s create failed | Err: %v", intf.GetKey(), err)
 	}
 	if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Error("Interface: %s Create failed  | Status: %s", intf.GetKey(), resp.ApiStatus)
+		log.Errorf("Interface: %s Create failed  | Status: %s", intf.GetKey(), resp.ApiStatus)
 		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Interface: %s Create failed | Status: %s", intf.GetKey(), resp.ApiStatus)
 	}
 	log.Infof("Inteface: %s create | Status: %s | Resp: %v", intf.GetKey(), resp.ApiStatus, resp.Response)
@@ -83,7 +83,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		},
 	}
 
-	o, err := infraAPI.Read("Network", oldIntf.GetKey())
+	o, err := infraAPI.Read(intf.Kind, oldIntf.GetKey())
 	if err != nil {
 		log.Errorf("Interface: %s not found during update | Err: %s", intf.GetKey(), err)
 		return errors.Wrapf(types.ErrObjNotFound, "Interface: %s not found during update | Err: %s", intf.GetKey(), err)
@@ -101,7 +101,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 	uid, err := uuid.FromString(intf.UUID)
 	if err != nil {
 		log.Errorf("Interface: %s could not get UUID [%v] | Err: %s", intf.GetKey(), intf.UUID, err)
-		return errors.Wrapf(types.ErrBadRequest, "Interface: %s could not get UUID | Err: %s", intf.GetKey(), intf.UUID, err)
+		return errors.Wrapf(types.ErrBadRequest, "Interface: %s could not get UUID [%v] | Err: %s", intf.GetKey(), intf.UUID, err)
 	}
 
 	if uid != ouid {
@@ -110,7 +110,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 	}
 	if oldIntf.Spec.VrfName != intf.Spec.VrfName || oldIntf.Spec.Network != intf.Spec.Network {
 		log.Infof("Interface: %v mapping changed [%v/%v] -> [%v/%v]",
-			oldIntf.Spec.VrfName, oldIntf.Spec.Network,
+			intf.UUID, oldIntf.Spec.VrfName, oldIntf.Spec.Network,
 			intf.Spec.VrfName, intf.Spec.Network)
 		updateSubnet := func(tenant, netw string, uid []byte) error {
 			nw := netproto.Network{
@@ -145,7 +145,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 				return errors.Wrapf(types.ErrDatapathHandling, "Subnet: %s update failed | Err: %v", intf.GetKey(), err)
 			}
 			if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-				log.Error("Network: %s update failed  | Status: %s", nw.GetKey(), resp.ApiStatus)
+				log.Errorf("Network: %s update failed  | Status: %s", nw.GetKey(), resp.ApiStatus)
 				return errors.Wrapf(types.ErrBoltDBStoreUpdate, "Subnet: %s update failed | Status: %s", intf.GetKey(), resp.ApiStatus)
 			}
 			return nil
@@ -168,7 +168,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		return errors.Wrapf(types.ErrDatapathHandling, "Interface: %s update failed | Err: %v", intf.GetKey(), err)
 	}
 	if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Error("Interface: %s update failed  | Status: %s", intf.GetKey(), resp.ApiStatus)
+		log.Errorf("Interface: %s update failed  | Status: %s", intf.GetKey(), resp.ApiStatus)
 		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Interface: %s update failed | Status: %s", intf.GetKey(), resp.ApiStatus)
 	}
 	log.Infof("Inteface: %s update | Status: %s | Resp: %v", intf.GetKey(), resp.ApiStatus, resp.Response)
@@ -257,7 +257,7 @@ func convertInterface(infraAPI types.InfraAPI, intf netproto.Interface) (*halapi
 		}
 
 		if vrf == nil {
-			log.Errorf("Failed to find vrf", intf.Spec.VrfName)
+			log.Errorf("Failed to find vrf %v", intf.Spec.VrfName)
 			return nil, fmt.Errorf("failed to find vrf")
 		}
 

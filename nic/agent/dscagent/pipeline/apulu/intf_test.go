@@ -57,22 +57,22 @@ func TestHandleInterface(t *testing.T) {
 	if err := addDummyVrf(); err != nil {
 		t.Fatal(err)
 	}
-	err := HandleInterface(infraAPI, intfClient, types.Create, intf)
+	err := HandleInterface(infraAPI, intfClient, subnetClient, types.Create, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleInterface(infraAPI, intfClient, types.Update, intf)
+	err = HandleInterface(infraAPI, intfClient, subnetClient, types.Update, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleInterface(infraAPI, intfClient, types.Delete, intf)
+	err = HandleInterface(infraAPI, intfClient, subnetClient, types.Delete, intf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleInterface(infraAPI, intfClient, 42, intf)
+	err = HandleInterface(infraAPI, intfClient, subnetClient, 42, intf)
 	if err == nil {
 		t.Fatal("Invalid op must return a valid error.")
 	}
@@ -103,17 +103,17 @@ func TestHandleInterfaceInfraFailures(t *testing.T) {
 		t.Fatal(err)
 	}
 	i := newBadInfraAPI()
-	err := HandleInterface(i, intfClient, types.Create, intf)
+	err := HandleInterface(i, intfClient, subnetClient, types.Create, intf)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 
-	err = HandleInterface(i, intfClient, types.Update, intf)
+	err = HandleInterface(i, intfClient, subnetClient, types.Update, intf)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 
-	err = HandleInterface(i, intfClient, types.Delete, intf)
+	err = HandleInterface(i, intfClient, subnetClient, types.Delete, intf)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}

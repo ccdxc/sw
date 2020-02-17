@@ -27,6 +27,7 @@ var (
 	lis          netutils.TestListenAddr
 	intfClient   halapi.IfSvcClient
 	mirrorClient halapi.MirrorSvcClient
+	subnetClient halapi.SubnetSvcClient
 )
 
 // Implements InfraAPI that return errors for testing
@@ -132,6 +133,11 @@ func (i *badInfraAPI) GetConfig() (cfg types.DistributedServiceCardStatus) {
 		MgmtIP:      "",
 		Controllers: nil,
 	}
+}
+
+// UpdateIfChannel returns a channel for propagating interface state to the netagent
+func (i *badInfraAPI) UpdateIfChannel() chan types.UpdateIfEvent {
+	return nil
 }
 
 func (i *badInfraAPI) Close() error {

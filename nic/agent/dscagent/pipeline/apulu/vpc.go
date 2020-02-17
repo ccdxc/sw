@@ -66,7 +66,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 
 	uid, err := uuid.FromString(vrf.UUID)
 	if err != nil {
-		log.Errorf("Vrf: %s failed to parse UUID %s | Err: %v", vrf.UUID, err)
+		log.Errorf("Vrf: %s failed to parse UUID %s | Err: %v", vrf.GetKey(), vrf.UUID, err)
 		return err
 	}
 
@@ -148,7 +148,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		}
 		if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 			log.Infof("EVPN VRF RT Spec Create received resp (%v)[%v, %v] req[%+v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response, rtReq)
-			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring EVPN VRF RT  | status: %s", eVrfRTResp.ApiStatus)
+			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring EVPN VRF RT  | status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
 		}
 		log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 	}
@@ -193,7 +193,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	// only the VNI or RTs could change in update
 	if curVrf.UUID != vrf.UUID {
 		log.Errorf("UUID change on update [%v][%v/%v]", vrf.Name, curVrf.UUID, vrf.UUID)
-		return errors.Wrapf(types.ErrBadRequest, "Vrf: %s UUID change on update")
+		return errors.Wrapf(types.ErrBadRequest, "Vrf: %s UUID change on update", vrf.GetKey())
 	}
 	if curVrf.Spec.VxLANVNI != vrf.Spec.VxLANVNI {
 		evrfReq := msTypes.EvpnIpVrfRequest{
@@ -308,7 +308,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s  Configuring EVPN VRF RT  | Status: %s", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s  Configuring EVPN VRF RT  | Status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -319,7 +319,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Delete: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -396,7 +396,7 @@ func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF Spec Delete received resp (%v)[%v, %v]", err, eVrfResp.ApiStatus, eVrfResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Status: %s", eVrfResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Status: %s", vrf.GetKey(), eVrfResp.ApiStatus)
 	}
 	log.Infof("VRF Delete: %s: got response [%v/%v]", vrf.Name, eVrfResp.ApiStatus, eVrfResp.Response)
 

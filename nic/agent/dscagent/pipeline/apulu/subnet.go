@@ -170,7 +170,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
 	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
 	if err != nil {
-		return errors.Wrapf(types.ErrBadRequest, "Subnet: %v Convertion failed | Err: err", nw.GetKey(), err)
+		return errors.Wrapf(types.ErrBadRequest, "Subnet: %v Convertion failed | Err: %v", nw.GetKey(), err)
 	}
 	resp, err := client.SubnetUpdate(context.Background(), subnetReq)
 	if err != nil {
