@@ -1,8 +1,10 @@
 meta:
-    name        : classic_storage
+    name        : transparent_basenet
+    description : Transparent Basenet Test Suite
     description : Classic NIC Testsuite
     mode        : hardware
     cfgmode     : netagent
+    #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
     nicmode     : classic
     os          : [ linux, freebsd ]
 
@@ -48,7 +50,31 @@ testbundles:
         - networking/connectivity.testbundle
         - classic/rdma.testbundle
         - linktest/linktest.testbundle
-        - storage/storage.testbundle
+        - filters/filters.testbundle
+        - mtu/mtu.testbundle
+        - subifs/subifs.testbundle
+        - rx_mode/rx_mode.testbundle
+        - vlanoffload/vlanoffload.testbundle
+        - linktest/linktest.testbundle
+        - mnic/mnic_classic.testbundle
+        - linktest/linktest.testbundle
+        #- classic/driver-features-int_mgmt-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-oob-1g-sanity.testbundle
+        - linktest/linktest.testbundle
+        - tso/tso.testbundle
+        - drivercsum/drivercsum.testbundle
+        - classic/driver-features-sanity.testbundle
+        - linktest/linktest.testbundle
+        #- storage/storage.testbundle
+        - penctl/penctl_classic.testbundle
+        #- penctl/mode_change.testbundle
+        - post_diag/post_diag.testbundle
+        - asic_tools/asic_tools.testbundle
+        - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
+        - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
 
     extended:
         # Relative paths from iota/test/iris/testbundles/
@@ -56,8 +82,10 @@ testbundles:
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_reg.testbundle
-        - classic/rdma_stress.testbundle
+        #- classic/rdma_reg.testbundle
+        #- classic/rdma_stress.testbundle
+        - tso/tso_regr.testbundle
+        - rss/rss.testbundle
         - classic/driver-features.testbundle
         - storage/regression.testbundle
 

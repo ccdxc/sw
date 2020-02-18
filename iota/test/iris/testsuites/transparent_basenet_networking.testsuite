@@ -1,8 +1,9 @@
 meta:
-    name        : classic_networking
-    description : Classic NIC Testsuite for networking 
+    name        : transparent_basenet_networking
+    description : Transparent Basenet NIC Testsuite for networking
     mode        : hardware
     cfgmode     : netagent
+    #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
     nicmode     : classic
     os          : [ linux, freebsd ]
 

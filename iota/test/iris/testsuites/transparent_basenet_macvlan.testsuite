@@ -1,8 +1,9 @@
 meta:
-    name        : classic_macvlan
-    description : Classic Macvlan NIC Testsuite
+    name        : transparent_basenet_macvlan
+    description : Transparent Basenet Macvlan NIC Testsuite
     mode        : hardware
     cfgmode     : netagent
+    #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
     nicmode     : classic
     os          : [ linux ]
 

@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
  # baremetal
  e2e-freebsd-regression-rdma:
-   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite classic --regression --testbundle mtu,rdma_reg"]
+   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg"]
    owners: ["email:rdma-dpath@pensando.io"]
    area:
    sub-area:
@@ -38,7 +38,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-rdma-stress:
-   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite classic --regression --testbundle mtu,rdma_stress"]
+   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
    owners: ["email:rdma-dpath@pensando.io"]
    area:
    sub-area:
@@ -66,7 +66,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-storage:
-   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite classic --regression --testbundle storage"]
+   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle storage"]
    owners: ["email:stg-dev@pensando.io"]
    area:
    sub-area:
@@ -92,7 +92,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-eth:
-   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite classic --regression --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr"]
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr"]
    owners: ["email:anish@pensando.io"]
    area:
    sub-area:
@@ -118,7 +118,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-infra:
-   commands: ["sh", "-c", "make regression-infra && ./run_iota.sh --testsuite classic --regression --testbundle connectivity,mode_change,post_diag_check,asic_tools,obfl_check"]
+   commands: ["sh", "-c", "make regression-infra && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle connectivity,mode_change,post_diag_check,asic_tools,obfl_check"]
    owners: ["email:anish@pensando.io"]
    area:
    sub-area:
