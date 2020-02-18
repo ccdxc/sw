@@ -87,8 +87,6 @@ def get_all_peer_af():
     return
 
 def delete_peer_af():
-    print ("peer_af delete is currently not supported")
-    """
     req = bgp_pb2.BGPPeerAfRequest()
     req_msg = req.Request.add()
     req_msg.Id = uuid
@@ -100,7 +98,6 @@ def delete_peer_af():
     req_msg.Safi= safi
     resp = stub.BGPPeerAfDelete(req)     
     process_response(req, resp)
-    """
     return
 
 def init():

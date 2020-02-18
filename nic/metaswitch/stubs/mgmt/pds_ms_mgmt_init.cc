@@ -106,6 +106,7 @@ nbase_init ()
     A0_USER_REG_LOCAL_IF_MAP_FN (pds_ms::ms_to_lnx_ifindex);
     A0_USER_REG_SYSTEM_IF_MAP_FN(pds_ms::lnx_to_ms_ifindex);
 
+    pds_ms_reg_pre_set_amb_bgp_rm_ent (pds::bgp_rm_ent_pre_set);
     pds_ms_reg_pre_set_amb_bgp_peer(pds::bgp_peer_pre_set);
     pds_ms_reg_pre_get_amb_bgp_peer(pds::bgp_peer_pre_get);
     pds_ms_reg_pre_set_amb_evpn_evi(pds::evpn_evi_pre_set);
@@ -114,6 +115,8 @@ nbase_init ()
     pds_ms_reg_pre_set_amb_evpn_ip_vrf_rt(pds::evpn_ip_vrf_rt_pre_set);
     pds_ms_reg_pre_set_amb_bgp_peer_afi_safi(pds::bgp_peer_afi_safi_pre_set);
     pds_ms_reg_pre_get_amb_bgp_peer_afi_safi(pds::bgp_peer_afi_safi_pre_get);
+    pds_ms_reg_pre_fill_get_amb_bgp_peer_afi_safi(
+        pds::bgp_peer_afi_safi_pre_fill_get);
     pds_ms_reg_pre_set_amb_lim_l3_if_addr(pds::lim_l3_if_addr_pre_set);
     pds_ms_reg_pre_set_amb_cipr_rtm_static_rt(pds::cp_route_pre_set);
 

@@ -320,6 +320,7 @@
         /***************************************************************************/
         AMB_GET *v_amb_get;
         NBB_LONG bulk_row;
+        NBB_ULONG num_entries=0;
         bool specific_get = false;
         {{$struct}} *v_{{$struct | ToLower}};
 
@@ -351,12 +352,11 @@
                                                        v_amb_get->data_offset);
             }
 
-            if (!pds_ms_pre_fill_get_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
-                goto replyback;
-            }
-
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
+                if (pds_ms_pre_fill_get_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
+                    num_entries++;
+
         {{$reqfields := $rootMsg.Fields}}
         {{range $reqfields}}
           {{if (eq .GetName "Response")}}
@@ -371,90 +371,91 @@
                 {{end}}
                 {{if $specPresent}}
                   {{if (isRepeatedField .)}}
-                auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
+                    auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
                   {{else}}
-                auto res = resp->response();
+                    auto res = resp->response();
                   {{end}}
-                auto ent = res->mutable_status();
+                    auto ent = res->mutable_status();
                 {{else}}
                   {{if (isRepeatedField .)}}
-                auto res = resp->add_response();
+                    auto res = resp->add_response();
                   {{else}}
-                auto res = resp->mutable_response();
+                    auto res = resp->mutable_response();
                   {{end}}
-                auto ent = res->mutable_status();
+                    auto ent = res->mutable_status();
                 {{end}}
               {{end}}
               {{if HasSuffix $msg.GetName "Spec"}}
                 {{if (isRepeatedField .)}}
-                auto res = resp->add_response();
+                    auto res = resp->add_response();
                 {{else}}
-                auto res = resp->mutable_response();
+                    auto res = resp->mutable_response();
                 {{end}}
-                auto ent = res->mutable_spec();
+                    auto ent = res->mutable_spec();
               {{end}}
             {{end}}
           {{end}}
-                /*************************************************************************/
-                /* TODO: Extract the fields.                                             */
-                /*************************************************************************/
+                    /*************************************************************************/
+                    /* TODO: Extract the fields.                                             */
+                    /*************************************************************************/
             {{$fields := .Fields}}
             {{range $fields}}
               {{if hasExtension "venice.pdsaFields" .}}
                 {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
                 {{if not (eq $isFldInTbl true)}}
-                // !!! {{.Name}} field is not in table {{$mib}} !!!
+                    // !!! {{.Name}} field is not in table {{$mib}} !!!
                 {{else}}
                   {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
                     {{if not (eq $fieldOpt.Name "")}}
-                // {{.Type}} {{.GetTypeName}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}} {{.GetLabel}}
+                    // {{.Type}} {{.GetTypeName}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}} {{.GetLabel}}
                       {{if (eq $fieldOpt.GetFieldFn "")}}
                         {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                         {{if (eq $castFn "")}}
                           {{if (eq .GetTypeName ".types.IPAddress")}}
-                auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
-                types::IPAddress   res_{{$fieldOpt.Field}};
-                ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}};
+                    auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
+                    types::IPAddress   res_{{$fieldOpt.Field}};
+                    ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}};
                             {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
-                pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
-                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type,
-                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len,
-                                                      &pds_ms_ip_addr_{{$fieldOpt.Field}});
+                    pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                          v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type,
+                                                          v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len,
+                                                          &pds_ms_ip_addr_{{$fieldOpt.Field}});
                             {{else}}
-                pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
-                                                      v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}},
-                                                      v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}},
-                                                      &pds_ms_ip_addr_{{$fieldOpt.Field}});
+                    pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                          v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}},
+                                                          v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}},
+                                                          &pds_ms_ip_addr_{{$fieldOpt.Field}});
                             {{end}}
-                ip_addr_to_spec(&pds_ms_ip_addr_{{$fieldOpt.Field}}, &res_{{$fieldOpt.Field}});
-                {{$fieldOpt.Name | ToLower}}_addr->set_af(res_{{$fieldOpt.Field}}.af());
-                {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(res_{{$fieldOpt.Field}}.v4addr());
+                    ip_addr_to_spec(&pds_ms_ip_addr_{{$fieldOpt.Field}}, &res_{{$fieldOpt.Field}});
+                    {{$fieldOpt.Name | ToLower}}_addr->set_af(res_{{$fieldOpt.Field}}.af());
+                    {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(res_{{$fieldOpt.Field}}.v4addr());
                           {{else}}
                             {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
                             {{if (eq $typeCastFn "")}}
-                ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                    ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
                             {{else}}
-                ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                    ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
                             {{end}}
                           {{end}}
                         {{else}}
                           {{if or (eq $castFn "pds_ms_nbb_get_long") (eq $castFn "pds_ms_get_amb_bool")}}
-                ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
                           {{else}}
                             {{if (eq $fieldOpt.FieldHasLen false)}}
-                ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
                             {{else}}
-                ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
                             {{end}}
                           {{end}}
                         {{end}}
                       {{else}}
-                {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
+                    {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
                       {{end}}
                     {{end}}
                   {{end}}
                 {{end}}
               {{end}}
+              }
 
                 /***********************************************************************/
                 /* Go to the next MIB row returned.                                    */
@@ -464,11 +465,11 @@
             }
 
             {{if HasSuffix $msg.GetName "Status"}}
-            pds_ms_check_get_{{$struct | ToLower}}_status_response_count += v_amb_get->bulk_returned;
+            pds_ms_check_get_{{$struct | ToLower}}_status_response_count += num_entries;
             {{else}}
-            pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += v_amb_get->bulk_returned;
+            pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += num_entries;
             {{end}}
-replyback:
+
             if (specific_get) {
                 /*************************************************************************/
                 /* Free the buffer.                                                      */

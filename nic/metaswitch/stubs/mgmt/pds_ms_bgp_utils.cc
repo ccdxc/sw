@@ -106,7 +106,7 @@ populate_disable_peer_af_spec (BGPPeerSpec &peer, BGPPeerAfSpec *peer_af,
     laddr->set_v4addr(peer.localaddr().v4addr());
     peer_af->set_afi(afi);
     peer_af->set_safi(safi);
-    peer_af->set_disable(true);
+    peer_af->set_disable(AMB_TRUE);
 }
 
 NBB_VOID
@@ -201,6 +201,19 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
 
 }
 
+// API to verify whether given peer AF can be displayed to user or not
+// for now only IPV4-unicast and L2VPN-EVPN AFs are supported
+bool
+bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data)
+{
+    if ((data->afi == AMB_BGP_AFI_L2VPN && data->safi == AMB_BGP_EVPN) ||
+        (data->afi == AMB_BGP_AFI_IPV4 && data->safi == AMB_BGP_UNICAST)) {
+        // display only enabled AFs
+        return (data->disable_afi_safi == AMB_FALSE);
+    }
+    return false;
+}
+
 NBB_VOID
 bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
                           pds::BGPPeerAfGetResponse* resp)
@@ -278,6 +291,40 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
         SDK_TRACE_VERBOSE("Received BGP PeerAF request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
     }
+
+    // Address Family enable/disable should be set internally as per
+    // create-update/delete operation. these rows cannot be destroyed
+    // in metaswitch, so when user deletes an AF for a peer, we internally
+    // disable the AF and enable when he creates it
+    req.set_disable (row_status == AMB_ROW_DESTROY);
+    ip_addr_t local_ipaddr, peer_ipaddr;
+    ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
+    ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+    SDK_TRACE_VERBOSE("BGP PeerAF for Local IP %s "
+                      "Peer IP %s AFI %d SAFI %d is %s",
+                      ipaddr2str(&local_ipaddr), ipaddr2str(&peer_ipaddr),
+                      req.afi(), req.safi(),
+                      (row_status == AMB_ROW_DESTROY)?"disabled":"enabled");
+}
+
+NBB_VOID
+bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
+                    NBB_ULONG correlator, bool op_update)
+{
+    AdminState state = ADMIN_STATE_ENABLE;
+
+    // BGP global spec deletion should be sent down as
+    // update with admin_status_down in order to keep all
+    // joins and peer info (?) intact when user creates the
+    // global spec again. this goes with the assumption
+    // that there will be only one global spec at any time
+    if (row_status == AMB_ROW_DESTROY) {
+        state = ADMIN_STATE_DISABLE;
+    }
+
+    req.set_state (state);
+    SDK_TRACE_VERBOSE ("BGP Rm Ent admin status is updated to %s",
+                        (state == ADMIN_STATE_DISABLE) ? "Disable" : "Enable");
 }
 
 NBB_VOID
@@ -405,9 +452,6 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
     // Always set admin status to UP
     if (row_status != AMB_ROW_DESTROY) {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying RM: fill in field admin_status and I3 in AMB_BGP_RM_ENT"));
-        v_amb_bgp_rm_ent->admin_status = AMB_BGP_ADMIN_STATUS_UP; 
-        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ADMIN_STATUS);
-
         v_amb_bgp_rm_ent->i3_ent_index = PDS_MS_I3_ENT_INDEX;;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_I3_ENT_INDEX);
 

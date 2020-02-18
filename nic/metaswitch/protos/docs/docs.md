@@ -8,7 +8,6 @@
     - [DescriptorProto.ExtensionRange](#google.protobuf.DescriptorProto.ExtensionRange)
     - [DescriptorProto.ReservedRange](#google.protobuf.DescriptorProto.ReservedRange)
     - [EnumDescriptorProto](#google.protobuf.EnumDescriptorProto)
-    - [EnumDescriptorProto.EnumReservedRange](#google.protobuf.EnumDescriptorProto.EnumReservedRange)
     - [EnumOptions](#google.protobuf.EnumOptions)
     - [EnumValueDescriptorProto](#google.protobuf.EnumValueDescriptorProto)
     - [EnumValueOptions](#google.protobuf.EnumValueOptions)
@@ -382,29 +381,6 @@ Describes an enum type.
 | name | [string](#string) | optional |  |
 | value | [EnumValueDescriptorProto](#google.protobuf.EnumValueDescriptorProto) | repeated |  |
 | options | [EnumOptions](#google.protobuf.EnumOptions) | optional |  |
-| reserved_range | [EnumDescriptorProto.EnumReservedRange](#google.protobuf.EnumDescriptorProto.EnumReservedRange) | repeated | Range of reserved numeric values. Reserved numeric values may not be used by enum values in the same enum declaration. Reserved ranges may not overlap. |
-| reserved_name | [string](#string) | repeated | Reserved enum value names, which may not be reused. A given name may only be reserved once. |
-
-
-
-
-
-
-<a name="google.protobuf.EnumDescriptorProto.EnumReservedRange"/>
-
-### EnumDescriptorProto.EnumReservedRange
-Range of reserved numeric values. Reserved values may not be used by
-entries in the same enum. Reserved ranges may not overlap.
-
-Note that this is distinct from DescriptorProto.ReservedRange in that it
-is inclusive such that it can appropriately represent the entire int32
-domain.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| start | [int32](#int32) | optional | Inclusive. |
-| end | [int32](#int32) | optional | Inclusive. |
 
 
 
@@ -589,9 +565,7 @@ files it parses.
 | swift_prefix | [string](#string) | optional | By default Swift generators will take the proto package and CamelCase it replacing &#39;.&#39; with underscore and use that to prefix the types/symbols defined. When this options is provided, they will use this value instead to prefix the types/symbols defined. |
 | php_class_prefix | [string](#string) | optional | Sets the php class prefix which is prepended to all php generated classes from this .proto. Default is empty. |
 | php_namespace | [string](#string) | optional | Use this option to change the namespace of php generated classes. Default is empty. When this option is empty, the package name will be used for determining the namespace. |
-| php_metadata_namespace | [string](#string) | optional | Use this option to change the namespace of php generated metadata classes. Default is empty. When this option is empty, the proto file name will be used for determining the namespace. |
-| ruby_package | [string](#string) | optional | Use this option to change the package of ruby generated classes. Default is empty. When this option is not set, the package name will be used for determining the ruby package. |
-| uninterpreted_option | [UninterpretedOption](#google.protobuf.UninterpretedOption) | repeated | The parser stores options it doesn&#39;t recognize here. See the documentation for the &#34;Options&#34; section above. |
+| uninterpreted_option | [UninterpretedOption](#google.protobuf.UninterpretedOption) | repeated | The parser stores options it doesn&#39;t recognize here. See above. |
 
 
 
@@ -1177,9 +1151,7 @@ where {year} is always expressed using four digits while {month}, {day},
 {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
 seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
 are optional. The &#34;Z&#34; suffix indicates the timezone (&#34;UTC&#34;); the timezone
-is required. A proto3 JSON serializer should always use UTC (as indicated by
-&#34;Z&#34;) when printing the Timestamp type and a proto3 JSON parser should be
-able to accept both UTC and other timezones (as indicated by an offset).
+is required, though only UTC (as indicated by &#34;Z&#34;) is presently supported.
 
 For example, &#34;2017-01-15T01:30:15.01Z&#34; encodes 15.01 seconds past
 01:30 UTC on January 15, 2017.
@@ -1190,8 +1162,8 @@ method. In Python, a standard `datetime.datetime` object can be converted
 to this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)
 with the time format spec &#39;%Y-%m-%dT%H:%M:%S.%fZ&#39;. Likewise, in Java, one
 can use the Joda Time&#39;s [`ISODateTimeFormat.dateTime()`](
-http://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime--
-) to obtain a formatter capable of generating timestamps in this format.
+http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime())
+to obtain a formatter capable of generating timestamps in this format.
 
 
 | Field | Type | Label | Description |
@@ -2055,9 +2027,9 @@ BGP peer AF configurations
 | PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
 | Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
 | Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-| Disable | [bool](#bool) |  | disable adress family. IPv4-unicast and l2vpn-evpn address families are enabled by default TODO: Disable field should become &#34;internal-only&#34; field once auto-gen support for this special case is added create/update should set Disable field to false delete should set Disable field to true |
 | NexthopSelf | [bool](#bool) |  | enforce this router to set self as next-hop for advertised routes |
 | DefaultOrig | [bool](#bool) |  | originate a default route to this peer |
+| Disable | [bool](#bool) |  | internal only enable/disable address families. this field is internally mapped with create/delete request |
 
 
 
@@ -2210,6 +2182,7 @@ BGP configuration
 | LocalASN | [uint32](#uint32) |  | the local autonomous system number |
 | RouterId | [fixed32](#fixed32) |  | router ID for this bgp instance |
 | ClusterId | [fixed32](#fixed32) |  | cluster ID of the local router. if not configured, router ID will be used as cluster ID |
+| State | [AdminState](#pds.AdminState) |  | internal-only fields |
 
 
 

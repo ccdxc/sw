@@ -65,6 +65,8 @@ def delete_bgp():
     req = bgp_pb2.BGPRequest()
     req_msg = req.Request
     req_msg.Id = uuid
+    req_msg.LocalASN = asn
+    req_msg.RouterId = routerid;
     resp = stub.BGPDelete(req)     
     process_response(req, resp)
     return

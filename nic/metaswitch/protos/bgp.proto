@@ -90,6 +90,7 @@ message BGPSpec {
       OidLen: "AMB_BGP_RM_OID_LEN",
       Mib:    "bgpRmEntTable"
       FillFn: "bgp_rm_ent_set_fill_func"
+      UpdateForDelete: true
   };
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_RM_OID_LEN",
@@ -105,6 +106,9 @@ message BGPSpec {
   // cluster ID of the local router. if not configured, router ID will be used
   // as cluster ID
   fixed32 ClusterId = 4 [(venice.pdsaFields) = {Field: "cluster_id"}];
+
+  // internal-only fields
+  AdminState State  = 1000 [(venice.pdsaFields) = {Field: "admin_status"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // operational status of BGP spec, if any
@@ -230,6 +234,7 @@ message BGPPeerAfSpec {
       OidLen: "AMB_BGP_PAS_OID_LEN",
       Mib:    "bgpPeerAfiSafiTable",
       FillFn: "bgp_peer_af_set_fill_func"
+      UpdateForDelete: true
   };
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_PAS_OID_LEN",
@@ -247,16 +252,14 @@ message BGPPeerAfSpec {
   BGPAfi          Afi         = 4 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
   // BGP sub-address family
   BGPSafi         Safi        = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
-  // disable adress family. IPv4-unicast and l2vpn-evpn address families
-  // are enabled by default
-  // TODO: Disable field should become "internal-only" field once auto-gen support for this special case is added
-  // create/update should set Disable field to false
-  // delete should set Disable field to true
-  bool            Disable     = 6 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
   // enforce this router to set self as next-hop for advertised routes
-  bool            NexthopSelf = 7 [(venice.pdsaFields) = {Field: "next_hop_self"}];
+  bool            NexthopSelf = 6 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // originate a default route to this peer
-  bool            DefaultOrig = 8 [(venice.pdsaFields) = {Field: "originate_default"}];
+  bool            DefaultOrig = 7 [(venice.pdsaFields) = {Field: "originate_default"}];
+
+  // internal only
+  // enable/disable address families. this field is internally mapped with create/delete request
+  bool            Disable     = 1000 [(venice.pdsaFields) = {Field: "disable_afi_safi"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // BGP peer AF status and stats, if any

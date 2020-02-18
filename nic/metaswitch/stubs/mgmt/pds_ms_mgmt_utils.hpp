@@ -145,6 +145,8 @@ NBB_VOID bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
                                AMB_GEN_IPS        *mib_msg, 
                                AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
                                NBB_LONG           row_status);
+NBB_VOID bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
+                             NBB_ULONG correlator, bool op_update);
 
 NBB_VOID bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, bool op_update=false);
@@ -156,6 +158,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
 NBB_VOID bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp);
 NBB_VOID bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
                                    pds::BGPPeerAfGetResponse* resp);
+bool bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data);
 NBB_VOID bgp_peer_status_get_fill_func (pds::BGPPeerStatus& req,
                                         NBB_ULONG*          oid);
 

@@ -195,10 +195,6 @@
                 </li>
               
                 <li>
-                  <a href="#google.protobuf.EnumDescriptorProto.EnumReservedRange"><span class="badge">M</span>EnumDescriptorProto.EnumReservedRange</a>
-                </li>
-              
-                <li>
                   <a href="#google.protobuf.EnumOptions"><span class="badge">M</span>EnumOptions</a>
                 </li>
               
@@ -1406,53 +1402,6 @@ A given name may only be reserved once. </p></td>
                   <td><p> </p></td>
                 </tr>
               
-                <tr>
-                  <td>reserved_range</td>
-                  <td><a href="#google.protobuf.EnumDescriptorProto.EnumReservedRange">EnumDescriptorProto.EnumReservedRange</a></td>
-                  <td>repeated</td>
-                  <td><p>Range of reserved numeric values. Reserved numeric values may not be used
-by enum values in the same enum declaration. Reserved ranges may not
-overlap. </p></td>
-                </tr>
-              
-                <tr>
-                  <td>reserved_name</td>
-                  <td><a href="#string">string</a></td>
-                  <td>repeated</td>
-                  <td><p>Reserved enum value names, which may not be reused. A given name may only
-be reserved once. </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="google.protobuf.EnumDescriptorProto.EnumReservedRange">EnumDescriptorProto.EnumReservedRange</h3>
-        <p>Range of reserved numeric values. Reserved values may not be used by</p><p>entries in the same enum. Reserved ranges may not overlap.</p><p>Note that this is distinct from DescriptorProto.ReservedRange in that it</p><p>is inclusive such that it can appropriately represent the entire int32</p><p>domain.</p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>start</td>
-                  <td><a href="#int32">int32</a></td>
-                  <td>optional</td>
-                  <td><p>Inclusive. </p></td>
-                </tr>
-              
-                <tr>
-                  <td>end</td>
-                  <td><a href="#int32">int32</a></td>
-                  <td>optional</td>
-                  <td><p>Inclusive. </p></td>
-                </tr>
-              
             </tbody>
           </table>
         
@@ -2111,29 +2060,10 @@ determining the namespace. </p></td>
                 </tr>
               
                 <tr>
-                  <td>php_metadata_namespace</td>
-                  <td><a href="#string">string</a></td>
-                  <td>optional</td>
-                  <td><p>Use this option to change the namespace of php generated metadata classes.
-Default is empty. When this option is empty, the proto file name will be used
-for determining the namespace. </p></td>
-                </tr>
-              
-                <tr>
-                  <td>ruby_package</td>
-                  <td><a href="#string">string</a></td>
-                  <td>optional</td>
-                  <td><p>Use this option to change the package of ruby generated classes. Default
-is empty. When this option is not set, the package name will be used for
-determining the ruby package. </p></td>
-                </tr>
-              
-                <tr>
                   <td>uninterpreted_option</td>
                   <td><a href="#google.protobuf.UninterpretedOption">UninterpretedOption</a></td>
                   <td>repeated</td>
-                  <td><p>The parser stores options it doesn&#39;t recognize here.
-See the documentation for the &#34;Options&#34; section above. </p></td>
+                  <td><p>The parser stores options it doesn&#39;t recognize here. See above. </p></td>
                 </tr>
               
             </tbody>
@@ -3897,7 +3827,7 @@ Use ReflectionOps to implement these methods.</p></td>
 
       
         <h3 id="google.protobuf.Timestamp">Timestamp</h3>
-        <p>A Timestamp represents a point in time independent of any time zone</p><p>or calendar, represented as seconds and fractions of seconds at</p><p>nanosecond resolution in UTC Epoch time. It is encoded using the</p><p>Proleptic Gregorian Calendar which extends the Gregorian calendar</p><p>backwards to year one. It is encoded assuming all minutes are 60</p><p>seconds long, i.e. leap seconds are "smeared" so that no leap second</p><p>table is needed for interpretation. Range is from</p><p>0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z.</p><p>By restricting to that range, we ensure that we can convert to</p><p>and from  RFC 3339 date strings.</p><p>See [https://www.ietf.org/rfc/rfc3339.txt](https://www.ietf.org/rfc/rfc3339.txt).</p><p># Examples</p><p>Example 1: Compute Timestamp from POSIX `time()`.</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds(time(NULL));</p><p>timestamp.set_nanos(0);</p><p>Example 2: Compute Timestamp from POSIX `gettimeofday()`.</p><p>struct timeval tv;</p><p>gettimeofday(&tv, NULL);</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds(tv.tv_sec);</p><p>timestamp.set_nanos(tv.tv_usec * 1000);</p><p>Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.</p><p>FILETIME ft;</p><p>GetSystemTimeAsFileTime(&ft);</p><p>UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;</p><p>A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z</p><p>is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));</p><p>timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));</p><p>Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.</p><p>long millis = System.currentTimeMillis();</p><p>Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)</p><p>.setNanos((int) ((millis % 1000) * 1000000)).build();</p><p>Example 5: Compute Timestamp from current time in Python.</p><p>timestamp = Timestamp()</p><p>timestamp.GetCurrentTime()</p><p># JSON Mapping</p><p>In JSON format, the Timestamp type is encoded as a string in the</p><p>[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the</p><p>format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"</p><p>where {year} is always expressed using four digits while {month}, {day},</p><p>{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional</p><p>seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),</p><p>are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone</p><p>is required. A proto3 JSON serializer should always use UTC (as indicated by</p><p>"Z") when printing the Timestamp type and a proto3 JSON parser should be</p><p>able to accept both UTC and other timezones (as indicated by an offset).</p><p>For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past</p><p>01:30 UTC on January 15, 2017.</p><p>In JavaScript, one can convert a Date object to this format using the</p><p>standard [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString]</p><p>method. In Python, a standard `datetime.datetime` object can be converted</p><p>to this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)</p><p>with the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one</p><p>can use the Joda Time's [`ISODateTimeFormat.dateTime()`](</p><p>http://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime--</p><p>) to obtain a formatter capable of generating timestamps in this format.</p>
+        <p>A Timestamp represents a point in time independent of any time zone</p><p>or calendar, represented as seconds and fractions of seconds at</p><p>nanosecond resolution in UTC Epoch time. It is encoded using the</p><p>Proleptic Gregorian Calendar which extends the Gregorian calendar</p><p>backwards to year one. It is encoded assuming all minutes are 60</p><p>seconds long, i.e. leap seconds are "smeared" so that no leap second</p><p>table is needed for interpretation. Range is from</p><p>0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z.</p><p>By restricting to that range, we ensure that we can convert to</p><p>and from  RFC 3339 date strings.</p><p>See [https://www.ietf.org/rfc/rfc3339.txt](https://www.ietf.org/rfc/rfc3339.txt).</p><p># Examples</p><p>Example 1: Compute Timestamp from POSIX `time()`.</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds(time(NULL));</p><p>timestamp.set_nanos(0);</p><p>Example 2: Compute Timestamp from POSIX `gettimeofday()`.</p><p>struct timeval tv;</p><p>gettimeofday(&tv, NULL);</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds(tv.tv_sec);</p><p>timestamp.set_nanos(tv.tv_usec * 1000);</p><p>Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.</p><p>FILETIME ft;</p><p>GetSystemTimeAsFileTime(&ft);</p><p>UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;</p><p>A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z</p><p>is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.</p><p>Timestamp timestamp;</p><p>timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));</p><p>timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));</p><p>Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.</p><p>long millis = System.currentTimeMillis();</p><p>Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)</p><p>.setNanos((int) ((millis % 1000) * 1000000)).build();</p><p>Example 5: Compute Timestamp from current time in Python.</p><p>timestamp = Timestamp()</p><p>timestamp.GetCurrentTime()</p><p># JSON Mapping</p><p>In JSON format, the Timestamp type is encoded as a string in the</p><p>[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the</p><p>format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"</p><p>where {year} is always expressed using four digits while {month}, {day},</p><p>{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional</p><p>seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),</p><p>are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone</p><p>is required, though only UTC (as indicated by "Z") is presently supported.</p><p>For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past</p><p>01:30 UTC on January 15, 2017.</p><p>In JavaScript, one can convert a Date object to this format using the</p><p>standard [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString]</p><p>method. In Python, a standard `datetime.datetime` object can be converted</p><p>to this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)</p><p>with the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one</p><p>can use the Joda Time's [`ISODateTimeFormat.dateTime()`](</p><p>http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime())</p><p>to obtain a formatter capable of generating timestamps in this format.</p>
 
         
           <table class="field-table">
@@ -5652,17 +5582,6 @@ VLAN tag </p></td>
                 </tr>
               
                 <tr>
-                  <td>Disable</td>
-                  <td><a href="#bool">bool</a></td>
-                  <td></td>
-                  <td><p>disable adress family. IPv4-unicast and l2vpn-evpn address families
-are enabled by default
-TODO: Disable field should become &#34;internal-only&#34; field once auto-gen support for this special case is added
-create/update should set Disable field to false
-delete should set Disable field to true </p></td>
-                </tr>
-              
-                <tr>
                   <td>NexthopSelf</td>
                   <td><a href="#bool">bool</a></td>
                   <td></td>
@@ -5674,6 +5593,14 @@ delete should set Disable field to true </p></td>
                   <td><a href="#bool">bool</a></td>
                   <td></td>
                   <td><p>originate a default route to this peer </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Disable</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>internal only
+enable/disable address families. this field is internally mapped with create/delete request </p></td>
                 </tr>
               
             </tbody>
@@ -6024,6 +5951,13 @@ BGP local IP address </p></td>
                   <td></td>
                   <td><p>cluster ID of the local router. if not configured, router ID will be used
 as cluster ID </p></td>
+                </tr>
+              
+                <tr>
+                  <td>State</td>
+                  <td><a href="#pds.AdminState">AdminState</a></td>
+                  <td></td>
+                  <td><p>internal-only fields </p></td>
                 </tr>
               
             </tbody>
