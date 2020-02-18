@@ -40,6 +40,9 @@ do {                                                                           \
     (htable) = sdk::lib::ht::factory((table_sz), __VA_ARGS__);                 \
 } while (0)
 
+using sys::ForwardMode;
+using sys::PolicyMode;
+
 namespace hal {
 
 using sdk::lib::slab;
@@ -319,6 +322,7 @@ public:
     void set_mnic_internal_mgmt_lif_id(lif_id_t id) {
         mnic_internal_mgmt_lif_id_ = id;
     }
+
     void set_forwarding_mode(hal_forwarding_mode_t mode) {
         forwarding_mode_ = mode;
     }
@@ -496,6 +500,8 @@ private:
     vmotion      *vmotion_;
 
     // Unified Modes
+    bool          microseg_enable_;
+    bool          policy_enforce_;
     ForwardMode   fwd_mode_;
     PolicyMode    policy_mode_;
 
@@ -891,24 +897,6 @@ private:
 
 extern class hal_state    *g_hal_state;
 extern bool               g_delay_delete;
-
-static inline bool
-is_forwarding_mode_host_pinned (void)
-{
-    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-}
-
-static inline bool
-is_forwarding_mode_classic_nic (void)
-{
-    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC;
-}
-
-static inline bool
-is_forwarding_mode_smart_switch (void)
-{
-    return g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH;
-}
 
 static inline bool
 is_uplink_flood_mode_host_pinned (void)

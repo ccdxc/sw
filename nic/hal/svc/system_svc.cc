@@ -144,10 +144,6 @@ SystemServiceImpl::ForwardingModeGet(ServerContext *context,
                                      const Empty *request,
                                      ForwardingModeResponse *rsp)
 {
-    hal::hal_cfg_db_open(hal::CFG_OP_READ);
-    hal::forwarding_mode_get(rsp);
-    hal::hal_cfg_db_close();
-
     return Status::OK;
 }
 
@@ -222,10 +218,11 @@ SystemServiceImpl::SysSpecUpdate(ServerContext* context,
 
 Status 
 SystemServiceImpl::SysSpecGet(ServerContext* context,
-                              const Empty *req,
+                              const SysSpecGetRequest* req,
                               SysSpecGetResponse* rsp)
 {
     HAL_TRACE_DEBUG("Rcvd SysSpec get");
+
     hal::system_get_fwd_policy_mode(rsp);
     return Status::OK;
 }

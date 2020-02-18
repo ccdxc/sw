@@ -23,9 +23,7 @@ static inline void
 update_flow_qos (fte::flow_update_t *flowupd)
 {
     // For uplink-uplink, QOS needs to be updated based on ipsec flow
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH) {
-        flowupd->fwding.update_qos = true;
-    }
+    flowupd->fwding.update_qos = true;
 }
 
 static inline fte::pipeline_action_t

@@ -866,15 +866,6 @@ l2seg_cleanup_oiflists (l2seg_t *l2seg)
     // Classic:
     //   Uplinks are not added to l2seg's oiflists. The pkts go to uplinks
     //   through honor ingress.
-#if 0
-    if (is_forwarding_mode_smart_switch()) {
-        // Remove oifs from bcast oiflist.
-        ret = l2seg_delete_oifs(l2seg);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
-        }
-    }
-#endif
 
     if (l2seg_is_mgmt(l2seg)) {
         ret = l2seg_del_non_designated_uplink(l2seg);

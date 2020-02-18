@@ -228,16 +228,6 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
 #endif
 
 
-#if 0
-    if (is_forwarding_mode_host_pinned()) {
-        ret = oif_list_set_honor_ingress(mc_entry->oif_list);
-        SDK_ASSERT(ret == HAL_RET_OK);
-
-        ret = oif_list_set_honor_ingress(mc_entry_shared_oifl(mc_entry));
-        SDK_ASSERT(ret == HAL_RET_OK);
-    }
-#endif
-
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
@@ -375,16 +365,6 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
         SDK_ASSERT(ret == HAL_RET_OK);
 #endif
 
-#if 0
-    if (is_forwarding_mode_host_pinned()) {
-        ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
-        SDK_ASSERT(ret == HAL_RET_OK);
-
-        ret = oif_list_clr_honor_ingress(mc_entry_shared_oifl(mc_entry));
-        SDK_ASSERT(ret == HAL_RET_OK);
-    }
-#endif
-
     // Delete the OIF List
 #if 0
     ret = oif_list_delete(mc_entry->oif_list);
@@ -485,25 +465,6 @@ mc_entry_read_oifs (mc_entry_t *mc_entry, MulticastEntrySpec& spec)
             ret = HAL_RET_INVALID_ARG;
             goto end;
         }
-
-#if 0
-        if (!is_forwarding_mode_smart_switch()) {
-            if (pi_if->if_type != intf::IF_TYPE_ENIC) {
-                HAL_TRACE_ERR("Only Enics allowed for OIFs when not "
-                              "in smart nic mode");
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-        } else {
-            if (pi_if->if_type != intf::IF_TYPE_ENIC &&
-                pi_if->if_type != intf::IF_TYPE_UPLINK &&
-                pi_if->if_type != intf::IF_TYPE_UPLINK_PC) {
-                HAL_TRACE_ERR("Only Enics/Uplink/UplinkPC allowed for OIFs");
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-        }
-#endif
 
         HAL_TRACE_DEBUG("Adding if_id:{} type:{} handle:{} to oif.",
                         pi_if->if_id, pi_if->if_type, pi_if->hal_handle);

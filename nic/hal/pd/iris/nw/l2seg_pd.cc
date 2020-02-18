@@ -609,16 +609,6 @@ l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg)
         hal_if = find_if_by_handle(*p_hdl);
         if_type = hal::intf_get_if_type(hal_if);
 
-        // No need of this check. We will depgm if there is an entry created.
-#if 0
-        if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
-            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
-            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
-                continue;
-            }
-        }
-#endif
-
         HAL_TRACE_DEBUG("Processing if: {}", hal_if->if_id);
 
         switch(if_type) {
@@ -1069,56 +1059,6 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
 end:
     return ret;
 }
-
-#if 0
-//-----------------------------------------------------------------------------
-// program member IFs
-//-----------------------------------------------------------------------------
-hal_ret_t
-l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg, bool is_upgrade)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    hal_handle_t    *p_hdl = NULL;
-    if_t            *hal_if = NULL;
-    intf::IfType    if_type;
-    vrf_t           *vrf = NULL;
-
-    for (const void *ptr : *if_list) {
-        p_hdl = (hal_handle_t *)ptr;
-        hal_if = find_if_by_handle(*p_hdl);
-        if_type = hal::intf_get_if_type(hal_if);
-
-        // Skip for non-designated 
-        if ((is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) &&
-            l2seg->single_wire_mgmt) {
-            vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
-            if (!vrf_if_is_designated_uplink(vrf, hal_if)) {
-                continue;
-            }
-        }
-
-        switch(if_type) {
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_UPLINK_PC:
-            ret = l2seg_uplink_pgm_input_properties_tbl(l2seg,
-                                                        hal_if,
-                                                        is_upgrade);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Unable to program input properties for "
-                              "(l2seg:{}, uplink:{}). ret: {}",
-                              l2seg->seg_id, hal_if->if_id, ret);
-                goto end;
-            }
-        break;
-        default:
-            SDK_ASSERT(0);
-        }
-    }
-
-end:
-    return ret;
-}
-#endif
 
 hal_ret_t
 l2seg_pd_repgm_enics (l2seg_t *l2seg)
@@ -2105,11 +2045,6 @@ get_clear_prom_repl (l2seg_t *l2seg, uint32_t num_prom_lifs,
 
     return;
 
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
-        l2seg_is_mgmt(l2seg))) {
-#endif
     if (l2seg_is_mgmt(l2seg)) {
         if (l2seg->single_wire_mgmt && l2seg_is_oob_mgmt(l2seg)) {
             *clear_prom = 0;

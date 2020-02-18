@@ -306,7 +306,7 @@ func (mr *MockSystemClientMockRecorder) SysSpecUpdate(ctx, in interface{}, opts 
 }
 
 // SysSpecGet mocks base method
-func (m *MockSystemClient) SysSpecGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SysSpecGetResponse, error) {
+func (m *MockSystemClient) SysSpecGet(ctx context.Context, in *SysSpecGetRequest, opts ...grpc.CallOption) (*SysSpecGetResponse, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
@@ -542,7 +542,7 @@ func (mr *MockSystemServerMockRecorder) SysSpecUpdate(arg0, arg1 interface{}) *g
 }
 
 // SysSpecGet mocks base method
-func (m *MockSystemServer) SysSpecGet(arg0 context.Context, arg1 *Empty) (*SysSpecGetResponse, error) {
+func (m *MockSystemServer) SysSpecGet(arg0 context.Context, arg1 *SysSpecGetRequest) (*SysSpecGetResponse, error) {
 	ret := m.ctrl.Call(m, "SysSpecGet", arg0, arg1)
 	ret0, _ := ret[0].(*SysSpecGetResponse)
 	ret1, _ := ret[1].(error)

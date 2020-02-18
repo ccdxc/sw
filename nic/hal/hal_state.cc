@@ -1396,7 +1396,6 @@ hal_oper_db::hal_oper_db()
     route_ht_ = NULL;
     filter_ht_ = NULL;
 
-    forwarding_mode_ = HAL_FORWARDING_MODE_NONE;
     mgmt_vlan_ = 0;
     infra_vrf_handle_ = HAL_HANDLE_INVALID;
     event_mgr_ = NULL;

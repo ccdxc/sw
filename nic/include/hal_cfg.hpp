@@ -49,11 +49,9 @@ typedef enum hal_feature_set_s {
      ENTRY(HAL_FORWARDING_MODE_NONE,                0, "HAL_FORWARDING_MODE_NONE")                  \
      ENTRY(HAL_FORWARDING_MODE_CLASSIC,             1, "HAL_FORWARDING_MODE_CLASSIC")               \
      ENTRY(HAL_FORWARDING_MODE_SMART_HOST_PINNED,   2, "HAL_FORWARDING_MODE_SMART_HOST_PINNED")     \
-     ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,        3, "HAL_FORWARDING_MODE_SMART_SWITCH")  
+     ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,        3, "HAL_FORWARDING_MODE_SMART_SWITCH")
  DEFINE_ENUM(hal_forwarding_mode_t, FORWARDING_MODES)
  DEFINE_ENUM_TO_STR(hal_forwarding_mode_t, FORWARDING_MODES)
-
- #undef FORWARDING_MODES
 
 typedef struct device_cfg_s {
     hal_forwarding_mode_t forwarding_mode;
@@ -88,16 +86,6 @@ typedef struct hal_cfg_s {
     bool                     bypass_fte;                // test mode, for PMD testing
     uint64_t                 max_sessions;              // max number of sessions
 } hal_cfg_t;
-
-#if 0
-static const char *
-fwdmode_to_str(device::ForwardingMode mode) {
-    case device::FORWARDING_MODE_CLASSIC: return "FORWARDING_MODE_CLASSIC";
-    case device::FORWARDING_MODE_HOSTPIN: return "FORWARDING_MODE_HOSTPIN";
-    case device::FORWARDING_MODE_SWITCH: return "FORWARDING_MODE_SWITCH";
-    default: return "FORWARDING_MODE_UNKNOWN"
-}
-#endif
 
 }    // namespace hal
 

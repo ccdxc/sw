@@ -260,12 +260,6 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_no_drop(true);
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -291,12 +285,6 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_no_drop(true);
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -325,12 +313,6 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -358,12 +340,6 @@ hal_eplearn_acl_config_init (void)
         match->mutable_internal_mask()->set_flow_miss(true);
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
 
         ret = hal::acl_create(spec, &rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
@@ -383,12 +359,7 @@ hal_eplearn_acl_config_init (void)
         ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(DHCP_CLIENT_PORT);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_CLIENT_PORT);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
+
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
         match->mutable_internal_key()->set_ep_learn_en(true);
@@ -412,12 +383,7 @@ hal_eplearn_acl_config_init (void)
         ip_selector->set_ip_af(types::IPAddressFamily::IP_AF_INET);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_low(DHCP_SERVER_PORT);
         ip_selector->mutable_udp_selector()->mutable_dst_port_range()->set_port_high(DHCP_SERVER_PORT);
-#if 0
-        if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-            match->mutable_internal_key()->set_direction(0);
-            match->mutable_internal_mask()->set_direction(1);
-        }
-#endif
+
         match->mutable_internal_key()->set_direction(0);
         match->mutable_internal_mask()->set_direction(1);
         match->mutable_internal_key()->set_ep_learn_en(true);
@@ -435,7 +401,7 @@ hal_eplearn_acl_config_init (void)
 //------------------------------------------------------------------------------
 // install init time ACL entries
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 hal_acl_config_init (void)
 {
     hal_ret_t     ret = HAL_RET_OK;
@@ -444,23 +410,16 @@ hal_acl_config_init (void)
 
     hal::hal_cfg_db_open(CFG_OP_WRITE);
 
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH ||
-        g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
-        ret = hal_smart_nic_acl_config_init();
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error creating smart nic acl entries ret {}", ret);
-            goto end;
-        }
+    ret = hal_smart_nic_acl_config_init();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error creating smart nic acl entries ret {}", ret);
+        goto end;
     }
 
-    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_CLASSIC) {
-        ret = hal_eplearn_acl_config_init();
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
-            goto end;
-        }
-        HAL_TRACE_DEBUG("Eplearn acl entry created");
-        ret = HAL_RET_OK;
+    ret = hal_eplearn_acl_config_init();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
+        goto end;
     }
 
 end:
@@ -484,11 +443,12 @@ aclqos_init (hal_cfg_t *hal_cfg)
     // TODO acls need cpu interface. Right now, in GFT mode, the
     // hal_cpu_if_create() fails, so cpu interface is not created
     // So skipping installation of acls
-    if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+    if (getenv("MICROSEG_ENABLE") && 
+        (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // do acl creates after qos creates. acls depend on qos config
         ret = hal_acl_config_init();
         HAL_ABORT(ret == HAL_RET_OK);
-    }
+    } 
 
     return HAL_RET_OK;
 }

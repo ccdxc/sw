@@ -17,36 +17,36 @@ import (
 )
 
 var (
-	traceLevel              string
-	secProfID               uint32
-	connTrack               string
-	ipNormalization         string
-	tcpNormalization        string
-	tcpTimeout              uint32
-	udpTimeout              uint32
-	icmpTimeout             uint32
-	idleTimeout             uint32
-	tcpCxnsetupTimeout      uint32
-	tcpCloseTimeout         uint32
-	tcpHalfcloseTimeout     uint32
-	tcpHalfOpenSessionLimit uint32
-	udpActiveSessionLimit   uint32
-	icmpActiveSessionLimit  uint32
-	otherActiveSessionLimit uint32
-	regID                   uint32
-	regAddr                 uint64
-	regData                 uint32
-	regInstance             uint32
-	platPbPause             string
-	spanThreshold           uint32
-	xcvrValid               string
-	tcpProxyMss             uint32
-	tcpProxyCwndInitial     uint32
-	tcpProxyCwndIdle        uint32
-	maxSession              uint64
-	isMicroSegEn            bool
-	fwdModeStr              string
-	policyModeStr           string
+	traceLevel          string
+	secProfID           uint32
+	connTrack           string
+	ipNormalization     string
+	tcpNormalization    string
+	tcpTimeout          uint32
+	udpTimeout          uint32
+	icmpTimeout         uint32
+	idleTimeout         uint32
+	tcpCxnsetupTimeout  uint32
+	tcpCloseTimeout     uint32
+	tcpHalfcloseTimeout uint32
+	tcpHalfOpenSessionLimit   uint32
+	udpActiveSessionLimit     uint32
+	icmpActiveSessionLimit    uint32
+	otherActiveSessionLimit   uint32
+	regID               uint32
+	regAddr             uint64
+	regData             uint32
+	regInstance         uint32
+	platPbPause         string
+	spanThreshold       uint32
+	xcvrValid           string
+	tcpProxyMss         uint32
+	tcpProxyCwndInitial uint32
+	tcpProxyCwndIdle    uint32
+	maxSession          uint64
+	isMicroSegEn        bool
+	fwdModeStr          string
+	policyModeStr       string
 )
 
 var debugCmd = &cobra.Command{
@@ -1258,7 +1258,7 @@ func isTimeoutValid(str string, val uint32) bool {
 func isSessLimitValid(str string, val uint32) bool {
 	switch str {
 	case "TCP-HALF-OPEN-SESS-LIMIT", "UDP-ACTIVE-SESS-LIMIT",
-		"ICMP-ACTIVE-SESS-LIMIT", "OTHER-ACTIVE-SESS-LIMIT":
+         "ICMP-ACTIVE-SESS-LIMIT", "OTHER-ACTIVE-SESS-LIMIT":
 		if val > 128000 {
 			return false
 		}

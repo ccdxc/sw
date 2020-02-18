@@ -292,8 +292,8 @@ func systemModeShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewSystemClient(c)
 
 	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.SysSpecGet(context.Background(), empty)
+	var req *halproto.SysSpecGetRequest
+	resp, err := client.SysSpecGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Getting system modes failed. %v\n", err)
 		return

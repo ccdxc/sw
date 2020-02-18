@@ -451,19 +451,6 @@ lif_pd_program_hw (pd_lif_t *pd_lif)
         goto end;
     }
 
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
-        lif->type == types::LIF_TYPE_HOST_MANAGEMENT) {
-        ret = pd_lif_pgm_host_mgmt(pd_lif);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("unable to program NACL to prevent "
-                          "non-classic traffic on host-mgmt. ret: {}", ret);
-            ret = HAL_RET_ERR;
-            goto end;
-        }
-    }
-#endif
-
 end:
     return ret;
 }

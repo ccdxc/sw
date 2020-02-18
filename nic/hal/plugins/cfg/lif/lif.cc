@@ -1965,24 +1965,6 @@ lif_update (LifSpec& spec, LifResponse *rsp)
         goto end;
     }
 
-#if 0
-    // Promiscuous flag is supposed to be used only in classic mode.
-    // Used to update number of prom lifs on l2segs.
-    // In non-classic mode, prom flag is not being used.
-    if (!is_forwarding_mode_classic_nic() &&
-        app_ctxt.pkt_filter_prom_changed &&
-        !(lif->type == types::LIF_TYPE_HOST_MANAGEMENT ||
-          lif->type == types::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT ||
-          lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT)) {
-        HAL_TRACE_ERR("lif's promiscous filter can't be changed in mode {}",
-                      g_hal_state->forwarding_mode());
-        // ret = HAL_RET_INVALID_ARG;
-        // goto end;
-        // Silently suppressing prom mode change
-        app_ctxt.pkt_filter_prom_changed = false;
-    }
-#endif
-
     if (!(app_ctxt.vlan_strip_en_changed ||
           app_ctxt.vlan_insert_en_changed ||
           app_ctxt.qstate_map_init_set ||

@@ -23,7 +23,7 @@ using sys::MicroSegUpdateResponse;
 using sys::SysSpec;
 using sys::SysSpecResponse;
 using sys::SysSpecGetResponse;
-using types::Empty;
+using sys::SysSpecGetRequest;
 
 namespace hal {
 
@@ -34,7 +34,6 @@ hal_ret_t clear_pb_stats(void);
 hal_ret_t clear_ingress_drop_stats(void);
 hal_ret_t clear_egress_drop_stats(void);
 hal_ret_t upgrade_table_reset(void);
-hal_ret_t forwarding_mode_get(ForwardingModeResponse *rsp);
 hal_ret_t feature_profile_get(FeatureProfileResponse *rsp);
 hal_ret_t micro_seg_update(MicroSegUpdateRequest &req, 
                            MicroSegUpdateResponse *rsp);

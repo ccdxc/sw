@@ -383,8 +383,8 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     HAL_TRACE_INFO("Starting FTE instance");
     HAL_TRACE_FLUSH();
     if (hal::is_platform_type_hw() && !getenv("DISABLE_FWLOG")) {
-       logger_ = ipc_logger::factory();
-       SDK_ASSERT(logger_);
+        logger_ = ipc_logger::factory();
+        SDK_ASSERT(logger_);
     }
 
     /*

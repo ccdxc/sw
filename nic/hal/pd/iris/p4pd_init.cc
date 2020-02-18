@@ -1482,16 +1482,13 @@ capri_repl_pgm_def_entries (void)
 static hal_ret_t
 p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
-#if 0
-    if (getenv("CAPRI_MOCK_MODE")) {
-        return HAL_RET_OK;
-    }
-#endif
-    uint64_t val, nic_mode = NIC_MODE_SMART;
+    //uint64_t val, nic_mode = NIC_MODE_SMART;
     p4pd_table_properties_t       tbl_ctx;
     p4pd_table_properties_get(P4TBL_ID_INPUT_PROPERTIES, &tbl_ctx);
+#if 0
     sdk::platform::capri::capri_table_constant_read(&val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+
     val = be64toh(val);
 
     if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
@@ -1515,6 +1512,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     val = htobe64(val);
     sdk::platform::capri::capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+#endif
 
     // Flow_info table is split into multiple threads in Capri so that
     // we can limit the # of phvwr to less than 8. Internally
@@ -1537,7 +1535,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
         HAL_TRACE_DEBUG("setting flow_info table constant, tid = {}, constant = {}",
                         tid, i);
     }
- 
+
     return HAL_RET_OK;
 }
 
@@ -1551,6 +1549,7 @@ p4pd_flow_hash_init (p4pd_def_cfg_t *p4pd_def_cfg)
     uint64_t                      size = 0;
 
     p4pd_table_properties_get(P4TBL_ID_FLOW_HASH, &tbl_ctx);
+ 
     // Get the table size from hbm json to reset to 0
     size = get_mem_size_kb(tbl_ctx.tablename) << 10;
     HAL_TRACE_DEBUG("Table name: {} depth: {} Base virtual memory: {} Base Physical Memory: {} table_sz: {}",
@@ -1604,8 +1603,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 
     // Setting NIC's forwarding mode
     SDK_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
-    if (p4pd_def_cfg->hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW && 
-        p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+    if (p4pd_def_cfg->hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
         SDK_ASSERT(p4pd_flow_hash_init(p4pd_def_cfg) == HAL_RET_OK);
     }
 

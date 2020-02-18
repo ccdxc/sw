@@ -1851,66 +1851,6 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-    // Deprecated. Not support smart switch mode. 
-#if 0
-    l2seg_t                     *native_l2seg_old;
-    // Change Flood replication entry for change of native l2seg
-    if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change &&
-        hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
-        // Remove and add replication entry
-        if (hal_if->native_l2seg != 0) {
-            native_l2seg_old = find_l2seg_by_id(hal_if->native_l2seg);
-
-            oif.intf = hal_if;
-            oif.l2seg = native_l2seg_old;
-
-            // remove replication entry for old native l2seg
-            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(native_l2seg_old), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Native l2seg change: Remove repl entry of old l2seg: {}",
-                              l2seg_keyhandle_to_str(native_l2seg_old));
-                goto end;
-            }
-
-            // add replication entry for old native l2seg
-            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(native_l2seg_old), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Native l2seg change: Add repl entry of old l2seg: {}",
-                              l2seg_keyhandle_to_str(native_l2seg_old));
-                goto end;
-            }
-        }
-
-        if (pd_if_args.native_l2seg) {
-
-            // TODO: Have to check if new native l2seg is already part of bcast oiflist.
-            //       If not skip this.
-
-            oif.intf = hal_if;
-            oif.l2seg = pd_if_args.native_l2seg;
-
-            // remove replication entry for new native l2seg
-            ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(pd_if_args.native_l2seg), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Native l2seg change: Remove repl entry of new l2seg: {}",
-                              l2seg_keyhandle_to_str(pd_if_args.native_l2seg));
-                goto end;
-            }
-
-            hal_if_clone->native_l2seg = pd_if_args.native_l2seg->seg_id;
-            oif.intf = hal_if_clone;
-            oif.l2seg = pd_if_args.native_l2seg;
-            // add replication entry for old native l2seg
-            ret = oif_list_add_oif(l2seg_get_bcast_oif_list(pd_if_args.native_l2seg), &oif);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Native l2seg change: Add repl entry of new l2seg: {}",
-                              l2seg_keyhandle_to_str(pd_if_args.native_l2seg));
-                goto end;
-            }
-        }
-    }
-#endif
-
 end:
     return ret;
 }
@@ -2881,24 +2821,6 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         goto end;
     }
 
-    // Deprecated: smart switch is no longer supported
-#if 0
-    // oif_t                           oif = {};
-    // Add the uplink to the broadcast list of the l2seg
-    if (is_forwarding_mode_smart_switch()) {
-        oif.intf = hal_if;
-        oif.l2seg = l2seg;
-
-        ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("bcast oiflist Failed. ret : {}",
-                          ret);
-            rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
-            goto end;
-        }
-    }
-#endif
-
 end:
 
     rsp->set_api_status(hal_prepare_rsp(ret));
@@ -2943,23 +2865,6 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
         HAL_TRACE_ERR("Failed in pd, ret {}:", ret);
         goto end;
     }
-
-    // Deprecated: smart switch is no longer supported
-#if 0
-    oif_t                           oif = {};
-    // Del the uplink from the broadcast list of the l2seg
-    if (is_forwarding_mode_smart_switch()) {
-        oif.intf = hal_if;
-        oif.l2seg = l2seg;
-
-        ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("dell2seguplink<->link:bcast oiflist"
-                                  " Failed. ret : {}", ret);
-            goto end;
-        }
-    }
-#endif
 
     // Del Uplink in l2seg
     ret = l2seg_del_back_if(l2seg, hal_if);
@@ -5334,77 +5239,7 @@ end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
     
-    // Deprecated as fwding info is not going to come from flow anymore
-#if 0
-    // Repin ipfix flows only if you are in host pin mode
-    if (ctxt.hal_if && is_forwarding_mode_host_pinned()) {
-        // Repin ipfix flows
-        ret = hal_if_repin_ipfix_flows(ctxt.hal_if);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to repin ipfix sessions. ret: {}", ret);
-        }
-    }
-#endif
-
     return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Re pin IPFIX flows
-//-----------------------------------------------------------------------------
-hal_ret_t
-hal_if_repin_ipfix_flows (if_t *uplink)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-    
-    if (!uplink) {
-        // Nothing to be done
-        return ret;
-    }
-    if (uplink->if_type != intf::IF_TYPE_UPLINK) {
-        // Nothing to be done
-        return ret;
-    }
-    if (uplink->is_oob_management) {
-        // Nothing to be done
-        return ret;
-    }
-    
-    HAL_TRACE_DEBUG("Repin IPFIX flows");
-    // We need to post session update to FTE
-    auto walk_func = [](void *entry, void *ctxt) {
-        hal::session_t  *session = (session_t *)entry;
-        dllist_ctxt_t   *list_head = (dllist_ctxt_t *) ctxt;
-
-        hal_handle_id_list_entry_t *lentry = (hal_handle_id_list_entry_t *)g_hal_state->
-                hal_handle_id_list_entry_slab()->alloc();
-        if (lentry == NULL) {
-            HAL_TRACE_ERR("Out of memory - skipping update session {}", session->hal_handle);
-            return false;
-        }
-        HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
-        lentry->handle_id = session->hal_handle;
-        dllist_add(list_head, &lentry->dllist_ctxt);
-        return false;
-    };
-
-    // build list of session_ids
-    dllist_ctxt_t ipfix_session_list;
-    dllist_reset(&ipfix_session_list);
-
-    if (g_hal_state->session_hal_telemetry_ht()->num_entries() > 0) {
-        HAL_TRACE_DEBUG("Calling IPFIX sessions walk func");
-        g_hal_state->session_hal_telemetry_ht()->walk_safe(walk_func,
-                                                        &ipfix_session_list);
-    }
-
-    HAL_TRACE_DEBUG("Update the IPFIX sessions");
-    uint64_t bitmap =
-        (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
-    bitmap |= (uint64_t)(1 << fte::feature_id("pensando.io/telemetry:telemetry"));
-    session_update_list(&ipfix_session_list, true, bitmap);
-    
-    return HAL_RET_OK;
 }
 
 //-----------------------------------------------------------------------------

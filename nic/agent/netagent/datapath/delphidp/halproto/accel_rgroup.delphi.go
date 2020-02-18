@@ -1322,9 +1322,11 @@ It has these top-level messages:
 	MicroSegUpdateResponse
 	MicroSegUpdateResponseMsg
 	SysSpec
+	SysSpecCreateUpdateRequest
 	SysSpecStatus
 	SysSpecResponse
 	SysSpecGetResponse
+	SysSpecGetRequest
 	TableIndexMetadata
 	TableTcamMetadata
 	TableHashMetadata

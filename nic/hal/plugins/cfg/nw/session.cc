@@ -1179,13 +1179,6 @@ session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
         SessionGetResponseMsg   *response;
     } ctxt = {0};
 
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
-        response->set_api_status(types::API_STATUS_NOT_FOUND);
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-#endif
-
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t          *session = (session_t *)entry;
         SessionGetResponseMsg   *rsp = (SessionGetResponseMsg *)(\
@@ -1279,18 +1272,6 @@ hal_ret_t
 session_get_stream (SessionGetRequest& req, grpc::ServerWriter<session::SessionGetResponseMsg> *writer)
 {
     session_t *session;
-
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
-        SessionGetResponseMsg msg;
-        msg.Clear();
-        SessionGetResponse *rsp = msg.add_response();
-        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
-        writer->Write(msg);
-        msg.Clear();
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-#endif
 
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t *session = (session_t *)entry;

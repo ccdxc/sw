@@ -549,7 +549,7 @@ func (h Hal) SysSpecUpdate(ctx context.Context, req *irisproto.SysSpec) (*irispr
 }
 
 // SysSpecGet Stubbed out
-func (h Hal) SysSpecGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SysSpecGetResponse, error) {
+func (h Hal) SysSpecGet(ctx context.Context, req *irisproto.SysSpecGetRequest) (*irisproto.SysSpecGetResponse, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")
 	log.Info("Got SysSpecGet Request:")
 	fmt.Println(string(dat))

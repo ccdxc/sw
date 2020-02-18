@@ -99,69 +99,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     }
 }
 
-#if 0
-static hal_forwarding_mode_t
-hal_get_forwarding_mode (std::string mode)
-{
-    if (mode == "smart-switch") {
-        return HAL_FORWARDING_MODE_SMART_SWITCH;
-    } else if (mode == "smart-host-pinned") {
-        return HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-    } else if (mode == "classic") {
-        return HAL_FORWARDING_MODE_CLASSIC;
-    }
-    return HAL_FORWARDING_MODE_NONE;
-}
-
-//------------------------------------------------------------------------------
-// parse HAL .ini file
-//------------------------------------------------------------------------------
-hal_ret_t
-hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
-{
-    std::string         ini_file, line;
-
-    // check if ini file exists
-    ini_file = hal_cfg->cfg_path + "/" + std::string(inifile);
-    std::ifstream in(ini_file.c_str());
-    if (access(ini_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "HAL ini file %s doesn't exist or not accessible, "
-                "picking host-pinned mode\n",
-                ini_file.c_str());
-        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-        goto end;
-    }
-
-    if (!in) {
-        HAL_TRACE_ERR("Failed to open ini file ... "
-                      "setting forwarding mode to smart-switch\n");
-        hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-        goto end;
-    }
-
-    while (std::getline(in, line)) {
-        std::string key = line.substr(0, line.find("="));
-        std::string val = line.substr(line.find("=")+1, line.length()-1);
-
-        if (key == "forwarding_mode") {
-            hal_cfg->forwarding_mode = hal_get_forwarding_mode(val);
-            if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_NONE) {
-                SDK_ASSERT_TRACE_RETURN(FALSE, HAL_RET_INVALID_ARG,
-                                        "Invalid forwarding mode {}", val);
-            }
-        }
-    }
-    in.close();
-
-end:
-
-    HAL_TRACE_DEBUG("NIC forwarding mode : {}\n",
-                    hal_cfg->forwarding_mode);
-
-    return HAL_RET_OK;
-}
-#endif
-
 //------------------------------------------------------------------------------
 // bring up delphi thread
 //------------------------------------------------------------------------------
@@ -350,7 +287,7 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // vmotion thread init
-    hal_vmotion_init(hal_cfg);
+    hal_vmotion_init(hal_cfg); 
 
     // start monitoring HAL heartbeat
     hb::heartbeat_init();

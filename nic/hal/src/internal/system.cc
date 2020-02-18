@@ -15,6 +15,7 @@
 #include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/microseg.hpp"
 
 namespace hal {
 
@@ -663,32 +664,6 @@ end:
     return ret;
 }
 
-
-//------------------------------------------------------------------------------
-// process a forwarding mode get request
-//------------------------------------------------------------------------------
-hal_ret_t
-forwarding_mode_get (ForwardingModeResponse *rsp)
-{
-    switch (hal::g_hal_cfg.device_cfg.forwarding_mode) {
-    case HAL_FORWARDING_MODE_NONE:
-        rsp->set_fwd_mode(sys::FORWARDING_MODE_NONE);
-        break;
-    case HAL_FORWARDING_MODE_CLASSIC:
-        rsp->set_fwd_mode(sys::FORWARDING_MODE_CLASSIC);
-        break;
-    case HAL_FORWARDING_MODE_SMART_SWITCH:
-        rsp->set_fwd_mode(sys::FORWARDING_MODE_SMART_SWITCH);
-        break;
-    case HAL_FORWARDING_MODE_SMART_HOST_PINNED:
-        rsp->set_fwd_mode(sys::FORWARDING_MODE_SMART_HOST_PINNED);
-        break;
-    }
-    rsp->set_api_status(types::API_STATUS_OK);
-
-    return HAL_RET_OK;
-}
-
 //------------------------------------------------------------------------------
 // process a feature profile get request
 //------------------------------------------------------------------------------
@@ -744,6 +719,8 @@ micro_seg_update(MicroSegUpdateRequest &req,
                     hal::g_hal_cfg.device_cfg.micro_seg_en ? 
                     MicroSegMode_Name(sys::MICRO_SEG_ENABLE) : MicroSegMode_Name(sys::MICRO_SEG_DISABLE),
                     MicroSegMode_Name(req.micro_seg_mode()));
+
+    hal_handle_microseg_enable();
 
     // Send micro seg mode change to Nicmgr
     hal::svc::micro_seg_mode_notify(req.micro_seg_mode());

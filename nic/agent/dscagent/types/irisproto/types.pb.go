@@ -450,9 +450,11 @@
 		MicroSegUpdateResponse
 		MicroSegUpdateResponseMsg
 		SysSpec
+		SysSpecCreateUpdateRequest
 		SysSpecStatus
 		SysSpecResponse
 		SysSpecGetResponse
+		SysSpecGetRequest
 		CollectorSpec
 		CollectorStatus
 		CollectorResponse

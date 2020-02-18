@@ -178,10 +178,6 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
         goto end;
     }
 
-#if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        is_ep_classic(args->ep)) {
-#endif
     if (ep_pd->reg_mac_tbl_idx != INVALID_INDEXER_INDEX) {
         ret = ep_pd_depgm_registered_mac(ep_pd);
         if (ret != HAL_RET_OK) {
@@ -599,25 +595,6 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
     }
 
     ret = pd_ep_pgm_registered_mac(pd_ep, NULL, NULL, TABLE_OPER_INSERT);
-
-#if 0
-    // Classic Mode:
-    // - All EPs
-    // Smart(hostpin)
-    // - All EPs pointing to classic enic
-    //   - OOB Mnic
-    //   - Internal Management MNIC
-    //   - Host Management Mnic
-    //   - Untagged enics on Host Data and Naples Data LIFs
-    // - Workload EPs to support shared inband mgmt traffic
-    l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
-    if (is_forwarding_mode_classic_nic() || 
-        (l2seg->single_wire_mgmt) ||    // For Uplink -> OOB SWM traffic
-        (l2seg_is_cust(l2seg) && l2seg_is_shared_mgmt_attached(l2seg)) ||
-        is_ep_classic(pi_ep)) {
-        ret = pd_ep_pgm_registered_mac(pd_ep, TABLE_OPER_INSERT);
-    }
-#endif
 
     return ret;
 }

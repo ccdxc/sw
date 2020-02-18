@@ -973,66 +973,6 @@ ep_prepare_rsp (EndpointResponse *rsp, hal_ret_t ret,
     return HAL_RET_OK;
 }
 
-#if 0
-//------------------------------------------------------------------------------
-// Host Pinning Mode:
-// If this mode is enabled, then this routine will pin the endpoint to an
-// uplink port/port-channel.
-//-- Applies only to Local endpoints. NOP for Remote EPs.
-// Priority:
-//      - Enic If
-//      - Lif
-//------------------------------------------------------------------------------
-static hal_ret_t
-pin_endpoint (ep_t *ep)
-{
-    hal_ret_t   ret     = HAL_RET_OK;
-    if_t        *hal_if = NULL;
-    if_t        *uplink_if = NULL;
-
-    ep->pinned_if_handle = HAL_HANDLE_INVALID;
-    if (is_forwarding_mode_host_pinned() == FALSE || is_ep_management(ep)) {
-        HAL_TRACE_DEBUG("Forwarding mode is not host-pinned, no-op");
-        return HAL_RET_OK;
-    }
-
-    if (ep->ep_flags & EP_FLAGS_REMOTE) {
-        HAL_TRACE_DEBUG("no-op for remote EP.");
-        return HAL_RET_OK;
-    }
-
-    hal_if = find_if_by_handle(ep->if_handle);
-    if (hal_if == NULL) {
-        HAL_TRACE_ERR("Interface {} not found for if handle", ep->if_handle);
-        return HAL_RET_IF_NOT_FOUND;
-    }
-
-    ret = if_enicif_get_pinned_if (hal_if, &uplink_if);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to get pinned uplink for EP. ret: {}", ret);
-        goto end;
-    }
-    ep->pinned_if_handle = uplink_if->hal_handle;
-    HAL_TRACE_DEBUG("EP Pinning to UplinkId:{}",
-                    uplink_if->if_id);
-
-end:
-    return ret;
-}
-
-if_t *
-ep_get_pinned_uplink(ep_t *ep)
-{
-    if_t        *hal_if = NULL;
-
-    if (ep->pinned_if_handle != HAL_HANDLE_INVALID) {
-        hal_if = find_if_by_handle(ep->pinned_if_handle);
-    }
-
-    return hal_if;
-}
-#endif
-
 if_t *
 ep_get_pinned_uplink(ep_t *ep)
 {

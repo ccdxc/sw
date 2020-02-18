@@ -37,7 +37,7 @@ service System {
   rpc MicroSegStatusUpdate(MicroSegRequestMsg) returns (MicroSegResponseMsg) {}
 
   rpc SysSpecUpdate(SysSpec) returns (SysSpecResponse) {}
-  rpc SysSpecGet(types.Empty) returns (SysSpecGetResponse) {}
+  rpc SysSpecGet(SysSpecGetRequest) returns (SysSpecGetResponse) {}
 }
 
 enum ApiCounter {
@@ -515,6 +515,11 @@ message SysSpec {
   PolicyMode  policy_mode = 2;
 }
 
+message SysSpecCreateUpdateRequest {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  
+  SysSpec          spec       = 2;
+}
+
 // System Spec Response Status
 message SysSpecStatus {
 } 
@@ -529,4 +534,7 @@ message SysSpecResponse {
 message SysSpecGetResponse {
   types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
   SysSpec          spec       = 2;
+}
+
+message SysSpecGetRequest {
 }

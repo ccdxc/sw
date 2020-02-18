@@ -48,8 +48,7 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
 
     // send TCP FIN on sessions with local EPs
-    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
+    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
         ret = session_handle_upgrade();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("[upgrade] Session handle upgrade failed, err {}", ret);
