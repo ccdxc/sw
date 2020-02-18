@@ -142,6 +142,7 @@ pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
             to_next[0] = *PDS_PACKET_BUFFER_INDEX_PTR(pak_count);
             to_next[1] = *PDS_PACKET_BUFFER_INDEX_PTR(pak_count+1);
             pak_count += 2;
+            to_next += 2;
         } PDS_PACKET_DUAL_LOOP_END;
         PDS_PACKET_SINGLE_LOOP_START {
             vlib_buffer_t *p0;
@@ -173,6 +174,7 @@ pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
             pkt_count++;
             to_frame->n_vectors++;
             to_next[0] = *PDS_PACKET_BUFFER_INDEX_PTR(pak_count);
+            to_next++;
             pak_count++;
         } PDS_PACKET_SINGLE_LOOP_END;
         vlib_put_frame_to_node(vm, hw->tx_node_index, to_frame);
