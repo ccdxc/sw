@@ -634,7 +634,7 @@ e2e-cp:
 	if [ -z ${BYPASS_PEGASUS} ]; then \
 		$(MAKE) -C nic docker/pegasus; \
 	fi
-	$(MAKE) dind-cluster
+	$(MAKE) dind-cluster-cp
 	$(MAKE) e2e-cp-test
 
 e2e-cp-test:

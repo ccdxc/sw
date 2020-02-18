@@ -25,7 +25,8 @@ func TestFeatureFlags(t *testing.T) {
 		{FeatureKey: SubnetSecurityPolicies},
 	}
 	// Test without any flags set
-	Assert(t, IsOVerlayRoutingEnabled() == false, "expecing overlay routing to be false")
+	Assert(t, IsOVerlayRoutingEnabled() == false, "expecting overlay routing to be false")
+	Assert(t, IsMultiTenantEnabled() == false, "expecting  multi-tenancy to be false")
 	Assert(t, IsNetworkSecPolicyEnabled() == false, "expecing network level secpolicy to be false")
 	Assert(t, AreALGsEnabled() == true, "expecing ALGs to be true")
 
@@ -69,7 +70,8 @@ func TestFeatureFlags(t *testing.T) {
 
 	errs = Update(fflags)
 	Assert(t, len(errs) == 0, "expecting 1 error")
-	Assert(t, IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
+	Assert(t, IsOVerlayRoutingEnabled() == true, "expecting overlay routing to be true")
+	Assert(t, IsMultiTenantEnabled() == true, "expecting multi-tenancy to be true")
 	Assert(t, IsNetworkSecPolicyEnabled() == true, "expecing network level secpolicy to be true")
 	Assert(t, AreALGsEnabled() == true, "expecing ALGs to be true")
 
@@ -91,7 +93,8 @@ func TestFeatureFlags(t *testing.T) {
 
 	errs = Update(fflags)
 	Assert(t, len(errs) == 0, "expecting 1 error")
-	Assert(t, IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
+	Assert(t, IsOVerlayRoutingEnabled() == true, "expecting overlay routing to be true")
+	Assert(t, IsMultiTenantEnabled() == true, "expecting  multi-tenancy to be true")
 	Assert(t, IsNetworkSecPolicyEnabled() == true, "expecing network level secpolicy to be false")
 	Assert(t, AreALGsEnabled() == false, "expecing ALGs to be true")
 
@@ -115,7 +118,8 @@ func TestFeatureFlags(t *testing.T) {
 
 	errs = Update(fflags)
 	Assert(t, len(errs) == 0, "expecting 0 error")
-	Assert(t, IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
+	Assert(t, IsOVerlayRoutingEnabled() == true, "expecting overlay routing to be true")
+	Assert(t, IsMultiTenantEnabled() == true, "expecting  multi-tenancy to be true")
 	Assert(t, IsNetworkSecPolicyEnabled() == true, "expecing network level secpolicy to be false")
 	Assert(t, AreALGsEnabled() == false, "expecing ALGs to be true")
 
@@ -138,7 +142,8 @@ func TestFeatureFlags(t *testing.T) {
 
 	errs = Update(fflags)
 	Assert(t, len(errs) == 1, "expecting 1 error got [%d]", len(errs))
-	Assert(t, IsOVerlayRoutingEnabled() == true, "expecing overlay routing to be true")
+	Assert(t, IsOVerlayRoutingEnabled() == true, "expecting overlay routing to be true")
+	Assert(t, IsMultiTenantEnabled() == true, "expecting  multi-tenancy to be true")
 	Assert(t, IsNetworkSecPolicyEnabled() == true, "expecing network level secpolicy to be false")
 	Assert(t, AreALGsEnabled() == false, "expecing ALGs to be true")
 

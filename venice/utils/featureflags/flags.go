@@ -159,3 +159,10 @@ func AreALGsEnabled() bool {
 	currentFeatures.RLock()
 	return currentFeatures.appSecurity
 }
+
+// IsMultiTenantEnabled returns true of multi-tenancy is allowed on the cluster
+func IsMultiTenantEnabled() bool {
+	defer currentFeatures.RUnlock()
+	currentFeatures.RLock()
+	return currentFeatures.overlayRouting
+}

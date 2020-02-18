@@ -293,7 +293,7 @@ func (cl *clusterHooks) validateTenant(i interface{}, ver string, ignStatus, ign
 	}
 	apiSrv := apisrvpkg.MustGetAPIServer()
 	flags := apiSrv.RuntimeFlags()
-	if !flags.AllowMultiTenant && r.Name != globals.DefaultTenant {
+	if !(flags.AllowMultiTenant || featureflags.IsMultiTenantEnabled()) && r.Name != globals.DefaultTenant {
 		return []error{errors.New("only tenant default allowed")}
 	}
 	return nil
@@ -1084,20 +1084,22 @@ func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Inter
 	if !ok {
 		return i, false, fmt.Errorf("invalid kind processing Node object")
 	}
-	rcfg := network.RoutingConfig{
-		ObjectMeta: api.ObjectMeta{
-			Name:   node.Spec.RoutingConfig,
-			Tenant: globals.DefaultTenant,
-		},
-	}
-	rkey := rcfg.MakeKey(string(apiclient.GroupNetwork))
+
 	if node.Spec.RoutingConfig != "" {
+		rcfg := network.RoutingConfig{
+			ObjectMeta: api.ObjectMeta{
+				Name:   node.Spec.RoutingConfig,
+				Tenant: globals.DefaultTenant,
+			},
+		}
+		rkey := rcfg.MakeKey(string(apiclient.GroupNetwork))
 		err := kvs.Get(ctx, rkey, &rcfg)
 		if err != nil {
 			return i, false, fmt.Errorf("Routing configuration not found")
 		}
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
 	}
-	txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
+
 	return i, true, nil
 }
 
