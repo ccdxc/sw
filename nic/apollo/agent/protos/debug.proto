@@ -33,7 +33,6 @@ service DebugSvc {
   rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
   rpc StartAacsServer (AacsRequest) returns (types.Empty) {}
   rpc StopAacsServer (types.Empty) returns (types.Empty) {}
-
 }
 
 enum TraceLevel {

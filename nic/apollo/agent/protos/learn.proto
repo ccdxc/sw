@@ -1,0 +1,97 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for endpoint learning information
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service LearnSvc {
+  rpc LearnMACGet (LearnMACGetRequest) returns (LearnMACGetResponse) {}
+  rpc LearnIPGet (LearnIPGetRequest) returns (LearnIPGetResponse) {}
+  rpc LearnStatsGet (types.Empty) returns (LearnStatsGetResponse) {}
+}
+
+message LearnIPKey {
+  bytes           VPCId  = 1;
+  types.IPAddress IPAddr = 2;
+}
+
+message LearnMACKey {
+  bytes  SubnetId = 1;
+  uint64 MACAddr  = 2;
+}
+
+enum EpState {
+  EP_STATE_NONE     = 0;
+  EP_STATE_LEARNING = 1;
+  EP_STATE_CREATED  = 2;
+  EP_STATE_PROBING  = 3;
+  EP_STATE_UPDATING = 4;
+  EP_STATE_DELETING = 5;
+  EP_STATE_DELETED  = 6;
+}
+
+message LearnIPEntry {
+  LearnIPKey  Key     = 1;
+  LearnMACKey MACInfo = 2;
+  EpState     State   = 3;
+}
+
+message LearnMACEntry {
+  LearnMACKey         Key    = 1;
+  bytes               VnicId = 2;
+  EpState             State  = 3;
+  repeated LearnIPKey IPInfo = 4;
+}
+
+enum LearnPktDropReason {
+  LEARN_PKTDROP_REASON_NONE           = 0;
+  LEARN_PKTDROP_REASON_PARSE_ERR      = 1;
+  LEARN_PKTDROP_REASON_RES_ALLOC_FAIL = 2;
+  LEARN_PKTDROP_REASON_MBUF_ERR       = 3;
+  LEARN_PKTDROP_REASON_TX_FAIL        = 4;
+}
+
+message LearnPktDropStats {
+  LearnPktDropReason Reason   = 1;
+  uint64             NumDrops = 2;
+}
+
+message LearnStats {
+  uint64                     NumPktsRcvd   = 1;
+  uint64                     NumPktsSent   = 2;
+  uint64                     NumVnics      = 3;
+  uint64                     NumL3Mappings = 4;
+  uint64                     NumApiCalls   = 5;
+  uint64                     NumApiFailure = 6;
+  repeated LearnPktDropStats DropStats     = 7;
+}
+
+message LearnMACGetRequest {
+  repeated LearnMACKey Key = 1;
+}
+
+message LearnIPGetRequest {
+  repeated LearnIPKey Key = 1;
+}
+
+message LearnMACGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated LearnMACEntry Response  = 2;
+}
+
+message LearnIPGetResponse {
+  types.ApiStatus       ApiStatus = 1;
+  repeated LearnIPEntry Response  = 2;
+}
+
+message LearnStatsGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  LearnStats      Stats     = 2;
+}

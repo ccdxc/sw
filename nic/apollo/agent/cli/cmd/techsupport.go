@@ -76,5 +76,9 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	meterShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Tag information ===\n")
 	tagShowCmdHandler(nil, nil)
+	fmt.Printf("\n=== Learn information ===\n")
+	learnStatsShowCmdHandler(nil, nil)
+	learnMACShowCmdHandler(nil, nil)
+	learnIPShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Techsupport dump complete ===\n")
 }

@@ -29,7 +29,7 @@ var mappingShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(mappingShowCmd)
-	mappingShowCmd.Flags().StringVar(&vpcID, "VPC id", "", "Specify VPC ID")
+	mappingShowCmd.Flags().StringVar(&vpcID, "vpc", "", "Specify VPC ID")
 	mappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
 	mappingShowCmd.Flags().StringVar(&mappingType, "type", "all", "Specify mapping type - all, local or remote")
 }
@@ -48,7 +48,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd != nil && (cmd.Flags().Changed("vpc-id") != cmd.Flags().Changed("ip")) {
+	if cmd != nil && (cmd.Flags().Changed("vpc") != cmd.Flags().Changed("ip")) {
 		fmt.Printf("Cannot specify only one of VPC ID and mapping IP address\n")
 		return
 	}
@@ -69,7 +69,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	var cmdCtxt *pds.CommandCtxt
 
-	if cmd != nil && cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
+	if cmd != nil && cmd.Flags().Changed("vpc") && cmd.Flags().Changed("ip") {
 		// dump specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
