@@ -9,7 +9,8 @@ import re
 
 
 class MappingObject():
-    def __init__(self, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None):
+    def __init__(self, id, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None):
+        self.id = id
         self.keytype = key_type
         self.macaddr  = utils.getmac2num(macaddr)
         if type(ip) is ipaddress.IPv4Address:
@@ -30,10 +31,11 @@ class MappingObject():
     def GetGrpcCreateMessage(self):
         grpcmsg = mapping_pb2.MappingRequest()
         spec = grpcmsg.Request.add()
+        spec.Id = utils.PdsUuid.GetUUIDfromId(self.id)
         if re.search( 'l3', self.keytype, re.I ):
-            spec.Id.IPKey.VPCId = utils.PdsUuid.GetUUIDfromId(self.vpcid)
-            spec.Id.IPKey.IPAddr.Af = types_pb2.IP_AF_INET
-            spec.Id.IPKey.IPAddr.V4Addr = self.ip
+            spec.IPKey.VPCId = utils.PdsUuid.GetUUIDfromId(self.vpcid)
+            spec.IPKey.IPAddr.Af = types_pb2.IP_AF_INET
+            spec.IPKey.IPAddr.V4Addr = self.ip
 
         if self.subnetid is not None:
            spec.SubnetId = utils.PdsUuid.GetUUIDfromId(self.subnetid)

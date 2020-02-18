@@ -28,7 +28,7 @@ class VnicObject():
     def GetGrpcCreateMessage(self):
         grpcmsg = vnic_pb2.VnicRequest()
         spec = grpcmsg.Request.add()
-        spec.VnicId = utils.PdsUuid.GetUUIDfromId(self.id)
+        spec.Id = utils.PdsUuid.GetUUIDfromId(self.id)
         spec.SubnetId = utils.PdsUuid.GetUUIDfromId(self.subnetid)
         spec.MACAddress = utils.getmac2num(self.macaddr)
         spec.SourceGuardEnable = self.sourceguard

@@ -44,7 +44,7 @@ os.environ['AGENT_GRPC_PORT'] = naplesport
 # node uuid
 # this is the mac address of the lowest numbered naples device on the server
 # (example enp20s0)
-node_uuid="0xaecd0121c8"
+node_uuid="0xaecd012228"
 
 # Device object inputs
 local_tep_ip='1.0.0.3'
@@ -83,6 +83,8 @@ v6_router_ip='2001::2:1:0:2'
 virt_router_mac='00:55:01:00:00:01'
 
 # VNIC and mapping (local and remote) table objects 
+local_mapping_id=2
+remote_mapping_id=1
 local_vnic_mac='00:ae:cd:00:00:0a'
 remote_vnic_mac='00:ae:cd:00:08:11'
 local_host_ip='2.1.0.3'
@@ -135,9 +137,9 @@ vnic1 = vnic.VnicObject(1, 1, local_vnic_mac, host_if_idx, False, 'VXLAN', fabri
 # Create Mapping Objects 1 for local vnic and another for remote IP
 # self, key_type, macaddr, ip, vpcid, subnetid, tunnelid, encaptype, encapslotid, nexthopgroupid, publicip, providerip, vnicid = 0
 
-map1_l = mapping.MappingObject( 'l3', local_vnic_mac, ipaddress.IPv4Address(local_host_ip), vpc1_id, subnetid=1, vnicid=1 )
+map1_l = mapping.MappingObject( local_mapping_id, 'l3', local_vnic_mac, ipaddress.IPv4Address(local_host_ip), vpc1_id, subnetid=1, vnicid=1 )
 
-map1_r = mapping.MappingObject( 'l3', remote_vnic_mac, ipaddress.IPv4Address(remote_host_ip), vpc1_id, subnetid=1, tunnelid=1 )
+map1_r = mapping.MappingObject( remote_mapping_id, 'l3', remote_vnic_mac, ipaddress.IPv4Address(remote_host_ip), vpc1_id, subnetid=1, tunnelid=1 )
 
 # Push the configuration
 api.client.Start(api.ObjectTypes.BATCH, batch1.GetGrpcMessage())
