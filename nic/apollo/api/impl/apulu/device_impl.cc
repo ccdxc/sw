@@ -219,10 +219,10 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4i_drop_stats_swkey_t key = { 0 };
     p4i_drop_stats_swkey_mask_t key_mask = { 0 };
     const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
-        "drop_vni_invalid",
-        "drop_nacl",
-        "drop_vnic_policer_tx",
-        "drop_mac_ip_binding_fail",
+        "vni_invalid",
+        "nacl",
+        "vnic_policer_tx",
+        "mac_ip_binding_fail",
     };
 
     SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));
@@ -247,11 +247,18 @@ device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
     p4e_drop_stats_swkey_mask_t key_mask = { 0 };
     p4e_drop_stats_actiondata_t data = { 0 };
     const char edrop[][PDS_MAX_DROP_NAME_LEN] = {
-        "drop_session_invalid",
-        "drop_session_hit",
-        "drop_nexthop_invalid",
-        "drop_vnic_policer_rx",
-        "drop_copp",
+        "session_invalid",
+        "session_hit",
+        "nexthop_invalid",
+        "vnic_policer_rx",
+        "tcp_out_of_window ",
+        "tcp_win_zero",
+        "tcp_unexpected_pkt",
+        "tcp_non_rst_pkt_after_rst",
+        "tcp_rst_with_invalid_ack_num",
+        "tcp_invalid_responder_first_pkt",
+        "tcp_data_after_fin",
+        "copp",
     };
 
     SDK_ASSERT(sizeof(edrop)/sizeof(edrop[0]) == (P4E_DROP_REASON_MAX + 1));

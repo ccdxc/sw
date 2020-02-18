@@ -35,13 +35,20 @@
 #define P4I_DROP_MAC_IP_BINDING_FAIL    3
 #define P4I_DROP_REASON_MAX             3
 
-#define P4E_DROP_REASON_MIN             0
-#define P4E_DROP_SESSION_INVALID        0
-#define P4E_DROP_SESSION_HIT            1
-#define P4E_DROP_NEXTHOP_INVALID        2
-#define P4E_DROP_VNIC_POLICER_RX        3
-#define P4E_DROP_COPP                   4
-#define P4E_DROP_REASON_MAX             4
+#define P4E_DROP_REASON_MIN                         0
+#define P4E_DROP_SESSION_INVALID                    0
+#define P4E_DROP_SESSION_HIT                        1
+#define P4E_DROP_NEXTHOP_INVALID                    2
+#define P4E_DROP_VNIC_POLICER_RX                    3
+#define P4E_DROP_TCP_OUT_OF_WINDOW                  4
+#define P4E_DROP_TCP_WIN_ZERO                       5
+#define P4E_DROP_TCP_UNEXPECTED_PKT                 6
+#define P4E_DROP_TCP_NON_RST_PKT_AFTER_RST          7
+#define P4E_DROP_TCP_RST_WITH_INVALID_ACK_NUM       8
+#define P4E_DROP_TCP_INVALID_RESPONDER_FIRST_PKT    9
+#define P4E_DROP_TCP_DATA_AFTER_FIN                 10
+#define P4E_DROP_COPP                               11
+#define P4E_DROP_REASON_MAX                         P4E_DROP_COPP
 
 /*****************************************************************************/
 /* nexthop types                                                            */
@@ -58,6 +65,36 @@
 /*****************************************************************************/
 #define TCP_FLOW_INITIATOR              0
 #define TCP_FLOW_RESPONDER              1
+
+/*****************************************************************************/
+/* flow states                                                               */
+/*****************************************************************************/
+#define FLOW_STATE_INIT                 0
+#define FLOW_STATE_TCP_SYN_RCVD         1
+#define FLOW_STATE_TCP_ACK_RCVD         2
+#define FLOW_STATE_TCP_SYN_ACK_RCVD     3
+#define FLOW_STATE_ESTABLISHED          4
+#define FLOW_STATE_FIN_RCVD             5
+#define FLOW_STATE_BIDIR_FIN_RCVD       6
+#define FLOW_STATE_RESET                7
+
+/*****************************************************************************/
+/* TCP exceptions                                                            */
+/*****************************************************************************/
+#define TCP_SYN_REXMIT                  0x0001
+#define TCP_WIN_ZERO_DROP               0x0002
+#define TCP_FULL_REXMIT                 0x0004
+#define TCP_PARTIAL_OVERLAP             0x0008
+#define TCP_PACKET_REORDER              0x0010
+#define TCP_OUT_OF_WINDOW               0x0020
+#define TCP_ACK_ERR                     0x0040
+#define TCP_NORMALIZATION_DROP          0x0080
+#define TCP_SPLIT_HANDSHAKE_DETECTED    0x0100
+#define TCP_DATA_AFTER_FIN              0x0200
+#define TCP_NON_RST_PKT_AFTER_RST       0x0400
+#define TCP_INVALID_RESPONDER_FIRST_PKT 0x0800
+#define TCP_UNEXPECTED_PKT              0x1000
+#define TCP_RST_WITH_INVALID_ACK_NUM    0x2000
 
 /*****************************************************************************/
 /* rewrite flags                                                             */

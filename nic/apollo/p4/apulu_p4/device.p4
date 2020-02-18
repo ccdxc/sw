@@ -61,8 +61,10 @@ action p4e_recirc() {
 }
 
 action p4e_device_info(device_ipv4_addr, device_ipv6_addr) {
-    remove_header(tcp_option_mss);
+    modify_field(control_metadata.tcp_option_ws_valid, tcp_option_ws.valid);
+    modify_field(control_metadata.tcp_option_mss_valid, tcp_option_mss.valid);
     remove_header(tcp_option_ws);
+    remove_header(tcp_option_mss);
     modify_field(rewrite_metadata.device_ipv4_addr, device_ipv4_addr);
     modify_field(rewrite_metadata.device_ipv6_addr, device_ipv6_addr);
     p4e_recirc();

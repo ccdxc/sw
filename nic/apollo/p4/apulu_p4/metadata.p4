@@ -74,6 +74,8 @@ header_type control_metadata_t {
         local_mapping_done      : 1;
         flow_done               : 1;
         parse_tcp_option_error  : 1;
+        tcp_option_ws_valid     : 1;
+        tcp_option_mss_valid    : 1;
     }
 }
 
@@ -154,16 +156,6 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
-
-        // tcp
-        tcp_flags           : 8;
-        tcp_state           : 4;
-        tcp_seq_num         : 32;
-        tcp_ack_num         : 32;
-        tcp_mss             : 16;
-        tcp_win_size        : 16;
-        tcp_win_scale       : 4;
-        tcp_exceptions      : 16;
     }
 }
 

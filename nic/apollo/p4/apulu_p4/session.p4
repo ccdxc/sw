@@ -97,7 +97,8 @@ table session {
 
 control session_lookup {
     apply(session);
-    if (control_metadata.session_tracking_en == 1) {
+    if ((control_metadata.session_tracking_en == 1) and
+        (tcp.valid == TRUE)) {
         apply(session_track);
     }
 }
