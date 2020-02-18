@@ -99,7 +99,7 @@ class NexthopObject(base.ConfigObjectBase):
 
     def Dup(self):
         dupObj = copy.copy(self)
-        dupObj.NexthopId = next(ResmgrClient[self.Node].NexthopIdAllocator)
+        dupObj.NexthopId = next(ResmgrClient[self.Node].NexthopIdAllocator) + Resmgr.BaseDuplicateIdAllocator
         dupObj.GID('DupNexthop%d'%dupObj.NexthopId)
         dupObj.UUID = utils.PdsUuid(dupObj.NexthopId, dupObj.ObjType)
         self.Duplicate = dupObj

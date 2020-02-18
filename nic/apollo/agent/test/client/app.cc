@@ -650,8 +650,7 @@ batch_commit_grpc (pds_batch_ctxt_t bctxt)
 {
     ClientContext       commit_context;
     BatchCtxt           batch_context;
-    types::Empty        empty_spec;
-    types::Empty        response;
+    BatchStatus         response;
     Status              ret_status;
 
     batch_context.set_batchcookie(bctxt);

@@ -165,19 +165,26 @@ def __getRandomSamples(objlist, num = None):
         num = limit
     return random.sample(objlist, k=num)
 
-def SetupConfigObjects(oper, objtype):
-    select_objs = []
-    if oper is None or ((oper != 'Delete') and (oper != 'Update')):
+# Perform operation <oper> on <selected_objs>
+# <selected_objs> = None, then use objects of type <objtype> for <oper>
+def ProcessObjectsByOperation(oper, objtype, selected_objs = None):
+    select_objs = selected_objs
+    supported_ops = [ 'Create', 'Read', 'Delete', 'Update' ]
+    if oper is None or oper not in supported_ops:
         return select_objs
-    maxlimit = __getMaxLimit(objtype)
-    select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
-    objs = __getObjects(objtype)
-    select_objs = __getRandomSamples(objs, select_count)
+    if select_objs is None:
+        maxlimit = __getMaxLimit(objtype)
+        select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
+        select_objs = __getRandomSamples(__getObjects(objtype), select_count)
+    res = list()
     for obj in select_objs:
         getattr(obj, oper)()
         if not getattr(obj, 'Read')():
             api.Logger.error(f"{oper} failed for object: {obj}")
-    return select_objs
+        else:
+            res.append(obj)
+    api.Logger.info(f"selected_objs: {res}")
+    return res
 
 def __findVnicObjectByWorkload(wl):
     vnics = vnic.client.Objects(wl.node_name)
@@ -224,11 +231,8 @@ def IsAnyConfigDeleted(workload_pair):
         subnet_ = getattr(vnic_, "SUBNET", None)
         if subnet_:
             vpc_ = getattr(vnic_.SUBNET, "VPC", None)
-            v4_rtbid = getattr(subnet_, "V4RouteTableId", None)
-            v6_rtbid = getattr(subnet_, "V6RouteTableId", None)
-            objClient = GetObjClient('route')
-            v4routetable_ = objClient.GetRouteV4Table(w1.node_name, vpc_.VPCId, v4_rtbid)
-            v6routetable_ = objClient.GetRouteV6Table(w1.node_name, vpc_.VPCId, v6_rtbid)
+            v4routetable_ = subnet_.V4RouteTable
+            v6routetable_ = subnet_.V6RouteTable
         lmapping_ = __getLocalMappingObjectByWorkload(w1)
         rmapping_ = __getRemoteMappingObjectByWorkload(w2)
         tunnel_ = getattr(rmapping_, 'TUNNEL', None)
@@ -251,19 +255,24 @@ def IsAnyConfigDeleted(workload_pair):
 def ReadConfigObject(obj):
     return obj.Read()
 
-def RestoreConfigObjects(oper, objlist):
-    if oper is None or ((oper != 'Delete') and (oper != 'Update')):
+def RestoreObjects(oper, objlist):
+    supported_ops = [ 'Delete', 'Update' ]
+    if oper is None or oper not in supported_ops:
         return True
     else:
         rs = True
-        for obj in objlist:
-            if oper == 'Delete':
+        if oper == 'Delete':
+            for obj in objlist:
                 obj.Create()
-            elif oper == 'Update':
+                if ReadConfigObject(obj) is False:
+                    api.Logger.error(f"Read object failed for {obj} after {oper} operation")
+                    rs = False
+        elif oper == 'Update':
+            for obj in objlist:
                 obj.RollbackUpdate()
-            if ReadConfigObject(obj) is False:
-                api.Logger.error(f"Read object failed for {obj} after {oper} operation")
-                rs = False
+                if ReadConfigObject(obj) is False:
+                    api.Logger.error(f"Read object failed for {obj} after {oper} operation")
+                    rs = False
     return rs
 
 

@@ -20,6 +20,7 @@ class BatchObject(base.ConfigObjectBase):
         self.GID('Batch')
         self.epoch = next(ResmgrClient[node].EpochAllocator)
         self.cookie = INVALID_BATCH_COOKIE
+        self.commitstatus = types_pb2.API_STATUS_OK
         return
 
     def __repr__(self):
@@ -50,6 +51,13 @@ class BatchObject(base.ConfigObjectBase):
         self.epoch += 1
         return
 
+    def GetBatchCommitStatus(self):
+        return self.commitstatus
+
+    def SetBatchCommitStatus(self, status):
+        self.commitstatus = status[0].ApiStatus
+        return
+
     def Show(self):
         logger.info("Batch Object:", self)
         logger.info("- %s" % repr(self))
@@ -78,13 +86,16 @@ class BatchObjectClient:
         self.__objs.update({node: obj})
         return
 
-    def __updateObject(self, node, batchStatus):
+    def __updateObject(self, node, batchStatus, commitStatus = None):
         if batchStatus is None:
             cookie = INVALID_BATCH_COOKIE
         else:
             cookie = batchStatus[0].BatchContext.BatchCookie
         logger.info("Setting Batch cookie to ", cookie)
         self.GetObjectByKey(node).SetBatchCookie(cookie)
+        if commitStatus:
+            self.GetObjectByKey(node).SetBatchCommitStatus(commitStatus)
+        return
 
     def Start(self, node):
         self.GetObjectByKey(node).SetNextEpoch()
@@ -97,9 +108,9 @@ class BatchObjectClient:
         if self.__commit_for_flows:
             api.client[node].Start(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetInvalidBatchSpec())
             self.__commit_for_flows = False
-        api.client[node].Commit(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchContext())
+        status = api.client[node].Commit(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchContext())
         # invalidate batch context
-        self.__updateObject(node, None)
+        self.__updateObject(node, None, status)
         return
 
 client = BatchObjectClient()

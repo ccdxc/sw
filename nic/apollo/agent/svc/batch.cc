@@ -4,6 +4,7 @@
 
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/agent/svc/batch.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 
 Status
@@ -31,7 +32,7 @@ BatchSvcImpl::BatchStart(ServerContext *context,
         }
         proto_status->set_apistatus(types::ApiStatus::API_STATUS_ERR);
         proto_status->mutable_batchcontext()->set_batchcookie(PDS_BATCH_CTXT_INVALID);
-        return Status::CANCELLED;
+        return Status::OK;
     }
     // TODO: return OK until hooks is cleaned up
     proto_status->set_apistatus(types::ApiStatus::API_STATUS_OK);
@@ -41,23 +42,31 @@ BatchSvcImpl::BatchStart(ServerContext *context,
 Status
 BatchSvcImpl::BatchCommit(ServerContext *context,
                           const types::BatchCtxt *ctxt,
-                          Empty *proto_status) {
+                          pds::BatchStatus *proto_status) {
+    sdk_ret_t ret = SDK_RET_OK;
+
     if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
-        if (pds_batch_commit(ctxt->batchcookie()) == SDK_RET_OK) {
-            return Status::OK;
-        }
+        ret = pds_batch_commit(ctxt->batchcookie());
+        proto_status->mutable_batchcontext()->set_batchcookie(ctxt->batchcookie());
+    } else {
+        proto_status->mutable_batchcontext()->set_batchcookie(PDS_BATCH_CTXT_INVALID);
     }
-    return Status::CANCELLED;
+    proto_status->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
 }
 
 Status
 BatchSvcImpl::BatchAbort(ServerContext *context,
                          const types::BatchCtxt *ctxt,
-                         Empty *proto_status) {
+                         pds::BatchStatus *proto_status) {
+    sdk_ret_t ret = SDK_RET_OK;
+
     if (ctxt->batchcookie() != PDS_BATCH_CTXT_INVALID) {
-        if (pds_batch_destroy(ctxt->batchcookie()) == SDK_RET_OK) {
-            return Status::OK;
-        }
+        ret = pds_batch_destroy(ctxt->batchcookie());
+        proto_status->mutable_batchcontext()->set_batchcookie(ctxt->batchcookie());
+    } else {
+        proto_status->mutable_batchcontext()->set_batchcookie(PDS_BATCH_CTXT_INVALID);
     }
-    return Status::CANCELLED;
+    proto_status->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
 }

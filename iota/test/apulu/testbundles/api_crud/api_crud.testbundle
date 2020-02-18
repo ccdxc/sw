@@ -18,7 +18,7 @@ testcases:
             # TODO: nh, nh-group, interface
             # route object excluded from local2remote tests, because no hit
             objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping ]
-            oper    : [ Delete ]
+            oper    : [ [delete] ]
 
     -   name    : API_CRUD_For_Update_Ping_Traffic
         testcase: testcases.api_crud.ping
@@ -33,6 +33,17 @@ testcases:
             # TODO: vnic, nh-group
             # excluded vpc object because no mutable config present
             objtype : [ device, subnet, tunnel, nexthop, interface, nexthop ]
-            oper    : [ Update ]
+            oper    : [ [update] ]
 
+    -   name    : Object_Idempotency_Ping_Traffic
+        testcase: testcases.api_crud.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            objtype : [ vpc, subnet, vnic, tunnel ]
+            oper    : [ [create, create], [delete, read, update, read] ]
 

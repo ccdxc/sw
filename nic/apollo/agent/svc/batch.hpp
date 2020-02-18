@@ -22,9 +22,9 @@ public:
     Status BatchStart(ServerContext *context, const pds::BatchSpec *spec,
                       pds::BatchStatus *status) override;
     Status BatchCommit(ServerContext *context, const types::BatchCtxt *ctxt,
-                       Empty *status) override;
+                      pds::BatchStatus *status) override;
     Status BatchAbort(ServerContext *context, const types::BatchCtxt *ctxt,
-                      Empty *status) override;
+                      pds::BatchStatus *status) override;
 };
 
 #endif    // __AGENT_SVC_BATCH_HPP__

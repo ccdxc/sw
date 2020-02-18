@@ -72,7 +72,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -136,7 +136,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -163,7 +163,8 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, nexthop delete "
                           "failed");
-            return Status::CANCELLED;
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -189,7 +190,7 @@ end:
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -259,7 +260,7 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
             PDS_TRACE_ERR("Failed to create a new batch %u",
                           batch_params.epoch);
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -289,7 +290,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -318,7 +319,7 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
             PDS_TRACE_ERR("Failed to create a new batch %u",
                           batch_params.epoch);
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -351,7 +352,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -378,7 +379,8 @@ NhSvcImpl::NhGroupDelete(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch %u",
                           batch_params.epoch);
-            return Status::CANCELLED;
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -400,7 +402,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     // proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status

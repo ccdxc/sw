@@ -82,6 +82,9 @@ class Resmgr(base.ConfigObjectBase):
 
     InvalidMplsSlotIdAllocator = iter(irange(50001,90000))
     InvalidVxlanIdAllocator = iter(irange(10001,12000))
+    # This will be used to avoid overlap between topology and resource manager id allocation
+    # used only for Tunnel, Nexthop and Interface objects
+    BaseDuplicateIdAllocator = 100000
 
     # TCP/UDP ports for flow and service mapping. Right now keeping it in resmgr.
     TransportSrcPort   = 100 # For VNET packets
@@ -281,7 +284,7 @@ class Resmgr(base.ConfigObjectBase):
         objs = EzAccessStoreClient[self.Node].GetIgwNatTunnels()
         if len(objs) != 0:
             self.RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
-    
+
     def CollectSvcTunnels(self):
         if utils.IsPipelineArtemis():
             objs = EzAccessStoreClient[self.Node].GetSvcTunnels()
@@ -290,12 +293,12 @@ class Resmgr(base.ConfigObjectBase):
             objs = EzAccessStoreClient[self.Node].GetSvcTunnels(True)
             if len(objs) != 0:
                 self.RemoteSvcTunAllocator = utils.rrobiniter(objs)
-    
+
     def CreateVnicTunnels(self):
         objs = EzAccessStoreClient[self.Node].GetWorkloadTunnels()
         if len(objs) != 0:
             self.RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
-    
+
     def CreateUnderlayTunnels(self):
         objs = EzAccessStoreClient[self.Node].GetUnderlayTunnels()
         if len(objs) != 0:
@@ -303,32 +306,32 @@ class Resmgr(base.ConfigObjectBase):
         objs = EzAccessStoreClient[self.Node].GetUnderlayTunnels(ecmp=True)
         if len(objs) != 0:
             self.UnderlayECMPTunAllocator = utils.rrobiniter(objs)
-    
+
     def CreateUnderlayNHAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetUnderlayNexthops()
         if len(objs) != 0:
             self.UnderlayNHAllocator = utils.rrobiniter(objs)
-    
+
     def CreateOverlayNHAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetOverlayNexthops()
         if len(objs) != 0:
             self.OverlayNHAllocator = utils.rrobiniter(objs)
-    
+
     def CreateDualEcmpNhAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetDualEcmpNexthops()
         if len(objs) != 0:
             self.DualEcmpNhAllocator = utils.rrobiniter(objs)
-    
+
     def CreateUnderlayNhGroupAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetUnderlayNhGroups()
         if len(objs) != 0:
             self.UnderlayNhGroupAllocator = utils.rrobiniter(objs)
-    
+
     def CreateOverlayNhGroupAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetOverlayNhGroups()
         if len(objs) != 0:
             self.OverlayNhGroupAllocator = utils.rrobiniter(objs)
-    
+
     def CreateDualEcmpNhGroupAllocator(self):
         objs = EzAccessStoreClient[self.Node].GetDualEcmpNhGroups()
         if len(objs) != 0:

@@ -35,7 +35,7 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -70,7 +70,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -98,7 +98,7 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -133,7 +133,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -159,7 +159,8 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
         bctxt = pds_batch_start(&batch_params);
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc deletion failed");
-            return Status::CANCELLED;
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -186,7 +187,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -249,7 +250,7 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
             PDS_TRACE_ERR("Failed to create a new batch, vpc peer creation "
                           "failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -284,7 +285,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -311,7 +312,8 @@ VPCSvcImpl::VPCPeerDelete(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, vpc peer delete "
                           "failed");
-            return Status::CANCELLED;
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -337,7 +339,7 @@ end:
         // destroy the internal batch
         pds_batch_destroy(bctxt);
     }
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status

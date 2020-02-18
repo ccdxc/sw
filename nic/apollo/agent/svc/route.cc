@@ -36,7 +36,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
             PDS_TRACE_ERR("Failed to create a new batch, route table "
                           "creation failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -80,7 +80,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -109,7 +109,7 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
             PDS_TRACE_ERR("Failed to create a new batch, route table "
                           "update failed");
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -152,7 +152,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status
@@ -179,7 +179,8 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, route table "
                           "delete failed");
-            return Status::CANCELLED;
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
         }
         batched_internally = true;
     }
@@ -206,7 +207,7 @@ end:
         pds_batch_destroy(bctxt);
     }
     proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
-    return Status::CANCELLED;
+    return Status::OK;
 }
 
 Status

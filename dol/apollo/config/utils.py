@@ -256,18 +256,46 @@ def GetAttrFromResponse(obj, resp, attr):
         return [result]
     return result
 
+def ValidateCommit(obj, operation, expectedResp):
+    if IsDryRun():
+        return True
+    ret = False
+    logger.info(f"ValidateCommit {obj} with {operation} and expected {expectedResp}")
+    if obj.IsHwHabitant():
+        if operation == 'Create':
+            ret = expectedResp == types_pb2.API_STATUS_EXISTS_ALREADY
+        elif operation == 'Delete' or operation == 'Update':
+            if expectedResp == types_pb2.API_STATUS_OK:
+                if operation == 'Delete':
+                    obj.SetHwHabitant(False)
+                ret = True
+    else:
+        if operation == 'Create':
+            if expectedResp == types_pb2.API_STATUS_OK:
+                obj.SetHwHabitant(True)
+                ret = True
+        elif operation == 'Delete' or operation == 'Update':
+            if expectedResp == types_pb2.API_STATUS_NOT_FOUND:
+                ret = True
+    return ret
+
 def ValidateCreate(obj, resps):
     if IsDryRun():
         # assume creation was fine in case of dry run
         obj.SetHwHabitant(True)
-        return
+        return True
+    if obj.IsHwHabitant():
+        expApiStatus = types_pb2.API_STATUS_EXISTS_ALREADY
+    else:
+        expApiStatus = types_pb2.API_STATUS_OK
     for resp in resps:
-        if ValidateGrpcResponse(resp):
+        if ValidateGrpcResponse(resp, expApiStatus):
             obj.SetHwHabitant(True)
         else:
-            logger.error("Creation/Restoration failed for %s" % (obj))
+            logger.error(f"Creation/Restoration failed for {obj}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
             obj.Show()
-    return
+            return False
+    return True
 
 def ValidateRead(obj, resps):
     if IsDryRun(): return True
@@ -302,20 +330,27 @@ def ValidateDelete(obj, resps):
         for status in respStatus:
             if status == types_pb2.API_STATUS_OK:
                 obj.SetHwHabitant(False)
+            elif not obj.IsHwHabitant() and status == types_pb2.API_STATUS_NOT_FOUND:
+                obj.SetHwHabitant(False)
             else:
-                logger.error("Deletion failed for %s" % (obj))
+                logger.error(f"Deletion failed for {obj}, received {status}")
                 obj.Show()
                 return False
     return True
 
 def ValidateUpdate(obj, resps):
     if IsDryRun(): return True
+    expApiStatus = types_pb2.API_STATUS_OK
+    if obj.HasPrecedent():
+        if not obj.Precedent.IsHwHabitant():
+            expApiStatus = types_pb2.API_STATUS_NOT_FOUND
     for resp in resps:
-        if ValidateGrpcResponse(resp):
-            obj.SetHwHabitant(True)
-            InformDependents(obj, 'UpdateNotify')
+        if ValidateGrpcResponse(resp, expApiStatus):
+            if expApiStatus == types_pb2.API_STATUS_OK:
+                obj.SetHwHabitant(True)
+                InformDependents(obj, 'UpdateNotify')
         else:
-            logger.error("Update failed for %s" %(obj.__repr__()))
+            logger.error(f"Update failed for {obj.__repr__()}, received {resp.ApiStatus}, expected {expApiStatus}")
             obj.PrepareRollbackUpdate()
             obj.SetDirty(False)
             obj.SetHwHabitant(True)
@@ -330,6 +365,11 @@ def GetBatchCookie(node):
     obj = batchClient.GetObjectByKey(node)
     return obj.GetBatchCookie()
 
+def GetBatchCommitStatus(node):
+    batchClient = EzAccessStore.GetBatchClient()
+    obj = batchClient.GetObjectByKey(node)
+    return obj.GetBatchCommitStatus()
+
 def InformDependents(dependee, cbFn):
     # inform dependent objects
     for objType, ObjList in dependee.Deps.items():
@@ -343,19 +383,23 @@ def TriggerCreate(obj, node):
     cookie = GetBatchCookie(node)
     msg = obj.GetGrpcCreateMessage(cookie)
     resps = api.client[node].Create(obj.ObjType, [msg])
-    ValidateCreate(obj, resps)
+    ret = ValidateCreate(obj, resps)
     batchClient.Commit(node)
-    return True
+    # device and mapping are stateless objects, operation status updated only after batch commit
+    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
+    if obj.ObjType in exception:
+        commitStatus = GetBatchCommitStatus(node)
+        return ValidateCommit(obj, 'Create', commitStatus)
+    return ret
 
 #TODO - Fix validation returns appropriately for DOL & IOTA
 def CreateObject(obj):
-    if obj.IsHwHabitant():
+    if IsDryRun() and obj.IsHwHabitant():
         logger.info("Already restored %s" % (obj))
         return True
 
     def RestoreObj(robj, node):
         logger.info("Recreating object %s" % (robj))
-        
 
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first
@@ -396,7 +440,12 @@ def UpdateObject(obj):
     msg = obj.GetGrpcUpdateMessage(cookie)
     resps = api.client[node].Update(obj.ObjType, [msg])
     batchClient.Commit(node)
-    return ValidateUpdate(obj, resps)
+    ret = ValidateUpdate(obj, resps)
+    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
+    if obj.ObjType in exception:
+        commitStatus = GetBatchCommitStatus(node)
+        return ValidateCommit(obj, 'Update', commitStatus)
+    return ret
 
 def TriggerDelete(obj, node):
     batchClient = EzAccessStore.GetBatchClient()
@@ -406,10 +455,14 @@ def TriggerDelete(obj, node):
     resps = api.client[node].Delete(obj.ObjType, [msg])
     batchClient.Commit(node)
     ret = ValidateDelete(obj, resps)
-    return True
+    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
+    if obj.ObjType in exception:
+        commitStatus = GetBatchCommitStatus(node)
+        return ValidateCommit(obj, 'Delete', commitStatus)
+    return ret
 
 def DeleteObject(obj):
-    if not obj.IsHwHabitant():
+    if IsDryRun() and not obj.IsHwHabitant():
         logger.info("Already deleted %s" % (obj))
         return True
 

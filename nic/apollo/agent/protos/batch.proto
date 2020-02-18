@@ -12,8 +12,8 @@ import "types.proto";
 
 service BatchSvc {
   rpc BatchStart (BatchSpec) returns (BatchStatus) {}
-  rpc BatchCommit(types.BatchCtxt) returns (types.Empty) {}
-  rpc BatchAbort(types.BatchCtxt) returns (types.Empty) {}
+  rpc BatchCommit(types.BatchCtxt) returns (BatchStatus) {}
+  rpc BatchAbort(types.BatchCtxt) returns (BatchStatus) {}
 }
 
 // batch configuration

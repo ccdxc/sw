@@ -30,7 +30,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::CANCELLED;
+        return Status::OK;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -42,26 +42,36 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, device object "
                           "creation failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            ret = SDK_RET_ERR;
+            goto end;
         }
         batched_internally = true;
     }
 
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        pds_device_create(api_spec, bctxt);
+        ret = pds_device_create(api_spec, bctxt);
+        if (ret != SDK_RET_OK) {
+            if (batched_internally) {
+                pds_batch_destroy(bctxt);
+            }
+            goto end;
+        }
     }
 
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
+
     }
+
+end:
+
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
 
-static inline sdk_ret_t
+static inline void
 device_profile_update (pds::DeviceProfile profile)
 {
     boost::property_tree::ptree pt, output;
@@ -88,7 +98,7 @@ device_profile_update (pds::DeviceProfile profile)
     } catch (...) {}
     boost::property_tree::write_json(DEVICE_CONF_FILE, output);
 
-    return SDK_RET_OK;
+    return;
 }
 
 Status
@@ -108,11 +118,12 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::CANCELLED;
+        return Status::OK;
     }
 
     // create an internal batch, if this is not part of an existing API batch
     bctxt = proto_req->batchctxt().batchcookie();
+    auto profile = proto_req->request().profile();
     if (bctxt == PDS_BATCH_CTXT_INVALID) {
         batch_params.epoch = core::agent_state::state()->new_epoch();
         batch_params.async = false;
@@ -120,27 +131,34 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, device object update "
                           "failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::CANCELLED;
+            ret = SDK_RET_ERR;
+            goto end;
         }
         batched_internally = true;
     }
 
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        pds_device_update(api_spec, bctxt);
+        ret = pds_device_update(api_spec, bctxt);
+        if (ret != SDK_RET_OK) {
+            if (batched_internally) {
+                pds_batch_destroy(bctxt);
+            }
+            goto end;
+        }
     }
 
     // update device.conf with profile
     // TODO: ideally this should be done during commit time (and we need to
     //       handle aborting/rollback here)
-    auto profile = proto_req->request().profile();
-    ret = device_profile_update(profile);
-
+    device_profile_update(profile);
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
     }
+
+end:
+
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
@@ -158,7 +176,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-        return Status::CANCELLED;
+        return Status::OK;
     }
     memset(api_spec, 0, sizeof(pds_device_spec_t));
 
@@ -171,19 +189,29 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
         if (bctxt == PDS_BATCH_CTXT_INVALID) {
             PDS_TRACE_ERR("Failed to create a new batch, device object delete "
                           "failed");
-            return Status::CANCELLED;
+            ret = SDK_RET_ERR;
+            goto end;
         }
         batched_internally = true;
     }
 
     if (!core::agent_state::state()->pds_mock_mode()) {
-        pds_device_delete(bctxt);
+        ret = pds_device_delete(bctxt);
+        if (ret != SDK_RET_OK) {
+            if (batched_internally) {
+                pds_batch_destroy(bctxt);
+            }
+            goto end;
+        }
     }
 
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
     }
+
+end:
+
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

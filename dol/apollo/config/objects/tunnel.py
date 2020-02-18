@@ -306,7 +306,8 @@ class TunnelObjectClient(base.ConfigClientBase):
         return self.GetObjectByKey(node, tunnelid)
 
     def AssociateObjects(self, node):
-        logger.info("Filling nexthops")
+        logger.info(f"Filling nexthops on {node}")
+        NhClient = EzAccessStoreClient[node].GetConfigClient(api.ObjectTypes.NEXTHOP)
         for tun in self.Objects(node):
             if tun.IsUnderlay():
                 if tun.NexthopId == None:
@@ -316,11 +317,10 @@ class TunnelObjectClient(base.ConfigClientBase):
                     logger.info("Linking %s - %s" % (tun, nhObj))
                     nhObj.AddDependent(tun)
                 elif tun.NEXTHOP == None:
-                    logger.info("Linking Tunnel%d - Nexthop%d" %
+                    logger.info("Linking Tunnel%d with Nexthop%d" %
                                 (tun.Id, tun.NexthopId))
-                    # TODO: Keep all clientObjs in topo.py and enable it
-                    # to resolve circular dependency between tunnel and nexthop
-                    #tun.NEXTHOP = NhClient.GetNexthopObject(self.Node, tun.NexthopId)
+                    tun.NEXTHOP = NhClient.GetNexthopObject(node, tun.NexthopId)
+                    tun.NEXTHOP.AddDependent(tun)
         return
 
     def FillUnderlayNhGroups(self, node):
