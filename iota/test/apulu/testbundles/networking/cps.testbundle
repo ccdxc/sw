@@ -12,11 +12,11 @@ testcases:
             type: remote_only
         iterators:
             type      : simple
-            proto     : [ tcp, udp ]
-            #proto     : [ udp ]
-            #cps       : [ 500 ]
-            #duration  : [ 200 ]
-            cps       : [ 300, 700 ]
-            duration  : [ 10, 10 ]
+            #proto     : [ tcp, udp ]
+            proto     : [ udp ]
+            cps       : [ 100 ]
+            duration  : [ 10 ]
+            #cps       : [ 20, 20 ]
+            #duration  : [ 10, 10 ]
 
 
