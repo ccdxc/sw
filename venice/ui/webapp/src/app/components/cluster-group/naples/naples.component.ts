@@ -249,7 +249,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   fetechAll() {
-    this.tableLoading = (this.searchDSCsCount > 0 ) ? true : false;
+    this.tableLoading = (this.searchDSCsCount > 0) ? true : false;
     const observables: Observable<any>[] = [];
     observables.push(this.workloadService.ListWorkload()); // workloads
     const forkJoinSub = forkJoin(observables).subscribe((results: any[]) => {
@@ -300,8 +300,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       (response) => {
         this.workloadEventUtility.processEvents(response);
 
-        const updatedMap: { [type: string]: Array<WorkloadWorkload>  } = this.workloadEventUtility.updateRecordMap;
-        const addedWLItems =  updatedMap[EventTypes.create];
+        const updatedMap: { [type: string]: Array<WorkloadWorkload> } = this.workloadEventUtility.updateRecordMap;
+        const addedWLItems = updatedMap[EventTypes.create];
         const deletedWLIems = updatedMap[EventTypes.delete];
         const updatedWLIems = updatedMap[EventTypes.update];
 
@@ -979,13 +979,15 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   showDecommissionButton(rowData: ClusterDistributedServiceCard): boolean {
-    return rowData.spec.admit && rowData.status['admission-phase'] ===
-      ClusterDistributedServiceCardStatus_admission_phase.admitted;
+
+    return (rowData.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.network) && (rowData.status['admission-phase'] ===
+      ClusterDistributedServiceCardStatus_admission_phase.admitted);
   }
 
   showDeleteButton(rowData: ClusterDistributedServiceCard): boolean {
-    return rowData.spec.admit && rowData.status['admission-phase'] ===
-      ClusterDistributedServiceCardStatus_admission_phase.decommissioned;
+
+    return (rowData.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.host) || (rowData.status['admission-phase'] ===
+      ClusterDistributedServiceCardStatus_admission_phase.decommissioned);
   }
 
   onSearchDSCs(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
