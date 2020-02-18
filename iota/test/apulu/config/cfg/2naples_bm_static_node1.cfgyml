@@ -126,9 +126,10 @@ vpc:
                  type : static
 
       policy:
-              - type : specific
-                policytype : default
-                direction : bidir
+             - type : specific
+               policytype : default
+               direction : bidir
+
       nat:
         count : 2
         addrtype : PUBLIC_AND_SERVICE

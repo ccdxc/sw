@@ -135,6 +135,7 @@ class PolicyObject(base.ConfigObjectBase):
         self.OverlapType = overlaptype
         self.rules = copy.deepcopy(rules)
         self.DeriveOperInfo()
+        self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.Show()
         return
 

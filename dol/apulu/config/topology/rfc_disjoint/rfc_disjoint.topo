@@ -99,7 +99,6 @@ node:
                  - type : underlay
                    count : 2
           policy:
-
                   - type : specific
                     policytype : icmp_specific
                     direction : bidir

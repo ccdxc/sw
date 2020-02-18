@@ -145,9 +145,9 @@ vpc:
                    - '50.5.0.0\16'
 
       policy:
-              - type : specific
-                policytype : default
-                direction : bidir
+             - type : specific
+               policytype : default
+               direction : bidir
 
 # ECMP:
 # Object types and order of creation of objects for different kinds of ECMP.

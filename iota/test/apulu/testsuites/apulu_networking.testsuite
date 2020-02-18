@@ -45,6 +45,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/networking.testbundle
+        #- policy/policy.testbundle
         - classic/ethtool.testbundle
         - api_crud/api_crud.testbundle
         - mtu/mtu.testbundle

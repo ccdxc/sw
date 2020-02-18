@@ -1,0 +1,45 @@
+meta:
+    name    : policy
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : ICMP_Policy_Remote_Workloads
+        testcase: testcases.policy.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ] #[ ipv4, ipv6 ]
+            pktsize   : [ 64 ] #[ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+            protocol  : [ icmp ]
+            direction : [ ingress, egress ]
+            action    : [ allow, deny ]
+
+    -   name    : TCP_Policy_Remote_Workloads
+        testcase: testcases.policy.iperf
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ] #[ ipv4, ipv6 ]
+            pktsize   : [ 64 ] #[ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+            protocol  : [ tcp ]
+            direction : [ ingress, egress ]
+            action    : [ allow, deny ]
+
+    -   name    : UDP_Policy_Remote_Workloads
+        testcase: testcases.policy.iperf
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ] #[ ipv4, ipv6 ]
+            pktsize   : [ 64 ] #[ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+            protocol  : [ udp ]
+            direction : [ ingress, egress ]
+            action    : [ allow, deny ]
