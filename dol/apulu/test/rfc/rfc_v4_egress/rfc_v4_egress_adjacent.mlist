@@ -6,7 +6,7 @@ feature:
     module      : rfc
     runorder    : 11000
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 
@@ -43,7 +43,7 @@ modules:
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx
             - policy : filter://AddrFamily=IPV4,OverlapType=adjacent_pfx_with_default
-            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
+#            - policy : filter://AddrFamily=IPV4,OverlapType=pfx_adjacent
 
     - module:
         name    : ADJACENT_LEFT
