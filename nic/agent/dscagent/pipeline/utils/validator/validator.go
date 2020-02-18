@@ -70,8 +70,50 @@ func ValidateEndpoint(i types.InfraAPI, endpoint netproto.Endpoint) (network net
 	return
 }
 
+func validateCollector(i types.InfraAPI, collector string) (c netproto.Collector, err error) {
+	col := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      collector,
+		},
+	}
+	dat, err := i.Read(col.Kind, col.GetKey())
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
+		err = errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
+		return
+	}
+	err = c.Unmarshal(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
+		err = errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+		return
+	}
+	return
+}
+
+func validateCollectors(i types.InfraAPI, collectors []string, collectorToIDMap map[string]uint64) error {
+	for _, col := range collectors {
+		c, err := validateCollector(i, col)
+		if err != nil {
+			return err
+		}
+		collectorToIDMap[col] = c.Status.Collector
+	}
+	return nil
+}
+
 // ValidateInterface performs static field validations on interface type
-func ValidateInterface(intf netproto.Interface) (err error) {
+func ValidateInterface(i types.InfraAPI, intf netproto.Interface, collectorToIDMap map[string]uint64) (err error) {
+	// Collector validations
+	if err = validateCollectors(i, intf.Spec.TxCollectors, collectorToIDMap); err != nil {
+		return
+	}
+	if err = validateCollectors(i, intf.Spec.RxCollectors, collectorToIDMap); err != nil {
+		return
+	}
 	// Static Field  Validations
 	switch strings.ToLower(intf.Spec.Type) {
 	case "uplink_eth":
@@ -231,31 +273,29 @@ func ValidateTunnel(i types.InfraAPI, tunnel netproto.Tunnel) (vrf netproto.Vrf,
 	return
 }
 
-// ValidateMirrorSession performs static field validations on srcIP, DstIP and named reference validation on vrf
-func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation) (vrf netproto.Vrf, err error) {
-	var collectorIPAddresses []string
-	for _, c := range mirror.Spec.Collectors {
-		collectorIPAddresses = append(collectorIPAddresses, c.ExportCfg.Destination)
+// ValidateCollector performs named reference validation on vrf and max mirror session check
+func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Operation) (vrf netproto.Vrf, err error) {
+	dat, _ := i.List(col.Kind)
+	if len(dat) == types.MaxMirrorSessions && oper == types.Create {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured))
+		return vrf, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured)
 	}
 
+	// Named reference validations
+	vrf, err = ValidateVrf(i, col.Tenant, col.Namespace, col.Spec.VrfName)
+	return
+}
+
+// ValidateMirrorSession performs named reference validation on vrf and max mirror session check
+func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation) (vrf netproto.Vrf, err error) {
 	dat, _ := i.List(mirror.Kind)
 	if len(dat) == types.MaxMirrorSessions && oper == types.Create {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured))
 		return vrf, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured)
 	}
 
-	//cfg := i.GetConfig()
-
-	//arpCache, err = utils.ResolveIPAddress(cfg.MgmtIP, cfg.MgmtIntf, collectorIPAddresses...)
-	//if err != nil {
-	//	return
-	//}
-
 	// Named reference validations
 	vrf, err = ValidateVrf(i, mirror.Tenant, mirror.Namespace, mirror.Spec.VrfName)
-	if err != nil {
-		return
-	}
 	return
 }
 

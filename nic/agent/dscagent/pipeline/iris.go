@@ -617,7 +617,8 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		intf = existingInterface
 	}
 	// Perform object validations
-	err = validator.ValidateInterface(intf)
+	collectorToIDMap := make(map[string]uint64)
+	err = validator.ValidateInterface(i.InfraAPI, intf, collectorToIDMap)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -627,7 +628,7 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	err = iris.HandleInterface(i.InfraAPI, i.IntfClient, oper, intf)
+	err = iris.HandleInterface(i.InfraAPI, i.IntfClient, oper, intf, collectorToIDMap)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -1085,10 +1086,6 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 
 		return
 	case types.Create:
-		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
-		if mirror.Status.MirrorSessionID == 0 {
-			mirror.Status.MirrorSessionID = i.InfraAPI.AllocateID(types.MirrorSessionID, 0)
-		}
 
 	case types.Update:
 		// Get to ensure that the object exists
@@ -1110,8 +1107,6 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 			return nil, nil
 		}
 
-		// Reuse ID from store
-		mirror.Status.MirrorSessionID = existingMirrorSession.Status.MirrorSessionID
 	case types.Delete:
 		var existingMirrorSession netproto.MirrorSession
 		dat, err := i.InfraAPI.Read(mirror.Kind, mirror.GetKey())
@@ -1135,8 +1130,6 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 		log.Error(err)
 		return nil, err
 	}
-	// Update Mirror session ID to be under 8. TODO remove this once HAL doesn't rely on agents to provide its hardware ID
-	mirror.Status.MirrorSessionID = mirror.Status.MirrorSessionID % types.MaxMirrorSessions
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleMirrorSession(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, mirror, vrf.Status.VrfID)
 	if err != nil {
@@ -1382,6 +1375,115 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	return
 }
 
+// HandleCollector handles CRUD Methods for Collector Object
+func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
+	i.Lock()
+	defer i.Unlock()
+
+	err = utils.ValidateMeta(oper, col.Kind, col.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.Collector
+		)
+		dat, err = i.InfraAPI.Read(col.Kind, col.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+		}
+		cols = append(cols, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = i.InfraAPI.List(col.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var collector netproto.Collector
+			err := proto.Unmarshal(o, &collector)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", collector.GetKey(), err))
+				continue
+			}
+			cols = append(cols, collector)
+		}
+
+		return
+	case types.Create:
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingCollector netproto.Collector
+		dat, err := i.InfraAPI.Read(col.Kind, col.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingCollector.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&col.Spec, &existingCollector.Spec) {
+			//log.Infof("Collector: %s | Info: %s ", col.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
+		// Reuse ID from store
+		col.Status.Collector = existingCollector.Status.Collector
+	case types.Delete:
+		var existingCollector netproto.Collector
+		dat, err := i.InfraAPI.Read(col.Kind, col.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingCollector.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+		}
+		col = existingCollector
+	}
+	log.Infof("Collector: %v | Op: %s | %s", col, oper, types.InfoHandleObjBegin)
+	defer log.Infof("Collector: %v | Op: %s | %s", col, oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	vrf, err := validator.ValidateCollector(i.InfraAPI, col, oper)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	// Take a lock to ensure a single HAL API is active at any given point
+	if err := iris.HandleCollector(i.InfraAPI, i.TelemetryClient, oper, col, vrf.Status.VrfID); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
 // HandleIPAMPolicy handles CRUD methods for IPAMPolicy
 func (i *IrisAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPolicy) (policies []netproto.IPAMPolicy, err error) {
 	return nil, err
@@ -1493,6 +1595,26 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 		}
 	}
+
+	// Replay Collector Object
+	cols, err := i.InfraAPI.List("Collector")
+	if err == nil {
+		for _, o := range cols {
+			var collector netproto.Collector
+			err := collector.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Collector. Err: %v", err)
+				continue
+			}
+			creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Collector object")
+				if _, err := i.HandleCollector(types.Create, collector); err != nil {
+					log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -1534,6 +1656,14 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 		if _, err := i.HandleNetwork(types.Delete, network); err != nil {
 			log.Errorf("Failed to purge the Network. Err: %v", err)
+		}
+	}
+
+	c := netproto.Collector{TypeMeta: api.TypeMeta{Kind: "Collector"}}
+	cols, _ := i.HandleCollector(types.List, c)
+	for _, col := range cols {
+		if _, err := i.HandleCollector(types.Delete, col); err != nil {
+			log.Errorf("Failed to purge the Collector. Err: %v", err)
 		}
 	}
 
@@ -1655,11 +1785,6 @@ func (i *IrisAPI) initLifStream() {
 // HandleCPRoutingConfig unimplemented
 func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
-}
-
-// HandleVrf handles CRUD Methods for Collector Object
-func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
-	return nil, nil
 }
 
 // TODO Remove PortCreates once the linkmgr changes are stable

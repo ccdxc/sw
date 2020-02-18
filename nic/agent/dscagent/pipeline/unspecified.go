@@ -1710,7 +1710,7 @@ func (i *FakeAgentAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
 }
 
-// HandleVrf handles CRUD Methods for Collector Object
+// HandleCollector handles CRUD Methods for Collector Object
 func (i *FakeAgentAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	return nil, nil
 }

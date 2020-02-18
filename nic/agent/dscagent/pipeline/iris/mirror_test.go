@@ -10,10 +10,21 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
-func TestHandleMirror(t *testing.T) {
-	t.Skip("Skipped till we figure out a way to ensure the lateral objects are correctly handled in the absensce of venice configs")
+func TestHandleMirrorSession(t *testing.T) {
+	col := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testCollector",
+		},
+		Spec: netproto.CollectorSpec{
+			Destination: "192.168.100.101",
+		},
+		Status: netproto.CollectorStatus{Collector: 1},
+	}
 	mirror := netproto.MirrorSession{
-		TypeMeta: api.TypeMeta{Kind: "Mirror"},
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
@@ -60,6 +71,9 @@ func TestHandleMirror(t *testing.T) {
 		Status: netproto.MirrorSessionStatus{MirrorSessionID: 1},
 	}
 
+	if err := HandleCollector(infraAPI, telemetryClient, types.Create, col, 65); err != nil {
+		t.Fatal(err)
+	}
 	err := HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Create, mirror, 65)
 	if err != nil {
 		t.Fatal(err)
@@ -69,41 +83,44 @@ func TestHandleMirror(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//
-	//err = HandleMirrorSession(infraAPI, intfClient, 42, mirror, 65)
-	//if err == nil {
-	//	t.Fatal("Invalid op must return a valid error.")
-	//}
+
+	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, 42, mirror, 65)
+	if err == nil {
+		t.Fatal("Invalid op must return a valid error.")
+	}
 }
 
-//func TestHandleMirrorInfraFailures(t *testing.T) {
-//	t.Parallel()
-//	mirror := netproto.Mirror{
-//		TypeMeta: api.TypeMeta{Kind: "Mirror"},
-//		ObjectMeta: api.ObjectMeta{
-//			Tenant:    "default",
-//			Namespace: "default",
-//			Name:      "testMirror",
-//		},
-//		Spec: netproto.MirrorSpec{
-//			AdminStatus: "UP",
-//			Src:         "10.10.10.10",
-//			Dst:         "20.20.20.20",
-//		},
-//	}
-//	i := newBadInfraAPI()
-//	err := HandleMirror(i, intfClient, types.Create, mirror, 65)
-//	if err == nil {
-//		t.Fatalf("Must return a valid error. Err: %v", err)
-//	}
-//
-//	err = HandleMirror(i, intfClient, types.Update, mirror, 65)
-//	if err == nil {
-//		t.Fatalf("Must return a valid error. Err: %v", err)
-//	}
-//
-//	err = HandleMirror(i, intfClient, types.Delete, mirror, 65)
-//	if err == nil {
-//		t.Fatalf("Must return a valid error. Err: %v", err)
-//	}
-//}
+func TestHandleMirrorInfraFailures(t *testing.T) {
+	mirror := netproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testMirror",
+		},
+		Spec: netproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Collectors: []netproto.MirrorCollector{
+				{
+					ExportCfg: netproto.MirrorExportConfig{Destination: "192.168.100.101"},
+				},
+			},
+		},
+	}
+
+	i := newBadInfraAPI()
+	err := HandleMirrorSession(i, telemetryClient, intfClient, epClient, types.Create, mirror, 65)
+	if err == nil {
+		t.Fatalf("Must return a valid error. Err: %v", err)
+	}
+
+	err = HandleMirrorSession(i, telemetryClient, intfClient, epClient, types.Update, mirror, 65)
+	if err == nil {
+		t.Fatalf("Must return a valid error. Err: %v", err)
+	}
+
+	err = HandleMirrorSession(i, telemetryClient, intfClient, epClient, types.Delete, mirror, 65)
+	if err == nil {
+		t.Fatalf("Must return a valid error. Err: %v", err)
+	}
+}

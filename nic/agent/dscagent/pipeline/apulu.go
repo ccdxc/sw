@@ -1413,7 +1413,7 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 	return nil
 }
 
-// HandleVrf handles CRUD Methods for Collector Object
+// HandleCollector handles CRUD Methods for Collector Object
 func (i *ApuluAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	return nil, nil
 }

@@ -17,12 +17,12 @@ import (
 )
 
 // HandleInterface handles crud operations on intf
-func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, oper types.Operation, intf netproto.Interface) error {
+func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, oper types.Operation, intf netproto.Interface, collectorToIDMap map[string]uint64) error {
 	switch oper {
 	case types.Create:
-		return createInterfaceHandler(infraAPI, client, intf)
+		return createInterfaceHandler(infraAPI, client, intf, collectorToIDMap)
 	case types.Update:
-		return updateInterfaceHandler(infraAPI, client, intf)
+		return updateInterfaceHandler(infraAPI, client, intf, collectorToIDMap)
 	case types.Delete:
 		return deleteInterfaceHandler(infraAPI, client, intf)
 	default:
@@ -30,8 +30,8 @@ func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, ope
 	}
 }
 
-func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface) error {
-	intfReqMsg := convertInterface(intf)
+func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorToIDMap map[string]uint64) error {
+	intfReqMsg := convertInterface(intf, collectorToIDMap)
 	resp, err := client.InterfaceCreate(context.Background(), intfReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
@@ -47,8 +47,8 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	return nil
 }
 
-func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface) error {
-	intfReqMsg := convertInterface(intf)
+func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorToIDMap map[string]uint64) error {
+	intfReqMsg := convertInterface(intf, collectorToIDMap)
 	resp, err := client.InterfaceUpdate(context.Background(), intfReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
@@ -88,9 +88,15 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	return nil
 }
 
-func convertInterface(intf netproto.Interface) *halapi.InterfaceRequestMsg {
+func convertInterface(intf netproto.Interface, collectorToIDMap map[string]uint64) *halapi.InterfaceRequestMsg {
 	var txMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
 	var rxMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
+	for _, c := range intf.Spec.TxCollectors {
+		txMirrorSessionhandles = append(txMirrorSessionhandles, convertMirrorSessionKeyHandle(collectorToIDMap[c]))
+	}
+	for _, c := range intf.Spec.RxCollectors {
+		rxMirrorSessionhandles = append(rxMirrorSessionhandles, convertMirrorSessionKeyHandle(collectorToIDMap[c]))
+	}
 	switch strings.ToLower(intf.Spec.Type) {
 	case "uplink_eth":
 		return &halapi.InterfaceRequestMsg{
