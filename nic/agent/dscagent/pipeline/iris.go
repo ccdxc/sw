@@ -123,11 +123,6 @@ func (i *IrisAPI) PipelineInit() error {
 			VrfID: 65,
 		},
 	}
-	if _, err := i.HandleVrf(types.Create, defaultVrf); err != nil {
-		log.Error(err)
-		return err
-	}
-	log.Infof("Iris API: %s | %s", types.InfoPipelineInit, types.InfoDefaultVrfCreate)
 
 	defaultNetwork := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -147,6 +142,23 @@ func (i *IrisAPI) PipelineInit() error {
 		},
 		Status: netproto.NetworkStatus{NetworkID: types.UntaggedCollVLAN},
 	}
+
+	// Clean up stale objects from store. This will be recomputed during PipelineInit
+	if err := i.InfraAPI.Delete(defaultVrf.Kind, defaultVrf.GetKey()); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Vrf: %s | Err: %v", defaultVrf.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Vrf: %s | Err: %v", defaultVrf.GetKey(), err)
+	}
+
+	if err := i.InfraAPI.Delete(defaultNetwork.Kind, defaultNetwork.GetKey()); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Network: %s | Err: %v", defaultNetwork.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Network: %s | Err: %v", defaultNetwork.GetKey(), err)
+	}
+
+	if _, err := i.HandleVrf(types.Create, defaultVrf); err != nil {
+		log.Error(err)
+		return err
+	}
+	log.Infof("Iris API: %s | %s", types.InfoPipelineInit, types.InfoDefaultVrfCreate)
 
 	if _, err := i.HandleNetwork(types.Create, defaultNetwork); err != nil {
 		log.Error(err)
