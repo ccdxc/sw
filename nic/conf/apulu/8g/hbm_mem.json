@@ -208,31 +208,23 @@
             "max_elements": "1K"
         },
         {
-            "name": "sacl_egress_v4",
+            "name": "sacl_v4",
+            "_comment": "1K vnics, 1K subnets, 5 policies per vnic per direction, 1 policy per subnet per direction",
+            "_comment": "((1K * 5) * 2) + ((1K * 1) * 2) + 1 = 12K +1 blocks = 12289 blocks",
             "kind": "cfgtbl",
-            "size": "264M",
+            "size": "528M",
             "block_size": "264K",
+            "block_count": "2K",
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "sacl_ingress_v4",
-            "kind": "cfgtbl",
-            "size": "264M",
-            "block_size": "264K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "sacl_egress_v6",
+            "name": "sacl_v6",
+            "_comment": "1K vnics, 1K subnets, 5 policies per vnic per direction, 1 policy per subnet per direction",
+            "_comment": "((1K * 5) * 2) + ((1K * 1) * 2) + 1 = 12K +1 blocks = 12289 blocks",
             "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "sacl_ingress_v6",
-            "kind": "cfgtbl",
-            "size": "1K",
-            "block_size": "1K",
+            "block_count": "2K",
             "cache": "p4plus-rxdma"
         },
         {

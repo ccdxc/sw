@@ -106,7 +106,6 @@ typedef struct pds_policy_spec_s    pds_policy_spec_t;
 struct pds_policy_spec_s {
     pds_obj_key_t       key;            ///< policy key
     uint8_t             af;             ///< Address family
-    rule_dir_t          direction;      ///< Policy enforcement direction
     uint32_t            num_rules;      ///< Number of rules in the list
     rule_t              *rules;         ///< List or rules
 
@@ -124,7 +123,6 @@ struct pds_policy_spec_s {
         }
         key = policy.key;
         af = policy.af;
-        direction = policy.direction;
         num_rules = policy.num_rules;
         if (rules) {
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);

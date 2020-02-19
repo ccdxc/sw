@@ -396,6 +396,16 @@ ip_addr_is_zero (const ip_addr_t *addr)
 }
 
 static inline bool
+ip_prefix_is_zero (ip_prefix_t *ip_prefix)
+{
+    static ip_prefix_t ippfx_zero = { 0 };
+    if (!memcmp(ip_prefix, &ippfx_zero, sizeof(ip_prefix_t))) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
 ip_prefix_is_equal (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
 {
     if (!ip_prefix1 || !ip_prefix2) {

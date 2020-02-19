@@ -220,31 +220,19 @@
             "max_elements": "1K"
         },
         {
-            "name": "sacl_egress_v4",
-            "_comment": "(64 + 1) * 264K",
-            "size": "18M",
+            "name": "sacl_v4",
+            "_comment": "(64 * 2 + 1) * 264K",
+            "size": "36M",
             "block_size": "264K",
+            "block_count": "129",
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "sacl_ingress_v4",
-            "_comment": "(64 + 1) * 264K",
-            "size": "18M",
-            "block_size": "264K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "sacl_egress_v6",
-            "_comment": "(64 + 1) * 330K",
-            "size": "22M",
+            "name": "sacl_v6",
+            "_comment": "(64 * 2 + 1) * 330K",
+            "size": "44M",
             "block_size": "330K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "sacl_ingress_v6",
-            "_comment": "(64 + 1) * 330K",
-            "size": "22M",
-            "block_size": "330K",
+            "block_count": "129",
             "cache": "p4plus-rxdma"
         },
         {

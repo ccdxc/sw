@@ -19,7 +19,6 @@ namespace api {
 void
 policy_feeder::init(pds_obj_key_t key,
                     uint16_t stateful_rules,
-                    rule_dir_t direction,
                     uint8_t af,
                     std::string cidr_str,
                     uint32_t num_policy) {
@@ -30,7 +29,6 @@ policy_feeder::init(pds_obj_key_t key,
     this->spec.key = key;
     this->spec.num_rules = max_rules;
     this->stateful_rules = stateful_rules;
-    this->spec.direction = direction;
     this->spec.af = af;
     this->spec.rules = NULL;
     this->cidr_str = cidr_str;
@@ -140,8 +138,6 @@ policy_feeder::key_compare(const pds_obj_key_t *key) const {
 
 bool
 policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
-    if (spec->direction != this->spec.direction)
-        return false;
     if (spec->af != this->spec.af)
         return false;
 
@@ -165,23 +161,19 @@ void sample_policy_setup(pds_batch_ctxt_t bctxt) {
     pds_obj_key_t pol_key = int2pdsobjkey(1);
 
     // setup and teardown parameters should be in sync
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS,
-                      IP_AF_IPV4, "10.0.0.1/16", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "10.0.0.1/16", 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS,
-                      IP_AF_IPV6, "2001::1/64", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV6, "2001::1/64", 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS,
-                      IP_AF_IPV4, "20.0.0.1/16", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "20.0.0.1/16", 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS,
-                      IP_AF_IPV6, "3001::1/64", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV6, "3001::1/64", 5);
     many_create(bctxt, k_pol_feeder);
 }
 
@@ -189,23 +181,19 @@ void sample_policy_teardown(pds_batch_ctxt_t bctxt) {
     pds_obj_key_t pol_key = int2pdsobjkey(1);
 
     // this feeder base values doesn't matter in case of deletes
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS,
-                      IP_AF_IPV4, "10.0.0.1/16", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "10.0.0.1/16", 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS,
-                      IP_AF_IPV6, "2001::1/64", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV6, "2001::1/64", 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS,
-                      IP_AF_IPV4, "20.0.0.1/16", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "20.0.0.1/16", 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS,
-                      IP_AF_IPV6, "3001::1/64", 5);
+    k_pol_feeder.init(pol_key, 512, IP_AF_IPV6, "3001::1/64", 5);
     many_delete(bctxt, k_pol_feeder);
 }
 

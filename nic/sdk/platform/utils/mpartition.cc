@@ -20,6 +20,7 @@ namespace utils {
 #define JKEY_REGION_NAME    "name"
 #define JKEY_SIZE           "size"
 #define JKEY_BLKSIZE        "block_size"
+#define JKEY_BLKCOUNT       "block_count"
 #define JKEY_MAX_ELEMENTS   "max_elements"
 #define JKEY_CACHE_PIPE     "cache"
 #define JKEY_RESET_REGION   "reset"
@@ -62,7 +63,7 @@ extract_size (std::string str)
 }
 
 static inline std::string
-region_kind_to_str (mpartition_region_kind_t kind)
+region_kind_to_str (region_kind_t kind)
 {
     switch(kind) {
     case MEM_REGION_KIND_STATIC : return JKEYVAL_REGION_KIND_STATIC;
@@ -257,14 +258,16 @@ insert_common_regions (mpartition_region_t *reg, const char *name,
     reg->size         = size;
     reg->reset        = reset;
     reg->block_size   = -1;
+    reg->block_count  = 1;
     reg->max_elements = -1;
     reg->kind = MEM_REGION_KIND_STATIC;
 
     SDK_TRACE_DEBUG(
-        "region : %s, size : %u, block size : %u, max elems : %u, "
-        "reset : %u, cpipe : %s, start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
-        reg->mem_reg_name, reg->size, reg->block_size, reg->max_elements,
-        reg->reset, "none", MREGION_BASE_ADDR + offset,
+        "region : %s, size : %u, block size : %u, block count : %u, "
+        "max elems : %u, reset : %u, cpipe : %s, start : 0x%" PRIx64
+        ", end : 0x%" PRIx64 "", reg->mem_reg_name, reg->size,
+        reg->block_size, reg->block_count, reg->max_elements, reg->reset,
+        "none", MREGION_BASE_ADDR + offset,
         MREGION_BASE_ADDR + offset + reg->size);
 }
 
@@ -361,6 +364,7 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
         reg->block_size =
             extract_size(p4_tbl.second.get<std::string>(JKEY_BLKSIZE,
                                                         "4294967295B")); // -1 default
+        reg->block_count = std::stol(p4_tbl.second.get<std::string>(JKEY_BLKCOUNT, "1")); // default = 1
         reg->max_elements =
             extract_size(p4_tbl.second.get<std::string>(JKEY_MAX_ELEMENTS,
                                                         "4294967295B")); // -1 default
@@ -384,11 +388,11 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
         }
 
         SDK_TRACE_DEBUG("region : %s, size : %u, block size : %u, "
-                        "max elements : %u, reset : %u, cpipe : %s, "
-                        "start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
+                        "block count : %u, max elements : %u, reset : %u, "
+                        "cpipe : %s, start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
                         reg->mem_reg_name, reg->size, reg->block_size,
-                        reg->max_elements, reg->reset, cache_pipe_name.c_str(),
-                        addr(reg->start_offset),
+                        reg->block_count, reg->max_elements, reg->reset,
+                        cache_pipe_name.c_str(), addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
         reg++;
     }
@@ -492,6 +496,13 @@ mpartition::block_size(const char *name)
 {
     mpartition_region_t *reg = region(name);
     return reg ? reg->block_size : 0;
+}
+
+uint64_t
+mpartition::block_count(const char *name)
+{
+    mpartition_region_t *reg = region(name);
+    return reg ? reg->block_count : 0;
 }
 
 uint32_t

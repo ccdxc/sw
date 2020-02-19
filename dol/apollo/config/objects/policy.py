@@ -216,7 +216,6 @@ class PolicyObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        spec.Direction = utils.GetRpcDirection(self.Direction)
         spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.rules:
             self.FillRuleSpec(spec, rule)
@@ -224,8 +223,6 @@ class PolicyObject(base.ConfigObjectBase):
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
-            return False
-        if spec.Direction != utils.GetRpcDirection(self.Direction):
             return False
         if spec.AddrFamily != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False

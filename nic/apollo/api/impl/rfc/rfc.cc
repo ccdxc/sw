@@ -23,7 +23,6 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     string    rule_str = "";
 
     rule_str += std::to_string(rule_num) + ". ";
-    rule_str += (policy->direction == RULE_DIR_INGRESS) ? "ing, " : "egr, ";
     rule_str += (policy->af == IP_AF_IPV4) ? "v4, " : "v6, ";
     rule_str += rule->stateful ? "stateful : " : "stateless : ";
     rule_str += "match = (proto " +

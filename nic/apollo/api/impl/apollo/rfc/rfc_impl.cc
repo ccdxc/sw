@@ -97,10 +97,12 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
-        if (policy->direction == RULE_DIR_INGRESS) {
+        if (ip_prefix_is_zero(&rule->match.l3_match.dst_ip_pfx)) {
+            // ingress policy
             itable_add_address_inodes(rule_num, addr_inode,
                                       &rule->match.l3_match.src_ip_pfx);
         } else {
+            // egress policy
             itable_add_address_inodes(rule_num, addr_inode,
                                       &rule->match.l3_match.dst_ip_pfx);
         }

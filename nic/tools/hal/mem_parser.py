@@ -283,6 +283,11 @@ def parse_region(e, start_offset):
     else:
         bs = size_str_to_bytes(e['block_size'])
 
+    if e.get('block_count') is None:
+        bc = 1
+    else:
+        bc = size_str_to_bytes(e['block_count'])
+
     # parse kind
     if parse_kind(e, start_offset, s) == -1:
         print('Invalid kind specified for region %s', n)
@@ -295,6 +300,7 @@ def parse_region(e, start_offset):
     print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
     print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
     print >> fd, "#define %-60s %ld" %(nbase + "BLOCK_SIZE", bs)
+    print >> fd, "#define %-60s %ld" %(nbase + "BLOCK_COUNT", bc)
 
     # Update start offset
     print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", start_offset);

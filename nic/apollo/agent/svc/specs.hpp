@@ -1857,22 +1857,6 @@ pds_proto_action_to_rule_action (types::SecurityRuleAction action)
 }
 
 static inline sdk_ret_t
-pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
-                                  const pds::SecurityPolicySpec &proto_spec)
-{
-    if (proto_spec.direction() == types::RULE_DIR_INGRESS) {
-        *dir = RULE_DIR_INGRESS;
-    } else if (proto_spec.direction() == types::RULE_DIR_EGRESS) {
-        *dir = RULE_DIR_EGRESS;
-    } else {
-        PDS_TRACE_ERR("Invalid direction {} in policy spec {}",
-                      proto_spec.direction(), proto_spec.id());
-        return SDK_RET_INVALID_ARG;
-    }
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
 pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                                          uint32_t rule_id, uint8_t af,
                                          rule_match_t *match,
@@ -2028,10 +2012,6 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
-    ret = pds_policy_dir_proto_to_api_spec(&api_spec->direction, proto_spec);
-    if (unlikely(ret != SDK_RET_OK)) {
-        return ret;
-    }
     num_rules = proto_spec.rules_size();
     api_spec->num_rules = num_rules;
     api_spec->rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
@@ -2085,11 +2065,6 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         proto_spec->set_addrfamily(types::IP_AF_INET6);
     } else {
         SDK_ASSERT(FALSE);
-    }
-    if (api_spec->direction == RULE_DIR_INGRESS) {
-        proto_spec->set_direction(types::RULE_DIR_INGRESS);
-    } else if (api_spec->direction == RULE_DIR_EGRESS) {
-        proto_spec->set_direction(types::RULE_DIR_EGRESS);
     }
     for (uint32_t i = 0; i < api_spec->num_rules; i++) {
         pds::SecurityRule *proto_rule = proto_spec->add_rules();

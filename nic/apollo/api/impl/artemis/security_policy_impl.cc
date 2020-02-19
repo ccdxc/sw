@@ -13,8 +13,8 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/policy.hpp"
-#include "nic/apollo/api/impl/apollo/security_policy_impl.hpp"
-#include "nic/apollo/api/impl/apollo/pds_impl_state.hpp"
+#include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/rfc/rfc.hpp"
 
 namespace api {
@@ -50,16 +50,13 @@ security_policy_impl::reserve_resources(api_base *orig_obj,
 
     spec = &obj_ctxt->api_params->policy_spec;
     // allocate available block for this security policy
-    if (security_policy_impl_db()->security_policy_idxr(spec->af,
-                                                        spec->direction)->alloc(&policy_block_id) !=
-            sdk::lib::indexer::SUCCESS) {
+    if (security_policy_impl_db()->security_policy_idxr(spec->af)->alloc(
+            &policy_block_id) != SDK_RET_OK) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     security_policy_root_addr_ =
-        security_policy_impl_db()->security_policy_region_addr(spec->af,
-                                                               spec->direction) +
-            (security_policy_impl_db()->security_policy_table_size(spec->af,
-                                                                   spec->direction) *
+        security_policy_impl_db()->security_policy_region_addr(spec->af) +
+            (security_policy_impl_db()->security_policy_table_size(spec->af) *
                  policy_block_id);
     return SDK_RET_OK;
 }
@@ -73,12 +70,9 @@ security_policy_impl::release_resources(api_base *api_obj) {
     if (security_policy_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
         policy_block_id =
             (security_policy_root_addr_ -
-                 security_policy_impl_db()->security_policy_region_addr(security_policy->af(),
-                                                                        security_policy->dir()))/
-                security_policy_impl_db()->security_policy_table_size(security_policy->af(),
-                                                                      security_policy->dir());
-        security_policy_impl_db()->security_policy_idxr(security_policy->af(),
-                                                        security_policy->dir())->free(policy_block_id);
+                 security_policy_impl_db()->security_policy_region_addr(security_policy->af()))/
+                security_policy_impl_db()->security_policy_table_size(security_policy->af());
+        security_policy_impl_db()->security_policy_idxr(security_policy->af())->free(policy_block_id);
     }
     return SDK_RET_OK;
 }
@@ -98,7 +92,6 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     memset(&policy, 0, sizeof(policy));
     policy.af = spec->af;
-    policy.direction = spec->direction;
     policy.max_rules =
         (policy.af ==IP_AF_IPV4) ? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
                                    PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
@@ -106,8 +99,7 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     policy.rules = spec->rules;
     PDS_TRACE_DEBUG("Processing security policy %s", spec->key.str());
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
-              security_policy_impl_db()->security_policy_table_size(spec->af,
-                                                                    spec->direction));
+              security_policy_impl_db()->security_policy_table_size(spec->af));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
     }

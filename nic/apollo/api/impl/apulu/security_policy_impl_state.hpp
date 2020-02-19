@@ -11,8 +11,6 @@
 #ifndef __SECURITY_POLICY_STATE_IMPL_HPP__
 #define __SECURITY_POLICY_IMPL_STATE_HPP__
 
-#include "nic/sdk/lib/table/directmap/directmap.hpp"
-#include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -56,71 +54,32 @@ public:
     sdk_ret_t table_transaction_end(void);
 
     /// \brief  return policy region's base/start address in memory
-    mem_addr_t security_policy_region_addr(uint8_t af, rule_dir_t dir) const {
-        if (af == IP_AF_IPV4) {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v4_region_addr_;
-            } else {
-                return egr_v4_region_addr_;
-            }
-        } else {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v6_region_addr_;
-            } else {
-                return egr_v6_region_addr_;
-            }
-        }
+    /// \param[in] af    address family of the policy
+    mem_addr_t security_policy_region_addr(uint8_t af) const {
+        return (af == IP_AF_IPV4) ? v4_region_addr_ : v6_region_addr_;
     }
 
     /// \brief return security policy table's size
-    uint64_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
-        if (af == IP_AF_IPV4) {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v4_table_size_;
-            } else {
-                return egr_v4_table_size_;
-            }
-        } else {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v6_table_size_;
-            } else {
-                return egr_v6_table_size_;
-            }
-        }
+    /// \param[in] af    address family of the policy
+    uint64_t security_policy_table_size(uint8_t af) const {
+        return (af == IP_AF_IPV4) ? v4_table_size_ : v6_table_size_;
     }
 
 private:
-    indexer *security_policy_idxr(uint8_t af, rule_dir_t dir) {
-        if (af == IP_AF_IPV4) {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v4_idxr_;
-            } else {
-                return egr_v4_idxr_;
-            }
-        } else {
-            if (dir == RULE_DIR_INGRESS) {
-                return ing_v6_idxr_;
-            } else {
-                return egr_v6_idxr_;
-            }
-        }
+    rte_indexer *security_policy_idxr(uint8_t af) {
+        return (af == IP_AF_IPV4) ? v4_idxr_ : v6_idxr_;
     }
     friend class security_policy_impl;
 
 private:
     // datapath tables for security policy
-    indexer    *ing_v4_idxr_;          ///< indexer to allocate mem block for ingress policy tables
-    mem_addr_t ing_v4_region_addr_;    ///< base address for the ingress policy region
-    uint64_t   ing_v4_table_size_;     ///< size of each ingress policy table
-    indexer    *egr_v4_idxr_;          ///< indexer to allocate mem block for egress policy tables
-    mem_addr_t egr_v4_region_addr_;    ///< base address for the egress policy region
-    uint64_t   egr_v4_table_size_;     ///< size of each egress policy table
-    indexer    *ing_v6_idxr_;          ///< indexer to allocate mem block for ingress policy tables
-    mem_addr_t ing_v6_region_addr_;    ///< base address for the ingress policy region
-    uint64_t   ing_v6_table_size_;     ///< size of each ingress policy table
-    indexer    *egr_v6_idxr_;          ///< indexer to allocate mem block for egress policy tables
-    mem_addr_t egr_v6_region_addr_;    ///< base address for the egress policy region
-    uint64_t   egr_v6_table_size_;     ///< size of each egress policy table
+    rte_indexer *v4_idxr_;          ///< indexer to allocate mem block for v4 policy tables
+    mem_addr_t  v4_region_addr_;    ///< base address for v4 policy region
+    uint64_t    v4_table_size_;     ///< size of each v4 policy table
+
+    rte_indexer *v6_idxr_;          ///< indexer to allocate mem block for v6 policy tables
+    mem_addr_t  v6_region_addr_;    ///< base address for v6 policy region
+    uint64_t    v6_table_size_;     ///< size of each v6 policy table
 };
 
 /// \@}

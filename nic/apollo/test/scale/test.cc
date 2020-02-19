@@ -1300,7 +1300,6 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     }
 
     policy.af = ip_af;
-    policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
     policy.num_rules = num_rules;
     policy.rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES,
                                         num_rules * sizeof(rule_t));
@@ -1678,7 +1677,7 @@ create_objects (void)
             return ret;
         }
 
-        // create security policies
+        // create egress IPv4 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
                                      g_test_params.num_ipv4_rules,
@@ -1686,6 +1685,7 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
+        // create ingress IPv4 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
                                      g_test_params.num_ipv4_rules,
@@ -1694,6 +1694,7 @@ create_objects (void)
             return ret;
         }
 
+        // create egress IPv6 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
                                      g_test_params.num_ipv6_rules,
@@ -1701,6 +1702,7 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
+        // create ingress IPv6 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
                                      g_test_params.num_ipv6_rules,

@@ -29,27 +29,28 @@ namespace utils {
 #define MEM_REGION_MPU_TRACE_NAME       "mpu-trace"
 #define MEM_REGION_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 
-typedef enum mpartition_region_kind_e {
+typedef enum region_kind_e {
     MEM_REGION_KIND_CFGTBL,
     MEM_REGION_KIND_OPERTBL,
     MEM_REGION_KIND_STATIC,
     MEM_REGION_KIND_UPGRADE
-} mpartition_region_kind_t;
+} region_kind_t;
 
 /**
  * @brief Memory mpartition region
  */
 typedef struct mpartition_region_s {
     char            mem_reg_name[MEM_REG_NAME_MAX_LEN];   /**< Name */
-    uint64_t        size;           /**< Size */
-    uint64_t        block_size;     /**< Size of each block, if exists */
-    uint32_t        max_elements;   /**< max. no. of elements, if exists */
-    mem_addr_t      start_offset;   /**< Start address offset */
-    cache_pipe_t    cache_pipe;     /**< Cached pipe */
-    bool            reset;          /**< True to bzero this region during init */
-    int32_t         alias_index;    /**< region index if alias for another region */
-    mpartition_region_kind_t kind;  /**< Region kind */
-    bool            upgrade_check_done; /**< For upgrade scenarios */
+    uint64_t        size;               /**< size */
+    uint64_t        block_size;         /**< size of each block, if exists */
+    uint64_t        block_count;        /**< number of (equal sized) blocks in the region */
+    uint32_t        max_elements;       /**< max. no. of elements, if exists */
+    mem_addr_t      start_offset;       /**< start address offset */
+    cache_pipe_t    cache_pipe;         /**< cached pipe */
+    bool            reset;              /**< true to bzero this region during init */
+    int32_t         alias_index;        /**< region index if alias for another region */
+    region_kind_t   kind;               /**< region kind */
+    bool            upgrade_check_done; /**< for upgrade scenarios */
 } mpartition_region_t;
 
 class mpartition {
@@ -133,6 +134,15 @@ public:
     uint64_t block_size(const char *name);
 
     /**
+     * @brief Get the number of blocks in mpartition region
+     *
+     * @param[in] name Name of memory partition region
+     *
+     * @return number of blocks in mpartition region
+     */
+    uint64_t block_count(const char *name);
+
+    /**
      * @brief Get number of elements in mpartition region
      *
      * @param[in] name Name of memory partition region
@@ -194,7 +204,7 @@ public:
      */
     sdk_ret_t upg_regions(const char *cfg_path, bool oper_table_persist);
 
-static inline std::string get_mpart_file_path(std::string cfg_path, 
+static inline std::string get_mpart_file_path(std::string cfg_path,
         const char *feature_set, sdk::lib::dev_feature_profile_t profile)
 {
     std::string profile_name;

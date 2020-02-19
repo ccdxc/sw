@@ -49,7 +49,7 @@ using namespace sdk::platform::capri;
 #define JLIFQSTATE      "lif2qstate_map"
 #define JPKTBUFFER      "rxdma_to_txdma_buf"
 #define JPKTDESC        "rxdma_to_txdma_desc"
-#define JSACLV4BASE     "sacl_egress_v4"
+#define JSACLV4BASE     "sacl_v4"
 #define JLPMV4BASE      "lpm_v4"
 #define JSTATSBASE      "session_stats"
 #define JP4_PRGM        "p4_program"

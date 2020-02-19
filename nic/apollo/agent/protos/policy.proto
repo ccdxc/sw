@@ -44,8 +44,6 @@ message SecurityPolicySpec {
   bytes                    Id              = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 or IPv6 policy
   types.IPAF               AddrFamily      = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // direction in which the policy should be enforced
-  types.RuleDir            Direction       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // DefaultFWAction is the action taken by the firewall when SG policies are
   // configured on vnic but no rule is hit. Similarly, when NACLs are configured
   // on a subnet and no rule is hit, this action is taken by the firewall

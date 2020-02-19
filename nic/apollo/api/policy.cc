@@ -122,7 +122,6 @@ policy::init_config(api_ctxt_t *api_ctxt) {
 
     spec = &api_ctxt->api_params->policy_spec;
     this->af_ = spec->af;
-    this->dir_ = spec->direction;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     return SDK_RET_OK;
 }
@@ -136,16 +135,7 @@ policy::program_create(api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
-    pds_policy_spec_t *spec = &obj_ctxt->api_params->policy_spec;
-
-    if ((af_ != spec->af) || (dir_ != spec->direction)) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
-                      "or \"direction\" from %u to %u on policy table %s",
-                      dir_, spec->direction, key2str().c_str());
-        return SDK_RET_INVALID_ARG;
-    }
-    // in all other cases we have to recompute the policy table and program in
-    // the datapath
+    // we have to recompute the policy table & program in the datapath
     return SDK_RET_OK;
 }
 
@@ -300,7 +290,6 @@ void
 policy::fill_spec_(pds_policy_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->af = af_;
-    spec->direction = dir_;
     spec->num_rules = 0;
     // rules are not stored anywhere
     spec->rules = NULL;
