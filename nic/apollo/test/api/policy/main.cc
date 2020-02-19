@@ -36,7 +36,7 @@ protected:
         // the scale number should be based on memory profile
         if (apulu()) {
             // for 4G profile, we can only support 64
-            g_num_policy = 128;
+            g_num_policy = 64;
         } else if (apollo()) {
             g_num_policy = 2048;
         } else {

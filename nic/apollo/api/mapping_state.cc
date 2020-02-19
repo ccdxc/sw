@@ -12,9 +12,6 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/mapping_state.hpp"
 
-// TODO:
-// 1. move PDS_TRACE_DEBUG to PDS_TRACE_VERBOSE
-
 namespace api {
 
 /// \defgroup PDS_MAPPING_STATE - mapping database functionality
@@ -59,7 +56,7 @@ sdk_ret_t
 mapping_state::insert(mapping_entry *mapping) {
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Inserting %s", mapping->key2str().c_str());
+    PDS_TRACE_VERBOSE("Inserting %s", mapping->key2str().c_str());
     ret = mapping_skey_ht_->insert_with_key(&mapping->skey_, mapping,
                                             &mapping->skey_ht_ctxt_);
     if (unlikely(ret != SDK_RET_OK)) {
@@ -78,7 +75,7 @@ mapping_entry *
 mapping_state::remove(mapping_entry *mapping) {
     void *ret;
 
-    PDS_TRACE_DEBUG("Removing %s", mapping->key2str().c_str());
+    PDS_TRACE_VERBOSE("Removing %s", mapping->key2str().c_str());
     ret = mapping_skey_ht_->remove(&mapping->skey_);
     if ((ret != NULL) && mapping->key().valid()) {
         return (mapping_entry *)(mapping_ht_->remove(&mapping->key_));
@@ -93,7 +90,7 @@ mapping_state::free(mapping_entry *mapping) {
 
 mapping_entry *
 mapping_state::find(pds_obj_key_t *key) const {
-    PDS_TRACE_DEBUG("Looking for %s", key->str());
+    PDS_TRACE_VERBOSE("Looking for %s", key->str());
     return (mapping_entry *)(mapping_ht_->lookup(key));
 }
 
@@ -101,12 +98,12 @@ mapping_state::find(pds_obj_key_t *key) const {
 mapping_entry *
 mapping_state::find(pds_mapping_key_t *skey) const {
     if (skey->type == PDS_MAPPING_TYPE_L2) {
-        PDS_TRACE_DEBUG("Looking for mapping (%s, %s) to db",
-                        skey->subnet.str(), macaddr2str(skey->mac_addr));
+        PDS_TRACE_VERBOSE("Looking for mapping (%s, %s) to db",
+                          skey->subnet.str(), macaddr2str(skey->mac_addr));
     } else if (skey->type == PDS_MAPPING_TYPE_L3) {
-        PDS_TRACE_DEBUG("Looking for mapping (%s, %s) to db",
-                        std::string(skey->vpc.str()),
-                        ipaddr2str(&skey->ip_addr));
+        PDS_TRACE_VERBOSE("Looking for mapping (%s, %s) to db",
+                          std::string(skey->vpc.str()),
+                          ipaddr2str(&skey->ip_addr));
     }
     return (mapping_entry *)(mapping_skey_ht_->lookup(skey));
 }
@@ -119,8 +116,8 @@ mapping_state::skey(pds_obj_key_t *key, pds_mapping_key_t *skey) const {
     // find the 2nd-ary key from primary key
     ret = kvstore_->find(key, sizeof(*key), skey, &skey_sz);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("Primary key %s to 2nd-ary key lookup failed",
-                        key->str());
+        PDS_TRACE_VERBOSE("Primary key %s to 2nd-ary key lookup failed",
+                          key->str());
     }
     return ret;
 }
