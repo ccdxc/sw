@@ -153,127 +153,127 @@ func (mr *MockProbeInfMockRecorder) ListHosts(dcRef interface{}) *gomock.Call {
 }
 
 // AddPenPG mocks base method
-func (m *MockProbeInf) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error {
-	ret := m.ctrl.Call(m, "AddPenPG", dcName, dvsName, pgConfigSpec)
+func (m *MockProbeInf) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error {
+	ret := m.ctrl.Call(m, "AddPenPG", dcName, dvsName, pgConfigSpec, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddPenPG indicates an expected call of AddPenPG
-func (mr *MockProbeInfMockRecorder) AddPenPG(dcName, dvsName, pgConfigSpec interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenPG", reflect.TypeOf((*MockProbeInf)(nil).AddPenPG), dcName, dvsName, pgConfigSpec)
+func (mr *MockProbeInfMockRecorder) AddPenPG(dcName, dvsName, pgConfigSpec, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenPG", reflect.TypeOf((*MockProbeInf)(nil).AddPenPG), dcName, dvsName, pgConfigSpec, retry)
 }
 
 // GetPenPG mocks base method
-func (m *MockProbeInf) GetPenPG(dcName, pgName string) (*object.DistributedVirtualPortgroup, error) {
-	ret := m.ctrl.Call(m, "GetPenPG", dcName, pgName)
+func (m *MockProbeInf) GetPenPG(dcName, pgName string, retry int) (*object.DistributedVirtualPortgroup, error) {
+	ret := m.ctrl.Call(m, "GetPenPG", dcName, pgName, retry)
 	ret0, _ := ret[0].(*object.DistributedVirtualPortgroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPenPG indicates an expected call of GetPenPG
-func (mr *MockProbeInfMockRecorder) GetPenPG(dcName, pgName interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenPG", reflect.TypeOf((*MockProbeInf)(nil).GetPenPG), dcName, pgName)
+func (mr *MockProbeInfMockRecorder) GetPenPG(dcName, pgName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenPG", reflect.TypeOf((*MockProbeInf)(nil).GetPenPG), dcName, pgName, retry)
 }
 
 // GetPGConfig mocks base method
-func (m *MockProbeInf) GetPGConfig(dcName, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error) {
-	ret := m.ctrl.Call(m, "GetPGConfig", dcName, pgName, ps)
+func (m *MockProbeInf) GetPGConfig(dcName, pgName string, ps []string, retry int) (*mo.DistributedVirtualPortgroup, error) {
+	ret := m.ctrl.Call(m, "GetPGConfig", dcName, pgName, ps, retry)
 	ret0, _ := ret[0].(*mo.DistributedVirtualPortgroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPGConfig indicates an expected call of GetPGConfig
-func (mr *MockProbeInfMockRecorder) GetPGConfig(dcName, pgName, ps interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPGConfig", reflect.TypeOf((*MockProbeInf)(nil).GetPGConfig), dcName, pgName, ps)
+func (mr *MockProbeInfMockRecorder) GetPGConfig(dcName, pgName, ps, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPGConfig", reflect.TypeOf((*MockProbeInf)(nil).GetPGConfig), dcName, pgName, ps, retry)
 }
 
 // RenamePG mocks base method
-func (m *MockProbeInf) RenamePG(dcName, oldName, newName string) error {
-	ret := m.ctrl.Call(m, "RenamePG", dcName, oldName, newName)
+func (m *MockProbeInf) RenamePG(dcName, oldName, newName string, retry int) error {
+	ret := m.ctrl.Call(m, "RenamePG", dcName, oldName, newName, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RenamePG indicates an expected call of RenamePG
-func (mr *MockProbeInfMockRecorder) RenamePG(dcName, oldName, newName interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenamePG", reflect.TypeOf((*MockProbeInf)(nil).RenamePG), dcName, oldName, newName)
+func (mr *MockProbeInfMockRecorder) RenamePG(dcName, oldName, newName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenamePG", reflect.TypeOf((*MockProbeInf)(nil).RenamePG), dcName, oldName, newName, retry)
 }
 
 // RemovePenPG mocks base method
-func (m *MockProbeInf) RemovePenPG(dcName, pgName string) error {
-	ret := m.ctrl.Call(m, "RemovePenPG", dcName, pgName)
+func (m *MockProbeInf) RemovePenPG(dcName, pgName string, retry int) error {
+	ret := m.ctrl.Call(m, "RemovePenPG", dcName, pgName, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePenPG indicates an expected call of RemovePenPG
-func (mr *MockProbeInfMockRecorder) RemovePenPG(dcName, pgName interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenPG", reflect.TypeOf((*MockProbeInf)(nil).RemovePenPG), dcName, pgName)
+func (mr *MockProbeInfMockRecorder) RemovePenPG(dcName, pgName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenPG", reflect.TypeOf((*MockProbeInf)(nil).RemovePenPG), dcName, pgName, retry)
 }
 
 // AddPenDVS mocks base method
-func (m *MockProbeInf) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error {
-	ret := m.ctrl.Call(m, "AddPenDVS", dcName, dvsCreateSpec)
+func (m *MockProbeInf) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, retry int) error {
+	ret := m.ctrl.Call(m, "AddPenDVS", dcName, dvsCreateSpec, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddPenDVS indicates an expected call of AddPenDVS
-func (mr *MockProbeInfMockRecorder) AddPenDVS(dcName, dvsCreateSpec interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenDVS", reflect.TypeOf((*MockProbeInf)(nil).AddPenDVS), dcName, dvsCreateSpec)
+func (mr *MockProbeInfMockRecorder) AddPenDVS(dcName, dvsCreateSpec, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenDVS", reflect.TypeOf((*MockProbeInf)(nil).AddPenDVS), dcName, dvsCreateSpec, retry)
 }
 
 // GetPenDVS mocks base method
-func (m *MockProbeInf) GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error) {
-	ret := m.ctrl.Call(m, "GetPenDVS", dcName, dvsName)
+func (m *MockProbeInf) GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error) {
+	ret := m.ctrl.Call(m, "GetPenDVS", dcName, dvsName, retry)
 	ret0, _ := ret[0].(*object.DistributedVirtualSwitch)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPenDVS indicates an expected call of GetPenDVS
-func (mr *MockProbeInfMockRecorder) GetPenDVS(dcName, dvsName interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVS", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVS), dcName, dvsName)
+func (mr *MockProbeInfMockRecorder) GetPenDVS(dcName, dvsName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVS", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVS), dcName, dvsName, retry)
 }
 
 // UpdateDVSPortsVlan mocks base method
-func (m *MockProbeInf) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings) error {
-	ret := m.ctrl.Call(m, "UpdateDVSPortsVlan", dcName, dvsName, portsSetting)
+func (m *MockProbeInf) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
+	ret := m.ctrl.Call(m, "UpdateDVSPortsVlan", dcName, dvsName, portsSetting, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateDVSPortsVlan indicates an expected call of UpdateDVSPortsVlan
-func (mr *MockProbeInfMockRecorder) UpdateDVSPortsVlan(dcName, dvsName, portsSetting interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDVSPortsVlan", reflect.TypeOf((*MockProbeInf)(nil).UpdateDVSPortsVlan), dcName, dvsName, portsSetting)
+func (mr *MockProbeInfMockRecorder) UpdateDVSPortsVlan(dcName, dvsName, portsSetting, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDVSPortsVlan", reflect.TypeOf((*MockProbeInf)(nil).UpdateDVSPortsVlan), dcName, dvsName, portsSetting, retry)
 }
 
 // GetPenDVSPorts mocks base method
-func (m *MockProbeInf) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error) {
-	ret := m.ctrl.Call(m, "GetPenDVSPorts", dcName, dvsName, criteria)
+func (m *MockProbeInf) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
+	ret := m.ctrl.Call(m, "GetPenDVSPorts", dcName, dvsName, criteria, retry)
 	ret0, _ := ret[0].([]types.DistributedVirtualPort)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPenDVSPorts indicates an expected call of GetPenDVSPorts
-func (mr *MockProbeInfMockRecorder) GetPenDVSPorts(dcName, dvsName, criteria interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVSPorts", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVSPorts), dcName, dvsName, criteria)
+func (mr *MockProbeInfMockRecorder) GetPenDVSPorts(dcName, dvsName, criteria, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVSPorts", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVSPorts), dcName, dvsName, criteria, retry)
 }
 
 // RemovePenDVS mocks base method
-func (m *MockProbeInf) RemovePenDVS(dcName, dvsName string) error {
-	ret := m.ctrl.Call(m, "RemovePenDVS", dcName, dvsName)
+func (m *MockProbeInf) RemovePenDVS(dcName, dvsName string, retry int) error {
+	ret := m.ctrl.Call(m, "RemovePenDVS", dcName, dvsName, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePenDVS indicates an expected call of RemovePenDVS
-func (mr *MockProbeInfMockRecorder) RemovePenDVS(dcName, dvsName interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenDVS", reflect.TypeOf((*MockProbeInf)(nil).RemovePenDVS), dcName, dvsName)
+func (mr *MockProbeInfMockRecorder) RemovePenDVS(dcName, dvsName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenDVS", reflect.TypeOf((*MockProbeInf)(nil).RemovePenDVS), dcName, dvsName, retry)
 }
 
 // TagObjAsManaged mocks base method

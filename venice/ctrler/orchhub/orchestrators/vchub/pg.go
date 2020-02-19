@@ -1,13 +1,16 @@
 package vchub
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 // PenPG represents an instance of a port group on a DVS
@@ -34,7 +37,12 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 		}
 	}
 	d.Log.Debugf("Adding PG %s with pvlan of %d and %d", pgName, primaryVlan, secondaryVlan)
-	return d.AddPenPGWithVlan(pgName, networkMeta, primaryVlan, secondaryVlan)
+	err = d.AddPenPGWithVlan(pgName, networkMeta, primaryVlan, secondaryVlan)
+	if err != nil {
+		evtMsg := fmt.Sprintf("Failed to set configuration for network %s in Datacenter %s", networkMeta.Name, d.DcName)
+		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+	}
+	return err
 }
 
 // AddPenPGWithVlan creates a PG with the given pvlan values
@@ -67,12 +75,12 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		},
 	}
 
-	err := d.probe.AddPenPG(d.DcName, d.DvsName, &spec)
+	err := d.probe.AddPenPG(d.DcName, d.DvsName, &spec, defaultRetryCount)
 	if err != nil {
 		return err
 	}
 
-	pg, err := d.probe.GetPenPG(d.DcName, pgName)
+	pg, err := d.probe.GetPenPG(d.DcName, pgName, defaultRetryCount)
 	if err != nil {
 		return err
 	}
@@ -158,7 +166,7 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 		}
 	}
 
-	err := d.probe.RemovePenPG(d.DcName, pgName)
+	err := d.probe.RemovePenPG(d.DcName, pgName, defaultRetryCount)
 	if err != nil {
 		d.Log.Errorf("Failed to delete PG %s, removing management tag", pgName)
 		tagErrs := d.probe.RemovePensandoTags(ref)

@@ -27,6 +27,10 @@ export enum EventsEvent_severity {
 
 export enum EventsEvent_type {
     'DISK_THRESHOLD_EXCEEDED' = "DISK_THRESHOLD_EXCEEDED",
+    'ORCH_CONFIG_PUSH_FAILURE' = "ORCH_CONFIG_PUSH_FAILURE",
+    'ORCH_CONNECTION_ERROR' = "ORCH_CONNECTION_ERROR",
+    'ORCH_INVALID_ACTION' = "ORCH_INVALID_ACTION",
+    'ORCH_LOGIN_FAILURE' = "ORCH_LOGIN_FAILURE",
     'AUDITING_FAILED' = "AUDITING_FAILED",
     'AUTO_GENERATED_TLS_CERT' = "AUTO_GENERATED_TLS_CERT",
     'CLOCK_SYNC_FAILED' = "CLOCK_SYNC_FAILED",
@@ -100,6 +104,7 @@ export enum EventsEvent_category {
     'rollout' = "rollout",
     'config' = "config",
     'resource' = "resource",
+    'orchestration' = "orchestration",
 }
 
 export enum EventsEventAttributes_severity {
@@ -116,6 +121,7 @@ export enum EventsEventAttributes_category {
     'rollout' = "rollout",
     'config' = "config",
     'resource' = "resource",
+    'orchestration' = "orchestration",
 }
 
 

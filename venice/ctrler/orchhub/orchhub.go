@@ -6,7 +6,7 @@ import (
 	"github.com/pensando/sw/venice/utils/k8s"
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
-	"github.com/pensando/sw/venice/ctrler/orchhub/instancemanager"
+	instanceManager "github.com/pensando/sw/venice/ctrler/orchhub/instancemanager"
 	"github.com/pensando/sw/venice/ctrler/orchhub/rpcserver"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
@@ -80,4 +80,11 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 		instanceMgr: instance,
 	}
 	return ctrler, nil
+}
+
+// Stop stops orch hub
+func (o *OrchCtrler) Stop() {
+	o.rpcServer.StopServer()
+	o.StateMgr.Controller().Stop()
+	o.instanceMgr.Stop()
 }

@@ -93,7 +93,7 @@ func (w *InstanceManager) watchOrchestratorConfig() {
 	for {
 		select {
 		case <-w.watchCtx.Done():
-			log.Info("Exiting watch for orchestration configuration")
+			w.logger.Info("Exiting watch for orchestration configuration")
 			return
 		case evt, ok := <-w.instanceManagerCh:
 			if ok {
@@ -114,7 +114,7 @@ func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 }
 
 func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, config *orchestration.Orchestrator) {
-	log.Infof("Handle Orchestrator config event. %v", config)
+	w.logger.Infof("Handle Orchestrator config event. %v", config)
 	switch evtType {
 	case kvstore.Created:
 		w.createOrch(config)
@@ -126,7 +126,7 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		}
 		orchInst.UpdateConfig(config)
 	case kvstore.Deleted:
-		log.Infof("Config item deleted. %v", config)
+		w.logger.Infof("Config item deleted. %v", config)
 		orchInst, ok := w.orchestratorMap[config.GetKey()]
 		if !ok {
 			return

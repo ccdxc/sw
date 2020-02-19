@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	storeQSize = 64
+	storeQSize        = 64
+	defaultRetryCount = 3
 )
 
 // VCHub instance
@@ -189,7 +190,7 @@ func (v *VCHub) deleteAllDVS() {
 
 		dc.Lock()
 		for _, penDVS := range dc.DvsMap {
-			err := v.probe.RemovePenDVS(dc.Name, penDVS.DvsName)
+			err := v.probe.RemovePenDVS(dc.Name, penDVS.DvsName, defaultRetryCount)
 			if err != nil {
 				log.Errorf("Failed deleting DVS %v in DC %v. Err : %v", penDVS.DvsName, dc.Name, err)
 			}

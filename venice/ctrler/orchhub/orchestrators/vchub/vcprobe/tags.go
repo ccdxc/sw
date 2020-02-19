@@ -86,8 +86,6 @@ func (t *tagsProbe) StartWatch() {
 }
 
 func (t *tagsProbe) SetupVCTags() {
-	tc := t.GetTagClientWithRLock()
-	defer t.ReleaseClientsRLock()
 	var tagCategory *tags.Category
 	var err error
 	retryUntilSuccessful := func(fn func() bool) {
@@ -104,6 +102,8 @@ func (t *tagsProbe) SetupVCTags() {
 	}
 	// Create category
 	retryUntilSuccessful(func() bool {
+		tc := t.GetTagClientWithRLock()
+		defer t.ReleaseClientsRLock()
 		tagCategory, err = tc.GetCategory(t.ClientCtx, defs.VCTagCategory)
 		if err == nil {
 			t.writeTagInfo[defs.VCTagCategory] = tagCategory.ID
@@ -129,6 +129,8 @@ func (t *tagsProbe) SetupVCTags() {
 	// Get tags for category
 	var tagObjs []tags.Tag
 	retryUntilSuccessful(func() bool {
+		tc := t.GetTagClientWithRLock()
+		defer t.ReleaseClientsRLock()
 		var err error
 		tagObjs, err = tc.GetTagsForCategory(t.ClientCtx, tagCategory.Name)
 		if err == nil {
@@ -145,6 +147,8 @@ func (t *tagsProbe) SetupVCTags() {
 
 	// Create VCTagManaged
 	retryUntilSuccessful(func() bool {
+		tc := t.GetTagClientWithRLock()
+		defer t.ReleaseClientsRLock()
 		if _, ok := t.writeTagInfo[t.managedTagName]; ok {
 			t.Log.Debugf("Pensando managed tag already exists")
 			return true

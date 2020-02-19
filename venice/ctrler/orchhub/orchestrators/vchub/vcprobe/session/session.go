@@ -36,7 +36,7 @@ const (
 // Session is a struct for maintaining vCenter client objects.
 type Session struct {
 	ctx        context.Context
-	ConnUpdate chan bool // Boolean of the status of the session
+	ConnUpdate chan error // Boolean of the status of the session
 	vcURL      *url.URL
 	logger     log.Logger
 
@@ -68,7 +68,7 @@ func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger) *Session
 		vcURL:      VcURL,
 		logger:     logger,
 		WatcherWg:  &sync.WaitGroup{},
-		ConnUpdate: make(chan bool, 100),
+		ConnUpdate: make(chan error, 100),
 		LastEvent:  make(map[string]int32),
 	}
 }
@@ -138,6 +138,7 @@ func (s *Session) ClearSessionWithLock() {
 
 func (s *Session) clearSession() {
 	s.logger.Debug("Clearing session")
+	s.SessionReady = false
 	if s.client != nil {
 		// Using background context since it's likely that
 		// VCHub's context has been cancelled
@@ -164,7 +165,6 @@ func (s *Session) clearSession() {
 	s.viewMgr = nil
 	s.tagClient = nil
 	s.eventMgr = nil
-	s.SessionReady = false
 	s.clientCancel = nil
 	s.ClientCtx = nil
 }
@@ -191,11 +191,11 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		for {
 			c, err = govmomi.NewClient(s.ClientCtx, s.vcURL, true)
 			if err == nil {
-				s.ConnUpdate <- true
+				s.ConnUpdate <- nil
 				s.logger.Infof("Connection success")
 				break
 			}
-			s.ConnUpdate <- false
+			s.ConnUpdate <- err
 
 			s.logger.Errorf("login failed: %v", err)
 			select {
@@ -238,14 +238,15 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 					client := s.GetClientWithRLock()
 					active, err := client.SessionManager.SessionIsActive(s.ClientCtx)
 					if err != nil {
-						s.logger.Errorf("Received err %v while testing session", err)
 						count--
+						s.logger.Errorf("Received err %v while testing session, attempts left %d", err, count)
 					} else if active {
 						count = retryCount
 						s.CheckSession = false
+						s.logger.Debugf("Connection status is active, setting check session back to false")
 					} else {
-						s.logger.Infof("Session is not active .. retry")
 						count--
+						s.logger.Infof("Session is not active.. retrying, attempts left %d", count)
 					}
 					s.ReleaseClientsRLock()
 				}
@@ -256,6 +257,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		// we re-establish the client, or the ctx is cancelled
 		s.clientLock.Lock()
 		s.clearSession()
+		s.logger.Infof("Attempting to rebuild session")
 		// Hold onto lock
 	}
 	// Exiting run release lock

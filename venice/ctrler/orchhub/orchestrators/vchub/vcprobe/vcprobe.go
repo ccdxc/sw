@@ -2,6 +2,7 @@ package vcprobe
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -10,15 +11,18 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 const (
-	retryDelay = time.Second
+	retryDelay = 500 * time.Millisecond
 )
 
 // VCProbe represents an instance of a vCenter Interface
@@ -47,18 +51,20 @@ type ProbeInf interface {
 	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 
 	// port_group.go functions
-	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error
-	GetPenPG(dcName string, pgName string) (*object.DistributedVirtualPortgroup, error)
-	GetPGConfig(dcName string, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error)
-	RenamePG(dcName, oldName string, newName string) error
-	RemovePenPG(dcName, pgName string) error
+	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error
+
+	GetPenPG(dcName string, pgName string, retry int) (*object.DistributedVirtualPortgroup, error)
+
+	GetPGConfig(dcName string, pgName string, ps []string, retry int) (*mo.DistributedVirtualPortgroup, error)
+	RenamePG(dcName, oldName string, newName string, retry int) error
+	RemovePenPG(dcName, pgName string, retry int) error
 
 	// distributed_vswitch.go functions
-	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error
-	GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error)
-	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error
-	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error)
-	RemovePenDVS(dcName, dvsName string) error
+	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, retry int) error
+	GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error)
+	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error
+	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error)
+	RemovePenDVS(dcName, dvsName string, retry int) error
 
 	// Tag methods
 	TagObjAsManaged(ref types.ManagedObjectReference) error
@@ -137,7 +143,7 @@ func (v *VCProbe) connectionListen() {
 		select {
 		case <-v.Ctx.Done():
 			return
-		case connected := <-v.ConnUpdate:
+		case connErr := <-v.ConnUpdate:
 			o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
 			if err != nil {
 				// orchestrator object does not exists anymore, not need to run the probe
@@ -145,7 +151,7 @@ func (v *VCProbe) connectionListen() {
 					v.OrchConfig.GetKey())
 				return
 			}
-			if connected {
+			if connErr == nil {
 				v.Log.Infof("Updating orchestrator connection status to %v",
 					orchestration.OrchestratorStatus_Success.String())
 				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
@@ -155,6 +161,20 @@ func (v *VCProbe) connectionListen() {
 					orchestration.OrchestratorStatus_Failure.String())
 				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
 				o.Write()
+
+				evt := eventtypes.ORCH_CONNECTION_ERROR
+				evtMsg := connErr.Error()
+				// Generate event depending on error type
+				// Check if it is a credential issue
+				if soap.IsSoapFault(connErr) {
+					soapErr := soap.ToSoapFault(connErr)
+					evtMsg = soapErr.String
+					if _, ok := soapErr.Detail.Fault.(types.InvalidLogin); ok {
+						// Login error
+						evt = eventtypes.ORCH_LOGIN_FAILURE
+					}
+				}
+				recorder.Event(evt, evtMsg, v.State.OrchConfig)
 			}
 		}
 	}
@@ -444,6 +464,29 @@ func (v *VCProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
 // RemovePensandoTags removes all pensando tags
 func (v *VCProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
 	return v.tp.RemovePensandoTags(ref)
+}
+
+func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interface{}, error) {
+	if count < 1 {
+		return nil, fmt.Errorf("Supplied invalid count")
+	}
+	i := 0
+	var ret interface{}
+	err := fmt.Errorf("Client Ctx cancelled")
+	for i < count && v.ClientCtx.Err() == nil {
+		ret, err = fn()
+		if err == nil {
+			return ret, err
+		}
+		i++
+		v.CheckSession = true
+		select {
+		case <-v.ClientCtx.Done():
+			return nil, err
+		case <-time.After(retryDelay):
+		}
+	}
+	return nil, err
 }
 
 // StartEventReceiver starts receiving events on specified objects

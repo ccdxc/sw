@@ -489,6 +489,34 @@ func init() {
 		Desc:       "OTHER Session Limit reached",
 		SuppressMM: false}
 
+	eventTypes[ORCH_CONNECTION_ERROR] = &EventTypeAttributes{
+		EType:      ORCH_CONNECTION_ERROR.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "Failed to connect to orchestrator",
+		SuppressMM: false}
+
+	eventTypes[ORCH_LOGIN_FAILURE] = &EventTypeAttributes{
+		EType:      ORCH_LOGIN_FAILURE.String(),
+		Severity:   "critical",
+		Category:   "",
+		Desc:       "Login credentials were invalid for orchestrator.",
+		SuppressMM: false}
+
+	eventTypes[ORCH_CONFIG_PUSH_FAILURE] = &EventTypeAttributes{
+		EType:      ORCH_CONFIG_PUSH_FAILURE.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "Failed to push some configurations to orchestrator",
+		SuppressMM: false}
+
+	eventTypes[ORCH_INVALID_ACTION] = &EventTypeAttributes{
+		EType:      ORCH_INVALID_ACTION.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "User performed an action that is not supported",
+		SuppressMM: false}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

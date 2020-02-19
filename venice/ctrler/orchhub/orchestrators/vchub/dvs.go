@@ -1,13 +1,16 @@
 package vchub
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 // PenDVS represents an instance of a Distributed Virtual Switch
@@ -37,13 +40,13 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 	dcName := d.Name
 	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
 
-	err := d.probe.AddPenDVS(dcName, dvsCreateSpec)
+	err := d.probe.AddPenDVS(dcName, dvsCreateSpec, defaultRetryCount)
 	if err != nil {
 		d.Log.Errorf("Failed to create %s in DC %s: %s", dvsName, dcName, err)
 		return err
 	}
 
-	dvs, err := d.probe.GetPenDVS(dcName, dvsName)
+	dvs, err := d.probe.GetPenDVS(dcName, dvsName, defaultRetryCount)
 	if err != nil {
 		return err
 	}
@@ -94,7 +97,7 @@ func (d *PenDC) getPenDVS(dvsName string) *PenDVS {
 
 // GetPortSettings returns the port settings of the dvs
 func (d *PenDVS) GetPortSettings() ([]types.DistributedVirtualPort, error) {
-	return d.probe.GetPenDVSPorts(d.DcName, d.DvsName, &types.DistributedVirtualSwitchPortCriteria{})
+	return d.probe.GetPenDVSPorts(d.DcName, d.DvsName, &types.DistributedVirtualSwitchPortCriteria{}, 1)
 }
 
 // SetVlanOverride overrides the port settings with the given vlan
@@ -105,36 +108,42 @@ func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
 			VlanId: int32(vlan),
 		},
 	}
-	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, ports)
+	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, ports, defaultRetryCount)
 	if err != nil {
 		d.Log.Errorf("Failed to set vlan override for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
+
+		evtMsg := fmt.Sprintf("Failed to set vlan override in DC %s. Traffic may be impacted.", d.DcName)
+		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
 		return err
 	}
 	return nil
 }
 
+// Resetting vlan overrides is not needed. As soon as port is disconnected,
+// the pvlan settings are restored.
+//
 // SetPvlanForPorts undoes the vlan override and restores the given ports with the pvlan of the given pg
 // Input is a map from pg name to ports to set
-func (d *PenDVS) SetPvlanForPorts(pgMap map[string][]string) error {
-	d.Log.Debugf("SetPvlanForPorts called with %v", pgMap)
-	portSetting := vcprobe.PenDVSPortSettings{}
-	for pg, ports := range pgMap {
-		_, vlan2, err := d.UsegMgr.GetVlansForPG(pg)
-		if err != nil {
-			// Don't have assignments for this PG.
-			d.Log.Infof("PG %s had no vlans, err %s", pg, err)
-			continue
-		}
-		for _, p := range ports {
-			portSetting[p] = &types.VmwareDistributedVirtualSwitchPvlanSpec{
-				PvlanId: int32(vlan2),
-			}
-		}
-	}
-	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, portSetting)
-	if err != nil {
-		d.Log.Errorf("Failed to set pvlans back for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
-		return err
-	}
-	return nil
-}
+// func (d *PenDVS) SetPvlanForPorts(pgMap map[string][]string) error {
+// 	d.Log.Debugf("SetPvlanForPorts called with %v", pgMap)
+// 	portSetting := vcprobe.PenDVSPortSettings{}
+// 	for pg, ports := range pgMap {
+// 		_, vlan2, err := d.UsegMgr.GetVlansForPG(pg)
+// 		if err != nil {
+// 			// Don't have assignments for this PG.
+// 			d.Log.Infof("PG %s had no vlans, err %s", pg, err)
+// 			continue
+// 		}
+// 		for _, p := range ports {
+// 			portSetting[p] = &types.VmwareDistributedVirtualSwitchPvlanSpec{
+// 				PvlanId: int32(vlan2),
+// 			}
+// 		}
+// 	}
+// 	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, portSetting, 1)
+// 	if err != nil {
+// 		d.Log.Errorf("Failed to set pvlans back for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
+// 		return err
+// 	}
+// 	return nil
+// }

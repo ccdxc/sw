@@ -5,17 +5,19 @@ package eventattrs;
 // list of V1 event types supported by the cluster service
 enum Category {
     // Cluster related events (leader election, K8s, CMD, NMD, etc..)
-    Cluster     = 0;
+    Cluster      = 0;
     // Network related events (linkmgr, etc..)
-    Network     = 1;
+    Network      = 1;
     // System related events (service events, system boot/reboot events, etc...)
-    System      = 2;
+    System       = 2;
     // Rollout related events
-    Rollout     = 3;
+    Rollout      = 3;
     // Config related events
-    Config      = 4;
+    Config       = 4;
     // Resource related events (cpu, mem and disk usage)
-    Resource    = 5;
+    Resource     = 5;
+    // Orchestration related events
+    Orchestration = 6;
 }
 
 // Severity Level of an event

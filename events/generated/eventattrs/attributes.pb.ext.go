@@ -30,15 +30,17 @@ var Severity_vvalue = map[string]int32{
 
 // Category_normal is a map of normalized values for the enum
 var Category_normal = map[string]string{
-	"Cluster": "Cluster",
-	"System":  "System",
-	"Network": "Network",
-	"Rollout": "Rollout",
-	"cluster": "Cluster",
-	"system":  "System",
-	"network": "Network",
-	"rollout": "Rollout",
-	"config":  "Config",
+	"Cluster":      "Cluster",
+	"System":       "System",
+	"Network":      "Network",
+	"Rollout":      "Rollout",
+	"Orchestrator": "Orchestrator",
+	"cluster":      "Cluster",
+	"system":       "System",
+	"network":      "Network",
+	"rollout":      "Rollout",
+	"config":       "Config",
+	"orchestrator": "Orchestrator",
 }
 
 // Category_vname is a map from value to the venice name

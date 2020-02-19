@@ -31,7 +31,7 @@ func TestTags(t *testing.T) {
 	password := "pass"
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   vcID,
 		Path:   "/sdk",
 	}
@@ -201,7 +201,7 @@ func TestTagWriting(t *testing.T) {
 	password := "pass"
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   vcID,
 		Path:   "/sdk",
 	}

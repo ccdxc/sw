@@ -336,4 +336,17 @@ enum EventTypes {
     OTHER_ACTIVE_SESSION_LIMIT_REACHED        = 908 [(category) = Cluster,
                                                      (severity) = CRITICAL,
                                                      (desc)     = "OTHER Session Limit reached"];
+    // ------------------------- Orchestration events ------------------------- //
+    ORCH_CONNECTION_ERROR                     = 1001 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "Failed to connect to orchestrator"];
+    ORCH_LOGIN_FAILURE                          = 1002 [(category) = Orchestration,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Login credentials were invalid for orchestrator."];
+    ORCH_CONFIG_PUSH_FAILURE                  = 1003 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "Failed to push some configurations to orchestrator"];
+    ORCH_INVALID_ACTION                          = 1004 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "User performed an action that is not supported"];
 }

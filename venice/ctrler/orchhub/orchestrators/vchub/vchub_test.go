@@ -13,16 +13,22 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 
-	// need tsdb
-	// _ "github.com/pensando/sw/venice/utils/tsdb"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("vchub_test",
+		log.GetNewLogger(log.GetDefaultConfig("vchub_test"))))
 )
 
 var defaultTestParams = &testutils.TestParams{
@@ -61,7 +67,7 @@ func TestVCWrite(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -106,7 +112,7 @@ func TestVCWrite(t *testing.T) {
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithScheme("http"))
+	vchub := LaunchVCHub(sm, orchConfig, logger)
 
 	// Give time for VCHub to come up
 	time.Sleep(2 * time.Second)
@@ -268,7 +274,7 @@ func TestVCHub(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -290,7 +296,7 @@ func TestVCHub(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithScheme("http"))
+	vchub := LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		dc := vchub.GetDC(defaultTestParams.TestDCName)

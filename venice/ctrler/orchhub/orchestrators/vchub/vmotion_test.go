@@ -50,7 +50,7 @@ func TestVmotion(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -112,8 +112,8 @@ func TestVmotion(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
-	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0])
-	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"))
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], 1)
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"), 1)
 	AssertOk(t, err, "failed to add portgroup")
 
 	logger.Infof("===== Pre-Sync Initial config =====")

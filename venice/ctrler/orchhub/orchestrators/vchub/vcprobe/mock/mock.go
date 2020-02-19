@@ -29,13 +29,14 @@ func NewProbeMock(probe *vcprobe.VCProbe) *ProbeMock {
 }
 
 // AddPenPG creates a PG
-func (v *ProbeMock) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error {
+func (v *ProbeMock) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error {
 	dc := v.pgStateMap[dcName]
 	if dc == nil {
 		dc = map[string]*types.DVPortgroupConfigSpec{}
+		v.pgStateMap[dcName] = dc
 	}
 	dc[pgConfigSpec.Name] = pgConfigSpec
-	return v.VCProbe.AddPenPG(dcName, dvsName, pgConfigSpec)
+	return v.VCProbe.AddPenPG(dcName, dvsName, pgConfigSpec, retry)
 }
 
 func extractVlanSpec(spec *types.DVPortgroupConfigSpec) (types.BaseVmwareDistributedVirtualSwitchVlanSpec, error) {
@@ -96,8 +97,8 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 }
 
 // GetPGConfig gets PG configuration
-func (v *ProbeMock) GetPGConfig(dcName string, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error) {
-	pgObj, err := v.VCProbe.GetPGConfig(dcName, pgName, ps)
+func (v *ProbeMock) GetPGConfig(dcName string, pgName string, ps []string, retry int) (*mo.DistributedVirtualPortgroup, error) {
+	pgObj, err := v.VCProbe.GetPGConfig(dcName, pgName, ps, retry)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +130,7 @@ func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDist
 }
 
 // UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS
-func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings) error {
+func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
 	dc := v.dvsStateMap[dcName]
 	portConfigs := map[string]types.DistributedVirtualPort{}
 	if dc == nil {
@@ -174,7 +175,7 @@ func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcpr
 }
 
 // GetPenDVSPorts returns port settings
-func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error) {
+func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
 	dc := v.dvsStateMap[dcName]
 	portsRet := []types.DistributedVirtualPort{}
 
@@ -185,7 +186,7 @@ func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.Distr
 	portSettingsUsed := map[string]bool{}
 
 	// Get existing port info
-	ports, err := v.VCProbe.GetPenDVSPorts(dcName, dvsName, criteria)
+	ports, err := v.VCProbe.GetPenDVSPorts(dcName, dvsName, criteria, retry)
 	if err != nil {
 		return ports, err
 	}

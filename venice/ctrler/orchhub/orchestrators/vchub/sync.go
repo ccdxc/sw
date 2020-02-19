@@ -259,7 +259,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 				}
 			}
 			if !isUplink {
-				err := v.probe.RemovePenPG(dcName, pg.Name)
+				err := v.probe.RemovePenPG(dcName, pg.Name, 1)
 				if err != nil {
 					v.Log.Errorf("Failed to delete PG %s, removing management tag", pg.Name)
 					tagErrs := v.probe.RemovePensandoTags(pg.Reference())
@@ -346,7 +346,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 			continue
 		}
 		if vlanSpec.VlanId == 0 {
-			v.Log.Info("Vlan override for port %s is 0", portKey)
+			v.Log.Infof("Vlan override for port %s is 0", portKey)
 			continue
 		}
 		entry := struct {
@@ -402,12 +402,14 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 		}
 		resetMap[pgName] = append(ports, port)
 	}
-	v.Log.Debugf("Resetting vlan overrides for unused ports %v", resetMap)
-	err = penDvs.SetPvlanForPorts(resetMap)
-	if err != nil {
-		v.Log.Errorf("Resetting vlan overrides for unused ports failed, %s", err)
-		// This error isn't worth failing the sync operation for
-	}
+	// Resetting vlan overrides is not needed. As soon as port is disconnected,
+	// the pvlan settings are restored.
+	// v.Log.Debugf("Resetting vlan overrides for unused ports %v", resetMap)
+	// err = penDvs.SetPvlanForPorts(resetMap)
+	// if err != nil {
+	// v.Log.Errorf("Resetting vlan overrides for unused ports failed, %s", err)
+	// This error isn't worth failing the sync operation for
+	// }
 
 	// Handle new VMs
 	// We make create calls for all of the VMs

@@ -1,14 +1,17 @@
 package vchub
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 // PenDC represents an instance of a Datacenter
@@ -96,7 +99,10 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 	spec.ConfigSpec.GetDVSConfigSpec().Name = dvsName
 	err := dc.AddPenDVS(&spec)
 	if err != nil {
-		v.Log.Errorf("Failed to create DVS %s in DC %s, err %s", dvsName, dcName, err)
+		evtMsg := fmt.Sprintf("Failed to create DVS in Datacenter %s. Network configuration cannot be pushed.", dcName)
+		v.Log.Errorf(evtMsg)
+
+		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
 		return nil, err
 	}
 

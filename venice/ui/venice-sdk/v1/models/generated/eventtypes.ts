@@ -9,6 +9,10 @@ interface EventType {
 export const categoryToEventType: { [cat: string]: string[] } = {
   : [
     'DISK_THRESHOLD_EXCEEDED',
+    'ORCH_CONFIG_PUSH_FAILURE',
+    'ORCH_CONNECTION_ERROR',
+    'ORCH_INVALID_ACTION',
+    'ORCH_LOGIN_FAILURE',
   ],
   cluster: [
     'AUDITING_FAILED',
@@ -91,6 +95,26 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "DISK_THRESHOLD_EXCEEDED",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Disk threshold exceeded",
+  },
+  'ORCH_CONFIG_PUSH_FAILURE' : {
+      "Name": "ORCH_CONFIG_PUSH_FAILURE",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Failed to push some configurations to orchestrator",
+  },
+  'ORCH_CONNECTION_ERROR' : {
+      "Name": "ORCH_CONNECTION_ERROR",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Failed to connect to orchestrator",
+  },
+  'ORCH_INVALID_ACTION' : {
+      "Name": "ORCH_INVALID_ACTION",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "User performed an action that is not supported",
+  },
+  'ORCH_LOGIN_FAILURE' : {
+      "Name": "ORCH_LOGIN_FAILURE",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Login credentials were invalid for orchestrator.",
   },
   'AUDITING_FAILED' : {
       "Name": "AUDITING_FAILED",

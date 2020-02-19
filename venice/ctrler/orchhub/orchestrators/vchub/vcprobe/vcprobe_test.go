@@ -41,6 +41,8 @@ var defaultTestParams = &testutils.TestParams{
 	TestNumPortsPerPG:      20,
 }
 
+var retryCount = 1
+
 func TestListAndWatch(t *testing.T) {
 	testParams := &testutils.TestParams{
 		TestHostName: "127.0.0.1:8989",
@@ -64,7 +66,7 @@ func TestListAndWatch(t *testing.T) {
 	}
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   testParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -174,7 +176,7 @@ func TestListAndWatch(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
 
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	time.Sleep(1 * time.Second)
@@ -191,7 +193,7 @@ func TestListAndWatch(t *testing.T) {
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
 
 	for i := 0; i < testParams.TestNumPG; i++ {
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
 		AssertOk(t, err, "Failed to add new PG")
 	}
 
@@ -201,11 +203,11 @@ func TestListAndWatch(t *testing.T) {
 		},
 	}
 	// Call will fail, added to increase coverage
-	err = vcp.UpdateDVSPortsVlan(testParams.TestDCName, testParams.TestDVSName, ports)
+	err = vcp.UpdateDVSPortsVlan(testParams.TestDCName, testParams.TestDVSName, ports, retryCount)
 	// Don't check err since it is
 	// ServerFaultCode: DistributedVirtualSwitch:dvs-28 does not implement: ReconfigureDVPort_Task
 
-	_, err = vcp.GetPenDVSPorts(testParams.TestDCName, testParams.TestDVSName, &types.DistributedVirtualSwitchPortCriteria{})
+	_, err = vcp.GetPenDVSPorts(testParams.TestDCName, testParams.TestDVSName, &types.DistributedVirtualSwitchPortCriteria{}, retryCount)
 	AssertOk(t, err, "Failed to get DVS Ports")
 
 	// List PGs
@@ -243,7 +245,7 @@ func TestDVSAndPG(t *testing.T) {
 	}
 
 	u := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   testParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -298,11 +300,11 @@ func TestDVSAndPG(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
 
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	// Reconfigure should succeed
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
@@ -311,22 +313,22 @@ func TestDVSAndPG(t *testing.T) {
 	var mapPGNamesWithIndex *map[string]int
 
 	for i := 0; i < testParams.TestNumPG; i++ {
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
 		AssertOk(t, err, "Failed to add new PG")
 
 		// Second add will result in reconfigure operation
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
 		AssertOk(t, err, "Failed to add DVS")
 
 		// Rename PG and then rename it back
 		// VCSim doesn't support rename, so we don't check the rror
-		vcp.RenamePG(testParams.TestDCName, pgConfigSpecArray[i].Name, "TestPG")
+		vcp.RenamePG(testParams.TestDCName, pgConfigSpecArray[i].Name, "TestPG", retryCount)
 
 		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
-		pgObj, err := vcp.GetPenPG(testParams.TestDCName, pgName)
+		pgObj, err := vcp.GetPenPG(testParams.TestDCName, pgName, retryCount)
 		AssertOk(t, err, "Failed to find created PG %s", pgName)
 		Assert(t, pgObj != nil, "Couldn't find created PG %s", pgName)
-		pgMo, err := vcp.GetPGConfig(testParams.TestDCName, pgName, []string{"config"})
+		pgMo, err := vcp.GetPGConfig(testParams.TestDCName, pgName, []string{"config"}, retryCount)
 		AssertOk(t, err, "Failed to find created PG %s as mo ref", pgName)
 		Assert(t, pgMo != nil, "Couldn't find created PG %s as mo ref", pgName)
 	}
@@ -348,7 +350,7 @@ func TestDVSAndPG(t *testing.T) {
 	*/
 
 	// Verify the results
-	dvsObj, err := vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName)
+	dvsObj, err := vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
 	AssertOk(t, err, "Failed to get DVS %s", testParams.TestDVSName)
 
 	var dvs mo.DistributedVirtualSwitch
@@ -369,18 +371,18 @@ func TestDVSAndPG(t *testing.T) {
 	// List and Delete all PGs
 	for i := 0; i < testParams.TestNumPG; i++ {
 		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
-		err = vcp.RemovePenPG(testParams.TestDCName, pgName)
+		err = vcp.RemovePenPG(testParams.TestDCName, pgName, retryCount)
 		AssertOk(t, err, "Failed to delete PG")
 
-		_, err := vcp.GetPenPG(testParams.TestDCName, pgName)
+		_, err := vcp.GetPenPG(testParams.TestDCName, pgName, retryCount)
 		Assert(t, err != nil, "Found deleted PG %s", pgName)
 	}
 
 	// Delete DVS
-	err = vcp.RemovePenDVS(testParams.TestDCName, testParams.TestDVSName)
+	err = vcp.RemovePenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
 	AssertOk(t, err, "Failed to delete DVS")
 
-	_, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName)
+	_, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
 	Assert(t, err != nil, "Found deleted DVS %s", testParams.TestDVSName)
 
 }
@@ -400,7 +402,7 @@ func TestEventReceiver(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}

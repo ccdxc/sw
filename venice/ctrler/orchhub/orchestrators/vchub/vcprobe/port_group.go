@@ -12,51 +12,62 @@ import (
 
 // AddPenPG returns a new instance of PenPG, or reconfigures the PG
 // to match the given spec if it already exists
-func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error {
-	pgName := pgConfigSpec.Name
+func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error {
+	fn := func() (interface{}, error) {
+		pgName := pgConfigSpec.Name
 
-	var task *object.Task
-	var err error
-	// Check if it exists already
-	if pgObj, err := v.GetPenPG(dcName, pgName); err == nil {
-		moPG, err := v.GetPGConfig(dcName, pgName, []string{"config"})
-		if err != nil {
-			v.Log.Errorf("Failed at getting pg properties, err: %s", err)
-			return err
+		var task *object.Task
+		var err error
+		// Check if it exists already
+		if pgObj, err := v.GetPenPG(dcName, pgName, 1); err == nil {
+			moPG, err := v.GetPGConfig(dcName, pgName, []string{"config"}, 1)
+			if err != nil {
+				v.Log.Errorf("Failed at getting pg properties, err: %s", err)
+				return nil, err
+			}
+			pgConfigSpec.ConfigVersion = moPG.Config.ConfigVersion
+			v.Log.Infof("DC: %s - PG %s already exists, reconfiguring...", dcName, pgName)
+			task, err = pgObj.Reconfigure(v.ClientCtx, *pgConfigSpec)
+		} else {
+			// Creating PG
+			objDvs, err := v.GetPenDVS(dcName, dvsName, 1)
+			if err != nil {
+				v.Log.Errorf("Couldn't find DVS %s for PG creation %s: err", dcName, dvsName, err)
+				return nil, err
+			}
+
+			task, err = objDvs.AddPortgroup(v.ClientCtx, []types.DVPortgroupConfigSpec{*pgConfigSpec})
 		}
-		pgConfigSpec.ConfigVersion = moPG.Config.ConfigVersion
-		v.Log.Infof("DC: %s - PG %s already exists, reconfiguring...", dcName, pgName)
-		task, err = pgObj.Reconfigure(v.ClientCtx, *pgConfigSpec)
-	} else {
-		// Creating PG
-		objDvs, err := v.GetPenDVS(dcName, dvsName)
+
 		if err != nil {
-			v.Log.Errorf("Couldn't find DVS %s for PG creation %s: err", dcName, dvsName, err)
-			return err
+			v.Log.Errorf("Failed at adding/reconfiguring port group: %s, err: %s", pgName, err)
+			return nil, err
 		}
 
-		task, err = objDvs.AddPortgroup(v.ClientCtx, []types.DVPortgroupConfigSpec{*pgConfigSpec})
-	}
+		_, err = task.WaitForResult(v.ClientCtx, nil)
+		if err != nil {
+			v.Log.Errorf("Failed at waiting results of add port group: %s, err: %s", pgName, err)
+			return nil, err
+		}
 
-	if err != nil {
-		v.Log.Errorf("Failed at adding/reconfiguring port group: %s, err: %s", pgName, err)
-		return err
+		return nil, nil
 	}
-
-	_, err = task.WaitForResult(v.ClientCtx, nil)
-	if err != nil {
-		v.Log.Errorf("Failed at waiting results of add port group: %s, err: %s", pgName, err)
-		return err
-	}
-
-	return nil
+	_, err := v.withRetry(fn, retry)
+	return err
 }
 
 // GetPenPG returns the PG if it exists, or an error
-func (v *VCProbe) GetPenPG(dcName string, pgName string) (*object.DistributedVirtualPortgroup, error) {
-	finder := v.GetFinderWithRLock()
-	defer v.ReleaseClientsRLock()
-	return v.getPenPG(dcName, pgName, finder)
+func (v *VCProbe) GetPenPG(dcName string, pgName string, retry int) (*object.DistributedVirtualPortgroup, error) {
+	fn := func() (interface{}, error) {
+		finder := v.GetFinderWithRLock()
+		defer v.ReleaseClientsRLock()
+		return v.getPenPG(dcName, pgName, finder)
+	}
+	ret, err := v.withRetry(fn, retry)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*object.DistributedVirtualPortgroup), err
 }
 
 func (v *VCProbe) getPenPG(dcName string, pgName string, finder *find.Finder) (*object.DistributedVirtualPortgroup, error) {
@@ -84,69 +95,84 @@ func (v *VCProbe) getPenPG(dcName string, pgName string, finder *find.Finder) (*
 }
 
 // GetPGConfig returns the mo object for the given PG
-func (v *VCProbe) GetPGConfig(dcName string, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error) {
-	objPg, err := v.GetPenPG(dcName, pgName)
-	if err != nil {
+func (v *VCProbe) GetPGConfig(dcName string, pgName string, ps []string, retry int) (*mo.DistributedVirtualPortgroup, error) {
+	fn := func() (interface{}, error) {
+		objPg, err := v.GetPenPG(dcName, pgName, 1)
+		if err != nil {
+			return nil, err
+		}
+		var dvsPg mo.DistributedVirtualPortgroup
+		err = objPg.Properties(v.ClientCtx, objPg.Reference(), ps, &dvsPg)
+		if err != nil {
+			v.Log.Errorf("Failed at getting dv port group properties, err: %s", err)
+			return nil, err
+		}
+		return &dvsPg, nil
+	}
+	ret, err := v.withRetry(fn, retry)
+	if ret == nil {
 		return nil, err
 	}
-	var dvsPg mo.DistributedVirtualPortgroup
-	err = objPg.Properties(v.ClientCtx, objPg.Reference(), ps, &dvsPg)
-	if err != nil {
-		v.Log.Errorf("Failed at getting dv port group properties, err: %s", err)
-		return nil, err
-	}
-	return &dvsPg, nil
+	return ret.(*mo.DistributedVirtualPortgroup), err
 }
 
 // RenamePG renames the given PG
-func (v *VCProbe) RenamePG(dcName string, oldName string, newName string) error {
-	objPg, err := v.GetPenPG(dcName, oldName)
-	if err != nil {
-		return err
-	}
-	task, err := objPg.Rename(v.ClientCtx, newName)
-	if err != nil {
-		// Failed to delete PG
-		v.Log.Errorf("Failed to rename PG %s to %s, err", oldName, newName, err)
-		// TODO: Generate Event and mark object?
-		return err
-	}
+func (v *VCProbe) RenamePG(dcName string, oldName string, newName string, retry int) error {
+	fn := func() (interface{}, error) {
+		objPg, err := v.GetPenPG(dcName, oldName, 1)
+		if err != nil {
+			return nil, err
+		}
+		task, err := objPg.Rename(v.ClientCtx, newName)
+		if err != nil {
+			// Failed to delete PG
+			v.Log.Errorf("Failed to rename PG %s to %s, err", oldName, newName, err)
+			// TODO: Generate Event and mark object?
+			return nil, err
+		}
 
-	_, err = task.WaitForResult(v.ClientCtx, nil)
-	if err != nil {
-		// Failed to delete PG
-		v.Log.Errorf("Failed to wait for PG rename %s to %s, err", oldName, newName, err)
-		// TODO: Generate Event and mark object?
-		return err
-	}
+		_, err = task.WaitForResult(v.ClientCtx, nil)
+		if err != nil {
+			// Failed to delete PG
+			v.Log.Errorf("Failed to wait for PG rename %s to %s, err", oldName, newName, err)
+			// TODO: Generate Event and mark object?
+			return nil, err
+		}
 
-	return nil
+		return nil, nil
+	}
+	_, err := v.withRetry(fn, retry)
+	return err
 }
 
 // RemovePenPG removes the pg with the given name
-func (v *VCProbe) RemovePenPG(dcName, pgName string) error {
-	finder := v.GetFinderWithRLock()
-	defer v.ReleaseClientsRLock()
+func (v *VCProbe) RemovePenPG(dcName, pgName string, retry int) error {
+	fn := func() (interface{}, error) {
+		finder := v.GetFinderWithRLock()
+		defer v.ReleaseClientsRLock()
 
-	objPG, err := v.getPenPG(dcName, pgName, finder)
-	if err != nil {
-		return err
-	}
-	task, err := objPG.Destroy(v.ClientCtx)
-	if err != nil {
-		// Failed to delete PG
-		v.Log.Errorf("Failed to delete PG, err", err)
-		// TODO: Generate Event and mark object?
-		return err
-	}
+		objPG, err := v.getPenPG(dcName, pgName, finder)
+		if err != nil {
+			return nil, err
+		}
+		task, err := objPG.Destroy(v.ClientCtx)
+		if err != nil {
+			// Failed to delete PG
+			v.Log.Errorf("Failed to delete PG, err", err)
+			// TODO: Generate Event and mark object?
+			return nil, err
+		}
 
-	_, err = task.WaitForResult(v.ClientCtx, nil)
-	if err != nil {
-		// Failed to delete PG
-		v.Log.Errorf("Failed to wait for delete PG, err", err)
-		// TODO: Generate Event and mark object?
-		return err
-	}
+		_, err = task.WaitForResult(v.ClientCtx, nil)
+		if err != nil {
+			// Failed to delete PG
+			v.Log.Errorf("Failed to wait for delete PG, err %s", err)
+			// TODO: Generate Event and mark object?
+			return nil, err
+		}
 
-	return nil
+		return nil, nil
+	}
+	_, err := v.withRetry(fn, retry)
+	return err
 }

@@ -27,9 +27,18 @@ import (
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	// create mock events recorder
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("sync_test",
+		log.GetNewLogger(log.GetDefaultConfig("sync_test"))))
+	retryCount = 1
 )
 
 // Tests creation of internal DC state, creationg of DVS
@@ -65,7 +74,7 @@ func TestVCSyncPG(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -111,14 +120,14 @@ func TestVCSyncPG(t *testing.T) {
 	}, "Session is not Ready", "1s", "10s")
 
 	spec := testutils.GenPGConfigSpec(createPGName("pgStale"), 2, 3)
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
 	spec1 := testutils.GenPGConfigSpec(createPGName("pgModified"), 4, 5)
 	spec1.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan = &types.VmwareDistributedVirtualSwitchVlanIdSpec{
 		VlanId: 4,
 	}
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
 	defer vchub.Destroy(false)
@@ -142,7 +151,7 @@ func TestVCSyncPG(t *testing.T) {
 					if penPG == nil {
 						return false, fmt.Errorf("Failed to find %s in DC %s", pgName, name)
 					}
-					pgObj, err := mockProbe.GetPGConfig(dc1.Obj.Name, pgName, nil)
+					pgObj, err := mockProbe.GetPGConfig(dc1.Obj.Name, pgName, nil, retryCount)
 					AssertOk(t, err, "Failed to get PG")
 
 					vlanSpec := pgObj.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan
@@ -207,7 +216,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -416,7 +425,7 @@ func TestVCSyncVM(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -479,9 +488,9 @@ func TestVCSyncVM(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	spec := testutils.GenPGConfigSpec(createPGName("pg1"), 2, 3)
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
 	AssertOk(t, err, "failed to create pg")
-	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, createPGName("pg1"))
+	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, createPGName("pg1"), retryCount)
 	AssertOk(t, err, "failed to get pg")
 
 	defer vchub.Destroy(false)
@@ -585,7 +594,7 @@ func TestVCSyncVM(t *testing.T) {
 			VlanId: int32(3000),
 		},
 	}
-	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate)
+	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, retryCount)
 
 	time.Sleep(1 * time.Second)
 
@@ -637,7 +646,7 @@ func TestVCSyncVM(t *testing.T) {
 
 	verifyWorkloads(dcWorkloadMap, "Failed to verify workloads")
 
-	dvsPorts, err := mockProbe.GetPenDVSPorts(dc1.Obj.Name, dvs.Obj.Name, &types.DistributedVirtualSwitchPortCriteria{})
+	dvsPorts, err := mockProbe.GetPenDVSPorts(dc1.Obj.Name, dvs.Obj.Name, &types.DistributedVirtualSwitchPortCriteria{}, retryCount)
 	AssertOk(t, err, "Failed to get port info")
 	overrides := vchub.extractOverrides(dvsPorts)
 	AssertEquals(t, 2, len(overrides), "2 ports should have vlan override, overrideMap: %v", overrides)
@@ -654,12 +663,12 @@ func TestVCSyncVM(t *testing.T) {
 			VlanId: int32(3002),
 		},
 	}
-	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate)
+	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate, retryCount)
 
 	vchub.Sync()
 
 	AssertEventually(t, func() (bool, interface{}) {
-		dvsPorts, err := mockProbe.GetPenDVSPorts(dc1.Obj.Name, dvs.Obj.Name, &types.DistributedVirtualSwitchPortCriteria{})
+		dvsPorts, err := mockProbe.GetPenDVSPorts(dc1.Obj.Name, dvs.Obj.Name, &types.DistributedVirtualSwitchPortCriteria{}, retryCount)
 		AssertOk(t, err, "Failed to get port info")
 		overrides := vchub.extractOverrides(dvsPorts)
 		if len(overrides) != 2 {
@@ -703,7 +712,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 
 	// SETTING UP VCSIM
 	vcURL := &url.URL{
-		Scheme: "http",
+		Scheme: "https",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -765,8 +774,8 @@ func TestVCSyncVmkNics(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
-	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0])
-	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"))
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"), retryCount)
 	AssertOk(t, err, "failed to add portgroup")
 
 	// Create Host
@@ -932,6 +941,16 @@ func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestrati
 	vchub.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	vchub.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	vchub.setupPCache()
+
+	clusterItems, err := stateMgr.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		logger.Errorf("Failed to get cluster object, %s", err)
+	} else if len(clusterItems) == 0 {
+		logger.Errorf("Cluster list returned 0 objects, %s", err)
+	} else {
+		cluster := clusterItems[0]
+		state.ClusterID = defs.CreateClusterID(cluster.Cluster)
+	}
 
 	return vchub
 }

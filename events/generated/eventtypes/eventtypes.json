@@ -4,6 +4,26 @@
    "Name": "DISK_THRESHOLD_EXCEEDED",
    "Severity": "critical",
    "Desc": "Disk threshold exceeded"
+  },
+  {
+   "Name": "ORCH_CONFIG_PUSH_FAILURE",
+   "Severity": "warn",
+   "Desc": "Failed to push some configurations to orchestrator"
+  },
+  {
+   "Name": "ORCH_CONNECTION_ERROR",
+   "Severity": "warn",
+   "Desc": "Failed to connect to orchestrator"
+  },
+  {
+   "Name": "ORCH_INVALID_ACTION",
+   "Severity": "warn",
+   "Desc": "User performed an action that is not supported"
+  },
+  {
+   "Name": "ORCH_LOGIN_FAILURE",
+   "Severity": "critical",
+   "Desc": "Login credentials were invalid for orchestrator."
   }
  ],
  "cluster": [

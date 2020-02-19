@@ -6,7 +6,9 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -112,8 +114,10 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	penPG := dvs.pgIDMap[m.Key]
 	if penPG != nil && penPG.PgName != pgConfig.Name {
 		// TODO: Raise event
+		evtMsg := fmt.Sprintf("User renamed a Pensando created Port Group. Port group name has been changed back.")
+		recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
 		// Put object name back
-		err := v.probe.RenamePG(m.DcName, pgConfig.Name, penPG.PgName)
+		err := v.probe.RenamePG(m.DcName, pgConfig.Name, penPG.PgName, defaultRetryCount)
 		if err != nil {
 			v.Log.Errorf("Failed to rename PG, %s", err)
 		}
@@ -145,6 +149,9 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 			if secondary == vlan {
 				return // nothing to do
 			}
+			v.Log.Infof("PG %s pvlan is %d, expected it to be %d", vlan, secondary)
+		default:
+			v.Log.Infof("PG %s vlan config was of %T, %+v", vlanSpec, vlanSpec)
 		}
 		// Vlan spec is not what we expect, set it back
 		err = dvs.AddPenPG(pgConfig.Name, penPG.NetworkMeta)

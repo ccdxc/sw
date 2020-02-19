@@ -2,6 +2,7 @@ package sim
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -82,6 +83,7 @@ func NewVcSim(config Config) (*VcSim, error) {
 		Service.Listen = u
 	}
 
+	Service.TLS = new(tls.Config)
 	server := Service.NewServer()
 
 	return &VcSim{
@@ -99,6 +101,7 @@ func (v *VcSim) Destroy() {
 	for _, dir := range v.dirs {
 		_ = os.RemoveAll(dir)
 	}
+	v.Server.CloseClientConnections()
 	v.Server.Close()
 }
 
