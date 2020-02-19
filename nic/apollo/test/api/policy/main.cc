@@ -36,7 +36,7 @@ protected:
         // the scale number should be based on memory profile
         if (apulu()) {
             // for 4G profile, we can only support 64
-            g_num_policy = 64;
+            g_num_policy = 32;
         } else if (apollo()) {
             g_num_policy = 2048;
         } else {
@@ -148,17 +148,17 @@ TEST_F(policy, policy_workflow_3) {
     policy_feeder feeder1, feeder2, feeder3;
 
     // setup
-    feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV4, "10.0.0.1/16", 20);
-    feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV4, "11.0.0.1/16", 20);
-    feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV4, "12.0.0.1/16", 20);
+    feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV4, "10.0.0.1/16", 10);
+    feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV4, "11.0.0.1/16", 10);
+    feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV4, "12.0.0.1/16", 10);
 
     // trigger
     workflow_3<policy_feeder>(feeder1, feeder2, feeder3);
 
     if (apulu()) {
-        feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV6, "2001::1/64", 20);
-        feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV6, "3001::1/64", 20);
-        feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV6, "4001::1/64", 20);
+        feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV6, "2001::1/64", 10);
+        feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV6, "3001::1/64", 10);
+        feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV6, "4001::1/64", 10);
         workflow_3<policy_feeder>(feeder1, feeder2, feeder3);
     }
 }
@@ -186,15 +186,15 @@ TEST_F(policy, policy_workflow_5) {
     pds_obj_key_t key3 = int2pdsobjkey(70);
     policy_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV4, "10.0.0.1/16", 20);
-    feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV4, "11.0.0.1/16", 20);
-    feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV4, "12.0.0.1/16", 20);
+    feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV4, "10.0.0.1/16", 10);
+    feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV4, "11.0.0.1/16", 10);
+    feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV4, "12.0.0.1/16", 10);
     workflow_5<policy_feeder>(feeder1, feeder2, feeder3);
 
     if (apulu()) {
-        feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV6, "2001::1/64", 20);
-        feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV6, "3001::1/64", 20);
-        feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV6, "4001::1/64", 20);
+        feeder1.init(key1, g_num_stateful_rules, IP_AF_IPV6, "2001::1/64", 10);
+        feeder2.init(key2, g_num_stateful_rules, IP_AF_IPV6, "3001::1/64", 10);
+        feeder3.init(key3, g_num_stateful_rules, IP_AF_IPV6, "4001::1/64", 10);
         workflow_5<policy_feeder>(feeder1, feeder2, feeder3);
     }
 }
