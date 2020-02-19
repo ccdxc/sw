@@ -494,7 +494,7 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect('\003', "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
-    def __login(self):
+    def __login(self, force_connect=True):
         for _ in range(4):
             try:
                 midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
@@ -510,7 +510,10 @@ class NaplesManagement(EntityManagement):
             except: 
                 print("failed to login, trying again")
         #try ipmi reset as final option
-        self.IpmiResetAndWait()
+        if force_connect:
+            self.IpmiResetAndWait()
+        else:
+            raise
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
@@ -590,9 +593,9 @@ class NaplesManagement(EntityManagement):
 
 
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
-    def Connect(self, bringup_oob=True):
+    def Connect(self, bringup_oob=True, force_connect=True):
         self.__connect_to_console()
-        self.Login(bringup_oob)
+        self.Login(bringup_oob, force_connect)
 
     def _getMemorySize(self):
         mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "240000000" | cut  -d'-' -f 1'''
@@ -642,8 +645,8 @@ class NaplesManagement(EntityManagement):
                 print("Did not Read OOB mac")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
-    def Login(self, bringup_oob=True):
-        self.__login()
+    def Login(self, bringup_oob=True, force_connect=True):
+        self.__login(force_connect)
         print("sleeping 60 seconds in Login")
         time.sleep(60)
         if bringup_oob:
@@ -1218,7 +1221,7 @@ def Main():
     if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
         #First do a reset as naples may be in screwed up state.
         try:
-            naples.Connect()
+            naples.Connect(force_connect=False)
             #Read Naples Gold FW version if system in good state.
             #If not able to read then we will reset
             naples.ReadGoldFwVersion()

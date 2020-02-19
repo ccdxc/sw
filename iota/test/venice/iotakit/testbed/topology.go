@@ -771,7 +771,7 @@ var topo3Venice9Naples7NaplesSim100Scale = Topology{
 			HostOS:       "linux",
 			NumInstances: 220,
 		},
-		{
+		/*{
 			NodeName:    "naplesSimScale6",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
@@ -786,7 +786,7 @@ var topo3Venice9Naples7NaplesSim100Scale = Topology{
 			//This should be linux
 			HostOS:       "linux",
 			NumInstances: 220,
-		},
+		},*/
 		{
 			NodeName:    "venice1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,

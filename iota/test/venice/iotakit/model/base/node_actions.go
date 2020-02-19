@@ -80,6 +80,43 @@ func (sm *SysModel) ReloadHosts(hc *objects.HostCollection) error {
 	return sm.SetUpNaplesAuthenticationOnHosts(hc)
 }
 
+// ReloadHosts reloads a host
+func (sm *SysModel) ReloadFakeHosts(hc *objects.HostCollection) error {
+
+	var hostNames string
+	nodeMsg := &iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+	}
+
+	iotaNodes := make(map[string]bool)
+	for _, hst := range hc.FakeHosts {
+		if _, ok := iotaNodes[hst.Name()]; ok {
+			continue
+		}
+		iotaNodes[hst.Name()] = true
+		nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: hst.Name()})
+		hostNames += hst.Name() + " "
+	}
+
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
+	log.Infof("Reloading hosts: %v", hostNames)
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to reload hosts %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
+	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to reload hosts %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got reload resp: %+v", reloadResp)
+	return sm.SetUpNaplesAuthenticationOnHosts(hc)
+}
+
 // ReloadVeniceNodes reloads a venice node
 func (sm *SysModel) ReloadVeniceNodes(vnc *objects.VeniceNodeCollection) error {
 

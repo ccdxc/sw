@@ -71,6 +71,8 @@ var _ = Describe("Config Stress tests", func() {
 
 	Context("Delete and Add scale configs", func() {
 		It("Do delete/add and run-traffic", func() {
+
+			Skip("Skipping scale connection runs")
 			log.Infof("scaleData = %v hasNaples = %v", ts.scaleData, ts.tb.HasNaplesSim())
 			if !ts.scaleData || ts.tb.HasNaplesSim() {
 				Skip("Skipping scale connection runs")

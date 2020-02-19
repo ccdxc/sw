@@ -333,7 +333,7 @@ def __bringup_naples_container(args):
         __wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")
 
     def __wait_for_agent_to_be_up():
-        __wait_for_line_log(agent_log_file, "Starting server at")
+        __wait_for_line_log(agent_log_file, "Agent up and running")
 
     def __wait_for_nmd_to_be_up():
         __wait_for_line_log(nmd_log_file, "Started NMD Rest server")
