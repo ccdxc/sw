@@ -163,14 +163,14 @@ public:
     /// \brief API to begin transaction over all table mgmt library instances
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t table_transaction_begin(void) {
+    virtual sdk_ret_t transaction_begin(void) {
         return SDK_RET_ERR;
     }
 
     /// \brief API to end transaction over all table mgmt library instances
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t table_transaction_end(void) {
+    virtual sdk_ret_t transaction_end(void) {
         return SDK_RET_ERR;
     }
 

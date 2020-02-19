@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/framework/api_thread.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -21,7 +22,10 @@ namespace api {
 void
 api_thread_init_fn (void *ctxt)
 {
-    api_engine_init();
+    sdk::lib::thread *curr_thread = (sdk::lib::thread *)ctxt;
+    state_base *state = (state_base *)curr_thread->data();
+
+    api_engine_init(state);
     sdk::ipc::reg_request_handler(API_MSG_ID_BATCH, api_thread_ipc_batch_cb,
                                   NULL, true);
 }

@@ -101,6 +101,18 @@ pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+pds_state::transaction_begin(void) {
+    return SDK_RET_OK;
+    //return mapping_db()->transaction_begin();
+}
+
+sdk_ret_t
+pds_state::transaction_end(bool abort) {
+    return SDK_RET_OK;
+    //return mapping_db()->transaction_end(abort);
+}
+
 /** * @} */    // end of PDS_STATE
 
 }    // namespace api

@@ -223,6 +223,8 @@ public:
     learn_state *learn_db(void) {
         return (learn_state *)state_[PDS_STATE_LEARN];
     }
+    virtual sdk_ret_t transaction_begin(void) override;
+    virtual sdk_ret_t transaction_end(bool abort) override;
 
 private:
     string                  cfg_path_;

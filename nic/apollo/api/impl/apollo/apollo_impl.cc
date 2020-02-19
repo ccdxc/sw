@@ -588,7 +588,7 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 }
 
 sdk_ret_t
-apollo_impl::table_transaction_begin(void) {
+apollo_impl::transaction_begin(void) {
     tep_impl_db()->table_transaction_begin();
     vnic_impl_db()->table_transaction_begin();
     mapping_impl_db()->table_transaction_begin();
@@ -600,7 +600,7 @@ apollo_impl::table_transaction_begin(void) {
 }
 
 sdk_ret_t
-apollo_impl::table_transaction_end(void) {
+apollo_impl::transaction_end(void) {
     tep_impl_db()->table_transaction_end();
     vnic_impl_db()->table_transaction_end();
     mapping_impl_db()->table_transaction_end();

@@ -72,6 +72,19 @@ public:
         return SDK_RET_INVALID_OP;
     }
 
+    /// \brief API to begin database/remote transactions, if any
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t transaction_begin(void) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief API to end database/remote transactions, if any
+    /// \param[in] abort    true if transaction needs to be aborted, else false
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t transaction_end(bool abort) {
+        return SDK_RET_ERR;
+    }
+
     /// \brief API to return the store counters
     /// \return    state/store counters
     const state_counters_t& counters(void) const { return counters_; }

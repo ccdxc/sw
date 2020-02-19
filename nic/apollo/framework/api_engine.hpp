@@ -23,6 +23,7 @@
 #include "nic/apollo/core/msg.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 
@@ -277,7 +278,8 @@ public:
     ~api_engine() {}
 
     // API engine initialization function
-    sdk_ret_t init(void) {
+    sdk_ret_t init(state_base *state) {
+        state_ = state;
         api_obj_ctxt_slab_ =
             slab::factory("api-obj-ctxt", PDS_SLAB_ID_API_OBJ_CTXT,
                           sizeof(api_obj_ctxt_t), 512, true, true, true, NULL);
@@ -608,11 +610,14 @@ private:
     api_batch_ctxt_t    batch_ctxt_;
     api_counters_t      counters_;
     slab                *api_obj_ctxt_slab_;
+    state_base          *state_;
 };
 
 /// \brief    initialize the API engine
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t api_engine_init(void);
+/// \param[in] state    pointer to application specific state (base) class
+///                     instance
+sdk_ret_t api_engine_init(state_base *state);
 
 /// \brief    return the API engine instance
 /// \return    pointer to the (singleton) API engine instance

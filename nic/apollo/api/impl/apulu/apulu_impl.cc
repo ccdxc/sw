@@ -589,7 +589,7 @@ apulu_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 }
 
 sdk_ret_t
-apulu_impl::table_transaction_begin(void) {
+apulu_impl::transaction_begin(void) {
     vpc_impl_db()->table_transaction_begin();
     tep_impl_db()->table_transaction_begin();
     vnic_impl_db()->table_transaction_begin();
@@ -601,7 +601,7 @@ apulu_impl::table_transaction_begin(void) {
 }
 
 sdk_ret_t
-apulu_impl::table_transaction_end(void) {
+apulu_impl::transaction_end(void) {
     vpc_impl_db()->table_transaction_end();
     tep_impl_db()->table_transaction_end();
     vnic_impl_db()->table_transaction_end();

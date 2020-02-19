@@ -11,7 +11,7 @@ export VAL_CMD=valgrind
 
 function finish () {
     # auto invoked on any exit
-    ${NICDIR}/tools/print-cores.sh
+    ${PDSPKG_TOPDIR}/tools/print-cores.sh
     echo "===== Collecting logs ====="
     ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
     rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json

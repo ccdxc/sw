@@ -1037,12 +1037,13 @@ api_engine::batch_abort_(void) {
     PDS_TRACE_INFO("Finished config rollback stage");
 
     // end the table mgmt. lib transaction
-    PDS_TRACE_INFO("Initiating table transaction end for epoch %u",
+    PDS_TRACE_INFO("Initiating transaction end for epoch %u",
                    batch_ctxt_.epoch);
-    impl_base::pipeline_impl()->table_transaction_end();
+    state_->transaction_end(true);
+    ret = impl_base::pipeline_impl()->transaction_end();
     if (ret != SDK_RET_OK) {
         PDS_API_ABORT_COUNTER_INC(txn_end_err, 1);
-        PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
+        PDS_TRACE_ERR("Transaction end API failure, err %u", ret);
         return ret;
     }
     batch_ctxt_.clear();
@@ -1067,9 +1068,10 @@ api_engine::batch_commit_phase1_(void) {
                    batch_ctxt_.dol.size(), batch_ctxt_.dom.size());
 
     // start table mgmt. lib transaction
-    PDS_TRACE_INFO("Initiating table transaction begin for epoch %u",
+    PDS_TRACE_INFO("Initiating transaction begin for epoch %u",
                    batch_ctxt_.epoch);
-    impl_base::pipeline_impl()->table_transaction_begin();
+    state_->transaction_begin();
+    impl_base::pipeline_impl()->transaction_begin();
 
     PDS_TRACE_INFO("Starting resource reservation phase");
     // NOTE: by this time, all updates per object are already
@@ -1129,11 +1131,12 @@ api_engine::batch_commit_phase2_(void) {
     }
 
     // end the table mgmt. lib transaction
-    PDS_TRACE_INFO("Initiating table transaction end for epoch %u",
+    PDS_TRACE_INFO("Initiating transaction end for epoch %u",
                    batch_ctxt_.epoch);
-    impl_base::pipeline_impl()->table_transaction_end();
+    state_->transaction_end(false);
+    ret = impl_base::pipeline_impl()->transaction_end();
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Table transaction end API failure, err %u", ret);
+        PDS_TRACE_ERR("Transaction end API failure, err %u", ret);
         // fall thru
     }
 
@@ -1394,7 +1397,7 @@ api_engine::dump_api_counters(int fd) {
 }
 
 sdk_ret_t
-api_engine_init (void)
+api_engine_init (state_base *state)
 {
     api_params_init();
     g_api_ctxt_slab_ =
@@ -1404,7 +1407,7 @@ api_engine_init (void)
         slab::factory("api-msg", PDS_SLAB_ID_API_MSG,
                       sizeof(api_msg_t), 512, true, true, true, NULL);
 
-    SDK_ASSERT(g_api_engine.init() == SDK_RET_OK);
+    SDK_ASSERT(g_api_engine.init(state) == SDK_RET_OK);
 
     return SDK_RET_OK;
 }

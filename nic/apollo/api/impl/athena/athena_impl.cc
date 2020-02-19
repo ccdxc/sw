@@ -667,12 +667,12 @@ athena_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 }
 
 sdk_ret_t
-athena_impl::table_transaction_begin(void) {
+athena_impl::transaction_begin(void) {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-athena_impl::table_transaction_end(void) {
+athena_impl::transaction_end(void) {
     return SDK_RET_OK;
 }
 
