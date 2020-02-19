@@ -132,11 +132,15 @@ def Trigger(tc):
     #==============================================================
     # update non-default cmd options
     #==============================================================
+    # if use both duration '-D' and count '-n', count will take precedence
     if hasattr(tc.iterators, 'duration'):
         iter_opt = ' -D {dur} '.format(dur = tc.iterators.duration)
         # For scale tests, we noticed all 8 threads not started early,
         # so need to give extra timeout
         bkg_timeout = tc.iterators.duration + 30
+
+    if hasattr(tc.iterators, 'count'):
+        iter_opt = ' -n {iter} '.format(iter = tc.iterators.count)
 
     if hasattr(tc.iterators, 'rdma_cm') and \
        tc.iterators.rdma_cm == 'yes':
