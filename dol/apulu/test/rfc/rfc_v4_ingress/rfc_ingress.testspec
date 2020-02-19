@@ -57,7 +57,7 @@ packets:
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
-                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                src     : ref://testcase/config/route/TUNNEL/MACAddr
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
