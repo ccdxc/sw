@@ -97,6 +97,10 @@ public:
     /// \return         count of IP addresses
     uint16_t ip_count(void) const { return (uint16_t) ip_list_.size(); }
 
+    /// \brief          get key to this entry
+    /// \return         pointer to key
+    const ep_mac_key_t *key(void) const { return &key_; }
+
     /// \brief          return stringified key of the object (for debugging)
     string key2str(void) const {
         return "MAC entry-(" + std::string(key_.subnet.str()) + ", " +

@@ -21,6 +21,7 @@
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_learn_local.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
+#include "nic/apollo/learn/ep_utils.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 #include "nic/apollo/learn/learn_thread.hpp"
 #include "nic/apollo/learn/utils.hpp"
@@ -349,8 +350,8 @@ update_ep_mac (local_learn_ctxt_t *ctxt)
         ctxt->mac_entry->set_state(EP_STATE_CREATED);
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
-        aging_timer_restart(ctxt->ip_entry->timer());
-        // TODO: publish EVPN update
+        aging_timer_restart(ctxt->mac_entry->timer());
+        broadcast_mac_event(EVENT_MAC_LEARN, ctxt->mac_entry);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:
@@ -370,7 +371,7 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
     case LEARN_TYPE_NEW_LOCAL:
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
-        // TODO: publish EVPN update
+        broadcast_ip_event(EVENT_IP_LEARN, ctxt->ip_entry);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:

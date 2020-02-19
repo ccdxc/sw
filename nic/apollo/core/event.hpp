@@ -26,6 +26,7 @@ typedef enum event_id_e {
     EVENT_ID_UPLINK_STATUS      = 4,
     EVENT_ID_HOST_LIF_CREATE    = 5,
     EVENT_ID_LIF_STATUS         = 6,
+    EVENT_ID_LEARN              = 7,
 } event_id_t;
 
 namespace core {
@@ -60,6 +61,24 @@ typedef struct lif_event_info_s {
     lif_state_t      state;
 } lif_event_info_t;
 
+// MAC, IP learn specific information
+typedef enum learn_event_e {
+    EVENT_NONE = 0,
+    EVENT_MAC_LEARN = 1,
+    EVENT_MAC_AGE = 2,
+    EVENT_IP_LEARN = 3,
+    EVENT_IP_AGE = 4,
+} learn_event_t;
+
+typedef struct learn_event_info_s {
+    learn_event_t   event;
+    pds_obj_key_t   vpc;
+    pds_obj_key_t   subnet;
+    pds_ifindex_t   ifindex;
+    ip_addr_t       ip_addr;
+    mac_addr_t      mac_addr;
+} learn_event_info_t;
+
 // event structure that gets passed around for every event
 typedef struct event_s {
     event_id_t              event_id;
@@ -68,6 +87,7 @@ typedef struct event_s {
         xcvr_event_info_t   xcvr;
         uplink_event_info_t uplink;
         lif_event_info_t    lif;
+        learn_event_info_t  learn;
     };
 } event_t;
 

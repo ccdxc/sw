@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -20,6 +21,7 @@
 namespace learn {
 
 namespace event = sdk::event_thread;
+using namespace sdk::types;
 
 static void
 mac_aging_cb (event::timer_t *timer)
@@ -46,7 +48,9 @@ mac_aging_cb (event::timer_t *timer)
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
                       mac_entry->key2str(), ret);
+        return;
     }
+    broadcast_mac_event(EVENT_MAC_AGE, mac_entry);
 }
 
 static void
@@ -72,7 +76,7 @@ ip_aging_cb (event::timer_t *timer)
                 if (mac_entry->ip_count() == 0) {
                     aging_timer_restart(mac_entry->timer());
                 }
-                // TODO: send EVPN event
+                broadcast_ip_event(EVENT_IP_AGE, ip_entry);
             }
             return;
         }

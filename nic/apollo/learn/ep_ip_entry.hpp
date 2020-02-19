@@ -66,6 +66,10 @@ public:
     /// \return         pointer to MAC entry, which this IP entry associates to
     ep_mac_entry *mac_entry(void);
 
+    /// \brief          get vnic object id of this entry
+    /// \return         vnic object id
+    uint32_t vnic_obj_id(void) const { return vnic_obj_id_; }
+
     /// \brief          set the vnic object id for this entry
     /// \param[in]      vnic object id
     void set_vnic_obj_id(uint32_t vnic_obj_id) { vnic_obj_id_ = vnic_obj_id; }
