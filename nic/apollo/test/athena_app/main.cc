@@ -26,6 +26,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "trace.hpp"
 #include "fte_athena.hpp"
+#include "app_test.hpp"
 
 namespace core {
 // number of trace files to keep
@@ -235,18 +236,21 @@ main (int argc, char **argv)
 {
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
+    string       script_fname, script_dir;
     boost::property_tree::ptree pt;
 
     struct option longopts[] = {
-       { "config",    required_argument, NULL, 'c' },
-       { "profile",   required_argument, NULL, 'p' },
-       { "feature",   required_argument, NULL, 'f' },
-       { "help",      no_argument,       NULL, 'h' },
-       { 0,           0,                 0,     0 }
+       { "config",      required_argument, NULL, 'c' },
+       { "profile",     required_argument, NULL, 'p' },
+       { "feature",     required_argument, NULL, 'f' },
+       { "test_script", required_argument, NULL, 't' },
+       { "script_dir",  required_argument, NULL, 'd' },
+       { "help",        no_argument,       NULL, 'h' },
+       { 0,             0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:p:f:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             if (optarg) {
@@ -268,6 +272,25 @@ main (int argc, char **argv)
             }
             break;
 
+        case 't':
+            if (optarg) {
+                script_fname = std::string(optarg);
+            } else {
+                fprintf(stderr, "test script is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'd':
+            if (optarg) {
+                script_dir = std::string(optarg);
+            } else {
+                fprintf(stderr, "script directory is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
 
         case 'h':
             print_usage(argv);
@@ -354,8 +377,12 @@ main (int argc, char **argv)
 
     fte_ath::fte_init();
 
-    // wait forver
     printf("Initialization done ...\n");
+
+    if (!script_fname.empty()) {
+        test::athena_app::script_exec(script_dir, script_fname);
+    }
+
 #ifdef __x86_64__
     /* Packet injection support on SIM.
      * The delay below is required to wait untill the ionic initializations are done
@@ -369,8 +396,27 @@ main (int argc, char **argv)
     sleep(5);
     recv_packet();
 #endif /* __x86_64__ */
-    while (1);
 
+    // wait forver
+    while (1) usleep(10000);
+
+    return 0;
+}
+
+/*
+ * App test exit with test result - callable from script_exec()
+ */
+bool
+app_test_exit(void *arg)
+{
+    //bool overall_success = *((bool *)arg);
+
+    pds_teardown();
+
+    // For now return success result always while continuing to
+    // monitor jobd runs.
+    //exit(overall_success ? 0 : 1);
+    exit(0);
     return 0;
 }
 

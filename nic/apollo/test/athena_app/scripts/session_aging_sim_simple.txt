@@ -1,0 +1,8 @@
+#Simple session aging test (SIM platform)
+session_aging_init
+session_aging_expiry_log_enable
+session_aging_sim_mode
+session_aging_simple
+session_aging_fini
+session_aging_expiry_log_disable
+app_test_exit

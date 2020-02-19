@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "ftl_pollers_client.hpp"
 #include "ftl_dev_impl.hpp"
+#include "ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_session.h"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
 
@@ -26,7 +26,9 @@ namespace ftl_pollers_client {
 #define FTL_POLLERS_BURST_COUNT         128
 #define FTL_POLLERS_BURST_BUF_SZ        (FTL_POLLERS_BURST_COUNT * \
                                          sizeof(poller_slot_data_t))
+static rte_atomic16_t       module_inited = RTE_ATOMIC16_INIT(0);
 static uint32_t             pollers_qcount;
+static bool                 expiry_log_en;
 
 static void
 expiry_fn_dflt_fn(uint32_t expiry_id,
@@ -114,37 +116,39 @@ expiry_submap_process(uint32_t submap_id,
 sdk_ret_t
 init(void)
 {
-    client_queue_t          *queue;
-    sdk_ret_t               ret;
+    client_queue_t  *queue;
+    sdk_ret_t       ret = SDK_RET_OK;
 
-    ret = ftl_dev_impl::init();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("init failed: error %d", ret);
-        return ret;
-    }
+    if (rte_atomic16_test_and_set(&module_inited)) {
+        ret = ftl_dev_impl::init();
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("init failed: error %d", ret);
+            return ret;
+        }
 
-    ret = ftl_dev_impl::pollers_qcount_get(&pollers_qcount);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("pollers_qcount_get failed: error %d", ret);
-        return ret;
-    }
-    PDS_TRACE_DEBUG("pollers_qcount %u", pollers_qcount);
+        ret = ftl_dev_impl::pollers_qcount_get(&pollers_qcount);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("pollers_qcount_get failed: error %d", ret);
+            return ret;
+        }
+        PDS_TRACE_DEBUG("pollers_qcount %u", pollers_qcount);
 
-    queue = &client_queue[0];
-    for (uint32_t qid = 0; qid < FTL_POLLERS_MAX_QUEUES; qid++, queue++) {
-        queue->qid = qid;
-        if (qid < pollers_qcount) {
-            queue->poller_slot_data =
-                   (poller_slot_data_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTL_POLLER_SLOT_DATA,
-                                                    FTL_POLLERS_BURST_BUF_SZ);
-            if (!queue->poller_slot_data) {
-                PDS_TRACE_ERR("failed to allocate slot data for qid %u", qid);
-                return SDK_RET_OOM;
+        queue = &client_queue[0];
+        for (uint32_t qid = 0; qid < FTL_POLLERS_MAX_QUEUES; qid++, queue++) {
+            queue->qid = qid;
+            if (qid < pollers_qcount) {
+                queue->poller_slot_data = (poller_slot_data_t *)
+                               SDK_MALLOC(SDK_MEM_ALLOC_FTL_POLLER_SLOT_DATA,
+                                          FTL_POLLERS_BURST_BUF_SZ);
+                if (!queue->poller_slot_data) {
+                    PDS_TRACE_ERR("failed to allocate slot data for qid %u", qid);
+                    return SDK_RET_OOM;
+                }
             }
         }
-    }
 
-    PDS_TRACE_DEBUG("init completed");
+        PDS_TRACE_DEBUG("init completed");
+    }
     return ret;
 }
 
@@ -182,6 +186,48 @@ force_conntrack_expired_ts_set(bool force_expired_ts)
     return ftl_dev_impl::force_conntrack_expired_ts_set(force_expired_ts);
 }
 
+sdk_ret_t
+session_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
+{
+    return ftl_dev_impl::session_scanners_metrics_get(metrics);
+}
+
+sdk_ret_t
+conntrack_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
+{
+    return ftl_dev_impl::conntrack_scanners_metrics_get(metrics);
+}
+
+sdk_ret_t
+pollers_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
+{
+    return ftl_dev_impl::pollers_metrics_get(metrics);
+}
+
+uint32_t
+session_table_depth_get(void)
+{
+    uint32_t    table_depth;
+
+    return ftl_dev_impl::session_table_depth_get(&table_depth) == SDK_RET_OK ?
+           table_depth : 0;
+}
+
+uint32_t
+conntrack_table_depth_get(void)
+{
+    uint32_t    table_depth;
+
+    return ftl_dev_impl::conntrack_table_depth_get(&table_depth) == SDK_RET_OK ?
+           table_depth : 0;
+}
+
+void
+expiry_log_set(bool enable_sense)
+{
+    expiry_log_en = enable_sense;
+}
+
 /*
  * Submit a burst dequeue on a poller queue corresponding to qid.
  *
@@ -193,8 +239,7 @@ force_conntrack_expired_ts_set(bool force_expired_ts)
  * when a given queue is "overly polled".
  */
 sdk_ret_t
-poll(uint32_t qid,
-     bool debug_log)
+poll(uint32_t qid)
 {
     client_queue_t              *queue = client_queue_get(qid);
     poller_slot_data_t          *slot_data;
@@ -212,21 +257,23 @@ poll(uint32_t qid,
                                               FTL_POLLERS_BURST_BUF_SZ,
                                               &burst_count);
     if ((ret == SDK_RET_OK) && burst_count) {
-        if (debug_log) {
+        if (expiry_log_en) {
             PDS_TRACE_DEBUG("pollers_dequeue_burst poller_qid %d burst_count %u",
                             qid, burst_count);
         }
         slot_data = queue->poller_slot_data;
         for (uint32_t i = 0; i < burst_count; i++, slot_data++) {
-            if (debug_log) {
+            if (expiry_log_en) {
                 PDS_TRACE_DEBUG("table_id_base %u scanner_qid %u scanner_qtype %u "
                                 "flags %u", slot_data->table_id_base,
                                 slot_data->scanner_qid, slot_data->scanner_qtype,
                                 slot_data->flags);
-                PDS_TRACE_DEBUG("expiry_map0 0x%llx expiry_map1 0x%llx expiry_map2 "
-                                "0x%llx expiry_map3 0x%llx", slot_data->expiry_map[0],
-                                slot_data->expiry_map[1], slot_data->expiry_map[2],
-                                slot_data->expiry_map[3]);
+                PDS_TRACE_DEBUG(" expiry_map0 0x%" PRIx64 
+                                " expiry_map1 0x%" PRIx64 
+                                " expiry_map2 0x%" PRIx64 
+                                " expiry_map3 0x%" PRIx64,
+                                slot_data->expiry_map[0], slot_data->expiry_map[1],
+                                slot_data->expiry_map[2], slot_data->expiry_map[3]);
             }
 
             /*
@@ -328,7 +375,9 @@ static void
 expiry_fn_dflt_fn(uint32_t expiry_id,
                   pds_flow_age_expiry_type_t expiry_type)
 {
-    PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);
+    if (expiry_log_en) {
+        PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);
+    }
 
     switch (expiry_type) {
 

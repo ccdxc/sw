@@ -300,6 +300,10 @@ jobd/hal_test_fips/rsa-siggen15-0: ${JOBD_PREREQS}
 jobd/offload: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --offload
 
+.PHONY: jobd/athena_app/session_aging_sim_simple
+jobd/athena_app/session_aging_sim_simple: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_simple.txt
+
 .PHONY: jobd/configtest
 jobd/configtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --configtest

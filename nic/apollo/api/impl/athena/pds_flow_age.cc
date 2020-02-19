@@ -45,10 +45,10 @@ pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
 }
 
 sdk_ret_t
-pds_flow_age_sw_pollers_poll_control(bool user_is_poller,
+pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
                                      pds_flow_expiry_fn_t expiry_fn)
 {
-    return ftl_pollers_client::poll_control(user_is_poller, expiry_fn);
+    return ftl_pollers_client::poll_control(user_will_poll, expiry_fn);
 }
 
 sdk_ret_t

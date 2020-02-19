@@ -676,7 +676,7 @@ _inner_label0:;                                                                 
     bcf         [!c1], _break_label;                                            \
     nop;                                                                        \
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
-                        TABLE_SIZE_512_BITS, _pc)                               \
+                        SESSION_INFO_BYTES_SHFT, _pc)                           \
     add         r_session_info_addr, r_session_info_addr, SESSION_INFO_BYTES;   \
 
 #define CONNTRACK_INFO_POSSIBLE_SCAN_INCR(_tbl, _round, _num_scannables,        \
@@ -686,7 +686,7 @@ _inner_label0:;                                                                 
     bcf         [!c1], _break_label;                                            \
     nop;                                                                        \
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
-                        TABLE_SIZE_512_BITS, _pc)                               \
+                        CONNTRACK_INFO_BYTES_SHFT, _pc)                         \
     add         r_session_info_addr, r_session_info_addr, CONNTRACK_INFO_BYTES; \
 
 /*
@@ -710,7 +710,7 @@ _inner_label0:;                                                                 
     bcf         [!_cf], _break_label;                                           \
     nop;                                                                        \
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
-                        TABLE_SIZE_512_BITS, _pc)                               \
+                        SESSION_INFO_BYTES_SHFT, _pc)                           \
                 
 #define CONNTRACK_INFO_NUM_SCANNABLES_CHECK_CF(_cf, _tbl, _round,               \
                                              _num_scannables)                   \
@@ -725,7 +725,7 @@ _inner_label0:;                                                                 
     bcf         [!_cf], _break_label;                                           \
     nop;                                                                        \
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
-                        TABLE_SIZE_512_BITS, _pc)                               \
+                        CONNTRACK_INFO_BYTES_SHFT, _pc)                         \
                 
 /*
  * When there is no more session scanning to launch for session 0 (i.e., table 0),

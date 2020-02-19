@@ -18,9 +18,11 @@
 #include <cmath>
 #include <endian.h>
 #include <sstream>
+#include <inttypes.h>
 #include <sys/time.h>
 
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
+#include "nic/include/ftl_dev_if.hpp"
 
 #ifndef BITS_PER_BYTE
 #define BITS_PER_BYTE           8
@@ -35,10 +37,16 @@ uint32_t qcount_get(void);
 sdk_ret_t expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt);
 sdk_ret_t poll_control(bool user_will_poll,
                        pds_flow_expiry_fn_t expiry_fn);
-sdk_ret_t poll(uint32_t qid,
-               bool debug_log = true);
+sdk_ret_t poll(uint32_t qid);
+
 sdk_ret_t force_session_expired_ts_set(bool force_expired_ts);
 sdk_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);
+sdk_ret_t session_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics);
+sdk_ret_t conntrack_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics);
+sdk_ret_t pollers_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics);
+uint32_t session_table_depth_get(void);
+uint32_t conntrack_table_depth_get(void);
+void expiry_log_set(bool enable_sense);
 
 static inline bool
 user_will_poll(void)

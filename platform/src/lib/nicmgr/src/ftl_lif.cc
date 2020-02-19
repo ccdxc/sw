@@ -13,6 +13,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 
 #include "logger.hpp"
 #include "ftl_dev.hpp"
@@ -23,6 +24,15 @@
  * Amount of time to wait for scanner queues to be quiesced
  */
 #define FTL_LIF_SCANNERS_QUIESCE_TIME_US            (5 * USEC_PER_SEC)
+
+static uint64_t                 hw_coreclk_freq;
+static double                   hw_ns_per_tick;
+
+static inline uint64_t
+hw_coreclk_ticks_to_time_ns(uint64_t ticks)
+{
+    return (uint64_t)(hw_ns_per_tick * (double)ticks);
+}
 
 /*
  * rounded up log2
@@ -792,6 +802,11 @@ FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event)
     cosB = 0;
     ctl_cosA = 1;
 
+    hw_coreclk_freq = sdk::platform::capri::capri_get_coreclk_freq(pd->platform_);
+    NIC_LOG_DEBUG("{}: hw_coreclk_freq {}", LifNameGet(), hw_coreclk_freq);
+    hw_ns_per_tick = hw_coreclk_freq ?
+                     (double)1E9 / (double)hw_coreclk_freq : 0;
+
     FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
     dev_api->qos_get_txtc_cos("INTERNAL_TX_PROXY_DROP", 1, &cosB);
     if ((int)cosB < 0) {
@@ -843,6 +858,14 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
     case FTL_LIF_ATTR_ACCEL_AGE_TMO:
         age_tmo_cb_set("accelerated", &accel_age_tmo_cb,
                        accel_age_cb_addr(), &cmd->age_tmo);
+        break;
+
+    case FTL_LIF_ATTR_METRICS:
+
+        /*
+         * Setting of metrics not supported; only Get allowed
+         */
+        fsm_ctx.devcmd.status = FTL_RC_EPERM;
         break;
 
     case FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS:
@@ -900,6 +923,32 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
         if (fsm_ctx.devcmd.rsp_data) {
             age_tmo_cb_get((lif_attr_age_tmo_t *)fsm_ctx.devcmd.rsp_data,
                            &accel_age_tmo_cb);
+        }
+        break;
+
+    case FTL_LIF_ATTR_METRICS:
+
+        if (fsm_ctx.devcmd.rsp_data) {
+            lif_attr_metrics_t  *metrics =
+                     (lif_attr_metrics_t *)fsm_ctx.devcmd.rsp_data;
+            switch (cmd->qtype) {
+            case FTL_QTYPE_SCANNER_SESSION:
+                fsm_ctx.devcmd.status = session_scanners_ctl.metrics_get(metrics);
+                break;
+
+            case FTL_QTYPE_SCANNER_CONNTRACK:
+                fsm_ctx.devcmd.status = conntrack_scanners_ctl.metrics_get(metrics);
+                break;
+
+            case FTL_QTYPE_POLLER:
+                fsm_ctx.devcmd.status = pollers_ctl.metrics_get(metrics);
+                break;
+
+            default:
+                NIC_LOG_ERR("{}: Unsupported qtype {}", LifNameGet(), cmd->qtype);
+                fsm_ctx.devcmd.status = FTL_RC_EQTYPE;
+                break;
+            }
         }
         break;
 
@@ -1709,7 +1758,7 @@ ftl_lif_queues_ctl_t::stop(void)
 {
     void                (*cb_deactivate)(int64_t qstate_addr);
     int64_t             qstate_addr;
-    ftl_status_code_t   status;
+    ftl_status_code_t   status = FTL_RC_SUCCESS;
 
     switch (qtype()) {
 
@@ -1915,6 +1964,103 @@ ftl_lif_queues_ctl_t::quiesce_idle(void)
     quiescing = false;
 }
 
+ftl_status_code_t
+ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
+{
+    int64_t             qstate_addr;
+    uint64_t            min_elapsed_ticks;
+    uint64_t            max_elapsed_ticks;
+    uint64_t            total_min_elapsed_ticks;
+    uint64_t            total_max_elapsed_ticks;
+    uint32_t            curr_range_sz;
+    uint32_t            avg_count;
+    ftl_status_code_t   status = FTL_RC_SUCCESS;
+
+    memset(metrics, 0, sizeof(*metrics));
+    if (qcount_) {
+        min_elapsed_ticks = (uint64_t)~0;
+        max_elapsed_ticks = 0;
+        total_min_elapsed_ticks = 0;
+        total_max_elapsed_ticks = 0;
+        curr_range_sz = 0;
+        avg_count = 0;
+
+        for (uint32_t qid = 0; qid <= qid_high_; qid++) {
+            qstate_addr = qid_qstate_addr(qid);
+            if (qstate_addr < 0) {
+
+                /*
+                 * continue to try with as many queues as possible
+                 */
+                status = FTL_RC_EFAULT;
+                continue;
+            }
+
+            switch (qtype()) {
+
+            case FTL_QTYPE_SCANNER_SESSION:
+            case FTL_QTYPE_SCANNER_CONNTRACK: {
+                scanner_session_qstate_t scanner_qstate;
+
+                read_mem_small(qstate_addr, (uint8_t *)&scanner_qstate,
+                               sizeof(scanner_qstate));
+                metrics->scanners.total_expired_entries  += 
+                         scanner_qstate.metrics0.expired_entries;
+                metrics->scanners.total_scan_invocations +=
+                         scanner_qstate.metrics0.scan_invocations;
+                metrics->scanners.total_cb_cfg_discards  +=
+                         scanner_qstate.metrics0.cb_cfg_discards;
+                /*
+                 * Only include in calcs for averages if queues have the same
+                 * range size (all queues of the same qtype do except maybe
+                 * the last queue).
+                 */
+                if ((qid == 0) || 
+                    (curr_range_sz == scanner_qstate.fsm.scan_range_sz)) {
+
+                    min_elapsed_ticks = std::min(min_elapsed_ticks,
+                                        scanner_qstate.metrics0.min_range_elapsed_ticks);
+                    max_elapsed_ticks = std::max(max_elapsed_ticks,
+                                        scanner_qstate.metrics0.max_range_elapsed_ticks);
+                    avg_count++;
+                    total_min_elapsed_ticks +=
+                            scanner_qstate.metrics0.min_range_elapsed_ticks;
+                    total_max_elapsed_ticks +=
+                            scanner_qstate.metrics0.max_range_elapsed_ticks;
+                }
+                curr_range_sz = scanner_qstate.fsm.scan_range_sz;
+                break;
+            }
+
+            case FTL_QTYPE_POLLER: {
+                poller_qstate_t poller_qstate;
+
+                read_mem_small(qstate_addr, (uint8_t *)&poller_qstate,
+                               sizeof(poller_qstate));
+                metrics->pollers.total_num_qfulls += poller_qstate.num_qfulls;
+                break;
+            }
+
+            default:
+                return FTL_RC_SUCCESS;
+            }
+        }
+
+        if (avg_count) {
+            metrics->scanners.min_range_elapsed_ns =
+                     hw_coreclk_ticks_to_time_ns(min_elapsed_ticks);
+            metrics->scanners.max_range_elapsed_ns =
+                     hw_coreclk_ticks_to_time_ns(max_elapsed_ticks);
+            metrics->scanners.avg_min_range_elapsed_ns =
+                     hw_coreclk_ticks_to_time_ns(total_min_elapsed_ticks / avg_count);
+            metrics->scanners.avg_max_range_elapsed_ns =
+                     hw_coreclk_ticks_to_time_ns(total_max_elapsed_ticks / avg_count);
+        }
+    }
+
+    return status;
+}
+
 
 ftl_status_code_t
 ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
@@ -1953,8 +2099,8 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     qstate.cb.normal_tmo_cb_addr = lif.normal_age_cb_addr();
     qstate.cb.accel_tmo_cb_addr = lif.accel_age_cb_addr();
     qstate.cb.scan_resched_ticks =
-           time_us_to_timer_ticks(cmd->scan_resched_time,
-                                  &qstate.cb.resched_uses_slow_timer);
+           time_us_to_txs_sched_ticks(cmd->scan_resched_time,
+                                      &qstate.cb.resched_uses_slow_timer);
     /*
      * burst size may be zero but range size must be > 0
      */

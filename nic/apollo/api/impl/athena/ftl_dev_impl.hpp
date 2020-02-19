@@ -18,6 +18,7 @@
 #include <cmath>
 #include <endian.h>
 #include <sstream>
+#include <inttypes.h>
 #include <sys/time.h>
 
 #include <rte_spinlock.h>
@@ -55,6 +56,11 @@ sdk_ret_t accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
 sdk_ret_t accel_aging_control(bool enable_sense);
 sdk_ret_t force_session_expired_ts_set(bool force_expired_ts);
 sdk_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);
+sdk_ret_t session_scanners_metrics_get(lif_attr_metrics_t *metrics);
+sdk_ret_t conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics);
+sdk_ret_t pollers_metrics_get(lif_attr_metrics_t *metrics);
+sdk_ret_t session_table_depth_get(uint32_t *ret_table_depth);
+sdk_ret_t conntrack_table_depth_get(uint32_t *ret_table_depth);
 
 bool lif_init_done(void);
 
@@ -86,12 +92,14 @@ public:
     void lock_all(void);
     void unlock_all(void);
     uint32_t qcount_get(void) { return qcount_actual; }
+    uint32_t table_depth(void) { return table_sz; }
 
 private:
     enum ftl_qtype          qtype;
     uint32_t                qcount;
     uint32_t                qcount_actual;
     uint32_t                qdepth;
+    uint32_t                table_sz;
     rte_spinlock_t          *spinlocks;
 
     sdk_ret_t pollers_init(devcmd_t *devcmd);

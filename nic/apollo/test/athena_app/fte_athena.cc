@@ -108,7 +108,7 @@ fte_rx_loop (int poller_qid)
 
     PDS_TRACE_DEBUG("\nFTE_ATH fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
-        if (poller_qid != -1) {
+        if ((poller_qid != -1) && !ftl_pollers_client::user_will_poll()) {
             ftl_pollers_client::poll(poller_qid);
         }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);
@@ -296,7 +296,6 @@ fte_main (void)
         rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
     }
 
-    _init_pollers_client();
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
@@ -322,6 +321,8 @@ fte_main (void)
         rte_exit(EXIT_FAILURE, "fte_ftl_init:err=%d",
                  sdk_ret);
     }
+
+    _init_pollers_client();
 
     ret = 0;
     // launch per-lcore init on every lcore

@@ -49,7 +49,6 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/fte/fte.hpp"
-#include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 
 namespace fte {
 
@@ -82,8 +81,6 @@ typedef struct gls_s {
 
 gls_t gls = { NULL, FTE_MAX_TXDSCR, FTE_MAX_RXDSCR };
 
-static uint32_t pollers_client_qcount;
-
 static void
 _process (struct rte_mbuf *m)
 {
@@ -101,16 +98,13 @@ _process (struct rte_mbuf *m)
 
 // main processing loop
 static void
-fte_rx_loop (int poller_qid)
+fte_rx_loop (void)
 {
     struct rte_mbuf *pkts_burst[FTE_PKT_BATCH_SIZE];
     int numrx, numtx;
 
     PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
-        if ((poller_qid != -1) && !ftl_pollers_client::user_will_poll()) {
-            ftl_pollers_client::poll(poller_qid);
-        }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);
         if (!numrx) {
             continue;
@@ -142,16 +136,8 @@ fte_rx_loop (int poller_qid)
 static int
 fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
-    int poller_qid;
-
     fte_ftl_set_core_id(rte_lcore_id());
-
-    poller_qid = rte_lcore_index(rte_lcore_id());
-    if (poller_qid >= (int)pollers_client_qcount) {
-        poller_qid = -1;
-    }
-
-    fte_rx_loop(poller_qid);
+    fte_rx_loop();
     return 0;
 }
 
@@ -261,21 +247,6 @@ _init_txbf (uint16_t portid)
 }
 
 static void
-_init_pollers_client()
-{
-    if (ftl_pollers_client::init() != SDK_RET_OK) {
-        rte_exit(EXIT_FAILURE, "failed ftl_pollers_client init");
-    }
-
-    pollers_client_qcount = ftl_pollers_client::qcount_get();
-    if (rte_lcore_count() < pollers_client_qcount) {
-        PDS_TRACE_DEBUG("Number of lcores (%u) is less than number of "
-                        "poller queues (%u)", rte_lcore_count(),
-                        pollers_client_qcount);
-    }
-}
-
-static void
 signal_handler (int signum)
 {
     if (signum == SIGINT || signum == SIGTERM) {
@@ -296,7 +267,6 @@ fte_main (void)
         rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
     }
 
-    _init_pollers_client();
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 

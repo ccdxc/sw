@@ -70,8 +70,7 @@ sdk_ret_t pds_flow_age_sw_pollers_flush(void);
 /// \brief     Return the number of poller queues configured
 /// \param[out] ret_qcount: location to hold the returned queue count
 /// \return    #SDK_RET_OK on success, failure status code on error
-/// \remark    This function returns the number of poller queues
-/// \remark    and returns them to the empty state.
+/// \remark    This function returns the number of poller queues.
 sdk_ret_t pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount);
 
 /// \brief     Return the default PDS expiry handler
@@ -82,7 +81,7 @@ sdk_ret_t pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount);
 sdk_ret_t pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt);
 
 /// \brief     Set polling control
-/// \param[in] user_is_poller: true if user will poll; false leaves all the polling
+/// \param[in] user_will_poll: true if user will poll; false leaves all the polling
 ///             to PDS software (default)
 /// \param[in] expiry_fn: the user may also supply a function to handle expired
 ///            entries. If NULL, PDS software will provide a representative
@@ -95,7 +94,7 @@ sdk_ret_t pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_df
 /// \remark    the user may supply a handler function to intercept and
 /// \remark    process the expired flows. If no handler is given, PDS software
 /// \remark    will provide a default handler to delete the expired flows.
-sdk_ret_t pds_flow_age_sw_pollers_poll_control(bool user_is_poller,
+sdk_ret_t pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
                                                pds_flow_expiry_fn_t expiry_fn);
 
 /// \brief     Submit a poll request (a burst dequeue) on a poller queue

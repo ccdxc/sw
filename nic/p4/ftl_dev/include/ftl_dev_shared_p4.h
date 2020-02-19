@@ -318,7 +318,6 @@ header_type session_info_common_d {
         s2h_vnic_statistics_id          : 9;
         s2h_vnic_statistics_mask        : 16;
         s2h_vnic_histogram_id           : 9;
-        pad_to_512b                     : 353;
     }
 }
 
@@ -327,7 +326,7 @@ header_type session_info_common_d {
     h2s_throttle_pps_id, h2s_throttle_bw_id, h2s_vnic_statistics_id,            \
     h2s_vnic_statistics_mask, h2s_vnic_histogram_id, s2h_throttle_pps_id,       \
     s2h_throttle_bw_id, s2h_vnic_statistics_id, s2h_vnic_statistics_mask,       \
-    s2h_vnic_histogram_id, pad_to_512b                                          \
+    s2h_vnic_histogram_id                                                       \
 
 #define SESSION_INFO_USE(scratch)                                               \
     modify_field(scratch.valid_flag, valid_flag);                               \
@@ -343,7 +342,6 @@ header_type session_info_common_d {
     modify_field(scratch.s2h_vnic_statistics_id, s2h_vnic_statistics_id);       \
     modify_field(scratch.s2h_vnic_statistics_mask, s2h_vnic_statistics_mask);   \
     modify_field(scratch.s2h_vnic_histogram_id, s2h_vnic_histogram_id);         \
-    modify_field(scratch.pad_to_512b, pad_to_512b);                             \
 
 header_type conntrack_info_d {
     fields {
@@ -351,20 +349,17 @@ header_type conntrack_info_d {
         flow_type                       : 2;
         flow_state                      : 4;
         timestamp                       : 48;
-        pad_to_512b                     : 457;
     }
 }
 
 #define CONNTRACK_INFO_DATA                                                     \
-    valid_flag, flow_type, flow_state, timestamp,                               \
-    pad_to_512b                                                                 \
+    valid_flag, flow_type, flow_state, timestamp                                \
 
 #define CONNTRACK_INFO_USE(scratch)                                             \
     modify_field(scratch.valid_flag, valid_flag);                               \
     modify_field(scratch.flow_type, flow_type);                                 \
     modify_field(scratch.flow_state, flow_state);                               \
     modify_field(scratch.timestamp, timestamp);                                 \
-    modify_field(scratch.pad_to_512b, pad_to_512b);                             \
 
 /*
  * Common ring producer index

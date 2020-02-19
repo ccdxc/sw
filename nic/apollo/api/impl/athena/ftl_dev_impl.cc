@@ -85,6 +85,8 @@ static sdk_ret_t attr_age_tmo_set(enum lif_attr attr,
                                   const pds_flow_age_timeouts_t *attr_age_tmo);
 static sdk_ret_t force_expired_ts_set(enum lif_attr attr,
                                       bool force_expired_ts);
+static sdk_ret_t metrics_get(enum ftl_qtype qtype,
+                             lif_attr_metrics_t *metrics);
 static sdk_ret_t pollers_alloc(enum ftl_qtype qtype);
 static sdk_ret_t scanners_alloc(enum ftl_qtype qtype);
 
@@ -143,17 +145,23 @@ init(void)
 sdk_ret_t
 scanners_start(void)
 {
-    sdk_ret_t       ret = SDK_RET_OK;
+    sdk_ret_t       ret = SDK_RET_RETRY;
 
-    if (!lif_init_done()) {
-        return SDK_RET_RETRY;
-    }
+    if (lif_init_done()) {
 
-    if (session_scanners()) {
-        ret = session_scanners()->start();
-    }
-    if (conntrack_scanners() && (ret == SDK_RET_OK)) {
-        ret = conntrack_scanners()->start();
+        /*
+         * Pre-lock and share the same devcmd block across all scanners start
+         */
+        devcmd_t devcmd_start(ftl_lif, scanners_lock_all, scanners_unlock_all);
+        devcmd_start.owner_pre_lock();
+
+        ret = session_scanners() ? 
+              session_scanners()->start(&devcmd_start) : SDK_RET_OK;
+
+        if (conntrack_scanners() && (ret == SDK_RET_OK)) {
+            ret = conntrack_scanners()->start(&devcmd_start);
+        }
+        devcmd_start.owner_pre_unlock();
     }
     return ret;
 }
@@ -161,16 +169,19 @@ scanners_start(void)
 sdk_ret_t
 scanners_stop(bool quiesce_check)
 {
-    sdk_ret_t       ret = SDK_RET_OK;
+    sdk_ret_t       ret = SDK_RET_RETRY;
 
-    if (!lif_init_done()) {
-        return SDK_RET_RETRY;
-    }
-    if (session_scanners()) {
-        ret = session_scanners()->stop(quiesce_check);
-    }
-    if (conntrack_scanners() && (ret == SDK_RET_OK)) {
-        ret = conntrack_scanners()->stop(quiesce_check);
+    if (lif_init_done()) {
+        devcmd_t devcmd_stop(ftl_lif, scanners_lock_all, scanners_unlock_all);
+        devcmd_stop.owner_pre_lock();
+
+        ret = session_scanners() ? 
+              session_scanners()->stop(quiesce_check, &devcmd_stop) : SDK_RET_OK;
+
+        if (conntrack_scanners() && (ret == SDK_RET_OK)) {
+            ret = conntrack_scanners()->stop(quiesce_check, &devcmd_stop);
+        }
+        devcmd_stop.owner_pre_unlock();
     }
     return ret;
 }
@@ -255,16 +266,10 @@ sdk_ret_t
 accel_aging_control(bool enable_sense)
 {
     devcmd_t        devcmd(ftl_lif, age_tmo_cfg_lock, age_tmo_cfg_unlock);
-    sdk_ret_t       ret;
 
     devcmd.req().accel_aging_ctl.opcode = FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL;
     devcmd.req().accel_aging_ctl.enable_sense = enable_sense;
-
-    ret = devcmd.submit();
-    if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
-        PDS_TRACE_ERR("failed devcmd: error %d", ret);
-    }
-    return ret;
+    return devcmd.submit();
 }
 
 sdk_ret_t
@@ -279,6 +284,40 @@ force_conntrack_expired_ts_set(bool force_expired_ts)
 {
     return force_expired_ts_set(FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS,
                                 force_expired_ts);
+}
+
+sdk_ret_t
+session_scanners_metrics_get(lif_attr_metrics_t *metrics)
+{
+    return metrics_get(FTL_QTYPE_SCANNER_SESSION, metrics);
+}
+
+sdk_ret_t
+conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics)
+{
+    return metrics_get(FTL_QTYPE_SCANNER_CONNTRACK, metrics);
+}
+
+sdk_ret_t
+pollers_metrics_get(lif_attr_metrics_t *metrics)
+{
+    return metrics_get(FTL_QTYPE_POLLER, metrics);
+}
+
+sdk_ret_t
+session_table_depth_get(uint32_t *ret_table_depth)
+{
+    *ret_table_depth = session_scanners() ? 
+                       session_scanners()->table_depth() : 0;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+conntrack_table_depth_get(uint32_t *ret_table_depth)
+{
+    *ret_table_depth = conntrack_scanners() ? 
+                       conntrack_scanners()->table_depth() : 0;
+    return SDK_RET_OK;
 }
 
 bool
@@ -394,17 +433,11 @@ attr_age_tmo_set(enum lif_attr attr,
                  const pds_flow_age_timeouts_t *attr_age_tmo)
 {
     devcmd_t        devcmd(ftl_lif, age_tmo_cfg_lock, age_tmo_cfg_unlock);
-    sdk_ret_t       ret;
 
     devcmd.req().lif_setattr.opcode = FTL_DEVCMD_OPCODE_LIF_SETATTR;
     devcmd.req().lif_setattr.attr = attr;
     devcmd.req().lif_setattr.age_tmo = *attr_age_tmo;
-
-    ret = devcmd.submit();
-    if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
-        PDS_TRACE_ERR("failed devcmd: error %d", ret);
-    }
-    return ret;
+    return devcmd.submit();
 }
 
 static sdk_ret_t
@@ -416,17 +449,23 @@ force_expired_ts_set(enum lif_attr attr,
      * (no need for any lock)
      */
     devcmd_t        devcmd(ftl_lif);
-    sdk_ret_t       ret;
 
     devcmd.req().lif_setattr.opcode = FTL_DEVCMD_OPCODE_LIF_SETATTR;
     devcmd.req().lif_setattr.attr = attr;
     devcmd.req().lif_setattr.force_expired_ts = force_expired_ts;
+    return devcmd.submit();
+}
 
-    ret = devcmd.submit();
-    if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
-        PDS_TRACE_ERR("failed devcmd: error %d", ret);
-    }
-    return ret;
+static sdk_ret_t
+metrics_get(enum ftl_qtype qtype,
+            lif_attr_metrics_t *metrics)
+{
+    devcmd_t        devcmd(ftl_lif);
+
+    devcmd.req().lif_getattr.opcode = FTL_DEVCMD_OPCODE_LIF_GETATTR;
+    devcmd.req().lif_getattr.attr = FTL_LIF_ATTR_METRICS;
+    devcmd.req().lif_getattr.qtype = qtype;
+    return devcmd.submit(nullptr, metrics);
 }
 
 static sdk_ret_t
@@ -478,7 +517,8 @@ lif_queues_ctl_t::lif_queues_ctl_t(enum ftl_qtype qtype,
     qtype(qtype),
     qcount(qcount),
     qcount_actual(0),
-    qdepth(qdepth)
+    qdepth(qdepth),
+    table_sz(0)
 {
     spinlocks = (rte_spinlock_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTL_DEV_IMPL_LOCKS,
                                              sizeof(rte_spinlock_t) * qcount);
@@ -499,7 +539,7 @@ lif_queues_ctl_t::init(devcmd_t *owner_devcmd)
 {
     devcmd_t        local_devcmd(ftl_lif, queues_lock_all, queues_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -530,7 +570,7 @@ lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
 {
     devcmd_t        local_devcmd(ftl_lif, scanners_lock_all, scanners_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -545,10 +585,10 @@ lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
         /*
          * SW queues don't use scheduler
          */
-        ret = SDK_RET_OK;
         break;
 
     case FTL_QTYPE_SCANNER_SESSION:
+    case FTL_QTYPE_SCANNER_CONNTRACK:
         devcmd->req_clr();
         devcmd->rsp_clr();
         devcmd->req().scanners_start.opcode = FTL_DEVCMD_OPCODE_SCANNERS_START;
@@ -556,15 +596,6 @@ lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
-        break;
-
-    case FTL_QTYPE_SCANNER_CONNTRACK:
-
-        /*
-         * NOTE: FTL_DEVCMD_OPCODE_SCANNERS_START above would start all scanners
-         * (of all qtypes) so no need to run it separately for conntrack.
-         */
-        ret = SDK_RET_OK;
         break;
 
     default:
@@ -580,7 +611,7 @@ lif_queues_ctl_t::stop(bool quiesce_check,
 {
     devcmd_t        local_devcmd(ftl_lif, scanners_lock_all, scanners_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -595,10 +626,10 @@ lif_queues_ctl_t::stop(bool quiesce_check,
         /*
          * SW queues don't use scheduler
          */
-        ret = SDK_RET_OK;
         break;
 
     case FTL_QTYPE_SCANNER_SESSION:
+    case FTL_QTYPE_SCANNER_CONNTRACK:
         devcmd->req_clr();
         devcmd->rsp_clr();
         devcmd->req().scanners_stop.opcode = FTL_DEVCMD_OPCODE_SCANNERS_STOP;
@@ -607,15 +638,6 @@ lif_queues_ctl_t::stop(bool quiesce_check,
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
-        break;
-
-    case FTL_QTYPE_SCANNER_CONNTRACK:
-
-        /*
-         * NOTE: FTL_DEVCMD_OPCODE_SCANNERS_STOP above would stop all scanners
-         * (of all qtypes) so no need to run it separately for conntrack.
-         */
-        ret = SDK_RET_OK;
         break;
 
     default:
@@ -630,7 +652,7 @@ lif_queues_ctl_t::start_single(uint32_t qid)
 {
     devcmd_t        devcmd(ftl_lif, scanners_lock_one, scanners_unlock_one,
                            this, qid);
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     switch (qtype) {
 
@@ -639,7 +661,6 @@ lif_queues_ctl_t::start_single(uint32_t qid)
         /*
          * SW queues don't use scheduler
          */
-        ret = SDK_RET_OK;
         break;
 
     case FTL_QTYPE_SCANNER_SESSION:
@@ -665,7 +686,7 @@ sdk_ret_t
 lif_queues_ctl_t::flush(void)
 {
     devcmd_t        devcmd(ftl_lif, pollers_lock_all, pollers_unlock_all);
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     switch (qtype) {
 
@@ -684,7 +705,6 @@ lif_queues_ctl_t::flush(void)
         /*
          * HW queues support start/stop rather than flush.
          */
-        ret = SDK_RET_OK;
         break;
 
     default:
@@ -702,7 +722,7 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
                                 devcmd_t *owner_devcmd)
 {
     devcmd_t        *devcmd;
-    sdk_ret_t       ret;
+    sdk_ret_t       ret = SDK_RET_OK;
 
     switch (qtype) {
 
@@ -737,7 +757,6 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
          * HW queues have nothing to dequeue
          */
         *burst_count = 0;
-        ret = SDK_RET_OK;
         break;
 
     default:
@@ -815,7 +834,7 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     devcmd->req().scanners_init.scan_addr_base = tprop.base_mem_pa;
     devcmd->req().scanners_init.scan_id_base = 0;
     devcmd->req().scanners_init.scan_table_sz = tprop.tabledepth;
-    PDS_TRACE_DEBUG("qtype %d scan_addr_base 0x%llx scan_table_sz %u",
+    PDS_TRACE_DEBUG("qtype %d scan_addr_base 0x%" PRIx64 " scan_table_sz %u",
                     qtype, tprop.base_mem_pa, tprop.tabledepth);
 
     devcmd->req().scanners_init.scan_burst_sz = qident->burst_sz;
@@ -831,9 +850,10 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
      */
     if (!platform_is_hw(platform_type)) {
         devcmd->req().scanners_init.qcount = 1;
-        devcmd->req().scanners_init.scan_table_sz = 640;
+        devcmd->req().scanners_init.scan_table_sz = 1024;
         devcmd->req().scanners_init.poller_qcount = 1;
     }
+    table_sz = devcmd->req().scanners_init.scan_table_sz;
     qcount_actual = devcmd->req().scanners_init.qcount;
 
     ret = devcmd->submit();

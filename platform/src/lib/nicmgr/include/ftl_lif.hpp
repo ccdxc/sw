@@ -252,6 +252,8 @@ public:
                                     uint32_t *burst_count,
                                     uint8_t *buf,
                                     uint32_t buf_sz);
+    ftl_status_code_t metrics_get(lif_attr_metrics_t *metrics);
+
     bool quiesce(void);
     void quiesce_idle(void);
 

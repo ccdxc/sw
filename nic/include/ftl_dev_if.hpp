@@ -347,11 +347,34 @@ enum lif_attr {
     FTL_LIF_ATTR_NAME         = 0,
     FTL_LIF_ATTR_NORMAL_AGE_TMO,
     FTL_LIF_ATTR_ACCEL_AGE_TMO,
+    FTL_LIF_ATTR_METRICS,
     FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS,  // for debugging on SIM platform
     FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS,
 };
 
 typedef pds_flow_age_timeouts_t lif_attr_age_tmo_t;
+
+/**
+ * LIF metrics
+ */
+typedef struct {
+    uint64_t   total_cb_cfg_discards;
+    uint64_t   total_scan_invocations;
+    uint64_t   total_expired_entries;
+    uint64_t   min_range_elapsed_ns;
+    uint64_t   avg_min_range_elapsed_ns;
+    uint64_t   max_range_elapsed_ns;
+    uint64_t   avg_max_range_elapsed_ns;
+} lif_attr_scanners_metrics_t;
+
+typedef struct {
+    uint64_t   total_num_qfulls;
+} lif_attr_pollers_metrics_t;
+
+typedef union {
+    lif_attr_scanners_metrics_t scanners;
+    lif_attr_pollers_metrics_t  pollers;
+} lif_attr_metrics_t;
 
 /**
  * lif_setattr_cmd_t - Set LIF attributes
@@ -383,12 +406,14 @@ typedef struct lif_setattr_cpl {
  * struct lif_getattr_cmd - Get LIF attributes
  * @lif_index:  software lif index
  * @attr:       Attribute type (enum lif_attr)
+ * @qtype:      For use by FTL_LIF_ATTR_METRICS
  */
 typedef struct lif_getattr_cmd {
     uint8_t     opcode;
     uint8_t     attr;
     __le16      lif_index;
-    uint8_t     rsvd[60];
+    uint8_t     qtype;
+    uint8_t     rsvd[59];
 } lif_getattr_cmd_t;
 
 typedef struct lif_getattr_cpl {

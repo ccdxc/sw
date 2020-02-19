@@ -50,14 +50,14 @@
 /*
  * Session Info (P4 session_info_t)
  */
-#define SESSION_INFO_BYTES                      64     // in bytes
-#define SESSION_INFO_BYTES_SHFT                 6      // log2(SESSION_INFO_BYTES)
+#define SESSION_INFO_BYTES                      32     // in bytes
+#define SESSION_INFO_BYTES_SHFT                 5      // log2(SESSION_INFO_BYTES)
  
 /*
  * Conntrack Info (P4 conntrack_info_t)
  */
-#define CONNTRACK_INFO_BYTES                    64     // in bytes
-#define CONNTRACK_INFO_BYTES_SHFT               6      // log2(CONNTRACK_INFO_BYTES)
+#define CONNTRACK_INFO_BYTES                    4      // in bytes
+#define CONNTRACK_INFO_BYTES_SHFT               2      // log2(CONNTRACK_INFO_BYTES)
  
 /*
  * Control Block activate 16-bit indicator
@@ -328,8 +328,8 @@ typedef struct {
  * Convert time in microseconds to scheduler timer ticks
  */
 static inline uint32_t
-time_us_to_timer_ticks(uint32_t time_us,
-                       uint8_t *use_slow_timer)
+time_us_to_txs_sched_ticks(uint32_t time_us,
+                           uint8_t *use_slow_timer)
 {
     uint32_t    ticks = time_us;
 
