@@ -86,6 +86,16 @@ message ObjectRef {
   string URI        = 5 [(gogoproto.jsontag) = "uri,omitempty"];
 }
 
+// Label is the input for label operations
+message Label {
+  TypeMeta T          = 1 [(gogoproto.embed) = true,
+                           (gogoproto.nullable) = false,
+                           (gogoproto.jsontag) = ",inline"];
+  ObjectMeta O        = 2 [(gogoproto.embed) = true,
+                           (gogoproto.nullable) = false,
+                           (gogoproto.jsontag) = ",inline"];
+}
+
 message ListWatchOptions {
   enum SortOrders {
     None                  = 0; // ui-hint: None

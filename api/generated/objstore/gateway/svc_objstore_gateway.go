@@ -215,6 +215,60 @@ func (a adapterObjstoreV1) AutoGetObject(oldctx oldcontext.Context, t *objstore.
 	return ret.(*objstore.Object), err
 }
 
+func (a adapterObjstoreV1) AutoLabelBucket(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*objstore.Bucket, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoLabelBucket", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelBucket")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Bucket", t.Tenant, t.Namespace, "objstore", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelBucket(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*objstore.Bucket), err
+}
+
+func (a adapterObjstoreV1) AutoLabelObject(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*objstore.Object, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ObjstoreV1AutoLabelObject", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelObject")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Object", t.Tenant, t.Namespace, "objstore", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelObject(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*objstore.Object), err
+}
+
 func (a adapterObjstoreV1) AutoListBucket(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*objstore.BucketList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()

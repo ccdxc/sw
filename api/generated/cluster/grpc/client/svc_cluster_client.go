@@ -421,6 +421,132 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetVersion")(lAutoGetVersionEndpoint)
 	}
+	var lAutoLabelClusterEndpoint endpoint.Endpoint
+	{
+		lAutoLabelClusterEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelCluster",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespCluster,
+			&cluster.Cluster{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelClusterEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelCluster")(lAutoLabelClusterEndpoint)
+	}
+	var lAutoLabelConfigurationSnapshotEndpoint endpoint.Endpoint
+	{
+		lAutoLabelConfigurationSnapshotEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelConfigurationSnapshot",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespConfigurationSnapshot,
+			&cluster.ConfigurationSnapshot{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelConfigurationSnapshot")(lAutoLabelConfigurationSnapshotEndpoint)
+	}
+	var lAutoLabelDistributedServiceCardEndpoint endpoint.Endpoint
+	{
+		lAutoLabelDistributedServiceCardEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelDistributedServiceCard",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespDistributedServiceCard,
+			&cluster.DistributedServiceCard{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelDistributedServiceCardEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelDistributedServiceCard")(lAutoLabelDistributedServiceCardEndpoint)
+	}
+	var lAutoLabelHostEndpoint endpoint.Endpoint
+	{
+		lAutoLabelHostEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelHost",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespHost,
+			&cluster.Host{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelHostEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelHost")(lAutoLabelHostEndpoint)
+	}
+	var lAutoLabelLicenseEndpoint endpoint.Endpoint
+	{
+		lAutoLabelLicenseEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelLicense",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespLicense,
+			&cluster.License{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelLicenseEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelLicense")(lAutoLabelLicenseEndpoint)
+	}
+	var lAutoLabelNodeEndpoint endpoint.Endpoint
+	{
+		lAutoLabelNodeEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelNode",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespNode,
+			&cluster.Node{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelNodeEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelNode")(lAutoLabelNodeEndpoint)
+	}
+	var lAutoLabelSnapshotRestoreEndpoint endpoint.Endpoint
+	{
+		lAutoLabelSnapshotRestoreEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelSnapshotRestore",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespSnapshotRestore,
+			&cluster.SnapshotRestore{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelSnapshotRestoreEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelSnapshotRestore")(lAutoLabelSnapshotRestoreEndpoint)
+	}
+	var lAutoLabelTenantEndpoint endpoint.Endpoint
+	{
+		lAutoLabelTenantEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelTenant",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespTenant,
+			&cluster.Tenant{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelTenant")(lAutoLabelTenantEndpoint)
+	}
+	var lAutoLabelVersionEndpoint endpoint.Endpoint
+	{
+		lAutoLabelVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelVersion",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespVersion,
+			&cluster.Version{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelVersion")(lAutoLabelVersionEndpoint)
+	}
 	var lAutoListClusterEndpoint endpoint.Endpoint
 	{
 		lAutoListClusterEndpoint = grpctransport.NewClient(
@@ -746,6 +872,15 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoGetSnapshotRestoreEndpoint:           lAutoGetSnapshotRestoreEndpoint,
 		AutoGetTenantEndpoint:                    lAutoGetTenantEndpoint,
 		AutoGetVersionEndpoint:                   lAutoGetVersionEndpoint,
+		AutoLabelClusterEndpoint:                 lAutoLabelClusterEndpoint,
+		AutoLabelConfigurationSnapshotEndpoint:   lAutoLabelConfigurationSnapshotEndpoint,
+		AutoLabelDistributedServiceCardEndpoint:  lAutoLabelDistributedServiceCardEndpoint,
+		AutoLabelHostEndpoint:                    lAutoLabelHostEndpoint,
+		AutoLabelLicenseEndpoint:                 lAutoLabelLicenseEndpoint,
+		AutoLabelNodeEndpoint:                    lAutoLabelNodeEndpoint,
+		AutoLabelSnapshotRestoreEndpoint:         lAutoLabelSnapshotRestoreEndpoint,
+		AutoLabelTenantEndpoint:                  lAutoLabelTenantEndpoint,
+		AutoLabelVersionEndpoint:                 lAutoLabelVersionEndpoint,
 		AutoListClusterEndpoint:                  lAutoListClusterEndpoint,
 		AutoListConfigurationSnapshotEndpoint:    lAutoListConfigurationSnapshotEndpoint,
 		AutoListDistributedServiceCardEndpoint:   lAutoListDistributedServiceCardEndpoint,
@@ -808,6 +943,15 @@ func (a *grpcObjClusterV1Cluster) UpdateStatus(ctx context.Context, in *cluster.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCluster(nctx, in)
+}
+
+func (a *grpcObjClusterV1Cluster) Label(ctx context.Context, in *api.Label) (*cluster.Cluster, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Cluster", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelCluster(nctx, in)
 }
 
 func (a *grpcObjClusterV1Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
@@ -928,6 +1072,13 @@ func (a *restObjClusterV1Cluster) UpdateStatus(ctx context.Context, in *cluster.
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1Cluster) Label(ctx context.Context, in *api.Label) (*cluster.Cluster, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelCluster(ctx, in)
+}
+
 func (a *restObjClusterV1Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1030,6 +1181,15 @@ func (a *grpcObjClusterV1Node) UpdateStatus(ctx context.Context, in *cluster.Nod
 	return a.client.AutoUpdateNode(nctx, in)
 }
 
+func (a *grpcObjClusterV1Node) Label(ctx context.Context, in *api.Label) (*cluster.Node, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Node", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelNode(nctx, in)
+}
+
 func (a *grpcObjClusterV1Node) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Node, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Node", "oper", "get")
 	if objMeta == nil {
@@ -1130,6 +1290,13 @@ func (a *restObjClusterV1Node) UpdateStatus(ctx context.Context, in *cluster.Nod
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1Node) Label(ctx context.Context, in *api.Label) (*cluster.Node, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelNode(ctx, in)
+}
+
 func (a *restObjClusterV1Node) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Node, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1217,6 +1384,15 @@ func (a *grpcObjClusterV1Host) UpdateStatus(ctx context.Context, in *cluster.Hos
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateHost(nctx, in)
+}
+
+func (a *grpcObjClusterV1Host) Label(ctx context.Context, in *api.Label) (*cluster.Host, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Host", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelHost(nctx, in)
 }
 
 func (a *grpcObjClusterV1Host) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Host, error) {
@@ -1319,6 +1495,13 @@ func (a *restObjClusterV1Host) UpdateStatus(ctx context.Context, in *cluster.Hos
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1Host) Label(ctx context.Context, in *api.Label) (*cluster.Host, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelHost(ctx, in)
+}
+
 func (a *restObjClusterV1Host) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Host, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1406,6 +1589,15 @@ func (a *grpcObjClusterV1DistributedServiceCard) UpdateStatus(ctx context.Contex
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateDistributedServiceCard(nctx, in)
+}
+
+func (a *grpcObjClusterV1DistributedServiceCard) Label(ctx context.Context, in *api.Label) (*cluster.DistributedServiceCard, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DistributedServiceCard", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelDistributedServiceCard(nctx, in)
 }
 
 func (a *grpcObjClusterV1DistributedServiceCard) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DistributedServiceCard, error) {
@@ -1508,6 +1700,13 @@ func (a *restObjClusterV1DistributedServiceCard) UpdateStatus(ctx context.Contex
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1DistributedServiceCard) Label(ctx context.Context, in *api.Label) (*cluster.DistributedServiceCard, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelDistributedServiceCard(ctx, in)
+}
+
 func (a *restObjClusterV1DistributedServiceCard) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DistributedServiceCard, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1595,6 +1794,15 @@ func (a *grpcObjClusterV1Tenant) UpdateStatus(ctx context.Context, in *cluster.T
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTenant(nctx, in)
+}
+
+func (a *grpcObjClusterV1Tenant) Label(ctx context.Context, in *api.Label) (*cluster.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelTenant(nctx, in)
 }
 
 func (a *grpcObjClusterV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Tenant, error) {
@@ -1697,6 +1905,13 @@ func (a *restObjClusterV1Tenant) UpdateStatus(ctx context.Context, in *cluster.T
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1Tenant) Label(ctx context.Context, in *api.Label) (*cluster.Tenant, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelTenant(ctx, in)
+}
+
 func (a *restObjClusterV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Tenant, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1784,6 +1999,15 @@ func (a *grpcObjClusterV1Version) UpdateStatus(ctx context.Context, in *cluster.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateVersion(nctx, in)
+}
+
+func (a *grpcObjClusterV1Version) Label(ctx context.Context, in *api.Label) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelVersion(nctx, in)
 }
 
 func (a *grpcObjClusterV1Version) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
@@ -1886,6 +2110,13 @@ func (a *restObjClusterV1Version) UpdateStatus(ctx context.Context, in *cluster.
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1Version) Label(ctx context.Context, in *api.Label) (*cluster.Version, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelVersion(ctx, in)
+}
+
 func (a *restObjClusterV1Version) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1973,6 +2204,15 @@ func (a *grpcObjClusterV1ConfigurationSnapshot) UpdateStatus(ctx context.Context
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateConfigurationSnapshot(nctx, in)
+}
+
+func (a *grpcObjClusterV1ConfigurationSnapshot) Label(ctx context.Context, in *api.Label) (*cluster.ConfigurationSnapshot, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ConfigurationSnapshot", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelConfigurationSnapshot(nctx, in)
 }
 
 func (a *grpcObjClusterV1ConfigurationSnapshot) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
@@ -2084,6 +2324,13 @@ func (a *restObjClusterV1ConfigurationSnapshot) UpdateStatus(ctx context.Context
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1ConfigurationSnapshot) Label(ctx context.Context, in *api.Label) (*cluster.ConfigurationSnapshot, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelConfigurationSnapshot(ctx, in)
+}
+
 func (a *restObjClusterV1ConfigurationSnapshot) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.ConfigurationSnapshot, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2178,6 +2425,15 @@ func (a *grpcObjClusterV1SnapshotRestore) UpdateStatus(ctx context.Context, in *
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateSnapshotRestore(nctx, in)
+}
+
+func (a *grpcObjClusterV1SnapshotRestore) Label(ctx context.Context, in *api.Label) (*cluster.SnapshotRestore, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SnapshotRestore", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelSnapshotRestore(nctx, in)
 }
 
 func (a *grpcObjClusterV1SnapshotRestore) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
@@ -2289,6 +2545,13 @@ func (a *restObjClusterV1SnapshotRestore) UpdateStatus(ctx context.Context, in *
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjClusterV1SnapshotRestore) Label(ctx context.Context, in *api.Label) (*cluster.SnapshotRestore, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelSnapshotRestore(ctx, in)
+}
+
 func (a *restObjClusterV1SnapshotRestore) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2383,6 +2646,15 @@ func (a *grpcObjClusterV1License) UpdateStatus(ctx context.Context, in *cluster.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateLicense(nctx, in)
+}
+
+func (a *grpcObjClusterV1License) Label(ctx context.Context, in *api.Label) (*cluster.License, error) {
+	a.logger.DebugLog("msg", "received call", "object", "License", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelLicense(nctx, in)
 }
 
 func (a *grpcObjClusterV1License) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {
@@ -2483,6 +2755,13 @@ func (a *restObjClusterV1License) Update(ctx context.Context, in *cluster.Licens
 
 func (a *restObjClusterV1License) UpdateStatus(ctx context.Context, in *cluster.License) (*cluster.License, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1License) Label(ctx context.Context, in *api.Label) (*cluster.License, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelLicense(ctx, in)
 }
 
 func (a *restObjClusterV1License) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.License, error) {

@@ -113,6 +113,34 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lAutoGetRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoGetRolloutAction")(lAutoGetRolloutActionEndpoint)
 	}
+	var lAutoLabelRolloutEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRolloutEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoLabelRollout",
+			rollout.EncodeGrpcReqLabel,
+			rollout.DecodeGrpcRespRollout,
+			&rollout.Rollout{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoLabelRollout")(lAutoLabelRolloutEndpoint)
+	}
+	var lAutoLabelRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoLabelRolloutAction",
+			rollout.EncodeGrpcReqLabel,
+			rollout.DecodeGrpcRespRolloutAction,
+			&rollout.RolloutAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoLabelRolloutAction")(lAutoLabelRolloutActionEndpoint)
+	}
 	var lAutoListRolloutEndpoint endpoint.Endpoint
 	{
 		lAutoListRolloutEndpoint = grpctransport.NewClient(
@@ -234,6 +262,8 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		AutoDeleteRolloutActionEndpoint: lAutoDeleteRolloutActionEndpoint,
 		AutoGetRolloutEndpoint:          lAutoGetRolloutEndpoint,
 		AutoGetRolloutActionEndpoint:    lAutoGetRolloutActionEndpoint,
+		AutoLabelRolloutEndpoint:        lAutoLabelRolloutEndpoint,
+		AutoLabelRolloutActionEndpoint:  lAutoLabelRolloutActionEndpoint,
 		AutoListRolloutEndpoint:         lAutoListRolloutEndpoint,
 		AutoListRolloutActionEndpoint:   lAutoListRolloutActionEndpoint,
 		AutoUpdateRolloutEndpoint:       lAutoUpdateRolloutEndpoint,
@@ -283,6 +313,15 @@ func (a *grpcObjRolloutV1Rollout) UpdateStatus(ctx context.Context, in *rollout.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRollout(nctx, in)
+}
+
+func (a *grpcObjRolloutV1Rollout) Label(ctx context.Context, in *api.Label) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Rollout", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRollout(nctx, in)
 }
 
 func (a *grpcObjRolloutV1Rollout) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.Rollout, error) {
@@ -421,6 +460,13 @@ func (a *restObjRolloutV1Rollout) UpdateStatus(ctx context.Context, in *rollout.
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjRolloutV1Rollout) Label(ctx context.Context, in *api.Label) (*rollout.Rollout, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRollout(ctx, in)
+}
+
 func (a *restObjRolloutV1Rollout) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.Rollout, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -535,6 +581,15 @@ func (a *grpcObjRolloutV1RolloutAction) UpdateStatus(ctx context.Context, in *ro
 	return a.client.AutoUpdateRolloutAction(nctx, in)
 }
 
+func (a *grpcObjRolloutV1RolloutAction) Label(ctx context.Context, in *api.Label) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRolloutAction(nctx, in)
+}
+
 func (a *grpcObjRolloutV1RolloutAction) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {
 	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "get")
 	if objMeta == nil {
@@ -633,6 +688,13 @@ func (a *restObjRolloutV1RolloutAction) Update(ctx context.Context, in *rollout.
 
 func (a *restObjRolloutV1RolloutAction) UpdateStatus(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjRolloutV1RolloutAction) Label(ctx context.Context, in *api.Label) (*rollout.RolloutAction, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRolloutAction(ctx, in)
 }
 
 func (a *restObjRolloutV1RolloutAction) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {

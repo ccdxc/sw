@@ -73,6 +73,12 @@ type eBookstoreV1Endpoints struct {
 	fnAutoGetOrder        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetPublisher    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetStore        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelBook       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelCoupon     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelCustomer   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelOrder      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelPublisher  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelStore      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListBook        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCoupon      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCustomer    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -2735,6 +2741,15 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.UnusedMessage": apisrvpkg.NewMessage("bookstore.UnusedMessage"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("bookstore", s.Messages)
@@ -2887,6 +2902,182 @@ func (s *sbookstoreExampleBackend) regSvcsFunc(ctx context.Context, logger log.L
 		s.endpointsBookstoreV1.fnAutoGetStore = srv.AddMethod("AutoGetStore",
 			apisrvpkg.NewMethod(srv, pkgMessages["bookstore.Store"], pkgMessages["bookstore.Store"], "bookstore", "AutoGetStore")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "bookstore/v1/store"), nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelBook = srv.AddMethod("AutoLabelBook",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Book"], "bookstore", "AutoLabelBook")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Book{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Book{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelCoupon = srv.AddMethod("AutoLabelCoupon",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Coupon"], "bookstore", "AutoLabelCoupon")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Coupon{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Coupon{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelCustomer = srv.AddMethod("AutoLabelCustomer",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Customer"], "bookstore", "AutoLabelCustomer")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "bookstore/v1/customers/", in.Name), nil
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Customer{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Customer{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelOrder = srv.AddMethod("AutoLabelOrder",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Order"], "bookstore", "AutoLabelOrder")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "bookstore/v1/orders/", in.Name), nil
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Order{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Order{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelPublisher = srv.AddMethod("AutoLabelPublisher",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Publisher"], "bookstore", "AutoLabelPublisher")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Publisher{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Publisher{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsBookstoreV1.fnAutoLabelStore = srv.AddMethod("AutoLabelStore",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["bookstore.Store"], "bookstore", "AutoLabelStore")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := bookstore.Store{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := bookstore.Store{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoListBook = srv.AddMethod("AutoListBook",
@@ -3817,6 +4008,54 @@ func (e *eBookstoreV1Endpoints) AutoGetPublisher(ctx context.Context, t bookstor
 }
 func (e *eBookstoreV1Endpoints) AutoGetStore(ctx context.Context, t bookstore.Store) (bookstore.Store, error) {
 	r, err := e.fnAutoGetStore(ctx, t)
+	if err == nil {
+		return r.(bookstore.Store), err
+	}
+	return bookstore.Store{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelBook(ctx context.Context, t api.Label) (bookstore.Book, error) {
+	r, err := e.fnAutoLabelBook(ctx, t)
+	if err == nil {
+		return r.(bookstore.Book), err
+	}
+	return bookstore.Book{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelCoupon(ctx context.Context, t api.Label) (bookstore.Coupon, error) {
+	r, err := e.fnAutoLabelCoupon(ctx, t)
+	if err == nil {
+		return r.(bookstore.Coupon), err
+	}
+	return bookstore.Coupon{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelCustomer(ctx context.Context, t api.Label) (bookstore.Customer, error) {
+	r, err := e.fnAutoLabelCustomer(ctx, t)
+	if err == nil {
+		return r.(bookstore.Customer), err
+	}
+	return bookstore.Customer{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelOrder(ctx context.Context, t api.Label) (bookstore.Order, error) {
+	r, err := e.fnAutoLabelOrder(ctx, t)
+	if err == nil {
+		return r.(bookstore.Order), err
+	}
+	return bookstore.Order{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelPublisher(ctx context.Context, t api.Label) (bookstore.Publisher, error) {
+	r, err := e.fnAutoLabelPublisher(ctx, t)
+	if err == nil {
+		return r.(bookstore.Publisher), err
+	}
+	return bookstore.Publisher{}, err
+
+}
+func (e *eBookstoreV1Endpoints) AutoLabelStore(ctx context.Context, t api.Label) (bookstore.Store, error) {
+	r, err := e.fnAutoLabelStore(ctx, t)
 	if err == nil {
 		return r.(bookstore.Store), err
 	}

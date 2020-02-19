@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/api/graph"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
@@ -202,6 +202,11 @@ func (m *FakeMethod) WithVersion(ver string) apisrv.Method { return m }
 
 // WithMakeURI set the URI maker function for the method
 func (m *FakeMethod) WithMakeURI(fn apisrv.MakeURIFunc) apisrv.Method {
+	return m
+}
+
+// WithMethDbKey set the URI maker function for the method
+func (m *FakeMethod) WithMethDbKey(fn apisrv.MakeMethDbKeyFunc) apisrv.Method {
 	return m
 }
 

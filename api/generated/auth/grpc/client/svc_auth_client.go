@@ -240,6 +240,76 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoGetUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoGetUserPreference")(lAutoGetUserPreferenceEndpoint)
 	}
+	var lAutoLabelAuthenticationPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAuthenticationPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoLabelAuthenticationPolicy",
+			auth.EncodeGrpcReqLabel,
+			auth.DecodeGrpcRespAuthenticationPolicy,
+			&auth.AuthenticationPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAuthenticationPolicyEndpoint = trace.ClientEndPoint("AuthV1:AutoLabelAuthenticationPolicy")(lAutoLabelAuthenticationPolicyEndpoint)
+	}
+	var lAutoLabelRoleEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRoleEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoLabelRole",
+			auth.EncodeGrpcReqLabel,
+			auth.DecodeGrpcRespRole,
+			&auth.Role{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRoleEndpoint = trace.ClientEndPoint("AuthV1:AutoLabelRole")(lAutoLabelRoleEndpoint)
+	}
+	var lAutoLabelRoleBindingEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRoleBindingEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoLabelRoleBinding",
+			auth.EncodeGrpcReqLabel,
+			auth.DecodeGrpcRespRoleBinding,
+			&auth.RoleBinding{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRoleBindingEndpoint = trace.ClientEndPoint("AuthV1:AutoLabelRoleBinding")(lAutoLabelRoleBindingEndpoint)
+	}
+	var lAutoLabelUserEndpoint endpoint.Endpoint
+	{
+		lAutoLabelUserEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoLabelUser",
+			auth.EncodeGrpcReqLabel,
+			auth.DecodeGrpcRespUser,
+			&auth.User{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelUserEndpoint = trace.ClientEndPoint("AuthV1:AutoLabelUser")(lAutoLabelUserEndpoint)
+	}
+	var lAutoLabelUserPreferenceEndpoint endpoint.Endpoint
+	{
+		lAutoLabelUserPreferenceEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"AutoLabelUserPreference",
+			auth.EncodeGrpcReqLabel,
+			auth.DecodeGrpcRespUserPreference,
+			&auth.UserPreference{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelUserPreferenceEndpoint = trace.ClientEndPoint("AuthV1:AutoLabelUserPreference")(lAutoLabelUserPreferenceEndpoint)
+	}
 	var lAutoListAuthenticationPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListAuthenticationPolicyEndpoint = grpctransport.NewClient(
@@ -482,6 +552,11 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		AutoGetRoleBindingEndpoint:             lAutoGetRoleBindingEndpoint,
 		AutoGetUserEndpoint:                    lAutoGetUserEndpoint,
 		AutoGetUserPreferenceEndpoint:          lAutoGetUserPreferenceEndpoint,
+		AutoLabelAuthenticationPolicyEndpoint:  lAutoLabelAuthenticationPolicyEndpoint,
+		AutoLabelRoleEndpoint:                  lAutoLabelRoleEndpoint,
+		AutoLabelRoleBindingEndpoint:           lAutoLabelRoleBindingEndpoint,
+		AutoLabelUserEndpoint:                  lAutoLabelUserEndpoint,
+		AutoLabelUserPreferenceEndpoint:        lAutoLabelUserPreferenceEndpoint,
 		AutoListAuthenticationPolicyEndpoint:   lAutoListAuthenticationPolicyEndpoint,
 		AutoListRoleEndpoint:                   lAutoListRoleEndpoint,
 		AutoListRoleBindingEndpoint:            lAutoListRoleBindingEndpoint,
@@ -539,6 +614,15 @@ func (a *grpcObjAuthV1User) UpdateStatus(ctx context.Context, in *auth.User) (*a
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateUser(nctx, in)
+}
+
+func (a *grpcObjAuthV1User) Label(ctx context.Context, in *api.Label) (*auth.User, error) {
+	a.logger.DebugLog("msg", "received call", "object", "User", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelUser(nctx, in)
 }
 
 func (a *grpcObjAuthV1User) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.User, error) {
@@ -668,6 +752,13 @@ func (a *restObjAuthV1User) UpdateStatus(ctx context.Context, in *auth.User) (*a
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjAuthV1User) Label(ctx context.Context, in *api.Label) (*auth.User, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelUser(ctx, in)
+}
+
 func (a *restObjAuthV1User) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.User, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -777,6 +868,15 @@ func (a *grpcObjAuthV1AuthenticationPolicy) UpdateStatus(ctx context.Context, in
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAuthenticationPolicy(nctx, in)
+}
+
+func (a *grpcObjAuthV1AuthenticationPolicy) Label(ctx context.Context, in *api.Label) (*auth.AuthenticationPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuthenticationPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelAuthenticationPolicy(nctx, in)
 }
 
 func (a *grpcObjAuthV1AuthenticationPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.AuthenticationPolicy, error) {
@@ -906,6 +1006,13 @@ func (a *restObjAuthV1AuthenticationPolicy) UpdateStatus(ctx context.Context, in
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjAuthV1AuthenticationPolicy) Label(ctx context.Context, in *api.Label) (*auth.AuthenticationPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelAuthenticationPolicy(ctx, in)
+}
+
 func (a *restObjAuthV1AuthenticationPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.AuthenticationPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1014,6 +1121,15 @@ func (a *grpcObjAuthV1Role) UpdateStatus(ctx context.Context, in *auth.Role) (*a
 	return a.client.AutoUpdateRole(nctx, in)
 }
 
+func (a *grpcObjAuthV1Role) Label(ctx context.Context, in *api.Label) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRole(nctx, in)
+}
+
 func (a *grpcObjAuthV1Role) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "get")
 	if objMeta == nil {
@@ -1114,6 +1230,13 @@ func (a *restObjAuthV1Role) UpdateStatus(ctx context.Context, in *auth.Role) (*a
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjAuthV1Role) Label(ctx context.Context, in *api.Label) (*auth.Role, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRole(ctx, in)
+}
+
 func (a *restObjAuthV1Role) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1204,6 +1327,15 @@ func (a *grpcObjAuthV1RoleBinding) UpdateStatus(ctx context.Context, in *auth.Ro
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRoleBinding(nctx, in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) Label(ctx context.Context, in *api.Label) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRoleBinding(nctx, in)
 }
 
 func (a *grpcObjAuthV1RoleBinding) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
@@ -1306,6 +1438,13 @@ func (a *restObjAuthV1RoleBinding) UpdateStatus(ctx context.Context, in *auth.Ro
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjAuthV1RoleBinding) Label(ctx context.Context, in *api.Label) (*auth.RoleBinding, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRoleBinding(ctx, in)
+}
+
 func (a *restObjAuthV1RoleBinding) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1396,6 +1535,15 @@ func (a *grpcObjAuthV1UserPreference) UpdateStatus(ctx context.Context, in *auth
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateUserPreference(nctx, in)
+}
+
+func (a *grpcObjAuthV1UserPreference) Label(ctx context.Context, in *api.Label) (*auth.UserPreference, error) {
+	a.logger.DebugLog("msg", "received call", "object", "UserPreference", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelUserPreference(nctx, in)
 }
 
 func (a *grpcObjAuthV1UserPreference) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {
@@ -1496,6 +1644,13 @@ func (a *restObjAuthV1UserPreference) Update(ctx context.Context, in *auth.UserP
 
 func (a *restObjAuthV1UserPreference) UpdateStatus(ctx context.Context, in *auth.UserPreference) (*auth.UserPreference, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjAuthV1UserPreference) Label(ctx context.Context, in *api.Label) (*auth.UserPreference, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelUserPreference(ctx, in)
 }
 
 func (a *restObjAuthV1UserPreference) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.UserPreference, error) {

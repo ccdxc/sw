@@ -134,6 +134,33 @@ func (a adapterDiagnosticsV1) AutoGetModule(oldctx oldcontext.Context, t *diagno
 	return ret.(*diagnostics.Module), err
 }
 
+func (a adapterDiagnosticsV1) AutoLabelModule(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*diagnostics.Module, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.DiagnosticsV1AutoLabelModule", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelModule")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Module", t.Tenant, t.Namespace, "diagnostics", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelModule(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*diagnostics.Module), err
+}
+
 func (a adapterDiagnosticsV1) AutoListModule(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*diagnostics.ModuleList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()

@@ -49,6 +49,8 @@ type EndpointsRolloutV1Client struct {
 	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
 	AutoGetRolloutEndpoint          endpoint.Endpoint
 	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoLabelRolloutEndpoint        endpoint.Endpoint
+	AutoLabelRolloutActionEndpoint  endpoint.Endpoint
 	AutoListRolloutEndpoint         endpoint.Endpoint
 	AutoListRolloutActionEndpoint   endpoint.Endpoint
 	AutoUpdateRolloutEndpoint       endpoint.Endpoint
@@ -72,6 +74,8 @@ type EndpointsRolloutV1RestClient struct {
 	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
 	AutoGetRolloutEndpoint          endpoint.Endpoint
 	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoLabelRolloutEndpoint        endpoint.Endpoint
+	AutoLabelRolloutActionEndpoint  endpoint.Endpoint
 	AutoListRolloutEndpoint         endpoint.Endpoint
 	AutoListRolloutActionEndpoint   endpoint.Endpoint
 	AutoUpdateRolloutEndpoint       endpoint.Endpoint
@@ -98,6 +102,8 @@ type EndpointsRolloutV1Server struct {
 	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
 	AutoGetRolloutEndpoint          endpoint.Endpoint
 	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoLabelRolloutEndpoint        endpoint.Endpoint
+	AutoLabelRolloutActionEndpoint  endpoint.Endpoint
 	AutoListRolloutEndpoint         endpoint.Endpoint
 	AutoListRolloutActionEndpoint   endpoint.Endpoint
 	AutoUpdateRolloutEndpoint       endpoint.Endpoint
@@ -191,6 +197,34 @@ func (e EndpointsRolloutV1Client) AutoGetRolloutAction(ctx context.Context, in *
 }
 
 type respRolloutV1AutoGetRolloutAction struct {
+	V   RolloutAction
+	Err error
+}
+
+// AutoLabelRollout is endpoint for AutoLabelRollout
+func (e EndpointsRolloutV1Client) AutoLabelRollout(ctx context.Context, in *api.Label) (*Rollout, error) {
+	resp, err := e.AutoLabelRolloutEndpoint(ctx, in)
+	if err != nil {
+		return &Rollout{}, err
+	}
+	return resp.(*Rollout), nil
+}
+
+type respRolloutV1AutoLabelRollout struct {
+	V   Rollout
+	Err error
+}
+
+// AutoLabelRolloutAction is endpoint for AutoLabelRolloutAction
+func (e EndpointsRolloutV1Client) AutoLabelRolloutAction(ctx context.Context, in *api.Label) (*RolloutAction, error) {
+	resp, err := e.AutoLabelRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutAction{}, err
+	}
+	return resp.(*RolloutAction), nil
+}
+
+type respRolloutV1AutoLabelRolloutAction struct {
 	V   RolloutAction
 	Err error
 }
@@ -453,6 +487,50 @@ func MakeRolloutV1AutoGetRolloutActionEndpoint(s ServiceRolloutV1Server, logger 
 	return trace.ServerEndpoint("RolloutV1:AutoGetRolloutAction")(f)
 }
 
+// AutoLabelRollout implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoLabelRollout(ctx context.Context, in api.Label) (Rollout, error) {
+	resp, err := e.AutoLabelRolloutEndpoint(ctx, in)
+	if err != nil {
+		return Rollout{}, err
+	}
+	return *resp.(*Rollout), nil
+}
+
+// MakeRolloutV1AutoLabelRolloutEndpoint creates  AutoLabelRollout endpoints for the service
+func MakeRolloutV1AutoLabelRolloutEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRollout(ctx, *req)
+		return respRolloutV1AutoLabelRollout{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoLabelRollout")(f)
+}
+
+// AutoLabelRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoLabelRolloutAction(ctx context.Context, in api.Label) (RolloutAction, error) {
+	resp, err := e.AutoLabelRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutAction{}, err
+	}
+	return *resp.(*RolloutAction), nil
+}
+
+// MakeRolloutV1AutoLabelRolloutActionEndpoint creates  AutoLabelRolloutAction endpoints for the service
+func MakeRolloutV1AutoLabelRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRolloutAction(ctx, *req)
+		return respRolloutV1AutoLabelRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoLabelRolloutAction")(f)
+}
+
 // AutoListRollout implementation on server Endpoint
 func (e EndpointsRolloutV1Server) AutoListRollout(ctx context.Context, in api.ListWatchOptions) (RolloutList, error) {
 	resp, err := e.AutoListRolloutEndpoint(ctx, in)
@@ -678,6 +756,8 @@ func MakeRolloutV1ServerEndpoints(s ServiceRolloutV1Server, logger log.Logger) E
 		AutoDeleteRolloutActionEndpoint: MakeRolloutV1AutoDeleteRolloutActionEndpoint(s, logger),
 		AutoGetRolloutEndpoint:          MakeRolloutV1AutoGetRolloutEndpoint(s, logger),
 		AutoGetRolloutActionEndpoint:    MakeRolloutV1AutoGetRolloutActionEndpoint(s, logger),
+		AutoLabelRolloutEndpoint:        MakeRolloutV1AutoLabelRolloutEndpoint(s, logger),
+		AutoLabelRolloutActionEndpoint:  MakeRolloutV1AutoLabelRolloutActionEndpoint(s, logger),
 		AutoListRolloutEndpoint:         MakeRolloutV1AutoListRolloutEndpoint(s, logger),
 		AutoListRolloutActionEndpoint:   MakeRolloutV1AutoListRolloutActionEndpoint(s, logger),
 		AutoUpdateRolloutEndpoint:       MakeRolloutV1AutoUpdateRolloutEndpoint(s, logger),
@@ -798,6 +878,32 @@ func (m loggingRolloutV1MiddlewareClient) AutoGetRolloutAction(ctx context.Conte
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoGetRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetRolloutAction(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) AutoLabelRollout(ctx context.Context, in *api.Label) (resp *Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoLabelRollout", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) AutoLabelRolloutAction(ctx context.Context, in *api.Label) (resp *RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoLabelRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRolloutAction(ctx, in)
 	return
 }
 func (m loggingRolloutV1MiddlewareClient) AutoListRollout(ctx context.Context, in *api.ListWatchOptions) (resp *RolloutList, err error) {
@@ -1024,6 +1130,32 @@ func (m loggingRolloutV1MiddlewareServer) AutoGetRolloutAction(ctx context.Conte
 	resp, err = m.next.AutoGetRolloutAction(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareServer) AutoLabelRollout(ctx context.Context, in api.Label) (resp Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoLabelRollout", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareServer) AutoLabelRolloutAction(ctx context.Context, in api.Label) (resp RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoLabelRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareServer) AutoListRollout(ctx context.Context, in api.ListWatchOptions) (resp RolloutList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1229,6 +1361,18 @@ func makeURIRolloutV1AutoGetRolloutActionGetOper(in *RolloutAction) string {
 }
 
 //
+func makeURIRolloutV1AutoLabelRolloutLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIRolloutV1AutoLabelRolloutActionLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIRolloutV1AutoListRolloutListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/rollout/v1", "/rollout")
 }
@@ -1295,6 +1439,11 @@ func (r *EndpointsRolloutV1RestClient) AutoAddRollout(ctx context.Context, in *R
 
 // AutoUpdateRollout CRUD method for Rollout
 func (r *EndpointsRolloutV1RestClient) AutoUpdateRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelRollout label method for Rollout
+func (r *EndpointsRolloutV1RestClient) AutoLabelRollout(ctx context.Context, in *api.Label) (*Rollout, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -1486,6 +1635,11 @@ func (r *EndpointsRolloutV1RestClient) AutoAddRolloutAction(ctx context.Context,
 
 // AutoUpdateRolloutAction CRUD method for RolloutAction
 func (r *EndpointsRolloutV1RestClient) AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelRolloutAction label method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoLabelRolloutAction(ctx context.Context, in *api.Label) (*RolloutAction, error) {
 	return nil, errors.New("not allowed")
 }
 

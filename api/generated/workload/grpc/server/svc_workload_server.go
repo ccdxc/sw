@@ -57,6 +57,8 @@ type eWorkloadV1Endpoints struct {
 	fnAutoDeleteWorkload func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetWorkload    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelEndpoint  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelWorkload  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListEndpoint   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListWorkload   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
@@ -140,6 +142,15 @@ func (s *sworkloadSvc_workloadBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("workload", s.Messages)
@@ -211,6 +222,62 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnAutoLabelEndpoint = srv.AddMethod("AutoLabelEndpoint",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["workload.Endpoint"], "workload", "AutoLabelEndpoint")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := workload.Endpoint{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := workload.Endpoint{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnAutoLabelWorkload = srv.AddMethod("AutoLabelWorkload",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["workload.Workload"], "workload", "AutoLabelWorkload")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := workload.Workload{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := workload.Workload{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsWorkloadV1.fnAutoListEndpoint = srv.AddMethod("AutoListEndpoint",
@@ -570,6 +637,22 @@ func (e *eWorkloadV1Endpoints) AutoGetEndpoint(ctx context.Context, t workload.E
 }
 func (e *eWorkloadV1Endpoints) AutoGetWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
 	r, err := e.fnAutoGetWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
+func (e *eWorkloadV1Endpoints) AutoLabelEndpoint(ctx context.Context, t api.Label) (workload.Endpoint, error) {
+	r, err := e.fnAutoLabelEndpoint(ctx, t)
+	if err == nil {
+		return r.(workload.Endpoint), err
+	}
+	return workload.Endpoint{}, err
+
+}
+func (e *eWorkloadV1Endpoints) AutoLabelWorkload(ctx context.Context, t api.Label) (workload.Workload, error) {
+	r, err := e.fnAutoLabelWorkload(ctx, t)
 	if err == nil {
 		return r.(workload.Workload), err
 	}

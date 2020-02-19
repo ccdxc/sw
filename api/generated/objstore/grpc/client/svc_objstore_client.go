@@ -114,6 +114,34 @@ func NewObjstoreV1(conn *grpc.ClientConn, logger log.Logger) objstore.ServiceObj
 		).Endpoint()
 		lAutoGetObjectEndpoint = trace.ClientEndPoint("ObjstoreV1:AutoGetObject")(lAutoGetObjectEndpoint)
 	}
+	var lAutoLabelBucketEndpoint endpoint.Endpoint
+	{
+		lAutoLabelBucketEndpoint = grpctransport.NewClient(
+			conn,
+			"objstore.ObjstoreV1",
+			"AutoLabelBucket",
+			objstore.EncodeGrpcReqLabel,
+			objstore.DecodeGrpcRespBucket,
+			&objstore.Bucket{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelBucketEndpoint = trace.ClientEndPoint("ObjstoreV1:AutoLabelBucket")(lAutoLabelBucketEndpoint)
+	}
+	var lAutoLabelObjectEndpoint endpoint.Endpoint
+	{
+		lAutoLabelObjectEndpoint = grpctransport.NewClient(
+			conn,
+			"objstore.ObjstoreV1",
+			"AutoLabelObject",
+			objstore.EncodeGrpcReqLabel,
+			objstore.DecodeGrpcRespObject,
+			&objstore.Object{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelObjectEndpoint = trace.ClientEndPoint("ObjstoreV1:AutoLabelObject")(lAutoLabelObjectEndpoint)
+	}
 	var lAutoListBucketEndpoint endpoint.Endpoint
 	{
 		lAutoListBucketEndpoint = grpctransport.NewClient(
@@ -179,6 +207,8 @@ func NewObjstoreV1(conn *grpc.ClientConn, logger log.Logger) objstore.ServiceObj
 		AutoDeleteObjectEndpoint: lAutoDeleteObjectEndpoint,
 		AutoGetBucketEndpoint:    lAutoGetBucketEndpoint,
 		AutoGetObjectEndpoint:    lAutoGetObjectEndpoint,
+		AutoLabelBucketEndpoint:  lAutoLabelBucketEndpoint,
+		AutoLabelObjectEndpoint:  lAutoLabelObjectEndpoint,
 		AutoListBucketEndpoint:   lAutoListBucketEndpoint,
 		AutoListObjectEndpoint:   lAutoListObjectEndpoint,
 		AutoUpdateBucketEndpoint: lAutoUpdateBucketEndpoint,
@@ -224,6 +254,15 @@ func (a *grpcObjObjstoreV1Bucket) UpdateStatus(ctx context.Context, in *objstore
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateBucket(nctx, in)
+}
+
+func (a *grpcObjObjstoreV1Bucket) Label(ctx context.Context, in *api.Label) (*objstore.Bucket, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Bucket", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelBucket(nctx, in)
 }
 
 func (a *grpcObjObjstoreV1Bucket) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Bucket, error) {
@@ -326,6 +365,13 @@ func (a *restObjObjstoreV1Bucket) UpdateStatus(ctx context.Context, in *objstore
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjObjstoreV1Bucket) Label(ctx context.Context, in *api.Label) (*objstore.Bucket, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelBucket(ctx, in)
+}
+
 func (a *restObjObjstoreV1Bucket) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Bucket, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -413,6 +459,15 @@ func (a *grpcObjObjstoreV1Object) UpdateStatus(ctx context.Context, in *objstore
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateObject(nctx, in)
+}
+
+func (a *grpcObjObjstoreV1Object) Label(ctx context.Context, in *api.Label) (*objstore.Object, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Object", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelObject(nctx, in)
 }
 
 func (a *grpcObjObjstoreV1Object) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Object, error) {
@@ -513,6 +568,13 @@ func (a *restObjObjstoreV1Object) Update(ctx context.Context, in *objstore.Objec
 
 func (a *restObjObjstoreV1Object) UpdateStatus(ctx context.Context, in *objstore.Object) (*objstore.Object, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjObjstoreV1Object) Label(ctx context.Context, in *api.Label) (*objstore.Object, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelObject(ctx, in)
 }
 
 func (a *restObjObjstoreV1Object) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Object, error) {

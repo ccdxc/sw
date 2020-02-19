@@ -73,6 +73,16 @@ type EndpointsMonitoringV1Client struct {
 	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
 	AutoGetTechSupportRequestEndpoint        endpoint.Endpoint
 	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoLabelAlertEndpoint                   endpoint.Endpoint
+	AutoLabelAlertDestinationEndpoint        endpoint.Endpoint
+	AutoLabelAlertPolicyEndpoint             endpoint.Endpoint
+	AutoLabelArchiveRequestEndpoint          endpoint.Endpoint
+	AutoLabelEventPolicyEndpoint             endpoint.Endpoint
+	AutoLabelFlowExportPolicyEndpoint        endpoint.Endpoint
+	AutoLabelFwlogPolicyEndpoint             endpoint.Endpoint
+	AutoLabelMirrorSessionEndpoint           endpoint.Endpoint
+	AutoLabelTechSupportRequestEndpoint      endpoint.Endpoint
+	AutoLabelTroubleshootingSessionEndpoint  endpoint.Endpoint
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
@@ -133,6 +143,16 @@ type EndpointsMonitoringV1RestClient struct {
 	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
 	AutoGetTechSupportRequestEndpoint        endpoint.Endpoint
 	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoLabelAlertEndpoint                   endpoint.Endpoint
+	AutoLabelAlertDestinationEndpoint        endpoint.Endpoint
+	AutoLabelAlertPolicyEndpoint             endpoint.Endpoint
+	AutoLabelArchiveRequestEndpoint          endpoint.Endpoint
+	AutoLabelEventPolicyEndpoint             endpoint.Endpoint
+	AutoLabelFlowExportPolicyEndpoint        endpoint.Endpoint
+	AutoLabelFwlogPolicyEndpoint             endpoint.Endpoint
+	AutoLabelMirrorSessionEndpoint           endpoint.Endpoint
+	AutoLabelTechSupportRequestEndpoint      endpoint.Endpoint
+	AutoLabelTroubleshootingSessionEndpoint  endpoint.Endpoint
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
@@ -204,6 +224,16 @@ type EndpointsMonitoringV1Server struct {
 	AutoGetMirrorSessionEndpoint             endpoint.Endpoint
 	AutoGetTechSupportRequestEndpoint        endpoint.Endpoint
 	AutoGetTroubleshootingSessionEndpoint    endpoint.Endpoint
+	AutoLabelAlertEndpoint                   endpoint.Endpoint
+	AutoLabelAlertDestinationEndpoint        endpoint.Endpoint
+	AutoLabelAlertPolicyEndpoint             endpoint.Endpoint
+	AutoLabelArchiveRequestEndpoint          endpoint.Endpoint
+	AutoLabelEventPolicyEndpoint             endpoint.Endpoint
+	AutoLabelFlowExportPolicyEndpoint        endpoint.Endpoint
+	AutoLabelFwlogPolicyEndpoint             endpoint.Endpoint
+	AutoLabelMirrorSessionEndpoint           endpoint.Endpoint
+	AutoLabelTechSupportRequestEndpoint      endpoint.Endpoint
+	AutoLabelTroubleshootingSessionEndpoint  endpoint.Endpoint
 	AutoListAlertEndpoint                    endpoint.Endpoint
 	AutoListAlertDestinationEndpoint         endpoint.Endpoint
 	AutoListAlertPolicyEndpoint              endpoint.Endpoint
@@ -654,6 +684,146 @@ func (e EndpointsMonitoringV1Client) AutoGetTroubleshootingSession(ctx context.C
 }
 
 type respMonitoringV1AutoGetTroubleshootingSession struct {
+	V   TroubleshootingSession
+	Err error
+}
+
+// AutoLabelAlert is endpoint for AutoLabelAlert
+func (e EndpointsMonitoringV1Client) AutoLabelAlert(ctx context.Context, in *api.Label) (*Alert, error) {
+	resp, err := e.AutoLabelAlertEndpoint(ctx, in)
+	if err != nil {
+		return &Alert{}, err
+	}
+	return resp.(*Alert), nil
+}
+
+type respMonitoringV1AutoLabelAlert struct {
+	V   Alert
+	Err error
+}
+
+// AutoLabelAlertDestination is endpoint for AutoLabelAlertDestination
+func (e EndpointsMonitoringV1Client) AutoLabelAlertDestination(ctx context.Context, in *api.Label) (*AlertDestination, error) {
+	resp, err := e.AutoLabelAlertDestinationEndpoint(ctx, in)
+	if err != nil {
+		return &AlertDestination{}, err
+	}
+	return resp.(*AlertDestination), nil
+}
+
+type respMonitoringV1AutoLabelAlertDestination struct {
+	V   AlertDestination
+	Err error
+}
+
+// AutoLabelAlertPolicy is endpoint for AutoLabelAlertPolicy
+func (e EndpointsMonitoringV1Client) AutoLabelAlertPolicy(ctx context.Context, in *api.Label) (*AlertPolicy, error) {
+	resp, err := e.AutoLabelAlertPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &AlertPolicy{}, err
+	}
+	return resp.(*AlertPolicy), nil
+}
+
+type respMonitoringV1AutoLabelAlertPolicy struct {
+	V   AlertPolicy
+	Err error
+}
+
+// AutoLabelArchiveRequest is endpoint for AutoLabelArchiveRequest
+func (e EndpointsMonitoringV1Client) AutoLabelArchiveRequest(ctx context.Context, in *api.Label) (*ArchiveRequest, error) {
+	resp, err := e.AutoLabelArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return &ArchiveRequest{}, err
+	}
+	return resp.(*ArchiveRequest), nil
+}
+
+type respMonitoringV1AutoLabelArchiveRequest struct {
+	V   ArchiveRequest
+	Err error
+}
+
+// AutoLabelEventPolicy is endpoint for AutoLabelEventPolicy
+func (e EndpointsMonitoringV1Client) AutoLabelEventPolicy(ctx context.Context, in *api.Label) (*EventPolicy, error) {
+	resp, err := e.AutoLabelEventPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &EventPolicy{}, err
+	}
+	return resp.(*EventPolicy), nil
+}
+
+type respMonitoringV1AutoLabelEventPolicy struct {
+	V   EventPolicy
+	Err error
+}
+
+// AutoLabelFlowExportPolicy is endpoint for AutoLabelFlowExportPolicy
+func (e EndpointsMonitoringV1Client) AutoLabelFlowExportPolicy(ctx context.Context, in *api.Label) (*FlowExportPolicy, error) {
+	resp, err := e.AutoLabelFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FlowExportPolicy{}, err
+	}
+	return resp.(*FlowExportPolicy), nil
+}
+
+type respMonitoringV1AutoLabelFlowExportPolicy struct {
+	V   FlowExportPolicy
+	Err error
+}
+
+// AutoLabelFwlogPolicy is endpoint for AutoLabelFwlogPolicy
+func (e EndpointsMonitoringV1Client) AutoLabelFwlogPolicy(ctx context.Context, in *api.Label) (*FwlogPolicy, error) {
+	resp, err := e.AutoLabelFwlogPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &FwlogPolicy{}, err
+	}
+	return resp.(*FwlogPolicy), nil
+}
+
+type respMonitoringV1AutoLabelFwlogPolicy struct {
+	V   FwlogPolicy
+	Err error
+}
+
+// AutoLabelMirrorSession is endpoint for AutoLabelMirrorSession
+func (e EndpointsMonitoringV1Client) AutoLabelMirrorSession(ctx context.Context, in *api.Label) (*MirrorSession, error) {
+	resp, err := e.AutoLabelMirrorSessionEndpoint(ctx, in)
+	if err != nil {
+		return &MirrorSession{}, err
+	}
+	return resp.(*MirrorSession), nil
+}
+
+type respMonitoringV1AutoLabelMirrorSession struct {
+	V   MirrorSession
+	Err error
+}
+
+// AutoLabelTechSupportRequest is endpoint for AutoLabelTechSupportRequest
+func (e EndpointsMonitoringV1Client) AutoLabelTechSupportRequest(ctx context.Context, in *api.Label) (*TechSupportRequest, error) {
+	resp, err := e.AutoLabelTechSupportRequestEndpoint(ctx, in)
+	if err != nil {
+		return &TechSupportRequest{}, err
+	}
+	return resp.(*TechSupportRequest), nil
+}
+
+type respMonitoringV1AutoLabelTechSupportRequest struct {
+	V   TechSupportRequest
+	Err error
+}
+
+// AutoLabelTroubleshootingSession is endpoint for AutoLabelTroubleshootingSession
+func (e EndpointsMonitoringV1Client) AutoLabelTroubleshootingSession(ctx context.Context, in *api.Label) (*TroubleshootingSession, error) {
+	resp, err := e.AutoLabelTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return &TroubleshootingSession{}, err
+	}
+	return resp.(*TroubleshootingSession), nil
+}
+
+type respMonitoringV1AutoLabelTroubleshootingSession struct {
 	V   TroubleshootingSession
 	Err error
 }
@@ -1666,6 +1836,226 @@ func MakeMonitoringV1AutoGetTroubleshootingSessionEndpoint(s ServiceMonitoringV1
 	return trace.ServerEndpoint("MonitoringV1:AutoGetTroubleshootingSession")(f)
 }
 
+// AutoLabelAlert implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelAlert(ctx context.Context, in api.Label) (Alert, error) {
+	resp, err := e.AutoLabelAlertEndpoint(ctx, in)
+	if err != nil {
+		return Alert{}, err
+	}
+	return *resp.(*Alert), nil
+}
+
+// MakeMonitoringV1AutoLabelAlertEndpoint creates  AutoLabelAlert endpoints for the service
+func MakeMonitoringV1AutoLabelAlertEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelAlert(ctx, *req)
+		return respMonitoringV1AutoLabelAlert{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelAlert")(f)
+}
+
+// AutoLabelAlertDestination implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelAlertDestination(ctx context.Context, in api.Label) (AlertDestination, error) {
+	resp, err := e.AutoLabelAlertDestinationEndpoint(ctx, in)
+	if err != nil {
+		return AlertDestination{}, err
+	}
+	return *resp.(*AlertDestination), nil
+}
+
+// MakeMonitoringV1AutoLabelAlertDestinationEndpoint creates  AutoLabelAlertDestination endpoints for the service
+func MakeMonitoringV1AutoLabelAlertDestinationEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelAlertDestination(ctx, *req)
+		return respMonitoringV1AutoLabelAlertDestination{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelAlertDestination")(f)
+}
+
+// AutoLabelAlertPolicy implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelAlertPolicy(ctx context.Context, in api.Label) (AlertPolicy, error) {
+	resp, err := e.AutoLabelAlertPolicyEndpoint(ctx, in)
+	if err != nil {
+		return AlertPolicy{}, err
+	}
+	return *resp.(*AlertPolicy), nil
+}
+
+// MakeMonitoringV1AutoLabelAlertPolicyEndpoint creates  AutoLabelAlertPolicy endpoints for the service
+func MakeMonitoringV1AutoLabelAlertPolicyEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelAlertPolicy(ctx, *req)
+		return respMonitoringV1AutoLabelAlertPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelAlertPolicy")(f)
+}
+
+// AutoLabelArchiveRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelArchiveRequest(ctx context.Context, in api.Label) (ArchiveRequest, error) {
+	resp, err := e.AutoLabelArchiveRequestEndpoint(ctx, in)
+	if err != nil {
+		return ArchiveRequest{}, err
+	}
+	return *resp.(*ArchiveRequest), nil
+}
+
+// MakeMonitoringV1AutoLabelArchiveRequestEndpoint creates  AutoLabelArchiveRequest endpoints for the service
+func MakeMonitoringV1AutoLabelArchiveRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelArchiveRequest(ctx, *req)
+		return respMonitoringV1AutoLabelArchiveRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelArchiveRequest")(f)
+}
+
+// AutoLabelEventPolicy implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelEventPolicy(ctx context.Context, in api.Label) (EventPolicy, error) {
+	resp, err := e.AutoLabelEventPolicyEndpoint(ctx, in)
+	if err != nil {
+		return EventPolicy{}, err
+	}
+	return *resp.(*EventPolicy), nil
+}
+
+// MakeMonitoringV1AutoLabelEventPolicyEndpoint creates  AutoLabelEventPolicy endpoints for the service
+func MakeMonitoringV1AutoLabelEventPolicyEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelEventPolicy(ctx, *req)
+		return respMonitoringV1AutoLabelEventPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelEventPolicy")(f)
+}
+
+// AutoLabelFlowExportPolicy implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelFlowExportPolicy(ctx context.Context, in api.Label) (FlowExportPolicy, error) {
+	resp, err := e.AutoLabelFlowExportPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FlowExportPolicy{}, err
+	}
+	return *resp.(*FlowExportPolicy), nil
+}
+
+// MakeMonitoringV1AutoLabelFlowExportPolicyEndpoint creates  AutoLabelFlowExportPolicy endpoints for the service
+func MakeMonitoringV1AutoLabelFlowExportPolicyEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelFlowExportPolicy(ctx, *req)
+		return respMonitoringV1AutoLabelFlowExportPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelFlowExportPolicy")(f)
+}
+
+// AutoLabelFwlogPolicy implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelFwlogPolicy(ctx context.Context, in api.Label) (FwlogPolicy, error) {
+	resp, err := e.AutoLabelFwlogPolicyEndpoint(ctx, in)
+	if err != nil {
+		return FwlogPolicy{}, err
+	}
+	return *resp.(*FwlogPolicy), nil
+}
+
+// MakeMonitoringV1AutoLabelFwlogPolicyEndpoint creates  AutoLabelFwlogPolicy endpoints for the service
+func MakeMonitoringV1AutoLabelFwlogPolicyEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelFwlogPolicy(ctx, *req)
+		return respMonitoringV1AutoLabelFwlogPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelFwlogPolicy")(f)
+}
+
+// AutoLabelMirrorSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelMirrorSession(ctx context.Context, in api.Label) (MirrorSession, error) {
+	resp, err := e.AutoLabelMirrorSessionEndpoint(ctx, in)
+	if err != nil {
+		return MirrorSession{}, err
+	}
+	return *resp.(*MirrorSession), nil
+}
+
+// MakeMonitoringV1AutoLabelMirrorSessionEndpoint creates  AutoLabelMirrorSession endpoints for the service
+func MakeMonitoringV1AutoLabelMirrorSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelMirrorSession(ctx, *req)
+		return respMonitoringV1AutoLabelMirrorSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelMirrorSession")(f)
+}
+
+// AutoLabelTechSupportRequest implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelTechSupportRequest(ctx context.Context, in api.Label) (TechSupportRequest, error) {
+	resp, err := e.AutoLabelTechSupportRequestEndpoint(ctx, in)
+	if err != nil {
+		return TechSupportRequest{}, err
+	}
+	return *resp.(*TechSupportRequest), nil
+}
+
+// MakeMonitoringV1AutoLabelTechSupportRequestEndpoint creates  AutoLabelTechSupportRequest endpoints for the service
+func MakeMonitoringV1AutoLabelTechSupportRequestEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelTechSupportRequest(ctx, *req)
+		return respMonitoringV1AutoLabelTechSupportRequest{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelTechSupportRequest")(f)
+}
+
+// AutoLabelTroubleshootingSession implementation on server Endpoint
+func (e EndpointsMonitoringV1Server) AutoLabelTroubleshootingSession(ctx context.Context, in api.Label) (TroubleshootingSession, error) {
+	resp, err := e.AutoLabelTroubleshootingSessionEndpoint(ctx, in)
+	if err != nil {
+		return TroubleshootingSession{}, err
+	}
+	return *resp.(*TroubleshootingSession), nil
+}
+
+// MakeMonitoringV1AutoLabelTroubleshootingSessionEndpoint creates  AutoLabelTroubleshootingSession endpoints for the service
+func MakeMonitoringV1AutoLabelTroubleshootingSessionEndpoint(s ServiceMonitoringV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelTroubleshootingSession(ctx, *req)
+		return respMonitoringV1AutoLabelTroubleshootingSession{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("MonitoringV1:AutoLabelTroubleshootingSession")(f)
+}
+
 // AutoListAlert implementation on server Endpoint
 func (e EndpointsMonitoringV1Server) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (AlertList, error) {
 	resp, err := e.AutoListAlertEndpoint(ctx, in)
@@ -2305,6 +2695,16 @@ func MakeMonitoringV1ServerEndpoints(s ServiceMonitoringV1Server, logger log.Log
 		AutoGetMirrorSessionEndpoint:             MakeMonitoringV1AutoGetMirrorSessionEndpoint(s, logger),
 		AutoGetTechSupportRequestEndpoint:        MakeMonitoringV1AutoGetTechSupportRequestEndpoint(s, logger),
 		AutoGetTroubleshootingSessionEndpoint:    MakeMonitoringV1AutoGetTroubleshootingSessionEndpoint(s, logger),
+		AutoLabelAlertEndpoint:                   MakeMonitoringV1AutoLabelAlertEndpoint(s, logger),
+		AutoLabelAlertDestinationEndpoint:        MakeMonitoringV1AutoLabelAlertDestinationEndpoint(s, logger),
+		AutoLabelAlertPolicyEndpoint:             MakeMonitoringV1AutoLabelAlertPolicyEndpoint(s, logger),
+		AutoLabelArchiveRequestEndpoint:          MakeMonitoringV1AutoLabelArchiveRequestEndpoint(s, logger),
+		AutoLabelEventPolicyEndpoint:             MakeMonitoringV1AutoLabelEventPolicyEndpoint(s, logger),
+		AutoLabelFlowExportPolicyEndpoint:        MakeMonitoringV1AutoLabelFlowExportPolicyEndpoint(s, logger),
+		AutoLabelFwlogPolicyEndpoint:             MakeMonitoringV1AutoLabelFwlogPolicyEndpoint(s, logger),
+		AutoLabelMirrorSessionEndpoint:           MakeMonitoringV1AutoLabelMirrorSessionEndpoint(s, logger),
+		AutoLabelTechSupportRequestEndpoint:      MakeMonitoringV1AutoLabelTechSupportRequestEndpoint(s, logger),
+		AutoLabelTroubleshootingSessionEndpoint:  MakeMonitoringV1AutoLabelTroubleshootingSessionEndpoint(s, logger),
 		AutoListAlertEndpoint:                    MakeMonitoringV1AutoListAlertEndpoint(s, logger),
 		AutoListAlertDestinationEndpoint:         MakeMonitoringV1AutoListAlertDestinationEndpoint(s, logger),
 		AutoListAlertPolicyEndpoint:              MakeMonitoringV1AutoListAlertPolicyEndpoint(s, logger),
@@ -2758,6 +3158,136 @@ func (m loggingMonitoringV1MiddlewareClient) AutoGetTroubleshootingSession(ctx c
 		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoGetTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetTroubleshootingSession(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelAlert(ctx context.Context, in *api.Label) (resp *Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlert", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlert(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelAlertDestination(ctx context.Context, in *api.Label) (resp *AlertDestination, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlertDestination", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlertDestination(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelAlertPolicy(ctx context.Context, in *api.Label) (resp *AlertPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlertPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelArchiveRequest(ctx context.Context, in *api.Label) (resp *ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelArchiveRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelArchiveRequest(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelEventPolicy(ctx context.Context, in *api.Label) (resp *EventPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelEventPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelEventPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelFlowExportPolicy(ctx context.Context, in *api.Label) (resp *FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelFlowExportPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelFwlogPolicy(ctx context.Context, in *api.Label) (resp *FwlogPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelFwlogPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelFwlogPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelMirrorSession(ctx context.Context, in *api.Label) (resp *MirrorSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelMirrorSession", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelMirrorSession(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelTechSupportRequest(ctx context.Context, in *api.Label) (resp *TechSupportRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelTechSupportRequest", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelTechSupportRequest(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareClient) AutoLabelTroubleshootingSession(ctx context.Context, in *api.Label) (resp *TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelTroubleshootingSession", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelTroubleshootingSession(ctx, in)
 	return
 }
 func (m loggingMonitoringV1MiddlewareClient) AutoListAlert(ctx context.Context, in *api.ListWatchOptions) (resp *AlertList, err error) {
@@ -3569,6 +4099,136 @@ func (m loggingMonitoringV1MiddlewareServer) AutoGetTroubleshootingSession(ctx c
 	resp, err = m.next.AutoGetTroubleshootingSession(ctx, in)
 	return
 }
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelAlert(ctx context.Context, in api.Label) (resp Alert, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlert", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlert(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelAlertDestination(ctx context.Context, in api.Label) (resp AlertDestination, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlertDestination", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlertDestination(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelAlertPolicy(ctx context.Context, in api.Label) (resp AlertPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelAlertPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelAlertPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelArchiveRequest(ctx context.Context, in api.Label) (resp ArchiveRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelArchiveRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelArchiveRequest(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelEventPolicy(ctx context.Context, in api.Label) (resp EventPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelEventPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelEventPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelFlowExportPolicy(ctx context.Context, in api.Label) (resp FlowExportPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelFlowExportPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelFlowExportPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelFwlogPolicy(ctx context.Context, in api.Label) (resp FwlogPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelFwlogPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelFwlogPolicy(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelMirrorSession(ctx context.Context, in api.Label) (resp MirrorSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelMirrorSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelMirrorSession(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelTechSupportRequest(ctx context.Context, in api.Label) (resp TechSupportRequest, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelTechSupportRequest", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelTechSupportRequest(ctx, in)
+	return
+}
+func (m loggingMonitoringV1MiddlewareServer) AutoLabelTroubleshootingSession(ctx context.Context, in api.Label) (resp TroubleshootingSession, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "MonitoringV1", "method", "AutoLabelTroubleshootingSession", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelTroubleshootingSession(ctx, in)
+	return
+}
 func (m loggingMonitoringV1MiddlewareServer) AutoListAlert(ctx context.Context, in api.ListWatchOptions) (resp AlertList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -4164,6 +4824,66 @@ func makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in *Troubleshooting
 }
 
 //
+func makeURIMonitoringV1AutoLabelAlertLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelAlertDestinationLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelAlertPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelArchiveRequestLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelEventPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelFlowExportPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelFwlogPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelMirrorSessionLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelTechSupportRequestLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIMonitoringV1AutoLabelTroubleshootingSessionLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIMonitoringV1AutoListAlertListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts")
 }
@@ -4371,6 +5091,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateEventPolicy(ctx context.Cont
 	return ret.(*EventPolicy), err
 }
 
+// AutoLabelEventPolicy label method for EventPolicy
+func (r *EndpointsMonitoringV1RestClient) AutoLabelEventPolicy(ctx context.Context, in *api.Label) (*EventPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetEventPolicy CRUD method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetEventPolicy(ctx context.Context, in *EventPolicy) (*EventPolicy, error) {
 	path := makeURIMonitoringV1AutoGetEventPolicyGetOper(in)
@@ -4527,6 +5252,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFwlogPolicy(ctx context.Cont
 		return nil, err
 	}
 	return ret.(*FwlogPolicy), err
+}
+
+// AutoLabelFwlogPolicy label method for FwlogPolicy
+func (r *EndpointsMonitoringV1RestClient) AutoLabelFwlogPolicy(ctx context.Context, in *api.Label) (*FwlogPolicy, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetFwlogPolicy CRUD method for FwlogPolicy
@@ -4687,6 +5417,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFlowExportPolicy(ctx context
 	return ret.(*FlowExportPolicy), err
 }
 
+// AutoLabelFlowExportPolicy label method for FlowExportPolicy
+func (r *EndpointsMonitoringV1RestClient) AutoLabelFlowExportPolicy(ctx context.Context, in *api.Label) (*FlowExportPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetFlowExportPolicy CRUD method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoGetFlowExportPolicy(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error) {
 	path := makeURIMonitoringV1AutoGetFlowExportPolicyGetOper(in)
@@ -4828,6 +5563,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlert(ctx context.Context, i
 	return ret.(*Alert), err
 }
 
+// AutoLabelAlert label method for Alert
+func (r *EndpointsMonitoringV1RestClient) AutoLabelAlert(ctx context.Context, in *api.Label) (*Alert, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetAlert CRUD method for Alert
 func (r *EndpointsMonitoringV1RestClient) AutoGetAlert(ctx context.Context, in *Alert) (*Alert, error) {
 	path := makeURIMonitoringV1AutoGetAlertGetOper(in)
@@ -4967,6 +5707,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertPolicy(ctx context.Cont
 		return nil, err
 	}
 	return ret.(*AlertPolicy), err
+}
+
+// AutoLabelAlertPolicy label method for AlertPolicy
+func (r *EndpointsMonitoringV1RestClient) AutoLabelAlertPolicy(ctx context.Context, in *api.Label) (*AlertPolicy, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetAlertPolicy CRUD method for AlertPolicy
@@ -5127,6 +5872,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertDestination(ctx context
 	return ret.(*AlertDestination), err
 }
 
+// AutoLabelAlertDestination label method for AlertDestination
+func (r *EndpointsMonitoringV1RestClient) AutoLabelAlertDestination(ctx context.Context, in *api.Label) (*AlertDestination, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetAlertDestination CRUD method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoGetAlertDestination(ctx context.Context, in *AlertDestination) (*AlertDestination, error) {
 	path := makeURIMonitoringV1AutoGetAlertDestinationGetOper(in)
@@ -5283,6 +6033,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateMirrorSession(ctx context.Co
 		return nil, err
 	}
 	return ret.(*MirrorSession), err
+}
+
+// AutoLabelMirrorSession label method for MirrorSession
+func (r *EndpointsMonitoringV1RestClient) AutoLabelMirrorSession(ctx context.Context, in *api.Label) (*MirrorSession, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetMirrorSession CRUD method for MirrorSession
@@ -5443,6 +6198,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx c
 	return ret.(*TroubleshootingSession), err
 }
 
+// AutoLabelTroubleshootingSession label method for TroubleshootingSession
+func (r *EndpointsMonitoringV1RestClient) AutoLabelTroubleshootingSession(ctx context.Context, in *api.Label) (*TroubleshootingSession, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetTroubleshootingSession CRUD method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoGetTroubleshootingSession(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error) {
 	path := makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in)
@@ -5584,6 +6344,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateTechSupportRequest(ctx conte
 	return nil, errors.New("not allowed")
 }
 
+// AutoLabelTechSupportRequest label method for TechSupportRequest
+func (r *EndpointsMonitoringV1RestClient) AutoLabelTechSupportRequest(ctx context.Context, in *api.Label) (*TechSupportRequest, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetTechSupportRequest CRUD method for TechSupportRequest
 func (r *EndpointsMonitoringV1RestClient) AutoGetTechSupportRequest(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error) {
 	path := makeURIMonitoringV1AutoGetTechSupportRequestGetOper(in)
@@ -5722,6 +6487,11 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddArchiveRequest(ctx context.Cont
 
 // AutoUpdateArchiveRequest CRUD method for ArchiveRequest
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateArchiveRequest(ctx context.Context, in *ArchiveRequest) (*ArchiveRequest, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelArchiveRequest label method for ArchiveRequest
+func (r *EndpointsMonitoringV1RestClient) AutoLabelArchiveRequest(ctx context.Context, in *api.Label) (*ArchiveRequest, error) {
 	return nil, errors.New("not allowed")
 }
 

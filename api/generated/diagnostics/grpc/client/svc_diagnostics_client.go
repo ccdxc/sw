@@ -71,6 +71,20 @@ func NewDiagnosticsV1(conn *grpc.ClientConn, logger log.Logger) diagnostics.Serv
 		).Endpoint()
 		lAutoGetModuleEndpoint = trace.ClientEndPoint("DiagnosticsV1:AutoGetModule")(lAutoGetModuleEndpoint)
 	}
+	var lAutoLabelModuleEndpoint endpoint.Endpoint
+	{
+		lAutoLabelModuleEndpoint = grpctransport.NewClient(
+			conn,
+			"diagnostics.DiagnosticsV1",
+			"AutoLabelModule",
+			diagnostics.EncodeGrpcReqLabel,
+			diagnostics.DecodeGrpcRespModule,
+			&diagnostics.Module{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelModuleEndpoint = trace.ClientEndPoint("DiagnosticsV1:AutoLabelModule")(lAutoLabelModuleEndpoint)
+	}
 	var lAutoListModuleEndpoint endpoint.Endpoint
 	{
 		lAutoListModuleEndpoint = grpctransport.NewClient(
@@ -119,6 +133,7 @@ func NewDiagnosticsV1(conn *grpc.ClientConn, logger log.Logger) diagnostics.Serv
 		AutoAddModuleEndpoint:    lAutoAddModuleEndpoint,
 		AutoDeleteModuleEndpoint: lAutoDeleteModuleEndpoint,
 		AutoGetModuleEndpoint:    lAutoGetModuleEndpoint,
+		AutoLabelModuleEndpoint:  lAutoLabelModuleEndpoint,
 		AutoListModuleEndpoint:   lAutoListModuleEndpoint,
 		AutoUpdateModuleEndpoint: lAutoUpdateModuleEndpoint,
 		DebugEndpoint:            lDebugEndpoint,
@@ -163,6 +178,15 @@ func (a *grpcObjDiagnosticsV1Module) UpdateStatus(ctx context.Context, in *diagn
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateModule(nctx, in)
+}
+
+func (a *grpcObjDiagnosticsV1Module) Label(ctx context.Context, in *api.Label) (*diagnostics.Module, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Module", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelModule(nctx, in)
 }
 
 func (a *grpcObjDiagnosticsV1Module) Get(ctx context.Context, objMeta *api.ObjectMeta) (*diagnostics.Module, error) {
@@ -272,6 +296,13 @@ func (a *restObjDiagnosticsV1Module) Update(ctx context.Context, in *diagnostics
 
 func (a *restObjDiagnosticsV1Module) UpdateStatus(ctx context.Context, in *diagnostics.Module) (*diagnostics.Module, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjDiagnosticsV1Module) Label(ctx context.Context, in *api.Label) (*diagnostics.Module, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelModule(ctx, in)
 }
 
 func (a *restObjDiagnosticsV1Module) Get(ctx context.Context, objMeta *api.ObjectMeta) (*diagnostics.Module, error) {

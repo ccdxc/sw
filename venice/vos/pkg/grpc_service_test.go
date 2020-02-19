@@ -127,6 +127,9 @@ func TestBucketOps(t *testing.T) {
 	_, err = srv.AutoUpdateBucket(ctx, &bucket)
 	Assert(t, err != nil, "not implemented")
 
+	_, err = srv.AutoLabelBucket(ctx, &api.Label{})
+	Assert(t, err != nil, "not implemented")
+
 	err = srv.AutoWatchBucket(&api.ListWatchOptions{}, nil)
 	Assert(t, err != nil, "not implemented")
 }
@@ -294,6 +297,9 @@ func TestObjectOps(t *testing.T) {
 	Assert(t, len(retl.Items) == 3, "wrong number of items returned [%v]", len(retl.Items))
 
 	_, err = srv.AutoUpdateObject(ctx, obj)
+	Assert(t, err != nil, "not implemented")
+
+	_, err = srv.AutoLabelObject(ctx, &api.Label{})
 	Assert(t, err != nil, "not implemented")
 
 	_, err = srv.AutoListBucket(ctx, &api.ListWatchOptions{})

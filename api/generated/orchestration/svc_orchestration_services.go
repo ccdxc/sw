@@ -22,6 +22,7 @@ type ServiceOrchestratorV1Client interface {
 	AutoAddOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
 	AutoDeleteOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
 	AutoGetOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
+	AutoLabelOrchestrator(ctx context.Context, t *api.Label) (*Orchestrator, error)
 	AutoListOrchestrator(ctx context.Context, t *api.ListWatchOptions) (*OrchestratorList, error)
 	AutoUpdateOrchestrator(ctx context.Context, t *Orchestrator) (*Orchestrator, error)
 
@@ -35,6 +36,7 @@ type ServiceOrchestratorV1Server interface {
 	AutoAddOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)
 	AutoDeleteOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)
 	AutoGetOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)
+	AutoLabelOrchestrator(ctx context.Context, t api.Label) (Orchestrator, error)
 	AutoListOrchestrator(ctx context.Context, t api.ListWatchOptions) (OrchestratorList, error)
 	AutoUpdateOrchestrator(ctx context.Context, t Orchestrator) (Orchestrator, error)
 

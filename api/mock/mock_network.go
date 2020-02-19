@@ -78,6 +78,19 @@ func (mr *MockNetworkV1NetworkInterfaceMockRecorder) UpdateStatus(ctx, in interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1NetworkInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockNetworkV1NetworkInterface) Label(ctx context.Context, in *api.Label) (*network.Network, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.Network)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1NetworkInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1NetworkInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1NetworkInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -202,6 +215,19 @@ func (m *MockNetworkV1ServiceInterface) UpdateStatus(ctx context.Context, in *ne
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockNetworkV1ServiceInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1ServiceInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockNetworkV1ServiceInterface) Label(ctx context.Context, in *api.Label) (*network.Service, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1ServiceInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1ServiceInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -330,6 +356,19 @@ func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) UpdateStatus(ctx, in inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1LbPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockNetworkV1LbPolicyInterface) Label(ctx context.Context, in *api.Label) (*network.LbPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.LbPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1LbPolicyInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1LbPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -454,6 +493,19 @@ func (m *MockNetworkV1VirtualRouterInterface) UpdateStatus(ctx context.Context, 
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Label(ctx context.Context, in *api.Label) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -582,6 +634,19 @@ func (mr *MockNetworkV1NetworkInterfaceInterfaceMockRecorder) UpdateStatus(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1NetworkInterfaceInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockNetworkV1NetworkInterfaceInterface) Label(ctx context.Context, in *api.Label) (*network.NetworkInterface, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.NetworkInterface)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1NetworkInterfaceInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1NetworkInterfaceInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1NetworkInterfaceInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.NetworkInterface, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -706,6 +771,19 @@ func (m *MockNetworkV1IPAMPolicyInterface) UpdateStatus(ctx context.Context, in 
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockNetworkV1IPAMPolicyInterface) Label(ctx context.Context, in *api.Label) (*network.IPAMPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.IPAMPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1IPAMPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1IPAMPolicyInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -834,6 +912,19 @@ func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) UpdateStatus(ctx, in 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockNetworkV1RoutingConfigInterface) Label(ctx context.Context, in *api.Label) (*network.RoutingConfig, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.RoutingConfig)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1RoutingConfigInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1RoutingConfigInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1RoutingConfigInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -958,6 +1049,19 @@ func (m *MockNetworkV1RouteTableInterface) UpdateStatus(ctx context.Context, in 
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockNetworkV1RouteTableInterface) Label(ctx context.Context, in *api.Label) (*network.RouteTable, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*network.RouteTable)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockNetworkV1RouteTableInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockNetworkV1RouteTableInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method

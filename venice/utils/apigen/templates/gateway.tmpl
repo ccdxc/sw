@@ -74,9 +74,11 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
     t.Namespace = ""{{end}}
 	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "{{getListType .ResponseType false}}", t.Tenant, t.Namespace, "{{$pkgname}}", "", strings.Title(string(apiintf.ListOper))
-	{{else}}{{if isActionMethod .}}
-	oper, kind, tenant, namespace, group, name, auditAction := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$pkgname}}", t.Name, "{{.Name}}"
+	{{else}}{{if isActionMethod .}}{{if isLabelMethod .}}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$pkgname}}", t.Name, strings.Title(string(apiintf.{{$params.Oper}}))
 	{{else}}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$pkgname}}", t.Name, "{{.Name}}"
+	{{end}}{{else}}
 	oper, kind, tenant, namespace, group, name, auditAction := apiintf.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$pkgname}}", t.Name, strings.Title(string(apiintf.{{$params.Oper}}))
 	{{end}}{{end}}{{/*<isAutoList>*/}}
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)

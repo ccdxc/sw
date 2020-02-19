@@ -7,9 +7,8 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/api"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -84,7 +83,7 @@ func (s dummyStream) SetTrailer(metadata.MD)       {}
 func TestSvcWatch(t *testing.T) {
 	svc := NewService("testSvc").(*ServiceHdlr)
 	ver := "v1"
-	msgs := []apiserver.Message{mocks.NewFakeMessage("obj1", "/obj1", false), mocks.NewFakeMessage("obj2", "/obj2", false)}
+	msgs := []apiserver.Message{mocks.NewFakeMessage("test.obj1", "/obj1", false), mocks.NewFakeMessage("test.obj2", "/obj2", false)}
 	svc.WithCrudServices(msgs)
 	if len(svc.prepMsgMap) != 2 || len(svc.crudMsgMap) != 2 {
 		t.Errorf("prepMap got %d want 2, crudMsgMap got %d want 2", len(svc.prepMsgMap), len(svc.crudMsgMap))

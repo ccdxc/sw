@@ -450,6 +450,146 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetTroubleshootingSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetTroubleshootingSession")(lAutoGetTroubleshootingSessionEndpoint)
 	}
+	var lAutoLabelAlertEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAlertEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelAlert",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespAlert,
+			&monitoring.Alert{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAlertEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelAlert")(lAutoLabelAlertEndpoint)
+	}
+	var lAutoLabelAlertDestinationEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAlertDestinationEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelAlertDestination",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespAlertDestination,
+			&monitoring.AlertDestination{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAlertDestinationEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelAlertDestination")(lAutoLabelAlertDestinationEndpoint)
+	}
+	var lAutoLabelAlertPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAlertPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelAlertPolicy",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespAlertPolicy,
+			&monitoring.AlertPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAlertPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelAlertPolicy")(lAutoLabelAlertPolicyEndpoint)
+	}
+	var lAutoLabelArchiveRequestEndpoint endpoint.Endpoint
+	{
+		lAutoLabelArchiveRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelArchiveRequest",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespArchiveRequest,
+			&monitoring.ArchiveRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelArchiveRequest")(lAutoLabelArchiveRequestEndpoint)
+	}
+	var lAutoLabelEventPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelEventPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelEventPolicy",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespEventPolicy,
+			&monitoring.EventPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelEventPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelEventPolicy")(lAutoLabelEventPolicyEndpoint)
+	}
+	var lAutoLabelFlowExportPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelFlowExportPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelFlowExportPolicy",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespFlowExportPolicy,
+			&monitoring.FlowExportPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelFlowExportPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelFlowExportPolicy")(lAutoLabelFlowExportPolicyEndpoint)
+	}
+	var lAutoLabelFwlogPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelFwlogPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelFwlogPolicy",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespFwlogPolicy,
+			&monitoring.FwlogPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelFwlogPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelFwlogPolicy")(lAutoLabelFwlogPolicyEndpoint)
+	}
+	var lAutoLabelMirrorSessionEndpoint endpoint.Endpoint
+	{
+		lAutoLabelMirrorSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelMirrorSession",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespMirrorSession,
+			&monitoring.MirrorSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelMirrorSession")(lAutoLabelMirrorSessionEndpoint)
+	}
+	var lAutoLabelTechSupportRequestEndpoint endpoint.Endpoint
+	{
+		lAutoLabelTechSupportRequestEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelTechSupportRequest",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespTechSupportRequest,
+			&monitoring.TechSupportRequest{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelTechSupportRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelTechSupportRequest")(lAutoLabelTechSupportRequestEndpoint)
+	}
+	var lAutoLabelTroubleshootingSessionEndpoint endpoint.Endpoint
+	{
+		lAutoLabelTroubleshootingSessionEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelTroubleshootingSession",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespTroubleshootingSession,
+			&monitoring.TroubleshootingSession{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelTroubleshootingSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelTroubleshootingSession")(lAutoLabelTroubleshootingSessionEndpoint)
+	}
 	var lAutoListAlertEndpoint endpoint.Endpoint
 	{
 		lAutoListAlertEndpoint = grpctransport.NewClient(
@@ -777,6 +917,16 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetMirrorSessionEndpoint:             lAutoGetMirrorSessionEndpoint,
 		AutoGetTechSupportRequestEndpoint:        lAutoGetTechSupportRequestEndpoint,
 		AutoGetTroubleshootingSessionEndpoint:    lAutoGetTroubleshootingSessionEndpoint,
+		AutoLabelAlertEndpoint:                   lAutoLabelAlertEndpoint,
+		AutoLabelAlertDestinationEndpoint:        lAutoLabelAlertDestinationEndpoint,
+		AutoLabelAlertPolicyEndpoint:             lAutoLabelAlertPolicyEndpoint,
+		AutoLabelArchiveRequestEndpoint:          lAutoLabelArchiveRequestEndpoint,
+		AutoLabelEventPolicyEndpoint:             lAutoLabelEventPolicyEndpoint,
+		AutoLabelFlowExportPolicyEndpoint:        lAutoLabelFlowExportPolicyEndpoint,
+		AutoLabelFwlogPolicyEndpoint:             lAutoLabelFwlogPolicyEndpoint,
+		AutoLabelMirrorSessionEndpoint:           lAutoLabelMirrorSessionEndpoint,
+		AutoLabelTechSupportRequestEndpoint:      lAutoLabelTechSupportRequestEndpoint,
+		AutoLabelTroubleshootingSessionEndpoint:  lAutoLabelTroubleshootingSessionEndpoint,
 		AutoListAlertEndpoint:                    lAutoListAlertEndpoint,
 		AutoListAlertDestinationEndpoint:         lAutoListAlertDestinationEndpoint,
 		AutoListAlertPolicyEndpoint:              lAutoListAlertPolicyEndpoint,
@@ -839,6 +989,15 @@ func (a *grpcObjMonitoringV1EventPolicy) UpdateStatus(ctx context.Context, in *m
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateEventPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1EventPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.EventPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "EventPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelEventPolicy(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1EventPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
@@ -941,6 +1100,13 @@ func (a *restObjMonitoringV1EventPolicy) UpdateStatus(ctx context.Context, in *m
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1EventPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.EventPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelEventPolicy(ctx, in)
+}
+
 func (a *restObjMonitoringV1EventPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1031,6 +1197,15 @@ func (a *grpcObjMonitoringV1FwlogPolicy) UpdateStatus(ctx context.Context, in *m
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFwlogPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1FwlogPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelFwlogPolicy(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1FwlogPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FwlogPolicy, error) {
@@ -1133,6 +1308,13 @@ func (a *restObjMonitoringV1FwlogPolicy) UpdateStatus(ctx context.Context, in *m
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1FwlogPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.FwlogPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelFwlogPolicy(ctx, in)
+}
+
 func (a *restObjMonitoringV1FwlogPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FwlogPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1223,6 +1405,15 @@ func (a *grpcObjMonitoringV1FlowExportPolicy) UpdateStatus(ctx context.Context, 
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFlowExportPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1FlowExportPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelFlowExportPolicy(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1FlowExportPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FlowExportPolicy, error) {
@@ -1325,6 +1516,13 @@ func (a *restObjMonitoringV1FlowExportPolicy) UpdateStatus(ctx context.Context, 
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1FlowExportPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.FlowExportPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelFlowExportPolicy(ctx, in)
+}
+
 func (a *restObjMonitoringV1FlowExportPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FlowExportPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1415,6 +1613,15 @@ func (a *grpcObjMonitoringV1Alert) UpdateStatus(ctx context.Context, in *monitor
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlert(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1Alert) Label(ctx context.Context, in *api.Label) (*monitoring.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelAlert(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1Alert) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Alert, error) {
@@ -1517,6 +1724,13 @@ func (a *restObjMonitoringV1Alert) UpdateStatus(ctx context.Context, in *monitor
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1Alert) Label(ctx context.Context, in *api.Label) (*monitoring.Alert, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelAlert(ctx, in)
+}
+
 func (a *restObjMonitoringV1Alert) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Alert, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1607,6 +1821,15 @@ func (a *grpcObjMonitoringV1AlertPolicy) UpdateStatus(ctx context.Context, in *m
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlertPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AlertPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.AlertPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AlertPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelAlertPolicy(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1AlertPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertPolicy, error) {
@@ -1709,6 +1932,13 @@ func (a *restObjMonitoringV1AlertPolicy) UpdateStatus(ctx context.Context, in *m
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1AlertPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.AlertPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelAlertPolicy(ctx, in)
+}
+
 func (a *restObjMonitoringV1AlertPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1799,6 +2029,15 @@ func (a *grpcObjMonitoringV1AlertDestination) UpdateStatus(ctx context.Context, 
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlertDestination(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AlertDestination) Label(ctx context.Context, in *api.Label) (*monitoring.AlertDestination, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AlertDestination", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelAlertDestination(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1AlertDestination) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertDestination, error) {
@@ -1901,6 +2140,13 @@ func (a *restObjMonitoringV1AlertDestination) UpdateStatus(ctx context.Context, 
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1AlertDestination) Label(ctx context.Context, in *api.Label) (*monitoring.AlertDestination, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelAlertDestination(ctx, in)
+}
+
 func (a *restObjMonitoringV1AlertDestination) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertDestination, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1991,6 +2237,15 @@ func (a *grpcObjMonitoringV1MirrorSession) UpdateStatus(ctx context.Context, in 
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateMirrorSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) Label(ctx context.Context, in *api.Label) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelMirrorSession(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1MirrorSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
@@ -2093,6 +2348,13 @@ func (a *restObjMonitoringV1MirrorSession) UpdateStatus(ctx context.Context, in 
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1MirrorSession) Label(ctx context.Context, in *api.Label) (*monitoring.MirrorSession, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelMirrorSession(ctx, in)
+}
+
 func (a *restObjMonitoringV1MirrorSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2183,6 +2445,15 @@ func (a *grpcObjMonitoringV1TroubleshootingSession) UpdateStatus(ctx context.Con
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTroubleshootingSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TroubleshootingSession) Label(ctx context.Context, in *api.Label) (*monitoring.TroubleshootingSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TroubleshootingSession", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelTroubleshootingSession(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1TroubleshootingSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
@@ -2285,6 +2556,13 @@ func (a *restObjMonitoringV1TroubleshootingSession) UpdateStatus(ctx context.Con
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1TroubleshootingSession) Label(ctx context.Context, in *api.Label) (*monitoring.TroubleshootingSession, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelTroubleshootingSession(ctx, in)
+}
+
 func (a *restObjMonitoringV1TroubleshootingSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2375,6 +2653,15 @@ func (a *grpcObjMonitoringV1TechSupportRequest) UpdateStatus(ctx context.Context
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTechSupportRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) Label(ctx context.Context, in *api.Label) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelTechSupportRequest(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1TechSupportRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
@@ -2477,6 +2764,13 @@ func (a *restObjMonitoringV1TechSupportRequest) UpdateStatus(ctx context.Context
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjMonitoringV1TechSupportRequest) Label(ctx context.Context, in *api.Label) (*monitoring.TechSupportRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelTechSupportRequest(ctx, in)
+}
+
 func (a *restObjMonitoringV1TechSupportRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2564,6 +2858,15 @@ func (a *grpcObjMonitoringV1ArchiveRequest) UpdateStatus(ctx context.Context, in
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateArchiveRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1ArchiveRequest) Label(ctx context.Context, in *api.Label) (*monitoring.ArchiveRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "ArchiveRequest", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelArchiveRequest(nctx, in)
 }
 
 func (a *grpcObjMonitoringV1ArchiveRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {
@@ -2673,6 +2976,13 @@ func (a *restObjMonitoringV1ArchiveRequest) Update(ctx context.Context, in *moni
 
 func (a *restObjMonitoringV1ArchiveRequest) UpdateStatus(ctx context.Context, in *monitoring.ArchiveRequest) (*monitoring.ArchiveRequest, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjMonitoringV1ArchiveRequest) Label(ctx context.Context, in *api.Label) (*monitoring.ArchiveRequest, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelArchiveRequest(ctx, in)
 }
 
 func (a *restObjMonitoringV1ArchiveRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.ArchiveRequest, error) {

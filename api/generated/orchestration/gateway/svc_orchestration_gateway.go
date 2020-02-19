@@ -134,6 +134,33 @@ func (a adapterOrchestratorV1) AutoGetOrchestrator(oldctx oldcontext.Context, t 
 	return ret.(*orchestration.Orchestrator), err
 }
 
+func (a adapterOrchestratorV1) AutoLabelOrchestrator(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*orchestration.Orchestrator, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.OrchestratorV1AutoLabelOrchestrator", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelOrchestrator")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Orchestrator", t.Tenant, t.Namespace, "orchestration", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelOrchestrator(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*orchestration.Orchestrator), err
+}
+
 func (a adapterOrchestratorV1) AutoListOrchestrator(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*orchestration.OrchestratorList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()

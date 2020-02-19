@@ -40,6 +40,11 @@ type grpcServerAuthV1 struct {
 	AutoGetRoleBindingHdlr             grpctransport.Handler
 	AutoGetUserHdlr                    grpctransport.Handler
 	AutoGetUserPreferenceHdlr          grpctransport.Handler
+	AutoLabelAuthenticationPolicyHdlr  grpctransport.Handler
+	AutoLabelRoleHdlr                  grpctransport.Handler
+	AutoLabelRoleBindingHdlr           grpctransport.Handler
+	AutoLabelUserHdlr                  grpctransport.Handler
+	AutoLabelUserPreferenceHdlr        grpctransport.Handler
 	AutoListAuthenticationPolicyHdlr   grpctransport.Handler
 	AutoListRoleHdlr                   grpctransport.Handler
 	AutoListRoleBindingHdlr            grpctransport.Handler
@@ -169,6 +174,41 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqUserPreference,
 			EncodeGrpcRespUserPreference,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetUserPreference", logger)))...,
+		),
+
+		AutoLabelAuthenticationPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelAuthenticationPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespAuthenticationPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAuthenticationPolicy", logger)))...,
+		),
+
+		AutoLabelRoleHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRoleEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRole,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRole", logger)))...,
+		),
+
+		AutoLabelRoleBindingHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRoleBindingEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRoleBinding,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoleBinding", logger)))...,
+		),
+
+		AutoLabelUserHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelUserEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespUser,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUser", logger)))...,
+		),
+
+		AutoLabelUserPreferenceHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelUserPreferenceEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespUserPreference,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelUserPreference", logger)))...,
 		),
 
 		AutoListAuthenticationPolicyHdlr: grpctransport.NewServer(
@@ -547,6 +587,96 @@ func (s *grpcServerAuthV1) AutoGetUserPreference(ctx oldcontext.Context, req *Us
 }
 
 func decodeHTTPrespAuthV1AutoGetUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp UserPreference
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoLabelAuthenticationPolicy(ctx oldcontext.Context, req *api.Label) (*AuthenticationPolicy, error) {
+	_, resp, err := s.AutoLabelAuthenticationPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoLabelAuthenticationPolicy).V
+	return &r, resp.(respAuthV1AutoLabelAuthenticationPolicy).Err
+}
+
+func decodeHTTPrespAuthV1AutoLabelAuthenticationPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AuthenticationPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoLabelRole(ctx oldcontext.Context, req *api.Label) (*Role, error) {
+	_, resp, err := s.AutoLabelRoleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoLabelRole).V
+	return &r, resp.(respAuthV1AutoLabelRole).Err
+}
+
+func decodeHTTPrespAuthV1AutoLabelRole(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Role
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoLabelRoleBinding(ctx oldcontext.Context, req *api.Label) (*RoleBinding, error) {
+	_, resp, err := s.AutoLabelRoleBindingHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoLabelRoleBinding).V
+	return &r, resp.(respAuthV1AutoLabelRoleBinding).Err
+}
+
+func decodeHTTPrespAuthV1AutoLabelRoleBinding(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoleBinding
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoLabelUser(ctx oldcontext.Context, req *api.Label) (*User, error) {
+	_, resp, err := s.AutoLabelUserHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoLabelUser).V
+	return &r, resp.(respAuthV1AutoLabelUser).Err
+}
+
+func decodeHTTPrespAuthV1AutoLabelUser(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) AutoLabelUserPreference(ctx oldcontext.Context, req *api.Label) (*UserPreference, error) {
+	_, resp, err := s.AutoLabelUserPreferenceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1AutoLabelUserPreference).V
+	return &r, resp.(respAuthV1AutoLabelUserPreference).Err
+}
+
+func decodeHTTPrespAuthV1AutoLabelUserPreference(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

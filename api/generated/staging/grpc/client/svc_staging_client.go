@@ -72,6 +72,20 @@ func NewStagingV1(conn *grpc.ClientConn, logger log.Logger) staging.ServiceStagi
 		).Endpoint()
 		lAutoGetBufferEndpoint = trace.ClientEndPoint("StagingV1:AutoGetBuffer")(lAutoGetBufferEndpoint)
 	}
+	var lAutoLabelBufferEndpoint endpoint.Endpoint
+	{
+		lAutoLabelBufferEndpoint = grpctransport.NewClient(
+			conn,
+			"staging.StagingV1",
+			"AutoLabelBuffer",
+			staging.EncodeGrpcReqLabel,
+			staging.DecodeGrpcRespBuffer,
+			&staging.Buffer{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelBufferEndpoint = trace.ClientEndPoint("StagingV1:AutoLabelBuffer")(lAutoLabelBufferEndpoint)
+	}
 	var lAutoListBufferEndpoint endpoint.Endpoint
 	{
 		lAutoListBufferEndpoint = grpctransport.NewClient(
@@ -134,6 +148,7 @@ func NewStagingV1(conn *grpc.ClientConn, logger log.Logger) staging.ServiceStagi
 		AutoAddBufferEndpoint:    lAutoAddBufferEndpoint,
 		AutoDeleteBufferEndpoint: lAutoDeleteBufferEndpoint,
 		AutoGetBufferEndpoint:    lAutoGetBufferEndpoint,
+		AutoLabelBufferEndpoint:  lAutoLabelBufferEndpoint,
 		AutoListBufferEndpoint:   lAutoListBufferEndpoint,
 		AutoUpdateBufferEndpoint: lAutoUpdateBufferEndpoint,
 		ClearEndpoint:            lClearEndpoint,
@@ -179,6 +194,15 @@ func (a *grpcObjStagingV1Buffer) UpdateStatus(ctx context.Context, in *staging.B
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateBuffer(nctx, in)
+}
+
+func (a *grpcObjStagingV1Buffer) Label(ctx context.Context, in *api.Label) (*staging.Buffer, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Buffer", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelBuffer(nctx, in)
 }
 
 func (a *grpcObjStagingV1Buffer) Get(ctx context.Context, objMeta *api.ObjectMeta) (*staging.Buffer, error) {
@@ -297,6 +321,13 @@ func (a *restObjStagingV1Buffer) Update(ctx context.Context, in *staging.Buffer)
 
 func (a *restObjStagingV1Buffer) UpdateStatus(ctx context.Context, in *staging.Buffer) (*staging.Buffer, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjStagingV1Buffer) Label(ctx context.Context, in *api.Label) (*staging.Buffer, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelBuffer(ctx, in)
 }
 
 func (a *restObjStagingV1Buffer) Get(ctx context.Context, objMeta *api.ObjectMeta) (*staging.Buffer, error) {

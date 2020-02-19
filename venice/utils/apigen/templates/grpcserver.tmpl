@@ -387,6 +387,15 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		}){{end}},{{end}}{{end}}{{end}}
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions":                      apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label":                      apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("{{$pkgname}}", s.Messages)
@@ -406,16 +415,39 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logge
 		s.endpoints{{$svcname}}.fnAutoWatchSvc{{$svcname}} = srv.WatchFromKv
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}{{if (strEq $methparams.Oper "WatchOper")}}{{else}}
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
-			apisrvpkg.NewMethod(srv, pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiintf.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, i interface{}) (interface{}, bool, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiintf.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}{{if isAutoLabel .}}{{else}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
-		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . $svcver false}}{{if $uri.Ref}}
+		}){{end}}{{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . $svcver false}}{{if $uri.Ref}}
 			in, ok := i.({{getInputType $pkgname . true}})
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			} {{end}}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", {{$uri.Str}}), nil{{else}}
 			return "", fmt.Errorf("not rest endpoint"){{end}}
-		}).HandleInvocation
+		}){{if isAutoLabel .}}.WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := {{getOutputType $pkgname . true}}{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := {{getOutputType $pkgname . true}}{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}){{end}}.HandleInvocation
 		{{end}}{{end}}
 		{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{range $cruds}}
 		s.endpoints{{$svcname}}.fnAutoWatch{{.}} = pkgMessages["{{$pkgname}}.{{.}}"].WatchFromKv

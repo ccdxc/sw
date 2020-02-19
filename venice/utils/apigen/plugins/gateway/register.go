@@ -427,7 +427,7 @@ func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 		rule := r.(*googapi.HttpRule)
 		pattern := ""
 		switch params.Oper {
-		case "CreateOper":
+		case "CreateOper", "LabelOper":
 			pattern = rule.GetPost()
 		case "GetOper", "ListOper", "WatchOper":
 			pattern = rule.GetGet()
@@ -440,6 +440,11 @@ func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 			return out, err
 		}
 	} else {
+		if params.Oper == "LabelOper" {
+			// Response type has the URI, request type is api.Label
+			msg = m.ResponseType
+		}
+
 		if output, err = getMsgURI(msg, ver, svcParams.Prefix); err != nil {
 			return out, err
 		}
@@ -1149,6 +1154,8 @@ func getMethodParams(m *descriptor.Method) (MethodParams, error) {
 		return params, errInvalidOption
 	}
 	switch strings.ToLower(params.Oper) {
+	case "label":
+		params.Oper = "LabelOper"
 	case "create":
 		params.Oper = "CreateOper"
 	case "update":
@@ -2650,6 +2657,20 @@ func isAutoWatch(meth *descriptor.Method) bool {
 	return false
 }
 
+func isAutoLabel(meth *descriptor.Method) bool {
+	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
+		if v.(bool) == false {
+			return false
+		}
+		if v1, err := reg.GetExtension("venice.methodOper", meth); err == nil {
+			if v1.(string) == "label" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func getPackageCrudObjects(file *descriptor.File) ([]string, error) {
 	var crudmap = make(map[string]bool)
 	for _, svc := range file.Services {
@@ -2714,6 +2735,15 @@ func getActionTarget(meth *descriptor.Method) (string, error) {
 func isActionMethod(meth *descriptor.Method) bool {
 	_, err := getActionTarget(meth)
 	return err == nil
+}
+
+func isLabelMethod(meth *descriptor.Method) bool {
+	if v1, err := reg.GetExtension("venice.methodOper", meth); err == nil {
+		if v1.(string) == "label" {
+			return true
+		}
+	}
+	return false
 }
 
 func isRestExposed(meth *descriptor.Method) bool {
@@ -2816,7 +2846,7 @@ func getAutoRestOper(meth *descriptor.Method) (string, error) {
 		}
 		if v1, err := reg.GetExtension("venice.methodOper", meth); err == nil {
 			switch v1.(string) {
-			case "create":
+			case "create", "label":
 				return "POST", nil
 			case "update":
 				return "PUT", nil
@@ -3869,6 +3899,7 @@ func init() {
 	reg.RegisterFunc("getWatchTypeMsg", getWatchTypeMsg)
 	reg.RegisterFunc("isAutoWatch", isAutoWatch)
 	reg.RegisterFunc("isAutoList", isAutoList)
+	reg.RegisterFunc("isAutoLabel", isAutoLabel)
 	reg.RegisterFunc("isWatchHelper", isWatchHelper)
 	reg.RegisterFunc("isListHelper", isListHelper)
 	reg.RegisterFunc("getPackageCrudObjects", getPackageCrudObjects)
@@ -3921,6 +3952,7 @@ func init() {
 	reg.RegisterFunc("ToUpper", strings.ToUpper)
 	reg.RegisterFunc("CamelCase", gogen.CamelCase)
 	reg.RegisterFunc("isActionMethod", isActionMethod)
+	reg.RegisterFunc("isLabelMethod", isLabelMethod)
 	reg.RegisterFunc("getActionTarget", getActionTarget)
 	reg.RegisterFunc("getCLIFlagMap", getCLIFlagMap)
 	reg.RegisterFunc("splitSvcObj", splitSvcObj)

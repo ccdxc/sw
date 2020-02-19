@@ -67,6 +67,14 @@ type EndpointsNetworkV1Client struct {
 	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoLabelIPAMPolicyEndpoint        endpoint.Endpoint
+	AutoLabelLbPolicyEndpoint          endpoint.Endpoint
+	AutoLabelNetworkEndpoint           endpoint.Endpoint
+	AutoLabelNetworkInterfaceEndpoint  endpoint.Endpoint
+	AutoLabelRouteTableEndpoint        endpoint.Endpoint
+	AutoLabelRoutingConfigEndpoint     endpoint.Endpoint
+	AutoLabelServiceEndpoint           endpoint.Endpoint
+	AutoLabelVirtualRouterEndpoint     endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
@@ -116,6 +124,14 @@ type EndpointsNetworkV1RestClient struct {
 	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoLabelIPAMPolicyEndpoint        endpoint.Endpoint
+	AutoLabelLbPolicyEndpoint          endpoint.Endpoint
+	AutoLabelNetworkEndpoint           endpoint.Endpoint
+	AutoLabelNetworkInterfaceEndpoint  endpoint.Endpoint
+	AutoLabelRouteTableEndpoint        endpoint.Endpoint
+	AutoLabelRoutingConfigEndpoint     endpoint.Endpoint
+	AutoLabelServiceEndpoint           endpoint.Endpoint
+	AutoLabelVirtualRouterEndpoint     endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
@@ -174,6 +190,14 @@ type EndpointsNetworkV1Server struct {
 	AutoGetRoutingConfigEndpoint       endpoint.Endpoint
 	AutoGetServiceEndpoint             endpoint.Endpoint
 	AutoGetVirtualRouterEndpoint       endpoint.Endpoint
+	AutoLabelIPAMPolicyEndpoint        endpoint.Endpoint
+	AutoLabelLbPolicyEndpoint          endpoint.Endpoint
+	AutoLabelNetworkEndpoint           endpoint.Endpoint
+	AutoLabelNetworkInterfaceEndpoint  endpoint.Endpoint
+	AutoLabelRouteTableEndpoint        endpoint.Endpoint
+	AutoLabelRoutingConfigEndpoint     endpoint.Endpoint
+	AutoLabelServiceEndpoint           endpoint.Endpoint
+	AutoLabelVirtualRouterEndpoint     endpoint.Endpoint
 	AutoListIPAMPolicyEndpoint         endpoint.Endpoint
 	AutoListLbPolicyEndpoint           endpoint.Endpoint
 	AutoListNetworkEndpoint            endpoint.Endpoint
@@ -533,6 +557,118 @@ func (e EndpointsNetworkV1Client) AutoGetVirtualRouter(ctx context.Context, in *
 }
 
 type respNetworkV1AutoGetVirtualRouter struct {
+	V   VirtualRouter
+	Err error
+}
+
+// AutoLabelIPAMPolicy is endpoint for AutoLabelIPAMPolicy
+func (e EndpointsNetworkV1Client) AutoLabelIPAMPolicy(ctx context.Context, in *api.Label) (*IPAMPolicy, error) {
+	resp, err := e.AutoLabelIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &IPAMPolicy{}, err
+	}
+	return resp.(*IPAMPolicy), nil
+}
+
+type respNetworkV1AutoLabelIPAMPolicy struct {
+	V   IPAMPolicy
+	Err error
+}
+
+// AutoLabelLbPolicy is endpoint for AutoLabelLbPolicy
+func (e EndpointsNetworkV1Client) AutoLabelLbPolicy(ctx context.Context, in *api.Label) (*LbPolicy, error) {
+	resp, err := e.AutoLabelLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &LbPolicy{}, err
+	}
+	return resp.(*LbPolicy), nil
+}
+
+type respNetworkV1AutoLabelLbPolicy struct {
+	V   LbPolicy
+	Err error
+}
+
+// AutoLabelNetwork is endpoint for AutoLabelNetwork
+func (e EndpointsNetworkV1Client) AutoLabelNetwork(ctx context.Context, in *api.Label) (*Network, error) {
+	resp, err := e.AutoLabelNetworkEndpoint(ctx, in)
+	if err != nil {
+		return &Network{}, err
+	}
+	return resp.(*Network), nil
+}
+
+type respNetworkV1AutoLabelNetwork struct {
+	V   Network
+	Err error
+}
+
+// AutoLabelNetworkInterface is endpoint for AutoLabelNetworkInterface
+func (e EndpointsNetworkV1Client) AutoLabelNetworkInterface(ctx context.Context, in *api.Label) (*NetworkInterface, error) {
+	resp, err := e.AutoLabelNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkInterface{}, err
+	}
+	return resp.(*NetworkInterface), nil
+}
+
+type respNetworkV1AutoLabelNetworkInterface struct {
+	V   NetworkInterface
+	Err error
+}
+
+// AutoLabelRouteTable is endpoint for AutoLabelRouteTable
+func (e EndpointsNetworkV1Client) AutoLabelRouteTable(ctx context.Context, in *api.Label) (*RouteTable, error) {
+	resp, err := e.AutoLabelRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return &RouteTable{}, err
+	}
+	return resp.(*RouteTable), nil
+}
+
+type respNetworkV1AutoLabelRouteTable struct {
+	V   RouteTable
+	Err error
+}
+
+// AutoLabelRoutingConfig is endpoint for AutoLabelRoutingConfig
+func (e EndpointsNetworkV1Client) AutoLabelRoutingConfig(ctx context.Context, in *api.Label) (*RoutingConfig, error) {
+	resp, err := e.AutoLabelRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return &RoutingConfig{}, err
+	}
+	return resp.(*RoutingConfig), nil
+}
+
+type respNetworkV1AutoLabelRoutingConfig struct {
+	V   RoutingConfig
+	Err error
+}
+
+// AutoLabelService is endpoint for AutoLabelService
+func (e EndpointsNetworkV1Client) AutoLabelService(ctx context.Context, in *api.Label) (*Service, error) {
+	resp, err := e.AutoLabelServiceEndpoint(ctx, in)
+	if err != nil {
+		return &Service{}, err
+	}
+	return resp.(*Service), nil
+}
+
+type respNetworkV1AutoLabelService struct {
+	V   Service
+	Err error
+}
+
+// AutoLabelVirtualRouter is endpoint for AutoLabelVirtualRouter
+func (e EndpointsNetworkV1Client) AutoLabelVirtualRouter(ctx context.Context, in *api.Label) (*VirtualRouter, error) {
+	resp, err := e.AutoLabelVirtualRouterEndpoint(ctx, in)
+	if err != nil {
+		return &VirtualRouter{}, err
+	}
+	return resp.(*VirtualRouter), nil
+}
+
+type respNetworkV1AutoLabelVirtualRouter struct {
 	V   VirtualRouter
 	Err error
 }
@@ -1333,6 +1469,182 @@ func MakeNetworkV1AutoGetVirtualRouterEndpoint(s ServiceNetworkV1Server, logger 
 	return trace.ServerEndpoint("NetworkV1:AutoGetVirtualRouter")(f)
 }
 
+// AutoLabelIPAMPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelIPAMPolicy(ctx context.Context, in api.Label) (IPAMPolicy, error) {
+	resp, err := e.AutoLabelIPAMPolicyEndpoint(ctx, in)
+	if err != nil {
+		return IPAMPolicy{}, err
+	}
+	return *resp.(*IPAMPolicy), nil
+}
+
+// MakeNetworkV1AutoLabelIPAMPolicyEndpoint creates  AutoLabelIPAMPolicy endpoints for the service
+func MakeNetworkV1AutoLabelIPAMPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelIPAMPolicy(ctx, *req)
+		return respNetworkV1AutoLabelIPAMPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelIPAMPolicy")(f)
+}
+
+// AutoLabelLbPolicy implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelLbPolicy(ctx context.Context, in api.Label) (LbPolicy, error) {
+	resp, err := e.AutoLabelLbPolicyEndpoint(ctx, in)
+	if err != nil {
+		return LbPolicy{}, err
+	}
+	return *resp.(*LbPolicy), nil
+}
+
+// MakeNetworkV1AutoLabelLbPolicyEndpoint creates  AutoLabelLbPolicy endpoints for the service
+func MakeNetworkV1AutoLabelLbPolicyEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelLbPolicy(ctx, *req)
+		return respNetworkV1AutoLabelLbPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelLbPolicy")(f)
+}
+
+// AutoLabelNetwork implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelNetwork(ctx context.Context, in api.Label) (Network, error) {
+	resp, err := e.AutoLabelNetworkEndpoint(ctx, in)
+	if err != nil {
+		return Network{}, err
+	}
+	return *resp.(*Network), nil
+}
+
+// MakeNetworkV1AutoLabelNetworkEndpoint creates  AutoLabelNetwork endpoints for the service
+func MakeNetworkV1AutoLabelNetworkEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelNetwork(ctx, *req)
+		return respNetworkV1AutoLabelNetwork{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelNetwork")(f)
+}
+
+// AutoLabelNetworkInterface implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelNetworkInterface(ctx context.Context, in api.Label) (NetworkInterface, error) {
+	resp, err := e.AutoLabelNetworkInterfaceEndpoint(ctx, in)
+	if err != nil {
+		return NetworkInterface{}, err
+	}
+	return *resp.(*NetworkInterface), nil
+}
+
+// MakeNetworkV1AutoLabelNetworkInterfaceEndpoint creates  AutoLabelNetworkInterface endpoints for the service
+func MakeNetworkV1AutoLabelNetworkInterfaceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelNetworkInterface(ctx, *req)
+		return respNetworkV1AutoLabelNetworkInterface{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelNetworkInterface")(f)
+}
+
+// AutoLabelRouteTable implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelRouteTable(ctx context.Context, in api.Label) (RouteTable, error) {
+	resp, err := e.AutoLabelRouteTableEndpoint(ctx, in)
+	if err != nil {
+		return RouteTable{}, err
+	}
+	return *resp.(*RouteTable), nil
+}
+
+// MakeNetworkV1AutoLabelRouteTableEndpoint creates  AutoLabelRouteTable endpoints for the service
+func MakeNetworkV1AutoLabelRouteTableEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRouteTable(ctx, *req)
+		return respNetworkV1AutoLabelRouteTable{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelRouteTable")(f)
+}
+
+// AutoLabelRoutingConfig implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelRoutingConfig(ctx context.Context, in api.Label) (RoutingConfig, error) {
+	resp, err := e.AutoLabelRoutingConfigEndpoint(ctx, in)
+	if err != nil {
+		return RoutingConfig{}, err
+	}
+	return *resp.(*RoutingConfig), nil
+}
+
+// MakeNetworkV1AutoLabelRoutingConfigEndpoint creates  AutoLabelRoutingConfig endpoints for the service
+func MakeNetworkV1AutoLabelRoutingConfigEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRoutingConfig(ctx, *req)
+		return respNetworkV1AutoLabelRoutingConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelRoutingConfig")(f)
+}
+
+// AutoLabelService implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelService(ctx context.Context, in api.Label) (Service, error) {
+	resp, err := e.AutoLabelServiceEndpoint(ctx, in)
+	if err != nil {
+		return Service{}, err
+	}
+	return *resp.(*Service), nil
+}
+
+// MakeNetworkV1AutoLabelServiceEndpoint creates  AutoLabelService endpoints for the service
+func MakeNetworkV1AutoLabelServiceEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelService(ctx, *req)
+		return respNetworkV1AutoLabelService{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelService")(f)
+}
+
+// AutoLabelVirtualRouter implementation on server Endpoint
+func (e EndpointsNetworkV1Server) AutoLabelVirtualRouter(ctx context.Context, in api.Label) (VirtualRouter, error) {
+	resp, err := e.AutoLabelVirtualRouterEndpoint(ctx, in)
+	if err != nil {
+		return VirtualRouter{}, err
+	}
+	return *resp.(*VirtualRouter), nil
+}
+
+// MakeNetworkV1AutoLabelVirtualRouterEndpoint creates  AutoLabelVirtualRouter endpoints for the service
+func MakeNetworkV1AutoLabelVirtualRouterEndpoint(s ServiceNetworkV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelVirtualRouter(ctx, *req)
+		return respNetworkV1AutoLabelVirtualRouter{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("NetworkV1:AutoLabelVirtualRouter")(f)
+}
+
 // AutoListIPAMPolicy implementation on server Endpoint
 func (e EndpointsNetworkV1Server) AutoListIPAMPolicy(ctx context.Context, in api.ListWatchOptions) (IPAMPolicyList, error) {
 	resp, err := e.AutoListIPAMPolicyEndpoint(ctx, in)
@@ -1830,6 +2142,14 @@ func MakeNetworkV1ServerEndpoints(s ServiceNetworkV1Server, logger log.Logger) E
 		AutoGetRoutingConfigEndpoint:       MakeNetworkV1AutoGetRoutingConfigEndpoint(s, logger),
 		AutoGetServiceEndpoint:             MakeNetworkV1AutoGetServiceEndpoint(s, logger),
 		AutoGetVirtualRouterEndpoint:       MakeNetworkV1AutoGetVirtualRouterEndpoint(s, logger),
+		AutoLabelIPAMPolicyEndpoint:        MakeNetworkV1AutoLabelIPAMPolicyEndpoint(s, logger),
+		AutoLabelLbPolicyEndpoint:          MakeNetworkV1AutoLabelLbPolicyEndpoint(s, logger),
+		AutoLabelNetworkEndpoint:           MakeNetworkV1AutoLabelNetworkEndpoint(s, logger),
+		AutoLabelNetworkInterfaceEndpoint:  MakeNetworkV1AutoLabelNetworkInterfaceEndpoint(s, logger),
+		AutoLabelRouteTableEndpoint:        MakeNetworkV1AutoLabelRouteTableEndpoint(s, logger),
+		AutoLabelRoutingConfigEndpoint:     MakeNetworkV1AutoLabelRoutingConfigEndpoint(s, logger),
+		AutoLabelServiceEndpoint:           MakeNetworkV1AutoLabelServiceEndpoint(s, logger),
+		AutoLabelVirtualRouterEndpoint:     MakeNetworkV1AutoLabelVirtualRouterEndpoint(s, logger),
 		AutoListIPAMPolicyEndpoint:         MakeNetworkV1AutoListIPAMPolicyEndpoint(s, logger),
 		AutoListLbPolicyEndpoint:           MakeNetworkV1AutoListLbPolicyEndpoint(s, logger),
 		AutoListNetworkEndpoint:            MakeNetworkV1AutoListNetworkEndpoint(s, logger),
@@ -2198,6 +2518,110 @@ func (m loggingNetworkV1MiddlewareClient) AutoGetVirtualRouter(ctx context.Conte
 		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoGetVirtualRouter", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetVirtualRouter(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelIPAMPolicy(ctx context.Context, in *api.Label) (resp *IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelIPAMPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelIPAMPolicy(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelLbPolicy(ctx context.Context, in *api.Label) (resp *LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelLbPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelLbPolicy(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelNetwork(ctx context.Context, in *api.Label) (resp *Network, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelNetwork", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelNetworkInterface(ctx context.Context, in *api.Label) (resp *NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelNetworkInterface", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelRouteTable(ctx context.Context, in *api.Label) (resp *RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelRouteTable", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelRoutingConfig(ctx context.Context, in *api.Label) (resp *RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelRoutingConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRoutingConfig(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelService(ctx context.Context, in *api.Label) (resp *Service, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelService", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelService(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareClient) AutoLabelVirtualRouter(ctx context.Context, in *api.Label) (resp *VirtualRouter, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelVirtualRouter", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelVirtualRouter(ctx, in)
 	return
 }
 func (m loggingNetworkV1MiddlewareClient) AutoListIPAMPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *IPAMPolicyList, err error) {
@@ -2840,6 +3264,110 @@ func (m loggingNetworkV1MiddlewareServer) AutoGetVirtualRouter(ctx context.Conte
 	resp, err = m.next.AutoGetVirtualRouter(ctx, in)
 	return
 }
+func (m loggingNetworkV1MiddlewareServer) AutoLabelIPAMPolicy(ctx context.Context, in api.Label) (resp IPAMPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelIPAMPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelIPAMPolicy(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelLbPolicy(ctx context.Context, in api.Label) (resp LbPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelLbPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelLbPolicy(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelNetwork(ctx context.Context, in api.Label) (resp Network, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelNetwork", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetwork(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelNetworkInterface(ctx context.Context, in api.Label) (resp NetworkInterface, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelNetworkInterface", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetworkInterface(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelRouteTable(ctx context.Context, in api.Label) (resp RouteTable, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelRouteTable", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRouteTable(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelRoutingConfig(ctx context.Context, in api.Label) (resp RoutingConfig, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelRoutingConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRoutingConfig(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelService(ctx context.Context, in api.Label) (resp Service, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelService", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelService(ctx, in)
+	return
+}
+func (m loggingNetworkV1MiddlewareServer) AutoLabelVirtualRouter(ctx context.Context, in api.Label) (resp VirtualRouter, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "NetworkV1", "method", "AutoLabelVirtualRouter", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelVirtualRouter(ctx, in)
+	return
+}
 func (m loggingNetworkV1MiddlewareServer) AutoListIPAMPolicy(ctx context.Context, in api.ListWatchOptions) (resp IPAMPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3322,6 +3850,54 @@ func makeURINetworkV1AutoGetVirtualRouterGetOper(in *VirtualRouter) string {
 }
 
 //
+func makeURINetworkV1AutoLabelIPAMPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelLbPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelNetworkLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelNetworkInterfaceLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelRouteTableLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelRoutingConfigLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelServiceLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURINetworkV1AutoLabelVirtualRouterLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURINetworkV1AutoListIPAMPolicyListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies")
 }
@@ -3498,6 +4074,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in
 	return ret.(*Network), err
 }
 
+// AutoLabelNetwork label method for Network
+func (r *EndpointsNetworkV1RestClient) AutoLabelNetwork(ctx context.Context, in *api.Label) (*Network, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *Network) (*Network, error) {
 	path := makeURINetworkV1AutoGetNetworkGetOper(in)
@@ -3622,6 +4203,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateService(ctx context.Context, in
 	return nil, errors.New("not allowed")
 }
 
+// AutoLabelService label method for Service
+func (r *EndpointsNetworkV1RestClient) AutoLabelService(ctx context.Context, in *api.Label) (*Service, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoGetService(ctx context.Context, in *Service) (*Service, error) {
 	return nil, errors.New("not allowed")
@@ -3692,6 +4278,11 @@ func (r *EndpointsNetworkV1RestClient) AutoAddLbPolicy(ctx context.Context, in *
 
 // AutoUpdateLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelLbPolicy label method for LbPolicy
+func (r *EndpointsNetworkV1RestClient) AutoLabelLbPolicy(ctx context.Context, in *api.Label) (*LbPolicy, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -3800,6 +4391,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateVirtualRouter(ctx context.Conte
 		return nil, err
 	}
 	return ret.(*VirtualRouter), err
+}
+
+// AutoLabelVirtualRouter label method for VirtualRouter
+func (r *EndpointsNetworkV1RestClient) AutoLabelVirtualRouter(ctx context.Context, in *api.Label) (*VirtualRouter, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetVirtualRouter CRUD method for VirtualRouter
@@ -3943,6 +4539,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetworkInterface(ctx context.Co
 	return ret.(*NetworkInterface), err
 }
 
+// AutoLabelNetworkInterface label method for NetworkInterface
+func (r *EndpointsNetworkV1RestClient) AutoLabelNetworkInterface(ctx context.Context, in *api.Label) (*NetworkInterface, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetNetworkInterface CRUD method for NetworkInterface
 func (r *EndpointsNetworkV1RestClient) AutoGetNetworkInterface(ctx context.Context, in *NetworkInterface) (*NetworkInterface, error) {
 	path := makeURINetworkV1AutoGetNetworkInterfaceGetOper(in)
@@ -4082,6 +4683,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateIPAMPolicy(ctx context.Context,
 		return nil, err
 	}
 	return ret.(*IPAMPolicy), err
+}
+
+// AutoLabelIPAMPolicy label method for IPAMPolicy
+func (r *EndpointsNetworkV1RestClient) AutoLabelIPAMPolicy(ctx context.Context, in *api.Label) (*IPAMPolicy, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetIPAMPolicy CRUD method for IPAMPolicy
@@ -4242,6 +4848,11 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateRoutingConfig(ctx context.Conte
 	return ret.(*RoutingConfig), err
 }
 
+// AutoLabelRoutingConfig label method for RoutingConfig
+func (r *EndpointsNetworkV1RestClient) AutoLabelRoutingConfig(ctx context.Context, in *api.Label) (*RoutingConfig, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetRoutingConfig CRUD method for RoutingConfig
 func (r *EndpointsNetworkV1RestClient) AutoGetRoutingConfig(ctx context.Context, in *RoutingConfig) (*RoutingConfig, error) {
 	path := makeURINetworkV1AutoGetRoutingConfigGetOper(in)
@@ -4363,6 +4974,11 @@ func (r *EndpointsNetworkV1RestClient) AutoAddRouteTable(ctx context.Context, in
 
 // AutoUpdateRouteTable CRUD method for RouteTable
 func (r *EndpointsNetworkV1RestClient) AutoUpdateRouteTable(ctx context.Context, in *RouteTable) (*RouteTable, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelRouteTable label method for RouteTable
+func (r *EndpointsNetworkV1RestClient) AutoLabelRouteTable(ctx context.Context, in *api.Label) (*RouteTable, error) {
 	return nil, errors.New("not allowed")
 }
 

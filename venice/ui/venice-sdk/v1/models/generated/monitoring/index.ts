@@ -6,6 +6,7 @@
 
 export * from './enums';
 export * from './tech-support-request-spec-node-selector-spec.model';
+export * from './api-label.model';
 export * from './api-list-meta.model';
 export * from './api-list-watch-options.model';
 export * from './api-object-meta.model';

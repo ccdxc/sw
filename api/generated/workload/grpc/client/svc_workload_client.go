@@ -128,6 +128,34 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoGetWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoGetWorkload")(lAutoGetWorkloadEndpoint)
 	}
+	var lAutoLabelEndpointEndpoint endpoint.Endpoint
+	{
+		lAutoLabelEndpointEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoLabelEndpoint",
+			workload.EncodeGrpcReqLabel,
+			workload.DecodeGrpcRespEndpoint,
+			&workload.Endpoint{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelEndpointEndpoint = trace.ClientEndPoint("WorkloadV1:AutoLabelEndpoint")(lAutoLabelEndpointEndpoint)
+	}
+	var lAutoLabelWorkloadEndpoint endpoint.Endpoint
+	{
+		lAutoLabelWorkloadEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AutoLabelWorkload",
+			workload.EncodeGrpcReqLabel,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoLabelWorkload")(lAutoLabelWorkloadEndpoint)
+	}
 	var lAutoListEndpointEndpoint endpoint.Endpoint
 	{
 		lAutoListEndpointEndpoint = grpctransport.NewClient(
@@ -222,6 +250,8 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		AutoDeleteWorkloadEndpoint: lAutoDeleteWorkloadEndpoint,
 		AutoGetEndpointEndpoint:    lAutoGetEndpointEndpoint,
 		AutoGetWorkloadEndpoint:    lAutoGetWorkloadEndpoint,
+		AutoLabelEndpointEndpoint:  lAutoLabelEndpointEndpoint,
+		AutoLabelWorkloadEndpoint:  lAutoLabelWorkloadEndpoint,
 		AutoListEndpointEndpoint:   lAutoListEndpointEndpoint,
 		AutoListWorkloadEndpoint:   lAutoListWorkloadEndpoint,
 		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
@@ -269,6 +299,15 @@ func (a *grpcObjWorkloadV1Endpoint) UpdateStatus(ctx context.Context, in *worklo
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateEndpoint(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Endpoint) Label(ctx context.Context, in *api.Label) (*workload.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelEndpoint(nctx, in)
 }
 
 func (a *grpcObjWorkloadV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Endpoint, error) {
@@ -371,6 +410,13 @@ func (a *restObjWorkloadV1Endpoint) UpdateStatus(ctx context.Context, in *worklo
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjWorkloadV1Endpoint) Label(ctx context.Context, in *api.Label) (*workload.Endpoint, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelEndpoint(ctx, in)
+}
+
 func (a *restObjWorkloadV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Endpoint, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -461,6 +507,15 @@ func (a *grpcObjWorkloadV1Workload) UpdateStatus(ctx context.Context, in *worklo
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateWorkload(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) Label(ctx context.Context, in *api.Label) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelWorkload(nctx, in)
 }
 
 func (a *grpcObjWorkloadV1Workload) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {
@@ -588,6 +643,13 @@ func (a *restObjWorkloadV1Workload) Update(ctx context.Context, in *workload.Wor
 
 func (a *restObjWorkloadV1Workload) UpdateStatus(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjWorkloadV1Workload) Label(ctx context.Context, in *api.Label) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelWorkload(ctx, in)
 }
 
 func (a *restObjWorkloadV1Workload) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {

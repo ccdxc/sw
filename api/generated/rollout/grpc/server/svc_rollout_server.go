@@ -56,6 +56,8 @@ type eRolloutV1Endpoints struct {
 	fnAutoDeleteRolloutAction func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetRollout          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetRolloutAction    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRollout        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRolloutAction  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRollout         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRolloutAction   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRollout       func(ctx context.Context, t interface{}) (interface{}, error)
@@ -129,6 +131,15 @@ func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("rollout", s.Messages)
@@ -179,6 +190,62 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsRolloutV1.fnAutoGetRolloutAction = srv.AddMethod("AutoGetRolloutAction",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoGetRolloutAction")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnAutoLabelRollout = srv.AddMethod("AutoLabelRollout",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["rollout.Rollout"], "rollout", "AutoLabelRollout")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := rollout.Rollout{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := rollout.Rollout{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnAutoLabelRolloutAction = srv.AddMethod("AutoLabelRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoLabelRolloutAction")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := rollout.RolloutAction{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := rollout.RolloutAction{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoListRollout = srv.AddMethod("AutoListRollout",
@@ -540,6 +607,22 @@ func (e *eRolloutV1Endpoints) AutoGetRollout(ctx context.Context, t rollout.Roll
 }
 func (e *eRolloutV1Endpoints) AutoGetRolloutAction(ctx context.Context, t rollout.RolloutAction) (rollout.RolloutAction, error) {
 	r, err := e.fnAutoGetRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutAction), err
+	}
+	return rollout.RolloutAction{}, err
+
+}
+func (e *eRolloutV1Endpoints) AutoLabelRollout(ctx context.Context, t api.Label) (rollout.Rollout, error) {
+	r, err := e.fnAutoLabelRollout(ctx, t)
+	if err == nil {
+		return r.(rollout.Rollout), err
+	}
+	return rollout.Rollout{}, err
+
+}
+func (e *eRolloutV1Endpoints) AutoLabelRolloutAction(ctx context.Context, t api.Label) (rollout.RolloutAction, error) {
+	r, err := e.fnAutoLabelRolloutAction(ctx, t)
 	if err == nil {
 		return r.(rollout.RolloutAction), err
 	}

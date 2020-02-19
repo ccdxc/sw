@@ -49,6 +49,8 @@ type EndpointsObjstoreV1Client struct {
 	AutoDeleteObjectEndpoint endpoint.Endpoint
 	AutoGetBucketEndpoint    endpoint.Endpoint
 	AutoGetObjectEndpoint    endpoint.Endpoint
+	AutoLabelBucketEndpoint  endpoint.Endpoint
+	AutoLabelObjectEndpoint  endpoint.Endpoint
 	AutoListBucketEndpoint   endpoint.Endpoint
 	AutoListObjectEndpoint   endpoint.Endpoint
 	AutoUpdateBucketEndpoint endpoint.Endpoint
@@ -68,6 +70,8 @@ type EndpointsObjstoreV1RestClient struct {
 	AutoDeleteObjectEndpoint       endpoint.Endpoint
 	AutoGetBucketEndpoint          endpoint.Endpoint
 	AutoGetObjectEndpoint          endpoint.Endpoint
+	AutoLabelBucketEndpoint        endpoint.Endpoint
+	AutoLabelObjectEndpoint        endpoint.Endpoint
 	AutoListBucketEndpoint         endpoint.Endpoint
 	AutoListObjectEndpoint         endpoint.Endpoint
 	AutoUpdateBucketEndpoint       endpoint.Endpoint
@@ -92,6 +96,8 @@ type EndpointsObjstoreV1Server struct {
 	AutoDeleteObjectEndpoint endpoint.Endpoint
 	AutoGetBucketEndpoint    endpoint.Endpoint
 	AutoGetObjectEndpoint    endpoint.Endpoint
+	AutoLabelBucketEndpoint  endpoint.Endpoint
+	AutoLabelObjectEndpoint  endpoint.Endpoint
 	AutoListBucketEndpoint   endpoint.Endpoint
 	AutoListObjectEndpoint   endpoint.Endpoint
 	AutoUpdateBucketEndpoint endpoint.Endpoint
@@ -181,6 +187,34 @@ func (e EndpointsObjstoreV1Client) AutoGetObject(ctx context.Context, in *Object
 }
 
 type respObjstoreV1AutoGetObject struct {
+	V   Object
+	Err error
+}
+
+// AutoLabelBucket is endpoint for AutoLabelBucket
+func (e EndpointsObjstoreV1Client) AutoLabelBucket(ctx context.Context, in *api.Label) (*Bucket, error) {
+	resp, err := e.AutoLabelBucketEndpoint(ctx, in)
+	if err != nil {
+		return &Bucket{}, err
+	}
+	return resp.(*Bucket), nil
+}
+
+type respObjstoreV1AutoLabelBucket struct {
+	V   Bucket
+	Err error
+}
+
+// AutoLabelObject is endpoint for AutoLabelObject
+func (e EndpointsObjstoreV1Client) AutoLabelObject(ctx context.Context, in *api.Label) (*Object, error) {
+	resp, err := e.AutoLabelObjectEndpoint(ctx, in)
+	if err != nil {
+		return &Object{}, err
+	}
+	return resp.(*Object), nil
+}
+
+type respObjstoreV1AutoLabelObject struct {
 	V   Object
 	Err error
 }
@@ -394,6 +428,50 @@ func MakeObjstoreV1AutoGetObjectEndpoint(s ServiceObjstoreV1Server, logger log.L
 	return trace.ServerEndpoint("ObjstoreV1:AutoGetObject")(f)
 }
 
+// AutoLabelBucket implementation on server Endpoint
+func (e EndpointsObjstoreV1Server) AutoLabelBucket(ctx context.Context, in api.Label) (Bucket, error) {
+	resp, err := e.AutoLabelBucketEndpoint(ctx, in)
+	if err != nil {
+		return Bucket{}, err
+	}
+	return *resp.(*Bucket), nil
+}
+
+// MakeObjstoreV1AutoLabelBucketEndpoint creates  AutoLabelBucket endpoints for the service
+func MakeObjstoreV1AutoLabelBucketEndpoint(s ServiceObjstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelBucket(ctx, *req)
+		return respObjstoreV1AutoLabelBucket{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ObjstoreV1:AutoLabelBucket")(f)
+}
+
+// AutoLabelObject implementation on server Endpoint
+func (e EndpointsObjstoreV1Server) AutoLabelObject(ctx context.Context, in api.Label) (Object, error) {
+	resp, err := e.AutoLabelObjectEndpoint(ctx, in)
+	if err != nil {
+		return Object{}, err
+	}
+	return *resp.(*Object), nil
+}
+
+// MakeObjstoreV1AutoLabelObjectEndpoint creates  AutoLabelObject endpoints for the service
+func MakeObjstoreV1AutoLabelObjectEndpoint(s ServiceObjstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelObject(ctx, *req)
+		return respObjstoreV1AutoLabelObject{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ObjstoreV1:AutoLabelObject")(f)
+}
+
 // AutoListBucket implementation on server Endpoint
 func (e EndpointsObjstoreV1Server) AutoListBucket(ctx context.Context, in api.ListWatchOptions) (BucketList, error) {
 	resp, err := e.AutoListBucketEndpoint(ctx, in)
@@ -538,6 +616,8 @@ func MakeObjstoreV1ServerEndpoints(s ServiceObjstoreV1Server, logger log.Logger)
 		AutoDeleteObjectEndpoint: MakeObjstoreV1AutoDeleteObjectEndpoint(s, logger),
 		AutoGetBucketEndpoint:    MakeObjstoreV1AutoGetBucketEndpoint(s, logger),
 		AutoGetObjectEndpoint:    MakeObjstoreV1AutoGetObjectEndpoint(s, logger),
+		AutoLabelBucketEndpoint:  MakeObjstoreV1AutoLabelBucketEndpoint(s, logger),
+		AutoLabelObjectEndpoint:  MakeObjstoreV1AutoLabelObjectEndpoint(s, logger),
 		AutoListBucketEndpoint:   MakeObjstoreV1AutoListBucketEndpoint(s, logger),
 		AutoListObjectEndpoint:   MakeObjstoreV1AutoListObjectEndpoint(s, logger),
 		AutoUpdateBucketEndpoint: MakeObjstoreV1AutoUpdateBucketEndpoint(s, logger),
@@ -654,6 +734,32 @@ func (m loggingObjstoreV1MiddlewareClient) AutoGetObject(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "AutoGetObject", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetObject(ctx, in)
+	return
+}
+func (m loggingObjstoreV1MiddlewareClient) AutoLabelBucket(ctx context.Context, in *api.Label) (resp *Bucket, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "AutoLabelBucket", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelBucket(ctx, in)
+	return
+}
+func (m loggingObjstoreV1MiddlewareClient) AutoLabelObject(ctx context.Context, in *api.Label) (resp *Object, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "AutoLabelObject", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelObject(ctx, in)
 	return
 }
 func (m loggingObjstoreV1MiddlewareClient) AutoListBucket(ctx context.Context, in *api.ListWatchOptions) (resp *BucketList, err error) {
@@ -855,6 +961,32 @@ func (m loggingObjstoreV1MiddlewareServer) AutoGetObject(ctx context.Context, in
 	resp, err = m.next.AutoGetObject(ctx, in)
 	return
 }
+func (m loggingObjstoreV1MiddlewareServer) AutoLabelBucket(ctx context.Context, in api.Label) (resp Bucket, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "AutoLabelBucket", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelBucket(ctx, in)
+	return
+}
+func (m loggingObjstoreV1MiddlewareServer) AutoLabelObject(ctx context.Context, in api.Label) (resp Object, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "AutoLabelObject", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelObject(ctx, in)
+	return
+}
 func (m loggingObjstoreV1MiddlewareServer) AutoListBucket(ctx context.Context, in api.ListWatchOptions) (resp BucketList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1013,6 +1145,18 @@ func makeURIObjstoreV1AutoGetObjectGetOper(in *Object) string {
 }
 
 //
+func makeURIObjstoreV1AutoLabelBucketLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIObjstoreV1AutoLabelObjectLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIObjstoreV1AutoListBucketListOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -1059,6 +1203,11 @@ func (r *EndpointsObjstoreV1RestClient) AutoAddBucket(ctx context.Context, in *B
 
 // AutoUpdateBucket CRUD method for Bucket
 func (r *EndpointsObjstoreV1RestClient) AutoUpdateBucket(ctx context.Context, in *Bucket) (*Bucket, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelBucket label method for Bucket
+func (r *EndpointsObjstoreV1RestClient) AutoLabelBucket(ctx context.Context, in *api.Label) (*Bucket, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -1149,6 +1298,11 @@ func (r *EndpointsObjstoreV1RestClient) AutoAddObject(ctx context.Context, in *O
 
 // AutoUpdateObject CRUD method for Object
 func (r *EndpointsObjstoreV1RestClient) AutoUpdateObject(ctx context.Context, in *Object) (*Object, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelObject label method for Object
+func (r *EndpointsObjstoreV1RestClient) AutoLabelObject(ctx context.Context, in *api.Label) (*Object, error) {
 	return nil, errors.New("not allowed")
 }
 

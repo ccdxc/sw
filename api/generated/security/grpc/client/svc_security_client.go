@@ -282,6 +282,90 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		).Endpoint()
 		lAutoGetTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoGetTrafficEncryptionPolicy")(lAutoGetTrafficEncryptionPolicyEndpoint)
 	}
+	var lAutoLabelAppEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAppEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelApp",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespApp,
+			&security.App{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAppEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelApp")(lAutoLabelAppEndpoint)
+	}
+	var lAutoLabelCertificateEndpoint endpoint.Endpoint
+	{
+		lAutoLabelCertificateEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelCertificate",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespCertificate,
+			&security.Certificate{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelCertificateEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelCertificate")(lAutoLabelCertificateEndpoint)
+	}
+	var lAutoLabelFirewallProfileEndpoint endpoint.Endpoint
+	{
+		lAutoLabelFirewallProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelFirewallProfile",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespFirewallProfile,
+			&security.FirewallProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelFirewallProfileEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelFirewallProfile")(lAutoLabelFirewallProfileEndpoint)
+	}
+	var lAutoLabelNetworkSecurityPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelNetworkSecurityPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelNetworkSecurityPolicy",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespNetworkSecurityPolicy,
+			&security.NetworkSecurityPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelNetworkSecurityPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelNetworkSecurityPolicy")(lAutoLabelNetworkSecurityPolicyEndpoint)
+	}
+	var lAutoLabelSecurityGroupEndpoint endpoint.Endpoint
+	{
+		lAutoLabelSecurityGroupEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelSecurityGroup",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespSecurityGroup,
+			&security.SecurityGroup{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelSecurityGroupEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelSecurityGroup")(lAutoLabelSecurityGroupEndpoint)
+	}
+	var lAutoLabelTrafficEncryptionPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelTrafficEncryptionPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"security.SecurityV1",
+			"AutoLabelTrafficEncryptionPolicy",
+			security.EncodeGrpcReqLabel,
+			security.DecodeGrpcRespTrafficEncryptionPolicy,
+			&security.TrafficEncryptionPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelTrafficEncryptionPolicyEndpoint = trace.ClientEndPoint("SecurityV1:AutoLabelTrafficEncryptionPolicy")(lAutoLabelTrafficEncryptionPolicyEndpoint)
+	}
 	var lAutoListAppEndpoint endpoint.Endpoint
 	{
 		lAutoListAppEndpoint = grpctransport.NewClient(
@@ -471,6 +555,12 @@ func NewSecurityV1(conn *grpc.ClientConn, logger log.Logger) security.ServiceSec
 		AutoGetNetworkSecurityPolicyEndpoint:      lAutoGetNetworkSecurityPolicyEndpoint,
 		AutoGetSecurityGroupEndpoint:              lAutoGetSecurityGroupEndpoint,
 		AutoGetTrafficEncryptionPolicyEndpoint:    lAutoGetTrafficEncryptionPolicyEndpoint,
+		AutoLabelAppEndpoint:                      lAutoLabelAppEndpoint,
+		AutoLabelCertificateEndpoint:              lAutoLabelCertificateEndpoint,
+		AutoLabelFirewallProfileEndpoint:          lAutoLabelFirewallProfileEndpoint,
+		AutoLabelNetworkSecurityPolicyEndpoint:    lAutoLabelNetworkSecurityPolicyEndpoint,
+		AutoLabelSecurityGroupEndpoint:            lAutoLabelSecurityGroupEndpoint,
+		AutoLabelTrafficEncryptionPolicyEndpoint:  lAutoLabelTrafficEncryptionPolicyEndpoint,
 		AutoListAppEndpoint:                       lAutoListAppEndpoint,
 		AutoListCertificateEndpoint:               lAutoListCertificateEndpoint,
 		AutoListFirewallProfileEndpoint:           lAutoListFirewallProfileEndpoint,
@@ -524,6 +614,15 @@ func (a *grpcObjSecurityV1SecurityGroup) UpdateStatus(ctx context.Context, in *s
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateSecurityGroup(nctx, in)
+}
+
+func (a *grpcObjSecurityV1SecurityGroup) Label(ctx context.Context, in *api.Label) (*security.SecurityGroup, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SecurityGroup", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelSecurityGroup(nctx, in)
 }
 
 func (a *grpcObjSecurityV1SecurityGroup) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SecurityGroup, error) {
@@ -626,6 +725,13 @@ func (a *restObjSecurityV1SecurityGroup) UpdateStatus(ctx context.Context, in *s
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjSecurityV1SecurityGroup) Label(ctx context.Context, in *api.Label) (*security.SecurityGroup, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelSecurityGroup(ctx, in)
+}
+
 func (a *restObjSecurityV1SecurityGroup) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SecurityGroup, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -716,6 +822,15 @@ func (a *grpcObjSecurityV1NetworkSecurityPolicy) UpdateStatus(ctx context.Contex
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateNetworkSecurityPolicy(nctx, in)
+}
+
+func (a *grpcObjSecurityV1NetworkSecurityPolicy) Label(ctx context.Context, in *api.Label) (*security.NetworkSecurityPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "NetworkSecurityPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelNetworkSecurityPolicy(nctx, in)
 }
 
 func (a *grpcObjSecurityV1NetworkSecurityPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.NetworkSecurityPolicy, error) {
@@ -818,6 +933,13 @@ func (a *restObjSecurityV1NetworkSecurityPolicy) UpdateStatus(ctx context.Contex
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjSecurityV1NetworkSecurityPolicy) Label(ctx context.Context, in *api.Label) (*security.NetworkSecurityPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelNetworkSecurityPolicy(ctx, in)
+}
+
 func (a *restObjSecurityV1NetworkSecurityPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.NetworkSecurityPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -908,6 +1030,15 @@ func (a *grpcObjSecurityV1App) UpdateStatus(ctx context.Context, in *security.Ap
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateApp(nctx, in)
+}
+
+func (a *grpcObjSecurityV1App) Label(ctx context.Context, in *api.Label) (*security.App, error) {
+	a.logger.DebugLog("msg", "received call", "object", "App", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelApp(nctx, in)
 }
 
 func (a *grpcObjSecurityV1App) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.App, error) {
@@ -1010,6 +1141,13 @@ func (a *restObjSecurityV1App) UpdateStatus(ctx context.Context, in *security.Ap
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjSecurityV1App) Label(ctx context.Context, in *api.Label) (*security.App, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelApp(ctx, in)
+}
+
 func (a *restObjSecurityV1App) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.App, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1100,6 +1238,15 @@ func (a *grpcObjSecurityV1FirewallProfile) UpdateStatus(ctx context.Context, in 
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFirewallProfile(nctx, in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) Label(ctx context.Context, in *api.Label) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelFirewallProfile(nctx, in)
 }
 
 func (a *grpcObjSecurityV1FirewallProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
@@ -1202,6 +1349,13 @@ func (a *restObjSecurityV1FirewallProfile) UpdateStatus(ctx context.Context, in 
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjSecurityV1FirewallProfile) Label(ctx context.Context, in *api.Label) (*security.FirewallProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelFirewallProfile(ctx, in)
+}
+
 func (a *restObjSecurityV1FirewallProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1292,6 +1446,15 @@ func (a *grpcObjSecurityV1Certificate) UpdateStatus(ctx context.Context, in *sec
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCertificate(nctx, in)
+}
+
+func (a *grpcObjSecurityV1Certificate) Label(ctx context.Context, in *api.Label) (*security.Certificate, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Certificate", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelCertificate(nctx, in)
 }
 
 func (a *grpcObjSecurityV1Certificate) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.Certificate, error) {
@@ -1394,6 +1557,13 @@ func (a *restObjSecurityV1Certificate) UpdateStatus(ctx context.Context, in *sec
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjSecurityV1Certificate) Label(ctx context.Context, in *api.Label) (*security.Certificate, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelCertificate(ctx, in)
+}
+
 func (a *restObjSecurityV1Certificate) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.Certificate, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1484,6 +1654,15 @@ func (a *grpcObjSecurityV1TrafficEncryptionPolicy) UpdateStatus(ctx context.Cont
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTrafficEncryptionPolicy(nctx, in)
+}
+
+func (a *grpcObjSecurityV1TrafficEncryptionPolicy) Label(ctx context.Context, in *api.Label) (*security.TrafficEncryptionPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TrafficEncryptionPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelTrafficEncryptionPolicy(nctx, in)
 }
 
 func (a *grpcObjSecurityV1TrafficEncryptionPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.TrafficEncryptionPolicy, error) {
@@ -1584,6 +1763,13 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Update(ctx context.Context, i
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) UpdateStatus(ctx context.Context, in *security.TrafficEncryptionPolicy) (*security.TrafficEncryptionPolicy, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjSecurityV1TrafficEncryptionPolicy) Label(ctx context.Context, in *api.Label) (*security.TrafficEncryptionPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelTrafficEncryptionPolicy(ctx, in)
 }
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.TrafficEncryptionPolicy, error) {

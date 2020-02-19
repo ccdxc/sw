@@ -906,6 +906,66 @@ func TestClusterScopedAuthz(t *testing.T) {
 	Assert(t, err != nil, "roles in non-default tenant cannot have permissions for cluster scoped resource kind")
 }
 
+func TestLabelAuthorization(t *testing.T) {
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+
+	// create testUser2 as user with create permissions
+	MustCreateTestUser(tinfo.apicl, "testUser2", testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, "testUser2", globals.DefaultTenant)
+	MustCreateRole(tinfo.apicl, "UserCreateRole", globals.DefaultTenant,
+		login.NewPermission(
+			globals.DefaultTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_Create.String()))
+	defer MustDeleteRole(tinfo.apicl, "UserCreateRole", globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, "UserCreateRoleBinding", globals.DefaultTenant, "UserCreateRole", []string{"testUser2"}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "UserCreateRoleBinding", globals.DefaultTenant)
+
+	// login as user
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "testUser2",
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	AssertOk(t, err, "error creating logged in context")
+	// labeling role should result in authorization error at this point
+	AssertConsistently(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Label(ctx, &api.Label{ObjectMeta: api.ObjectMeta{Name: "UserUpdateRole", Tenant: globals.DefaultTenant, Labels: map[string]string{"label": "value"}}})
+		return err != nil, nil
+	}, "authorization error expected while labeling role", "100ms", "1s")
+
+	// Add update permissions
+	MustCreateRole(tinfo.apicl, "UserUpdateRole", globals.DefaultTenant,
+		login.NewPermission(
+			globals.DefaultTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_Update.String()))
+	defer MustDeleteRole(tinfo.apicl, "UserUpdateRole", globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, "UserUpdateRoleBinding", globals.DefaultTenant, "UserUpdateRole", []string{"testUser2"}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "UserUpdateRoleBinding", globals.DefaultTenant)
+
+	// labeling role should succeed now
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().Role().Label(ctx, &api.Label{ObjectMeta: api.ObjectMeta{Name: "UserUpdateRole", Tenant: globals.DefaultTenant, Labels: map[string]string{"label": "value"}}})
+		return err == nil, nil
+	}, fmt.Sprintf("error while labeling role: %v", err))
+}
+
 func TestValidatePerms(t *testing.T) {
 	// create default tenant
 	adminCred := &auth.PasswordCredential{

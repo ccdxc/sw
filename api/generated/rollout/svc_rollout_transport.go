@@ -31,6 +31,8 @@ type grpcServerRolloutV1 struct {
 	AutoDeleteRolloutActionHdlr grpctransport.Handler
 	AutoGetRolloutHdlr          grpctransport.Handler
 	AutoGetRolloutActionHdlr    grpctransport.Handler
+	AutoLabelRolloutHdlr        grpctransport.Handler
+	AutoLabelRolloutActionHdlr  grpctransport.Handler
 	AutoListRolloutHdlr         grpctransport.Handler
 	AutoListRolloutActionHdlr   grpctransport.Handler
 	AutoUpdateRolloutHdlr       grpctransport.Handler
@@ -89,6 +91,20 @@ func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Se
 			DecodeGrpcReqRolloutAction,
 			EncodeGrpcRespRolloutAction,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRolloutAction", logger)))...,
+		),
+
+		AutoLabelRolloutHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRolloutEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRollout,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRollout", logger)))...,
+		),
+
+		AutoLabelRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRolloutActionEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRolloutAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRolloutAction", logger)))...,
 		),
 
 		AutoListRolloutHdlr: grpctransport.NewServer(
@@ -249,6 +265,42 @@ func (s *grpcServerRolloutV1) AutoGetRolloutAction(ctx oldcontext.Context, req *
 }
 
 func decodeHTTPrespRolloutV1AutoGetRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutAction
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) AutoLabelRollout(ctx oldcontext.Context, req *api.Label) (*Rollout, error) {
+	_, resp, err := s.AutoLabelRolloutHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoLabelRollout).V
+	return &r, resp.(respRolloutV1AutoLabelRollout).Err
+}
+
+func decodeHTTPrespRolloutV1AutoLabelRollout(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Rollout
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) AutoLabelRolloutAction(ctx oldcontext.Context, req *api.Label) (*RolloutAction, error) {
+	_, resp, err := s.AutoLabelRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoLabelRolloutAction).V
+	return &r, resp.(respRolloutV1AutoLabelRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoLabelRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

@@ -9,6 +9,7 @@ package orchestration
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -45,6 +46,7 @@ type EndpointsOrchestratorV1Client struct {
 	AutoAddOrchestratorEndpoint    endpoint.Endpoint
 	AutoDeleteOrchestratorEndpoint endpoint.Endpoint
 	AutoGetOrchestratorEndpoint    endpoint.Endpoint
+	AutoLabelOrchestratorEndpoint  endpoint.Endpoint
 	AutoListOrchestratorEndpoint   endpoint.Endpoint
 	AutoUpdateOrchestratorEndpoint endpoint.Endpoint
 }
@@ -59,6 +61,7 @@ type EndpointsOrchestratorV1RestClient struct {
 	AutoAddOrchestratorEndpoint        endpoint.Endpoint
 	AutoDeleteOrchestratorEndpoint     endpoint.Endpoint
 	AutoGetOrchestratorEndpoint        endpoint.Endpoint
+	AutoLabelOrchestratorEndpoint      endpoint.Endpoint
 	AutoListOrchestratorEndpoint       endpoint.Endpoint
 	AutoUpdateOrchestratorEndpoint     endpoint.Endpoint
 	AutoWatchOrchestratorEndpoint      endpoint.Endpoint
@@ -75,6 +78,7 @@ type EndpointsOrchestratorV1Server struct {
 	AutoAddOrchestratorEndpoint    endpoint.Endpoint
 	AutoDeleteOrchestratorEndpoint endpoint.Endpoint
 	AutoGetOrchestratorEndpoint    endpoint.Endpoint
+	AutoLabelOrchestratorEndpoint  endpoint.Endpoint
 	AutoListOrchestratorEndpoint   endpoint.Endpoint
 	AutoUpdateOrchestratorEndpoint endpoint.Endpoint
 
@@ -119,6 +123,20 @@ func (e EndpointsOrchestratorV1Client) AutoGetOrchestrator(ctx context.Context, 
 }
 
 type respOrchestratorV1AutoGetOrchestrator struct {
+	V   Orchestrator
+	Err error
+}
+
+// AutoLabelOrchestrator is endpoint for AutoLabelOrchestrator
+func (e EndpointsOrchestratorV1Client) AutoLabelOrchestrator(ctx context.Context, in *api.Label) (*Orchestrator, error) {
+	resp, err := e.AutoLabelOrchestratorEndpoint(ctx, in)
+	if err != nil {
+		return &Orchestrator{}, err
+	}
+	return resp.(*Orchestrator), nil
+}
+
+type respOrchestratorV1AutoLabelOrchestrator struct {
 	V   Orchestrator
 	Err error
 }
@@ -226,6 +244,28 @@ func MakeOrchestratorV1AutoGetOrchestratorEndpoint(s ServiceOrchestratorV1Server
 	return trace.ServerEndpoint("OrchestratorV1:AutoGetOrchestrator")(f)
 }
 
+// AutoLabelOrchestrator implementation on server Endpoint
+func (e EndpointsOrchestratorV1Server) AutoLabelOrchestrator(ctx context.Context, in api.Label) (Orchestrator, error) {
+	resp, err := e.AutoLabelOrchestratorEndpoint(ctx, in)
+	if err != nil {
+		return Orchestrator{}, err
+	}
+	return *resp.(*Orchestrator), nil
+}
+
+// MakeOrchestratorV1AutoLabelOrchestratorEndpoint creates  AutoLabelOrchestrator endpoints for the service
+func MakeOrchestratorV1AutoLabelOrchestratorEndpoint(s ServiceOrchestratorV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelOrchestrator(ctx, *req)
+		return respOrchestratorV1AutoLabelOrchestrator{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("OrchestratorV1:AutoLabelOrchestrator")(f)
+}
+
 // AutoListOrchestrator implementation on server Endpoint
 func (e EndpointsOrchestratorV1Server) AutoListOrchestrator(ctx context.Context, in api.ListWatchOptions) (OrchestratorList, error) {
 	resp, err := e.AutoListOrchestratorEndpoint(ctx, in)
@@ -303,6 +343,7 @@ func MakeOrchestratorV1ServerEndpoints(s ServiceOrchestratorV1Server, logger log
 		AutoAddOrchestratorEndpoint:    MakeOrchestratorV1AutoAddOrchestratorEndpoint(s, logger),
 		AutoDeleteOrchestratorEndpoint: MakeOrchestratorV1AutoDeleteOrchestratorEndpoint(s, logger),
 		AutoGetOrchestratorEndpoint:    MakeOrchestratorV1AutoGetOrchestratorEndpoint(s, logger),
+		AutoLabelOrchestratorEndpoint:  MakeOrchestratorV1AutoLabelOrchestratorEndpoint(s, logger),
 		AutoListOrchestratorEndpoint:   MakeOrchestratorV1AutoListOrchestratorEndpoint(s, logger),
 		AutoUpdateOrchestratorEndpoint: MakeOrchestratorV1AutoUpdateOrchestratorEndpoint(s, logger),
 
@@ -377,6 +418,19 @@ func (m loggingOrchestratorV1MiddlewareClient) AutoGetOrchestrator(ctx context.C
 		m.logger.Audit(ctx, "service", "OrchestratorV1", "method", "AutoGetOrchestrator", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetOrchestrator(ctx, in)
+	return
+}
+func (m loggingOrchestratorV1MiddlewareClient) AutoLabelOrchestrator(ctx context.Context, in *api.Label) (resp *Orchestrator, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "OrchestratorV1", "method", "AutoLabelOrchestrator", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelOrchestrator(ctx, in)
 	return
 }
 func (m loggingOrchestratorV1MiddlewareClient) AutoListOrchestrator(ctx context.Context, in *api.ListWatchOptions) (resp *OrchestratorList, err error) {
@@ -473,6 +527,19 @@ func (m loggingOrchestratorV1MiddlewareServer) AutoGetOrchestrator(ctx context.C
 	resp, err = m.next.AutoGetOrchestrator(ctx, in)
 	return
 }
+func (m loggingOrchestratorV1MiddlewareServer) AutoLabelOrchestrator(ctx context.Context, in api.Label) (resp Orchestrator, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "OrchestratorV1", "method", "AutoLabelOrchestrator", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelOrchestrator(ctx, in)
+	return
+}
 func (m loggingOrchestratorV1MiddlewareServer) AutoListOrchestrator(ctx context.Context, in api.ListWatchOptions) (resp OrchestratorList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -567,6 +634,12 @@ func makeURIOrchestratorV1AutoGetOrchestratorGetOper(in *Orchestrator) string {
 }
 
 //
+func makeURIOrchestratorV1AutoLabelOrchestratorLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIOrchestratorV1AutoListOrchestratorListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator")
 }
@@ -629,6 +702,11 @@ func (r *EndpointsOrchestratorV1RestClient) AutoUpdateOrchestrator(ctx context.C
 		return nil, err
 	}
 	return ret.(*Orchestrator), err
+}
+
+// AutoLabelOrchestrator label method for Orchestrator
+func (r *EndpointsOrchestratorV1RestClient) AutoLabelOrchestrator(ctx context.Context, in *api.Label) (*Orchestrator, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetOrchestrator CRUD method for Orchestrator

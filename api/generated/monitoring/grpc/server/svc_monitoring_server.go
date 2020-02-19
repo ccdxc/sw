@@ -80,6 +80,16 @@ type eMonitoringV1Endpoints struct {
 	fnAutoGetMirrorSession             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTechSupportRequest        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTroubleshootingSession    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelAlert                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelAlertDestination        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelAlertPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelArchiveRequest          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelEventPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelFlowExportPolicy        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelFwlogPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelMirrorSession           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelTechSupportRequest      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelTroubleshootingSession  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAlert                    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAlertDestination         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAlertPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
@@ -444,6 +454,15 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("monitoring", s.Messages)
@@ -722,6 +741,286 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelAlert = srv.AddMethod("AutoLabelAlert",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.Alert"], "monitoring", "AutoLabelAlert")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.Alert{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.Alert{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelAlertDestination = srv.AddMethod("AutoLabelAlertDestination",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoLabelAlertDestination")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.AlertDestination{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.AlertDestination{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelAlertPolicy = srv.AddMethod("AutoLabelAlertPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoLabelAlertPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.AlertPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.AlertPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelArchiveRequest = srv.AddMethod("AutoLabelArchiveRequest",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.ArchiveRequest"], "monitoring", "AutoLabelArchiveRequest")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.ArchiveRequest{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.ArchiveRequest{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelEventPolicy = srv.AddMethod("AutoLabelEventPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoLabelEventPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.EventPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.EventPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelFlowExportPolicy = srv.AddMethod("AutoLabelFlowExportPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoLabelFlowExportPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.FlowExportPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.FlowExportPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelFwlogPolicy = srv.AddMethod("AutoLabelFwlogPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoLabelFwlogPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.FwlogPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.FwlogPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelMirrorSession = srv.AddMethod("AutoLabelMirrorSession",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoLabelMirrorSession")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.MirrorSession{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.MirrorSession{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelTechSupportRequest = srv.AddMethod("AutoLabelTechSupportRequest",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoLabelTechSupportRequest")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.TechSupportRequest{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.TechSupportRequest{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelTroubleshootingSession = srv.AddMethod("AutoLabelTroubleshootingSession",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoLabelTroubleshootingSession")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.TroubleshootingSession{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.TroubleshootingSession{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlert = srv.AddMethod("AutoListAlert",
@@ -2212,6 +2511,86 @@ func (e *eMonitoringV1Endpoints) AutoGetTechSupportRequest(ctx context.Context, 
 }
 func (e *eMonitoringV1Endpoints) AutoGetTroubleshootingSession(ctx context.Context, t monitoring.TroubleshootingSession) (monitoring.TroubleshootingSession, error) {
 	r, err := e.fnAutoGetTroubleshootingSession(ctx, t)
+	if err == nil {
+		return r.(monitoring.TroubleshootingSession), err
+	}
+	return monitoring.TroubleshootingSession{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelAlert(ctx context.Context, t api.Label) (monitoring.Alert, error) {
+	r, err := e.fnAutoLabelAlert(ctx, t)
+	if err == nil {
+		return r.(monitoring.Alert), err
+	}
+	return monitoring.Alert{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelAlertDestination(ctx context.Context, t api.Label) (monitoring.AlertDestination, error) {
+	r, err := e.fnAutoLabelAlertDestination(ctx, t)
+	if err == nil {
+		return r.(monitoring.AlertDestination), err
+	}
+	return monitoring.AlertDestination{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelAlertPolicy(ctx context.Context, t api.Label) (monitoring.AlertPolicy, error) {
+	r, err := e.fnAutoLabelAlertPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AlertPolicy), err
+	}
+	return monitoring.AlertPolicy{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelArchiveRequest(ctx context.Context, t api.Label) (monitoring.ArchiveRequest, error) {
+	r, err := e.fnAutoLabelArchiveRequest(ctx, t)
+	if err == nil {
+		return r.(monitoring.ArchiveRequest), err
+	}
+	return monitoring.ArchiveRequest{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelEventPolicy(ctx context.Context, t api.Label) (monitoring.EventPolicy, error) {
+	r, err := e.fnAutoLabelEventPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.EventPolicy), err
+	}
+	return monitoring.EventPolicy{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelFlowExportPolicy(ctx context.Context, t api.Label) (monitoring.FlowExportPolicy, error) {
+	r, err := e.fnAutoLabelFlowExportPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.FlowExportPolicy), err
+	}
+	return monitoring.FlowExportPolicy{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelFwlogPolicy(ctx context.Context, t api.Label) (monitoring.FwlogPolicy, error) {
+	r, err := e.fnAutoLabelFwlogPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.FwlogPolicy), err
+	}
+	return monitoring.FwlogPolicy{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelMirrorSession(ctx context.Context, t api.Label) (monitoring.MirrorSession, error) {
+	r, err := e.fnAutoLabelMirrorSession(ctx, t)
+	if err == nil {
+		return r.(monitoring.MirrorSession), err
+	}
+	return monitoring.MirrorSession{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelTechSupportRequest(ctx context.Context, t api.Label) (monitoring.TechSupportRequest, error) {
+	r, err := e.fnAutoLabelTechSupportRequest(ctx, t)
+	if err == nil {
+		return r.(monitoring.TechSupportRequest), err
+	}
+	return monitoring.TechSupportRequest{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoLabelTroubleshootingSession(ctx context.Context, t api.Label) (monitoring.TroubleshootingSession, error) {
+	r, err := e.fnAutoLabelTroubleshootingSession(ctx, t)
 	if err == nil {
 		return r.(monitoring.TroubleshootingSession), err
 	}

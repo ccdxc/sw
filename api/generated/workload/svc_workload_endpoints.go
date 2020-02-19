@@ -50,6 +50,8 @@ type EndpointsWorkloadV1Client struct {
 	AutoDeleteWorkloadEndpoint endpoint.Endpoint
 	AutoGetEndpointEndpoint    endpoint.Endpoint
 	AutoGetWorkloadEndpoint    endpoint.Endpoint
+	AutoLabelEndpointEndpoint  endpoint.Endpoint
+	AutoLabelWorkloadEndpoint  endpoint.Endpoint
 	AutoListEndpointEndpoint   endpoint.Endpoint
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
@@ -72,6 +74,8 @@ type EndpointsWorkloadV1RestClient struct {
 	AutoDeleteWorkloadEndpoint     endpoint.Endpoint
 	AutoGetEndpointEndpoint        endpoint.Endpoint
 	AutoGetWorkloadEndpoint        endpoint.Endpoint
+	AutoLabelEndpointEndpoint      endpoint.Endpoint
+	AutoLabelWorkloadEndpoint      endpoint.Endpoint
 	AutoListEndpointEndpoint       endpoint.Endpoint
 	AutoListWorkloadEndpoint       endpoint.Endpoint
 	AutoUpdateEndpointEndpoint     endpoint.Endpoint
@@ -97,6 +101,8 @@ type EndpointsWorkloadV1Server struct {
 	AutoDeleteWorkloadEndpoint endpoint.Endpoint
 	AutoGetEndpointEndpoint    endpoint.Endpoint
 	AutoGetWorkloadEndpoint    endpoint.Endpoint
+	AutoLabelEndpointEndpoint  endpoint.Endpoint
+	AutoLabelWorkloadEndpoint  endpoint.Endpoint
 	AutoListEndpointEndpoint   endpoint.Endpoint
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
@@ -202,6 +208,34 @@ func (e EndpointsWorkloadV1Client) AutoGetWorkload(ctx context.Context, in *Work
 }
 
 type respWorkloadV1AutoGetWorkload struct {
+	V   Workload
+	Err error
+}
+
+// AutoLabelEndpoint is endpoint for AutoLabelEndpoint
+func (e EndpointsWorkloadV1Client) AutoLabelEndpoint(ctx context.Context, in *api.Label) (*Endpoint, error) {
+	resp, err := e.AutoLabelEndpointEndpoint(ctx, in)
+	if err != nil {
+		return &Endpoint{}, err
+	}
+	return resp.(*Endpoint), nil
+}
+
+type respWorkloadV1AutoLabelEndpoint struct {
+	V   Endpoint
+	Err error
+}
+
+// AutoLabelWorkload is endpoint for AutoLabelWorkload
+func (e EndpointsWorkloadV1Client) AutoLabelWorkload(ctx context.Context, in *api.Label) (*Workload, error) {
+	resp, err := e.AutoLabelWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AutoLabelWorkload struct {
 	V   Workload
 	Err error
 }
@@ -458,6 +492,50 @@ func MakeWorkloadV1AutoGetWorkloadEndpoint(s ServiceWorkloadV1Server, logger log
 	return trace.ServerEndpoint("WorkloadV1:AutoGetWorkload")(f)
 }
 
+// AutoLabelEndpoint implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoLabelEndpoint(ctx context.Context, in api.Label) (Endpoint, error) {
+	resp, err := e.AutoLabelEndpointEndpoint(ctx, in)
+	if err != nil {
+		return Endpoint{}, err
+	}
+	return *resp.(*Endpoint), nil
+}
+
+// MakeWorkloadV1AutoLabelEndpointEndpoint creates  AutoLabelEndpoint endpoints for the service
+func MakeWorkloadV1AutoLabelEndpointEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelEndpoint(ctx, *req)
+		return respWorkloadV1AutoLabelEndpoint{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoLabelEndpoint")(f)
+}
+
+// AutoLabelWorkload implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AutoLabelWorkload(ctx context.Context, in api.Label) (Workload, error) {
+	resp, err := e.AutoLabelWorkloadEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AutoLabelWorkloadEndpoint creates  AutoLabelWorkload endpoints for the service
+func MakeWorkloadV1AutoLabelWorkloadEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelWorkload(ctx, *req)
+		return respWorkloadV1AutoLabelWorkload{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AutoLabelWorkload")(f)
+}
+
 // AutoListEndpoint implementation on server Endpoint
 func (e EndpointsWorkloadV1Server) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (EndpointList, error) {
 	resp, err := e.AutoListEndpointEndpoint(ctx, in)
@@ -640,6 +718,8 @@ func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger)
 		AutoDeleteWorkloadEndpoint: MakeWorkloadV1AutoDeleteWorkloadEndpoint(s, logger),
 		AutoGetEndpointEndpoint:    MakeWorkloadV1AutoGetEndpointEndpoint(s, logger),
 		AutoGetWorkloadEndpoint:    MakeWorkloadV1AutoGetWorkloadEndpoint(s, logger),
+		AutoLabelEndpointEndpoint:  MakeWorkloadV1AutoLabelEndpointEndpoint(s, logger),
+		AutoLabelWorkloadEndpoint:  MakeWorkloadV1AutoLabelWorkloadEndpoint(s, logger),
 		AutoListEndpointEndpoint:   MakeWorkloadV1AutoListEndpointEndpoint(s, logger),
 		AutoListWorkloadEndpoint:   MakeWorkloadV1AutoListWorkloadEndpoint(s, logger),
 		AutoUpdateEndpointEndpoint: MakeWorkloadV1AutoUpdateEndpointEndpoint(s, logger),
@@ -771,6 +851,32 @@ func (m loggingWorkloadV1MiddlewareClient) AutoGetWorkload(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoGetWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetWorkload(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) AutoLabelEndpoint(ctx context.Context, in *api.Label) (resp *Endpoint, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoLabelEndpoint", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) AutoLabelWorkload(ctx context.Context, in *api.Label) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoLabelWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelWorkload(ctx, in)
 	return
 }
 func (m loggingWorkloadV1MiddlewareClient) AutoListEndpoint(ctx context.Context, in *api.ListWatchOptions) (resp *EndpointList, err error) {
@@ -984,6 +1090,32 @@ func (m loggingWorkloadV1MiddlewareServer) AutoGetWorkload(ctx context.Context, 
 	resp, err = m.next.AutoGetWorkload(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareServer) AutoLabelEndpoint(ctx context.Context, in api.Label) (resp Endpoint, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoLabelEndpoint", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelEndpoint(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) AutoLabelWorkload(ctx context.Context, in api.Label) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoLabelWorkload", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelWorkload(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareServer) AutoListEndpoint(ctx context.Context, in api.ListWatchOptions) (resp EndpointList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1165,6 +1297,18 @@ func makeURIWorkloadV1AutoGetWorkloadGetOper(in *Workload) string {
 }
 
 //
+func makeURIWorkloadV1AutoLabelEndpointLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIWorkloadV1AutoLabelWorkloadLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIWorkloadV1AutoListEndpointListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints")
 }
@@ -1218,6 +1362,11 @@ func (r *EndpointsWorkloadV1RestClient) AutoAddEndpoint(ctx context.Context, in 
 
 // AutoUpdateEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelEndpoint label method for Endpoint
+func (r *EndpointsWorkloadV1RestClient) AutoLabelEndpoint(ctx context.Context, in *api.Label) (*Endpoint, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -1360,6 +1509,11 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, 
 		return nil, err
 	}
 	return ret.(*Workload), err
+}
+
+// AutoLabelWorkload label method for Workload
+func (r *EndpointsWorkloadV1RestClient) AutoLabelWorkload(ctx context.Context, in *api.Label) (*Workload, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetWorkload CRUD method for Workload

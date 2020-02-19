@@ -416,6 +416,30 @@ func (r *Endpoints{{$svcname}}RestClient) AutoUpdate{{.}}(ctx context.Context, i
 	return nil, errors.New("not allowed")
 }{{end}}
 
+// AutoLabel{{.}} label method for {{.}}
+func (r *Endpoints{{$svcname}}RestClient) AutoLabel{{.}}(ctx context.Context, in *api.Label) (*{{.}}, error) { {{if isRestMethod $svc "AutoLabel" .}}
+	path := makeURI{{$svcname}}AutoLabel{{.}}LabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/" + r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+    defer resp.Body.Close()
+	ret, err := decodeHTTPresp{{$svcname}}AutoLabel{{.}}(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*{{.}}), err
+}{{else}}
+	return nil, errors.New("not allowed")
+}{{end}}
+
 // AutoGet{{.}} CRUD method for {{.}}
 func (r *Endpoints{{$svcname}}RestClient) AutoGet{{.}}(ctx context.Context, in *{{.}}) (*{{.}}, error) { {{if isRestMethod $svc "AutoGet" .}}
 	path := makeURI{{$svcname}}AutoGet{{.}}GetOper(in)

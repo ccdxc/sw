@@ -134,6 +134,33 @@ func (a adapterStagingV1) AutoGetBuffer(oldctx oldcontext.Context, t *staging.Bu
 	return ret.(*staging.Buffer), err
 }
 
+func (a adapterStagingV1) AutoLabelBuffer(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*staging.Buffer, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1AutoLabelBuffer", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelBuffer")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelBuffer(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*staging.Buffer), err
+}
+
 func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*staging.BufferList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()

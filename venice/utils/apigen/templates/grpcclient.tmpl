@@ -97,6 +97,15 @@ func (a *grpcObj{{$srvname}}{{.}}) UpdateStatus(ctx context.Context, in *{{$pkgn
 	return a.client.AutoUpdate{{.}}(nctx, in)
 }
 
+func (a *grpcObj{{$srvname}}{{.}}) Label(ctx context.Context, in *api.Label) (*{{$pkgname}}.{{.}}, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "{{$version}}")
+	return a.client.AutoLabel{{.}}(nctx, in)
+}
+
 func (a *grpcObj{{$srvname}}{{.}}) Get(ctx context.Context, objMeta *api.ObjectMeta) (*{{$pkgname}}.{{.}}, error) {
 	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "get")
 	if objMeta == nil {
@@ -205,6 +214,13 @@ func (a *restObj{{$srvname}}{{.}}) Update(ctx context.Context, in *{{$pkgname}}.
 
 func (a *restObj{{$srvname}}{{.}}) UpdateStatus(ctx context.Context, in *{{$pkgname}}.{{.}}) (*{{$pkgname}}.{{.}}, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObj{{$srvname}}{{.}}) Label(ctx context.Context, in *api.Label) (*{{$pkgname}}.{{.}}, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabel{{.}}(ctx, in)
 }
 
 func (a *restObj{{$srvname}}{{.}}) Get(ctx context.Context, objMeta *api.ObjectMeta) (*{{$pkgname}}.{{.}}, error) {

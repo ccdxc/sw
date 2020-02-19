@@ -73,7 +73,7 @@ func TestMutator(t *testing.T) {
 				input_type: '.example.Nest1'
 				output_type: '.example.Nest1'
 			>
-			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg" [venice.apiRestService]: {Object: "Nest1", Method: [ "put", "post" ], Pattern: "/testpattern"}>
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg" [venice.apiRestService]: {Object: "Nest1", Method: [ "put", "post", "label" ], Pattern: "/testpattern"}>
 		>
 		service <
 			name: 'full_crudservice'
@@ -118,6 +118,7 @@ func TestMutator(t *testing.T) {
 		autoGet     int
 		autoList    int
 		autoWatch   int
+		autoLabel   int
 	}
 	type counts struct {
 		msgcount  int
@@ -134,31 +135,34 @@ func TestMutator(t *testing.T) {
 		autoWatch: 2,
 	}
 	expected["example.proto"].svcs["hybrid_crudservice"] = &svccount{
-		methodcount: 14,
+		methodcount: 16,
 		autoCreate:  2,
 		autoUpdate:  2,
 		autoDelete:  2,
 		autoGet:     2,
 		autoList:    2,
 		autoWatch:   3,
+		autoLabel:   2,
 	}
 	expected["example.proto"].svcs["full_crudservice"] = &svccount{
-		methodcount: 7,
+		methodcount: 8,
 		autoCreate:  1,
 		autoUpdate:  1,
 		autoDelete:  1,
 		autoGet:     1,
 		autoList:    1,
 		autoWatch:   2,
+		autoLabel:   1,
 	}
 	expected["example.proto"].svcs["action_service"] = &svccount{
-		methodcount: 9,
+		methodcount: 10,
 		autoCreate:  1,
 		autoUpdate:  1,
 		autoDelete:  1,
 		autoGet:     1,
 		autoList:    1,
 		autoWatch:   2,
+		autoLabel:   1,
 	}
 	expected["another.proto"] = &counts{
 		svcs:      make(map[string]*svccount),
@@ -174,6 +178,7 @@ func TestMutator(t *testing.T) {
 		autoGet:     0,
 		autoList:    0,
 		autoWatch:   0,
+		autoLabel:   0,
 	}
 	AddAutoGrpcEndpoints(&req)
 	found := make(map[string]*counts)
@@ -224,6 +229,9 @@ func TestMutator(t *testing.T) {
 				if strings.Contains(*method.Name, "AutoWatch") {
 					s.autoWatch++
 				}
+				if strings.Contains(*method.Name, "AutoLabel") {
+					s.autoLabel++
+				}
 			}
 			methStr := fmt.Sprintf("%v", svcs.Method)
 			sort.Slice(svcs.Method, func(x, y int) bool {
@@ -256,7 +264,7 @@ func TestMutator(t *testing.T) {
 				expected[protoName].svcs["full_crudservice"], found[protoName].svcs["full_crudservice"])
 			t.Logf("hybrid_crud expected: %+v\nhybrid_crud found %+v",
 				expected[protoName].svcs["hybrid_crudservice"], found[protoName].svcs["hybrid_crudservice"])
-			t.Logf("action_service expected: %+v\action_service found %+v",
+			t.Logf("action_service expected: %+v\naction_service found %+v",
 				expected[protoName].svcs["action_service"], found[protoName].svcs["action_service"])
 
 		}

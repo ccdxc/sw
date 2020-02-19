@@ -53,6 +53,7 @@ type eStagingV1Endpoints struct {
 	fnAutoAddBuffer    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteBuffer func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetBuffer    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelBuffer  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListBuffer   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateBuffer func(ctx context.Context, t interface{}) (interface{}, error)
 	fnClear            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -100,6 +101,15 @@ func (s *sstagingSvc_stagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("staging", s.Messages)
@@ -143,6 +153,34 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/tenant/", in.Tenant, "/buffers/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsStagingV1.fnAutoLabelBuffer = srv.AddMethod("AutoLabelBuffer",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["staging.Buffer"], "staging", "AutoLabelBuffer")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := staging.Buffer{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := staging.Buffer{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoListBuffer = srv.AddMethod("AutoListBuffer",
@@ -350,6 +388,14 @@ func (e *eStagingV1Endpoints) AutoDeleteBuffer(ctx context.Context, t staging.Bu
 }
 func (e *eStagingV1Endpoints) AutoGetBuffer(ctx context.Context, t staging.Buffer) (staging.Buffer, error) {
 	r, err := e.fnAutoGetBuffer(ctx, t)
+	if err == nil {
+		return r.(staging.Buffer), err
+	}
+	return staging.Buffer{}, err
+
+}
+func (e *eStagingV1Endpoints) AutoLabelBuffer(ctx context.Context, t api.Label) (staging.Buffer, error) {
+	r, err := e.fnAutoLabelBuffer(ctx, t)
 	if err == nil {
 		return r.(staging.Buffer), err
 	}

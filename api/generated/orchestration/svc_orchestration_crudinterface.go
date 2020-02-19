@@ -20,6 +20,7 @@ type OrchestratorV1OrchestratorInterface interface {
 	Create(ctx context.Context, in *Orchestrator) (*Orchestrator, error)
 	Update(ctx context.Context, in *Orchestrator) (*Orchestrator, error)
 	UpdateStatus(ctx context.Context, in *Orchestrator) (*Orchestrator, error)
+	Label(ctx context.Context, in *api.Label) (*Orchestrator, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Orchestrator, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Orchestrator, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Orchestrator, error)

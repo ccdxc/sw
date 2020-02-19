@@ -135,7 +135,8 @@
               "get",
               "delete",
               "post",
-              "list"
+              "list",
+              "label"
             ],
             "URI": "/configs/bookstore/v1/customers"
           },
@@ -149,7 +150,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "applydiscount",

@@ -87,6 +87,18 @@ func DecodeGrpcRespListWatchOptions(ctx context.Context, response interface{}) (
 	return response, nil
 }
 
+// EncodeGrpcReqLabel encodes ListWatchOptions
+func EncodeGrpcReqLabel(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*api.Label)
+	return req, nil
+}
+
+// DecodeGrpcReqLabel encodes ListWatchOptions
+func DecodeGrpcReqLabel(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*(api.Label))
+	return req, nil
+}
+
 func encodeHTTPResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	if e, ok := response.(errorer); ok && e.error() != nil {
 		// Not a Go kit transport error, but a business-logic error.

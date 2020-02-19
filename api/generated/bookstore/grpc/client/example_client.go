@@ -309,6 +309,90 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		).Endpoint()
 		lAutoGetStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoGetStore")(lAutoGetStoreEndpoint)
 	}
+	var lAutoLabelBookEndpoint endpoint.Endpoint
+	{
+		lAutoLabelBookEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelBook",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespBook,
+			&bookstore.Book{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelBookEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelBook")(lAutoLabelBookEndpoint)
+	}
+	var lAutoLabelCouponEndpoint endpoint.Endpoint
+	{
+		lAutoLabelCouponEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelCoupon",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespCoupon,
+			&bookstore.Coupon{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelCouponEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelCoupon")(lAutoLabelCouponEndpoint)
+	}
+	var lAutoLabelCustomerEndpoint endpoint.Endpoint
+	{
+		lAutoLabelCustomerEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelCustomer",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespCustomer,
+			&bookstore.Customer{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelCustomerEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelCustomer")(lAutoLabelCustomerEndpoint)
+	}
+	var lAutoLabelOrderEndpoint endpoint.Endpoint
+	{
+		lAutoLabelOrderEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelOrder",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespOrder,
+			&bookstore.Order{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelOrderEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelOrder")(lAutoLabelOrderEndpoint)
+	}
+	var lAutoLabelPublisherEndpoint endpoint.Endpoint
+	{
+		lAutoLabelPublisherEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelPublisher",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespPublisher,
+			&bookstore.Publisher{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelPublisherEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelPublisher")(lAutoLabelPublisherEndpoint)
+	}
+	var lAutoLabelStoreEndpoint endpoint.Endpoint
+	{
+		lAutoLabelStoreEndpoint = grpctransport.NewClient(
+			conn,
+			"bookstore.BookstoreV1",
+			"AutoLabelStore",
+			bookstore.EncodeGrpcReqLabel,
+			bookstore.DecodeGrpcRespStore,
+			&bookstore.Store{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelStoreEndpoint = trace.ClientEndPoint("BookstoreV1:AutoLabelStore")(lAutoLabelStoreEndpoint)
+	}
 	var lAutoListBookEndpoint endpoint.Endpoint
 	{
 		lAutoListBookEndpoint = grpctransport.NewClient(
@@ -528,6 +612,12 @@ func NewBookstoreV1(conn *grpc.ClientConn, logger log.Logger) bookstore.ServiceB
 		AutoGetOrderEndpoint:        lAutoGetOrderEndpoint,
 		AutoGetPublisherEndpoint:    lAutoGetPublisherEndpoint,
 		AutoGetStoreEndpoint:        lAutoGetStoreEndpoint,
+		AutoLabelBookEndpoint:       lAutoLabelBookEndpoint,
+		AutoLabelCouponEndpoint:     lAutoLabelCouponEndpoint,
+		AutoLabelCustomerEndpoint:   lAutoLabelCustomerEndpoint,
+		AutoLabelOrderEndpoint:      lAutoLabelOrderEndpoint,
+		AutoLabelPublisherEndpoint:  lAutoLabelPublisherEndpoint,
+		AutoLabelStoreEndpoint:      lAutoLabelStoreEndpoint,
 		AutoListBookEndpoint:        lAutoListBookEndpoint,
 		AutoListCouponEndpoint:      lAutoListCouponEndpoint,
 		AutoListCustomerEndpoint:    lAutoListCustomerEndpoint,
@@ -583,6 +673,15 @@ func (a *grpcObjBookstoreV1Order) UpdateStatus(ctx context.Context, in *bookstor
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateOrder(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Order) Label(ctx context.Context, in *api.Label) (*bookstore.Order, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Order", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelOrder(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Order) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Order, error) {
@@ -703,6 +802,13 @@ func (a *restObjBookstoreV1Order) UpdateStatus(ctx context.Context, in *bookstor
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjBookstoreV1Order) Label(ctx context.Context, in *api.Label) (*bookstore.Order, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelOrder(ctx, in)
+}
+
 func (a *restObjBookstoreV1Order) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Order, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -803,6 +909,15 @@ func (a *grpcObjBookstoreV1Book) UpdateStatus(ctx context.Context, in *bookstore
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateBook(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Book) Label(ctx context.Context, in *api.Label) (*bookstore.Book, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Book", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelBook(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Book) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Book, error) {
@@ -914,6 +1029,13 @@ func (a *restObjBookstoreV1Book) UpdateStatus(ctx context.Context, in *bookstore
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjBookstoreV1Book) Label(ctx context.Context, in *api.Label) (*bookstore.Book, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelBook(ctx, in)
+}
+
 func (a *restObjBookstoreV1Book) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Book, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1008,6 +1130,15 @@ func (a *grpcObjBookstoreV1Publisher) UpdateStatus(ctx context.Context, in *book
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdatePublisher(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Publisher) Label(ctx context.Context, in *api.Label) (*bookstore.Publisher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Publisher", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelPublisher(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Publisher) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Publisher, error) {
@@ -1110,6 +1241,13 @@ func (a *restObjBookstoreV1Publisher) UpdateStatus(ctx context.Context, in *book
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjBookstoreV1Publisher) Label(ctx context.Context, in *api.Label) (*bookstore.Publisher, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelPublisher(ctx, in)
+}
+
 func (a *restObjBookstoreV1Publisher) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Publisher, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1197,6 +1335,15 @@ func (a *grpcObjBookstoreV1Store) UpdateStatus(ctx context.Context, in *bookstor
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateStore(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Store) Label(ctx context.Context, in *api.Label) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelStore(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Store) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
@@ -1308,6 +1455,13 @@ func (a *restObjBookstoreV1Store) UpdateStatus(ctx context.Context, in *bookstor
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjBookstoreV1Store) Label(ctx context.Context, in *api.Label) (*bookstore.Store, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelStore(ctx, in)
+}
+
 func (a *restObjBookstoreV1Store) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1402,6 +1556,15 @@ func (a *grpcObjBookstoreV1Coupon) UpdateStatus(ctx context.Context, in *booksto
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCoupon(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) Label(ctx context.Context, in *api.Label) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelCoupon(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Coupon) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
@@ -1504,6 +1667,13 @@ func (a *restObjBookstoreV1Coupon) UpdateStatus(ctx context.Context, in *booksto
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjBookstoreV1Coupon) Label(ctx context.Context, in *api.Label) (*bookstore.Coupon, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelCoupon(ctx, in)
+}
+
 func (a *restObjBookstoreV1Coupon) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1591,6 +1761,15 @@ func (a *grpcObjBookstoreV1Customer) UpdateStatus(ctx context.Context, in *books
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCustomer(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Customer) Label(ctx context.Context, in *api.Label) (*bookstore.Customer, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Customer", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelCustomer(nctx, in)
 }
 
 func (a *grpcObjBookstoreV1Customer) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Customer, error) {
@@ -1691,6 +1870,13 @@ func (a *restObjBookstoreV1Customer) Update(ctx context.Context, in *bookstore.C
 
 func (a *restObjBookstoreV1Customer) UpdateStatus(ctx context.Context, in *bookstore.Customer) (*bookstore.Customer, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjBookstoreV1Customer) Label(ctx context.Context, in *api.Label) (*bookstore.Customer, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelCustomer(ctx, in)
 }
 
 func (a *restObjBookstoreV1Customer) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Customer, error) {

@@ -78,6 +78,19 @@ func (mr *MockWorkloadV1EndpointInterfaceMockRecorder) UpdateStatus(ctx, in inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockWorkloadV1EndpointInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockWorkloadV1EndpointInterface) Label(ctx context.Context, in *api.Label) (*workload.Endpoint, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*workload.Endpoint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockWorkloadV1EndpointInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockWorkloadV1EndpointInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockWorkloadV1EndpointInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Endpoint, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -202,6 +215,19 @@ func (m *MockWorkloadV1WorkloadInterface) UpdateStatus(ctx context.Context, in *
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockWorkloadV1WorkloadInterface) Label(ctx context.Context, in *api.Label) (*workload.Workload, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*workload.Workload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method

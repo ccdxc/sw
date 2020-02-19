@@ -28,6 +28,7 @@ type grpcServerOrchestratorV1 struct {
 	AutoAddOrchestratorHdlr    grpctransport.Handler
 	AutoDeleteOrchestratorHdlr grpctransport.Handler
 	AutoGetOrchestratorHdlr    grpctransport.Handler
+	AutoLabelOrchestratorHdlr  grpctransport.Handler
 	AutoListOrchestratorHdlr   grpctransport.Handler
 	AutoUpdateOrchestratorHdlr grpctransport.Handler
 }
@@ -59,6 +60,13 @@ func MakeGRPCServerOrchestratorV1(ctx context.Context, endpoints EndpointsOrches
 			DecodeGrpcReqOrchestrator,
 			EncodeGrpcRespOrchestrator,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetOrchestrator", logger)))...,
+		),
+
+		AutoLabelOrchestratorHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelOrchestratorEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespOrchestrator,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrchestrator", logger)))...,
 		),
 
 		AutoListOrchestratorHdlr: grpctransport.NewServer(
@@ -123,6 +131,24 @@ func (s *grpcServerOrchestratorV1) AutoGetOrchestrator(ctx oldcontext.Context, r
 }
 
 func decodeHTTPrespOrchestratorV1AutoGetOrchestrator(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Orchestrator
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerOrchestratorV1) AutoLabelOrchestrator(ctx oldcontext.Context, req *api.Label) (*Orchestrator, error) {
+	_, resp, err := s.AutoLabelOrchestratorHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respOrchestratorV1AutoLabelOrchestrator).V
+	return &r, resp.(respOrchestratorV1AutoLabelOrchestrator).Err
+}
+
+func decodeHTTPrespOrchestratorV1AutoLabelOrchestrator(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

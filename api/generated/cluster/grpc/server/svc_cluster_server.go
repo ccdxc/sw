@@ -78,6 +78,15 @@ type eClusterV1Endpoints struct {
 	fnAutoGetSnapshotRestore           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTenant                    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetVersion                   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelCluster                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelConfigurationSnapshot   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelDistributedServiceCard  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelHost                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelLicense                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelNode                    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelSnapshotRestore         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelTenant                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelVersion                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCluster                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListConfigurationSnapshot    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListDistributedServiceCard   func(ctx context.Context, t interface{}) (interface{}, error)
@@ -364,6 +373,15 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("cluster", s.Messages)
@@ -564,6 +582,258 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsClusterV1.fnAutoGetVersion = srv.AddMethod("AutoGetVersion",
 			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Version"], pkgMessages["cluster.Version"], "cluster", "AutoGetVersion")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/version"), nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelCluster = srv.AddMethod("AutoLabelCluster",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Cluster"], "cluster", "AutoLabelCluster")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Cluster{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Cluster{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelConfigurationSnapshot = srv.AddMethod("AutoLabelConfigurationSnapshot",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.ConfigurationSnapshot"], "cluster", "AutoLabelConfigurationSnapshot")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.ConfigurationSnapshot{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.ConfigurationSnapshot{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelDistributedServiceCard = srv.AddMethod("AutoLabelDistributedServiceCard",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoLabelDistributedServiceCard")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.DistributedServiceCard{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.DistributedServiceCard{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelHost = srv.AddMethod("AutoLabelHost",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Host"], "cluster", "AutoLabelHost")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Host{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Host{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelLicense = srv.AddMethod("AutoLabelLicense",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.License"], "cluster", "AutoLabelLicense")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.License{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.License{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelNode = srv.AddMethod("AutoLabelNode",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Node"], "cluster", "AutoLabelNode")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Node{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Node{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelSnapshotRestore = srv.AddMethod("AutoLabelSnapshotRestore",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.SnapshotRestore"], "cluster", "AutoLabelSnapshotRestore")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.SnapshotRestore{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.SnapshotRestore{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelTenant = srv.AddMethod("AutoLabelTenant",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Tenant"], "cluster", "AutoLabelTenant")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Tenant{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Tenant{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsClusterV1.fnAutoLabelVersion = srv.AddMethod("AutoLabelVersion",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Version"], "cluster", "AutoLabelVersion")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := cluster.Version{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := cluster.Version{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
@@ -1899,6 +2169,78 @@ func (e *eClusterV1Endpoints) AutoGetTenant(ctx context.Context, t cluster.Tenan
 }
 func (e *eClusterV1Endpoints) AutoGetVersion(ctx context.Context, t cluster.Version) (cluster.Version, error) {
 	r, err := e.fnAutoGetVersion(ctx, t)
+	if err == nil {
+		return r.(cluster.Version), err
+	}
+	return cluster.Version{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelCluster(ctx context.Context, t api.Label) (cluster.Cluster, error) {
+	r, err := e.fnAutoLabelCluster(ctx, t)
+	if err == nil {
+		return r.(cluster.Cluster), err
+	}
+	return cluster.Cluster{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelConfigurationSnapshot(ctx context.Context, t api.Label) (cluster.ConfigurationSnapshot, error) {
+	r, err := e.fnAutoLabelConfigurationSnapshot(ctx, t)
+	if err == nil {
+		return r.(cluster.ConfigurationSnapshot), err
+	}
+	return cluster.ConfigurationSnapshot{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelDistributedServiceCard(ctx context.Context, t api.Label) (cluster.DistributedServiceCard, error) {
+	r, err := e.fnAutoLabelDistributedServiceCard(ctx, t)
+	if err == nil {
+		return r.(cluster.DistributedServiceCard), err
+	}
+	return cluster.DistributedServiceCard{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelHost(ctx context.Context, t api.Label) (cluster.Host, error) {
+	r, err := e.fnAutoLabelHost(ctx, t)
+	if err == nil {
+		return r.(cluster.Host), err
+	}
+	return cluster.Host{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelLicense(ctx context.Context, t api.Label) (cluster.License, error) {
+	r, err := e.fnAutoLabelLicense(ctx, t)
+	if err == nil {
+		return r.(cluster.License), err
+	}
+	return cluster.License{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelNode(ctx context.Context, t api.Label) (cluster.Node, error) {
+	r, err := e.fnAutoLabelNode(ctx, t)
+	if err == nil {
+		return r.(cluster.Node), err
+	}
+	return cluster.Node{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelSnapshotRestore(ctx context.Context, t api.Label) (cluster.SnapshotRestore, error) {
+	r, err := e.fnAutoLabelSnapshotRestore(ctx, t)
+	if err == nil {
+		return r.(cluster.SnapshotRestore), err
+	}
+	return cluster.SnapshotRestore{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelTenant(ctx context.Context, t api.Label) (cluster.Tenant, error) {
+	r, err := e.fnAutoLabelTenant(ctx, t)
+	if err == nil {
+		return r.(cluster.Tenant), err
+	}
+	return cluster.Tenant{}, err
+
+}
+func (e *eClusterV1Endpoints) AutoLabelVersion(ctx context.Context, t api.Label) (cluster.Version, error) {
+	r, err := e.fnAutoLabelVersion(ctx, t)
 	if err == nil {
 		return r.(cluster.Version), err
 	}

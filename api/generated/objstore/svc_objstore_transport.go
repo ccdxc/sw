@@ -31,6 +31,8 @@ type grpcServerObjstoreV1 struct {
 	AutoDeleteObjectHdlr grpctransport.Handler
 	AutoGetBucketHdlr    grpctransport.Handler
 	AutoGetObjectHdlr    grpctransport.Handler
+	AutoLabelBucketHdlr  grpctransport.Handler
+	AutoLabelObjectHdlr  grpctransport.Handler
 	AutoListBucketHdlr   grpctransport.Handler
 	AutoListObjectHdlr   grpctransport.Handler
 	AutoUpdateBucketHdlr grpctransport.Handler
@@ -85,6 +87,20 @@ func MakeGRPCServerObjstoreV1(ctx context.Context, endpoints EndpointsObjstoreV1
 			DecodeGrpcReqObject,
 			EncodeGrpcRespObject,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetObject", logger)))...,
+		),
+
+		AutoLabelBucketHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelBucketEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespBucket,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBucket", logger)))...,
+		),
+
+		AutoLabelObjectHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelObjectEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespObject,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelObject", logger)))...,
 		),
 
 		AutoListBucketHdlr: grpctransport.NewServer(
@@ -217,6 +233,42 @@ func (s *grpcServerObjstoreV1) AutoGetObject(ctx oldcontext.Context, req *Object
 }
 
 func decodeHTTPrespObjstoreV1AutoGetObject(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Object
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerObjstoreV1) AutoLabelBucket(ctx oldcontext.Context, req *api.Label) (*Bucket, error) {
+	_, resp, err := s.AutoLabelBucketHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respObjstoreV1AutoLabelBucket).V
+	return &r, resp.(respObjstoreV1AutoLabelBucket).Err
+}
+
+func decodeHTTPrespObjstoreV1AutoLabelBucket(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Bucket
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerObjstoreV1) AutoLabelObject(ctx oldcontext.Context, req *api.Label) (*Object, error) {
+	_, resp, err := s.AutoLabelObjectHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respObjstoreV1AutoLabelObject).V
+	return &r, resp.(respObjstoreV1AutoLabelObject).Err
+}
+
+func decodeHTTPrespObjstoreV1AutoLabelObject(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

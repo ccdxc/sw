@@ -53,6 +53,7 @@ type eOrchestratorV1Endpoints struct {
 	fnAutoAddOrchestrator    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteOrchestrator func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetOrchestrator    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelOrchestrator  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListOrchestrator   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateOrchestrator func(ctx context.Context, t interface{}) (interface{}, error)
 
@@ -92,6 +93,15 @@ func (s *sorchestrationSvc_orchestrationBackend) regMsgsFunc(l log.Logger, schem
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("orchestration", s.Messages)
@@ -135,6 +145,34 @@ func (s *sorchestrationSvc_orchestrationBackend) regSvcsFunc(ctx context.Context
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsOrchestratorV1.fnAutoLabelOrchestrator = srv.AddMethod("AutoLabelOrchestrator",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoLabelOrchestrator")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := orchestration.Orchestrator{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := orchestration.Orchestrator{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsOrchestratorV1.fnAutoListOrchestrator = srv.AddMethod("AutoListOrchestrator",
@@ -328,6 +366,14 @@ func (e *eOrchestratorV1Endpoints) AutoDeleteOrchestrator(ctx context.Context, t
 }
 func (e *eOrchestratorV1Endpoints) AutoGetOrchestrator(ctx context.Context, t orchestration.Orchestrator) (orchestration.Orchestrator, error) {
 	r, err := e.fnAutoGetOrchestrator(ctx, t)
+	if err == nil {
+		return r.(orchestration.Orchestrator), err
+	}
+	return orchestration.Orchestrator{}, err
+
+}
+func (e *eOrchestratorV1Endpoints) AutoLabelOrchestrator(ctx context.Context, t api.Label) (orchestration.Orchestrator, error) {
+	r, err := e.fnAutoLabelOrchestrator(ctx, t)
 	if err == nil {
 		return r.(orchestration.Orchestrator), err
 	}

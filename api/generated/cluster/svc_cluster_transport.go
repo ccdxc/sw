@@ -53,6 +53,15 @@ type grpcServerClusterV1 struct {
 	AutoGetSnapshotRestoreHdlr           grpctransport.Handler
 	AutoGetTenantHdlr                    grpctransport.Handler
 	AutoGetVersionHdlr                   grpctransport.Handler
+	AutoLabelClusterHdlr                 grpctransport.Handler
+	AutoLabelConfigurationSnapshotHdlr   grpctransport.Handler
+	AutoLabelDistributedServiceCardHdlr  grpctransport.Handler
+	AutoLabelHostHdlr                    grpctransport.Handler
+	AutoLabelLicenseHdlr                 grpctransport.Handler
+	AutoLabelNodeHdlr                    grpctransport.Handler
+	AutoLabelSnapshotRestoreHdlr         grpctransport.Handler
+	AutoLabelTenantHdlr                  grpctransport.Handler
+	AutoLabelVersionHdlr                 grpctransport.Handler
 	AutoListClusterHdlr                  grpctransport.Handler
 	AutoListConfigurationSnapshotHdlr    grpctransport.Handler
 	AutoListDistributedServiceCardHdlr   grpctransport.Handler
@@ -278,6 +287,69 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqVersion,
 			EncodeGrpcRespVersion,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVersion", logger)))...,
+		),
+
+		AutoLabelClusterHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelClusterEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespCluster,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCluster", logger)))...,
+		),
+
+		AutoLabelConfigurationSnapshotHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelConfigurationSnapshotEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespConfigurationSnapshot,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelConfigurationSnapshot", logger)))...,
+		),
+
+		AutoLabelDistributedServiceCardHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelDistributedServiceCardEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespDistributedServiceCard,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelDistributedServiceCard", logger)))...,
+		),
+
+		AutoLabelHostHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelHostEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespHost,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelHost", logger)))...,
+		),
+
+		AutoLabelLicenseHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelLicenseEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespLicense,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelLicense", logger)))...,
+		),
+
+		AutoLabelNodeHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelNodeEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespNode,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNode", logger)))...,
+		),
+
+		AutoLabelSnapshotRestoreHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelSnapshotRestoreEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespSnapshotRestore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelSnapshotRestore", logger)))...,
+		),
+
+		AutoLabelTenantHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelTenantEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespTenant,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTenant", logger)))...,
+		),
+
+		AutoLabelVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelVersionEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespVersion,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelVersion", logger)))...,
 		),
 
 		AutoListClusterHdlr: grpctransport.NewServer(
@@ -925,6 +997,168 @@ func (s *grpcServerClusterV1) AutoGetVersion(ctx oldcontext.Context, req *Versio
 }
 
 func decodeHTTPrespClusterV1AutoGetVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Version
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelCluster(ctx oldcontext.Context, req *api.Label) (*Cluster, error) {
+	_, resp, err := s.AutoLabelClusterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelCluster).V
+	return &r, resp.(respClusterV1AutoLabelCluster).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelCluster(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Cluster
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelConfigurationSnapshot(ctx oldcontext.Context, req *api.Label) (*ConfigurationSnapshot, error) {
+	_, resp, err := s.AutoLabelConfigurationSnapshotHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelConfigurationSnapshot).V
+	return &r, resp.(respClusterV1AutoLabelConfigurationSnapshot).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelConfigurationSnapshot(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ConfigurationSnapshot
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelDistributedServiceCard(ctx oldcontext.Context, req *api.Label) (*DistributedServiceCard, error) {
+	_, resp, err := s.AutoLabelDistributedServiceCardHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelDistributedServiceCard).V
+	return &r, resp.(respClusterV1AutoLabelDistributedServiceCard).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelDistributedServiceCard(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DistributedServiceCard
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelHost(ctx oldcontext.Context, req *api.Label) (*Host, error) {
+	_, resp, err := s.AutoLabelHostHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelHost).V
+	return &r, resp.(respClusterV1AutoLabelHost).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelHost(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Host
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelLicense(ctx oldcontext.Context, req *api.Label) (*License, error) {
+	_, resp, err := s.AutoLabelLicenseHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelLicense).V
+	return &r, resp.(respClusterV1AutoLabelLicense).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelLicense(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp License
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelNode(ctx oldcontext.Context, req *api.Label) (*Node, error) {
+	_, resp, err := s.AutoLabelNodeHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelNode).V
+	return &r, resp.(respClusterV1AutoLabelNode).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelNode(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Node
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelSnapshotRestore(ctx oldcontext.Context, req *api.Label) (*SnapshotRestore, error) {
+	_, resp, err := s.AutoLabelSnapshotRestoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelSnapshotRestore).V
+	return &r, resp.(respClusterV1AutoLabelSnapshotRestore).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelSnapshotRestore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SnapshotRestore
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelTenant(ctx oldcontext.Context, req *api.Label) (*Tenant, error) {
+	_, resp, err := s.AutoLabelTenantHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelTenant).V
+	return &r, resp.(respClusterV1AutoLabelTenant).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelTenant(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoLabelVersion(ctx oldcontext.Context, req *api.Label) (*Version, error) {
+	_, resp, err := s.AutoLabelVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelVersion).V
+	return &r, resp.(respClusterV1AutoLabelVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelVersion(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

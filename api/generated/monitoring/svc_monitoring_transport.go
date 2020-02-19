@@ -55,6 +55,16 @@ type grpcServerMonitoringV1 struct {
 	AutoGetMirrorSessionHdlr             grpctransport.Handler
 	AutoGetTechSupportRequestHdlr        grpctransport.Handler
 	AutoGetTroubleshootingSessionHdlr    grpctransport.Handler
+	AutoLabelAlertHdlr                   grpctransport.Handler
+	AutoLabelAlertDestinationHdlr        grpctransport.Handler
+	AutoLabelAlertPolicyHdlr             grpctransport.Handler
+	AutoLabelArchiveRequestHdlr          grpctransport.Handler
+	AutoLabelEventPolicyHdlr             grpctransport.Handler
+	AutoLabelFlowExportPolicyHdlr        grpctransport.Handler
+	AutoLabelFwlogPolicyHdlr             grpctransport.Handler
+	AutoLabelMirrorSessionHdlr           grpctransport.Handler
+	AutoLabelTechSupportRequestHdlr      grpctransport.Handler
+	AutoLabelTroubleshootingSessionHdlr  grpctransport.Handler
 	AutoListAlertHdlr                    grpctransport.Handler
 	AutoListAlertDestinationHdlr         grpctransport.Handler
 	AutoListAlertPolicyHdlr              grpctransport.Handler
@@ -294,6 +304,76 @@ func MakeGRPCServerMonitoringV1(ctx context.Context, endpoints EndpointsMonitori
 			DecodeGrpcReqTroubleshootingSession,
 			EncodeGrpcRespTroubleshootingSession,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTroubleshootingSession", logger)))...,
+		),
+
+		AutoLabelAlertHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelAlertEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespAlert,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlert", logger)))...,
+		),
+
+		AutoLabelAlertDestinationHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelAlertDestinationEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespAlertDestination,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertDestination", logger)))...,
+		),
+
+		AutoLabelAlertPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelAlertPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespAlertPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelAlertPolicy", logger)))...,
+		),
+
+		AutoLabelArchiveRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelArchiveRequestEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespArchiveRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelArchiveRequest", logger)))...,
+		),
+
+		AutoLabelEventPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelEventPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespEventPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEventPolicy", logger)))...,
+		),
+
+		AutoLabelFlowExportPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelFlowExportPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespFlowExportPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFlowExportPolicy", logger)))...,
+		),
+
+		AutoLabelFwlogPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelFwlogPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespFwlogPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFwlogPolicy", logger)))...,
+		),
+
+		AutoLabelMirrorSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelMirrorSessionEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespMirrorSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelMirrorSession", logger)))...,
+		),
+
+		AutoLabelTechSupportRequestHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelTechSupportRequestEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespTechSupportRequest,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTechSupportRequest", logger)))...,
+		),
+
+		AutoLabelTroubleshootingSessionHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelTroubleshootingSessionEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespTroubleshootingSession,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTroubleshootingSession", logger)))...,
 		),
 
 		AutoListAlertHdlr: grpctransport.NewServer(
@@ -977,6 +1057,186 @@ func (s *grpcServerMonitoringV1) AutoGetTroubleshootingSession(ctx oldcontext.Co
 }
 
 func decodeHTTPrespMonitoringV1AutoGetTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TroubleshootingSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelAlert(ctx oldcontext.Context, req *api.Label) (*Alert, error) {
+	_, resp, err := s.AutoLabelAlertHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelAlert).V
+	return &r, resp.(respMonitoringV1AutoLabelAlert).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelAlert(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Alert
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelAlertDestination(ctx oldcontext.Context, req *api.Label) (*AlertDestination, error) {
+	_, resp, err := s.AutoLabelAlertDestinationHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelAlertDestination).V
+	return &r, resp.(respMonitoringV1AutoLabelAlertDestination).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelAlertDestination(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AlertDestination
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelAlertPolicy(ctx oldcontext.Context, req *api.Label) (*AlertPolicy, error) {
+	_, resp, err := s.AutoLabelAlertPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelAlertPolicy).V
+	return &r, resp.(respMonitoringV1AutoLabelAlertPolicy).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelAlertPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AlertPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelArchiveRequest(ctx oldcontext.Context, req *api.Label) (*ArchiveRequest, error) {
+	_, resp, err := s.AutoLabelArchiveRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelArchiveRequest).V
+	return &r, resp.(respMonitoringV1AutoLabelArchiveRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelArchiveRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp ArchiveRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelEventPolicy(ctx oldcontext.Context, req *api.Label) (*EventPolicy, error) {
+	_, resp, err := s.AutoLabelEventPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelEventPolicy).V
+	return &r, resp.(respMonitoringV1AutoLabelEventPolicy).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelEventPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp EventPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelFlowExportPolicy(ctx oldcontext.Context, req *api.Label) (*FlowExportPolicy, error) {
+	_, resp, err := s.AutoLabelFlowExportPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelFlowExportPolicy).V
+	return &r, resp.(respMonitoringV1AutoLabelFlowExportPolicy).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelFlowExportPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FlowExportPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelFwlogPolicy(ctx oldcontext.Context, req *api.Label) (*FwlogPolicy, error) {
+	_, resp, err := s.AutoLabelFwlogPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelFwlogPolicy).V
+	return &r, resp.(respMonitoringV1AutoLabelFwlogPolicy).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelFwlogPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FwlogPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelMirrorSession(ctx oldcontext.Context, req *api.Label) (*MirrorSession, error) {
+	_, resp, err := s.AutoLabelMirrorSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelMirrorSession).V
+	return &r, resp.(respMonitoringV1AutoLabelMirrorSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelMirrorSession(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp MirrorSession
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelTechSupportRequest(ctx oldcontext.Context, req *api.Label) (*TechSupportRequest, error) {
+	_, resp, err := s.AutoLabelTechSupportRequestHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelTechSupportRequest).V
+	return &r, resp.(respMonitoringV1AutoLabelTechSupportRequest).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelTechSupportRequest(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TechSupportRequest
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerMonitoringV1) AutoLabelTroubleshootingSession(ctx oldcontext.Context, req *api.Label) (*TroubleshootingSession, error) {
+	_, resp, err := s.AutoLabelTroubleshootingSessionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respMonitoringV1AutoLabelTroubleshootingSession).V
+	return &r, resp.(respMonitoringV1AutoLabelTroubleshootingSession).Err
+}
+
+func decodeHTTPrespMonitoringV1AutoLabelTroubleshootingSession(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

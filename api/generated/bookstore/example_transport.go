@@ -45,6 +45,12 @@ type grpcServerBookstoreV1 struct {
 	AutoGetOrderHdlr        grpctransport.Handler
 	AutoGetPublisherHdlr    grpctransport.Handler
 	AutoGetStoreHdlr        grpctransport.Handler
+	AutoLabelBookHdlr       grpctransport.Handler
+	AutoLabelCouponHdlr     grpctransport.Handler
+	AutoLabelCustomerHdlr   grpctransport.Handler
+	AutoLabelOrderHdlr      grpctransport.Handler
+	AutoLabelPublisherHdlr  grpctransport.Handler
+	AutoLabelStoreHdlr      grpctransport.Handler
 	AutoListBookHdlr        grpctransport.Handler
 	AutoListCouponHdlr      grpctransport.Handler
 	AutoListCustomerHdlr    grpctransport.Handler
@@ -207,6 +213,48 @@ func MakeGRPCServerBookstoreV1(ctx context.Context, endpoints EndpointsBookstore
 			DecodeGrpcReqStore,
 			EncodeGrpcRespStore,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetStore", logger)))...,
+		),
+
+		AutoLabelBookHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelBookEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespBook,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBook", logger)))...,
+		),
+
+		AutoLabelCouponHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelCouponEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespCoupon,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCoupon", logger)))...,
+		),
+
+		AutoLabelCustomerHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelCustomerEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespCustomer,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCustomer", logger)))...,
+		),
+
+		AutoLabelOrderHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelOrderEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespOrder,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelOrder", logger)))...,
+		),
+
+		AutoLabelPublisherHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelPublisherEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespPublisher,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelPublisher", logger)))...,
+		),
+
+		AutoLabelStoreHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelStoreEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespStore,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelStore", logger)))...,
 		),
 
 		AutoListBookHdlr: grpctransport.NewServer(
@@ -661,6 +709,114 @@ func (s *grpcServerBookstoreV1) AutoGetStore(ctx oldcontext.Context, req *Store)
 }
 
 func decodeHTTPrespBookstoreV1AutoGetStore(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Store
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelBook(ctx oldcontext.Context, req *api.Label) (*Book, error) {
+	_, resp, err := s.AutoLabelBookHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelBook).V
+	return &r, resp.(respBookstoreV1AutoLabelBook).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelBook(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Book
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelCoupon(ctx oldcontext.Context, req *api.Label) (*Coupon, error) {
+	_, resp, err := s.AutoLabelCouponHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelCoupon).V
+	return &r, resp.(respBookstoreV1AutoLabelCoupon).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelCoupon(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Coupon
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelCustomer(ctx oldcontext.Context, req *api.Label) (*Customer, error) {
+	_, resp, err := s.AutoLabelCustomerHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelCustomer).V
+	return &r, resp.(respBookstoreV1AutoLabelCustomer).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelCustomer(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Customer
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelOrder(ctx oldcontext.Context, req *api.Label) (*Order, error) {
+	_, resp, err := s.AutoLabelOrderHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelOrder).V
+	return &r, resp.(respBookstoreV1AutoLabelOrder).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelOrder(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Order
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelPublisher(ctx oldcontext.Context, req *api.Label) (*Publisher, error) {
+	_, resp, err := s.AutoLabelPublisherHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelPublisher).V
+	return &r, resp.(respBookstoreV1AutoLabelPublisher).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelPublisher(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Publisher
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerBookstoreV1) AutoLabelStore(ctx oldcontext.Context, req *api.Label) (*Store, error) {
+	_, resp, err := s.AutoLabelStoreHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respBookstoreV1AutoLabelStore).V
+	return &r, resp.(respBookstoreV1AutoLabelStore).Err
+}
+
+func decodeHTTPrespBookstoreV1AutoLabelStore(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

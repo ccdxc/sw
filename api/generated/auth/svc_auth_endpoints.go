@@ -58,6 +58,11 @@ type EndpointsAuthV1Client struct {
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
+	AutoLabelAuthenticationPolicyEndpoint  endpoint.Endpoint
+	AutoLabelRoleEndpoint                  endpoint.Endpoint
+	AutoLabelRoleBindingEndpoint           endpoint.Endpoint
+	AutoLabelUserEndpoint                  endpoint.Endpoint
+	AutoLabelUserPreferenceEndpoint        endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
@@ -98,6 +103,11 @@ type EndpointsAuthV1RestClient struct {
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
+	AutoLabelAuthenticationPolicyEndpoint  endpoint.Endpoint
+	AutoLabelRoleEndpoint                  endpoint.Endpoint
+	AutoLabelRoleBindingEndpoint           endpoint.Endpoint
+	AutoLabelUserEndpoint                  endpoint.Endpoint
+	AutoLabelUserPreferenceEndpoint        endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
@@ -144,6 +154,11 @@ type EndpointsAuthV1Server struct {
 	AutoGetRoleBindingEndpoint             endpoint.Endpoint
 	AutoGetUserEndpoint                    endpoint.Endpoint
 	AutoGetUserPreferenceEndpoint          endpoint.Endpoint
+	AutoLabelAuthenticationPolicyEndpoint  endpoint.Endpoint
+	AutoLabelRoleEndpoint                  endpoint.Endpoint
+	AutoLabelRoleBindingEndpoint           endpoint.Endpoint
+	AutoLabelUserEndpoint                  endpoint.Endpoint
+	AutoLabelUserPreferenceEndpoint        endpoint.Endpoint
 	AutoListAuthenticationPolicyEndpoint   endpoint.Endpoint
 	AutoListRoleEndpoint                   endpoint.Endpoint
 	AutoListRoleBindingEndpoint            endpoint.Endpoint
@@ -374,6 +389,76 @@ func (e EndpointsAuthV1Client) AutoGetUserPreference(ctx context.Context, in *Us
 }
 
 type respAuthV1AutoGetUserPreference struct {
+	V   UserPreference
+	Err error
+}
+
+// AutoLabelAuthenticationPolicy is endpoint for AutoLabelAuthenticationPolicy
+func (e EndpointsAuthV1Client) AutoLabelAuthenticationPolicy(ctx context.Context, in *api.Label) (*AuthenticationPolicy, error) {
+	resp, err := e.AutoLabelAuthenticationPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &AuthenticationPolicy{}, err
+	}
+	return resp.(*AuthenticationPolicy), nil
+}
+
+type respAuthV1AutoLabelAuthenticationPolicy struct {
+	V   AuthenticationPolicy
+	Err error
+}
+
+// AutoLabelRole is endpoint for AutoLabelRole
+func (e EndpointsAuthV1Client) AutoLabelRole(ctx context.Context, in *api.Label) (*Role, error) {
+	resp, err := e.AutoLabelRoleEndpoint(ctx, in)
+	if err != nil {
+		return &Role{}, err
+	}
+	return resp.(*Role), nil
+}
+
+type respAuthV1AutoLabelRole struct {
+	V   Role
+	Err error
+}
+
+// AutoLabelRoleBinding is endpoint for AutoLabelRoleBinding
+func (e EndpointsAuthV1Client) AutoLabelRoleBinding(ctx context.Context, in *api.Label) (*RoleBinding, error) {
+	resp, err := e.AutoLabelRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return &RoleBinding{}, err
+	}
+	return resp.(*RoleBinding), nil
+}
+
+type respAuthV1AutoLabelRoleBinding struct {
+	V   RoleBinding
+	Err error
+}
+
+// AutoLabelUser is endpoint for AutoLabelUser
+func (e EndpointsAuthV1Client) AutoLabelUser(ctx context.Context, in *api.Label) (*User, error) {
+	resp, err := e.AutoLabelUserEndpoint(ctx, in)
+	if err != nil {
+		return &User{}, err
+	}
+	return resp.(*User), nil
+}
+
+type respAuthV1AutoLabelUser struct {
+	V   User
+	Err error
+}
+
+// AutoLabelUserPreference is endpoint for AutoLabelUserPreference
+func (e EndpointsAuthV1Client) AutoLabelUserPreference(ctx context.Context, in *api.Label) (*UserPreference, error) {
+	resp, err := e.AutoLabelUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return &UserPreference{}, err
+	}
+	return resp.(*UserPreference), nil
+}
+
+type respAuthV1AutoLabelUserPreference struct {
 	V   UserPreference
 	Err error
 }
@@ -961,6 +1046,116 @@ func MakeAuthV1AutoGetUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.L
 	return trace.ServerEndpoint("AuthV1:AutoGetUserPreference")(f)
 }
 
+// AutoLabelAuthenticationPolicy implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoLabelAuthenticationPolicy(ctx context.Context, in api.Label) (AuthenticationPolicy, error) {
+	resp, err := e.AutoLabelAuthenticationPolicyEndpoint(ctx, in)
+	if err != nil {
+		return AuthenticationPolicy{}, err
+	}
+	return *resp.(*AuthenticationPolicy), nil
+}
+
+// MakeAuthV1AutoLabelAuthenticationPolicyEndpoint creates  AutoLabelAuthenticationPolicy endpoints for the service
+func MakeAuthV1AutoLabelAuthenticationPolicyEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelAuthenticationPolicy(ctx, *req)
+		return respAuthV1AutoLabelAuthenticationPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoLabelAuthenticationPolicy")(f)
+}
+
+// AutoLabelRole implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoLabelRole(ctx context.Context, in api.Label) (Role, error) {
+	resp, err := e.AutoLabelRoleEndpoint(ctx, in)
+	if err != nil {
+		return Role{}, err
+	}
+	return *resp.(*Role), nil
+}
+
+// MakeAuthV1AutoLabelRoleEndpoint creates  AutoLabelRole endpoints for the service
+func MakeAuthV1AutoLabelRoleEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRole(ctx, *req)
+		return respAuthV1AutoLabelRole{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoLabelRole")(f)
+}
+
+// AutoLabelRoleBinding implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoLabelRoleBinding(ctx context.Context, in api.Label) (RoleBinding, error) {
+	resp, err := e.AutoLabelRoleBindingEndpoint(ctx, in)
+	if err != nil {
+		return RoleBinding{}, err
+	}
+	return *resp.(*RoleBinding), nil
+}
+
+// MakeAuthV1AutoLabelRoleBindingEndpoint creates  AutoLabelRoleBinding endpoints for the service
+func MakeAuthV1AutoLabelRoleBindingEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelRoleBinding(ctx, *req)
+		return respAuthV1AutoLabelRoleBinding{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoLabelRoleBinding")(f)
+}
+
+// AutoLabelUser implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoLabelUser(ctx context.Context, in api.Label) (User, error) {
+	resp, err := e.AutoLabelUserEndpoint(ctx, in)
+	if err != nil {
+		return User{}, err
+	}
+	return *resp.(*User), nil
+}
+
+// MakeAuthV1AutoLabelUserEndpoint creates  AutoLabelUser endpoints for the service
+func MakeAuthV1AutoLabelUserEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelUser(ctx, *req)
+		return respAuthV1AutoLabelUser{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoLabelUser")(f)
+}
+
+// AutoLabelUserPreference implementation on server Endpoint
+func (e EndpointsAuthV1Server) AutoLabelUserPreference(ctx context.Context, in api.Label) (UserPreference, error) {
+	resp, err := e.AutoLabelUserPreferenceEndpoint(ctx, in)
+	if err != nil {
+		return UserPreference{}, err
+	}
+	return *resp.(*UserPreference), nil
+}
+
+// MakeAuthV1AutoLabelUserPreferenceEndpoint creates  AutoLabelUserPreference endpoints for the service
+func MakeAuthV1AutoLabelUserPreferenceEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelUserPreference(ctx, *req)
+		return respAuthV1AutoLabelUserPreference{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:AutoLabelUserPreference")(f)
+}
+
 // AutoListAuthenticationPolicy implementation on server Endpoint
 func (e EndpointsAuthV1Server) AutoListAuthenticationPolicy(ctx context.Context, in api.ListWatchOptions) (AuthenticationPolicyList, error) {
 	resp, err := e.AutoListAuthenticationPolicyEndpoint(ctx, in)
@@ -1410,6 +1605,11 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		AutoGetRoleBindingEndpoint:             MakeAuthV1AutoGetRoleBindingEndpoint(s, logger),
 		AutoGetUserEndpoint:                    MakeAuthV1AutoGetUserEndpoint(s, logger),
 		AutoGetUserPreferenceEndpoint:          MakeAuthV1AutoGetUserPreferenceEndpoint(s, logger),
+		AutoLabelAuthenticationPolicyEndpoint:  MakeAuthV1AutoLabelAuthenticationPolicyEndpoint(s, logger),
+		AutoLabelRoleEndpoint:                  MakeAuthV1AutoLabelRoleEndpoint(s, logger),
+		AutoLabelRoleBindingEndpoint:           MakeAuthV1AutoLabelRoleBindingEndpoint(s, logger),
+		AutoLabelUserEndpoint:                  MakeAuthV1AutoLabelUserEndpoint(s, logger),
+		AutoLabelUserPreferenceEndpoint:        MakeAuthV1AutoLabelUserPreferenceEndpoint(s, logger),
 		AutoListAuthenticationPolicyEndpoint:   MakeAuthV1AutoListAuthenticationPolicyEndpoint(s, logger),
 		AutoListRoleEndpoint:                   MakeAuthV1AutoListRoleEndpoint(s, logger),
 		AutoListRoleBindingEndpoint:            MakeAuthV1AutoListRoleBindingEndpoint(s, logger),
@@ -1658,6 +1858,71 @@ func (m loggingAuthV1MiddlewareClient) AutoGetUserPreference(ctx context.Context
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoGetUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetUserPreference(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoLabelAuthenticationPolicy(ctx context.Context, in *api.Label) (resp *AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelAuthenticationPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoLabelRole(ctx context.Context, in *api.Label) (resp *Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelRole", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoLabelRoleBinding(ctx context.Context, in *api.Label) (resp *RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelRoleBinding", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelRoleBinding(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoLabelUser(ctx context.Context, in *api.Label) (resp *User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelUser", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) AutoLabelUserPreference(ctx context.Context, in *api.Label) (resp *UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelUserPreference", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelUserPreference(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) AutoListAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions) (resp *AuthenticationPolicyList, err error) {
@@ -2144,6 +2409,71 @@ func (m loggingAuthV1MiddlewareServer) AutoGetUserPreference(ctx context.Context
 	resp, err = m.next.AutoGetUserPreference(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) AutoLabelAuthenticationPolicy(ctx context.Context, in api.Label) (resp AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelAuthenticationPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelAuthenticationPolicy(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoLabelRole(ctx context.Context, in api.Label) (resp Role, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelRole", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRole(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoLabelRoleBinding(ctx context.Context, in api.Label) (resp RoleBinding, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelRoleBinding", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelRoleBinding(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoLabelUser(ctx context.Context, in api.Label) (resp User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelUser", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareServer) AutoLabelUserPreference(ctx context.Context, in api.Label) (resp UserPreference, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoLabelUserPreference", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelUserPreference(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) AutoListAuthenticationPolicy(ctx context.Context, in api.ListWatchOptions) (resp AuthenticationPolicyList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2535,6 +2865,36 @@ func makeURIAuthV1AutoGetUserPreferenceGetOper(in *UserPreference) string {
 }
 
 //
+func makeURIAuthV1AutoLabelAuthenticationPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIAuthV1AutoLabelRoleLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIAuthV1AutoLabelRoleBindingLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIAuthV1AutoLabelUserLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIAuthV1AutoLabelUserPreferenceLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIAuthV1AutoListAuthenticationPolicyListOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -2689,6 +3049,11 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUser(ctx context.Context, in *User
 		return nil, err
 	}
 	return ret.(*User), err
+}
+
+// AutoLabelUser label method for User
+func (r *EndpointsAuthV1RestClient) AutoLabelUser(ctx context.Context, in *api.Label) (*User, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetUser CRUD method for User
@@ -2912,6 +3277,11 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateAuthenticationPolicy(ctx context.C
 	return ret.(*AuthenticationPolicy), err
 }
 
+// AutoLabelAuthenticationPolicy label method for AuthenticationPolicy
+func (r *EndpointsAuthV1RestClient) AutoLabelAuthenticationPolicy(ctx context.Context, in *api.Label) (*AuthenticationPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetAuthenticationPolicy CRUD method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoGetAuthenticationPolicy(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error) {
 	path := makeURIAuthV1AutoGetAuthenticationPolicyGetOper(in)
@@ -3099,6 +3469,11 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role
 	return ret.(*Role), err
 }
 
+// AutoLabelRole label method for Role
+func (r *EndpointsAuthV1RestClient) AutoLabelRole(ctx context.Context, in *api.Label) (*Role, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetRole CRUD method for Role
 func (r *EndpointsAuthV1RestClient) AutoGetRole(ctx context.Context, in *Role) (*Role, error) {
 	path := makeURIAuthV1AutoGetRoleGetOper(in)
@@ -3257,6 +3632,11 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, i
 	return ret.(*RoleBinding), err
 }
 
+// AutoLabelRoleBinding label method for RoleBinding
+func (r *EndpointsAuthV1RestClient) AutoLabelRoleBinding(ctx context.Context, in *api.Label) (*RoleBinding, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetRoleBinding CRUD method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoGetRoleBinding(ctx context.Context, in *RoleBinding) (*RoleBinding, error) {
 	path := makeURIAuthV1AutoGetRoleBindingGetOper(in)
@@ -3396,6 +3776,11 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUserPreference(ctx context.Context
 		return nil, err
 	}
 	return ret.(*UserPreference), err
+}
+
+// AutoLabelUserPreference label method for UserPreference
+func (r *EndpointsAuthV1RestClient) AutoLabelUserPreference(ctx context.Context, in *api.Label) (*UserPreference, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetUserPreference CRUD method for UserPreference

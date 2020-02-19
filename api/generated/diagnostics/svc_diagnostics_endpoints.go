@@ -46,6 +46,7 @@ type EndpointsDiagnosticsV1Client struct {
 	AutoAddModuleEndpoint    endpoint.Endpoint
 	AutoDeleteModuleEndpoint endpoint.Endpoint
 	AutoGetModuleEndpoint    endpoint.Endpoint
+	AutoLabelModuleEndpoint  endpoint.Endpoint
 	AutoListModuleEndpoint   endpoint.Endpoint
 	AutoUpdateModuleEndpoint endpoint.Endpoint
 	DebugEndpoint            endpoint.Endpoint
@@ -61,6 +62,7 @@ type EndpointsDiagnosticsV1RestClient struct {
 	AutoAddModuleEndpoint             endpoint.Endpoint
 	AutoDeleteModuleEndpoint          endpoint.Endpoint
 	AutoGetModuleEndpoint             endpoint.Endpoint
+	AutoLabelModuleEndpoint           endpoint.Endpoint
 	AutoListModuleEndpoint            endpoint.Endpoint
 	AutoUpdateModuleEndpoint          endpoint.Endpoint
 	AutoWatchModuleEndpoint           endpoint.Endpoint
@@ -78,6 +80,7 @@ type EndpointsDiagnosticsV1Server struct {
 	AutoAddModuleEndpoint    endpoint.Endpoint
 	AutoDeleteModuleEndpoint endpoint.Endpoint
 	AutoGetModuleEndpoint    endpoint.Endpoint
+	AutoLabelModuleEndpoint  endpoint.Endpoint
 	AutoListModuleEndpoint   endpoint.Endpoint
 	AutoUpdateModuleEndpoint endpoint.Endpoint
 	DebugEndpoint            endpoint.Endpoint
@@ -123,6 +126,20 @@ func (e EndpointsDiagnosticsV1Client) AutoGetModule(ctx context.Context, in *Mod
 }
 
 type respDiagnosticsV1AutoGetModule struct {
+	V   Module
+	Err error
+}
+
+// AutoLabelModule is endpoint for AutoLabelModule
+func (e EndpointsDiagnosticsV1Client) AutoLabelModule(ctx context.Context, in *api.Label) (*Module, error) {
+	resp, err := e.AutoLabelModuleEndpoint(ctx, in)
+	if err != nil {
+		return &Module{}, err
+	}
+	return resp.(*Module), nil
+}
+
+type respDiagnosticsV1AutoLabelModule struct {
 	V   Module
 	Err error
 }
@@ -244,6 +261,28 @@ func MakeDiagnosticsV1AutoGetModuleEndpoint(s ServiceDiagnosticsV1Server, logger
 	return trace.ServerEndpoint("DiagnosticsV1:AutoGetModule")(f)
 }
 
+// AutoLabelModule implementation on server Endpoint
+func (e EndpointsDiagnosticsV1Server) AutoLabelModule(ctx context.Context, in api.Label) (Module, error) {
+	resp, err := e.AutoLabelModuleEndpoint(ctx, in)
+	if err != nil {
+		return Module{}, err
+	}
+	return *resp.(*Module), nil
+}
+
+// MakeDiagnosticsV1AutoLabelModuleEndpoint creates  AutoLabelModule endpoints for the service
+func MakeDiagnosticsV1AutoLabelModuleEndpoint(s ServiceDiagnosticsV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelModule(ctx, *req)
+		return respDiagnosticsV1AutoLabelModule{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("DiagnosticsV1:AutoLabelModule")(f)
+}
+
 // AutoListModule implementation on server Endpoint
 func (e EndpointsDiagnosticsV1Server) AutoListModule(ctx context.Context, in api.ListWatchOptions) (ModuleList, error) {
 	resp, err := e.AutoListModuleEndpoint(ctx, in)
@@ -343,6 +382,7 @@ func MakeDiagnosticsV1ServerEndpoints(s ServiceDiagnosticsV1Server, logger log.L
 		AutoAddModuleEndpoint:    MakeDiagnosticsV1AutoAddModuleEndpoint(s, logger),
 		AutoDeleteModuleEndpoint: MakeDiagnosticsV1AutoDeleteModuleEndpoint(s, logger),
 		AutoGetModuleEndpoint:    MakeDiagnosticsV1AutoGetModuleEndpoint(s, logger),
+		AutoLabelModuleEndpoint:  MakeDiagnosticsV1AutoLabelModuleEndpoint(s, logger),
 		AutoListModuleEndpoint:   MakeDiagnosticsV1AutoListModuleEndpoint(s, logger),
 		AutoUpdateModuleEndpoint: MakeDiagnosticsV1AutoUpdateModuleEndpoint(s, logger),
 		DebugEndpoint:            MakeDiagnosticsV1DebugEndpoint(s, logger),
@@ -418,6 +458,19 @@ func (m loggingDiagnosticsV1MiddlewareClient) AutoGetModule(ctx context.Context,
 		m.logger.Audit(ctx, "service", "DiagnosticsV1", "method", "AutoGetModule", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetModule(ctx, in)
+	return
+}
+func (m loggingDiagnosticsV1MiddlewareClient) AutoLabelModule(ctx context.Context, in *api.Label) (resp *Module, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "DiagnosticsV1", "method", "AutoLabelModule", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelModule(ctx, in)
 	return
 }
 func (m loggingDiagnosticsV1MiddlewareClient) AutoListModule(ctx context.Context, in *api.ListWatchOptions) (resp *ModuleList, err error) {
@@ -525,6 +578,19 @@ func (m loggingDiagnosticsV1MiddlewareServer) AutoGetModule(ctx context.Context,
 		m.logger.Audit(ctx, "service", "DiagnosticsV1", "method", "AutoGetModule", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetModule(ctx, in)
+	return
+}
+func (m loggingDiagnosticsV1MiddlewareServer) AutoLabelModule(ctx context.Context, in api.Label) (resp Module, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "DiagnosticsV1", "method", "AutoLabelModule", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelModule(ctx, in)
 	return
 }
 func (m loggingDiagnosticsV1MiddlewareServer) AutoListModule(ctx context.Context, in api.ListWatchOptions) (resp ModuleList, err error) {
@@ -636,6 +702,12 @@ func makeURIDiagnosticsV1AutoGetModuleGetOper(in *Module) string {
 }
 
 //
+func makeURIDiagnosticsV1AutoLabelModuleLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIDiagnosticsV1AutoListModuleListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/diagnostics/v1", "/modules")
 }
@@ -686,6 +758,11 @@ func (r *EndpointsDiagnosticsV1RestClient) AutoUpdateModule(ctx context.Context,
 		return nil, err
 	}
 	return ret.(*Module), err
+}
+
+// AutoLabelModule label method for Module
+func (r *EndpointsDiagnosticsV1RestClient) AutoLabelModule(ctx context.Context, in *api.Label) (*Module, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetModule CRUD method for Module

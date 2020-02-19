@@ -71,6 +71,20 @@ func NewOrchestratorV1(conn *grpc.ClientConn, logger log.Logger) orchestration.S
 		).Endpoint()
 		lAutoGetOrchestratorEndpoint = trace.ClientEndPoint("OrchestratorV1:AutoGetOrchestrator")(lAutoGetOrchestratorEndpoint)
 	}
+	var lAutoLabelOrchestratorEndpoint endpoint.Endpoint
+	{
+		lAutoLabelOrchestratorEndpoint = grpctransport.NewClient(
+			conn,
+			"orchestration.OrchestratorV1",
+			"AutoLabelOrchestrator",
+			orchestration.EncodeGrpcReqLabel,
+			orchestration.DecodeGrpcRespOrchestrator,
+			&orchestration.Orchestrator{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelOrchestratorEndpoint = trace.ClientEndPoint("OrchestratorV1:AutoLabelOrchestrator")(lAutoLabelOrchestratorEndpoint)
+	}
 	var lAutoListOrchestratorEndpoint endpoint.Endpoint
 	{
 		lAutoListOrchestratorEndpoint = grpctransport.NewClient(
@@ -105,6 +119,7 @@ func NewOrchestratorV1(conn *grpc.ClientConn, logger log.Logger) orchestration.S
 		AutoAddOrchestratorEndpoint:    lAutoAddOrchestratorEndpoint,
 		AutoDeleteOrchestratorEndpoint: lAutoDeleteOrchestratorEndpoint,
 		AutoGetOrchestratorEndpoint:    lAutoGetOrchestratorEndpoint,
+		AutoLabelOrchestratorEndpoint:  lAutoLabelOrchestratorEndpoint,
 		AutoListOrchestratorEndpoint:   lAutoListOrchestratorEndpoint,
 		AutoUpdateOrchestratorEndpoint: lAutoUpdateOrchestratorEndpoint,
 	}
@@ -148,6 +163,15 @@ func (a *grpcObjOrchestratorV1Orchestrator) UpdateStatus(ctx context.Context, in
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateOrchestrator(nctx, in)
+}
+
+func (a *grpcObjOrchestratorV1Orchestrator) Label(ctx context.Context, in *api.Label) (*orchestration.Orchestrator, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Orchestrator", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelOrchestrator(nctx, in)
 }
 
 func (a *grpcObjOrchestratorV1Orchestrator) Get(ctx context.Context, objMeta *api.ObjectMeta) (*orchestration.Orchestrator, error) {
@@ -248,6 +272,13 @@ func (a *restObjOrchestratorV1Orchestrator) Update(ctx context.Context, in *orch
 
 func (a *restObjOrchestratorV1Orchestrator) UpdateStatus(ctx context.Context, in *orchestration.Orchestrator) (*orchestration.Orchestrator, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjOrchestratorV1Orchestrator) Label(ctx context.Context, in *api.Label) (*orchestration.Orchestrator, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelOrchestrator(ctx, in)
 }
 
 func (a *restObjOrchestratorV1Orchestrator) Get(ctx context.Context, objMeta *api.ObjectMeta) (*orchestration.Orchestrator, error) {

@@ -43,6 +43,12 @@ type grpcServerSecurityV1 struct {
 	AutoGetNetworkSecurityPolicyHdlr      grpctransport.Handler
 	AutoGetSecurityGroupHdlr              grpctransport.Handler
 	AutoGetTrafficEncryptionPolicyHdlr    grpctransport.Handler
+	AutoLabelAppHdlr                      grpctransport.Handler
+	AutoLabelCertificateHdlr              grpctransport.Handler
+	AutoLabelFirewallProfileHdlr          grpctransport.Handler
+	AutoLabelNetworkSecurityPolicyHdlr    grpctransport.Handler
+	AutoLabelSecurityGroupHdlr            grpctransport.Handler
+	AutoLabelTrafficEncryptionPolicyHdlr  grpctransport.Handler
 	AutoListAppHdlr                       grpctransport.Handler
 	AutoListCertificateHdlr               grpctransport.Handler
 	AutoListFirewallProfileHdlr           grpctransport.Handler
@@ -189,6 +195,48 @@ func MakeGRPCServerSecurityV1(ctx context.Context, endpoints EndpointsSecurityV1
 			DecodeGrpcReqTrafficEncryptionPolicy,
 			EncodeGrpcRespTrafficEncryptionPolicy,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTrafficEncryptionPolicy", logger)))...,
+		),
+
+		AutoLabelAppHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelAppEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespApp,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelApp", logger)))...,
+		),
+
+		AutoLabelCertificateHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelCertificateEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespCertificate,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelCertificate", logger)))...,
+		),
+
+		AutoLabelFirewallProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelFirewallProfileEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespFirewallProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelFirewallProfile", logger)))...,
+		),
+
+		AutoLabelNetworkSecurityPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelNetworkSecurityPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespNetworkSecurityPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkSecurityPolicy", logger)))...,
+		),
+
+		AutoLabelSecurityGroupHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelSecurityGroupEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespSecurityGroup,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelSecurityGroup", logger)))...,
+		),
+
+		AutoLabelTrafficEncryptionPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelTrafficEncryptionPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespTrafficEncryptionPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelTrafficEncryptionPolicy", logger)))...,
 		),
 
 		AutoListAppHdlr: grpctransport.NewServer(
@@ -593,6 +641,114 @@ func (s *grpcServerSecurityV1) AutoGetTrafficEncryptionPolicy(ctx oldcontext.Con
 }
 
 func decodeHTTPrespSecurityV1AutoGetTrafficEncryptionPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp TrafficEncryptionPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelApp(ctx oldcontext.Context, req *api.Label) (*App, error) {
+	_, resp, err := s.AutoLabelAppHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelApp).V
+	return &r, resp.(respSecurityV1AutoLabelApp).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelApp(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp App
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelCertificate(ctx oldcontext.Context, req *api.Label) (*Certificate, error) {
+	_, resp, err := s.AutoLabelCertificateHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelCertificate).V
+	return &r, resp.(respSecurityV1AutoLabelCertificate).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelCertificate(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Certificate
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelFirewallProfile(ctx oldcontext.Context, req *api.Label) (*FirewallProfile, error) {
+	_, resp, err := s.AutoLabelFirewallProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelFirewallProfile).V
+	return &r, resp.(respSecurityV1AutoLabelFirewallProfile).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelFirewallProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FirewallProfile
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelNetworkSecurityPolicy(ctx oldcontext.Context, req *api.Label) (*NetworkSecurityPolicy, error) {
+	_, resp, err := s.AutoLabelNetworkSecurityPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelNetworkSecurityPolicy).V
+	return &r, resp.(respSecurityV1AutoLabelNetworkSecurityPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelNetworkSecurityPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkSecurityPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelSecurityGroup(ctx oldcontext.Context, req *api.Label) (*SecurityGroup, error) {
+	_, resp, err := s.AutoLabelSecurityGroupHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelSecurityGroup).V
+	return &r, resp.(respSecurityV1AutoLabelSecurityGroup).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelSecurityGroup(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp SecurityGroup
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerSecurityV1) AutoLabelTrafficEncryptionPolicy(ctx oldcontext.Context, req *api.Label) (*TrafficEncryptionPolicy, error) {
+	_, resp, err := s.AutoLabelTrafficEncryptionPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respSecurityV1AutoLabelTrafficEncryptionPolicy).V
+	return &r, resp.(respSecurityV1AutoLabelTrafficEncryptionPolicy).Err
+}
+
+func decodeHTTPrespSecurityV1AutoLabelTrafficEncryptionPolicy(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

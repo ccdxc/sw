@@ -78,6 +78,19 @@ func (mr *MockMonitoringV1EventPolicyInterfaceMockRecorder) UpdateStatus(ctx, in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1EventPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockMonitoringV1EventPolicyInterface) Label(ctx context.Context, in *api.Label) (*monitoring.EventPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.EventPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1EventPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1EventPolicyInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1EventPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -202,6 +215,19 @@ func (m *MockMonitoringV1FwlogPolicyInterface) UpdateStatus(ctx context.Context,
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockMonitoringV1FwlogPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1FwlogPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1FwlogPolicyInterface) Label(ctx context.Context, in *api.Label) (*monitoring.FwlogPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.FwlogPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1FwlogPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1FwlogPolicyInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -330,6 +356,19 @@ func (mr *MockMonitoringV1FlowExportPolicyInterfaceMockRecorder) UpdateStatus(ct
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1FlowExportPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockMonitoringV1FlowExportPolicyInterface) Label(ctx context.Context, in *api.Label) (*monitoring.FlowExportPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.FlowExportPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1FlowExportPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1FlowExportPolicyInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1FlowExportPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FlowExportPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -454,6 +493,19 @@ func (m *MockMonitoringV1AlertInterface) UpdateStatus(ctx context.Context, in *m
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockMonitoringV1AlertInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1AlertInterface) Label(ctx context.Context, in *api.Label) (*monitoring.Alert, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.Alert)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1AlertInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1AlertInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -582,6 +634,19 @@ func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) UpdateStatus(ctx, in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockMonitoringV1AlertPolicyInterface) Label(ctx context.Context, in *api.Label) (*monitoring.AlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.AlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1AlertPolicyInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1AlertPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -706,6 +771,19 @@ func (m *MockMonitoringV1AlertDestinationInterface) UpdateStatus(ctx context.Con
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertDestinationInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1AlertDestinationInterface) Label(ctx context.Context, in *api.Label) (*monitoring.AlertDestination, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.AlertDestination)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1AlertDestinationInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -834,6 +912,19 @@ func (mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) UpdateStatus(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockMonitoringV1MirrorSessionInterface) Label(ctx context.Context, in *api.Label) (*monitoring.MirrorSession, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1MirrorSessionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -958,6 +1049,19 @@ func (m *MockMonitoringV1TroubleshootingSessionInterface) UpdateStatus(ctx conte
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1TroubleshootingSessionInterface) Label(ctx context.Context, in *api.Label) (*monitoring.TroubleshootingSession, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -1086,6 +1190,19 @@ func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) UpdateStatus(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) Label(ctx context.Context, in *api.Label) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1TechSupportRequestInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -1210,6 +1327,19 @@ func (m *MockMonitoringV1ArchiveRequestInterface) UpdateStatus(ctx context.Conte
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1ArchiveRequestInterface) Label(ctx context.Context, in *api.Label) (*monitoring.ArchiveRequest, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.ArchiveRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1ArchiveRequestInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1ArchiveRequestInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method

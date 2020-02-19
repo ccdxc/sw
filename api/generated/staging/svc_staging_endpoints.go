@@ -46,6 +46,7 @@ type EndpointsStagingV1Client struct {
 	AutoAddBufferEndpoint    endpoint.Endpoint
 	AutoDeleteBufferEndpoint endpoint.Endpoint
 	AutoGetBufferEndpoint    endpoint.Endpoint
+	AutoLabelBufferEndpoint  endpoint.Endpoint
 	AutoListBufferEndpoint   endpoint.Endpoint
 	AutoUpdateBufferEndpoint endpoint.Endpoint
 	ClearEndpoint            endpoint.Endpoint
@@ -62,6 +63,7 @@ type EndpointsStagingV1RestClient struct {
 	AutoAddBufferEndpoint         endpoint.Endpoint
 	AutoDeleteBufferEndpoint      endpoint.Endpoint
 	AutoGetBufferEndpoint         endpoint.Endpoint
+	AutoLabelBufferEndpoint       endpoint.Endpoint
 	AutoListBufferEndpoint        endpoint.Endpoint
 	AutoUpdateBufferEndpoint      endpoint.Endpoint
 	AutoWatchBufferEndpoint       endpoint.Endpoint
@@ -80,6 +82,7 @@ type EndpointsStagingV1Server struct {
 	AutoAddBufferEndpoint    endpoint.Endpoint
 	AutoDeleteBufferEndpoint endpoint.Endpoint
 	AutoGetBufferEndpoint    endpoint.Endpoint
+	AutoLabelBufferEndpoint  endpoint.Endpoint
 	AutoListBufferEndpoint   endpoint.Endpoint
 	AutoUpdateBufferEndpoint endpoint.Endpoint
 	ClearEndpoint            endpoint.Endpoint
@@ -126,6 +129,20 @@ func (e EndpointsStagingV1Client) AutoGetBuffer(ctx context.Context, in *Buffer)
 }
 
 type respStagingV1AutoGetBuffer struct {
+	V   Buffer
+	Err error
+}
+
+// AutoLabelBuffer is endpoint for AutoLabelBuffer
+func (e EndpointsStagingV1Client) AutoLabelBuffer(ctx context.Context, in *api.Label) (*Buffer, error) {
+	resp, err := e.AutoLabelBufferEndpoint(ctx, in)
+	if err != nil {
+		return &Buffer{}, err
+	}
+	return resp.(*Buffer), nil
+}
+
+type respStagingV1AutoLabelBuffer struct {
 	V   Buffer
 	Err error
 }
@@ -261,6 +278,28 @@ func MakeStagingV1AutoGetBufferEndpoint(s ServiceStagingV1Server, logger log.Log
 	return trace.ServerEndpoint("StagingV1:AutoGetBuffer")(f)
 }
 
+// AutoLabelBuffer implementation on server Endpoint
+func (e EndpointsStagingV1Server) AutoLabelBuffer(ctx context.Context, in api.Label) (Buffer, error) {
+	resp, err := e.AutoLabelBufferEndpoint(ctx, in)
+	if err != nil {
+		return Buffer{}, err
+	}
+	return *resp.(*Buffer), nil
+}
+
+// MakeStagingV1AutoLabelBufferEndpoint creates  AutoLabelBuffer endpoints for the service
+func MakeStagingV1AutoLabelBufferEndpoint(s ServiceStagingV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelBuffer(ctx, *req)
+		return respStagingV1AutoLabelBuffer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StagingV1:AutoLabelBuffer")(f)
+}
+
 // AutoListBuffer implementation on server Endpoint
 func (e EndpointsStagingV1Server) AutoListBuffer(ctx context.Context, in api.ListWatchOptions) (BufferList, error) {
 	resp, err := e.AutoListBufferEndpoint(ctx, in)
@@ -382,6 +421,7 @@ func MakeStagingV1ServerEndpoints(s ServiceStagingV1Server, logger log.Logger) E
 		AutoAddBufferEndpoint:    MakeStagingV1AutoAddBufferEndpoint(s, logger),
 		AutoDeleteBufferEndpoint: MakeStagingV1AutoDeleteBufferEndpoint(s, logger),
 		AutoGetBufferEndpoint:    MakeStagingV1AutoGetBufferEndpoint(s, logger),
+		AutoLabelBufferEndpoint:  MakeStagingV1AutoLabelBufferEndpoint(s, logger),
 		AutoListBufferEndpoint:   MakeStagingV1AutoListBufferEndpoint(s, logger),
 		AutoUpdateBufferEndpoint: MakeStagingV1AutoUpdateBufferEndpoint(s, logger),
 		ClearEndpoint:            MakeStagingV1ClearEndpoint(s, logger),
@@ -458,6 +498,19 @@ func (m loggingStagingV1MiddlewareClient) AutoGetBuffer(ctx context.Context, in 
 		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoGetBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetBuffer(ctx, in)
+	return
+}
+func (m loggingStagingV1MiddlewareClient) AutoLabelBuffer(ctx context.Context, in *api.Label) (resp *Buffer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoLabelBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelBuffer(ctx, in)
 	return
 }
 func (m loggingStagingV1MiddlewareClient) AutoListBuffer(ctx context.Context, in *api.ListWatchOptions) (resp *BufferList, err error) {
@@ -580,6 +633,19 @@ func (m loggingStagingV1MiddlewareServer) AutoGetBuffer(ctx context.Context, in 
 	resp, err = m.next.AutoGetBuffer(ctx, in)
 	return
 }
+func (m loggingStagingV1MiddlewareServer) AutoLabelBuffer(ctx context.Context, in api.Label) (resp Buffer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoLabelBuffer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelBuffer(ctx, in)
+	return
+}
 func (m loggingStagingV1MiddlewareServer) AutoListBuffer(ctx context.Context, in api.ListWatchOptions) (resp BufferList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -700,6 +766,12 @@ func makeURIStagingV1AutoGetBufferGetOper(in *Buffer) string {
 }
 
 //
+func makeURIStagingV1AutoLabelBufferLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIStagingV1AutoListBufferListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/staging/v1", "/tenant/", in.Tenant, "/buffers")
 }
@@ -756,6 +828,11 @@ func (r *EndpointsStagingV1RestClient) AutoAddBuffer(ctx context.Context, in *Bu
 
 // AutoUpdateBuffer CRUD method for Buffer
 func (r *EndpointsStagingV1RestClient) AutoUpdateBuffer(ctx context.Context, in *Buffer) (*Buffer, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelBuffer label method for Buffer
+func (r *EndpointsStagingV1RestClient) AutoLabelBuffer(ctx context.Context, in *api.Label) (*Buffer, error) {
 	return nil, errors.New("not allowed")
 }
 

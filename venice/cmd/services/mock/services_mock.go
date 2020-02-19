@@ -633,6 +633,11 @@ func (c *Cluster) UpdateStatus(ctx context.Context, in *cmd.Cluster) (*cmd.Clust
 	return &c.DummyCluster, nil
 }
 
+// Label mocks cluster Label
+func (c *Cluster) Label(ctx context.Context, in *api.Label) (*cmd.Cluster, error) {
+	return nil, errors.New("not implemented")
+}
+
 // Get mocks cluster Get
 func (c *Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Cluster, error) {
 	c.RLock()
@@ -714,6 +719,11 @@ func (n *Node) UpdateStatus(ctx context.Context, in *cmd.Node) (*cmd.Node, error
 	n.DummyNode = *in
 	n.nodeWatcher.ch <- &kvstore.WatchEvent{Type: kvstore.Updated, Object: &n.DummyNode}
 	return &n.DummyNode, nil
+}
+
+// Label mocks cluster Label
+func (n *Node) Label(ctx context.Context, in *api.Label) (*cmd.Node, error) {
+	return nil, errors.New("not implemented")
 }
 
 // Get mocks nodes Get

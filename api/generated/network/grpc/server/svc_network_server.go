@@ -74,6 +74,14 @@ type eNetworkV1Endpoints struct {
 	fnAutoGetRoutingConfig       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetService             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetVirtualRouter       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelIPAMPolicy        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelLbPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelNetwork           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelNetworkInterface  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRouteTable        func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRoutingConfig     func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelService           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelVirtualRouter     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListIPAMPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListLbPolicy           func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListNetwork            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -363,6 +371,15 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("network", s.Messages)
@@ -555,6 +572,230 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/virtualrouters/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelIPAMPolicy = srv.AddMethod("AutoLabelIPAMPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.IPAMPolicy"], "network", "AutoLabelIPAMPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.IPAMPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.IPAMPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelLbPolicy = srv.AddMethod("AutoLabelLbPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.LbPolicy"], "network", "AutoLabelLbPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.LbPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.LbPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelNetwork = srv.AddMethod("AutoLabelNetwork",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.Network"], "network", "AutoLabelNetwork")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.Network{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.Network{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelNetworkInterface = srv.AddMethod("AutoLabelNetworkInterface",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.NetworkInterface"], "network", "AutoLabelNetworkInterface")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.NetworkInterface{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.NetworkInterface{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelRouteTable = srv.AddMethod("AutoLabelRouteTable",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.RouteTable"], "network", "AutoLabelRouteTable")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.RouteTable{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.RouteTable{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelRoutingConfig = srv.AddMethod("AutoLabelRoutingConfig",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.RoutingConfig"], "network", "AutoLabelRoutingConfig")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.RoutingConfig{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.RoutingConfig{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelService = srv.AddMethod("AutoLabelService",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.Service"], "network", "AutoLabelService")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.Service{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.Service{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsNetworkV1.fnAutoLabelVirtualRouter = srv.AddMethod("AutoLabelVirtualRouter",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.VirtualRouter"], "network", "AutoLabelVirtualRouter")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := network.VirtualRouter{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := network.VirtualRouter{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsNetworkV1.fnAutoListIPAMPolicy = srv.AddMethod("AutoListIPAMPolicy",
@@ -1743,6 +1984,70 @@ func (e *eNetworkV1Endpoints) AutoGetService(ctx context.Context, t network.Serv
 }
 func (e *eNetworkV1Endpoints) AutoGetVirtualRouter(ctx context.Context, t network.VirtualRouter) (network.VirtualRouter, error) {
 	r, err := e.fnAutoGetVirtualRouter(ctx, t)
+	if err == nil {
+		return r.(network.VirtualRouter), err
+	}
+	return network.VirtualRouter{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelIPAMPolicy(ctx context.Context, t api.Label) (network.IPAMPolicy, error) {
+	r, err := e.fnAutoLabelIPAMPolicy(ctx, t)
+	if err == nil {
+		return r.(network.IPAMPolicy), err
+	}
+	return network.IPAMPolicy{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelLbPolicy(ctx context.Context, t api.Label) (network.LbPolicy, error) {
+	r, err := e.fnAutoLabelLbPolicy(ctx, t)
+	if err == nil {
+		return r.(network.LbPolicy), err
+	}
+	return network.LbPolicy{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelNetwork(ctx context.Context, t api.Label) (network.Network, error) {
+	r, err := e.fnAutoLabelNetwork(ctx, t)
+	if err == nil {
+		return r.(network.Network), err
+	}
+	return network.Network{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelNetworkInterface(ctx context.Context, t api.Label) (network.NetworkInterface, error) {
+	r, err := e.fnAutoLabelNetworkInterface(ctx, t)
+	if err == nil {
+		return r.(network.NetworkInterface), err
+	}
+	return network.NetworkInterface{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelRouteTable(ctx context.Context, t api.Label) (network.RouteTable, error) {
+	r, err := e.fnAutoLabelRouteTable(ctx, t)
+	if err == nil {
+		return r.(network.RouteTable), err
+	}
+	return network.RouteTable{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelRoutingConfig(ctx context.Context, t api.Label) (network.RoutingConfig, error) {
+	r, err := e.fnAutoLabelRoutingConfig(ctx, t)
+	if err == nil {
+		return r.(network.RoutingConfig), err
+	}
+	return network.RoutingConfig{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelService(ctx context.Context, t api.Label) (network.Service, error) {
+	r, err := e.fnAutoLabelService(ctx, t)
+	if err == nil {
+		return r.(network.Service), err
+	}
+	return network.Service{}, err
+
+}
+func (e *eNetworkV1Endpoints) AutoLabelVirtualRouter(ctx context.Context, t api.Label) (network.VirtualRouter, error) {
+	r, err := e.fnAutoLabelVirtualRouter(ctx, t)
 	if err == nil {
 		return r.(network.VirtualRouter), err
 	}

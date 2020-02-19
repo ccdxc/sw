@@ -76,6 +76,12 @@ The following Services and Methods are defined.
    AutoGetOrder
    AutoGetPublisher
    AutoGetStore
+   AutoLabelBook
+   AutoLabelCoupon
+   AutoLabelCustomer
+   AutoLabelOrder
+   AutoLabelPublisher
+   AutoLabelStore
    AutoListBook
    AutoListCoupon
    AutoListCustomer

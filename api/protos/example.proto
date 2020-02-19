@@ -244,7 +244,7 @@ service BookstoreV1 {
 
   option (venice.apiRestService) = {
         Object: "Order"
-        Method: [ "put", "get", "delete", "post", "list", "watch" ]
+        Method: [ "put", "get", "delete", "post", "list", "watch", "label"]
      };
 
   option (venice.apiRestService) = {
@@ -254,7 +254,7 @@ service BookstoreV1 {
 
   option (venice.apiRestService) = {
         Object: "Customer"
-        Method: [ "put", "get", "delete", "post", "list" ]
+        Method: [ "put", "get", "delete", "post", "list", "label"]
      };
 
   // Action on a Object

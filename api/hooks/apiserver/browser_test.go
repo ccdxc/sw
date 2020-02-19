@@ -34,8 +34,8 @@ func TestProcessQuery(t *testing.T) {
 
 	apisrv := apisrvpkg.MustGetAPIServer()
 	msgs := map[string]apiserver.Message{
-		"test.TestMsg1":     apisrvmocks.NewFakeMessage("TestMsg1", "/test/path", false),
-		"test.TestMsg1List": apisrvmocks.NewFakeMessage("TestMsg1List", "/test/path", false),
+		"test.TestMsg1":     apisrvmocks.NewFakeMessage("test.TestMsg1", "/test/path", false),
+		"test.TestMsg1List": apisrvmocks.NewFakeMessage("test.TestMsg1List", "/test/path", false),
 	}
 	apisrv.RegisterMessages("test", msgs)
 

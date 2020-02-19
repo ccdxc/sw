@@ -28,6 +28,7 @@ type grpcServerStagingV1 struct {
 	AutoAddBufferHdlr    grpctransport.Handler
 	AutoDeleteBufferHdlr grpctransport.Handler
 	AutoGetBufferHdlr    grpctransport.Handler
+	AutoLabelBufferHdlr  grpctransport.Handler
 	AutoListBufferHdlr   grpctransport.Handler
 	AutoUpdateBufferHdlr grpctransport.Handler
 	ClearHdlr            grpctransport.Handler
@@ -61,6 +62,13 @@ func MakeGRPCServerStagingV1(ctx context.Context, endpoints EndpointsStagingV1Se
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetBuffer", logger)))...,
+		),
+
+		AutoLabelBufferHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelBufferEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespBuffer,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelBuffer", logger)))...,
 		),
 
 		AutoListBufferHdlr: grpctransport.NewServer(
@@ -139,6 +147,24 @@ func (s *grpcServerStagingV1) AutoGetBuffer(ctx oldcontext.Context, req *Buffer)
 }
 
 func decodeHTTPrespStagingV1AutoGetBuffer(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Buffer
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStagingV1) AutoLabelBuffer(ctx oldcontext.Context, req *api.Label) (*Buffer, error) {
+	_, resp, err := s.AutoLabelBufferHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStagingV1AutoLabelBuffer).V
+	return &r, resp.(respStagingV1AutoLabelBuffer).Err
+}
+
+func decodeHTTPrespStagingV1AutoLabelBuffer(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

@@ -15,6 +15,7 @@ import (
 const (
 	CreateOper  APIOperType = "create"
 	UpdateOper  APIOperType = "update"
+	LabelOper   APIOperType = "label"
 	GetOper     APIOperType = "get"
 	DeleteOper  APIOperType = "delete"
 	ListOper    APIOperType = "list"

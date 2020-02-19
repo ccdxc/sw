@@ -2,14 +2,15 @@ package apisrvpkg
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 
-	"github.com/pensando/sw/api/api_test"
+	apitest "github.com/pensando/sw/api/api_test"
 	"github.com/pensando/sw/api/requirement"
 	"github.com/pensando/sw/venice/utils/runtime"
 
@@ -17,7 +18,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -57,8 +58,8 @@ func TestMethodWiths(t *testing.T) {
 	singletonAPISrv.config.GetOverlay = fakeGetOverlay
 	fsvc := mocks.NewFakeService()
 
-	req := mocks.NewFakeMessage("TestType1", "TestType1", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("TestType2", "TestType2", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.TestType1", "TestType1", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.TestType2", "TestType2", true).(*mocks.FakeMessage)
 	f := mocks.NewFakeMethod(true).(*mocks.FakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(fsvc, req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
@@ -125,8 +126,9 @@ func TestMethodWiths(t *testing.T) {
 // TestMethodKvWrite
 // Validate KV operation on Method invocation
 func TestMethodKvWrite(t *testing.T) {
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	// Response kind must be the same as the object for the label operation
+	resp := mocks.NewFakeMessage("test.testobj", "/responsmsg/A", true).(*mocks.FakeMessage)
 	fsvc := mocks.NewFakeService()
 	fcache := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}}
 	ftxn := &cachemocks.FakeTxn{}
@@ -258,10 +260,45 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Update status was not called")
 	}
 
-	// Now delete the object and check
+	// invoke with label update
+	// Object type needs to be known for methods.go to create the into object
+	runtime.GetDefaultScheme().AddKnownTypes(&reqmsg)
 	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
-		apisrv.RequestParamMethod, "DELETE")
+		apisrv.RequestParamMethod, "label", apisrv.RequestParamUpdateStatus, "false")
+	reqLabelMsg := api.Label{
+		ObjectMeta: api.ObjectMeta{
+			Labels: map[string]string{
+				"test": "val",
+			},
+		},
+	}
 	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
+
+	// define new method with response writer
+	mLabel := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite")
+	mLabel.WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+		label, ok := resp.(api.Label)
+		if !ok {
+			return "", fmt.Errorf("Expected type to be api.Label")
+		}
+		cur := apitest.TestObj{}
+		cur.ObjectMeta = label.ObjectMeta
+		key := cur.MakeKey(prefix)
+		if err := kvs.Get(ctx, key, &cur); err != nil {
+			return nil, err
+		}
+		return cur, nil
+	})
+
+	mLabel.HandleInvocation(ctx3, reqLabelMsg)
+	if globFakeOverlay.UpdatePrimaries != 3 || ftxn.CommitOps != 7 {
+		t.Errorf("Expecting [3] CreatePrimary and [7] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, ftxn.CommitOps)
+	}
+
+	// Now delete the object and check
+	md4 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "DELETE")
+	ctx4 := metadata.NewIncomingContext(context.Background(), md4)
 	span := opentracing.StartSpan("delete")
 	statMap := map[string]apiintf.ObjectStat{
 		"/requestmsg/A": {Key: "/requestmsg/A", Valid: true, Revision: 9},
@@ -280,8 +317,8 @@ func TestMethodKvWrite(t *testing.T) {
 		return nil
 	}
 	ftxn.Empty = false
-	ctx3 = opentracing.ContextWithSpan(ctx3, span)
-	if _, err := m.HandleInvocation(ctx3, reqmsg); err != nil {
+	ctx4 = opentracing.ContextWithSpan(ctx4, span)
+	if _, err := m.HandleInvocation(ctx4, reqmsg); err != nil {
 		t.Errorf("Expecting success but failed %v", err)
 	}
 	if globFakeOverlay.DeletePrimaries != 1 {
@@ -360,8 +397,8 @@ func TestMethodKvWrite(t *testing.T) {
 }
 
 func TestMethodKvList(t *testing.T) {
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
@@ -384,8 +421,8 @@ func TestMethodKvList(t *testing.T) {
 }
 
 func TestMapOper(t *testing.T) {
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
@@ -459,8 +496,8 @@ func TestDisabledMethod(t *testing.T) {
 }
 func TestTxn(t *testing.T) {
 	svc := mocks.NewFakeService()
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
 	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
 	fkv := cachemocks.FakeKvStore{}
@@ -555,8 +592,8 @@ func TestTxn(t *testing.T) {
 
 func TestTransforms(t *testing.T) {
 	svc := mocks.NewFakeService()
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
 	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
 
@@ -596,8 +633,8 @@ func TestTransforms(t *testing.T) {
 }
 
 func TestWithReferences(t *testing.T) {
-	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
-	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
+	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("test.reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
 	fsvc := mocks.NewFakeService()
 	fcache := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}}
 	ftxn := &cachemocks.FakeTxn{}

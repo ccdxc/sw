@@ -142,6 +142,12 @@ func (g *grpcBackend) AutoListBucket(ctx context.Context, in *api.ListWatchOptio
 	return nil, errNotImplemented
 }
 
+// Label Bucket object
+func (g *grpcBackend) AutoLabelBucket(context.Context, *api.Label) (*objstore.Bucket, error) {
+	log.Infof("got call to AutoLabelBucket")
+	return nil, errNotImplemented
+}
+
 // Update Bucket object
 func (g *grpcBackend) AutoUpdateBucket(context.Context, *objstore.Bucket) (*objstore.Bucket, error) {
 	log.Infof("got call to AutoUpdateBucket")
@@ -324,6 +330,12 @@ func (g *grpcBackend) AutoListObject(ctx context.Context, in *api.ListWatchOptio
 // Update Object object
 func (g *grpcBackend) AutoUpdateObject(context.Context, *objstore.Object) (*objstore.Object, error) {
 	log.Infof("got call to AutoUpdateObject")
+	return nil, errNotImplemented
+}
+
+// Label Object object
+func (g *grpcBackend) AutoLabelObject(context.Context, *api.Label) (*objstore.Object, error) {
+	log.Infof("got call to AutoLabelObject")
 	return nil, errNotImplemented
 }
 

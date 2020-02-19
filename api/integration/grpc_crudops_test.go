@@ -427,7 +427,36 @@ func TestCrudOps(t *testing.T) {
 			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Updated)
 		}
 	}
-
+	{ // --- Label resource via gRPC ---//
+		labelObj := api.Label{
+			ObjectMeta: api.ObjectMeta{
+				Name: pub.GetName(),
+				Labels: map[string]string{
+					"test": "val",
+				},
+			},
+		}
+		if ret, err := apicl.BookstoreV1().Publisher().Label(ctx, &labelObj); err != nil {
+			t.Fatalf("failed to label publisher(%s)", err)
+		} else {
+			AssertEquals(t, ret.Labels, labelObj.Labels, "labeling failed")
+			evp := *ret
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Updated)
+		}
+	}
+	{ // -- Label via REST for publisher - should fail --//
+		labelObj := api.Label{
+			ObjectMeta: api.ObjectMeta{
+				Name: pub.GetName(),
+				Labels: map[string]string{
+					"test": "val1",
+				},
+			},
+		}
+		if _, err := restcl.BookstoreV1().Publisher().Label(ctx, &labelObj); err == nil {
+			t.Fatal("status update should have failed")
+		}
+	}
 	{ // -- UpdateStatus via REST - should fail --//
 		pub.Status.Status = "test update status"
 		if _, err := restcl.BookstoreV1().Publisher().UpdateStatus(ctx, &pub); err == nil {
@@ -741,6 +770,35 @@ func TestCrudOps(t *testing.T) {
 		}
 		if retorder.GenerationID != "3" {
 			t.Fatalf("returned generation id is not 3, got [%s]", retorder.GenerationID)
+		}
+		evp := order2mod
+		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
+	}
+	{ // Label object via REST
+		objectMeta := api.ObjectMeta{Name: "order-2"}
+		curobj, err := restcl.BookstoreV1().Order().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("could not get object before PUT (%s)", err)
+		}
+		labelObj := api.Label{
+			ObjectMeta: api.ObjectMeta{
+				Name: "order-2",
+				Labels: map[string]string{
+					"test": "val",
+				},
+			},
+		}
+		retorder, err := restcl.BookstoreV1().Order().Label(ctx, &labelObj)
+		if err != nil {
+			t.Fatalf("failed to label object Order via REST (%s)", err)
+		}
+		AssertEquals(t, retorder.Labels, labelObj.Labels, "labeling failed")
+		if retorder.GenerationID != "4" {
+			t.Fatalf("returned generation id is not 4, got [%s]", retorder.GenerationID)
+		}
+		if retorder.UUID != curobj.UUID ||
+			retorder.ModTime == curobj.ModTime {
+			t.Fatalf("meta from post was over-written")
 		}
 		evp := order2mod
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Updated)
@@ -2285,6 +2343,28 @@ func TestStaging(t *testing.T) {
 			if ver2 != ver1+1 {
 				t.Fatalf("GenerationID has not been incremented [%d/%d]", ver1, ver2)
 			}
+		}
+	}
+	{ // Label object via staging should return error
+		lopts := api.ListWatchOptions{}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if err != nil {
+			t.Fatalf("Failed to get customers")
+		}
+		if len(lst) != 2 {
+			t.Fatalf("expecting 2 objects in list, got %d", len(lst))
+		}
+		labelObj := api.Label{
+			ObjectMeta: api.ObjectMeta{
+				Name: lst[0].GetName(),
+				Labels: map[string]string{
+					"test": "val",
+				},
+			},
+		}
+		_, err = stagecl.BookstoreV1().Customer().Label(ctx, &labelObj)
+		if err == nil {
+			t.Fatalf("label of customer should have failed")
 		}
 	}
 	{ // delete existing objects via staging

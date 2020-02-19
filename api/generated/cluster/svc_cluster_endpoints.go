@@ -71,6 +71,15 @@ type EndpointsClusterV1Client struct {
 	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
+	AutoLabelClusterEndpoint                 endpoint.Endpoint
+	AutoLabelConfigurationSnapshotEndpoint   endpoint.Endpoint
+	AutoLabelDistributedServiceCardEndpoint  endpoint.Endpoint
+	AutoLabelHostEndpoint                    endpoint.Endpoint
+	AutoLabelLicenseEndpoint                 endpoint.Endpoint
+	AutoLabelNodeEndpoint                    endpoint.Endpoint
+	AutoLabelSnapshotRestoreEndpoint         endpoint.Endpoint
+	AutoLabelTenantEndpoint                  endpoint.Endpoint
+	AutoLabelVersionEndpoint                 endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
 	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
@@ -129,6 +138,15 @@ type EndpointsClusterV1RestClient struct {
 	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
+	AutoLabelClusterEndpoint                 endpoint.Endpoint
+	AutoLabelConfigurationSnapshotEndpoint   endpoint.Endpoint
+	AutoLabelDistributedServiceCardEndpoint  endpoint.Endpoint
+	AutoLabelHostEndpoint                    endpoint.Endpoint
+	AutoLabelLicenseEndpoint                 endpoint.Endpoint
+	AutoLabelNodeEndpoint                    endpoint.Endpoint
+	AutoLabelSnapshotRestoreEndpoint         endpoint.Endpoint
+	AutoLabelTenantEndpoint                  endpoint.Endpoint
+	AutoLabelVersionEndpoint                 endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
 	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
@@ -197,6 +215,15 @@ type EndpointsClusterV1Server struct {
 	AutoGetSnapshotRestoreEndpoint           endpoint.Endpoint
 	AutoGetTenantEndpoint                    endpoint.Endpoint
 	AutoGetVersionEndpoint                   endpoint.Endpoint
+	AutoLabelClusterEndpoint                 endpoint.Endpoint
+	AutoLabelConfigurationSnapshotEndpoint   endpoint.Endpoint
+	AutoLabelDistributedServiceCardEndpoint  endpoint.Endpoint
+	AutoLabelHostEndpoint                    endpoint.Endpoint
+	AutoLabelLicenseEndpoint                 endpoint.Endpoint
+	AutoLabelNodeEndpoint                    endpoint.Endpoint
+	AutoLabelSnapshotRestoreEndpoint         endpoint.Endpoint
+	AutoLabelTenantEndpoint                  endpoint.Endpoint
+	AutoLabelVersionEndpoint                 endpoint.Endpoint
 	AutoListClusterEndpoint                  endpoint.Endpoint
 	AutoListConfigurationSnapshotEndpoint    endpoint.Endpoint
 	AutoListDistributedServiceCardEndpoint   endpoint.Endpoint
@@ -618,6 +645,132 @@ func (e EndpointsClusterV1Client) AutoGetVersion(ctx context.Context, in *Versio
 }
 
 type respClusterV1AutoGetVersion struct {
+	V   Version
+	Err error
+}
+
+// AutoLabelCluster is endpoint for AutoLabelCluster
+func (e EndpointsClusterV1Client) AutoLabelCluster(ctx context.Context, in *api.Label) (*Cluster, error) {
+	resp, err := e.AutoLabelClusterEndpoint(ctx, in)
+	if err != nil {
+		return &Cluster{}, err
+	}
+	return resp.(*Cluster), nil
+}
+
+type respClusterV1AutoLabelCluster struct {
+	V   Cluster
+	Err error
+}
+
+// AutoLabelConfigurationSnapshot is endpoint for AutoLabelConfigurationSnapshot
+func (e EndpointsClusterV1Client) AutoLabelConfigurationSnapshot(ctx context.Context, in *api.Label) (*ConfigurationSnapshot, error) {
+	resp, err := e.AutoLabelConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return &ConfigurationSnapshot{}, err
+	}
+	return resp.(*ConfigurationSnapshot), nil
+}
+
+type respClusterV1AutoLabelConfigurationSnapshot struct {
+	V   ConfigurationSnapshot
+	Err error
+}
+
+// AutoLabelDistributedServiceCard is endpoint for AutoLabelDistributedServiceCard
+func (e EndpointsClusterV1Client) AutoLabelDistributedServiceCard(ctx context.Context, in *api.Label) (*DistributedServiceCard, error) {
+	resp, err := e.AutoLabelDistributedServiceCardEndpoint(ctx, in)
+	if err != nil {
+		return &DistributedServiceCard{}, err
+	}
+	return resp.(*DistributedServiceCard), nil
+}
+
+type respClusterV1AutoLabelDistributedServiceCard struct {
+	V   DistributedServiceCard
+	Err error
+}
+
+// AutoLabelHost is endpoint for AutoLabelHost
+func (e EndpointsClusterV1Client) AutoLabelHost(ctx context.Context, in *api.Label) (*Host, error) {
+	resp, err := e.AutoLabelHostEndpoint(ctx, in)
+	if err != nil {
+		return &Host{}, err
+	}
+	return resp.(*Host), nil
+}
+
+type respClusterV1AutoLabelHost struct {
+	V   Host
+	Err error
+}
+
+// AutoLabelLicense is endpoint for AutoLabelLicense
+func (e EndpointsClusterV1Client) AutoLabelLicense(ctx context.Context, in *api.Label) (*License, error) {
+	resp, err := e.AutoLabelLicenseEndpoint(ctx, in)
+	if err != nil {
+		return &License{}, err
+	}
+	return resp.(*License), nil
+}
+
+type respClusterV1AutoLabelLicense struct {
+	V   License
+	Err error
+}
+
+// AutoLabelNode is endpoint for AutoLabelNode
+func (e EndpointsClusterV1Client) AutoLabelNode(ctx context.Context, in *api.Label) (*Node, error) {
+	resp, err := e.AutoLabelNodeEndpoint(ctx, in)
+	if err != nil {
+		return &Node{}, err
+	}
+	return resp.(*Node), nil
+}
+
+type respClusterV1AutoLabelNode struct {
+	V   Node
+	Err error
+}
+
+// AutoLabelSnapshotRestore is endpoint for AutoLabelSnapshotRestore
+func (e EndpointsClusterV1Client) AutoLabelSnapshotRestore(ctx context.Context, in *api.Label) (*SnapshotRestore, error) {
+	resp, err := e.AutoLabelSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return &SnapshotRestore{}, err
+	}
+	return resp.(*SnapshotRestore), nil
+}
+
+type respClusterV1AutoLabelSnapshotRestore struct {
+	V   SnapshotRestore
+	Err error
+}
+
+// AutoLabelTenant is endpoint for AutoLabelTenant
+func (e EndpointsClusterV1Client) AutoLabelTenant(ctx context.Context, in *api.Label) (*Tenant, error) {
+	resp, err := e.AutoLabelTenantEndpoint(ctx, in)
+	if err != nil {
+		return &Tenant{}, err
+	}
+	return resp.(*Tenant), nil
+}
+
+type respClusterV1AutoLabelTenant struct {
+	V   Tenant
+	Err error
+}
+
+// AutoLabelVersion is endpoint for AutoLabelVersion
+func (e EndpointsClusterV1Client) AutoLabelVersion(ctx context.Context, in *api.Label) (*Version, error) {
+	resp, err := e.AutoLabelVersionEndpoint(ctx, in)
+	if err != nil {
+		return &Version{}, err
+	}
+	return resp.(*Version), nil
+}
+
+type respClusterV1AutoLabelVersion struct {
 	V   Version
 	Err error
 }
@@ -1581,6 +1734,204 @@ func MakeClusterV1AutoGetVersionEndpoint(s ServiceClusterV1Server, logger log.Lo
 	return trace.ServerEndpoint("ClusterV1:AutoGetVersion")(f)
 }
 
+// AutoLabelCluster implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelCluster(ctx context.Context, in api.Label) (Cluster, error) {
+	resp, err := e.AutoLabelClusterEndpoint(ctx, in)
+	if err != nil {
+		return Cluster{}, err
+	}
+	return *resp.(*Cluster), nil
+}
+
+// MakeClusterV1AutoLabelClusterEndpoint creates  AutoLabelCluster endpoints for the service
+func MakeClusterV1AutoLabelClusterEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelCluster(ctx, *req)
+		return respClusterV1AutoLabelCluster{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelCluster")(f)
+}
+
+// AutoLabelConfigurationSnapshot implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelConfigurationSnapshot(ctx context.Context, in api.Label) (ConfigurationSnapshot, error) {
+	resp, err := e.AutoLabelConfigurationSnapshotEndpoint(ctx, in)
+	if err != nil {
+		return ConfigurationSnapshot{}, err
+	}
+	return *resp.(*ConfigurationSnapshot), nil
+}
+
+// MakeClusterV1AutoLabelConfigurationSnapshotEndpoint creates  AutoLabelConfigurationSnapshot endpoints for the service
+func MakeClusterV1AutoLabelConfigurationSnapshotEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelConfigurationSnapshot(ctx, *req)
+		return respClusterV1AutoLabelConfigurationSnapshot{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelConfigurationSnapshot")(f)
+}
+
+// AutoLabelDistributedServiceCard implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelDistributedServiceCard(ctx context.Context, in api.Label) (DistributedServiceCard, error) {
+	resp, err := e.AutoLabelDistributedServiceCardEndpoint(ctx, in)
+	if err != nil {
+		return DistributedServiceCard{}, err
+	}
+	return *resp.(*DistributedServiceCard), nil
+}
+
+// MakeClusterV1AutoLabelDistributedServiceCardEndpoint creates  AutoLabelDistributedServiceCard endpoints for the service
+func MakeClusterV1AutoLabelDistributedServiceCardEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelDistributedServiceCard(ctx, *req)
+		return respClusterV1AutoLabelDistributedServiceCard{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelDistributedServiceCard")(f)
+}
+
+// AutoLabelHost implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelHost(ctx context.Context, in api.Label) (Host, error) {
+	resp, err := e.AutoLabelHostEndpoint(ctx, in)
+	if err != nil {
+		return Host{}, err
+	}
+	return *resp.(*Host), nil
+}
+
+// MakeClusterV1AutoLabelHostEndpoint creates  AutoLabelHost endpoints for the service
+func MakeClusterV1AutoLabelHostEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelHost(ctx, *req)
+		return respClusterV1AutoLabelHost{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelHost")(f)
+}
+
+// AutoLabelLicense implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelLicense(ctx context.Context, in api.Label) (License, error) {
+	resp, err := e.AutoLabelLicenseEndpoint(ctx, in)
+	if err != nil {
+		return License{}, err
+	}
+	return *resp.(*License), nil
+}
+
+// MakeClusterV1AutoLabelLicenseEndpoint creates  AutoLabelLicense endpoints for the service
+func MakeClusterV1AutoLabelLicenseEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelLicense(ctx, *req)
+		return respClusterV1AutoLabelLicense{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelLicense")(f)
+}
+
+// AutoLabelNode implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelNode(ctx context.Context, in api.Label) (Node, error) {
+	resp, err := e.AutoLabelNodeEndpoint(ctx, in)
+	if err != nil {
+		return Node{}, err
+	}
+	return *resp.(*Node), nil
+}
+
+// MakeClusterV1AutoLabelNodeEndpoint creates  AutoLabelNode endpoints for the service
+func MakeClusterV1AutoLabelNodeEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelNode(ctx, *req)
+		return respClusterV1AutoLabelNode{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelNode")(f)
+}
+
+// AutoLabelSnapshotRestore implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelSnapshotRestore(ctx context.Context, in api.Label) (SnapshotRestore, error) {
+	resp, err := e.AutoLabelSnapshotRestoreEndpoint(ctx, in)
+	if err != nil {
+		return SnapshotRestore{}, err
+	}
+	return *resp.(*SnapshotRestore), nil
+}
+
+// MakeClusterV1AutoLabelSnapshotRestoreEndpoint creates  AutoLabelSnapshotRestore endpoints for the service
+func MakeClusterV1AutoLabelSnapshotRestoreEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelSnapshotRestore(ctx, *req)
+		return respClusterV1AutoLabelSnapshotRestore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelSnapshotRestore")(f)
+}
+
+// AutoLabelTenant implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelTenant(ctx context.Context, in api.Label) (Tenant, error) {
+	resp, err := e.AutoLabelTenantEndpoint(ctx, in)
+	if err != nil {
+		return Tenant{}, err
+	}
+	return *resp.(*Tenant), nil
+}
+
+// MakeClusterV1AutoLabelTenantEndpoint creates  AutoLabelTenant endpoints for the service
+func MakeClusterV1AutoLabelTenantEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelTenant(ctx, *req)
+		return respClusterV1AutoLabelTenant{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelTenant")(f)
+}
+
+// AutoLabelVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoLabelVersion(ctx context.Context, in api.Label) (Version, error) {
+	resp, err := e.AutoLabelVersionEndpoint(ctx, in)
+	if err != nil {
+		return Version{}, err
+	}
+	return *resp.(*Version), nil
+}
+
+// MakeClusterV1AutoLabelVersionEndpoint creates  AutoLabelVersion endpoints for the service
+func MakeClusterV1AutoLabelVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelVersion(ctx, *req)
+		return respClusterV1AutoLabelVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoLabelVersion")(f)
+}
+
 // AutoListCluster implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (ClusterList, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
@@ -2205,6 +2556,15 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 		AutoGetSnapshotRestoreEndpoint:           MakeClusterV1AutoGetSnapshotRestoreEndpoint(s, logger),
 		AutoGetTenantEndpoint:                    MakeClusterV1AutoGetTenantEndpoint(s, logger),
 		AutoGetVersionEndpoint:                   MakeClusterV1AutoGetVersionEndpoint(s, logger),
+		AutoLabelClusterEndpoint:                 MakeClusterV1AutoLabelClusterEndpoint(s, logger),
+		AutoLabelConfigurationSnapshotEndpoint:   MakeClusterV1AutoLabelConfigurationSnapshotEndpoint(s, logger),
+		AutoLabelDistributedServiceCardEndpoint:  MakeClusterV1AutoLabelDistributedServiceCardEndpoint(s, logger),
+		AutoLabelHostEndpoint:                    MakeClusterV1AutoLabelHostEndpoint(s, logger),
+		AutoLabelLicenseEndpoint:                 MakeClusterV1AutoLabelLicenseEndpoint(s, logger),
+		AutoLabelNodeEndpoint:                    MakeClusterV1AutoLabelNodeEndpoint(s, logger),
+		AutoLabelSnapshotRestoreEndpoint:         MakeClusterV1AutoLabelSnapshotRestoreEndpoint(s, logger),
+		AutoLabelTenantEndpoint:                  MakeClusterV1AutoLabelTenantEndpoint(s, logger),
+		AutoLabelVersionEndpoint:                 MakeClusterV1AutoLabelVersionEndpoint(s, logger),
 		AutoListClusterEndpoint:                  MakeClusterV1AutoListClusterEndpoint(s, logger),
 		AutoListConfigurationSnapshotEndpoint:    MakeClusterV1AutoListConfigurationSnapshotEndpoint(s, logger),
 		AutoListDistributedServiceCardEndpoint:   MakeClusterV1AutoListDistributedServiceCardEndpoint(s, logger),
@@ -2631,6 +2991,123 @@ func (m loggingClusterV1MiddlewareClient) AutoGetVersion(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetVersion", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetVersion(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelCluster(ctx context.Context, in *api.Label) (resp *Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelCluster", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelConfigurationSnapshot(ctx context.Context, in *api.Label) (resp *ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelConfigurationSnapshot", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelConfigurationSnapshot(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelDistributedServiceCard(ctx context.Context, in *api.Label) (resp *DistributedServiceCard, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelDistributedServiceCard", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelDistributedServiceCard(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelHost(ctx context.Context, in *api.Label) (resp *Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelHost", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelHost(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelLicense(ctx context.Context, in *api.Label) (resp *License, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelLicense", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelLicense(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelNode(ctx context.Context, in *api.Label) (resp *Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelNode", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelSnapshotRestore(ctx context.Context, in *api.Label) (resp *SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelSnapshotRestore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelSnapshotRestore(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelTenant(ctx context.Context, in *api.Label) (resp *Tenant, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelTenant", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoLabelVersion(ctx context.Context, in *api.Label) (resp *Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelVersion(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (resp *ClusterList, err error) {
@@ -3403,6 +3880,123 @@ func (m loggingClusterV1MiddlewareServer) AutoGetVersion(ctx context.Context, in
 	resp, err = m.next.AutoGetVersion(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoLabelCluster(ctx context.Context, in api.Label) (resp Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelCluster", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelCluster(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelConfigurationSnapshot(ctx context.Context, in api.Label) (resp ConfigurationSnapshot, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelConfigurationSnapshot", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelConfigurationSnapshot(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelDistributedServiceCard(ctx context.Context, in api.Label) (resp DistributedServiceCard, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelDistributedServiceCard", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelDistributedServiceCard(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelHost(ctx context.Context, in api.Label) (resp Host, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelHost", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelHost(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelLicense(ctx context.Context, in api.Label) (resp License, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelLicense", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelLicense(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelNode(ctx context.Context, in api.Label) (resp Node, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelNode", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelNode(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelSnapshotRestore(ctx context.Context, in api.Label) (resp SnapshotRestore, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelSnapshotRestore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelSnapshotRestore(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelTenant(ctx context.Context, in api.Label) (resp Tenant, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelTenant", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoLabelVersion(ctx context.Context, in api.Label) (resp Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoLabelVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (resp ClusterList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -3981,6 +4575,60 @@ func makeURIClusterV1AutoGetVersionGetOper(in *Version) string {
 }
 
 //
+func makeURIClusterV1AutoLabelClusterLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelConfigurationSnapshotLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelDistributedServiceCardLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelHostLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelLicenseLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelNodeLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelSnapshotRestoreLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelTenantLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIClusterV1AutoLabelVersionLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoListClusterListOper(in *api.ListWatchOptions) string {
 	return ""
 
@@ -4172,6 +4820,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateCluster(ctx context.Context, in
 	return ret.(*Cluster), err
 }
 
+// AutoLabelCluster label method for Cluster
+func (r *EndpointsClusterV1RestClient) AutoLabelCluster(ctx context.Context, in *api.Label) (*Cluster, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoGetCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	path := makeURIClusterV1AutoGetClusterGetOper(in)
@@ -4338,6 +4991,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateNode(ctx context.Context, in *N
 	return ret.(*Node), err
 }
 
+// AutoLabelNode label method for Node
+func (r *EndpointsClusterV1RestClient) AutoLabelNode(ctx context.Context, in *api.Label) (*Node, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetNode CRUD method for Node
 func (r *EndpointsClusterV1RestClient) AutoGetNode(ctx context.Context, in *Node) (*Node, error) {
 	path := makeURIClusterV1AutoGetNodeGetOper(in)
@@ -4496,6 +5154,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *H
 	return ret.(*Host), err
 }
 
+// AutoLabelHost label method for Host
+func (r *EndpointsClusterV1RestClient) AutoLabelHost(ctx context.Context, in *api.Label) (*Host, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetHost CRUD method for Host
 func (r *EndpointsClusterV1RestClient) AutoGetHost(ctx context.Context, in *Host) (*Host, error) {
 	path := makeURIClusterV1AutoGetHostGetOper(in)
@@ -4635,6 +5298,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateDistributedServiceCard(ctx cont
 		return nil, err
 	}
 	return ret.(*DistributedServiceCard), err
+}
+
+// AutoLabelDistributedServiceCard label method for DistributedServiceCard
+func (r *EndpointsClusterV1RestClient) AutoLabelDistributedServiceCard(ctx context.Context, in *api.Label) (*DistributedServiceCard, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetDistributedServiceCard CRUD method for DistributedServiceCard
@@ -4795,6 +5463,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateTenant(ctx context.Context, in 
 	return ret.(*Tenant), err
 }
 
+// AutoLabelTenant label method for Tenant
+func (r *EndpointsClusterV1RestClient) AutoLabelTenant(ctx context.Context, in *api.Label) (*Tenant, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetTenant CRUD method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoGetTenant(ctx context.Context, in *Tenant) (*Tenant, error) {
 	path := makeURIClusterV1AutoGetTenantGetOper(in)
@@ -4916,6 +5589,11 @@ func (r *EndpointsClusterV1RestClient) AutoAddVersion(ctx context.Context, in *V
 
 // AutoUpdateVersion CRUD method for Version
 func (r *EndpointsClusterV1RestClient) AutoUpdateVersion(ctx context.Context, in *Version) (*Version, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelVersion label method for Version
+func (r *EndpointsClusterV1RestClient) AutoLabelVersion(ctx context.Context, in *api.Label) (*Version, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -5043,6 +5721,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateConfigurationSnapshot(ctx conte
 	return ret.(*ConfigurationSnapshot), err
 }
 
+// AutoLabelConfigurationSnapshot label method for ConfigurationSnapshot
+func (r *EndpointsClusterV1RestClient) AutoLabelConfigurationSnapshot(ctx context.Context, in *api.Label) (*ConfigurationSnapshot, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetConfigurationSnapshot CRUD method for ConfigurationSnapshot
 func (r *EndpointsClusterV1RestClient) AutoGetConfigurationSnapshot(ctx context.Context, in *ConfigurationSnapshot) (*ConfigurationSnapshot, error) {
 	path := makeURIClusterV1AutoGetConfigurationSnapshotGetOper(in)
@@ -5168,6 +5851,11 @@ func (r *EndpointsClusterV1RestClient) AutoAddSnapshotRestore(ctx context.Contex
 
 // AutoUpdateSnapshotRestore CRUD method for SnapshotRestore
 func (r *EndpointsClusterV1RestClient) AutoUpdateSnapshotRestore(ctx context.Context, in *SnapshotRestore) (*SnapshotRestore, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelSnapshotRestore label method for SnapshotRestore
+func (r *EndpointsClusterV1RestClient) AutoLabelSnapshotRestore(ctx context.Context, in *api.Label) (*SnapshotRestore, error) {
 	return nil, errors.New("not allowed")
 }
 
@@ -5314,6 +6002,11 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateLicense(ctx context.Context, in
 		return nil, err
 	}
 	return ret.(*License), err
+}
+
+// AutoLabelLicense label method for License
+func (r *EndpointsClusterV1RestClient) AutoLabelLicense(ctx context.Context, in *api.Label) (*License, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetLicense CRUD method for License

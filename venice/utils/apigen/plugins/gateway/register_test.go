@@ -1027,6 +1027,12 @@ func TestGetParams(t *testing.T) {
 				options:<[venice.methodOper]:"create" [venice.methodAutoGen]: true [venice.methodAutoGen]: true [venice.methodActionObject]: "Nest1" [google.api.http]:<selector:"" get:"/prefix">>
 			>
 			method: <
+				name: 'noncrudsvc_label'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"label" [venice.methodAutoGen]: true [venice.methodAutoGen]: true [venice.methodActionObject]: "Nest1" [google.api.http]:<selector:"" get:"/prefix">>
+			>
+			method: <
 				name: 'noncrudsvc_watch'
 				input_type: '.example.Nest1'
 				output_type: '.example.Nest1'
@@ -1109,6 +1115,10 @@ func TestGetParams(t *testing.T) {
 				if mparams.Oper != "CreateOper" {
 					t.Errorf("expecting CreateOper got %s", mparams.Oper)
 				}
+			case "noncrudsvc_label":
+				if mparams.Oper != "LabelOper" {
+					t.Errorf("expecting LabelOper got %s", mparams.Oper)
+				}
 			case "noncrudsvc_watch":
 				if mparams.Oper != "WatchOper" {
 					t.Errorf("expecting WatchOper got %s", mparams.Oper)
@@ -1148,6 +1158,10 @@ func TestGetParams(t *testing.T) {
 				if restOper != "POST" {
 					t.Errorf("expecting POST got [%s]", restOper)
 				}
+			case "noncrudsvc_label":
+				if restOper != "POST" {
+					t.Errorf("expecting POST got [%s]", restOper)
+				}
 			case "noncrudsvc_watch":
 				if restOper != "" {
 					t.Errorf("expecting [] got [%s]", restOper)
@@ -1173,12 +1187,16 @@ func TestGetParams(t *testing.T) {
 				t.Errorf("error getting message URI key for [%s.%s](%s)", *meth.Name, *meth.RequestType.Name, err)
 			}
 			switch *meth.Name {
-			case "noncrudsvc_get", "noncrudsvc_delete", "noncrudsvc_list", "noncrudsvc_create", "noncrudsvc_update":
+			case "noncrudsvc_get", "noncrudsvc_delete", "noncrudsvc_list", "noncrudsvc_create", "noncrudsvc_update", "noncrudsvc_label":
 				if !reflect.DeepEqual(result1, keys) {
 					t.Errorf("key components do not match for [%s] got [%+v] want [%+v]", *meth.Name, keys, result1)
 				}
 				if !reflect.DeepEqual(msgResult1, msgKeys) {
 					t.Errorf("key components (msg) do not match for [%s] got [%+v] want [%+v]", *meth.Name, msgKeys, result1)
+				}
+				labelMeth := *meth.Name == "noncrudsvc_label"
+				if labelMeth != isLabelMethod(meth) {
+					t.Errorf("isLabelMethod returned wrong value for meth [%s]", *meth.Name)
 				}
 			case "noncrudsvc_action":
 				if !isActionMethod(meth) {
@@ -1785,6 +1803,12 @@ func TestGetAutoTypes(t *testing.T) {
 				options:<[venice.methodOper]:"list" [venice.methodAutoGen]: true>
 			>
 			method: <
+				name: 'AutoCrudLabel'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"label" [venice.methodAutoGen]: true>
+			>
+			method: <
 				name: 'AutoCrudWatch'
 				input_type: '.example.Nest1'
 				output_type: '.example.Auto_ListNest1'
@@ -1845,6 +1869,11 @@ func TestGetAutoTypes(t *testing.T) {
 		if *v.Name == "AutoCrudWatch" {
 			if isAutoList(v) || !isAutoWatch(v) {
 				t.Errorf("check for isAutoList failed")
+			}
+		}
+		if *v.Name == "AutoCrudLabel" {
+			if !isAutoLabel(v) {
+				t.Errorf("check for isAutoLabel failed")
 			}
 		}
 	}

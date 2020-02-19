@@ -68,6 +68,12 @@ type eSecurityV1Endpoints struct {
 	fnAutoGetNetworkSecurityPolicy      func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetSecurityGroup              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTrafficEncryptionPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelApp                      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelCertificate              func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelFirewallProfile          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelNetworkSecurityPolicy    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelSecurityGroup            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelTrafficEncryptionPolicy  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListApp                       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListCertificate               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListFirewallProfile           func(ctx context.Context, t interface{}) (interface{}, error)
@@ -293,6 +299,15 @@ func (s *ssecuritySvc_securityBackend) regMsgsFunc(l log.Logger, scheme *runtime
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("security", s.Messages)
@@ -439,6 +454,174 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 		s.endpointsSecurityV1.fnAutoGetTrafficEncryptionPolicy = srv.AddMethod("AutoGetTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoGetTrafficEncryptionPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelApp = srv.AddMethod("AutoLabelApp",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.App"], "security", "AutoLabelApp")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.App{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.App{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelCertificate = srv.AddMethod("AutoLabelCertificate",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.Certificate"], "security", "AutoLabelCertificate")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.Certificate{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.Certificate{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelFirewallProfile = srv.AddMethod("AutoLabelFirewallProfile",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.FirewallProfile"], "security", "AutoLabelFirewallProfile")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.FirewallProfile{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.FirewallProfile{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelNetworkSecurityPolicy = srv.AddMethod("AutoLabelNetworkSecurityPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoLabelNetworkSecurityPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.NetworkSecurityPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.NetworkSecurityPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelSecurityGroup = srv.AddMethod("AutoLabelSecurityGroup",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.SecurityGroup"], "security", "AutoLabelSecurityGroup")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.SecurityGroup{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.SecurityGroup{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsSecurityV1.fnAutoLabelTrafficEncryptionPolicy = srv.AddMethod("AutoLabelTrafficEncryptionPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoLabelTrafficEncryptionPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := security.TrafficEncryptionPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := security.TrafficEncryptionPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListApp = srv.AddMethod("AutoListApp",
@@ -1336,6 +1519,54 @@ func (e *eSecurityV1Endpoints) AutoGetSecurityGroup(ctx context.Context, t secur
 }
 func (e *eSecurityV1Endpoints) AutoGetTrafficEncryptionPolicy(ctx context.Context, t security.TrafficEncryptionPolicy) (security.TrafficEncryptionPolicy, error) {
 	r, err := e.fnAutoGetTrafficEncryptionPolicy(ctx, t)
+	if err == nil {
+		return r.(security.TrafficEncryptionPolicy), err
+	}
+	return security.TrafficEncryptionPolicy{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelApp(ctx context.Context, t api.Label) (security.App, error) {
+	r, err := e.fnAutoLabelApp(ctx, t)
+	if err == nil {
+		return r.(security.App), err
+	}
+	return security.App{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelCertificate(ctx context.Context, t api.Label) (security.Certificate, error) {
+	r, err := e.fnAutoLabelCertificate(ctx, t)
+	if err == nil {
+		return r.(security.Certificate), err
+	}
+	return security.Certificate{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelFirewallProfile(ctx context.Context, t api.Label) (security.FirewallProfile, error) {
+	r, err := e.fnAutoLabelFirewallProfile(ctx, t)
+	if err == nil {
+		return r.(security.FirewallProfile), err
+	}
+	return security.FirewallProfile{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelNetworkSecurityPolicy(ctx context.Context, t api.Label) (security.NetworkSecurityPolicy, error) {
+	r, err := e.fnAutoLabelNetworkSecurityPolicy(ctx, t)
+	if err == nil {
+		return r.(security.NetworkSecurityPolicy), err
+	}
+	return security.NetworkSecurityPolicy{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelSecurityGroup(ctx context.Context, t api.Label) (security.SecurityGroup, error) {
+	r, err := e.fnAutoLabelSecurityGroup(ctx, t)
+	if err == nil {
+		return r.(security.SecurityGroup), err
+	}
+	return security.SecurityGroup{}, err
+
+}
+func (e *eSecurityV1Endpoints) AutoLabelTrafficEncryptionPolicy(ctx context.Context, t api.Label) (security.TrafficEncryptionPolicy, error) {
+	r, err := e.fnAutoLabelTrafficEncryptionPolicy(ctx, t)
 	if err == nil {
 		return r.(security.TrafficEncryptionPolicy), err
 	}

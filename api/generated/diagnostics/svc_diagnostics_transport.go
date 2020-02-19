@@ -28,6 +28,7 @@ type grpcServerDiagnosticsV1 struct {
 	AutoAddModuleHdlr    grpctransport.Handler
 	AutoDeleteModuleHdlr grpctransport.Handler
 	AutoGetModuleHdlr    grpctransport.Handler
+	AutoLabelModuleHdlr  grpctransport.Handler
 	AutoListModuleHdlr   grpctransport.Handler
 	AutoUpdateModuleHdlr grpctransport.Handler
 	DebugHdlr            grpctransport.Handler
@@ -60,6 +61,13 @@ func MakeGRPCServerDiagnosticsV1(ctx context.Context, endpoints EndpointsDiagnos
 			DecodeGrpcReqModule,
 			EncodeGrpcRespModule,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetModule", logger)))...,
+		),
+
+		AutoLabelModuleHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelModuleEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespModule,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelModule", logger)))...,
 		),
 
 		AutoListModuleHdlr: grpctransport.NewServer(
@@ -131,6 +139,24 @@ func (s *grpcServerDiagnosticsV1) AutoGetModule(ctx oldcontext.Context, req *Mod
 }
 
 func decodeHTTPrespDiagnosticsV1AutoGetModule(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Module
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerDiagnosticsV1) AutoLabelModule(ctx oldcontext.Context, req *api.Label) (*Module, error) {
+	_, resp, err := s.AutoLabelModuleHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respDiagnosticsV1AutoLabelModule).V
+	return &r, resp.(respDiagnosticsV1AutoLabelModule).Err
+}
+
+func decodeHTTPrespDiagnosticsV1AutoLabelModule(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

@@ -63,6 +63,12 @@ type EndpointsBookstoreV1Client struct {
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
 	AutoGetStoreEndpoint        endpoint.Endpoint
+	AutoLabelBookEndpoint       endpoint.Endpoint
+	AutoLabelCouponEndpoint     endpoint.Endpoint
+	AutoLabelCustomerEndpoint   endpoint.Endpoint
+	AutoLabelOrderEndpoint      endpoint.Endpoint
+	AutoLabelPublisherEndpoint  endpoint.Endpoint
+	AutoLabelStoreEndpoint      endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListCouponEndpoint      endpoint.Endpoint
 	AutoListCustomerEndpoint    endpoint.Endpoint
@@ -106,6 +112,12 @@ type EndpointsBookstoreV1RestClient struct {
 	AutoGetOrderEndpoint            endpoint.Endpoint
 	AutoGetPublisherEndpoint        endpoint.Endpoint
 	AutoGetStoreEndpoint            endpoint.Endpoint
+	AutoLabelBookEndpoint           endpoint.Endpoint
+	AutoLabelCouponEndpoint         endpoint.Endpoint
+	AutoLabelCustomerEndpoint       endpoint.Endpoint
+	AutoLabelOrderEndpoint          endpoint.Endpoint
+	AutoLabelPublisherEndpoint      endpoint.Endpoint
+	AutoLabelStoreEndpoint          endpoint.Endpoint
 	AutoListBookEndpoint            endpoint.Endpoint
 	AutoListCouponEndpoint          endpoint.Endpoint
 	AutoListCustomerEndpoint        endpoint.Endpoint
@@ -156,6 +168,12 @@ type EndpointsBookstoreV1Server struct {
 	AutoGetOrderEndpoint        endpoint.Endpoint
 	AutoGetPublisherEndpoint    endpoint.Endpoint
 	AutoGetStoreEndpoint        endpoint.Endpoint
+	AutoLabelBookEndpoint       endpoint.Endpoint
+	AutoLabelCouponEndpoint     endpoint.Endpoint
+	AutoLabelCustomerEndpoint   endpoint.Endpoint
+	AutoLabelOrderEndpoint      endpoint.Endpoint
+	AutoLabelPublisherEndpoint  endpoint.Endpoint
+	AutoLabelStoreEndpoint      endpoint.Endpoint
 	AutoListBookEndpoint        endpoint.Endpoint
 	AutoListCouponEndpoint      endpoint.Endpoint
 	AutoListCustomerEndpoint    endpoint.Endpoint
@@ -455,6 +473,90 @@ func (e EndpointsBookstoreV1Client) AutoGetStore(ctx context.Context, in *Store)
 }
 
 type respBookstoreV1AutoGetStore struct {
+	V   Store
+	Err error
+}
+
+// AutoLabelBook is endpoint for AutoLabelBook
+func (e EndpointsBookstoreV1Client) AutoLabelBook(ctx context.Context, in *api.Label) (*Book, error) {
+	resp, err := e.AutoLabelBookEndpoint(ctx, in)
+	if err != nil {
+		return &Book{}, err
+	}
+	return resp.(*Book), nil
+}
+
+type respBookstoreV1AutoLabelBook struct {
+	V   Book
+	Err error
+}
+
+// AutoLabelCoupon is endpoint for AutoLabelCoupon
+func (e EndpointsBookstoreV1Client) AutoLabelCoupon(ctx context.Context, in *api.Label) (*Coupon, error) {
+	resp, err := e.AutoLabelCouponEndpoint(ctx, in)
+	if err != nil {
+		return &Coupon{}, err
+	}
+	return resp.(*Coupon), nil
+}
+
+type respBookstoreV1AutoLabelCoupon struct {
+	V   Coupon
+	Err error
+}
+
+// AutoLabelCustomer is endpoint for AutoLabelCustomer
+func (e EndpointsBookstoreV1Client) AutoLabelCustomer(ctx context.Context, in *api.Label) (*Customer, error) {
+	resp, err := e.AutoLabelCustomerEndpoint(ctx, in)
+	if err != nil {
+		return &Customer{}, err
+	}
+	return resp.(*Customer), nil
+}
+
+type respBookstoreV1AutoLabelCustomer struct {
+	V   Customer
+	Err error
+}
+
+// AutoLabelOrder is endpoint for AutoLabelOrder
+func (e EndpointsBookstoreV1Client) AutoLabelOrder(ctx context.Context, in *api.Label) (*Order, error) {
+	resp, err := e.AutoLabelOrderEndpoint(ctx, in)
+	if err != nil {
+		return &Order{}, err
+	}
+	return resp.(*Order), nil
+}
+
+type respBookstoreV1AutoLabelOrder struct {
+	V   Order
+	Err error
+}
+
+// AutoLabelPublisher is endpoint for AutoLabelPublisher
+func (e EndpointsBookstoreV1Client) AutoLabelPublisher(ctx context.Context, in *api.Label) (*Publisher, error) {
+	resp, err := e.AutoLabelPublisherEndpoint(ctx, in)
+	if err != nil {
+		return &Publisher{}, err
+	}
+	return resp.(*Publisher), nil
+}
+
+type respBookstoreV1AutoLabelPublisher struct {
+	V   Publisher
+	Err error
+}
+
+// AutoLabelStore is endpoint for AutoLabelStore
+func (e EndpointsBookstoreV1Client) AutoLabelStore(ctx context.Context, in *api.Label) (*Store, error) {
+	resp, err := e.AutoLabelStoreEndpoint(ctx, in)
+	if err != nil {
+		return &Store{}, err
+	}
+	return resp.(*Store), nil
+}
+
+type respBookstoreV1AutoLabelStore struct {
 	V   Store
 	Err error
 }
@@ -1129,6 +1231,138 @@ func MakeBookstoreV1AutoGetStoreEndpoint(s ServiceBookstoreV1Server, logger log.
 	return trace.ServerEndpoint("BookstoreV1:AutoGetStore")(f)
 }
 
+// AutoLabelBook implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelBook(ctx context.Context, in api.Label) (Book, error) {
+	resp, err := e.AutoLabelBookEndpoint(ctx, in)
+	if err != nil {
+		return Book{}, err
+	}
+	return *resp.(*Book), nil
+}
+
+// MakeBookstoreV1AutoLabelBookEndpoint creates  AutoLabelBook endpoints for the service
+func MakeBookstoreV1AutoLabelBookEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelBook(ctx, *req)
+		return respBookstoreV1AutoLabelBook{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelBook")(f)
+}
+
+// AutoLabelCoupon implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelCoupon(ctx context.Context, in api.Label) (Coupon, error) {
+	resp, err := e.AutoLabelCouponEndpoint(ctx, in)
+	if err != nil {
+		return Coupon{}, err
+	}
+	return *resp.(*Coupon), nil
+}
+
+// MakeBookstoreV1AutoLabelCouponEndpoint creates  AutoLabelCoupon endpoints for the service
+func MakeBookstoreV1AutoLabelCouponEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelCoupon(ctx, *req)
+		return respBookstoreV1AutoLabelCoupon{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelCoupon")(f)
+}
+
+// AutoLabelCustomer implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelCustomer(ctx context.Context, in api.Label) (Customer, error) {
+	resp, err := e.AutoLabelCustomerEndpoint(ctx, in)
+	if err != nil {
+		return Customer{}, err
+	}
+	return *resp.(*Customer), nil
+}
+
+// MakeBookstoreV1AutoLabelCustomerEndpoint creates  AutoLabelCustomer endpoints for the service
+func MakeBookstoreV1AutoLabelCustomerEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelCustomer(ctx, *req)
+		return respBookstoreV1AutoLabelCustomer{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelCustomer")(f)
+}
+
+// AutoLabelOrder implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelOrder(ctx context.Context, in api.Label) (Order, error) {
+	resp, err := e.AutoLabelOrderEndpoint(ctx, in)
+	if err != nil {
+		return Order{}, err
+	}
+	return *resp.(*Order), nil
+}
+
+// MakeBookstoreV1AutoLabelOrderEndpoint creates  AutoLabelOrder endpoints for the service
+func MakeBookstoreV1AutoLabelOrderEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelOrder(ctx, *req)
+		return respBookstoreV1AutoLabelOrder{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelOrder")(f)
+}
+
+// AutoLabelPublisher implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelPublisher(ctx context.Context, in api.Label) (Publisher, error) {
+	resp, err := e.AutoLabelPublisherEndpoint(ctx, in)
+	if err != nil {
+		return Publisher{}, err
+	}
+	return *resp.(*Publisher), nil
+}
+
+// MakeBookstoreV1AutoLabelPublisherEndpoint creates  AutoLabelPublisher endpoints for the service
+func MakeBookstoreV1AutoLabelPublisherEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelPublisher(ctx, *req)
+		return respBookstoreV1AutoLabelPublisher{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelPublisher")(f)
+}
+
+// AutoLabelStore implementation on server Endpoint
+func (e EndpointsBookstoreV1Server) AutoLabelStore(ctx context.Context, in api.Label) (Store, error) {
+	resp, err := e.AutoLabelStoreEndpoint(ctx, in)
+	if err != nil {
+		return Store{}, err
+	}
+	return *resp.(*Store), nil
+}
+
+// MakeBookstoreV1AutoLabelStoreEndpoint creates  AutoLabelStore endpoints for the service
+func MakeBookstoreV1AutoLabelStoreEndpoint(s ServiceBookstoreV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelStore(ctx, *req)
+		return respBookstoreV1AutoLabelStore{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("BookstoreV1:AutoLabelStore")(f)
+}
+
 // AutoListBook implementation on server Endpoint
 func (e EndpointsBookstoreV1Server) AutoListBook(ctx context.Context, in api.ListWatchOptions) (BookList, error) {
 	resp, err := e.AutoListBookEndpoint(ctx, in)
@@ -1552,6 +1786,12 @@ func MakeBookstoreV1ServerEndpoints(s ServiceBookstoreV1Server, logger log.Logge
 		AutoGetOrderEndpoint:        MakeBookstoreV1AutoGetOrderEndpoint(s, logger),
 		AutoGetPublisherEndpoint:    MakeBookstoreV1AutoGetPublisherEndpoint(s, logger),
 		AutoGetStoreEndpoint:        MakeBookstoreV1AutoGetStoreEndpoint(s, logger),
+		AutoLabelBookEndpoint:       MakeBookstoreV1AutoLabelBookEndpoint(s, logger),
+		AutoLabelCouponEndpoint:     MakeBookstoreV1AutoLabelCouponEndpoint(s, logger),
+		AutoLabelCustomerEndpoint:   MakeBookstoreV1AutoLabelCustomerEndpoint(s, logger),
+		AutoLabelOrderEndpoint:      MakeBookstoreV1AutoLabelOrderEndpoint(s, logger),
+		AutoLabelPublisherEndpoint:  MakeBookstoreV1AutoLabelPublisherEndpoint(s, logger),
+		AutoLabelStoreEndpoint:      MakeBookstoreV1AutoLabelStoreEndpoint(s, logger),
 		AutoListBookEndpoint:        MakeBookstoreV1AutoListBookEndpoint(s, logger),
 		AutoListCouponEndpoint:      MakeBookstoreV1AutoListCouponEndpoint(s, logger),
 		AutoListCustomerEndpoint:    MakeBookstoreV1AutoListCustomerEndpoint(s, logger),
@@ -1864,6 +2104,84 @@ func (m loggingBookstoreV1MiddlewareClient) AutoGetStore(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoGetStore", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetStore(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelBook(ctx context.Context, in *api.Label) (resp *Book, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelBook", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelBook(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelCoupon(ctx context.Context, in *api.Label) (resp *Coupon, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelCoupon", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelCustomer(ctx context.Context, in *api.Label) (resp *Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelCustomer", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelCustomer(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelOrder(ctx context.Context, in *api.Label) (resp *Order, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelOrder", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelOrder(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelPublisher(ctx context.Context, in *api.Label) (resp *Publisher, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelPublisher", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelPublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareClient) AutoLabelStore(ctx context.Context, in *api.Label) (resp *Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelStore", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelStore(ctx, in)
 	return
 }
 func (m loggingBookstoreV1MiddlewareClient) AutoListBook(ctx context.Context, in *api.ListWatchOptions) (resp *BookList, err error) {
@@ -2402,6 +2720,84 @@ func (m loggingBookstoreV1MiddlewareServer) AutoGetStore(ctx context.Context, in
 	resp, err = m.next.AutoGetStore(ctx, in)
 	return
 }
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelBook(ctx context.Context, in api.Label) (resp Book, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelBook", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelBook(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelCoupon(ctx context.Context, in api.Label) (resp Coupon, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelCoupon", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelCoupon(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelCustomer(ctx context.Context, in api.Label) (resp Customer, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelCustomer", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelCustomer(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelOrder(ctx context.Context, in api.Label) (resp Order, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelOrder", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelOrder(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelPublisher(ctx context.Context, in api.Label) (resp Publisher, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelPublisher", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelPublisher(ctx, in)
+	return
+}
+func (m loggingBookstoreV1MiddlewareServer) AutoLabelStore(ctx context.Context, in api.Label) (resp Store, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "BookstoreV1", "method", "AutoLabelStore", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelStore(ctx, in)
+	return
+}
 func (m loggingBookstoreV1MiddlewareServer) AutoListBook(ctx context.Context, in api.ListWatchOptions) (resp BookList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2810,6 +3206,40 @@ func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
 }
 
 //
+func makeURIBookstoreV1AutoLabelBookLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoLabelCouponLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoLabelCustomerLabelOper(in *api.Label) string {
+	return fmt.Sprint("/configs/bookstore/v1", "/customers/", in.Name, "/label")
+}
+
+//
+func makeURIBookstoreV1AutoLabelOrderLabelOper(in *api.Label) string {
+	return fmt.Sprint("/configs/bookstore/v1", "/orders/", in.Name, "/label")
+}
+
+//
+func makeURIBookstoreV1AutoLabelPublisherLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURIBookstoreV1AutoLabelStoreLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURIBookstoreV1AutoListBookListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/bookstore/v1", "/books")
 }
@@ -2963,6 +3393,28 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateOrder(ctx context.Context, in
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateOrder(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Order), err
+}
+
+// AutoLabelOrder label method for Order
+func (r *EndpointsBookstoreV1RestClient) AutoLabelOrder(ctx context.Context, in *api.Label) (*Order, error) {
+	path := makeURIBookstoreV1AutoLabelOrderLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespBookstoreV1AutoLabelOrder(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -3152,6 +3604,11 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateBook(ctx context.Context, in 
 	return ret.(*Book), err
 }
 
+// AutoLabelBook label method for Book
+func (r *EndpointsBookstoreV1RestClient) AutoLabelBook(ctx context.Context, in *api.Label) (*Book, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetBook CRUD method for Book
 func (r *EndpointsBookstoreV1RestClient) AutoGetBook(ctx context.Context, in *Book) (*Book, error) {
 	path := makeURIBookstoreV1AutoGetBookGetOper(in)
@@ -3280,6 +3737,11 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdatePublisher(ctx context.Context
 	return nil, errors.New("not allowed")
 }
 
+// AutoLabelPublisher label method for Publisher
+func (r *EndpointsBookstoreV1RestClient) AutoLabelPublisher(ctx context.Context, in *api.Label) (*Publisher, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetPublisher CRUD method for Publisher
 func (r *EndpointsBookstoreV1RestClient) AutoGetPublisher(ctx context.Context, in *Publisher) (*Publisher, error) {
 	return nil, errors.New("not allowed")
@@ -3385,6 +3847,11 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateStore(ctx context.Context, in
 		return nil, err
 	}
 	return ret.(*Store), err
+}
+
+// AutoLabelStore label method for Store
+func (r *EndpointsBookstoreV1RestClient) AutoLabelStore(ctx context.Context, in *api.Label) (*Store, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetStore CRUD method for Store
@@ -3515,6 +3982,11 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateCoupon(ctx context.Context, i
 	return nil, errors.New("not allowed")
 }
 
+// AutoLabelCoupon label method for Coupon
+func (r *EndpointsBookstoreV1RestClient) AutoLabelCoupon(ctx context.Context, in *api.Label) (*Coupon, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetCoupon CRUD method for Coupon
 func (r *EndpointsBookstoreV1RestClient) AutoGetCoupon(ctx context.Context, in *Coupon) (*Coupon, error) {
 	return nil, errors.New("not allowed")
@@ -3616,6 +4088,28 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateCustomer(ctx context.Context,
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateCustomer(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Customer), err
+}
+
+// AutoLabelCustomer label method for Customer
+func (r *EndpointsBookstoreV1RestClient) AutoLabelCustomer(ctx context.Context, in *api.Label) (*Customer, error) {
+	path := makeURIBookstoreV1AutoLabelCustomerLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespBookstoreV1AutoLabelCustomer(ctx, resp)
 	if err != nil {
 		return nil, err
 	}

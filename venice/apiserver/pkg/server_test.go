@@ -14,7 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -93,8 +93,8 @@ func TestRegistration(t *testing.T) {
 		t.Errorf("could not retrieve registered service")
 	}
 
-	m1 := mocks.NewFakeMessage("TestType1", "", true)
-	m2 := mocks.NewFakeMessage("TestType2", "", true)
+	m1 := mocks.NewFakeMessage("test.TestType1", "", true)
+	m2 := mocks.NewFakeMessage("test.TestType2", "", true)
 	msgs := make(map[string]apisrv.Message)
 	msgs["test-service.msg1"] = m1
 	msgs["test-service.msg2"] = m2

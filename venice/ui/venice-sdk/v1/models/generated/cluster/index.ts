@@ -6,6 +6,7 @@
 
 export * from './enums';
 export * from './configuration-snapshot-status-config-save-status.model';
+export * from './api-label.model';
 export * from './api-list-meta.model';
 export * from './api-list-watch-options.model';
 export * from './api-object-meta.model';

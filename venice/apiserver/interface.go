@@ -182,6 +182,10 @@ type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix 
 //  to invoke the method if the method is exposed via REST. If not it returns a non nil error.
 type MakeURIFunc func(i interface{}) (string, error)
 
+// MakeMethDbKeyFunc is registered to the method and generates the DB key for the input i.
+// Usually supplied from auto-generated code.
+type MakeMethDbKeyFunc func(i interface{}, prefix string) (string, error)
+
 // KeyGenFunc is a function that generates the key for input i. This is usually auto-generated code.
 type KeyGenFunc func(i interface{}, prefix string) string
 
@@ -375,8 +379,10 @@ type MethodRegistration interface {
 	WithOper(oper apiintf.APIOperType) Method
 	// With Version sets the version of the API
 	WithVersion(ver string) Method
-	// WithMakeURI set the URI maker function for the method
+	// WithMakeURI sets the URI maker function for the method
 	WithMakeURI(fn MakeURIFunc) Method
+	// WithMethDbKey sets the fn to generate the db key for the method
+	WithMethDbKey(fn MakeMethDbKeyFunc) Method
 }
 
 // MethodAction is the set of actions on a Method.

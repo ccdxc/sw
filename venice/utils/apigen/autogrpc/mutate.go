@@ -18,7 +18,7 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
-	"github.com/pensando/sw/venice/utils/apigen/annotations"
+	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
 
@@ -409,6 +409,27 @@ func insertGrpcCRUD(svc *descriptor.ServiceDescriptorProto, sci *srcCodeInfo, m,
 	defTenant = false
 	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoAdd%s", m)] = codeInfo{
 		comments: fmt.Sprintf("Create %s object", m),
+	}
+	// Label method
+	if v, ok := resteps["label"]; ok {
+		opt := googapi.HttpRule_Post{Post: v}
+		restopt = &googapi.HttpRule{Pattern: &opt, Body: "*"}
+		if v1, ok := resteps["label_defTenant"]; ok {
+			dopt := googapi.HttpRule_Post{Post: v1}
+			restopt.AdditionalBindings = append(restopt.AdditionalBindings, &googapi.HttpRule{Pattern: &dopt, Body: "*"})
+			defTenant = true
+		}
+	} else {
+		restopt = nil
+	}
+	insertMethod(svc,
+		fmt.Sprintf("AutoLabel%s", m),
+		".api.Label",
+		fmt.Sprintf(".%s.%s", pkg, m),
+		"label", false, defTenant, m, restopt)
+	defTenant = false
+	sci.services[svc.GetName()].methods[fmt.Sprintf("AutoLabel%s", m)] = codeInfo{
+		comments: fmt.Sprintf("Label %s object", m),
 	}
 	// Update method
 	if v, ok := resteps["put"]; ok {
@@ -959,7 +980,7 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 							for _, meth := range r.Method {
 								meth = strings.ToLower(meth)
 								switch meth {
-								case "put", "post", "get", "delete", "list", "watch":
+								case "put", "post", "get", "delete", "list", "watch", "label":
 								default:
 									glog.Fatalf("unsupported REST verb %s", meth)
 								}
@@ -1000,6 +1021,18 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 										resteps[r.Object][meth] = path
 										if strings.Contains(path, "tenant/{O.Tenant}") {
 											npath := strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
+											resteps[r.Object][meth+"_defTenant"] = npath
+										}
+									case "label":
+										path, err := GetMessageURI(m)
+										path = path + "/label"
+										if err != nil {
+											glog.Fatalf("Could not evaluate URI for [%s](%s)", r.Object, err)
+										}
+										resteps[r.Object][meth] = path
+										var npath string
+										if strings.Contains(path, "tenant/{O.Tenant}") {
+											npath = strings.Replace(path, "tenant/{O.Tenant}/", "", 1)
 											resteps[r.Object][meth+"_defTenant"] = npath
 										}
 									}

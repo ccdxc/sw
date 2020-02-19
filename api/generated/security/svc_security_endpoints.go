@@ -61,6 +61,12 @@ type EndpointsSecurityV1Client struct {
 	AutoGetNetworkSecurityPolicyEndpoint      endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
+	AutoLabelAppEndpoint                      endpoint.Endpoint
+	AutoLabelCertificateEndpoint              endpoint.Endpoint
+	AutoLabelFirewallProfileEndpoint          endpoint.Endpoint
+	AutoLabelNetworkSecurityPolicyEndpoint    endpoint.Endpoint
+	AutoLabelSecurityGroupEndpoint            endpoint.Endpoint
+	AutoLabelTrafficEncryptionPolicyEndpoint  endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListFirewallProfileEndpoint           endpoint.Endpoint
@@ -100,6 +106,12 @@ type EndpointsSecurityV1RestClient struct {
 	AutoGetNetworkSecurityPolicyEndpoint      endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
+	AutoLabelAppEndpoint                      endpoint.Endpoint
+	AutoLabelCertificateEndpoint              endpoint.Endpoint
+	AutoLabelFirewallProfileEndpoint          endpoint.Endpoint
+	AutoLabelNetworkSecurityPolicyEndpoint    endpoint.Endpoint
+	AutoLabelSecurityGroupEndpoint            endpoint.Endpoint
+	AutoLabelTrafficEncryptionPolicyEndpoint  endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListFirewallProfileEndpoint           endpoint.Endpoint
@@ -146,6 +158,12 @@ type EndpointsSecurityV1Server struct {
 	AutoGetNetworkSecurityPolicyEndpoint      endpoint.Endpoint
 	AutoGetSecurityGroupEndpoint              endpoint.Endpoint
 	AutoGetTrafficEncryptionPolicyEndpoint    endpoint.Endpoint
+	AutoLabelAppEndpoint                      endpoint.Endpoint
+	AutoLabelCertificateEndpoint              endpoint.Endpoint
+	AutoLabelFirewallProfileEndpoint          endpoint.Endpoint
+	AutoLabelNetworkSecurityPolicyEndpoint    endpoint.Endpoint
+	AutoLabelSecurityGroupEndpoint            endpoint.Endpoint
+	AutoLabelTrafficEncryptionPolicyEndpoint  endpoint.Endpoint
 	AutoListAppEndpoint                       endpoint.Endpoint
 	AutoListCertificateEndpoint               endpoint.Endpoint
 	AutoListFirewallProfileEndpoint           endpoint.Endpoint
@@ -415,6 +433,90 @@ func (e EndpointsSecurityV1Client) AutoGetTrafficEncryptionPolicy(ctx context.Co
 }
 
 type respSecurityV1AutoGetTrafficEncryptionPolicy struct {
+	V   TrafficEncryptionPolicy
+	Err error
+}
+
+// AutoLabelApp is endpoint for AutoLabelApp
+func (e EndpointsSecurityV1Client) AutoLabelApp(ctx context.Context, in *api.Label) (*App, error) {
+	resp, err := e.AutoLabelAppEndpoint(ctx, in)
+	if err != nil {
+		return &App{}, err
+	}
+	return resp.(*App), nil
+}
+
+type respSecurityV1AutoLabelApp struct {
+	V   App
+	Err error
+}
+
+// AutoLabelCertificate is endpoint for AutoLabelCertificate
+func (e EndpointsSecurityV1Client) AutoLabelCertificate(ctx context.Context, in *api.Label) (*Certificate, error) {
+	resp, err := e.AutoLabelCertificateEndpoint(ctx, in)
+	if err != nil {
+		return &Certificate{}, err
+	}
+	return resp.(*Certificate), nil
+}
+
+type respSecurityV1AutoLabelCertificate struct {
+	V   Certificate
+	Err error
+}
+
+// AutoLabelFirewallProfile is endpoint for AutoLabelFirewallProfile
+func (e EndpointsSecurityV1Client) AutoLabelFirewallProfile(ctx context.Context, in *api.Label) (*FirewallProfile, error) {
+	resp, err := e.AutoLabelFirewallProfileEndpoint(ctx, in)
+	if err != nil {
+		return &FirewallProfile{}, err
+	}
+	return resp.(*FirewallProfile), nil
+}
+
+type respSecurityV1AutoLabelFirewallProfile struct {
+	V   FirewallProfile
+	Err error
+}
+
+// AutoLabelNetworkSecurityPolicy is endpoint for AutoLabelNetworkSecurityPolicy
+func (e EndpointsSecurityV1Client) AutoLabelNetworkSecurityPolicy(ctx context.Context, in *api.Label) (*NetworkSecurityPolicy, error) {
+	resp, err := e.AutoLabelNetworkSecurityPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &NetworkSecurityPolicy{}, err
+	}
+	return resp.(*NetworkSecurityPolicy), nil
+}
+
+type respSecurityV1AutoLabelNetworkSecurityPolicy struct {
+	V   NetworkSecurityPolicy
+	Err error
+}
+
+// AutoLabelSecurityGroup is endpoint for AutoLabelSecurityGroup
+func (e EndpointsSecurityV1Client) AutoLabelSecurityGroup(ctx context.Context, in *api.Label) (*SecurityGroup, error) {
+	resp, err := e.AutoLabelSecurityGroupEndpoint(ctx, in)
+	if err != nil {
+		return &SecurityGroup{}, err
+	}
+	return resp.(*SecurityGroup), nil
+}
+
+type respSecurityV1AutoLabelSecurityGroup struct {
+	V   SecurityGroup
+	Err error
+}
+
+// AutoLabelTrafficEncryptionPolicy is endpoint for AutoLabelTrafficEncryptionPolicy
+func (e EndpointsSecurityV1Client) AutoLabelTrafficEncryptionPolicy(ctx context.Context, in *api.Label) (*TrafficEncryptionPolicy, error) {
+	resp, err := e.AutoLabelTrafficEncryptionPolicyEndpoint(ctx, in)
+	if err != nil {
+		return &TrafficEncryptionPolicy{}, err
+	}
+	return resp.(*TrafficEncryptionPolicy), nil
+}
+
+type respSecurityV1AutoLabelTrafficEncryptionPolicy struct {
 	V   TrafficEncryptionPolicy
 	Err error
 }
@@ -1017,6 +1119,138 @@ func MakeSecurityV1AutoGetTrafficEncryptionPolicyEndpoint(s ServiceSecurityV1Ser
 	return trace.ServerEndpoint("SecurityV1:AutoGetTrafficEncryptionPolicy")(f)
 }
 
+// AutoLabelApp implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelApp(ctx context.Context, in api.Label) (App, error) {
+	resp, err := e.AutoLabelAppEndpoint(ctx, in)
+	if err != nil {
+		return App{}, err
+	}
+	return *resp.(*App), nil
+}
+
+// MakeSecurityV1AutoLabelAppEndpoint creates  AutoLabelApp endpoints for the service
+func MakeSecurityV1AutoLabelAppEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelApp(ctx, *req)
+		return respSecurityV1AutoLabelApp{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelApp")(f)
+}
+
+// AutoLabelCertificate implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelCertificate(ctx context.Context, in api.Label) (Certificate, error) {
+	resp, err := e.AutoLabelCertificateEndpoint(ctx, in)
+	if err != nil {
+		return Certificate{}, err
+	}
+	return *resp.(*Certificate), nil
+}
+
+// MakeSecurityV1AutoLabelCertificateEndpoint creates  AutoLabelCertificate endpoints for the service
+func MakeSecurityV1AutoLabelCertificateEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelCertificate(ctx, *req)
+		return respSecurityV1AutoLabelCertificate{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelCertificate")(f)
+}
+
+// AutoLabelFirewallProfile implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelFirewallProfile(ctx context.Context, in api.Label) (FirewallProfile, error) {
+	resp, err := e.AutoLabelFirewallProfileEndpoint(ctx, in)
+	if err != nil {
+		return FirewallProfile{}, err
+	}
+	return *resp.(*FirewallProfile), nil
+}
+
+// MakeSecurityV1AutoLabelFirewallProfileEndpoint creates  AutoLabelFirewallProfile endpoints for the service
+func MakeSecurityV1AutoLabelFirewallProfileEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelFirewallProfile(ctx, *req)
+		return respSecurityV1AutoLabelFirewallProfile{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelFirewallProfile")(f)
+}
+
+// AutoLabelNetworkSecurityPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelNetworkSecurityPolicy(ctx context.Context, in api.Label) (NetworkSecurityPolicy, error) {
+	resp, err := e.AutoLabelNetworkSecurityPolicyEndpoint(ctx, in)
+	if err != nil {
+		return NetworkSecurityPolicy{}, err
+	}
+	return *resp.(*NetworkSecurityPolicy), nil
+}
+
+// MakeSecurityV1AutoLabelNetworkSecurityPolicyEndpoint creates  AutoLabelNetworkSecurityPolicy endpoints for the service
+func MakeSecurityV1AutoLabelNetworkSecurityPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelNetworkSecurityPolicy(ctx, *req)
+		return respSecurityV1AutoLabelNetworkSecurityPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelNetworkSecurityPolicy")(f)
+}
+
+// AutoLabelSecurityGroup implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelSecurityGroup(ctx context.Context, in api.Label) (SecurityGroup, error) {
+	resp, err := e.AutoLabelSecurityGroupEndpoint(ctx, in)
+	if err != nil {
+		return SecurityGroup{}, err
+	}
+	return *resp.(*SecurityGroup), nil
+}
+
+// MakeSecurityV1AutoLabelSecurityGroupEndpoint creates  AutoLabelSecurityGroup endpoints for the service
+func MakeSecurityV1AutoLabelSecurityGroupEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelSecurityGroup(ctx, *req)
+		return respSecurityV1AutoLabelSecurityGroup{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelSecurityGroup")(f)
+}
+
+// AutoLabelTrafficEncryptionPolicy implementation on server Endpoint
+func (e EndpointsSecurityV1Server) AutoLabelTrafficEncryptionPolicy(ctx context.Context, in api.Label) (TrafficEncryptionPolicy, error) {
+	resp, err := e.AutoLabelTrafficEncryptionPolicyEndpoint(ctx, in)
+	if err != nil {
+		return TrafficEncryptionPolicy{}, err
+	}
+	return *resp.(*TrafficEncryptionPolicy), nil
+}
+
+// MakeSecurityV1AutoLabelTrafficEncryptionPolicyEndpoint creates  AutoLabelTrafficEncryptionPolicy endpoints for the service
+func MakeSecurityV1AutoLabelTrafficEncryptionPolicyEndpoint(s ServiceSecurityV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.Label)
+		v, err := s.AutoLabelTrafficEncryptionPolicy(ctx, *req)
+		return respSecurityV1AutoLabelTrafficEncryptionPolicy{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("SecurityV1:AutoLabelTrafficEncryptionPolicy")(f)
+}
+
 // AutoListApp implementation on server Endpoint
 func (e EndpointsSecurityV1Server) AutoListApp(ctx context.Context, in api.ListWatchOptions) (AppList, error) {
 	resp, err := e.AutoListAppEndpoint(ctx, in)
@@ -1394,6 +1628,12 @@ func MakeSecurityV1ServerEndpoints(s ServiceSecurityV1Server, logger log.Logger)
 		AutoGetNetworkSecurityPolicyEndpoint:      MakeSecurityV1AutoGetNetworkSecurityPolicyEndpoint(s, logger),
 		AutoGetSecurityGroupEndpoint:              MakeSecurityV1AutoGetSecurityGroupEndpoint(s, logger),
 		AutoGetTrafficEncryptionPolicyEndpoint:    MakeSecurityV1AutoGetTrafficEncryptionPolicyEndpoint(s, logger),
+		AutoLabelAppEndpoint:                      MakeSecurityV1AutoLabelAppEndpoint(s, logger),
+		AutoLabelCertificateEndpoint:              MakeSecurityV1AutoLabelCertificateEndpoint(s, logger),
+		AutoLabelFirewallProfileEndpoint:          MakeSecurityV1AutoLabelFirewallProfileEndpoint(s, logger),
+		AutoLabelNetworkSecurityPolicyEndpoint:    MakeSecurityV1AutoLabelNetworkSecurityPolicyEndpoint(s, logger),
+		AutoLabelSecurityGroupEndpoint:            MakeSecurityV1AutoLabelSecurityGroupEndpoint(s, logger),
+		AutoLabelTrafficEncryptionPolicyEndpoint:  MakeSecurityV1AutoLabelTrafficEncryptionPolicyEndpoint(s, logger),
 		AutoListAppEndpoint:                       MakeSecurityV1AutoListAppEndpoint(s, logger),
 		AutoListCertificateEndpoint:               MakeSecurityV1AutoListCertificateEndpoint(s, logger),
 		AutoListFirewallProfileEndpoint:           MakeSecurityV1AutoListFirewallProfileEndpoint(s, logger),
@@ -1678,6 +1918,84 @@ func (m loggingSecurityV1MiddlewareClient) AutoGetTrafficEncryptionPolicy(ctx co
 		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoGetTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoGetTrafficEncryptionPolicy(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelApp(ctx context.Context, in *api.Label) (resp *App, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelApp", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelApp(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelCertificate(ctx context.Context, in *api.Label) (resp *Certificate, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelCertificate", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelCertificate(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelFirewallProfile(ctx context.Context, in *api.Label) (resp *FirewallProfile, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelFirewallProfile", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelFirewallProfile(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelNetworkSecurityPolicy(ctx context.Context, in *api.Label) (resp *NetworkSecurityPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelNetworkSecurityPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetworkSecurityPolicy(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelSecurityGroup(ctx context.Context, in *api.Label) (resp *SecurityGroup, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelSecurityGroup", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelSecurityGroup(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareClient) AutoLabelTrafficEncryptionPolicy(ctx context.Context, in *api.Label) (resp *TrafficEncryptionPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoLabelTrafficEncryptionPolicy(ctx, in)
 	return
 }
 func (m loggingSecurityV1MiddlewareClient) AutoListApp(ctx context.Context, in *api.ListWatchOptions) (resp *AppList, err error) {
@@ -2164,6 +2482,84 @@ func (m loggingSecurityV1MiddlewareServer) AutoGetTrafficEncryptionPolicy(ctx co
 	resp, err = m.next.AutoGetTrafficEncryptionPolicy(ctx, in)
 	return
 }
+func (m loggingSecurityV1MiddlewareServer) AutoLabelApp(ctx context.Context, in api.Label) (resp App, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelApp", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelApp(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareServer) AutoLabelCertificate(ctx context.Context, in api.Label) (resp Certificate, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelCertificate", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelCertificate(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareServer) AutoLabelFirewallProfile(ctx context.Context, in api.Label) (resp FirewallProfile, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelFirewallProfile", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelFirewallProfile(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareServer) AutoLabelNetworkSecurityPolicy(ctx context.Context, in api.Label) (resp NetworkSecurityPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelNetworkSecurityPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelNetworkSecurityPolicy(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareServer) AutoLabelSecurityGroup(ctx context.Context, in api.Label) (resp SecurityGroup, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelSecurityGroup", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelSecurityGroup(ctx, in)
+	return
+}
+func (m loggingSecurityV1MiddlewareServer) AutoLabelTrafficEncryptionPolicy(ctx context.Context, in api.Label) (resp TrafficEncryptionPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "SecurityV1", "method", "AutoLabelTrafficEncryptionPolicy", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoLabelTrafficEncryptionPolicy(ctx, in)
+	return
+}
 func (m loggingSecurityV1MiddlewareServer) AutoListApp(ctx context.Context, in api.ListWatchOptions) (resp AppList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2536,6 +2932,42 @@ func makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in *TrafficEncryptio
 }
 
 //
+func makeURISecurityV1AutoLabelAppLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURISecurityV1AutoLabelCertificateLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURISecurityV1AutoLabelFirewallProfileLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURISecurityV1AutoLabelNetworkSecurityPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURISecurityV1AutoLabelSecurityGroupLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
+func makeURISecurityV1AutoLabelTrafficEncryptionPolicyLabelOper(in *api.Label) string {
+	return ""
+
+}
+
+//
 func makeURISecurityV1AutoListAppListOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/apps")
 }
@@ -2679,6 +3111,11 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSecurityGroup(ctx context.Cont
 		return nil, err
 	}
 	return ret.(*SecurityGroup), err
+}
+
+// AutoLabelSecurityGroup label method for SecurityGroup
+func (r *EndpointsSecurityV1RestClient) AutoLabelSecurityGroup(ctx context.Context, in *api.Label) (*SecurityGroup, error) {
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetSecurityGroup CRUD method for SecurityGroup
@@ -2839,6 +3276,11 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateNetworkSecurityPolicy(ctx cont
 	return ret.(*NetworkSecurityPolicy), err
 }
 
+// AutoLabelNetworkSecurityPolicy label method for NetworkSecurityPolicy
+func (r *EndpointsSecurityV1RestClient) AutoLabelNetworkSecurityPolicy(ctx context.Context, in *api.Label) (*NetworkSecurityPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetNetworkSecurityPolicy CRUD method for NetworkSecurityPolicy
 func (r *EndpointsSecurityV1RestClient) AutoGetNetworkSecurityPolicy(ctx context.Context, in *NetworkSecurityPolicy) (*NetworkSecurityPolicy, error) {
 	path := makeURISecurityV1AutoGetNetworkSecurityPolicyGetOper(in)
@@ -2997,6 +3439,11 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *A
 	return ret.(*App), err
 }
 
+// AutoLabelApp label method for App
+func (r *EndpointsSecurityV1RestClient) AutoLabelApp(ctx context.Context, in *api.Label) (*App, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetApp CRUD method for App
 func (r *EndpointsSecurityV1RestClient) AutoGetApp(ctx context.Context, in *App) (*App, error) {
 	path := makeURISecurityV1AutoGetAppGetOper(in)
@@ -3138,6 +3585,11 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateFirewallProfile(ctx context.Co
 	return ret.(*FirewallProfile), err
 }
 
+// AutoLabelFirewallProfile label method for FirewallProfile
+func (r *EndpointsSecurityV1RestClient) AutoLabelFirewallProfile(ctx context.Context, in *api.Label) (*FirewallProfile, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetFirewallProfile CRUD method for FirewallProfile
 func (r *EndpointsSecurityV1RestClient) AutoGetFirewallProfile(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error) {
 	path := makeURISecurityV1AutoGetFirewallProfileGetOper(in)
@@ -3245,6 +3697,11 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateCertificate(ctx context.Contex
 	return nil, errors.New("not allowed")
 }
 
+// AutoLabelCertificate label method for Certificate
+func (r *EndpointsSecurityV1RestClient) AutoLabelCertificate(ctx context.Context, in *api.Label) (*Certificate, error) {
+	return nil, errors.New("not allowed")
+}
+
 // AutoGetCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoGetCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
 	return nil, errors.New("not allowed")
@@ -3315,6 +3772,11 @@ func (r *EndpointsSecurityV1RestClient) AutoAddTrafficEncryptionPolicy(ctx conte
 
 // AutoUpdateTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoLabelTrafficEncryptionPolicy label method for TrafficEncryptionPolicy
+func (r *EndpointsSecurityV1RestClient) AutoLabelTrafficEncryptionPolicy(ctx context.Context, in *api.Label) (*TrafficEncryptionPolicy, error) {
 	return nil, errors.New("not allowed")
 }
 

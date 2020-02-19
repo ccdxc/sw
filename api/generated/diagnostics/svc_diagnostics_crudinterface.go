@@ -20,6 +20,7 @@ type DiagnosticsV1ModuleInterface interface {
 	Create(ctx context.Context, in *Module) (*Module, error)
 	Update(ctx context.Context, in *Module) (*Module, error)
 	UpdateStatus(ctx context.Context, in *Module) (*Module, error)
+	Label(ctx context.Context, in *api.Label) (*Module, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Module, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Module, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Module, error)

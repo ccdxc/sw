@@ -52,6 +52,26 @@ func (l *ListMeta) GetListMeta() *ListMeta {
 }
 
 // Clone clones the object into into
+func (l *Label) Clone(into interface{}) (interface{}, error) {
+	var out *Label
+	var ok bool
+	if into == nil {
+		out = &Label{}
+	} else {
+		out, ok = into.(*Label)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	out.ObjectMeta.Name = l.ObjectMeta.Name
+	out.Labels = map[string]string{}
+	for k, v := range l.Labels {
+		out.Labels[k] = v
+	}
+	return out, nil
+}
+
+// Clone clones the object into into
 func (l *ListMeta) Clone(into interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("not defined")
 }
@@ -82,6 +102,11 @@ func (m *ListWatchOptions) Defaults(ver string) bool {
 	return false
 }
 
+// Defaults applies defaults to the object
+func (l *Label) Defaults(ver string) bool {
+	return false
+}
+
 // Validate validates the object
 func (t *TypeMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
@@ -97,6 +122,14 @@ func (l *ListMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool
 
 // Normalize normalizes the object if needed
 func (l *ListMeta) Normalize() {}
+
+// Validate validates the object
+func (l *Label) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	return nil
+}
+
+// Normalize normalizes the object if needed
+func (l *Label) Normalize() {}
 
 // Validate validates the object
 func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

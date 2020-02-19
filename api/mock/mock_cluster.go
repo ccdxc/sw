@@ -78,6 +78,19 @@ func (mr *MockClusterV1ClusterInterfaceMockRecorder) UpdateStatus(ctx, in interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockClusterV1ClusterInterface) Label(ctx context.Context, in *api.Label) (*cluster.Cluster, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1ClusterInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1ClusterInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -230,6 +243,19 @@ func (mr *MockClusterV1NodeInterfaceMockRecorder) UpdateStatus(ctx, in interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1NodeInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockClusterV1NodeInterface) Label(ctx context.Context, in *api.Label) (*cluster.Node, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1NodeInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1NodeInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1NodeInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Node, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -354,6 +380,19 @@ func (m *MockClusterV1HostInterface) UpdateStatus(ctx context.Context, in *clust
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockClusterV1HostInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1HostInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockClusterV1HostInterface) Label(ctx context.Context, in *api.Label) (*cluster.Host, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1HostInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -482,6 +521,19 @@ func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) UpdateStatus
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockClusterV1DistributedServiceCardInterface) Label(ctx context.Context, in *api.Label) (*cluster.DistributedServiceCard, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.DistributedServiceCard)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1DistributedServiceCardInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1DistributedServiceCardInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1DistributedServiceCardInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DistributedServiceCard, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -606,6 +658,19 @@ func (m *MockClusterV1TenantInterface) UpdateStatus(ctx context.Context, in *clu
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockClusterV1TenantInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1TenantInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockClusterV1TenantInterface) Label(ctx context.Context, in *api.Label) (*cluster.Tenant, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Tenant)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1TenantInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1TenantInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -734,6 +799,19 @@ func (mr *MockClusterV1VersionInterfaceMockRecorder) UpdateStatus(ctx, in interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockClusterV1VersionInterface) Label(ctx context.Context, in *api.Label) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1VersionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -858,6 +936,19 @@ func (m *MockClusterV1ConfigurationSnapshotInterface) UpdateStatus(ctx context.C
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockClusterV1ConfigurationSnapshotInterface) Label(ctx context.Context, in *api.Label) (*cluster.ConfigurationSnapshot, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.ConfigurationSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1ConfigurationSnapshotInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1ConfigurationSnapshotInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method
@@ -999,6 +1090,19 @@ func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) UpdateStatus(ctx, i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).UpdateStatus), ctx, in)
 }
 
+// Label mocks base method
+func (m *MockClusterV1SnapshotRestoreInterface) Label(ctx context.Context, in *api.Label) (*cluster.SnapshotRestore, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.SnapshotRestore)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1SnapshotRestoreInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1SnapshotRestoreInterface)(nil).Label), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1SnapshotRestoreInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SnapshotRestore, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -1136,6 +1240,19 @@ func (m *MockClusterV1LicenseInterface) UpdateStatus(ctx context.Context, in *cl
 // UpdateStatus indicates an expected call of UpdateStatus
 func (mr *MockClusterV1LicenseInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockClusterV1LicenseInterface) Label(ctx context.Context, in *api.Label) (*cluster.License, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*cluster.License)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockClusterV1LicenseInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockClusterV1LicenseInterface)(nil).Label), ctx, in)
 }
 
 // Get mocks base method

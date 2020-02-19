@@ -65,6 +65,11 @@ type eAuthV1Endpoints struct {
 	fnAutoGetRoleBinding             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetUser                    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetUserPreference          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelAuthenticationPolicy  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRole                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelRoleBinding           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelUser                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelUserPreference        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAuthenticationPolicy   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRole                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListRoleBinding            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -262,6 +267,15 @@ func (s *sauthSvc_authBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("auth", s.Messages)
@@ -393,6 +407,146 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/user-preferences/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoLabelAuthenticationPolicy = srv.AddMethod("AutoLabelAuthenticationPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoLabelAuthenticationPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := auth.AuthenticationPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := auth.AuthenticationPolicy{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoLabelRole = srv.AddMethod("AutoLabelRole",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.Role"], "auth", "AutoLabelRole")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := auth.Role{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := auth.Role{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoLabelRoleBinding = srv.AddMethod("AutoLabelRoleBinding",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.RoleBinding"], "auth", "AutoLabelRoleBinding")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := auth.RoleBinding{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := auth.RoleBinding{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoLabelUser = srv.AddMethod("AutoLabelUser",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.User"], "auth", "AutoLabelUser")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := auth.User{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := auth.User{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnAutoLabelUserPreference = srv.AddMethod("AutoLabelUserPreference",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.UserPreference"], "auth", "AutoLabelUserPreference")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := auth.UserPreference{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := auth.UserPreference{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
@@ -1206,6 +1360,46 @@ func (e *eAuthV1Endpoints) AutoGetUser(ctx context.Context, t auth.User) (auth.U
 }
 func (e *eAuthV1Endpoints) AutoGetUserPreference(ctx context.Context, t auth.UserPreference) (auth.UserPreference, error) {
 	r, err := e.fnAutoGetUserPreference(ctx, t)
+	if err == nil {
+		return r.(auth.UserPreference), err
+	}
+	return auth.UserPreference{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoLabelAuthenticationPolicy(ctx context.Context, t api.Label) (auth.AuthenticationPolicy, error) {
+	r, err := e.fnAutoLabelAuthenticationPolicy(ctx, t)
+	if err == nil {
+		return r.(auth.AuthenticationPolicy), err
+	}
+	return auth.AuthenticationPolicy{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoLabelRole(ctx context.Context, t api.Label) (auth.Role, error) {
+	r, err := e.fnAutoLabelRole(ctx, t)
+	if err == nil {
+		return r.(auth.Role), err
+	}
+	return auth.Role{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoLabelRoleBinding(ctx context.Context, t api.Label) (auth.RoleBinding, error) {
+	r, err := e.fnAutoLabelRoleBinding(ctx, t)
+	if err == nil {
+		return r.(auth.RoleBinding), err
+	}
+	return auth.RoleBinding{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoLabelUser(ctx context.Context, t api.Label) (auth.User, error) {
+	r, err := e.fnAutoLabelUser(ctx, t)
+	if err == nil {
+		return r.(auth.User), err
+	}
+	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) AutoLabelUserPreference(ctx context.Context, t api.Label) (auth.UserPreference, error) {
+	r, err := e.fnAutoLabelUserPreference(ctx, t)
 	if err == nil {
 		return r.(auth.UserPreference), err
 	}

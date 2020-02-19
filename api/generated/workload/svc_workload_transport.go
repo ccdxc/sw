@@ -32,6 +32,8 @@ type grpcServerWorkloadV1 struct {
 	AutoDeleteWorkloadHdlr grpctransport.Handler
 	AutoGetEndpointHdlr    grpctransport.Handler
 	AutoGetWorkloadHdlr    grpctransport.Handler
+	AutoLabelEndpointHdlr  grpctransport.Handler
+	AutoLabelWorkloadHdlr  grpctransport.Handler
 	AutoListEndpointHdlr   grpctransport.Handler
 	AutoListWorkloadHdlr   grpctransport.Handler
 	AutoUpdateEndpointHdlr grpctransport.Handler
@@ -95,6 +97,20 @@ func MakeGRPCServerWorkloadV1(ctx context.Context, endpoints EndpointsWorkloadV1
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetWorkload", logger)))...,
+		),
+
+		AutoLabelEndpointHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelEndpointEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespEndpoint,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelEndpoint", logger)))...,
+		),
+
+		AutoLabelWorkloadHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelWorkloadEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespWorkload,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelWorkload", logger)))...,
 		),
 
 		AutoListEndpointHdlr: grpctransport.NewServer(
@@ -259,6 +275,42 @@ func (s *grpcServerWorkloadV1) AutoGetWorkload(ctx oldcontext.Context, req *Work
 }
 
 func decodeHTTPrespWorkloadV1AutoGetWorkload(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Workload
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerWorkloadV1) AutoLabelEndpoint(ctx oldcontext.Context, req *api.Label) (*Endpoint, error) {
+	_, resp, err := s.AutoLabelEndpointHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respWorkloadV1AutoLabelEndpoint).V
+	return &r, resp.(respWorkloadV1AutoLabelEndpoint).Err
+}
+
+func decodeHTTPrespWorkloadV1AutoLabelEndpoint(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Endpoint
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerWorkloadV1) AutoLabelWorkload(ctx oldcontext.Context, req *api.Label) (*Workload, error) {
+	_, resp, err := s.AutoLabelWorkloadHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respWorkloadV1AutoLabelWorkload).V
+	return &r, resp.(respWorkloadV1AutoLabelWorkload).Err
+}
+
+func decodeHTTPrespWorkloadV1AutoLabelWorkload(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

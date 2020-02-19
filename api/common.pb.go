@@ -18,6 +18,7 @@
 		Interface
 		InterfaceSlice
 		KindWatchOptions
+		Label
 		ListMeta
 		ListWatchOptions
 		ObjectMeta

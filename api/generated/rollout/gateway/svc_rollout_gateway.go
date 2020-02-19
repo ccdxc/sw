@@ -215,6 +215,60 @@ func (a adapterRolloutV1) AutoGetRolloutAction(oldctx oldcontext.Context, t *rol
 	return ret.(*rollout.RolloutAction), err
 }
 
+func (a adapterRolloutV1) AutoLabelRollout(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*rollout.Rollout, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoLabelRollout", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelRollout")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelRollout(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.Rollout), err
+}
+
+func (a adapterRolloutV1) AutoLabelRolloutAction(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.RolloutV1AutoLabelRolloutAction", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutAction), err
+}
+
 func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*rollout.RolloutList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()

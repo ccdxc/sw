@@ -29,7 +29,7 @@ func TestIPAMPolicyConfig(t *testing.T) {
 	l := log.SetConfig(logConfig)
 	service := apisrvmocks.NewFakeService()
 	meth := apisrvmocks.NewFakeMethod(true)
-	msg := apisrvmocks.NewFakeMessage("test", "/test/path", false)
+	msg := apisrvmocks.NewFakeMessage("test.test", "/test/path", false)
 	apisrvmocks.SetFakeMethodReqType(msg, meth)
 	service.AddMethod("IPAMPolicy", meth)
 

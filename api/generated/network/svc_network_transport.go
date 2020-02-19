@@ -49,6 +49,14 @@ type grpcServerNetworkV1 struct {
 	AutoGetRoutingConfigHdlr       grpctransport.Handler
 	AutoGetServiceHdlr             grpctransport.Handler
 	AutoGetVirtualRouterHdlr       grpctransport.Handler
+	AutoLabelIPAMPolicyHdlr        grpctransport.Handler
+	AutoLabelLbPolicyHdlr          grpctransport.Handler
+	AutoLabelNetworkHdlr           grpctransport.Handler
+	AutoLabelNetworkInterfaceHdlr  grpctransport.Handler
+	AutoLabelRouteTableHdlr        grpctransport.Handler
+	AutoLabelRoutingConfigHdlr     grpctransport.Handler
+	AutoLabelServiceHdlr           grpctransport.Handler
+	AutoLabelVirtualRouterHdlr     grpctransport.Handler
 	AutoListIPAMPolicyHdlr         grpctransport.Handler
 	AutoListLbPolicyHdlr           grpctransport.Handler
 	AutoListNetworkHdlr            grpctransport.Handler
@@ -241,6 +249,62 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqVirtualRouter,
 			EncodeGrpcRespVirtualRouter,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVirtualRouter", logger)))...,
+		),
+
+		AutoLabelIPAMPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelIPAMPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespIPAMPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelIPAMPolicy", logger)))...,
+		),
+
+		AutoLabelLbPolicyHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelLbPolicyEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespLbPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelLbPolicy", logger)))...,
+		),
+
+		AutoLabelNetworkHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelNetworkEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespNetwork,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetwork", logger)))...,
+		),
+
+		AutoLabelNetworkInterfaceHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelNetworkInterfaceEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespNetworkInterface,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelNetworkInterface", logger)))...,
+		),
+
+		AutoLabelRouteTableHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRouteTableEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRouteTable,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRouteTable", logger)))...,
+		),
+
+		AutoLabelRoutingConfigHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelRoutingConfigEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespRoutingConfig,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelRoutingConfig", logger)))...,
+		),
+
+		AutoLabelServiceHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelServiceEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespService,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelService", logger)))...,
+		),
+
+		AutoLabelVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelVirtualRouterEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespVirtualRouter,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelVirtualRouter", logger)))...,
 		),
 
 		AutoListIPAMPolicyHdlr: grpctransport.NewServer(
@@ -781,6 +845,150 @@ func (s *grpcServerNetworkV1) AutoGetVirtualRouter(ctx oldcontext.Context, req *
 }
 
 func decodeHTTPrespNetworkV1AutoGetVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouter
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelIPAMPolicy(ctx oldcontext.Context, req *api.Label) (*IPAMPolicy, error) {
+	_, resp, err := s.AutoLabelIPAMPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelIPAMPolicy).V
+	return &r, resp.(respNetworkV1AutoLabelIPAMPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelIPAMPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp IPAMPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelLbPolicy(ctx oldcontext.Context, req *api.Label) (*LbPolicy, error) {
+	_, resp, err := s.AutoLabelLbPolicyHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelLbPolicy).V
+	return &r, resp.(respNetworkV1AutoLabelLbPolicy).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelLbPolicy(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp LbPolicy
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelNetwork(ctx oldcontext.Context, req *api.Label) (*Network, error) {
+	_, resp, err := s.AutoLabelNetworkHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelNetwork).V
+	return &r, resp.(respNetworkV1AutoLabelNetwork).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelNetwork(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Network
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelNetworkInterface(ctx oldcontext.Context, req *api.Label) (*NetworkInterface, error) {
+	_, resp, err := s.AutoLabelNetworkInterfaceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelNetworkInterface).V
+	return &r, resp.(respNetworkV1AutoLabelNetworkInterface).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelNetworkInterface(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp NetworkInterface
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelRouteTable(ctx oldcontext.Context, req *api.Label) (*RouteTable, error) {
+	_, resp, err := s.AutoLabelRouteTableHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelRouteTable).V
+	return &r, resp.(respNetworkV1AutoLabelRouteTable).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelRouteTable(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RouteTable
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelRoutingConfig(ctx oldcontext.Context, req *api.Label) (*RoutingConfig, error) {
+	_, resp, err := s.AutoLabelRoutingConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelRoutingConfig).V
+	return &r, resp.(respNetworkV1AutoLabelRoutingConfig).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelRoutingConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RoutingConfig
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelService(ctx oldcontext.Context, req *api.Label) (*Service, error) {
+	_, resp, err := s.AutoLabelServiceHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelService).V
+	return &r, resp.(respNetworkV1AutoLabelService).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelService(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoLabelVirtualRouter(ctx oldcontext.Context, req *api.Label) (*VirtualRouter, error) {
+	_, resp, err := s.AutoLabelVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoLabelVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoLabelVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoLabelVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

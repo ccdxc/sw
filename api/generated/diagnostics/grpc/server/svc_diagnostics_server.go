@@ -53,6 +53,7 @@ type eDiagnosticsV1Endpoints struct {
 	fnAutoAddModule    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteModule func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetModule    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelModule  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListModule   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateModule func(ctx context.Context, t interface{}) (interface{}, error)
 	fnDebug            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -93,6 +94,15 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regMsgsFunc(l log.Logger, scheme *r
 		}),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
+		// Add a message handler for Label options
+		"api.Label": apisrvpkg.NewMessage("api.Label").WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(api.Label)
+			return &r
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(api.Label)
+			r.APIVersion = version
+			return r
+		}),
 	}
 
 	apisrv.RegisterMessages("diagnostics", s.Messages)
@@ -128,6 +138,34 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regSvcsFunc(ctx context.Context, lo
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "diagnostics/v1/modules/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsDiagnosticsV1.fnAutoLabelModule = srv.AddMethod("AutoLabelModule",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["diagnostics.Module"], "diagnostics", "AutoLabelModule")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := diagnostics.Module{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := diagnostics.Module{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
 		}).HandleInvocation
 
 		s.endpointsDiagnosticsV1.fnAutoListModule = srv.AddMethod("AutoListModule",
@@ -330,6 +368,14 @@ func (e *eDiagnosticsV1Endpoints) AutoDeleteModule(ctx context.Context, t diagno
 }
 func (e *eDiagnosticsV1Endpoints) AutoGetModule(ctx context.Context, t diagnostics.Module) (diagnostics.Module, error) {
 	r, err := e.fnAutoGetModule(ctx, t)
+	if err == nil {
+		return r.(diagnostics.Module), err
+	}
+	return diagnostics.Module{}, err
+
+}
+func (e *eDiagnosticsV1Endpoints) AutoLabelModule(ctx context.Context, t api.Label) (diagnostics.Module, error) {
+	r, err := e.fnAutoLabelModule(ctx, t)
 	if err == nil {
 		return r.(diagnostics.Module), err
 	}

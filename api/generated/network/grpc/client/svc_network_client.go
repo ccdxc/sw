@@ -366,6 +366,118 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoGetVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetVirtualRouter")(lAutoGetVirtualRouterEndpoint)
 	}
+	var lAutoLabelIPAMPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelIPAMPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelIPAMPolicy",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespIPAMPolicy,
+			&network.IPAMPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelIPAMPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelIPAMPolicy")(lAutoLabelIPAMPolicyEndpoint)
+	}
+	var lAutoLabelLbPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelLbPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelLbPolicy",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespLbPolicy,
+			&network.LbPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelLbPolicyEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelLbPolicy")(lAutoLabelLbPolicyEndpoint)
+	}
+	var lAutoLabelNetworkEndpoint endpoint.Endpoint
+	{
+		lAutoLabelNetworkEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelNetwork",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespNetwork,
+			&network.Network{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelNetworkEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelNetwork")(lAutoLabelNetworkEndpoint)
+	}
+	var lAutoLabelNetworkInterfaceEndpoint endpoint.Endpoint
+	{
+		lAutoLabelNetworkInterfaceEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelNetworkInterface",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespNetworkInterface,
+			&network.NetworkInterface{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelNetworkInterfaceEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelNetworkInterface")(lAutoLabelNetworkInterfaceEndpoint)
+	}
+	var lAutoLabelRouteTableEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRouteTableEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelRouteTable",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespRouteTable,
+			&network.RouteTable{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRouteTableEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelRouteTable")(lAutoLabelRouteTableEndpoint)
+	}
+	var lAutoLabelRoutingConfigEndpoint endpoint.Endpoint
+	{
+		lAutoLabelRoutingConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelRoutingConfig",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespRoutingConfig,
+			&network.RoutingConfig{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelRoutingConfigEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelRoutingConfig")(lAutoLabelRoutingConfigEndpoint)
+	}
+	var lAutoLabelServiceEndpoint endpoint.Endpoint
+	{
+		lAutoLabelServiceEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelService",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespService,
+			&network.Service{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelService")(lAutoLabelServiceEndpoint)
+	}
+	var lAutoLabelVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoLabelVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoLabelVirtualRouter",
+			network.EncodeGrpcReqLabel,
+			network.DecodeGrpcRespVirtualRouter,
+			&network.VirtualRouter{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoLabelVirtualRouter")(lAutoLabelVirtualRouterEndpoint)
+	}
 	var lAutoListIPAMPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListIPAMPolicyEndpoint = grpctransport.NewClient(
@@ -617,6 +729,14 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		AutoGetRoutingConfigEndpoint:       lAutoGetRoutingConfigEndpoint,
 		AutoGetServiceEndpoint:             lAutoGetServiceEndpoint,
 		AutoGetVirtualRouterEndpoint:       lAutoGetVirtualRouterEndpoint,
+		AutoLabelIPAMPolicyEndpoint:        lAutoLabelIPAMPolicyEndpoint,
+		AutoLabelLbPolicyEndpoint:          lAutoLabelLbPolicyEndpoint,
+		AutoLabelNetworkEndpoint:           lAutoLabelNetworkEndpoint,
+		AutoLabelNetworkInterfaceEndpoint:  lAutoLabelNetworkInterfaceEndpoint,
+		AutoLabelRouteTableEndpoint:        lAutoLabelRouteTableEndpoint,
+		AutoLabelRoutingConfigEndpoint:     lAutoLabelRoutingConfigEndpoint,
+		AutoLabelServiceEndpoint:           lAutoLabelServiceEndpoint,
+		AutoLabelVirtualRouterEndpoint:     lAutoLabelVirtualRouterEndpoint,
 		AutoListIPAMPolicyEndpoint:         lAutoListIPAMPolicyEndpoint,
 		AutoListLbPolicyEndpoint:           lAutoListLbPolicyEndpoint,
 		AutoListNetworkEndpoint:            lAutoListNetworkEndpoint,
@@ -674,6 +794,15 @@ func (a *grpcObjNetworkV1Network) UpdateStatus(ctx context.Context, in *network.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateNetwork(nctx, in)
+}
+
+func (a *grpcObjNetworkV1Network) Label(ctx context.Context, in *api.Label) (*network.Network, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Network", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelNetwork(nctx, in)
 }
 
 func (a *grpcObjNetworkV1Network) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
@@ -776,6 +905,13 @@ func (a *restObjNetworkV1Network) UpdateStatus(ctx context.Context, in *network.
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1Network) Label(ctx context.Context, in *api.Label) (*network.Network, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelNetwork(ctx, in)
+}
+
 func (a *restObjNetworkV1Network) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -866,6 +1002,15 @@ func (a *grpcObjNetworkV1Service) UpdateStatus(ctx context.Context, in *network.
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateService(nctx, in)
+}
+
+func (a *grpcObjNetworkV1Service) Label(ctx context.Context, in *api.Label) (*network.Service, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Service", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelService(nctx, in)
 }
 
 func (a *grpcObjNetworkV1Service) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Service, error) {
@@ -968,6 +1113,13 @@ func (a *restObjNetworkV1Service) UpdateStatus(ctx context.Context, in *network.
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1Service) Label(ctx context.Context, in *api.Label) (*network.Service, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelService(ctx, in)
+}
+
 func (a *restObjNetworkV1Service) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Service, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1058,6 +1210,15 @@ func (a *grpcObjNetworkV1LbPolicy) UpdateStatus(ctx context.Context, in *network
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateLbPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1LbPolicy) Label(ctx context.Context, in *api.Label) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelLbPolicy(nctx, in)
 }
 
 func (a *grpcObjNetworkV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
@@ -1160,6 +1321,13 @@ func (a *restObjNetworkV1LbPolicy) UpdateStatus(ctx context.Context, in *network
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1LbPolicy) Label(ctx context.Context, in *api.Label) (*network.LbPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelLbPolicy(ctx, in)
+}
+
 func (a *restObjNetworkV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1250,6 +1418,15 @@ func (a *grpcObjNetworkV1VirtualRouter) UpdateStatus(ctx context.Context, in *ne
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateVirtualRouter(nctx, in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Label(ctx context.Context, in *api.Label) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelVirtualRouter(nctx, in)
 }
 
 func (a *grpcObjNetworkV1VirtualRouter) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
@@ -1352,6 +1529,13 @@ func (a *restObjNetworkV1VirtualRouter) UpdateStatus(ctx context.Context, in *ne
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1VirtualRouter) Label(ctx context.Context, in *api.Label) (*network.VirtualRouter, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelVirtualRouter(ctx, in)
+}
+
 func (a *restObjNetworkV1VirtualRouter) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1442,6 +1626,15 @@ func (a *grpcObjNetworkV1NetworkInterface) UpdateStatus(ctx context.Context, in 
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateNetworkInterface(nctx, in)
+}
+
+func (a *grpcObjNetworkV1NetworkInterface) Label(ctx context.Context, in *api.Label) (*network.NetworkInterface, error) {
+	a.logger.DebugLog("msg", "received call", "object", "NetworkInterface", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelNetworkInterface(nctx, in)
 }
 
 func (a *grpcObjNetworkV1NetworkInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.NetworkInterface, error) {
@@ -1544,6 +1737,13 @@ func (a *restObjNetworkV1NetworkInterface) UpdateStatus(ctx context.Context, in 
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1NetworkInterface) Label(ctx context.Context, in *api.Label) (*network.NetworkInterface, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelNetworkInterface(ctx, in)
+}
+
 func (a *restObjNetworkV1NetworkInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.NetworkInterface, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1631,6 +1831,15 @@ func (a *grpcObjNetworkV1IPAMPolicy) UpdateStatus(ctx context.Context, in *netwo
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateIPAMPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1IPAMPolicy) Label(ctx context.Context, in *api.Label) (*network.IPAMPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "IPAMPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelIPAMPolicy(nctx, in)
 }
 
 func (a *grpcObjNetworkV1IPAMPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
@@ -1733,6 +1942,13 @@ func (a *restObjNetworkV1IPAMPolicy) UpdateStatus(ctx context.Context, in *netwo
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1IPAMPolicy) Label(ctx context.Context, in *api.Label) (*network.IPAMPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelIPAMPolicy(ctx, in)
+}
+
 func (a *restObjNetworkV1IPAMPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.IPAMPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1823,6 +2039,15 @@ func (a *grpcObjNetworkV1RoutingConfig) UpdateStatus(ctx context.Context, in *ne
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRoutingConfig(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RoutingConfig) Label(ctx context.Context, in *api.Label) (*network.RoutingConfig, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoutingConfig", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRoutingConfig(nctx, in)
 }
 
 func (a *grpcObjNetworkV1RoutingConfig) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
@@ -1925,6 +2150,13 @@ func (a *restObjNetworkV1RoutingConfig) UpdateStatus(ctx context.Context, in *ne
 	return nil, errors.New("not supported for REST")
 }
 
+func (a *restObjNetworkV1RoutingConfig) Label(ctx context.Context, in *api.Label) (*network.RoutingConfig, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRoutingConfig(ctx, in)
+}
+
 func (a *restObjNetworkV1RoutingConfig) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RoutingConfig, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2012,6 +2244,15 @@ func (a *grpcObjNetworkV1RouteTable) UpdateStatus(ctx context.Context, in *netwo
 	nctx := addVersion(ctx, "v1")
 	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRouteTable(nctx, in)
+}
+
+func (a *grpcObjNetworkV1RouteTable) Label(ctx context.Context, in *api.Label) (*network.RouteTable, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RouteTable", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelRouteTable(nctx, in)
 }
 
 func (a *grpcObjNetworkV1RouteTable) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
@@ -2112,6 +2353,13 @@ func (a *restObjNetworkV1RouteTable) Update(ctx context.Context, in *network.Rou
 
 func (a *restObjNetworkV1RouteTable) UpdateStatus(ctx context.Context, in *network.RouteTable) (*network.RouteTable, error) {
 	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjNetworkV1RouteTable) Label(ctx context.Context, in *api.Label) (*network.RouteTable, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelRouteTable(ctx, in)
 }
 
 func (a *restObjNetworkV1RouteTable) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.RouteTable, error) {
