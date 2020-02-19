@@ -27,7 +27,7 @@ pipeline_impl_base::factory(pipeline_cfg_t *pipeline_cfg) {
 
 void
 pipeline_impl_base::destroy(pipeline_impl_base *impl) {
-    apulu_impl::destroy(static_cast<apulu_impl*>(impl));
+    apulu_impl::destroy(static_cast<apulu_impl *>(impl));
 }
 
 /// \@}
