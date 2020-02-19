@@ -47,22 +47,22 @@ def get_bit_arr_length(field_width):
 def is_field_hash(field_name):
     return 'hash' in field_name;
 
-# TODO use pragmas
-def is_table_ftl_gen(table):
-    # return 'flow' in str(table) and 'stats' not in str(table) and 'info' not in str(table)
-    return 'flow' in str(table) and 'stats' not in str(table)
+def is_table_ftl_gen(table, pddict):
+    for annotation_dict in pddict['tables'][table]['annotations']:
+        if 'capi_bitfields_struct' in annotation_dict:
+            return True
 
 # index based table
-def is_table_index_based(table):
-    return 'flow_info' in str(table)
+def is_table_index_based(table, pddict):
+    return pddict['tables'][table]['type'] == 'Index'
 
 # generate key for table
-def is_table_gen_key(table):
-    return not is_table_index_based(table)
+def is_table_gen_key(table, pddict):
+    return not is_table_index_based(table, pddict)
 
 # generate hashes/hints for table
-def is_table_gen_hints(table):
-    return not is_table_index_based(table)
+def is_table_gen_hints(table, pddict):
+    return not is_table_index_based(table, pddict)
 
 # TODO use pragmas
 def is_table_pad_256(table):

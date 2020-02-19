@@ -88,6 +88,7 @@ action flow_hash(epoch, session_index, flow_role, pad8,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table flow {
     reads {
         vnic_metadata.vpc_id    : exact;
@@ -191,6 +192,7 @@ action ipv4_flow_hash(epoch, session_index, flow_role, pad8,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table ipv4_flow {
     reads {
         vnic_metadata.vpc_id    : exact;

@@ -111,6 +111,7 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table flow {
     reads {
         vnic_metadata.bd_id     : exact;
@@ -241,6 +242,7 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table ipv4_flow {
     reads {
         vnic_metadata.bd_id     : exact;

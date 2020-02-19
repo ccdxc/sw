@@ -868,6 +868,7 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
 @pragma hbm_table
 @pragma table_write
 @pragma index_table
+@pragma capi_bitfields_struct
 table session_track {
     reads {
         p4e_i2e.session_id  : exact;

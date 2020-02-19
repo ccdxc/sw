@@ -71,6 +71,7 @@ action flow_hash(entry_valid, session_index, nexthop_group_index, flow_role,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table flow {
     reads {
         key_metadata.lkp_id : exact;
@@ -161,6 +162,7 @@ action ipv4_flow_hash(entry_valid, session_index, nexthop_group_index,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table ipv4_flow {
     reads {
         key_metadata.lkp_id     : exact;

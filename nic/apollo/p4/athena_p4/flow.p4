@@ -58,6 +58,7 @@ action flow_hash(entry_valid, index, index_type,
 
 @pragma stage 3
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table flow {
     reads {
         key_metadata.vnic_id            : exact;
@@ -152,6 +153,7 @@ action ipv4_flow_hash(entry_valid, index, index_type, pad,
 
 @pragma stage 4
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table ipv4_flow {
     reads {
         key_metadata.vnic_id    : exact;

@@ -677,6 +677,7 @@ action flow_hit_to_vm_bounce(dst_lport, qos_class_id) {
 @pragma stage 3
 @pragma hbm_table
 @pragma numthreads 2
+@pragma capi_bitfields_struct
 table flow_info {
     reads {
         flow_info_metadata.flow_index : exact;
@@ -754,6 +755,7 @@ action flow_hash_info(entry_valid, export_en,
 @pragma hbm_table
 @pragma hash_type 0
 @pragma include_k_in_d
+@pragma capi_bitfields_struct
 table flow_hash {
     reads {
         flow_lkp_metadata.lkp_inst  : exact;

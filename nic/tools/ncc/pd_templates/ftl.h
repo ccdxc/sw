@@ -126,10 +126,7 @@
 //::     k_d_action_data_json['INGRESS_KD'] = {}
 //::     ftl_table_using_str = ''
 //::     for table in pddict['tables']:
-//::        if not is_table_ftl_gen(table):
-//::            continue
-//::        #endif
-//::        if pddict['tables'][table]['direction'] == "EGRESS":
+//::        if not is_table_ftl_gen(table, pddict):
 //::            continue
 //::        #endif
 //::        if pddict['tables'][table]['hash_overflow'] and not pddict['tables'][table]['otcam']:
@@ -528,7 +525,7 @@
 //::                # KEY STRUCT
 //::                ######################################
 //::
-//::                if is_table_gen_key(table):
+//::                if is_table_gen_key(table, pddict):
 struct __attribute__((__packed__)) ${struct_name}_key_entry_t {
 //::                    for key_field in reversed(key_fields_list):
 //::                        ftl_field_str = ftl_process_field(key_field)
@@ -541,7 +538,11 @@ struct __attribute__((__packed__)) ${struct_name}_key_entry_t {
 //::                # DATA STRUCT
 //::                ######################################
 //::
+//::                if is_table_index_based(table, pddict):
+struct __attribute__((__packed__)) ${struct_full_name} {
+//::                else:
 struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
+//::                #endif
 //::                for data_field in reversed(data_fields_list):
 //::                    # TODO remove once key is expanded for Apollo
 //::                    if data_field.name() == '__pad_key_bits':
@@ -617,6 +618,13 @@ public:
                  ${args});
     }
 
+//::                # if the table is index based entry_size calculation is different
+//::                # and alloc method is not required
+//::                if is_table_index_based(table, pddict):
+    static uint32_t entry_size(void) {
+        return sizeof(${struct_full_name});
+    }
+//::                else:
     static uint32_t entry_size(void) {
         return sizeof(${struct_full_name}) - sizeof(base_table_entry_t);
     }
@@ -639,11 +647,13 @@ public:
         return new (mem) ${struct_full_name}();
     }
 
+//::                #endif
+//::
 //::                ######################################
 //::                # KEY METHODS
 //::                ######################################
 //::
-//::                if is_table_gen_key(table):
+//::                if is_table_gen_key(table, pddict):
     void copy_key(${struct_name}_entry_t *s) {
 //::                    for key_field in reversed(key_fields_list):
 //::                        field_name = key_field.name()
@@ -734,7 +744,7 @@ public:
 //::                # HASH/HINT METHODS
 //::                ######################################
 //::
-//::                if is_table_gen_hints(table):
+//::                if is_table_gen_hints(table, pddict):
 
     void clear_hints(void) {
 //::                    # TODO use setters
@@ -910,13 +920,13 @@ public:
         }
         return 0;
     }
-//::                # if is_table_gen_hints(table):
+//::                # if is_table_gen_hints(table, pddict):
 //::                #endif
 
     int tostr(char *buff, uint32_t len) {
         int offset = 0;
 
-//::                if is_table_gen_key(table):
+//::                if is_table_gen_key(table, pddict):
         offset = key2str(buff, len);
         // delimiter b/w key and data
         snprintf(buff + offset, len-offset, ", ");
@@ -926,14 +936,17 @@ public:
     }
 
     void clear(void) {
-//::                if is_table_gen_key(table):
+//::                if is_table_gen_key(table, pddict):
         clear_key();
 //::                #endif
-//::                if is_table_gen_hints(table):
+//::                if is_table_gen_hints(table, pddict):
         clear_hints();
 //::                #endif
         clear_data();
+//::                # index based tables don't have inheritance
+//::                if not is_table_index_based(table, pddict):
         set_entry_valid(0);
+//::                #endif
     }
 
 //::                ######################################
@@ -942,7 +955,7 @@ public:
 //::
 //::                # To set fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table) and pipeline != 'iris':
+//::                if is_table_gen_key(table, pddict) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -984,7 +997,7 @@ public:
 //::
 //::                # To get fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table) and pipeline != 'iris':
+//::                if is_table_gen_key(table, pddict) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -1030,10 +1043,13 @@ public:
 #endif
 };
 //::
-//::                num_hints = ftl_hash_field_cnt()-1
-//::                tableid = 'P4' + caps_p4prog + 'TBL_ID_' + table.upper()
-//::                ftl_table_using_str += 'using sdk::table::' + struct_name + ';\n'
-//::                ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, struct_name, struct_full_name)
+//::                # dont generate derived class methods for index tables
+//::                if not is_table_index_based(table, pddict):
+//::                    num_hints = ftl_hash_field_cnt()-1
+//::                    tableid = 'P4' + caps_p4prog + 'TBL_ID_' + table.upper()
+//::                    ftl_table_using_str += 'using sdk::table::' + struct_name + ';\n'
+//::                    ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, struct_name, struct_full_name)
+//::                #endif
 //::
 //::                # reset the global state since this in invoked multiple times
 //::                ftl_hash_field_cnt_reset()
