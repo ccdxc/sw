@@ -1,0 +1,21 @@
+meta:
+    name    : cps
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : session_scale_stress_1hr
+        testcase: testcases.networking.session_scale
+        stress  : True
+        ignore  : True
+        args    :
+             timeout: 7200
+             stats_show_interval: 120
+             latency_pps: 10
+             switch_port_flap_interval: 90
+             sec_policy_interval: 30
+        iterators:
+            type             : simple
+            max_active_flow  : [64000]
+            cps              : [900]
+            duration         : [3600]

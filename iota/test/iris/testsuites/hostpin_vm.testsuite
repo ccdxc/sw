@@ -65,7 +65,8 @@ testbundles:
     regression:
         - firewall/policy_scale.testbundle
         - alg/alg_regression.testbundle
-        - ipsec/ipsec.testbundle
+        #- ipsec/ipsec.testbundle
+        - networking/cps_regression.testbundle
         - firewall/conntrack_regression.testbundle
         - naples_upgrade/naples_upgrade_hostpin_long.testbundle
 
