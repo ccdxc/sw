@@ -389,6 +389,11 @@
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
             "size": "1088K"
+        },
+        {
+            "name": "port_stats",
+            "size": "3K",
+            "reset": true
         }
     ]
 }

@@ -406,6 +406,11 @@
             "name": "opaque_tag",
             "size": "2K",
             "reset": true
+        },
+        {
+            "name": "port_stats",
+            "size": "3K",
+            "reset": true
         }
     ]
 }
