@@ -17,9 +17,9 @@ node:
 # Tunnel, nexthop and route-tables are retained for pkt generation. They are
 # not pushed to the model
         tunnel      :
-            - count : 16
+            - count : 1
               type  : underlay
-            - count : 16
+            - count : 1
               type  : underlay-ecmp
     uplink:
        - entry:

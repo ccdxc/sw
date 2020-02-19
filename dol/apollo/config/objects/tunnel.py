@@ -34,7 +34,7 @@ class TunnelObject(base.ConfigObjectBase):
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
-        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+        if utils.IsDol() and self.DEVICE.OverlayRoutingEn:
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         if (hasattr(spec, 'srcaddr')):

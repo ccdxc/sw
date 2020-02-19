@@ -31,7 +31,7 @@ class DeviceObject(base.ConfigObjectBase):
         self.BridgingEnabled = getattr(spec, 'bridging', False)
         self.LearningEnabled = getattr(spec, 'learning', False)
         self.LearnAgeTimeout = getattr(spec, 'learningagetimeout', 300)
-        self.OverlayRoutingEnabled = getattr(spec, 'overlayrouting', False)
+        self.OverlayRoutingEn = getattr(spec, 'overlayrouting', False)
         #TODO: based on stack, get ip & gw addr
         if getattr(spec, 'ipaddress', None) != None:
             self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
@@ -69,9 +69,9 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s|Encap:%s" %\
+        return "Device1|IPAddr:%s|GatewayAddr:%s|MAC:%s|Encap:%s|OverlayRoutingEn:%s" %\
                (self.IPAddr, self.GatewayAddr, self.MACAddr.get(),
-               utils.GetEncapTypeString(self.EncapType))
+               utils.GetEncapTypeString(self.EncapType), self.OverlayRoutingEn)
 
     def Show(self):
         logger.info("Device Object: %s" % self)
@@ -95,7 +95,7 @@ class DeviceObject(base.ConfigObjectBase):
         spec.BridgingEn = self.BridgingEnabled
         spec.LearningEn = self.LearningEnabled
         spec.LearnAgeTimeout = self.LearnAgeTimeout
-        spec.OverlayRoutingEn = self.OverlayRoutingEnabled
+        spec.OverlayRoutingEn = self.OverlayRoutingEn
         return
 
     def ValidateSpec(self, spec):
@@ -121,7 +121,7 @@ class DeviceObject(base.ConfigObjectBase):
             return False
         if spec.LearnAgeTimeout != self.LearnAgeTimeout:
             return False
-        if spec.OverlayRoutingEn != self.OverlayRoutingEnabled:
+        if spec.OverlayRoutingEn != self.OverlayRoutingEn:
             return False
         return True
 
@@ -144,7 +144,7 @@ class DeviceObject(base.ConfigObjectBase):
             return False
         if spec['learnagetimeout'] != self.LearnAgeTimeout:
             return False
-        if spec['overlayroutingen'] != self.OverlayRoutingEnabled:
+        if spec['overlayroutingen'] != self.OverlayRoutingEn:
             return False
         return True
 
@@ -166,7 +166,7 @@ class DeviceObject(base.ConfigObjectBase):
         return self.LearningEnabled
 
     def IsOverlayRoutingEnabled(self):
-        return self.OverlayRoutingEnabled
+        return self.OverlayRoutingEn
 
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
