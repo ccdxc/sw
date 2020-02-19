@@ -330,7 +330,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 
 .PHONY: jobd/e2e/naples-sim-image
 jobd/e2e/naples-sim-image: ${JOBD_PREREQS}
-	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
 	${NICDIR}/tools/release.sh
 
 .PHONY: jobd/e2e/naples-sim
@@ -358,7 +358,7 @@ jobd/make/nic:
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}
 	cd ${NICDIR}/.. && ${MAKE} -C nic/agent/dscagent
-	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
 	${NICDIR}/tools/release.sh
 	cd ${NICDIR}/.. go test -tags iris ./nic/agent/dscagent/...
 	# TODO uncomment the sanities once these are fixed
