@@ -113,12 +113,22 @@ update_port (const pds_obj_key_t *key, port_args_t *api_port_info)
 {
     sdk_ret_t ret;
     if_entry *intf;
+    port_args_t port_info;
 
     intf = if_db()->find(key);
     if (intf == NULL) {
         PDS_TRACE_ERR("port %s update failed", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
+    memset(&port_info, 0, sizeof(port_info));
+
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get port %s info, err %u", key->str(), ret);
+        return ret;
+    }
+    api_port_info->tx_pause_enable = port_info.tx_pause_enable;
+    api_port_info->rx_pause_enable = port_info.rx_pause_enable;
 
     // sdk port_num is logical port
     api_port_info->port_num =

@@ -1805,6 +1805,8 @@ static inline void
 pds_port_proto_to_port_args (port_args_t *port_args,
                              const pds::PortSpec &spec)
 {
+    memset(port_args, 0, sizeof(port_args_t));
+
     switch (spec.type()) {
     case pds::PORT_TYPE_ETH:
         port_args->port_type = port_type_t::PORT_TYPE_ETH;
@@ -3909,7 +3911,7 @@ pds_port_spec_to_proto (pds::PortSpec *spec,
         spec->set_type(pds::PORT_TYPE_NONE);
         break;
     }
-    switch(port_info->admin_state) {
+    switch(port_info->user_admin_state) {
     case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
         spec->set_adminstate(pds::PORT_ADMIN_STATE_DOWN);
         break;
