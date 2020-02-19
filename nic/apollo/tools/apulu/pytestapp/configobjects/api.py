@@ -52,8 +52,9 @@ class ObjectTypes(enum.IntEnum):
     POLICY = 9
     MIRROR = 10
     INTERFACE = 11
-    NH = 12
-    MAX = 13
+    LIF = 12
+    NH = 13
+    MAX = 14
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -72,7 +73,7 @@ class ClientStub:
         self.__set_one_rpc(ApiOps.CREATE, "%sCreate"%p)
         self.__set_one_rpc(ApiOps.DELETE, "%sDelete"%p)
         self.__set_one_rpc(ApiOps.UPDATE, "%sUpdate"%p)
-        self.__set_one_rpc(ApiOps.RETRIEVE, "%sRetrieve"%p)
+        self.__set_one_rpc(ApiOps.RETRIEVE, "%sGet"%p)
         self.__set_one_rpc(ApiOps.START, "%sStart"%p)
         self.__set_one_rpc(ApiOps.COMMIT, "%sCommit"%p)
         self.__set_one_rpc(ApiOps.ABORT, "%sAbort"%p)
@@ -130,6 +131,8 @@ class ApolloAgentClient:
                                                    self.__channel, 'VPC')
         self.__stubs[ObjectTypes.INTERFACE] = ClientStub(interface_pb2_grpc.IfSvcStub,
                                                    self.__channel, 'Interface')
+        self.__stubs[ObjectTypes.LIF] = ClientStub(interface_pb2_grpc.IfSvcStub,
+                                                   self.__channel, 'Lif')
         self.__stubs[ObjectTypes.NH] = ClientStub(nh_pb2_grpc.NhSvcStub,
                                                    self.__channel, 'Nexthop')
         self.__stubs[ObjectTypes.SUBNET] = ClientStub(subnet_pb2_grpc.SubnetSvcStub,

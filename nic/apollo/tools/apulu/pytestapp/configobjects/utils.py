@@ -77,6 +77,12 @@ class PdsUuid:
         uuidstr = hex(uuid_id) + "-" + hex(uuid_magic) + "-" + hex(uuid_mac)
         return uuidstr
 
+    def GetUuidMacString(uuid):
+        uuid_id = PdsUuid.GetIdfromUUID(uuid)
+        uuid_mac = int.from_bytes(uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:], "big")
+        uuid_mac_str = hex(uuid_mac)
+        return uuid_mac_str
+
     @staticmethod
     def GetIdfromUUID(uuid):
         return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)

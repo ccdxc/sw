@@ -13,6 +13,7 @@ import policy
 import mirror
 import interface
 import nh
+import node
 
 import netaddr
 import argparse
@@ -42,9 +43,7 @@ os.environ['AGENT_GRPC_PORT'] = naplesport
 #Variables
 
 # node uuid
-# this is the mac address of the lowest numbered naples device on the server
-# (example enp20s0)
-node_uuid="0xaecd00da28"
+node_uuid=node.NodeObject().GetNodeMac()
 
 # Device object inputs
 local_tep_ip='1.0.0.2'
