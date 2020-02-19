@@ -275,7 +275,7 @@ class Node(object):
 
         if self.IsWorkloadNode():
             osDetail = getattr(spec.workloads, self.__os,  None)
-            if not os:
+            if not osDetail:
                 Logger.error("Workload type for OS  : %s not found" % (self.__os))
                 sys.exit(1)
             self.__workload_type = topo_pb2.WorkloadType.Value(osDetail.type)
