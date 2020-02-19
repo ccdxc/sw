@@ -88,7 +88,7 @@ pds_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
 }
 
 sdk_ret_t
-pds_state::state_walk(state_walk_cb_t walk_cb, void *ctxt) {
+pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
     state_walk_ctxt_t walk_ctxt;
 
     for (uint32_t i = PDS_STATE_MIN + 1; i < PDS_STATE_MAX; i ++) {

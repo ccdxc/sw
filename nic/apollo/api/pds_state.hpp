@@ -100,7 +100,7 @@ typedef struct state_walk_ctxt_s {
 //       databases
 //       while updating db (with cloned obj), we need to both of the above
 //--------------------------------------------------------------------------
-class pds_state {
+class pds_state : public state_base {
 public:
     pds_state();
     ~pds_state();
@@ -120,8 +120,8 @@ public:
     program_info *prog_info(void) const { return pginfo_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
-    sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt);
-    sdk_ret_t state_walk(state_walk_cb_t walk_cb, void *ctxt);
+    sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+    sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
     void set_scale_profile(pds_scale_profile_t profile) {
         scale_profile_ = profile;
     }

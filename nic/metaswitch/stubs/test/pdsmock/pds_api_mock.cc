@@ -543,6 +543,13 @@ namespace api {
 pds_state g_pds_state;
 pds_state::pds_state() { }
 pds_state::~pds_state() { }
+sdk_ret_t pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return SDK_RET_OK;
+}
 
 sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
     info->status.state = PDS_IF_STATE_UP;

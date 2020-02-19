@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// apulu pipeline NACL Opaque data declaration
+/// apulu pipeline NACL opaque data declaration
 ///
 //----------------------------------------------------------------------------
 
@@ -18,4 +18,5 @@ typedef enum {
     NACL_DATA_ID_FLOW_MISS_DHCP,
     NACL_DATA_ID_FLOW_MISS_IP4_IP6,
 } nacl_data;
-#endif    //__APULU_NACL_DATA_H__
+
+#endif    // __APULU_NACL_DATA_H__

@@ -118,7 +118,7 @@ dump_state_base_stats (int fd)
             "Store", "NumElem", "InsertOK", "InsertErr",
             "RemoveOK", "RemoveErr", "UpdateOK", "UpdateErr");
     dprintf(fd, "%s\n", std::string(95, '-').c_str());
-    api::g_pds_state.state_walk(state_base_counters_dump, (void *)&fd);
+    api::g_pds_state.walk(state_base_counters_dump, (void *)&fd);
     return SDK_RET_OK;
 }
 
