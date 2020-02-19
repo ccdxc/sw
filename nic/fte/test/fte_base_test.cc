@@ -149,7 +149,7 @@ hal_handle_t fte_base_test::add_enic(hal_handle_t l2segh, uint32_t useg, uint64_
     return resp.mutable_status()->if_handle();
 }
 
-hal_handle_t fte_base_test::add_uplink(uint8_t port_num)
+hal_handle_t fte_base_test::add_uplink(uint32_t port_num)
 {
     hal_ret_t ret;
     intf::InterfaceSpec spec;

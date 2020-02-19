@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
@@ -294,7 +295,7 @@ TEST_F(ipsec_encrypt_test, test1)
     // Create an uplink
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
-    up_spec.mutable_if_uplink_info()->set_port_num(1);
+    up_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close();
@@ -303,7 +304,7 @@ TEST_F(ipsec_encrypt_test, test1)
 
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
-    up_spec.mutable_if_uplink_info()->set_port_num(2);
+    up_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close();

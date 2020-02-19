@@ -20,6 +20,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 #include "nic/hal/test/hal_calls/hal_calls.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using intf::InterfaceSpec;
 using intf::InterfaceResponse;
@@ -325,7 +326,7 @@ TEST_F(ep_mgmt_merge_classic_test, test1)
     uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20/*,
                    vrf_id_hp1 = 65*/;
     uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3 /*,l2seg_id_hp1 = 103*/;
-    uint32_t       up_port1 = 1, up_port2 = 5, up_port3 = 9;
+    uint32_t       up_port1 = PORT_NUM_1, up_port2 = PORT_NUM_2, up_port3 = PORT_NUM_3;
     uint32_t       inb_lifid1 = 66, inb_lifid2 = 67, host_lifid1 = 68, host_lifid2 = 69, oob_lifid = 70;
     uint32_t       enic_inb1 = 257, enic_inb2 = 258, enic_oob = 259/*, enic_wl1 = 200*/;
     // uint32_t       wl_encap1 = 100;

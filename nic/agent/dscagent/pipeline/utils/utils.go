@@ -23,6 +23,7 @@ const (
 	ifTypeEth         = 1
 	ifTypeEthPC       = 2
 	ifTypeTunnel      = 3
+	ifTypeUplink      = 5
 	ifTypeL3          = 7
 	ifTypeLif         = 8
 	ifTypeLoopback    = 9
@@ -299,11 +300,16 @@ func ifIndexToID(ifIndex uint32) uint32 {
 	return ifIndex &^ (ifTypeMask << ifTypeShift)
 }
 
+// EthIfIndexToUplinkIfIndex converts Eth ifIndex to Uplink IfIndex
+func EthIfIndexToUplinkIfIndex(ifIndex uint64) uint64 {
+	return ((ifTypeUplink << ifTypeShift) | (ifIndex &^ (ifTypeMask << ifTypeShift)))
+}
+
 func getIfTypeStr(ifIndex uint32, subType string) (intfType string, err error) {
 	ifType := (ifIndex >> ifTypeShift) & ifTypeMask
 	switch ifType {
 	case ifTypeEth:
-		if subType == "PORT_TYPE_ETH_MGMT" {
+		if subType == "PORT_TYPE_ETH_MGMT" || subType == "PORT_TYPE_MGMT" {
 			return "mgmt", nil
 		}
 		return "uplink", nil
@@ -356,4 +362,9 @@ func GetIfIndex(subType string, slot, parent, port uint32) uint32 {
 		return ((ifTypeLoopback & ifTypeMask) << ifTypeShift) | (slot&ifSlotMask)<<ifSlotShift | (parent&ifParentPortMask)<<ifParentPortShift | port&ifChildPortMask
 	}
 	return 0
+}
+
+// GetLifIndex converts hwLifID to IfIndex
+func GetLifIndex(hwLifID uint64) uint32 {
+	return uint32((ifTypeLif << ifTypeShift) | hwLifID)
 }

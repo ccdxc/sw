@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"
 #include <vector>
-
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 #include <tins/tins.h>
 
 using namespace fte;
@@ -32,8 +32,8 @@ protected:
         nwh_ = add_network(vrfh_, 0x0A000000, 24, 0xAABB0A000000);
         l2segh1_ = add_l2segment(nwh_, 100);
         l2segh2_ = add_l2segment(nwh_, 200);
-        intfh1_ = add_uplink(1);
-        intfh2_ =  add_uplink(2);
+        intfh1_ = add_uplink(PORT_NUM_1);
+        intfh2_ =  add_uplink(PORT_NUM_2);
         eph_ = add_endpoint(l2segh1_, intfh1_, 0x0A000001, 0xAABB0A000001, 0);
         gwh_ = add_endpoint(l2segh2_, intfh2_, 0x0A000002, 0xAABB0A000002, 0);
         add_route(vrfh_, 0x0A000100, 24, gwh_);

@@ -12,6 +12,7 @@
 #include "lib/pal/pal.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "asic/rw/asicrw.hpp"
+#include "include/sdk/port_utils.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -1636,6 +1637,7 @@ port::port_mac_stats_persist_collate(uint64_t *stats_data)
 sdk_ret_t
 port::port_mac_stats_init(void)
 {
+    uint32_t ifindex;
     sdk::types::mem_addr_t port_stats_base = INVALID_MEM_ADDRESS;
 
     this->port_stats_base_addr_ = INVALID_MEM_ADDRESS;
@@ -1655,16 +1657,8 @@ port::port_mac_stats_init(void)
         return SDK_RET_OK;
     }
 
-    if ((this->port_num_ >= 1) && (this->port_num_ <= 4)) {
-        this->port_stats_base_addr_ = port_stats_base;
-    } else if((this->port_num_ >= 5) && (this->port_num_ <= 8)) {
-        this->port_stats_base_addr_ = port_stats_base + PORT_MAC_STAT_REPORT_SIZE;
-    } else if(this->port_num_ == 9) {
-        this->port_stats_base_addr_ = port_stats_base + (PORT_MAC_STAT_REPORT_SIZE * 2);
-    } else {
-        SDK_TRACE_ERR("port %u port stats not supported", this->port_num_);
-        this->port_stats_base_addr_ = INVALID_MEM_ADDRESS;
-    }
+    ifindex = sdk::lib::catalog::logical_port_to_ifindex(port_num());
+    this->port_stats_base_addr_ = port_stats_base + port_stats_addr_offset(ifindex);
 
     SDK_TRACE_DEBUG("port %u stats_init port_stats_base = 0x%llx, port_stats_base_addr_ = 0x%llx",
                      this->port_num_, port_stats_base, this->port_stats_base_addr_);

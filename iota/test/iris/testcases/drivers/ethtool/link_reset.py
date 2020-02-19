@@ -18,7 +18,8 @@ import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 UP = 1
 waitTime = 20
-naplesPorts = [1, 5, 9]
+naplesPorts = [285278209, 285343745, 285409281]
+naplesPortNames = ["Eth1/1", "Eth1/2", "Eth1/3"]
 maxLinkBringupDuration = 15
 
 def Setup(tc):
@@ -39,12 +40,12 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl show port --yaml")
         tc.cmd_cookies.append('before')
         # we use halctl until we find better, consistent way
-        for np in range(len(naplesPorts)):
-            api.Logger.info("admin-state toggle trigger on node %s intf %d" % (n, naplesPorts[np]))
-            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %d --admin-state down" % naplesPorts[np])
-            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %d --admin-state up" % naplesPorts[np])
-            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %d --admin-state down" % naplesPorts[np])
-            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %d --admin-state up" % naplesPorts[np])
+        for np in range(len(naplesPortNames)):
+            api.Logger.info("admin-state toggle trigger on node %s intf %s" % (n, naplesPortNames[np]))
+            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %s --admin-state down" % naplesPortNames[np])
+            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %s --admin-state up" % naplesPortNames[np])
+            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %s --admin-state down" % naplesPortNames[np])
+            api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl debug port --port %s --admin-state up" % naplesPortNames[np])
         api.Trigger_AddNaplesCommand(req, n, "sleep %d" % waitTime, timeout=300)
         api.Trigger_AddNaplesCommand(req, n, "/nic/bin/halctl show port --yaml")
         tc.cmd_cookies.append('after')
@@ -126,11 +127,11 @@ def validateResults (node, beforeList, afterList):
 
         # link down count 1 increment for contiguous admin  down/up
         #  linkdown count error
-        if ( portNum != 9) and ((bData[2] + 1) != aData[2]):
+        if ( portNum != 285409281) and ((bData[2] + 1) != aData[2]):
             api.Logger.error("%s mismatch linkdown count, before %d after %d " % (np, bData[2], aData[2]))
             testStatus = api.types.status.FAILURE
         # link down count 2 increment for two contiguous admin  down/up for OOB
-        elif (portNum == 9) and ((bData[2] + 2) != aData[2]):
+        elif (portNum == 285409281) and ((bData[2] + 2) != aData[2]):
             api.Logger.error("%s mismatch linkdown count, before %d after %d " % (np, bData[2], aData[2]))
             testStatus = api.types.status.FAILURE
 

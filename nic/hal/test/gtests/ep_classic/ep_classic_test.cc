@@ -252,7 +252,7 @@ TEST_F(endpoint_test, test1)
 
 
     // Create uplink
-    create_uplink(uplinkif_id, test_id, test_id);
+    create_uplink(uplinkif_id, PORT_NUM_1, test_id);
     // Create vrf
     create_vrf(test_id);
     // Create lif

@@ -167,15 +167,15 @@ create_uplinks (uint32_t num_uplinks)
     for (uint32_t i = 0; i < num_uplinks; i++) {
         if_spec.set_type(intf::IF_TYPE_UPLINK);
         if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + i);
-#if 0
         ifindex = ETH_IFINDEX(hal::g_hal_state->catalog()->slot(),
-                              i + 1, IF_DEFAULT_CHILD_PORT);
-#endif
+                              i + 1, 1);
+#if 0
         if (i == 0) {
             ifindex = 1;
         } else if (i == 1) {
             ifindex = 5;
         }
+#endif
         if_spec.mutable_if_uplink_info()->set_port_num(ifindex);
         if_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

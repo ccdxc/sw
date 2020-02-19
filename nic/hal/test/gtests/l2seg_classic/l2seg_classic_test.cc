@@ -155,7 +155,7 @@ TEST_F(l2seg_test, test1)
     fill_inp_prop(1549822106);
 
     // Create uplink
-    create_uplink(UPLINK_IF_ID_OFFSET + 1, 1, 1);
+    create_uplink(UPLINK_IF_ID_OFFSET + 1, PORT_NUM_1, 1);
     // Create Vrf
     create_vrf(1);
     // Collect slabs

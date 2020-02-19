@@ -2,6 +2,7 @@
 #include "nic/fte/test/fte_base_test.hpp"
 #include "nic/hal/plugins/sfw/alg_rtsp/core.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 #include <tins/tins.h>
 
@@ -28,8 +29,8 @@ protected:
         hal_handle_t vrfh = add_vrf();
         hal_handle_t nwh = add_network(vrfh, 0x0A000000, 8, 0xAABB0A000000);
         hal_handle_t l2segh = add_l2segment(nwh, 100);
-        hal_handle_t intfh1 = add_uplink(1);
-        hal_handle_t intfh2 =  add_uplink(2);
+        hal_handle_t intfh1 = add_uplink(PORT_NUM_1);
+        hal_handle_t intfh2 =  add_uplink(PORT_NUM_2);
         client_eph = add_endpoint(l2segh, intfh1, 0x0A000001 , 0xAABB0A000001, 0);
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);
         client_eph1 = add_endpoint(l2segh, intfh1, 0x0A000101 , 0xAABB0A000003, 0);

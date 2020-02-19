@@ -47,7 +47,7 @@ TEST_F(snake_test, test1)
     // Uplink if
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 1);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
     hal::hal_cfg_db_close();
@@ -55,7 +55,7 @@ TEST_F(snake_test, test1)
 
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 2);
-    if_spec.mutable_if_uplink_info()->set_port_num(5);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
     hal::hal_cfg_db_close();

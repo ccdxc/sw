@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,8 +19,32 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
 
+// IfTypeShift bit shift for interface type
+const IfTypeShift = 28
+
+// IfSlotShift bit shift for slot
+const IfSlotShift = 24
+
+// IfParentPortShift bit shift for the parent port
+const IfParentPortShift = 16
+
+// IfTypeMask mask bits for interface type
+const IfTypeMask = 0xF
+
+// IfSlotMask mask bits for the slot
+const IfSlotMask = 0xF
+
+// IfParentPortMask mask bits for the parent port
+const IfParentPortMask = 0xFF
+
+// IfChildPortMask mask bits for the child port
+const IfChildPortMask = 0xFF
+
+// InvalidIfIndex invalid ifindex value
+const InvalidIfIndex = 0xFFFFFFFF
+
 var (
-	portNum        uint32
+	portNum        string
 	portPause      string
 	portFecType    string
 	txPause        string
@@ -113,13 +138,13 @@ func init() {
 	portShowCmd.AddCommand(portStatsShowCmd)
 
 	portShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	portShowCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
+	portShowCmd.PersistentFlags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
 
 	clearCmd.AddCommand(portClearStatsCmd)
-	portClearStatsCmd.Flags().Uint32Var(&portNum, "port", 1, "Speficy port number")
+	portClearStatsCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Speficy port number")
 
 	debugCmd.AddCommand(portDebugCmd)
-	portDebugCmd.Flags().Uint32Var(&portNum, "port", 0, "Specify port number")
+	portDebugCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
 	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 	portDebugCmd.Flags().StringVar(&txPause, "tx-pause", "enable", "Enable or disable TX pause using enable | disable")
 	portDebugCmd.Flags().StringVar(&rxPause, "rx-pause", "enable", "Enable or disable RX pause using enable | disable")
@@ -155,7 +180,7 @@ func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -212,7 +237,7 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -273,8 +298,8 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 			xcvrStr = xcvrStateStr
 		}
 
-		fmt.Printf("%-10d%-12s%-10s%-14s\n",
-			resp.GetSpec().GetKeyOrHandle().GetPortId(),
+		fmt.Printf("%-10s%-12s%-10s%-14s\n",
+			ifIndexToPortIDStr(resp.GetSpec().GetKeyOrHandle().GetPortId()),
 			adminStateStr, operStatusStr,
 			xcvrStr)
 	}
@@ -324,7 +349,7 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -381,7 +406,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -498,6 +523,71 @@ func portXcvrShowResp(resp *halproto.PortGetResponse) {
 		vendorSn)
 }
 
+func portIDStrToIfIndex(portIDStr string) uint32 {
+	var slotIndex uint32
+	var portIndex uint32
+	var ifIndex uint32
+
+	portIDStr = strings.ToLower(portIDStr)
+	n, err := fmt.Sscanf(portIDStr, "eth%d/%d", &slotIndex, &portIndex)
+	if err != nil || n != 2 {
+		return InvalidIfIndex
+	}
+	ifIndex = 1 << IfTypeShift // 1 is Eth port
+	ifIndex |= slotIndex << IfSlotShift
+	ifIndex |= portIndex << IfParentPortShift
+	ifIndex |= 1 // Default child port
+
+	return ifIndex
+}
+
+func ifIndexToSlot(ifIndex uint32) uint32 {
+	return (ifIndex >> IfSlotShift) & IfSlotMask
+}
+
+func ifIndexToParentPort(ifIndex uint32) uint32 {
+	return (ifIndex >> IfParentPortShift) & IfParentPortMask
+}
+
+func ifIndexToChildPort(ifIndex uint32) uint32 {
+	return ifIndex & IfChildPortMask
+}
+
+func ifIndexToIfType(ifindex uint32) string {
+	ifType := (ifindex >> IfTypeShift) & IfTypeMask
+	switch ifType {
+	case 0:
+		return "None"
+	case 1:
+		return "Eth"
+	case 2:
+		return "EthPC"
+	case 3:
+		return "Tunnel"
+	case 4:
+		return "Mgmt"
+	case 5:
+		return "Uplink"
+	case 6:
+		return "UplinkPC"
+	case 7:
+		return "L3"
+	case 8:
+		return "Lif"
+	}
+	return "None"
+}
+
+func ifIndexToPortIDStr(ifIndex uint32) string {
+	if ifIndex != 0 {
+		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+		ifTypeStr := ifIndexToIfType(ifIndex)
+		return ifTypeStr + slotStr + "/" + parentPortStr
+	}
+	return "-"
+}
+
 func portShowOneResp(resp *halproto.PortGetResponse) {
 	spec := resp.GetSpec()
 	status := resp.GetStatus()
@@ -533,8 +623,7 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 		fecStr = "None"
 	}
 
-	portStr := strings.ToLower(strings.Replace(spec.GetPortType().String(), "PORT_TYPE_", "", -1))
-	portStr = fmt.Sprintf("%s/%d", portStr, spec.GetKeyOrHandle().GetPortId())
+	portStr := ifIndexToPortIDStr(spec.GetKeyOrHandle().GetPortId())
 	pauseStr := strings.ToLower(strings.Replace(spec.GetPause().String(), "PORT_PAUSE_TYPE_", "", -1))
 	adminStateStr := strings.Replace(spec.GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(linkStatus.GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
@@ -571,7 +660,7 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -615,7 +704,7 @@ func portShowStatsHeader() {
 func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 	hdrLine := strings.Repeat("-", 30)
 
-	fmt.Printf("\nstats for port: %d\n\n", resp.GetSpec().GetKeyOrHandle().GetPortId())
+	fmt.Printf("\nstats for port: %s\n\n", ifIndexToPortIDStr(resp.GetSpec().GetKeyOrHandle().GetPortId()))
 
 	if resp.GetSpec().GetPortType() == halproto.PortType_PORT_TYPE_MGMT {
 		mgmtMacStats := resp.GetStats().GetMgmtMacStats()
@@ -809,7 +898,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}
@@ -1050,7 +1139,7 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 		req = &halproto.PortGetRequest{
 			KeyOrHandle: &halproto.PortKeyHandle{
 				KeyOrHandle: &halproto.PortKeyHandle_PortId{
-					PortId: portNum,
+					PortId: portIDStrToIfIndex(portNum),
 				},
 			},
 		}

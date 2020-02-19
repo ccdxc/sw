@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
@@ -328,6 +329,7 @@ int
 DeviceManager::LoadProfile(string device_json_file, bool init_pci)
 {
     struct eth_devspec *eth_spec;
+    uint32_t eth_ifindex, uplink_ifindex;
 
     NIC_HEADER_TRACE("Loading Config");
     if (!device_json_file.empty()) {
@@ -375,7 +377,9 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
         if (spec.get_child_optional("network.uplink")) {
             for (const auto &node : spec.get_child("network.uplink")) {
                 auto val = node.second;
-                CreateUplink(val.get<uint64_t>("id"), val.get<uint64_t>("port"),
+                eth_ifindex = val.get<uint64_t>("port");
+                uplink_ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
+                CreateUplink(uplink_ifindex, eth_ifindex,
                              val.get<bool>("oob", false));
             }
         }

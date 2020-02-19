@@ -10,6 +10,7 @@
 #include "gen/proto/interface.grpc.pb.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 // #include "devapi_types.hpp"
 // #include "logger.hpp"
 
@@ -42,9 +43,9 @@ create_uplinks()
     InterfaceResponseMsg    rsp_msg;
     ClientContext           context;
     Status                  status;
-    uint64_t                port_num[3] = {1, 5, 9};
+    uint64_t                port_num[3] = {PORT_NUM_1, PORT_NUM_2, PORT_NUM_3};
     int                     num_uplinks = 3;
-    int                     if_id_start = 128;
+    uint64_t                if_id[3] = {UPLINK_IF_INDEX1, UPLINK_IF_INDEX2, UPLINK_IF_INDEX3};
 
     std::string  svc_endpoint;
 
@@ -71,7 +72,7 @@ create_uplinks()
 
     for (uint32_t i = 0; i < num_uplinks; i++) {
         spec = req_msg.add_request();
-        spec->mutable_key_or_handle()->set_interface_id(if_id_start++);
+        spec->mutable_key_or_handle()->set_interface_id(if_id[i]);
         spec->set_type(::intf::IfType::IF_TYPE_UPLINK);
         spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
         spec->mutable_if_uplink_info()->set_port_num(port_num[i]);

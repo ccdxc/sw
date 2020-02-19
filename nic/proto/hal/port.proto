@@ -202,6 +202,7 @@ message PortStatus {
     kh.PortKeyHandle  key_or_handle    = 2 [(gogoproto.moretags) = "venice:key"];
     PortLinkStatus    link_status      = 3;    // operational link status
     PortXcvrStatus    xcvr_status      = 4;    // transceiver status
+    uint32            IfIndex          = 5;    // encoded interface index
 }
 
 //------------------------------------------------------------------------------

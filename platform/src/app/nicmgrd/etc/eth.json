@@ -1,9 +1,9 @@
 {
     "network" : {
         "uplink" : [
-            { "id" : 128, "port": 1 },
-            { "id" : 129, "port": 5 },
-            { "id" : 130, "port": 9, "oob" : "true" }
+            { "port": 285278209 },
+            { "port": 285343745 },
+            { "port": 285409281, "oob" : "true" }
         ]
     },
 
@@ -18,7 +18,7 @@
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
-                "uplink" : 9
+                "uplink" : 285409281
             }
         }
     ],
@@ -39,7 +39,7 @@
                 "oprom": "uefi"
             },
             "network" : {
-                "uplink" : 1
+                "uplink" : 285278209
             }
         }
     ]

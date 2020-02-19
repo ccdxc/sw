@@ -24,7 +24,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/common"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris"
-	irisUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -187,9 +186,22 @@ func (i *IrisAPI) PipelineInit() error {
 		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", defaultProfile.GetKey(), err)
 	}
 
-	i.initLifStream()
+	// parse the uuid
+	resp, err := i.SystemClient.SystemUUIDGet(context.Background(), &halapi.Empty{})
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to get system uuid, err %v", err))
+		return err
+	}
+	if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+		return fmt.Errorf("HAL returned non OK status. %v", resp.ApiStatus.String())
+	}
 
-	if err := i.createPortsAndUplinks(); err != nil {
+	// Remove the colon from UUID
+	uid := strings.Join(strings.Split(resp.Uuid, ":"), "")
+
+	i.initLifStream(uid)
+
+	if err := i.createPortsAndUplinks(uid); err != nil {
 		log.Error(err)
 		return err
 	}
@@ -1693,7 +1705,99 @@ func (i *IrisAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Lis
 }
 
 // ############################################### Helper Methods  ###############################################
-func (i *IrisAPI) initLifStream() {
+func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *halapi.LifStatus) error {
+	// skip any internal lifs
+	if spec.GetType() != halapi.LifType_LIF_TYPE_HOST {
+		log.Infof("Skipping LIF_CREATE event for lif %v, type %v", uid, spec.GetType().String())
+		return nil
+	}
+	lifIndex := utils.GetLifIndex(status.HwLifId)
+	// form the interface name
+	ifName, err := utils.GetIfName(uid, lifIndex, spec.GetType().String())
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, ifindex %x, err %v",
+			uid, lifIndex, err))
+		return err
+	}
+	// create host interface instance
+	l := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      ifName,
+			UUID:      uid,
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: netproto.InterfaceSpec_HOST_PF.String(),
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID: uint64(lifIndex),
+			IFHostStatus: netproto.InterfaceHostStatus{
+				HostIfName: spec.GetName(),
+			},
+			OperStatus: status.GetLifStatus().String(),
+		},
+	}
+	b, _ := json.MarshalIndent(l, "", "   ")
+	fmt.Println(string(b))
+	dat, _ := l.Marshal()
+	if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
+		return err
+	}
+	return nil
+}
+
+func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, status *halapi.PortStatus) error {
+	var ifType string
+	// form the interface name
+	ifName, err := utils.GetIfName(uid, status.GetIfIndex(), spec.GetPortType().String())
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, ifindex %x, err %v",
+			uid, status.GetIfIndex(), err))
+		return err
+	}
+	if spec.GetPortType().String() == "PORT_TYPE_ETH" {
+		ifType = netproto.InterfaceSpec_UPLINK_ETH.String()
+	} else if spec.GetPortType().String() == "PORT_TYPE_MGMT" {
+		ifType = netproto.InterfaceSpec_UPLINK_MGMT.String()
+	}
+
+	uplink := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      ifName,
+			UUID:      uid,
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: ifType,
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID: uint64(status.GetIfIndex()),
+			OperStatus:  status.GetLinkStatus().GetOperState().String(),
+			IFUplinkStatus: netproto.InterfaceUplinkStatus{
+				PortID: spec.KeyOrHandle.GetPortId(),
+			},
+		},
+	}
+	dat, _ := uplink.Marshal()
+	if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
+		return err
+	}
+	return nil
+}
+
+func (i *IrisAPI) initLifStream(uid string) {
 
 	lifReqMsg := &halapi.LifGetRequestMsg{
 		Request: []*halapi.LifGetRequest{
@@ -1733,32 +1837,7 @@ func (i *IrisAPI) initLifStream() {
 
 			lif := resp.GetLifEvent()
 
-			l := netproto.Interface{
-				TypeMeta: api.TypeMeta{
-					Kind: "Interface",
-				},
-				ObjectMeta: api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      fmt.Sprintf("%s%d", types.LifPrefix, lif.Spec.KeyOrHandle.GetLifId()),
-				},
-				Spec: netproto.InterfaceSpec{
-					Type: "LIF",
-				},
-				Status: netproto.InterfaceStatus{
-					InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
-					IFHostStatus: netproto.InterfaceHostStatus{
-						HostIfName: lif.Spec.GetName(),
-					},
-					OperStatus: lif.Status.GetLifStatus().String(),
-				},
-			}
-			b, _ := json.MarshalIndent(l, "", "   ")
-			fmt.Println(string(b))
-			dat, _ := l.Marshal()
-			if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
-				log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
-			}
+			err = i.createHostInterface(uid, lif.Spec, lif.Status)
 
 		}
 
@@ -1766,30 +1845,7 @@ func (i *IrisAPI) initLifStream() {
 
 	// Store initial Lifs
 	for _, lif := range lifs.Response {
-		l := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("%s%d", types.LifPrefix, lif.Spec.KeyOrHandle.GetLifId()),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type: "LIF",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: lif.Spec.KeyOrHandle.GetLifId(),
-				IFHostStatus: netproto.InterfaceHostStatus{
-					HostIfName: lif.Spec.GetName(),
-				},
-				OperStatus: lif.Status.GetLifStatus().String(),
-			},
-		}
-		dat, _ := l.Marshal()
-		if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
-		}
+		i.createHostInterface(uid, lif.Spec, lif.Status)
 	}
 
 }
@@ -1800,135 +1856,19 @@ func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 }
 
 // TODO Remove PortCreates once the linkmgr changes are stable
-func (i *IrisAPI) createPortsAndUplinks() error {
-	portReqMsg := &halapi.PortInfoGetRequestMsg{
-		Request: []*halapi.PortInfoGetRequest{{}},
+func (i *IrisAPI) createPortsAndUplinks(uid string) error {
+	portReqMsg := &halapi.PortGetRequestMsg{
+		Request: []*halapi.PortGetRequest{{}},
 	}
 
-	ports, err := i.PortClient.PortInfoGet(context.Background(), portReqMsg)
+	ports, err := i.PortClient.PortGet(context.Background(), portReqMsg)
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelinePortGet, "Iris Init: %v", err))
 		return errors.Wrapf(types.ErrPipelinePortGet, "Iris Init: %v", err)
 	}
 
-	var (
-		pReq     []*halapi.PortSpec
-		numLanes uint32
-		uReq     []*halapi.InterfaceSpec
-		uplinks  []netproto.Interface
-	)
-
-	for idx, port := range ports.Response {
-		var (
-			portSpeed             halapi.PortSpeed
-			autoNeg, isMgmtUplink bool
-			fecType               halapi.PortFecType
-			uplinkType            string
-		)
-
-		// Set appropriate types for ports
-		if port.Spec.PortType == halapi.PortType_PORT_TYPE_MGMT {
-			portSpeed = halapi.PortSpeed_PORT_SPEED_1G
-			autoNeg = false
-			fecType = halapi.PortFecType_PORT_FEC_TYPE_NONE
-			uplinkType = "UPLINK_MGMT"
-			isMgmtUplink = true
-		} else {
-			portSpeed = halapi.PortSpeed_PORT_SPEED_100G
-			autoNeg = true
-			fecType = halapi.PortFecType_PORT_FEC_TYPE_RS
-			uplinkType = "UPLINK_ETH"
-			isMgmtUplink = false
-		}
-
-		portID := 1 + numLanes
-		numLanes += port.Spec.NumLanes
-
-		p := &halapi.PortSpec{
-			KeyOrHandle: &halapi.PortKeyHandle{
-				KeyOrHandle: &halapi.PortKeyHandle_PortId{
-					PortId: portID,
-				},
-			},
-			PortType:      port.Spec.PortType,
-			AdminState:    port.Spec.AdminState,
-			PortSpeed:     portSpeed,
-			NumLanes:      port.Spec.NumLanes,
-			FecType:       fecType,
-			AutoNegEnable: autoNeg,
-			Pause:         halapi.PortPauseType_PORT_PAUSE_TYPE_LINK,
-			TxPauseEnable: true,
-			RxPauseEnable: true,
-		}
-		uplinkID := uint64(types.UplinkOffset + idx + 1)
-		uplink := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("%s%d", types.UplinkPrefix, uplinkID),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type:        uplinkType,
-				AdminStatus: "UP",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: uplinkID,
-				IFUplinkStatus: netproto.InterfaceUplinkStatus{
-					PortID: portID,
-				},
-			},
-		}
-
-		u := &halapi.InterfaceSpec{
-			KeyOrHandle: &halapi.InterfaceKeyHandle{
-				KeyOrHandle: &halapi.InterfaceKeyHandle_InterfaceId{
-					InterfaceId: uplinkID,
-				},
-			},
-			Type: halapi.IfType_IF_TYPE_UPLINK,
-			IfInfo: &halapi.InterfaceSpec_IfUplinkInfo{
-				IfUplinkInfo: &halapi.IfUplinkInfo{
-					PortNum:         uplink.Status.IFUplinkStatus.PortID,
-					IsOobManagement: isMgmtUplink,
-				},
-			},
-		}
-
-		pReq = append(pReq, p)
-		uReq = append(uReq, u)
-		uplinks = append(uplinks, uplink)
-	}
-
-	portCreateReqMsg := &halapi.PortRequestMsg{
-		Request: pReq,
-	}
-
-	uplinkCreateReqMsg := &halapi.InterfaceRequestMsg{
-		Request: uReq,
-	}
-
-	pResp, err := i.PortClient.PortCreate(context.Background(), portCreateReqMsg)
-	if pResp != nil {
-		if err := irisUtils.HandleErr(types.Create, pResp.Response[0].ApiStatus, err, fmt.Sprintf("Create failed for Ports. Err: %v", err)); err != nil {
-			return err
-		}
-	}
-
-	uResp, err := i.IntfClient.InterfaceCreate(context.Background(), uplinkCreateReqMsg)
-	if uResp != nil {
-		if err := irisUtils.HandleErr(types.Create, uResp.Response[0].ApiStatus, err, fmt.Sprintf("Create failed for Uplinks. Err: %v", err)); err != nil {
-			return err
-		}
-	}
-
-	for _, uplink := range uplinks {
-		dat, _ := uplink.Marshal()
-		if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
-		}
+	for _, port := range ports.Response {
+		i.createUplinkInterface(uid, port.Spec, port.Status)
 	}
 
 	return nil

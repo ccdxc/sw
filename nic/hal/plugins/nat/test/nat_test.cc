@@ -3,6 +3,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 #include <tins/tins.h>
 
@@ -28,8 +29,8 @@ protected:
         fte_base_test::SetUpTestCase();
 
         // create topo
-        intfh1_ = add_uplink(1);
-        intfh2_ =  add_uplink(2);
+        intfh1_ = add_uplink(PORT_NUM_1);
+        intfh2_ =  add_uplink(PORT_NUM_2);
         vrfh1_ = add_vrf();
         vrfh2_ = add_vrf();
         nwh1_ = add_network(vrfh1_, 0x0A000000, 24, 0xAABB0A000000);

@@ -1061,7 +1061,7 @@ TEST_F(l2seg_test, test6)
     // Create uplinks
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 61);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
     hal::hal_cfg_db_close();
@@ -1070,7 +1070,7 @@ TEST_F(l2seg_test, test6)
     if_spec.Clear();
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 62);
-    if_spec.mutable_if_uplink_info()->set_port_num(2);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
     hal::hal_cfg_db_close();
@@ -1089,13 +1089,13 @@ TEST_F(l2seg_test, test6)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Simulating port event
-    ret = hal::if_port_oper_state_process_event(2, port_event_t::PORT_EVENT_LINK_DOWN);
+    ret = hal::if_port_oper_state_process_event(5, port_event_t::PORT_EVENT_LINK_DOWN);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     ret = hal::if_port_oper_state_process_event(1, port_event_t::PORT_EVENT_LINK_DOWN);
     ASSERT_TRUE(ret == HAL_RET_OK);
 
-    ret = hal::if_port_oper_state_process_event(2, port_event_t::PORT_EVENT_LINK_UP);
+    ret = hal::if_port_oper_state_process_event(5, port_event_t::PORT_EVENT_LINK_UP);
     ASSERT_TRUE(ret == HAL_RET_OK);
 }
 

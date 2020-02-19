@@ -9,6 +9,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "linkmgr_svc.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_utils.hpp"
@@ -107,7 +108,6 @@ populate_port_create_args (PortSpec& spec, port_args_t *args)
     sdk::linkmgr::port_args_init(args);
 
     args->port_num        = spec.key_or_handle().port_id();
-
     asic                  = port_num_to_asic_num(args->port_num);
     asic_port             = port_num_to_asic_port(args->port_num);
 
@@ -263,9 +263,14 @@ validate_port_update (PortSpec& spec, PortResponse*rsp)
 void
 populate_port_update_args (PortSpec& spec, port_args_t *args)
 {
+    uint32_t ifindex;
+
     sdk::linkmgr::port_args_init(args);
 
-    args->port_num        = spec.key_or_handle().port_id();
+    // port update is with ifindex
+    // convert to logical port
+    ifindex = spec.key_or_handle().port_id();
+    args->port_num = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
     args->mtu             = spec.mtu();
     args->auto_neg_enable = spec.auto_neg_enable();
     args->debounce_time   = spec.debounce_time();
@@ -400,6 +405,7 @@ populate_port_get_response_spec (port_args_t *port_args,
 {
     PortSpec  *spec  = NULL;
     PortStats *stats = NULL;
+    uint32_t ifindex;
 
     PortGetResponseMsg *rsp      = (PortGetResponseMsg *) ctxt;
     PortGetResponse    *response = rsp->add_response();
@@ -407,7 +413,8 @@ populate_port_get_response_spec (port_args_t *port_args,
     if (hal_ret == HAL_RET_OK) {
         // populate spec
         spec = response->mutable_spec();
-        spec->mutable_key_or_handle()->set_port_id(port_args->port_num);
+        ifindex = sdk::lib::catalog::logical_port_to_ifindex(port_args->port_num);
+        spec->mutable_key_or_handle()->set_port_id(ifindex);
         spec->set_port_type(
                 linkmgr::sdk_port_type_to_port_type_spec(port_args->port_type));
         spec->set_port_speed(
@@ -443,6 +450,11 @@ populate_port_get_response_spec (port_args_t *port_args,
         auto link_status = status->mutable_link_status();
 
         status->mutable_key_or_handle()->set_port_id(port_args->port_num);
+#if 0
+        auto ifindex = ETH_IFINDEX(linkmgr::catalog()->slot(),
+                                   port_args->port_num, ETH_IF_DEFAULT_CHILD_PORT);
+#endif
+        status->set_ifindex(ifindex);
 
         // link status
         link_status->set_oper_state(
@@ -504,6 +516,7 @@ populate_port_get_response (PortGetRequest& req, PortGetResponseMsg *rsp)
 {
     hal_ret_t   hal_ret   = HAL_RET_OK;
     port_args_t port_args = { 0 };
+    uint32_t ifindex;
 
     uint64_t    stats_data[MAX_MAC_STATS];
 
@@ -511,7 +524,10 @@ populate_port_get_response (PortGetRequest& req, PortGetResponseMsg *rsp)
 
     sdk::linkmgr::port_args_init(&port_args);
 
-    port_args.port_num   = req.key_or_handle().port_id();
+    // port get is with ifindex
+    // convert to logical port
+    ifindex = req.key_or_handle().port_id();
+    port_args.port_num = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
     port_args.stats_data = stats_data;
 
     hal_ret = linkmgr::port_get(&port_args);

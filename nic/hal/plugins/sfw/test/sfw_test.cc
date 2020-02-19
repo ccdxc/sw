@@ -3,7 +3,7 @@
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/fte/fte_ctx.hpp"
-
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 #include <tins/tins.h>
 
 struct {
@@ -34,8 +34,8 @@ protected:
         vrfh_ = add_vrf();
         nwh_ = add_network(vrfh_, 0x0A000000, 8, 0xAABB0A000000);
         l2segh_ = add_l2segment(nwh_, 100);
-        intfh1_ =  add_uplink(1);
-        intfh2_ =  add_uplink(2);
+        intfh1_ =  add_uplink(PORT_NUM_1);
+        intfh2_ =  add_uplink(PORT_NUM_2);
         eph1_ = add_endpoint(l2segh_, intfh1_, g_eps[0].ip, g_eps[0].mac, 0);
         eph2_ = add_endpoint(l2segh_, intfh2_, g_eps[1].ip, g_eps[1].mac, 0);
 

@@ -229,6 +229,8 @@ class Eth : public Device
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
 
+    void port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr);
+
     // Tasks
     static void StatsUpdate(void *obj);
     static void StatsUpdateComplete(void *obj);

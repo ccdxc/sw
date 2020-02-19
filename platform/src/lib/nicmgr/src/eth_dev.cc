@@ -28,6 +28,8 @@
 #include "nic/sdk/platform/mnet/include/mnet.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/include/sdk/port_utils.hpp"
 
 #include "dev.hpp"
 #include "edmaq.hpp"
@@ -84,6 +86,36 @@ Eth::str_to_eth_type(std::string const &s)
     } else {
         NIC_LOG_ERR("Unknown ETH dev type: {}", s);
         return ETH_UNKNOWN;
+    }
+}
+
+void
+Eth::port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr) {
+    uint32_t parent_port;
+
+    // ifindex=0 for internal mnic
+    if (ifindex == 0) {
+        port_stats_addr = 0;
+        return;
+    }
+
+    parent_port = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
+    port_stats_addr = stats_hbm_base_addr + port_stats_addr_offset(ifindex);
+
+    // TODO store the type from catalog and set port_stats_size accordingly
+    switch (parent_port) {
+    case 1:
+    case 2:
+        // mx0, mx1
+        port_stats_size = sizeof(struct port_stats);
+        break;
+    case 3:
+        // bx
+        port_stats_size = sizeof(struct mgmt_port_stats);
+        break;
+    default:
+        SDK_ASSERT(0);
+        break;
     }
 }
 
@@ -261,53 +293,16 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
-    // use_hbm when port_stats region is carved in HBM.
-    // else old approach
-    auto use_hbm = true;
-    // Null checks; just to be sure
-    if (pd == NULL) {
-        use_hbm = false;
-        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
-    } else if (pd->mp_ == NULL) {
-        use_hbm = false;
-        NIC_LOG_ERR("{}: No HBM region!", spec->name);
+    stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
+    if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
+        NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
+        SDK_ASSERT(0);
     }
 
-    if (use_hbm == true) {
-        stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
-        if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
-            use_hbm = false;
-            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
-        }
+    NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
+                 stats_hbm_base_addr);
 
-        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
-                     stats_hbm_base_addr);
-    }
-
-    /*
-     * We read port values from HBM - populated by linkMgr
-     * Base: CAPRI_HBM_REG_PORT_STATS ("port_stats")
-     * 1K MAC stats size per port
-     * First 1K: Port 1
-     * Next 1K: Port 5
-     * Next 1K: Port 9
-     * TODO: remove hardcoding, enhance this logic to pack HBM region
-     */
-    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
-        // mx0_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01d81000 : stats_hbm_base_addr;
-        port_stats_size = sizeof(struct port_stats);
-    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
-        // mx1_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01e81000 : (stats_hbm_base_addr + 1024);
-        port_stats_size = sizeof(struct port_stats);
-    } else if (spec->uplink_port_num == 9) {
-        // bx_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
-        port_stats_size = sizeof(struct mgmt_port_stats);
-    } else {
-        port_stats_addr = 0;
-    }
+    port_stats_init_(spec->uplink_port_num, stats_hbm_base_addr);
 
     NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
                  port_stats_addr, port_stats_size);
@@ -467,53 +462,17 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
-    // use_hbm when port_stats region is carved in HBM.
-    // else old approach
-    auto use_hbm = true;
-    // Null checks; just to be sure
-    if (pd == NULL) {
-        use_hbm = false;
-        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
-    } else if (pd->mp_ == NULL) {
-        use_hbm = false;
-        NIC_LOG_ERR("{}: No HBM region!", spec->name);
+    stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
+    if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
+        NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
+        SDK_ASSERT(0);
     }
 
-    if (use_hbm == true) {
-        stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
-        if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
-            use_hbm = false;
-            NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
-        }
+    NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
+                 stats_hbm_base_addr);
 
-        NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
-                     stats_hbm_base_addr);
-    }
+    port_stats_init_(spec->uplink_port_num, stats_hbm_base_addr);
 
-    /*
-     * We read port values from HBM - populated by linkMgr
-     * Base: CAPRI_HBM_REG_PORT_STATS ("port_stats")
-     * 1K MAC stats size per port
-     * First 1K: Port 1
-     * Next 1K: Port 5
-     * Next 1K: Port 9
-     * TODO: remove hardcoding, enhance this logic to pack HBM region
-     */
-    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
-        // mx0_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01d81000 : stats_hbm_base_addr;
-        port_stats_size = sizeof(struct port_stats);
-    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
-        // mx1_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01e81000 : (stats_hbm_base_addr + 1024);
-        port_stats_size = sizeof(struct port_stats);
-    } else if (spec->uplink_port_num == 9) {
-        // bx_dhs_mac_stats_entry
-        port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
-        port_stats_size = sizeof(struct mgmt_port_stats);
-    } else {
-        port_stats_addr = 0;
-    }
 
     NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
                  port_stats_addr, port_stats_size);

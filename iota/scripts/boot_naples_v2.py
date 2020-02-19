@@ -414,7 +414,7 @@ class EntityManagement:
     def clear_buffer(self):
         try:
             #Clear buffer 
-            self.hdl.read_nonblocking(1000000000, timeout = 1)
+            self.hdl.read_nonblocking(1000000000, timeout = 3)
         except:
             pass
 
@@ -630,11 +630,16 @@ class NaplesManagement(EntityManagement):
             self.SSHPassInit()
 
     def __read_mac(self):
-        output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
-        mac_regexp = '(?:[0-9a-fA-F]:?){12}'
-        x = re.findall(mac_regexp, output)
-        if len(x) > 0:
-            self.mac_addr = x[0]
+        for _ in range(0, 3):
+            output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
+            mac_regexp = '(?:[0-9a-fA-F]:?){12}'
+            x = re.findall(mac_regexp, output)
+            if len(x) > 0:
+                self.mac_addr = x[0]
+                print("Read OOB mac {0}".format(self.mac_addr))
+                break
+            else:
+                print("Did not Read OOB mac")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True):

@@ -48,7 +48,7 @@ public:
     static hal_handle_t add_network(hal_handle_t vrfh, uint32_t v4_addr,
                                     uint8_t prefix_len, uint64_t rmac);
     static hal_handle_t add_l2segment(hal_handle_t nwh, uint16_t vlan_id);
-    static hal_handle_t add_uplink(uint8_t port_num);
+    static hal_handle_t add_uplink(uint32_t port_num);
     static hal_handle_t add_enic(hal_handle_t l2segh, uint32_t useg_vlan, uint64_t mac, hal_handle_t uplink);
     static hal_handle_t add_endpoint(hal_handle_t l2segh, hal_handle_t intfh,
                                      uint32_t ip, uint64_t mac, uint16_t useg_vlan,

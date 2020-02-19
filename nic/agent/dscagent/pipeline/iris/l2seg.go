@@ -8,7 +8,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
+	irisUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -35,7 +36,7 @@ func createL2SegmentHandler(infraAPI types.InfraAPI, client halapi.L2SegmentClie
 
 	resp, err := client.L2SegmentCreate(context.Background(), l2SegReqMsg)
 	if resp != nil {
-		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", l2Seg.GetKind(), l2Seg.GetKey())); err != nil {
+		if err := irisUtils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", l2Seg.GetKind(), l2Seg.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -54,7 +55,7 @@ func updateL2SegmentHandler(infraAPI types.InfraAPI, client halapi.L2SegmentClie
 
 	resp, err := client.L2SegmentUpdate(context.Background(), l2SegReqMsg)
 	if resp != nil {
-		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", l2Seg.GetKind(), l2Seg.GetKey())); err != nil {
+		if err := irisUtils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", l2Seg.GetKind(), l2Seg.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -81,7 +82,7 @@ func deleteL2SegmentHandler(infraAPI types.InfraAPI, client halapi.L2SegmentClie
 
 	resp, err := client.L2SegmentDelete(context.Background(), l2SegDelReq)
 	if resp != nil {
-		if err := utils.HandleErr(types.Delete, resp.Response[0].ApiStatus, err, fmt.Sprintf("Network: %s", l2Seg.GetKey())); err != nil {
+		if err := irisUtils.HandleErr(types.Delete, resp.Response[0].ApiStatus, err, fmt.Sprintf("Network: %s", l2Seg.GetKey())); err != nil {
 			return err
 		}
 	}
@@ -94,7 +95,11 @@ func deleteL2SegmentHandler(infraAPI types.InfraAPI, client halapi.L2SegmentClie
 }
 
 func convertL2Segment(l2Seg netproto.Network, vrfID uint64, uplinkIDs []uint64) *halapi.L2SegmentRequestMsg {
-	ifKeyHandles := convertIfKeyHandles(l2Seg.Spec.VlanID, uplinkIDs...)
+	var uplinkIfIndices []uint64
+	for _, u := range uplinkIDs {
+		uplinkIfIndices = append(uplinkIfIndices, utils.EthIfIndexToUplinkIfIndex(u))
+	}
+	ifKeyHandles := convertIfKeyHandles(l2Seg.Spec.VlanID, uplinkIfIndices...)
 
 	return &halapi.L2SegmentRequestMsg{
 		Request: []*halapi.L2SegmentSpec{

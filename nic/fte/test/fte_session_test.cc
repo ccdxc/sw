@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include "nic/fte/fte.hpp"
 #include <pthread.h>
+#include "nic/hal/test/utils/hal_test_utils.hpp"
 
 using namespace fte;
 
@@ -27,8 +28,8 @@ protected:
         hal_handle_t vrfh = add_vrf();
         hal_handle_t nwh = add_network(vrfh, 0x0A000000, 8, 0xAABB0A000000);
         l2segh = add_l2segment(nwh, 100);
-        intfh1 = add_uplink(1);
-        intfh2 = add_uplink(2);
+        intfh1 = add_uplink(PORT_NUM_1);
+        intfh2 = add_uplink(PORT_NUM_2);
         intfh3 =  add_enic(l2segh, 100, 0x0000DEADBEEF, intfh1);
         client_eph = add_endpoint(l2segh, intfh1, 0x0A000001 , 0xAABB0A000001, 0);
         server_eph = add_endpoint(l2segh, intfh2, 0x0A000002 , 0xAABB0A000002, 0);

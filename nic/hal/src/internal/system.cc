@@ -5,6 +5,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/src/internal/system.hpp"
@@ -480,13 +481,19 @@ system_uuid_get (SystemResponse *rsp)
 {
     hal_ret_t   ret = HAL_RET_OK;
     char *uuid = NULL;
+    std::string mac_str;
 
     rsp->set_api_status(types::API_STATUS_OK);
-    uuid = getenv("SYSUUID");
-    if (uuid) {
-        rsp->set_uuid(uuid);
+    if (hal::g_hal_cfg.platform == platform_type_t::PLATFORM_TYPE_HW) {
+        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+        rsp->set_uuid(mac_str);
     } else {
-        rsp->set_uuid("");
+        uuid = getenv("SYSUUID");
+        if (uuid) {
+            rsp->set_uuid(uuid);
+        } else {
+            rsp->set_uuid(PENSANDO_NIC_MAC_STR);
+        }
     }
     return ret;
 }

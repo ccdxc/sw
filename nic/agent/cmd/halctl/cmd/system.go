@@ -42,6 +42,10 @@ const (
 	CyanColor = "\u001b[36m%s\u001b[0m"
 )
 
+var (
+	portNumber uint32
+)
+
 var systemShowCmd = &cobra.Command{
 	Use:   "system",
 	Short: "show system information",
@@ -186,7 +190,7 @@ func init() {
 
 	systemShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	threadShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	queueStatsCmd.PersistentFlags().Uint32Var(&portNum, "port", 0, "Port number")
+	queueStatsCmd.PersistentFlags().Uint32Var(&portNumber, "port", 0, "Port number")
 
 	// PB Stats
 	systemStatsShowCmd.AddCommand(systemPbStatsShowCmd)
@@ -431,7 +435,7 @@ func systemQueueStatsPrint(resp *halproto.SystemResponse, portSet bool, bufferOc
 		qosQueueStatsHeaderPrint()
 		for _, port := range portStats {
 			if portSet == true {
-				if port.GetPacketBufferPort().GetPortNum() != portNum {
+				if port.GetPacketBufferPort().GetPortNum() != portNumber {
 					continue
 				}
 			}
@@ -467,7 +471,7 @@ func systemQueueStatsPrint(resp *halproto.SystemResponse, portSet bool, bufferOc
 		qosQueueStatsHeaderPrint()
 		for _, port := range portStats {
 			if portSet == true {
-				if port.GetPacketBufferPort().GetPortNum() != portNum {
+				if port.GetPacketBufferPort().GetPortNum() != portNumber {
 					continue
 				}
 			}
@@ -503,7 +507,7 @@ func systemQueueStatsPrint(resp *halproto.SystemResponse, portSet bool, bufferOc
 		qosQueueStatsHeaderPrint()
 		for _, port := range portStats {
 			if portSet == true {
-				if port.GetPacketBufferPort().GetPortNum() != portNum {
+				if port.GetPacketBufferPort().GetPortNum() != portNumber {
 					continue
 				}
 			}
@@ -682,18 +686,18 @@ func systemPbDropStatsShowHeader() {
 func systemPbDropStatsShowPortEntry(entry *halproto.PacketBufferPortStats) {
 	portType := strings.ToLower(strings.Replace(entry.GetPacketBufferPort().GetPortType().String(),
 		"PACKET_BUFFER_PORT_TYPE_", "", -1))
-	portNum := entry.GetPacketBufferPort().GetPortNum()
+	portNumber := entry.GetPacketBufferPort().GetPortNum()
 
 	for _, dropStatsEntry := range entry.GetBufferStats().GetDropCounts().GetStatsEntries() {
 		fmt.Printf("%-8d%-9s%-30s%-5d\n",
-			portNum, portType,
+			portNumber, portType,
 			strings.ToLower(strings.Replace(dropStatsEntry.GetReasons().String(), "_", " ", -1)),
 			dropStatsEntry.GetDropCount())
 	}
 
 	for _, dropStatsEntry := range entry.GetOflowFifoStats().GetDropCounts().GetEntry() {
 		fmt.Printf("%-8d%-9s%-30s%-5d\n",
-			portNum, portType,
+			portNumber, portType,
 			strings.ToLower(strings.Replace(dropStatsEntry.GetType().String(), "_", " ", -1)),
 			dropStatsEntry.GetCount())
 	}
@@ -861,25 +865,25 @@ func systemPbOccupancyCountersShow(inputQueueInfo [][]InputQueueInfo) {
 }
 
 func systemPbOccupancyOqCountersPopulate(portStats *halproto.PacketBufferPortStats, inputQueueInfo [][]InputQueueInfo, outputQueueInfo [][]OutputQueueInfo) {
-	portNum := portStats.GetPacketBufferPort().GetPortNum()
+	portNumber := portStats.GetPacketBufferPort().GetPortNum()
 
 	for _, inputQueueStats := range portStats.GetQosQueueStats().GetInputQueueStats() {
 		inputQueueIndex := inputQueueStats.GetInputQueueIdx()
 		bufferOccupancy := inputQueueStats.GetBufferOccupancy()
 		peakOccupancy := inputQueueStats.GetPeakOccupancy()
 		portMonitor := inputQueueStats.GetPortMonitor()
-		inputQueueInfo[portNum][inputQueueIndex].valid = true
-		inputQueueInfo[portNum][inputQueueIndex].bufferOccupancy = bufferOccupancy
-		inputQueueInfo[portNum][inputQueueIndex].peakOccupancy = peakOccupancy
-		inputQueueInfo[portNum][inputQueueIndex].portMonitor = portMonitor
+		inputQueueInfo[portNumber][inputQueueIndex].valid = true
+		inputQueueInfo[portNumber][inputQueueIndex].bufferOccupancy = bufferOccupancy
+		inputQueueInfo[portNumber][inputQueueIndex].peakOccupancy = peakOccupancy
+		inputQueueInfo[portNumber][inputQueueIndex].portMonitor = portMonitor
 	}
 	for _, outputQueueStats := range portStats.GetQosQueueStats().GetOutputQueueStats() {
 		outputQueueIndex := outputQueueStats.GetOutputQueueIdx()
 		outputQueueDepth := outputQueueStats.GetQueueDepth()
 		portMonitor := outputQueueStats.GetPortMonitor()
-		outputQueueInfo[portNum][outputQueueIndex].valid = true
-		outputQueueInfo[portNum][outputQueueIndex].queueDepth = outputQueueDepth
-		outputQueueInfo[portNum][outputQueueIndex].portMonitor = portMonitor
+		outputQueueInfo[portNumber][outputQueueIndex].valid = true
+		outputQueueInfo[portNumber][outputQueueIndex].queueDepth = outputQueueDepth
+		outputQueueInfo[portNumber][outputQueueIndex].portMonitor = portMonitor
 	}
 }
 
@@ -1314,7 +1318,7 @@ func systemPbDisplayQueueData(inputQueueInfo [][]InputQueueInfo,
 func systemPbQueueCountersPopulate(portStats *halproto.PacketBufferPortStats,
 	inputQueueInfo [][]InputQueueInfo,
 	outputQueueInfo [][]OutputQueueInfo) {
-	portNum := portStats.GetPacketBufferPort().GetPortNum()
+	portNumber := portStats.GetPacketBufferPort().GetPortNum()
 	// fmt.Printf("Processing port number %d\n", portNum)
 
 	for i, inputQueueStats := range portStats.GetQosQueueStats().GetInputQueueStats() {
@@ -1330,11 +1334,11 @@ func systemPbQueueCountersPopulate(portStats *halproto.PacketBufferPortStats,
 			fmt.Printf("Populating IQ entry %d QI: %d, BO: %d, PO: %d, PM: %d\n",
 			           i, inputQueueIndex, bufferOccupancy, peakOccupancy, portMonitor)
 		*/
-		inputQueueInfo[portNum][i].valid = true
-		inputQueueInfo[portNum][i].queueIndex = inputQueueIndex
-		inputQueueInfo[portNum][i].bufferOccupancy = bufferOccupancy
-		inputQueueInfo[portNum][i].peakOccupancy = peakOccupancy
-		inputQueueInfo[portNum][i].portMonitor = portMonitor
+		inputQueueInfo[portNumber][i].valid = true
+		inputQueueInfo[portNumber][i].queueIndex = inputQueueIndex
+		inputQueueInfo[portNumber][i].bufferOccupancy = bufferOccupancy
+		inputQueueInfo[portNumber][i].peakOccupancy = peakOccupancy
+		inputQueueInfo[portNumber][i].portMonitor = portMonitor
 	}
 	for i, outputQueueStats := range portStats.GetQosQueueStats().GetOutputQueueStats() {
 		outputQueueIndex := outputQueueStats.GetOutputQueueIdx()
@@ -1348,10 +1352,10 @@ func systemPbQueueCountersPopulate(portStats *halproto.PacketBufferPortStats,
 			fmt.Printf("Populating OQ for entry %d QI: %d, QD: %d, PM: %d\n",
 			           i, outputQueueIndex, outputQueueDepth, portMonitor)
 		*/
-		outputQueueInfo[portNum][i].valid = true
-		outputQueueInfo[portNum][i].queueIndex = outputQueueIndex
-		outputQueueInfo[portNum][i].queueDepth = outputQueueDepth
-		outputQueueInfo[portNum][i].portMonitor = portMonitor
+		outputQueueInfo[portNumber][i].valid = true
+		outputQueueInfo[portNumber][i].queueIndex = outputQueueIndex
+		outputQueueInfo[portNumber][i].queueDepth = outputQueueDepth
+		outputQueueInfo[portNumber][i].portMonitor = portMonitor
 	}
 }
 

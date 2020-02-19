@@ -3397,19 +3397,13 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-#if 0
     hal_if->uplink_port_num = g_hal_state->catalog()->
-        logical_port_to_tm_port(spec.if_uplink_info().port_num());
-#endif
+         ifindex_to_tm_port(spec.if_uplink_info().port_num());
 
-    ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(),
-                                             &hal_if->uplink_port_num);
-    SDK_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
-
-    hal_if->fp_port_num = spec.if_uplink_info().port_num();
+    hal_if->fp_port_num = spec.if_uplink_info().port_num(); // eth ifindex. TODO: change the name
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->is_oob_management = spec.if_uplink_info().is_oob_management();
-    hal_if->if_op_status = uplink_if_get_oper_state(hal_if->fp_port_num);
+    hal_if->if_op_status = uplink_if_get_oper_state(g_hal_state->catalog()->ifindex_to_logical_port(hal_if->fp_port_num));
     HAL_TRACE_DEBUG("Uplink fp_port_num: {}, asic_port_num: {}, Status: {}, native_l2seg_id: {},"
                     "is_oob: {}",
                     hal_if->fp_port_num,
@@ -5195,7 +5189,7 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
 
     new_status = port_event_to_if_status(event);
 
-    ctxt.fp_port_num = fp_port_num;
+    ctxt.fp_port_num = sdk::lib::catalog::logical_port_to_ifindex(fp_port_num);
     // Find uplink with this port_num
     g_hal_state->if_id_ht()->walk(if_port_event_get_ht_cb, &ctxt);
 

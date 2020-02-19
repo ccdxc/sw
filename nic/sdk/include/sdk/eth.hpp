@@ -110,6 +110,7 @@ inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
 
 // NOTE: this is temporary until we have reserved block
 #define PENSANDO_NIC_MAC        0x022222111111ull
+#define PENSANDO_NIC_MAC_STR    "02:22:22:11:11:11"
 
 #endif    // __ETH_HPP__
 

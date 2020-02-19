@@ -1102,7 +1102,7 @@ func (a *ApuluAPI) retrieveObject(kind, key string, umToFunc func([]byte) error)
 	return nil
 }
 
-func handleHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifStatus) error {
+func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifStatus) error {
 	// parse the uuid
 	intfID := spec.GetId()
 	uid, err := uuid.FromBytes(intfID)
@@ -1160,7 +1160,7 @@ func handleHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifSt
 	return nil
 }
 
-func handleUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.PortStatus) error {
+func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.PortStatus) error {
 	var ifType string
 
 	// parse the uuid
@@ -1215,6 +1215,7 @@ func handleUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.Po
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", i.GetKey(), err))
+		return err
 	}
 	return nil
 }
@@ -1303,25 +1304,25 @@ func (a *ApuluAPI) initEventStream() {
 			case halapi.EventId_EVENT_ID_LIF_UP:
 				fallthrough
 			case halapi.EventId_EVENT_ID_LIF_DOWN:
-				err = handleHostInterface(a, lif.Spec, lif.Status)
+				err = a.handleHostInterface(lif.Spec, lif.Status)
 			case halapi.EventId_EVENT_ID_PORT_CREATE:
 				fallthrough
 			case halapi.EventId_EVENT_ID_PORT_UP:
 				fallthrough
 			case halapi.EventId_EVENT_ID_PORT_DOWN:
-				err = handleUplinkInterface(a, port.Spec, port.Status)
+				err = a.handleUplinkInterface(port.Spec, port.Status)
 			}
 		}
 	}(eventStream)
 
 	// Store initial Lifs
 	for _, lif := range lifs.Response {
-		handleHostInterface(a, lif.Spec, lif.Status)
+		a.handleHostInterface(lif.Spec, lif.Status)
 	}
 
 	// handle the ports
 	for _, port := range ports.Response {
-		handleUplinkInterface(a, port.Spec, port.Status)
+		a.handleUplinkInterface(port.Spec, port.Status)
 	}
 }
 

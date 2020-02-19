@@ -16,12 +16,13 @@ port_event_notify (port_event_info_t *port_event_info)
     port_event_t port_event = port_event_info->event;
     port_speed_t port_speed = port_event_info->speed;
     uint32_t logical_port = port_event_info->logical_port;
+    uint32_t ifindex = sdk::lib::catalog::logical_port_to_ifindex(logical_port);
 
     sdk::linkmgr::port_set_leds(logical_port, port_event);
 
     memset(&event, 0, sizeof(event));
     event.event_id = event_id_t::EVENT_ID_PORT_STATUS;
-    event.port.id = logical_port;
+    event.port.id = ifindex;
     event.port.event = port_event;
     event.port.speed = port_speed;
     sdk::ipc::broadcast(event_id_t::EVENT_ID_PORT_STATUS, &event, sizeof(event));

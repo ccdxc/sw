@@ -129,7 +129,7 @@ TEST_F(mgmt_test, test1)
     // Create OOB uplink
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_UPLINK);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     if_spec.mutable_if_uplink_info()->set_is_oob_management(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
@@ -255,7 +255,7 @@ TEST_F(mgmt_test, test1)
     if_spec.Clear();
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_UPLINK);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     if_spec.mutable_if_uplink_info()->set_native_l2segment_id(L2SEG_ID_OOB);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(if_spec, &if_rsp);
@@ -433,7 +433,7 @@ TEST_F(mgmt_test, test2)
     // Create OOB uplink
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_UPLINK_HP);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     if_spec.mutable_if_uplink_info()->set_is_oob_management(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
@@ -559,7 +559,7 @@ TEST_F(mgmt_test, test2)
     if_spec.Clear();
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_UPLINK_HP);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     if_spec.mutable_if_uplink_info()->set_native_l2segment_id(L2SEG_ID_OOB_HP);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_update(if_spec, &if_rsp);

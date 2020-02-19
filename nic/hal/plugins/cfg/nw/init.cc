@@ -118,19 +118,16 @@ hal_uplink_if_create (uint64_t if_id,
 
 static hal_ret_t hal_uplink_ifs_create (hal_cfg_t *hal_cfg)
 {
-    uint32_t ifindex;
+    uint32_t eth_ifindex, uplink_ifindex;
     uint32_t fp_port;
-    uint32_t if_id = NETAGENT_IF_ID_UPLINK_MIN;
-    uint32_t logical_port;
     sdk::lib::catalog *catalog = hal_cfg->catalog;
     uint32_t num_fp_ports = catalog->num_fp_ports();
 
     for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
-        ifindex = ETH_IFINDEX(catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
-        logical_port = sdk::lib::catalog::ifindex_to_logical_port(ifindex);
-        hal_uplink_if_create(if_id, logical_port,
+        eth_ifindex = ETH_IFINDEX(catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+        uplink_ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
+        hal_uplink_if_create(uplink_ifindex, eth_ifindex,
                              (catalog->port_type_fp(fp_port) == port_type_t::PORT_TYPE_MGMT) ? true : false);
-        if_id++;
     }
 
     return HAL_RET_OK;

@@ -107,7 +107,7 @@ TEST_F(hal_filter_test, test1)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(100);
-    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -208,7 +208,7 @@ TEST_F(hal_filter_test, test2)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(200);
-    upif_spec.mutable_if_uplink_info()->set_port_num(2);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -347,7 +347,7 @@ TEST_F(hal_filter_test, test3)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(300);
-    upif_spec.mutable_if_uplink_info()->set_port_num(3);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_3);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -496,7 +496,7 @@ TEST_F(hal_filter_test, test4)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(400);
-    upif_spec.mutable_if_uplink_info()->set_port_num(4);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -619,7 +619,7 @@ TEST_F(hal_filter_test, test5)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(500);
-    upif_spec.mutable_if_uplink_info()->set_port_num(5);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -859,7 +859,7 @@ TEST_F(hal_filter_test, test6)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(600);
-    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -985,7 +985,7 @@ TEST_F(hal_filter_test, test7)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(700);
-    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();
@@ -1241,7 +1241,7 @@ TEST_F(hal_filter_test, test8)
     // Create Uplink If
     upif_spec.set_type(intf::IF_TYPE_UPLINK);
     upif_spec.mutable_key_or_handle()->set_interface_id(800);
-    upif_spec.mutable_if_uplink_info()->set_port_num(1);
+    upif_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(upif_spec, &upif_rsp);
     hal::hal_cfg_db_close();

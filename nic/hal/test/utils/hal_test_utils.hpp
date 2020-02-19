@@ -13,6 +13,15 @@ using sdk::lib::slab;
 using sdk::utils::mem_mgr;
 using sdk::utils::mtrack_info_t;
 
+#define PORT_NUM_1 285278209
+#define PORT_NUM_2 285343745
+#define PORT_NUM_3 285409281
+
+#define UPLINK_IF_INDEX1 0x51010001
+#define UPLINK_IF_INDEX2 0x51020001
+#define UPLINK_IF_INDEX3 0x51030001
+
+
 typedef struct slab_stats_s {
     hal_slab_t  slab_id;
     uint32_t    num_in_use;

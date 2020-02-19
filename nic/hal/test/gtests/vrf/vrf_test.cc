@@ -428,7 +428,7 @@ TEST_F(vrf_test, test3)
     // Create Uplink If
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     if_spec.mutable_key_or_handle()->set_interface_id(31);
-    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
     // if_spec.mutable_if_uplink_info()->set_native_l2segment_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
@@ -1034,7 +1034,7 @@ TEST_F(vrf_test, test9)
     if_spec.set_type(intf::IF_TYPE_UPLINK);
     for (int i = 0; i < 4; i++) {
         if_spec.mutable_key_or_handle()->set_interface_id(900 + i);
-        if_spec.mutable_if_uplink_info()->set_port_num(1);
+        if_spec.mutable_if_uplink_info()->set_port_num(PORT_NUM_1);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(if_spec, &if_rsp);
         hal::hal_cfg_db_close();

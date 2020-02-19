@@ -243,12 +243,12 @@ func convertEPAttrs(addresses []string, mgmtIntf string, usegVLAN uint32, enicID
 	// This is error prone and is extremely hacky to support this configuration.
 	// TODO fix this hack when HAL side telemetry code is cleaned up and removes the remote EP handholding of specific uplinks. HAL should be able to determine the reachability of EPs
 	if enicID == 0 && l2SegID == types.UntaggedCollVLAN && mgmtIntf == types.NaplesOOBInterface {
-		ifKeyHandle = convertIfKeyHandles(0, 130)[0]
+		ifKeyHandle = convertIfKeyHandles(0, 0x51030001)[0]
 	} else if enicID == 0 {
 		// Remote EPs in HAL also expect agent to send an uplink ID even though it has logic to determine the active uplink.
 		// Remote EP Creates without an uplink ID is incorrectly getting rejected which causes IOTA Sanity failures.
 		// Coding specific things to make tests pass is bad. TODO clean this up on HAL Svc Validation for RemoteEP Creates
-		ifKeyHandle = convertIfKeyHandles(0, 128)[0]
+		ifKeyHandle = convertIfKeyHandles(0, 0x51010001)[0]
 	}
 
 	return &halapi.EndpointAttributes{
