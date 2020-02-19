@@ -147,6 +147,13 @@ var _ = Describe("session limit tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
+		// disable the session limits to cleanup
+		fwp = ts.model.NewFirewallProfile("default")
+		Expect(fwp.DisableFirewallLimit()).Should(Succeed())
+		Expect(fwp.Commit()).Should(Succeed())
+		Eventually(func() error {
+			return VerifyFirewallPropagation(fwp)
+		}).Should(Succeed())
 		ts.tb.AfterTestCommon()
 	})
 
@@ -174,7 +181,7 @@ var _ = Describe("session limit tests", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
-			var conn_limit int = 10
+			var conn_limit int = 1000
 
 			By(fmt.Sprintf("Enabling TCP, UDP, ICMP, OTHER Firewall Session Limits to %d", conn_limit))
 			Expect(fwp.SetFirewallLimit("ALL", conn_limit)).Should(Succeed())
