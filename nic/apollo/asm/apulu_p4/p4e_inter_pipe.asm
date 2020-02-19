@@ -103,6 +103,7 @@ egress_to_rxdma_ipv4:
     seq             c1, k.ipv4_1_protocol, IP_PROTO_UDP
     phvwr.c1.e      p.p4e_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV4_UDP
+    nop.e
     phvwr.f         p.p4e_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV4
 
