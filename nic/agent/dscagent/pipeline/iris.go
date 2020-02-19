@@ -145,12 +145,10 @@ func (i *IrisAPI) PipelineInit() error {
 	// Clean up stale objects from store. This will be recomputed during PipelineInit
 	if err := i.InfraAPI.Delete(defaultVrf.Kind, defaultVrf.GetKey()); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Vrf: %s | Err: %v", defaultVrf.GetKey(), err))
-		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Vrf: %s | Err: %v", defaultVrf.GetKey(), err)
 	}
 
 	if err := i.InfraAPI.Delete(defaultNetwork.Kind, defaultNetwork.GetKey()); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Network: %s | Err: %v", defaultNetwork.GetKey(), err))
-		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Network: %s | Err: %v", defaultNetwork.GetKey(), err)
 	}
 
 	if _, err := i.HandleVrf(types.Create, defaultVrf); err != nil {
