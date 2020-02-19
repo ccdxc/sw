@@ -155,6 +155,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   telemetryKind: string = 'DistributedServiceCard';
 
   customQueryOptions: RepeaterData[];
+  multiSelectFields: Array<string> = ['Condition'];
 
   cancelSearch: boolean = false;
 

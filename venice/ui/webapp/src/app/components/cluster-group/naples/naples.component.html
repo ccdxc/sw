@@ -64,6 +64,7 @@
       <app-advanced-search #advancedSearchComponent
                            [formArray]="fieldFormArray" [cols]="advSearchCols"
                            [customQueryOptions]="customQueryOptions"
+                           [multiSelectFields]="multiSelectFields"
                            (cancelEmitter)="onCancelSearch($event)"
                            (searchEmitter)="onSearchDSCs()"
                            kind="DistributedServiceCard"

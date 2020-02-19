@@ -7,17 +7,18 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
+import * as _ from 'lodash';
+import * as moment from 'moment';
 import { RepeaterComponent, RepeaterData, RepeaterItem, ValueType } from 'web-app-framework';
 import { FormArray, FormControl } from '@angular/forms';
 import { SearchUtil } from '@components/search/SearchUtil';
-import { Animations } from '@app/animations';
 import { TableCol } from '@components/shared/tableviewedit';
-import * as _ from 'lodash';
-import { SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
+import { Animations } from '@app/animations';
+import { SearchExpression } from '@app/components/search';
 import { ControllerService } from '@app/services/controller.service';
+import { AdvancedSearchExpression } from '.';
+import { SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
 import { Utility } from '@common/Utility';
-import * as moment from 'moment';
-
 
 /**
  * Advanced Search Component
@@ -72,7 +73,7 @@ export class AdvancedSearchComponent implements OnInit {
   @Input() kind: string;
   @Input() customQueryOptions: RepeaterData[] = [];
   @Input() maxSearchRecords: number = 4000;
-
+  @Input() multiSelectFields: Array<string> = [];
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   @Output() searchEmitter: EventEmitter<any> = new EventEmitter();
   @Output() cancelEmitter: EventEmitter<any> = new EventEmitter();
@@ -262,12 +263,12 @@ export class AdvancedSearchComponent implements OnInit {
       this.formArray = new FormArray([]);  // clear formArray
       return;
     }
-    let searchExpressions = [], generalSearch = [];
+    let searchExpressions: SearchExpression[] = [], generalSearch = [];
 
     try {
-      const a = SearchUtil.advancedSearchParser(this.search);
-      searchExpressions = a.searchExpressions;
-      generalSearch = a.generalSearch;
+      const advancedSearchExpression: AdvancedSearchExpression = SearchUtil.advancedSearchParser(this.search);
+      searchExpressions = advancedSearchExpression.searchExpressions;
+      generalSearch = advancedSearchExpression.generalSearch;
 
       if (searchExpressions === null || searchExpressions.length === 0) {
         this.formArray = new FormArray([]);  // clear formArray
@@ -275,11 +276,8 @@ export class AdvancedSearchComponent implements OnInit {
       if (searchExpressions !== null && searchExpressions.length !== 0) {
         this.formArray = new FormArray([]);  // clear formArray
         searchExpressions.forEach(ele => {
-          this.formArray.push(new FormControl({
-            keyFormControl: ele.key,
-            operatorFormControl: ele.operator,
-            valueFormControl: ele.values
-          }));
+          const newFormControl: FormControl = this.buildFormControl(ele);
+          this.formArray.push(newFormControl);
         });
       }
 
@@ -290,6 +288,22 @@ export class AdvancedSearchComponent implements OnInit {
     if (generalSearch) {
       this.generalSearch = generalSearch.join(' ');
     }
+  }
+
+  /**
+   * Builds form Control from the search expressions
+   * @param ele
+   */
+  buildFormControl(ele: SearchExpression): FormControl {
+    // Converts the search value into a form suitable for multi-select
+    if (this.multiSelectFields.includes(ele.key)) {
+      ele.values = ele.values[0].split(',');
+    }
+    return new FormControl({
+      keyFormControl: ele.key,
+      operatorFormControl: ele.operator,
+      valueFormControl: ele.values
+    });
   }
 
   /**
