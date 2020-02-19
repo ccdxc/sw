@@ -14535,11 +14535,11 @@
       "properties": {
         "source": {
           "$ref": "#/definitions/monitoringMatchSelector",
-          "description": "Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored."
+          "description": "Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pensando DSC, matching pkts to/from src will be mirrored."
         },
         "destination": {
           "$ref": "#/definitions/monitoringMatchSelector",
-          "description": "Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored."
+          "description": "Dst = * when not specified When Dst is specified and resides on Pensando DSC, matching pkts to/from dst will be mirrored."
         },
         "app-protocol-selectors": {
           "$ref": "#/definitions/monitoringAppProtoSelector",

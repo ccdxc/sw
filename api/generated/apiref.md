@@ -4,7 +4,7 @@
 | [Audit](generated/apiref/audit/index.html) | Audit logs for the cluster and related APIs |
 | [Auth](generated/apiref/auth/index.html) | Authentication and Authorization related APIs |
 | [Browser](generated/apiref/browser/index.html) | browse configuration objects and relations |
-| [Cluster](generated/apiref/cluster/index.html) | Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc. |
+| [Cluster](generated/apiref/cluster/index.html) | Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc. |
 | [Diagnostics](generated/apiref/diagnostics/index.html) | Diagnostics APIs for the cluster |
 | [Events](generated/apiref/events/index.html) | Monitor events on the cluster |
 | [Monitoring](generated/apiref/monitoring/index.html) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |

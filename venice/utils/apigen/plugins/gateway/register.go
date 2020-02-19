@@ -1204,7 +1204,7 @@ var groupDocString = map[string]string{
 	"auth":            "Authentication and Authorization related APIs",
 	"audit":           "Audit logs for the cluster and related APIs",
 	"browser":         "browse configuration objects and relations",
-	"cluster":         "Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc.",
+	"cluster":         "Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc.",
 	"diagnostics":     "Diagnostics APIs for the cluster",
 	"events":          "Monitor events on the cluster",
 	"monitoring":      "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies",

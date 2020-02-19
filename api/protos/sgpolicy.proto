@@ -82,7 +82,7 @@ message PropagationStatus {
     string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
     // Textual description of propagation status
     string Status = 5 [(gogoproto.jsontag) = "status"];
-    // list of smartnics where propagation did not complete
+    // list of DSCs where propagation did not complete
     repeated string PendingNaples = 6 [(gogoproto.jsontag) = "pending-dscs"];
 }
 

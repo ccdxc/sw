@@ -131,10 +131,10 @@ func (m *AppProtoSelector) GetApps() []string {
 type MatchRule struct {
 	// Either Src or Dst or both must be specified, both cannot be *
 	// Src = * when not specified
-	// When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
+	// When Src is specified and resides on Pensando DSC, matching pkts to/from src will be mirrored
 	Src *MatchSelector `protobuf:"bytes,1,opt,name=Src,json=source,omitempty" json:"source,omitempty"`
 	// Dst = * when not specified
-	// When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
+	// When Dst is specified and resides on Pensando DSC, matching pkts to/from dst will be mirrored
 	Dst *MatchSelector `protobuf:"bytes,2,opt,name=Dst,json=destination,omitempty" json:"destination,omitempty"`
 	// App = * when not specified
 	AppProtoSel *AppProtoSelector `protobuf:"bytes,3,opt,name=AppProtoSel,json=app-protocol-selectors,omitempty" json:"app-protocol-selectors,omitempty"`

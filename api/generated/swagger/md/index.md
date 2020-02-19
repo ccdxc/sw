@@ -6,7 +6,7 @@
 | [audit](/swagger/audit) | Audit logs for the cluster and related APIs |
 | [auth](/swagger/auth) | Authentication and Authorization related APIs |
 | [browser](/swagger/browser) | browse configuration objects and relations |
-| [cluster](/swagger/cluster) | Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc. |
+| [cluster](/swagger/cluster) | Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc. |
 | [diagnostics](/swagger/diagnostics) | Diagnostics APIs for the cluster |
 | [events](/swagger/events) | Monitor events on the cluster |
 | [monitoring](/swagger/monitoring) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |

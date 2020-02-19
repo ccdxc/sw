@@ -157,7 +157,7 @@ type PropagationStatus struct {
 	MinVersion string `protobuf:"bytes,4,opt,name=MinVersion,json=min-version,proto3" json:"min-version"`
 	// Textual description of propagation status
 	Status string `protobuf:"bytes,5,opt,name=Status,json=status,proto3" json:"status"`
-	// list of smartnics where propagation did not complete
+	// list of DSCs where propagation did not complete
 	PendingNaples []string `protobuf:"bytes,6,rep,name=PendingNaples,json=pending-dscs" json:"pending-dscs"`
 }
 

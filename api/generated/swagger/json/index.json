@@ -12,7 +12,7 @@
       "path": "/swagger/browser"
     },
     "cluster": {
-      "description": "Configure and Manage the Venice cluster, manage nodes in the cluster, SmartNics, Tenants etc.",
+      "description": "Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc.",
       "path": "/swagger/cluster"
     },
     "diagnostics": {

@@ -128,9 +128,9 @@ if (( `vgdisplay | grep 'VG Name' | wc -l` != 1 )); then
 fi
 if (( `lvdisplay | grep 'LV Name' | wc -l` != 2 )); then
     # Config volume is same as the original parition size 3
-    lvcreate -L ${p3_size}m -n lv3 ${vg_name}
+    lvcreate --yes -L ${p3_size}m -n lv3 ${vg_name}
     # Data volume fills the rest of the VG
-    lvcreate -l 100%FREE -n lv4 ${vg_name}
+    lvcreate --yes -l 100%FREE -n lv4 ${vg_name}
 fi
 
 /sbin/udevadm settle

@@ -355,7 +355,7 @@ func (TransceiverStatus_Pid) EnumDescriptor() ([]byte, []int) {
 type NetworkInterface struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
-	// Object name is Serial-Number of the SmartNIC
+	// Object name is Serial-Number of the DSC
 	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,omitempty,embedded=O" json:"meta,omitempty"`
 	// NetworkInterfaceSpec contains the configuration of the network adapter.
 	Spec NetworkInterfaceSpec `protobuf:"bytes,3,opt,name=Spec,json=spec,omitempty" json:"spec,omitempty"`

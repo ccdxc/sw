@@ -92,10 +92,10 @@ message AppProtoSelector {
 message MatchRule {
     // Either Src or Dst or both must be specified, both cannot be *
     // Src = * when not specified
-    // When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
+    // When Src is specified and resides on Pensando DSC, matching pkts to/from src will be mirrored
     MatchSelector       Src         = 1 [(gogoproto.jsontag) = "source,omitempty"];
     // Dst = * when not specified
-    // When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
+    // When Dst is specified and resides on Pensando DSC, matching pkts to/from dst will be mirrored
     MatchSelector       Dst         = 2 [(gogoproto.jsontag) = "destination,omitempty"];;
     // App = * when not specified
     AppProtoSelector   AppProtoSel  = 3 [(gogoproto.jsontag) = "app-protocol-selectors,omitempty"];;

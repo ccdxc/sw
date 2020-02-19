@@ -32,7 +32,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
     'min-version': string = null;
     /** Textual description of propagation status. */
     'status': string = null;
-    /** List of smartnics where propagation did not complete. */
+    /** List of DSCs where propagation did not complete. */
     'pending-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof ISecurityPropagationStatus]: PropInfoItem } = {
         'generation-id': {
@@ -61,7 +61,7 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
             type: 'string'
         },
         'pending-dscs': {
-            description:  `List of smartnics where propagation did not complete.`,
+            description:  `List of DSCs where propagation did not complete.`,
             required: false,
             type: 'Array<string>'
         },

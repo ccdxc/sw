@@ -7684,7 +7684,7 @@
         },
         "meta": {
           "$ref": "#/definitions/apiObjectMeta",
-          "description": "Object name is Serial-Number of the SmartNIC."
+          "description": "Object name is Serial-Number of the DSC."
         },
         "spec": {
           "$ref": "#/definitions/networkNetworkInterfaceSpec",
