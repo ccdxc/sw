@@ -32,7 +32,7 @@ class BgpPeerObject(base.ConfigObjectBase):
         self.HoldTime = getattr(spec, "holdtime", 0)
         self.KeepAlive = getattr(spec, "keepalive", 0)
         self.Password = ""
-        #self.Password = getattr(spec, "password", "")
+        self.Password = bytes(getattr(spec, "password", ""), 'utf-8')
         self.PeerAf = peeraf_obj
         self.Show()
         return
@@ -112,8 +112,8 @@ class BgpPeerObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_PEER, Resmgr.MAX_BGP_PEERS)
         return
 
-    def GetBgpPeerObject(self, node):
-        return self.GetObjectByKey(node, 1)
+    def GetBgpPeerObject(self, node, peerid):
+        return self.GetObjectByKey(node, peerid)
 
     def GenerateObjects(self, node, parent, vpcspec):
         def __add_bgp_peer(peerspec):

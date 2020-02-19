@@ -110,7 +110,6 @@ class EvpnEviObjectClient(base.ConfigClientBase):
         def __add_evpn_evi_config(evpnevispec):
             obj = EvpnEviObject(node, evpnevispec)
             self.Objs[node].update({obj.Id: obj})
-            utils.dump(evpnevispec)
         evpneviSpec = getattr(subnetspec, 'evpnevi', None)
         if not evpneviSpec:
             return

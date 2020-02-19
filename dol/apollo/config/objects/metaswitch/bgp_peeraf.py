@@ -115,8 +115,8 @@ class BgpPeerAfObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_PEER_AF, Resmgr.MAX_BGP_PEER_AF_SESSIONS)
         return
 
-    def GetBgpPeerAfObject(self, node):
-        return self.GetObjectByKey(node, 1)
+    def GetBgpPeerAfObject(self, node, peerafid):
+        return self.GetObjectByKey(node, peerafid)
     """
     def GenerateObjects(self, node, parent, vpcspec):
         def __add_bgp_peer(peerspec):
@@ -124,7 +124,6 @@ class BgpPeerAfObjectClient(base.ConfigClientBase):
             self.Objs[node].update({obj.Id: obj})
 
         bgpPeer = getattr(vpcspec, 'bgppeer', None)
-        utils.dump(bgpPeer)
         if not bgpPeer:
             logger.info("No BGP peer config in topology")
             return

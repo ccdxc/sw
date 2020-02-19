@@ -47,8 +47,8 @@ class EvpnEviRtObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         if self.SubnetId:
             spec.subnetId = utils.PdsUuid.GetUUIDfromId(self.SubnetId)
-        #if self.RT:
-            #spec.RT = self.RT
+        if self.RT:
+            spec.RT = bytes(self.RT, 'utf-8')
         if self.RTType:
             if self.RTType == 'import':
                 spec.RTType = evpn_pb2.EVPN_RT_IMPORT
@@ -83,7 +83,6 @@ class EvpnEviRtObjectClient(base.ConfigClientBase):
         def __add_evpn_evi_rt_config(evpnevirtspec):
             obj = EvpnEviRtObject(node, evpnevirtspec)
             self.Objs[node].update({obj.Id: obj})
-            utils.dump(evpnevirtspec)
         evpnEviRtSpec = getattr(subnetspec, 'evpnevirt', None)
         if not evpnEviRtSpec:
             return

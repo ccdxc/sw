@@ -82,7 +82,6 @@ class EvpnIpVrfObjectClient(base.ConfigClientBase):
         def __add_evpn_ip_vrf_config(evpnipvrfspec):
             obj = EvpnIpVrfObject(node, evpnipvrfspec)
             self.Objs[node].update({obj.Id: obj})
-            utils.dump(evpnipvrfspec)
         evpnIpVrfSpec = getattr(vpcspec, 'evpnipvrf', None)
         if not evpnIpVrfSpec:
             return

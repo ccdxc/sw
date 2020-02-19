@@ -47,8 +47,8 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         if self.VPCId:
             spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId)
-        #if self.RT:
-            #spec.RT = self.RT
+        if self.RT:
+            spec.RT = bytes(self.RT, 'utf-8')
         if self.RTType:
             if self.RTType == 'import':
                 spec.RTType = evpn_pb2.EVPN_RT_IMPORT
@@ -80,14 +80,13 @@ class EvpnIpVrfRtObjectClient(base.ConfigClientBase):
                          Resmgr.MAX_BGP_EVPN_IP_VRF_RT)
         return
 
-    def GetDhcpRelayObject(self, node):
-        return self.GetObjectByKey(node, 1)
+    def GetEvpnIpVrfRtObject(self, node, id):
+        return self.GetObjectByKey(node, id)
 
     def GenerateObjects(self, node, vpcspec):
         def __add_evpn_ip_vrf_rt_config(evpnipvrfrtspec):
             obj = EvpnIpVrfRtObject(node, evpnipvrfrtspec)
             self.Objs[node].update({obj.Id: obj})
-            utils.dump(evpnipvrfrtspec)
         evpnIpVrfRtSpec = getattr(vpcspec, 'evpnipvrfrt', None)
         if not evpnIpVrfRtSpec:
             return
