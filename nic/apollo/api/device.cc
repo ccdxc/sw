@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/impl.hpp"
@@ -128,9 +129,27 @@ device_entry::fill_spec_(pds_device_spec_t *spec) {
     spec->dev_oper_mode = oper_mode_;
 }
 
+void
+device_entry::fill_status_(pds_device_status_t *status) {
+    std::string   mac_str;
+    std::string   mem_str;
+
+    // fill fru mac in status
+    sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+    mac_str_to_addr((char *)mac_str.c_str(), status->fru_mac);
+
+    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
+    if (mem_str == "4g") {
+        status->memory_cap = 4;
+    } else if (mem_str == "8g") {
+        status->memory_cap = 8;
+    }
+}
+
 sdk_ret_t
 device_entry::read(pds_device_info_t *info) {
     fill_spec_(&info->spec);
+    fill_status_(&info->status);
     return impl_->read_hw(this, NULL, (impl::obj_info_t *)info);
 }
 

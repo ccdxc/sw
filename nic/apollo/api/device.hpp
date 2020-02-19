@@ -198,6 +198,10 @@ private:
     /// \param[out] spec specification
     void fill_spec_(pds_device_spec_t *spec);
 
+    /// \brief      fill the device sw status
+    /// \param[out] status specification
+    void fill_status_(pds_device_status_t *status);
+
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)
     /// \return SDK_RET_OK on success, failure status code on error

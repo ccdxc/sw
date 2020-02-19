@@ -127,12 +127,6 @@ message MappingGetResponse {
   repeated Mapping Response = 2;
 }
 
-// mapping dump request
-message MappingDumpRequest {
-  int64    CId           = 1;
-  repeated MappingKey Id = 2;
-}
-
 // mapping delete request
 message MappingDeleteRequest {
   // optional batch context, if this request is part of batch of API calls

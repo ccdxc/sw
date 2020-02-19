@@ -3316,6 +3316,8 @@ static inline void
 pds_device_api_status_to_proto (pds::DeviceStatus *proto_status,
                                 const pds_device_status_t *api_status)
 {
+    proto_status->set_systemmacaddress(MAC_TO_UINT64(api_status->fru_mac));
+    proto_status->set_memory(api_status->memory_cap);
 }
 
 // populate proto buf stats from device API stats

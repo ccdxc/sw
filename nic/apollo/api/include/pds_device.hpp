@@ -45,7 +45,8 @@ typedef struct pds_device_s {
 
 /// \brief device status
 typedef struct pds_device_status_s {
-    // TODO
+    mac_addr_t  fru_mac;    ///< FRU MAC
+    uint8_t     memory_cap; ///< Memory capacity
 } __PACK__ pds_device_status_t;
 
 /// \brief Drop statistics

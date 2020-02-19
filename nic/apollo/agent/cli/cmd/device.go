@@ -173,23 +173,26 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printDeviceHeader() {
-	hdrLine := strings.Repeat("-", 112)
+	hdrLine := strings.Repeat("-", 140)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-16s%-20s%-16s%-10s%-12s%-12s%-10s%-18s\n",
+	fmt.Printf("%-16s%-20s%-16s%-10s%-12s%-12s%-10s%-18s%-20s%-6s\n",
 		"IPAddr", "MACAddr", "GatewayIP",
 		"Profile", "BridgingEn", "LearningEn",
-		"OperMode", "OverlayRoutingEn")
+		"OperMode", "OverlayRoutingEn", "FRU MAC", "Memory")
 	fmt.Println(hdrLine)
 }
 
 func printDevice(resp *pds.DeviceGetResponse) {
 	spec := resp.GetResponse().GetSpec()
-	fmt.Printf("%-16s%-20s%-16s%-10s%-12t%-12t%-10s%-18t\n",
+	status := resp.GetResponse().GetStatus()
+	memoryStr := fmt.Sprintf("%dG", status.GetMemory())
+	fmt.Printf("%-16s%-20s%-16s%-10s%-12t%-12t%-10s%-18t%-20s%-6s\n",
 		utils.IPAddrToStr(spec.GetIPAddr()),
 		utils.MactoStr(spec.GetMACAddr()),
 		utils.IPAddrToStr(spec.GetGatewayIP()),
 		strings.Replace(spec.GetProfile().String(), "DEVICE_PROFILE_", "", -1),
 		spec.GetBridgingEn(), spec.GetLearningEn(),
 		strings.Replace(spec.GetDevOperMode().String(), "DEVICE_OPER_MODE_", "", -1),
-		spec.GetOverlayRoutingEn())
+		spec.GetOverlayRoutingEn(), utils.MactoStr(status.GetSystemMACAddress()),
+		memoryStr)
 }

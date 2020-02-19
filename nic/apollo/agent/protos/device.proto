@@ -87,17 +87,17 @@ enum DeviceHealth {
 // operational status of the device, if any
 message DeviceStatus {
   // operaional state of the device
-  DeviceState           State =  1;
-  // health of the device
-  repeated DeviceHealth Health = 2;
+  DeviceState State            = 1;
   // System MAC address (can be used to uniquely identify the device in cluster)
-  string SystemMACAddress      = 3;
+  uint64      SystemMACAddress = 2;
   // serial number of the device
-  string SerialNumber          = 4;
+  string      SerialNumber     = 3;
   // SKU/part numnber
-  string Sku                   = 5;
+  string      Sku              = 4;
   // version of the firmware running
-  string FirmwareVersion       = 6;
+  string      FirmwareVersion  = 5;
+  // Memory Capacity
+  uint32      Memory           = 6;
 }
 
 // stats of the device, if any

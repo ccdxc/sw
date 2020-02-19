@@ -7,6 +7,8 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/api/pds_state.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -57,6 +59,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
             }
             goto end;
         }
+        memcpy(core::agent_state::state()->device(), api_spec, sizeof(pds_device_spec_t));
     }
 
     if (batched_internally) {
@@ -146,6 +149,7 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
             }
             goto end;
         }
+        memcpy(core::agent_state::state()->device(), api_spec, sizeof(pds_device_spec_t));
     }
 
     // update device.conf with profile
@@ -174,11 +178,6 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
     pds_batch_params_t batch_params;
 
     api_spec = core::agent_state::state()->device();
-    if (api_spec == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-        return Status::OK;
-    }
-    memset(api_spec, 0, sizeof(pds_device_spec_t));
 
     // create an internal batch, if this is not part of an existing API batch
     bctxt = proto_req->batchctxt().batchcookie();
@@ -203,6 +202,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
             }
             goto end;
         }
+        memset(api_spec, 0, sizeof(pds_device_spec_t));
     }
 
     if (batched_internally) {
@@ -216,30 +216,50 @@ end:
     return Status::OK;
 }
 
+static sdk_ret_t
+device_status_fill (pds_device_status_t *status)
+{
+    std::string   mac_str;
+    std::string   mem_str;
+
+    // fill fru mac in status
+    sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+    mac_str_to_addr((char *)mac_str.c_str(), status->fru_mac);
+
+    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
+    if (mem_str == "4g") {
+        status->memory_cap = 4;
+    } else if (mem_str == "8g") {
+        status->memory_cap = 8;
+    }
+
+    return SDK_RET_OK;
+}
+
 Status
 DeviceSvcImpl::DeviceGet(ServerContext *context,
                          const types::Empty *empty,
                          pds::DeviceGetResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_device_spec_t *api_spec = NULL;
+    sdk_ret_t ret = SDK_RET_OK;
+    pds_device_spec_t *api_spec = core::agent_state::state()->device();
     pds_device_info_t info;
 
-    api_spec = core::agent_state::state()->device();
-    if (api_spec == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-        return Status::OK;
-    }
-    memcpy(&info.spec, api_spec, sizeof(pds_device_spec_t));
-    if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_read(&info);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Device object not found");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-            return Status::OK;
+    if (api_spec->dev_oper_mode != PDS_DEV_OPER_MODE_NONE) {
+        api_spec = core::agent_state::state()->device();
+        memcpy(&info.spec, api_spec, sizeof(pds_device_spec_t));
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_device_read(&info);
+        }
+    } else {
+        memset(&info, 0, sizeof(pds_device_info_t));
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = device_status_fill(&info.status);
         }
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Device object not found");
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
         return Status::OK;
     }
     pds_device_api_spec_to_proto(
