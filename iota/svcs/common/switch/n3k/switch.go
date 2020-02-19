@@ -218,9 +218,12 @@ func ConfigureQos(n3k *ConnectCtx, qosCfg *QosConfig, timeout time.Duration) (st
 				}
 			}
 
-			pfcCmd := fmt.Sprintf("pause pfc-cos %v\n", qosClass.PfsCos)
-			if err = exp.Send(pfcCmd); err != nil {
-				return buf.String(), err
+			if qosClass.PfsCos <= 7 {
+				// 7 is maximum allowed CoS value so far
+				pfcCmd := fmt.Sprintf("pause pfc-cos %v\n", qosClass.PfsCos)
+				if err = exp.Send(pfcCmd); err != nil {
+					return buf.String(), err
+				}
 			}
 
 			exp.Send("exit\n") //exit configClassQos

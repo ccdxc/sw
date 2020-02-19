@@ -36,12 +36,15 @@ def setUpSwitchQos(switch_ctx):
     qosClass = switch_ctx.qos.qos_classes.add()
     qosClass.name = "c-nq3"
     qosClass.mtu = 1500
+    qosClass.pause_pfc_cos = 3
     qosClass = switch_ctx.qos.qos_classes.add()
     qosClass.name = "c-nq2"
     qosClass.mtu = 1500
+    qosClass.pause_pfc_cos = 100  # set cos to an invalid value
     qosClass = switch_ctx.qos.qos_classes.add()
     qosClass.name = "c-nq1"
     qosClass.mtu = 1500
+    qosClass.pause_pfc_cos = 100  # set cos to an invalid value
     qosClass = switch_ctx.qos.qos_classes.add()
     qosClass.name = "c-nq-default"
     qosClass.mtu = 9216
