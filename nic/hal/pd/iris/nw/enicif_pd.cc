@@ -1715,6 +1715,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     bool                        set_drop            = false;
     bool                        egress_en           = false;
     bool                        encap_vlan_id_valid = false;
+    bool                        nacl_egress_drop_en = false;                       
     vlan_id_t                   encap_vlan          = 0;
 
     memset(&data, 0, sizeof(data));
@@ -1761,6 +1762,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         access_vlan_classic = 0;
         encap_vlan = 0;
         encap_vlan_id_valid = false;
+        nacl_egress_drop_en = true;
     } else {
         tm_oport = TM_PORT_DMA;
         p4plus_app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
@@ -1818,6 +1820,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                                                                pd_lif->pi_lif,
                                                                                lif_upd) : false;
             om_tmoport.access_vlan_id      = access_vlan_classic;
+            om_tmoport.nacl_egress_drop_en = nacl_egress_drop_en;
         }
     }
 
