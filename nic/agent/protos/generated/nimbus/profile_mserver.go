@@ -350,7 +350,7 @@ func (eh *ProfileTopic) ListProfiles(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Profile", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Profile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

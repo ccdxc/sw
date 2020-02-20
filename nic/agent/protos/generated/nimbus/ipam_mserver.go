@@ -350,7 +350,7 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.List
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("IPAMPolicy", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.IPAMPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

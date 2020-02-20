@@ -350,7 +350,7 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("App", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.App", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

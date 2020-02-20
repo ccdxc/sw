@@ -357,7 +357,7 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
     }
 
     if  eh.statusReactor != nil {
-        filters = eh.statusReactor.GetWatchFilter("{{$crudObject}}", objsel)
+        filters = eh.statusReactor.GetWatchFilter("netproto.{{$crudObject}}", objsel)
     } else {
         filters = append(filters, filterFn)
     }

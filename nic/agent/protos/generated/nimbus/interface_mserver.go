@@ -350,7 +350,7 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Interface", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Interface", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

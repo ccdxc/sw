@@ -350,7 +350,7 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("SecurityProfile", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.SecurityProfile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

@@ -525,7 +525,7 @@ func (md *Memdb) ListObjects(kind string, filters []FilterFn) []Object {
 	// walk all objects and add it to return list
 	var objs []Object
 	for _, obj := range od.objects {
-		if filters == nil {
+		if len(filters) == 0 {
 			objs = append(objs, obj.obj)
 		} else {
 			for _, filter := range filters {

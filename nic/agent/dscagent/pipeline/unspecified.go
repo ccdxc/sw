@@ -1463,6 +1463,7 @@ func (i *FakeAgentAPI) GetWatchOptions(ctx context.Context, kind string) (ret ap
 	switch kind {
 	case "Endpoint":
 		str := fmt.Sprintf("spec.node-uuid=%s", i.InfraAPI.GetDscName())
+		log.Info("WatchOptions for: ", kind, " ", str)
 		ret.FieldSelector = str
 	}
 	return ret

@@ -350,7 +350,7 @@ func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Con
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.NetworkSecurityPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

@@ -350,7 +350,7 @@ func (eh *CollectorTopic) ListCollectors(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Collector", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Collector", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

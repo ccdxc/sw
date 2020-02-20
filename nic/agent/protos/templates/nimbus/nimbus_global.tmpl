@@ -197,6 +197,7 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 
 func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOptions) (*netproto.AggObjectList, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
 	kindStrings := []string{}
 	for _, aggKind := range kinds.WatchOptions {
@@ -206,19 +207,24 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 
 	objList := &netproto.AggObjectList{}
 	// walk all associated kinds objects
-	for _, kind := range kindStrings {
+	for _, kind := range kinds.WatchOptions {
 
 		addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta) {
-			aggObj := &netproto.AggObject{Kind: kind, Object: &api.Any{}}
+			aggObj := &netproto.AggObject{Kind: kind.Kind, Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
-			eh.updateSentObjStatus(aggKey, nodeID, kind, api.EventType_UpdateEvent, meta)
+			eh.updateSentObjStatus(aggKey, nodeID, kind.Kind, api.EventType_UpdateEvent, meta)
 			objList.Objects = append(objList.Objects, aggObj)
 		}
 
-		switch kind {
+		switch kind.Kind {
 		{{range $key, $value := $manifest}}
 			case "{{$value.Object}}":
-				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
+
+				if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
+					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				} 
+				
+				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), filters)
 				if err != nil {
 					log.Errorf("Error getting a list of objects. Err: %v", err)
 					return nil, err

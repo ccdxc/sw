@@ -350,7 +350,7 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatc
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Endpoint", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Endpoint", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

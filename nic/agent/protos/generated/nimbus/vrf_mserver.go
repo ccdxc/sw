@@ -350,7 +350,7 @@ func (eh *VrfTopic) ListVrfs(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Vrf", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Vrf", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

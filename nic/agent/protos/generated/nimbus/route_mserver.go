@@ -350,7 +350,7 @@ func (eh *RouteTableTopic) ListRouteTables(ctx context.Context, objsel *api.List
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("RouteTable", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.RouteTable", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -877,7 +877,7 @@ func (eh *RoutingConfigTopic) ListRoutingConfigs(ctx context.Context, objsel *ap
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("RoutingConfig", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.RoutingConfig", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}

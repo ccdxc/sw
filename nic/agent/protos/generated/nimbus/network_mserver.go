@@ -350,7 +350,7 @@ func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("Network", objsel)
+		filters = eh.statusReactor.GetWatchFilter("netproto.Network", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
