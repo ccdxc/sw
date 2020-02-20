@@ -75,13 +75,17 @@ class Node(object):
             return self.__password
 
     class CimcInfo:
-        def __init__(self, ip, username, password):
+        def __init__(self, ip, ncsi_ip, username, password):
             self.__ip = ip
+            self.__ncsi_ip = ncsi_ip
             self.__username = username
             self.__password = password
 
         def GetIp(self):
             return self.__ip
+
+        def GetNcsiIp(self):
+            return self.__ncsi_ip
 
         def GetUsername(self):
             return self.__username
@@ -263,7 +267,10 @@ class Node(object):
         self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.__vmPassword
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
         self.__control_intf = "eth1"
-
+        self.__cimc_ip = getattr(self.__inst, "NodeCimcIP", None)
+        self.__cimc_ncsi_ip = getattr(self.__inst, "NodeCimcNcsiIP", None)
+        self.__cimc_username = getattr(self.__inst, "NodeCimcUsername", None)
+        self.__cimc_password = getattr(self.__inst, "NodeCimcPassword", None)
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
@@ -299,9 +306,13 @@ class Node(object):
 
     def __update_cimc_info(self):
         try:
-            if self._Node__inst.NodeCimcIP == "":
+            cimc_ip = getattr(self._Node__inst,"NodeCimcIP","")
+            if cimc_ip == "":
                 return None
-            return Node.CimcInfo(self._Node__inst.NodeCimcIP, getattr(self._Node__inst,"NodeCimcUsername","admin"), getattr(self._Node__inst,"NodeCimcPassword","N0isystem$"))
+            return Node.CimcInfo(cimc_ip, 
+                                 getattr(self._Node__inst.Resource, "NodeCimcNcsiIP", ""),
+                                 getattr(self._Node__inst,"NodeCimcUsername","admin"),
+                                 getattr(self._Node__inst,"NodeCimcPassword","N0isystem$"))
         except:
             Logger.debug("failed to parse cimc info. error was: {0}".format(traceback.format_exc()))
         return None

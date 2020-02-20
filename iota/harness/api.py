@@ -331,6 +331,13 @@ def GetWorkloadMemoryForNode(node_name):
 def GetNodes():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
 
+def GetNaplesNodes():
+    naples_nodes = []
+    for _node in GetNodes():
+        if IsNaplesNode(_node.Name()):
+            naples_nodes.append(_node)
+    return naples_nodes
+
 def GetNodeOs(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodeOs(node_name)
 

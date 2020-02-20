@@ -174,6 +174,8 @@ class _Testbed:
         msg.username = self.__tbspec.Provision.Username
         msg.password = self.__tbspec.Provision.Password
         msg.testbed_id = getattr(self, "__tbid", 1)
+        msg.native_vlan = self.GetNativeVlan()
+        Logger.info("Native Vlan %s" % str(msg.native_vlan))
 
         for instance in self.__tbspec.Instances:
             node_msg = msg.nodes.add()
@@ -503,7 +505,14 @@ class _Testbed:
         return self.__vlan_allocator.VlanRange()
 
     def GetNativeVlan(self):
-        return self.__vlan_allocator.VlanNative()
+        vlan = 0
+        if getattr(self.__tbspec, "TestbedVlanBase", None):
+            vlan = self.__vlan_allocator.VlanNative()
+        else:
+            nw = getattr(self.__tbspec, "Network", None)
+            if nw:
+                vlan = getattr(nw, "VlanID", 0)
+        return vlan
 
     def UnsetVlansOnTestBed(self):
         #First Unset the Switch

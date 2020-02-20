@@ -1,0 +1,36 @@
+meta:
+    name        : swm
+    description : SWM Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
+    config  :
+        - step : utils.cleanup
+        - step : utils.naples_workloads
+        - step : config.netagent.hw_push_config
+        - step : testcases.penctl.install
+        - step : testcases.drivers.install_iperf
+        
+common:
+    verifs:
+
+    debugs:
+
+    setup:
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - swm/swm.testbundle
+
+teardown:

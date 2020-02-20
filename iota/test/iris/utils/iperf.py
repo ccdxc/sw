@@ -3,7 +3,7 @@ import json
 import pdb
 import iota.harness.api as api
 
-def ServerCmd(port = None, time=None, run_core=None):
+def ServerCmd(port = None, time=None, run_core=None, jsonOut=False):
     assert(port)
     cmd = ["iperf3", "-s","-p", str(port)]
     if run_core:
@@ -12,13 +12,16 @@ def ServerCmd(port = None, time=None, run_core=None):
     if time:
         cmd.extend(["-t", str(time)])
 
+    if jsonOut:
+        cmd.append("-J")
+
     return " ".join(cmd)
 
-def ClientCmd(server_ip, server_port = None, time=10, pktsize=None, proto='tcp', run_core=None,
-            ipproto='v4', num_of_streams = None, jsonOut=False, connect_timeout=None, 
-            client_ip=None,client_port=None, packet_count=None, bandwidth=None):
-    assert(server_port)
-    cmd = ["iperf3", "-c", str(server_ip), "-p", str(server_port)]
+def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None,
+            ipproto='v4', bandwidth="100G", num_of_streams = None, jsonOut=False,
+            connect_timeout=None, client_ip=None, client_port=None, packet_count=None):
+    assert(port)
+    cmd = ["iperf3", "-c", str(server_ip), "-p", str(port), "-b", str(bandwidth)]
 
     if client_ip:
         cmd.extend(["-B", str(client_ip)])
@@ -55,6 +58,8 @@ def ClientCmd(server_ip, server_port = None, time=10, pktsize=None, proto='tcp',
 
     if ipproto == 'v6':
         cmd.append("-6")
+    
+    
 
     if packet_count: 
         cmd.extend(["-k", str(packet_count)])
@@ -145,7 +150,7 @@ def GetReceivedGbps(iperf_out):
         return '0'
     if iperfJson["start"]["test_start"]["protocol"] == 'TCP':
         return ('{0:.2f}'.format(end["sum_received"]["bits_per_second"]/(1024 * 1024 * 1024)))
-    return '0'
+    return ('{0:.2f}'.format(end["sum"]["bits_per_second"]/(1024 * 1024 * 1024)))
 
 
 if __name__ == '__main__':

@@ -633,16 +633,17 @@ class NaplesManagement(EntityManagement):
             self.SSHPassInit()
 
     def __read_mac(self):
-        for _ in range(0, 3):
+        for _ in range(3):
             output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
             mac_regexp = '(?:[0-9a-fA-F]:?){12}'
             x = re.findall(mac_regexp, output)
             if len(x) > 0:
                 self.mac_addr = x[0]
-                print("Read OOB mac {0}".format(self.mac_addr))
-                break
+                print("Read MAC {0}".format(self.mac_addr))
+                return
             else:
-                print("Did not Read OOB mac")
+                print("Did not Read MAC  {0}".format(self.mac_addr))
+        raise Exception("Not able to read oob mac")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True, force_connect=True):

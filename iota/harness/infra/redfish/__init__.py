@@ -1,0 +1,22 @@
+# Copyright Notice:
+# Copyright 2016-2019 DMTF. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/python-redfish-library/blob/master/LICENSE.md
+
+""" Redfish restful library """
+
+__all__ = ['rest', 'ris', 'discovery']
+__version__ = "2.1.3"
+
+from iota.harness.infra.redfish.rest.v1 import redfish_client
+from iota.harness.infra.redfish.rest.v1 import AuthMethod
+from iota.harness.infra.redfish.discovery.discovery import discover_ssdp
+import logging
+
+def redfish_logger(file_name, log_format, log_level=logging.ERROR):
+    formatter = logging.Formatter(log_format)
+    fh = logging.FileHandler(file_name)
+    fh.setFormatter(formatter)
+    logger = logging.getLogger(__name__)
+    logger.addHandler(fh)
+    logger.setLevel(log_level)
+    return logger

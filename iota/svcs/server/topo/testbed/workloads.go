@@ -328,7 +328,7 @@ func (n *TestNode) DeleteWorkloads(w *iota.WorkloadMsg) (*iota.WorkloadMsg, erro
 
 	if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Deleting workloads on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
-		return nil, fmt.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		//return nil, fmt.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
 	n.WorkloadResp = resp

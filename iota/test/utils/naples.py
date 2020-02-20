@@ -92,4 +92,19 @@ def DisableAllmulti(node, interface):
         result = api.types.status.FAILURE
     return result
 
+def GetNaplesUptime(node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "awk '{print $1}' /proc/time"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to get uptime from node %s, command not executed" % (node))
+        return None
 
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error("Failed to get uptime from node %s" % (node))
+        api.PrintCommandResults(cmd)
+        return None
+    
+    return float(cmd.stdout.strip())

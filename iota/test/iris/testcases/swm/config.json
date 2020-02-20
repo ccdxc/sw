@@ -1,0 +1,12 @@
+{
+    "ILO_IP": "10.31.1.11",
+    "NCSI_IP": "10.31.1.11",
+    "ILO_UNAME": "administrator",
+    "ILO_PSWD": "N0isystem$",
+    "ILO_GW": "10.31.1.11",
+    "ILO_NETMASK": "255.255.252.0",
+    "HOST_IP": "10.31.1.28",
+    "HOST_UNAME": "root",
+    "HOST_PSWD": "docker",
+    "VMEDIA_PATH": "http://tinycorelinux.net/10.x/x86/release/CorePlus-current.iso"
+}

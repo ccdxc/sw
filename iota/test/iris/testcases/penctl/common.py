@@ -600,6 +600,28 @@ def GetNaplesFruJson(n):
     else:
         return json.loads(resp.commands[0].stdout)
 
+def GetNaplesFrequency(n):
+    api.Logger.info("Getting Asic frequency information.")
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "echo -e 'secure on\n read ms_cfg_clk__S\n' > /tmp/freq_stats"
+    api.Trigger_AddNaplesCommand(req, n, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        api.Logger.info("Failed to get naples frequency")
+        return None
+    cmd = "LD_LIBRARY_PATH=/nic/lib:/platform/lib:$LD_LIBRARY_PATH /platform/bin/capview < /tmp/freq_stats | grep pll_select_core | awk '{print NF}'"
+    api.Trigger_AddNaplesCommand(req, n, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        api.Logger.info("Failed to get naples frequency, capview")
+        return None
+    cmd = resp.commands.pop()
+    
+    if int(cmd.stdout) == 5:
+        return 416
+    else:
+        return -1
+
 def GetPenctlFruJson(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
