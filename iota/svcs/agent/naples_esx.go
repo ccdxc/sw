@@ -466,7 +466,7 @@ func (node *esxHwNode) setUpNaplesMgmtNetwork(inst int, hint string) error {
 
 	mgmtNetwork := getMgmtNetwork(inst)
 
-	err = ctrlVM.ReconfigureNetwork(Common.EsxDefaultNetwork, mgmtNetwork)
+	err = ctrlVM.ReconfigureNetwork(Common.EsxDefaultNetwork, mgmtNetwork, 0)
 	if err != nil {
 		return errors.Wrap(err, "Failed to reconfigure Ctrl VM to Naples Mgmt network")
 	}

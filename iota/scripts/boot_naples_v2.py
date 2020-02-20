@@ -79,7 +79,7 @@ parser.add_argument('--host-username', dest='host_username',
 parser.add_argument('--host-password', dest='host_password',
                     default="docker", help='Host Password.')
 parser.add_argument('--mode', dest='mode', default='hostpin',
-                    choices=["classic", "hostpin", "bitw"],
+                    choices=["classic", "hostpin", "bitw", "hostpin_dvs"],
                     help='Naples mode - hostpin / classic.')
 parser.add_argument('--cimc-username', dest='cimc_username',
                     default="admin", help='CIMC Username')

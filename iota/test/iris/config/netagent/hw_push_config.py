@@ -66,6 +66,7 @@ class NodeVlan:
 
 
 classic_vlan_map = {}
+dvs_vlan_map = {}
 
 def __prepare_ip_address_str_for_endpoint(ep):
     nw_filter = "meta.name=" + ep.spec.network_name + ";"
@@ -116,6 +117,7 @@ def __add_config_worklads(req, target_node = None):
         wl_msg.mac_address = ep.spec.mac_address
         wl_msg.pinned_port = 1
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+
         encap_vlan = getattr(ep.spec, 'useg_vlan', None)
         host_if = None
         if api.GetNicMode() == 'hostpin':
@@ -125,6 +127,17 @@ def __add_config_worklads(req, target_node = None):
                 wl_msg.encap_vlan = encap_vlan if encap_vlan else wl_msg.uplink_vlan
             else:
                 wl_msg.encap_vlan = wl_msg.uplink_vlan
+        elif api.GetNicMode() == 'hostpin_dvs':
+            host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
+            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_DVS_PVLAN
+            wl_msg.switch_name = GlobalOptions.distributed_switch
+            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
+                wl_msg.encap_vlan = ep.spec.primary_vlan
+                wl_msg.secondary_encap_vlan = ep.spec.secondary_vlan
+            else:
+                wl_msg.encap_vlan = wl_msg.uplink_vlan
+
         elif api.GetNicMode() == 'classic':
             global classic_vlan_map
             node_vlan = classic_vlan_map.get(node_name)
@@ -437,7 +450,7 @@ def __add_config_classic_workloads(req, target_node = None):
 
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
-    if api.GetNicMode() == 'hostpin':
+    if api.GetNicMode() in ['hostpin', 'hostpin_dvs']:
         __add_config_worklads(req, target_node)
     elif api.GetNicMode() == 'classic':
         __add_config_classic_workloads(req, target_node)

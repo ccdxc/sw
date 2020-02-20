@@ -97,6 +97,7 @@ type EntityIntf interface {
 	BootVM(name string) (*VMInfo, error)
 	FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error)
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
+	RelaxSecurityOnPg(name string, pgName string) error
 	AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error
 	AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error
 	RemoveKernelNic(cluster, host string, pgName string) error
@@ -306,6 +307,14 @@ func (dc *DataCenter) getClientWithRLock() {
 
 func (dc *DataCenter) releaseClientRLock() {
 	dc.vc.clientLock.RUnlock()
+}
+
+func (dc *DataCenter) getClientWithLock() {
+	dc.vc.clientLock.Lock()
+}
+
+func (dc *DataCenter) releaseClientLock() {
+	dc.vc.clientLock.Unlock()
 }
 
 func (entity *Entity) importVapp(dir string, spec *types.OvfCreateImportSpecResult,

@@ -3,8 +3,6 @@
 package statemgr
 
 import (
-	"fmt"
-	"net"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -268,6 +266,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 	}
 
 	if ns.Network.Spec.IPv4Subnet != "" {
+		/* //Commenting out IP allocation
 		// allocate an IP address
 		ns.Lock()
 		ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
@@ -302,6 +301,7 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 			log.Errorf("Error writing the network object. Err: %v", err)
 			return err
 		}
+		*/
 	}
 
 	// create a new endpoint instance

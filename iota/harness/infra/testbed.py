@@ -177,6 +177,7 @@ class _Testbed:
         msg.native_vlan = self.GetNativeVlan()
         Logger.info("Native Vlan %s" % str(msg.native_vlan))
 
+        is_vcenter = False
         for instance in self.__tbspec.Instances:
             node_msg = msg.nodes.add()
             node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
@@ -190,6 +191,25 @@ class _Testbed:
                 node_msg.esx_password = self.__tbspec.Provision.Vars.EsxPassword
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
+
+            if getattr(instance, "Tag", None) ==  "vcenter":
+                node_msg.os = topo_pb2.TESTBED_NODE_OS_VCENTER
+                node_msg.dc_name = GlobalOptions.dc_name
+                node_msg.switch = GlobalOptions.distributed_switch
+                node_msg.esx_username = self.__tbspec.Provision.Vars.VcenterUsername
+                node_msg.esx_password = self.__tbspec.Provision.Vars.VcenterPassword
+                node_msg.license = self.__tbspec.Provision.Vars.VcenterLicense
+                is_vcenter = True
+
+            if is_vcenter:
+                license = msg.licenses.add()
+                license.username = self.__tbspec.Provision.Vars.VcenterUsername
+                license.password =  self.__tbspec.Provision.Vars.VcenterPassword
+                license.key = self.__tbspec.Provision.Vars.VcenterLicense
+                license.type = topo_pb2.License.Type.Name(topo_pb2.License.LICENSE_VCENTER) 
+
+
+
 
             res = instance.Resource
             if getattr(res,"ApcIP",None):
@@ -474,9 +494,11 @@ class _Testbed:
         status = self.__init_testbed()
         return status
 
-    def AllocateInstance(self, type):
+    def AllocateInstance(self, type, tag=None):
         for instance in self.__instpool:
             if instance.Type == type:
+                if tag != None and tag != getattr(instance, "Tag", None):
+                    continue
                 self.__instpool.remove(instance)
                 return instance
         else:
@@ -546,8 +568,8 @@ class _Testbed:
         #First Unset the Switch
         setMsg = topo_pb2.SwitchMsg()
         setMsg.op = topo_pb2.VLAN_CONFIG
+        switch_ips = {}
         for instance in self.__tbspec.Instances:
-            switch_ips = {}
             if instance.Type == "bm":
                 for nw in instance.DataNetworks:
                     switch_ctx = switch_ips.get(nw.SwitchIP, None)

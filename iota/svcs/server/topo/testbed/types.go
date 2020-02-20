@@ -37,12 +37,15 @@ type TestNode struct {
 	CimcIP       string
 	info         NodeInfo
 	//Use when workload are local managed rather than agent
-	controlNode  TestNodeInterface
-	workloadMap  *sync.Map
-	logger       *log.Logger
-	connector    interface{}
-	triggerLocal bool
-	ApcInfo      *iota.ApcInfo
+	controlNode       TestNodeInterface
+	workloadMap       *sync.Map
+	logger            *log.Logger
+	connector         interface{}
+	triggerLocal      bool
+	ApcInfo           *iota.ApcInfo
+	DCName            string
+	ClusterName       string
+	DistributedSwitch string
 }
 
 // VcenterNode implements functions for Vcenter
@@ -152,6 +155,10 @@ type TestNodeInterface interface {
 	GetNodeAgent() iota.IotaAgentApiClient
 	SetNodeAgent(iota.IotaAgentApiClient)
 	RunTriggerLocally()
+
+	SetDC(string)
+	SetCluster(string)
+	SetSwitch(string)
 
 	IsOrchesratorNode() bool
 

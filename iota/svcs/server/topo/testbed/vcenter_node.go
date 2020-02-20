@@ -3,7 +3,6 @@ package testbed
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -15,9 +14,6 @@ import (
 	"golang.org/x/crypto/ssh"
 	//"golang.org/x/sync/errgroup"
 )
-
-var dcName = ""
-var dvsName = ""
 
 func (n *VcenterNode) cleanUpVcenter() error {
 
@@ -31,22 +27,9 @@ func (n *VcenterNode) cleanUpVcenter() error {
 		return err
 	}
 
-	uid := os.Getenv("USER")
-	if uid == "" {
-		uid = os.Getenv("SUDO_USER")
-		if uid == "" {
-			if os.Getenv("JOB_ID") != "" {
-				return fmt.Errorf("DC name cannot be derived, please run as non-sudo user")
-			}
-			uid = "default-" + os.Getenv("HOSTNAME")
-		}
-	}
+	dvsSpec := vmware.DVSwitchSpec{Name: n.DistributedSwitch}
 
-	dcName = uid + "-iota-dc"
-	dvsName = uid + "-iota-dvs"
-	dvsSpec := vmware.DVSwitchSpec{Name: dvsName}
-
-	dc, err := vc.SetupDataCenter(dcName)
+	dc, err := vc.SetupDataCenter(n.DCName)
 	if err == nil {
 
 		//Datacenter exists
@@ -69,7 +52,7 @@ func (n *VcenterNode) cleanUpVcenter() error {
 			return err
 		}
 
-		err = vc.DestroyDataCenter(dcName)
+		err = vc.DestroyDataCenter(n.DCName)
 		if err != nil {
 			fmt.Printf("Initing failed %v.\n", err.Error())
 			log.Errorf("TOPO SVC | CleanTestBed | Destroying data center failed %v", err.Error())
@@ -99,7 +82,7 @@ func (n *VcenterNode) initVcenter() error {
 	n.vc = vc
 
 	//TODO , create based on current User -ID
-	dc, err := vc.CreateDataCenter(dcName)
+	dc, err := vc.CreateDataCenter(n.DCName)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestbed  | Failed to create datacenter  %v", err.Error())
 		return err
@@ -108,7 +91,7 @@ func (n *VcenterNode) initVcenter() error {
 	n.dc = dc
 
 	//Create cluster
-	cl, err := dc.CreateCluster(constants.VcenterCluster)
+	cl, err := dc.CreateCluster(n.ClusterName)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestbed  | Failed to create cluster %v", err.Error())
 		return err
@@ -129,7 +112,7 @@ func (n *VcenterNode) initVcenter() error {
 		if err != nil {
 			return err
 		}
-		log.Infof("Adding pnic %v of host %v to dvs", intfs, node.GetNodeInfo().Name)
+		log.Infof("Adding pnic %v of host %v (%v) to dvs", intfs, node.GetNodeInfo().Name, node.GetNodeInfo().IPAddress)
 		hostSpecs = append(hostSpecs, vmware.DVSwitchHostSpec{
 			Name:  node.GetNodeInfo().IPAddress,
 			Pnics: intfs,
@@ -140,13 +123,13 @@ func (n *VcenterNode) initVcenter() error {
 		}
 		vspec := vmware.VswitchSpec{Name: constants.IotaVmotionSwitch}
 
-		err = dc.AddNetworks(constants.VcenterCluster, node.GetNodeInfo().IPAddress, vNWs, vspec)
+		err = dc.AddNetworks(n.ClusterName, node.GetNodeInfo().IPAddress, vNWs, vspec)
 		if err != nil {
 			//Ignore as it may be created already.
 			log.Errorf("Error creating vmotion pg %v", err.Error())
 		}
 
-		err = dc.AddKernelNic(constants.VcenterCluster, node.GetNodeInfo().IPAddress, constants.IotaVmotionPortgroup, true)
+		err = dc.AddKernelNic(n.ClusterName, node.GetNodeInfo().IPAddress, constants.IotaVmotionPortgroup, true)
 
 		if err != nil {
 			//Ignore as it may be created already.
@@ -155,15 +138,43 @@ func (n *VcenterNode) initVcenter() error {
 	}
 
 	dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
-		Name: dvsName, Cluster: constants.VcenterCluster,
-		MaxPorts: 10,
-		Pvlans: []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: constants.VcenterPvlanStart,
-			Secondary: constants.VcenterPvlanStart, Type: "promiscuous"}}}
+		Name: n.DistributedSwitch, Cluster: n.ClusterName,
+		MaxPorts: 100}
+
+	start := n.Node.GetVcenterConfig().PvlanStart
+	end := n.Node.GetVcenterConfig().PvlanEnd
+	if start == 0 {
+		start = 2
+		end = constants.ReservedPGVlanCount
+	}
+	for i := start; i < end; i += 2 {
+		pvlanSpecProm := vmware.DvsPvlanPair{
+			Primary:   int32(i),
+			Type:      "promiscuous",
+			Secondary: int32(i),
+		}
+		pvlanSpecIsolated := vmware.DvsPvlanPair{
+			Primary:   int32(i),
+			Type:      "isolated",
+			Secondary: int32(i + 1),
+		}
+		dvsSpec.Pvlans = append(dvsSpec.Pvlans, pvlanSpecProm)
+		dvsSpec.Pvlans = append(dvsSpec.Pvlans, pvlanSpecIsolated)
+	}
+
 	err = dc.AddDvs(dvsSpec)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestbed  | Error add DVS with host spec %v", err.Error())
 		return err
 	}
+
+	//Make sure all nodes now go through controller for operations
+	for _, mnode := range n.managedNodes {
+		mnode.SetNodeController(n)
+		mnode.RunTriggerLocally()
+		mnode.SetConnector(n.dc)
+	}
+
 	return nil
 }
 
@@ -195,8 +206,8 @@ func (n *VcenterNode) CheckHealth(ctx context.Context, health *iota.NodeHealth) 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
 func (n *VcenterNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []string) error {
 
-	if err := n.initVcenter(); err != nil {
-		return errors.Wrap(err, "init vcenter failed")
+	if err := n.cleanUpVcenter(); err != nil {
+		return errors.Wrap(err, "Clean up venter failed")
 	}
 
 	return nil
@@ -246,6 +257,9 @@ func (n *VcenterNode) SetupNode() error {
 	n.managedNodes = make(map[string]ManagedNodeInterface)
 	n.independentNodes = make(map[string]ManagedNodeInterface)
 	n.info.ManagedNodes = make(map[string]NodeInfo)
+	n.DCName = n.Node.GetVcenterConfig().DcName
+	n.ClusterName = n.Node.GetVcenterConfig().ClusterName
+	n.DistributedSwitch = n.Node.GetVcenterConfig().DistributedSwitch
 	for _, mnode := range n.Node.GetVcenterConfig().EsxConfigs {
 		inf := NodeInfo{
 			Os:        iota.TestBedNodeOs_TESTBED_NODE_OS_ESX,
@@ -314,6 +328,7 @@ func (n *VcenterNode) AssocaiateIndependentNode(node TestNodeInterface) error {
 	}
 
 	for index, mn := range n.managedNodes {
+		log.Infof("Checking managed node %v %v", mn.GetNodeInfo().Name, node.GetNodeInfo().Name)
 		if mn.GetNodeInfo().Name == node.GetNodeInfo().Name {
 			//Set agent for some operations
 			mn.SetNodeAgent(agent)
@@ -324,6 +339,9 @@ func (n *VcenterNode) AssocaiateIndependentNode(node TestNodeInterface) error {
 			mNode.SetNodeController(n)
 			mNode.RunTriggerLocally()
 			mNode.SetConnector(n.dc)
+			mNode.SetDC(n.DCName)
+			mNode.SetCluster(n.ClusterName)
+			log.Infof("Added managed node %v %v", node.GetNodeInfo().Name, mNode.NodeConnector())
 			break
 		}
 	}

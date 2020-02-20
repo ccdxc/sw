@@ -1,0 +1,48 @@
+meta:
+    name: 2Naples_VM_Vcenter
+    description: 2Naples VM Vcenter Topology
+    mode: dvs
+
+nodes:
+    - node: node1
+      name: node1
+      role: auto
+      mode : dvs
+      workloads:
+        esx:
+            type       : WORKLOAD_TYPE_VM
+            image      : "build-199"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 25
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+
+
+    - node: node2
+      name: node2
+      role: auto
+      mode : dvs
+      workloads:
+        esx:
+            type    : WORKLOAD_TYPE_VM
+            image   : "build-199"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 256
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP
+            image   : "N/A"
+
+    - node: vcenter
+      name: vcenter
+      role: PERSONALITY_VCENTER_NODE
+      Tag: vcenter
+      vlan_start: 1000
+      vlan_end: 1200
+      managednodes:
+       - node1 
+       - node2

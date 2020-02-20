@@ -180,49 +180,51 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 // freeIPv4Addr free the address
 func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
-	log.Infof("Freeing IPv4 address: %v", reqAddr)
+	/*
+		log.Infof("Freeing IPv4 address: %v", reqAddr)
 
-	reqIP, _, err := net.ParseCIDR(reqAddr)
-	if err != nil {
-		log.Errorf("Error parsing ip address: %v. Err: %v", reqAddr, err)
-		return err
-	}
+		reqIP, _, err := net.ParseCIDR(reqAddr)
+		if err != nil {
+			log.Errorf("Error parsing ip address: %v. Err: %v", reqAddr, err)
+			return err
+		}
 
-	// parse the subnet
-	baseAddr, ipnet, err := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
-	if err != nil {
-		log.Errorf("Error parsing subnet %v. Err: %v", ns.Network.Spec.IPv4Subnet, err)
-		return err
-	}
+		// parse the subnet
+		baseAddr, ipnet, err := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
+		if err != nil {
+			log.Errorf("Error parsing subnet %v. Err: %v", ns.Network.Spec.IPv4Subnet, err)
+			return err
+		}
 
-	// verify the address is in subnet
-	if !ipnet.Contains(reqIP) {
-		log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Network.Spec.IPv4Subnet)
-		return fmt.Errorf("requested address not in subnet")
-	}
+		// verify the address is in subnet
+		if !ipnet.Contains(reqIP) {
+			log.Errorf("Requested address %s is not in subnet %s", reqAddr, ns.Network.Spec.IPv4Subnet)
+			return fmt.Errorf("requested address not in subnet")
+		}
 
-	// read ipv4 allocation bitmap
-	subnetMaskLen, maskLen := ipnet.Mask.Size()
-	subnetSize := 1 << uint32(maskLen-subnetMaskLen)
-	buf := bytes.NewBuffer(ns.Network.Status.AllocatedIPv4Addrs)
-	bs := bitset.New(uint(subnetSize))
-	bs.ReadFrom(buf)
+		// read ipv4 allocation bitmap
+		subnetMaskLen, maskLen := ipnet.Mask.Size()
+		subnetSize := 1 << uint32(maskLen-subnetMaskLen)
+		buf := bytes.NewBuffer(ns.Network.Status.AllocatedIPv4Addrs)
+		bs := bitset.New(uint(subnetSize))
+		bs.ReadFrom(buf)
 
-	// determine the bit in bitmask
-	addrBit := ipv42int(reqIP) - ipv42int(baseAddr)
+		// determine the bit in bitmask
+		addrBit := ipv42int(reqIP) - ipv42int(baseAddr)
 
-	// verify the address is still allocated
-	if !bs.Test(uint(addrBit)) {
-		log.Errorf("Address %s was not allocated", reqAddr)
-		return fmt.Errorf("Requested address was not allocated")
-	}
+		// verify the address is still allocated
+		if !bs.Test(uint(addrBit)) {
+			log.Errorf("Address %s was not allocated", reqAddr)
+			return fmt.Errorf("Requested address was not allocated")
+		}
 
-	// clear the bit
-	bs.Clear(uint(addrBit))
+		// clear the bit
+		bs.Clear(uint(addrBit))
 
-	// save the bitset back
-	bs.WriteTo(buf)
-	ns.Network.Status.AllocatedIPv4Addrs = buf.Bytes()
+		// save the bitset back
+		bs.WriteTo(buf)
+		ns.Network.Status.AllocatedIPv4Addrs = buf.Bytes()
+	*/
 
 	return nil
 }
@@ -371,6 +373,23 @@ func (sm *Statemgr) FindNetwork(tenant, name string) (*NetworkState, error) {
 	}
 
 	return NetworkStateFromObj(obj)
+}
+
+// FindNetworkByVlanID finds a network by vlan-id
+func (sm *Statemgr) FindNetworkByVlanID(tenant string, vlanID uint32) (*NetworkState, error) {
+	// find the object
+	nObjs, err := sm.ListNetworks()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, nw := range nObjs {
+		if nw.Network.Network.Spec.VlanID == vlanID {
+			return nw, nil
+		}
+	}
+
+	return nil, fmt.Errorf("failed to find network with VLAN ID : %v", vlanID)
 }
 
 // ListNetworks lists all networks

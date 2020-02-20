@@ -48,7 +48,6 @@ type vmESXWorkload struct {
 type vmVcenterWorkload struct {
 	vmESXWorkloadBase
 	vhost vmware.EntityIntf
-	vm    *vmware.VM
 }
 
 func newVMESXWorkload(name string, parent string, logger *log.Logger) Workload {
@@ -136,6 +135,7 @@ func (vm *vmVcenterWorkload) SetConnector(cluster, host string, conn interface{}
 	vm.vhost = conn.(vmware.EntityIntf)
 	vm.hostName = host
 	vm.cluster = cluster
+	log.Infof("Setting vcenter connector with host %v %v", host, vm.vhost)
 }
 
 func (vm *vmESXWorkload) BringUp(args ...string) error {
@@ -220,7 +220,7 @@ func (vm *vmESXWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		//return "", errors.Wrap(err, "Error in creating network")
 	}
 
-	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, nwName); err != nil {
+	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, nwName, 0); err != nil {
 		return "", errors.Wrap(err, "Error in Reconfiguring Def network")
 	}
 
@@ -341,9 +341,12 @@ func (vm *vmESXWorkloadBase) TearDown() {
 	//Stop all bg cmds first
 	vm.workloadBase.TearDown()
 	if vm.vm != nil {
+		log.Errorf("Tearing down vm %v", vm.Name())
 		//Power off VM in ESX, Deploy is expensive
 		vm.vm.PowerOff()
 		vm.vm.Destroy()
+	} else {
+		log.Errorf("VM reference nil, cannot teardown %v %p %p", vm.Name(), vm, vm.vm)
 	}
 }
 
@@ -376,6 +379,7 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 
 	//Power on is not consistent.
 	host := vm.vhost
+	log.Infof("Bringing up workload on vcenter handle %v", host)
 	host.DestoryVM(vm.vmName)
 	if !host.VMExists(vm.vmName) {
 		vm.logger.Infof("Deploying VM on cluster %v, host %v", clusterName, hostName)
@@ -433,44 +437,60 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 	//vsname := constants.VcenterDCDvs
 	vsname := spec.Switch
 
+	log.Errorf("Add interface %v %p %p", vm.Name(), vm, vm.vm)
+	relaxSecurity := false
 	if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
-		err = vm.vhost.AddPvlanPairsToDvs(vsname, []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: int32(spec.PrimaryVlan),
-			Secondary: int32(spec.SecondaryVlan), Type: "isolated"}})
 
-		if err != nil {
-			return "", errors.Wrapf(err, "Error creating pvlan pair %v", spec.PrimaryVlan)
-		}
-
+		private := false
 		pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+		if spec.SecondaryVlan != 0 {
+			pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.SecondaryVlan)
+			private = true
+		}
 		//Create the port group
 		err = vm.vhost.AddPortGroupToDvs(vsname,
 			[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName,
 				VlanOverride: true,
-				Private:      true,
+				Private:      private,
 				Ports:        32, Type: "earlyBinding",
 				Vlan: int32(spec.PrimaryVlan)}})
-		if err != nil {
+
+		if err != nil && !strings.Contains(err.Error(), "already exists") {
 			return "", errors.Wrap(err, "Failed to add portgroup to dvs")
 		}
 
 	} else {
-		pgName, err = vm.vhost.FindDvsPortGroup(vsname, vmware.DvsPGMatchCriteria{Type: vmware.DvsVlanID, VlanID: int32(spec.PrimaryVlan)})
-		if err != nil {
-			pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
-			//Create the port group
-			err = vm.vhost.AddPortGroupToDvs(vsname,
-				[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName,
-					VlanOverride: true,
-					Ports:        32, Type: "earlyBinding",
-					Vlan: int32(spec.PrimaryVlan)}})
+		if spec.NetworkName != "" {
+			//Use network name specified.
+			pgName = spec.NetworkName
+			relaxSecurity = true
+
+		} else {
+			pgName, err = vm.vhost.FindDvsPortGroup(vsname, vmware.DvsPGMatchCriteria{Type: vmware.DvsVlanID, VlanID: int32(spec.PrimaryVlan)})
 			if err != nil {
-				return "", errors.Wrap(err, "Failed to add portgroup to dvs")
+				pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+				//Create the port group
+				err = vm.vhost.AddPortGroupToDvs(vsname,
+					[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName,
+						VlanOverride: true,
+						Ports:        32, Type: "earlyBinding",
+						Vlan: int32(spec.PrimaryVlan)}})
+				if err != nil {
+					return "", errors.Wrap(err, "Failed to add portgroup to dvs")
+				}
 			}
 		}
 	}
 
-	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, pgName); err != nil {
-		return "", errors.Wrap(err, "Error in Reconfiguring Def network")
+	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, pgName, 1); err != nil {
+		return "", errors.Wrapf(err, "Error in Reconfiguring Def network to %v", pgName)
+	}
+
+	if relaxSecurity {
+		err := vm.vhost.RelaxSecurityOnPg(vsname, pgName)
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to relax security on pg")
+		}
 	}
 
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {

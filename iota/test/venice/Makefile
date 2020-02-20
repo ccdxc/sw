@@ -33,4 +33,13 @@ upgrade:
 	cd ../../../ && make bundle-upgrade-image
 	SKIP_SETUP=1 VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rollout -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
 
+vcenter-e2e:
+	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
+	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
+	cd ../../ && make
+	./start_iota.sh
+	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
+	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
+	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/vcenter -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Vcenter
+
 all: venice-e2e upgrade

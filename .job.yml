@@ -134,6 +134,8 @@ jobs:
     labels: ["precommit", "hourly"]
   iota/test/venice:
     labels: ["precommit", "2xhourly"]
+  iota/test/venice/vcenter:
+    labels: ["precommit"]
   iota/test/standalone/sanity/freebsd:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/esx:
@@ -420,6 +422,8 @@ dependencies:
     - reference: test/ci_targets/e2e
     - reference: iota/test/venice
       exclude_dirs: ["ui"]
+  venice/orch:
+    - reference: iota/test/venice/vcenter
   test:
     - reference: api
     - reference: test/ci_targets/e2e

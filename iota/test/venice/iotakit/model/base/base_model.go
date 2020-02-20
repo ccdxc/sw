@@ -358,6 +358,7 @@ func (sm *SysModel) AssociateHosts() error {
 	for k := range sm.NaplesHosts {
 		delete(sm.NaplesHosts, k)
 	}
+
 	for _, n := range sm.NaplesNodes {
 		n.SmartNic.Labels = make(map[string]string)
 		nodeMac := strings.Replace(n.Nodeuuid, ":", "", -1)
@@ -484,6 +485,7 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 		node.Node.Nodeuuid = "50df.9ac7.c24" + fmt.Sprintf("%v", index)
 		n := getThirdPartyNic(name, node.Node.Nodeuuid)
 		cfgParams.Dscs = append(cfgParams.Dscs, n)
+		cfgParams.ThirdPartyDscs = append(cfgParams.ThirdPartyDscs, n)
 		index++
 	}
 

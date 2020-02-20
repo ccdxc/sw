@@ -1,15 +1,22 @@
 package vcentercfg
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"time"
+
+	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+const configFile = "/tmp/scale-cfg.json"
 
 //VcenterCfg encapsulate all Vcenter configuration objects
 type VcenterCfg struct {
@@ -27,23 +34,32 @@ func (vc *VcenterCfg) pushConfigViaRest() error {
 
 	rClient := vc.Client
 
-	createHosts := func() error {
-		defer base.TimeTrack(time.Now(), "Creating hosts")
-		for _, o := range cfg.ConfigItems.Hosts {
-			err := rClient.CreateHost(o)
-			if err != nil {
-				log.Errorf("Error creating host: %+v. Err: %v", o, err)
-				return err
+	/*
+		createHosts := func() error {
+			defer base.TimeTrack(time.Now(), "Creating hosts")
+			for _, o := range cfg.ConfigItems.Hosts {
+				err := rClient.CreateHost(o)
+				if err != nil {
+					log.Errorf("Error creating host: %+v. Err: %v", o, err)
+					return err
+				}
 			}
+			return nil
 		}
-		return nil
-	}
 
-	if err := createHosts(); err != nil {
-		return err
+		if err := createHosts(); err != nil {
+			return err
+		} */
+
+	//Set mac address to be empty as venter and orch will figure out for themselves
+	for _, wl := range vc.Cfg.ConfigItems.Workloads {
+		for index := range wl.Spec.Interfaces {
+			wl.Spec.Interfaces[index].MACAddress = ""
+		}
 	}
 
 	for _, o := range cfg.ConfigItems.Networks {
+
 		if err := rClient.CreateNetwork(o); err != nil {
 			log.Errorf("Error creating network %s", err)
 			//Ignore network create error as it might be created already
@@ -104,12 +120,12 @@ func (vc *VcenterCfg) CleanupAllConfig() error {
 	rClient := vc.Client
 
 	// get all venice configs
-	/*
-		veniceHosts, err := rClient.ListHost()
-		if err != nil {
-			log.Errorf("err: %s", err)
-			return err
-		}*/
+	veniceHosts, err := rClient.ListHost()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
 	veniceSGPolicies, err := rClient.ListNetworkSecurityPolicy()
 	if err != nil {
 		log.Errorf("err: %s", err)
@@ -126,12 +142,11 @@ func (vc *VcenterCfg) CleanupAllConfig() error {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	/*
-		veniceWorkloads, err := rClient.ListWorkload()
-		if err != nil {
-			log.Errorf("err: %s", err)
-			return err
-		}*/
+	veniceWorkloads, err := rClient.ListWorkload()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
 
 	log.Infof("Cleanup: Apps %d, sgpolicy %d networks %d",
 		len(veniceApps), len(veniceSGPolicies), len(veniceNetworks))
@@ -152,19 +167,51 @@ func (vc *VcenterCfg) CleanupAllConfig() error {
 		}
 	}
 
-	/*
-		if err := rClient.DeleteWorkloads(veniceWorkloads); err != nil {
-			err = fmt.Errorf("Error deleting workloads Err: %v", err)
+	if err := rClient.DeleteWorkloads(veniceWorkloads); err != nil {
+		err = fmt.Errorf("Error deleting workloads Err: %v", err)
+		log.Errorf("%s", err)
+		return err
+	}
+
+	for i := 0; i < 1; i++ {
+
+	}
+
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+L:
+	for true {
+		select {
+		case <-bkCtx.Done():
+			return fmt.Errorf("Error deleting all endpoints: %s", err)
+		default:
+			veniceEndpoints, err := rClient.ListEndpoints(globals.DefaultTenant)
+			if err != nil {
+				log.Errorf("err: %s", err)
+				return err
+			}
+			if len(veniceEndpoints) == 0 {
+				break L
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	for _, obj := range veniceNetworks {
+		if err := rClient.DeleteNetwork(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
 			log.Errorf("%s", err)
 			return err
 		}
-		for _, obj := range veniceHosts {
-			if err := rClient.DeleteHost(obj); err != nil {
-				err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
-				log.Errorf("%s", err)
-				return err
-			}
-		}*/
+	}
+
+	for _, obj := range veniceHosts {
+		if err := rClient.DeleteHost(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
 
 	return nil
 }
@@ -214,7 +261,7 @@ func (vc *VcenterCfg) PushConfig() error {
 				if err != nil {
 					done <- fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
 					return
-				} else if retSgp.Status.PropagationStatus.Updated == int32(len(vc.Dscs)) {
+				} else if retSgp.Status.PropagationStatus.Updated == int32(len(vc.Dscs)-len(vc.ThirdPartyDscs)) {
 					log.Infof("got back policy satus %+v", retSgp.Status.PropagationStatus)
 					done <- nil
 					return
@@ -235,6 +282,18 @@ func (vc *VcenterCfg) PushConfig() error {
 			err = retErr
 		}
 	}
+
+	writeConfig := func() {
+		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			panic(err)
+		}
+		j, err := json.MarshalIndent(&vc.Cfg.ConfigItems, "", "  ")
+		ofile.Write(j)
+		ofile.Close()
+	}
+
+	writeConfig()
 
 	return nil
 }

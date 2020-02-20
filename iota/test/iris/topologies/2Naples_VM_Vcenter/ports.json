@@ -1,0 +1,70 @@
+{
+    "type" : "netagent",
+  "rest-endpoint" : "api/system/ports/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+  "objects": [
+    {
+      "kind": "Port",
+      "meta": {
+        "name": "port9",
+        "tenant": "default",
+        "namespace": "default",
+        "generation-id": "",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "speed": "SPEED_1G",
+        "type": "TYPE_MANAGEMENT",
+        "breakout-mode": "BREAKOUT_NONE",
+        "admin-status": "UP",
+        "lanes": 1
+      },
+      "status": {
+        "id": 9
+      }
+    },
+    {
+      "kind": "Port",
+      "meta": {
+        "name": "port1",
+        "tenant": "default",
+        "namespace": "default",
+        "generation-id": "",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "speed": "SPEED_100G",
+        "type": "TYPE_ETHERNET",
+        "breakout-mode": "BREAKOUT_NONE",
+        "admin-status": "UP",
+        "lanes": 4
+      },
+      "status": {
+        "id": 1
+      }
+    },
+    {
+      "kind": "Port",
+      "meta": {
+        "name": "port5",
+        "tenant": "default",
+        "namespace": "default",
+        "generation-id": "",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "speed": "SPEED_100G",
+        "type": "TYPE_ETHERNET",
+        "breakout-mode": "BREAKOUT_NONE",
+        "admin-status": "UP",
+        "lanes": 4
+      },
+      "status": {
+        "id": 5
+      }
+    }
+  ]
+}

@@ -123,6 +123,7 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 				wc.SetError(err)
 				return wc
 			}
+			log.Infof("GOt workloads %v", len(wloads))
 		hostL:
 			for _, wload := range wloads {
 				vlan := wload.GetSpec().Interfaces[0].GetExternalVlan()
@@ -152,9 +153,15 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 		return wc
 	}
 	//Now add the workload info to IOTA
+	subnets := snc.Subnets()
 	for i, wload := range newWloads {
-		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(hosts[i], wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage)
-		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+		for _, subnet := range subnets {
+			if subnet.VeniceNetwork.Spec.VlanID == wload.Spec.Interfaces[0].ExternalVlan {
+				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(hosts[i], wload, sm.Tb.Topo.WorkloadType,
+					sm.Tb.Topo.WorkloadImage, sm.Tb.GetSwitch(), subnet.Name)
+				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+			}
+		}
 	}
 
 	// bringup the Workloads

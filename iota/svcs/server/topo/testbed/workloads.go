@@ -48,7 +48,7 @@ func (n *TestNode) AddWorkloads(w *iota.WorkloadMsg) (*iota.WorkloadMsg, error) 
 
 	if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Adding workloads on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
-		return nil, fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		return resp, nil
 	}
 
 	//Store all the workloads
@@ -80,6 +80,7 @@ func (n *TestNode) configureWorkload(wload workload.Workload, in *iota.Workload)
 		PrimaryVlan:   int(in.GetEncapVlan()),
 		SecondaryVlan: int(in.GetSecondaryEncapVlan()),
 		Switch:        in.GetSwitchName(),
+		NetworkName:   in.GetNetworkName(),
 	}
 
 	attachedIntf, err := wload.AddInterface(spec)
@@ -123,15 +124,16 @@ func (n *TestNode) setupWorkload(wload workload.Workload, in *iota.Workload) (*i
 	wDir := constants.DstIotaEntitiesDir + "/" + in.GetWorkloadName()
 	wload.SetBaseDir(wDir)
 
-	wload.SetConnector(constants.VcenterCluster, wload.Host(), n.connector)
+	wload.SetConnector(n.ClusterName, wload.Host(), n.connector)
 	imageDir, _ := imageRep.GetImageDir(in.GetWorkloadImage())
 	if err := wload.BringUp(in.GetWorkloadName(), imageDir,
-		constants.VcenterCluster, n.info.IPAddress, constants.IotaAgentBinaryPathLinux); err != nil {
+		n.ClusterName, n.info.IPAddress, constants.IotaAgentBinaryPathLinux); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		n.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		return resp, err
 	}
+
 	n.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
 	return n.configureWorkload(wload, in)
@@ -178,6 +180,7 @@ func (n *TestNode) AddWorkloadsLocal(in *iota.WorkloadMsg) (*iota.WorkloadMsg, e
 		resp, err := n.setupWorkload(iotaWload.workload, in)
 
 		if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+			logger.Errorf("Tearing down workload %v", iotaWload.workload.Name())
 			iotaWload.workload.TearDown()
 			return resp
 		}
@@ -230,7 +233,7 @@ func (n *TestNode) AddWorkloadsLocal(in *iota.WorkloadMsg) (*iota.WorkloadMsg, e
 	for _, wload := range in.Workloads {
 		if wload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 			in.ApiResponse = wload.WorkloadStatus
-			return in, errors.New(wload.WorkloadStatus.ErrorMsg)
+			return in, nil
 		}
 	}
 	in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}

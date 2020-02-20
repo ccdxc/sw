@@ -65,6 +65,7 @@ var Topologies = map[string]*Topology{
 	"1Venice_3SimScale200Naples":          &topo1Venice3NaplesSim200Scale,
 	"3VMVenice_5SimScale1000Naples":       &topo3VMVenice5NaplesSim1000Scale,
 	"3Venice_2Naples_Vcenter":             &topo3Venice2NaplesVcenter,
+	"3Venice_1Naples_Vcenter":             &topo3Venice1Naples1ThirdPartyVcenter,
 }
 
 // 3 Venice Nodes and 3 Naples Sim nodes
@@ -1102,7 +1103,7 @@ var topo3VeniceBM2Naples = Topology{
 	},
 }
 
-var topo3Venice2NaplesVcenter = Topology{
+var topo3Venice1Naples1ThirdPartyVcenter = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
@@ -1133,6 +1134,53 @@ var topo3Venice2NaplesVcenter = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
 			HostOS:      "vcenter",
 			MangedNodes: []string{"naples1", "intel"},
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+var topo3Venice2NaplesVcenter = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage: "build-160",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         VcenterModel,
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_DVS,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC_DVS,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+		},
+		{
+			NodeName:    "vcenter",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_VCENTER,
+			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
+			HostOS:      "vcenter",
+			MangedNodes: []string{"naples1", "naples2"},
 		},
 		{
 			NodeName:    "venice2",

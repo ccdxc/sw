@@ -72,15 +72,16 @@ def Main():
         except OfflineTestbedException:
             result = types.status.OFFLINE_TESTBED
             break
+        #Help in skip setup option
+        finally:
+            if ts.SetupComplete():
+                SaveSuiteInfo(ts_spec)
         if ret != types.status.SUCCESS:
             result = ret
             if GlobalOptions.no_keep_going:
                 break
             if result == types.status.OFFLINE_TESTBED:
                 break
-        #Help in skip setup option
-        if ts.SetupComplete():
-           SaveSuiteInfo(ts_spec)
     for ts in testsuites:
         ts.PrintReport()
 

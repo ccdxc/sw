@@ -157,10 +157,11 @@ type Objdb struct {
 // Memdb is database of all objects
 type Memdb struct {
 	sync.Mutex
-	objdb         map[string]*Objdb
-	objGraph      graph.Interface
-	dbAddResolver resolver
-	dbDelResolver resolver
+	objdb           map[string]*Objdb
+	registeredKinds map[string]bool
+	objGraph        graph.Interface
+	dbAddResolver   resolver
+	dbDelResolver   resolver
 }
 
 // watchEvent sends out watch event to all watchers
@@ -208,7 +209,8 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 func NewMemdb() *Memdb {
 	// create memdb instance
 	md := Memdb{
-		objdb: make(map[string]*Objdb),
+		objdb:           make(map[string]*Objdb),
+		registeredKinds: make(map[string]bool),
 	}
 
 	md.dbAddResolver = newAddResolver(&md)
@@ -217,6 +219,22 @@ func NewMemdb() *Memdb {
 	md.objGraph, _ = graph.NewCayleyStore()
 
 	return &md
+}
+
+//RegisterKind register a kind
+func (md *Memdb) RegisterKind(kind string) {
+	md.Lock()
+	defer md.Unlock()
+	md.registeredKinds[kind] = true
+}
+
+func (md *Memdb) filterOutRefs(refs map[string]apiintf.ReferenceObj) {
+
+	for key, ref := range refs {
+		if _, ok := md.registeredKinds[ref.RefKind]; !ok {
+			delete(refs, key)
+		}
+	}
 }
 
 // memdbKey returns objdb key for the object
@@ -305,6 +323,7 @@ func (md *Memdb) AddObjectWithReferences(key string, obj Object, refs map[string
 	if obj.GetObjectKind() == "" {
 		log.Errorf("Object kind is empty: %+v", obj)
 	}
+	md.filterOutRefs(refs)
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
 	if key == "" {
@@ -360,6 +379,7 @@ func (md *Memdb) UpdateObjectWithReferences(key string, obj Object, refs map[str
 	if key == "" {
 		key = memdbKey(obj.GetObjectMeta())
 	}
+	md.filterOutRefs(refs)
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
 
@@ -448,6 +468,7 @@ func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[str
 	// get objdb
 	od := md.getObjdb(obj.GetObjectKind())
 
+	md.filterOutRefs(refs)
 	// lock object db
 	od.Lock()
 
@@ -525,6 +546,9 @@ func (md *Memdb) ListObjects(kind string, filters []FilterFn) []Object {
 	// walk all objects and add it to return list
 	var objs []Object
 	for _, obj := range od.objects {
+		if !obj.isResolved() {
+			continue
+		}
 		if len(filters) == 0 {
 			objs = append(objs, obj.obj)
 		} else {

@@ -343,6 +343,8 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 
 	sm.mbus = mserver
 
+	sm.registerKindsWithMbus()
+
 	sm.logger = logger
 
 	// create controller instance
@@ -497,6 +499,20 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	}
 
 	return err
+}
+
+func (sm *Statemgr) registerKindsWithMbus() {
+	sm.mbus.RegisterKind("Tenant")
+	sm.mbus.RegisterKind("Vrf")
+	sm.mbus.RegisterKind("Network")
+	sm.mbus.RegisterKind("RouteTable")
+	sm.mbus.RegisterKind("Endpoint")
+	sm.mbus.RegisterKind("App")
+	sm.mbus.RegisterKind("SecurityProfile")
+	sm.mbus.RegisterKind("SecurityGroup")
+	sm.mbus.RegisterKind("NetworkSecurityPolicy")
+	sm.mbus.RegisterKind("NetworkInterface")
+	sm.mbus.RegisterKind("Collector")
 }
 
 // runPeriodicUpdater runs periodic and write objects back

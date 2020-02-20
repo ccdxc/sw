@@ -57,3 +57,11 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 func (cl *CloudCfg) PushConfig() error {
 	return nil
 }
+
+//GetCfgObjects gets all generated objects
+func (gs *CloudCfg) GetCfgObjects() base.CfgObjects {
+
+	objects := base.CfgObjects{}
+
+	return objects
+}

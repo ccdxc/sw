@@ -296,17 +296,24 @@ func (ws *WorkloadState) createEndpoints() error {
 	ws.stateMgr.Lock()
 	defer ws.stateMgr.Unlock()
 	for ii := range ws.Workload.Spec.Interfaces {
-		// check if we have a network for this workload
-		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
-		//if err != nil {
-		// Create networks since all creates are idempotent
-		err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+		var netName string
+		ns, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		if err != nil {
-			log.Errorf("Error creating network. Err: %v", err)
-			return err
+
+			// check if we have a network for this workload
+			netName = ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+			ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+			//if err != nil {
+			// Create networks since all creates are idempotent
+			err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+			if err != nil {
+				log.Errorf("Error creating network. Err: %v", err)
+				return err
+			}
+			//}
+		} else {
+			netName = ns.Network.Network.Name
 		}
-		//}
 
 		// check if we already have the endpoint for this workload
 		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
@@ -401,13 +408,18 @@ func (ws *WorkloadState) createEndpoints() error {
 func (ws *WorkloadState) deleteEndpoints() error {
 	// loop over each interface of the workload
 	for ii := range ws.Workload.Spec.Interfaces {
+		var nw *NetworkState
+		var err error
 		// find the network for the interface
-		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-		nw, err := ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		nw, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		if err != nil {
-			log.Errorf("Error finding the network %v. Err: %v", netName, err)
-		} else {
+			netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+			nw, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		}
 
+		if err != nil {
+			log.Errorf("Error finding the network. Err: %v", err)
+		} else {
 			// check if we created an endpoint for this workload interface
 			name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
 			epName := ws.Workload.Name + "-" + name

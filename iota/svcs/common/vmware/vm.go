@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
@@ -90,7 +91,7 @@ func (vm *VM) Migrate(host *Host, dref *types.ManagedObjectReference) error {
 }
 
 //ReconfigureNetwork will connect interface connected from one network to other network
-func (vm *VM) ReconfigureNetwork(currNW string, newNW string) error {
+func (vm *VM) ReconfigureNetwork(currNW string, newNW string, maxReconfigs int) error {
 
 	var task *object.Task
 	var devList object.VirtualDeviceList
@@ -121,6 +122,7 @@ func (vm *VM) ReconfigureNetwork(currNW string, newNW string) error {
 		return errors.Wrap(err, "Failed to device list of VM")
 	}
 
+	reconfigs := 0
 	for _, d := range devList.SelectByType((*types.VirtualEthernetCard)(nil)) {
 		veth := d.GetVirtualDevice()
 
@@ -186,7 +188,40 @@ func (vm *VM) ReconfigureNetwork(currNW string, newNW string) error {
 		if err := task.Wait(vm.entity.Ctx()); err != nil {
 			return errors.Wrap(err, "Reconfiguring to network failed")
 		}
+
+		reconfigs++
+		if maxReconfigs != 0 && reconfigs == maxReconfigs {
+			break
+		}
 	}
 
 	return nil
+}
+
+//ReadMacs gets the mac address
+func (vm *VM) ReadMacs() ([]string, error) {
+
+	macs := []string{}
+	// device name:network name
+	property.Wait(vm.entity.Ctx(), vm.entity.ConnCtx.pc, vm.vm.Reference(), []string{"config.hardware.device"}, func(pc []types.PropertyChange) bool {
+		for _, c := range pc {
+			//if c.Op != types.PropertyChangeOpAssign {
+			//continue
+			//}
+
+			changedDevices := c.Val.(types.ArrayOfVirtualDevice).VirtualDevice
+			for _, device := range changedDevices {
+				if nic, ok := device.(types.BaseVirtualEthernetCard); ok {
+					mac := nic.GetVirtualEthernetCard().MacAddress
+					if mac == "" {
+						continue
+					}
+					macs = append(macs, mac)
+				}
+			}
+		}
+		return true
+	})
+
+	return macs, nil
 }

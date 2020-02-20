@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
@@ -36,6 +37,7 @@ type ObjClient interface {
 
 	CreateNetwork(obj *network.Network) error
 	ListNetwork() (objs []*network.Network, err error)
+	DeleteNetwork(obj *network.Network) error
 
 	CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 	GetNetworkSecurityPolicy(meta *api.ObjectMeta) (sgp *security.NetworkSecurityPolicy, err error)
@@ -80,6 +82,9 @@ type ObjClient interface {
 	PullConfigStatus(configStatus interface{}) error
 
 	ListObjectStoreObjects() (objs []*objstore.Object, err error)
+
+	CreateOrchestration(orch *orchestration.Orchestrator) error
+	DeleteOrchestration(orch *orchestration.Orchestrator) error
 }
 
 type VeniceConfigStatus struct {
@@ -197,6 +202,20 @@ func (r *Client) CreateNetwork(obj *network.Network) error {
 	var err error
 	for _, restcl := range r.restcls {
 		_, err = restcl.NetworkV1().Network().Create(r.ctx, obj)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// DeleteNetwork delete an Network in venice
+func (r *Client) DeleteNetwork(obj *network.Network) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().Network().Delete(r.ctx, obj.GetObjectMeta())
 		if err == nil {
 			break
 		}
@@ -894,4 +913,37 @@ func (r *Client) doConfigPostAction(action string, configStatus interface{}) err
 func (r *Client) PullConfigStatus(configStatus interface{}) error {
 
 	return r.doConfigPostAction("config-status", configStatus)
+}
+
+//CreateOrchestration creates orchestration object
+func (r *Client) CreateOrchestration(orch *orchestration.Orchestrator) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.OrchestratorV1().Orchestrator().Create(r.ctx, orch)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.OrchestratorV1().Orchestrator().Update(r.ctx, orch)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	return err
+}
+
+//DeleteOrchestration deletes orchestration object
+func (r *Client) DeleteOrchestration(orch *orchestration.Orchestrator) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.OrchestratorV1().Orchestrator().Delete(r.ctx, &orch.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
 }

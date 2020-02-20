@@ -96,6 +96,7 @@ message NodeMsg {
 
     // Cluster is complete or not (Could by used by other nodes to check their admission status for health check)
     bool cluster_done               = 5;
+
 }
 
 // Reload msg
@@ -168,6 +169,16 @@ message VmwareESXConfig {
 
 message VcenterConfig {
     repeated VmwareESXConfig esx_configs = 1;
+
+    string dc_name                       = 2;
+
+    string cluster_name                  = 3;
+
+    string distributed_switch            = 4;
+
+    uint32 pvlan_start                   = 5;
+    
+    uint32 pvlan_end                     = 6;
 }
 
 
@@ -466,8 +477,10 @@ message Workload {
     DvsInfo  dvs                            = 22;
 
     string   switch_name                    = 23;
+   
+    string   network_name                   = 24;
     
-    repeated ExposedPorts exposed_ports     = 24;
+    repeated ExposedPorts exposed_ports     = 25;
 }
 
 enum TriggerOp {
@@ -772,6 +785,7 @@ message TestBedMsg {
 
     // global licenses
     repeated License licenses           = 14;
+   
 }
 
 message TestNodesMsg {
@@ -963,6 +977,10 @@ message TestBedNode {
 
     //mgmt intf
     string mgmt_intf                = 25;
+
+    string dc_name                  = 26;
+
+    string switch                   = 27;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

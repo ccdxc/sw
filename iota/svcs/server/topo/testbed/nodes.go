@@ -190,97 +190,97 @@ func (n *TestNode) IpmiNodeCommand(method string) error {
 	var err error
 	var sshCfg *ssh.ClientConfig
 
-    log.Infof("using ipmi command %s on node %s", method, n.Node.Name)
-    if n.CimcIP == "" {
-        log.Errorf("user requested ipmi command but no cimc ip in node object")
-        return err
-    }
-    cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power %s",
-                       n.CimcIP, n.CimcUserName, n.CimcPassword, method)
+	log.Infof("using ipmi command %s on node %s", method, n.Node.Name)
+	if n.CimcIP == "" {
+		log.Errorf("user requested ipmi command but no cimc ip in node object")
+		return err
+	}
+	cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power %s",
+		n.CimcIP, n.CimcUserName, n.CimcPassword, method)
 
-    splitCmd := strings.Split(cmd, " ")
-    if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
-        log.Errorf("TOPO SVC | ipmi command %s failed %v", method, stdout)
-    } else {
-        log.Errorf("TOPO SVC | ipmi command %s success", method)
-    }
+	splitCmd := strings.Split(cmd, " ")
+	if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+		log.Errorf("TOPO SVC | ipmi command %s failed %v", method, stdout)
+	} else {
+		log.Errorf("TOPO SVC | ipmi command %s success", method)
+	}
 
-    if n.GrpcClient != nil {
-        n.GrpcClient.Client.Close()
-        n.GrpcClient = nil
-    }
+	if n.GrpcClient != nil {
+		n.GrpcClient.Client.Close()
+		n.GrpcClient = nil
+	}
 
-    time.Sleep(60 * time.Second)
+	time.Sleep(60 * time.Second)
 
-    if err = n.waitForNodeUp(restartTimeout); err != nil {
-        return err
-    }
+	if err = n.waitForNodeUp(restartTimeout); err != nil {
+		return err
+	}
 
-    if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-        if err = n.initEsxNode(); err != nil {
-            log.Errorf("TOPO SVC | IpmiNodeCommand | Init ESX node failed :  %v", err.Error())
-            return err
-        }
-        sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
-    } else {
-        sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
-    }
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if err = n.initEsxNode(); err != nil {
+			log.Errorf("TOPO SVC | IpmiNodeCommand | Init ESX node failed :  %v", err.Error())
+			return err
+		}
+		sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	} else {
+		sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
+	}
 
-    if ip, err = n.GetNodeIP(); err != nil {
-        log.Errorf("TOPO SVC | ipmi control node failed")
-        return fmt.Errorf("TOPO SVC | Failed to get Node IP")
-    }
+	if ip, err = n.GetNodeIP(); err != nil {
+		log.Errorf("TOPO SVC | ipmi control node failed")
+		return fmt.Errorf("TOPO SVC | Failed to get Node IP")
+	}
 
-    addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-    sshclient, err := ssh.Dial("tcp", addr, sshCfg)
-    if sshclient == nil || err != nil {
-        log.Errorf("SSH connect to %v (%v) failed", n.info.Name, n.info.IPAddress)
-        return err
-    }
+	addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+	sshclient, err := ssh.Dial("tcp", addr, sshCfg)
+	if sshclient == nil || err != nil {
+		log.Errorf("SSH connect to %v (%v) failed", n.info.Name, n.info.IPAddress)
+		return err
+	}
 
-    //Give it some time for node to stabalize
-    time.Sleep(5 * time.Second)
-    n.SSHClient = sshclient
+	//Give it some time for node to stabalize
+	time.Sleep(5 * time.Second)
+	n.SSHClient = sshclient
 
-    return nil
+	return nil
 }
 
-func inList(src string, list [] string) bool {
-    for _,s := range list {
-        if src == s {
-            return true
-        }
-    }
-    return false
+func inList(src string, list []string) bool {
+	for _, s := range list {
+		if src == s {
+			return true
+		}
+	}
+	return false
 }
 
 // ipmi control of node.
 func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string) error {
 	var agentBinary string
-    var err error
+	var err error
 
 	if n.Node == nil {
 		n.Node = &iota.Node{}
 	}
-    var methods = []string {"cycle", "soft", "reset", "off"}
-    if inList(method, methods) {
-        resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
-        log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v",
-            n.Node.GetName(), n.Node.IpAddress, resp)
-        if err != nil {
-            log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
-            return err
-        }
-    }
+	var methods = []string{"cycle", "soft", "reset", "off"}
+	if inList(method, methods) {
+		resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
+		log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v",
+			n.Node.GetName(), n.Node.IpAddress, resp)
+		if err != nil {
+			log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
+			return err
+		}
+	}
 
 	if err = n.IpmiNodeCommand(method); err != nil {
 		log.Errorf("ipmi control of node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
 
-    if method == "off" {
-        return nil
-    }
+	if method == "off" {
+		return nil
+	}
 
 	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD {
 		agentBinary = constants.IotaAgentBinaryPathFreebsd
@@ -375,7 +375,6 @@ func (n *TestNode) RestartNode(method string) error {
 					command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
 					nrunner.Run(addr, command, constants.RunCommandForeground)
 				}
-				addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
 				sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
 				addr = fmt.Sprintf("%s:%d", n.info.IPAddress, constants.SSHPort)
 				nrunner = runner.NewRunner(sshCfg)
@@ -426,17 +425,17 @@ func (n *TestNode) RestartNode(method string) error {
 				if err := h.PowerOn(n.ApcInfo.Port); err != nil {
 					log.Errorf("failed to power on port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
 				}
-                                time.Sleep(2*time.Minute)
-                                 cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power on",
-                                       n.CimcIP, n.CimcUserName, n.CimcPassword)
-                                splitCmd := strings.Split(cmd, " ")
-                                if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
-            			    log.Errorf("TOPO SVC | Failed to call ipmi power on: %v", stdout)
-            			} else {
-                		    log.Errorf("TOPO SVC | ipmi power on Success")
-            			}
-	    		}	
-	    	}
+				time.Sleep(2 * time.Minute)
+				cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power on",
+					n.CimcIP, n.CimcUserName, n.CimcPassword)
+				splitCmd := strings.Split(cmd, " ")
+				if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+					log.Errorf("TOPO SVC | Failed to call ipmi power on: %v", stdout)
+				} else {
+					log.Errorf("TOPO SVC | ipmi power on Success")
+				}
+			}
+		}
 	}
 
 	if n.GrpcClient != nil {
@@ -597,7 +596,7 @@ func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string) 
 					},
 				}
 				dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
-					Name: dvsName, Cluster: constants.VcenterCluster,
+					Name: n.DistributedSwitch, Cluster: n.ClusterName,
 					MaxPorts: 10,
 					Pvlans: []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: constants.VcenterPvlanStart,
 						Secondary: constants.VcenterPvlanStart, Type: "promiscuous"}}}
@@ -720,6 +719,21 @@ func (n *TestNode) GetNodeAgent() iota.IotaAgentApiClient {
 //SetNodeAgent Retruns node agent
 func (n *TestNode) SetNodeAgent(agent iota.IotaAgentApiClient) {
 	n.AgentClient = agent
+}
+
+//SetDC set dc
+func (n *TestNode) SetDC(dc string) {
+	n.DCName = dc
+}
+
+//SetCluster sets cluster
+func (n *TestNode) SetCluster(cl string) {
+	n.ClusterName = cl
+}
+
+//SetSwitch sets switch
+func (n *TestNode) SetSwitch(sw string) {
+	n.DistributedSwitch = sw
 }
 
 //RunTriggerLocally run trigger locally for the node

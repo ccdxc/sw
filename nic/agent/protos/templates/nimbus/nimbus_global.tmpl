@@ -58,6 +58,11 @@ func (ms *MbusServer) AddObject(obj memdb.Object) error {
 	return ms.memDB.AddObject(obj)
 }
 
+func (ms *MbusServer) RegisterKind(kind string) {
+
+	ms.memDB.RegisterKind(kind)
+}
+
 // AddObjectWithReferences adds object to mbus with refs
 func (ms *MbusServer) AddObjectWithReferences(key string, obj memdb.Object, refs map[string]apiintf.ReferenceObj) error {
 	ms.Stats(obj.GetObjectKind(), "AddEvent").Inc()

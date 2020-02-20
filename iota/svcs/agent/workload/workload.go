@@ -63,6 +63,7 @@ type InterfaceSpec struct {
 	IPV4Address   string
 	IPV6Address   string
 	Switch        string
+	NetworkName   string
 	PrimaryVlan   int
 	SecondaryVlan int
 }

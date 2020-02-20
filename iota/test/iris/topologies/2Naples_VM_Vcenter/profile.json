@@ -1,0 +1,19 @@
+{
+    "type" : "netagent",
+    "rest-endpoint" : "api/profiles/",
+    "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects": [
+        {
+            "kind": "Profile",
+            "meta": {
+                "name": "default",
+                "tenant": "default",
+                "namespace": "default"
+            },
+            "spec": {
+                "fwd-mode": "TRANSPARENT",
+                "policy-mode": "BASENET"
+            }
+        }
+    ]
+}

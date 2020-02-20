@@ -33,14 +33,22 @@ def formatMac(mac: str) -> str:
     mac = ".".join(["%s" % (mac[i:i+4]) for i in range(0, 12, 4)])
     return mac
 
-def GetNodePersonalityByNicType(nic_type):
+def GetNodePersonalityByNicType(nic_type, mode = None):
     if nic_type in ['pensando', 'naples']:
+        if mode == "dvs":
+            return topo_pb2.PERSONALITY_NAPLES_DVS
         return topo_pb2.PERSONALITY_NAPLES
     elif nic_type == 'mellanox':
+        if mode == "dvs":
+            return topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS
         return topo_pb2.PERSONALITY_MELLANOX
     elif nic_type == 'broadcom':
+        if mode == "dvs":
+            return topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS
         return topo_pb2.PERSONALITY_BROADCOM
     elif nic_type == 'intel':
+        if mode == "dvs":
+            return topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS
         return topo_pb2.PERSONALITY_INTEL
     elif nic_type == 'pensando-sim':
         return topo_pb2.PERSONALITY_NAPLES_SIM
@@ -49,7 +57,7 @@ def GetNodePersonalityByNicType(nic_type):
 
 
 def GetNodeType(role):
-    if role in ['PERSONALITY_NAPLES_SIM', 'PERSONALITY_VENICE']:
+    if role in ['PERSONALITY_NAPLES_SIM', 'PERSONALITY_VENICE', 'PERSONALITY_VCENTER_NODE']:
         return "vm"
     return "bm"
 
@@ -212,12 +220,14 @@ class Node(object):
             else:
                 Logger.info("Skipping management IP read as no console info %s" % self.__name)
 
-    def __init__(self, spec):
+    def __init__(self, topo, spec):
         self.__spec = spec
+        self.__topo = topo
         self.__name = spec.name
         self.__node_type = GetNodeType(spec.role)
-        self.__inst = store.GetTestbed().AllocateInstance(self.__node_type)
-        self.__role = self.__get_instance_role(spec.role)
+        self.__node_tag = getattr(spec, "Tag", None)
+        self.__inst = store.GetTestbed().AllocateInstance(self.__node_type, self.__node_tag)
+        self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
         self.__node_id = getattr(self.__inst, "ID", 0)
 
         self.__ip_address = self.__inst.NodeMgmtIP
@@ -229,35 +239,37 @@ class Node(object):
         self.__dev_index = 1
         self.__devices = {}
 
-        nics = getattr(self.__inst, "Nics", None)
-        if nics != None and len(nics) != 0:
-            for nic in nics:
-                name = self.GetNicType() + str(self.__dev_index)
-                device = Node.NicDevice(name)
-                self.__dev_index = self.__dev_index + 1
-                self.__devices[name] = device
-                device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
-                device.SetNicConsoleIP(getattr(nic, "ConsoleIP", ""))
-                device.SetNicConsolePort(getattr(nic, "ConsolePort", ""))
-                device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
-                device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
-                for port in getattr(nic, "Ports", []):
-                    device.SetMac(port.MAC)
-                    break
-                device.read_from_console()       
 
-        else:
-            for index in range(1):
-                name = self.GetNicType() + str(self.__dev_index)
-                device = Node.NicDevice(name)
-                self.__dev_index = self.__dev_index + 1
-                self.__devices[name] = device
-                device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
-                device.SetNicConsoleIP(getattr(self.__inst, "NicConsoleIP", ""))
-                device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
-                device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
-                device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
-                device.read_from_console()
+        nics = getattr(self.__inst, "Nics", None)
+        if  self.__node_type == "bm":
+            if nics != None and len(nics) != 0:
+                for nic in nics:
+                    name = self.GetNicType() + str(self.__dev_index)
+                    device = Node.NicDevice(name)
+                    self.__dev_index = self.__dev_index + 1
+                    self.__devices[name] = device
+                    device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
+                    device.SetNicConsoleIP(getattr(nic, "ConsoleIP", ""))
+                    device.SetNicConsolePort(getattr(nic, "ConsolePort", ""))
+                    device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
+                    device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
+                    for port in getattr(nic, "Ports", []):
+                        device.SetMac(port.MAC)
+                        break
+                    device.read_from_console()       
+
+            else:
+                for index in range(1):
+                    name = self.GetNicType() + str(self.__dev_index)
+                    device = Node.NicDevice(name)
+                    self.__dev_index = self.__dev_index + 1
+                    self.__devices[name] = device
+                    device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
+                    device.SetNicConsoleIP(getattr(self.__inst, "NicConsoleIP", ""))
+                    device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
+                    device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
+                    device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
+                    device.read_from_console()
 
         self.__nic_pci_info = {}
         self.__nic_info = {}
@@ -317,7 +329,7 @@ class Node(object):
             Logger.debug("failed to parse cimc info. error was: {0}".format(traceback.format_exc()))
         return None
 
-    def __get_instance_role(self, role):
+    def __get_instance_role(self, role, mode=None):
         if role != 'auto':
             return topo_pb2.PersonalityType.Value(role)
 
@@ -326,7 +338,7 @@ class Node(object):
 
         nic_type = self.__inst.Resource.NICType
 
-        role = GetNodePersonalityByNicType(nic_type)
+        role = GetNodePersonalityByNicType(nic_type, mode)
         if role is None:
             os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
             os.system("cat /warmd.json")
@@ -452,7 +464,7 @@ class Node(object):
     def IsNaplesMultiSim(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_MULTI_SIM
     def IsNaplesHw(self):
-        return self.__role == topo_pb2.PERSONALITY_NAPLES
+        return self.__role in[ topo_pb2.PERSONALITY_NAPLES, topo_pb2.PERSONALITY_NAPLES_DVS]
     def IsNaplesHwWithBumpInTheWire(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_BITW
     def IsNaplesHwWithBumpInTheWirePerf(self):
@@ -460,19 +472,22 @@ class Node(object):
     def IsNaplesCloudPipeline(self):
         return GlobalOptions.pipeline in [ "apulu" ]
 
+    def IsOrchestratorNode(self):
+        return self.__role == topo_pb2.PERSONALITY_VCENTER_NODE
+
     def IsNaples(self):
         return self.IsNaplesSim() or self.IsNaplesHw() or self.IsNaplesHwWithBumpInTheWire()
 
     def IsMellanox(self):
-        return self.__role == topo_pb2.PERSONALITY_MELLANOX
+        return self.__role in [ topo_pb2.PERSONALITY_MELLANOX, topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS]
     def IsBroadcom(self):
-        return self.__role == topo_pb2.PERSONALITY_BROADCOM
+        return self.__role in [ topo_pb2.PERSONALITY_BROADCOM, topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS]
     def IsIntel(self):
-        return self.__role == topo_pb2.PERSONALITY_INTEL
+        return self.__role in [ topo_pb2.PERSONALITY_INTEL, topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS]
     def IsThirdParty(self):
         return self.IsMellanox() or self.IsBroadcom() or self.IsIntel()
     def IsWorkloadNode(self):
-        return self.__role != topo_pb2.PERSONALITY_VENICE
+        return self.__role != topo_pb2.PERSONALITY_VENICE and self.__role != topo_pb2.PERSONALITY_VCENTER_NODE
 
     def GetDevicesNames(self):
         return sorted(self.__devices.keys())
@@ -533,6 +548,9 @@ class Node(object):
     def AddToNodeMsg(self, msg, topology, testsuite):
         if self.IsThirdParty():
             msg.type = topo_pb2.PERSONALITY_THIRD_PARTY_NIC
+            if getattr(self.__spec, "mode", None) == "dvs":
+                msg.type = topo_pb2.PERSONALITY_THIRD_PARTY_NIC_DVS
+
         else:
             msg.type = self.__role
         msg.image = ""
@@ -549,7 +567,23 @@ class Node(object):
         elif self.__os == 'freebsd':
             msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
 
-        if self.Role() == topo_pb2.PERSONALITY_VENICE:
+        if self.Role() == topo_pb2.PERSONALITY_VCENTER_NODE:
+            msg.vcenter_config.pvlan_start = int(self.__spec.vlan_start)
+            msg.vcenter_config.pvlan_end  = int(self.__spec.vlan_end)
+            self.__topo.vlan_start = int(self.__spec.vlan_start)
+            self.__topo.vlan_end = int(self.__spec.vlan_end)
+            managed_nodes = self.__spec.managednodes
+            for node in managed_nodes:
+                esx_config = msg.vcenter_config.esx_configs.add()
+                esx_config.username = getattr(self.__tb_params, "EsxUsername", "")
+                esx_config.password = getattr(self.__tb_params, "EsxPassword", "")
+                esx_config.ip_address = self.__topo.GetMgmtIPAddress(node)
+                esx_config.name = node
+            msg.vcenter_config.dc_name = GlobalOptions.dc_name
+            msg.vcenter_config.cluster_name = GlobalOptions.cluster_name
+            msg.vcenter_config.distributed_switch = GlobalOptions.distributed_switch
+
+        elif self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf
             msg.venice_config.control_ip = str(self.__control_ip)
             msg.image = os.path.basename(testsuite.GetImages().venice)
@@ -622,6 +656,11 @@ class Node(object):
         return types.status.SUCCESS
 
     def ProcessResponse(self, resp):
+
+        if self.IsOrchestratorNode():
+            Logger.info("Setting orch node as %s" % (self.Name()))
+            self.__topo.SetOrchNode(self)
+
         if self.IsNaples():
             for naples_config in resp.naples_configs.configs:
                 device = self.__get_device(naples_config.name)
@@ -717,20 +756,26 @@ class Topology(object):
 
     def __init__(self, spec):
         self.__nodes = {}
+        self.__orch_node = None
 
         assert(spec)
         Logger.info("Parsing Topology: %s" % spec)
         self.__dirname = os.path.dirname(spec)
         self.__spec = parser.YmlParse(spec)
         self.__parse_nodes()
+        self.vlan_start = 0
+        self.vlan_end = 0
         return
 
     def GetDirectory(self):
         return self.__dirname
 
+    def SetOrchNode(self, node):
+        self.__orch_node = node
+
     def __parse_nodes(self):
         for node_spec in self.__spec.nodes:
-            node = Node(node_spec)
+            node = Node(self, node_spec)
             self.__nodes[node.Name()] = node
         return
 
@@ -949,16 +994,16 @@ class Topology(object):
 
         return types.status.SUCCESS
 
-    def __convert_to_roles(self, nics):
+    def __convert_to_roles(self, nics, mode=None):
         roles = []
         for nic_type in nics:
-            roles.append(GetNodePersonalityByNicType(nic_type))
+            roles.append(GetNodePersonalityByNicType(nic_type, mode))
         return roles
 
     def ValidateNics(self, nics):
-        roles = self.__convert_to_roles(nics)
+        roles = self.__convert_to_roles(nics, getattr(self.__spec.meta, "mode", None))
         for n in self.__nodes.values():
-            if not n.IsVenice() and n.Role() not in roles:
+            if not n.IsVenice() and not n.IsOrchestratorNode() and n.Role() not in roles:
                 return False
         return True
 
@@ -1036,6 +1081,12 @@ class Topology(object):
     def GetNodeOs(self, node_name):
         return self.__nodes[node_name].GetOs()
 
+    def GetVlanStart(self):
+        return self.vlan_start
+
+    def GetVlanEnd(self):
+        return self.vlan_end
+
     def GetNaplesMgmtIP(self, node_name):
         if self.__nodes[node_name].IsNaples():
             return self.__nodes[node_name].MgmtIpAddress()
@@ -1066,6 +1117,9 @@ class Topology(object):
 
     def GetNodes(self):
         return list(self.__nodes.values())
+
+    def GetOrchestratorNode(self):
+        return self.__orch_node.Name()
 
     def SetUpTestBedInHostToHostNetworkMode(self):
         return store.GetTestbed().SetUpTestBedInHostToHostNetworkMode()

@@ -289,6 +289,12 @@ def GetNaplesNodeUuidMap():
 def GetDataVlans():
     return store.GetTestbed().GetDataVlans()
 
+def GetPVlansStart():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVlanStart()
+
+def GetPVlansEnd():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVlanEnd()
+
 def GetVeniceHostnames():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceHostnames()
 
@@ -337,6 +343,9 @@ def GetNaplesNodes():
         if IsNaplesNode(_node.Name()):
             naples_nodes.append(_node)
     return naples_nodes
+
+def GetOrchestratorNode():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetOrchestratorNode()
 
 def GetNodeOs(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodeOs(node_name)
@@ -638,6 +647,51 @@ def Trigger_TeardownWorkloadsRequest(req):
     resp, ret = __teardown_workloads(req)
     return ret
 
+
+# ================================
+# Wrappers for Workload Move APIs
+# ================================
+def Trigger_WorkloadMoveRequest():
+    req = topo_svc.WorkloadMoveMsg()
+    req.orchestrator_node = GetOrchestratorNode()
+    return req
+
+
+# ================================
+# Wrappers for Workload Move APIs
+# ================================
+def Trigger_WorkloadMoveAddRequest(req, wloads, dst):
+    store_wloads = GetWorkloads()
+    for wl in wloads:
+        for s_wl in store_wloads:
+            if wl.workload_name == s_wl.workload_name and dst != s_wl.node_name:
+                move_req = req.workload_moves.add()
+                move_req.workload_name = wl.workload_name
+                move_req.dst_node_name = dst
+                move_req.src_node_name = s_wl.node_name
+                break
+    return req
+
+def TriggerMove(req):
+    store_wloads = GetWorkloads()
+    global gl_topo_svc_stub
+    Logger.debug("Trigger Workload Move Message:")
+    resp = __rpc(req, gl_topo_svc_stub.MoveWorkloads)
+    if not resp: return types.status.FAILURE
+    result = types.status.SUCCESS
+    for idx in range(len(resp.workload_moves)):
+        move_resp = resp.workload_moves[idx]
+        if move_resp.api_response.api_status == types_pb2.API_STATUS_OK: 
+            for wl in store_wloads:
+                if wl.workload_name == move_resp.workload_name:
+                    Logger.info("Workload move success %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
+                    wl.node_name = move_resp.dst_node_name
+        else:
+            Logger.info("Workload move failed %s %s -> %s, %s" % (wl.workload_name, wl.node_name,
+                 move_resp.dst_node_name, move_resp.api_response.error_msg))
+            result = types.status.FAILURE
+    return result
+
 # ================================
 # Wrappers for Trigger APIs
 # ================================
@@ -646,6 +700,9 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
     req.trigger_op = topo_svc.EXEC_CMDS
     req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
     return req
+
+
+
 
 #Run all commands in parallel irrespetive of which node it is running
 def Trigger_CreateAllParallelCommandsRequest():

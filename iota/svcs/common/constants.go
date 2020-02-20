@@ -161,15 +161,15 @@ const (
 
 	DefaultCimcPassword = "N0isystem$"
 
-	VcenterCluster = "iota-cluster"
-
 	IotaVmotionPortgroup = "iota-vmotion-pg"
+
+	ReservedPGVlanCount = 1002
 
 	IotaVmotionSwitch = "vSwitch0"
 
 	VcenterPvlanPairCount = 64
 
-	VcenterPvlanStart = 1024
+	VcenterPvlanStart = 2048
 )
 
 // incrementing constants. List all constants whose value you don't care here

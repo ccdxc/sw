@@ -100,6 +100,21 @@ if GlobalOptions.testcase != None:
     else:
         GlobalOptions.testcases = GlobalOptions.testcase.split(',')
 
+GlobalOptions.uid = os.environ.get("USER", None)
+if GlobalOptions.uid == None:
+    GlobalOptions.uid = os.environ.get("SUDO_USER", None)
+    if GlobalOptions.uid == None:
+        if os.environ.get("JOB_ID", None) == None:
+            raise("Please run as no sudo user")
+        else:
+            GlobalOptions.uid = "SUPER_USER"
+    
+
+GlobalOptions.dc_name = GlobalOptions.uid + "-iota-dc"
+GlobalOptions.cluster_name = GlobalOptions.uid + "-iota-cluster"
+GlobalOptions.distributed_switch = "Pen-DVS-" + GlobalOptions.dc_name 
+
+
 def __validate():
     if GlobalOptions.debug:
         print("========================================================")

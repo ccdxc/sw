@@ -321,6 +321,10 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				ts.tbInfo.resp.NaplesImage,
 				ts.tbInfo.resp.NaplesSimImage,
 			}
+			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
+				n.SetDC(node.DcName)
+				n.SetSwitch(node.Switch)
+			}
 
 			pool.Go(func() error {
 				n := n
@@ -394,6 +398,10 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNode
 			ts.tbInfo.resp.VeniceImage,
 			ts.tbInfo.resp.NaplesImage,
 		}
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
+			n.SetDC(node.DcName)
+			n.SetSwitch(node.Switch)
+		}
 
 		pool.Go(func() error {
 			n := n
@@ -442,6 +450,10 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 			nodeInfo.Password = node.EsxPassword
 		}
 		n := testbed.NewTestNode(nodeInfo)
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
+			n.SetDC(node.DcName)
+			n.SetSwitch(node.Switch)
+		}
 		cnodes = append(cnodes, n)
 
 	}

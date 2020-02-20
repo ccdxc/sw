@@ -286,10 +286,10 @@ func createApp(s *Statemgr, name, port string) error {
 		},
 		Spec: security.AppSpec{
 			ProtoPorts: []security.ProtoPort{
-				security.ProtoPort{
-					Ports:    port,
-					Protocol: "tcp",
-				},
+				//security.ProtoPort{
+				//	Ports:    port,
+				//	Protocol: "tcp",
+				//},
 			},
 			ALG: &security.ALG{
 				Type: security.ALG_DNS.String(),
@@ -415,6 +415,29 @@ func createSmartNic(s *Statemgr, name string) (*cluster.DistributedServiceCard, 
 	}
 
 	return &snic, s.ctrler.DistributedServiceCard().Create(&snic)
+}
+
+func updateSmartNic(s *Statemgr, name string) (*cluster.DistributedServiceCard, error) {
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
+			Conditions: []cluster.DSCCondition{
+				{
+					Type:   cluster.DSCCondition_HEALTHY.String(),
+					Status: cluster.ConditionStatus_TRUE.String(),
+				},
+			},
+		},
+	}
+
+	return &snic, s.ctrler.DistributedServiceCard().Update(&snic)
 }
 
 func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, error) {
@@ -787,6 +810,7 @@ func TestFirewallProfileNodeVersions(t *testing.T) {
 	fwp, err := stateMgr.FindFirewallProfile("default", "testFwProfile1")
 	AssertOk(t, err, "Error finding FwProfile")
 
+	updateSmartNic(stateMgr, "testSmartnic1")
 	// verify propagation status
 	prop := &fwp.FirewallProfile.Status.PropagationStatus
 	AssertEquals(t, (int32)(1), prop.Updated, "Incorrect 'updated' propagation status")

@@ -1416,6 +1416,6 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 }
 
 // HandleCollector handles CRUD Methods for Collector Object
-func (i *ApuluAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
+func (a *ApuluAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	return nil, nil
 }

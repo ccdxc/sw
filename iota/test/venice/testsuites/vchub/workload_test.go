@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Vc hub workload tests", func() {
 	BeforeEach(func() {
-		// verify cluster is in good health
+		 //verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
@@ -74,7 +74,10 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		It("tags:sanity=true Vmotion basic test", func() {
 
-			Skip("Skipping move tests..")
+			//Skip("Skipping move tests..")
+			workloads := ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
+			Expect(workloads.Error()).ShouldNot(HaveOccurred())
+
 			//Get All possible Host & Corresponding workload combination
 			hostWorkloads := ts.model.HostWorkloads()
 
@@ -82,6 +85,7 @@ var _ = Describe("Vc hub workload tests", func() {
 				Skip("Skipping vmotion tests as there are not enough workloads")
 			}
 
+			log.Infof("Foudn sufficient worklaods")
 			srcHost := hostWorkloads[0].Host()
 			srcWorkloads := hostWorkloads[0].Workloads().Any(1)
 			dstHost := hostWorkloads[1].Host()

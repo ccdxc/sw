@@ -96,7 +96,7 @@ func (w *Workload) GetInterface() string {
 	return w.iotaWorkload.Interface
 }
 
-func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wimage string) *Workload {
+func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wimage string, switchName, nwName string) *Workload {
 
 	convertMac := func(s string) string {
 		mac := strings.Replace(s, ".", "", -1)
@@ -125,6 +125,8 @@ func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wima
 		InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
 		PinnedPort:      1, // another hack: always pinning to first uplink
 		UplinkVlan:      w.Spec.Interfaces[0].ExternalVlan,
+		NetworkName:     nwName,
+		SwitchName:      switchName,
 	}
 
 	return &Workload{

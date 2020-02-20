@@ -1,0 +1,79 @@
+{
+    "type" : "netagent",
+    "rest-endpoint" : "api/tunnels/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+"objects" : [
+  {
+    "kind": "Tunnel",
+    "meta": {
+      "name": "gre-tunnel-0",
+      "tenant": "default",
+      "namespace": "default",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "type": "GRE",
+      "admin-status": "UP",
+      "source": "100.100.100.100",
+      "destination": "192.168.100.101"
+    },
+    "status": {}
+  },
+  {
+    "kind": "Tunnel",
+    "meta": {
+      "name": "gre-tunnel-1",
+      "tenant": "default",
+      "namespace": "default",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "type": "GRE",
+      "admin-status": "UP",
+      "source": "100.100.100.100",
+      "destination": "192.168.100.102"
+    },
+    "status": {}
+  },
+  {
+    "kind": "Tunnel",
+    "meta": {
+      "name": "gre-tunnel-2",
+      "tenant": "default",
+      "namespace": "default",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "type": "GRE",
+      "admin-status": "UP",
+      "source": "100.100.100.100",
+      "destination": "192.168.100.103"
+    },
+    "status": {}
+  },
+  {
+    "kind": "Tunnel",
+    "meta": {
+      "name": "gre-tunnel-3",
+      "tenant": "default",
+      "namespace": "default",
+      "generation-id": "",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "type": "GRE",
+      "admin-status": "UP",
+      "source": "100.100.100.100",
+      "destination": "192.168.100.104"
+    },
+    "status": {}
+  }
+]
+}

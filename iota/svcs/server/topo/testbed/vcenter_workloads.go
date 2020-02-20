@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
-	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
@@ -220,6 +219,9 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 	defer n.Unlock()
 	req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 
+	moveKey := func(moveReq *iota.WorkloadMove) string {
+		return moveReq.WorkloadName + "-" + moveReq.DstNodeName
+	}
 	type moveRequest struct {
 		srcNodeName  string
 		dstNodeName  string
@@ -228,6 +230,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 		workloadName string
 		err          error
 	}
+	dupCheck := make(map[string]bool)
 	moveRequests := []*moveRequest{}
 	for _, mvReq := range req.GetWorkloadMoves() {
 
@@ -237,7 +240,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 			log.Error(msg)
 			req.ApiResponse.ErrorMsg = msg
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-			return req, errors.New(msg)
+			return req, nil
 		}
 
 		mvDstNode, ok := n.managedNodes[mvReq.DstNodeName]
@@ -246,7 +249,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 			log.Error(msg)
 			req.ApiResponse.ErrorMsg = msg
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-			return req, errors.New(msg)
+			return req, nil
 		}
 
 		//Check whether workload exisits in src
@@ -256,8 +259,17 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 			log.Error(msg)
 			req.ApiResponse.ErrorMsg = msg
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-			return req, errors.New(msg)
+			return req, nil
 		}
+		key := moveKey(mvReq)
+		if _, ok := dupCheck[key]; ok {
+			msg := fmt.Sprintf("Duplicate workload move request  %v %v -> %v", mvReq.WorkloadName, mvReq.SrcNodeName, mvReq.DstNodeName)
+			log.Error(msg)
+			req.ApiResponse.ErrorMsg = msg
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			return req, nil
+		}
+		dupCheck[key] = true
 
 		moveRequests = append(moveRequests, &moveRequest{srcHost: mSrcNode.GetNodeInfo().IPAddress,
 			srcNodeName: mvReq.SrcNodeName, dstNodeName: mvReq.DstNodeName,
@@ -273,7 +285,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 			mvReq := mvReq
 			pool.Go(func() error {
 				err := n.dc.LiveMigrate(mvReq.workloadName,
-					mvReq.srcHost, mvReq.dstHost, constants.VcenterCluster)
+					mvReq.srcHost, mvReq.dstHost, n.ClusterName)
 				if err != nil {
 					msg := fmt.Sprintf("Workload migrate Name : %v, Src : %v, Dst %v failed : %v",
 						mvReq.workloadName, mvReq.srcHost, mvReq.dstHost, err.Error())

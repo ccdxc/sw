@@ -1,0 +1,179 @@
+{
+  "type" : "netagent",
+  "rest-endpoint"    : "api/ipsec/policies/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
+  {
+    "kind": "IPSecPolicy",
+    "meta": {
+      "name": "ipsec-encrypt-rules-tep2",
+      "tenant": "default",
+      "namespace": "default",
+      "creation-time": "1970-01-01T00:00:00Z",
+      "mod-time": "1970-01-01T00:00:00Z"
+    },
+    "spec": {
+      "attach-tenant": true,
+      "rules": [
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "tcp",
+                "port": "20001-21000"
+              },
+              {
+                "protocol": "udp",
+                "port": "20001-21000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-tep2-sa1",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "tcp",
+                "port": "21001-22000"
+              },
+              {
+                "protocol": "udp",
+                "port": "21001-22000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-tep2-sa2",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "tcp",
+                "port": "22001-23000"
+              },
+              {
+                "protocol": "udp",
+                "port": "22001-23000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-tep2-sa3",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.101"
+            ],
+            "proto-ports": [
+              {
+                "protocol": "tcp",
+                "port": "23001-24000"
+              },
+              {
+                "protocol": "udp",
+                "port": "23001-24000"
+              }
+            ]
+          },
+          "sa-name": "ipsec-encrypt-tep2-sa4",
+          "sa-type": "ENCRYPT"
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-tep2-sa1",
+          "sa-type": "DECRYPT",
+          "spi": 1
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-tep2-sa2",
+          "sa-type": "DECRYPT",
+          "spi": 2
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-tep2-sa3",
+          "sa-type": "DECRYPT",
+          "spi": 3
+        },
+        {
+          "source": {
+            "addresses": [
+              "192.168.100.101"
+            ]
+          },
+          "destination": {
+            "addresses": [
+              "192.168.100.103"
+            ]
+          },
+          "sa-name": "ipsec-decrypt-tep2-sa4",
+          "sa-type": "DECRYPT",
+          "spi": 4
+        }
+      ]
+    },
+    "status": {}
+  }
+ ]
+}

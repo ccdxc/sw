@@ -27,7 +27,7 @@ var scaleCfgenParams = &Cfgen{
 				Type:        network.NetworkType_Bridged.String(),
 				IPv4Subnet:  "{{ipv4-subnet:22.x.0.0/16}}",
 				IPv4Gateway: "{{ipv4-gateway:22.x.0.254}}",
-				VlanID:      998,
+				VlanID:      98,
 			},
 		},
 	},

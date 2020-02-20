@@ -218,6 +218,7 @@ type TestBed struct {
 	caseResult           map[string]*TestCaseResult // test case result counts
 	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
 	naplesDataMap        map[string]naplesData      //naples name data map
+	dcName               string
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -225,6 +226,13 @@ type TestBed struct {
 	addNodeResp     *iota.NodeMsg        // add node resp from iota server
 	makeClustrResp  *iota.MakeClusterMsg // resp to make cluster message
 	authCfgResp     *iota.AuthMsg        // auth response
+	switchName      string
+	cleanup         bool //clean up testbed after done
+	tbMsg           *iota.TestBedMsg
+}
+
+func (tb *TestBed) GetSwitch() string {
+	return tb.switchName
 }
 
 //Client returns client
@@ -405,6 +413,7 @@ func (tb *TestBed) IsMockMode() bool {
 
 // getAvailableInstance returns next instance of a given type
 func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *InstanceParams {
+
 	for idx, inst := range tb.unallocatedInstances {
 		switch instType {
 		case iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM:
@@ -438,6 +447,15 @@ func (tb *TestBed) getAvailableInstance(instType iota.TestBedNodeType) *Instance
 				return inst
 			}
 		}
+	}
+
+	//This should be removed when vcenter is provisioned from jobd
+	if instType == iota.TestBedNodeType_TESTBED_NODE_TYPE_VCENTER &&
+		tb.Params.Provision.Vars["VcenterIP"] != "" {
+		inst := &InstanceParams{Type: "vm", Tag: "vcenter",
+			NodeMgmtIP: tb.Params.Provision.Vars["VcenterIP"],
+			Name:       tb.Params.Provision.Vars["VcenterIP"]}
+		return inst
 	}
 
 	log.Fatalf("Could not find any instances of type: %v", instType)
@@ -607,11 +625,41 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 	return nil
 }
 
+//Cleanup clean up testbed
+func (tb *TestBed) Cleanup() {
+	if tb.cleanup && tb.iotaClient != nil {
+		log.Infof("Cleaning up testbed")
+		client := iota.NewTopologyApiClient(tb.iotaClient.Client)
+		client.CleanUpTestBed(context.Background(), tb.tbMsg)
+	}
+}
+
+func (tb *TestBed) GetDC() string {
+	return tb.dcName
+}
+
 func (tb *TestBed) setupVcenterNode(node *TestNode) error {
+
+	uid := os.Getenv("USER")
+	if uid == "" {
+		uid = os.Getenv("SUDO_USER")
+		if uid == "" {
+			if os.Getenv("JOB_ID") == "" {
+				return fmt.Errorf("DC name cannot be derived, please run as non-sudo user")
+			}
+			tb.cleanup = true
+			uid = "default-" + os.Getenv("HOSTNAME")
+		}
+	}
 
 	log.Info("Setting up vcenter node...")
 	switch node.Personality {
 	case iota.PersonalityType_PERSONALITY_VCENTER_NODE:
+		node.VcenterConfig.DcName = uid + "-iota-dc"
+		node.VcenterConfig.ClusterName = uid + "-iota-cluster"
+		node.VcenterConfig.DistributedSwitch = "#Pen-DVS-" + node.VcenterConfig.DcName
+		tb.switchName = node.VcenterConfig.DistributedSwitch
+		tb.dcName = node.VcenterConfig.DcName
 		node.VcenterConfig.EsxConfigs = []*iota.VmwareESXConfig{}
 		for _, mn := range node.topoNode.MangedNodes {
 			for _, tbn := range tb.Nodes {
@@ -1225,6 +1273,8 @@ func (tb *TestBed) setupTestBed() error {
 		NativeVlan:     uint32(tb.Params.Network.VlanID),
 	}
 
+	tb.tbMsg = testBedMsg
+
 	if tb.Params.Provision.Vars["VcenterUsername"] != "" {
 		testBedMsg.Licenses = append(testBedMsg.Licenses,
 			&iota.License{
@@ -1266,6 +1316,12 @@ func (tb *TestBed) setupTestBed() error {
 			tbn.EsxUsername = tb.Params.Provision.Vars["VcenterUsername"]
 			tbn.EsxPassword = tb.Params.Provision.Vars["VcenterPassword"]
 			tbn.License = tb.Params.Provision.Vars["VcenterLicense"]
+			err := tb.setupVcenterNode(node)
+			if err != nil {
+				return err
+			}
+			tbn.DcName = node.VcenterConfig.DcName
+			tbn.Switch = node.VcenterConfig.DistributedSwitch
 		} else if node.topoNode.HostOS == "esx" {
 			tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
 			tbn.EsxPassword = tb.Params.Provision.Vars["EsxPassword"]

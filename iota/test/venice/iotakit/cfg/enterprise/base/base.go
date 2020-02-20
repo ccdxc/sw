@@ -27,10 +27,11 @@ import (
 type EntBaseCfg struct {
 	*objClient.Client
 	//naples map[string]*Naples // Naples instances
-	Dscs       []*cluster.DistributedServiceCard
-	subnets    []*Network               // subnets
-	sgPolicies []*NetworkSecurityPolicy // simulated security policies
-	apps       []*App                   // simulated apps
+	Dscs           []*cluster.DistributedServiceCard
+	ThirdPartyDscs []*cluster.DistributedServiceCard
+	subnets        []*Network               // subnets
+	sgPolicies     []*NetworkSecurityPolicy // simulated security policies
+	apps           []*App                   // simulated apps
 
 	DefaultSgPolicies []*NetworkSecurityPolicy //default sg policy pushed
 	Cfg               *cfgen.Cfgen
@@ -97,24 +98,34 @@ func (gs *EntBaseCfg) createNetwork(nw *network.Network) error {
 	bs := bitset.New(uint(subnetSize))
 	bs.Set(0)
 	snet := Network{
-		Name:       fmt.Sprintf("Network-Vlan-%d", nw.Spec.VlanID),
-		vlan:       nw.Spec.VlanID,
-		ipPrefix:   nw.Spec.IPv4Subnet,
-		subnetSize: subnetSize,
-		bitmask:    bs,
+		Name:          fmt.Sprintf("Network-Vlan-%d", nw.Spec.VlanID),
+		vlan:          nw.Spec.VlanID,
+		ipPrefix:      nw.Spec.IPv4Subnet,
+		subnetSize:    subnetSize,
+		bitmask:       bs,
+		veniceNetwork: nw,
 	}
 	gs.subnets = append(gs.subnets, &snet)
 
 	return nil
 }
 
+//CfgObjects config objects genereted
+type CfgObjects struct {
+	Networks   []*network.Network                // subnets
+	SgPolicies []*security.NetworkSecurityPolicy // simulated security policies
+	Apps       []*security.App                   // simulated apps
+
+}
+
 //ConfigParams contoller
 type ConfigParams struct {
-	Dscs       []*cluster.DistributedServiceCard
-	FakeDscs   []*cluster.DistributedServiceCard
-	Vlans      []uint32
-	Scale      bool
-	Regenerate bool
+	Dscs           []*cluster.DistributedServiceCard
+	FakeDscs       []*cluster.DistributedServiceCard
+	ThirdPartyDscs []*cluster.DistributedServiceCard
+	Vlans          []uint32
+	Scale          bool
+	Regenerate     bool
 }
 
 // WorkloadPair is a pair of workloads
@@ -170,6 +181,7 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 	}
 
 	gs.Dscs = params.Dscs
+	gs.ThirdPartyDscs = params.ThirdPartyDscs
 
 	//Add sim naples too.
 	for _, naples := range params.FakeDscs {
@@ -890,4 +902,24 @@ func (gs *EntBaseCfg) IsConfigPushComplete() (bool, error) {
 	}
 
 	return true, nil
+}
+
+//GetCfgObjects gets all generated objects
+func (gs *EntBaseCfg) GetCfgObjects() CfgObjects {
+
+	objects := CfgObjects{}
+
+	for _, app := range gs.apps {
+		objects.Apps = append(objects.Apps, app.veniceApp)
+	}
+
+	for _, nw := range gs.subnets {
+		objects.Networks = append(objects.Networks, nw.veniceNetwork)
+	}
+
+	for _, pol := range gs.sgPolicies {
+		objects.SgPolicies = append(objects.SgPolicies, pol.VenicePolicy)
+	}
+
+	return objects
 }

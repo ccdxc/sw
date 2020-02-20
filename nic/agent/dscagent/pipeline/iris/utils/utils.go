@@ -63,5 +63,9 @@ func ConvertIPAddresses(addresses ...string) (ipAddresses []*halapi.IPAddress) {
 		}
 		ipAddresses = append(ipAddresses, v4Addr)
 	}
+
+	if len(ipAddresses) == 0 {
+		ipAddresses = nil
+	}
 	return
 }

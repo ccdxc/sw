@@ -257,7 +257,7 @@ func (sm *SysModel) GetWorkloadsForScale(hosts []*objects.Host, policyCollection
 	for hostName, wloads := range workloadHostMap {
 		host, _ := hostMap[hostName]
 		for _, w := range wloads {
-			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage)
+			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
 			newCollection.Workloads = append(newCollection.Workloads, sm.WorkloadsObjs[w.Name])
 		}
 	}
@@ -311,7 +311,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 	}
 
 	for _, wload := range wloadsToCreate {
-		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage)
+		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
 	}
 
@@ -439,17 +439,6 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 		return fmt.Errorf("Error initing config %v", err)
 	}
 
-	//TODO, we have to move this out of sysmodel
-	defaultSgPolicies, err := sm.ListNetworkSecurityPolicy()
-	if err != nil {
-		return fmt.Errorf("Error in listing policies %v", err)
-	}
-
-	for _, pol := range defaultSgPolicies {
-		nPolicy := &objects.NetworkSecurityPolicy{VenicePolicy: pol}
-		sm.defaultSgPolicies = append(sm.defaultSgPolicies, objects.NewNetworkSecurityPolicyCollection(nPolicy, sm.ObjClient(), sm.Tb))
-	}
-
 	return nil
 }
 
@@ -482,9 +471,15 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData bool) error {
 	log.Infof("Setting up default config...")
 
-	err := sm.InitConfig(scale, scaleData)
+	//TODO, we have to move this out of sysmodel
+	defaultSgPolicies, err := sm.ListNetworkSecurityPolicy()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error in listing policies %v", err)
+	}
+
+	for _, pol := range defaultSgPolicies {
+		nPolicy := &objects.NetworkSecurityPolicy{VenicePolicy: pol}
+		sm.defaultSgPolicies = append(sm.defaultSgPolicies, objects.NewNetworkSecurityPolicyCollection(nPolicy, sm.ObjClient(), sm.Tb))
 	}
 
 	err = sm.AssociateHosts()
@@ -527,7 +522,12 @@ func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData boo
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 
-	if err := sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
+	err := sm.InitConfig(scale, scaleData)
+	if err != nil {
+		return err
+	}
+
+	if err = sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
 		return err
 	}
 	return sm.SetupWorkloads(scale)

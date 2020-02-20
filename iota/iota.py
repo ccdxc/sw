@@ -81,7 +81,7 @@ def __start_server():
     Logger.debug("setting default SIGINT handler")
     signal.signal(signal.SIGINT, signal.default_int_handler)
     global gl_srv_process
-    srv_binary = "VENICE_DEV=1 %s/iota/bin/server/iota_server" % topdir
+    srv_binary = "VENICE_DEV=1 nohup %s/iota/bin/server/iota_server" % topdir
     srv_logfile = "%s/server.log" % glopts.GlobalOptions.logdir
     srv_args = "--port %d" % glopts.GlobalOptions.svcport
     if glopts.GlobalOptions.dryrun:
@@ -113,8 +113,9 @@ def packageCoresDirectory():
 
 def __exit_cleanup():
     global gl_srv_process
-    Logger.debug("ATEXIT: Stopping IOTA Server")
-    #gl_srv_process.Stop()
+    if not engine.SkipSetupValid():
+        Logger.debug("ATEXIT: Stopping IOTA Server as setup was not complete")
+        gl_srv_process.Stop()
     if glopts.GlobalOptions.dryrun or glopts.GlobalOptions.skip_logs:
         return
     packageCoresDirectory()

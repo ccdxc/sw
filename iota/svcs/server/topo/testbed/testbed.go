@@ -98,7 +98,7 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 			if nws != nil {
 				for _, nw := range nws {
 					if strings.Contains(nw.Name, constants.EsxNaplesMgmtNetwork) {
-						vm.ReconfigureNetwork(nw.Name, constants.EsxDefaultNetwork)
+						vm.ReconfigureNetwork(nw.Name, constants.EsxDefaultNetwork, 0)
 					}
 				}
 			}

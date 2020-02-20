@@ -1,0 +1,199 @@
+{
+    "type" : "netagent",
+    "rest-endpoint"    : "api/endpoints/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node1-ep1",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw0",
+          "ipv4-addresses": [
+            "192.168.100.101"
+          ],
+          "ipv6-addresses": [
+            "2000::101/128"
+          ],
+          "mac-address": "00:46:46:00:01:01",
+          "useg-vlan": 1001,
+          "node-uuid": "node1"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node1-ep2",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw0",
+          "ipv4-addresses": [
+            "192.168.100.102"
+          ],
+          "ipv6-addresses": [
+            "2000::102/128"
+          ],
+          "mac-address": "00:46:46:00:01:02",
+          "useg-vlan": 1002,
+          "node-uuid": "node1"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node1-ep3",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw1",
+          "ipv4-addresses": [
+            "192.168.101.101"
+          ],
+          "ipv6-addresses": [
+            "2001::101/128"
+          ],
+          "mac-address": "00:46:46:00:02:01",
+          "useg-vlan": 1003,
+          "node-uuid": "node1"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node1-ep4",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw1",
+          "ipv4-addresses": [
+            "192.168.101.102"
+          ],
+          "ipv6-addresses": [
+            "2001::102/128"
+          ],
+          "mac-address": "00:46:46:00:02:02",
+          "useg-vlan": 1004,
+          "node-uuid": "node1"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node2-ep1",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw0",
+          "ipv4-addresses": [
+            "192.168.100.103"
+          ],
+          "ipv6-addresses": [
+            "2000::103/128"
+          ],
+          "mac-address": "00:46:46:00:01:03",
+          "useg-vlan": 1001,
+          "node-uuid": "node2"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node2-ep2",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw0",
+          "ipv4-addresses": [
+            "192.168.100.104"
+          ],
+          "ipv6-addresses": [
+            "2000::104/128"
+          ],
+          "mac-address": "00:46:46:00:01:04",
+          "useg-vlan": 1002,
+          "node-uuid": "node2"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node2-ep3",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw1",
+          "ipv4-addresses": [
+            "192.168.101.103"
+          ],
+          "ipv6-addresses": [
+            "2001::103/128"
+          ],
+          "mac-address": "00:46:46:00:02:03",
+          "useg-vlan": 1003,
+          "node-uuid": "node2"
+        },
+        "status": {}
+      },
+      {
+        "kind": "Endpoint",
+        "meta": {
+          "name": "node2-ep4",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "network-name": "nw1",
+          "ipv4-addresses": [
+            "192.168.101.104"
+          ],
+          "ipv6-addresses": [
+            "2001::104/128"
+          ],
+          "mac-address": "00:46:46:00:02:04",
+          "useg-vlan": 1004,
+          "node-uuid": "node2"
+        },
+        "status": {}
+      }
+    ]
+}

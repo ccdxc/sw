@@ -22,6 +22,8 @@ type CfgModel interface {
 	CleanupAllConfig() error
 	PushConfig() error
 	ObjClient() objClient.ObjClient
+	//Get all generated objects which may be modified before push
+	GetCfgObjects() base.CfgObjects
 }
 
 //CfgType type

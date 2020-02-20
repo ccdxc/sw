@@ -1,0 +1,45 @@
+{
+    "type" : "netagent",
+    "rest-endpoint" : "api/networks/",
+  "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects" : [
+      {
+        "kind": "Network",
+        "meta": {
+          "name": "nw0",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "ipv4-subnet": "192.168.100.0/24",
+          "ipv4-gateway": "192.168.100.1",
+          "ipv6-subnet": "2000::/64",
+          "ipv6-gateway": "2000::1/64",
+          "vlan-id": 0
+        },
+        "status": {}
+      },
+      {
+        "kind": "Network",
+        "meta": {
+          "name": "nw1",
+          "tenant": "default",
+          "namespace": "default",
+          "generation-id": "",
+          "creation-time": "1970-01-01T00:00:00Z",
+          "mod-time": "1970-01-01T00:00:00Z"
+        },
+        "spec": {
+          "ipv4-subnet": "192.168.101.0/24",
+          "ipv4-gateway": "192.168.101.1",
+          "ipv6-subnet": "2001::/64",
+          "ipv6-gateway": "2001::1/64",
+          "vlan-id": -1
+        },
+        "status": {}
+      }
+    ]
+}

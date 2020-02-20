@@ -1,0 +1,80 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "NetworkSecurityPolicy", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "default-policy", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "policy-rules": [
+                    {
+                        "action": "REJECT", 
+                        "source": {
+                            "addresses": [
+                                "1.0.4.6/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "1"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.102/32"
+                            ]
+                        }
+                    }, 
+                    {
+                        "action": "PERMIT", 
+                        "source": {
+                            "addresses": [
+                                "1.0.4.6/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "2"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.102/32"
+                            ]
+                        }
+                    }, 
+                    {
+                        "action": "PERMIT", 
+                        "source": {
+                            "addresses": [
+                                "1.0.4.6/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "3"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.102/32"
+                            ]
+                        }
+                    }
+                ], 
+                "attach-tenant": true
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/security/policies/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

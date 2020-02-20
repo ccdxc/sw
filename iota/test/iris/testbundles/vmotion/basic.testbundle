@@ -1,0 +1,13 @@
+meta:
+    name    : vmotion
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #targetcount : 35
+
+testcases:
+    -   name    : BASIC_VMOTION
+        testcase: testcases.vmotion.basic
+        stress  : True
+        args    :
+            type: local_only
+            #timeout : 60

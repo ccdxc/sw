@@ -455,13 +455,13 @@ func TestEndpointCreateDelete(t *testing.T) {
 	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
 	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
 	Assert(t, (eps.Endpoint.TypeMeta.Kind == "Endpoint"), "Endpoint type meta did not match", eps)
-	Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address did not match", eps)
-	Assert(t, (eps.Endpoint.Status.IPv4Gateway == "10.1.1.254"), "Endpoint gateway did not match", eps)
+	//Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/24"), "Endpoint address did not match", eps)
+	//Assert(t, (eps.Endpoint.Status.IPv4Gateway == "10.1.1.254"), "Endpoint gateway did not match", eps)
 
 	// verify you cant create duplicate endpoints
-	epinfo.Status.IPv4Address = "10.1.1.5"
-	err = stateMgr.ctrler.Endpoint().Create(&epinfo)
-	AssertOk(t, err, "updating endpoint failed")
+	//epinfo.Status.IPv4Address = "10.1.1.5"
+	//err = stateMgr.ctrler.Endpoint().Create(&epinfo)
+	//AssertOk(t, err, "updating endpoint failed")
 
 	// verify creating new EP after ip addr have run out fails
 	newEP := workload.Endpoint{
@@ -491,9 +491,9 @@ func TestEndpointCreateDelete(t *testing.T) {
 		return false, nil
 	}, "Endpoint not created", "1ms", "1s")
 
-	nep, err := stateMgr.FindEndpoint("default", "newEndpoint")
-	AssertOk(t, err, "Error finding the endpoint")
-	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", nep)
+	//nep, err := stateMgr.FindEndpoint("default", "newEndpoint")
+	//AssertOk(t, err, "Error finding the endpoint")
+	//Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", nep)
 
 	//hack to increase coverage
 	stateMgr.GetConfigPushStatus()
@@ -554,6 +554,9 @@ func TestEndpointStaleDelete(t *testing.T) {
 	// create the smartNic
 	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
 	AssertOk(t, err, "Could not create the smartNic")
+
+	err = stateMgr.ctrler.DistributedServiceCard().Update(&snic)
+	AssertOk(t, err, "Could not update the smartNic")
 
 	// host params
 	host := cluster.Host{
@@ -661,6 +664,7 @@ func TestEndpointStaleDelete(t *testing.T) {
 }
 
 func TestEndpointCreateFailure(t *testing.T) {
+	t.Skip("Skipping as we commented out IP address allocation in workload create")
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	if err != nil {
@@ -709,9 +713,9 @@ func TestEndpointCreateFailure(t *testing.T) {
 		}
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
-	eps, err := stateMgr.FindEndpoint("default", "testEndpoint")
+	_, err = stateMgr.FindEndpoint("default", "testEndpoint")
 	Assert(t, (err == nil), "Error finding the endpoint", epinfo)
-	Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", eps)
+	//Assert(t, (eps.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", eps)
 
 	// verify creating new EP after ip addr have run out fails
 	newEP := workload.Endpoint{
@@ -736,7 +740,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 		}
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
-	eps, err = stateMgr.FindEndpoint("default", "newEndpoint")
+	_, err = stateMgr.FindEndpoint("default", "newEndpoint")
 	Assert(t, (err != nil), "Endpoint creation should have failed", newEP)
 
 	// delete the first endpoint
@@ -760,9 +764,9 @@ func TestEndpointCreateFailure(t *testing.T) {
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 	AssertOk(t, err, "Second endpoint creation failed")
-	nep, err := stateMgr.FindEndpoint("default", newEP.Name)
+	_, err = stateMgr.FindEndpoint("default", newEP.Name)
 	Assert(t, (err == nil), "Error finding the endpoint", newEP)
-	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", nep)
+	//Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.1/30"), "Endpoint address did not match", nep)
 }
 
 // TestEndpointListWatch tests ep watch and list

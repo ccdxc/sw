@@ -166,6 +166,19 @@ def FlapPorts():
 
 
 def UpdateNodeUuidEndpoints(objects):
+    #allocate pvlan pair for dvs
+    if api.GetNicMode() == 'hostpin_dvs':
+        pvlan_start = api.GetPVlansStart()
+        pvlan_end = api.GetPVlansEnd()
+        index = 0
+        for obj in objects:
+            obj.spec.primary_vlan = pvlan_start + index
+            obj.spec.secondary_vlan = pvlan_start + index + 1
+            obj.spec.useg_vlan = obj.spec.primary_vlan
+            index = index + 2
+            if index > pvlan_end:
+                assert(0)
+
     agent_uuid_map = api.GetNaplesNodeUuidMap()
     for ep in objects:
         node_name = getattr(ep.spec, "_node_name", None)
@@ -176,6 +189,7 @@ def UpdateNodeUuidEndpoints(objects):
         ep.spec._node_name = node_name
 
 def UpdateTestBedVlans(objects):
+
     for obj in objects:
         if obj.spec.vlan_id == -1:
             vlan = api.Testbed_AllocateVlan()

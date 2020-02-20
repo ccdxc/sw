@@ -317,7 +317,7 @@ func addVirtualSwitch(ctx context.Context, ns *object.HostNetworkSystem, vspec V
 
 // AddVswitch adds vswitch to target host
 func (h *VHost) AddVswitch(vspec VswitchSpec) error {
-	ns, err := h.hostNetworkSystem()
+	ns, err := h.hostNetworkSystemByName(h.Name)
 	if err != nil {
 		return err
 	}
@@ -333,7 +333,45 @@ func (h *VHost) AddVswitch(vspec VswitchSpec) error {
 // AddNetworks add specified network for
 func (h *VHost) AddNetworks(specs []NWSpec, vsSpec VswitchSpec) error {
 
-	return h.Host.AddNetworks(specs, vsSpec)
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	var nets []string
+
+	// create our private vswitch
+	err := h.AddVswitch(vsSpec)
+	if err != nil {
+		//return nets, err
+	}
+
+	ns, err := h.hostNetworkSystemByName(h.Name)
+	if err != nil {
+		return err
+	}
+
+	// allow everything on the port group
+	allow := true
+	nsp := &types.HostNetworkSecurityPolicy{
+		AllowPromiscuous: &allow,
+		MacChanges:       &allow,
+		ForgedTransmits:  &allow,
+	}
+	for _, s := range specs {
+		pgs := types.HostPortGroupSpec{
+			Name:        s.Name,
+			VlanId:      s.Vlan,
+			VswitchName: vsSpec.Name,
+			Policy:      types.HostNetworkPolicy{Security: nsp},
+		}
+		err = ns.AddPortGroup(h.Ctx(), pgs)
+		if err != nil {
+			return err
+		}
+
+		nets = append(nets, s.Name)
+	}
+
+	return nil
+
 }
 
 // ListVswitchs lists all vswitches in the ESX host

@@ -406,6 +406,7 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 		PrimaryVlan:   int(in.GetEncapVlan()),
 		SecondaryVlan: int(in.GetSecondaryEncapVlan()),
 		Switch:        in.GetSwitchName(),
+		NetworkName:   in.GetNetworkName(),
 	}
 	attachedIntf, err := wload.AddInterface(spec)
 	if err != nil {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"time"
 
 	TestUtils "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -72,7 +71,7 @@ func Test_datastore(t *testing.T) {
 }
 
 func Test_dvs_create_delete(t *testing.T) {
-	vc, err := NewVcenter(context.Background(), "192.168.69.120", "administrator@vsphere.local", "N0isystem$", "")
+	vc, err := NewVcenter(context.Background(), "barun-vc.pensando.io", "administrator@pensando.io", "N0isystem$", "")
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
@@ -158,7 +157,7 @@ func Test_vcenter_dissocaitate(t *testing.T) {
 
 func Test_vcenter_find_host(t *testing.T) {
 
-	TestUtils.Assert(t, false, "Ds not created")
+	//	TestUtils.Assert(t, false, "Ds not created")
 
 	ctx, _ := context.WithCancel(context.Background())
 	vc, err := NewVcenter(ctx, "barun-vc.pensando.io", "administrator@pensando.io", "N0isystem$",
@@ -167,41 +166,68 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("iota-dc")
+	dc, err := vc.SetupDataCenter("sudhiaithal-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["iota-dc"]
+	dc, ok := vc.datacenters["sudhiaithal-iota-dc"]
 	TestUtils.Assert(t, ok, "successfuly setup dc")
 
-	c, ok := dc.clusters["iota-cluster"]
+	c, ok := dc.clusters["sudhiaithal-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	err = c.DeleteHost("tb60-host1.pensando.io")
-	TestUtils.Assert(t, ok, "successfuly removed to  cluster")
-	TestUtils.Assert(t, err == nil, "disconnect failed")
+	/*dvsSpec := DVSwitchSpec{
+	Name: "iota-dvs", Cluster: "sudhiaithal-iota-cluster",
+	MaxPorts: 10,
+	Pvlans: []DvsPvlanPair{DvsPvlanPair{Primary: 1024,
+		Secondary: 1024, Type: "promiscuous"}}} */
 
-	time.Sleep(3 * time.Second)
+	//err = dc.AddDvs(dvsSpec)
+	//TestUtils.Assert(t, err == nil, "dvs added")
 
-	err = c.AddHost("tb60-host1.pensando.io", "root", "pen123!")
-	TestUtils.Assert(t, ok, "successfuly added to  cluster")
-	TestUtils.Assert(t, err == nil, "connect failed ")
+	vm, err2 := dc.NewVM("workload-host-1-w1")
+	TestUtils.Assert(t, err2 == nil, "VM FOUND")
+	TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	hostSpecs := []DVSwitchHostSpec{
-		DVSwitchHostSpec{
-			Name:  "tb60-host1.pensando.io",
-			Pnics: []string{"vmnic2", "vmnic3"},
-		},
+	macs, err3 := vm.ReadMacs()
+	for nw, mac := range macs {
+		fmt.Printf("NW : %v. mac %v\n", nw, mac)
 	}
+	TestUtils.Assert(t, err3 != nil, "VM FOUND")
 
-	dvsSpec := DVSwitchSpec{Hosts: hostSpecs,
-		Name: "pen-dvs", Cluster: "iota-cluster",
-		MaxPorts: 10,
-		Pvlans: []DvsPvlanPair{DvsPvlanPair{Primary: 1024,
-			Secondary: 1024, Type: "promiscuous"}}}
-	err = dc.AddDvs(dvsSpec)
-	fmt.Printf("Add DVS failed %v", err)
-	TestUtils.Assert(t, ok, "successfuly added to  cluster")
-	TestUtils.Assert(t, err == nil, "reconfig failed ")
+	//dvs, err := dc.findDvs("#Pen-DVS-sudhiaithal-iota-dc")
+	//TestUtils.Assert(t, err == nil && dvs != nil, "dvs found")
+
+	//pgName, err := dc.FindDvsPortGroup("Pen-DVS-sudhiaithal-iota-dc", DvsPGMatchCriteria{Type: DvsPvlan, VlanID: int32(199)})
+	//fmt.Printf("Dvs port name %v %v", pgName, err)
+	//TestUtils.Assert(t, err == nil, "Connected to venter")
+
+	err = dc.RelaxSecurityOnPg("#Pen-DVS-sudhiaithal-iota-dc", "#Pen-PG-Network-Vlan-2")
+	fmt.Printf("Error %v\n", err)
+	TestUtils.Assert(t, err == nil, "pvlan added")
+
+	/*
+		for i := int32(0); i < 100; i += 2 {
+			err = dc.AddPvlanPairsToDvs("iota-dvs", []DvsPvlanPair{DvsPvlanPair{Primary: 3003 + i,
+				Secondary: 3003 + i, Type: "promiscuous"}})
+			fmt.Printf("Error %v\n", err)
+			TestUtils.Assert(t, err == nil, "pvlan added")
+
+			err = dc.AddPvlanPairsToDvs("iota-dvs", []DvsPvlanPair{DvsPvlanPair{Primary: 3003 + i,
+				Secondary: 3003 + i + 1, Type: "isolated"}})
+			fmt.Printf("Error %v\n", err)
+			TestUtils.Assert(t, err == nil, "pvlan added")
+		} */
+
+	//pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+	//Create the port group
+	/*err = dc.AddPortGroupToDvs("Pen-DVS-sudhiaithal-iota-dc",
+		[]DvsPortGroup{DvsPortGroup{Name: "my-pg",
+			VlanOverride: true,
+			Private:      true,
+			Ports:        32, Type: "earlyBinding",
+			Vlan: int32(800)}})
+	fmt.Printf("Error %v\n", err)
+	TestUtils.Assert(t, err == nil, "pvlan added")*/
 
 	/*
 		ctx, cancel := context.WithCancel(context.Background())

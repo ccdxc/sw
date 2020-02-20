@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path/filepath"
+	"strings"
 
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
@@ -692,8 +695,6 @@ type DvsPvlanPair struct {
 }
 
 func (dc *DataCenter) findDvs(name string) (*object.DistributedVirtualSwitch, error) {
-	dc.getClientWithRLock()
-	defer dc.releaseClientRLock()
 	net, err := dc.Finder().Network(dc.vc.Ctx(), name)
 	if err != nil {
 		return nil, err
@@ -832,6 +833,8 @@ func (dc *DataCenter) DisconnectAllHostFromDvs(vspec DVSwitchSpec) error {
 // AddPvlanPairsToDvs adds pvlan to dvs
 func (dc *DataCenter) AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error {
 
+	dc.getClientWithLock()
+	defer dc.releaseClientLock()
 	dvs, err := dc.findDvs(name)
 	if err != nil {
 		return errors.Wrap(err, "Dvs not found")
@@ -880,6 +883,9 @@ const (
 	DvsVlanTrunk
 	//DvsPvlan trunk
 	DvsPvlan
+
+	//PgName match
+	PgName
 )
 
 //DvsMatchCriteria
@@ -887,6 +893,7 @@ type DvsPGMatchCriteria struct {
 	VlanID int32
 	Type   VlanType
 	Uplink bool
+	PgName string
 }
 
 //FindDvsPortGroup find dvs matching criteria
@@ -961,6 +968,10 @@ func (dc *DataCenter) FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria
 			if mcriteria.Type == DvsVlanTrunk && vlanID == mcriteria.VlanID {
 				return getNwName(port.DvsUuid, port.PortgroupKey)
 			}
+			if mcriteria.Type == DvsPvlan && vlanID == mcriteria.VlanID {
+				return getNwName(port.DvsUuid, port.PortgroupKey)
+			}
+
 		}
 
 	}
@@ -968,9 +979,110 @@ func (dc *DataCenter) FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria
 	return "", errors.New("Portgroup not found")
 }
 
+//FetchDVPorts fetches port keys matching
+func (dc *DataCenter) FetchDVPorts(name string, mcriteria DvsPGMatchCriteria) ([]types.DistributedVirtualPort, error) {
+
+	err := dc.setUpFinder()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error setup datacenter")
+	}
+
+	dvs, err := dc.findDvs(name)
+	if err != nil {
+		return nil, errors.Wrap(err, "Dvs not found")
+	}
+
+	// Set base search criteria
+	//active := true
+	criteria := types.DistributedVirtualSwitchPortCriteria{
+		//UplinkPort: &mcriteria.Uplink,
+		//Connected:  &active,
+
+		//Connected: types.NewBool(true),
+
+		//Active:     types.NewBool(cmd.active),
+		//UplinkPort: types.NewBool(cmd.uplinkPort),
+		//Inside:     types.NewBool(cmd.inside),
+	}
+	res, err := dvs.FetchDVPorts(dc.vc.Ctx(), &criteria)
+	if err != nil {
+		return nil, err
+	}
+	netList, err := dc.Finder().NetworkList(dc.vc.Ctx(), "*")
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed Fetch networks")
+	}
+
+	nwKey := func(uuid, key string) string {
+		return uuid + "-" + key
+	}
+	nwMap := make(map[string]string)
+	for _, net := range netList {
+		nwRef, err := net.EthernetCardBackingInfo(dc.Ctx())
+		if err != nil {
+			continue
+		}
+		switch nw := nwRef.(type) {
+		case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+			nwMap[nwKey(nw.Port.SwitchUuid, nw.Port.PortgroupKey)] = filepath.Base(net.GetInventoryPath())
+		}
+
+	}
+
+	portKeys := []types.DistributedVirtualPort{}
+	log.Infof("Number od DV Ports %v %v", len(res), len(nwMap))
+	for _, port := range res {
+		var vlanID int32
+		setting := port.Config.Setting.(*types.VMwareDVSPortSetting)
+
+		switch vlan := setting.Vlan.(type) {
+		case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+			if mcriteria.Type == DvsVlanID && vlan.VlanId == mcriteria.VlanID {
+				portKeys = append(portKeys, port)
+			}
+			if mcriteria.Type == PgName {
+				pgName, ok := nwMap[nwKey(port.DvsUuid, port.PortgroupKey)]
+				if ok && pgName == mcriteria.PgName {
+					portKeys = append(portKeys, port)
+				}
+			}
+			vlanID = vlan.VlanId
+		case *types.VmwareDistributedVirtualSwitchTrunkVlanSpec:
+			if mcriteria.Type == DvsVlanTrunk {
+				for _, vlan := range vlan.VlanId {
+					if vlan.Start >= mcriteria.VlanID && vlan.End <= mcriteria.VlanID {
+						portKeys = append(portKeys, port)
+					}
+				}
+			}
+		case *types.VmwareDistributedVirtualSwitchPvlanSpec:
+			vlanID = vlan.PvlanId
+			if mcriteria.Type == DvsVlanTrunk && vlanID == mcriteria.VlanID {
+				portKeys = append(portKeys, port)
+			}
+			if mcriteria.Type == DvsPvlan && vlanID == mcriteria.VlanID {
+				portKeys = append(portKeys, port)
+			}
+
+			if mcriteria.Type == PgName {
+				pgName, ok := nwMap[nwKey(port.DvsUuid, port.PortgroupKey)]
+				if ok && pgName == mcriteria.PgName {
+					portKeys = append(portKeys, port)
+				}
+			}
+
+		}
+
+	}
+
+	return portKeys, nil
+}
+
 // AddPortGroupToDvs adds port group to dvs
 func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error {
 
+	dc.getClientWithLock()
+	defer dc.releaseClientLock()
 	if len(pairs) == 0 {
 		return nil
 	}
@@ -987,23 +1099,42 @@ func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 	}
 
 	pgSpec := []types.DVPortgroupConfigSpec{}
+	allow := true
 	for _, pair := range pairs {
 
 		spec := types.DVPortgroupConfigSpec{
 			Name:     pair.Name,
 			NumPorts: pair.Ports,
 			Type:     pair.Type,
+			DefaultPortConfig: &types.VMwareDVSPortSetting{
+				SecurityPolicy: &types.DVSSecurityPolicy{
+					MacChanges: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+						Inherited: true,
+					}},
+					AllowPromiscuous: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+						Inherited: true,
+					}},
+					ForgedTransmits: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+						Inherited: true,
+					}},
+					InheritablePolicy: types.InheritablePolicy{
+						Inherited: true,
+					},
+				},
+			},
 			Policy: &types.VMwareDVSPortgroupPolicy{
 				DVPortgroupPolicy: types.DVPortgroupPolicy{
 					//BlockOverrideAllowed:               true,
 					//ShapingOverrideAllowed:             false,
-					VendorConfigOverrideAllowed: false,
+					VendorConfigOverrideAllowed: true,
 					LivePortMovingAllowed:       true,
 					PortConfigResetAtDisconnect: true,
+
 					//NetworkResourcePoolOverrideAllowed: types.NewBool(false),
 					//TrafficFilterOverrideAllowed:       types.NewBool(false),
 				},
-				VlanOverrideAllowed: pair.VlanOverride,
+				SecurityPolicyOverrideAllowed: true,
+				VlanOverrideAllowed:           pair.VlanOverride,
 				//UplinkTeamingOverrideAllowed:  false,
 				//SecurityPolicyOverrideAllowed: false,
 			},
@@ -1027,11 +1158,161 @@ func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 
 	}
 	task, err := dvs.AddPortgroup(dc.Ctx(), pgSpec)
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return err
+	}
+	_, err = task.WaitForResult(dc.Ctx())
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
+		return err
+	}
+
+	pSpec := []types.DVPortConfigSpec{}
+	for _, pair := range pairs {
+		vType := DvsPvlan
+		if !pair.Private {
+			vType = DvsVlanID
+		}
+		ports, err := dc.FetchDVPorts(name, DvsPGMatchCriteria{Type: vType, VlanID: pair.Vlan})
+		if err != nil {
+			return err
+		}
+
+		for _, port := range ports {
+			spec := types.DVPortConfigSpec{
+				Key: port.Key,
+				//Name:          name,
+				Scope:         port.Config.Scope,
+				ConfigVersion: port.Config.ConfigVersion,
+				Operation:     "edit",
+				Setting: &types.VMwareDVSPortSetting{
+					SecurityPolicy: &types.DVSSecurityPolicy{
+						MacChanges:       &types.BoolPolicy{Value: &allow},
+						ForgedTransmits:  &types.BoolPolicy{Value: &allow},
+						AllowPromiscuous: &types.BoolPolicy{Value: &allow},
+					},
+				},
+			}
+			pSpec = append(pSpec, spec)
+		}
+	}
+	task, err = dvs.ReconfigureDVPort(dc.Ctx(), pSpec)
 	if err != nil {
 		return err
 	}
 	_, err = task.WaitForResult(dc.Ctx())
 	return err
+}
+
+// RelaxSecurityOnPg relaxes security on PG
+func (dc *DataCenter) RelaxSecurityOnPg(name string, pgName string) error {
+
+	dc.getClientWithLock()
+	defer dc.releaseClientLock()
+
+	dvs, err := dc.findDvs(name)
+	if err != nil {
+		return errors.Wrap(err, "Dvs not found")
+	}
+
+	var s mo.DistributedVirtualSwitch
+	err = dvs.Properties(dc.Ctx(), dvs.Reference(), []string{"config"}, &s)
+	if err != nil {
+		return err
+	}
+
+	net, err := dc.Finder().Network(dc.Ctx(), pgName)
+	if err != nil {
+		return fmt.Errorf("Port group for %s is not present", pgName)
+	}
+
+	objPg, ok := net.(*object.DistributedVirtualPortgroup)
+	if !ok {
+		return fmt.Errorf("Failed at getting dvs port group object %v", pgName)
+	}
+
+	var dvsPg mo.DistributedVirtualPortgroup
+	err = objPg.Properties(dc.Ctx(), objPg.Reference(), []string{"config"}, &dvsPg)
+	if err != nil {
+		return err
+	}
+
+	allow := true
+	spec := types.DVPortgroupConfigSpec{
+		Name:          dvsPg.Name,
+		ConfigVersion: dvsPg.Config.ConfigVersion,
+		DefaultPortConfig: &types.VMwareDVSPortSetting{
+			SecurityPolicy: &types.DVSSecurityPolicy{
+				MacChanges: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+					Inherited: true,
+				}},
+				AllowPromiscuous: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+					Inherited: true,
+				}},
+				ForgedTransmits: &types.BoolPolicy{Value: &allow, InheritablePolicy: types.InheritablePolicy{
+					Inherited: true,
+				}},
+				InheritablePolicy: types.InheritablePolicy{
+					Inherited: true,
+				},
+			},
+		},
+		Policy: &types.VMwareDVSPortgroupPolicy{
+			DVPortgroupPolicy: types.DVPortgroupPolicy{
+				BlockOverrideAllowed:               true,
+				ShapingOverrideAllowed:             false,
+				VendorConfigOverrideAllowed:        false,
+				LivePortMovingAllowed:              false,
+				PortConfigResetAtDisconnect:        true,
+				NetworkResourcePoolOverrideAllowed: types.NewBool(false),
+				TrafficFilterOverrideAllowed:       types.NewBool(false),
+			},
+			VlanOverrideAllowed:           true,
+			UplinkTeamingOverrideAllowed:  false,
+			SecurityPolicyOverrideAllowed: true,
+			IpfixOverrideAllowed:          types.NewBool(false),
+		},
+	}
+
+	task, err := objPg.Reconfigure(dc.Ctx(), spec)
+
+	_, err = task.WaitForResult(dc.Ctx(), nil)
+	if err != nil {
+		return fmt.Errorf("Error reconfiguring %v", pgName)
+	}
+
+	pSpec := []types.DVPortConfigSpec{}
+	ports, err := dc.FetchDVPorts(name, DvsPGMatchCriteria{Type: PgName, PgName: pgName})
+	if err != nil {
+		return err
+	}
+
+	if len(ports) != 0 {
+		for _, port := range ports {
+			spec := types.DVPortConfigSpec{
+				Key: port.Key,
+				//Name:          name,
+				Scope:         port.Config.Scope,
+				ConfigVersion: port.Config.ConfigVersion,
+				Operation:     "edit",
+				Setting: &types.VMwareDVSPortSetting{
+					SecurityPolicy: &types.DVSSecurityPolicy{
+						MacChanges:       &types.BoolPolicy{Value: &allow},
+						ForgedTransmits:  &types.BoolPolicy{Value: &allow},
+						AllowPromiscuous: &types.BoolPolicy{Value: &allow},
+					},
+				},
+			}
+			pSpec = append(pSpec, spec)
+		}
+		task, err = dvs.ReconfigureDVPort(dc.Ctx(), pSpec)
+		if err != nil {
+			return err
+		}
+		_, err = task.WaitForResult(dc.Ctx())
+		return err
+	}
+
+	return nil
 }
 
 // RemoveHostsFromDvs remove hosts from dvs
@@ -1261,6 +1542,7 @@ func (dc *DataCenter) BootVM(name string) (*VMInfo, error) {
 
 func (dc *DataCenter) DestoryVM(name string) error {
 
+	log.Infof("Destroy vm with %v", dc.vc)
 	dc.getClientWithRLock()
 	defer dc.releaseClientRLock()
 
