@@ -67,11 +67,10 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			hConfig = &propConfig
 		case defs.HostPropName:
 			dispName = prop.Val.(string)
-			if hostObj.Labels == nil {
-				hostObj.Labels = make(map[string]string)
-			}
-			addNameLabel(hostObj.Labels, dispName)
+			// Try to update vmkworkloadname incase we did not get the name info
+			// during create
 			penDC.addHostNameKey(dispName, m.Key)
+			v.updateVmkWorkloadLabels(hostObj.Name, m.DcName, dispName)
 		default:
 			v.Log.Errorf("host prop change %s - not handled", prop.Name)
 		}
@@ -80,8 +79,22 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	// Name of a host cannot change easily (used for DNS resolution etc), not
 	// handled rightnow
 	if hConfig == nil {
-		v.Log.Debugf("No Config change for the host - ignore the event")
+		// cover the case where config was received first followed by name property
+		if dispName != "" && existingHost != nil {
+			if existingHost.Labels == nil {
+				existingHost.Labels = make(map[string]string)
+			}
+			v.Log.Infof("Adding display-name label %s on host %s", dispName, existingHost.Name)
+			addNameLabel(existingHost.Labels, dispName)
+			v.StateMgr.Controller().Host().Update(existingHost)
+		}
+		v.Log.Debugf("No Config change for the host")
 		return
+	}
+
+	if dispName == "" {
+		// see if received it before config property
+		dispName, _ = penDC.findHostNameByKey(m.Key)
 	}
 
 	nwInfo := hConfig.Network
@@ -150,6 +163,15 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	}
 	if existingHost == nil && v.OrchConfig != nil {
 		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
+		if hostObj.Labels == nil {
+			hostObj.Labels = make(map[string]string)
+		}
+		if dispName == "" {
+			v.Log.Infof("Host %s is created without name property", hostObj.Name)
+		}
+	}
+	if dispName != "" {
+		addNameLabel(hostObj.Labels, dispName)
 	}
 	addNamespaceLabel(hostObj.Labels, penDC.Name)
 
@@ -166,7 +188,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		}
 	}
 
-	v.syncHostVmkNics(penDC, penDVS, m.Key, hConfig)
+	v.syncHostVmkNics(penDC, penDVS, dispName, m.Key, hConfig)
 
 	// If different, write to apiserver
 	if reflect.DeepEqual(hostObj, existingHost) {
@@ -302,4 +324,13 @@ func (v *VCHub) getDCNameForHost(hostName string) string {
 	}
 	v.Log.Errorf("Host %s has no namespace label", hostName)
 	return ""
+}
+
+func (v *VCHub) updateVmkWorkloadLabels(hostName, dcName, dispName string) {
+	wlName := createVmkWorkloadNameFromHostName(hostName)
+	workloadObj := v.getWorkload(wlName)
+	if workloadObj == nil {
+		return
+	}
+	v.addWorkloadLabels(workloadObj, dispName, dcName)
 }

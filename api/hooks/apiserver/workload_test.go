@@ -248,23 +248,32 @@ func TestMigration(t *testing.T) {
 
 	s.logger.Infof("==== Start Migration1\n")
 	// create migration workload
+	// run error test first
 	work2 := work
+	work2.Spec.HostName = "host-2"
+	work2.Spec.Interfaces[0].MicroSegVlan = 3000
+	work2.Spec.Interfaces = work2.Spec.Interfaces[0:1]
+	_, _, err := s.processStartMigration(context.Background(), kvs, kvs.NewTxn(), work.MakeKey("Workload"), apiintf.UpdateOper, false, work2)
+	Assert(t, err != nil, "Migration should have failed")
+	AssertEquals(t, err.Error(), "Number of interface cannot change during migration", "Failed to Start Migration3 should fail")
+
+	work2 = work
 	work2.Spec.HostName = "host-2"
 	work2.Spec.Interfaces[0].MicroSegVlan = 2000
 	work2.Spec.Interfaces[1].MicroSegVlan = 2001
-	_, _, err := s.processStartMigration(context.Background(), kvs, kvs.NewTxn(), work.MakeKey("Workload"), apiintf.UpdateOper, false, work2)
+	_, _, err = s.processStartMigration(context.Background(), kvs, kvs.NewTxn(), work.MakeKey("Workload"), apiintf.UpdateOper, false, work2)
 	AssertOk(t, err, "Failed to Start Migration")
 	newWl := &workload.Workload{}
 	kvs.Get(context.Background(), work.MakeKey("Workload"), newWl)
 
-	Assert(t, newWl.Status.HostName == "host-1", "Status HostName is not updated")
-	Assert(t, newWl.Status.MigrationStatus.Stage == stageMigrationStart, "Migration stage is not START")
-	Assert(t, newWl.Status.Interfaces[0].MicroSegVlan == 1000, "Incorrect old useg vlan on interface 0")
-	Assert(t, newWl.Status.Interfaces[1].MicroSegVlan == 1001, "Incorrect old useg vlan on interface 1")
+	AssertEquals(t, newWl.Status.HostName, "host-1", "Status HostName is not updated")
+	AssertEquals(t, newWl.Status.MigrationStatus.Stage, stageMigrationStart, "Migration stage is not START")
+	AssertEquals(t, newWl.Status.Interfaces[0].MicroSegVlan, uint32(1000), "Incorrect old useg vlan on interface 0")
+	AssertEquals(t, newWl.Status.Interfaces[1].MicroSegVlan, uint32(1001), "Incorrect old useg vlan on interface 1")
 
-	Assert(t, newWl.Spec.HostName == "host-2", "Spec HostName is not updated")
-	Assert(t, newWl.Spec.Interfaces[0].MicroSegVlan == 2000, "Incorrect new useg vlan on interface 0")
-	Assert(t, newWl.Spec.Interfaces[1].MicroSegVlan == 2001, "Incorrect new useg vlan on interface 1")
+	AssertEquals(t, newWl.Spec.HostName, "host-2", "Spec HostName is not updated")
+	AssertEquals(t, newWl.Spec.Interfaces[0].MicroSegVlan, uint32(2000), "Incorrect new useg vlan on interface 0")
+	AssertEquals(t, newWl.Spec.Interfaces[1].MicroSegVlan, uint32(2001), "Incorrect new useg vlan on interface 1")
 
 	s.logger.Infof("==== Finish Migration1\n")
 	// finish migration
@@ -273,7 +282,7 @@ func TestMigration(t *testing.T) {
 
 	// newWl = obj.(workload.Workload)
 	kvs.Get(context.Background(), work.MakeKey("Workload"), newWl)
-	Assert(t, newWl.Status.MigrationStatus.Stage == stageMigrationDone, "Migration stage is not DONE")
+	AssertEquals(t, newWl.Status.MigrationStatus.Stage, stageMigrationDone, "Migration stage is not DONE")
 	// mark it done so we can start another migration for testing
 	newWl.Status.MigrationStatus.Status = statusDone
 	kvs.Update(context.Background(), work.MakeKey("Workload"), newWl)
@@ -289,7 +298,7 @@ func TestMigration(t *testing.T) {
 	// newWl = obj.(workload.Workload)
 	kvs.Get(context.Background(), work.MakeKey("Workload"), newWl)
 
-	Assert(t, newWl.Status.MigrationStatus.Stage == stageMigrationStart, "Migration stage is not START")
+	AssertEquals(t, newWl.Status.MigrationStatus.Stage, stageMigrationStart, "Migration stage is not START")
 
 	// Abort migration
 	s.logger.Infof("==== Abort Migration2\n")
@@ -298,13 +307,12 @@ func TestMigration(t *testing.T) {
 
 	// newWl = obj.(workload.Workload)
 	kvs.Get(context.Background(), work.MakeKey("Workload"), newWl)
-	Assert(t, newWl.Spec.HostName == "host-2", "Spec HostName is not updated")
-	Assert(t, newWl.Spec.Interfaces[0].MicroSegVlan == 2000, "Incorrect old useg vlan on interface 0")
-	Assert(t, newWl.Spec.Interfaces[1].MicroSegVlan == 2001, "Incorrect old useg vlan on interface 1")
+	AssertEquals(t, newWl.Spec.HostName, "host-2", "Spec HostName is not updated")
+	AssertEquals(t, newWl.Spec.Interfaces[0].MicroSegVlan, uint32(2000), "Incorrect old useg vlan on interface 0")
+	AssertEquals(t, newWl.Spec.Interfaces[1].MicroSegVlan, uint32(2001), "Incorrect old useg vlan on interface 1")
 
-	Assert(t, newWl.Status.HostName == "host-2", "Spec HostName is not updated")
-	Assert(t, newWl.Status.Interfaces[0].MicroSegVlan == 2000, "Incorrect new useg vlan on interface 0")
-	Assert(t, newWl.Status.Interfaces[1].MicroSegVlan == 2001, "Incorrect new useg vlan on interface 1")
+	AssertEquals(t, newWl.Status.Interfaces[0].MicroSegVlan, uint32(2000), "Incorrect new useg vlan on interface 0")
+	AssertEquals(t, newWl.Status.Interfaces[1].MicroSegVlan, uint32(2001), "Incorrect new useg vlan on interface 1")
 
 	// Abort migration - should fail
 	s.logger.Infof("==== Abort (Again) Migration2 should fail\n")
@@ -315,4 +323,5 @@ func TestMigration(t *testing.T) {
 	s.logger.Infof("==== Finish (Again) Migration2 should fail\n")
 	_, _, err = s.processFinishMigration(context.Background(), kvs, kvs.NewTxn(), work.MakeKey("Workload"), apiintf.CreateOper, false, work)
 	Assert(t, err != nil, "Finish migration2 should have failed (already aborted)")
+
 }

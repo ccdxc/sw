@@ -103,6 +103,19 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 		if isMigrationInProgress(wlObj) {
 			return oldObj, errors.New("Migration already in progress, cannot start another one now")
 		}
+		// Check that interfaces do not change as part of migration
+		if len(wl.Spec.Interfaces) != len(wlObj.Spec.Interfaces) {
+			return oldObj, errors.New("Number of interface cannot change during migration")
+		}
+		specIfs := map[string]int{}
+		for i, intf := range wlObj.Spec.Interfaces {
+			specIfs[intf.MACAddress] = i
+		}
+		for _, intf := range wl.Spec.Interfaces {
+			if _, ok := specIfs[intf.MACAddress]; !ok {
+				return oldObj, errors.New("Interface MAC addr cannot change during migration")
+			}
+		}
 		// copy Spec to Status
 		if wlObj.Status.MigrationStatus == nil {
 			wlObj.Status.MigrationStatus = &workload.WorkloadMigrationStatus{}
@@ -123,12 +136,15 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 			statusIfs[intf.MACAddress] = i
 		}
 		// Cannot reinit status interfaces[] as it has more information like endpoints etc which is
-		// not in the spec
+		// not in the spec, remove any interfaces in status that are no-more in the spec
+		newStatusIfs := []workload.WorkloadIntfStatus{}
 		for _, intf := range wlObj.Spec.Interfaces {
 			if i, ok := statusIfs[intf.MACAddress]; ok {
-				wlObj.Status.Interfaces[i].MicroSegVlan = intf.MicroSegVlan
+				statusIntf := wlObj.Status.Interfaces[i]
+				statusIntf.MicroSegVlan = intf.MicroSegVlan
+				newStatusIfs = append(newStatusIfs, statusIntf)
 			} else {
-				wlObj.Status.Interfaces = append(wlObj.Status.Interfaces, workload.WorkloadIntfStatus{
+				newStatusIfs = append(newStatusIfs, workload.WorkloadIntfStatus{
 					MicroSegVlan: intf.MicroSegVlan,
 					ExternalVlan: intf.ExternalVlan,
 					MACAddress:   intf.MACAddress,
@@ -137,11 +153,17 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 			}
 		}
 		// sort it to keep the same order between spec and status (for common intfs)
-		sort.Slice(wlObj.Status.Interfaces, func(i, j int) bool {
-			return wlObj.Status.Interfaces[i].MACAddress < wlObj.Status.Interfaces[j].MACAddress
+		sort.Slice(newStatusIfs, func(i, j int) bool {
+			return newStatusIfs[i].MACAddress < newStatusIfs[j].MACAddress
 		})
+		wlObj.Status.Interfaces = newStatusIfs
+
 		wlObj.Spec.HostName = wl.Spec.HostName
+		sort.Slice(wl.Spec.Interfaces, func(i, j int) bool {
+			return wl.Spec.Interfaces[i].MACAddress < wl.Spec.Interfaces[j].MACAddress
+		})
 		wlObj.Spec.Interfaces = wl.Spec.Interfaces
+
 		return oldObj, nil
 	}); err != nil {
 		s.logger.Errorf("Error Stating Migration on workload %s : %v", wl.Name, err)

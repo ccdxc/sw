@@ -102,14 +102,15 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		// Object was deleted
 		if existingWorkload == nil {
 			// Don't have object we received delete for
+			v.Log.Infof("Delete for non-existing workload %s", m.Key)
 			return
 		}
 		wlDcName := v.getDCNameForHost(workloadObj.Spec.HostName)
 		if wlDcName != "" && wlDcName != m.DcName {
-			v.Log.Debugf("Ignore VM Delete Event - VM has moved to another DC %s", wlDcName)
+			v.Log.Infof("Ignore VM Delete Event - VM has moved to another DC %s", wlDcName)
 			return
 		}
-		v.Log.Debugf("VM Delete Event - %s in DC %s", workloadObj.Name, wlDcName)
+		v.Log.Infof("VM Delete Event - %s in DC %s", workloadObj.Name, wlDcName)
 		v.deleteWorkload(workloadObj)
 		return
 	}
@@ -143,7 +144,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		// not, validateVnicInformation will revalidate PG's to make sure we have reliable information
 		if len(workloadObj.Spec.Interfaces) != len(existingWorkload.Spec.Interfaces) ||
 			!v.validateVnicInformation(existingWorkload) {
-			v.Log.Debugf("Interfaces cannot be changed during vMotion")
+			v.Log.Infof("Interfaces cannot be changed during vMotion")
 			return
 		}
 	}
@@ -856,7 +857,7 @@ func (v *VCHub) getVmkWorkload(penDC *PenDC, wlName, hostName string) *workload.
 	return workloadObj
 }
 
-func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, hKey string, hConfig *types.HostConfigInfo) {
+func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey string, hConfig *types.HostConfigInfo) {
 	if !isPensandoHost(hConfig) {
 		return
 	}
@@ -936,14 +937,16 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, hKey string, hConf
 	// TODO it may be better to pass dvs to assignUseg in future
 	v.assignUsegs(workloadObj)
 	// Use host key as name for vmkworkload.. makes it easier to handle host updates/deletes
-	v.addWorkloadLabels(workloadObj, hKey, penDC.Name)
+	v.addWorkloadLabels(workloadObj, dispName, penDC.Name)
 	v.Log.Infof("Create/Update vmkWorkload %s", wlName)
 	v.pCache.Set(workloadKind, workloadObj)
 }
 
 func (v *VCHub) addWorkloadLabels(workloadObj *workload.Workload, name, dcName string) {
 	// TODO derive dcName from host
-	addNameLabel(workloadObj.Labels, name)
+	if name != "" {
+		addNameLabel(workloadObj.Labels, name)
+	}
 	addNamespaceLabel(workloadObj.Labels, dcName)
 	utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 }

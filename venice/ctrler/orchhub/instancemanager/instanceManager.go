@@ -15,9 +15,10 @@ import (
 // Orchestrator is the interface all orchestrator components
 // must implement in order to be managed by instance manager
 type Orchestrator interface {
-	// cleanRemote controls if the objects on the remote server
-	// are to be cleaned up when Destroy is called
-	Destroy(cleanRemote bool)
+	// delete flag controls if the objects on the remote server (vcenter)
+	// are to be cleaned up when Destroy is called as well as any apiserver
+	// objets that were created for the orchestrator
+	Destroy(delete bool)
 	UpdateConfig(*orchestration.Orchestrator)
 	Sync()
 }

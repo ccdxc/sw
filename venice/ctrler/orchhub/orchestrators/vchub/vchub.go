@@ -149,22 +149,22 @@ func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
 }
 
 // Destroy tears down VCHub instance
-func (v *VCHub) Destroy(cleanRemote bool) {
+func (v *VCHub) Destroy(delete bool) {
 	// Teardown probe and store
 	v.Log.Infof("Destroying VCHub....")
 
 	// Clearing probe/session state after all routines finish
 	// so that a thread in the middle of writing doesn't get a nil client
-	if cleanRemote {
+	if delete {
 		v.Log.Infof("Cleaning up state on VCenter.")
 		v.deleteAllDVS()
+		v.DeleteHosts()
 	}
 	v.cancel()
 	v.Wg.Wait()
 
 	v.probe.ClearState()
 
-	v.DeleteHosts()
 	v.Log.Infof("VCHub Destroyed")
 }
 

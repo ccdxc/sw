@@ -130,7 +130,7 @@ func TestVCSyncPG(t *testing.T) {
 	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
-	defer vchub.Destroy(false)
+	defer vchub.Destroy(true)
 
 	vchub.Sync()
 
@@ -449,7 +449,7 @@ func TestVCSyncVM(t *testing.T) {
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 
-	defer vchub.Destroy(false)
+	defer vchub.Destroy(true)
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
@@ -492,8 +492,6 @@ func TestVCSyncVM(t *testing.T) {
 	AssertOk(t, err, "failed to create pg")
 	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, createPGName("pg1"), retryCount)
 	AssertOk(t, err, "failed to get pg")
-
-	defer vchub.Destroy(false)
 
 	// Setting up VMs
 	vmExistingPort := "10"

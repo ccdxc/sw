@@ -230,3 +230,14 @@ func (d *PenDC) findHostKeyByName(name string) (string, bool) {
 	key, ok := d.HostName2Key[name]
 	return key, ok
 }
+
+func (d *PenDC) findHostNameByKey(key string) (string, bool) {
+	d.Lock()
+	defer d.Unlock()
+	for name, k := range d.HostName2Key {
+		if k == key {
+			return name, true
+		}
+	}
+	return "", false
+}
