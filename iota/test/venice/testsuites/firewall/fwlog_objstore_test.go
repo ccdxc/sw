@@ -10,7 +10,7 @@ import (
 )
 
 const timeFormat = "2006-01-02T15:04:05"
-const bucketPrefix = "default"
+const bucketPrefix = "fwlogs"
 
 var _ = Describe("tests for storing firewall logs in object store", func() {
 	var startTime time.Time
@@ -68,10 +68,10 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 			naplesBMac := workloadB.NaplesMAC()
 
 			bucketAName :=
-				"fwlogs." + naplesAMac + "-" +
+				naplesAMac + "-" +
 					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
 			bucketBName :=
-				"fwlogs." + naplesBMac + "-" +
+				naplesBMac + "-" +
 					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
 
 			By(fmt.Sprintf("bucketAName %s bucketBName %s", bucketPrefix+"."+bucketAName, bucketPrefix+"."+bucketBName))

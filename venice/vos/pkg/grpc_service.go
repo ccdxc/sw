@@ -58,16 +58,18 @@ var errNotImplemented = errors.New("Not implemented")
 func (g *grpcBackend) validateNamespace(in *objstore.Object) (string, error) {
 	// The namespace name will be considered valid if its prefix matches the
 	// namespaces defined in the model
-	// Todo: should we allow prefix match for all the namespaces defined in the model
-	// or just for fwlogs. It should not matter even if we allow for all since there
-	// are no buckets getting created with those names.
-	prefix := strings.Split(in.Namespace, ".")[0]
-	if _, ok := objstore.Buckets_value[strings.ToLower(prefix)]; !ok {
-		str := ""
-		for k := range objstore.Buckets_value {
-			str = str + "," + k
+	if _, ok := objstore.Buckets_value[strings.ToLower(in.Namespace)]; !ok {
+		// For fwlogs, all the buckets are prefixed with 'fwlogs' keyword, its not the
+		// tenant name but it comes populated as tenantName in the objectstore object.
+		// This also means that fwlogs name is not reserved and cannot be used for
+		// creating a tenant.
+		if _, ok := objstore.Buckets_value[strings.ToLower(in.Tenant)]; !ok {
+			str := ""
+			for k := range objstore.Buckets_value {
+				str = str + "," + k
+			}
+			return str, errors.New("invalid type")
 		}
-		return str, errors.New("invalid type")
 	}
 	return "", nil
 }

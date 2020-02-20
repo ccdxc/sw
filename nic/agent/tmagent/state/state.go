@@ -32,6 +32,13 @@ import (
 const maxRetry = 5
 const maxCollectorsInVrf = 4
 
+// 300 CPS * 60 (seconds) * 10(minutes)  = 180000
+// We should be able to buffer 10 minute logs in case connectivity
+// with venice goes down.
+// If every entry in the channel is 500 bytes, then to buffer 10 min
+// logs it will take 90Mb memory
+const logChannelSize = 180000
+
 // PolicyState keeps the policy agent state
 type PolicyState struct {
 	ctx                context.Context
@@ -48,6 +55,7 @@ type PolicyState struct {
 	wg                 sync.WaitGroup
 	logsChannel        chan singleLog
 	objStoreFileFormat fileFormat
+	zipObjects         bool
 }
 
 type fwlogCollector struct {
@@ -92,8 +100,9 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		appName:         globals.Tmagent,
 		objStoreClients: map[string]objstore.Client{},
 		// This channel is used for transmitting logs from the collector to the transmitter routine
-		logsChannel:        make(chan singleLog, 10000),
+		logsChannel:        make(chan singleLog, logChannelSize),
 		objStoreFileFormat: csvFileFormat,
+		zipObjects:         true,
 	}
 
 	state.connectSyslog()

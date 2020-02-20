@@ -19,7 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	_ "github.com/pensando/sw/nic/agent/dscagent"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	_ "github.com/pensando/sw/nic/agent/protos/netproto"
 	_ "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	servicetypes "github.com/pensando/sw/venice/cmd/types/protos"
@@ -86,7 +86,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	AssertOk(t, err, "failed to init FwLog")
 
 	testChannel := make(chan TestObject, 10000)
-	err = ps.ObjStoreInit(t.Name(), r, time.Duration(1)*time.Second, testChannel)
+	err = ps.ObjStoreInit("1", r, time.Duration(1)*time.Second, testChannel)
 	AssertOk(t, err, "failed to init objectstore")
 
 	srcIPStr := "192.168.10.1"
@@ -122,7 +122,10 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 
 	testObject := <-testChannel
 	Assert(t, testObject.ObjectName != "", "object name is empty")
+	Assert(t, testObject.BucketName != "", "bucket name is empty")
+	Assert(t, testObject.IndexBucketName != "", "index bucket name is empty")
 	Assert(t, testObject.Data != "", "object data is empty")
+	Assert(t, testObject.Index != "", "index is empty")
 	Assert(t, len(testObject.Meta) == 4, "object meta is empty %s", testObject.Meta)
 
 	// done := make(chan bool)
@@ -140,6 +143,6 @@ func TestObjStoreErrors(t *testing.T) {
 	defer ps.Close()
 
 	// Pass nil resolver
-	err = ps.ObjStoreInit(t.Name(), nil, time.Duration(1)*time.Second, nil)
+	err = ps.ObjStoreInit("1", nil, time.Duration(1)*time.Second, nil)
 	Assert(t, err != nil, "failed to init objectstore")
 }

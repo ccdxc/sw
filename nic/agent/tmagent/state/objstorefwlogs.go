@@ -4,10 +4,12 @@ package state
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -29,16 +31,30 @@ const (
 	jsonFileFormat
 )
 
-const timeFormat = "2006-01-02T15:04:05"
-const bucketPrefix = "default.fwlogs"
+const (
+	timeFormat            = "2006-01-02T15:04:05"
+	bucketPrefix          = "fwlogs"
+	numLogTransmitWorkers = 10
+	workItemBufferSize    = 1000
+	connectErr            = "connect:" // copied from vos
+)
 
 // TestObject is used for testing
 type TestObject struct {
+	// BucketName represents the bucket where the fwlogs are kept
+	BucketName string
+
+	// IndexBucketName represents the bucket where the index are kept
+	IndexBucketName string
+
 	// ObjectName represents the name of the object to be stored in object store
 	ObjectName string
 
 	// Data represents the actual logs
 	Data string
+
+	// Index's data
+	Index string
 
 	// Meta represents the meta data of the object to be stored in object store
 	Meta map[string]string
@@ -61,13 +77,16 @@ func (s *PolicyState) ObjStoreInit(nodeUUID string,
 		return fmt.Errorf("Resolver cannot be null")
 	}
 
+	w := newWorkers(s.ctx, numLogTransmitWorkers, workItemBufferSize)
+
 	go periodicTransmit(s.ctx, rc, s.logsChannel,
-		periodicTransmitTime, testChannel, nodeUUID, s.objStoreFileFormat)
+		periodicTransmitTime, testChannel, nodeUUID, s.objStoreFileFormat, s.zipObjects, w)
 	return nil
 }
 
 func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan singleLog,
-	periodicTransmitTime time.Duration, testChannel chan<- TestObject, nodeUUID string, ff fileFormat) {
+	periodicTransmitTime time.Duration, testChannel chan<- TestObject,
+	nodeUUID string, ff fileFormat, zip bool, w *workers) {
 
 	var c objstore.Client
 	clientChannel := make(chan interface{}, 1)
@@ -91,24 +110,25 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 	}(ctx, clientChannel)
 
 	bufferedLogs := []interface{}{}
+	index := map[string]string{}
+
 	// StartTs & EndTs represent the timestamp of the first log and the last log in a window
-	var startTs, endTs time.Time
+	var startTs, endTs, prevTime time.Time
 
 	helper := func() {
 		if c != nil {
-			go transmitLogs(ctx, c, bufferedLogs, len(bufferedLogs), startTs, endTs, testChannel, nodeUUID, ff)
+			w.postWorkItem(transmitLogs(ctx, c, bufferedLogs, index, len(bufferedLogs), startTs, endTs, testChannel, nodeUUID, ff, zip))
 		}
 
 		// If client has not been initialized yet then drop the collected logs and move on.
 		bufferedLogs = []interface{}{}
+		index = map[string]string{}
 	}
 
 	// Logs will get transmitted to the object store when:
-	// 1. Logs buffer reaches 10k
-	// 2. Every 30 seconds
+	// 1. Logs buffer reaches 6k
+	// 2. Every 1 minute
 	// Whatever condition hits first
-
-	var prevTime time.Time
 	for {
 		select {
 		case <-ctx.Done():
@@ -150,6 +170,8 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 				startTs = l.ts
 			}
 			bufferedLogs = append(bufferedLogs, l.log)
+			populateIndex(index, l)
+
 			endTs = l.ts
 			prevTime = endTs
 		case <-time.After(periodicTransmitTime):
@@ -161,70 +183,140 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 }
 
 func transmitLogs(ctx context.Context,
-	c objstore.Client, logs interface{}, numLogs int, startTs time.Time, endTs time.Time,
-	testChannel chan<- TestObject, nodeUUID string, ff fileFormat) {
+	c objstore.Client, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
+	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool) func() {
+	return func() {
+		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
+		bucketName := getBucketName(bucketPrefix, nodeUUID, startTs)
+		indexBucketName := getIndexBucketName(bucketName)
 
-	// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
-	bucketName := getBucketName(bucketPrefix, nodeUUID, startTs)
+		// The logs in input slice logs are already sorted according to their Ts.
+		// Every entry in the logs slice, convert to JSON and write to buffer.
+		// TODO: What format is needed by GraphDB?
 
-	// The logs in input slice logs are already sorted according to their Ts.
-	// Every entry in the logs slice, convert to JSON and write to buffer.
-	// TODO: What format is needed by GraphDB?
+		var objNameBuffer, objBuffer, indexBuffer bytes.Buffer
+		fStartTs := startTs.UTC().Format(timeFormat)
+		fEndTs := endTs.UTC().Format(timeFormat)
+		objNameBuffer.WriteString(fStartTs)
+		objNameBuffer.WriteString("_")
+		objNameBuffer.WriteString(fEndTs)
 
-	var objNameBuffer, objBuffer bytes.Buffer
-	fStartTs := startTs.UTC().Format(timeFormat)
-	fEndTs := endTs.UTC().Format(timeFormat)
-	objNameBuffer.WriteString(fStartTs)
-	objNameBuffer.WriteString("_")
-	objNameBuffer.WriteString(fEndTs)
-	if ff == csvFileFormat {
-		objNameBuffer.WriteString(".csv")
-		getCSVObjectBuffer(logs, &objBuffer)
-	} else {
-		objNameBuffer.WriteString(".json")
-		getJSONObjectBuffer(logs, &objBuffer)
-	}
+		if ff == csvFileFormat {
+			objNameBuffer.WriteString(".csv")
+			if zip {
+				objNameBuffer.WriteString(".gzip")
+			}
+			getCSVObjectBuffer(logs, &objBuffer, zip)
+			getCSVIndexBuffer(index, &indexBuffer, zip)
+		} else {
+			objNameBuffer.WriteString(".json")
+			if zip {
+				objNameBuffer.WriteString(".gzip")
+			}
+			getJSONObjectBuffer(logs, &objBuffer)
+			getJSONIndexBuffer(index, &indexBuffer)
+		}
 
-	// Object meta
-	meta := map[string]string{}
-	meta["startts"] = fStartTs
-	meta["endts"] = fEndTs
-	meta["logcount"] = strconv.Itoa(numLogs)
-	meta["nodeid"] = nodeUUID
+		// Object meta
+		meta := map[string]string{}
+		meta["startts"] = fStartTs
+		meta["endts"] = fEndTs
+		meta["logcount"] = strconv.Itoa(numLogs)
+		meta["nodeid"] = nodeUUID
 
-	// PutObject uploads an object to the object store
-	r := bytes.NewReader(objBuffer.Bytes())
+		fmt.Println("Bucket names ", bucketName, indexBucketName, time.Now(), meta["logcount"])
 
-	// PutObject will try to put the object with some retries otherwise will drop it.
-	// TODO: Is this the right behavior?
-	fmt.Println("Shrey ", bucketName, time.Now(), meta["logcount"])
-	_, err := c.PutObjectExplicit(ctx, bucketName, objNameBuffer.String(), r, meta)
-	if err != nil {
-		log.Errorf("error in putting object to object store (%s)", err)
-	}
+		// PutObject uploads an object to the object store
+		r := bytes.NewReader(objBuffer.Bytes())
+		if err := putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, meta); err != nil {
+			log.Errorf("could not put object %s", err.Error())
+		}
 
-	// Send the file on to the channel for testing
-	if testChannel != nil {
-		testChannel <- TestObject{
-			ObjectName: objNameBuffer.String(),
-			Data:       objBuffer.String(),
-			Meta:       meta,
+		// The index's object name is same as the data object name
+		ir := bytes.NewReader(indexBuffer.Bytes())
+		if err := putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, map[string]string{}); err != nil {
+			log.Errorf("could not put object %s", err.Error())
+		}
+
+		// Send the file on to the channel for testing
+		if testChannel != nil {
+			testChannel <- TestObject{
+				BucketName:      bucketName,
+				IndexBucketName: indexBucketName,
+				ObjectName:      objNameBuffer.String(),
+				Data:            objBuffer.String(),
+				Index:           indexBuffer.String(),
+				Meta:            meta,
+			}
 		}
 	}
 }
 
-func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer) {
-	w := csv.NewWriter(b)
-	w.Write([]string{"sip",
-		"dip", "ts", "sport", "dport",
-		"proto", "act", "dir", "ruleid",
-		"sessionid", "sessionstate",
-		"icmptype", "icmpid", "icmpcode"})
-	for _, l := range logs.([]interface{}) {
-		temp := l.([]string)
-		w.Write(temp)
+func putObjectHelper(ctx context.Context,
+	c objstore.Client, bucketName string, objectName string, reader io.Reader,
+	metaData map[string]string) error {
+	// We are waiting infinitely if its a connect error, otherwise dropping the data. Is that ok?
+	for {
+		fmt.Println(" in loop")
+		if _, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, metaData); err != nil && strings.Contains(err.Error(), connectErr) {
+			log.Errorf("connection error in putting object to object store (%s)", err)
+			continue
+		} else if err != nil {
+			// other errors
+			return err
+		}
+		return nil
 	}
-	w.Flush()
+}
+
+func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer, zip bool) {
+	helper := func(csvBytes *bytes.Buffer) {
+		w := csv.NewWriter(csvBytes)
+		w.Write([]string{"sip",
+			"dip", "ts", "sport", "dport",
+			"proto", "act", "dir", "ruleid",
+			"sessionid", "sessionstate",
+			"icmptype", "icmpid", "icmpcode"})
+		for _, l := range logs.([]interface{}) {
+			temp := l.([]string)
+			w.Write(temp)
+		}
+		w.Flush()
+	}
+
+	if !zip {
+		helper(b)
+		return
+	}
+
+	var csvBytes bytes.Buffer
+	helper(&csvBytes)
+	zw := gzip.NewWriter(b)
+	zw.Write(csvBytes.Bytes())
+	zw.Close()
+}
+
+func getCSVIndexBuffer(index map[string]string, b *bytes.Buffer, zip bool) {
+	helper := func(metaBytes *bytes.Buffer) {
+		csvMeta := [][]string{}
+		csvMeta = append(csvMeta, []string{"ip", "mode"})
+		for k, v := range index {
+			csvMeta = append(csvMeta, []string{k, v})
+		}
+		mw := csv.NewWriter(metaBytes)
+		mw.WriteAll(csvMeta)
+	}
+
+	if !zip {
+		helper(b)
+		return
+	}
+
+	var csvBytes bytes.Buffer
+	helper(&csvBytes)
+	zw := gzip.NewWriter(b)
+	zw.Write(csvBytes.Bytes())
+	zw.Close()
 }
 
 func getJSONObjectBuffer(logs interface{}, b *bytes.Buffer) {
@@ -234,6 +326,10 @@ func getJSONObjectBuffer(logs interface{}, b *bytes.Buffer) {
 		(*b).Write(ml)
 		(*b).WriteString("\n")
 	}
+}
+
+func getJSONIndexBuffer(logs interface{}, b *bytes.Buffer) {
+	// not implemented
 }
 
 func getBucketName(bucketPrefix string, dscID string, ts time.Time) string {
@@ -246,6 +342,14 @@ func getBucketName(bucketPrefix string, dscID string, ts time.Time) string {
 	b.WriteString(strings.ToLower(strings.Replace(dscID, ":", "-", -1)))
 	b.WriteString("-")
 	b.WriteString(strings.Replace(strings.Replace(t.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
+	return b.String()
+}
+
+func getIndexBucketName(dataBucketName string) string {
+	var b bytes.Buffer
+	b.WriteString("meta")
+	b.WriteString("-")
+	b.WriteString(dataBucketName)
 	return b.String()
 }
 
@@ -332,4 +436,34 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 
 	// TODO: use sync pool
 	s.logsChannel <- singleLog{ts, fwLog}
+}
+
+func populateIndex(index map[string]string, l singleLog) {
+	var src, dest string
+	if temp, ok := l.log.(map[string]string); ok {
+		src = temp["source"]
+		dest = temp["destination"]
+	} else if temp, ok := l.log.([]string); ok {
+		src = temp[0]
+		dest = temp[1]
+	}
+
+	// 0 represents src
+	// 1 represents dest
+	// 2 represents src & dest
+	if v, ok := index[src]; ok {
+		if v == "1" {
+			index[src] = "2"
+		}
+	} else {
+		index[src] = "0"
+	}
+
+	if v, ok := index[dest]; ok {
+		if v == "0" {
+			index[dest] = "2"
+		}
+	} else {
+		index[dest] = "1"
+	}
 }
