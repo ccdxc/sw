@@ -86,58 +86,6 @@ static void ionic_resid_skip(struct ionic_resid_bits *bits)
 	}
 }
 
-static ssize_t hca_type_show(struct device *device,
-			     struct device_attribute *attr,
-			     char *buf)
-{
-	struct ionic_ibdev *dev =
-		container_of(device, struct ionic_ibdev, ibdev.dev);
-	return sprintf(buf, "Pensando Naples %u\n",
-#ifdef __FreeBSD__
-		       pci_get_device(dev->hwdev->bsddev));
-#else
-		       to_pci_dev(dev->hwdev)->device);
-#endif
-}
-static DEVICE_ATTR_RO(hca_type);
-
-static ssize_t hw_rev_show(struct device *device,
-			   struct device_attribute *attr,
-			   char *buf)
-{
-	struct ionic_ibdev *dev =
-		container_of(device, struct ionic_ibdev, ibdev.dev);
-	return sprintf(buf, "%x\n", dev->info->asic_rev);
-}
-static DEVICE_ATTR_RO(hw_rev);
-
-static ssize_t board_id_show(struct device *device,
-			     struct device_attribute *attr,
-			     char *buf)
-{
-	return sprintf(buf, "%.*s\n", 32, "Pensando Naples");
-}
-static DEVICE_ATTR_RO(board_id);
-
-#ifdef HAVE_RDMA_DEV_SYSFS_GROUP
-static struct attribute *ionic_dev_attributes[] = {
-	&dev_attr_hw_rev.attr,
-	&dev_attr_hca_type.attr,
-	&dev_attr_board_id.attr,
-	NULL
-};
-
-static const struct attribute_group ionic_attr_group = {
-	.attrs = ionic_dev_attributes,
-};
-#else
-static struct device_attribute *ionic_dev_attributes[] = {
-	&dev_attr_hw_rev,
-	&dev_attr_hca_type,
-	&dev_attr_board_id
-};
-#endif
-
 static int ionic_query_device(struct ib_device *ibdev,
 			      struct ib_device_attr *attr,
 			      struct ib_udata *udata)
@@ -410,9 +358,6 @@ void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
 static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 {
 	struct net_device *ndev = dev->ndev;
-#ifndef HAVE_RDMA_DEV_SYSFS_GROUP
-	int i;
-#endif
 
 	list_del(&dev->driver_ent);
 
@@ -420,11 +365,6 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_dcqcn_destroy(dev);
 
-#ifndef HAVE_RDMA_DEV_SYSFS_GROUP
-	for (i = 0; i < ARRAY_SIZE(ionic_dev_attributes); i++)
-		device_remove_file(&dev->ibdev.dev,
-				   ionic_dev_attributes[i]);
-#endif
 	ib_unregister_device(&dev->ibdev);
 
 	ionic_destroy_rdma_admin(dev);
@@ -504,9 +444,6 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	struct dentry *dbg_ctx;
 #endif
 	int rc, val, lif_index, version;
-#ifndef HAVE_RDMA_DEV_SYSFS_GROUP
-	int i;
-#endif
 
 	dev_hold(ndev);
 
@@ -774,9 +711,6 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	ibdev->dma_device = ibdev->dev.parent;
 #endif
 
-#ifdef HAVE_RDMA_DEV_SYSFS_GROUP
-	rdma_set_device_sysfs_group(ibdev, &ionic_attr_group);
-#endif
 #ifdef HAVE_RDMA_DRIVER_ID
 #ifndef HAVE_RDMA_DEV_OPS_EXT
 	ibdev->driver_id = RDMA_DRIVER_IONIC;
@@ -799,27 +733,12 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	if (rc)
 		goto err_api;
 
-#ifndef HAVE_RDMA_DEV_SYSFS_GROUP
-	for (i = 0; i < ARRAY_SIZE(ionic_dev_attributes); i++) {
-		rc = device_create_file(&dev->ibdev.dev,
-					ionic_dev_attributes[i]);
-		if (rc)
-			goto err_attrib;
-	}
-#endif
-
 	ionic_dcqcn_init(dev, ident->rdma.dcqcn_profiles);
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
 	return dev;
 
-#ifndef HAVE_RDMA_DEV_SYSFS_GROUP
-err_attrib:
-	while (i-- > 0)
-		device_remove_file(&dev->ibdev.dev, ionic_dev_attributes[i]);
-	ionic_api_clear_private(handle);
-#endif
 err_api:
 	ib_unregister_device(&dev->ibdev);
 err_register:

@@ -718,6 +718,7 @@ void ionic_dbg_rm_cq(struct ionic_cq *cq)
 	cq->debug = NULL;
 }
 
+#ifdef NOT_UPSTREAM
 struct ionic_dbg_admin_wr {
 	struct ionic_aq *aq;
 	struct ionic_admin_wr wr;
@@ -833,15 +834,17 @@ out:
 	return -rc;
 }
 
+#endif /* NOT_UPSTREAM */
 void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_dbg_admin_wr *wr;
+#endif /* NOT_UPSTREAM */
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
 	struct sysctl_oid *oidp;
 
 	aq->debug = NULL;
-	aq->debug_wr = NULL;
 
 	if (!dev->debug_aq)
 		return;
@@ -866,6 +869,7 @@ void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 
 	ionic_q_add(ctx, parent, &aq->q, NULL, NULL,
 		    "q", "RDMA Admin Queue");
+#ifdef NOT_UPSTREAM
 
 	wr = kzalloc(sizeof(*wr), GFP_KERNEL);
 	if (!wr)
@@ -905,17 +909,21 @@ err_data:
 	kfree(wr);
 err_wr:
 	return;
+#endif /* NOT_UPSTREAM */
 }
 
 void ionic_dbg_rm_aq(struct ionic_aq *aq)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = aq->dev;
 	struct ionic_dbg_admin_wr *wr;
 
+#endif /* NOT_UPSTREAM */
 	if (aq->debug)
 		sysctl_ctx_free(&aq->debug_ctx);
 
 	aq->debug = NULL;
+#ifdef NOT_UPSTREAM
 
 	if (!aq->debug_wr)
 		return;
@@ -925,6 +933,7 @@ void ionic_dbg_rm_aq(struct ionic_aq *aq)
 	dma_unmap_single(dev->hwdev, wr->dma, PAGE_SIZE, DMA_FROM_DEVICE);
 	kfree(wr->data);
 	kfree(wr);
+#endif /* NOT_UPSTREAM */
 }
 
 void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)

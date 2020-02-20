@@ -1018,7 +1018,7 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 			goto cq_next;
 #endif /* NOT_UPSTREAM */
 
-		switch(type) {
+		switch (type) {
 		case IONIC_V1_CQE_TYPE_RECV:
 			ionic_spin_lock(ctx, &qp->rq_lock);
 			rc = ionic_poll_recv(ctx, cq, qp, cqe, wc + npolled);

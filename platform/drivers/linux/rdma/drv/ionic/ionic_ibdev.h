@@ -157,7 +157,6 @@ struct ionic_ibdev {
 	struct dentry		*debug_cq;
 	struct dentry		*debug_eq;
 	struct dentry		*debug_mr;
-	struct dentry		*debug_pd;
 	struct dentry		*debug_qp;
 };
 

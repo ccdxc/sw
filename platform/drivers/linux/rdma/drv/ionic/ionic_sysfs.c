@@ -280,7 +280,6 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
 
 	if (IS_ERR_OR_NULL(parent))
@@ -313,10 +312,6 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	if (IS_ERR(dev->debug_mr))
 		dev->debug_mr = NULL;
 
-	dev->debug_pd = debugfs_create_dir("pd", dev->debug);
-	if (IS_ERR(dev->debug_pd))
-		dev->debug_pd = NULL;
-
 	dev->debug_qp = debugfs_create_dir("qp", dev->debug);
 	if (IS_ERR(dev->debug_qp))
 		dev->debug_qp = NULL;
@@ -330,7 +325,6 @@ void ionic_dbg_rm_dev(struct ionic_ibdev *dev)
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
 }
 

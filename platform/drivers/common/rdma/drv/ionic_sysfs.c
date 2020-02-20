@@ -288,7 +288,6 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
 
 	if (IS_ERR_OR_NULL(parent))
@@ -321,10 +320,6 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	if (IS_ERR(dev->debug_mr))
 		dev->debug_mr = NULL;
 
-	dev->debug_pd = debugfs_create_dir("pd", dev->debug);
-	if (IS_ERR(dev->debug_pd))
-		dev->debug_pd = NULL;
-
 	dev->debug_qp = debugfs_create_dir("qp", dev->debug);
 	if (IS_ERR(dev->debug_qp))
 		dev->debug_qp = NULL;
@@ -338,7 +333,6 @@ void ionic_dbg_rm_dev(struct ionic_ibdev *dev)
 	dev->debug_cq = NULL;
 	dev->debug_eq = NULL;
 	dev->debug_mr = NULL;
-	dev->debug_pd = NULL;
 	dev->debug_qp = NULL;
 }
 
@@ -699,6 +693,7 @@ static const struct file_operations ionic_aq_q_fops = {
 	.release = seq_release,
 };
 
+#ifdef NOT_UPSTREAM
 static int ionic_aq_wqe_show(struct seq_file *s, void *v)
 {
 	struct ionic_aq *aq = s->private;
@@ -903,9 +898,12 @@ static const struct file_operations ionic_aq_ctrl_fops = {
 	.write = ionic_aq_ctrl_write,
 };
 
+#endif /* NOT_UPSTREAM */
 void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_dbg_admin_wr *wr;
+#endif /* NOT_UPSTREAM */
 	char name[8];
 
 	aq->debug = NULL;
@@ -927,6 +925,7 @@ void ionic_dbg_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 	if (aq->q.ptr)
 		debugfs_create_file("q", 0440, aq->debug, aq,
 				    &ionic_aq_q_fops);
+#ifdef NOT_UPSTREAM
 
 	wr = kzalloc(sizeof(*wr), GFP_KERNEL);
 	if (!wr)
@@ -969,16 +968,20 @@ err_data:
 	kfree(wr);
 err_wr:
 	return;
+#endif /* NOT_UPSTREAM */
 }
 
 void ionic_dbg_rm_aq(struct ionic_aq *aq)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = aq->dev;
 	struct ionic_dbg_admin_wr *wr;
 
+#endif /* NOT_UPSTREAM */
 	debugfs_remove_recursive(aq->debug);
 
 	aq->debug = NULL;
+#ifdef NOT_UPSTREAM
 
 	if (!aq->debug_wr)
 		return;
@@ -988,6 +991,7 @@ void ionic_dbg_rm_aq(struct ionic_aq *aq)
 	dma_unmap_single(dev->hwdev, wr->dma, PAGE_SIZE, DMA_FROM_DEVICE);
 	kfree(wr->data);
 	kfree(wr);
+#endif /* NOT_UPSTREAM */
 }
 
 static int ionic_qp_info_show(struct seq_file *s, void *v)

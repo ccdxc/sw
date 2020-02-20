@@ -291,6 +291,7 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	if (rc)
 		ionic_err("context freed before destroying resources");
 #else
+
 	ionic_tbl_destroy(&ctx->qp_tbl);
 #endif /* NOT_UPSTREAM */
 

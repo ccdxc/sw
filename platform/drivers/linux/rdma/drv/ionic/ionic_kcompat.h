@@ -240,7 +240,6 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
 #else
 #define HAVE_IB_REGISTER_DEVICE_NAME
-#define HAVE_RDMA_DEV_SYSFS_GROUP
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 5_0)

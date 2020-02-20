@@ -71,41 +71,6 @@ static void ionic_resid_skip(struct ionic_resid_bits *bits)
 	}
 }
 
-static ssize_t hca_type_show(struct device *device,
-			     struct device_attribute *attr,
-			     char *buf)
-{
-	struct ionic_ibdev *dev =
-		container_of(device, struct ionic_ibdev, ibdev.dev);
-	return sprintf(buf, "Pensando Naples %u\n",
-		       pci_get_device(dev->hwdev->bsddev));
-}
-static DEVICE_ATTR_RO(hca_type);
-
-static ssize_t hw_rev_show(struct device *device,
-			   struct device_attribute *attr,
-			   char *buf)
-{
-	struct ionic_ibdev *dev =
-		container_of(device, struct ionic_ibdev, ibdev.dev);
-	return sprintf(buf, "%x\n", dev->info->asic_rev);
-}
-static DEVICE_ATTR_RO(hw_rev);
-
-static ssize_t board_id_show(struct device *device,
-			     struct device_attribute *attr,
-			     char *buf)
-{
-	return sprintf(buf, "%.*s\n", 32, "Pensando Naples");
-}
-static DEVICE_ATTR_RO(board_id);
-
-static struct device_attribute *ionic_dev_attributes[] = {
-	&dev_attr_hw_rev,
-	&dev_attr_hca_type,
-	&dev_attr_board_id
-};
-
 static int ionic_query_device(struct ib_device *ibdev,
 			      struct ib_device_attr *attr,
 			      struct ib_udata *udata)
@@ -312,7 +277,6 @@ void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
 static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 {
 	struct net_device *ndev = dev->ndev;
-	int i;
 
 	list_del(&dev->driver_ent);
 
@@ -320,9 +284,6 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_dcqcn_destroy(dev);
 
-	for (i = 0; i < ARRAY_SIZE(ionic_dev_attributes); i++)
-		device_remove_file(&dev->ibdev.dev,
-				   ionic_dev_attributes[i]);
 	ib_unregister_device(&dev->ibdev);
 
 	ionic_destroy_rdma_admin(dev);
@@ -383,7 +344,6 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	const union lif_identity *ident;
 	struct sysctl_oid *dbg_ctx;
 	int rc, val, lif_index, version;
-	int i;
 
 	dev_hold(ndev);
 
@@ -631,23 +591,12 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	if (rc)
 		goto err_api;
 
-	for (i = 0; i < ARRAY_SIZE(ionic_dev_attributes); i++) {
-		rc = device_create_file(&dev->ibdev.dev,
-					ionic_dev_attributes[i]);
-		if (rc)
-			goto err_attrib;
-	}
-
 	ionic_dcqcn_init(dev, ident->rdma.dcqcn_profiles);
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
 	return dev;
 
-err_attrib:
-	while (i-- > 0)
-		device_remove_file(&dev->ibdev.dev, ionic_dev_attributes[i]);
-	ionic_api_clear_private(handle);
 err_api:
 	ib_unregister_device(&dev->ibdev);
 err_register:
