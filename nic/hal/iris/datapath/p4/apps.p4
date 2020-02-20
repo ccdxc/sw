@@ -339,6 +339,7 @@ action f_p4plus_cpu_pkt(offset) {
 
     modify_field(p4_to_p4plus_cpu_pkt.src_lif, control_metadata.src_lif);
     modify_field(p4_to_p4plus_cpu_pkt.lif, capri_intrinsic.lif);
+    modify_field(p4_to_p4plus_cpu_pkt.src_lport, control_metadata.src_lport);
     modify_field(p4_to_p4plus_cpu_pkt.qid, control_metadata.qid);
     modify_field(p4_to_p4plus_cpu_pkt.qtype, control_metadata.qtype);
     modify_field(p4_to_p4plus_cpu_pkt.lkp_vrf, flow_lkp_metadata.lkp_vrf);

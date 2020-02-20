@@ -130,8 +130,10 @@ p4plus_app_cpu_raw_redir_common:
 
 p4plus_app_cpu_l4_icmp:
   seq         c1, k.icmp_valid, TRUE
+  or.c1       r1, k.icmp_typeCode_s8_e15, \
+              k.icmp_typeCode_s0_e7, 8
   bcf         [!c1], p4plus_app_cpu_l4_udp
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.icmp_typeCode
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, r1
   b           p4plus_app_cpu_common
   nop
 
@@ -284,6 +286,7 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
   or          r1, k.capri_intrinsic_lif_s3_e10, k.capri_intrinsic_lif_s0_e2, 8
   phvwr       p.p4_to_p4plus_cpu_pkt_lif, r1[15:0].hx
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_lport, k.{control_metadata_src_lport}.hx
   phvwr       p.p4_to_p4plus_cpu_pkt_qid, k.{control_metadata_qid}.wx
   phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx

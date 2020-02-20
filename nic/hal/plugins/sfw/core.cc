@@ -257,9 +257,7 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
     p4plus_to_p4_header_t       p4plus_hdr = {0};
     uint8_t                    *pkt = NULL;
     uint32_t                    pkt_len = 0;
-    fte::flow_t                *rflow = NULL;
     hal_ret_t                   ret = HAL_RET_OK;
-    fwding_info_t          fwding;
     header_rewrite_info_t  rewrite_info;
     header_push_info_t     push_info;
 
@@ -283,13 +281,7 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
     p4plus_hdr.compute_l4_csum = 1;
     p4plus_hdr.compute_ip_csum = 1;
 
-    // Get the reverse flow forwarding info
-    rflow = ctx.flow(hal::FLOW_ROLE_RESPONDER);
-    fwding = rflow->fwding();
-    rewrite_info = rflow->header_rewrite_info();
-    push_info = rflow->header_push_info();
-
-    p4plus_hdr.dst_lport = fwding.lport;
+    p4plus_hdr.dst_lport = ctx.cpu_rxhdr()?ctx.cpu_rxhdr()->src_lport:0;
 
     if (ctx.key().proto == IP_PROTO_TCP) {
         pkt_len = net_sfw_build_tcp_rst(ctx, &pkt, rewrite_info, push_info);

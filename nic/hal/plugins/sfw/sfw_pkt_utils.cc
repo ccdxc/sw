@@ -88,44 +88,34 @@ net_sfw_build_eth_hdr (ctx_t& ctx, uint8_t *pkt, const header_rewrite_info_t rew
 {
     ether_header_t   *pkt_eth_hdr = NULL, *eth_hdr = NULL;
     uint32_t          offset = 0;
-    vlan_header_t    *vlan_hdr = NULL;
+    vlan_header_t    *vlan_hdr = NULL, *pkt_vlan_hdr = NULL;
     uint8_t           etype = 0;
     hal::flow_key_t   key = ctx.get_key(role);
     uint16_t          l2_offset = (ctx.cpu_rxhdr())->l2_offset;
 
     etype = htons((key.flow_type == FLOW_TYPE_V4)?ETH_TYPE_IPV4:ETH_TYPE_IPV6);
-    if (rewrite_info.valid_flds.vlan_id) {
+    if (ctx.cpu_rxhdr()->flags&CPU_FLAGS_VLAN_VALID) {
+        pkt_vlan_hdr = (vlan_header_t *)(ctx.pkt() + l2_offset);
         vlan_hdr = (vlan_header_t *)pkt;
         vlan_hdr->tpid = htons(ETH_TYPE_DOT1Q);
-        vlan_hdr->vlan_tag = htons(rewrite_info.ether.vlan_id);
+        vlan_hdr->vlan_tag = pkt_vlan_hdr->vlan_tag;
         vlan_hdr->etype = etype;
         offset = sizeof(vlan_header_t);
         eth_hdr = (ether_header_t *)vlan_hdr;
     } else {
+        pkt_eth_hdr = (ether_header_t *)(ctx.pkt() + l2_offset);
         eth_hdr = (ether_header_t *)(pkt);
         eth_hdr->etype = etype;
         offset = sizeof(ether_header_t);
     }
 
     pkt_eth_hdr = (ether_header_t *)(ctx.pkt() + l2_offset);
-    if (rewrite_info.valid_flds.smac) {
-        memcpy(eth_hdr->smac, rewrite_info.ether.smac.ether_addr_octet,
-               ETH_ADDR_LEN);
+    if (role == hal::FLOW_ROLE_RESPONDER) {
+        memcpy(eth_hdr->smac, pkt_eth_hdr->dmac, ETH_ADDR_LEN);
+        memcpy(eth_hdr->dmac, pkt_eth_hdr->smac, ETH_ADDR_LEN);
     } else {
-        if (role == hal::FLOW_ROLE_RESPONDER)
-            memcpy(eth_hdr->smac, pkt_eth_hdr->dmac, ETH_ADDR_LEN);
-        else
-            memcpy(eth_hdr->smac, pkt_eth_hdr->smac, ETH_ADDR_LEN);
-    }
-
-    if (rewrite_info.valid_flds.dmac) {
-        memcpy(eth_hdr->dmac, rewrite_info.ether.dmac.ether_addr_octet,
-               ETH_ADDR_LEN);
-    } else {
-        if (role == hal::FLOW_ROLE_RESPONDER)
-            memcpy(eth_hdr->dmac, pkt_eth_hdr->smac, ETH_ADDR_LEN);
-        else
-            memcpy(eth_hdr->dmac, pkt_eth_hdr->dmac, ETH_ADDR_LEN);
+        memcpy(eth_hdr->smac, pkt_eth_hdr->smac, ETH_ADDR_LEN);
+        memcpy(eth_hdr->dmac, pkt_eth_hdr->dmac, ETH_ADDR_LEN);
     }
 
     return offset;
@@ -143,7 +133,7 @@ net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
     ipv4_header_t     *ip_hdr = NULL;
     tcp_header_t      *tcp_hdr = NULL, *pkt_tcp_hdr = NULL;
     hal::flow_key_t    key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
-    bool               vxlan_valid = false;
+    //bool               vxlan_valid = false;
     uint32_t           offset = 0, pkt_len = 0;
     uint8_t           *pkt = NULL;
 
@@ -153,6 +143,7 @@ net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
      */
     pkt_len = TCP_IPV4_PKT_SZ;
 
+#if 0
     if (valid_tunnel_headers(push_info.valid_hdrs) &&
         ((push_info.valid_hdrs&FTE_ENCAP_HEADERS) == FTE_HEADER_vxlan)) {
          vxlan_valid = true;
@@ -167,13 +158,21 @@ net_sfw_build_tcp_rst (ctx_t& ctx, uint8_t **pkt_p,
     if (rewrite_info.valid_flds.vlan_id) {
         pkt_len += DOT1Q_HDR_SZ;
     }
+#endif
+
+    if (ctx.cpu_rxhdr()->flags&CPU_FLAGS_VLAN_VALID) {
+        pkt_len += DOT1Q_HDR_SZ;
+    }
+
     pkt = (uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_SFW, pkt_len);
     if (!pkt)
         return 0;
 
+#if 0
     // Get the outer header
     if (vxlan_valid)
         offset += net_sfw_build_vxlan_hdr(pkt, push_info);
+#endif
 
     //get the eth type
     offset += net_sfw_build_eth_hdr(ctx, (pkt + offset), 
@@ -243,7 +242,7 @@ net_sfw_build_udp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
     ipv4_header_t     *ip_hdr = NULL, *pkt_ip_hdr = NULL;
     udp_header_t      *udp_hdr = NULL, *pkt_udp_hdr = NULL;
     hal::flow_key_t    key = ctx.get_key(hal::FLOW_ROLE_INITIATOR);
-    bool               vxlan_valid = false;
+    //bool               vxlan_valid = false;
     uint32_t           offset = 0, pkt_len = 0;
     uint32_t           payload_sz = (ctx.pkt_len()-ctx.cpu_rxhdr()->payload_offset);
     uint8_t            *payload = NULL;
@@ -254,6 +253,7 @@ net_sfw_build_udp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
      */
     pkt_len = UDP_IPV4_PKT_SZ;
 
+#if 0
     if (valid_tunnel_headers(push_info.valid_hdrs) &&
         ((push_info.valid_hdrs&FTE_ENCAP_HEADERS) == FTE_HEADER_vxlan)) {
          vxlan_valid = true;
@@ -268,14 +268,22 @@ net_sfw_build_udp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
     if (rewrite_info.valid_flds.vlan_id) {
         pkt_len += DOT1Q_HDR_SZ;
     }
+#endif
+
+    if (ctx.cpu_rxhdr()->flags&CPU_FLAGS_VLAN_VALID) {
+        pkt_len += DOT1Q_HDR_SZ;
+    }
+
     pkt_len += payload_sz;
     if (pkt_len > len) {
         return 0;
     }
 
+#if 0
     // Get the outer header
     if (vxlan_valid)
         offset += net_sfw_build_vxlan_hdr(pkt, push_info);
+#endif
 
     //get the eth type
     offset += net_sfw_build_eth_hdr(ctx, (pkt + offset), rewrite_info,
@@ -326,7 +334,7 @@ net_sfw_build_tcp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
     ipv4_header_t     *ip_hdr = NULL, *pkt_ip_hdr = NULL;
     tcp_header_t      *tcp_hdr = NULL, *pkt_tcp_hdr = NULL;
     hal::flow_key_t    key = ctx.get_key(hal::FLOW_ROLE_INITIATOR);
-    bool               vxlan_valid = false;
+    //bool               vxlan_valid = false;
     uint32_t           offset = 0, pkt_len = 0;
     uint32_t           payload_sz = (ctx.pkt_len()-ctx.cpu_rxhdr()->payload_offset);
     uint8_t            *payload = NULL;
@@ -337,6 +345,7 @@ net_sfw_build_tcp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
      */
     pkt_len = TCP_IPV4_PKT_SZ;
 
+#if 0
     if (valid_tunnel_headers(push_info.valid_hdrs) &&
         ((push_info.valid_hdrs&FTE_ENCAP_HEADERS) == FTE_HEADER_vxlan)) {
          vxlan_valid = true;
@@ -351,6 +360,12 @@ net_sfw_build_tcp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
     if (rewrite_info.valid_flds.vlan_id) {
         pkt_len += DOT1Q_HDR_SZ;
     }
+#endif
+
+    if (ctx.cpu_rxhdr()->flags&CPU_FLAGS_VLAN_VALID) {
+        pkt_len += DOT1Q_HDR_SZ;
+    }
+
     pkt_tcp_hdr = (tcp_header_t *)(ctx.pkt() + l4_offset);
     pkt_len += ((pkt_tcp_hdr->doff*4)-sizeof(tcp_header_t));
     pkt_len += payload_sz;
@@ -358,9 +373,11 @@ net_sfw_build_tcp_pkt (ctx_t& ctx, uint8_t *pkt, uint32_t len,
         return 0;
     }
 
+#if 0
     // Get the outer header
     if (vxlan_valid)
         offset += net_sfw_build_vxlan_hdr(pkt, push_info);
+#endif
 
     //get the eth type
     offset += net_sfw_build_eth_hdr(ctx, (pkt + offset), 

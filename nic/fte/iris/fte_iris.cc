@@ -1051,6 +1051,9 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                    post_xmit_cb_t cb)
 {
     txpkt_info_t *pkt_info;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_VERBOSE("fte: txpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
         HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
@@ -1064,7 +1067,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         pkt_info->cpu_header = *cpu_header;
     } else {
         pkt_info->cpu_header.src_lif = cpu_rxhdr_->src_lif;
-#ifdef TBD_WHAT_TODO 
         // change lif/vlan for uplink pkts
         // - Vxlan: P4 terminates vxlan and doesn't send outer headers to FTE. 
         //          So FTE can inject the same packet.
@@ -1098,7 +1100,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                 }
             }
         }
-#endif
     }
 
     pkt_info->cpu_header.tm_oq = cpu_rxhdr_->src_tm_iq;

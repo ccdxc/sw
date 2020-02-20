@@ -16,6 +16,7 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
     uint32_t  qid;
 
     uint16_t  lkp_vrf;
+    uint16_t  src_lport;
 
 #if __BYTE_ORDER == __BIG_ENDIAN
     uint8_t   src_app_id : 4;
@@ -34,8 +35,8 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
     uint8_t   flags;
 
     // offsets
-    int16_t  l2_offset;
-    int16_t  l3_offset;
+    uint16_t  l2_offset;
+    uint16_t  l3_offset;
     int16_t  l4_offset;
     int16_t  payload_offset;
 

@@ -569,6 +569,8 @@ enicif_update_host_prom (bool add)
 {
     HAL_TRACE_DEBUG("Reprogramming oifls for host encifs: {}", add ? "add" : "del");
     g_hal_state->if_id_ht()->walk(enicif_process_host_cb, &add);
+
+    return HAL_RET_OK;
 }
 
 hal_ret_t
