@@ -36,7 +36,7 @@ def create_req():
     req_msg = req.Request.add()
     req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = chr(0)+chr(2)+chr(0)+chr(0)+chr(0)+chr(0)+chr(2)+chr(rt)
+    req_msg.RT = rt_str
     req_msg.RTType = rttype
     resp = stub.EvpnIpVrfRtSpecCreate(req)     
     process_response(req, resp)
@@ -47,7 +47,7 @@ def update_req():
     req_msg = req.Request.add()
     req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = chr(0)+chr(2)+chr(0)+chr(0)+chr(0)+chr(0)+chr(2)+chr(rt)
+    req_msg.RT = rt_str
     req_msg.RTType = rttype
     resp = stub.EvpnIpVrfRtSpecUpdate(req)     
     process_response(req, resp)
@@ -58,7 +58,7 @@ def get_req():
     req_msg = req.Request.add()
     req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = chr(0)+chr(2)+chr(0)+chr(0)+chr(0)+chr(0)+chr(2)+chr(rt)
+    req_msg.RT = rt_str
     resp =  stub.EvpnIpVrfRtSpecGet(req)     
     process_response(req, resp)
     return
@@ -74,7 +74,7 @@ def delete_req():
     req_msg = req.Request.add()
     req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = chr(0)+chr(2)+chr(0)+chr(0)+chr(0)+chr(0)+chr(2)+chr(rt)
+    req_msg.RT = rt_str
     resp = stub.EvpnIpVrfRtSpecDelete(req)     
     process_response(req, resp)
     return
@@ -88,8 +88,8 @@ def init():
     return
 
 def print_help():
-    print ("Usage: %s <opt> UUID VPCId <last-byte-in-RT> rttype" % sys.argv[0])
-    print ("eg   : %s 1 500 500 1 3" %sys.argv[0])
+    print ("Usage: %s <opt> UUID VPCId RT rttype" % sys.argv[0])
+    print ("eg   : %s 1 500 500 0:2:0:0:0:0:0:200 3" %sys.argv[0])
     print ("opt  : 1: create_req\t2: update_req\t3: delete_req\t4: get_req")
     print ("empty get does get-all")
     return
@@ -98,9 +98,10 @@ def read_args():
     global opt
     global uuid
     global vpcid
-    global rt
     global rttype
-    rt = 0
+    global rt_str
+    global rttype
+    rt_str = ""
     uuid = "0"
     vpcid = "0"
     rttype=evpn_pb2.EVPN_RT_NONE
@@ -110,7 +111,9 @@ def read_args():
     if args > 2:
         vpcid = sys.argv[3]
     if args > 3:
-        rt = int(sys.argv[4])
+        rt = sys.argv[4]
+        for x in rt.split(':'):
+            rt_str = rt_str+chr(int(x))
     if args > 4:
         rttype = int(sys.argv[5])
     return

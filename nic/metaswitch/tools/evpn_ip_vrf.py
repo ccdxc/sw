@@ -14,68 +14,63 @@ def process_response(req_msg, resp_msg):
     if (resp_msg.ApiStatus != types_pb2.API_STATUS_OK):
         print ("Op failed: %d" % resp_msg.ApiStatus)
         return
-    if resp_msg.DESCRIPTOR.name == "EvpnEviRtGetResponse":
+    if resp_msg.DESCRIPTOR.name == "EvpnIpVrfGetResponse":
         print ("Number of entries retrieved: %d" % len(resp_msg.Response))
         for idx in range(len(resp_msg.Response)):
             resp = resp_msg.Response[idx]
             spec = resp.Spec
-            print ("\nEntry %d" %idx)
+            print ("Entry %d" %idx)
             print ("-----------------------");
-            print ("RT: "),
-            for i in spec.RT:
-                mm=int(i.encode('hex'),16)
-                print(hex(mm) ),
-            print
-            print ("Spec: RTType : %d" % spec.RTType)
+            print ("Spec: VNI :%d"%spec.VNI)
+            print ("Spec: AutoRd: %s" % ("Auto" if spec.AutoRD==evpn_pb2.EVPN_CFG_AUTO else "Manual"))
+            print ("Spec: RD: %s"%spec.RD)
     else:
         print ("Op Success")
     return
 
 def create_req():
-    req = evpn_pb2.EvpnEviRtRequest()
+    req = evpn_pb2.EvpnIpVrfRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    req_msg.RTType = rttype
-    resp = stub.EvpnEviRtSpecCreate(req)     
+    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.RD = rd_str
+    req_msg.VNI = vni
+    resp = stub.EvpnIpVrfSpecCreate(req)     
     process_response(req, resp)
     return
 
 def update_req():
-    req = evpn_pb2.EvpnEviRtRequest()
+    req = evpn_pb2.EvpnIpVrfRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    req_msg.RTType = rttype
-    resp = stub.EvpnEviRtSpecUpdate(req)     
+    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.RD = rd_str
+    req_msg.VNI = vni
+    resp = stub.EvpnIpVrfSpecUpdate(req)     
     process_response(req, resp)
     return
 
 def get_req():
-    req = evpn_pb2.EvpnEviRtRequest()
+    req = evpn_pb2.EvpnIpVrfRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    resp =  stub.EvpnEviRtSpecGet(req)     
+    req_msg.Id = uuid
+    req_msg.VPCId = vpcid
+    resp =  stub.EvpnIpVrfSpecGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
-    req = evpn_pb2.EvpnEviRtRequest()
-    resp =  stub.EvpnEviRtSpecGet(req)     
+    req = evpn_pb2.EvpnIpVrfRequest()
+    resp =  stub.EvpnIpVrfSpecGet(req)     
     process_response(req, resp)
     return
 
 def delete_req():
-    req = evpn_pb2.EvpnEviRtRequest()
+    req = evpn_pb2.EvpnIpVrfRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    resp = stub.EvpnEviRtSpecDelete(req)     
+    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    resp = stub.EvpnIpVrfSpecDelete(req)     
     process_response(req, resp)
     return
 
@@ -88,8 +83,8 @@ def init():
     return
 
 def print_help():
-    print ("Usage: %s <opt> UUID SubnetId RT rttype" % sys.argv[0])
-    print ("eg   : %s 1 500 500 0:2:0:0:0:0:1:100 3" %sys.argv[0])
+    print ("Usage: %s <opt> UUID VpcId vni autord rd" % sys.argv[0])
+    print ("eg   : %s 1 500 500 100 0 0:2:1:2:3:4:100:200" %sys.argv[0])
     print ("opt  : 1: create_req\t2: update_req\t3: delete_req\t4: get_req")
     print ("empty get does get-all")
     return
@@ -97,24 +92,27 @@ def print_help():
 def read_args():
     global opt
     global uuid
-    global subnetid
-    global rt_str
-    global rttype
-    rt_str = ""
+    global vpcid
+    global rd_str
+    global autord
+    global vni
+    rd_str = ""
     uuid = "0"
-    subnetid = "0"
-    rttype=evpn_pb2.EVPN_RT_NONE
+    vpcid = "0"
+    vni = 0
     opt = int (sys.argv[1])
     if args > 1:
         uuid = sys.argv[2]
     if args > 2:
-        subnetid = sys.argv[3]
+        vpcid = sys.argv[3]
     if args > 3:
-        rt = sys.argv[4]
-        for x in rt.split(':'):
-            rt_str = rt_str+chr(int(x))
+        vni = int (sys.argv[4])
     if args > 4:
-        rttype = int(sys.argv[5])
+        autord = evpn_pb2.EVPN_CFG_AUTO if int(sys.argv[5]) else evpn_pb2.EVPN_CFG_MANUAL
+    if args > 5:
+        rd = sys.argv[6]
+        for x in rd.split(':'):
+            rd_str = rd_str+chr(int(x))
     return
 
 if __name__ == '__main__':

@@ -153,7 +153,7 @@ def read_args():
     if args > 2:
         destaddr = socket.htonl(ip2long(sys.argv[3]))
     if args > 3:
-        prefixen = int(sys.argv[4])
+        prefixlen = int(sys.argv[4])
     if args > 4:
         nhaddr = socket.htonl(ip2long(sys.argv[5]))
     return

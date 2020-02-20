@@ -111,7 +111,7 @@ message CPStaticRouteSpec {
 
 // control plane static route create, delete and update message
 message CPStaticRouteRequest {
-  repeated CPStaticRouteSpec request = 1;
+  repeated CPStaticRouteSpec Request = 1;
 }
 
 // status of control plane static route, if any 

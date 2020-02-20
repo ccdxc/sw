@@ -327,6 +327,10 @@ ms_txn_guard_t::~ms_txn_guard_t(void) {
     if (nbb_thread_global_data != nullptr) {
         nbb_free_tgd(NBB_CXT);
     }
+    if (!end_txn_) {
+        // Await MS response for transaction abort
+        pds_ms::mgmt_state_t::ms_response_wait();
+    }
 }
 
 ms_thr_ctxt_guard_t::ms_thr_ctxt_guard_t(uint32_t pid) {

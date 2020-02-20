@@ -106,7 +106,7 @@ populate_disable_peer_af_spec (BGPPeerSpec &peer, BGPPeerAfSpec *peer_af,
     laddr->set_v4addr(peer.localaddr().v4addr());
     peer_af->set_afi(afi);
     peer_af->set_safi(safi);
-    peer_af->set_disable(AMB_TRUE);
+    peer_af->set_disable(true);
 }
 
 NBB_VOID

@@ -2424,7 +2424,7 @@ control plane static route create, delete and update message
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| request | [CPStaticRouteSpec](#pds.CPStaticRouteSpec) | repeated |  |
+| Request | [CPStaticRouteSpec](#pds.CPStaticRouteSpec) | repeated |  |
 
 
 
