@@ -969,6 +969,14 @@
   revision = "8219919fca892353a082b184bca66db55c55b583"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ac94acc1f38b88bc6731b78fc5bd91d014333513f773cba452ad90f2b746195a"
+  name = "github.com/greenpau/go-cisco-nx-api"
+  packages = ["pkg/client"]
+  pruneopts = "NUT"
+  revision = "69825780787d208a2f855bfc19e4b6de375ad994"
+
+[[projects]]
   digest = "1:432e8b04365b52add2d6256a42de45cebebf6b7a132d4eacb052602fe199a80a"
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
   packages = ["."]
@@ -2971,6 +2979,7 @@
     "github.com/gorilla/mux",
     "github.com/gorilla/websocket",
     "github.com/grandcat/zeroconf",
+    "github.com/greenpau/go-cisco-nx-api/pkg/client",
     "github.com/haya14busa/gopkgs/cmd/gopkgs",
     "github.com/imdario/mergo",
     "github.com/influxdata/influxdb/client/v2",

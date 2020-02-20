@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	dataswitch "github.com/pensando/sw/iota/svcs/common/switch"
-	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
+	"github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -426,7 +426,10 @@ func (n *TestNode) StartAgent(command string, cfg *ssh.ClientConfig) error {
 
 func clearSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string) error {
 	for _, port := range ports {
-		dataSwitch.UnsetTrunkMode(port)
+		err := dataSwitch.UnsetTrunkMode(port)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -765,20 +768,25 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32, nati
 			return nil, errors.New("Switch not found")
 		}
 
-		clearSwitchPortConfig(n3k, ds.GetPorts())
+		err := clearSwitchPortConfig(n3k, ds.GetPorts())
+		if err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Clear Switch port config failed: %s", err.Error())
+			return nil, errors.New("Clear switch port config failed")
+		}
 
 		speed := getSpeed(ds.GetSpeed())
 		trunkVlanRange := strconv.Itoa(int(startTrunkVlan)) + "-" + strconv.Itoa(int(endTrunkVlan))
-		log.Infof("Reserving vlans native vlan %v trunk vlans %v", nativeVlan, trunkVlanRange)
+		log.Infof("Reserving vlans: native vlan (%v) trunk vlans (%v)", nativeVlan, trunkVlanRange)
+
 		if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(nativeVlan), trunkVlanRange,
 			ds.GetIgmpDisabled(), speed, ds.Mtu, ds.FlowControlReceive, ds.FlowControlSend); err != nil {
-			return nil, errors.Wrap(err, "Configuring switch failed")
-
+			log.Errorf("TOPO SVC | InitTestBed | Set Switch port config failed: %s", err.Error())
+			return nil, errors.Wrap(err, "Configuring switch port failed")
 		}
 
 		if err := setSwitchQosConfig(n3k, ds.GetQos()); err != nil {
-			return nil, errors.Wrap(err, "Configuring  QOS  on switch failed")
-
+			log.Errorf("TOPO SVC | InitTestBed | Set Switch QoS config failed: %s", err.Error())
+			return nil, errors.Wrap(err, "Configuring QOS on switch failed")
 		}
 
 		if err := setSwitchDscpConfig(n3k, ds.GetDscp()); err != nil {
@@ -792,10 +800,9 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32, nati
 		}
 
 		if err := checkSwitchConfig(n3k, ds.GetPorts(), speed); err != nil {
-			log.Errorf("TOPO SVC | InitTestBed | SwitchPort config check failed  %s", err.Error())
+			log.Errorf("TOPO SVC | InitTestBed | Check Switch config failed %s", err.Error())
 			return nil, err
 		}
-
 	}
 
 	return vlans, nil
