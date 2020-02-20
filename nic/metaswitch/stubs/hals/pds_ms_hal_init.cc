@@ -9,10 +9,13 @@
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/agent/core/core.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include <li_fte.hpp>
 
 extern NBB_ULONG li_proc_id;
@@ -99,6 +102,40 @@ handle_port_event (core::port_event_info_t &portev)
     return;
 }
 
+static void
+handle_learn_event (core::learn_event_info_t &learnev)
+{
+    ip_addr_t zero_ip = {0};
+
+    PDS_TRACE_DEBUG("Got learn event type %u VPC %s Subnet %s Ifindex 0x%lx "
+                    "IpAddr %s MacAddr %s", learnev.event, learnev.vpc.str(),
+                     learnev.subnet.str(), learnev.ifindex,
+                     ipaddr2str(&learnev.ip_addr),
+                     macaddr2str(learnev.mac_addr));
+    switch (learnev.event) {
+        case core::EVENT_MAC_LEARN:
+            pds_ms::l2f_local_mac_ip_add(learnev.subnet, zero_ip,
+                                         learnev.mac_addr, learnev.ifindex);
+            break;
+        case core::EVENT_MAC_AGE:
+            pds_ms::l2f_local_mac_ip_del(learnev.subnet, zero_ip,
+                                         learnev.mac_addr);
+            break;
+        case core::EVENT_IP_LEARN:
+            pds_ms::l2f_local_mac_ip_add(learnev.subnet, learnev.ip_addr,
+                                         learnev.mac_addr, learnev.ifindex);
+            break;
+        case core::EVENT_IP_AGE:
+            pds_ms::l2f_local_mac_ip_del(learnev.subnet, learnev.ip_addr,
+                                         learnev.mac_addr);
+            break;
+        default:
+            PDS_TRACE_ERR("Unknown learn event!");
+            break;
+    }
+    return;
+}
+
 void
 hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 {
@@ -114,28 +151,9 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     case EVENT_ID_LIF_STATUS:
         // TODO: Need to propagate LIF events to the software-IF
         break;
-#if 0 // TODO: Enable when MAC IP learn is implemented
-    case EVENT_ID_MAC_LEARN:
-        {
-        ip_addr_t ip = {0};
-        pds_ms::l2f_local_mac_ip_add(event->macip.subnet_id, ip, event->macip.mac,
-                                     event->macip.lifindex);
-        }
+    case EVENT_ID_LEARN:
+        handle_learn_event(event->learn);
         break;
-    case EVENT_ID_IP_LEARN:
-        pds_ms::l2f_local_mac_ip_add(event->macip.subnet_id, event->macip.ip,
-                                     event->macip.mac, event->macip.lifindex);
-        break;
-    case EVENT_ID_MAC_AGE:
-        {
-        ip_addr_t ip = {0};
-        pds_ms::l2f_local_mac_ip_del(event->macip.subnet_id, ip, event->macip.mac);
-        }
-        break;
-    case EVENT_ID_IP_AGE:
-        pds_ms::l2f_local_mac_ip_del(event->macip.subnet_id, event->macip.ip, event->macip.mac);
-        break;
-#endif
     default:
         break;
     }
