@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -120,7 +121,7 @@ public:
         uuid_pending_delete_.clear();
     }
     void set_pending_uuid_delete(const pds_obj_key_t& uuid) {
-        SDK_TRACE_VERBOSE("UUID %s in pending Delete list", uuid.str());
+        PDS_TRACE_VERBOSE("UUID %s in pending Delete list", uuid.str());
         uuid_pending_delete_.push_back(uuid);
     }
     // Commit all pending UUID operations to permanent store
@@ -133,13 +134,13 @@ public:
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
     void set_rt_pending_add_(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
-        SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
+        PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
                           rt_str, type, id);
         rt_pending_add_.emplace_back(rt_str, type, id);
     }
     void set_rt_pending_delete_(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
-        SDK_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
+        PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
                           rt_str, type, id);
         rt_pending_delete_.emplace_back(rt_str, type, id);
     }

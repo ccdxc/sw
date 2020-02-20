@@ -26,14 +26,14 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     pds_if_info_t info = {0};
 
     if (PDS_MOCK_MODE()) {
-        SDK_TRACE_DEBUG ("MS If 0x%lx: PDS MOCK MODE", ifindex);
+        PDS_TRACE_DEBUG ("MS If 0x%lx: PDS MOCK MODE", ifindex);
         return ATG_FRI_FAULT_NONE;
     }
 
     auto eth_ifindex = ms_to_pds_eth_ifindex(ifindex);
     ret = api::pds_if_read(&eth_ifindex, &info);
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR("%s", (std::string("PDS If Get failed for Eth If ")
+        PDS_TRACE_ERR("%s", (std::string("PDS If Get failed for Eth If ")
                     .append(std::to_string(eth_ifindex))
                     .append(" MS If ")
                     .append(std::to_string(ifindex))
@@ -41,15 +41,15 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
         return ATG_FRI_FAULT_NONE;
     }
     if (info.status.state == PDS_IF_STATE_DOWN) {
-        SDK_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
         return ATG_FRI_FAULT_PRESENT;
     } else if (info.status.state == PDS_IF_STATE_UP) {
-        SDK_TRACE_DEBUG("MS If 0x%lx: Port UP", ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%lx: Port UP", ifindex);
         return ATG_FRI_FAULT_NONE;
     }
 
     /* Invalid state. Should not come here. Indicate fault */
-    SDK_TRACE_DEBUG("MS If 0x%lx: Port state invalid", ifindex);
+    PDS_TRACE_DEBUG("MS If 0x%lx: Port state invalid", ifindex);
     return ATG_FRI_FAULT_PRESENT;
 }
 
@@ -95,7 +95,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         phy_port_prop.hal_created = true;
         phy_port_prop.admin_state = ips_info_.admin_state;
         phy_port_prop.switchport = ips_info_.switchport;
-        SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
+        PDS_TRACE_DEBUG ("MS If 0x%lx: Admin State %d, Switchport %d",
                          ips_info_.ifindex, ips_info_.admin_state,
                          ips_info_.switchport);
 
@@ -103,7 +103,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         ntl::Frl &frl = li::Fte::get().get_frl();
         fw = frl.create_fri_worker(ips_info_.ifindex);
         phy_port_prop.fri_worker = fw;
-        SDK_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%lx: Created FRI worker", ips_info_.ifindex);
         // Set the initial interface state. The port event subscribe is already
         // done by this point. Any events after creating worker and setting
         // initial state is handled by the port event callback
@@ -113,13 +113,13 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
-            SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d",
+            PDS_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d",
                              ips_info_.ifindex, ips_info_.admin_state);
             // Update the new admin state in the new If object
             phy_port_prop.admin_state = ips_info_.admin_state;
         }
         if (ips_info_.switchport_updated) {
-            SDK_TRACE_DEBUG ("MS If 0x%lx: Switchport State change to %d",
+            PDS_TRACE_DEBUG ("MS If 0x%lx: Switchport State change to %d",
                              ips_info_.ifindex, ips_info_.switchport);
             // Update the new admin state in the new If object
             phy_port_prop.switchport = ips_info_.switchport;
@@ -127,7 +127,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
     } else {
         // Update request but no change in the fields we are
         // interested in
-        SDK_TRACE_VERBOSE ("MS If 0x%lx: No-op update", ips_info_.ifindex);
+        PDS_TRACE_VERBOSE ("MS If 0x%lx: No-op update", ips_info_.ifindex);
         return false;
     }
     // Update the local store info context so that the make_pds_spec
@@ -159,7 +159,7 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
     spec.l3_if_info.port = api::uuid_from_objid(ifindex);
 
-    SDK_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x L3 UUID %s Port UUID %s",
+    PDS_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x L3 UUID %s Port UUID %s",
                    ips_info_.ifindex, ifindex, spec.key.str(),
                    spec.l3_if_info.port.str());
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
@@ -229,13 +229,13 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         fetch_store_info_(state_ctxt.state());
 
         if (op_create_) {
-            SDK_TRACE_INFO ("MS If 0x%lx: Create IPS", ips_info_.ifindex);
+            PDS_TRACE_INFO ("MS If 0x%lx: Create IPS", ips_info_.ifindex);
         } else {
-            SDK_TRACE_INFO ("MS If 0x%lx: Update IPS", ips_info_.ifindex);
+            PDS_TRACE_INFO ("MS If 0x%lx: Update IPS", ips_info_.ifindex);
         }
         if (unlikely(!cache_new_obj_in_cookie_())) {
             // No change
-            SDK_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
+            PDS_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
             return;
         }
 
@@ -266,18 +266,18 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                     li::Port::set_ips_rc(&port_add_upd_ips->ips_hdr,
                                          (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("+++++++ Phy port 0x%x: Send Async IPS reply"
+                PDS_TRACE_DEBUG("+++++++ Phy port 0x%x: Send Async IPS reply"
                                 " %s stateless mode +++++++",
                                 key.index, (pds_status) ? "Success" : "Failure");
                 li::Fte::get().get_lipi_join()->
                     send_ips_reply(&port_add_upd_ips->ips_hdr);
             } else {
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply success stateful mode",
+                    PDS_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply success stateful mode",
                                     key.index);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply failure stateful mode",
+                    PDS_TRACE_DEBUG("Phy Port 0x%x: Send Async IPS Reply failure stateful mode",
                                     key.index);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
@@ -297,7 +297,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                     .append(" err=").append(std::to_string(ret)));
     }
     port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful",
+    PDS_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful",
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -318,7 +318,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     // if there is a subsequent create from MS.
 
     ips_info_.ifindex = ifindex;
-    SDK_TRACE_INFO ("MS If 0x%lx: Delete IPS no-op", ips_info_.ifindex);
+    PDS_TRACE_INFO ("MS If 0x%lx: Delete IPS no-op", ips_info_.ifindex);
 }
 
 } // End namespace

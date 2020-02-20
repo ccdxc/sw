@@ -504,7 +504,42 @@ port_type_t  catalog::port_type_fp(uint32_t fp_port) {
 } // End namespace lib
 } // End namespace sdk
 
+static int
+sdk_test_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    switch (tracel_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        printf("%s\n", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        printf("%s\n", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        printf("%s\n", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+        printf("%s\n", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+        printf("%s\n", logbuf);
+        break;
+    default:
+        break;
+    }
+    va_end(args);
+
+    return 0;
+}
+
+sdk_logger::trace_cb_t  g_trace_cb;
+
 sdk_ret_t pds_init(pds_init_params_s *params) {
+    register_trace_cb(sdk_test_logger);
     static sdk::lib::catalog* ctlg = sdk::lib::catalog::factory();
     api::g_pds_state.set_catalog(ctlg);
     return SDK_RET_OK;

@@ -122,7 +122,7 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
     vrf_name = std::to_string (vrf_id);
 
-    SDK_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
+    PDS_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
                     vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
@@ -191,7 +191,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
     // Get IRB If Index
     if_index = bd_id_to_ms_ifindex (bd_id);
-    SDK_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X",
+    PDS_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X",
                      bd_id, if_index);
 
     // Update IRB to VRF binding
@@ -218,7 +218,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
         // Get Lif's MS IfIndex
         if_index = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
-        SDK_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+        PDS_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
                           subnet_spec->host_if.str(), lif_ifindex, if_index);
 
         // Set Lif interface settings
@@ -259,7 +259,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);
+        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);
         pds::EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
         pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -267,7 +267,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);
+        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);
         pds::LimInterfaceSpec lim_swif_spec;
         auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
         populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
@@ -275,7 +275,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
         // Get Lif's MS IfIndex
         ms_ifindex = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
-        SDK_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+        PDS_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
                          subnet_spec->host_if.str(), lif_ifindex, ms_ifindex);
 
         // Set Lif interface settings
@@ -290,7 +290,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     }
 
     if (ms_upd_flags.irb) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);
+        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);
         // Configure IRB IP Address
         ip_prefix_t ip_prefix;
         ip_prefix.len = subnet_spec->v4_prefix.len;
@@ -354,7 +354,7 @@ subnet_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
                     .append(" in Subnet request"), SDK_RET_INVALID_ARG);
     }
     auto subnet_uuid_obj = (subnet_uuid_obj_t*) uuid_obj;
-    SDK_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d",
+    PDS_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d",
                       key.str(), subnet_uuid_obj->ms_id());
     if (del_op) {
         mgmt_ctxt.state()->set_pending_uuid_delete(key);
@@ -373,17 +373,17 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
+            PDS_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
                            spec->key.str(), bd_id, ret_status);
 
             // Internal BD ID already release - Delete the cached subnet spec
             cache_subnet_spec (spec, bd_id, true /* Delete */);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-        SDK_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed",
+        PDS_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed",
                          spec->key.str(), bd_id);
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("Subnet %s creation failed %s",
+        PDS_TRACE_ERR ("Subnet %s creation failed %s",
                         spec->key.str(), e.what());
         return e.rc();
     }
@@ -400,17 +400,17 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process subnet %s bd %d delete (error=%d)",
+            PDS_TRACE_ERR ("Failed to process subnet %s bd %d delete (error=%d)",
                            spec->key.str(), bd_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
 
         cache_subnet_spec (spec, bd_id, true /* Delete */);
-        SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed",
+        PDS_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed",
                          spec->key.str(), bd_id);
 
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("Subnet %s deletion failed %s",
+        PDS_TRACE_ERR ("Subnet %s deletion failed %s",
                         spec->key.str(), e.what());
         return e.rc();
     }
@@ -435,7 +435,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
     if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap,
                 sizeof(state_pds_spec.fabric_encap)) != 0) {
         ms_upd_flags.bd = true;
-        SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
+        PDS_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
                        spec->key.str(), bd_id,
                        state_pds_spec.fabric_encap.val.vnid,
                        spec->fabric_encap.val.vnid);
@@ -443,7 +443,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
     }
     if (state_pds_spec.host_if != spec->host_if) {
         ms_upd_flags.bd_if = true;
-        SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old %s New %s",
+        PDS_TRACE_INFO("Subnet %s BD %d Host If change - Old %s New %s",
                        spec->key.str(), bd_id, state_pds_spec.host_if.str(),
                        spec->host_if.str());
         state_pds_spec.host_if = spec->host_if;
@@ -454,7 +454,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
     }
     // Diff in any other property needs to be driven through fastpath
     if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
-        SDK_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
+        PDS_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
                        spec->key.str(), bd_id);
         fastpath = true;
     }
@@ -491,15 +491,15 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
             ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id,
                                                      AMB_ROW_ACTIVE);
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
-                SDK_TRACE_ERR ("Failed to process subnet %s field update err %d",
+                PDS_TRACE_ERR ("Failed to process subnet %s field update err %d",
                                spec->key.str(), ret_status);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
-            SDK_TRACE_DEBUG ("Subnet %s field update successfully processed",
+            PDS_TRACE_DEBUG ("Subnet %s field update successfully processed",
                              spec->key.str());
         }
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("Subnet %s update failed %s",
+        PDS_TRACE_ERR ("Subnet %s update failed %s",
                         spec->key.str(), e.what());
         return e.rc();
     }

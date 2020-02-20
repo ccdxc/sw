@@ -17,6 +17,7 @@
 
 #include "nbase.h"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 /*****************************************************************************/
 /* Global Variables.  Use #define to include definitions from header file    */
@@ -351,7 +352,7 @@ NBB_BOOL pds_ms_register_mib_notify_sink(NBB_CXT_T NBB_CXT)
     /*************************************************************************/
     /* Failed to allocate buffer - exit.                                     */
     /*************************************************************************/
-    SDK_TRACE_ERR ("Failed to allocate buffer\n");
+    PDS_TRACE_ERR ("Failed to allocate buffer\n");
     goto EXIT_LABEL;
   }
 

@@ -28,7 +28,7 @@ ms_to_pds_ifindex (uint32_t ms_ifindex)
         auto lif_id = ms_ifindex - k_ms_lif_if_base;
         return LIF_IFINDEX(lif_id);
     }
-    SDK_TRACE_ERR("If 0x%x: Unknown Metaswitch interface type", ms_ifindex);
+    PDS_TRACE_ERR("If 0x%x: Unknown Metaswitch interface type", ms_ifindex);
     return ms_ifindex;
 }
 
@@ -103,7 +103,7 @@ ms_to_lnx_ifindex (NBB_LONG ms_ifindex, NBB_ULONG location)
     // Linux ifindex is cached in the store at the time 
     // of L3 interface creation
     auto lnx_ifindex = phy_port_if_obj->phy_port_properties().lnx_ifindex;
-    SDK_TRACE_VERBOSE ("MS UserExit: MS IfIndex 0x%lx -> Linux IfIndex %ld", 
+    PDS_TRACE_VERBOSE ("MS UserExit: MS IfIndex 0x%lx -> Linux IfIndex %ld", 
                        ms_ifindex, lnx_ifindex);
     return lnx_ifindex; 
 }
@@ -136,10 +136,10 @@ lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
         });
 
     if (found) {
-        SDK_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
+        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
                           lnx_ifindex, ms_ifindex);
     } else {
-        SDK_TRACE_ERR("MS UserExit: Lnx IfIndex 0x%lx -> "
+        PDS_TRACE_ERR("MS UserExit: Lnx IfIndex 0x%lx -> "
                       "Ms IfIndex conversion Failed", lnx_ifindex);
     }
     return ms_ifindex; 

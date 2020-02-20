@@ -37,7 +37,7 @@ evpn_evi_pre_set (EvpnEviSpec  &req,
         if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
            auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
            req.set_eviid(subnet_uuid_obj->ms_id()); 
-           SDK_TRACE_DEBUG("EVPN EVI request: %s evi-index: %d",
+           PDS_TRACE_DEBUG("EVPN EVI request: %s evi-index: %d",
                             uuid.str(), subnet_uuid_obj->ms_id());
         } else {
             throw Error (std::string("EVPN EVI request with non-matching "
@@ -79,9 +79,8 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
         if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
             auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
             ms_bd_id = subnet_uuid_obj->ms_id();
-
-            SDK_TRACE_DEBUG("EVPN EVI RT request: %s evi-index: %d",
-                            uuid.str(), ms_bd_id);
+            PDS_TRACE_DEBUG("EVPN EVI RT request: %s evi-index: %d",
+                            uuid.str(), subnet_uuid_obj->ms_id());
         } else {
             throw Error (std::string("EVPN EVI RT request with non-matching "
                          "Subnet reference ").  append(uuid.str()),
@@ -106,7 +105,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
             update_orf = true;
             subnet_obj->rt_store.del((unsigned char *)req.rt().c_str());
 
-            SDK_TRACE_DEBUG("Deleting RT from MS EVI %d for ORF", ms_bd_id);
+            PDS_TRACE_DEBUG("Deleting RT from MS EVI %d for ORF", ms_bd_id);
             // in case of failure, we need to add the RT back to subnet
             // add it to temp del list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -122,7 +121,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
             update_orf = true;
             subnet_obj->rt_store.add ((unsigned char *)req.rt().c_str());
 
-            SDK_TRACE_DEBUG("Adding RT to MS EVI %d for ORF", ms_bd_id);
+            PDS_TRACE_DEBUG("Adding RT to MS EVI %d for ORF", ms_bd_id);
             // in case of failure, we need to delete the RT from subnet
             // add it to temp add list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -169,7 +168,7 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
             std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
             req.set_vrfname(vrf_name);
-            SDK_TRACE_DEBUG("EVPN IP VRF request: %s vrf-id: %d, vrf-name:%s",
+            PDS_TRACE_DEBUG("EVPN IP VRF request: %s vrf-id: %d, vrf-name:%s",
                             uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
         } else {
             throw Error (std::string("EVPN IP VRF request with non-matching "
@@ -215,7 +214,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             ms_vrf_id = vpc_uuid_obj->ms_id();
             vrf_name = std::to_string (ms_vrf_id);
 
-            SDK_TRACE_DEBUG
+            PDS_TRACE_DEBUG
                 ("EVPN IP RT VRF request: %s vrf-id: %d, vrf-name:%s",
                  uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
         } else {
@@ -242,7 +241,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             update_orf = true;
             vpc_obj->rt_store.del((unsigned char *)req.rt().c_str());
 
-            SDK_TRACE_DEBUG("Deleting RT from MS VRF %d for ORF", ms_vrf_id);
+            PDS_TRACE_DEBUG("Deleting RT from MS VRF %d for ORF", ms_vrf_id);
             // in case of failure, we need to add the RT back to vpc
             // add it to temp del list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -258,7 +257,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             update_orf = true;
             vpc_obj->rt_store.add((unsigned char *)req.rt().c_str());
 
-            SDK_TRACE_DEBUG("Adding RT to MS VRF %d for ORF", ms_vrf_id);
+            PDS_TRACE_DEBUG("Adding RT to MS VRF %d for ORF", ms_vrf_id);
             // in case of failure, we need to delete the RT from vpc
             // add it to temp add list
             auto mgmt_ctxt = mgmt_state_t::thread_context();

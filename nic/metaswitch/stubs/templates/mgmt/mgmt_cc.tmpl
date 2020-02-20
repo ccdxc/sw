@@ -560,7 +560,7 @@
             /* the next FSM action.                                                  */
             /*************************************************************************/
             NBB_TRC_FLOW((NBB_FORMAT "GET failure"));
-            SDK_TRACE_ERR ("Get failure, no such entry/object exists");
+            PDS_TRACE_ERR ("Get failure, no such entry/object exists");
             v_amb_get->correlator.pds_ms_resp_ctx = NULL;
             NBB_FREE_BUFFER(v_amb_get);
             v_amb_get = NULL;

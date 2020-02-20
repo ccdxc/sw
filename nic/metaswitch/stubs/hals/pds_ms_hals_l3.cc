@@ -20,7 +20,7 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_add_update_ecmp(ATG_NHPI_ADD_UPDATE_ECMP 
         hals_ecmp_t ecmp;
         ecmp.handle_add_upd_ips(add_update_ecmp_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("ECMP Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("ECMP Add Update processing failed %s", e.what());
         add_update_ecmp_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -33,7 +33,7 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp(ATG_NHPI_DELETE_ECMP *delete_
         hals_ecmp_t ecmp;
         ecmp.handle_delete(delete_ecmp_ips->pathset_id);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("ECMP Delete processing failed %s", e.what());
+        PDS_TRACE_ERR ("ECMP Delete processing failed %s", e.what());
     }
     // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
@@ -45,7 +45,7 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_destroy_ecmp(NBB_CORRELATOR ecmp_corr) {
         hals_ecmp_t ecmp;
         ecmp.handle_delete(ecmp_corr);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("ECMP Destroy processing failed %s", e.what());
+        PDS_TRACE_ERR ("ECMP Destroy processing failed %s", e.what());
     }
     return ATG_OK;
 }
@@ -66,7 +66,7 @@ NBB_BYTE hals_l3_integ_subcomp_t::ropi_update_route(ATG_ROPI_UPDATE_ROUTE *updat
         hals_route_t route;
         route.handle_add_upd_ips(update_route);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Route Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("Route Add Update processing failed %s", e.what());
         update_route->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -79,7 +79,7 @@ NBB_BYTE hals_l3_integ_subcomp_t::ropi_delete_route(ATG_ROPI_ROUTE_ID route_id) 
         hals_route_t route;
         route.handle_delete(route_id);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Route Delete processing failed %s", e.what());
+        PDS_TRACE_ERR ("Route Delete processing failed %s", e.what());
     }
     // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;

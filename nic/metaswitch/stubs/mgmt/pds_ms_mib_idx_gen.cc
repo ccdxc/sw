@@ -32,11 +32,11 @@ mib_idx_gen_guard_t::~mib_idx_gen_guard_t() {
     auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
     auto rs = mgmt_ctxt.state()->mib_indexer().free(tbl_type_, mib_idx_);
     if (rs != SDK_RET_OK) {
-        SDK_TRACE_ERR("MIB Table %d Index %d free failed with err %d",
+        PDS_TRACE_ERR("MIB Table %d Index %d free failed with err %d",
                       tbl_type_, mib_idx_, rs);
         return;
     }
-    SDK_TRACE_VERBOSE("Freed MIB Table %d Index %d", tbl_type_, mib_idx_);
+    PDS_TRACE_VERBOSE("Freed MIB Table %d Index %d", tbl_type_, mib_idx_);
 }
 
 // ----------------------------------------

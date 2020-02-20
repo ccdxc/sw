@@ -6,6 +6,7 @@
 #include "evpn_prod.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "lim_mgmt_if.h"
 
 using namespace pds_ms;
@@ -26,7 +27,7 @@ lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
     pds_ms_convert_ip_addr_to_amb_ip_addr(lo_ipaddr, &conf.lo_addr_type,
                                           &conf.lo_addr_len, conf.lo_addr, false);
 
-    SDK_TRACE_INFO("Adding redistributed connected rule to BGP for address %s",
+    PDS_TRACE_INFO("Adding redistributed connected rule to BGP for address %s",
                    ipaddr2str(&lo_ipaddr));
     pds_ms::pds_ms_rtm_redis_connected (&conf);
 }
@@ -65,7 +66,7 @@ lim_intf_addr_fill_func (LimInterfaceAddrSpec&   req,
             break;
 
         default:
-           SDK_TRACE_ERR ("Invalid Interface Address Req %d\n", if_type); 
+           PDS_TRACE_ERR ("Invalid Interface Address Req %d\n", if_type); 
     }
     data->if_index                   = if_index;
     oid[AMB_LIM_L3_ADDR_IF_IX_INDEX] = if_index;

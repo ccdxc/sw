@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 //-------------------------------------------------------------------------
 // Shared function used by LIM and SMI for MAC handling.
@@ -30,18 +31,18 @@ NBB_ULONG get_initial_mac_address(NBB_BYTE (&initial_mac)[ATG_L2_MAC_ADDR_LEN],
     std::string value;
     auto ret = sdk::platform::readFruKey(NUMMACADDR_KEY, value);
     if (ret == -1) {
-        SDK_TRACE_ERR("Could not read FRU num-mac-address");
+        PDS_TRACE_ERR("Could not read FRU num-mac-address");
         return 0;
     }
     NBB_ULONG total_num_macs = atoi (value.c_str());
 
     ret = sdk::platform::readFruKey(MACADDRESS_KEY, value);
     if (ret == -1) {
-        SDK_TRACE_ERR("Could not read FRU mac-address");
+        PDS_TRACE_ERR("Could not read FRU mac-address");
         return 0;
     }
     mac_str_to_addr((char*) value.c_str(), initial_mac);
-    SDK_TRACE_INFO ("FRU Read NumMacs %d MAC %s", total_num_macs, value.c_str());
+    PDS_TRACE_INFO ("FRU Read NumMacs %d MAC %s", total_num_macs, value.c_str());
 
     return total_num_macs;
 }
@@ -82,7 +83,7 @@ pds_ms_smi_hw_desc_t::pds_ms_smi_hw_desc_t(NBB_BYTE (&mac_address)[ATG_L2_MAC_AD
 // The HW Desc is sent to LIM during the Join activation between LIM & SMI
 bool pds_ms_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config)
 {
-    SDK_TRACE_INFO("Creating uplinks ...");
+    PDS_TRACE_INFO("Creating uplinks ...");
 
     ATG_SMI_PORT_SETTINGS settings = {};
     create_default_port_settings(settings);
@@ -107,7 +108,7 @@ bool pds_ms_smi_hw_desc_t::create_ports(std::vector <smi::PortData> &port_config
         temp_port.settings.mac_address[5] = port;
 
         port_config.push_back(temp_port);
-        SDK_TRACE_INFO ("Metaswitch SMI port add id=%d name=%s ms_ifindex=0x%x", 
+        PDS_TRACE_INFO ("Metaswitch SMI port add id=%d name=%s ms_ifindex=0x%x", 
                         port, if_name.c_str(), ms_ifindex);
     }
     return true;

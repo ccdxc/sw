@@ -173,7 +173,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
     parse_ips_info_(vxlan_port_add_upd_ips);
     if (!vxlan_port_add_upd_ips->port_properties.l3_capable) {
         // Only interested in L3 VXLAN Ports
-            SDK_TRACE_INFO ("Ignore Type2 TEP %s Local VNI %d Remote VNI %d MS L2 VXLAN Port 0x%x IPS",
+            PDS_TRACE_INFO ("Ignore Type2 TEP %s Local VNI %d Remote VNI %d MS L2 VXLAN Port 0x%x IPS",
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
@@ -191,13 +191,13 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
 
         if (store_info_.vxp_if_obj != nullptr) {
             // Update Port
-            SDK_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Update IPS",
+            PDS_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Update IPS",
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
         } else {
             // Create VXLAN Port
-            SDK_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Create IPS",
+            PDS_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Create IPS",
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
@@ -236,7 +236,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                     li::VxLanPort::set_ips_rc(&vxlan_port_add_upd_ips->ips_hdr,
                                               (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("+++++++ Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
+                PDS_TRACE_DEBUG("+++++++ Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                 " Send Async IPS reply %s stateless mode ++++++++",
                                  ipaddr2str(&l_tep_ip), l_vni, key,
                                  (pds_status) ? "Success": "Failure");
@@ -245,12 +245,12 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
             } else {
                 // MS Stub Stateful mode
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
+                    PDS_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                     " Send Async IPS Reply success stateful mode",
                                      ipaddr2str(&l_tep_ip), l_vni, key);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
+                    PDS_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                     " Send Async IPS Reply failure stateful mode",
                                      ipaddr2str(&l_tep_ip), l_vni, key);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
@@ -273,7 +273,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                     .append(" err=").append(std::to_string(ret)));
     }
     vxlan_port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful", 
                      ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -303,12 +303,12 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
         fetch_store_info_(state_ctxt.state());
 
         if (store_info_.vxp_if_obj == nullptr) {
-            SDK_TRACE_DEBUG("Ignoring possible L2 VXLAN Port 0x%x Delete", vxlan_port_ifindex);
+            PDS_TRACE_DEBUG("Ignoring possible L2 VXLAN Port 0x%x Delete", vxlan_port_ifindex);
             return;
         }
 
         tep_ip = store_info_.vxp_if_obj->vxlan_port_properties().tep_ip;
-        SDK_TRACE_INFO ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete IPS",
+        PDS_TRACE_INFO ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete IPS",
                         ipaddr2str(&tep_ip), vxlan_port_ifindex);
 
         pds_bctxt_guard = make_batch_pds_spec_(); 
@@ -325,7 +325,7 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++++ Type5 TEP %s MS L3 VXLAN Port 0x%x Delete"
+            PDS_TRACE_DEBUG("+++++++ Type5 TEP %s MS L3 VXLAN Port 0x%x Delete"
                             " Rcvd Async PDS response %s +++++++",
                             ipaddr2str(&tep_ip), vxlan_port_ifindex, 
                             (pds_status)?"Success": "Failure");
@@ -342,7 +342,7 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
                     .append(ipaddr2str(&tep_ip))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete PDS Batch commit successful", 
                      ipaddr2str(&tep_ip), ips_info_.if_index);
 
     { // Enter thread-safe context to access/modify global state

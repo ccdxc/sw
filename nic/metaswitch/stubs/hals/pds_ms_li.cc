@@ -37,7 +37,7 @@ NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_
         li_intf_t intf;
         intf.handle_add_upd_ips (port_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
         port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -49,7 +49,7 @@ NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
         li_intf_t intf;
         intf.handle_delete (port_ifindex);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Interface Delete processing failed %s", e.what());
+        PDS_TRACE_ERR ("Interface Delete processing failed %s", e.what());
     }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
@@ -63,7 +63,7 @@ NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd
         li_vrf_t vrf;
         vrf.handle_add_upd_ips (vrf_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
         vrf_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -75,7 +75,7 @@ NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_
         li_vrf_t vrf;
         vrf.handle_delete(vrf_name, vrf_len);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
     }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
@@ -89,7 +89,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_t
         li_vxlan_tnl vxtnl;
         vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
         vxlan_tnl_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -101,7 +101,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
         li_vxlan_tnl vxtnl;
         vxtnl.handle_delete (vxlan_tnl_ifindex);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Tunnel Delete processing failed %s", e.what());
+        PDS_TRACE_ERR ("Vxlan Tunnel Delete processing failed %s", e.what());
     }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
@@ -115,7 +115,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_port_add_update(ATG_LIPI_VXLAN_PORT_ADD_UPD* 
         li_vxlan_port vxport;
         vxport.handle_add_upd_ips (vxlan_port_add_upd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Port Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("Vxlan Port Add Update processing failed %s", e.what());
         vxlan_port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -127,7 +127,7 @@ NBB_BYTE li_integ_subcomp_t::vxlan_port_delete(NBB_ULONG vxlan_port_ifindex) {
         li_vxlan_port vxport;
         vxport.handle_delete (vxlan_port_ifindex);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Vxlan Port Delete processing failed %s", e.what());
+        PDS_TRACE_ERR ("Vxlan Port Delete processing failed %s", e.what());
     }
     // Deletes are assummed to be synchronous and always successful in MS
     return ATG_OK;
@@ -148,7 +148,7 @@ NBB_BYTE li_integ_subcomp_t::irb_delete(NBB_ULONG irb_ifindex) {
 // Software interface (Loopback and Dummy LIFs)
 //-------------------------------------------------
 NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swif_add_upd_ips) {
-    SDK_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d",
+    PDS_TRACE_INFO("Loopback interface create IfIndex 0x%lx Ifname %s SwType %d",
                    swif_add_upd_ips->id.if_index, swif_add_upd_ips->id.if_name,
                    swif_add_upd_ips->softwif_type);
     return ATG_OK;
@@ -157,7 +157,7 @@ NBB_BYTE li_integ_subcomp_t::softwif_add_update(ATG_LIPI_SOFTWIF_ADD_UPDATE* swi
 NBB_BYTE li_integ_subcomp_t::softwif_delete(NBB_ULONG if_index,
                                             const NBB_CHAR (&if_name) [ATG_LIPI_NAME_MAX_LEN],
                                             NBB_ULONG softwif_type) {
-    SDK_TRACE_INFO("Loopback interface delete IfIndex 0x%lx Ifname %s SwType %d",
+    PDS_TRACE_INFO("Loopback interface delete IfIndex 0x%lx Ifname %s SwType %d",
                    if_index, if_name, softwif_type);
     return ATG_OK;
 }
@@ -191,16 +191,16 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
 
         char buf[INET6_ADDRSTRLEN];
-        SDK_TRACE_INFO("Loopback interface IP address set request %s %s",
+        PDS_TRACE_INFO("Loopback interface IP address set request %s %s",
                        if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
 
         if (ip.af == AF_INET6) {
-            SDK_TRACE_INFO("Ignore IPv6 address");
+            PDS_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
         }
         pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Loopback interface IP address add failed %s", e.what());
+        PDS_TRACE_ERR ("Loopback interface IP address add failed %s", e.what());
         return ATG_UNSUCCESSFUL;
     }
     return ATG_OK;
@@ -214,16 +214,16 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
 
         char buf[INET6_ADDRSTRLEN];
-        SDK_TRACE_INFO("Loopback interface IP address delete request %s %s",
+        PDS_TRACE_INFO("Loopback interface IP address delete request %s %s",
                        if_name, inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
 
         if (ip.af == AF_INET6) {
-            SDK_TRACE_INFO("Ignore IPv6 address");
+            PDS_TRACE_INFO("Ignore IPv6 address");
             return ATG_OK;
         }
         pds_ms::config_linux_loopback_ip(ip, ip_addr->prefix_len, true);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("Loopback interface IP address delete failed %s", e.what());
+        PDS_TRACE_ERR ("Loopback interface IP address delete failed %s", e.what());
         return ATG_UNSUCCESSFUL;
     }
     return ATG_OK;

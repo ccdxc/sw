@@ -52,10 +52,10 @@ state_init (void)
     try { 
         state_t::create();
     } catch (Error& e) {
-        SDK_TRACE_ERR("Initialization failed - %s", e.what());
+        PDS_TRACE_ERR("Initialization failed - %s", e.what());
         return false;
     }
-    SDK_TRACE_INFO ("State Initialization successful");
+    PDS_TRACE_INFO ("State Initialization successful");
     return true;
 }
 

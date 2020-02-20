@@ -231,14 +231,14 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
 
     if (store_info_.tep_obj != nullptr) {
         // Update Tunnel
-        SDK_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
+        PDS_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
             return;
         } 
     } else {
         // Create Tunnel
-        SDK_TRACE_INFO ("TEP %s: Create IPS", ips_info_.tep_ip_str.c_str());
+        PDS_TRACE_INFO ("TEP %s: Create IPS", ips_info_.tep_ip_str.c_str());
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
     }
@@ -270,17 +270,17 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                 auto send_response = li::VxLan::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
                                                           (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("++++++ VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode ++++++",
+                PDS_TRACE_DEBUG("++++++ VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode ++++++",
                                 key, (pds_status) ? "Success": "Failure");
                 li::Fte::get().get_lipi_join()->send_ips_reply(&vxlan_tnl_add_upd_ips->ips_hdr);
             } else {
                 // MS Stub Stateful mode
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply success stateful mode",
+                    PDS_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply success stateful mode",
                                      key);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply failure stateful mode",
+                    PDS_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS Reply failure stateful mode",
                                      key);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
@@ -301,7 +301,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                     .append(" err=").append(std::to_string(ret)));
     }
     vxlan_tnl_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
                      ips_info_.tep_ip_str.c_str());
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -336,7 +336,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
             return;
         }
         tep_ip = store_info_.tep_obj->properties().tep_ip;
-        SDK_TRACE_INFO ("TEP %s: Delete IPS", ipaddr2str(&tep_ip));
+        PDS_TRACE_INFO ("TEP %s: Delete IPS", ipaddr2str(&tep_ip));
 
         pds_bctxt_guard = make_batch_pds_spec_ (); 
 
@@ -352,7 +352,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++++ TEP %s Delete: Rcvd Async PDS response %s +++++++++",
+            PDS_TRACE_DEBUG("+++++++ TEP %s Delete: Rcvd Async PDS response %s +++++++++",
                             ipaddr2str(&tep_ip), (pds_status)?"Success": "Failure");
 
         };
@@ -367,7 +367,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
                     .append(ipaddr2str(&tep_ip))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
                      ipaddr2str(&tep_ip));
 
     { // Enter thread-safe context to access/modify global state

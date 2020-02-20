@@ -21,7 +21,7 @@ void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips) {
         l2f_bd_t bd;
         bd.handle_add_upd_ips(update_bd_ips);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BD Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("BD Add Update processing failed %s", e.what());
         update_bd_ips->return_code = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
@@ -33,7 +33,7 @@ void l2f_integ_subcomp_t::delete_bd(const ATG_L2_BD_ID *bd_id,
         l2f_bd_t bd;
         bd.handle_delete(bd_id->bd_id);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BD Del processing failed %s", e.what());
+        PDS_TRACE_ERR ("BD Del processing failed %s", e.what());
     }
 }
 
@@ -46,7 +46,7 @@ void l2f_integ_subcomp_t::add_upd_bd_if(const ATG_L2_BD_ID *bd_id,
         l2f_bd_t bd;
         bd.handle_add_if(bd_id->bd_id, if_bind->if_index);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BD If Add processing failed %s", e.what());
+        PDS_TRACE_ERR ("BD If Add processing failed %s", e.what());
     }
 }
 
@@ -57,7 +57,7 @@ void l2f_integ_subcomp_t::delete_bd_if(const ATG_L2_BD_ID *bd_id,
         l2f_bd_t bd;
         bd.handle_del_if(bd_id->bd_id, if_bind->if_index);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BD If Del processing failed %s", e.what());
+        PDS_TRACE_ERR ("BD If Del processing failed %s", e.what());
     }
 }
 
@@ -67,7 +67,7 @@ void l2f_integ_subcomp_t::add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_ma
         mai.handle_add_upd_mac(update_fdb_mac);
     } catch (Error& e) {
         update_fdb_mac->return_code = ATG_UNSUCCESSFUL;
-        SDK_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
+        PDS_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
     }
 }
 
@@ -76,7 +76,7 @@ void l2f_integ_subcomp_t::delete_fdb_mac(l2f::FdbMacKey *key) {
         l2f_mai_t mai;
         mai.handle_delete_mac(key);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BDPI Remote MAC Delete failed %s", e.what());
+        PDS_TRACE_ERR ("BDPI Remote MAC Delete failed %s", e.what());
     }
 }
 
@@ -90,7 +90,7 @@ NBB_ULONG l2f_integ_subcomp_t::add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
         l2f_mai_t mai;
         mai.handle_add_upd_ip(mac_ip_id);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
+        PDS_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
     }
     return ATG_OK;
 }
@@ -105,7 +105,7 @@ void l2f_integ_subcomp_t::delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
         l2f_mai_t mai;
         mai.handle_delete_ip(mac_ip_id);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
+        PDS_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
     }
     return;
 }
@@ -128,7 +128,7 @@ NBB_BYTE l2f_integ_subcomp_t::update_routers_mac(ATG_INET_ADDRESS *ip_address,
 {
     ip_addr_t  tep_ip;
     ms_to_pds_ipaddr(*ip_address, &tep_ip);
-    SDK_TRACE_INFO("Add Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s ---- ",
+    PDS_TRACE_INFO("Add Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s ---- ",
                     ipaddr2str(&tep_ip), macaddr2str(mac_addr), if_index, vrf_name);
     rtr_mac_update (ip_address, mac_addr, if_index, vrf_name,
                     false /* create */);
@@ -142,7 +142,7 @@ void l2f_integ_subcomp_t::delete_routers_mac(ATG_INET_ADDRESS *ip_address,
 {
     ip_addr_t  tep_ip;
     ms_to_pds_ipaddr(*ip_address, &tep_ip);
-    SDK_TRACE_INFO("Delete Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s",
+    PDS_TRACE_INFO("Delete Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s",
                     ipaddr2str(&tep_ip), macaddr2str(mac_addr), if_index, vrf_name);
     rtr_mac_update (ip_address, mac_addr, if_index, vrf_name,
                     true /* delete */);

@@ -29,7 +29,7 @@ public:
 };
 
 inline void cookie_t::print_debug_str(void) {
-    if (objs.size() > 0) {SDK_TRACE_DEBUG ("Update store for object(s):");}
+    if (objs.size() > 0) {PDS_TRACE_DEBUG ("Update store for object(s):");}
 
     for (auto& obj_uptr: objs) {
         obj_uptr->print_debug_str();

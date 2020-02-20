@@ -103,7 +103,7 @@ pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
     if (lif_ifindex != 0) {
         spec.host_if = api::uuid_from_objid(lif_ifindex);
     }
-    SDK_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x LIF UUID %s",
+    PDS_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x LIF UUID %s",
                     ips_info_.bd_id, spec.fabric_encap.val.vnid,
                     store_info_.bd_obj->properties().host_ifindex,
                     spec.host_if.str());
@@ -163,7 +163,7 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_
 pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
     auto& pds_spec = store_info_.subnet_obj->spec();
-    SDK_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s",
+    PDS_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s",
                     ips_info_.bd_id, pds_spec.key.str(), pds_spec.vpc.str(), 
                     pds_spec.fabric_encap.val.vnid,
                     ipv4addr2str(pds_spec.v4_vr_ip));
@@ -187,7 +187,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         if (unlikely(store_info_.subnet_obj == nullptr)) {
             // The prev BD IPS response could have possibly been delayed
             // beyond Subnet Spec delete - Ignore and return success to MS
-            SDK_TRACE_INFO ("BD %d: AddUpd IPS for unknown BD", ips_info_.bd_id);
+            PDS_TRACE_INFO ("BD %d: AddUpd IPS for unknown BD", ips_info_.bd_id);
             return;
         }
         bd_obj_uptr_t bd_obj_uptr; 
@@ -198,7 +198,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         }
         store_info_.bd_obj->properties().fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         store_info_.bd_obj->properties().fabric_encap.val.vnid = ips_info_.vnid;
-        SDK_TRACE_INFO("MS BD %d UUID %s %s IPS VNI %ld", ips_info_.bd_id,
+        PDS_TRACE_INFO("MS BD %d UUID %s %s IPS VNI %ld", ips_info_.bd_id,
                        store_info_.bd_obj->properties().subnet.str(),
                        (op_create_) ? "Create" : "Update",
                        store_info_.bd_obj->properties().fabric_encap.val.vnid);
@@ -218,7 +218,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             // ----------------------------------------------------------------
             if (!pds_status && l_op_create) {
                 // Create failed - Erase the BD Obj saved in store
-                SDK_TRACE_DEBUG ("MS BD %d: Create failed "
+                PDS_TRACE_DEBUG ("MS BD %d: Create failed "
                                  "- delete store obj ",
                                  bd_add_upd_ips->bd_id);
                 // Enter thread-safe context to access/modify global state
@@ -235,7 +235,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             do {
             auto bdpi_join = get_l2f_bdpi_join();
             if (bdpi_join == nullptr) {
-                SDK_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
+                PDS_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
                               bd_add_upd_ips->bd_id);
                 break;
             }
@@ -248,19 +248,19 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                     l2f::Bd::set_ips_rc(&bd_add_upd_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("+++++++ MS BD %d: Send Async IPS "
+                PDS_TRACE_DEBUG ("+++++++ MS BD %d: Send Async IPS "
                                  "reply %s stateless mode ++++++++",
                                 bd_add_upd_ips->bd_id.bd_id, 
                                 (pds_status) ? "Success" : "Failure");
                 bdpi_join->send_ips_reply(&bd_add_upd_ips->ips_hdr);
             } else {
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("MS BD %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS BD %d: Send Async IPS "
                                     "Reply success stateful mode",
                                     bd_add_upd_ips->bd_id);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("MS BD %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS BD %d: Send Async IPS "
                                     "Reply failure stateful mode",
                                     bd_add_upd_ips->bd_id);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
@@ -293,7 +293,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
       // Do Not access/modify global state after this
 
     bd_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful", 
                      ips_info_.bd_id);
 
     if (PDS_MOCK_MODE()) {
@@ -323,11 +323,11 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // The prev IPS response could have possibly been delayed
             // beyond Subnet Spec delete - Ignore and return success to MS
-            SDK_TRACE_INFO ("Delete IPS for unknown MS BD %d", bd_id);
+            PDS_TRACE_INFO ("Delete IPS for unknown MS BD %d", bd_id);
             return;
         }
         subnet_uuid = store_info_.bd_obj->properties().subnet;
-        SDK_TRACE_INFO ("MS BD %d UUID %s Delete IPS", ips_info_.bd_id,
+        PDS_TRACE_INFO ("MS BD %d UUID %s Delete IPS", ips_info_.bd_id,
                         subnet_uuid.str());
 
         // Empty cookie to force async PDS.
@@ -352,7 +352,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("++++++++++ MS BD %d Delete: Rcvd Async PDS"
+            PDS_TRACE_DEBUG("++++++++++ MS BD %d Delete: Rcvd Async PDS"
                             " response %s +++++++++++++",
                             l_bd_id, (pds_status) ? "Success" : "Failure");
             auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -368,7 +368,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
                     .append(std::to_string(bd_id))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful", bd_id);
+    PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful", bd_id);
 
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -381,7 +381,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     ips_info_.bd_id = bd_id;
     if (ms_ifindex_to_pds_type(ifindex) != IF_TYPE_LIF) {
-        SDK_TRACE_VERBOSE("Ignore Non-LIF interface 0x%x bind to BD %d",
+        PDS_TRACE_VERBOSE("Ignore Non-LIF interface 0x%x bind to BD %d",
                           ifindex, bd_id);
         return;
     }
@@ -396,13 +396,13 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
         if (unlikely(store_info_.subnet_obj == nullptr)) {
             // The prev IPS response could have possibly been delayed
             // beyond Subnet Spec delete - Ignore and return success to MS
-            SDK_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS for unknown BD",
+            PDS_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS for unknown BD",
                             bd_id, ifindex);
             return;
         }
         store_info_.bd_obj->properties().host_ifindex = ms_to_pds_ifindex(ifindex);
 
-        SDK_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x", 
+        PDS_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x", 
                         bd_id, ifindex,
                         store_info_.bd_obj->properties().host_ifindex);
 
@@ -423,7 +423,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++++++++ MS BD %d If 0x%x: Bind - Rcvd Async"
+            PDS_TRACE_DEBUG("+++++++++++ MS BD %d If 0x%x: Bind - Rcvd Async"
                             " PDS response %s ++++++++++",
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
@@ -439,7 +439,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                     .append(" MS If ").append(std::to_string(ifindex))
                     .append(" Bind err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG("MS BD %d If 0x%x: Bind PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d If 0x%x: Bind PDS Batch commit successful",
                     ips_info_.bd_id, ifindex);
 
     if (PDS_MOCK_MODE()) {
@@ -463,12 +463,12 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
         if (unlikely(store_info_.subnet_obj == nullptr)) {
             // The prev IPS response could have possibly been delayed
             // beyond Subnet Spec delete - Ignore and return success to MS
-            SDK_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS for unknown BD",
+            PDS_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS for unknown BD",
                             bd_id, ifindex);
             return;
         }
         store_info_.bd_obj->properties().host_ifindex = 0;
-        SDK_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS", bd_id, ifindex);
+        PDS_TRACE_INFO ("MS BD %d If 0x%x: Unbind IPS", bd_id, ifindex);
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
@@ -487,7 +487,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("++++++++++ MS BD %d If 0x%x: Unbind - Rcvd Async"
+            PDS_TRACE_DEBUG("++++++++++ MS BD %d If 0x%x: Unbind - Rcvd Async"
                             " PDS response %s +++++++++++",
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
@@ -503,7 +503,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
                     .append(" If ").append(std::to_string(ifindex))
                     .append(" Unbind err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG("MS BD %d If 0x%x: Unbind PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d If 0x%x: Unbind PDS Batch commit successful",
                     ips_info_.bd_id, ifindex);
 
     if (PDS_MOCK_MODE()) {
@@ -529,12 +529,12 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         if (unlikely(store_info_.bd_obj == nullptr)) {
             // L2F BD has not created the subnet in PDS HAL yet.
             // L2F BD will update PDS HAL with the latest cached subnet spec
-            SDK_TRACE_DEBUG("MS BD %d: Ignore Direct Update before BD Create", 
+            PDS_TRACE_DEBUG("MS BD %d: Ignore Direct Update before BD Create", 
                             ips_info_.bd_id);
             return SDK_RET_OK;
         }
 
-        SDK_TRACE_DEBUG("MS BD %d: Received Direct Update for BD", ips_info_.bd_id);
+        PDS_TRACE_DEBUG("MS BD %d: Received Direct Update for BD", ips_info_.bd_id);
         pds_bctxt_guard = prepare_pds(state_ctxt, false /* sync */);
 
         // This is a synchronous batch commit.
@@ -543,12 +543,12 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
 
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR ("MS BD %d: Add/Upd PDS Direct Update Batch commit"
+        PDS_TRACE_ERR ("MS BD %d: Add/Upd PDS Direct Update Batch commit"
                        "failed %d", ips_info_.bd_id, ret);
         return ret;
     }
 
-    SDK_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Direct Update Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Direct Update Batch commit successful", 
                      ips_info_.bd_id);
     return SDK_RET_OK;
 }
@@ -562,7 +562,7 @@ l2f_bd_update_pds_synch (state_t::context_t&& state_ctxt,
         l2f_bd_t bd;
         return bd.update_pds_synch(std::move(state_ctxt), bd_id, subnet_obj);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("BD Direct Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("BD Direct Update processing failed %s", e.what());
         return SDK_RET_ERR;
     }
 }

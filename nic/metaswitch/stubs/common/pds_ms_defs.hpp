@@ -7,6 +7,7 @@
 #define __PDS_MS_MS_DEFS_HPP__
 
 #include <nbase.h>
+#include "nic/apollo/core/trace.hpp"
 
 namespace pds_ms {
 using ms_ps_id_t = uint32_t; // Pathset ID

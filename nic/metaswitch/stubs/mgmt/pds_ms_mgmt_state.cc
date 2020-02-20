@@ -27,7 +27,7 @@ mgmt_state_t::mgmt_state_t(void) {
 
 void mgmt_state_t::commit_pending_uuid() {
     for (auto& uuid_pair: uuid_pending_create_) {
-        SDK_TRACE_VERBOSE("Commit create UUID %s", uuid_pair.first.str());
+        PDS_TRACE_VERBOSE("Commit create UUID %s", uuid_pair.first.str());
         uuid_store_[uuid_pair.first] = std::move(uuid_pair.second);
     }
     uuid_pending_create_.clear();
@@ -39,7 +39,7 @@ void mgmt_state_t::commit_pending_uuid() {
         // NOTE - Assumption that the deleted UUID will not be
         //        used again for Create immediately
         if (uuid_it->second->delay_release()) continue;
-        SDK_TRACE_VERBOSE("Commit delete UUID %s", uuid.str());
+        PDS_TRACE_VERBOSE("Commit delete UUID %s", uuid.str());
         uuid_store_.erase(uuid_it);
     }
     uuid_pending_delete_.clear();
@@ -67,10 +67,10 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
 void mgmt_state_t::set_pending_uuid_create(const pds_obj_key_t& uuid, 
                              uuid_obj_uptr_t&& obj) {
     if (lookup_uuid(uuid) != nullptr) {
-        SDK_TRACE_VERBOSE("Cannot create existing UUID %s", uuid.str());
+        PDS_TRACE_VERBOSE("Cannot create existing UUID %s", uuid.str());
         return;
     }
-    SDK_TRACE_VERBOSE("UUID %s in pending Create list", uuid.str());
+    PDS_TRACE_VERBOSE("UUID %s in pending Create list", uuid.str());
     uuid_pending_create_[uuid] = std::move(obj);
 }
 
@@ -101,7 +101,7 @@ void mgmt_state_t::redo_rt_pending_ () {
         if (obj.type == rt_type_e::EVI) {
             subnet_obj = state_ctxt.state()->subnet_store().get(obj.src_id);
             if (subnet_obj) {
-                SDK_TRACE_VERBOSE ("EVI RT %s is removed from subnet-id %d "
+                PDS_TRACE_VERBOSE ("EVI RT %s is removed from subnet-id %d "
                                    "due to failure",
                                    rt2str(obj.rt_str), obj.src_id);
                 subnet_obj->rt_store.del(obj.rt_str);
@@ -109,7 +109,7 @@ void mgmt_state_t::redo_rt_pending_ () {
         } else if (obj.type == rt_type_e::VRF) {
             vpc_obj = state_ctxt.state()->vpc_store().get(obj.src_id);
             if (vpc_obj) {
-                SDK_TRACE_VERBOSE ("VRF RT %s is removed from vpc-id %d "
+                PDS_TRACE_VERBOSE ("VRF RT %s is removed from vpc-id %d "
                                    "due to failure",
                                    rt2str(obj.rt_str), obj.src_id);
                 vpc_obj->rt_store.del(obj.rt_str);
@@ -122,7 +122,7 @@ void mgmt_state_t::redo_rt_pending_ () {
         if (obj.type == rt_type_e::EVI) {
             subnet_obj = state_ctxt.state()->subnet_store().get(obj.src_id);
             if (subnet_obj) {
-                SDK_TRACE_VERBOSE ("EVI RT %s is added back to subnet-id %d "
+                PDS_TRACE_VERBOSE ("EVI RT %s is added back to subnet-id %d "
                                    "due to failure",
                                    rt2str(obj.rt_str), obj.src_id);
                 subnet_obj->rt_store.add(obj.rt_str);
@@ -130,7 +130,7 @@ void mgmt_state_t::redo_rt_pending_ () {
         } else if (obj.type == rt_type_e::VRF) {
             vpc_obj = state_ctxt.state()->vpc_store().get(obj.src_id);
             if (vpc_obj) {
-                SDK_TRACE_VERBOSE ("VRF RT %s is added back to vpc-id %d "
+                PDS_TRACE_VERBOSE ("VRF RT %s is added back to vpc-id %d "
                                    "due to failure",
                                    rt2str(obj.rt_str), obj.src_id);
                 vpc_obj->rt_store.add(obj.rt_str);
@@ -150,15 +150,15 @@ mgmt_state_init (void)
         mgmt_state_t::create();
 
     } catch (pds_ms::Error& e) {
-        SDK_TRACE_ERR("Mgmt state Initialization failed - %s", e.what());
+        PDS_TRACE_ERR("Mgmt state Initialization failed - %s", e.what());
         return false;
     }
     if (std::getenv("PDS_MOCK_MODE")) {
         mgmt_state_t::thread_context().state()->set_pds_mock_mode(true);
-        SDK_TRACE_INFO("Running in PDS MOCK MODE");
+        PDS_TRACE_INFO("Running in PDS MOCK MODE");
     }
 
-    SDK_TRACE_INFO ("Mgmt State Initialization successful");
+    PDS_TRACE_INFO ("Mgmt State Initialization successful");
     return true;
 }
 

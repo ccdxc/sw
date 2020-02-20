@@ -15,7 +15,7 @@ namespace pds_ms {
 static inline l2f::BdpiSlaveJoin* get_l2f_bdpi_join() {
     auto& bdpi_set = l2f::Fte::get().get_bdpi_joins();
     if (unlikely(bdpi_set.size()!=1)) {
-        SDK_TRACE_ERR("Unexpected number of BDPI joins %d", 
+        PDS_TRACE_ERR("Unexpected number of BDPI joins %d", 
                       bdpi_set.size());
         return nullptr;
     }
@@ -31,7 +31,7 @@ static inline l2f::FdbMacStore* get_l2f_fdb_mac_store() {
 static inline l2f::MaiSlaveJoin* get_l2f_mai_join() {
     auto& mai_set = l2f::Fte::get().get_mai_joins();
     if (unlikely(mai_set.size()!=1)) {
-        SDK_TRACE_ERR("Unexpected number of MAI joins %d", 
+        PDS_TRACE_ERR("Unexpected number of MAI joins %d", 
                       mai_set.size());
         return nullptr;
     }

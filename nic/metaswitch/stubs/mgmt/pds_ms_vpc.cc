@@ -101,11 +101,11 @@ pds_cache_vpc_spec (pds_vpc_spec_t *vpc_spec, ms_vrf_id_t vrf_id,
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
         if (vpc_obj == nullptr) {return;}
         if (vpc_obj->properties().hal_created) {
-            SDK_TRACE_DEBUG("VPC %d already created in HAL - marking for delete",
+            PDS_TRACE_DEBUG("VPC %d already created in HAL - marking for delete",
                             vrf_id);
             vpc_obj->properties().spec_invalid = true;
         } else {
-            SDK_TRACE_DEBUG("VPC %d not created in HAL yet - remove from store",
+            PDS_TRACE_DEBUG("VPC %d not created in HAL yet - remove from store",
                             vpc_obj->properties().vrf_id);
             state_ctxt.state()->vpc_store().erase(vpc_obj->properties().vrf_id);
         }
@@ -123,7 +123,7 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Create new instance of RTM and initiate Joins
-    SDK_TRACE_INFO("%s VRF RTM instance %d",
+    PDS_TRACE_INFO("%s VRF RTM instance %d",
                    (row_status==AMB_ROW_DESTROY) ? "Deleting" : "Creating",
                    rtm_index);
 
@@ -155,7 +155,7 @@ process_underlay_vpc_create ()
     conf.row_status  = AMB_ROW_ACTIVE;
 
     // Create new instance of RTM and initiate Joins
-    SDK_TRACE_INFO("Underlay VRF creation request received");
+    PDS_TRACE_INFO("Underlay VRF creation request received");
 
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -216,7 +216,7 @@ vpc_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
                     .append(" in VPC request"), SDK_RET_INVALID_ARG);
     }
     auto vpc_uuid_obj = (vpc_uuid_obj_t*) uuid_obj;
-    SDK_TRACE_VERBOSE("Fetched VPC UUID %s = VRF %d",
+    PDS_TRACE_VERBOSE("Fetched VPC UUID %s = VRF %d",
                       key.str(), vpc_uuid_obj->ms_id());
     if (del_op) {
         mgmt_ctxt.state()->set_pending_uuid_delete(key);
@@ -240,31 +240,31 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (spec->type != PDS_VPC_TYPE_UNDERLAY) {
             ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_ACTIVE);
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
-                SDK_TRACE_ERR ("Failed to process VPC %s VRF %d create (error=%d)",
+                PDS_TRACE_ERR ("Failed to process VPC %s VRF %d create (error=%d)",
                                spec->key.str(), vrf_id, ret_status);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
         } else {
             ret_status = process_underlay_vpc_create();
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
-                SDK_TRACE_ERR ("Failed to process underlay VPC %s create (error=%d)",
+                PDS_TRACE_ERR ("Failed to process underlay VPC %s create (error=%d)",
                                spec->key.str(), ret_status);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
             auto ret = li_vrf_underlay_vpc_commit_pds_synch(*spec, true);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Error commiting Underlay VPC to HAL");
+                PDS_TRACE_ERR("Error commiting Underlay VPC to HAL");
                 return ret;
             }
             // Commit UUID mapping store
             auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->commit_pending_uuid();
         }
-        SDK_TRACE_DEBUG ("VPC %s VRF %d RouteTable %s RTM-v4 %d created successfully",
+        PDS_TRACE_DEBUG ("VPC %s VRF %d RouteTable %s RTM-v4 %d created successfully",
                          spec->key.str(), vrf_id, spec->v4_route_table.str(),
                          rtm_index);
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("VPC %s create failed %s", spec->key.str(), e.what());
+        PDS_TRACE_ERR ("VPC %s create failed %s", spec->key.str(), e.what());
         return e.rc();
     }
     return SDK_RET_OK;
@@ -275,7 +275,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        SDK_TRACE_ERR ("Underlay VPC %s deletion not allowed",
+        PDS_TRACE_ERR ("Underlay VPC %s deletion not allowed",
                        spec->key.str());
         return SDK_RET_INVALID_OP;
     }
@@ -287,7 +287,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
             auto ret = li_vrf_underlay_vpc_delete_pds_synch(spec->key);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Error commiting Underlay VPC to HAL");
+                PDS_TRACE_ERR("Error commiting Underlay VPC to HAL");
                 return ret;
             }
             pds_cache_vpc_spec(spec, vrf_id, true);
@@ -295,17 +295,17 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         }
         ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
+            PDS_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
                            spec->key.str(), vrf_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-        SDK_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
+        PDS_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
                          spec->key.str(), vrf_id);
         // Remove cached VPC spec, after successful reply from MS
         pds_cache_vpc_spec(spec, vrf_id, true);
 
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("VPC %s deletion failed %s", spec->key.str(), e.what());
+        PDS_TRACE_ERR ("VPC %s deletion failed %s", spec->key.str(), e.what());
         return e.rc();
     }
     return SDK_RET_OK;
@@ -323,7 +323,7 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
             auto ret = li_vrf_underlay_vpc_commit_pds_synch(*spec, false);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Error commiting Underlay VPC Update to HAL");
+                PDS_TRACE_ERR("Error commiting Underlay VPC Update to HAL");
                 return ret;
             }
             return SDK_RET_OK;
@@ -331,7 +331,7 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         auto state_ctxt = state_t::thread_context();
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
         if (vpc_obj == nullptr) {
-            SDK_TRACE_ERR("VPC update for unknown VRF %d", spec->key.id);
+            PDS_TRACE_ERR("VPC update for unknown VRF %d", spec->key.id);
             return SDK_RET_ENTRY_NOT_FOUND;
         }
         // Update the cached vpc spec with the new info
@@ -341,7 +341,7 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         // received from MS. Below function will release the state context lock.
         return li_vrf_update_pds_synch(std::move(state_ctxt), vpc_obj);
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("VPC %s update failed %s", spec->key.str(), e.what());
+        PDS_TRACE_ERR ("VPC %s update failed %s", spec->key.str(), e.what());
         return e.rc();
     }
 }

@@ -67,7 +67,7 @@ public:
     void update_store(state_t* state, bool op_delete) override;
 
     void print_debug_str(void) override {
-        SDK_TRACE_DEBUG ("  - TEP: %s ", ipaddr2str (&(prop_.tep_ip)));
+        PDS_TRACE_DEBUG ("  - TEP: %s ", ipaddr2str (&(prop_.tep_ip)));
     }
 
 private:

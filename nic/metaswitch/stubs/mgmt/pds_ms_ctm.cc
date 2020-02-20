@@ -136,7 +136,7 @@ pds_ms_ctm_rcv_transaction_done (ATG_CPI_TRANSACTION_DONE *trans_done)
                                 "Nbase stubs init txn failed! Aborting!");
         // Stubs initialization transaction is successful
         // We can now signal that the nbase thread is ready
-        SDK_TRACE_INFO("Nbase thread is ready");
+        PDS_TRACE_INFO("Nbase thread is ready");
         cout << "N-Base thread is ready\n";
         auto ctx = pds_ms::mgmt_state_t::thread_context();
         ctx.state()->nbase_thread()->set_ready(true);

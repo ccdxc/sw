@@ -7,7 +7,6 @@
 {{$pkgName := .Package}}
 {{$fileName := .GetName}}
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/{{TrimSuffix $fileName ".proto"}}_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_common.hpp"
@@ -37,18 +36,18 @@ Status
     }
     types::ApiStatus ret = types::API_STATUS_OK;
     {{if (HasSuffix $rpc "Create")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
     {{end}}
     {{if (HasSuffix $rpc "Delete")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
     {{end}}
     {{if (HasSuffix $rpc "Update")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
     {{end}}
     try {
     ret = {{$param.ActionFn}}(req, resp);
     } catch (const pds_ms::Error& e) {
-        SDK_TRACE_ERR("MIB Get aborted %s", e.what());
+        PDS_TRACE_ERR("MIB Get aborted %s", e.what());
         resp->set_apistatus(pds_ms_sdk_ret_to_api_status(e.rc()));
         return Status::OK;
     }
@@ -67,13 +66,13 @@ Status
     types::ApiStatus ret = types::API_STATUS_OK;
 
     {{if (HasSuffix $rpc "Create")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
     {{end}}
     {{if (HasSuffix $rpc "Delete")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
     {{end}}
     {{if (HasSuffix $rpc "Update")}}
-       SDK_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
+       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
     {{end}}
     try {
     {{if or (HasSuffix $rpc "Delete") (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
@@ -268,7 +267,7 @@ Status
       {{end}}
     {{end}}
     } catch (const pds_ms::Error& e) {
-        SDK_TRACE_ERR("CTM Transaction aborted %s", e.what());
+        PDS_TRACE_ERR("CTM Transaction aborted %s", e.what());
         resp->set_apistatus(pds_ms_sdk_ret_to_api_status(e.rc()));
         return Status::OK;
     }

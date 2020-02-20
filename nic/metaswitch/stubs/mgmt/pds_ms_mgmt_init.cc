@@ -301,11 +301,11 @@ mgmt_svc_init (grpc::ServerBuilder* server_builder)
     server_builder->RegisterService(&cp_route_svc);
 
 //    if (PDS_MOCK_MODE()) {
-        SDK_TRACE_INFO("Registering CP test proto");
+        PDS_TRACE_INFO("Registering CP test proto");
         server_builder->RegisterService(&cp_test_svc);
 //    }
 
-    SDK_TRACE_INFO("Mgmt SVC init successful");
+    PDS_TRACE_INFO("Mgmt SVC init successful");
 }
 
 } // End namespace

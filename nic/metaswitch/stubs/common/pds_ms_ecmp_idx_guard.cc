@@ -43,11 +43,11 @@ ecmp_idx_guard_t::~ecmp_idx_guard_t() {
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto rs = state_ctxt.state()->ecmp_idx_free(ecmp_idx_);
     if (rs != SDK_RET_OK) {
-        SDK_TRACE_ERR("Overlay ECMP HAL Index %d free failed with err %d",
+        PDS_TRACE_ERR("Overlay ECMP HAL Index %d free failed with err %d",
                       ecmp_idx_, rs);
         return;
     }
-    SDK_TRACE_VERBOSE("Freed Overlay ECMP HAL Index %d", ecmp_idx_);
+    PDS_TRACE_VERBOSE("Freed Overlay ECMP HAL Index %d", ecmp_idx_);
 }
 
 } // End namespace

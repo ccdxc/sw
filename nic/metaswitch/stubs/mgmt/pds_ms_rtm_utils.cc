@@ -59,7 +59,7 @@ cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status,
     }
     auto ifindex = ((pds_ms::interface_uuid_obj_t *) uuid_obj)->ms_id();
     req.set_ifindex(ifindex);
-    SDK_TRACE_DEBUG("Setting CP Route Interface index 0x%x from UUID %s",
+    PDS_TRACE_DEBUG("Setting CP Route Interface index 0x%x from UUID %s",
                     ifindex, uuid.str());
 }
 } // End of namespace pds
@@ -116,7 +116,7 @@ pds_ms_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
             strncpy((char*)data->vrf_name, vrf_name.c_str(), vrf_max_sz);
             data->vrf_name_len = (vrf_name.size() > vrf_max_sz)
                                  ? vrf_max_sz : vrf_name.size();
-            SDK_TRACE_DEBUG("RTM VRF name = %s", vrf_name.c_str());
+            PDS_TRACE_DEBUG("RTM VRF name = %s", vrf_name.c_str());
             AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_VRF_NAME);
         }
     }

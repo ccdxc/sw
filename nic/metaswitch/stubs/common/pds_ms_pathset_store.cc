@@ -30,7 +30,7 @@ pathset_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 pathset_obj_t::pathset_obj_t(ms_ps_id_t ps_id) : prop_(ps_id) {
     // Allocate index
     hal_oecmp_idx_guard = make_shared<ecmp_idx_guard_t>();
-    SDK_TRACE_VERBOSE("Allocated HAL Overlay ECMP Index %d for MS Pathset %d",
+    PDS_TRACE_VERBOSE("Allocated HAL Overlay ECMP Index %d for MS Pathset %d",
                       hal_oecmp_idx_guard->idx(), prop_.ms_ps_id);
 }
 

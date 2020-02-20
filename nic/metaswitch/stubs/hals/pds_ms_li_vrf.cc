@@ -157,7 +157,7 @@ pds_batch_ctxt_guard_t li_vrf_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
 
     auto& pds_spec = store_info_.vpc_obj->properties().vpc_spec;
-    SDK_TRACE_INFO ("VRF ID %d VNI %d",
+    PDS_TRACE_INFO ("VRF ID %d VNI %d",
                     ips_info_.vrf_id, pds_spec.fabric_encap.val.vnid);
 
     auto pds_bctxt_guard = make_batch_pds_spec_(async); 
@@ -183,15 +183,15 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
             // The prev VRF IPS response could have possibly been delayed
             // beyond VPC Spec delete - Ignore and return success.
             // Delete is on the way
-            SDK_TRACE_INFO ("VRF %d: VRF AddUpd IPS for unknown VRF",
+            PDS_TRACE_INFO ("VRF %d: VRF AddUpd IPS for unknown VRF",
                             ips_info_.vrf_id);
             return;
         }
         if (op_create_) {
-            SDK_TRACE_INFO ("MS VRF %d UUID %s Create IPS", ips_info_.vrf_id,
+            PDS_TRACE_INFO ("MS VRF %d UUID %s Create IPS", ips_info_.vrf_id,
                             store_info_.vpc_obj->properties().vpc_spec.key.str());
         } else {
-            SDK_TRACE_INFO ("MS VRF %d UUID %s Update IPS", ips_info_.vrf_id,
+            PDS_TRACE_INFO ("MS VRF %d UUID %s Update IPS", ips_info_.vrf_id,
                             store_info_.vpc_obj->properties().vpc_spec.key.str());
         }
 
@@ -211,7 +211,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
             if (!pds_status && l_op_create) {
                 // Create failed - Erase the VRF Store Obj
                 // Enter thread-safe context to access/modify global state
-                SDK_TRACE_DEBUG ("MS VRF %d: VRF Create failed "
+                PDS_TRACE_DEBUG ("MS VRF %d: VRF Create failed "
                                  "- delete store obj ", l_vrf_id);
                 auto state_ctxt = pds_ms::state_t::thread_context();
                 auto vpc_obj = state_ctxt.state()->vpc_store().get(l_vrf_id);
@@ -239,18 +239,18 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
                     li::Vrf::set_ips_rc(&vrf_add_upd_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("++++++++ MS VRF %d: Send Async IPS "
+                PDS_TRACE_DEBUG ("++++++++ MS VRF %d: Send Async IPS "
                                 "reply %s stateless mode +++++++++",
                                 l_vrf_id, (pds_status) ? "Success" : "Failure");
                 li::Fte::get().get_lipi_join()->
                     send_ips_reply(&vrf_add_upd_ips->ips_hdr);
             } else {
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("MS VRF %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS VRF %d: Send Async IPS "
                                     "Reply success stateful mode", l_vrf_id);
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("MS VRF %d: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS VRF %d: Send Async IPS "
                                     "Reply failure stateful mode", l_vrf_id);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
@@ -280,7 +280,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
       // Do Not access/modify global state after this
 
     vrf_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("MS VRF  %d: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS VRF  %d: Add/Upd PDS Batch commit successful", 
                      ips_info_.vrf_id);
     
     if (PDS_MOCK_MODE()) {
@@ -305,11 +305,11 @@ sdk_ret_t li_vrf_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
             // LI VRF has not created the VPC in PDS HAL yet.
             // When the PDS Create is pushed, LI VRF will use the latest cached
             // VPC spec
-            SDK_TRACE_DEBUG("MS VRF  %d: Ignore Direct Update before VRF Create", 
+            PDS_TRACE_DEBUG("MS VRF  %d: Ignore Direct Update before VRF Create", 
                             ips_info_.vrf_id);
             return SDK_RET_OK;
         }
-        SDK_TRACE_DEBUG("VPC %s MS VRF %d Received Direct Update for VRF",
+        PDS_TRACE_DEBUG("VPC %s MS VRF %d Received Direct Update for VRF",
                         vpc_obj->properties().vpc_spec.key.str(),
                         ips_info_.vrf_id);
         pds_bctxt_guard = prepare_pds(state_ctxt, false /* synchronous */);
@@ -320,12 +320,12 @@ sdk_ret_t li_vrf_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
 
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR ("MS VRF %d: Add/Upd PDS Direct Update Batch commit"
+        PDS_TRACE_ERR ("MS VRF %d: Add/Upd PDS Direct Update Batch commit"
                        "failed %d", ips_info_.vrf_id, ret);
         return ret;
     }
 
-    SDK_TRACE_DEBUG ("MS VRF  %d: Add/Upd PDS Direct Update Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS VRF  %d: Add/Upd PDS Direct Update Batch commit successful", 
                      ips_info_.vrf_id);
     return SDK_RET_OK;
 }
@@ -350,12 +350,12 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         fetch_store_info_(state_ctxt.state());
 
         if(store_info_.vpc_obj == nullptr) {
-            SDK_TRACE_INFO ("Delete IPS for unknown MS VRF %d", ips_info_.vrf_id);
+            PDS_TRACE_INFO ("Delete IPS for unknown MS VRF %d", ips_info_.vrf_id);
             return;
         }
 
         vpc_uuid = store_info_.vpc_obj->properties().vpc_spec.key;
-        SDK_TRACE_INFO ("MS VRF %d UUID %s Delete IPS", ips_info_.vrf_id, vpc_uuid.str());
+        PDS_TRACE_INFO ("MS VRF %d UUID %s Delete IPS", ips_info_.vrf_id, vpc_uuid.str());
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
@@ -377,7 +377,7 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++++  VPC %s MS VRF %d Delete: Rcvd Async PDS"
+            PDS_TRACE_DEBUG("+++++++  VPC %s MS VRF %d Delete: Rcvd Async PDS"
                             " response %s +++++++++",
                             vpc_uuid.str(), vrf_id,
                             (pds_status) ? "Success" : "Failure");
@@ -394,7 +394,7 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
                     .append(std::to_string(ips_info_.vrf_id))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("MS VRF %d: Delete PDS Batch commit successful", ips_info_.vrf_id);
+    PDS_TRACE_DEBUG ("MS VRF %d: Delete PDS Batch commit successful", ips_info_.vrf_id);
 }
 
 sdk_ret_t
@@ -404,7 +404,7 @@ li_vrf_update_pds_synch (state_t::context_t&& state_ctxt, vpc_obj_t* vpc_obj)
         li_vrf_t vrf;
         return vrf.update_pds_synch(std::move(state_ctxt), vpc_obj);
     } catch (Error& e) {
-        SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
+        PDS_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
         return SDK_RET_ERR;
     }
 }
@@ -428,19 +428,19 @@ li_vrf_underlay_vpc_commit_pds_synch (pds_vpc_spec_t& vpc_spec,
         ret = pds_vpc_update(&vpc_spec, bctxt);
     }
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR("Underlay VPC PDS Direct VPC Create failed for %s err=%d",
+        PDS_TRACE_ERR("Underlay VPC PDS Direct VPC Create failed for %s err=%d",
                       vpc_spec.key.str(), ret);
         return ret;
     }
 
     ret = pds_batch_commit(bctxt);
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR ("Underlay VPC PDS Direct VPC Create Batch commit failed for %s err=%d",
+        PDS_TRACE_ERR ("Underlay VPC PDS Direct VPC Create Batch commit failed for %s err=%d",
                       vpc_spec.key.str(), ret);
         return ret;
     }
 
-    SDK_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Create Batch commit suuccessful for %s",
+    PDS_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Create Batch commit suuccessful for %s",
                       vpc_spec.key.str());
     return SDK_RET_OK;
 }
@@ -459,19 +459,19 @@ li_vrf_underlay_vpc_delete_pds_synch (pds_obj_key_t& vpc_key)
 
     ret = pds_vpc_delete(&vpc_key, bctxt);
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR("Underlay VPC PDS Direct VPC Delete failed for %s err=%d",
+        PDS_TRACE_ERR("Underlay VPC PDS Direct VPC Delete failed for %s err=%d",
                       vpc_key.str(), ret);
         return ret;
     }
 
     ret = pds_batch_commit(bctxt);
     if (unlikely (ret != SDK_RET_OK)) {
-        SDK_TRACE_ERR ("Underlay VPC PDS Direct VPC Delete Batch commit failed for %s err=%d",
+        PDS_TRACE_ERR ("Underlay VPC PDS Direct VPC Delete Batch commit failed for %s err=%d",
                       vpc_key.str(), ret);
         return ret;
     }
 
-    SDK_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Delete Batch commit suuccessful for %s",
+    PDS_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Delete Batch commit suuccessful for %s",
                       vpc_key.str());
     return SDK_RET_OK;
 }

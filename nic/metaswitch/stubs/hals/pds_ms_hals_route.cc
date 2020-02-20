@@ -140,14 +140,14 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
 
     parse_ips_info_(add_upd_route_ips);
 
-    SDK_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Overlay ECMP %d",
+    PDS_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Overlay ECMP %d",
                      ips_info_.vrf_id, ipaddr2str(&ips_info_.pfx.addr),
                      add_upd_route_ips->route_properties.type,
                      ips_info_.overlay_ecmp_id);
 
     if ((add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_CONNECTED) ||
         (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
-        SDK_TRACE_DEBUG("Ignore connected route");
+        PDS_TRACE_DEBUG("Ignore connected route");
         return;
     }
 
@@ -158,7 +158,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto rttable_key = make_pds_rttable_key_();
         if (is_pds_obj_key_invalid(rttable_key)) {
-            SDK_TRACE_DEBUG("Ignore MS route for VRF %d that does not"
+            PDS_TRACE_DEBUG("Ignore MS route for VRF %d that does not"
                             " have Route table ID", ips_info_.vrf_id);
             return;
         }
@@ -203,7 +203,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
             do {
             auto ropi_join = get_hals_ropi_join();
             if (ropi_join == nullptr) {
-                SDK_TRACE_ERR("Failed to find ROPI join to return AddUpd IPS");
+                PDS_TRACE_ERR("Failed to find ROPI join to return AddUpd IPS");
                 break;
             }
             auto& route_store = ropi_join->get_route_store();
@@ -214,19 +214,19 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
                     hals::Route::set_ips_rc(&add_upd_route_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("+++++++ MS Route %s: Send Async IPS "
+                PDS_TRACE_DEBUG ("+++++++ MS Route %s: Send Async IPS "
                                  "reply %s stateless mode +++++++",
                                 ippfx2str(&l_ips_info_.pfx),
                                 (pds_status) ? "Success" : "Failure");
                 ropi_join->send_ips_reply(&add_upd_route_ips->ips_hdr);
             } else {
                 if (pds_status) {
-                    SDK_TRACE_DEBUG("MS Route %s: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS Route %s: Send Async IPS "
                                     "Reply success stateful mode",
                                     ippfx2str(&l_ips_info_.pfx));
                     (*it)->update_complete(ATG_OK);
                 } else {
-                    SDK_TRACE_DEBUG("MS Route %s: Send Async IPS "
+                    PDS_TRACE_DEBUG("MS Route %s: Send Async IPS "
                                     "Reply failure stateful mode",
                                     ippfx2str(&l_ips_info_.pfx));
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
@@ -251,7 +251,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
         //TODO: Is rollback required here ?
     }
     add_upd_route_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("Route %s: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("Route %s: Add/Upd PDS Batch commit successful", 
                      ippfx2str(&ips_info_.pfx));
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -272,7 +272,7 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
     // if there is a subsequent create from MS.
 
     populate_route_id(&route_id);
-    SDK_TRACE_INFO ("MS Route %s: Delete IPS", ippfx2str(&ips_info_.pfx));
+    PDS_TRACE_INFO ("MS Route %s: Delete IPS", ippfx2str(&ips_info_.pfx));
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -280,7 +280,7 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
         cookie_uptr_.reset(new cookie_t);
         auto rttable_key = make_pds_rttable_key_();
         if (is_pds_obj_key_invalid(rttable_key)) {
-            SDK_TRACE_DEBUG("Ignore MS route delete for VRF %d that does not"
+            PDS_TRACE_DEBUG("Ignore MS route delete for VRF %d that does not"
                             " have Route table ID", ips_info_.vrf_id);
             return;
         }
@@ -297,7 +297,7 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++ MS Route %s Delete: Rcvd Async PDS"
+            PDS_TRACE_DEBUG("+++++ MS Route %s Delete: Rcvd Async PDS"
                             " response %s +++++++",
                          ippfx2str(&pfx), (pds_status) ? "Success" : "Failure");
         };
@@ -311,7 +311,7 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
                     .append(ippfx2str(&pfx))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("MS Route %s: Delete PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS Route %s: Delete PDS Batch commit successful", 
                      ippfx2str(&pfx));
 }
 

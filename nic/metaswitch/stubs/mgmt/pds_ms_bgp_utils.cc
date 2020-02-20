@@ -38,7 +38,7 @@ update_bgp_route_map_table (NBB_ULONG correlator)
                 return true;
                 });
 
-    SDK_TRACE_VERBOSE ("****** bgpRouteMapTable ext-comm:: %s (len=%d)\n",
+    PDS_TRACE_VERBOSE ("****** bgpRouteMapTable ext-comm:: %s (len=%d)\n",
                        str.c_str(), str.length());
 
     // set length appropriately
@@ -68,7 +68,7 @@ bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
     auto peeraddr = req.mutable_peeraddr();
     ip_addr_to_spec(&bgp_peer_uuid_obj->ms_id().peer_ip, peeraddr);
 
-    SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
+    PDS_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
                       uuid_obj->uuid().str(),
                       ipaddr2str(&bgp_peer_uuid_obj->ms_id().local_ip),
                       ipaddr2str(&bgp_peer_uuid_obj->ms_id().peer_ip));
@@ -88,7 +88,7 @@ bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
     req.set_safi((pds::BGPSafi) bgp_peer_af_uuid_obj->ms_id().safi);
 
 
-    SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
+    PDS_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
                       uuid_obj->uuid().str(),
                       ipaddr2str(&bgp_peer_af_uuid_obj->ms_id().local_ip),
                       ipaddr2str(&bgp_peer_af_uuid_obj->ms_id().peer_ip));
@@ -130,7 +130,7 @@ bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp)
         // BGP Global, Peer and PeerAF
         // in which case it will fill the appropriate keys
         // and the UUID need not be created or deleted
-        SDK_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
+        PDS_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
     }
 }
@@ -169,7 +169,7 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_peer_uuid_obj));
         }
-        SDK_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
+        PDS_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
                           uuid.str(), ipaddr2str(&local_ipaddr),
                           ipaddr2str(&peer_ipaddr));
     } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
@@ -183,7 +183,7 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
         // BGP Global, Peer and PeerAF
         // in which case it will fill the appropriate keys
         // and the UUID need not be created or deleted
-        SDK_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
+        PDS_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
     }
 
@@ -236,7 +236,7 @@ bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
         // BGP Global, Peer and PeerAF
         // in which case it will fill the appropriate keys
         // and the UUID need not be created or deleted
-        SDK_TRACE_VERBOSE("Received BGP PeerAF get request with UUID type %s",
+        PDS_TRACE_VERBOSE("Received BGP PeerAF get request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
     }
 }
@@ -273,7 +273,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_peer_af_uuid_obj));
         }
-        SDK_TRACE_VERBOSE("BGP PeerAF Pre-set Create UUID %s Local IP %s "
+        PDS_TRACE_VERBOSE("BGP PeerAF Pre-set Create UUID %s Local IP %s "
                           "Peer IP %s AFI %d SAFI %d",
                           uuid.str(), ipaddr2str(&local_ipaddr),
                           ipaddr2str(&peer_ipaddr), req.afi(), req.safi());
@@ -288,7 +288,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
         // BGP Global, Peer and PeerAF
         // in which case it will fill the appropriate keys
         // and the UUID need not be created or deleted
-        SDK_TRACE_VERBOSE("Received BGP PeerAF request with UUID type %s",
+        PDS_TRACE_VERBOSE("Received BGP PeerAF request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
     }
 
@@ -300,7 +300,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
     ip_addr_t local_ipaddr, peer_ipaddr;
     ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
     ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
-    SDK_TRACE_VERBOSE("BGP PeerAF for Local IP %s "
+    PDS_TRACE_VERBOSE("BGP PeerAF for Local IP %s "
                       "Peer IP %s AFI %d SAFI %d is %s",
                       ipaddr2str(&local_ipaddr), ipaddr2str(&peer_ipaddr),
                       req.afi(), req.safi(),
@@ -323,7 +323,7 @@ bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
     }
 
     req.set_state (state);
-    SDK_TRACE_VERBOSE ("BGP Rm Ent admin status is updated to %s",
+    PDS_TRACE_VERBOSE ("BGP Rm Ent admin status is updated to %s",
                         (state == ADMIN_STATE_DISABLE) ? "Disable" : "Enable");
 }
 
@@ -397,13 +397,13 @@ bgp_rm_ent_get_fill_func (pds::BGPSpec &req,
             entity_index = bgp_uuid_obj->ms_id();
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_uuid_obj));
-            SDK_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
+            PDS_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
                               uuid.str(), entity_index);
         } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
             auto bgp_uuid_obj = (bgp_uuid_obj_t*)uuid_obj;
             entity_index = bgp_uuid_obj->ms_id();
         } else {
-            SDK_TRACE_ERR("BGP RM Request with unknown UUID %s of type %d",
+            PDS_TRACE_ERR("BGP RM Request with unknown UUID %s of type %d",
                           uuid.str(), uuid_obj_type_str(uuid_obj->obj_type()));
         }
     }
@@ -430,7 +430,7 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
             entity_index = bgp_uuid_obj->ms_id();
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_uuid_obj));
-            SDK_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
+            PDS_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
                               uuid.str(), entity_index);
         } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
             auto bgp_uuid_obj = (bgp_uuid_obj_t*)uuid_obj;
@@ -795,7 +795,7 @@ pds_ms_fill_amb_bgp_orf_cap (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     data->send_receive = AMB_BGP_ORF_CAP_SR_BOTH;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_SEND_RECV);
 
-    SDK_TRACE_VERBOSE ("BGP ORF Cap is enbaled for Afi/Safi %d/%d",
+    PDS_TRACE_VERBOSE ("BGP ORF Cap is enbaled for Afi/Safi %d/%d",
                         conf->afi, conf->safi);
 
     NBB_TRC_EXIT();

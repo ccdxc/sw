@@ -42,12 +42,12 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_key);
         if (uuid_obj == nullptr) {
-            SDK_TRACE_ERR("Received MAC %s IP %s learn for unknown Subnet %s",
+            PDS_TRACE_ERR("Received MAC %s IP %s learn for unknown Subnet %s",
                           macaddr2str(mac), ipaddr2str(&ip), subnet_key.str());
             return;
         }
         if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
-            SDK_TRACE_ERR("Received MAC %s IP %s learn with invalid UUID %s of type %s",
+            PDS_TRACE_ERR("Received MAC %s IP %s learn with invalid UUID %s of type %s",
                           macaddr2str(mac), ipaddr2str(&ip), subnet_key.str(),
                           uuid_obj_type_str(uuid_obj->obj_type()));
             return;
@@ -56,10 +56,10 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     } // Exit Mgmt thread context
 
     if (ip_addr_is_zero(&ip)) {
-        SDK_TRACE_DEBUG("Advertise MAC learn for Subnet %s BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
+        PDS_TRACE_DEBUG("Advertise MAC learn for Subnet %s BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
                         subnet_key.str(), bd_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
     } else {
-        SDK_TRACE_DEBUG("Advertise IP-MAC learn for Subnet %s BD %d IP %s MAC %s"
+        PDS_TRACE_DEBUG("Advertise IP-MAC learn for Subnet %s BD %d IP %s MAC %s"
                         " LIF 0x%x MS-LIF 0x%x",
                         subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac),
                         lif_ifindex, ms_lif_index);
@@ -77,7 +77,7 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     // Notify MAC only first
     auto ret = l2f::l2f_cc_is_mac_add_update(&mac_ip_id, ms_lif_index);
     if (ret != ATG_OK) {
-        SDK_TRACE_ERR("Adding local MAC to MS failed for BD %d MAC %s",
+        PDS_TRACE_ERR("Adding local MAC to MS failed for BD %d MAC %s",
                       bd_id, macaddr2str(mac));
     }
 
@@ -86,7 +86,7 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
         pds_ms::pds_to_ms_ipaddr(ip, &mac_ip_id.ip_address);
         ret = l2f::l2f_cc_is_mac_add_update(&mac_ip_id, ms_lif_index);
         if (ret != ATG_OK) {
-            SDK_TRACE_ERR("Adding local IP-MAC to MS failed for BD %d IP %s MAC %s",
+            PDS_TRACE_ERR("Adding local IP-MAC to MS failed for BD %d IP %s MAC %s",
                           bd_id, ipaddr2str(&ip), macaddr2str(mac));
         }
     }
@@ -105,12 +105,12 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_key);
         if (uuid_obj == nullptr) {
-            SDK_TRACE_ERR("Received MAC %s IP %s age for unknown Subnet %s",
+            PDS_TRACE_ERR("Received MAC %s IP %s age for unknown Subnet %s",
                           macaddr2str(mac), ipaddr2str(&ip), subnet_key.str());
             return;
         }
         if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
-            SDK_TRACE_ERR("Received MAC %s IP %s age with invalid UUID %s of type %s",
+            PDS_TRACE_ERR("Received MAC %s IP %s age with invalid UUID %s of type %s",
                           macaddr2str(mac), ipaddr2str(&ip), subnet_key.str(),
                           uuid_obj_type_str(uuid_obj->obj_type()));
             return;
@@ -119,10 +119,10 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     } // Exit Mgmt thread context
 
     if (ip_addr_is_zero(&ip)) {
-        SDK_TRACE_DEBUG("Received MAC remove for Subnet %s BD %d MAC %s",
+        PDS_TRACE_DEBUG("Received MAC remove for Subnet %s BD %d MAC %s",
                         subnet_key.str(), bd_id, macaddr2str(mac));
     } else {
-        SDK_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
+        PDS_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
                         subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac));
     }
 
@@ -294,7 +294,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
     cookie_t *cookie = nullptr;
     parse_ips_info_(update_fdb_mac);
 
-    SDK_TRACE_INFO("L2F FDB ADD BD %d MAC %s Num TEPs %d First-TEP %s",
+    PDS_TRACE_INFO("L2F FDB ADD BD %d MAC %s Num TEPs %d First-TEP %s",
                    ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
                    ips_info_.tep_ip_list.size(),
                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
@@ -311,7 +311,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         fetch_store_info_(state_ctxt.state());
 
         if (store_info_.subnet_obj == nullptr) {
-            SDK_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d MAC %s add-upd",
+            PDS_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d MAC %s add-upd",
                             ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
             return;
         }
@@ -340,7 +340,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         for (auto ip_address: store_info_.mac_obj->out_of_seq_ip) {
             ips_info_.ip_address = ip_address;
             ips_info_.has_ip = true;
-            SDK_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s",
+            PDS_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s",
                             ipaddr2str(&ip_address));
             add_pds_mapping_spec_(pds_bctxt_guard.get());
         }
@@ -357,7 +357,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
                 // ----------------------------------------------------------------
-                SDK_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS "
+                PDS_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS "
                                 "response %s ++++++++++", l_bd_id, macaddr2str(l_mac),
                                 (pds_status) ? "Success" : "Failure");
 
@@ -384,7 +384,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                 do {
                     auto bdpi_join = get_l2f_bdpi_join();
                     if (bdpi_join == nullptr) {
-                        SDK_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
+                        PDS_TRACE_ERR("Failed to find BDPI join to return BD %d AddUpd IPS",
                                       update_fdb_mac->bd_id);
                         break;
                     }
@@ -397,19 +397,19 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                             l2f::FdbMac::set_ips_rc(&update_fdb_mac->ips_hdr,
                                                     (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                         SDK_ASSERT(send_response);
-                        SDK_TRACE_DEBUG ("++++++++ MS BD %d MAC %s: Send Async IPS "
+                        PDS_TRACE_DEBUG ("++++++++ MS BD %d MAC %s: Send Async IPS "
                                          "reply %s stateless mode +++++++++++",
                                          l_bd_id, macaddr2str(l_mac),
                                          (pds_status) ? "Success" : "Failure");
                         bdpi_join->send_ips_reply(&update_fdb_mac->ips_hdr);
                     } else {
                         if (pds_status) {
-                            SDK_TRACE_DEBUG ("MS BD %d MAC %s: Send Async IPS "
+                            PDS_TRACE_DEBUG ("MS BD %d MAC %s: Send Async IPS "
                                              "Reply success stateful mode",
                                              l_bd_id, macaddr2str(l_mac));
                             (*it)->update_complete(ATG_OK);
                         } else {
-                            SDK_TRACE_DEBUG ("MS BD %d MAC %s: Send Async IPS "
+                            PDS_TRACE_DEBUG ("MS BD %d MAC %s: Send Async IPS "
                                              "Reply failure stateful mode",
                                              l_bd_id, macaddr2str(l_mac));
                             (*it)->update_failed(ATG_UNSUCCESSFUL);
@@ -440,7 +440,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
       // Do Not access/modify global state after this
 
     update_fdb_mac->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG("MS BD %d MAC %s Add PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d MAC %s Add PDS Batch commit successful",
                     ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -458,7 +458,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
     MAC_ADDR_COPY(ips_info_.mac_address, key->mac_address);
     ips_info_.has_ip = false;
 
-    SDK_TRACE_INFO("L2F FDB DEL BD %d MAC %s", key->bd_id.bd_id,
+    PDS_TRACE_INFO("L2F FDB DEL BD %d MAC %s", key->bd_id.bd_id,
                    macaddr2str(key->mac_address));
 
     { // Enter thread-safe context to access/modify global state
@@ -481,7 +481,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("++++++++ MS BD %d MAC %s: MAC Del Rcvd Async PDS"
+            PDS_TRACE_DEBUG("++++++++ MS BD %d MAC %s: MAC Del Rcvd Async PDS"
                             " response %s +++++++++++",
                             l_bd_id, macaddr2str(l_mac),
                             (pds_status) ? "Success" : "Failure");
@@ -498,7 +498,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
                     .append(" MAC ").append(macaddr2str(l_mac))
                     .append(" err ").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG("MS BD %d MAC %s Del PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d MAC %s Del PDS Batch commit successful",
                     l_bd_id, macaddr2str(l_mac));
 }
 
@@ -507,7 +507,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
 
     parse_ips_info_(mai_ip_id);
 
-    SDK_TRACE_INFO("L2F MAC IP ADD BD %d IP %s MAC %s",
+    PDS_TRACE_INFO("L2F MAC IP ADD BD %d IP %s MAC %s",
                    ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
                    macaddr2str(ips_info_.mac_address));
 
@@ -516,7 +516,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
         fetch_store_info_(state_ctxt.state());
 
         if (store_info_.subnet_obj == nullptr) {
-            SDK_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d IP %s MAC %s add-upd",
+            PDS_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d IP %s MAC %s add-upd",
                             ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
                             macaddr2str(ips_info_.mac_address));
             return;
@@ -525,7 +525,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
         if (store_info_.mac_obj == nullptr) {
             // MAC FDB entry does not exist for this IP - cache now
             // and revisit later when MAC is received from Metaswitch
-            SDK_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s(unknown) for later",
+            PDS_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s(unknown) for later",
                             ipaddr2str(&ips_info_.ip_address),
                             macaddr2str(ips_info_.mac_address));
             mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
@@ -536,7 +536,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             store_info_.mac_obj->out_of_seq_ip.push_back(ips_info_.ip_address);
             return;
         } else if (store_info_.mac_obj->tep_ip_list.empty()) {
-            SDK_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s for later",
+            PDS_TRACE_DEBUG("Saving out-of-seq IP %s MAC %s for later",
                             ipaddr2str(&ips_info_.ip_address),
                             macaddr2str(ips_info_.mac_address));
             store_info_.mac_obj->out_of_seq_ip.push_back(ips_info_.ip_address);
@@ -563,7 +563,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("++++++++++ MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
+            PDS_TRACE_DEBUG("++++++++++ MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
                             " PDS response %s ++++++++++",
                             l_bd_id, ipaddr2str(&l_ip),
                             (pds_status) ? "Success" : "Failure");
@@ -581,7 +581,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
                     .append(" IP ").append(ipaddr2str(&l_ip))
                     .append(" err ").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG("MS BD %d Remote IP %s Add PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d Remote IP %s Add PDS Batch commit successful",
                     l_bd_id, ipaddr2str(&l_ip));
 }
 
@@ -592,7 +592,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     // Populate IPS info
     parse_ips_info_(mai_ip_id);
 
-    SDK_TRACE_INFO("L2F MAI IP DEL BD %d IP %s", ips_info_.bd_id,
+    PDS_TRACE_INFO("L2F MAI IP DEL BD %d IP %s", ips_info_.bd_id,
                    ipaddr2str(&ips_info_.ip_address));
 
     { // Enter thread-safe context to access/modify global state
@@ -613,7 +613,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("++++++++ MS BD %d IP %s: Remote IP Delete Rcvd Async"
+            PDS_TRACE_DEBUG("++++++++ MS BD %d IP %s: Remote IP Delete Rcvd Async"
                             " PDS response %s +++++++++++++",
                             l_bd_id, ipaddr2str(&l_ip),
                             (pds_status) ? "Success" : "Failure");
@@ -631,7 +631,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
                     .append(" IP ").append(ipaddr2str(&l_ip))
                     .append(" err ").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG("MS BD %d Remote IP %s Del PDS Batch commit successful",
+    PDS_TRACE_DEBUG("MS BD %d Remote IP %s Del PDS Batch commit successful",
                     l_bd_id, ipaddr2str(&l_ip));
 }
 

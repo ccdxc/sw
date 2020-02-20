@@ -24,13 +24,13 @@ hal_callback (sdk_ret_t status, const void *cookie)
 {
     std::unique_ptr<cookie_t> cookie_ptr ((cookie_t*) cookie);
 
-    SDK_TRACE_DEBUG("Async PDS HAL callback, status %d, cookie 0x%lx",
+    PDS_TRACE_DEBUG("Async PDS HAL callback, status %d, cookie 0x%lx",
                      status, cookie);
     if (status != SDK_RET_OK) {
-        SDK_TRACE_ERR("Async PDS HAL callback failure err %d", status);
+        PDS_TRACE_ERR("Async PDS HAL callback failure err %d", status);
         cookie_ptr->print_debug_str(); 
     } else {
-        SDK_TRACE_DEBUG("Async PDS Batch success"); 
+        PDS_TRACE_DEBUG("Async PDS Batch success"); 
         cookie_ptr->print_debug_str(); 
 
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -85,11 +85,11 @@ handle_port_event (core::port_event_info_t &portev)
         }
     }
     if (worker != nullptr) {
-        SDK_TRACE_DEBUG("Sending intf fault indication, event %u",
+        PDS_TRACE_DEBUG("Sending intf fault indication, event %u",
                          portev.event);
         frl.send_fault_ind(worker, &fault_state);
     } else {
-        SDK_TRACE_DEBUG("No intf FRL worker, event %u", portev.event);
+        PDS_TRACE_DEBUG("No intf FRL worker, event %u", portev.event);
     }
             
     NBS_RELEASE_SHARED_DATA();
@@ -106,7 +106,7 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     if (!event) {
         return;
     }
-    SDK_TRACE_DEBUG("Got event id %u", event->event_id);
+    PDS_TRACE_DEBUG("Got event id %u", event->event_id);
     switch (event->event_id) {
     case EVENT_ID_PORT_STATUS:
         handle_port_event(event->port);
@@ -146,7 +146,7 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 void
 ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 {
-    SDK_TRACE_DEBUG("ipc init callback, fd 0x%lx", fd);
+    PDS_TRACE_DEBUG("ipc init callback, fd 0x%lx", fd);
     // Register SDK ipc infra fd with metaswitch. Metaswitch calls the callback
     // function in the context of the nbase thread when there is any event
     // pending on the fd

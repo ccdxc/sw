@@ -13,6 +13,7 @@
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nbase.h"
 #include "nbbstub.h"
 #include "qbnmdef.h"
@@ -156,7 +157,7 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
       if (remote_ip.af == IP_AF_IPV4) {
         remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
       }
-      SDK_TRACE_INFO ("BGP session to %s is Established", ipaddr2str(&remote_ip));
+      PDS_TRACE_INFO ("BGP session to %s is Established", ipaddr2str(&remote_ip));
       break;
 
     case AMB_BGP_TRAP_BACKWARD:
@@ -177,7 +178,7 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
           if (remote_ip.af == IP_AF_IPV4) {
               remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
           }
-          SDK_TRACE_INFO ("BGP session to %s is Failed, State: %s",
+          PDS_TRACE_INFO ("BGP session to %s is Failed, State: %s",
                            ipaddr2str(&remote_ip),
                            ms_bgp_conn_fsm_state_str(trap_data->fsm_state));
       }
@@ -193,7 +194,7 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
       {
           // Interested only in L3 Interface status changes
           if_index = pds_ms::ms_to_pds_ifindex (if_trap_data->if_index);
-          SDK_TRACE_INFO 
+          PDS_TRACE_INFO 
                  ("Interface %s [index: 0x%X] Oper Status changed to %s",
                  if_trap_data->name, if_index,
                  (if_trap_data->oper_status == AMB_IF_OPER_UP) ? "UP" : "DOWN");
@@ -211,7 +212,7 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
       /***********************************************************************/
       /* Unrecognized trap type.                                             */
       /***********************************************************************/
-      SDK_TRACE_DEBUG ("Unrecognized trap type 0x%lx\n", v_amb_trap->trap_type);
+      PDS_TRACE_DEBUG ("Unrecognized trap type 0x%lx\n", v_amb_trap->trap_type);
   }
 
   NBB_TRC_EXIT();
