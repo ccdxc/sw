@@ -260,11 +260,13 @@ enum AddressType {
 // flow key for non-IP flows
 message MACFlowKey {
   // subnet identifier
-  bytes  Subnet = 1;
+  bytes  Subnet    = 1;
   // source MAC address
-  uint64 SrcMAC = 2;
+  uint64 SrcMAC    = 2;
   // destination MAC address
-  uint64 DstMAC = 3;
+  uint64 DstMAC    = 3;
+  // 16 bits of Ethertype in the Ethernet header
+  uint32 EtherType = 4;
 }
 
 // L4 portion of flow key tuple
