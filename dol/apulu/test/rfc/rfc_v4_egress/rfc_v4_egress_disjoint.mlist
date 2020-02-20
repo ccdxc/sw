@@ -15,7 +15,7 @@ modules:
         spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=user_specific
-            #- policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific
+            - policy : filter://AddrFamily=IPV4,PolicyType=icmp_specific
 
     - module:
         name    : DISJOINT_RANDOM
