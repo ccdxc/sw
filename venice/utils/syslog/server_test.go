@@ -64,6 +64,17 @@ func TestRFC5424Server(t *testing.T) {
 	}
 }
 
+func TestParseErr(t *testing.T) {
+	_, err := parseRfc3164(nil)
+	Assert(t, err != nil, "parser test failed")
+	_, err = parseRfc5424(nil)
+	Assert(t, err != nil, "parser test failed")
+	_, err = parseSyslog(monitoring.MonitoringExportFormat_SYSLOG_BSD.String(), nil)
+	Assert(t, err != nil, "parser test failed")
+	_, err = parseSyslog(monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(), nil)
+	Assert(t, err != nil, "parser test failed")
+}
+
 func TestServerErr(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

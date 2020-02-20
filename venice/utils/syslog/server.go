@@ -17,7 +17,7 @@ import (
 func parseRfc3164(buff []byte) (syslogparser.LogParts, error) {
 	p := rfc3164.NewParser(buff)
 	if err := p.Parse(); err != nil {
-		fmt.Printf("failed to create new Rfc3164 parser, %s \n", err)
+		fmt.Printf("failed to create new Rfc3164 parser for %v, %s \n", string(buff), err)
 		return nil, err
 	}
 	return p.Dump(), nil
@@ -26,7 +26,7 @@ func parseRfc3164(buff []byte) (syslogparser.LogParts, error) {
 func parseRfc5424(buff []byte) (syslogparser.LogParts, error) {
 	p := rfc5424u.NewParser(buff)
 	if err := p.Parse(); err != nil {
-		fmt.Printf("failed to create new Rfc5424 parser, %s\n", err)
+		fmt.Printf("failed to create new Rfc5424 parser for %v, %v\n", string(buff), err)
 		return nil, err
 	}
 	return p.Dump(), nil
@@ -73,7 +73,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 			fmt.Printf("udp syslog server %s ready \n", l.LocalAddr().String())
 			for ctx.Err() == nil {
 				buff := make([]byte, 1024)
-				l.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
+				l.SetReadDeadline(time.Now().Add(time.Second * 30))
 				n, raddr, err := l.ReadFrom(buff)
 				if err != nil {
 					for _, s := range []string{"closed network connection", "EOF"} {
@@ -122,7 +122,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 					fmt.Printf("tcp syslog server %s ready %v\n", l.Addr().String(), conn.RemoteAddr().String())
 					for ctx.Err() == nil {
 						buff := make([]byte, 1024)
-						conn.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
+						conn.SetReadDeadline(time.Now().Add(time.Second * 30))
 						n, err := conn.Read(buff)
 						if err != nil {
 							for _, s := range []string{"closed network connection", "EOF"} {
