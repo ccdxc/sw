@@ -87,7 +87,8 @@ testbundles:
         - tso/tso_regr.testbundle
         - rss/rss.testbundle
         - classic/driver-features.testbundle
-        - storage/regression.testbundle
+        #- storage/regression.testbundle
+        - penctl/mode_change.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
