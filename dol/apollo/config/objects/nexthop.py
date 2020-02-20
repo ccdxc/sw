@@ -353,6 +353,9 @@ class NexthopObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self, node):
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+            logger.info("Skipping creating nexthop objects")
+            return
         cookie = utils.GetBatchCookie(node)
         if utils.IsPipelineApulu():
             logger.info(f"Creating {len(self.__underlay_objs[node])} underlay {self.ObjType.name} Objects in {node}")
