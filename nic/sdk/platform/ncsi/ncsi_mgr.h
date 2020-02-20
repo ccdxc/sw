@@ -29,10 +29,6 @@ class NcsiMgr {
 public:
 
     int Init(transport* xport_obj, shared_ptr<IpcService> ipc);
-    void UpdateLinkStatus(uint32_t port, bool link_status)
-    {
-        ncsi_cmd_hndlr->UpdateLinkStatus(port, link_status);
-    };
 private:
     transport *xport;
     CmdHndler *ncsi_cmd_hndlr;

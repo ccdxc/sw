@@ -12,6 +12,7 @@
 #include <grpc++/grpc++.h>
 #include "include/sdk/base.hpp"
 #include "gen/proto/ncsi.grpc.pb.h"
+#include "gen/proto/port.grpc.pb.h"
 #include "nic/sdk/platform/ncsi/ipc_service.h"
 
 using grpc::Status;
@@ -27,12 +28,16 @@ using ncsi::VlanModeRequestMsg;
 using ncsi::VlanModeResponseMsg;
 using ncsi::ChannelRequestMsg;
 using ncsi::ChannelResponseMsg;
+using port::PortGetRequest;
+using port::PortGetRequestMsg;
+using port::PortGetResponseMsg;
 
 using namespace ncsi;
 
 class grpc_ipc : public IpcService {
 private:
     std::unique_ptr<ncsi::Ncsi::Stub> ncsi_stub_;
+    std::unique_ptr<port::Port::Stub> port_stub_;
     std::shared_ptr<grpc::Channel> channel;
     // Make GRPC connection to HAL
     Status vlan_create (VlanFilterRequestMsg& req_msg, 
@@ -74,7 +79,7 @@ public:
     int PostMsg(struct EnableChanTxMsg& enable_ch_tx);
     int PostMsg(struct EnableBcastFilterMsg& bcast_filter);
     int PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter);
-    int GetLinkStatus();
+    int GetLinkStatus(uint32_t port, bool& link_status);
 };
 
 #endif //__GRCP_IPC_SERVICE_H__

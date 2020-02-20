@@ -38,30 +38,10 @@ public:
     int PostMsg(struct EnableChanTxMsg& enable_ch_tx);
     int PostMsg(struct EnableBcastFilterMsg& bcast_filter);
     int PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter);
-    int GetLinkStatus();
+    //int GetLinkStatus(uint32_t port, bool& link_status);
 
     void OnMountComplete();
 };
-
-// link_event_handler is the reactor for the Port object
-class link_event_handler : public dobj::PortStatusReactor {
-public:
-    link_event_handler(delphi::SdkPtr sdk) {
-        this->sdk_ = sdk;
-    }
-
-    // OnPortUpdate gets called when PortStatus object is updated
-    virtual error OnPortStatusUpdate(PortStatusPtr port);
-    virtual error OnPortStatusCreate(PortStatusPtr portStatus);
-
-    // update_link_status updates port status in ncsid app
-    error update_link_status(PortStatusPtr port);
-    void get_link_status();
-private:
-    delphi::SdkPtr    sdk_;
-};
-
-typedef std::shared_ptr<link_event_handler> link_event_handler_ptr_t;
 
 #endif // __DELPHI_IPC_SERVICE_H__
 

@@ -18,16 +18,6 @@ NcsiParamDb::NcsiParamDb()
     NcsiParamResp = (GetParamRespPkt*) calloc(1, sizeof(struct GetParamRespPkt));
     NcsiParamResp->vlan_cnt = NCSI_CAP_VLAN_FILTER_COUNT;
     NcsiParamResp->mac_cnt = NCSI_CAP_MIXED_MAC_FILTER_COUNT;
-
-    NcsiLinkStatusResp = (GetLinkStatusRespPkt*) calloc(1, sizeof(struct GetLinkStatusRespPkt));
-}
-
-void NcsiParamDb::UpdateNcsiLinkStatus(bool link_status)
-{
-    //Hack: link_status is always UP until we fix the IPC comm with linkmgr
-    link_status = true;
-    uint32_t status = ((link_status ? 1:0) | (0x8 << 1) | (0x3 << 5) | (1 << 20));
-    NcsiLinkStatusResp->status = htonl(status);
 }
 
 void NcsiParamDb::UpdateNcsiParam(struct VlanFilterMsg& msg)

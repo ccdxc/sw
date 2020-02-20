@@ -84,7 +84,6 @@ NCSI_CREATE_API(mcast_filters, McastFilter);
 NCSI_UPDATE_API(mcast_filters, McastFilter);
 NCSI_GET_API(mcast_filters, McastFilter);
 
-
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -127,6 +126,7 @@ grpc_ipc::connect_hal(void)
     SDK_TRACE_INFO("Connected to HAL at: %s", svc_url.c_str());
 
     ncsi_stub_ = ncsi::Ncsi::NewStub(channel);
+    port_stub_ = port::Port::NewStub(channel);
 
     return SDK_RET_OK;
 }
@@ -631,12 +631,70 @@ end:
     return ret;
 }
 
-extern link_event_handler_ptr_t g_link_event_handler;
+static bool port_handle_api_status(types::ApiStatus api_status,
+        uint32_t port_id) {
+    switch(api_status) {
+        case types::API_STATUS_OK:
+            return true;
 
-int grpc_ipc::GetLinkStatus()
+        case types::API_STATUS_NOT_FOUND:
+            return false;
+
+        default:
+            SDK_TRACE_ERR("Unknown erro while getting Port Status over gRPC");
+            return false;
+    }
+
+    return true;
+}
+
+int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status)
 {
-    g_link_event_handler->get_link_status();
+    //g_link_event_handler->get_link_status();
+    PortGetRequest      *req;
+    PortGetRequestMsg   req_msg;
+    PortGetResponseMsg  rsp_msg;
+    grpc::ClientContext context;
+    Status              status;
 
-    return 0;
+    if (port == 0)
+        port = 0x11010001;
+    else if (port == 1)
+        port = 0x11020001;
+    else {
+        SDK_TRACE_ERR("Invalid port number: %d\n", port);
+        return -1;
+    }
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_port_id(port);
+
+    // port get
+    status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
+    if (status.ok()) {
+
+        if (port_handle_api_status(
+                    rsp_msg.response(0).api_status(), port) == true) {
+            SDK_TRACE_INFO("Port oper status: %x",
+                rsp_msg.response(0).status().link_status().oper_state());
+
+            if (rsp_msg.response(0).status().link_status().oper_state() == 
+                    port::PORT_OPER_STATUS_UP)
+                link_status = true;
+            else
+                link_status = false;
+
+        } else {
+            SDK_TRACE_ERR("Port Get failed for port %d api_status: %x", 
+                    port, rsp_msg.response(0).api_status());
+        }
+
+        return 0;
+    }
+
+    SDK_TRACE_ERR("Port Get failed for port %d error: %x", 
+                    port, rsp_msg.response(0).api_status());
+
+    return -1;
 }
 

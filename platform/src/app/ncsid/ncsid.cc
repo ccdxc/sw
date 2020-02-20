@@ -25,7 +25,6 @@ typedef std::shared_ptr<spdlog::logger> Logger;
 static Logger current_logger;
 using namespace std;
 using namespace sdk::platform::ncsi;
-extern link_event_handler_ptr_t g_link_event_handler;
 
 int usage(int argc, char* argv[]);
 void ipc_init();
@@ -141,11 +140,6 @@ void delphi_init()
     ncsid_delphi_svc->Init(ncsid_delphi_svc);
 
     return;
-}
-
-void UpdateLinkStatus(uint32_t port, bool link_status)
-{
-    ncsimgr->UpdateLinkStatus(port, link_status);
 }
 
 int main(int argc, char* argv[])

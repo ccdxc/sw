@@ -101,24 +101,39 @@ void populate_fw_name_ver()
 
 void CmdHndler::ReadMacStats(uint32_t port, struct port_stats& stats)
 {
-    uint64_t port_stats_base;
+    uint64_t port_stats_base = 0;
 
-    if (port == 0)
+    if (port == 0x11010001) //first uplink
         port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS); 
 
-    else if (port == 1)
+    else if (port == 0x11020001) //second uplink
         port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS) + 
             PORT_MAC_STAT_REPORT_SIZE;
-    else if (port == 9)
+    else if (port == 0x11030001) //BX port
         port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS) + 
             (2 * PORT_MAC_STAT_REPORT_SIZE);
 
-    sdk::lib::pal_mem_read(port_stats_base, (uint8_t *)&stats, sizeof(struct port_stats));
+    if (port_stats_base)
+        sdk::lib::pal_mem_read(port_stats_base, (uint8_t *)&stats, 
+                sizeof(struct port_stats));
+    else
+        SDK_TRACE_ERR("ReadMacStats: Invalid port number: %d\n", port);
 }
 
 void CmdHndler::GetMacStats(uint32_t port, struct GetNicStatsRespPkt& resp)
 {
     struct port_stats p_stats = {0,};
+
+    if (port == 0)
+        port = 0x11010001; //first uplink
+    else if (port == 1)
+        port = 0x11020001; //second uplink
+    else {
+        SDK_TRACE_ERR("Invalid port number: %d. Skipping reading mac stats", 
+                port);
+        return;
+    }
+
     ReadMacStats(port, p_stats);
 
     resp.rx_bytes = *(memrev((uint8_t*)&p_stats.octets_rx_all, sizeof(uint64_t)));
@@ -160,11 +175,6 @@ void CmdHndler::GetMacStats(uint32_t port, struct GetNicStatsRespPkt& resp)
     resp.rx_valid_bytes = *(memrev((uint8_t*)&p_stats.octets_rx_ok, sizeof(uint64_t)));
     //resp.rx_runt_pkts = p_stats.
     ////resp.rx_jabber_pkts = p_stats.
-}
-
-void CmdHndler::UpdateLinkStatus(uint32_t port, bool link_status)
-{
-    NcsiDb[port]->UpdateNcsiLinkStatus(link_status);
 }
 
 CmdHndler::CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *XportObj) {
@@ -1022,20 +1032,23 @@ error_out:
 void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
 {
     ssize_t ret;
+    bool link_status;
+    uint32_t status;
     NcsiStateErr sm_ret;
     struct GetLinkStatusRespPkt resp;
     CmdHndler *hndlr = (CmdHndler *)obj;
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
 
-    hndlr->ipc->GetLinkStatus();
-
-    NcsiDb[cmd->cmd.NcsiHdr.channel]->GetNcsiLinkStatusRespPacket(resp);
+    hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status);
+    status = ((link_status ? 1:0) | (0x8 << 1) | (0x3 << 5) | (1 << 20));
 
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
  
     NCSI_CMD_BEGIN_BANNER();
-    resp.status = htonl(0x100071);
-    SDK_TRACE_INFO("ncsi_channel: 0x%x, link_status: 0x%x", cmd->cmd.NcsiHdr.channel, ntohl(resp.status));
+    //resp.status = htonl(0x100071);
+    resp.status = htonl(status);
+    SDK_TRACE_INFO("ncsi_channel: 0x%x, link_status: 0x%x", 
+            cmd->cmd.NcsiHdr.channel, ntohl(resp.status));
 
     sm_ret = StateM[cmd->cmd.NcsiHdr.channel]->UpdateState(CMD_GET_LINK_STATUS);
 
@@ -1777,7 +1790,8 @@ void CmdHndler::GetNcsiPassthruStats(void *obj, const void *cmd_pkt,
     uint64_t passthru_tx_pkts;
     CmdHndler *hndlr = (CmdHndler *)obj;
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
- 
+    uint32_t port = 0x11030001; //BX port in capri
+
     memset(&resp, 0, sizeof(resp));
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
  
@@ -1805,7 +1819,7 @@ void CmdHndler::GetNcsiPassthruStats(void *obj, const void *cmd_pkt,
     }
 
     //FIXME: Need to use some macro instead of hard coded 9 here for oob port
-    hndlr->ReadMacStats(9, p_stats);
+    hndlr->ReadMacStats(port, p_stats);
 
     passthru_tx_pkts = (p_stats.frames_tx_all - hndlr->stats.tx_total_cnt);
     resp.tx_pkts = *(memrev((uint8_t*)&passthru_tx_pkts, sizeof(uint64_t)));

@@ -8,8 +8,6 @@
 using namespace std;
 
 extern delphi::SdkPtr g_sdk;
-void UpdateLinkStatus(uint32_t port, bool link_status);
-link_event_handler_ptr_t g_link_event_handler;
 
 DelphiIpcService::DelphiIpcService(delphi::SdkPtr sk, delphi_cb cb)
 {
@@ -29,15 +27,6 @@ void DelphiIpcService::Init(shared_ptr<DelphiIpcService> ncsid_svc)
     delphi::objects::NcsiChanTx::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::NcsiBcastFilter::Mount(sdk_, delphi::ReadWriteMode);
     delphi::objects::NcsiMcastFilter::Mount(sdk_, delphi::ReadWriteMode);
-
-    // create the PortStatus reactor
-    g_link_event_handler = std::make_shared<link_event_handler>(sdk_);
-
-    // mount port status obj for getting link change notifications
-    delphi::objects::PortStatus::Mount(sdk_, delphi::ReadMode);
-
-    // Register PortStatus reactor
-    delphi::objects::PortStatus::Watch(sdk_, g_link_event_handler);
 
     // register ncsid as Delphi Service
     sdk_->RegisterService(ncsid_svc);
@@ -212,65 +201,5 @@ int DelphiIpcService::PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter)
     sdk()->SetObject(mcast_filter_obj);
 
     return 0;
-}
-
-int DelphiIpcService::GetLinkStatus()
-{
-    g_link_event_handler->get_link_status();
-
-    return 0;
-}
-
-void link_event_handler::get_link_status()
-{
-    std::vector <delphi::objects::PortStatusPtr> portstatus_list =
-        delphi::objects::PortStatus::List(g_sdk);
-
-    for (auto it = portstatus_list.begin(); it != portstatus_list.end(); ++it) {
-        g_link_event_handler->update_link_status(*it);
-    }
-}
-
-error link_event_handler::update_link_status(PortStatusPtr port_status)
-{
-    uint32_t port;
-    bool link_status;
-
-    //SDK_TRACE_INFO("Rcvd Link update event");
-
-    // ignore if there is no link status in this event
-    if (!port_status->has_link_status()) {
-        SDK_TRACE_ERR("Rcvd link event without link status");
-        return error::OK();
-    }
-
-    port = port_status->key_or_handle().port_id();
-    link_status = (port_status->link_status().oper_state() == 
-            1) ? true:false;
-
-    SDK_TRACE_INFO("Rcvd link event for port: %d, link_status: %s", 
-            port, link_status ? "Up":"Down");
-
-    if (port == 1)
-        port = 0;
-    else if (port == 5)
-        port = 1;
-    else
-        return error::OK();
-
-    UpdateLinkStatus(port, link_status);
-
-    return error::OK();
-}
-
-// OnLinkStatusUpdate gets called when PortStatus object is updated
-error link_event_handler::OnPortStatusUpdate(PortStatusPtr portStatus) {
-    SDK_TRACE_INFO("Rcvd link update event");
-    return update_link_status(portStatus);
-}
-
-error link_event_handler::OnPortStatusCreate(PortStatusPtr portStatus) {
-    SDK_TRACE_INFO("Rcvd link creation event");
-    return update_link_status(portStatus);
 }
 

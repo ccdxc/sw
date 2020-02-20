@@ -31,16 +31,9 @@ public:
     { 
         memcpy(&resp_pkt, NcsiParamResp, sizeof(struct GetParamRespPkt));
     }
-    void UpdateNcsiLinkStatus(bool status);
-    void GetNcsiLinkStatusRespPacket(struct GetLinkStatusRespPkt& resp_pkt) 
-    { 
-        memcpy(&resp_pkt, NcsiLinkStatusResp, sizeof(struct GetLinkStatusRespPkt));
-    }
-
 
 private:
     struct GetParamRespPkt* NcsiParamResp;
-    struct GetLinkStatusRespPkt* NcsiLinkStatusResp;
 };
 
 } // namespace ncsi

@@ -86,7 +86,7 @@ public:
     virtual int PostMsg(struct EnableChanTxMsg& enable_ch_tx) = 0;
     virtual int PostMsg(struct EnableBcastFilterMsg& bcast_filter) = 0;
     virtual int PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter) = 0;
-    virtual int GetLinkStatus() = 0;
+    virtual int GetLinkStatus(uint32_t port, bool& link_status) { return -1; };
 };
 
 #endif // __IPC_SERVICE_H__

@@ -177,7 +177,6 @@ class CmdHndler {
 public:
     CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *xport);
     int HandleCmd(const void* pkt, ssize_t sz);
-    void UpdateLinkStatus(uint32_t port, bool link_status);
 private:
 
     struct NcsiStats stats;
