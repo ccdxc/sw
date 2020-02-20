@@ -461,6 +461,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType)
 		}
+		fallthrough
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingIntf netproto.Interface

@@ -601,7 +601,7 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		if intf.Status.InterfaceID == 0 {
 			intf.Status.InterfaceID = i.InfraAPI.AllocateID(types.InterfaceID, types.UplinkOffset)
 		}
-
+		fallthrough
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingInterface netproto.Interface
