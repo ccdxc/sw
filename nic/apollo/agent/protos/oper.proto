@@ -87,9 +87,13 @@ message TechSupportResponse {
 // flow log type indicates whether log is generated when flow is
 // created or closed
 enum FlowLogType {
-  FLOW_LOG_TYPE_NONE  = 0;
-  FLOW_LOG_TYPE_OPEN  = 1;
-  FLOW_LOG_TYPE_CLOSE = 2;
+  FLOW_LOG_TYPE_NONE   = 0;
+  // flow log raised at the time of flow/session creation
+  FLOW_LOG_TYPE_OPEN   = 1;
+  // flow log raised at the time of flow/session deletion
+  FLOW_LOG_TYPE_CLOSE  = 2;
+  // flow log raised for long lived flows while flow is active
+  FLOW_LOG_TYPE_ACTIVE = 3;
 }
 
 // security policy type due to which the flow action was chosen
