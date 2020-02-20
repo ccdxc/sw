@@ -1,0 +1,32 @@
+{
+  "tasks": [
+      "ps -aefl",
+      "df -k",
+       "cat /proc/cpuinfo",
+       "cat /proc/iomem",
+       "ifconfig -a",
+       "/nic/tools/fwupdate -l",
+       "/nic/bin/pcieutil port",
+       "/nic/bin/pcieutil portstats",
+       "/nic/bin/pcieutil stats",
+       "/nic/bin/pcieutil counters",
+       "/nic/bin/pcieutil dev",
+       "/nic/bin/pcieutil devintr",
+       "/nic/bin/pcieutil bar",
+       "/nic/bin/pcieutil pmt",
+       "/nic/bin/pcieutil prt",
+       "/nic/bin/pcieutil hdrt",
+       "/nic/bin/pcieutil aximst",
+       "/nic/bin/pcieutil dberr",
+       "mkdir -p /data/techsupport/core/",
+       "mkdir -p /data/techsupport/logs/obfl/",
+       "mkdir -p /data/techsupport/db/",
+       "cp /data/core/* /data/techsupport/core/",
+       "cp /var/log/messages /data/techsupport/logs/",
+       "cp -R /var/log/pensando/* /data/techsupport/logs/",
+       "cp /obfl/* /data/techsupport/logs/obfl/",
+       "cp /sysconfig/config0/* /data/techsupport/db/",
+       "nic/bin/pdsctl show techsupport",
+       "curl  localhost:9007/api/mirror/sessions/ | jq ."
+    ]
+}
