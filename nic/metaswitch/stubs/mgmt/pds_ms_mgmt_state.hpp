@@ -41,13 +41,33 @@ class mgmt_state_t {
 public:
     struct context_t {
         public:    
-            context_t(std::recursive_mutex& m, mgmt_state_t* s) : l_(m), state_(s)  {};
+            context_t(std::recursive_mutex& m, mgmt_state_t* s) : l_(m), state_(s)  {
+                mgmt_state_locked(true, true);
+            }
             mgmt_state_t* state(void) {return state_;}
-            void release(void) {l_.unlock(); state_ = nullptr;}
+            void release(void) {
+                l_.unlock(); state_ = nullptr;
+                mgmt_state_locked(true, false);
+            }
+            ~context_t() {
+                mgmt_state_locked(true, false);
+            }
+            context_t(context_t&& c) {
+                state_ = c.state_;
+                c.state_ = nullptr;
+                l_ = std::move(c.l_);
+            }
+            context_t& operator=(context_t&& c) {
+                state_ = c.state_;
+                c.state_ = nullptr;
+                l_ = std::move(c.l_);
+                return *this;
+            }
         private:    
             std::unique_lock<std::recursive_mutex> l_;
             mgmt_state_t* state_;
     };
+
     static void create(void) { 
         SDK_ASSERT (g_state_ == nullptr);
         g_state_ = new mgmt_state_t;
@@ -59,9 +79,8 @@ public:
 
     // Obtain a mutual exclusion context for thread safe access to the 
     // stub state. Automatic release when the context goes 
-    // out of scope. Direct external access to Stub state without
+    // out of scope. Direct external access to Mgmt state without
     // a context is prohibited.
-    // Calling this more than once from the same thread will deadlock.
     static context_t thread_context(void) {
         SDK_ASSERT(g_state_ != nullptr);
         return context_t(g_state_mtx_, g_state_);

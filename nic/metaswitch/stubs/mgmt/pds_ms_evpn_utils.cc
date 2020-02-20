@@ -63,6 +63,8 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
 
+    ms_bd_id_t  ms_bd_id = 0;
+
     if (uuid == subnet_uuid) {
         // Venice case
         // spec uuid is same as subnet uuid
@@ -75,50 +77,11 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                          SDK_RET_ENTRY_NOT_FOUND);
         }
         if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
-            bool update_orf = false;
             auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
-            req.set_eviid(subnet_uuid_obj->ms_id());
-            auto state_ctxt = state_t::thread_context();
-            auto subnet_obj = state_ctxt.state()->subnet_store().get(req.eviid());
-            if (subnet_obj->rt_store.find ((unsigned char *)req.rt().c_str())) {
-                if ((row_status == AMB_ROW_DESTROY) ||
-                    (op_update && req.rttype() == EVPN_RT_EXPORT)) {
-                    // either delete RT or updated so that RT is no more
-                    // in import list, remove the RT from the subnet
-                    update_orf = true;
-                    subnet_obj->rt_store.del((unsigned char *)req.rt().c_str());
-
-                    // in case of failure, we need to add the RT back to subnet
-                    // add it to temp del list
-                    mgmt_ctxt.state()->set_rt_pending_delete_ (
-                                    (unsigned char *)req.rt().c_str(),
-                                    rt_type_e::EVI,
-                                    subnet_uuid_obj->ms_id());
-                }
-            } else {
-                if ((req.rttype() == EVPN_RT_IMPORT)  ||
-                        (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
-                    // RT is added or updated so that RT is in import list now
-                    // add RT to subnet list
-                    update_orf = true;
-                    subnet_obj->rt_store.add ((unsigned char *)req.rt().c_str());
-
-                    // in case of failure, we need to delete the RT from subnet
-                    // add it to temp add list
-                    mgmt_ctxt.state()->set_rt_pending_add_ (
-                                    (unsigned char *)req.rt().c_str(),
-                                    rt_type_e::EVI,
-                                    subnet_uuid_obj->ms_id());
-                }
-            }
-
-            // update RT in bgpRouteMapTable
-            if (update_orf) {
-                update_bgp_route_map_table(test_correlator);
-            }
+            ms_bd_id = subnet_uuid_obj->ms_id();
 
             SDK_TRACE_DEBUG("EVPN EVI RT request: %s evi-index: %d",
-                            uuid.str(), subnet_uuid_obj->ms_id());
+                            uuid.str(), ms_bd_id);
         } else {
             throw Error (std::string("EVPN EVI RT request with non-matching "
                          "Subnet reference ").  append(uuid.str()),
@@ -127,6 +90,51 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     } else {
         // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map
+        throw Error (std::string("EVPN EVI RT request with invalid EVI UUID ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+
+    bool update_orf = false;
+    req.set_eviid(ms_bd_id);
+    auto state_ctxt = state_t::thread_context();
+    auto subnet_obj = state_ctxt.state()->subnet_store().get(req.eviid());
+    if (subnet_obj->rt_store.find ((unsigned char *)req.rt().c_str())) {
+        if ((row_status == AMB_ROW_DESTROY) ||
+            (op_update && req.rttype() == EVPN_RT_EXPORT)) {
+            // either delete RT or updated so that RT is no more
+            // in import list, remove the RT from the subnet
+            update_orf = true;
+            subnet_obj->rt_store.del((unsigned char *)req.rt().c_str());
+
+            SDK_TRACE_DEBUG("Deleting RT from MS EVI %d for ORF", ms_bd_id);
+            // in case of failure, we need to add the RT back to subnet
+            // add it to temp del list
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->set_rt_pending_delete_ (
+                (unsigned char *)req.rt().c_str(),
+                rt_type_e::EVI, ms_bd_id);
+        }
+    } else {
+        if ((req.rttype() == EVPN_RT_IMPORT)  ||
+            (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
+            // RT is added or updated so that RT is in import list now
+            // add RT to subnet list
+            update_orf = true;
+            subnet_obj->rt_store.add ((unsigned char *)req.rt().c_str());
+
+            SDK_TRACE_DEBUG("Adding RT to MS EVI %d for ORF", ms_bd_id);
+            // in case of failure, we need to delete the RT from subnet
+            // add it to temp add list
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->set_rt_pending_add_ (
+                (unsigned char *)req.rt().c_str(),
+                rt_type_e::EVI, ms_bd_id);
+        }
+    }
+
+    // update RT in bgpRouteMapTable
+    if (update_orf) {
+        update_bgp_route_map_table(test_correlator);
     }
 }
 
@@ -188,6 +196,9 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
 
+    ms_vrf_id_t ms_vrf_id = 0;
+    std::string vrf_name;
+
     if (uuid == vpc_uuid) {
         // Venice case
         // spec uuid is same as vpcuuid
@@ -198,51 +209,11 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             throw Error (std::string("EVPN IP VRF RT request with unknown "
                          "VPC reference").append(uuid.str()),
                          SDK_RET_ENTRY_NOT_FOUND);
-            return;
         }
         if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
-            bool update_orf = false;
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
-            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
-            req.set_vrfname(vrf_name);
-            auto state_ctxt = state_t::thread_context();
-            auto vpc_obj = state_ctxt.state()->vpc_store().get(vpc_uuid_obj->ms_id());
-            if (vpc_obj->rt_store.find ((unsigned char *)req.rt().c_str())) {
-                if ((row_status == AMB_ROW_DESTROY) ||
-                    (op_update && req.rttype() == EVPN_RT_EXPORT)) {
-                    // either delete RT or updated so that RT is no more
-                    // in import list, remove the RT from the vpc
-                    update_orf = true;
-                    vpc_obj->rt_store.del((unsigned char *)req.rt().c_str());
-
-                    // in case of failure, we need to add the RT back to vpc
-                    // add it to temp del list
-                    mgmt_ctxt.state()->set_rt_pending_delete_ (
-                                    (unsigned char *)req.rt().c_str(),
-                                    rt_type_e::VRF,
-                                    vpc_uuid_obj->ms_id());
-                }
-            } else {
-                if ((req.rttype() == EVPN_RT_IMPORT)  ||
-                        (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
-                    // RT is added or updated so that RT is in import list now
-                    // add RT to vpc list
-                    update_orf = true;
-                    vpc_obj->rt_store.add((unsigned char *)req.rt().c_str());
-
-                    // in case of failure, we need to delete the RT from vpc
-                    // add it to temp add list
-                    mgmt_ctxt.state()->set_rt_pending_add_ (
-                                    (unsigned char *)req.rt().c_str(),
-                                    rt_type_e::VRF,
-                                    vpc_uuid_obj->ms_id());
-                }
-            }
-
-            // update RT in bgpRouteMapTable
-            if (update_orf) {
-                update_bgp_route_map_table(test_correlator);
-            }
+            ms_vrf_id = vpc_uuid_obj->ms_id();
+            vrf_name = std::to_string (ms_vrf_id);
 
             SDK_TRACE_DEBUG
                 ("EVPN IP RT VRF request: %s vrf-id: %d, vrf-name:%s",
@@ -255,6 +226,51 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
     } else {
         // Non-Venice case
         // TODO: spec uuid doesnt match with VPC uuid. need to key-map
+        throw Error (std::string("EVPN IP VRF RT request with invalid VRF UUID ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+
+    bool update_orf = false;
+    req.set_vrfname(vrf_name);
+    auto state_ctxt = state_t::thread_context();
+    auto vpc_obj = state_ctxt.state()->vpc_store().get(ms_vrf_id);
+    if (vpc_obj->rt_store.find ((unsigned char *)req.rt().c_str())) {
+        if ((row_status == AMB_ROW_DESTROY) ||
+            (op_update && req.rttype() == EVPN_RT_EXPORT)) {
+            // either delete RT or updated so that RT is no more
+            // in import list, remove the RT from the vpc
+            update_orf = true;
+            vpc_obj->rt_store.del((unsigned char *)req.rt().c_str());
+
+            SDK_TRACE_DEBUG("Deleting RT from MS VRF %d for ORF", ms_vrf_id);
+            // in case of failure, we need to add the RT back to vpc
+            // add it to temp del list
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->set_rt_pending_delete_ (
+                (unsigned char *)req.rt().c_str(),
+                rt_type_e::VRF, ms_vrf_id);
+        }
+    } else {
+        if ((req.rttype() == EVPN_RT_IMPORT)  ||
+            (req.rttype() == EVPN_RT_IMPORT_EXPORT)) {
+            // RT is added or updated so that RT is in import list now
+            // add RT to vpc list
+            update_orf = true;
+            vpc_obj->rt_store.add((unsigned char *)req.rt().c_str());
+
+            SDK_TRACE_DEBUG("Adding RT to MS VRF %d for ORF", ms_vrf_id);
+            // in case of failure, we need to delete the RT from vpc
+            // add it to temp add list
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->set_rt_pending_add_ (
+                (unsigned char *)req.rt().c_str(),
+                rt_type_e::VRF, ms_vrf_id);
+        }
+    }
+
+    // update RT in bgpRouteMapTable
+    if (update_orf) {
+        update_bgp_route_map_table(test_correlator);
     }
 }
 

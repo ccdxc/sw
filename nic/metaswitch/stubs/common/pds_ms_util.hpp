@@ -287,5 +287,14 @@ struct pend_rt_t {
         return rt2str(rt_str);
     }
 };
+
+static inline bool mgmt_state_locked(bool set, bool lock=false) {
+    static thread_local bool mgmt_state_lock_ = false;
+    if (set) {
+        mgmt_state_lock_ = lock;
+    }
+    return mgmt_state_lock_;
+}
+
 } // End namespace
 #endif

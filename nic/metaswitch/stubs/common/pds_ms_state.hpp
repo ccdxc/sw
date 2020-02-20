@@ -43,13 +43,17 @@ enum slab_id_e {
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
-
 // Singleton that holds all global state for the PDS-MS stubs
 class state_t {
 public:
     struct context_t {
     public:    
-        context_t(std::recursive_mutex& m, state_t* s) : l_(m), state_(s)  {};
+        context_t(std::recursive_mutex& m, state_t* s) : l_(m), state_(s)  {
+            if (unlikely(mgmt_state_locked(false))) {
+                SDK_TRACE_ERR("Acquiring Stub State lock within Mgmt state lock is not allowed");
+                SDK_ASSERT(0);
+            }
+        };
         state_t* state(void) {return state_;}
         void release(void) {l_.unlock(); state_ = nullptr;}
         context_t(context_t&& c) {

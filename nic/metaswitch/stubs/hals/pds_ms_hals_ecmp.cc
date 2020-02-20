@@ -165,21 +165,20 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             // TODO: Assuming that the same {TEP, VNI} will not advertise
             // multiple Router MACs. Hence blindly overwriting existing MAC
             if (is_mac_set(dmaci)) {
-                SDK_TRACE_ERR("!! Change in Router MAC address for TEP %s VNI %s"
-                              " L3 VXLAN Port 0x%x from %s to %s NOT SUPPORTED !!!",
+                SDK_TRACE_ERR("!! Overwriting Router MAC address for TEP %s VNI %s"
+                              " L3 VXLAN Port 0x%x from %s to %s - UNDEFINED BEHAVIOR !!!",
                               ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                               vxp_prop.ifindex, macaddr2str(dmaci),
                               macaddr2str(nh.mac_addr.m_mac));
-            } else {
-                MAC_ADDR_COPY(dmaci, nh.mac_addr.m_mac);
-                li_vxlan_port vxp;
-                vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
-                                     false /* Op Update */);
-                SDK_TRACE_DEBUG("Change DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
-                                " 0x%x to %s",
-                                ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
-                                vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
             }
+            MAC_ADDR_COPY(dmaci, nh.mac_addr.m_mac);
+            li_vxlan_port vxp;
+            vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
+                                 false /* Op Update */);
+            SDK_TRACE_DEBUG("Setting DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
+                            " 0x%x to %s",
+                            ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
+                            vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
         }
         nhgroup_spec.nexthops[i].tep = msidx2pdsobjkey(tep_obj->properties().hal_tep_idx);
         SDK_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %sto Overlay NHGroup %d",

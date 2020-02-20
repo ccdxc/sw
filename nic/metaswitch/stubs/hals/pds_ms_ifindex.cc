@@ -6,6 +6,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 
 namespace pds_ms {
@@ -42,23 +43,50 @@ ms_to_pds_eth_ifindex (uint32_t ms_ifindex)
     return ((IF_TYPE_ETH << IF_TYPE_SHIFT) | ms_ifindex);
 }
 
+struct lif_walk_ctxt_t {
+    uint32_t pds_ifindex;
+    std::string  ifname;
+};
+
+bool lif_walk_cb(void* obj, void* ctxt) {
+    auto lif =  (api::impl::lif_impl *) obj;
+    auto lif_ctxt = (lif_walk_ctxt_t *) ctxt;
+    SDK_TRACE_VERBOSE("Pinned uplink 0x%x Ifname %s",
+                      lif->pinned_ifindex(), lif->name());
+    if (lif->pinned_ifindex() == lif_ctxt->pds_ifindex) {
+        lif_ctxt->ifname = lif->name();
+        return true;
+    }
+    return false;
+}
+
 std::string 
 pds_ifindex_to_ifname (uint32_t pds_ifindex)
 {
-    // TODO : Get Linux IfName from LIF walk for EthIfIndex
-    // Hardcoding the interface name to be same as Linux interface name.
+    lif_walk_ctxt_t  ctxt;
+    ctxt.pds_ifindex = pds_ifindex;
+
+    if (lif_db() != nullptr) {
+        lif_db()->walk(lif_walk_cb, &ctxt);
+        SDK_TRACE_VERBOSE("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
+        if (!ctxt.ifname.empty()) {
+            SDK_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());
+            return ctxt.ifname;
+        }
+    }
+
+    // For x86 Naples containers there will be no LIFs for uplinks.
+    // Hence hardcoding the name from the uplink interface
     // uplink 1 - dsc0
     // uplink 2 - dsc1
-    // TODO: This needs to be changed to use L3 interface name
-    // And also if linux interface name for the uplink is not fixed then 
-    // need a way to derive dynamically here or in the FT-Stub
 #ifdef SIM
     std::string if_name = "eth";
 #else
     std::string if_name = "dsc";
 #endif
-    // TODO: Ignoring Child ports - revisit later
     if_name += std::to_string(ETH_IFINDEX_TO_PARENT_PORT(pds_ifindex)-1);
+    SDK_TRACE_INFO("PDS IfIndex 0x%x not found in LIF DB Walk Hardcoding Ifname %s",
+                   pds_ifindex, if_name.c_str());
     return if_name;
 }
 

@@ -541,7 +541,9 @@ int readFruKey(std::string key, std::string &value)
 namespace api {
 
 pds_state g_pds_state;
-pds_state::pds_state() { }
+pds_state::pds_state() {
+    memset(state_, 0, sizeof(state_));
+}
 pds_state::~pds_state() { }
 
 sdk_ret_t pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
