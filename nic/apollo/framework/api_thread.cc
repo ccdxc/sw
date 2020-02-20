@@ -26,8 +26,9 @@ api_thread_init_fn (void *ctxt)
     state_base *state = (state_base *)curr_thread->data();
 
     api_engine_init(state);
+    sdk::ipc::set_drip_feeding(true);
     sdk::ipc::reg_request_handler(API_MSG_ID_BATCH, api_thread_ipc_batch_cb,
-                                  NULL, true);
+                                  NULL);
 }
 
 void

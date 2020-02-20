@@ -88,7 +88,7 @@ extern void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
 ///
 
 extern void reg_request_handler(uint32_t msg_code, request_cb callback,
-                                const void *ctx, bool serialize = false);
+                                const void *ctx);
 
 
 extern void reg_response_handler(uint32_t msg_code, response_cb callback,
@@ -100,6 +100,13 @@ extern void subscribe(uint32_t msg_code, subscription_cb callback,
 // This is to be used in sync cases when we want to receive requests or
 // subscription messages
 extern void receive(void);
+
+
+///
+/// Configuration
+///
+
+extern void set_drip_feeding(bool enabled);
 
 } // namespace ipc
 } // namespace sdk

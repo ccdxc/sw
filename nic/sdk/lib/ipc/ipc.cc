@@ -51,7 +51,7 @@ public:
     void respond(ipc_msg_ptr msg, const void *data, size_t data_length);
     void broadcast(uint32_t msg_code, const void *data, size_t data_length);
     void reg_request_handler(uint32_t msg_code, request_cb callback,
-                             const void *ctx, bool serialize);
+                             const void *ctx);
     void reg_response_handler(uint32_t msg_code, response_cb callback,
                               const void *ctx);
     void subscribe(uint32_t msg_code, subscription_cb callback,
@@ -59,6 +59,7 @@ public:
     void receive(void);
     void server_receive(void);
     void eventfd_receive(void);
+    void set_drip_feeding(bool drip_feed);
 protected: 
     virtual zmq_ipc_client_ptr new_client_(uint32_t recipient) = 0;
     uint32_t get_id_(void);
@@ -66,9 +67,9 @@ protected:
     void handle_response_(ipc_msg_ptr msg, response_oneshot_cb cb,
                           const void *cookie);
     zmq_ipc_client_ptr get_client_(uint32_t recipient);
-    bool should_serialize_(ipc_msg_ptr msg);
+    bool should_serialize_(void);
     void serialize_(ipc_msg_ptr msg);
-    void deserialize_(uint32_t msg_code);
+    void deserialize_(void);
     void deliver_(ipc_msg_ptr msg);
     int get_eventfd_(void);
 private:
@@ -79,10 +80,10 @@ private:
     std::map<uint32_t, rsp_callback_t> rsp_cbs_;
     std::map<uint32_t, sub_callback_t> sub_cbs_;
     // the fields below are used for serialized delivery
-    std::map<uint32_t, bool> serializing_enabled_;
-    std::map<uint32_t, bool> message_in_flight_;
+    bool serializing_enabled_;
+    bool message_in_flight_;
     // hold queues are used to serialize messages
-    std::map<uint32_t, std::queue<ipc_msg_ptr> > hold_queues_;
+    std::queue<ipc_msg_ptr> hold_queue_;
     // deliver queue is used to actually deliver held messages to
     // the client at the next tick
     std::queue<ipc_msg_ptr> delivery_queue_;
@@ -177,6 +178,7 @@ ipc_service::ipc_service(uint32_t id) {
     this->id_ = id;
     this->ipc_server_ = nullptr;
     this->eventfd_ = -1;
+    this->serializing_enabled_ = false;
     
     for (int i = 0; i < IPC_MAX_ID + 1; i++) {
         this->ipc_clients_[i] = nullptr;
@@ -214,8 +216,8 @@ void
 ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
     assert(msg != nullptr);
     this->ipc_server_->reply(msg, data, data_length);
-    this->message_in_flight_[msg->code()] = false;
-    this->deserialize_(msg->code());
+    this->message_in_flight_ = false;
+    this->deserialize_();
 }
 
 void
@@ -287,11 +289,13 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
 ipc_service_async::ipc_service_async(uint32_t client_id,
                                      fd_watch_cb fd_watch_cb,
                                      const void *fd_watch_cb_ctx)
-    : ipc_service_async(client_id, NULL, fd_watch_cb, fd_watch_cb_ctx) {}
+    : ipc_service_async(client_id, NULL, fd_watch_cb, fd_watch_cb_ctx) {
+}
 
 ipc_service_async::ipc_service_async(uint32_t client_id,
                                      fd_watch_ms_cb fd_watch_ms_cb)
-    : ipc_service_async(client_id, fd_watch_ms_cb, NULL, NULL) {}
+    : ipc_service_async(client_id, fd_watch_ms_cb, NULL, NULL) {
+}
 
 zmq_ipc_client_ptr
 ipc_service_async::new_client_(uint32_t recipient) {
@@ -345,37 +349,27 @@ ipc_service_async::client_receive(uint32_t sender) {
 
 
 bool
-ipc_service::should_serialize_(ipc_msg_ptr msg) {
-    if (this->serializing_enabled_.count(msg->code()) != 0 &&
-        this->serializing_enabled_[msg->code()] &&
-        this->message_in_flight_.count(msg->code()) != 0 &&
-        this->message_in_flight_[msg->code()]) {
-        return true;
-    }
-    return false;
+ipc_service::should_serialize_(void) {
+    return (this->serializing_enabled_ && this->message_in_flight_);
 }
 
 void
 ipc_service::serialize_(ipc_msg_ptr msg) {
     SDK_TRACE_DEBUG("Serializing message with msg_code: %u", msg->code());
-    this->hold_queues_[msg->code()].push(msg);
+    this->hold_queue_.push(msg);
 }
 
 void
-ipc_service::deserialize_(uint32_t msg_code) {
+ipc_service::deserialize_(void) {
     uint64_t buffer = 1;
     
-    if (this->hold_queues_[msg_code].size() == 0) {
+    if (this->hold_queue_.size() == 0) {
         return;
     }
 
-    SDK_TRACE_DEBUG("Messages waiting: %i", this->hold_queues_.count(msg_code));
-    ipc_msg_ptr msg = this->hold_queues_[msg_code].front();
-    SDK_TRACE_DEBUG("Deserializing for msg_code: %u", msg->code());
-    this->delivery_queue_.push(msg);
-    this->hold_queues_[msg_code].pop();
+    SDK_TRACE_DEBUG("Messages waiting: %i", this->hold_queue_.size());
     
-    // Notify the client we have stuff for delivery
+    // Notify the client we have messages for delivery
     write(this->eventfd_, &buffer, sizeof(buffer));
 }
 
@@ -387,7 +381,7 @@ ipc_service::deliver_(ipc_msg_ptr msg) {
     req_callback_t req_cb = this->req_cbs_[msg->code()];
                 
     if (req_cb.cb != NULL) {
-        this->message_in_flight_[msg->code()] = true;
+        this->message_in_flight_ = true;
         req_cb.cb(msg, req_cb.ctx);
     }
 }
@@ -405,7 +399,7 @@ ipc_service::server_receive(void) {
             return;
         }
         if (msg->type() == sdk::ipc::DIRECT) {
-            if (this->should_serialize_(msg)) {
+            if (this->should_serialize_()) {
                 this->serialize_(msg);
             } else {
                 this->deliver_(msg);
@@ -432,9 +426,9 @@ ipc_service::eventfd_receive(void) {
     // Clear the eventfd flag
     read(this->eventfd_, &buffer, sizeof(buffer));;
     
-    while(!this->delivery_queue_.empty()) {
-        ipc_msg_ptr msg = this->delivery_queue_.front();
-        this->delivery_queue_.pop();
+    while(!this->hold_queue_.empty()) {
+        ipc_msg_ptr msg = this->hold_queue_.front();
+        this->hold_queue_.pop();
         SDK_TRACE_DEBUG("Delivering postponed message for msg_code: %u",
                         msg->code());
         this->deliver_(msg);
@@ -456,10 +450,9 @@ ipc_service::broadcast(uint32_t msg_code, const void *data,
 
 void
 ipc_service::reg_request_handler(uint32_t msg_code, request_cb callback,
-                                 const void *ctx, bool serialize) {
+                                 const void *ctx) {
     assert(this->req_cbs_.count(msg_code) == 0);
     this->req_cbs_[msg_code] = {.cb = callback, .ctx = ctx};
-    this->serializing_enabled_[msg_code] = serialize;
 }
 
 void
@@ -469,13 +462,17 @@ ipc_service::reg_response_handler(uint32_t msg_code, response_cb callback,
     this->rsp_cbs_[msg_code] = {.cb = callback, .ctx = ctx};
 }
 
-
 void
 ipc_service::subscribe(uint32_t msg_code, subscription_cb callback,
                        const void *ctx) {
     assert(this->sub_cbs_.count(msg_code) == 0);
     this->sub_cbs_[msg_code] = {.cb = callback, .ctx = ctx};
     this->ipc_server_->subscribe(msg_code);
+}
+
+void
+ipc_service::set_drip_feeding(bool enabled) {
+    this->serializing_enabled_ = enabled;
 }
 
 // We use this as for non asynchronous thread creating a client
@@ -495,8 +492,8 @@ ipc_init_async (uint32_t client_id, fd_watch_cb fd_watch_cb,
                 const void *fd_watch_cb_ctx)
 {
     assert(t_ipc_service == nullptr);
-    t_ipc_service = std::make_shared<ipc_service_async>(client_id, fd_watch_cb,
-        fd_watch_cb_ctx);
+    t_ipc_service = std::make_shared<ipc_service_async>(
+        client_id, fd_watch_cb, fd_watch_cb_ctx);
 }
 
 void
@@ -536,11 +533,10 @@ broadcast (uint32_t msg_code, const void *data, size_t data_length)
 
 // We need to call init or init_async before using this method
 void
-reg_request_handler (uint32_t msg_code, request_cb callback, const void *ctx,
-                     bool serialize)
+reg_request_handler (uint32_t msg_code, request_cb callback, const void *ctx)
 {
     assert(t_ipc_service != nullptr);
-    t_ipc_service->reg_request_handler(msg_code, callback, ctx, serialize);
+    t_ipc_service->reg_request_handler(msg_code, callback, ctx);
 }
 
 void
@@ -562,6 +558,12 @@ respond (ipc_msg_ptr msg, const void *data, size_t data_length)
 {
     assert(t_ipc_service != nullptr);
     t_ipc_service->respond(msg, data, data_length);
+}
+
+void
+set_drip_feeding (bool enabled)
+{
+    service()->set_drip_feeding(enabled);
 }
 
 } // namespace ipc

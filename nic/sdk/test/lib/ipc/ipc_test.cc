@@ -90,7 +90,8 @@ void *async_thread_run (void *arg)
 
     ipc_init_async(T_CLIENT_1, poll_fd_watch_cb, &poll_fds);
 
-    reg_request_handler(1, req_1_callback, NULL, true);
+    set_drip_feeding(true);
+    reg_request_handler(1, req_1_callback, NULL);
     reg_request_handler(99, req_99_callback, &exit);
 
     subscribe(2, sub_2_callback, NULL);

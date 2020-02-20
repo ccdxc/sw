@@ -1561,6 +1561,7 @@ flow key for non-IP flows
 | Subnet | [bytes](#bytes) |  | subnet identifier |
 | SrcMAC | [uint64](#uint64) |  | source MAC address |
 | DstMAC | [uint64](#uint64) |  | destination MAC address |
+| EtherType | [uint32](#uint32) |  | 16 bits of Ethertype in the Ethernet header |
 
 
 
