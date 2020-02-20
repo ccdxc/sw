@@ -45,6 +45,7 @@
 #include "ionic_ibdev.h"
 
 #ifdef NOT_UPSTREAM
+/* Kernel module parameters are not to be upstreamed */
 static bool ionic_xxx_aq_dbell = true;
 #ifdef __FreeBSD__
 module_param_named(ionic_rdma_xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
@@ -290,7 +291,11 @@ cq_next:
 		ionic_queue_produce(&aq->q);
 	}
 
+#ifdef NOT_UPSTREAM
 	if (old_prod != aq->q.prod && ionic_xxx_aq_dbell)
+#else
+	if (old_prod != aq->q.prod)
+#endif /* NOT_UPSTREAM */
 		ionic_dbell_ring(dev->dbpage, dev->aq_qtype,
 				 ionic_queue_dbell_val(&aq->q));
 }

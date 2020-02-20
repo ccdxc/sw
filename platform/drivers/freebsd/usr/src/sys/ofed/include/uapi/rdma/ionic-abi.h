@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR Linux-OpenIB) */
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -36,6 +36,8 @@
 
 #include <linux/types.h>
 
+typedef __u64 __aligned_u64;
+
 #define IONIC_ABI_VERSION	2
 
 struct ionic_ctx_req {
@@ -46,7 +48,7 @@ struct ionic_ctx_resp {
 	__u32 rsvd2;
 	__u32 page_shift;
 
-	__u64 dbell_offset;
+	__aligned_u64 dbell_offset;
 
 	__u16 version;
 	__u8 qp_opcodes;
@@ -63,7 +65,7 @@ struct ionic_ctx_resp {
 };
 
 struct ionic_qdesc {
-	__u64 addr;
+	__aligned_u64 addr;
 	__u32 size;
 	__u16 mask;
 	__u8 depth_log2;
@@ -95,8 +97,8 @@ struct ionic_qp_req {
 struct ionic_qp_resp {
 	__u32 qpid;
 	__u32 rsvd;
-	__u64 sq_cmb_offset;
-	__u64 rq_cmb_offset;
+	__aligned_u64 sq_cmb_offset;
+	__aligned_u64 rq_cmb_offset;
 };
 
 struct ionic_srq_req {
@@ -108,7 +110,7 @@ struct ionic_srq_req {
 struct ionic_srq_resp {
 	__u32 qpid;
 	__u32 rsvd;
-	__u64 rq_cmb_offset;
+	__aligned_u64 rq_cmb_offset;
 };
 
 #endif /* IONIC_ABI_H */

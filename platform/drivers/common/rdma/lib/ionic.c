@@ -34,8 +34,6 @@
 #include <stdlib.h>
 
 #include "ionic.h"
-#include "ionic_dbg.h"
-#include "ionic_stats.h"
 
 #ifdef __FreeBSD__
 extern void ionic_set_ops(struct ibv_context *ibctx);
@@ -43,6 +41,7 @@ extern void ionic_set_ops(struct ibv_context *ibctx);
 extern const struct verbs_context_ops ionic_ctx_ops;
 #endif
 
+#ifdef NOT_UPSTREAM
 FILE *IONIC_DEBUG_FILE;
 
 static void ionic_debug_file_close(void)
@@ -76,6 +75,7 @@ static void ionic_debug_file_init(void)
 	pthread_once(&once, ionic_debug_file_open);
 }
 
+#endif /* NOT_UPSTREAM */
 static int ionic_env_val_def(const char *name, int def)
 {
 	const char *env = getenv(name);
@@ -91,6 +91,7 @@ static int ionic_env_val(const char *name)
 	return ionic_env_val_def(name, 0);
 }
 
+#ifdef NOT_UPSTREAM
 static int ionic_env_debug(void)
 {
 	if (!(IONIC_DEBUG))
@@ -99,6 +100,8 @@ static int ionic_env_debug(void)
 	return ionic_env_val("IONIC_DEBUG");
 }
 
+#endif /* NOT_UPSTREAM */
+#ifdef IONIC_LIB_STATS
 static int ionic_env_stats(void)
 {
 	if (!(IONIC_STATS))
@@ -115,6 +118,7 @@ static int ionic_env_lats(void)
 	return ionic_env_val("IONIC_LATS");
 }
 
+#endif /* IONIC_LIB_STATS */
 static int ionic_env_lockfree(void)
 {
 	return ionic_env_val("IONIC_LOCKFREE");
@@ -139,10 +143,15 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
-	int rc, version, level;
+	int rc, version;
+#ifdef IONIC_LIB_STATS
+	int level;
+#endif
 
+#ifdef NOT_UPSTREAM
 	ionic_debug_file_init();
 
+#endif
 #ifdef __FreeBSD__
 	dev = to_ionic_dev(&vdev->device);
 	ctx = to_ionic_ctx(ibctx);
@@ -228,9 +237,12 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 			ctx->spec = 0;
 	}
 
+#ifdef NOT_UPSTREAM
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
 
+#endif /* NOT_UPSTREAM */
+#ifdef IONIC_LIB_STATS
 	level = ionic_env_stats();
 	if (level) {
 		ctx->stats = calloc(1, sizeof(*ctx->stats));
@@ -249,6 +261,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 		ionic_lat_init(ctx->lats);
 	}
 
+#endif /* IONIC_LIB_STATS */
 #ifdef __FreeBSD__
 err_cmd:
 	return rc;
@@ -271,25 +284,31 @@ static void ionic_free_context(struct ibv_context *ibctx)
 #endif
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+#ifdef NOT_UPSTREAM
 	int rc;
 
 	rc = ionic_tbl_destroy(&ctx->qp_tbl);
 	if (rc)
 		ionic_err("context freed before destroying resources");
+#else
+	ionic_tbl_destroy(&ctx->qp_tbl);
+#endif /* NOT_UPSTREAM */
 
 	pthread_mutex_destroy(&ctx->mut);
 
 	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
-
 #ifndef __FreeBSD__
-	verbs_uninit_context(&ctx->vctx);
 
+	verbs_uninit_context(&ctx->vctx);
 #endif
+#ifdef IONIC_LIB_STATS
+
 	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
 	free(ctx->stats);
 
 	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
 	free(ctx->lats);
+#endif /* IONIC_LIB_STATS */
 #ifndef __FreeBSD__
 
 	free(ctx);

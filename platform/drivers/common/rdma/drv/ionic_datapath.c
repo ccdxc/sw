@@ -46,6 +46,7 @@
 #include "ionic_ibdev.h"
 
 #ifdef NOT_UPSTREAM
+/* Kernel module parameters are not to be upstreamed */
 static bool ionic_xxx_qp_dbell = true;
 #ifdef __FreeBSD__
 module_param_named(ionic_rdma_xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
@@ -1244,9 +1245,14 @@ static void ionic_post_send_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		pos = ionic_queue_next(&qp->sq, pos);
 
+#ifdef NOT_UPSTREAM
 		if (ionic_xxx_qp_dbell)
 			ionic_dbell_ring(dev->dbpage, dev->sq_qtype,
 					 qp->sq.dbell | pos);
+#else
+		ionic_dbell_ring(dev->dbpage, dev->sq_qtype,
+				 qp->sq.dbell | pos);
+#endif /* NOT_UPSTREAM */
 	}
 
 	qp->sq_cmb_prod = end;
@@ -1433,7 +1439,11 @@ out:
 
 		if (qp->sq_cmb_ptr)
 			ionic_post_send_cmb(dev, qp);
+#ifdef NOT_UPSTREAM
 		else if (ionic_xxx_qp_dbell)
+#else
+		else
+#endif /* NOT_UPSTREAM */
 			ionic_dbell_ring(dev->dbpage, dev->sq_qtype,
 					 ionic_queue_dbell_val(&qp->sq));
 	}

@@ -39,6 +39,7 @@
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 
+/* Kernel module parameters are not to be upstreamed */
 static bool ionic_xxx_qp_dbell = true;
 module_param_named(ionic_rdma_xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_qp_dbell, "XXX Enable ringing qp doorbell (to test handling of dev failure).");

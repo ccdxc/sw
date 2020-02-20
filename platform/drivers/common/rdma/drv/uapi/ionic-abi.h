@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: ((GPL-2.0 WITH Linux-syscall-note) OR Linux-OpenIB) */
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -30,46 +31,88 @@
  * SOFTWARE.
  */
 
-#ifndef IONIC_DBG_H
-#define IONIC_DBG_H
+#ifndef IONIC_ABI_H
+#define IONIC_ABI_H
 
-#include <stdio.h>
-#include "ionic.h"
+#include <linux/types.h>
 
-#ifndef IONIC_DEBUG
-#define IONIC_DEBUG true
+#ifdef __FreeBSD__
+typedef __u64 __aligned_u64;
+
 #endif
+#define IONIC_ABI_VERSION	2
 
-extern FILE *IONIC_DEBUG_FILE;
+struct ionic_ctx_req {
+	__u32 rsvd[2];
+};
 
-#define IONIC_DEFAULT_DEBUG_FILE stderr
+struct ionic_ctx_resp {
+	__u32 rsvd2;
+	__u32 page_shift;
 
-#define _ionic_dbg(file, fmt, ...)					\
-	fprintf(file, "%s:%d: " fmt "\n",				\
-		__func__, __LINE__, ##__VA_ARGS__)
+	__aligned_u64 dbell_offset;
 
-#define ionic_dbg(ctx, fmt, ...) do {					\
-	if ((IONIC_DEBUG) && unlikely(ctx->dbg_file))			\
-		_ionic_dbg(ctx->dbg_file, fmt, ##__VA_ARGS__);		\
-} while (0)
+	__u16 version;
+	__u8 qp_opcodes;
+	__u8 admin_opcodes;
 
-#define ionic_err(fmt, ...)						\
-	_ionic_dbg(IONIC_DEBUG_FILE, fmt, ##__VA_ARGS__)
+	__u8 sq_qtype;
+	__u8 rq_qtype;
+	__u8 cq_qtype;
+	__u8 admin_qtype;
 
-static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
-				   const void *ptr, size_t size)
-{
-	const uint8_t *ptr8 = ptr;
-	int i;
+	__u8 max_stride;
+	__u8 max_spec;
+	__u8 rsvd[2];
+};
 
-	if (!(IONIC_DEBUG) || likely(!ctx->dbg_file))
-		return;
+struct ionic_qdesc {
+	__aligned_u64 addr;
+	__u32 size;
+	__u16 mask;
+	__u8 depth_log2;
+	__u8 stride_log2;
+};
 
-	for (i = 0; i < size; i += 8)
-		_ionic_dbg(ctx->dbg_file,
-			   "%s: %02x %02x %02x %02x %02x %02x %02x %02x", str,
-			   ptr8[i + 0], ptr8[i + 1], ptr8[i + 2], ptr8[i + 3],
-			   ptr8[i + 4], ptr8[i + 5], ptr8[i + 6], ptr8[i + 7]);
-}
+struct ionic_ah_resp {
+	__u32 ahid;
+	__u32 pad;
+};
 
-#endif /* IONIC_DBG_H */
+struct ionic_cq_req {
+	struct ionic_qdesc cq;
+};
+
+struct ionic_cq_resp {
+	__u32 cqid;
+	__u32 pad;
+};
+
+struct ionic_qp_req {
+	struct ionic_qdesc sq;
+	struct ionic_qdesc rq;
+	__u8 sq_spec;
+	__u8 rq_spec;
+	__u8 rsvd[6];
+};
+
+struct ionic_qp_resp {
+	__u32 qpid;
+	__u32 rsvd;
+	__aligned_u64 sq_cmb_offset;
+	__aligned_u64 rq_cmb_offset;
+};
+
+struct ionic_srq_req {
+	struct ionic_qdesc rq;
+	__u8 rq_spec;
+	__u8 rsvd[7];
+};
+
+struct ionic_srq_resp {
+	__u32 qpid;
+	__u32 rsvd;
+	__aligned_u64 rq_cmb_offset;
+};
+
+#endif /* IONIC_ABI_H */

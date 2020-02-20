@@ -42,8 +42,6 @@
 #include <fcntl.h>
 
 #include "ionic.h"
-#include "ionic_dbg.h"
-#include "ionic_stats.h"
 
 #ifndef IONIC_LOCKFREE
 #define IONIC_LOCKFREE false
@@ -362,19 +360,29 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 	wqe = ionic_queue_at_cons(&qp->rq);
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
+	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2))
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("invalid id %#lx",
 			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
+#else
+		return -EIO;
+#endif /* NOT_UPSTREAM */
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[wqe->base.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED)) {
+	if (unlikely(meta->next != IONIC_META_POSTED))
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("wqe not posted %#lx",
 			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
+#else
+		return -EIO;
+#endif /* NOT_UPSTREAM */
 
 	ionic_queue_consume(&qp->rq);
 
@@ -462,15 +470,25 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	if (cqe_qp->has_rq) {
 		qp = cqe_qp;
 	} else {
-		if (unlikely(cqe_qp->is_srq)) {
+		if (unlikely(cqe_qp->is_srq))
+#ifdef NOT_UPSTREAM
+		{
 			ionic_err("srq without rq %u", cqe_qp->qpid);
 			return -EIO;
 		}
+#else
+			return -EIO;
+#endif /* NOT_UPSTREAM */
 
-		if (unlikely(!cqe_qp->vqp.qp.srq)) {
+		if (unlikely(!cqe_qp->vqp.qp.srq))
+#ifdef NOT_UPSTREAM
+		{
 			ionic_err("qp without rq or srq %u", cqe_qp->qpid);
 			return -EIO;
 		}
+#else
+			return -EIO;
+#endif /* NOT_UPSTREAM */
 
 		qp = to_ionic_srq(cqe_qp->vqp.qp.srq);
 	}
@@ -497,32 +515,49 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 		list_add_tail(&cq->flush_rq, &cqe_qp->cq_flush_rq);
 #endif /* IONIC_SRQ_XRC */
 
+#ifdef IONIC_LIB_STATS
 		ionic_stat_incr(ctx->stats, poll_cq_wc_err);
 
+#endif /* IONIC_LIB_STATS */
 		/* posted recvs (if any) flushed by ionic_flush_recv */
 		return 0;
 	}
 
 	/* there had better be something in the recv queue to complete */
-	if (ionic_queue_empty(&qp->rq)) {
+	if (ionic_queue_empty(&qp->rq))
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("rq is empty %u", qp->qpid);
 		return -EIO;
 	}
+#else
+		return -EIO;
+#endif /* NOT_UPSTREAM */
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
+	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2))
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("invalid id %#lx",
 			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
+#else
+		return -EIO;
+#endif /* NOT_UPSTREAM */
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[cqe->recv.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED)) {
+	if (unlikely(meta->next != IONIC_META_POSTED))
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("wqe is not posted %#lx",
 			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
+#else
+		return -EIO;
+#endif /* NOT_UPSTREAM */
 
 	meta->next = qp->rq_meta_head;
 	qp->rq_meta_head = meta;
@@ -550,8 +585,10 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 		list_add_tail(&cq->flush_rq, &cqe_qp->cq_flush_rq);
 #endif /* IONIC_SRQ_XRC */
 
+#ifdef IONIC_LIB_STATS
 		ionic_stat_incr(ctx->stats, poll_cq_wc_err);
 
+#endif /* IONIC_LIB_STATS */
 		goto out;
 	}
 
@@ -592,10 +629,11 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	wc->pkey_index = 0;
 
 out:
+#ifdef NOT_UPSTREAM
 	ionic_dbg(ctx, "poll cq %u qp %u cons %u st %u wrid %#lx op %u len %u",
 		  cq->cqid, qp->qpid, qp->rq.cons,
 		  wc->status, meta->wrid, wc->opcode, st_len);
-
+#endif /* NOT_UPSTREAM */
 	ionic_queue_consume(&qp->rq);
 
 	return 1;
@@ -628,7 +666,9 @@ static bool ionic_peek_send(struct ionic_qp *qp)
 static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 			   struct ibv_wc *wc)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(cq->ibcq.context);
+#endif
 	struct ionic_sq_meta *meta;
 
 	if (qp->sq_flush)
@@ -649,11 +689,12 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 		if (!meta->remote && !meta->local_comp)
 			goto out_empty;
 
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx,
 			  "poll cq %u qp %u cons %u st %u wr %#lx op %u l %u",
 			  cq->cqid, qp->qpid, qp->sq.cons,
 			  meta->ibsts, meta->wrid, meta->ibop, meta->len);
-
+#endif /* NOT_UPSTREAM */
 		ionic_queue_consume(&qp->sq);
 
 		/* produce wc only if signaled or error status */
@@ -675,8 +716,10 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 		cq->flush = true;
 		list_del(&qp->cq_flush_sq);
 		list_add_tail(&cq->flush_sq, &qp->cq_flush_sq);
+#ifdef IONIC_LIB_STATS
 
 		ionic_stat_incr(ctx->stats, poll_cq_wc_err);
+#endif /* IONIC_LIB_STATS */
 	}
 
 	return 1;
@@ -735,11 +778,16 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
 				 cqe_seq, qp->sq.mask);
-	if (rc) {
+	if (rc)
+#ifdef NOT_UPSTREAM
+	{
 		ionic_err("wqe is not posted %#x (msn)",
 			  be32toh(cqe->send.msg_msn));
 		return rc;
 	}
+#else
+		return rc;
+#endif /* NOT_UPSTREAM */
 
 	qp->sq_msn_cons = cqe_seq;
 
@@ -792,18 +840,23 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 
 static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(cq->ibcq.context);
+#endif
 	struct ionic_v1_cqe *qcqe = ionic_queue_at_prod(&cq->q);
 
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
 		return false;
 
+#ifdef IONIC_LIB_STATS
 	ionic_lat_enable(ctx->lats, true);
 
+#endif /* IONIC_LIB_STATS */
 	udma_from_device_barrier();
 
+#ifdef NOT_UPSTREAM
 	ionic_dbg_xdump(ctx, "cqe", qcqe, 1u << cq->q.stride_log2);
-
+#endif /* NOT_UPSTREAM */
 	*cqe = qcqe;
 
 	return true;
@@ -838,13 +891,17 @@ static void ionic_reserve_sync_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
 		cq->reserve += ionic_queue_length(&cq->q);
 		cq->q.cons = cq->q.prod;
 
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "dbell cq %u val %#lx rsv %d",
 			  cq->cqid, ionic_queue_dbell_val(&cq->q),
 			  cq->reserve);
+#endif /* NOT_UPSTREAM */
 		ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
+#ifdef IONIC_LIB_STATS
 
 		ionic_stat_incr(ctx->stats, ring_cq_dbell);
+#endif /* IONIC_LIB_STATS */
 	}
 }
 
@@ -855,15 +912,21 @@ static void ionic_arm_cq(struct ionic_ctx *ctx, struct ionic_cq *cq)
 	if (cq->deferred_arm_sol_only) {
 		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
 		dbell_val |= cq->arm_sol_prod | IONIC_DBELL_RING_SONLY;
+#ifdef IONIC_LIB_STATS
 		ionic_stat_incr(ctx->stats, arm_cq_sol);
+#endif /* IONIC_LIB_STATS */
 	} else {
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
 		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
+#ifdef IONIC_LIB_STATS
 		ionic_stat_incr(ctx->stats, arm_cq_any);
+#endif /* IONIC_LIB_STATS */
 	}
 
+#ifdef NOT_UPSTREAM
 	ionic_dbg(ctx, "dbell cq %u val %#lx (%s)", cq->cqid, dbell_val,
 		  cq->deferred_arm_sol_only ? "sonly" : "arm");
+#endif /* NOT_UPSTREAM */
 	ionic_dbell_ring(&ctx->dbpage[ctx->cq_qtype], dbell_val);
 }
 
@@ -904,9 +967,11 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 	 * greater or equal to zero number of completions on success.
 	 */
 
+#ifdef IONIC_LIB_STATS
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, poll_cq);
 
+#endif /* IONIC_LIB_STATS */
 	if (nwc < 1)
 		return 0;
 
@@ -943,10 +1008,15 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 		qp = ionic_tbl_lookup(&ctx->qp_tbl, qid);
 
-		if (unlikely(!qp)) {
+		if (unlikely(!qp))
+#ifdef NOT_UPSTREAM
+		{
 			ionic_dbg(ctx, "missing qp for qid %#x", qid);
 			goto cq_next;
 		}
+#else
+			goto cq_next;
+#endif /* NOT_UPSTREAM */
 
 		switch(type) {
 		case IONIC_V1_CQE_TYPE_RECV:
@@ -1007,8 +1077,9 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 			break;
 
 		default:
+#ifdef NOT_UPSTREAM
 			ionic_err("unexpected cqe type %u", type);
-
+#endif /* NOT_UPSTREAM */
 			rc = -EIO;
 			goto out;
 		}
@@ -1031,7 +1102,9 @@ cq_next:
 
 		ionic_spin_lock(ctx, &qp->sq_lock);
 		rc = ionic_flush_send_many(qp, wc + npolled, nwc - npolled);
+#ifdef IONIC_LIB_STATS
 		ionic_stat_add(ctx->stats, poll_cq_wc_flush, rc);
+#endif /* IONIC_LIB_STATS */
 		ionic_spin_unlock(ctx, &qp->sq_lock);
 
 		if (rc > 0)
@@ -1049,7 +1122,9 @@ cq_next:
 
 		ionic_spin_lock(ctx, &qp->rq_lock);
 		rc = ionic_flush_recv_many(qp, wc + npolled, nwc - npolled);
+#ifdef IONIC_LIB_STATS
 		ionic_stat_add(ctx->stats, poll_cq_wc_flush, rc);
+#endif /* IONIC_LIB_STATS */
 		ionic_spin_unlock(ctx, &qp->rq_lock);
 
 		if (rc > 0)
@@ -1065,14 +1140,17 @@ out:
 	ionic_reserve_cq(ctx, cq, 0);
 
 	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
+#ifdef IONIC_LIB_STATS
 	ionic_stat_add(ctx->stats, poll_cq_cqe, old_prod);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_ncqe, old_prod);
 	ionic_stat_add(ctx->stats, poll_cq_wc, npolled);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_nwc, npolled);
 	ionic_stat_add(ctx->stats, poll_cq_err, (npolled ?: rc) < 0);
+#endif /* IONIC_LIB_STATS */
 
 	ionic_spin_unlock(ctx, &cq->lock);
 
+#ifdef IONIC_LIB_STATS
 	if (npolled) {
 		ionic_lat_trace(ctx->lats, poll_cq_compl);
 	} else {
@@ -1080,6 +1158,7 @@ out:
 		ionic_lat_enable(ctx->lats, false);
 	}
 
+#endif /* IONIC_LIB_STATS */
 	return npolled ?: rc;
 }
 
@@ -1650,8 +1729,10 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 			       struct ionic_sq_meta *meta,
 			       struct ionic_v1_wqe *wqe)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 
+#endif
 	meta->wrid = wr->wr_id;
 	meta->ibsts = IBV_WC_SUCCESS;
 	meta->signal = false;
@@ -1679,15 +1760,19 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
 	}
 
+#ifdef NOT_UPSTREAM
 	ionic_dbg(ctx, "post send %u prod %u", qp->qpid, qp->sq.prod);
 	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->sq.stride_log2);
 
+#endif /* NOT_UPSTREAM */
+#ifdef IONIC_LIB_STATS
 	ionic_stat_incr_idx(ctx->stats, post_send_op, wqe->base.op);
 	ionic_stat_add(ctx->stats, post_send_sig,
 		       !!(wqe->base.flags & htobe16(IONIC_V1_FLAG_SIG)));
 	ionic_stat_add(ctx->stats, post_send_inl,
 		       !!(wqe->base.flags & htobe16(IONIC_V1_FLAG_INL)));
 
+#endif /* IONIC_LIB_STATS */
 	ionic_queue_produce(&qp->sq);
 }
 
@@ -1976,7 +2061,9 @@ static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 				struct ibv_send_wr *wr,
 				bool send_path)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+#endif
 	int rc = 0;
 
 	switch (wr->opcode) {
@@ -2001,7 +2088,9 @@ static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 		rc = ionic_v1_prep_bind(qp, wr, send_path);
 		break;
 	default:
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
+#endif /* NOT_UPSTREAM */
 		rc = EINVAL;
 	}
 
@@ -2011,7 +2100,9 @@ static int ionic_v1_prep_one_rc(struct ionic_qp *qp,
 static int ionic_v1_prep_one_ud(struct ionic_qp *qp,
 				struct ibv_send_wr *wr)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+#endif
 	int rc = 0;
 
 	switch (wr->opcode) {
@@ -2020,7 +2111,9 @@ static int ionic_v1_prep_one_ud(struct ionic_qp *qp,
 		rc = ionic_v1_prep_send_ud(qp, wr);
 		break;
 	default:
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "invalid opcode %d", wr->opcode);
+#endif /* NOT_UPSTREAM */
 		rc = EINVAL;
 	}
 
@@ -2051,15 +2144,19 @@ static void ionic_post_send_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = ionic_queue_next(&qp->sq, pos);
 
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "dbell qp %u sq val %#lx",
 			  qp->qpid, qp->sq.dbell | pos);
+#endif /* NOT_UPSTREAM */
 		ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
 				 qp->sq.dbell | pos);
 	}
 
+#ifdef IONIC_LIB_STATS
 	ionic_stat_add(ctx->stats, post_send_cmb,
 		       (end - qp->sq_cmb_prod) & qp->sq.mask);
 
+#endif /* IONIC_LIB_STATS */
 	qp->sq_cmb_prod = end;
 }
 
@@ -2087,8 +2184,10 @@ static void ionic_post_recv_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = 0;
 
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "dbell qp %u rq val %#lx",
 			  qp->qpid, qp->rq.dbell | pos);
+#endif /* NOT_UPSTREAM */
 		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 				 qp->rq.dbell | pos);
 	}
@@ -2104,15 +2203,19 @@ static void ionic_post_recv_cmb(struct ionic_ctx *ctx, struct ionic_qp *qp)
 
 		pos = end;
 
+#ifdef NOT_UPSTREAM
 		ionic_dbg(ctx, "dbell qp %u rq val %#lx",
 			  qp->qpid, qp->rq.dbell | pos);
+#endif /* NOT_UPSTREAM */
 		ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 				 qp->rq.dbell | pos);
 	}
 
+#ifdef IONIC_LIB_STATS
 	ionic_stat_add(ctx->stats, post_recv_cmb,
 		       (end - qp->rq_cmb_prod) & qp->rq.mask);
 
+#endif /* IONIC_LIB_STATS */
 	qp->rq_cmb_prod = end;
 }
 
@@ -2126,9 +2229,11 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	uint16_t old_prod;
 	int spend, rc = 0;
 
+#ifdef IONIC_LIB_STATS
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_send);
 
+#endif /* IONIC_LIB_STATS */
 	if (unlikely(!bad))
 		return EINVAL;
 
@@ -2144,17 +2249,21 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 
 	ionic_spin_lock(ctx, &qp->sq_lock);
 
+#ifdef IONIC_LIB_STATS
 	ionic_stat_incr_idx_fls(ctx->stats, post_send_qlen,
 				ionic_queue_length(&qp->sq));
 
+#endif /* IONIC_LIB_STATS */
 	old_prod = qp->sq.prod;
 
 	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
+#ifdef NOT_UPSTREAM
 				ionic_dbg(ctx,
 					  "send queue full cons %u prod %u",
 					  qp->sq.cons, qp->sq.prod);
+#endif /* NOT_UPSTREAM */
 				rc = ENOMEM;
 				goto out;
 			}
@@ -2168,9 +2277,11 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	} else {
 		while (wr) {
 			if (ionic_queue_full(&qp->sq)) {
+#ifdef NOT_UPSTREAM
 				ionic_dbg(ctx,
 					  "send queue full cons %u prod %u",
 					  qp->sq.cons, qp->sq.prod);
+#endif /* NOT_UPSTREAM */
 				rc = ENOMEM;
 				goto out;
 			}
@@ -2185,8 +2296,10 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 
 out:
 	old_prod = (qp->sq.prod - old_prod) & qp->sq.mask;
+#ifdef IONIC_LIB_STATS
 	ionic_stat_incr_idx_fls(ctx->stats, post_send_nwr, old_prod);
 	ionic_stat_add(ctx->stats, post_send_wr, old_prod);
+#endif /* IONIC_LIB_STATS */
 
 	if (ionic_spin_trylock(ctx, &cq->lock)) {
 		ionic_spin_unlock(ctx, &qp->sq_lock);
@@ -2205,8 +2318,10 @@ out:
 			ionic_post_send_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
+#ifdef NOT_UPSTREAM
 			ionic_dbg(ctx, "dbell qp %u sq val %#lx",
 				  qp->qpid, ionic_queue_dbell_val(&qp->sq));
+#endif /* NOT_UPSTREAM */
 			ionic_dbell_ring(&ctx->dbpage[ctx->sq_qtype],
 					 ionic_queue_dbell_val(&qp->sq));
 		}
@@ -2221,9 +2336,11 @@ out:
 	ionic_spin_unlock(ctx, &qp->sq_lock);
 	ionic_spin_unlock(ctx, &cq->lock);
 
+#ifdef IONIC_LIB_STATS
 	ionic_stat_add(ctx->stats, post_send_err, !!rc);
 	ionic_lat_trace(ctx->lats, post_send);
 
+#endif /* IONIC_LIB_STATS */
 	*bad = wr;
 	return rc;
 }
@@ -2231,7 +2348,9 @@ out:
 static int ionic_v1_prep_recv(struct ionic_qp *qp,
 			      struct ibv_recv_wr *wr)
 {
+#if defined(NOT_UPSTREAM) || defined(IONIC_LIB_STATS)
 	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
+#endif
 	struct ionic_rq_meta *meta;
 	struct ionic_v1_wqe *wqe;
 	int64_t signed_len;
@@ -2271,9 +2390,10 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 		wqe->base.flags |= htobe16(IONIC_V1_FLAG_FENCE);
 
 #endif /* IONIC_SRQ_XRC */
+#ifdef NOT_UPSTREAM
 	ionic_dbg(ctx, "post recv %u prod %u", qp->qpid, qp->rq.prod);
 	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->rq.stride_log2);
-
+#endif /* NOT_UPSTREAM */
 	ionic_queue_produce(&qp->rq);
 
 	qp->rq_meta_head = meta->next;
@@ -2291,9 +2411,11 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 	uint16_t old_prod;
 	int spend, rc = 0;
 
+#ifdef IONIC_LIB_STATS
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_recv);
 
+#endif /* IONIC_LIB_STATS */
 	if (unlikely(!bad))
 		return EINVAL;
 
@@ -2309,15 +2431,19 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 
 	ionic_spin_lock(ctx, &qp->rq_lock);
 
+#ifdef IONIC_LIB_STATS
 	ionic_stat_incr_idx_fls(ctx->stats, post_recv_qlen,
 				ionic_queue_length(&qp->rq));
 
+#endif /* IONIC_LIB_STATS */
 	old_prod = qp->rq.prod;
 
 	while (wr) {
 		if (ionic_queue_full(&qp->rq)) {
+#ifdef NOT_UPSTREAM
 			ionic_dbg(ctx, "recv queue full cons %u prod %u",
 				  qp->rq.cons, qp->rq.prod);
+#endif /* NOT_UPSTREAM */
 			rc = ENOMEM;
 			goto out;
 		}
@@ -2331,8 +2457,10 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 
 out:
 	old_prod = (qp->rq.prod - old_prod) & qp->rq.mask;
+#ifdef IONIC_LIB_STATS
 	ionic_stat_incr_idx_fls(ctx->stats, post_recv_nwr, old_prod);
 	ionic_stat_add(ctx->stats, post_recv_wr, old_prod);
+#endif /* IONIC_LIB_STATS */
 
 	if (!cq) {
 		ionic_spin_unlock(ctx, &qp->rq_lock);
@@ -2356,8 +2484,10 @@ out:
 			ionic_post_recv_cmb(ctx, qp);
 		} else {
 			udma_to_device_barrier();
+#ifdef NOT_UPSTREAM
 			ionic_dbg(ctx, "dbell qp %u rq val %#lx",
 				  qp->qpid, ionic_queue_dbell_val(&qp->rq));
+#endif /* NOT_UPSTREAM */
 			ionic_dbell_ring(&ctx->dbpage[ctx->rq_qtype],
 					 ionic_queue_dbell_val(&qp->rq));
 		}
@@ -2373,9 +2503,11 @@ out:
 	ionic_spin_unlock(ctx, &cq->lock);
 
 out_unlocked:
+#ifdef IONIC_LIB_STATS
 	ionic_lat_trace(ctx->lats, post_recv);
 	ionic_stat_add(ctx->stats, post_recv_err, !!rc);
 
+#endif /* IONIC_LIB_STATS */
 	*bad = wr;
 	return rc;
 }

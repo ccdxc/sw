@@ -1,0 +1,29 @@
+Patch to reduce console spew from coan.
+
+--- a/src/options.cpp
++++ b/src/options.cpp
+@@ -589,10 +589,12 @@
+ 		case OPT_NO_TRANSIENTS: /* Disallow transient symbol configurations
+ 					for in-source #defines and #undefs */
+ 			_no_transients_ = true;
++#if 0
+ 			warning_no_transients_used() << "The --no-transients option "
+ 				<< "prohibits coan from taking account of the effects of "
+ 				<< "in-source #define and #undef directives. "
+ 				<< "Use at your own risk." << emit();
++#endif
+ 			break;
+ 		case OPT_DIR: /* Specify the spin directory */
+ 			io::set_spin_dir(optarg);
+@@ -656,9 +658,11 @@
+ 			}
+ 		}
+ 	}
++#if 0
+ 	if (argc) {
+ 		progress_building_tree() << "Building input tree" << emit();
+ 	}
++#endif
+ 	argc -= optind;
+ 	argv += optind;
+ 	for (	; argc; --argc,++argv,++_cmd_line_files_) {

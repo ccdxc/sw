@@ -34,8 +34,6 @@
 #include <stdlib.h>
 
 #include "ionic.h"
-#include "ionic_dbg.h"
-#include "ionic_stats.h"
 
 extern const struct verbs_context_ops ionic_ctx_ops;
 
@@ -129,7 +127,8 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
-	int rc, version, level;
+	int rc, version;
+	int level;
 
 	ionic_debug_file_init();
 

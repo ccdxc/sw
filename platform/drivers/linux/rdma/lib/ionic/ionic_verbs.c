@@ -42,8 +42,6 @@
 #include <fcntl.h>
 
 #include "ionic.h"
-#include "ionic_dbg.h"
-#include "ionic_stats.h"
 
 #ifndef IONIC_LOCKFREE
 #define IONIC_LOCKFREE false
@@ -294,7 +292,8 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 	wqe = ionic_queue_at_cons(&qp->rq);
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
+	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2))
+	{
 		ionic_err("invalid id %#lx",
 			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
@@ -302,7 +301,8 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[wqe->base.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED)) {
+	if (unlikely(meta->next != IONIC_META_POSTED))
+	{
 		ionic_err("wqe not posted %#lx",
 			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
@@ -408,13 +408,15 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	}
 
 	/* there had better be something in the recv queue to complete */
-	if (ionic_queue_empty(&qp->rq)) {
+	if (ionic_queue_empty(&qp->rq))
+	{
 		ionic_err("rq is empty %u", qp->qpid);
 		return -EIO;
 	}
 
 	/* wqe_id must be a valid queue index */
-	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
+	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2))
+	{
 		ionic_err("invalid id %#lx",
 			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
@@ -422,7 +424,8 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[cqe->recv.wqe_id];
-	if (unlikely(meta->next != IONIC_META_POSTED)) {
+	if (unlikely(meta->next != IONIC_META_POSTED))
+	{
 		ionic_err("wqe is not posted %#lx",
 			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
@@ -490,7 +493,6 @@ out:
 	ionic_dbg(ctx, "poll cq %u qp %u cons %u st %u wrid %#lx op %u len %u",
 		  cq->cqid, qp->qpid, qp->rq.cons,
 		  wc->status, meta->wrid, wc->opcode, st_len);
-
 	ionic_queue_consume(&qp->rq);
 
 	return 1;
@@ -548,7 +550,6 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 			  "poll cq %u qp %u cons %u st %u wr %#lx op %u l %u",
 			  cq->cqid, qp->qpid, qp->sq.cons,
 			  meta->ibsts, meta->wrid, meta->ibop, meta->len);
-
 		ionic_queue_consume(&qp->sq);
 
 		/* produce wc only if signaled or error status */
@@ -630,7 +631,8 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	rc = ionic_validate_cons(qp->sq_msn_prod,
 				 qp->sq_msn_cons,
 				 cqe_seq, qp->sq.mask);
-	if (rc) {
+	if (rc)
+	{
 		ionic_err("wqe is not posted %#x (msn)",
 			  be32toh(cqe->send.msg_msn));
 		return rc;
@@ -698,7 +700,6 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 	udma_from_device_barrier();
 
 	ionic_dbg_xdump(ctx, "cqe", qcqe, 1u << cq->q.stride_log2);
-
 	*cqe = qcqe;
 
 	return true;
@@ -838,7 +839,8 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 		qp = ionic_tbl_lookup(&ctx->qp_tbl, qid);
 
-		if (unlikely(!qp)) {
+		if (unlikely(!qp))
+		{
 			ionic_dbg(ctx, "missing qp for qid %#x", qid);
 			goto cq_next;
 		}
@@ -903,7 +905,6 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 		default:
 			ionic_err("unexpected cqe type %u", type);
-
 			rc = -EIO;
 			goto out;
 		}
@@ -2131,7 +2132,6 @@ static int ionic_v1_prep_recv(struct ionic_qp *qp,
 
 	ionic_dbg(ctx, "post recv %u prod %u", qp->qpid, qp->rq.prod);
 	ionic_dbg_xdump(ctx, "wqe", wqe, 1u << qp->rq.stride_log2);
-
 	ionic_queue_produce(&qp->rq);
 
 	qp->rq_meta_head = meta->next;

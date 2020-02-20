@@ -346,13 +346,6 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 }
 
 #endif /* HAVE_IB_GET_ETH_SPEED */
-#ifndef HAVE_IB_SRQ_HAS_CQ
-static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
-{
-	return (srq_type == IB_SRQT_XRC);
-}
-
-#endif /* HAVE_IB_SRQ_HAS_CQ */
 #ifdef HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
 #define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
 	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
