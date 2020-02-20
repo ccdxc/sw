@@ -920,7 +920,19 @@ pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
         key.flow_lkp_metadata_lkp_reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
         reg_mac.multicast_en = 0;
         reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
-        reg_mac.flow_learn = 0;
+        /*
+         * Pkts to Host which are created from nicmgr will always have flow_learn set.
+         * Transparent - Base net: policy_enf_cfg_en: 0
+         * Transparent - Flow Aware: policy_enf_cfg_en: 1
+         * Transparent - Enforce: policy_enf_cfg_en: 1
+         * MicroSeg - Enforce: policy_enf_cfg_en: 0 (Unshared)
+         * MicroSeg - Enforce: policy_enf_cfg_en: 1 (Shared) - Goes to first IF condition
+         */
+        if (enic_lif && enic_lif->type == types::LIF_TYPE_HOST) {
+            reg_mac.flow_learn = 1;
+        } else {
+            reg_mac.flow_learn = 0;
+        }
     }
 
     ret = if_l2seg_get_multicast_rewrite_data(ep_if, ep_l2seg, 

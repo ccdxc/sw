@@ -765,6 +765,9 @@ micro_seg_status_update(MicroSegSpec &req,
     return HAL_RET_OK;
 }
 
+#define IS_MODE(fwd_mode, fwd_mode_val, policy_mode, policy_mode_val) \
+    (fwd_mode == fwd_mode_val) && (policy_mode == policy_mode_val)
+
 /*
  * Handle system mode changes (fwd & policy)
  */
@@ -783,6 +786,73 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
         goto end;
     }
 
+    HAL_TRACE_DEBUG("Mode change: {},{} => {},{}",
+                    ForwardMode_Name(hal::g_hal_state->fwd_mode()), 
+                    PolicyMode_Name(hal::g_hal_state->policy_mode()),
+                    ForwardMode_Name(spec->fwd_mode()), 
+                    PolicyMode_Name(spec->policy_mode()));
+
+    if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                hal::g_hal_state->policy_mode(), sys::POLICY_MODE_BASE_NET)) {
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+            /*
+             * Base-Net, Flow-Aware
+             * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
+             */
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
+        }
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+            /*
+             * Base-Net, Enforce
+             * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
+             */
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
+        }
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
+                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+        }
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+            /*
+             * Base-Net, Enforce
+             * 1. Change l4 profile to disable policy_enf_cfg_en to not pull packets to FTE
+             *    To prevent shared mgmt pkts from uplink or host to not come to FTE
+             */
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, false);
+            
+            /*
+             * Fwd Mode: Transparent -> Micro-Seg
+             */
+            // 1. Cleanup config from nicmgr.
+            hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_ENABLE);
+
+            // 2. Remove host enics from mseg prom list
+            ret = enicif_update_host_prom(false);
+
+            // 3. Set up mode in hal state
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+
+            // 4. Add host enics to mgmt prom list
+            ret = enicif_update_host_prom(true);
+
+            // 5. Install ACLs for micro seg mode.
+            ret = hal_acl_micro_seg_init();
+        }
+
+        hal::g_hal_state->set_policy_mode(spec->policy_mode());
+    }
+
+#if 0
     // Check for change of fwd mode
     if (hal::g_hal_state->fwd_mode() != spec->fwd_mode()) {
         HAL_TRACE_DEBUG("Fwd mode change {} -> {}",
@@ -790,11 +860,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
         if (spec->fwd_mode() == sys::FWD_MODE_MICROSEG) {
             /*
              * Fwd Mode: Transparent -> Micro-Seg
-             * 1. Cleanup config from nicmgr.
-             * 2. Set up mode in hal state
-             * 3. Install ACLs for micro seg mode.
              */
-
             // 1. Cleanup config from nicmgr.
             hal::svc::micro_seg_mode_notify((spec->fwd_mode() == sys::FWD_MODE_MICROSEG) ?
                                             sys::MICRO_SEG_ENABLE:sys::MICRO_SEG_DISABLE);
@@ -829,6 +895,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
         }
         hal::g_hal_state->set_policy_mode(spec->policy_mode());
     }
+#endif
 
 end:
     rsp->set_api_status(types::API_STATUS_OK);
