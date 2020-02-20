@@ -1742,6 +1742,11 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 	}
 	b, _ := json.MarshalIndent(l, "", "   ")
 	fmt.Println(string(b))
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: l,
+	}
+	i.InfraAPI.UpdateIfChannel() <- ifEvnt
 	dat, _ := l.Marshal()
 	if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
@@ -1787,6 +1792,11 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 			},
 		},
 	}
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: uplink,
+	}
+	i.InfraAPI.UpdateIfChannel() <- ifEvnt
 	dat, _ := uplink.Marshal()
 	if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
