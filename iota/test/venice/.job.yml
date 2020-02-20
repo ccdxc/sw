@@ -9,8 +9,8 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + vm test case
- e2e-venice-2naples-vcenter:
-   commands: ["make", "-C", "iota/test/venice", "vcenter-e2e"]
+ e2e-venice-2naples:
+   commands: ["make", "-C", "iota/test/venice", "all"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:venice-dev@pensando.io"]
    area:
