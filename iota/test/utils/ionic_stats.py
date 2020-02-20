@@ -168,3 +168,13 @@ def getTSOIPv6Stats(node, intf):
         return getLinuxStats(node, intf, 'tx_tso')
     
     return None
+
+def getLROStats(node, intf):
+    if not node.IsNaples():
+        return None
+
+    if api.GetNodeOs(node.node_name) == host.OS_TYPE_BSD:
+        return getBsdStats(node, intf, 'rxq[0-9]*.\.lro_queue')
+
+    return None
+

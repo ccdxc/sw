@@ -81,7 +81,12 @@ def VerifyRetrans(tc):
     bw = 0
     if cmd.exit_code == 0 and cmd.stdout:
         bw_str = cmd.stdout
-        bw = int(float(tc.resp.commands[2].stdout) / (1024 * 1024))
+        bw = int(float(cmd.stdout) / (1024 * 1024))
+
+    cmd = tc.resp.commands[3]
+    tc.tx_bytes = 0
+    if cmd.exit_code == 0 and cmd.stdout:
+        tc.tx_bytes = int(cmd.stdout)
 
     return api.types.status.SUCCESS, retran, bw
 
@@ -178,6 +183,11 @@ def runIperfTest(tc, srv, cli):
             req2, cli.node_name, cli.workload_name,
             'cat ' + iperf_file_name +
             ' | grep bits_per_second | tail -1 |  cut -d ":" -f 2 | cut -d "," -f 1')
+        # Read the bytes transferred numbers.
+        api.Trigger_AddCommand(
+            req2, cli.node_name, cli.workload_name,
+            'cat ' + iperf_file_name +
+            ' | grep bytes | tail -1 |  cut -d ":" -f 2 | cut -d "," -f 1')
 
     trig_resp1 = api.Trigger(req1)
     if trig_resp1 is None:
@@ -216,24 +226,32 @@ def runTest(tc, srv, cli):
     else:
         cli_intf = cli.interface
         srv_intf = srv.interface
-        
+
+    lro = getattr(tc.iterators, 'lro_offload', 'off')
+    mtu = getattr(tc.iterators, 'mtu', '1500')
+
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
     if ipproto == 'v4':
         cli_before_tso_stats = ionic_stats.getTSOIPv4Stats(cli, cli_intf)
     else:
         cli_before_tso_stats = ionic_stats.getTSOIPv6Stats(cli, cli_intf)
-        
+
+    srv_before_lro_stats = ionic_stats.getLROStats(cli, cli_intf)
+
     status = runIperfTest(tc, srv, cli)
     if status != api.types.status.SUCCESS:
         return status
     
+    srv_after_lro_stats = ionic_stats.getLROStats(cli, cli_intf)
+    pkt_count = tc.tx_bytes / int(mtu)
+
     if ipproto == 'v4':
         cli_after_tso_stats = ionic_stats.getTSOIPv4Stats(cli, cli_intf)
     else:
         cli_after_tso_stats = ionic_stats.getTSOIPv6Stats(cli, cli_intf)
         
-    api.Logger.info("TSO Client stats ip: %s before: %s after: %s"
-                     % (ipproto, str(cli_before_tso_stats), str(cli_after_tso_stats)))
+    api.Logger.info("TSO Client stats ip: %s pkts: %d before: %s after: %s"
+                     % (ipproto, pkt_count, str(cli_before_tso_stats), str(cli_after_tso_stats)))
 
     tso = getattr(tc.iterators, 'tso_offload', 'off')
 #    if cli_before_tso_stats == cli_after_tso_stats and tso == 'on':
@@ -244,7 +262,33 @@ def runTest(tc, srv, cli):
     if cli_before_tso_stats != cli_after_tso_stats and tso == 'off':
         api.Logger.error("For TSO OFF, counters are not matching, before: %s after: %s"
                          %(str(cli_before_tso_stats), str(cli_after_tso_stats)))
-        return api.types.status.FAILURE  
+        return api.types.status.FAILURE
+
+    #
+    # Validate LRO if receiver is Naples card.
+    #
+    if tc.is_srv_naples and lro == 'on' and api.GetNodeOs(tc.srv.node_name) == host.OS_TYPE_BSD:
+        api.Logger.info("For LRO, counters before: %s after: %s"
+                         %(str(srv_before_lro_stats), str(srv_after_lro_stats)))
+        if srv_before_lro_stats == srv_after_lro_stats:
+            api.Logger.error("For LRO, counters are same, before: %s after: %s"
+                         %(str(srv_before_lro_stats), str(srv_after_lro_stats)))
+            return api.types.status.FAILURE
+        
+        #
+        # Packet count reported by iperf is bytes/MTU should match
+        # the LRO packets queued.
+        status = api.types.status.FAILURE
+        for pkt in srv_after_lro_stats:
+            if pkt_count >= pkt:
+                status = api.types.status.SUCCESS
+                break
+ 
+        if status != api.types.status.SUCCESS:
+            api.Logger.error("For LRO, pkt count: %d doesn't match any of queue stats: %s"
+                            %(pkt_count, str(srv_after_lro_stats)))
+            return api.types.status.FAILURE
+
     return status
 
 
@@ -310,6 +354,11 @@ def Trigger(tc):
             
         tc.srv = srv
         tc.cli = cli
+
+        tc.is_srv_naples = False
+        if srv.IsNaples():
+            tc.is_srv_naples = True
+
         vxlan = False
         if getattr(tc.iterators, 'vxlan', 'off') == 'on':
             vxlan = True

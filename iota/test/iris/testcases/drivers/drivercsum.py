@@ -288,8 +288,8 @@ def runCsumTest(tc):
         api.Logger.info("Rx good checksum counters before: %s after: %s"
                         %(str(srv_rx_before_csum_good), str(srv_rx_after_csum_good)))
                
-        if srv_rx_after_csum_bad == srv_rx_before_csum_bad and csum_valid == "invalid":
-            api.Logger.error("For bad packets, server bad checksum rx counters are same: %s after: %s"
+        if srv_rx_after_csum_good == srv_rx_before_csum_good and csum_valid == "valid":
+            api.Logger.error("For valid packets, server checksum rx counters are same: %s after: %s"
                              %(str(srv_rx_before_csum_bad), str(srv_rx_after_csum_bad)))
             return api.types.status.FAILURE
   

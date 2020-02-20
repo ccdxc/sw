@@ -218,6 +218,9 @@ def bsd_ethtool_rx_checksum(node, intf,op):
 def bsd_ethtool_tso_offload(node, intf,op):
     return " ".join(["ifconfig", intf,"tso" if op == "on" else "-tso"])
 
+def bsd_ethtool_lro_offload(node, intf,op):
+    return " ".join(["ifconfig", intf,"lro" if op == "on" else "-lro"])
+
 def bsd_ethtool_intr_coal(node, intf, size):
     return "".join(["sysctl dev.ionic.0.intr_coal=", str(size)])
 

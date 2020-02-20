@@ -2,7 +2,7 @@ meta:
     name    : tso
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 32
+    targetcount : 16
 
 testcases:
     -   name    : TSO
@@ -12,6 +12,25 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            lro_offload        : [ 'off']
+            tx_check_sum       : [ 'on']
+            mtu                : [ '1500']
+            pktsize            : [  32768 ]
+            vlantag            : [ 'off']
+            vxlan              : [ 'off']
+            proto              : [ 'tcp', 'udp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+            iperfthreads     :  1
+    -   name    : TSO_LRO
+        testcase: testcases.drivers.drivertso
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            tso_offload        : [ 'on', 'off']
+            lro_offload        : [ 'on']
             tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]
@@ -29,6 +48,7 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
+            lro_offload        : [ 'on', 'off']
             tx_check_sum       : [ 'on']
             mtu                : [ '1500']
             pktsize            : [  32768 ]

@@ -49,6 +49,11 @@ feature_cmd_map = {
             "linux"    : { "cmd" : cmd_builder.ethtool_tso_offload },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tso_offload }
         },
+    "lro_offload"        :
+        {
+            "linux"    : { "cmd" : cmd_builder.ethtool_gro_offload },
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_lro_offload }
+        },
     "sg_offload"         :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_sg_offload },
