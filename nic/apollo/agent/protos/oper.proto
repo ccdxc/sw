@@ -11,6 +11,79 @@ import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
 
+service OperSvc {
+  // TechSuport helps collecting all the debug information on the
+  // Distrubuted Services Card (DSC) platform for troubleshooting. The collected
+  // information includes trace files from various components, syslogs, core
+  // files, output of various debug commands etc.
+
+  // TechSupportStart initiates a new techsupport information collection
+  // NOTE: This API will fail, if there is already one pending request in
+  //       progress
+  rpc TechSupportStart (TechSupportRequest) returns (TechSupportResponse) {}
+  // TechSupportStop aborts the ongoing TechSupportRequest, if any
+  rpc TechSupportStop (types.Empty) returns (TechSupportResponse) {}
+  // TechSupportGet returns the status of the previously issued
+  // TechSupportRequest, if any
+  rpc TechSupportGet (types.Empty) returns (TechSupportResponse) {}
+}
+
+// TechSupportSpec defines the confiugration of the techsupport objet
+message TechSupportSpec {
+  // DestinationSpec defines the techsupport's destination
+  message DestinationSpec {
+    enum Protocol {
+      DST_PROTOCOL_NONE  = 0;
+      DST_PROTOCOL_LOCAL = 1;
+    }
+    // destination directory to place the gzipped techsupport file
+    string Path = 1;
+  }
+  // techsupport result file destination
+  DestinationSpec Dst       = 1;
+  // SkipCores can be set to true to exclude core files from techsupport
+  // output
+  bool            SkipCores = 2;
+}
+
+// TechSupportStatus captures the current status of the techsupport job
+message TechSupportStatus {
+  enum Status {
+    TECHSUPPORT_STATUS_NONE        = 0;  // error condition
+    TECHSUPPORT_STATUS_IN_PROGRESS = 1;  // indicates that job is in progress
+    TECHSUPPORT_STATUS_FAILED      = 2;  // indicates that job has failed
+    TECHSUPPORT_STATUS_COMPLETED   = 3;  // indicates that job has completed
+    TECHSUPPORT_STATUS_UNKNOWN     = 4;  // used when abort/get request is
+                                         // without starting the job 1st
+  }
+  Status JobStatus = 1;
+}
+
+// TechSupportStats contains stats related to techsupport
+message TechSupportStats {
+}
+
+// Techsupport object
+message TechSupport {
+  meta.TypeMeta     TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta      ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  TechSupportSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  TechSupportStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  TechSupportStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// TechSupport create request
+message TechSupportRequest {
+  // config specification
+  TechSupportSpec Request  = 1;
+}
+
+// TechSupport create response
+message TechSupportResponse {
+  types.ApiStatus   ApiStatus = 1;
+  TechSupportStatus Response  = 2;
+}
+
 // flow log type indicates whether log is generated when flow is
 // created or closed
 enum FlowLogType {
