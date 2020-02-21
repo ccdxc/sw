@@ -18,6 +18,8 @@
 
 #define IPFIX_STATS_SHIFT 6
 
+using sdk::lib::indexer;
+
 namespace hal {
 namespace pd {
 
@@ -71,24 +73,30 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
     mirror_actiondata_t                     action_data;
     pd_mirror_session_update_args_t         *args = pd_func_args->pd_mirror_session_update;
 
-    if ((args == NULL) || (args->session == NULL)) {
+    if ((args == NULL) || (args->session == NULL) || (args->session->pd == NULL)) {
         HAL_TRACE_ERR(" NULL argument");
         return HAL_RET_INVALID_ARG;
     }
-    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
-    HAL_TRACE_DEBUG("Update call for session {}", args->session->id);
-    pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL,
+    mirror_session_pd_t *session_pd = (mirror_session_pd_t *)args->session->pd;
+    auto hw_id = session_pd->hw_id;
+
+    SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
+
+    HAL_TRACE_DEBUG("Update call for session {}", args->session->sw_id);
+    pdret = p4pd_entry_read(P4TBL_ID_MIRROR, hw_id, NULL,
                             NULL, (void *)&action_data);
     if (pdret != P4PD_SUCCESS) {
-        HAL_TRACE_ERR("Session id {} read failed {}", args->session->id, pdret);
+        HAL_TRACE_ERR("Session id {} read from hw id {} failed {}",
+                      args->session->sw_id, hw_id,
+                      pdret);
         return HAL_RET_ERR;
     }
     // Update the dest_if
     dst_lport = if_get_lport_id(args->session->dest_if);
     if (action_data.action_id == MIRROR_ERSPAN_MIRROR_ID) {
         action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
-        ret = pd_mirror_update_hw(args->session->id, &action_data);
+        ret = pd_mirror_update_hw(hw_id, &action_data);
     }
 
     return ret;
@@ -102,18 +110,21 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     mirror_actiondata_t action_data;
     hal::pd::pd_tunnelif_get_rw_idx_args_t    tif_args = { 0 };
     pd_func_args_t pd_func_args1 = {0};
+    mirror_session_pd_t *session_pd;
+    uint32_t hw_id;
 
     if ((args == NULL) || (args->session == NULL)) {
         HAL_TRACE_ERR(" NULL argument");
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("{}: Create call for session {}",
-            __FUNCTION__, args->session->id);
+    SDK_ASSERT(args->session->pd == NULL);
+
+    HAL_TRACE_DEBUG("Create call for mirror session {}",
+                    args->session->sw_id);
 
     // Add to a PD datastructure instead of stack.
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     switch (args->session->dest_if->if_type) {
         case intf::IF_TYPE_TUNNEL:
@@ -154,7 +165,7 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
         break;
     }
     default:
-        HAL_TRACE_ERR(" unknown session type {}", args->session->type);
+        HAL_TRACE_ERR("unknown session type {}", args->session->type);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -167,7 +178,36 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     if (likely(is_platform_type_hw()))
         pd_clock_trigger_sync(pd_func_args);
 
-    return pd_mirror_update_hw(args->session->id, &action_data);
+    // alloc mirror session hw index
+    auto status = g_hal_state_pd->mirror_session_idxr()->alloc(&hw_id);
+    if (status == indexer::INDEXER_FULL) {
+        HAL_TRACE_ERR("Mirror session ID {} hw id alloc failed. "
+                      "Mirror session indexer is full",
+                      args->session->sw_id);
+        return HAL_RET_TABLE_FULL;
+    } else if (status != indexer::SUCCESS) {
+        HAL_TRACE_ERR("Mirror session ID {} hw id alloc failed {}",
+                      args->session->sw_id, status);
+        return HAL_RET_ERR;
+    }
+    HAL_TRACE_DEBUG("Mirror session ID {} allocated hw id {}",
+                    args->session->sw_id, hw_id);
+    SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
+
+    session_pd = (mirror_session_pd_t*)g_hal_state_pd->mirror_session_pd_slab()->alloc();
+    SDK_ASSERT(session_pd != NULL);
+    // program the hw
+    auto ret = pd_mirror_update_hw(hw_id, &action_data);
+    if (ret != HAL_RET_OK) {
+        g_hal_state_pd->mirror_session_idxr()->free(hw_id);
+        g_hal_state_pd->mirror_session_pd_slab()->free(session_pd);
+        return ret;
+    } else {
+        session_pd->hw_id = hw_id;
+        args->session->pd = session_pd;
+        args->hw_id = hw_id;
+    }
+    return ret;
 }
 
 hal_ret_t
@@ -175,79 +215,45 @@ pd_mirror_session_delete(pd_func_args_t *pd_func_args)
 {
     mirror_actiondata_t action_data;
     pd_mirror_session_delete_args_t *args = pd_func_args->pd_mirror_session_delete;
-    if ((args == NULL) || (args->session == NULL)) {
+    if ((args == NULL) || (args->session == NULL) || (args->session->pd == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
+    mirror_session_pd_t *session_pd = (mirror_session_pd_t *)args->session->pd;
+    auto hw_id = session_pd->hw_id;
+
+    HAL_TRACE_DEBUG("Delete call for mirror session ID {}",
+                    args->session->sw_id);
+
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
+    SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
     action_data.action_id = MIRROR_DROP_MIRROR_ID;
 
-    return pd_mirror_update_hw(args->session->id, &action_data);
-}
-
-bool 
-mirror_session_walk (void *entry, void *ctxt) 
-{
-    pd_mirror_session_get_args_t *args = (pd_mirror_session_get_args_t *)ctxt;
-    pd_tnnl_rw_entry_t *rwentry = (pd_tnnl_rw_entry_t *)entry; 
-
-    HAL_TRACE_DEBUG("tnnl rw idx: {} mirror session rw idx: {}", rwentry->tnnl_rw_idx, args->session->mirror_destination_u.er_span_dest.tnnl_rw_idx);
-    if (rwentry->tnnl_rw_idx == args->session->\
-                   mirror_destination_u.er_span_dest.tnnl_rw_idx) {
-        HAL_TRACE_DEBUG("Setting the tnnl params");
-        args->session->mirror_destination_u.er_span_dest.ip_sa = rwentry->tnnl_rw_key.ip_sa;
-        args->session->mirror_destination_u.er_span_dest.ip_da = rwentry->tnnl_rw_key.ip_da;
-        args->session->mirror_destination_u.er_span_dest.ip_type = rwentry->tnnl_rw_key.ip_type;
-        return true;
+    auto ret = pd_mirror_update_hw(hw_id, &action_data);
+    if (ret == HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Mirror session ID {} freed hw id {}",
+                        args->session->sw_id, hw_id);
+        g_hal_state_pd->mirror_session_idxr()->free(hw_id);
+        g_hal_state_pd->mirror_session_pd_slab()->free(args->session->pd);
+        args->session->pd = NULL;
     }
-
-    return false;
+    return ret;
 }
 
 hal_ret_t
-pd_mirror_session_get(pd_func_args_t *pd_func_args)
+pd_mirror_session_get_hw_id (pd_func_args_t *pd_func_args)
 {
-    mirror_actiondata_t action_data;
-    pd_mirror_session_get_args_t *args = pd_func_args->pd_mirror_session_get;
-    if ((args == NULL) || (args->session == NULL)) {
+    pd_mirror_session_get_hw_id_args_t *args =
+        pd_func_args->pd_mirror_session_get_hw_id;
+    if ((args == NULL) || (args->session == NULL) ||
+        (args->session->pd == NULL)) {
         HAL_TRACE_ERR("NULL argument");
         return HAL_RET_INVALID_ARG;
     }
-    memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
-    p4pd_error_t pdret;
-    pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
-    if (pdret == P4PD_SUCCESS) {
-        HAL_TRACE_DEBUG("Action: {}", action_data.action_id);
-        switch (action_data.action_id) {
-        case MIRROR_LOCAL_SPAN_ID:
-            args->session->type = MIRROR_DEST_LOCAL;
-            args->session->truncate_len = action_data.action_u.mirror_local_span.truncate_len;
-            // args-> dst_if // TBD
-            break;
-        case MIRROR_REMOTE_SPAN_ID:
-            args->session->type = MIRROR_DEST_RSPAN;
-            args->session->truncate_len = action_data.action_u.mirror_remote_span.truncate_len;
-            args->session->mirror_destination_u.r_span_dest.vlan = action_data.action_u.mirror_remote_span.vlan;
-            break;
-        case MIRROR_ERSPAN_MIRROR_ID:
-            args->session->type = MIRROR_DEST_ERSPAN;
-            args->session->truncate_len = action_data.action_u.mirror_erspan_mirror.truncate_len;
-            args->session->mirror_destination_u.er_span_dest.tnnl_rw_idx  = 
-                                   action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index;
-            walk_tnnl_rw_entry_ht(mirror_session_walk, (void *)args);
-            break;
-        case MIRROR_NOP_ID:
-            args->session->type = MIRROR_DEST_NONE;
-            break;
-        default:
-            return HAL_RET_INVALID_OP;
-        }
-    } else {
-        return HAL_RET_HW_PROG_ERR;
-    }
+    mirror_session_pd_t *session_pd =
+        (mirror_session_pd_t *)args->session->pd;
+    args->hw_id = session_pd->hw_id;
     return HAL_RET_OK;
 }
 

@@ -121,6 +121,16 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
+#define HAL_FREE_OBJ_RSP_RET_TRACE(free_fn, obj, rsp, ret, args...)     \
+    {                                                                   \
+        if (likely(obj != NULL)) {                                      \
+            free_fn(obj);                                               \
+        }                                                               \
+        rsp->set_api_status(hal_prepare_rsp(ret));                      \
+        HAL_TRACE_ERR(args);                                            \
+        return ret;                                                     \
+    }                                                                   \
+
 #define HAL_NOP                                      ((void) FALSE)
 #define HAL_GET_SYSTEM_CLOCK(_val)   \
     clock_gettime(CLOCK_MONOTONIC, _val);

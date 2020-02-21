@@ -18,7 +18,7 @@
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_update_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;
-using hal::pd::pd_mirror_session_get_args_t;
+using hal::pd::pd_mirror_session_get_hw_id_args_t;
 using hal::mirror_session_t;
 using hal::pd::pd_flow_monitor_rule_create_args_t;
 using hal::pd::pd_flow_monitor_rule_delete_args_t;
@@ -38,7 +38,20 @@ int flow_monitor_rule_id_db[MAX_FLOW_MONITOR_RULES] = {-1};
 acl::acl_config_t   flowmon_rule_config_glbl = { };
 
 // Cache the current dest if mirror sessions are using
-hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
+//hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
+
+void *
+mirror_session_get_key_func (void *entry)
+{
+    SDK_ASSERT(entry != NULL);
+    return (void *)&(((mirror_session_t *)entry)->sw_id);
+}
+
+uint32_t
+mirror_session_key_size(void)
+{
+    return sizeof(mirror_session_id_t);
+}
 
 void *
 flowmon_rules_get_key_func (void *entry)
@@ -140,19 +153,17 @@ mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 }
 
 hal_ret_t
-mirror_session_update_uplink (int session_id, if_t *uplink)
+mirror_session_update_uplink (mirror_session_t *session)
 {
     hal_ret_t                       ret = HAL_RET_OK;
-    mirror_session_t                session;
     pd::pd_func_args_t              pd_func_args = {0};
     pd_mirror_session_update_args_t args;
-
-    args.session = &session;
+    mirror_session_id_t session_id;
+    
+    args.session = session;
     pd_func_args.pd_mirror_session_update = &args;
 
     // Update mirror session
-    args.session->id = session_id;
-    args.session->dest_if = uplink;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Update failed for session id {}, ret {}",
@@ -167,38 +178,50 @@ hal_ret_t
 telemetry_mirror_session_handle_repin (if_t *uplink)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    auto ms_ht = g_hal_state->mirror_session_ht();
 
-
-    HAL_TRACE_DEBUG("Repin uplink id {} oper {}", uplink->if_id,
+    HAL_TRACE_INFO("Repin uplink id {} oper {}", uplink->if_id,
                      uplink->if_op_status);
     if (uplink->is_oob_management) {
         // Nothing to be done for OOB intf event
-        goto end;
+        return ret;
     }
     if (uplink->if_type != intf::IF_TYPE_UPLINK) {
         // Nothing to be done
-        goto end;
+        return ret;
     }
-    
-    for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
-        if_t *sess_if = g_telemetry_mirror_session_dest_if[i];
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        mirror_session_t *session = (mirror_session_t *)entry;
+        SDK_ASSERT(session != NULL);
+        if_t *sess_if = session->dest_if;
         if (sess_if && (sess_if->if_op_status == intf::IF_STATUS_DOWN)) {
             // Session points to down interface, find the active uplink
             if_t *new_dif = telemetry_get_active_uplink();
             if (!new_dif) {
                 HAL_TRACE_DEBUG("Could not find active uplink");
-                continue;
+                return false;
             }
             HAL_TRACE_DEBUG("New uplink id {} oper {}", new_dif->if_id,
-                             new_dif->if_op_status);
-            ret = mirror_session_update_uplink (i, new_dif);
-            if (ret == HAL_RET_OK) {
-                g_telemetry_mirror_session_dest_if[i] = new_dif;
+                            new_dif->if_op_status);
+            session->dest_if = new_dif;
+            auto ret = mirror_session_update_uplink (session);
+            if (ret != HAL_RET_OK) {
+                // we have failed to update the newuplink, restore the old dest if.
+                session->dest_if = sess_if;
             }
         }
+
+        return false;
+    };
+
+    auto sdk_ret = ms_ht->walk_safe(walk_func, NULL);
+    if (sdk_ret != SDK_RET_OK) {
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        HAL_TRACE_ERR("Mirror session repin failed {}", ret);
+        return ret;
     }
 
-end:
     return ret;
 }
 
@@ -232,18 +255,33 @@ hal_ret_t
 mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
     pd_mirror_session_create_args_t args;
+    pd_mirror_session_delete_args_t del_args;
     pd::pd_func_args_t pd_func_args = {0};
-    mirror_session_t session;
+    mirror_session_t *session = NULL;
+    mirror_session_id_t sw_id;
     kh::InterfaceKeyHandle ifid;
     hal_ret_t ret;
+    auto ms_ht = g_hal_state->mirror_session_ht();
     if_t *id;
 
-    HAL_TRACE_DEBUG("Mirror session ID {}, snaplen {}",
-                    spec.key_or_handle().mirrorsession_id(), spec.snaplen());
+    HAL_TRACE_INFO("Create Mirror session ID {}, snaplen {}",
+                   spec.key_or_handle().mirrorsession_id(), spec.snaplen());
     mirrorsession_spec_dump(spec);
-    if (spec.key_or_handle().mirrorsession_id() >= MAX_MIRROR_SESSION_DEST) {
-        HAL_TRACE_DEBUG("Mirror session id is out of bounds!");
-        return HAL_RET_INVALID_ARG;
+
+    // check if mirror session already exists
+    sw_id = spec.key_or_handle().mirrorsession_id();
+    session = (mirror_session_t*)ms_ht->lookup(&sw_id);
+    if (session != NULL) {
+        HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, NULL, rsp, HAL_RET_ENTRY_EXISTS,
+                                   "Mirror session ID {} already exist",
+                                   sw_id);
+    } else if (ms_ht->num_entries() >= MAX_MIRROR_SESSION_DEST) {
+        HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, NULL, rsp, HAL_RET_TABLE_FULL,
+                                   "Mirror session table full. scale: {}",
+                                   MAX_MIRROR_SESSION_DEST);
+    } else {
+        session = mirror_session_alloc();
+        SDK_ASSERT(session != NULL);
     }
 
     // Eventually the CREATE API will differ from the Update API in the way it
@@ -251,190 +289,254 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     // the flows using a previous incarnation of the mirror session have been
     // cleanedup (i.e. mirror session removed by the periodic thread). Update is
     // treated as an incremental update.
-    session.id = spec.key_or_handle().mirrorsession_id();
-    session.truncate_len = spec.snaplen();
-    rsp->set_api_status(types::API_STATUS_OK);
-    rsp->mutable_status()->set_active_flows(0);
+    session->sw_id = spec.key_or_handle().mirrorsession_id();
+    session->truncate_len = spec.snaplen();
     switch (spec.destination_case()) {
     case MirrorSessionSpec::kLocalSpanIf: {
         HAL_TRACE_DEBUG("Local Span IF is true");
         ifid = spec.local_span_if();
         id = if_lookup_key_or_handle(ifid);
-        if (id != NULL) {
-            session.dest_if = id;
-        } else {
-            rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
+        if (id == NULL) {
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                      rsp, HAL_RET_INVALID_ARG,
+                                      "Local Span IF {} does not exist",
+                                      ifid.interface_id());
         }
-        session.type = hal::MIRROR_DEST_LOCAL;
+        session->dest_if = id;
+        session->type = hal::MIRROR_DEST_LOCAL;
         break;
     }
     case MirrorSessionSpec::kRspanSpec: {
         HAL_TRACE_DEBUG("RSpan IF is true");
         auto rspan = spec.rspan_spec();
         ifid = rspan.intf();
-        session.dest_if = if_lookup_key_or_handle(ifid);
+        session->dest_if = if_lookup_key_or_handle(ifid);
         auto encap = rspan.rspan_encap();
         if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
-            session.mirror_destination_u.r_span_dest.vlan = encap.encap_value();
+            session->mirror_destination_u.r_span_dest.vlan = encap.encap_value();
         }
-        session.type = hal::MIRROR_DEST_RSPAN;
+        session->type = hal::MIRROR_DEST_RSPAN;
         break;
     }
     case MirrorSessionSpec::kErspanSpec: {
         HAL_TRACE_DEBUG("ERSpan IF is true");
         auto erspan = spec.erspan_spec();
-        ip_addr_t src_addr, dst_addr;
-        ip_addr_spec_to_ip_addr(&src_addr, erspan.src_ip());
-        ip_addr_spec_to_ip_addr(&dst_addr, erspan.dest_ip());
+        session->mirror_destination_u.er_span_dest.vrf_id =
+            spec.vrf_key_handle().vrf_id();
+        ip_addr_t *src_addr = &session->mirror_destination_u.
+            er_span_dest.ip_sa;
+        ip_addr_t *dst_addr = &session->mirror_destination_u.
+            er_span_dest.ip_da;
+        session->mirror_destination_u.er_span_dest.ip_type = dst_addr->af;
+        ip_addr_spec_to_ip_addr(src_addr, erspan.src_ip());
+        ip_addr_spec_to_ip_addr(dst_addr, erspan.dest_ip());
         ep_t *ep;
-        switch (dst_addr.af) {
-            case IP_AF_IPV4:
-                ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), dst_addr.addr.v4_addr);
-                break;
-            case IP_AF_IPV6:
-                ep = find_ep_by_v6_key(spec.vrf_key_handle().vrf_id(), &dst_addr);
-                break;
-            default:
-                HAL_TRACE_ERR("Unknown ERSPAN dest AF {}", dst_addr.af);
-                return HAL_RET_INVALID_ARG;
+        switch (dst_addr->af) {
+        case IP_AF_IPV4:
+            ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), dst_addr->addr.v4_addr);
+            break;
+        case IP_AF_IPV6:
+            ep = find_ep_by_v6_key(spec.vrf_key_handle().vrf_id(), dst_addr);
+            break;
+        default:
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "Unknown ERSPAN dest AF {}",
+                                       dst_addr->af);
         }
         if (ep == NULL) {
-            HAL_TRACE_ERR("Unknown ERSPAN dest {}, vrfId {}",
-                          ipaddr2str(&dst_addr), spec.vrf_key_handle().vrf_id());
-            return HAL_RET_INVALID_ARG;
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "Unknown ERSPAN dest {}, vrfId {}",
+                                       ipaddr2str(dst_addr),
+                                       spec.vrf_key_handle().vrf_id());
         }
         auto dest_if = find_if_by_handle(ep->if_handle);
         if (dest_if == NULL) {
-            HAL_TRACE_ERR("Could not find if ERSPAN dest {}",
-                          ipaddr2str(&dst_addr));
-            return HAL_RET_INVALID_ARG;
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "Could not find if ERSPAN dest {}",
+                                       ipaddr2str(dst_addr));
         }
         HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
-                         dest_if->if_type, dest_if->if_op_status,
-                         dest_if->if_id);
+                        dest_if->if_type, dest_if->if_op_status,
+                        dest_if->if_id);
         auto ift = find_if_by_handle(ep->gre_if_handle);
         if (ift == NULL) {
-            HAL_TRACE_ERR("Could not find ERSPAN tunnel dest if {}",
-                          ipaddr2str(&dst_addr));
-            return HAL_RET_INVALID_ARG;
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "Could not find ERSPAN tunnel dest if {}",
+                                       ipaddr2str(dst_addr));
         }
         if (ift->if_type != intf::IF_TYPE_TUNNEL) {
-            HAL_TRACE_ERR("No tunnel to ERSPAN dest {}", ipaddr2str(&dst_addr));
-            return HAL_RET_INVALID_ARG;
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "No tunnel to ERSPAN dest {}",
+                                       ipaddr2str(dst_addr));
         }
         if (!is_if_type_tunnel(ift)) {
-            HAL_TRACE_ERR("Not GRE tunnel to ERSPAN dest {}",
-                          ipaddr2str(&dst_addr));
-            return HAL_RET_INVALID_ARG;
+            HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                       rsp, HAL_RET_INVALID_ARG,
+                                       "Not GRE tunnel to ERSPAN dest {}",
+                                       ipaddr2str(dst_addr));
         }
-        session.mirror_destination_u.er_span_dest.tunnel_if = ift;
-        session.type = hal::MIRROR_DEST_ERSPAN;
-        session.dest_if = dest_if;
+        session->mirror_destination_u.er_span_dest.tunnel_if = ift;
+        session->type = hal::MIRROR_DEST_ERSPAN;
+        session->dest_if = dest_if;
         auto ndest_if = telemetry_mirror_pick_dest_if(dest_if);
         HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",
-                         ndest_if->if_type, ndest_if->if_op_status,
-                         ndest_if->if_id);
-        if (session.dest_if != ndest_if) {
+                        ndest_if->if_type, ndest_if->if_op_status,
+                        ndest_if->if_id);
+        if (session->dest_if != ndest_if) {
             // Update EP's hal handle
-            session.dest_if = ndest_if;
+            session->dest_if = ndest_if;
             ep->if_handle = ndest_if->hal_handle;
             // Update the if to ep backptr also
-            if_del_ep(session.dest_if, ep);
+            if_del_ep(session->dest_if, ep);
             if_add_ep(ndest_if, ep);
         }
-        g_telemetry_mirror_session_dest_if[session.id] = session.dest_if;
+        //g_telemetry_mirror_session_dest_if[session->sw_id] = session->dest_if;
         break;
     }
     default: {
-        HAL_TRACE_ERR("Unknown session type{}", spec.destination_case());
-        return HAL_RET_INVALID_ARG;
+        HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                   rsp, HAL_RET_INVALID_ARG,
+                                   "Unknown session type{}",
+                                   spec.destination_case());
     }
     }
-    args.session = &session;
+    args.session = session;
     pd_func_args.pd_mirror_session_create = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CREATE, &pd_func_args);
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_CREATE,
+                          &pd_func_args);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Create failed {}", ret);
+        HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                   rsp, ret, "Create failed {}", ret);
     } else {
-        HAL_TRACE_DEBUG("Create Succeeded {}", session.id);
+        HAL_TRACE_INFO("Create Succeeded {}", session->sw_id);
     }
 
+    session->mirror_session_ht_ctxt.reset();
+    auto sdk_ret = ms_ht->insert(session, &session->mirror_session_ht_ctxt);
+    if (sdk_ret != SDK_RET_OK) {
+        // delete the mirror session
+        del_args.session = session;
+        pd_func_args.pd_mirror_session_delete = &del_args;
+        pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, &pd_func_args);
+        HAL_FREE_OBJ_RSP_RET_TRACE(mirror_session_free, session,
+                                   rsp, HAL_RET_ERR, "Mirror session ht insert failed {}",
+                                   HAL_RET_ERR);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    rsp->mutable_status()->set_handle(args.hw_id);
     return ret;
 }
 
-static hal_ret_t
-mirror_session_process_get (MirrorSessionGetRequest &req,
-                            pd_mirror_session_get_args_t *args)
+static bool
+mirror_session_fill_rsp (void *entry, void *ctxt)
 {
-    hal_ret_t ret = HAL_RET_OK;
-    pd::pd_func_args_t pd_func_args = {0};
+    if (unlikely(entry == NULL || ctxt == NULL)) {
+        HAL_TRACE_ERR("Invalid argument to mirror session fill");
+        return false;
+    }
 
-    HAL_TRACE_DEBUG("Mirror Session ID {}",
-            req.key_or_handle().mirrorsession_id());
-    pd_func_args.pd_mirror_session_get = args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("PD API failed {}", ret);
-        return ret;
+    const mirror_session_t *session = (mirror_session_t *)entry;
+    MirrorSessionGetResponseMsg *rsp = (MirrorSessionGetResponseMsg *)ctxt;
+
+    auto response = rsp->add_response();
+    response->set_api_status(types::API_STATUS_OK);
+    response->mutable_spec()->mutable_key_or_handle()->\
+        set_mirrorsession_id(session->sw_id);
+    response->mutable_spec()->set_snaplen(session->truncate_len);
+
+    switch (session->type) {
+    case hal::MIRROR_DEST_ERSPAN:
+        response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
+            set_v4_addr(session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
+        response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
+            set_ip_af(types::IPAddressFamily::IP_AF_INET);
+
+        response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
+            set_v4_addr(session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
+        response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
+            set_ip_af(types::IPAddressFamily::IP_AF_INET);
+        break;
+    }
+    HAL_TRACE_VERBOSE("Added Mirror Session ID {} in get response",
+                    session->sw_id);
+    return false;
+}
+
+hal_ret_t
+mirror_session_get (MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp)
+{
+    mirror_session_t *session = NULL;
+    hal_ret_t ret = HAL_RET_OK;
+    auto ms_ht = g_hal_state->mirror_session_ht();
+
+    if (!req.has_key_or_handle()) {
+        HAL_TRACE_INFO("Getting all Mirror Sessions");
+        if (ms_ht->num_entries() == 0) {
+            auto response = rsp->add_response();
+            response->set_api_status(types::API_STATUS_OK);
+            return HAL_RET_OK;
+        }
+        auto sdk_ret = ms_ht->walk_safe(mirror_session_fill_rsp, rsp);
+        if (sdk_ret != SDK_RET_OK) {
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            HAL_TRACE_ERR("Mirror session walk failed {}", ret);
+            auto response = rsp->add_response();
+            response->set_api_status(hal_prepare_rsp(ret));
+            return ret;
+        }
+    } else {
+        mirror_session_id_t sw_id = req.key_or_handle().mirrorsession_id();
+        HAL_TRACE_INFO("Getting Mirror Session ID {}", sw_id);
+        session = (mirror_session_t*)ms_ht->lookup(&sw_id);
+        if (session == NULL) {
+            HAL_TRACE_ERR("Mirror Session ID {} does not exists", sw_id);
+            auto response = rsp->add_response();
+            response->set_api_status(types::API_STATUS_NOT_FOUND);
+            return HAL_RET_ENTRY_NOT_FOUND;
+        }
+        mirror_session_fill_rsp(session, rsp);
     }
     return ret;
 }
 
 hal_ret_t
-mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp)
+mirror_session_get_hw_id (mirror_session_id_t sw_id,
+                          mirror_session_id_t *hw_id)
 {
-    pd_mirror_session_get_args_t args;
-    mirror_session_t session;
+    pd_mirror_session_get_hw_id_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
+    mirror_session_t *session = NULL;
     hal_ret_t ret;
-    bool exists = false;
+    auto ms_ht = g_hal_state->mirror_session_ht();
 
-    args.session = &session;
-    if (!req.has_key_or_handle()) {
-        /* Iterate over all the sessions */
-        for (int i = 0; i < MAX_MIRROR_SESSION_DEST; i++) {
-            memset(args.session, 0, sizeof(mirror_session_t));
-            args.session->id = i;
-            ret = mirror_session_process_get(req, &args);
-            if (ret == HAL_RET_OK && args.session->type == hal::MIRROR_DEST_ERSPAN) {
-                exists = true;
-                auto response = rsp->add_response();
-                response->set_api_status(types::API_STATUS_OK);
-                response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(i);
-                response->mutable_spec()->set_snaplen(session.truncate_len);
-                response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
-                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
-                response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
-                        set_ip_af(types::IPAddressFamily::IP_AF_INET);
-                response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
-                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
-                response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
-                        set_ip_af(types::IPAddressFamily::IP_AF_INET);
-            }
-        }
-        if (!exists) {
-            auto response = rsp->add_response();
-            response->set_api_status(types::API_STATUS_OK);
-        }
-    } else {
-        auto response = rsp->add_response();
-        memset(args.session, 0, sizeof(mirror_session_t));
-        args.session->id = req.key_or_handle().mirrorsession_id();
-        ret = mirror_session_process_get(req, &args);
-        if (ret == HAL_RET_OK) {
-            response->set_api_status(types::API_STATUS_OK);
-            response->mutable_spec()->mutable_key_or_handle()->set_mirrorsession_id(args.session->id);
-            response->mutable_spec()->set_snaplen(session.truncate_len);
-            response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
-                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
-            response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
-                        set_v4_addr(args.session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
-        } else {
-            response->set_api_status(types::API_STATUS_INVALID_ARG);
-        }
+    HAL_TRACE_DEBUG("Get hw id for Mirror session ID {} ", sw_id);
+
+    // check if mirror session exists
+    session = (mirror_session_t*)ms_ht->lookup(&sw_id);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Mirror Session ID {} not found", sw_id);
+        return HAL_RET_ENTRY_NOT_FOUND;
     }
 
-    return HAL_RET_OK;
+    pd_mirror_session_get_hw_id_args_init(&args);
+    args.session = session;
+    pd_func_args.pd_mirror_session_get_hw_id = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID,
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get hw id for Mirror session ID {}",
+                      sw_id);
+        return ret;
+    } else {
+        HAL_TRACE_DEBUG("Got hw id {} successfully", args.hw_id);
+        *hw_id = args.hw_id;
+    }
+    return ret;
 }
 
 hal_ret_t
@@ -442,24 +544,37 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
 {
     pd_mirror_session_delete_args_t args;
     pd::pd_func_args_t pd_func_args = {0};
-    mirror_session_t session;
+    mirror_session_t *session;
     hal_ret_t ret;
-    int id;
+    mirror_session_id_t sw_id;
+    auto ms_ht = g_hal_state->mirror_session_ht();
 
-    HAL_TRACE_DEBUG("Delete Mirror Session ID {}",
-            req.key_or_handle().mirrorsession_id());
-    memset(&session, 0, sizeof(session));
-    id = session.id = req.key_or_handle().mirrorsession_id();
+    // check if mirror session already exists
+    sw_id = req.key_or_handle().mirrorsession_id();
+    HAL_TRACE_INFO("Delete Mirror Session ID {}", sw_id);
+
+    session = (mirror_session_t*)ms_ht->lookup(&sw_id);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Mirror session ID {} not found.", sw_id);
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        return HAL_RET_ENTRY_NOT_FOUND;
+    }
+
     // PD call to delete mirror session
-    args.session = &session;
+    args.session = session;
     pd_func_args.pd_mirror_session_delete = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("PD API failed {}", ret);
-        rsp->set_api_status(types::API_STATUS_OK);
-        rsp->mutable_key_or_handle()->set_mirrorsession_id(session.id);
+        rsp->set_api_status(hal_prepare_rsp(ret));
+        return ret;
     }
-    g_telemetry_mirror_session_dest_if[id] = NULL;
+
+    session = (mirror_session_t*)ms_ht->remove(&sw_id);
+    SDK_ASSERT(session != NULL);
+    mirror_session_free(session);
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    rsp->mutable_key_or_handle()->set_mirrorsession_id(sw_id);
     return ret;
 }
 
@@ -755,10 +870,20 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
                                                     n, MAX_MIRROR_SESSION_DEST);
                 return HAL_RET_INVALID_ARG;
             }
+            uint32_t hw_id = 0;
+            uint32_t sw_id = 0;
             for (int i = 0; i < n; i++) {
-                rule->action.mirror_destinations[i] = spec.action().ms_key_handle(i).mirrorsession_id();
-                HAL_TRACE_DEBUG("Mirror Destinations[{}]: {}", i,
-                               rule->action.mirror_destinations[i]);
+                sw_id = spec.action().ms_key_handle(i).mirrorsession_id();
+                ret = mirror_session_get_hw_id(sw_id, &hw_id);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Could not find the hw id for Mirror session ID {} ", sw_id);
+                    return HAL_RET_INVALID_ARG;
+                }
+                rule->action.mirror_destinations_sw_id[i] = sw_id;
+                rule->action.mirror_destinations[i] = hw_id;
+                HAL_TRACE_DEBUG("Mirror Destinations[{}] hw: {} sw: {}", i,
+                                rule->action.mirror_destinations[i],
+                                rule->action.mirror_destinations_sw_id[i]);
             }
             rule->action.num_mirror_dest = n;
             n = spec.action().action_size();
@@ -1060,9 +1185,8 @@ flow_monitor_rule_spec_build (flow_monitor_rule_t *rule, FlowMonitorRuleGetRespo
                  resp->mutable_spec()->mutable_action()->\
                        add_action(telemetry::MIRROR);
          }
-         
          resp->mutable_spec()->mutable_action()->add_ms_key_handle()->\
-             set_mirrorsession_id(rule->action.mirror_destinations[idx]); 
+             set_mirrorsession_id(rule->action.mirror_destinations_sw_id[idx]);
     }  
 
     return HAL_RET_OK;

@@ -179,7 +179,8 @@ typedef struct flow_monitor_rule_action_s {
     uint8_t     num_mirror_dest;    // Num of mirror sessions
     uint8_t     num_collector;  // Number of collectors
     uint8_t     collectors[MAX_COLLECTORS_PER_FLOW]; // Collector ids
-    uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];   // Mirror session ids
+    uint8_t     mirror_destinations[MAX_MIRROR_SESSION_DEST];   // Mirror session hw ids
+    mirror_session_id_t mirror_destinations_sw_id[MAX_MIRROR_SESSION_DEST];   // Mirror session sw ids
     bool        mirror_to_cpu;       // Mirror to cpu - additional mirror dest
 } __PACK__ flow_monitor_rule_action_t;
 
@@ -196,7 +197,7 @@ typedef struct flow_monitor_rule_s {
 
 typedef struct mirror_session_s {
     sdk_spinlock_t slock;
-    mirror_session_id_t id;
+    mirror_session_id_t sw_id;
     mirror_desttype_en type;
     uint32_t truncate_len;
     if_t *dest_if;
@@ -207,11 +208,14 @@ typedef struct mirror_session_s {
             ip_addr_t ip_sa;
             ip_addr_t ip_da;
             uint8_t   ip_type;
+            vrf_id_t  vrf_id;
         } er_span_dest;
       struct r_span_dest_ {
             vlan_id_t vlan;
         } r_span_dest;
     } mirror_destination_u;
+    void      *pd;
+    ht_ctxt_t  mirror_session_ht_ctxt;
 } __PACK__ mirror_session_t;
 
 typedef struct collector_config_s {
@@ -239,6 +243,24 @@ typedef struct collector_stats_s {
     uint64_t            pad2;
     uint64_t            pad3;
 } collector_stats_t;
+
+// alloc mirror session instance
+static inline mirror_session_t *
+mirror_session_alloc (void)
+{
+    return (mirror_session_t *)
+        g_hal_state->mirror_session_slab()->alloc();
+}
+
+// free mirror session instance
+static inline void
+mirror_session_free (mirror_session_t *session)
+{
+    SDK_ASSERT(session != NULL);
+    // make sure we dont leak memory
+    SDK_ASSERT(session->pd == NULL);
+    g_hal_state->mirror_session_slab()->free(session);
+}
 
 static inline flow_monitor_rule_t *
 flow_monitor_rule_alloc(void)
@@ -445,6 +467,7 @@ hal_ret_t mirror_session_create(MirrorSessionSpec &spec, MirrorSessionResponse *
 hal_ret_t mirror_session_update(MirrorSessionSpec &spec, MirrorSessionResponse *rsp);
 hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionDeleteResponse *rsp);
 hal_ret_t mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp);
+hal_ret_t mirror_session_get_hw_id(mirror_session_id_t sw_id, mirror_session_id_t *hw_id);
 hal_ret_t telemetry_mirror_session_handle_repin(if_t *uplink);
 
 hal_ret_t collector_create(CollectorSpec &spec, CollectorResponse *rsp);
@@ -465,6 +488,9 @@ hal_ret_t drop_monitor_rule_get(DropMonitorRuleGetRequest &req, DropMonitorRuleG
 hal_ret_t flow_monitor_acl_ctx_create(void);
 void *flowmon_rules_get_key_func(void *entry);
 uint32_t flowmon_rules_key_size(void);
+
+void *mirror_session_get_key_func(void *entry);
+uint32_t mirror_session_key_size(void);
 
 }    // namespace
 

@@ -124,5 +124,6 @@ ${CMD_OPTS} session_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/session_tes
 ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"
 ${CMD_OPTS} nwsec_policy_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/nwsec_policy_test.xml"
 ${CMD_OPTS} net_fwding_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/net_fwding_test.xml"
+${CMD_OPTS} mirror_session_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/mirror_session_test.xml"
 
 ${NICDIR}/utils/ftl/test/iris/run.sh --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ftl_test.xml"

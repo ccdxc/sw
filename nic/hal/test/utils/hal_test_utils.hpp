@@ -21,6 +21,9 @@ using sdk::utils::mtrack_info_t;
 #define UPLINK_IF_INDEX2 0x51020001
 #define UPLINK_IF_INDEX3 0x51030001
 
+#define LOGICAL_PORT_NUM_1 1
+#define LOGICAL_PORT_NUM_2 5
+#define LOGICAL_PORT_NUM_3 9
 
 typedef struct slab_stats_s {
     hal_slab_t  slab_id;

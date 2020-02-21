@@ -1961,6 +1961,7 @@ pd_telemetry_cleanup_args_init (pd_telemetry_cleanup_args_t *args)
 // mirror session
 typedef struct pd_mirror_session_create_args_s {
     mirror_session_t *session;
+    mirror_session_id_t hw_id;
 } __PACK__ pd_mirror_session_create_args_t;
 
 static inline void
@@ -1989,14 +1990,16 @@ pd_mirror_session_delete_args_init (pd_mirror_session_delete_args_t *args)
     args->session = NULL;
 }
 
-typedef struct pd_mirror_session_get_args_s {
+typedef struct pd_mirror_session_get_hw_id_args_s {
     mirror_session_t *session;
-} __PACK__ pd_mirror_session_get_args_t;
+    mirror_session_id_t hw_id;
+} __PACK__ pd_mirror_session_get_hw_id_args_t;
 
-static inline void
-pd_mirror_session_get_args_init(pd_mirror_session_get_args_t *args)
+static inline  void
+pd_mirror_session_get_hw_id_args_init(pd_mirror_session_get_hw_id_args_t *args)
 {
     args->session = NULL;
+    args->hw_id = 0;
 }
 
 // flow monitoring rule
@@ -3412,9 +3415,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_WRING_GET_ENTRY,      102,"PD_FUNC_ID_WRING_GET_ENTRY")               \
     ENTRY(PD_FUNC_ID_WRING_GET_META,       103, "PD_FUNC_ID_WRING_GET_META")               \
     ENTRY(PD_FUNC_ID_WRING_SET_META,       104, "PD_FUNC_ID_WRING_SET_META")               \
-    ENTRY(PD_FUNC_ID_MIRROR_SESSION_CREATE, 105, "PD_FUNC_ID_MIRROR_SESSION_CREATE")\
-    ENTRY(PD_FUNC_ID_MIRROR_SESSION_DELETE, 106, "PD_FUNC_ID_MIRROR_SESSION_DELETE")\
-    ENTRY(PD_FUNC_ID_MIRROR_SESSION_GET,    107, "PD_FUNC_ID_MIRROR_SESSION_GET")\
+    ENTRY(PD_FUNC_ID_MIRROR_SESSION_CREATE,    105, "PD_FUNC_ID_MIRROR_SESSION_CREATE")\
+    ENTRY(PD_FUNC_ID_MIRROR_SESSION_DELETE,    106, "PD_FUNC_ID_MIRROR_SESSION_DELETE")\
+    ENTRY(PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID, 107, "PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID") \
     ENTRY(PD_FUNC_ID_COLLECTOR_CREATE,      108, "PD_FUNC_ID_COLLECTOR_CREATE")\
     ENTRY(PD_FUNC_ID_MC_ENTRY_CREATE,       109, "PD_FUNC_ID_MC_ENTRY_CREATE")\
     ENTRY(PD_FUNC_ID_MC_ENTRY_DELETE,       110, "PD_FUNC_ID_MC_ENTRY_DELETE")\
@@ -3865,7 +3868,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_mirror_session_create);
         PD_UNION_ARGS_FIELD(pd_mirror_session_update);
         PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
-        PD_UNION_ARGS_FIELD(pd_mirror_session_get);
+        PD_UNION_ARGS_FIELD(pd_mirror_session_get_hw_id);
 
         // drop monitor rule
         PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_create);
@@ -4356,7 +4359,7 @@ PD_FUNCP_TYPEDEF(pd_wring_get_base_addr);
 PD_FUNCP_TYPEDEF(pd_mirror_session_create);
 PD_FUNCP_TYPEDEF(pd_mirror_session_update);
 PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
-PD_FUNCP_TYPEDEF(pd_mirror_session_get);
+PD_FUNCP_TYPEDEF(pd_mirror_session_get_hw_id);
 
 // flow monitor rule
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_create);

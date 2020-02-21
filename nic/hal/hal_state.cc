@@ -413,6 +413,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     SDK_ASSERT_RETURN((slab != NULL), false);
     SDK_ASSERT_RETURN((flow_monitor_acl_ctx_create() == HAL_RET_OK), false);
 
+    // Initialize monitor session related data struture
+    slab = register_slab(HAL_SLAB_MIRROR_SESSION,
+                         slab_args={.name="mirror_session",
+                         .size=sizeof(hal::mirror_session_t), .num_elements=64,
+                         .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
     slab = register_slab(HAL_SLAB_ROUTE_ACL_USERDATA,
                          slab_args={.name="route_acl_userdata",
                         .size=sizeof(route_acl_user_data_t), .num_elements=64,
@@ -1019,6 +1026,13 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::flowmon_rules_key_size(),
                   true, false, mmgr);
     SDK_ASSERT_RETURN((flowmon_rules_ht_ != NULL), false);
+
+    HAL_HT_CREATE("mirror-session", mirror_session_ht_,
+                  MAX_MIRROR_SESSION_DEST >> 1,
+                  hal::mirror_session_get_key_func,
+                  hal::mirror_session_key_size(),
+                  true, false, mmgr);
+    SDK_ASSERT_RETURN((mirror_session_ht_ != NULL), false);
 
 #ifdef __x86_64__
     // initialize l4lb related data structures
@@ -2153,6 +2167,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_FLOWMON_RULE:
         g_hal_state->flowmon_rule_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_MIRROR_SESSION:
+        g_hal_state->mirror_session_slab()->free(elem);
         break;
 
     case HAL_SLAB_ROUTE_ACL_USERDATA:

@@ -63,6 +63,8 @@
 #include "nic/hal/pd/iris/debug/snake_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_cfg.hpp"
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -601,6 +603,18 @@ hal_state_pd::init(void)
     SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)] != NULL),
                       false);
 
+    // initialize mirror session pd related data strucures
+    slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MIRROR_SESSION_PD)] =
+        slab::factory("mirror_session_pd", HAL_SLAB_MIRROR_SESSION_PD,
+                      sizeof(hal::pd::mirror_session_pd_t), 8,
+                      true, true, true);
+    SDK_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MIRROR_SESSION_PD)] != NULL),
+                      false);
+
+    // initialize mirror session hw id indexer
+    mirror_session_idxr_ = sdk::lib::indexer::factory(MAX_MIRROR_SESSION_DEST);
+    SDK_ASSERT_RETURN((mirror_session_idxr_ != NULL), false);
+
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
@@ -637,7 +651,7 @@ hal_state_pd::hal_state_pd()
     qos_common_oq_idxr_      = NULL;
     qos_rxdma_oq_idxr_       = NULL;
     rw_tbl_idxr_             = NULL;
-
+    mirror_session_idxr_     = NULL;
     // ht
     flow_lkupid_ht_          = NULL;
     tlscb_hwid_ht_           = NULL;
@@ -683,6 +697,7 @@ hal_state_pd::~hal_state_pd()
     qos_common_oq_idxr_ ? indexer::destroy(qos_common_oq_idxr_) : HAL_NOP;
     qos_rxdma_oq_idxr_ ? indexer::destroy(qos_rxdma_oq_idxr_) : HAL_NOP;
     rw_tbl_idxr_ ? indexer::destroy(rw_tbl_idxr_) : HAL_NOP;
+    mirror_session_idxr_ ? indexer::destroy(mirror_session_idxr_) : HAL_NOP;
 
     flow_lkupid_ht_ ? ht::destroy(flow_lkupid_ht_) : HAL_NOP;
     tlscb_hwid_ht_ ? ht::destroy(tlscb_hwid_ht_) : HAL_NOP;
@@ -1536,6 +1551,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SNAKE_TEST_IF_PD:
         g_hal_state_pd->snake_test_if_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_MIRROR_SESSION_PD:
+        g_hal_state_pd->mirror_session_pd_slab()->free(elem);
         break;
 
     default:
