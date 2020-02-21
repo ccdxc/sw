@@ -214,7 +214,7 @@
             "kind": "cfgtbl",
             "size": "528M",
             "block_size": "264K",
-            "block_count": "2K",
+            "block_count": "2049",
             "cache": "p4plus-rxdma"
         },
         {
@@ -224,7 +224,7 @@
             "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1K",
-            "block_count": "2K",
+            "block_count": "2049",
             "cache": "p4plus-rxdma"
         },
         {
