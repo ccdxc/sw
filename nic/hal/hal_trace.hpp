@@ -97,7 +97,7 @@ using hal::utils::hal_trace_level;
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
-#define HAL_TRACE_WARN_NO_META(fmt, ...)                                       \
+#define HAL_TRACE_WARN_NO_META(fmt...)                                         \
     if (likely(likely(hal::utils::hal_logger()) &&                             \
                likely(hal_trace_level() >= ::utils::trace_warn))) {            \
         hal::utils::hal_logger()->warn(fmt);                                   \
@@ -110,7 +110,7 @@ using hal::utils::hal_trace_level;
                                        ##__VA_ARGS__);                         \
     }                                                                          \
 
-#define HAL_TRACE_INFO_NO_META(fmt, ...)                                       \
+#define HAL_TRACE_INFO_NO_META(fmt...)                                         \
     if (likely(likely(hal::utils::hal_logger()) &&                             \
                likely(hal_trace_level() >= ::utils::trace_info))) {            \
         hal::utils::hal_logger()->info(fmt);                                   \
