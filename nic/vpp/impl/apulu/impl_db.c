@@ -143,6 +143,12 @@ pds_impl_db_device_del (void)
     return 0;
 }
 
+u8
+pds_impl_db_bridging_en_get (void)
+{
+    return impl_db_ctx.device.bridging_en;
+}
+
 void
 pds_impl_db_subnet_init (void)
 {

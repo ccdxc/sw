@@ -34,10 +34,8 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     ethernet_arp_header_t *arp = NULL;
     arp_proxy_trace_t *trace;
     void *p4_rx_meta = NULL;
-    mac_addr_t vr_mac;
+    mac_addr_t mac;
     u32 bd_id = 0;
-    bool remote = FALSE; // knob based on config for arp-proxy
-                         // set based on device cfg
     u32 dst;
     u32 offset = 0;
     u16 vnic_nh_hw_id;
@@ -61,16 +59,15 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
-        // TODO take vr mac from vnic
-        // if vnic is null, drop it
-        // make sure the dst addr is in the same subnet
-        // remote flag - reset based on device config
-        pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst);
+        if (0 != pds_dst_mac_get(p4_rx_meta, mac, dst)) {
+            counter[ARP_PROXY_COUNTER_NO_MAC]++;
+            goto error;
+        }
 
         // Ethernet
         e0 = vlib_buffer_get_current(p0) + VPP_P4_TO_ARM_HDR_SZ;
         clib_memcpy(&e0->dst_address, &e0->src_address, ETH_ADDR_LEN);
-        clib_memcpy(&e0->src_address, vr_mac, ETH_ADDR_LEN);
+        clib_memcpy(&e0->src_address, mac, ETH_ADDR_LEN);
 
         // ARP Reply
         arp->opcode = clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_reply);
@@ -80,13 +77,13 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
         clib_memcpy(&arp->ip4_over_ethernet[1].mac,
                     &arp->ip4_over_ethernet[0].mac, ETH_ADDR_LEN);
         clib_memcpy(&arp->ip4_over_ethernet[0].mac,
-                    vr_mac, ETH_ADDR_LEN);
+                    mac, ETH_ADDR_LEN);
         *next0 = ARP_PROXY_NEXT_EXIT;
         counter[ARP_PROXY_COUNTER_REPLY_SUCCESS]++;
         if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                           p0->flags & VLIB_BUFFER_IS_TRACED)) {
             trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-            arp_proxy_trace_fill(trace, arp, vr_mac, bd_id);
+            arp_proxy_trace_fill(trace, arp, mac, bd_id);
         }
     } else {
         // TODO
@@ -100,7 +97,7 @@ error:
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-        arp_proxy_trace_fill(trace, arp, vr_mac, bd_id);
+        arp_proxy_trace_fill(trace, arp, mac, bd_id);
     }
     return;
 }

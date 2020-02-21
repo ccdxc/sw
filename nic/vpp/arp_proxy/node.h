@@ -10,8 +10,9 @@
 // ARP Proxy node
 #define foreach_arp_proxy_counter                           \
     _(REPLY_SUCCESS, "Reply success" )                      \
-    _(SUBNET_CHECK_FAIL, "Subnet check failed")           \
+    _(SUBNET_CHECK_FAIL, "Subnet check failed")             \
     _(VNIC_MISSING, "VNIC not present")                     \
+    _(NO_MAC, "MAC not found for ARP request")              \
     _(NOT_ARP_REQUEST, "Not an ARP request" )               \
 
 #define foreach_arp_proxy_next                              \

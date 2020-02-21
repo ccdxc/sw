@@ -32,8 +32,7 @@ pds_mapping_table_init (void)
 
 // get virtual router mac
 static inline int
-pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, bool remote,
-                 uint32_t dst_addr)
+pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
 {
     return 0;
 }
