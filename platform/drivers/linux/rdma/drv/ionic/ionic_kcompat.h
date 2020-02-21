@@ -267,6 +267,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_IB_ALLOC_SRQ_OBJ
 #define HAVE_IB_DESTROY_SRQ_VOID
 #define HAVE_IB_API_UDATA
+#define HAVE_IBDEV_PRINT
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_0)
@@ -279,6 +280,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
 #else /* 5.4 and later */
 #define HAVE_IB_PORT_PHYS_STATE
+#define HAVE_IBDEV_PRINT_RATELIMITED
 #endif
 
 #ifndef HAVE_IB_MTU_INT_TO_ENUM
@@ -523,6 +525,18 @@ enum ib_port_phys_state {
 };
 
 #endif /* HAVE_IB_PORT_PHYS_STATE */
+#ifndef HAVE_IBDEV_PRINT
+#define ibdev_dbg(ibdev, ...)	dev_dbg(&(ibdev)->dev, ##__VA_ARGS__)
+#define ibdev_info(ibdev, ...)	dev_info(&(ibdev)->dev, ##__VA_ARGS__)
+#define ibdev_warn(ibdev, ...)	dev_warn(&(ibdev)->dev, ##__VA_ARGS__)
+#define ibdev_err(ibdev, ...)	dev_err(&(ibdev)->dev, ##__VA_ARGS__)
+
+#endif /* HAVE_IBDEV_PRINT */
+#ifndef HAVE_IBDEV_PRINT_RATELIMITED
+#define ibdev_warn_ratelimited(ibdev, ...)				\
+	dev_warn_ratelimited(&(ibdev)->dev, ##__VA_ARGS__)
+
+#endif /* HAVE_IBDEV_PRINT_RATELIMITED */
 #ifdef HAVE_RDMA_DRIVER_ID
 #include <rdma/rdma_user_ioctl_cmds.h>
 /* Upstream: QIB, EFA, SIW, <us> */

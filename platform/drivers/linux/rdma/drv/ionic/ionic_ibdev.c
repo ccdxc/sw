@@ -345,7 +345,7 @@ static void ionic_kill_ibdev_cb(void *dev_ptr)
 {
 	struct ionic_ibdev *dev = dev_ptr;
 
-	dev_warn(&dev->ibdev.dev, "reset has been indicated\n");
+	ibdev_warn(&dev->ibdev, "reset has been indicated\n");
 
 	ionic_kill_ibdev(dev, true);
 }
@@ -732,7 +732,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 		}
 
 		dev->reset_cnt = work->reset_cnt;
-		dev_info(&dev->ibdev.dev, "registered\n");
+		ibdev_info(&dev->ibdev, "registered\n");
 		break;
 
 	case NETDEV_UNREGISTER:
@@ -853,16 +853,16 @@ void ionic_ibdev_reset(struct ionic_ibdev *dev)
 
 	rc = ionic_netdev_event_post(dev->ndev, NETDEV_UNREGISTER, 0);
 	if (rc) {
-		dev_warn(&dev->ibdev.dev,
-			 "failed to post unregister event: %d\n", rc);
+		ibdev_warn(&dev->ibdev,
+			   "failed to post unregister event: %d\n", rc);
 		return;
 	}
 
 	rc = ionic_netdev_event_post(dev->ndev, NETDEV_REGISTER,
 				     dev->reset_cnt);
 	if (rc)
-		dev_warn(&dev->ibdev.dev,
-			 "failed to post register event: %d\n", rc);
+		ibdev_warn(&dev->ibdev,
+			   "failed to post register event: %d\n", rc);
 }
 
 static int __init ionic_mod_init(void)

@@ -352,6 +352,18 @@ enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_PHY_TEST = 7,
 };
 
+extern bool ionic_dyndbg_enable;
+#define ibdev_dbg(ibdev, ...) do {					\
+	if (ionic_dyndbg_enable)					\
+		dev_info(&(ibdev)->dev, ##__VA_ARGS__);			\
+	} while (0)
+#define ibdev_info(ibdev, ...)	dev_info(&(ibdev)->dev, ##__VA_ARGS__)
+#define ibdev_warn(ibdev, ...)	dev_warn(&(ibdev)->dev, ##__VA_ARGS__)
+#define ibdev_err(ibdev, ...)	dev_err(&(ibdev)->dev, ##__VA_ARGS__)
+
+#define ibdev_warn_ratelimited(ibdev, ...)				\
+	dev_warn_ratelimited(&(ibdev)->dev, ##__VA_ARGS__)
+
 /**
  * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format
  * @header:UD header struct

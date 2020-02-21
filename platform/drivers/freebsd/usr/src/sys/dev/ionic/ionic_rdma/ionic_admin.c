@@ -74,35 +74,35 @@ static void ionic_admin_timedout(struct ionic_aq *aq)
 	/* Reset ALL adminq if any one times out */
 	queue_work(ionic_evt_workq, &dev->reset_work);
 
-	dev_err(&dev->ibdev.dev, "admin command timed out, aq %d\n", aq->aqid);
+	ibdev_err(&dev->ibdev, "admin command timed out, aq %d\n", aq->aqid);
 
-	dev_warn(&dev->ibdev.dev, "admin timeout was set for %ums\n",
-		 (u32)jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
-	dev_warn(&dev->ibdev.dev, "admin inactivity for %ums\n",
-		 (u32)jiffies_to_msecs(jiffies - aq->stamp));
+	ibdev_warn(&dev->ibdev, "admin timeout was set for %ums\n",
+		   (u32)jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
+	ibdev_warn(&dev->ibdev, "admin inactivity for %ums\n",
+		   (u32)jiffies_to_msecs(jiffies - aq->stamp));
 
-	dev_warn(&dev->ibdev.dev, "admin commands outstanding %u\n",
-		 ionic_queue_length(&aq->q));
-	dev_warn(&dev->ibdev.dev, "more commands pending? %s\n",
-		 list_empty(&aq->wr_post) ? "no" : "yes");
+	ibdev_warn(&dev->ibdev, "admin commands outstanding %u\n",
+		   ionic_queue_length(&aq->q));
+	ibdev_warn(&dev->ibdev, "more commands pending? %s\n",
+		   list_empty(&aq->wr_post) ? "no" : "yes");
 
 	pos = cq->q.prod;
 
-	dev_warn(&dev->ibdev.dev, "admin cq pos %u (next to complete)\n", pos);
+	ibdev_warn(&dev->ibdev, "admin cq pos %u (next to complete)\n", pos);
 	print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 		       ionic_queue_at(&cq->q, pos),
 		       BIT(cq->q.stride_log2), true);
 
 	pos = (pos - 1) & cq->q.mask;
 
-	dev_warn(&dev->ibdev.dev, "admin cq pos %u (last completed)\n", pos);
+	ibdev_warn(&dev->ibdev, "admin cq pos %u (last completed)\n", pos);
 	print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 		       ionic_queue_at(&cq->q, pos),
 		       BIT(cq->q.stride_log2), true);
 
 	pos = aq->q.cons;
 
-	dev_warn(&dev->ibdev.dev, "admin pos %u (next to complete)\n", pos);
+	ibdev_warn(&dev->ibdev, "admin pos %u (next to complete)\n", pos);
 	print_hex_dump(KERN_WARNING, "cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 		       ionic_queue_at(&aq->q, pos),
 		       BIT(aq->q.stride_log2), true);
@@ -111,7 +111,7 @@ static void ionic_admin_timedout(struct ionic_aq *aq)
 	if (pos == aq->q.cons)
 		goto out;
 
-	dev_warn(&dev->ibdev.dev, "admin pos %u (last posted)\n", pos);
+	ibdev_warn(&dev->ibdev, "admin pos %u (last posted)\n", pos);
 	print_hex_dump(KERN_WARNING, "cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 		       ionic_queue_at(&aq->q, pos),
 		       BIT(aq->q.stride_log2), true);
@@ -144,8 +144,8 @@ static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 
 	rmb();
 
-	dev_dbg(&dev->ibdev.dev, "poll admin cq %u prod %u\n",
-		cq->cqid, cq->q.prod);
+	ibdev_dbg(&dev->ibdev, "poll admin cq %u prod %u\n",
+		  cq->cqid, cq->q.prod);
 	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qcqe, BIT(cq->q.stride_log2), true);
 
@@ -192,28 +192,28 @@ static void ionic_admin_poll_locked(struct ionic_aq *aq)
 		type = ionic_v1_cqe_qtf_type(qtf);
 
 		if (unlikely(type != IONIC_V1_CQE_TYPE_ADMIN)) {
-			dev_warn_ratelimited(&dev->ibdev.dev,
-					     "unexpected cqe type %u\n", type);
+			ibdev_warn_ratelimited(&dev->ibdev,
+					       "bad cqe type %u\n", type);
 			goto cq_next;
 		}
 
 		if (unlikely(qid != aq->aqid)) {
-			dev_warn_ratelimited(&dev->ibdev.dev,
-					     "unexpected cqe qid %u\n", qid);
+			ibdev_warn_ratelimited(&dev->ibdev,
+					       "bad cqe qid %u\n", qid);
 			goto cq_next;
 		}
 
 		if (unlikely(be16_to_cpu(cqe->admin.cmd_idx) != aq->q.cons)) {
-			dev_warn_ratelimited(&dev->ibdev.dev,
-					     "unexpected idx %u cons %u qid %u\n",
-					     be16_to_cpu(cqe->admin.cmd_idx),
-					     aq->q.cons, qid);
+			ibdev_warn_ratelimited(&dev->ibdev,
+					       "bad idx %u cons %u qid %u\n",
+					       be16_to_cpu(cqe->admin.cmd_idx),
+					       aq->q.cons, qid);
 			goto cq_next;
 		}
 
 		if (unlikely(ionic_queue_empty(&aq->q))) {
-			dev_warn_ratelimited(&dev->ibdev.dev,
-					     "unexpected cqe for empty adminq\n");
+			ibdev_warn_ratelimited(&dev->ibdev,
+					       "bad cqe for empty adminq\n");
 			goto cq_next;
 		}
 
@@ -270,7 +270,7 @@ cq_next:
 
 		*wqe = wr->wqe;
 
-		dev_dbg(&dev->ibdev.dev, "post admin prod %u\n", aq->q.prod);
+		ibdev_dbg(&dev->ibdev, "post admin prod %u\n", aq->q.prod);
 		print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ionic_queue_at_prod(&aq->q),
 				     BIT(aq->q.stride_log2), true);
@@ -313,16 +313,16 @@ static void ionic_admin_dwork(struct work_struct *ws)
 		pos = aq->q.cons;
 		ionic_admin_poll_locked(aq);
 		if (pos != aq->q.cons) {
-			dev_dbg(&dev->ibdev.dev,
-				"missed event for acq %d\n", aq->cqid);
+			ibdev_dbg(&dev->ibdev,
+				  "missed event for acq %d\n", aq->cqid);
 			goto next_aq;
 		}
 
 		if (time_is_after_eq_jiffies(aq->stamp +
 					     IONIC_ADMIN_TIMEOUT)) {
 			/* Timeout threshold not met */
-			dev_dbg(&dev->ibdev.dev, "no progress after %ums\n",
-				(u32)jiffies_to_msecs(jiffies - aq->stamp));
+			ibdev_dbg(&dev->ibdev, "no progress after %ums\n",
+				  (u32)jiffies_to_msecs(jiffies - aq->stamp));
 			goto next_aq;
 		}
 
@@ -456,16 +456,16 @@ int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
 	}
 
 	if (rc) {
-		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
+		ibdev_warn(&dev->ibdev, "wait status %d\n", rc);
 		ionic_admin_cancel(wr);
 	} else if (wr->status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
+		ibdev_dbg(&dev->ibdev, "killed\n");
 
 		/* No error if admin already killed during teardown */
 		rc = (flags & IONIC_ADMIN_F_TEARDOWN) ? 0 : -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr->cqe)) {
-		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 be32_to_cpu(wr->cqe.status_length));
+		ibdev_warn(&dev->ibdev, "error %u\n",
+			   be32_to_cpu(wr->cqe.status_length));
 		rc = -EINVAL;
 	}
 	return rc;
@@ -569,7 +569,7 @@ static void ionic_rdma_admincq_event(struct ib_event *event, void *cq_context)
 	struct ionic_aq *aq = cq_context;
 	struct ionic_ibdev *dev = aq->dev;
 
-	dev_err(&dev->ibdev.dev, "admincq event %d\n", event->event);
+	ibdev_err(&dev->ibdev, "admincq event %d\n", event->event);
 }
 
 static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
@@ -794,7 +794,7 @@ void ionic_kill_rdma_admin(struct ionic_ibdev *dev, bool fatal_path)
 
 	rc = ionic_rdma_reset_devcmd(dev);
 	if (unlikely(rc)) {
-		dev_err(&dev->ibdev.dev, "failed to reset rdma %d\n", rc);
+		ibdev_err(&dev->ibdev, "failed to reset rdma %d\n", rc);
 		ionic_api_request_reset(dev->handle);
 	} else {
 		ionic_kill_ibdev(dev, fatal_path);
@@ -823,7 +823,7 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 
 	rmb();
 
-	dev_dbg(&eq->dev->ibdev.dev, "poll eq prod %u\n", eq->q.prod);
+	ibdev_dbg(&eq->dev->ibdev, "poll eq prod %u\n", eq->q.prod);
 	print_hex_dump_debug("eqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qeqe, BIT(eq->q.stride_log2), true);
 
@@ -845,8 +845,8 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 	xa_unlock_irqrestore(&dev->cq_tbl, irqflags);
 
 	if (!cq) {
-		dev_dbg(&dev->ibdev.dev, "missing cqid %#x code %u\n",
-			cqid, code);
+		ibdev_dbg(&dev->ibdev,
+			  "missing cqid %#x code %u\n", cqid, code);
 		goto out;
 	}
 
@@ -864,8 +864,8 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 		break;
 
 	default:
-		dev_dbg(&dev->ibdev.dev, "unrecognized cqid %#x code %u\n",
-			cqid, code);
+		ibdev_dbg(&dev->ibdev,
+			  "unrecognized cqid %#x code %u\n", cqid, code);
 		goto out;
 	}
 
@@ -891,8 +891,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 	xa_unlock_irqrestore(&dev->qp_tbl, irqflags);
 
 	if (!qp) {
-		dev_dbg(&dev->ibdev.dev, "missing qpid %#x code %u\n",
-			qpid, code);
+		ibdev_dbg(&dev->ibdev,
+			  "missing qpid %#x code %u\n", qpid, code);
 		goto out;
 	}
 
@@ -926,9 +926,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 		break;
 
 	default:
-		dev_dbg(&dev->ibdev.dev,
-			"unrecognized qpid %#x code %u\n",
-			qpid, code);
+		ibdev_dbg(&dev->ibdev,
+			  "unrecognized qpid %#x code %u\n", qpid, code);
 		goto out;
 	}
 
@@ -977,9 +976,8 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 			break;
 
 		default:
-			dev_dbg(&dev->ibdev.dev,
-				"unrecognized event %#x type %u\n",
-				evt, type);
+			ibdev_dbg(&dev->ibdev,
+				  "unknown event %#x type %u\n", evt, type);
 		}
 	}
 
@@ -1134,8 +1132,8 @@ int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	spin_lock_init(&dev->dev_lock);
 
 	if (ionic_aq_count > 0 && ionic_aq_count < dev->aq_count) {
-		dev_dbg(&dev->ibdev.dev, "limiting adminq count to %d\n",
-			ionic_aq_count);
+		ibdev_dbg(&dev->ibdev,
+			  "limiting adminq count to %d\n", ionic_aq_count);
 		dev->aq_count = ionic_aq_count;
 	}
 
@@ -1159,13 +1157,14 @@ int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 
 			/* need at least two eq */
 			if (eq_i < 2) {
-				dev_err(dev->hwdev, "fail create eq %d\n", rc);
+				ibdev_err(&dev->ibdev,
+					  "fail create eq %d\n", rc);
 				goto out;
 			}
 
 			/* ok, just fewer eq than device supports */
-			dev_dbg(dev->hwdev, "eq count %d want %d rc %d\n",
-				eq_i, dev->eq_count, rc);
+			ibdev_dbg(&dev->ibdev, "eq count %d want %d rc %d\n",
+				  eq_i, dev->eq_count, rc);
 
 			rc = 0;
 			break;
@@ -1190,14 +1189,14 @@ int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 			rc = PTR_ERR(cq);
 
 			if (!aq_i) {
-				dev_err(dev->hwdev,
-					"fail create acq %d\n", rc);
+				ibdev_err(&dev->ibdev,
+					  "failed to create acq %d\n", rc);
 				goto out;
 			}
 
 			/* ok, just fewer adminq than device supports */
-			dev_dbg(dev->hwdev, "acq count %d want %d rc %d\n",
-				aq_i, dev->aq_count, rc);
+			ibdev_dbg(&dev->ibdev, "acq count %d want %d rc %d\n",
+				  aq_i, dev->aq_count, rc);
 			break;
 		}
 
@@ -1211,14 +1210,14 @@ int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 			rc = PTR_ERR(aq);
 
 			if (!aq_i) {
-				dev_err(dev->hwdev,
-					"fail create aq %d\n", rc);
+				ibdev_err(&dev->ibdev,
+					  "failed to create aq %d\n", rc);
 				goto out;
 			}
 
 			/* ok, just fewer adminq than device supports */
-			dev_dbg(dev->hwdev, "aq count %d want %d rc %d\n",
-				aq_i, dev->aq_count, rc);
+			ibdev_dbg(&dev->ibdev, "aq count %d want %d rc %d\n",
+				  aq_i, dev->aq_count, rc);
 			break;
 		}
 

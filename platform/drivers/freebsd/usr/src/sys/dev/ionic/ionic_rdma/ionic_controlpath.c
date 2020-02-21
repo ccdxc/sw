@@ -278,7 +278,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	if (rc < 0)
 		goto err_dbid;
 
-	dev_dbg(&dev->ibdev.dev, "user space dbid %u\n", ctx->dbid);
+	ibdev_dbg(&dev->ibdev, "user space dbid %u\n", ctx->dbid);
 
 	mutex_init(&ctx->mmap_mut);
 	ctx->mmap_off = PAGE_SIZE;
@@ -353,7 +353,7 @@ static int ionic_mmap(struct ib_ucontext *ibctx, struct vm_area_struct *vma)
 	mutex_unlock(&ctx->mmap_mut);
 
 	/* not found */
-	dev_dbg(&dev->ibdev.dev, "not found %#lx\n", offset);
+	ibdev_dbg(&dev->ibdev, "not found %#lx\n", offset);
 	rc = -EINVAL;
 	goto out;
 
@@ -362,24 +362,24 @@ found:
 	mutex_unlock(&ctx->mmap_mut);
 
 	if (info->size != size) {
-		dev_dbg(&dev->ibdev.dev, "invalid size %#lx (%#lx)\n",
-			size, info->size);
+		ibdev_dbg(&dev->ibdev, "invalid size %#lx (%#lx)\n",
+			  size, info->size);
 		rc = -EINVAL;
 		goto out;
 	}
 
-	dev_dbg(&dev->ibdev.dev, "writecombine? %d\n", info->writecombine);
+	ibdev_dbg(&dev->ibdev, "writecombine? %d\n", info->writecombine);
 	if (info->writecombine)
 		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
 	else
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 
-	dev_dbg(&dev->ibdev.dev, "remap st %#lx pf %#lx sz %#lx\n",
-		vma->vm_start, info->pfn, size);
+	ibdev_dbg(&dev->ibdev, "remap st %#lx pf %#lx sz %#lx\n",
+		  vma->vm_start, info->pfn, size);
 	rc = io_remap_pfn_range(vma, vma->vm_start, info->pfn, size,
 				vma->vm_page_prot);
 	if (rc)
-		dev_dbg(&dev->ibdev.dev, "remap failed %d\n", rc);
+		ibdev_dbg(&dev->ibdev, "remap failed %d\n", rc);
 
 out:
 	return rc;
@@ -620,7 +620,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	hdr_len -= IB_BTH_BYTES;
 	hdr_len -= IB_DETH_BYTES;
 
-	dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
+	ibdev_dbg(&dev->ibdev, "roce packet header template\n");
 	print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 			     hdr_buf, hdr_len, true);
 
@@ -798,7 +798,7 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 
 	rc = ionic_destroy_ah_cmd(dev, ah->ahid, flags);
 	if (rc) {
-		dev_warn(&dev->ibdev.dev, "destroy_ah error %d\n", rc);
+		ibdev_warn(&dev->ibdev, "destroy_ah error %d\n", rc);
 		return rc;
 	}
 
@@ -1105,7 +1105,7 @@ static int ionic_map_mr_page(struct ib_mr *ibmr, u64 dma)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 
-	dev_dbg(&dev->ibdev.dev, "dma %p\n", (void *)dma);
+	ibdev_dbg(&dev->ibdev, "dma %p\n", (void *)dma);
 	return ionic_pgtbl_page(&mr->buf, dma);
 }
 
@@ -1126,7 +1126,7 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
 
-	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
+	ibdev_dbg(&dev->ibdev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
 	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
@@ -1436,7 +1436,7 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 
 	rc = ionic_destroy_cq_cmd(dev, cq->cqid);
 	if (rc) {
-		dev_warn(&dev->ibdev.dev, "destroy_cq error %d\n", rc);
+		ibdev_warn(&dev->ibdev, "destroy_cq error %d\n", rc);
 		return rc;
 	}
 
@@ -1609,7 +1609,7 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 		hdr_len -= IB_BTH_BYTES;
 		hdr_len -= IB_DETH_BYTES;
 
-		dev_dbg(&dev->ibdev.dev, "roce packet header template\n");
+		ibdev_dbg(&dev->ibdev, "roce packet header template\n");
 		print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 				     hdr_buf, hdr_len, true);
 
@@ -1944,9 +1944,9 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 		qp->sq_spec = ionic_v1_use_spec_sge(max_sge, sq_spec);
 		if (sq_spec && !qp->sq_spec)
-			dev_dbg(&dev->ibdev.dev,
-				"init sq: max_sge %u disables spec\n",
-				max_sge);
+			ibdev_dbg(&dev->ibdev,
+				  "init sq: max_sge %u disables spec\n",
+				  max_sge);
 
 		wqe_size = ionic_v1_send_wqe_min_size(max_sge, max_data,
 						      qp->sq_spec);
@@ -2148,9 +2148,9 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 		qp->rq_spec = ionic_v1_use_spec_sge(max_sge, rq_spec);
 		if (rq_spec && !qp->rq_spec)
-			dev_dbg(&dev->ibdev.dev,
-				"init rq: max_sge %u disables spec\n",
-				max_sge);
+			ibdev_dbg(&dev->ibdev,
+				  "init rq: max_sge %u disables spec\n",
+				  max_sge);
 
 		wqe_size = ionic_v1_recv_wqe_min_size(max_sge, qp->rq_spec);
 		rc = ionic_queue_init(&qp->rq, dev->hwdev,

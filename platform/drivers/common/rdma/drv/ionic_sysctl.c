@@ -39,7 +39,7 @@ static SYSCTL_NODE(_hw, OID_AUTO, ionic_rdma, CTLFLAG_RD, 0,
 
 bool ionic_dyndbg_enable = false;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dyndbg_enable, CTLFLAG_RWTUN,
-    &ionic_dyndbg_enable, 0, "Print to dmesg for dev_dbg, et al");
+    &ionic_dyndbg_enable, 0, "Print to dmesg for debug prints");
 
 bool ionic_dbg_enable = true;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbgfs_enable, CTLFLAG_RDTUN,
@@ -395,7 +395,7 @@ static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
 		return -EINVAL;
 
-	dev_warn(&dev->ibdev.dev, "resetting...\n");
+	ibdev_warn(&dev->ibdev, "resetting...\n");
 	ionic_ibdev_reset(dev);
 	return 0;
 }
@@ -421,7 +421,7 @@ static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 
 	oidp = ionic_node(ctx, parent, "info", "Rdma Device Info");
 	if (!oidp) {
-		dev_err(&dev->ibdev.dev, "failed to create info node\n");
+		ibdev_err(&dev->ibdev, "failed to create info node\n");
 		return;
 	}
 
@@ -546,7 +546,7 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
 
 	oidp = ionic_node(ctx, parent, "rdma", "RDMA Device");
 	if (!oidp) {
-		dev_err(&dev->ibdev.dev, "failed to create rdma node\n");
+		ibdev_err(&dev->ibdev, "failed to create rdma node\n");
 		return;
 	}
 

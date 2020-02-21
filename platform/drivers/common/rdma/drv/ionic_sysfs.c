@@ -271,7 +271,7 @@ static ssize_t ionic_dev_reset_write(struct file *fp, const char __user *ubuf,
 	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
 		return -EINVAL;
 
-	dev_warn(&dev->ibdev.dev, "resetting...\n");
+	ibdev_warn(&dev->ibdev, "resetting...\n");
 	ionic_ibdev_reset(dev);
 	return count;
 }
