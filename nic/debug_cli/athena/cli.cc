@@ -30,7 +30,7 @@ cli_init (char *ptr)
     cli_logger_init();
 
     memset(&capri_cfg, 0, sizeof(capri_cfg_t));
-    capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    capri_cfg.cfg_path = std::string(std::getenv("CONFIG_PATH"));
     catalog = catalog::factory(capri_cfg.cfg_path, "",
                                platform_type_t::PLATFORM_TYPE_HW);
     std::string mpart_json = capri_cfg.cfg_path + "/athena/" +
@@ -42,6 +42,8 @@ cli_init (char *ptr)
     // csr init is done inside capri_state_pd_init
     sdk::platform::capri::capri_state_pd_init(&capri_cfg);
 
+    memset(&p4pd_cfg, 0, sizeof(p4pd_cfg_t));
+    p4pd_cfg.cfg_path = std::getenv("CONFIG_PATH");
     api::impl::pipeline_p4_hbm_init(&p4pd_cfg, false);
     pd_inited = 1;
     return 0;

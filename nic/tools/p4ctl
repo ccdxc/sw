@@ -34,7 +34,6 @@ localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
 export LD_LIBRARY_PATH=/nic/lib:/nic/cli
-export HAL_CONFIG_PATH=/nic/conf
 export ASIC_SLAVE_INIT=1
 
 if [ -e /nic/conf/pipeline.json ]; then
@@ -44,7 +43,7 @@ fp=open("/nic/conf/pipeline.json");
 obj=json.load(fp);
 if "pipeline" in obj:
     print(obj["pipeline"])
-else: 
+else:
     print("NA")
         ')
     if [ $pipeline == "NA" ]; then
@@ -58,6 +57,12 @@ fi
 if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ]; then
     echo -e "Error: Invalid pipeline specified in /nic/conf/pipeline.json"
     exit
+fi
+
+if [ $pipeline == "iris" ]; then
+export HAL_CONFIG_PATH=/nic/conf
+else
+export CONFIG_PATH=/nic/conf
 fi
 
 if [[ "$repl" -eq 0 ]]; then
