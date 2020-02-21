@@ -98,8 +98,8 @@ func (p *Pipeline) GetDelphiClient() clientAPI.Client {
 	return p.DelSrv.DelphiClient
 }
 
-// MountDelphiObjects ...
-func (p *Pipeline) MountDelphiObjects() interface{} {
+// MountDSCObjects ...
+func (p *Pipeline) MountDSCObjects() interface{} {
 	// mount objects
 	log.Infof("Mounting naples status rw")
 	delphiProto.DistributedServiceCardStatusMount(p.DelSrv.DelphiClient, delphi.MountMode_ReadWriteMode)

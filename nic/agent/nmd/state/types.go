@@ -112,7 +112,7 @@ type Kind string
 // Pipeline is the APIs provided by respective pipeline modules
 type Pipeline interface {
 	InitDelphi() interface{}
-	MountDelphiObjects() interface{}
+	MountDSCObjects() interface{}
 	InitSysmgr()
 	MountSysmgrObjects() interface{}
 	RunDelphiClient(Agent) interface{}

@@ -25,9 +25,19 @@ func (p *Pipeline) GetDelphiClient() clientAPI.Client {
 	return nil
 }
 
-// MountDelphiObjects ...
-func (p *Pipeline) MountDelphiObjects() interface{} {
+// MountDSCObjects ...
+func (p *Pipeline) MountDSCObjects() interface{} {
+	p.onMountComplete()
 	return nil
+}
+
+func (p *Pipeline) onMountComplete() {
+	log.Info("onMountComplete() called")
+	if err := p.Agent.Nmd.UpdateNaplesConfig(p.Agent.Nmd.GetNaplesConfig()); err != nil {
+		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
+	}
+	p.Agent.Nmd.UpdateCurrentManagementMode()
+	p.Agent.Nmd.CreateIPClient()
 }
 
 // InitSysmgr ...
