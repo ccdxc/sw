@@ -10,7 +10,6 @@ package pds;
 import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
-import "mapping.proto";
 
 service DebugSvc {
   rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
@@ -405,13 +404,30 @@ enum Command {
 }
 
 enum MappingDumpType {
-  MAPPING_DUMP_ALL    = 0;
-  MAPPING_DUMP_LOCAL  = 1;
-  MAPPING_DUMP_REMOTE = 2;
+  MAPPING_DUMP_LOCAL     = 0;
+  MAPPING_DUMP_REMOTE_L2 = 1;
+  MAPPING_DUMP_REMOTE_L3 = 2;
+}
+
+message L3HWMappingKey {
+  uint32          VPCId  = 1;
+  types.IPAddress IPAddr = 2;
+}
+
+message L2HWMappingKey {
+  uint32 SubnetId = 1;
+  uint64 MACAddr  = 2;
+}
+
+message HWMappingKey {
+  oneof keyinfo {
+    L3HWMappingKey IPKey  = 1;
+    L2HWMappingKey MACKey = 2;
+  }
 }
 
 message MappingDumpFilter {
-  pds.MappingKey  Key  = 1;
+  HWMappingKey    Key  = 1;
   MappingDumpType Type = 2;
 }
 

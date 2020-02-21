@@ -279,6 +279,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     pds_local_mapping_spec_t pds_local_mapping;
     pds_local_mapping_spec_t pds_local_v6_mapping;
     pds_remote_mapping_spec_t pds_remote_mapping;
+    pds_remote_mapping_spec_t pds_remote_l2_mapping;
     pds_remote_mapping_spec_t pds_remote_v6_mapping;
     uint16_t vnic_key = 1, ip_base;
     uint32_t ip_offset = 0, remote_slot = 1025;
@@ -387,6 +388,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             "create v4 local mapping failed, ret %u", rv);
 
     // create remote mappings
+    uint64_t mac_uint64;
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         tep_offset = 2;
@@ -435,6 +437,23 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                         "create v4 remote mapping failed, vpc %u, ret %u",
                                         i, rv);
+
+                if (apulu()) {
+                    // l2 mapping
+                    pds_remote_l2_mapping = pds_remote_mapping;
+                    pds_remote_l2_mapping.skey.type = PDS_MAPPING_TYPE_L2;
+                    pds_remote_l2_mapping.skey.subnet =
+                        test::int2pdsobjkey(PDS_SUBNET_ID((i - 1), num_subnets, j));
+                    mac_uint64 = (uint64_t)((uint64_t)1 << 33);
+                    mac_uint64 = (mac_uint64 | (((uint64_t)i & 0x7FF) << 22) |
+                                  ((j & 0x7FF) << 11) | ((num_vnics + k) & 0x7FF));
+                    MAC_UINT64_TO_ADDR(pds_remote_l2_mapping.skey.mac_addr, mac_uint64);
+                    pds_remote_l2_mapping.subnet = pds_remote_l2_mapping.skey.subnet;
+                    rv = create_remote_mapping(&pds_remote_l2_mapping);
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "create l2 remote mapping failed, subnet %u, ret %u",
+                                            i, rv);
+                }
 
                 if (g_test_params.dual_stack) {
                     // V6 mapping

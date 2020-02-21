@@ -147,11 +147,9 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
         local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
         local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
         sdk_ret_t                   ret;
-        vpc_entry                   *vpc;
 
-        vpc = vpc_db()->find(&mapping_args->skey.vpc);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
-                                             vpc->hw_id(),
+                                             mapping_args->skey.vpc,
                                              &mapping_args->skey.ip_addr,
                                              true);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,

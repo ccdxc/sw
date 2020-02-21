@@ -723,13 +723,13 @@ static inline mapping_dump_type_t
 proto_mapping_dump_type_to_pds (pds::MappingDumpType type)
 {
     switch (type) {
+    case pds::MAPPING_DUMP_REMOTE_L2:
+        return MAPPING_DUMP_TYPE_REMOTE_L2;
+    case pds::MAPPING_DUMP_REMOTE_L3:
+        return MAPPING_DUMP_TYPE_REMOTE_L3;
     case pds::MAPPING_DUMP_LOCAL:
-        return MAPPING_DUMP_TYPE_LOCAL;
-    case pds::MAPPING_DUMP_REMOTE:
-        return MAPPING_DUMP_TYPE_REMOTE;
-    case pds::MAPPING_DUMP_ALL:
     default:
-        return MAPPING_DUMP_TYPE_ALL;
+        return MAPPING_DUMP_TYPE_LOCAL;
     }
 }
 
@@ -742,17 +742,30 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
     cmd_ctxt->cmd = pds_proto_cmd_to_api_cmd(proto_ctxt->cmd());
     if (proto_ctxt->has_mappingdumpfilter()) {
         cmd_ctxt->args.valid = true;
-        if (proto_ctxt->mappingdumpfilter().has_key()) {
-            auto key = proto_ctxt->mappingdumpfilter().key();
-            cmd_ctxt->args.mapping_dump.key_valid = true;
-            pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.vpc,
-                                          key.ipkey().vpcid());
-            ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.ip_addr,
-                                          key.ipkey().ipaddr());
-        }
         cmd_ctxt->args.mapping_dump.type =
                 proto_mapping_dump_type_to_pds(
                 proto_ctxt->mappingdumpfilter().type());
+        if (proto_ctxt->mappingdumpfilter().has_key()) {
+            auto key = proto_ctxt->mappingdumpfilter().key();
+            cmd_ctxt->args.mapping_dump.key_valid = true;
+            switch (cmd_ctxt->args.mapping_dump.type) {
+            case MAPPING_DUMP_TYPE_LOCAL:
+            case MAPPING_DUMP_TYPE_REMOTE_L3:
+                cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L3;
+                cmd_ctxt->args.mapping_dump.skey.vpc = key.ipkey().vpcid();
+                ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.ip_addr,
+                                              key.ipkey().ipaddr());
+                break;
+            case MAPPING_DUMP_TYPE_REMOTE_L2:
+                cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L2;
+                cmd_ctxt->args.mapping_dump.skey.subnet = key.mackey().subnetid();
+                MAC_UINT64_TO_ADDR(cmd_ctxt->args.mapping_dump.skey.mac_addr,
+                                   key.mackey().macaddr());
+                break;
+            default:
+                break;
+            }
+        }
     }
 }
 

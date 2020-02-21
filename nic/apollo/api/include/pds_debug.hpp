@@ -72,14 +72,30 @@ typedef struct session_stats_entry_s {
 } pds_session_debug_stats_t;
 
 typedef enum mapping_dump_type_e {
-    MAPPING_DUMP_TYPE_ALL = 0,
-    MAPPING_DUMP_TYPE_LOCAL,
-    MAPPING_DUMP_TYPE_REMOTE,
+    MAPPING_DUMP_TYPE_LOCAL = 0,
+    MAPPING_DUMP_TYPE_REMOTE_L2,
+    MAPPING_DUMP_TYPE_REMOTE_L3,
 } mapping_dump_type_t;
+
+typedef struct mapping_hw_key_s {
+    pds_mapping_type_t type;
+    union {
+        ///< L3 key
+        struct {
+            uint32_t  vpc;        ///< HW ID of VPC this IP belongs to
+            ip_addr_t ip_addr;    ///< IP address of the mapping
+        };
+        ///< L2 key
+        struct {
+            uint32_t   subnet;    ///< HW ID of subnet of the mapping
+            mac_addr_t mac_addr;  ///< MAC address of the mapping
+        };
+    };
+} mapping_hw_key_t;
 
 typedef struct mapping_dump_args_s {
     bool key_valid;
-    pds_mapping_key_t skey;
+    mapping_hw_key_t skey;
     mapping_dump_type_t type;
 } mapping_dump_args_t;
 

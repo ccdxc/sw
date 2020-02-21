@@ -18,6 +18,7 @@
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -111,6 +112,19 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
+/// \brief     function to print local mapping header
+/// \param[in] fd   file descriptor to print to
+static void
+local_mapping_print_header (int fd)
+{
+    dprintf(fd, "%s\n", std::string(143, '-').c_str());
+    dprintf(fd, "%-7s%-40s%-40s%-7s%-8s%-7s%-16s%-18s\n",
+            "VpcID", "PrivateIP", "PublicIP",
+            "VnicID", "NhType", "Tunnel",
+            "FabricEncap", "MAC");
+    dprintf(fd, "%s\n", std::string(143, '-').c_str());
+}
+
 /// \brief     callback function to dump local mapping entries
 /// \param[in] params   sdk_table_api_params_t structure
 void
@@ -176,17 +190,28 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data.nexthop_type);
 
-    dprintf(fd, "%-7u%-7u%-8s%-7u%-40s%-40s%-16s%-18s\n",
-            vpc_id, data->vnic_id, nexthop_type.c_str(),
+    dprintf(fd, "%-7u%-40s%-40s%-7u%-8s%-7u%-16s%-18s\n",
+            vpc_id, ipaddr2str(&private_ip), ipaddr2str(&public_ip),
+            data->vnic_id, nexthop_type.c_str(),
             mapping_data.nexthop_id,
-            ipaddr2str(&private_ip), ipaddr2str(&public_ip),
             pds_encap2str(&encap), macaddr2str(overlay_mac));
 }
 
-/// \brief     callback function to dump remote mapping entries
+/// \brief     function to print l3 mapping header
+/// \param[in] fd   file descriptor to print to
+static void
+remote_mapping_print_l3_header (int fd)
+{
+    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+    dprintf(fd, "%-7s%-40s%-8s%-7s%-18s\n",
+            "VpcID", "PrivateIP", "NhType", "Tunnel", "MAC");
+    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+}
+
+/// \brief     callback function to dump remote l3 mapping entries
 /// \param[in] params   sdk_table_api_params_t structure
 static void
-remote_mapping_dump_cb (sdk_table_api_params_t *params)
+remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
 {
     mapping_swkey_t         *mapping_key;
     mapping_appdata_t       *mapping_data;
@@ -202,6 +227,11 @@ remote_mapping_dump_cb (sdk_table_api_params_t *params)
 
     mapping_key = (mapping_swkey_t *)(params->key);
     mapping_data = (mapping_appdata_t *)(params->appdata);
+
+    // skip l2 mappings
+    if (mapping_key->p4e_i2e_mapping_lkp_type == KEY_TYPE_MAC) {
+        return;
+    }
 
     vpc_id = mapping_key->p4e_i2e_mapping_lkp_id;
     private_ip.af = (mapping_key->p4e_i2e_mapping_lkp_type == KEY_TYPE_IPV6) ?
@@ -229,39 +259,81 @@ remote_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
 
-    dprintf(fd, "%-7u%-7s%-8s%-7u%-40s%-40s%-16s%-18s\n",
-            vpc_id, "-", nexthop_type.c_str(),
+    dprintf(fd, "%-7u%-40s%-8s%-7u%-18s\n",
+            vpc_id,  ipaddr2str(&private_ip),
+            nexthop_type.c_str(),
             mapping_data->nexthop_id,
-            ipaddr2str(&private_ip), "-",
-            pds_encap2str(&encap), macaddr2str(overlay_mac));
+            macaddr2str(overlay_mac));
+}
+
+/// \brief     function to print l2 mapping header
+/// \param[in] fd   file descriptor to print to
+static void
+remote_mapping_print_l2_header (int fd)
+{
+    dprintf(fd, "%s\n", std::string(42, '-').c_str());
+    dprintf(fd, "%-9s%-18s%-8s%-7s\n",
+            "SubnetID", "MAC", "NhType", "Tunnel");
+    dprintf(fd, "%s\n", std::string(42, '-').c_str());
+}
+
+/// \brief     callback function to dump remote l2 mapping entries
+/// \param[in] params   sdk_table_api_params_t structure
+static void
+remote_l2_mapping_dump_cb (sdk_table_api_params_t *params)
+{
+    mapping_swkey_t         *mapping_key;
+    mapping_appdata_t       *mapping_data;
+    uint16_t                subnet_id;
+    int                     fd = *(int *)(params->cbdata);
+    p4pd_error_t            p4pd_ret;
+    sdk_ret_t               ret;
+    bd_actiondata_t         bd_data;
+    mac_addr_t              mac;
+    string                  nexthop_type;
+
+    mapping_key = (mapping_swkey_t *)(params->key);
+    mapping_data = (mapping_appdata_t *)(params->appdata);
+
+    // skip l3 mappings
+    if (mapping_key->p4e_i2e_mapping_lkp_type != KEY_TYPE_MAC) {
+        return;
+    }
+
+    subnet_id = mapping_key->p4e_i2e_mapping_lkp_id;
+    sdk::lib::memrev(mac, mapping_key->p4e_i2e_mapping_lkp_addr, ETH_ADDR_LEN);
+
+    nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
+
+    dprintf(fd, "%-9u%-18s%-8s%-7u\n",
+            subnet_id, macaddr2str(mac),
+            nexthop_type.c_str(),
+            mapping_data->nexthop_id);
 }
 
 sdk_ret_t
 mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
     sdk_table_api_params_t api_params = { 0 };
-    mapping_dump_type_t    type = MAPPING_DUMP_TYPE_ALL;
+    mapping_dump_type_t    type;
 
-    dprintf(fd, "%s\n", std::string(142, '-').c_str());
-    dprintf(fd, "%-7s%-7s%-8s%-7s%-40s%-40s%-16s%-18s\n",
-            "VpcID", "VnicID", "NhType", "Tunnel",
-            "PrivateIP", "PublicIP", "FabricEncap",
-            "MAC");
-    dprintf(fd, "%s\n", std::string(142, '-').c_str());
-
-    if (!args || !args->mapping_dump.key_valid) {
-        if (args) {
-            type = args->mapping_dump.type;
-        }
-        if (type == MAPPING_DUMP_TYPE_ALL ||
-            type == MAPPING_DUMP_TYPE_LOCAL) {
+    if (!args->mapping_dump.key_valid) {
+        type = args->mapping_dump.type;
+        if (type == MAPPING_DUMP_TYPE_LOCAL) {
+            local_mapping_print_header(fd);
             api_params.itercb = local_mapping_dump_cb;
             api_params.cbdata = &fd;
             local_mapping_tbl_->iterate(&api_params);
         }
         // TODO: skip local entries from remote table
-        if (type == MAPPING_DUMP_TYPE_ALL ||
-            type == MAPPING_DUMP_TYPE_REMOTE) {
-            api_params.itercb = remote_mapping_dump_cb;
+        if (type == MAPPING_DUMP_TYPE_REMOTE_L3) {
+            remote_mapping_print_l3_header(fd);
+            api_params.itercb = remote_l3_mapping_dump_cb;
+            api_params.cbdata = &fd;
+            mapping_tbl_->iterate(&api_params);
+        }
+        if (type == MAPPING_DUMP_TYPE_REMOTE_L2) {
+            remote_mapping_print_l2_header(fd);
+            api_params.itercb = remote_l2_mapping_dump_cb;
             api_params.cbdata = &fd;
             mapping_tbl_->iterate(&api_params);
         }
@@ -269,16 +341,13 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
         mapping_dump_args_t *mapping_args = &args->mapping_dump;
         type = mapping_args->type;
 
-        if (type == MAPPING_DUMP_TYPE_ALL ||
-            type == MAPPING_DUMP_TYPE_LOCAL) {
+        if (type == MAPPING_DUMP_TYPE_LOCAL) {
             local_mapping_swkey_t       local_ip_mapping_key;
             local_mapping_appdata_t     local_ip_mapping_data;
             sdk_ret_t                   ret;
-            vpc_entry                   *vpc;
 
-            vpc = vpc_db()->find(&mapping_args->skey.vpc);
             PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
-                                                 ((vpc_impl *)vpc->impl())->hw_id(),
+                                                 mapping_args->skey.vpc,
                                                  &mapping_args->skey.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                            NULL, &local_ip_mapping_data, 0,
@@ -287,19 +356,17 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
 
             ret = local_mapping_tbl_->get(&api_params);
             if (ret == SDK_RET_OK) {
+                local_mapping_print_header(fd);
                 local_mapping_dump_cb(&api_params);
             }
         }
-        if (type == MAPPING_DUMP_TYPE_ALL ||
-            type == MAPPING_DUMP_TYPE_REMOTE) {
+        if (type == MAPPING_DUMP_TYPE_REMOTE_L3) {
             mapping_swkey_t       mapping_key = { 0 };
             mapping_appdata_t     mapping_data = { 0 };
             sdk_ret_t             ret;
-            vpc_entry             *vpc;
 
-            vpc = vpc_db()->find(&mapping_args->skey.vpc);
             PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           mapping_args->skey.vpc,
                                            &mapping_args->skey.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key, NULL,
                                            &mapping_data, 0,
@@ -307,7 +374,26 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             api_params.cbdata = &fd;
             ret = mapping_tbl_->get(&api_params);
             if (ret == SDK_RET_OK) {
-                remote_mapping_dump_cb(&api_params);
+                remote_mapping_print_l3_header(fd);
+                remote_l3_mapping_dump_cb(&api_params);
+            }
+        }
+        if (type == MAPPING_DUMP_TYPE_REMOTE_L2) {
+            mapping_swkey_t       mapping_key = { 0 };
+            mapping_appdata_t     mapping_data = { 0 };
+            sdk_ret_t             ret;
+
+            PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
+                                           mapping_args->skey.subnet,
+                                           mapping_args->skey.mac_addr);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key, NULL,
+                                           &mapping_data, 0,
+                                           sdk::table::handle_t::null());
+            api_params.cbdata = &fd;
+            ret = mapping_tbl_->get(&api_params);
+            if (ret == SDK_RET_OK) {
+                remote_mapping_print_l2_header(fd);
+                remote_l2_mapping_dump_cb(&api_params);
             }
         }
     }
