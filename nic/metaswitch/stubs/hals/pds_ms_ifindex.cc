@@ -51,7 +51,7 @@ struct lif_walk_ctxt_t {
 bool lif_walk_cb(void* obj, void* ctxt) {
     auto lif =  (api::impl::lif_impl *) obj;
     auto lif_ctxt = (lif_walk_ctxt_t *) ctxt;
-    SDK_TRACE_VERBOSE("Pinned uplink 0x%x Ifname %s",
+    PDS_TRACE_VERBOSE("Pinned uplink 0x%x Ifname %s",
                       lif->pinned_ifindex(), lif->name());
     if (lif->pinned_ifindex() == lif_ctxt->pds_ifindex) {
         lif_ctxt->ifname = lif->name();
@@ -67,10 +67,10 @@ pds_ifindex_to_ifname (uint32_t pds_ifindex)
     ctxt.pds_ifindex = pds_ifindex;
 
     if (lif_db() != nullptr) {
+        PDS_TRACE_VERBOSE("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
         lif_db()->walk(lif_walk_cb, &ctxt);
-        SDK_TRACE_VERBOSE("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
         if (!ctxt.ifname.empty()) {
-            SDK_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());
+            PDS_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());
             return ctxt.ifname;
         }
     }
@@ -85,7 +85,7 @@ pds_ifindex_to_ifname (uint32_t pds_ifindex)
     std::string if_name = "dsc";
 #endif
     if_name += std::to_string(ETH_IFINDEX_TO_PARENT_PORT(pds_ifindex)-1);
-    SDK_TRACE_INFO("PDS IfIndex 0x%x not found in LIF DB Walk Hardcoding Ifname %s",
+    PDS_TRACE_INFO("PDS IfIndex 0x%x not found in LIF DB Walk Hardcoding Ifname %s",
                    pds_ifindex, if_name.c_str());
     return if_name;
 }
@@ -139,8 +139,8 @@ lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
         PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
                           lnx_ifindex, ms_ifindex);
     } else {
-        PDS_TRACE_ERR("MS UserExit: Lnx IfIndex 0x%lx -> "
-                      "Ms IfIndex conversion Failed", lnx_ifindex);
+        PDS_TRACE_VERBOSE("MS UserExit: Lnx IfIndex 0x%lx -> "
+                          "Ms IfIndex conversion Failed", lnx_ifindex);
     }
     return ms_ifindex; 
 }
