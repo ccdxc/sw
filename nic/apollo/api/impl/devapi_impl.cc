@@ -53,7 +53,8 @@ devapi_impl::destroy(devapi *impl) {
     SDK_FREE(SDK_MEM_ALLOC_DEVAPI_IMPL, impl);
 }
 
-static void lif_spec_from_info(pds_lif_spec_t &spec, lif_info_t *info)
+static void
+lif_spec_from_info (pds_lif_spec_t &spec, lif_info_t *info)
 {
     spec.key = uuid_from_objid(LIF_IFINDEX(info->lif_id));
     spec.id = info->lif_id;
@@ -250,7 +251,7 @@ devapi_impl::lif_upd_mcast_filter(uint32_t lif_id,
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::lif_upd_rx_en(uint32_t lif_id, bool rx_en){
     PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
@@ -504,28 +505,28 @@ devapi_impl::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t chan
     return SDK_RET_OK;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_impl::swm_enable_tx (uint32_t channel)
 {
     PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
-    
-sdk_ret_t 
+
+sdk_ret_t
 devapi_impl::swm_disable_tx(uint32_t channel)
 {
     PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
-    
-sdk_ret_t 
+
+sdk_ret_t
 devapi_impl::swm_enable_rx(uint32_t channel)
 {
     PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
-    
-sdk_ret_t 
+
+sdk_ret_t
 devapi_impl::swm_disable_rx(uint32_t channel)
 {
     PDS_TRACE_DEBUG("Not provided");

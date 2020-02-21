@@ -107,7 +107,6 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                           spec->subnet.str(), spec->key.str());
             return sdk::SDK_RET_INVALID_ARG;
         }
-
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) ||
             (spec->host_if == k_pds_obj_key_invalid)) {
             // allocate hw id for this vnic
@@ -121,11 +120,23 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         } else {
             lif = lif_impl_db()->find(&spec->host_if);
             // inherit vnic hw id of the corresponding lif
-            if (lif->type() != sdk::platform::LIF_TYPE_HOST) {
+            if (unlikely(lif == NULL)) {
+                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, host "
+                              "lif %s not found", spec->key.str(),
+                              spec->host_if.str());
+                return SDK_RET_INVALID_ARG;
+            }
+            if (unlikely(lif->type() != sdk::platform::LIF_TYPE_HOST)) {
                 PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",
                               lif->type(), spec->host_if.str(),
                               spec->key.str());
                 return SDK_RET_INVALID_ARG;
+            }
+            if (lif->state() != sdk::types::LIF_STATE_UP) {
+                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, hosot "
+                              "lif %s is not up, current state %u", spec->key.str(),
+                              spec->host_if.str(), lif->state());
+                return SDK_RET_RETRY;
             }
             hw_id_ = lif->vnic_hw_id();
         }

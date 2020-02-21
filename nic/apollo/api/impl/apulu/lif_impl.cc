@@ -62,9 +62,11 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     pinned_if_idx_ = spec->pinned_ifidx;
     type_ = spec->type;
     memcpy(mac_, spec->mac, ETH_ADDR_LEN);
+    memset(name_, 0, sizeof(name_));
     ifindex_ = LIF_IFINDEX(id_);
     nh_idx_ = 0xFFFFFFFF;
     vnic_hw_id_ = 0xFFFF;
+    state_ = sdk::types::LIF_STATE_NONE;
     ht_ctxt_.reset();
     id_ht_ctxt_.reset();
 }
