@@ -660,6 +660,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 			}
 		}
 	};
+	enum ionic_admin_flags admin_flags = 0;
 	struct ib_ud_header *hdr;
 	dma_addr_t hdr_dma = 0;
 	void *hdr_buf;
@@ -671,6 +672,8 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 
 	if (flags & RDMA_CREATE_AH_SLEEPABLE)
 		gfp = GFP_KERNEL;
+	else
+		admin_flags |= IONIC_ADMIN_F_BUSYWAIT;
 
 	hdr = kmalloc(sizeof(*hdr), gfp);
 	if (!hdr) {
@@ -709,27 +712,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	wr.wqe.ah.length = cpu_to_le32(hdr_len);
 
 	ionic_admin_post(dev, &wr);
-
-	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
-		ionic_admin_wait(&wr);
-		rc = 0;
-	} else {
-		rc = ionic_admin_busy_wait(&wr);
-	}
-
-	if (rc) {
-		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(&wr);
-	} else if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
+	rc = ionic_admin_wait(dev, &wr, admin_flags);
 
 	dma_unmap_single(dev->hwdev, hdr_dma, hdr_len,
 			 DMA_TO_DEVICE);
@@ -774,18 +757,7 @@ static int ionic_query_ah_cmd(struct ionic_ibdev *dev,
 	wr.wqe.query_ah.dma_addr = cpu_to_le64(hdr_dma);
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
-
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
+	rc = ionic_admin_wait(dev, &wr, 0);
 
 	dma_unmap_single(dev->hwdev, hdr_dma, PAGE_SIZE, DMA_FROM_DEVICE);
 
@@ -807,40 +779,21 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 			.id_ver = cpu_to_le32(ahid),
 		}
 	};
-	int rc;
+	enum ionic_admin_flags admin_flags = IONIC_ADMIN_F_TEARDOWN;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_DESTROY_AH)
 		return -ENOSYS;
 
+	if (!(flags & RDMA_CREATE_AH_SLEEPABLE))
+		admin_flags |= IONIC_ADMIN_F_BUSYWAIT;
+
 	ionic_admin_post(dev, &wr);
+	ionic_admin_wait(dev, &wr, admin_flags);
 
-	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
-		ionic_admin_wait(&wr);
-		rc = 0;
-	} else {
-		rc = ionic_admin_busy_wait(&wr);
-	}
-
-	if (rc) {
-		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(&wr);
-
-		/* No host-memory resource is associated with ah, so it is ok
-		 * to "succeed" and complete this destroy ah on the host.
-		 */
-		rc = 0;
-	} else if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = 0;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	/* No host-memory resource is associated with ah, so it is ok
+	 * to "succeed" and complete this destroy ah on the host.
+	 */
+	return 0;
 }
 
 #ifdef HAVE_CREATE_AH_UDATA
@@ -1029,19 +982,9 @@ static int ionic_create_mr_cmd(struct ionic_ibdev *dev,
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
-
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
+	rc = ionic_admin_wait(dev, &wr, 0);
+	if (!rc)
 		mr->created = true;
-		rc = 0;
-	}
 
 	return rc;
 }
@@ -1055,26 +998,13 @@ static int ionic_destroy_mr_cmd(struct ionic_ibdev *dev, u32 mrid)
 			.id_ver = cpu_to_le32(mrid),
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_DESTROY_MR)
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = 0;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_TEARDOWN);
 }
 
 static struct ib_mr *ionic_get_dma_mr(struct ib_pd *ibpd, int access)
@@ -1467,26 +1397,13 @@ static int ionic_create_cq_cmd(struct ionic_ibdev *dev,
 			}
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_CREATE_CQ)
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, 0);
 }
 
 static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
@@ -1498,26 +1415,13 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 			.id_ver = cpu_to_le32(cqid),
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_DESTROY_CQ)
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = 0;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_TEARDOWN);
 }
 
 int ionic_create_cq_common(struct ionic_cq *cq,
@@ -1811,7 +1715,6 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 			}
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_CREATE_QP)
 		return -ENOSYS;
@@ -1839,20 +1742,8 @@ static int ionic_create_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, 0);
 }
 
 static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
@@ -1972,18 +1863,8 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 	}
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
+	rc = ionic_admin_wait(dev, &wr, 0);
 
 	if (mask & IB_QP_AV)
 		dma_unmap_single(dev->hwdev, hdr_dma, hdr_len,
@@ -2078,18 +1959,8 @@ static int ionic_query_qp_cmd(struct ionic_ibdev *dev,
 	wr.wqe.query_qp.ah_id = cpu_to_le32(qp->ahid);
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
+	rc = ionic_admin_wait(dev, &wr, 0);
 
 	dma_unmap_single(dev->hwdev, query_sqdma, sizeof(*query_sqbuf),
 			 DMA_FROM_DEVICE);
@@ -2160,26 +2031,13 @@ static int ionic_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 			.id_ver = cpu_to_le32(qpid),
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_DESTROY_QP)
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
-	ionic_admin_wait(&wr);
 
-	if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = 0;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_TEARDOWN);
 }
 
 static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,

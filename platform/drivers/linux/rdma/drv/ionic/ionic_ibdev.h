@@ -61,6 +61,12 @@ enum ionic_admin_state {
 	IONIC_ADMIN_KILLED, /* not submitting, locally completed */
 };
 
+enum ionic_admin_flags {
+	IONIC_ADMIN_F_BUSYWAIT  = BIT(0),	/* Don't sleep */
+	IONIC_ADMIN_F_TEARDOWN  = BIT(1),	/* In destroy path */
+	IONIC_ADMIN_F_INTERRUPT = BIT(2),	/* Interruptible w/timeout */
+};
+
 struct ionic_mmap_info {
 	struct list_head ctx_ent;
 	unsigned long offset;
@@ -486,10 +492,8 @@ static inline void ionic_cq_complete(struct kref *kref)
 /* ionic_admin.c */
 extern struct workqueue_struct *ionic_evt_workq;
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
-void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr);
-void ionic_admin_wait(struct ionic_admin_wr *wr);
-int ionic_admin_busy_wait(struct ionic_admin_wr *wr);
-void ionic_admin_cancel(struct ionic_admin_wr *wr);
+int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
+		     enum ionic_admin_flags);
 
 int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev);
 

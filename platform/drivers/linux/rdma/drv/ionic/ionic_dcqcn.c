@@ -127,7 +127,6 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 			.id_ver = cpu_to_le32(prof_i + 1),
 		}
 	};
-	long timeout;
 	int rc;
 
 	wr.wqe.mod_dcqcn.np_incp_802p_prio =
@@ -190,28 +189,7 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 
 	ionic_admin_post(dev, &wr);
 
-	timeout = wait_for_completion_interruptible_timeout(&wr.work, HZ);
-	if (timeout > 0)
-		rc = 0;
-	else if (timeout == 0)
-		rc = -ETIMEDOUT;
-	else
-		rc = timeout;
-
-	if (rc) {
-		dev_warn(&dev->ibdev.dev, "wait %d\n", rc);
-		ionic_admin_cancel(&wr);
-	} else if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
+	rc = ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_INTERRUPT);
 	if (rc) {
 		pr_warn("ionic_rdma: dcqcn profile not set on device %d\n",
 			1 + prof_i);

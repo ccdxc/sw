@@ -323,7 +323,7 @@ static void ionic_admin_work(struct work_struct *ws)
 	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
-void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr)
+static void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr)
 {
 	unsigned long irqflags;
 	bool poll;
@@ -347,7 +347,7 @@ void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
 }
 
-void ionic_admin_cancel(struct ionic_admin_wr *wr)
+static void ionic_admin_cancel(struct ionic_admin_wr *wr)
 {
 	struct ionic_aq *aq = wr->aq;
 	unsigned long irqflags;
@@ -363,12 +363,7 @@ void ionic_admin_cancel(struct ionic_admin_wr *wr)
 	spin_unlock_irqrestore(&aq->lock, irqflags);
 }
 
-void ionic_admin_wait(struct ionic_admin_wr *wr)
-{
-	wait_for_completion(&wr->work);
-}
-
-int ionic_admin_busy_wait(struct ionic_admin_wr *wr)
+static int ionic_admin_busy_wait(struct ionic_admin_wr *wr)
 {
 	struct ionic_aq *aq = wr->aq;
 	unsigned long irqflags;
@@ -397,6 +392,57 @@ int ionic_admin_busy_wait(struct ionic_admin_wr *wr)
 	/* unreachable */
 	return -EINTR;
 }
+
+int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
+		     enum ionic_admin_flags flags)
+{
+	int rc, timo;
+
+	if (flags & IONIC_ADMIN_F_BUSYWAIT) {
+		/* Spin */
+		rc = ionic_admin_busy_wait(wr);
+	} else if (flags & IONIC_ADMIN_F_INTERRUPT) {
+		/*
+		 * Interruptible sleep, 1s timeout
+		 * This is used for commands which are safe for the caller
+		 * to clean up without killing and resetting the adminq.
+		 */
+		timo = wait_for_completion_interruptible_timeout(&wr->work,
+								 HZ);
+		if (timo > 0)
+			rc = 0;
+		else if (timo == 0)
+			rc = -ETIMEDOUT;
+		else
+			rc = timo;
+	} else {
+		/*
+		 * Uninterruptible sleep
+		 * This is used for commands which are NOT safe for the
+		 * caller to clean up. Cleanup must be handled by the
+		 * adminq kill and reset process so that host memory is
+		 * not corrupted by the device.
+		 */
+		wait_for_completion(&wr->work);
+		rc = 0;
+	}
+
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
+		ionic_admin_cancel(wr);
+	} else if (wr->status == IONIC_ADMIN_KILLED) {
+		dev_dbg(&dev->ibdev.dev, "killed\n");
+
+		/* No error if admin already killed during teardown */
+		rc = (flags & IONIC_ADMIN_F_TEARDOWN) ? 0 : -ENODEV;
+	} else if (ionic_v1_cqe_error(&wr->cqe)) {
+		dev_warn(&dev->ibdev.dev, "error %u\n",
+			 be32_to_cpu(wr->cqe.status_length));
+		rc = -EINVAL;
+	}
+	return rc;
+}
+
 
 static int ionic_verbs_status_to_rc(u32 status)
 {

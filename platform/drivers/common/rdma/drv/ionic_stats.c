@@ -105,29 +105,13 @@ static int ionic_stats_cmd(struct ionic_ibdev *dev,
 			}
 		}
 	};
-	int rc;
 
 	if (dev->admin_opcodes <= op)
 		return -ENOSYS;
 
 	ionic_admin_post(dev, &wr);
 
-	rc = wait_for_completion_interruptible(&wr.work);
-	if (rc) {
-		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
-		ionic_admin_cancel(&wr);
-	} else if (wr.status == IONIC_ADMIN_KILLED) {
-		dev_dbg(&dev->ibdev.dev, "killed\n");
-		rc = -ENODEV;
-	} else if (ionic_v1_cqe_error(&wr.cqe)) {
-		dev_warn(&dev->ibdev.dev, "error %u\n",
-			 be32_to_cpu(wr.cqe.status_length));
-		rc = -EINVAL;
-	} else {
-		rc = 0;
-	}
-
-	return rc;
+	return ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_INTERRUPT);
 }
 
 static int ionic_stats_hdrs_cmd(struct ionic_ibdev *dev,

@@ -733,7 +733,6 @@ static int ionic_aq_ctrl_write(void *context, const char *buf, size_t count)
 	struct ionic_aq *aq = context;
 	struct ionic_dbg_admin_wr *wr =
 		container_of(aq->debug_wr, struct ionic_dbg_admin_wr, wr);
-	long timeout;
 	int val, num, pos = 0, rc = 0;
 
 	if (buf[count]) {
@@ -753,29 +752,14 @@ static int ionic_aq_ctrl_write(void *context, const char *buf, size_t count)
 
 			reinit_completion(&wr->wr.work);
 
-			ionic_admin_post_aq(aq, &wr->wr);
+			ionic_admin_post(aq->dev, &wr->wr);
 
-			timeout = wait_for_completion_interruptible_timeout(
-							     &wr->wr.work, HZ);
-			if (timeout > 0)
-				rc = 0;
-			else if (timeout == 0)
-				rc = -ETIMEDOUT;
-			else
-				rc = timeout;
-
+			rc = ionic_admin_wait(aq->dev, &wr->wr,
+					      IONIC_ADMIN_F_INTERRUPT);
 			if (rc) {
-				dev_warn(&aq->dev->ibdev.dev, "wait %d\n", rc);
-				ionic_admin_cancel(&wr->wr);
-				goto out;
-			} else if (wr->wr.status == IONIC_ADMIN_KILLED) {
-				dev_dbg(&aq->dev->ibdev.dev, "killed\n");
-				rc = 0;
-				goto out;
-			} else if (ionic_v1_cqe_error(&wr->wr.cqe)) {
-				dev_warn(&aq->dev->ibdev.dev, "cqe error %u\n",
-					 be32_to_cpu(wr->wr.cqe.status_length));
-				rc = -EINVAL;
+				if (rc == -ENODEV)
+					/* No error, just bail out */
+					rc = 0;
 				goto out;
 			}
 			continue;
