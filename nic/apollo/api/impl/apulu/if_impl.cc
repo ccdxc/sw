@@ -117,6 +117,16 @@ if_impl::nuke_resources(api_base *api_obj) {
     return this->release_resources(api_obj);
 }
 
+uint32_t
+if_impl::port(if_entry *intf) {
+    const if_entry *eth_if = if_entry::eth_if(intf);
+
+    if (eth_if == NULL) {
+        return 0xFFFF;
+    }
+    return g_pds_state.catalogue()->ifindex_to_tm_port(eth_if->ifindex());
+}
+
 #define lif_action         action_u.lif_lif_info
 #define p4i_device_info    action_u.p4i_device_info_p4i_device_info
 sdk_ret_t
@@ -140,7 +150,7 @@ if_impl::program_l3_if_(if_entry *intf, pds_if_spec_t *spec) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
     // TODO: cleanup capri dependency
-    port_num = intf->port();
+    port_num = if_impl::port(intf);
     if (port_num == TM_PORT_UPLINK_0) {
         sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
                          spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
@@ -169,11 +179,8 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
     PDS_TRACE_DEBUG("Activating if %s, type %u, admin state %u",
                     spec->key.str(), spec->type, spec->admin_state);
     if (spec->type == PDS_IF_TYPE_UPLINK) {
-        if_entry *phy_intf;
-        phy_intf = if_db()->find(&spec->uplink_info.port);
         // program the lif id in the TM
-        tm_port =
-            g_pds_state.catalogue()->ifindex_to_tm_port(phy_intf->ifindex());
+        tm_port = if_impl::port(intf);
         PDS_TRACE_DEBUG("Creating uplink if %s, ifidx 0x%x, port %s, "
                         "hw_id_ %u, tm_port %u", spec->key.str(),
                         intf->ifindex(), spec->uplink_info.port.str(),
@@ -223,10 +230,10 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
             return sdk::SDK_RET_HW_READ_ERR;
         }
         // TODO: cleanup capri dependency
-        if (intf->port() == TM_PORT_UPLINK_0) {
+        if (if_impl::port(intf) == TM_PORT_UPLINK_0) {
             memset(p4i_device_info_data.p4i_device_info.device_mac_addr1,
                    0, ETH_ADDR_LEN);
-        } else if (intf->port() == TM_PORT_UPLINK_1) {
+        } else if (if_impl::port(intf) == TM_PORT_UPLINK_1) {
             memset(p4i_device_info_data.p4i_device_info.device_mac_addr2,
                    0, ETH_ADDR_LEN);
         }
@@ -309,7 +316,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
             PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        port_num = intf->port();
+        port_num = if_impl::port(intf);
         if (port_num == TM_PORT_UPLINK_0) {
             sdk::lib::memrev(spec->l3_if_info.mac_addr,
                              p4i_device_info_data.p4i_device_info.device_mac_addr1,

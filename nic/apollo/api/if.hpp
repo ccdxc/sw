@@ -207,10 +207,6 @@ public:
     /// \return interface type
     pds_if_type_t type(void) const { return type_; }
 
-    /// \brief    return the physical port number of this interface
-    /// \return   physical port number or 0xFF if invalid
-    uint8_t port(void) const;
-
     /// \brief    return the wire encap of this (L3) interface
     /// \return   wire encap of this L3 interface
     pds_encap_t l3_encap(void) { return if_info_.l3_.encap_; }
@@ -242,6 +238,12 @@ public:
     /// \brief    return port specific information
     /// \return return pointer to the port specific information
     void *port_info(void) { return if_info_.port_.port_info_; }
+
+    /// \brief    return eth interface entry corresponding to the given
+    ///           interface
+    /// \param[in] intf    interface instance
+    /// \return eth interface corresponding to the given interface or NULL
+    static const if_entry *eth_if(if_entry *intf);
 
 private:
     /// \brief constructor

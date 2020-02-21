@@ -19,6 +19,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/if_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 namespace api {
@@ -210,7 +211,7 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
                       intf->key().str(), intf->type(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
-    nh_data->nexthop_info.port = intf->port();
+    nh_data->nexthop_info.port = if_impl::port(intf);
     encap = intf->l3_encap();
     if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
         nh_data->nexthop_info.vlan = encap.val.vlan_tag;

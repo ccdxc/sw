@@ -297,33 +297,21 @@ if_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_IF, this);
 }
 
-uint8_t
-if_entry::port(void) const {
-    if (type_ == PDS_IF_TYPE_UPLINK) {
-        if_entry *phy_intf;
+const if_entry *
+if_entry::eth_if(if_entry *intf) {
+    switch (intf->type()) {
+    case PDS_IF_TYPE_UPLINK:
+        return if_db()->find(&intf->if_info_.uplink_.port_);
 
-        phy_intf = if_db()->find(&if_info_.uplink_.port_);
-        if (!phy_intf) {
-            PDS_TRACE_ERR("port %s not found for uplink intf %s",
-                          if_info_.uplink_.port_.str(), key_.str());
-            return PDS_PORT_INVALID;
-        }
-        return (ETH_IFINDEX_TO_PARENT_PORT(phy_intf->ifindex()) - 1);
-    } else if (type_ == PDS_IF_TYPE_L3) {
-        if_entry *phy_intf;
+    case PDS_IF_TYPE_L3:
+        return if_db()->find(&intf->if_info_.l3_.port_);
 
-        phy_intf = if_db()->find(&if_info_.l3_.port_);
-        if (!phy_intf) {
-            PDS_TRACE_ERR("port %s not found for l3 intf %s",
-                          if_info_.l3_.port_.str(), key_.str());
-            return PDS_PORT_INVALID;
-        }
-        return (ETH_IFINDEX_TO_PARENT_PORT(phy_intf->ifindex()) - 1);
-    } else if (type_ == PDS_IF_TYPE_ETH) {
-        return ((sdk::linkmgr::port *)if_info_.port_.port_info_)->port_num();
+    case PDS_IF_TYPE_ETH:
+        return intf;
+    default:
+        PDS_TRACE_ERR("Unknown interface type %u", intf->type());
     }
-    return PDS_PORT_INVALID;
+    return NULL;
 }
-
 
 }    // namespace api

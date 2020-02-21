@@ -154,6 +154,10 @@ public:
     /// \return     h/w id corresponding to this interface
     uint16_t hw_id(void) const { return hw_id_; }
 
+    /// \brief      return h/w port corresponding to this interface
+    /// \param[in]  intf    interface entry pointer
+    static uint32_t port(if_entry *intf);
+
 private:
     /// \brief  constructor
     if_impl() {
