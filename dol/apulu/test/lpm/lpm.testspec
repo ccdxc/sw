@@ -93,6 +93,7 @@ session:
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
         expect:
+            delay: 1
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=TO_SWITCH_PKT
