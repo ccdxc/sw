@@ -45,6 +45,11 @@ typedef struct p4_rx_cpu_hdr_s {
             uint8_t  is_l3_vnid         : 1;
             uint8_t  snat_type          : 2;
             uint8_t  dnat_en            : 1;
+            uint8_t  mapping_hit        : 1;
+            uint8_t  sacl_action        : 1;
+            uint8_t  sacl_root          : 3;
+            uint8_t  nexthop_type       : 2;
+            uint8_t  drop               : 1;
 #else
             uint8_t  dnat_en            : 1;
             uint8_t  snat_type          : 2;
@@ -53,14 +58,6 @@ typedef struct p4_rx_cpu_hdr_s {
             uint8_t  flow_role          : 1;
             uint8_t  flow_hit           : 1;
             uint8_t  rx_packet          : 1;
-#endif
-#if __BYTE_ORDER == __BIG_ENDIAN
-            uint8_t  mapping_hit        : 1;
-            uint8_t  sacl_action        : 1;
-            uint8_t  sacl_root          : 3;
-            uint8_t  nexthop_type       : 2;
-            uint8_t  drop               : 1;
-#else
             uint8_t  drop               : 1;
             uint8_t  nexthop_type       : 2;
             uint8_t  sacl_root          : 3;

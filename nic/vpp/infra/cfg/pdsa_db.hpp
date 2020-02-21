@@ -46,6 +46,7 @@ typedef struct {
 // registered callbacks) when this config changes
 class vpp_config_data {
     // containers are ordered map, instance to cfg msg
+    std::unordered_map<pds_obj_key_t, pds_device_cfg_msg_t, pds_obj_key_hash> device;
     std::unordered_map<pds_obj_key_t, pds_vpc_cfg_msg_t, pds_obj_key_hash> vpc;
     std::unordered_map<pds_obj_key_t, pds_vnic_cfg_msg_t, pds_obj_key_hash> vnic;
     std::unordered_map<pds_obj_key_t, pds_subnet_cfg_msg_t, pds_obj_key_hash> subnet;

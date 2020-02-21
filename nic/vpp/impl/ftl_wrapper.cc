@@ -32,17 +32,22 @@ extern "C" {
 // max 256 packets are processed by VPP, so 512 flows
 #define MAX_FLOW_ENTRIES_PER_BATCH 512
 
+typedef struct flow_flags_s {
+    uint8_t log : 1;
+    uint8_t update : 1;
+} flow_flags_t;
+
 typedef struct ftlv4_cache_s {
     ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
     uint32_t ip4_hash[MAX_FLOW_ENTRIES_PER_BATCH];
-    uint8_t log;
+    flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
 } ftlv4_cache_t;
 
 typedef struct ftlv6_cache_s {
     flow_hash_entry_t ip6_flow[MAX_FLOW_ENTRIES_PER_BATCH]; 
     uint32_t ip6_hash[MAX_FLOW_ENTRIES_PER_BATCH];
-    uint8_t log;
+    flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
 } ftlv6_cache_t;
 
@@ -245,7 +250,7 @@ ftlv4_create(void *key2str,
 
 static int
 ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
-             uint8_t log)
+             uint8_t log, uint8_t update)
 {
     sdk_table_api_params_t params = {0};
 
@@ -259,6 +264,13 @@ ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
     }
     params.entry = entry;
     params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+    if (unlikely(update)) {
+        if (SDK_RET_OK != obj->update(&params)) {
+            return -1;
+        }
+        return 0;
+    }
+
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
@@ -534,7 +546,20 @@ void
 ftlv4_cache_set_hash_log(uint32_t val, uint8_t log)
 {
     g_ip4_flow_cache.ip4_hash[g_ip4_flow_cache.count] = val;
-    g_ip4_flow_cache.log = log;
+    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].log = log;
+}
+
+void
+ftlv4_cache_set_update_flag(uint8_t update)
+{
+    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].update = update;
+}
+
+void
+ftlv4_cache_set_flow_miss_hit(uint8_t val)
+{
+    ftlv4_set_flow_miss_hit(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
+                            val);
 }
 
 static uint32_t
@@ -589,7 +614,8 @@ ftlv4_cache_program_index(ftlv4 *obj, uint16_t id)
 {
     return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,
                         g_ip4_flow_cache.ip4_hash[id],
-                        g_ip4_flow_cache.log);
+                        g_ip4_flow_cache.flags[id].log,
+                        g_ip4_flow_cache.flags[id].update);
 }
 
 int
@@ -597,7 +623,7 @@ ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id)
 {
     return ftlv4_remove(obj, g_ip4_flow_cache.ip4_flow + id,
                         g_ip4_flow_cache.ip4_hash[id],
-                        g_ip4_flow_cache.log);
+                        g_ip4_flow_cache.flags[id].log);
 }
 
 void
@@ -625,7 +651,9 @@ ftlv4_cache_batch_flush(ftlv4 *obj, int *status)
 
     for (i = 0; i < g_ip4_flow_cache.count; i++) {
        status[i] = ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + i,
-                                g_ip4_flow_cache.ip4_hash[i], 0);
+                                g_ip4_flow_cache.ip4_hash[i],
+                                g_ip4_flow_cache.flags[i].log,
+                                g_ip4_flow_cache.flags[i].update);
     }
 }
 
@@ -649,7 +677,8 @@ ftlv6_create(void *key2str,
 }
 
 static int
-ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, uint8_t log)
+ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, uint8_t log,
+             uint8_t update)
 {
     sdk_table_api_params_t params = {0};
 
@@ -663,6 +692,14 @@ ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, uint8_t log)
     }
     params.entry = entry;
     params.entry_size = flow_hash_entry_t::entry_size();
+
+    if (unlikely(update)) {
+        if (SDK_RET_OK != obj->update(&params)) {
+            return -1;
+        }
+        return 0;
+    }
+ 
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
@@ -990,7 +1027,8 @@ ftlv6_cache_program_index(ftlv6 *obj, uint16_t id)
 {
     return ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + id,
                         g_ip6_flow_cache.ip6_hash[id],
-                        g_ip6_flow_cache.log);
+                        g_ip6_flow_cache.flags[id].log,
+                        g_ip6_flow_cache.flags[id].update);
 }
 
 int
@@ -998,7 +1036,7 @@ ftlv6_cache_delete_index(ftlv6 *obj, uint16_t id)
 {
     return ftlv6_remove(obj, g_ip6_flow_cache.ip6_flow + id,
                         g_ip6_flow_cache.ip6_hash[id],
-                        g_ip6_flow_cache.log);
+                        g_ip6_flow_cache.flags[id].log);
 }
 
 void
@@ -1023,7 +1061,20 @@ void
 ftlv6_cache_set_hash_log(uint32_t val, uint8_t log)
 {
     g_ip6_flow_cache.ip6_hash[g_ip6_flow_cache.count] = val;
-    g_ip6_flow_cache.log = log;
+    g_ip6_flow_cache.flags[g_ip6_flow_cache.count].log = log;
+}
+
+void
+ftlv6_cache_set_update_flag(uint8_t update)
+{
+    g_ip6_flow_cache.flags[g_ip6_flow_cache.count].update = update;
+}
+
+void
+ftlv6_cache_set_flow_miss_hit(uint8_t val)
+{
+    ftlv6_set_flow_miss_hit(g_ip6_flow_cache.ip6_flow + g_ip6_flow_cache.count,
+                            val);
 }
 
 void
@@ -1033,7 +1084,9 @@ ftlv6_cache_batch_flush(ftlv6 *obj, int *status)
 
     for (i = 0; i < g_ip6_flow_cache.count; i++) {
        status[i] = ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + i,
-                                g_ip6_flow_cache.ip6_hash[i], 0);
+                                g_ip6_flow_cache.ip6_hash[i],
+                                g_ip6_flow_cache.flags[i].log,
+                                g_ip6_flow_cache.flags[i].update);
     }
 }
 

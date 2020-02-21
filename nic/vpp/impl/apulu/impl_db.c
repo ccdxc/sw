@@ -97,18 +97,51 @@ int
 pds_impl_db_subnet_set (uint8_t pfx_len,
                         uint32_t vr_ip,
                         uint8_t *mac,
-                        uint16_t subnet_hw_id)
+                        uint16_t subnet_hw_id,
+                        uint32_t vnid)
 {
     POOL_IMPL_DB_ADD(subnet);
 
     subnet_info->prefix_len = pfx_len;
     ip46_address_set_ip4(&subnet_info->vr_ip, (ip4_address_t *) &vr_ip);
     clib_memcpy(subnet_info->mac, mac, ETH_ADDR_LEN);
+    // store vnid in format required for vxlan packet so that no
+    // conversion required in packet path
+    vnid = vnid << 8;
+    subnet_info->vnid = clib_host_to_net_u32(vnid);
     return 0;
 }
 
 IMPL_DB_ENTRY_DEL(uint16_t, subnet);
 IMPL_DB_ENTRY_GET(uint16_t, subnet);
+
+int
+pds_impl_db_device_set (const u8 *mac, const u8 *ip, u8 ip4, u8 bridging_en)
+{
+    pds_impl_db_device_entry_t *dev = &impl_db_ctx.device;
+
+    dev->bridging_en = bridging_en;
+    clib_memcpy(dev->device_mac, mac, ETH_ADDR_LEN);
+    if (ip4) {
+        ip46_address_set_ip4(&dev->device_ip, (ip4_address_t *) ip);
+    } else {
+        ip46_address_set_ip6(&dev->device_ip, (ip6_address_t *) ip);
+    }
+    return 0;
+}
+
+pds_impl_db_device_entry_t *
+pds_impl_db_device_get (void)
+{
+    return &impl_db_ctx.device;
+}
+
+int
+pds_impl_db_device_del (void)
+{
+    clib_memset(&impl_db_ctx.device, 0, sizeof(pds_impl_db_device_entry_t));
+    return 0;
+}
 
 void
 pds_impl_db_subnet_init (void)

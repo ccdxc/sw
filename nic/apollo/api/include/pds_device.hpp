@@ -17,6 +17,7 @@
 
 #define PDS_DROP_REASON_MAX        64    ///< Maximum packet drop reasons
 #define PDS_MAX_DROP_NAME_LEN      32    ///< Packet drop reason string length
+#define PDS_MAX_DEVICE              1    ///< only one instance of device
 
 /// \defgroup PDS_DEVICE Device API
 /// \@{

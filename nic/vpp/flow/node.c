@@ -92,12 +92,13 @@ pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
 
             p0 = PDS_PACKET_BUFFER(0);
             p1 = PDS_PACKET_BUFFER(1);
-            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
-                vnet_buffer(p0)->sw_if_index[VLIB_RX];
-            vnet_buffer(p1)->sw_if_index[VLIB_TX] =
-                vnet_buffer(p1)->sw_if_index[VLIB_RX];
-
             pds_flow_add_tx_hdrs_x2(p0, p1);
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
+                    vnet_buffer(p0)->sw_if_index[VLIB_RX];
+            vnet_buffer(p1)->sw_if_index[VLIB_TX] =
+                    vnet_buffer(p1)->sw_if_index[VLIB_RX];
+
+
             if (PREDICT_FALSE((sw_if_index !=
                                vnet_buffer(p0)->sw_if_index[VLIB_TX]) ||
                               !to_frame)) {
@@ -148,11 +149,9 @@ pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
             vlib_buffer_t *p0;
 
             p0 = PDS_PACKET_BUFFER(0);
-            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
-                vnet_buffer(p0)->sw_if_index[VLIB_RX];
-
             pds_flow_add_tx_hdrs_x1(p0);
-
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] =
+                            vnet_buffer(p0)->sw_if_index[VLIB_RX];
             if (PREDICT_FALSE((sw_if_index !=
                                vnet_buffer(p0)->sw_if_index[VLIB_TX]) ||
                               !to_frame)) {
@@ -466,10 +465,11 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                u32 session_id,
-                               u8 is_ip4)
+                               u8 is_ip4, u8 flow_exists)
 {
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
+    u8 miss_hit = 0;
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
 
@@ -516,10 +516,16 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, sport, dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch( 0xff);
+        if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
+            pds_flow_handle_l2l(p0, flow_exists, &miss_hit);
+        }
+        ftlv4_cache_set_flow_miss_hit(miss_hit);
+        ftlv4_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 1, 1);
         ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
+
         // TODO : Handle rx from uplink, service mapping
         if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
             // NAPT - both port and ip are changed
@@ -536,6 +542,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch(0xff);
+        ftlv4_cache_set_flow_miss_hit(miss_hit);
+        ftlv4_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 1, 0);
         ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
@@ -581,6 +589,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_key(src_ip, dst_ip, protocol, sport, dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
+        if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
+            pds_flow_handle_l2l(p0, flow_exists, &miss_hit);
+        }
+        ftlv6_cache_set_flow_miss_hit(miss_hit);
+        ftlv6_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 0, 1);
         ftlv6_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
@@ -589,6 +602,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
+        ftlv6_cache_set_flow_miss_hit(miss_hit);
+        ftlv6_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 0, 0);
         ftlv6_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
@@ -679,15 +694,30 @@ pds_flow_prog (vlib_main_t *vm,
             u32 session_id0 = 0, session_id1 = 0;
             int offset0, offset1;
             vlib_buffer_t *b0, *b1;
+            u8 flow_exists0 = 1, flow_exists1 = 1;
 
             b0 = PDS_PACKET_BUFFER(0);
             b1 = PDS_PACKET_BUFFER(1);
 
-            pds_session_id_alloc2(&session_id0, &session_id1);
-            pds_flow_extract_prog_args_x1(b0,
-                                          session_id0, is_ip4);
-            pds_flow_extract_prog_args_x1(b1, 
-                                          session_id1, is_ip4);
+            session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
+            session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
+            if (PREDICT_TRUE((0 == session_id0) && (0 == session_id1))) {
+                pds_session_id_alloc2(&session_id0, &session_id1);
+                flow_exists0 = flow_exists1 = 0;
+            } else {
+                if (0 == session_id0) {
+                    session_id0 = pds_session_id_alloc();
+                    flow_exists0 = 0;
+                }
+                if (0 == session_id1) {
+                    session_id1 = pds_session_id_alloc();
+                    flow_exists1 = 0;
+                }
+            }
+            pds_flow_extract_prog_args_x1(b0, session_id0,
+                                          is_ip4, flow_exists0);
+            pds_flow_extract_prog_args_x1(b1, session_id1,
+                                          is_ip4, flow_exists1);
             offset0 = pds_flow_prog_get_next_offset(b0);
             offset1 = pds_flow_prog_get_next_offset(b1);
             vlib_buffer_advance(b0, offset0);
@@ -698,12 +728,16 @@ pds_flow_prog (vlib_main_t *vm,
             u32 session_id0;
             int offset0;
             vlib_buffer_t *b0;
+            u8 flow_exists0;
 
             b0 = PDS_PACKET_BUFFER(0);
 
-            session_id0 = pds_session_id_alloc();
-            pds_flow_extract_prog_args_x1(b0, 
-                                          session_id0, is_ip4);
+            session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id ?
+                          vnet_buffer(b0)->pds_flow_data.ses_id :
+                          pds_session_id_alloc();
+            flow_exists0 = vnet_buffer(b0)->pds_flow_data.ses_id ? 1 : 0;
+            pds_flow_extract_prog_args_x1(b0, session_id0,
+                                          is_ip4, flow_exists0);
             offset0 = pds_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
         } PDS_PACKET_SINGLE_LOOP_END;

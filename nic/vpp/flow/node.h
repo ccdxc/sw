@@ -169,6 +169,7 @@ typedef struct pds_flow_main_s {
     u32 max_sessions;
     u32 *flow_idle_timeout;
     char *stats_buf;
+    u8 *rx_vxlan_template;
 } pds_flow_main_t;
 
 extern pds_flow_main_t pds_flow_main;

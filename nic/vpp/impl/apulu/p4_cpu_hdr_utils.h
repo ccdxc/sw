@@ -24,14 +24,32 @@
 #define VPP_CPU_FLAGS_NAPT_POS             9
 #define VPP_CPU_FLAGS_NAPT_SVC_POS         10
 #define VPP_CPU_FLAGS_FLOW_LOG_POS         11
+#define VPP_CPU_FLAGS_FLOW_L2L_POS         12
+#define VPP_CPU_FLAGS_FLOW_VXLAN_ADD_POS   13
 
 #define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
 #define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
 #define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << VPP_CPU_FLAGS_NAPT_SVC_POS)
 #define VPP_CPU_FLAGS_FLOW_LOG_VALID       (1 << VPP_CPU_FLAGS_FLOW_LOG_POS)
+#define VPP_CPU_FLAGS_FLOW_L2L_VALID       (1 << VPP_CPU_FLAGS_FLOW_L2L_POS)
+#define VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID (1 << VPP_CPU_FLAGS_FLOW_VXLAN_ADD_POS)
 
 #define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
+
+always_inline u8
+pds_get_flow_add_vxlan (vlib_buffer_t *p0)
+{
+    return (vnet_buffer(p0)->pds_flow_data.flags &
+            VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID) ? 1 : 0;
+}
+
+always_inline u8
+pds_is_flow_l2l (vlib_buffer_t *p0)
+{
+    return (vnet_buffer(p0)->pds_flow_data.flags &
+            VPP_CPU_FLAGS_FLOW_L2L_VALID) ? 1 : 0;
+}
 
 always_inline u8
 pds_get_flow_log_en (vlib_buffer_t *p0)

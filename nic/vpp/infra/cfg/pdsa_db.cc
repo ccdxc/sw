@@ -12,13 +12,14 @@ vpp_config_batch vpp_config_batch::singleton;
 std::list<object_cbs_t> vpp_config_batch::object_cbs;
 
 #define foreach_config_data_element                 \
+        _(DEVICE, device)                           \
         _(VPC, vpc)                                 \
         _(VNIC, vnic)                               \
         _(SUBNET, subnet)                           \
         _(DHCP_RELAY, dhcp_relay)                   \
         _(DHCP_POLICY, dhcp_policy)                 \
         _(NAT_PORT_BLOCK, nat_port_block)           \
-        _(SECURITY_PROFILE, security_profile)
+        _(SECURITY_PROFILE, security_profile)       \
 
 // vpp_config_data member functions
 
@@ -45,11 +46,11 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
     // since key and spec are a union, and the first element in the spec is
     // the key, we don't verify whether a key or spec is passed here
     switch(cfg_msg.obj_id) {
-#define _(obj, data)                                     \
-    case OBJ_ID_##obj:                                  \
-        if (data.find(cfg_msg.data.key) != data.end()) {   \
-            return true;                                \
-        }                                               \
+#define _(obj, data)                                        \
+    case OBJ_ID_##obj:                                      \
+        if (data.find(cfg_msg.data.key) != data.end()) {    \
+            return true;                                    \
+        }                                                   \
         break;
         foreach_config_data_element
 #undef _
@@ -66,13 +67,11 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
 bool
 vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
     // initialize iterators to all obj types
-    auto vpc_it = vpc.end();
-    auto vnic_it = vnic.end();
-    auto subnet_it = subnet.end();
-    auto dhcp_relay_it = dhcp_relay.end();
-    auto dhcp_policy_it = dhcp_policy.end();
-    auto nat_port_block_it = nat_port_block.end();
-    auto security_profile_it = security_profile.end();
+#define _(obj, data)                                \
+    auto data##_it = data.end();                    \
+
+    foreach_config_data_element
+#undef _
 
     switch(cfg_msg.obj_id) {
 #define _(obj, data)                                \
@@ -518,7 +517,8 @@ pds_cfg_register_callbacks (obj_id_t id,
         return -1;
     }
 
-    if ((id != OBJ_ID_VPC) &&
+    if ((id != OBJ_ID_DEVICE) &&
+        (id != OBJ_ID_VPC) &&
         (id != OBJ_ID_VNIC) &&
         (id != OBJ_ID_SUBNET) &&
         (id != OBJ_ID_DHCP_RELAY) &&

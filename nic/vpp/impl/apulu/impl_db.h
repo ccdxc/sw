@@ -39,7 +39,14 @@ typedef struct {
     mac_addr_t mac;                 // subnet mac
     u8 prefix_len;                  // subnet prefix len
     ip46_address_t vr_ip;           // subnet VR ip
+    u32 vnid;
 } pds_impl_db_subnet_entry_t;
+
+typedef struct {
+    mac_addr_t device_mac;          // device MAC address
+    ip46_address_t device_ip;       // device IP address
+    u8 bridging_en;                 // layer2 enabled flag
+} pds_impl_db_device_entry_t;
 
 #define foreach_impl_db_element                         \
  _(uint16_t, subnet)                                    \
@@ -52,6 +59,7 @@ typedef struct {
 
     foreach_impl_db_element
 #undef _
+    pds_impl_db_device_entry_t device;
 } pds_impl_db_ctx_t;
 
 extern pds_impl_db_ctx_t impl_db_ctx;
@@ -60,6 +68,8 @@ extern pds_impl_db_ctx_t impl_db_ctx;
 pds_impl_db_##obj##_entry_t * pds_impl_db_##obj##_get(type hw_id);
     foreach_impl_db_element
 #undef _
+
+pds_impl_db_device_entry_t * pds_impl_db_device_get(void);
 
 #ifdef __cplusplus
 }

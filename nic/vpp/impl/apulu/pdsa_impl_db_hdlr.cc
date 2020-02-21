@@ -13,7 +13,8 @@ pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
     rc = pds_impl_db_subnet_set(msg->subnet.spec.v4_prefix.len,
                                 msg->subnet.spec.v4_vr_ip,
                                 (uint8_t *) msg->subnet.spec.vr_mac,
-                                msg->subnet.status.hw_id);
+                                msg->subnet.status.hw_id,
+                                msg->subnet.spec.fabric_encap.val.vnid);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;
@@ -94,6 +95,38 @@ pds_cfg_db_vnic_del_cb (const pds_cfg_msg_t *msg)
     }
 }
 
+static sdk::sdk_ret_t
+pds_cfg_db_device_set_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+    const pds_device_spec_t *spec = &msg->device.spec.spec;
+
+    rc = pds_impl_db_device_set(msg->device.spec.spec.device_mac_addr,
+                                (const uint8_t *) &spec->device_ip_addr.addr,
+                                (spec->device_ip_addr.af == IP_AF_IPV4) ? 1:0,
+                                spec->bridging_en);
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
+static sdk::sdk_ret_t
+pds_cfg_db_device_del_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+
+    rc = pds_impl_db_device_del();
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
 void
 pds_impl_db_cb_register (void)
 {
@@ -105,6 +138,7 @@ pds_impl_db_cb_register (void)
 
     _(VNIC, vnic)
     _(SUBNET, subnet)
+    _(DEVICE, device)
 #undef _
 
     return;

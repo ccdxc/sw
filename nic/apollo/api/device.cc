@@ -113,6 +113,23 @@ device_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+device_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->id = PDS_CFG_MSG_ID_DEVICE;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_DEVICE;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.device.key = k_pds_obj_key_invalid;
+    } else {
+        msg->cfg_msg.device.spec.key = k_pds_obj_key_invalid;
+        msg->cfg_msg.device.spec.spec = obj_ctxt->api_params->device_spec;
+        if (impl_) {
+            impl_->populate_msg(msg, this, obj_ctxt);
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 device_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }

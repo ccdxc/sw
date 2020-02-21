@@ -9,8 +9,22 @@
 #include <api.h>
 #include <impl_db.h>
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
+#include <vlib/vlib.h>
+#include <vnet/vxlan/vxlan_packet.h>
 #include <nic/vpp/impl/nat.h>
+#include <nic/vpp/impl/pds_table.h>
 #include "p4_cpu_hdr_utils.h"
+#include "impl_db.h"
+
+#define PDS_FLOW_UPLINK0_LIF_ID     0x0
+#define PDS_FLOW_UPLINK1_LIF_ID     0x1
+
+typedef CLIB_PACKED(struct pds_vxlan_template_header_s {
+    ethernet_header_t eth;
+    ip4_header_t ip4;
+    udp_header_t udp;
+    vxlan_header_t vxlan;
+}) pds_vxlan_template_header_t;
 
 always_inline u32
 pds_session_get_max (void)
@@ -198,10 +212,93 @@ pds_flow_prog_get_next_node (void)
 }
 
 always_inline void
+pds_flow_create_rx_vxlan_template (void)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    pds_impl_db_device_entry_t *dev;
+    pds_vxlan_template_header_t *hdr;
+    p4i_device_info_actiondata_t p4i_device_info_data = { 0 };
+    int p4pd_ret;
+
+    dev = pds_impl_db_device_get();
+    vec_validate_init_empty(fm->rx_vxlan_template,
+                            sizeof(pds_vxlan_template_header_t) - 1, 0);
+    hdr = (pds_vxlan_template_header_t *) fm->rx_vxlan_template;
+    p4pd_ret = pds_table_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                              (void *)&p4i_device_info_data);
+    if (p4pd_ret == 0) {
+        u8 *uplink0_mac = p4i_device_info_data.action_u.\
+                          p4i_device_info_p4i_device_info.device_mac_addr1;
+        hdr->eth.dst_address[0] = uplink0_mac[5];
+        hdr->eth.dst_address[1] = uplink0_mac[4];
+        hdr->eth.dst_address[2] = uplink0_mac[3];
+        hdr->eth.dst_address[3] = uplink0_mac[2];
+        hdr->eth.dst_address[4] = uplink0_mac[1];
+        hdr->eth.dst_address[5] = uplink0_mac[0];
+    } else {
+        clib_memcpy(hdr->eth.dst_address, dev->device_mac, ETH_ADDR_LEN);
+    }
+    hdr->eth.type = clib_host_to_net_u16(ETHERNET_TYPE_IP4);
+    hdr->ip4.dst_address.as_u32 = clib_host_to_net_u32(dev->device_ip.ip4.as_u32);
+    hdr->ip4.ip_version_and_header_length = 0x45;
+    hdr->ip4.length = sizeof(ip4_header_t) + sizeof(udp_header_t) +
+                      sizeof(vxlan_header_t);
+    hdr->ip4.ttl = 255;
+    hdr->ip4.protocol = IP_PROTOCOL_UDP;
+    hdr->udp.src_port = clib_host_to_net_u16(50000); // any port
+    hdr->udp.dst_port = clib_host_to_net_u16(4789); // vxlan
+    hdr->udp.length = sizeof(udp_header_t) + sizeof(vxlan_header_t);
+    hdr->vxlan.flags = VXLAN_FLAGS_I; // set flag vni to true
+}
+
+always_inline void
+pds_flow_add_vxlan_template (vlib_buffer_t *b0)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    u16 vxlan_hdr_len, orig_len;
+    pds_vxlan_template_header_t *hdr;
+    u32 vnid = 0;
+    pds_impl_db_subnet_entry_t *subnet;
+
+    subnet = pds_impl_db_subnet_get(vnet_buffer(b0)->pds_flow_data.egress_lkp_id);
+    if (PREDICT_TRUE(subnet != NULL)) {
+        vnid = subnet->vnid;
+    }
+
+    if (PREDICT_FALSE(!fm->rx_vxlan_template)) {
+        pds_flow_create_rx_vxlan_template();
+    }
+    vxlan_hdr_len = vec_len(fm->rx_vxlan_template);
+    orig_len = b0->current_length - APULU_ARM_TO_P4_HDR_SZ;
+    hdr = (pds_vxlan_template_header_t *) (((u8 *) vlib_buffer_push_uninit(b0,
+          vxlan_hdr_len)) + APULU_ARM_TO_P4_HDR_SZ);
+    clib_memcpy(hdr, fm->rx_vxlan_template, vxlan_hdr_len);
+    hdr->vxlan.vni_reserved = vnid; // vnid store in network byte order
+    hdr->ip4.length += orig_len; 
+    hdr->ip4.length = clib_host_to_net_u16(hdr->ip4.length);
+    hdr->udp.length += orig_len;
+    hdr->udp.length = clib_host_to_net_u16(hdr->udp.length);
+    return;
+}
+
+always_inline void
 pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 {
     p4_tx_cpu_hdr_t *tx0, *tx1;
+    u32 lif0, lif1;
 
+    if (pds_get_flow_add_vxlan(b0)) {
+        pds_flow_add_vxlan_template(b0);
+        lif0 = PDS_FLOW_UPLINK0_LIF_ID;
+    } else {
+        lif0 = vnet_buffer(b0)->pds_flow_data.lif;
+    }
+    if (pds_get_flow_add_vxlan(b1)) {
+        pds_flow_add_vxlan_template(b1);
+        lif1 = PDS_FLOW_UPLINK0_LIF_ID;
+    } else {
+        lif1 = vnet_buffer(b1)->pds_flow_data.lif;
+    }
     tx0 = vlib_buffer_get_current(b0);
     tx1 = vlib_buffer_get_current(b1);
 
@@ -209,10 +306,10 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
     tx1->pad = 0;
     tx0->nexthop_valid = 0;
     tx1->nexthop_valid = 0;
-    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_flow_data.lif & 0xff;
-    tx1->lif_sbit0_ebit7 = vnet_buffer(b1)->pds_flow_data.lif & 0xff;
-    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_flow_data.lif >> 0x8;
-    tx1->lif_sbit8_ebit10 = vnet_buffer(b1)->pds_flow_data.lif >> 0x8;
+    tx0->lif_sbit0_ebit7 = lif0 & 0xff;
+    tx1->lif_sbit0_ebit7 = lif0 & 0xff;
+    tx0->lif_sbit8_ebit10 = lif1 >> 0x8;
+    tx1->lif_sbit8_ebit10 = lif1 >> 0x8;
 
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
@@ -223,12 +320,19 @@ always_inline void
 pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
 {
     p4_tx_cpu_hdr_t *tx0;
+    u32 lif = 0;
 
+    if (pds_get_flow_add_vxlan(b0)) {
+        pds_flow_add_vxlan_template(b0);
+        lif = PDS_FLOW_UPLINK0_LIF_ID;
+    } else {
+        lif = vnet_buffer(b0)->pds_flow_data.lif;
+    }
     tx0 = vlib_buffer_get_current(b0);
     tx0->pad = 0;
     tx0->nexthop_valid = 0;
-    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_flow_data.lif & 0xff;
-    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_flow_data.lif >> 0x8;
+    tx0->lif_sbit0_ebit7 = lif & 0xff;
+    tx0->lif_sbit8_ebit10 = lif >> 0x8;
 
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     //Dont care about nexthoptype/id as we don't set nexthop_valid.
@@ -378,8 +482,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         next_determined |= 0x1;
     } else {
         vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
+        vnet_buffer(p0)->pds_flow_data.ses_id = hdr0->session_id;
         vnet_buffer(p0)->pds_flow_data.flags = flag_orig0 |
             (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+            (((!hdr0->rx_packet) && hdr0->is_local) <<
+            VPP_CPU_FLAGS_FLOW_L2L_POS) |
             (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
 
         nexthop = hdr0->nexthop_id;
@@ -424,8 +531,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         next_determined |= 0x2;
     } else {
         vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
+        vnet_buffer(p1)->pds_flow_data.ses_id = hdr1->session_id;
         vnet_buffer(p1)->pds_flow_data.flags = flag_orig1 |
             (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+            (((!hdr1->rx_packet) && hdr1->is_local) <<
+            VPP_CPU_FLAGS_FLOW_L2L_POS) |
             (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
         nexthop = hdr1->nexthop_id;
         if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
@@ -625,9 +735,11 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         return;
     }
+    vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
     vnet_buffer(p)->pds_flow_data.flags = flag_orig |
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
+        (((!hdr->rx_packet) && hdr->is_local) << VPP_CPU_FLAGS_FLOW_L2L_POS) |
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr->nexthop_id;
     if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
@@ -724,6 +836,18 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 err:
     vnic->active_session_count--;
     return;
+}
+
+always_inline void
+pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists, u8 *miss_hit)
+{
+    if (flow_exists) {
+        *miss_hit = 0;
+    } else {
+        *miss_hit = 1;
+        // first l2l flow miss packet, add vxlan header
+        vnet_buffer(p0)->pds_flow_data.flags |= VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID;
+    }
 }
 
 always_inline void

@@ -89,6 +89,10 @@ void ftlv4_cache_set_epoch(uint8_t val);
 
 void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
 
+void ftlv4_cache_set_flow_miss_hit(uint8_t val);
+
+void ftlv4_cache_set_update_flag(uint8_t update);
+
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
 void ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id);
@@ -146,6 +150,10 @@ void ftlv6_cache_set_session_index(uint32_t val);
 uint32_t ftlv6_cache_get_session_index(int id);
 
 void ftlv6_cache_set_epoch(uint8_t val);
+
+void ftlv6_cache_set_flow_miss_hit(uint8_t val);
+
+void ftlv6_cache_set_update_flag(uint8_t update);
 
 void ftlv6_cache_set_hash_log(uint32_t val, uint8_t log);
 

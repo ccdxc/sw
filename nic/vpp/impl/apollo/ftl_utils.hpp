@@ -49,4 +49,15 @@ ftlv6_get_lookup_id(flow_hash_entry_t *entry)
     return entry->get_key_metadata_lkp_id();
 }
 
+void
+ftlv4_set_flow_miss_hit(ipv4_flow_hash_entry_t *entry, uint8_t val)
+{
+    return;
+}
+
+void
+ftlv6_set_flow_miss_hit(flow_hash_entry_t *entry, uint8_t val)
+{
+    return;
+}
 #endif  // __VPP_IMPL_APOLLO_FTL_UTILS_H__
