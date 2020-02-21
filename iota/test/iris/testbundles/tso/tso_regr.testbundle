@@ -2,7 +2,7 @@ meta:
     name    : tso_regr
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 3200
+    targetcount : 576
 
 testcases:
     -   name    : TSO_REGR
@@ -75,6 +75,7 @@ testcases:
             proto              : [ 'tcp', 'udp']
             ipproto            : [ 'v4', 'v6']
         args    :
+            timeout : 7200
             type: host
             iperfthreads     :  1
     -   name    : TSO_REGR_VLAN_VXLAN
@@ -93,5 +94,6 @@ testcases:
             proto              : [ 'tcp', 'udp']
             ipproto            : [ 'v4', 'v6']
         args    :
+            timeout : 7200
             type: host
             iperfthreads     :  1

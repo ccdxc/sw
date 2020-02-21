@@ -150,7 +150,7 @@ def addLinuxVxLAN(node, local_ip, remote_ip, vxlan_ip):
     api.Logger.info("Creating VxLAN on %s with local: %s remote: %s VxLAN IP: %s"
                     % (node, local_ip, remote_ip, vxlan_ip))
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    api.Trigger_AddHostCommand(req, node, 'sudo ip link delele vxlan0')
+    api.Trigger_AddHostCommand(req, node, 'sudo ip link delete vxlan0')
     resp = api.Trigger(req)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
