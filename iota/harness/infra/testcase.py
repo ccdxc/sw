@@ -15,6 +15,7 @@ import iota.harness.infra.utils.utils as utils
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.exceptions import *
+from iota.harness.infra.utils import periodic_timer as taskmgr
 
 gl_owner_db = {}
 
@@ -245,6 +246,37 @@ class TestcaseData:
     def SetPackage(self, package):
         self.__package = package
 
+class TestcaseBackgroundTrigger:
+
+    def __init__(self, task, trigger, sleep_interval, terminate):
+        self.__status = types.status.FAILURE
+        self.__task = task
+        self.__sleep_interval = sleep_interval
+        self.__trigger = trigger
+        self.__terminate = terminate
+        self.__task_inst = None
+
+    def StartTask(self, tc):
+        callback_fn = getattr(tc, self.__task, None)
+        assert(callback_fn)
+
+        self.__task_inst = taskmgr.BackgroundTask(callback_fn, self.__sleep_interval, 
+                                                  self.__trigger=='repeat', tc)
+        self.__task_inst.setName(self.__task)
+        self.__task_inst.start()
+        return types.status.SUCCESS
+
+    def StopTask(self):
+        if self.IsTaskRunning():
+            self.__task_inst.cancel()
+            self.__task_inst.join(self.__sleep_interval + 10)
+        return types.status.SUCCESS
+
+    def IsTaskRunning(self):
+        if self.__task_inst.is_alive():
+            return True
+        return False
+
 class Testcase:
     def __init__(self, spec, parent):
         self.__spec = spec
@@ -254,6 +286,7 @@ class Testcase:
         self.__setups = []
         self.__verifs = []
         self.__debugs = []
+        self.__background_tasks = []
         self.__iterid = 0
         self.__resolve()
         self.__enable = getattr(self.__spec, 'enable', True)
@@ -269,6 +302,7 @@ class Testcase:
         self.status = types.status.UNAVAIL
 
         self.__setup_iters()
+        self.__setup_background_tasks()
         self.__apply_stress_factor()
 
         self.__stats_pass = 0
@@ -377,6 +411,22 @@ class Testcase:
         else:
             api.Logger.error("Invalid Iterator Type: %s" % iter_type)
             assert(0)
+        return
+
+    def __setup_background_tasks(self):
+        tasks = getattr(self.__spec, 'background_tasks', None)
+        if tasks is None:
+            return
+
+        for task_name, task_attr in tasks.__dict__.items():
+            # Build BackgroundTask instance and prepare for trigger
+            trigger = getattr(task_attr, 'trigger', 'once')
+            sleep_interval = getattr(task_attr, 'sleep_interval', 60)
+            terminate = getattr(task_attr, 'terminate', 'Teardown')
+            Logger.info("Task %s attributes : trigger %s, sleep %d and terminate %s" % 
+                    (task_name, trigger, sleep_interval, terminate))
+            bt = TestcaseBackgroundTrigger(task_name, trigger, sleep_interval, terminate)
+            self.__background_tasks.append(bt)
         return
 
     def __resolve_testcase(self):
@@ -491,6 +541,11 @@ class Testcase:
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
             else:
+                for bt in self.__background_tasks:
+                    bt_trigger_result = bt.StartTask(self.__tc)
+                    if bt_trigger_result != types.status.SUCCESS:
+                        result = bt_trigger_result
+
                 trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
                 if trigger_result != types.status.SUCCESS:
                     result = trigger_result
@@ -498,6 +553,9 @@ class Testcase:
                 verify_result = loader.RunCallback(self.__tc, 'Verify', True, iter_data)
                 if verify_result != types.status.SUCCESS:
                     result = verify_result
+
+                for bt in self.__background_tasks:
+                    bt_stop_result = bt.StopTask()
 
                 verify_result = self.__run_common_verifs();
                 if verify_result != types.status.SUCCESS:

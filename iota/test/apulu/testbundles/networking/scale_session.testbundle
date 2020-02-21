@@ -17,3 +17,8 @@ testcases:
             max_active_flow  : [32000]
             cps              : [8]
             duration         : [10]
+        background_tasks:
+            showStats        : 
+                trigger         : repeat
+                sleep_interval  : 10
+                terminate       : verify

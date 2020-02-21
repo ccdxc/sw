@@ -40,3 +40,17 @@ testcases:
             max_active_flow  : [64000]
             cps              : [900]
             duration         : [300]
+        background_tasks:
+            showStats        : 
+                trigger         : repeat
+                sleep_interval  : 60
+                terminate       : verify
+            switchPortFlap   :
+                trigger         : repeat
+                sleep_interval  : 10
+                terminate       : verify
+            securityPolicyChangeEvent :
+                trigger         : repeat
+                sleep_interval  : 30
+                terminate       : verify
+

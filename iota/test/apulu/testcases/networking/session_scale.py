@@ -104,16 +104,6 @@ def switchPortFlap(tc):
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Failed to flap the switch port")
 
-def startPeriodicEvents(tc):
-    for t in tc.events:
-        t.start()
-
-def cancelPeriodicEvents(tc):
-    for thread in tc.events:
-        thread.cancel()
-        thread.join()
-    tc.events = []
-
 def securityPolicyChangeEvent(tc):
     agent_api.DeleteSgPolicies()
 
@@ -132,20 +122,6 @@ def securityPolicyChangeEvent(tc):
 
     newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
     agent_api.PushConfigObjects(newObjects)
-
-def getPeriodicEvents(tc):
-    # TRex Stats
-    statsInterval = 10 #sec
-    tc.events.append(pt.PeriodicTimer(statsInterval, showStats, args=[tc]))
-
-    # Switch Port Flap
-    #flapInterval = getattr(tc.args, "switch_port_flap_interval", 10) #sec
-    #tc.events.append(pt.PeriodicTimer(flapInterval, switchPortFlap, args=[tc]))
-
-    # Security policy
-    #securityPolicyChangeInterval = getattr(tc.args, "sec_policy_interval", 30)
-    #tc.events.append(pt.PeriodicTimer(securityPolicyChangeInterval,
-    #                                  securityPolicyChangeEvent, args=[tc]))
 
 def connectTrex(tc):
     for w, peerList in tc.workloadPeers.items():
@@ -212,17 +188,13 @@ def Setup(tc):
 def Trigger(tc):
     try:
         # Start the events and let the party begin.
-        getPeriodicEvents(tc)
-        startPeriodicEvents(tc)
 
         try:
             barrier(tc)
         except:
             api.Logger.error("Barrier failed..")
-            cancelPeriodicEvents(tc)
             raise
 
-        cancelPeriodicEvents(tc)
         return api.types.status.SUCCESS
     except Exception as e:
         traceback.print_exc()
