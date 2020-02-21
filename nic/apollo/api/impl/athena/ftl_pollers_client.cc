@@ -32,7 +32,8 @@ static bool                 expiry_log_en;
 
 static void
 expiry_fn_dflt_fn(uint32_t expiry_id,
-                  pds_flow_age_expiry_type_t expiry_type);
+                  pds_flow_age_expiry_type_t expiry_type,
+                  void *user_ctx);
 
 /*
  * The user is expected to invoke poll_control() only once during
@@ -107,12 +108,14 @@ static void
 expiry_map_process(uint32_t map_id,
                    uint32_t table_id_base,
                    pds_flow_age_expiry_type_t expiry_type,
-                   uint64_t expiry_map);
+                   uint64_t expiry_map,
+                   void *user_ctx);
 static void
 expiry_submap_process(uint32_t submap_id,
                       uint32_t expiry_id_base,
                       pds_flow_age_expiry_type_t expiry_type,
-                      uint8_t submap);
+                      uint8_t submap,
+                      void *user_ctx);
 sdk_ret_t
 init(void)
 {
@@ -239,7 +242,8 @@ expiry_log_set(bool enable_sense)
  * when a given queue is "overly polled".
  */
 sdk_ret_t
-poll(uint32_t qid)
+poll(uint32_t qid,
+     void *user_ctx)
 {
     client_queue_t              *queue = client_queue_get(qid);
     poller_slot_data_t          *slot_data;
@@ -286,13 +290,13 @@ poll(uint32_t qid)
 #error "May need more unrolled calls to expiry_map_process"
 #endif
             expiry_map_process(0, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[0]);
+                               slot_data->expiry_map[0], user_ctx);
             expiry_map_process(1, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[1]);
+                               slot_data->expiry_map[1], user_ctx);
             expiry_map_process(2, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[2]);
+                               slot_data->expiry_map[2], user_ctx);
             expiry_map_process(3, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[3]);
+                               slot_data->expiry_map[3], user_ctx);
             /*
              * Reschedule scanner if applicable
              */
@@ -311,7 +315,8 @@ static void
 expiry_map_process(uint32_t map_id,
                    uint32_t table_id_base,
                    pds_flow_age_expiry_type_t expiry_type,
-                   uint64_t expiry_map)
+                   uint64_t expiry_map,
+                   void *user_ctx)
 {
     expiry_submaps_t    submaps;
     uint32_t            expiry_id;
@@ -325,21 +330,21 @@ expiry_map_process(uint32_t map_id,
         expiry_id = table_id_base +
                     (map_id * sizeof(uint64_t) * BITS_PER_BYTE);
         expiry_submap_process(0, expiry_id, expiry_type,
-                              submaps.s.submap[0]);
+                              submaps.s.submap[0], user_ctx);
         expiry_submap_process(1, expiry_id, expiry_type,
-                              submaps.s.submap[1]);
+                              submaps.s.submap[1], user_ctx);
         expiry_submap_process(2, expiry_id, expiry_type,
-                              submaps.s.submap[2]);
+                              submaps.s.submap[2], user_ctx);
         expiry_submap_process(3, expiry_id, expiry_type,
-                              submaps.s.submap[3]);
+                              submaps.s.submap[3], user_ctx);
         expiry_submap_process(4, expiry_id, expiry_type,
-                              submaps.s.submap[4]);
+                              submaps.s.submap[4], user_ctx);
         expiry_submap_process(5, expiry_id, expiry_type,
-                              submaps.s.submap[5]);
+                              submaps.s.submap[5], user_ctx);
         expiry_submap_process(6, expiry_id, expiry_type,
-                              submaps.s.submap[6]);
+                              submaps.s.submap[6], user_ctx);
         expiry_submap_process(7, expiry_id, expiry_type,
-                              submaps.s.submap[7]);
+                              submaps.s.submap[7], user_ctx);
     }
 }
 
@@ -347,15 +352,16 @@ static void
 expiry_submap_process(uint32_t submap_id,
                       uint32_t expiry_id_base,
                       pds_flow_age_expiry_type_t expiry_type,
-                      uint8_t submap)
+                      uint8_t submap,
+                      void *user_ctx)
 {
     pds_flow_expiry_fn_t    expiry_fn = pollers_expiry_fn_get();
     uint32_t                sub_expiry_id;
 
-#define SUBMAP_TST_BIT(bit)                                 \
-    if (submap & ((1 << (bit)))) {                          \
-        expiry_fn(sub_expiry_id + (bit), expiry_type);      \
-    }                                                       \
+#define SUBMAP_TST_BIT(bit)                                         \
+    if (submap & ((1 << (bit)))) {                                  \
+        expiry_fn(sub_expiry_id + (bit), expiry_type, user_ctx);    \
+    }                                                               \
 
     if (submap) {
         sub_expiry_id = expiry_id_base +
@@ -373,7 +379,8 @@ expiry_submap_process(uint32_t submap_id,
 
 static void
 expiry_fn_dflt_fn(uint32_t expiry_id,
-                  pds_flow_age_expiry_type_t expiry_type)
+                  pds_flow_age_expiry_type_t expiry_type,
+                  void *user_ctx)
 {
     if (expiry_log_en) {
         PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);

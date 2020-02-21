@@ -15,6 +15,12 @@
 extern "C" {
 
 sdk_ret_t
+pds_flow_age_init(void)
+{
+    return ftl_pollers_client::init();
+}
+
+sdk_ret_t
 pds_flow_age_hw_scanners_start(void)
 {
     return ftl_dev_impl::scanners_start();
@@ -52,9 +58,10 @@ pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
 }
 
 sdk_ret_t
-pds_flow_age_sw_pollers_poll(uint32_t poller_id)
+pds_flow_age_sw_pollers_poll(uint32_t poller_id,
+                             void *user_ctx)
 {
-    return ftl_pollers_client::poll(poller_id);
+    return ftl_pollers_client::poll(poller_id, user_ctx);
 }
 
 sdk_ret_t

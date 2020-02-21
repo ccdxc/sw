@@ -109,7 +109,7 @@ fte_rx_loop (int poller_qid)
     PDS_TRACE_DEBUG("\nFTE_ATH fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
         if ((poller_qid != -1) && !ftl_pollers_client::user_will_poll()) {
-            ftl_pollers_client::poll(poller_qid);
+            pds_flow_age_sw_pollers_poll(poller_qid, nullptr);
         }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);
         if (!numrx) {
@@ -263,8 +263,8 @@ _init_txbf (uint16_t portid)
 static void
 _init_pollers_client()
 {
-    if (ftl_pollers_client::init() != SDK_RET_OK) {
-        rte_exit(EXIT_FAILURE, "failed ftl_pollers_client init");
+    if (pds_flow_age_init() != SDK_RET_OK) {
+        rte_exit(EXIT_FAILURE, "failed pds_flow_age_init");
     }
 
     pollers_client_qcount = ftl_pollers_client::qcount_get();

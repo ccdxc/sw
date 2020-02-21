@@ -795,7 +795,7 @@ lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
      * In SIM mode artificially reduce the number of poller queues.
      */
     if (!platform_is_hw(platform_type)) {
-        devcmd->req().pollers_init.qcount = 1;
+        devcmd->req().pollers_init.qcount = std::min((uint32_t)2, qcount);
     }
     qcount_actual = devcmd->req().pollers_init.qcount;
 
@@ -849,9 +849,10 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
      * and scan table size.
      */
     if (!platform_is_hw(platform_type)) {
-        devcmd->req().scanners_init.qcount = 1;
+        devcmd->req().scanners_init.qcount =  std::min((uint32_t)2, qcount);
         devcmd->req().scanners_init.scan_table_sz = 1024;
-        devcmd->req().scanners_init.poller_qcount = 1;
+        devcmd->req().scanners_init.poller_qcount =
+                      std::min((uint32_t)2, pollers_qident->qcount);
     }
     table_sz = devcmd->req().scanners_init.scan_table_sz;
     qcount_actual = devcmd->req().scanners_init.qcount;

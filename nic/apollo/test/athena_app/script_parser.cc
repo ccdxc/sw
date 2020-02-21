@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "app_test.hpp"
+#include "app_test_utils.hpp"
 #include "script_parser.hpp"
 
 namespace test {
@@ -17,7 +17,10 @@ namespace athena_app {
 script_parser_t::script_parser_t(const string& scripts_dir,
                                  const string& script_fname,
                                  token_parser_t& token_parser) :
-    token_parser(token_parser)
+    token_parser(token_parser),
+    line_no_(0),
+    line_consumed_(true),
+    token_consumed_(true)
 {
     string      full_fname;
 
@@ -40,18 +43,26 @@ script_parser_t::~script_parser_t()
     }
 }
 
-string
+token_type_t
 script_parser_t::parse(void)
 {
     string              token;
 
     while (line_get()) {
         token = next_token_get();
-        if (!token.empty()) {
-            break;
+        if (token_parser.is_eol(token)) {
+            line_consume_set();
+            token_consume_set();
+            return TOKEN_TYPE_EOL;
         }
+
+        if (token_parser.is_num(token)) {
+            return TOKEN_TYPE_NUM;
+        }
+        return TOKEN_TYPE_STR;
     }
-    return token;
+
+    return TOKEN_TYPE_EOF;
 }
 
 bool
@@ -61,19 +72,22 @@ script_parser_t::eof(void)
 }
 
 /*
- * Get a new line and automatically strip whitespaces and discard
+ * Get a new line and automatically skip whitespaces and discard
  * empty/comment lines.
  */
 bool
 script_parser_t::line_get(void)
 {
     if (file.is_open()) {
-        while (getline(file, line)) {
+        if (!line_consumed()) {
+            return true;
+        }
+
+        if (getline(file, line)) {
+            line_no_++;
             token_parser(line);
-            token_parser.whitespaces_strip();
-            if (!token_parser.line_empty() && !token_parser.line_is_comment()) {
-                return true;
-            }
+            line_consume_clr();
+            return true;
         }
 
         file.close();
@@ -88,10 +102,41 @@ script_parser_t::line_get(void)
 const string&
 script_parser_t::next_token_get(void)
 {
-    next_token = token_parser.next_token_get();
+    if (token_consumed()) {
+        next_token = token_parser.next_token_get();
+        token_consume_clr();
+    }
     return next_token;
 }
 
+/*
+ * Parse small number (can be dec/hex/octal).
+ */
+bool
+script_parser_t::parse_num(uint32_t *ret_num)
+{
+    const string&   token = next_token_get();
+    const char      *sptr;
+    char            *eptr;
+    u_long          n;
+
+    token_consume_set();
+    sptr = token.c_str();
+    n = strtoul(sptr, &eptr, 0);
+    *ret_num = n;
+    return (n != 0) || (sptr != eptr);
+}
+
+/*
+ * Parse string
+ */
+bool
+script_parser_t::parse_str(string *ret_str)
+{
+    ret_str->assign(next_token_get());
+    token_consume_set();
+    return !ret_str->empty();
+}
 
 /*
  * Token parser
@@ -112,57 +157,58 @@ token_parser_t::next_token_get(void)
     token.clear();
 
     /*
-     * next token begins at curr_pos until the 1st delimiter found,
+     * next token begins at curr_pos until the 1st delim found,
      * or until end of line.
      */
-    while (curr_pos < line.size()) {
-        matched_pos = line.find_first_of(delims, curr_pos);
-        if (matched_pos == string::npos) {
-            token.assign(line.substr(curr_pos));
-            curr_pos = line.size();
-            break;
-        }
+    whitespaces_skip();
+    if (!is_comment()) {
+        while (curr_pos < line.size()) {
+            matched_pos = line.find_first_of(whitespaces, curr_pos);
+            if (matched_pos != string::npos) {
+                token.assign(line.substr(curr_pos, matched_pos - curr_pos));
+                curr_pos = matched_pos + 1;
+                break;
+            }
 
-        token.assign(line.substr(curr_pos, matched_pos - curr_pos));
-        curr_pos = matched_pos + 1;
-        if (!token.empty()) {
+            /*
+             * Since whitespaces were initially skipped on function entry, the
+             * next token had to have ended with a whitespace (above) or EOL.
+             * If not, then the rest of the line constitutes the next token.
+             */
+            matched_pos = line.find_first_of(eol_delims, curr_pos);
+            if (matched_pos == string::npos) {
+                token.assign(line.substr(curr_pos));
+                curr_pos = line.size();
+                break;
+            }
+
+            /*
+             * EOL, if found, is also returned as a token
+             */
+            token.assign(line.substr(curr_pos, matched_pos == curr_pos ?
+                                               1 : matched_pos - curr_pos));
+            curr_pos = matched_pos + 1;
             break;
         }
     }
 
     /*
-     * An empty token on return means end of line
+     * An empty token on return also means end of line
      */
     return token;
 }
 
 /*
- * Strip all whitespaces from line to make parsing easier.
+ * Skip all whitespaces from line to get to next token
  */
 void
-token_parser_t::whitespaces_strip(void)
+token_parser_t::whitespaces_skip(void)
 {
-    string      stripped_line;
-    size_t      matched_pos;
-    size_t      pos = 0;
-
-    while (true) {
-        matched_pos = line.find_first_of(whitespaces, pos);
-        if (matched_pos == string::npos) {
-            stripped_line.append(line.substr(pos, string::npos));
-            break;
-        }
-
-        stripped_line.append(line.substr(pos, matched_pos - pos));
-        pos = line.find_first_not_of(whitespaces, matched_pos);
-        if (pos == string::npos) {
-            break;
-        }
+    curr_pos = line.find_first_not_of(whitespaces, curr_pos);
+    if (curr_pos == string::npos) {
+        line.clear();
     }
-
-    line.assign(stripped_line);
 }
-
 
 }    // namespace athena_app
 }    // namespace test

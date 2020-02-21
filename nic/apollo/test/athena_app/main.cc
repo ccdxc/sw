@@ -26,7 +26,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "trace.hpp"
 #include "fte_athena.hpp"
-#include "app_test.hpp"
+#include "app_test_utils.hpp"
 
 namespace core {
 // number of trace files to keep
@@ -407,16 +407,10 @@ main (int argc, char **argv)
  * App test exit with test result - callable from script_exec()
  */
 bool
-app_test_exit(void *arg)
+app_test_exit(test::athena_app::test_vparam_ref_t vparam)
 {
-    //bool overall_success = *((bool *)arg);
-
     pds_teardown();
-
-    // For now return success result always while continuing to
-    // monitor jobd runs.
-    //exit(overall_success ? 0 : 1);
-    exit(0);
+    exit(vparam.expected_bool() ? 0 : 1);
     return 0;
 }
 

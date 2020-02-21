@@ -1536,6 +1536,7 @@ ftl_lif_queues_ctl_t::ftl_lif_queues_ctl_t(FtlLif& lif,
     lif(lif),
     qtype_(qtype),
     wrings_base_addr(0),
+    wring_single_sz(0),
     slot_data_sz(0),
     qcount_(qcount),
     qdepth(0),
@@ -1626,7 +1627,6 @@ ftl_status_code_t
 ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
 {
     poller_init_single_cmd_t    single_cmd = {0};
-    uint32_t                    wring_single_sz;
     ftl_status_code_t           status;
 
     NIC_LOG_DEBUG("{}: qtype {} qcount {} qdepth {} wrings_base_addr {:#x} "
@@ -1842,6 +1842,7 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
                                     uint32_t buf_sz)
 {
     int64_t             qstate_addr;
+    uint64_t            queue_wring_base;
     uint64_t            slot_addr;
     qstate_1ring_cb_t   qstate_1ring_cb;
     uint32_t            avail_count;
@@ -1887,7 +1888,8 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
         /*
          * Handle ring wrap during read
          */
-        slot_addr = wrings_base_addr + (cndx * slot_data_sz);
+        queue_wring_base = wrings_base_addr + (qid * wring_single_sz);
+        slot_addr = queue_wring_base + (cndx * slot_data_sz);
         max_read_sz = (qdepth - cndx) * slot_data_sz;
         read_sz = std::min(total_read_sz, max_read_sz);
 
@@ -1899,7 +1901,7 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
             /*
              * Wrap once to start of ring
              */
-            read_mem_large(wrings_base_addr, buf, total_read_sz);
+            read_mem_large(queue_wring_base, buf, total_read_sz);
         }
 
         qstate_1ring_cb.c_ndx0 = (cndx + read_count) & qdepth_mask;

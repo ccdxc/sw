@@ -272,6 +272,7 @@ private:
     FtlLif&                 lif;
     enum ftl_qtype          qtype_;
     uint64_t                wrings_base_addr;
+    uint32_t                wring_single_sz;
     uint32_t                slot_data_sz;
     uint32_t                qcount_;
     uint32_t                qdepth;

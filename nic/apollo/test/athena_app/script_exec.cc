@@ -8,46 +8,46 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "app_test.hpp"
+#include "app_test_utils.hpp"
 #include "script_parser.hpp"
 #include "session_aging.hpp"
 
 namespace test {
 namespace athena_app {
 
-const static map<string,app_test_fn_with_param_t> name2fn_map =
+const static map<string,test_fn_t>  name2fn_map =
 {
     SESSION_AGING_NAME2FN_MAP
-    APP_TEST_NAME2FN_MAP_ENTRY_NULL_PARAM(APP_TEST_EXIT_FN),
+    APP_TEST_NAME2FN_MAP_ENTRY(APP_TEST_EXIT_FN),
 };
 
 class test_entry_t
 {
 public:
     test_entry_t(const string test_name,
-                 app_test_fn_t test_fn,
-                 void *test_param) :
+                 test_fn_t test_fn,
+                 test_vparam_t vparam) :
         test_name(test_name),
         test_fn(test_fn),
-        test_param(test_param),
+        vparam(vparam),
         test_success(false)
     {
     }
 
     string                      test_name;
-    app_test_fn_t               test_fn;
-    void                        *test_param;
+    test_fn_t                   test_fn;
+    test_vparam_t                 vparam;
     bool                        test_success;
 };
 
 static vector<test_entry_t>     test_suite;
 
-static const app_test_fn_with_param_t *
+static test_fn_t
 name2fn_find(const string &token)
 {
     auto iter = name2fn_map.find(token);
     if (iter != name2fn_map.end()) {
-        return &iter->second;
+        return iter->second;
     }
     return nullptr;
 }
@@ -57,9 +57,11 @@ script_exec(const string& scripts_dir,
             const string& script_fname)
 {
     script_parser_t     *script_parser;
-    const app_test_fn_with_param_t *test_fn;
+    test_fn_t           test_fn;
     token_parser_t      token_parser;
     string              test_name;
+    test_vparam_t       vparam;
+    token_type_t        token_type;
     struct timeval      start;
     struct timeval      end;
     size_t              tcid;
@@ -67,20 +69,72 @@ script_exec(const string& scripts_dir,
     bool                overall_success;
 
     script_parser = new script_parser_t(scripts_dir, script_fname,
-                                        token_parser);    while (!script_parser->eof()) {
-        test_name = script_parser->parse();
-        if (test_name.empty()) {
+                                        token_parser);
+    while (!script_parser->eof()) {
+        token_type = script_parser->parse();
+        if (token_type == TOKEN_TYPE_EOF) {
             break;
         }
-        test_fn = name2fn_find(test_name);
-        if (test_fn && test_fn->first) {
-            test_suite.push_back(test_entry_t(test_name, test_fn->first,
-                                              test_fn->second));
-        } else {
-            test_name.append(" (null)");
-            test_suite.push_back(test_entry_t(test_name, nullptr, nullptr));
+        if (token_type == TOKEN_TYPE_EOL) {
+            continue;
         }
+
+        // First token should be a test name
+        if ((token_type != TOKEN_TYPE_STR) ||
+            !script_parser->parse_str(&test_name)) {
+
+            TEST_LOG_INFO("Script line %u: first token must be a valid "
+                          "test function name\n", script_parser->line_no());
+            return;
+        }
+
+        // loop and build params vector
+        while (!script_parser->eof()) {
+            token_type = script_parser->parse();
+            if ((token_type == TOKEN_TYPE_EOL) ||
+                (token_type == TOKEN_TYPE_EOF)) {
+                break;
+            }
+
+            switch (token_type) {
+
+            case TOKEN_TYPE_STR: {
+                string      param_str;
+
+                if (!script_parser->parse_str(&param_str)) {
+                    TEST_LOG_INFO("Script line %u: invalid string parameter\n",
+                                  script_parser->line_no());
+                    return;
+                }
+                vparam.push_back(test_param_t(param_str));
+                break;
+            }
+
+            case TOKEN_TYPE_NUM: {
+                uint32_t    param_num;
+
+                if (!script_parser->parse_num(&param_num)) {
+                    TEST_LOG_INFO("Script line %u: invalid numeric parameter\n",
+                                  script_parser->line_no());
+                    return;
+                }
+                vparam.push_back(test_param_t(param_num));
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        test_fn = name2fn_find(test_name);
+        if (!test_fn) {
+            test_name.append(" (null)");
+        }
+        test_suite.push_back(test_entry_t(test_name, test_fn, vparam));
+        vparam.clear();
     }
+
     delete script_parser;
 
     if (test_suite.size() == 0) {
@@ -108,7 +162,7 @@ script_exec(const string& scripts_dir,
         TEST_LOG_INFO(" Starting test #: %d name: %s\n", (int)tcid,
                       test_entry.test_name.c_str());
         test_entry.test_success = test_entry.test_fn ? 
-                   test_entry.test_fn(test_entry.test_param) : true;
+                   test_entry.test_fn(test_entry.vparam) : true;
 
         gettimeofday(&end, NULL);
         TEST_LOG_INFO(" Finished test #: %d name: %s status %u time %u\n",
@@ -132,7 +186,10 @@ script_exec(const string& scripts_dir,
                   overall_success ? "SUCCESS" : "FAILURE");
     if (has_app_exit) {
         test_entry_t& test_entry = test_suite.at(tcid);
-        test_entry.test_fn((void *)&overall_success);
+
+        vparam.clear();
+        vparam.push_back(test_param_t((uint32_t)overall_success));
+        test_entry.test_fn(vparam);
     }
 }
 

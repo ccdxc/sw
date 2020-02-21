@@ -43,7 +43,15 @@ typedef struct pds_flow_age_timeout_s {
 
 /// \brief handler to process an expired session or conntrack ID
 typedef void (*pds_flow_expiry_fn_t)(uint32_t expiry_id,
-                                     pds_flow_age_expiry_type_t expiry_type);
+                                     pds_flow_age_expiry_type_t expiry_type,
+                                     void *user_ctx);
+
+/// \brief     Initialize flow aging module
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    This function implements one-time initialization of the flow aging
+/// \remark    module. Calling the same function multiple times would have no
+/// \remark    adverse effects and will simply be treated as no-op.
+sdk_ret_t pds_flow_age_init(void);
 
 /// \brief     Start all instances of HW scanner
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -99,6 +107,7 @@ sdk_ret_t pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
 
 /// \brief     Submit a poll request (a burst dequeue) on a poller queue
 /// \param[in] poller_id: poller queue ID
+/// \param[in] user_ctx: pointer to user context, if any
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    This function should only be called if the user intended to take
 /// \remark    responsibility for doing all polling in its own threads. The 
@@ -106,8 +115,10 @@ sdk_ret_t pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
 /// \remark    corresponding to poller_id. Any expired entries found will be
 /// \remark    sent to the handler function previously registered with 
 /// \remark    pds_flow_age_sw_pollers_poll_control(), or the default handler
-/// \remark    if none were registered.
-sdk_ret_t pds_flow_age_sw_pollers_poll(uint32_t poller_id);
+/// \remark    if none were registered. The argument user_ctx will also be
+/// \remark    passed on to the handler function.
+sdk_ret_t pds_flow_age_sw_pollers_poll(uint32_t poller_id,
+                                       void *user_ctx);
 
 /// \brief     Set normal inactivity timeout values for different types of flow
 /// \param[in] normal timeouts specification

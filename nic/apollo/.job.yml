@@ -275,15 +275,25 @@ targets:
     - build-athena-x86
     - build-athena-arm
 
-  #athena_app/session_aging_sim_simple:
-  #  commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
-  #  owners: ["email:raghava@pensando.io"]
-  #  area:
-  #  sub-area:
-  #  feature:
-  #  build-dependencies:
-  #  - build-athena-x86
-  #  - build-athena-arm
+  athena_app/session_aging_sim_simple:
+    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
+    owners: ["email:raghava@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena-x86
+    - build-athena-arm
+
+  athena_app/session_aging_sim_medium:
+    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_medium"]
+    owners: ["email:raghava@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena-x86
+    - build-athena-arm
 
 cache:
   name: "sw"
