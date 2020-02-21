@@ -210,6 +210,12 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     local_mapping_swkey_t local_mapping_key;
 
     vnic = vnic_find(&spec->vnic);
+    if (unlikely(vnic == NULL)) {
+        PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
+                      "reservation failed", spec->vnic.str(),
+                      mapping->key2str().c_str());
+        return SDK_RET_INVALID_ARG;
+    }
     // reserve an entry in LOCAL_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
                                          ((vpc_impl *)vpc->impl())->hw_id(),
