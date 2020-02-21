@@ -457,11 +457,11 @@ jobd/apulu/gtest_2: ${JOBD_PREREQS}
 
 .PHONY: jobd/apulu/metaswitch_hals_test
 jobd/apulu/metaswitch_hals_test: ${JOBD_PREREQS}
-	LD_LIBRARY_PATH=${NICDIR}/third-party/metaswitch/output/x86_64/debug/ ${NICDIR}/build/x86_64/apulu/out/pds_ms_hals_test_mockapi_gtest/pds_ms_hals_test_mockapi.gtest
+	LD_LIBRARY_PATH=${NICDIR}/third-party/metaswitch/output/x86_64/ ${NICDIR}/build/x86_64/apulu/out/pds_ms_hals_test_mockapi_gtest/pds_ms_hals_test_mockapi.gtest
 
 .PHONY: jobd/apulu/metaswitch_store_test
 jobd/apulu/metaswitch_store_test: ${JOBD_PREREQS}
-	LD_LIBRARY_PATH=${NICDIR}/third-party/metaswitch/output/x86_64/debug/ ${NICDIR}/build/x86_64/apulu/out/pds_ms_store_test_gtest/pds_ms_store_test.gtest
+	LD_LIBRARY_PATH=${NICDIR}/third-party/metaswitch/output/x86_64/ ${NICDIR}/build/x86_64/apulu/out/pds_ms_store_test_gtest/pds_ms_store_test.gtest
 
 .PHONY: jobd/dol/apulu/vxlan
 jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
