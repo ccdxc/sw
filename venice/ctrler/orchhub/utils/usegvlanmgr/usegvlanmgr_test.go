@@ -392,6 +392,23 @@ func TestReleaseVlan(t *testing.T) {
 	testHelper(t, testCases, testFunction, validateVlans, forceTestName)
 }
 
+func TestDebug(t *testing.T) {
+	vMgr := NewVlanManager(0, 4000, false, 0)
+
+	ownerMap := make(map[string]int)
+	for index := 0; index < 10; index++ {
+		owner := fmt.Sprintf("owner-%d", index)
+		vlan, err := vMgr.AssignVlan(owner)
+
+		tu.AssertOk(t, err, "assigning next vlan failed for %s", owner)
+		ownerMap[owner] = vlan
+	}
+
+	debugMap, err := vMgr.Debug(nil)
+	tu.AssertOk(t, err, "Failed to get debug info")
+	tu.AssertEquals(t, ownerMap, debugMap, "debug info didn't match expected")
+}
+
 func validateVlans(t *testing.T, tc testCase, vMgr *VlanMgr) {
 	// Validate vlan array
 	for i, val := range vMgr.vlans {

@@ -51,18 +51,18 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 		return err
 	}
 
-	if d.getPenDVS(dvsName) == nil {
+	penDVS := d.getPenDVS(dvsName)
+	if penDVS == nil {
 		useg, err := useg.NewUsegAllocator()
 		if err != nil {
 			d.Log.Errorf("Creating useg mgr for DC %s - penDVS %s failed, %v", dcName, dvsName, err)
 			return err
 		}
-		penDVS := &PenDVS{
+		penDVS = &PenDVS{
 			State:   d.State,
 			probe:   d.probe,
 			DcName:  dcName,
 			DvsName: dvsName,
-			DvsRef:  dvs.Reference(),
 			UsegMgr: useg,
 			Pgs:     map[string]*PenPG{},
 			pgIDMap: map[string]*PenPG{},
@@ -70,6 +70,8 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 
 		d.DvsMap[dvsName] = penDVS
 	}
+
+	penDVS.DvsRef = dvs.Reference()
 
 	err = d.probe.TagObjAsManaged(dvs.Reference())
 	if err != nil {

@@ -259,13 +259,8 @@ func TestVCSyncHost(t *testing.T) {
 	AssertOk(t, err, "failed host1 create")
 	err = dvs.AddHost(hostSystem1)
 	AssertOk(t, err, "failed to add Host to DVS")
-	pNicMac := net.HardwareAddr{}
-	pNicMac = append(pNicMac, globals.PensandoOUI[0])
-	pNicMac = append(pNicMac, globals.PensandoOUI[1])
-	pNicMac = append(pNicMac, globals.PensandoOUI[2])
-	pNicMac = append(pNicMac, 0xaa)
-	pNicMac = append(pNicMac, 0x00)
-	pNicMac = append(pNicMac, 0x00)
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
 	// Make it Pensando host
 	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
 
@@ -273,83 +268,64 @@ func TestVCSyncHost(t *testing.T) {
 	AssertOk(t, err, "failed host2 create")
 	err = dvs.AddHost(hostSystem2)
 	AssertOk(t, err, "failed to add Host to DVS")
-	pNicMac2 := net.HardwareAddr{}
-	pNicMac2 = append(pNicMac2, globals.PensandoOUI[0])
-	pNicMac2 = append(pNicMac2, globals.PensandoOUI[1])
-	pNicMac2 = append(pNicMac2, globals.PensandoOUI[2])
-	pNicMac2 = append(pNicMac2, 0xbb)
-	pNicMac2 = append(pNicMac2, 0x00)
-	pNicMac2 = append(pNicMac2, 0x00)
+	pNicMac2 := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	// Make it Pensando host
 	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac2))
 
 	// CREATING HOSTS
-	staleHost2 := cluster.Host{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00001"),
-			Namespace: "default",
-			// Don't set Tenant as object is not scoped inside Tenant in proto file.
-			Labels: map[string]string{},
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Host",
-		},
-		Spec: cluster.HostSpec{
-			DSCs: []cluster.DistributedServiceCardID{
-				cluster.DistributedServiceCardID{
-					ID:         "test",
-					MACAddress: conv.MacString(pNicMac),
-				},
-			},
-		},
-	}
+	staleHost2 := createHostObj(
+		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00001"),
+		"test",
+		conv.MacString(pNicMac),
+	)
 	utils.AddOrchNameLabel(staleHost2.Labels, "AnotherVC")
 	addNamespaceLabel(staleHost2.Labels, "AnotherDC")
-	sm.Controller().Host().Create(&staleHost2)
+	err = sm.Controller().Host().Create(&staleHost2)
+	AssertOk(t, err, "failed to create host")
 
 	// Create a another stale host with same mac addr but different VC id
-	staleHost := cluster.Host{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
-			Namespace: "default",
-			// Don't set Tenant as object is not scoped inside Tenant in proto file.
-			Labels: map[string]string{},
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Host",
-		},
-		Spec: cluster.HostSpec{
-			DSCs: []cluster.DistributedServiceCardID{
-				cluster.DistributedServiceCardID{
-					ID:         "test",
-					MACAddress: conv.MacString(pNicMac),
-				},
-			},
-		},
-	}
+	staleHost := createHostObj(
+		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
+		"test",
+		conv.MacString(pNicMac),
+	)
 	utils.AddOrchNameLabel(staleHost.Labels, orchConfig.Name)
 	addNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
 	// replace stale host with same mac but different VC by this one
 	vchub.fixStaleHost(&staleHost)
 
-	host1 := cluster.Host{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
-			Namespace: "default",
-			// Don't set Tenant as object is not scoped inside Tenant in proto file.
-			Labels: map[string]string{},
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Host",
-		},
-		Spec: cluster.HostSpec{
-			DSCs: []cluster.DistributedServiceCardID{
-				cluster.DistributedServiceCardID{
-					ID: "test1",
-				},
+	// Stale host that will have a stale workload referring to it
+	staleHost3 := createHostObj(
+		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00002"),
+		"test",
+		conv.MacString(pNicMac),
+	)
+	utils.AddOrchNameLabel(staleHost3.Labels, orchConfig.Name)
+	addNamespaceLabel(staleHost3.Labels, dc1.Obj.Name)
+	err = sm.Controller().Host().Create(&staleHost3)
+	AssertOk(t, err, "failed to create host")
+
+	// Create stale workload
+	staleWorkload := createWorkloadObj(
+		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
+		staleHost3.Name,
+		[]workload.WorkloadIntfSpec{
+			workload.WorkloadIntfSpec{
+				MACAddress:   "aaaa.bbbb.cccc",
+				MicroSegVlan: 2000,
 			},
 		},
-	}
+	)
+
+	vchub.addWorkloadLabels(&staleWorkload, "staleWorkload", dc1.Obj.Name)
+	err = sm.Controller().Workload().Create(&staleWorkload)
+	AssertOk(t, err, "failed to create workload")
+
+	host1 := createHostObj(
+		createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+		"test1",
+		"",
+	)
 	utils.AddOrchNameLabel(host1.Labels, orchConfig.Name)
 	addNamespaceLabel(host1.Labels, dc1.Obj.Name)
 
@@ -475,13 +451,7 @@ func TestVCSyncVM(t *testing.T) {
 	AssertOk(t, err, "failed host1 create")
 	err = dvs.AddHost(hostSystem1)
 	AssertOk(t, err, "failed to add Host to DVS")
-	pNicMac := net.HardwareAddr{}
-	pNicMac = append(pNicMac, globals.PensandoOUI[0])
-	pNicMac = append(pNicMac, globals.PensandoOUI[1])
-	pNicMac = append(pNicMac, globals.PensandoOUI[2])
-	pNicMac = append(pNicMac, 0xaa)
-	pNicMac = append(pNicMac, 0x00)
-	pNicMac = append(pNicMac, 0x00)
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
 	// Make it Pensando host
 	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
 
@@ -514,46 +484,24 @@ func TestVCSyncVM(t *testing.T) {
 	AssertOk(t, err, "Failed to create vmNew")
 
 	// CREATING HOSTS
-	host1 := cluster.Host{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
-			Namespace: "default",
-			// Don't set Tenant as object is not scoped inside Tenant in proto file.
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Host",
-		},
-		Spec: cluster.HostSpec{
-			DSCs: []cluster.DistributedServiceCardID{
-				cluster.DistributedServiceCardID{
-					ID: "test1",
-				},
-			},
-		},
-	}
+	host1 := createHostObj(
+		createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+		"test1",
+		"",
+	)
 	sm.Controller().Host().Create(&host1)
 
 	// CREATING WORKLOADS
-	staleWorkload := workload.Workload{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
-			Namespace: "default",
-			Tenant:    "default",
-			Labels:    map[string]string{},
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Workload",
-		},
-		Spec: workload.WorkloadSpec{
-			HostName: host1.Name,
-			Interfaces: []workload.WorkloadIntfSpec{
-				workload.WorkloadIntfSpec{
-					MACAddress:   "aaaa.bbbb.cccc",
-					MicroSegVlan: 2000,
-				},
+	staleWorkload := createWorkloadObj(
+		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
+		host1.Name,
+		[]workload.WorkloadIntfSpec{
+			workload.WorkloadIntfSpec{
+				MACAddress:   "aaaa.bbbb.cccc",
+				MicroSegVlan: 2000,
 			},
 		},
-	}
+	)
 
 	vchub.addWorkloadLabels(&staleWorkload, "staleWorkload", dc1.Obj.Name)
 	tagMsg := defs.TagMsg{
@@ -564,26 +512,16 @@ func TestVCSyncVM(t *testing.T) {
 	generateLabelsFromTags(staleWorkload.Labels, tagMsg)
 	sm.Controller().Workload().Create(&staleWorkload)
 
-	workloadExisting := workload.Workload{
-		ObjectMeta: api.ObjectMeta{
-			Name:      createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmExisting.Self.Value),
-			Namespace: "default",
-			Tenant:    "default",
-			Labels:    map[string]string{},
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Workload",
-		},
-		Spec: workload.WorkloadSpec{
-			HostName: host1.Name,
-			Interfaces: []workload.WorkloadIntfSpec{
-				workload.WorkloadIntfSpec{
-					MACAddress:   vmExistingMac,
-					MicroSegVlan: 3000,
-				},
+	workloadExisting := createWorkloadObj(
+		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmExisting.Self.Value),
+		host1.Name,
+		[]workload.WorkloadIntfSpec{
+			workload.WorkloadIntfSpec{
+				MACAddress:   vmExistingMac,
+				MicroSegVlan: 3000,
 			},
 		},
-	}
+	)
 	vchub.addWorkloadLabels(&workloadExisting, "vmExisting", dc1.Obj.Name)
 	sm.Controller().Workload().Create(&workloadExisting)
 
@@ -782,13 +720,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	err = dvs.AddHost(host)
 	AssertOk(t, err, "failed to add Host to DVS")
 
-	pNicMac := net.HardwareAddr{}
-	pNicMac = append(pNicMac, globals.PensandoOUI[0])
-	pNicMac = append(pNicMac, globals.PensandoOUI[1])
-	pNicMac = append(pNicMac, globals.PensandoOUI[2])
-	pNicMac = append(pNicMac, 0xbb)
-	pNicMac = append(pNicMac, 0x00)
-	pNicMac = append(pNicMac, 0x00)
+	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	// Make it Pensando host
 	err = host.AddNic("vmnic0", conv.MacString(pNicMac))
 	AssertOk(t, err, "failed to add pNic")
@@ -951,4 +883,52 @@ func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestrati
 	}
 
 	return vchub
+}
+
+func createHostObj(name, id, macAddress string) cluster.Host {
+	host := cluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+			// Don't set Tenant as object is not scoped inside Tenant in proto file.
+			Labels: map[string]string{},
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Host",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					ID:         id,
+					MACAddress: macAddress,
+				},
+			},
+		},
+	}
+	return host
+}
+
+func createWorkloadObj(name, host string, infs []workload.WorkloadIntfSpec) workload.Workload {
+	workload := workload.Workload{
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: "default",
+			Tenant:    "default",
+			Labels:    map[string]string{},
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Workload",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName:   host,
+			Interfaces: infs,
+		},
+	}
+	return workload
+}
+
+func createPenPnicBase() net.HardwareAddr {
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0], globals.PensandoOUI[1], globals.PensandoOUI[2])
+	return pNicMac
 }

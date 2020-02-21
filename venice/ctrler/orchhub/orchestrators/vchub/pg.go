@@ -92,11 +92,11 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 			probe:  d.probe,
 			DcName: d.DcName,
 			PgName: pgName,
-			PgRef:  pg.Reference(),
 		}
 		d.Pgs[pgName] = penPG
-		d.pgIDMap[pg.Reference().Value] = penPG
 	}
+	penPG.PgRef = pg.Reference()
+	d.pgIDMap[pg.Reference().Value] = penPG
 
 	penPG.NetworkMeta = networkMeta
 

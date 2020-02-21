@@ -2,12 +2,18 @@ package instanceManager
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/globals"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -19,6 +25,7 @@ type Orchestrator interface {
 	// are to be cleaned up when Destroy is called as well as any apiserver
 	// objets that were created for the orchestrator
 	Destroy(delete bool)
+	Debug(action string, params map[string]string) (interface{}, error)
 	UpdateConfig(*orchestration.Orchestrator)
 	Sync()
 }
@@ -77,6 +84,37 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 		stateMgr:          stateMgr,
 		instanceManagerCh: instanceManagerCh,
 	}
+
+	diagSvc := diagsvc.GetDiagnosticsService(globals.OrchHub, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, logger)
+	handlerFn := func(action string, params map[string]string) (interface{}, error) {
+		key, ok := params["key"]
+		if !ok {
+			return nil, fmt.Errorf("key is a required param")
+		}
+		orch, ok := instance.orchestratorMap[key]
+		if !ok {
+			// Try with default key format
+			meta := api.ObjectMeta{
+				Name: key,
+			}
+			key = meta.GetKey()
+		}
+		orch, ok = instance.orchestratorMap[key]
+
+		if !ok {
+			options := []string{}
+			for k := range instance.orchestratorMap {
+				options = append(options, k)
+			}
+			return nil, fmt.Errorf("No instance with the given key %s was found. Known keys: %v", key, options)
+		}
+
+		return orch.Debug(action, params)
+	}
+	diagSvc.RegisterCustomAction(vchub.DebugUseg, handlerFn)
+	diagSvc.RegisterCustomAction(vchub.DebugCache, handlerFn)
+	diagSvc.RegisterCustomAction(vchub.DebugState, handlerFn)
+	diagSvc.RegisterCustomAction(vchub.DebugSync, handlerFn)
 
 	return instance, nil
 }
@@ -154,7 +192,8 @@ func (w *InstanceManager) periodicSync() {
 			if !inProgress {
 				w.logger.Info("periodic sync running")
 				inProgress = true
-				for _, v := range w.orchestratorMap {
+				for k, v := range w.orchestratorMap {
+					w.logger.Info("periodic sync running for %s", k)
 					v.Sync()
 				}
 				inProgress = false

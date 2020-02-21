@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -354,4 +355,43 @@ func (p *PCache) Run(ctx context.Context, wg *sync.WaitGroup) {
 			}
 		}
 	}
+}
+
+// Debug returns the pcache entries
+func (p *PCache) Debug(params map[string]string) (interface{}, error) {
+
+	addKind := func(kind string, debugMap map[string]interface{}) error {
+		kindEntry, ok := p.kinds[kind]
+		if !ok {
+			return fmt.Errorf("Kind %s is not a known kind", kind)
+		}
+		retMap := map[string]interface{}{}
+		kindEntry.Lock()
+		defer kindEntry.Unlock()
+		for key, in := range kindEntry.entries {
+			retMap[key] = ref.DeepCopy(in)
+		}
+		debugMap[kind] = retMap
+		return nil
+	}
+
+	p.RLock()
+	defer p.RUnlock()
+
+	debugMap := map[string]interface{}{}
+	if kind, ok := params["kind"]; ok {
+		err := addKind(kind, debugMap)
+		if err != nil {
+			return nil, err
+		}
+		return debugMap, nil
+	}
+
+	for kind := range p.kinds {
+		err := addKind(kind, debugMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return debugMap, nil
 }

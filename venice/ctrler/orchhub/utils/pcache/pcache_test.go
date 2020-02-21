@@ -106,6 +106,22 @@ func TestPcache(t *testing.T) {
 	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
 	AssertEquals(t, "val1", entryWorkload.Labels[key1], "Workload not in pcache")
 
+	// Debug should return value in cache
+	debugInfoResp, err := pCache.Debug(map[string]string{"kind": "Workload"})
+	AssertOk(t, err, "Failed to get debug info")
+	debugInfoResp1, err := pCache.Debug(nil)
+	AssertOk(t, err, "Failed to get debug info")
+
+	AssertEquals(t, debugInfoResp, debugInfoResp1, "Debugs were note equal")
+
+	debugInfo := debugInfoResp.(map[string]interface{})
+	AssertEquals(t, 1, len(debugInfo), "Workload debug info had incorrect amount of entries")
+	debugInfoEntry := debugInfo["Workload"].(map[string]interface{})
+	for k, v := range debugInfoEntry {
+		AssertEquals(t, k, expMeta.GetKey(), "workload key did not match")
+		AssertEquals(t, v, entryWorkload, "workload did not match")
+	}
+
 	// Test isValid
 	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
 	expWorkload.Labels[validNoPushKey] = "test"

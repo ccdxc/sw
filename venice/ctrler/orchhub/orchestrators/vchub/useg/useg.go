@@ -60,6 +60,7 @@ type Inf interface {
 	GetVlansForPG(pg string) (int, int, error)
 	SetVlansForPG(pg string, vlan int) error
 	ReleaseVlansForPG(pg string) error
+	Debug(params map[string]string) (interface{}, error)
 }
 
 // Allocator implements Inf
@@ -283,4 +284,32 @@ func (u *Allocator) newPGVlanAllocator() error {
 // createPGKeys returns the formatted keys for the PG's primary and secondary vlan assignments
 func createPGKeys(key string) (string, string) {
 	return fmt.Sprintf("%s-primary", key), fmt.Sprintf("%s-secondary", key)
+}
+
+// Debug returns useg assignments for debugging
+func (u *Allocator) Debug(params map[string]string) (interface{}, error) {
+	ret := struct {
+		PG    interface{}
+		Hosts map[string]interface{}
+	}{
+		Hosts: map[string]interface{}{},
+	}
+	u.pgLock.Lock()
+	defer u.pgLock.Unlock()
+	pgDebug, err := u.pgVlanMgr.Debug(params)
+	if err != nil {
+		return nil, err
+	}
+	ret.PG = pgDebug
+
+	u.hostLock.Lock()
+	defer u.hostLock.Unlock()
+	for host, vlanMgr := range u.hostMgrs {
+		hostDebug, err := vlanMgr.Debug(params)
+		if err != nil {
+			return nil, err
+		}
+		ret.Hosts[host] = hostDebug
+	}
+	return ret, nil
 }

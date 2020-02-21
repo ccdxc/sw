@@ -71,9 +71,28 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	// If non-pensando PG, check whether we need to reserve useg space for it
 	// If it is pensando PG, verify pvlan config has not been modified
 
+	penDC := v.GetDC(m.DcName)
+	if penDC == nil {
+		v.Log.Errorf("DC not found for %s", m.DcName)
+		return
+	}
+	dvs := penDC.GetPenDVS(createDVSName(m.DcName))
+	if dvs == nil {
+		v.Log.Errorf("DVS state for DC %s was nil", m.DcName)
+	}
+
 	if m.UpdateType == types.ObjectUpdateKindLeave {
 		// Object was deleted
-		// TODO: Check if we have any vlans stored for it if it is non-pensando.
+		penPG := penDC.GetPGByID(m.Key)
+		if penPG == nil {
+			// TODO: Check if we have any vlans stored for it if it is non-pensando.
+			return
+		}
+
+		err := dvs.AddPenPG(penPG.PgName, penPG.NetworkMeta)
+		if err != nil {
+			v.Log.Errorf("Failed to set vlan config for PG %s, %s", penPG.PgName, err)
+		}
 		return
 	}
 
@@ -99,14 +118,9 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 	}
 
 	// Check if it is for our DVS
-	penDC := v.GetDC(m.DcName)
-	if penDC == nil {
-		v.Log.Errorf("DC not found for %s", m.DcName)
-		return
-	}
-	dvs := penDC.GetPenDVS(createDVSName(m.DcName))
 	if pgConfig.DistributedVirtualSwitch.Reference().Value != dvs.DvsRef.Value {
 		// Not for pensando DVS
+		v.Log.Debugf("Skipping PG event as its not attached to a PenDVS")
 		return
 	}
 
@@ -149,9 +163,6 @@ func (v *VCHub) handlePG(m defs.VCEventMsg) {
 			if secondary == vlan {
 				return // nothing to do
 			}
-			v.Log.Infof("PG %s pvlan is %d, expected it to be %d", vlan, secondary)
-		default:
-			v.Log.Infof("PG %s vlan config was of %T, %+v", vlanSpec, vlanSpec)
 		}
 		// Vlan spec is not what we expect, set it back
 		err = dvs.AddPenPG(pgConfig.Name, penPG.NetworkMeta)

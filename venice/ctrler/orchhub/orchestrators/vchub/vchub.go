@@ -45,24 +45,12 @@ type VCHub struct {
 // Option specifies optional values for vchub
 type Option func(*VCHub)
 
-// WithScheme sets the scheme for the client to use when connecting to vcenter
-func WithScheme(scheme string) Option {
-	return func(v *VCHub) {
-		vcURL := &url.URL{
-			Scheme: scheme,
-			Host:   v.OrchConfig.Spec.URI,
-			Path:   "/sdk",
-		}
-		vcURL.User = url.UserPassword(v.OrchConfig.Spec.Credentials.UserName, v.OrchConfig.Spec.Credentials.Password)
-		v.State.VcURL = vcURL
-	}
-}
-
 // LaunchVCHub starts VCHub
 func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
 	logger.Infof("VCHub instance for %s is starting...", config.GetName())
 	vchub := &VCHub{}
 	vchub.setupVCHub(stateMgr, config, logger, opts...)
+
 	return vchub
 }
 
@@ -216,6 +204,11 @@ func (v *VCHub) Sync() {
 	// Gets diffs
 	// Pushes deletes/creates as watch events
 	// v.probe.Sync()
+}
+
+// Debug returns debug info
+func (v *VCHub) Debug(action string, params map[string]string) (interface{}, error) {
+	return v.debugHandler(action, params)
 }
 
 // ListPensandoHosts List only Pensando Hosts from vCenter

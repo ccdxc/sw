@@ -20,6 +20,7 @@ type Inf interface {
 	ReleaseVlanOwner(owner string) error
 	ReleaseVlan(vlan int) error
 	GetFreeVlanCount() int
+	Debug(map[string]string) (interface{}, error)
 }
 
 // VlanMgr is a thread safe utility to manage vlan allocations
@@ -251,4 +252,9 @@ func (v *VlanMgr) GetFreeVlanCount() int {
 	defer v.RUnlock()
 
 	return v.itemList.Len()
+}
+
+// Debug returns debug info of vlan assignments
+func (v *VlanMgr) Debug(params map[string]string) (interface{}, error) {
+	return v.ownerMap, nil
 }

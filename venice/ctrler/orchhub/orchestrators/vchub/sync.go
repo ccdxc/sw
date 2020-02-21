@@ -87,38 +87,17 @@ func (v *VCHub) sync() {
 		vcHosts := v.ListPensandoHosts(&dcRef)
 
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
-		v.syncHosts(dc, vcHosts, hosts, vmkMap)
+		v.syncNewHosts(dc, vcHosts, hosts, vmkMap)
 		v.syncVMs(workloads, dc, dvsObjs, vms, pgs, vmkMap)
+		// Removing hosts after removing workloads to fix WL -> Host dependency
+		v.syncStaleHosts(dc, vcHosts, hosts, vmkMap)
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
 }
 
-func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
-	v.Log.Infof("Syncing hosts on DC %s============", dc.Name)
-	vcHostMap := map[string]bool{}
-	for _, vcHost := range vcHosts {
-		hostName := createHostName(v.VcID, dc.Self.Value, vcHost.Self.Value)
-		vcHostMap[hostName] = true
-	}
-
-	// Deleting stale hosts
-	for _, host := range hosts {
-		if !isObjForDC(host.Labels, v.VcID, dc.Name) {
-			// Filter out hosts not for this Orch
-			v.Log.Debugf("Skipping host %s", host.Name)
-			continue
-		}
-		if _, ok := vcHostMap[host.Name]; !ok {
-			// host no longer exists
-			// Delete vmkWorkload if created for this host
-			wlName := createVmkWorkloadNameFromHostName(host.Name)
-			v.deleteWorkloadByName(wlName)
-
-			v.Log.Debugf("Deleting stale host %s", host.Name)
-			v.deleteHost(&host.Host)
-		}
-	}
+func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
+	v.Log.Infof("Syncing new hosts on DC %s============", dc.Name)
 
 	// Process all hosts
 	for _, host := range vcHosts {
@@ -144,6 +123,33 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 		v.Log.Debugf("Process config change for host %s", host.Reference().Value)
 		vmkMap[createVmkWorkloadName(v.VcID, dc.Reference().Value, host.Reference().Value)] = true
 		v.handleHost(m)
+	}
+}
+
+func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
+	v.Log.Infof("Syncing stale hosts on DC %s============", dc.Name)
+	vcHostMap := map[string]bool{}
+	for _, vcHost := range vcHosts {
+		hostName := createHostName(v.VcID, dc.Self.Value, vcHost.Self.Value)
+		vcHostMap[hostName] = true
+	}
+
+	// Deleting stale hosts
+	for _, host := range hosts {
+		if !isObjForDC(host.Labels, v.VcID, dc.Name) {
+			// Filter out hosts not for this Orch
+			v.Log.Debugf("Skipping host %s", host.Name)
+			continue
+		}
+		if _, ok := vcHostMap[host.Name]; !ok {
+			// host no longer exists
+			// Delete vmkWorkload if created for this host
+			wlName := createVmkWorkloadNameFromHostName(host.Name)
+			v.deleteWorkloadByName(wlName)
+
+			v.Log.Debugf("Deleting stale host %s", host.Name)
+			v.deleteHost(&host.Host)
+		}
 	}
 }
 
