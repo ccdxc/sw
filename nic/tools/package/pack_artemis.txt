@@ -256,8 +256,8 @@ nic/build/$ARCH/$PIPELINE/lib/libnuma.so.1                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk.so                          /nic/lib/
 
 # Metaswitch
-nic/third-party/metaswitch/output/$ARCH/debug/libsi.so            /nic/lib/
-nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
+nic/third-party/metaswitch/output/$ARCH/libsi.so                  /nic/lib/
+nic/third-party/metaswitch/output/$ARCH/libdcsmi.a                /nic/lib/
 nic/third-party/libxml2/$ARCH/lib/libxml2.so.2                    /nic/lib/
 nic/third-party/liblzma/$ARCH/lib/liblzma.so.5                    /nic/lib/
 nic/third-party/libicuuc/$ARCH/lib/libicuuc.so.60                 /nic/lib/

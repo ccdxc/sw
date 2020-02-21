@@ -1,8 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-MODE = debug
+MODE = release
 MS_ROOT = $(TOPDIR)/nic/third-party/metaswitch
-MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)/$(MODE)
+MS_LIB_DIR = $(MS_ROOT)/output/$(GMK_TARGETOS)
 MS_COMPILATION_SWITCH = \
         NBB_64BIT_TYPES_NATIVE \
         NBB_64_BIT_POINTERS
