@@ -106,15 +106,16 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   }
 
   getNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
-      response => {
-        this.naplesEventUtility.processEvents(response);
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.naples  = response.data;
         this.populateNaples();
-      },
+      }
     );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+    this.subscriptions.push(dscSubscription);
   }
 
   getNodes() {

@@ -15,11 +15,11 @@ import { Subscription } from 'rxjs';
 import { TelemetryPollingMetricQueries, MetricsqueryService, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { NaplesConditionValues} from '@app/components/cluster-group/naples/index.ts';
+import { NaplesConditionValues } from '@app/components/cluster-group/naples/index.ts';
 import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import {Router} from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -161,9 +161,9 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   pieChartPercent: string = '';
 
   constructor(private controllerService: ControllerService,
-              protected metricsqueryService: MetricsqueryService,
-              protected uiconfigsService: UIConfigsService,
-              protected router: Router,
+    protected metricsqueryService: MetricsqueryService,
+    protected uiconfigsService: UIConfigsService,
+    protected router: Router,
     protected clusterService: ClusterService) { }
 
   toggleFlip() {
@@ -178,7 +178,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       this.dataDoughnut = null;
       return;
     }
-    this.dataDoughnut =  {
+    this.dataDoughnut = {
       labels: ['Healthy', 'Unhealthy', 'Unknown'],
       datasets: [
         {
@@ -191,7 +191,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         }
       ]
     };
-    this.options =  {
+    this.options = {
       tooltips: {
         enabled: true,
         displayColors: false,
@@ -201,7 +201,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
         bodyFontSize: 13,
         footerFontStyle: 'normal',
         callbacks: {
-          label: function(tooltipItem, data) {
+          label: function (tooltipItem, data) {
             const dataset = data.datasets[tooltipItem.datasetIndex];
             const label = data.labels[tooltipItem.index];
             const val: any = dataset.data[tooltipItem.index];
@@ -245,14 +245,14 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
 
       plugins: {
         datalabels: {
-          backgroundColor: function(context) {
+          backgroundColor: function (context) {
             return context.dataset.backgroundColor;
           },
           borderColor: 'white',
           borderRadius: 25,
           borderWidth: 2,
           color: 'white',
-          display: function(context) {
+          display: function (context) {
             // print bad % only
             return context.dataIndex > 0;
           },
@@ -361,7 +361,7 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       }
     );
     this.subscriptions.push(sub);
-  }
+    }
 
   avgQuery(): MetricsPollingQuery {
     const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery('Cluster');
@@ -409,109 +409,95 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
   }
 
   getNaples() {
-    // We perform a get as well as a watch so that we can know to set the card state
-    // in case the number of workloads is 0
-    this.clusterService.ListDistributedServiceCard().subscribe(
-      (resp) => {
-        const body: IClusterDistributedServiceCardList = resp.body as any;
-        if (body.items == null || body.items.length === 0) {
-          // Watch won't have any events
-          this.calculateNaplesStatus();
-          this.frontCardState = CardStates.READY;
-        }
-      },
-      error => {
-        this.frontCardState = CardStates.FAILED;
-      }
-    );
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
+    const subscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
       response => {
-        this.naplesEventUtility.processEvents(response);
+        if (response.connIsErrorState) {
+          this.frontCardState = CardStates.FAILED;
+          return;
+        }
+        this.naples = response.data;
         this.calculateNaplesStatus();
         this.frontCardState = CardStates.READY;
       },
-      (err) => {
-        this.frontCardState = CardStates.FAILED;
-      }
     );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+    this.subscriptions.push(subscription);
+
   }
 
-  calculateNaplesStatus() {
-    let rejected = 0; let admitted = 0; let pending = 0;
-    this.healthyNaplesCount = 0;
-    this.unknownNaplesCount = 0;
-    this.unhealthyNaples = [];
-    const admittedNics = [];
-    this.naples.forEach((naple) => {
-      if (!Utility.isNICConditionNotAdmitted(naple)) {
-        if (Utility.isNaplesNICHealthy(naple)) {
-          this.healthyNaplesCount += 1;
-        } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
-          this.unknownNaplesCount += 1;
-        } else {
-          const dsclabel  = (naple.spec.id) ? naple.spec.id : naple.meta.name;
-          this.unhealthyNaples.push(dsclabel);
-        }
-        admittedNics.push(naple);
-      }
-      switch (naple.status['admission-phase']) {
-        case ClusterDistributedServiceCardStatus_admission_phase.admitted:
-          admitted += 1;
-          break;
-        case ClusterDistributedServiceCardStatus_admission_phase.rejected:
-          rejected += 1;
-          break;
-        case ClusterDistributedServiceCardStatus_admission_phase.pending:
-          pending += 1;
-          break;
-      }
-    });
-    this.firstStat.value = this.naples.length.toString();
-    this.secondStat.value = admitted.toString();
-    this.thirdStat.value = rejected.toString();
-    this.fourthStat.value = pending.toString();
-    if (admittedNics && admittedNics.length !== 0) {
-      const unhealthyCount = admittedNics.length - this.healthyNaplesCount - this.unknownNaplesCount;
-      this.unhealthyPercent = (unhealthyCount / admittedNics.length) * 100;
-      this.unknownPercent = (this.unknownNaplesCount / admittedNics.length) * 100;
-      // Calculate healthy last so any rounding error will lower the health percent
-      this.healthyPercent = 100 - this.unhealthyPercent - this.unknownPercent;
+
+calculateNaplesStatus() {
+let rejected = 0; let admitted = 0; let pending = 0;
+this.healthyNaplesCount = 0;
+this.unknownNaplesCount = 0;
+this.unhealthyNaples = [];
+const admittedNics = [];
+this.naples.forEach((naple) => {
+  if (!Utility.isNICConditionNotAdmitted(naple)) {
+    if (Utility.isNaplesNICHealthy(naple)) {
+      this.healthyNaplesCount += 1;
+    } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
+      this.unknownNaplesCount += 1;
     } else {
-      this.healthyPercent = null;
-      this.unhealthyPercent = null;
-      this.unknownPercent = null;
+      const dsclabel  = (naple.spec.id) ? naple.spec.id : naple.meta.name;
+      this.unhealthyNaples.push(dsclabel);
     }
-    this.generatePieChartText();
-    this.generateDoughnut();
+    admittedNics.push(naple);
   }
+  switch (naple.status['admission-phase']) {
+    case ClusterDistributedServiceCardStatus_admission_phase.admitted:
+      admitted += 1;
+      break;
+    case ClusterDistributedServiceCardStatus_admission_phase.rejected:
+      rejected += 1;
+      break;
+    case ClusterDistributedServiceCardStatus_admission_phase.pending:
+      pending += 1;
+      break;
+  }
+});
+this.firstStat.value = this.naples.length.toString();
+this.secondStat.value = admitted.toString();
+this.thirdStat.value = rejected.toString();
+this.fourthStat.value = pending.toString();
+if (admittedNics && admittedNics.length !== 0) {
+  const unhealthyCount = admittedNics.length - this.healthyNaplesCount - this.unknownNaplesCount;
+  this.unhealthyPercent = (unhealthyCount / admittedNics.length) * 100;
+  this.unknownPercent = (this.unknownNaplesCount / admittedNics.length) * 100;
+  // Calculate healthy last so any rounding error will lower the health percent
+  this.healthyPercent = 100 - this.unhealthyPercent - this.unknownPercent;
+} else {
+  this.healthyPercent = null;
+  this.unhealthyPercent = null;
+  this.unknownPercent = null;
+}
+this.generatePieChartText();
+this.generateDoughnut();
+}
 
-  generatePieChartText() {
-    if (this.healthyPercent == null) {
-      return '';
-    }
-    this.pieChartPercent = this.roundHealthNumber() + '%';
-    this.pieChartText = 'Healthy';
-  }
+generatePieChartText() {
+if (this.healthyPercent == null) {
+  return '';
+}
+this.pieChartPercent = this.roundHealthNumber() + '%';
+this.pieChartText = 'Healthy';
+}
 
-  roundHealthNumber(): number {
-    const num: number = this.healthyPercent;
-    if (num >= 100) {
-      return 100;
-    }
-    const roundNum = Math.round(num * 100);
-    // never all 100% if there is a single unhelth card
-    if (num >= 10000) {
-      return 99.99;
-    }
-    return roundNum / 100;
-  }
+roundHealthNumber(): number {
+const num: number = this.healthyPercent;
+if (num >= 100) {
+  return 100;
+}
+const roundNum = Math.round(num * 100);
+// never all 100% if there is a single unhelth card
+if (num >= 10000) {
+  return 99.99;
+}
+return roundNum / 100;
+}
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(subscription => {
-      subscription.unsubscribe();
-    });
-  }
+ngOnDestroy() {
+this.subscriptions.forEach(subscription => {
+  subscription.unsubscribe();
+});
+}
 }

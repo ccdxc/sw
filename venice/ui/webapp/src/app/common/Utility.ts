@@ -51,10 +51,6 @@ export class Utility {
 
   static instance: Utility;
 
-  public static DATA_CACHE_TYPE_DSC = 'DistributedServiceCard';
-  public static DATA_CACHE_TYPE_WORKLOAD = 'Workload';
-  public static DATA_CACHE_TYPE_HOST = 'Host';
-
   // Define how long to keep cache data.
   public static DEFAULT_CACHE_DURATION: number = 1000 * 60 * 60; // 60 minutes
   public static DEFAULT_OPEN_ALERTS_NUMBER_TO_STOP_TOASTER: number = 1000;

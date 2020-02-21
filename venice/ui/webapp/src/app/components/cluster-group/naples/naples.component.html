@@ -126,7 +126,7 @@
         </div>
       </ng-container>
       <ng-container *ngSwitchCase="'workloads'">
-        <div *ngFor="let w of rowData['associatedWorkloads'] let i=index"
+        <div *ngFor="let w of rowData._ui['associatedWorkloads'] let i=index"
              class="naples-workloads-div">
           <ng-container *roleGuard="'workloadworkload_read'">
             <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"

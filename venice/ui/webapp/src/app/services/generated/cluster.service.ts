@@ -3,19 +3,23 @@ import { Injectable } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
+import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 import { Clusterv1Service } from '@sdk/v1/services/generated/clusterv1.service';
-import { Observable } from 'rxjs';
+import { NEVER, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
-import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
-import { NEVER } from 'rxjs';
-import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { GenServiceUtility } from './GenUtility';
 
 @Injectable()
 export class ClusterService extends Clusterv1Service {
+
+  public  DATA_CACHE_TYPE_DSC = 'DistributedServiceCards';
+  public  DATA_CACHE_TYPE_HOST = 'Hosts';
+  public  DATA_CACHE_TYPE_NODE = 'Nodes';
+
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -32,8 +36,8 @@ export class ClusterService extends Clusterv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.serviceUtility.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, 'DSCs', () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
-      this.serviceUtility.createDataCache<ClusterHost>(ClusterHost, 'Hosts', () => this.ListHost(), (body: any) => this.WatchHost(body));
+      this.serviceUtility.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, this.DATA_CACHE_TYPE_DSC, () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
+      this.serviceUtility.createDataCache<ClusterHost>(ClusterHost, this.DATA_CACHE_TYPE_HOST, () => this.ListHost(), (body: any) => this.WatchHost(body));
   }
 
   /**
@@ -44,12 +48,13 @@ export class ClusterService extends Clusterv1Service {
   }
 
   public ListDistributedServiceCardCache() {
-    return this.serviceUtility.handleListFromCache('DSCs');
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_DSC);
   }
 
   public ListHostCache() {
-    return this.serviceUtility.handleListFromCache('Hosts');
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_HOST);
   }
+
 
   protected publishAJAXStart(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);

@@ -48,6 +48,18 @@ import { NaplesCondition, NaplesConditionValues } from '.';
  * The matching naples objects are added to this.filteredNaples which is used to render the table.
  */
 
+ /**
+  TODO:
+  interface naplesUI {
+   associatedConditionStatus: ....
+   associatedWorkloads:....
+  }
+   uiData = data._ui as naplesUI
+
+   That way uiData.associatedConditionStatus has type checking and auto-completion.
+   line 402, 403, 454
+  */
+
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
 
   public static NAPLES_FIELD_WORKLOADS: string = 'associatedWorkloads';
@@ -72,7 +84,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
   dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
-  workloads: ReadonlyArray<WorkloadWorkload> = [];
   maxWorkloadsPerRow: number = 10;
 
   isTabComponent: boolean = false;
@@ -191,12 +202,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   /**
-   * 2020-01-17 Release-A note:
-   *  Flow:
-   *  1. User search API to check DSC total number
-   *     2. If there are DSC in Venice, this.launch()
-   *        3. Fetch all workloads
-   *           4. watchWorkloads, watchDSCs.
+   * 2020-02-15
+   * We use data-cache strategy.
+   * getDSCTotalCount() -> will invoke watchAll()
    */
   postNgInit() {
     this.buildAdvSearchCols();
@@ -219,13 +227,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           if (dscTotal > 0) {
             this.hasDSC = true;
             this.searchDSCsCount = dscTotal;
-            this.launch();
+            this.getMetrics();
           } else {
             this.hasDSC = false;
             this.tableLoading = false;
             this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in Venice');
-            this.fetechAll();
           }
+          this.invokeWatch();
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get Distributed Services Cards'),
@@ -233,44 +241,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.subscriptions.push(searchDSCTotalSubscription);
   }
 
-  launch(): void {
-    this.getMetrics();
-    setTimeout(() => {
-      // delay initiating websocket watches until metrics polling begins
-      const wlVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('Workload');
-      if (wlVeniceObjectCacheData && wlVeniceObjectCacheData.length > 0) {
-        this.workloadList = wlVeniceObjectCacheData;
-        console.log(this.getClassName() + ' .launch(), use cached data');
-        this.invokeWatch();
-      } else {
-        console.log(this.getClassName() + ' .launch(), use fetechAll()');
-        this.fetechAll();
-      }
-    }, 2000);
-  }
-
-  fetechAll() {
-    this.tableLoading = (this.searchDSCsCount > 0) ? true : false;
-    const observables: Observable<any>[] = [];
-    observables.push(this.workloadService.ListWorkload()); // workloads
-    const forkJoinSub = forkJoin(observables).subscribe((results: any[]) => {
-      for (let i = 0; i < results.length; i++) {
-        if (i === 0) {
-          const body0 = results[0].body as WorkloadWorkloadList;
-          this.workloadList = (body0.items) ? body0.items : [];
-          this.workloads = this.workloadList;
-        }
-      }
-    },
-      (error) => {
-        this.controllerService.invokeRESTErrorToaster('Error', error);
-      },
-      () => {
-        this.invokeWatch();
-      }
-    );
-    this.subscriptions.push(forkJoinSub);
-  }
 
   invokeWatch() {
     this.watchWorkloads();
@@ -294,69 +264,19 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    * Fetch workloads.
    */
   watchWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
-    const debounceDeley = (this.workloadList && this.workloadList.length > 100) ? 300 : 1;
-    const subscription = this.workloadService.WatchWorkload().pipe(debounceTime(debounceDeley)).subscribe(
+    const workloadSubscription = this.workloadService.ListWorkloadCache().subscribe(
       (response) => {
-        this.workloadEventUtility.processEvents(response);
-
-        const updatedMap: { [type: string]: Array<WorkloadWorkload> } = this.workloadEventUtility.updateRecordMap;
-        const addedWLItems = updatedMap[EventTypes.create];
-        const deletedWLIems = updatedMap[EventTypes.delete];
-        const updatedWLIems = updatedMap[EventTypes.update];
-
-        if (addedWLItems.length > 0) {
-          this.handleAddedWorkloads(addedWLItems);
+        if (response.connIsErrorState) {
+          return;
         }
-        if (deletedWLIems.length > 0) {
-          this.handleDeletededWorkloads(deletedWLIems);
-        }
-        if (updatedWLIems.length > 0) {
-          this.handleUpdatedWorkloads(updatedWLIems);
-        }
-      },
-      this._controllerService.webSocketErrorHandler('Failed to watch Workloads')
+        this.workloadList = response.data  as WorkloadWorkload[];
+        this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+      }
     );
-    this.subscriptions.push(subscription);
+    this.subscriptions.push(workloadSubscription);
   }
 
-  /**
-   * Remove objects from workloadList and recompute host-workloads map
-   * @param deletedIems
-   */
-  handleDeletededWorkloads(deletedIems: any[]) {
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleDeletedItemsFromWatch(deletedIems, this.workloadList);
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
-    }
-  }
 
-  /**
-   * Update objects to workloadList and recompute host-workloads map
-   * @param deletedIems
-   */
-  handleUpdatedWorkloads(updatedItems: any[]) {
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleUpdatedItemsFromWatch(updatedItems, this.workloadList, (item) => new WorkloadWorkload(item));
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
-    }
-  }
-
-  /**
-   * Add newly created objects to workloadList and recompute the host-workloads map
-   * @param addedItems
-   */
-  handleAddedWorkloads(addedItems: any[]) {
-
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleAddedItemsFromWatch(addedItems, this.workloadList, (item) => new WorkloadWorkload(item));
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
-    }
-  }
 
   /**
    * This is a key API.  It computes the DSC-Workloads map and updates each DSC's workload list
@@ -368,7 +288,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     if (myworkloads && dscs) {
       this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(myworkloads, dscs);
       this.dataObjects.map(naple => {
-        naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
+        naple._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
       });
     }
   }
@@ -416,56 +336,27 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    */
   watchNaples() {
     this._clearDSCMaps();
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects  = response.data;
+        this.processDSCrecords();
+      }
+    );
+    this.subscriptions.push(dscSubscription);
+  }
+
+  watchNaples_bk() {
+    this._clearDSCMaps();
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.dataObjects = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     // this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        this.tableLoading = false;
-        this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
-        this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
-        if (this.dataObjects && this.dataObjects.length > 0 && !this.hasDSC) {
-          this.hasDSC = true;  // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC, it will turn on hero-cards.
-          this.getMetrics();
-        }
-        if (this.dataObjects.length >= this.searchDSCsCount) {
-          this.searchDSCsCount = this.dataObjects.length;
-        }
-        for (const naple of this.dataObjects) {
-          this.naplesMap[naple.meta.name] = naple;
-          const dscHealthCond: NaplesCondition = Utility.getNaplesConditionObject(naple);
-          // Create search object for condition
-          switch (dscHealthCond.condition.toLowerCase()) {
-            case NaplesConditionValues.HEALTHY:
-              (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
-              break;
-            case NaplesConditionValues.UNHEALTHY:
-              (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] = [])).push(naple.meta.name);
-              break;
-            case NaplesConditionValues.UNKNOWN:
-              (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
-              break;
-            case NaplesConditionValues.NOTADMITTED:
-              (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] || (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] = [])).push(naple.meta.name);
-              break;
-            case NaplesConditionValues.REBOOT_NEEDED:
-              (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] || (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] = [])).push(naple.meta.name);
-              break;
-            case NaplesConditionValues.EMPTY:
-              (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
-              break;
-          }
-          naple[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] = {
-            dscCondStr: dscHealthCond.condition.toLowerCase(),
-            dscNeedReboot: dscHealthCond.rebootNeeded
-          };
-          naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
-        }
-        this.searchObject['status.conditions'] = this.conditionNaplesMap;
-        this.tryGenCharts();
-        // backup dataObjects
-        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
+        this.processDSCrecords();
       },
       (error) => {
         this.tableLoading = false;
@@ -474,6 +365,54 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
+
+  processDSCrecords() {
+    this.tableLoading = false;
+    this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
+    this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+    if (this.dataObjects && this.dataObjects.length > 0 && !this.hasDSC) {
+      this.hasDSC = true; // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC, it will turn on hero-cards.
+      this.getMetrics();
+    }
+    if (this.dataObjects.length >= this.searchDSCsCount) {
+      this.searchDSCsCount = this.dataObjects.length;
+    }
+    for (const naple of this.dataObjects) {
+      this.naplesMap[naple.meta.name] = naple;
+      const dscHealthCond: NaplesCondition = Utility.getNaplesConditionObject(naple);
+      // Create search object for condition
+      switch (dscHealthCond.condition.toLowerCase()) {
+        case NaplesConditionValues.HEALTHY:
+          (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
+          break;
+        case NaplesConditionValues.UNHEALTHY:
+          (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] = [])).push(naple.meta.name);
+          break;
+        case NaplesConditionValues.UNKNOWN:
+          (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
+          break;
+        case NaplesConditionValues.NOTADMITTED:
+          (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] || (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] = [])).push(naple.meta.name);
+          break;
+        case NaplesConditionValues.REBOOT_NEEDED:
+          (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] || (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] = [])).push(naple.meta.name);
+          break;
+        case NaplesConditionValues.EMPTY:
+          (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
+          break;
+      }
+      naple._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] = {
+        dscCondStr: dscHealthCond.condition.toLowerCase(),
+        dscNeedReboot: dscHealthCond.rebootNeeded
+      };
+      naple._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
+    }
+    this.searchObject['status.conditions'] = this.conditionNaplesMap;
+    this.tryGenCharts();
+    // backup dataObjects
+    this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
+  }
+
   getDSCWorkloads(naple: ClusterDistributedServiceCard): WorkloadWorkload[] {
     if (this.dscsWorkloadsTuple[naple.meta.name]) {
       return this.dscsWorkloadsTuple[naple.meta.name].workloads;
@@ -493,26 +432,26 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   isNICHealthy(data: ClusterDistributedServiceCard): boolean {
-    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
       === NaplesConditionValues.HEALTHY;
   }
 
   isNICUnhealthy(data: ClusterDistributedServiceCard): boolean {
-    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
       === NaplesConditionValues.UNHEALTHY;
   }
 
   isNICHealthUnknown(data: ClusterDistributedServiceCard): boolean {
-    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
+    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
       === NaplesConditionValues.UNKNOWN;
   }
 
   isNicNeedReboot(data: ClusterDistributedServiceCard): boolean {
-    return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
+    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
+      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
   }
 
   displayReasons(data: ClusterDistributedServiceCard): any {
@@ -835,11 +774,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
-      if (naplesObject[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS]) {  // remove UI fields
-        delete naplesObject[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS];
+      if (naplesObject._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS]) {  // remove UI fields
+        delete naplesObject._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS];
       }
-      if (naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS]) {  // remove UI fields
-        delete naplesObject[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+      if (naplesObject._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS]) {  // remove UI fields
+        delete naplesObject._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
       }
       const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
       observables.push(sub);
@@ -909,7 +848,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   buildMoreWorkloadTooltip(dsc: ClusterDistributedServiceCard): string {
     const wltips = [];
-    const workloads = dsc[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+    const workloads = dsc._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
     for (let i = 0; i < workloads.length; i++) {
       if (i >= this.maxWorkloadsPerRow) {
         const workload = workloads[i];
@@ -1002,7 +941,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   searchWorkloads(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const workloads = data[i][NaplesComponent.NAPLES_FIELD_WORKLOADS];
+      const workloads = data[i]._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
       // workloads[i] is a full object
       for (let k = 0; k < workloads.length; k++) {
         const recordValue = _.get(workloads[k], ['meta', 'name']);
@@ -1027,8 +966,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       const conditions = data[i].status.conditions;
       for (let k = 0; k < conditions.length; k++) {
         // datat[i].associatedConditionStatus is  {dscCondStr: "healthy", dscNeedReboot: true}
-        const recordValueStr = data[i][NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr;
-        const recordValueReboot = data[i][NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
+        const recordValueStr = data[i]._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr;
+        const recordValueReboot = data[i]._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
         const searchValues = requirement.values;
         let operator = String(requirement.operator);
         operator = TableUtility.convertOperator(operator);

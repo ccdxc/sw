@@ -391,20 +391,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   }
 
   getWorkloads() {
-    const query: SearchSearchRequest = new SearchSearchRequest({
-      'query-string': null,
-      'from': null,
-      'max-results': 2,
-      'sort-by': null,
-      'sort-order': 'ascending',
-      'mode': SearchSearchRequest_mode.preview,
-      query: {
-        kinds: [
-          'Workload'
-        ]
-      },
-      aggregate: false,
-    });
+    const query: SearchSearchRequest = Utility.buildObjectTotalSearchQuery('Workload');
     const searchDSCTotalSubscription = this.searchService.PostQuery(query).subscribe(
       resp => {
         if (resp) {

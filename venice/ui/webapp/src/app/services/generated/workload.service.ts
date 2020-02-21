@@ -15,6 +15,9 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 @Injectable()
 export class WorkloadService extends Workloadv1Service {
+
+  public DATA_CACHE_TYPE_WORKLOAD = 'Workloads';
+
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -31,7 +34,7 @@ export class WorkloadService extends Workloadv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.serviceUtility.createDataCache<WorkloadWorkload>(WorkloadWorkload, 'workloads', () => this.ListWorkload(), (body: any) => this.WatchWorkload(body));
+      this.serviceUtility.createDataCache<WorkloadWorkload>(WorkloadWorkload, this.DATA_CACHE_TYPE_WORKLOAD, () => this.ListWorkload(), (body: any) => this.WatchWorkload(body));
   }
 
   /**
@@ -42,7 +45,7 @@ export class WorkloadService extends Workloadv1Service {
   }
 
   public ListWorkloadCache() {
-    return this.serviceUtility.handleListFromCache('workloads');
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_WORKLOAD);
   }
 
   protected publishAJAXStart(eventPayload: any) {

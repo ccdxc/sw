@@ -125,6 +125,15 @@ export class GenServiceUtility {
         }
       }
     }
+    for (const key in this.cacheMap) {
+      if (this.cacheMap.hasOwnProperty(key)) {
+        try {
+          delete this.cacheMap[key];
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
 
   }
 
@@ -209,6 +218,38 @@ export class GenServiceUtility {
     };
   }
 
+  /**
+   * This is the key function for object cache
+   *
+   * This API has magic to return object list and websocket events.
+   * The return object looks like:
+   *
+   * {
+   * "data": [
+   *  {
+   *    "kind": "Host"  // host event
+   *  }
+   * ],
+   * "events": [
+   *  {
+   *    "type": "Deleted",  // event.type
+   *    "object": {
+   *       "kind": "Host"
+   *     }
+   *   }
+   * ],
+   * "connIsErrorState": false
+   * }
+   *
+   *  Service objects (such as cluster.service.ts or workload.service.ts) invoke this function by passing in listXXX function and watchXXX function
+   *  This API will first fetch the object list, then use websocket to get create/update/delete events.
+   *
+   *  Say listXXX call get objest of item.meta.['resource-version'] = 1. Websocket will only watch item.meta.['resource-version']>1
+   *
+   *   returnObject.data always contains the latest objects.  returnObject.data.events[ ... ] contains the ws-events.  event.type  is of create/update/delete
+   *
+   *  See hosts.component.ts for example
+   */
   public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
     let observer = new ReplaySubject<ServerEvent<T>>(1);
     if (this.cacheMap[key] != null) {
@@ -219,8 +260,8 @@ export class GenServiceUtility {
     // Only replay the last emitted event to new subscribers
     const sub = listFn().subscribe(resp => {
       const body = resp.body;
-      if (body.items) {
-        let resVersion = 0;
+      let resVersion = 0;
+      if (body && body.items) {
         const events = body.items.map(item => {
           const ver = parseInt(item.meta['resource-version'], 10);
           if (ver > resVersion) {
@@ -232,26 +273,21 @@ export class GenServiceUtility {
           };
         });
         eventUtility.processEvents({events: events});
+      }
         observer.next({
           data: eventUtility.array,
           events: [],
           connIsErrorState: false,
         });
         const watchBody = {};
-        if (body.items.length > 0) {
+        if (resVersion > 0) {
           watchBody['O.resource-version'] = (resVersion + 1).toString();
         }
 
         // TODO: the retry should be replaced with an observable retry
         const watchMethod = () => {
-          // buffer events for 250ms before acting on them
-          const watchSub = watchFn(watchBody).pipe(bufferTime(250)).subscribe(watchResp => {
-            let evts = [];
-            (<any[]>watchResp).forEach(item => {
-              if (item.events != null) {
-                evts = events.concat(item.events);
-              }
-            });
+          const watchSub = watchFn(watchBody).subscribe(watchResp => {
+            const evts = (<any>watchResp).events;
             eventUtility.processEvents({
               events: evts,
             });
@@ -276,7 +312,6 @@ export class GenServiceUtility {
           this.subscriptions.push(watchSub);
         };
         watchMethod();
-      }
     },
     (error) => {
       const controller = Utility.getInstance().getControllerService();

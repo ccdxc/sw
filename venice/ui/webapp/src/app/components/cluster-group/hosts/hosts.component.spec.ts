@@ -21,7 +21,7 @@ import { Utility } from '@common/Utility';
 import { SharedModule } from '@components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
-import { ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { ClusterHost, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/api';
@@ -29,6 +29,7 @@ import { WidgetsModule } from 'web-app-framework';
 import { HostsComponent } from './hosts.component';
 import { NewhostComponent } from './newhost/newhost.component';
 import { WorkloadsComponent } from '@app/components/dashboard/workloads/workloads.component';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 
 describe('HostsComponent', () => {
@@ -269,32 +270,24 @@ describe('HostsComponent', () => {
     TestingUtility.setAllPermissions();
     const serviceCluster = TestBed.get(ClusterService);
     const serviceWorkload = TestBed.get(WorkloadService);
-    const subjectDSC = TestingUtility.createWatchEventsSubject([
-      naple1
-    ]);
-    const subjectWL = TestingUtility.createWatchEventsSubject([
-       workload1, workload2
-    ]);
-    spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
-      subjectDSC
-    );
-    spyOn(serviceWorkload, 'ListWorkload').and.returnValue(
-      subjectWL
-    );
-    spyOn(serviceCluster, 'WatchHost').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        host1, host2
+
+    spyOn(serviceCluster, 'ListHostCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterHost(host1), new ClusterHost(host2)
       ])
     );
 
-    spyOn(serviceWorkload, 'WatchWorkload').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        workload1, workload2
+    spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterDistributedServiceCard( naple1)
       ])
     );
 
-    subjectDSC.complete();
-    subjectWL.complete();
+    spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new WorkloadWorkload (workload1), new WorkloadWorkload (workload2)
+      ])
+    );
 
     fixture.detectChanges();
 
@@ -322,7 +315,7 @@ describe('HostsComponent', () => {
           expect(fieldElem.nativeElement.textContent.length).toEqual(0);
         }
       }
-    }, 'delete ', true);
+    }, '', true);  // should not have delete icon as hosts have associated workloads
   });
 
   /**
@@ -336,26 +329,25 @@ describe('HostsComponent', () => {
   it('should have correct router links', () => {
     TestingUtility.setAllPermissions();
     const serviceCluster = TestBed.get(ClusterService);
+    const serviceWorkload = TestBed.get(WorkloadService);
 
-    const subject = TestingUtility.createWatchEventsSubject([
-      naple1, workload1, workload2
-    ]);
-    spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
-      subject
-    );
-    spyOn(serviceCluster, 'WatchHost').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        host1, host2, host3
+    spyOn(serviceCluster, 'ListHostCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterHost(host1), new ClusterHost(host2)
       ])
     );
 
-    spyOn(serviceCluster, 'WatchDistributedServiceCard').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        naple1
+    spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new ClusterDistributedServiceCard( naple1)
       ])
     );
 
-    subject.complete();
+    spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+      TestingUtility.createDataCacheSubject([
+        new WorkloadWorkload (workload1), new WorkloadWorkload (workload2)
+      ])
+    );
 
     fixture.detectChanges();
 
@@ -365,9 +357,11 @@ describe('HostsComponent', () => {
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
+    expect(routerLinks.length).toBe(4, 'Should have 4 routerLinks');
     expect(routerLinks[0].linkParams).toBe('/cluster/dscs/00ae.cd00.1142');
-    expect(routerLinks[1].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
+    expect(routerLinks[1].linkParams).toBe('/workload');
+    expect(routerLinks[2].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
+    expect(routerLinks[3].linkParams).toBe('/workload');
   });
 
 
@@ -377,25 +371,24 @@ describe('HostsComponent', () => {
       const serviceCluster = TestBed.get(ClusterService);
       const serviceWorkload = TestBed.get(WorkloadService);
 
-      const subject = TestingUtility.createWatchEventsSubject([
-        naple1
-      ]);
-      spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
-        subject
-      );
-      spyOn(serviceCluster, 'WatchHost').and.returnValue(
-        TestingUtility.createWatchEventsSubject([
-          host1, host2, host3
+
+      spyOn(serviceCluster, 'ListHostCache').and.returnValue(
+        TestingUtility.createDataCacheSubject([
+          new ClusterHost(host1), new ClusterHost(host2)
         ])
       );
 
-      spyOn(serviceCluster, 'WatchDistributedServiceCard').and.returnValue(
-        TestingUtility.createWatchEventsSubject([
-          naple1
+      spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+        TestingUtility.createDataCacheSubject([
+          new ClusterDistributedServiceCard( naple1)
         ])
       );
 
-      subject.complete();
+      spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+        TestingUtility.createDataCacheSubject([
+          new WorkloadWorkload (workload1), new WorkloadWorkload (workload2)
+        ])
+      );
     });
 
     it('naples read permission', () => {

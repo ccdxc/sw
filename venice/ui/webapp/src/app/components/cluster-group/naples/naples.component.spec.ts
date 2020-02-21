@@ -25,6 +25,7 @@ import { ConfirmationService } from 'primeng/primeng';
 import { NaplesComponent } from './naples.component';
 import { BehaviorSubject } from 'rxjs';
 import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 
 @Component({
@@ -225,6 +226,7 @@ describe('NaplesComponent', () => {
     const searchService = TestBed.get(SearchService);
     const serviceWorkload = TestBed.get(WorkloadService);
 
+    // component code sequence is getDSCcount -> watch (DSCs, Workload), we spyOn three REST calls.
     const searchResp: ISearchSearchResponse = {
       'total-hits': '3'
     };
@@ -235,24 +237,24 @@ describe('NaplesComponent', () => {
       })
     );
 
-    const subject = TestingUtility.createWatchEventsSubject([
-      workload1, workload2
+    const subjectWL = TestingUtility.createDataCacheSubject([
+      new WorkloadWorkload (workload1),
+      new WorkloadWorkload( workload2)
     ]);
 
-    spyOn(serviceWorkload, 'ListWorkload').and.returnValue(
-      subject
+    const subjectDSC = TestingUtility.createDataCacheSubject([
+      new ClusterDistributedServiceCard(naples1),
+      new ClusterDistributedServiceCard(naples2),
+      new ClusterDistributedServiceCard( naples3)
+    ]);
+
+    spyOn(serviceWorkload, 'ListWorkloadCache').and.returnValue(
+      subjectWL
     );
 
-    spyOn(serviceWorkload, 'WatchWorkload').and.returnValue(
-      TestingUtility.createWatchEventsSubject([
-        workload1, workload2
-      ])
+    spyOn(serviceCluster, 'ListDistributedServiceCardCache').and.returnValue(
+      subjectDSC
     );
-    spyOn(serviceCluster, 'WatchDistributedServiceCard').and.returnValue(
-      TestingUtility.createWatchEventsSubject([naples1, naples2, naples3])
-    );
-
-    subject.complete();
   });
 
   it('should populate table', <any>fakeAsync(() => {
@@ -285,7 +287,7 @@ describe('NaplesComponent', () => {
           expect(fieldElem.nativeElement.textContent).toContain('settings_power');
         }
       }
-    }, '', true);
+    }, 'delete ', true);
     fixture.destroy();
     discardPeriodicTasks();
     flush();

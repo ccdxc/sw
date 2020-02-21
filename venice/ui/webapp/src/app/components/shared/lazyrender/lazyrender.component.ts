@@ -199,9 +199,13 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     // putting longer delay so that the rest of the application
     // finishes rendering. Currently causing calculations to be ~1 pixel off
     // and displaying an uneccessary scrollbar
+
+
+
     this.resizeInterval = setInterval(() => {
       this.resizeTable(500);
     }, 1000);
+
   }
 
   stopResizeTableInterval() {

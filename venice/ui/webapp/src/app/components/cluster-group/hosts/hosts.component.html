@@ -72,7 +72,7 @@
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'spec.dscs'">
-      <div *ngFor="let v of rowData['processedSmartNics']">
+      <div *ngFor="let v of rowData._ui['processedSmartNics']">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="v.mac != ''" routerLink="/cluster/dscs/{{v.mac}}">{{v.text}}</a>
           <a *ngIf="v.mac == ''">{{v.text}}</a>
@@ -86,7 +86,8 @@
       </div>
     </ng-container>
     <ng-container *ngSwitchCase="'workloads'">
-      <div *ngFor="let w of rowData['processedWorkloads'] let i=index" class="hosts-workloads-div">
+      <div *ngFor="let w of rowData._ui['processedWorkloads'] let i=index"
+           class="hosts-workloads-div">
         <ng-container *roleGuard="'workloadworkload_read'">
           <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
              [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
@@ -106,7 +107,7 @@
 <ng-template #actionTemplate let-rowData>
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
-       *ngIf="!(rowData['processedWorkloads'] && rowData['processedWorkloads'].length > 0)">
+       *ngIf="!(rowData._ui['processedWorkloads'] && rowData._ui['processedWorkloads'].length > 0)">
     <!-- 2020-01-08 backend does not support host edit 
       <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
               class="global-table-action-icon"

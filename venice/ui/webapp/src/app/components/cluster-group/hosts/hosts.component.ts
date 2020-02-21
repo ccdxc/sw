@@ -52,7 +52,10 @@ export enum BuildHostWorkloadMapSourceType {
  *
  *  A proper design should be load Top10-this, top10-that, let user see the big picture and use search feature.
  *
- * debug tip:  this.hostWorkloadsTuple // keep watching this object value
+ *
+ *  2020-02-13 update:
+ *  postNgInit() -> getRecords() which fetch Hosts/DSCs/Workloads objects.
+ *  As we use cluser.service and workload.service internally use GenUtility.ts to cache data and manage web-socket event, we just build object maps
  *
  */
 @Component({
@@ -87,13 +90,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   };
   nameToMacMap: { [key: string]: string; } = {};
   macToNameMap: { [key: string]: string; } = {};
-  hostsEventUtility: HttpEventUtility<ClusterHost>;
   subscriptions: Subscription[] = [];
-  dataObjects: ReadonlyArray<ClusterHost>;
-  dataObjectsBackUp: ReadonlyArray<ClusterHost> = null;
-  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-  workloads: ReadonlyArray<WorkloadWorkload> = [];
-  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
+  dataObjects: ReadonlyArray<ClusterHost> = [];
+  dataObjectsBackUp: ReadonlyArray<ClusterHost>  = [];
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
 
@@ -123,13 +122,12 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   };
 
-  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
   hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; };
 
   maxWorkloadsPerRow: number = 8;
 
   naplesList: ClusterDistributedServiceCard[] = [];
-  workloadList: WorkloadWorkload[] = [];
+  workloadList: WorkloadWorkload[] = [] ;
   searchHostsCount: number = 0;
 
   constructor(private clusterService: ClusterService,
@@ -148,17 +146,14 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
    * Backend keeps push workload records to UI when there is no more hosts received from web-sockets.
    * We have to keep building host[i] -> workloads[] map to show data in UI.
    *
-   * TODO: tune performance.
-   * In https://192.168.76.198, there 5000 workloads and 600 hosts.  Browser will be very busy.
-   *
    */
   buildHostWorkloadsMap(myworkloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
     hosts: ReadonlyArray<ClusterHost> | ClusterHost[], source: BuildHostWorkloadMapSourceType) {
     if (myworkloads && hosts) {
       this.hostWorkloadsTuple = ObjectsRelationsUtility.buildHostWorkloadsMap(myworkloads, hosts);
-      this.dataObjects.map(host => {
-        host[HostsComponent.HOST_FIELD_DSCS] = this.processSmartNics(host);
-        host[HostsComponent.HOST_FIELD_WORKLOADS] = this.getHostWorkloads(host);
+      this.dataObjects.forEach(host => {
+        host._ui[HostsComponent.HOST_FIELD_DSCS] = this.processSmartNics(host);
+        host._ui[HostsComponent.HOST_FIELD_WORKLOADS] = this.getHostWorkloads(host);
       });
       // backup dataObjects
       this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
@@ -181,46 +176,6 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   }
 
 
-
-  fetechAll() {
-    if (this.searchHostsCount > 0) {
-         this.tableLoading = true;
-    }
-    const observables: Observable<any>[] = [];
-    observables.push(this.clusterService.ListDistributedServiceCard());  // dscs
-    observables.push(this.workloadService.ListWorkload()); // workloads
-    const forkJoinSub = forkJoin(observables).subscribe((results: any[]) => {
-      for (let i = 0; i < results.length; i++) {
-        if (i === 0) {
-          const body0 = results[0].body as ClusterDistributedServiceCardList;
-          this.naplesList = (body0.items) ? body0.items : [];
-          this.naples = this.naplesList;
-        } else if (i === 1) {
-          const body1 = results[1].body as WorkloadWorkloadList;
-          this.workloadList = (body1.items) ? body1.items : [];
-          this.workloads = this.workloadList;
-        }
-      }
-      const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList);
-      this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
-      this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
-    },
-      (error) => {
-        this.controllerService.invokeRESTErrorToaster('Error', error);
-      },
-      () => {
-        this.invokeWatch();
-      }
-    );
-    this.subscriptions.push(forkJoinSub);
-  }
-
-  invokeWatch() {
-    this.watchNaples();
-    this.watchWorkloads();
-    this.watchHosts();
-  }
-
   updateDSCsMaps(oldMap: { [key: string]: any; }, newMap: { [key: string]: any; }) {
     Object.keys(newMap).forEach((key) => {
       if (!oldMap[key]) {
@@ -229,121 +184,6 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     });
   }
 
-  watchHosts() {
-    this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
-    this.dataObjects = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
-    const subscription = this.clusterService.WatchHost().subscribe(
-      response => {
-        this.hostsEventUtility.processEvents(response);
-        this.tableLoading = false;
-        if (this.dataObjects.length >= this.searchHostsCount) {
-          this.searchHostsCount = this.dataObjects.length;
-        }
-        // use workloadList to build host-workloads map
-        this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchHosts);  // host[i] -> workloads[] map
-      },
-      (error) => {
-        this.tableLoading = false;
-        this.controllerService.invokeRESTErrorToaster('Failed to get hosts', error);
-      }
-    );
-    this.subscriptions.push(subscription);
-  }
-
-
-
-  watchNaples() {
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
-      response => {
-        this.naplesEventUtility.processEvents(response);
-        const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naples);
-
-        this.updateDSCsMaps(this.nameToMacMap, _myDSCnameToMacMap.nameToMacMap);
-        this.updateDSCsMaps(this.macToNameMap, _myDSCnameToMacMap.macToNameMap);
-        this.naplesWithoutHosts = [];
-        for (const dsc of this.naples) {
-          if (!dsc.status.host) {
-            this.naplesWithoutHosts.push(dsc);
-          }
-        }
-        this.notAdmittedCount = this.naplesWithoutHosts.length;
-      },
-      this.controllerService.webSocketErrorHandler('Failed to watch DSCs')
-    );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
-  }
-  /**
-   * Watch workloads.
-   * When watch objects arrive, we user findTypedItemsFromWSResponse() to figure the addedItems and deletedItems
-   * We then update this.workloadList and re-compute host-workload maps.
-   */
-  watchWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
-    const debounceDeley = (this.workloadList && this.workloadList.length > 100) ? 300 : 1;
-    const subscription = this.workloadService.WatchWorkload().pipe(debounceTime(debounceDeley)).subscribe(
-      (response) => {
-        this.workloadEventUtility.processEvents(response);
-
-        const updatedMap: { [type: string]: Array<WorkloadWorkload>  } = this.workloadEventUtility.updateRecordMap;
-        const addedWLItems =  updatedMap[EventTypes.create];
-        const deletedWLIems = updatedMap[EventTypes.delete];
-        const updatedWLIems = updatedMap[EventTypes.update];
-
-        // debug trick const targetItem = addedItems.find( (w) =>   w.meta.name.indexOf('jeff') >= 0 );
-
-        if (addedWLItems.length > 0) {
-          this.handleAddedWorkloads(addedWLItems);
-        }
-        if (updatedWLIems.length > 0) {
-          this.handleUpdatedWorkloads(addedWLItems);
-        }
-        if (deletedWLIems.length > 0) {
-          this.handleDeletededWorkloads(deletedWLIems);
-        }
-      },
-      this._controllerService.webSocketErrorHandler('Failed to watch Workloads')
-    );
-    this.subscriptions.push(subscription);
-  }
-
-  /**
-   * Remove objects from workloadList and recompute host-workloads map
-   * @param deletedIems
-   */
-  handleDeletededWorkloads(deletedIems: any[]) {
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleDeletedItemsFromWatch(deletedIems, this.workloadList);
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchWorkloadDelete);
-    }
-  }
-
-  /**
-   * Update objects to workloadList and recompute host-workloads map
-   * @param deletedIems
-   */
-  handleUpdatedWorkloads(updatedItems: any[]) {
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleUpdatedItemsFromWatch(updatedItems, this.workloadList, (item) => new WorkloadWorkload(item));
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchWorkloadAdd);
-    }
-  }
-
-  /**
-   * Add newly created objects to workloadList and recompute the host-workloads map
-   * @param addedItems
-   */
-  handleAddedWorkloads(addedItems: any[]) {
-    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleAddedItemsFromWatch(addedItems, this.workloadList, (item) => new WorkloadWorkload(item));
-    if (handleWatchItemResult.hasChange) {
-      this.workloadList = handleWatchItemResult.list;
-      this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchWorkloadAdd);
-    }
-  }
 
 
   getHostWorkloads(host: ClusterHost): WorkloadWorkload[] {
@@ -442,51 +282,76 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     });
   }
 
-
   postNgInit() {
-    // VS-1080.  We have to load up Hosts-DSCs-Workloads first then watch other objects. So far, this is the only call arrangement that works in both scale setup and small setup.
-    // TODO: Loading up hundreds of record in table is not the right UX/UI.  We should present top-Ns to give user big picture and encourage data searching.
-    const wlVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('Workload');
-    const dscVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('DistributedServiceCard');
-    const wlReady = wlVeniceObjectCacheData && wlVeniceObjectCacheData.length > 0;
-    const dstReady = dscVeniceObjectCacheData && dscVeniceObjectCacheData.length > 0;
-    if (wlReady) {
-      this.workloadList = wlVeniceObjectCacheData;
-    }
-    if (dstReady) {
-      this.naplesList = dscVeniceObjectCacheData;
-    }
-    if (wlReady && dstReady) {  // when both workloads and DSCs are available, invoke watch calls.
-      console.log(this.getClassName() + ' .postNgInit(), use cached data');
-      this.invokeWatch();
-    } else {
-      console.log(this.getClassName() + ' .postNgInit(), use fetchAll()');
-      this.fetechAll();  // fetechAll call watchNaples(), watchWorkloads(), watchHosts  // 2020 release-A
-    }
     this.buildAdvSearchCols();
-    this.getHostTotalCount(); // use search service to find total DSC in Venice at this moment.
+    this.getRecords();
   }
 
-  getHostTotalCount() {
-    const query: SearchSearchRequest = Utility.buildObjectTotalSearchQuery('Host');
-    const searchDSCTotalSubscription = this.searchService.PostQuery(query).subscribe(
-      resp => {
-        if (resp) {
-          const body = resp.body as ISearchSearchResponse;
-          const hostTotal = parseInt(body['total-hits'], 10);
-          // To test VS-1129, hard code -- const  dscTotal = 0;
-          if (hostTotal > 0) {
-            this.searchHostsCount = hostTotal;
-          } else {
-            this.searchHostsCount = 0;
-            this.tableLoading = false;
-          }
-        }
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Distributed Services Cards'),
-    );
-    this.subscriptions.push(searchDSCTotalSubscription);
+  /**
+   * This API is used in getRecords().
+   * Whenever, REST calls fetch host, dsc or workload, this function will be invoked.
+   */
+  handleDataReady() {
+    // When naplesList is ready, build DSC-maps
+    if ( this.naplesList ) {
+      const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList);
+      this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
+      this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
+    }
+     // When workload and hostList are ready, build host-workload map
+    if (this.workloadList && this.dataObjects  ) {
+      this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchHosts);  // host[i] -> workloads[] map
+    }
   }
+
+  /**
+   * This API fetch DSCs, Workloads and Hosts object.
+   * xxxService.ListXXXXCache() has magic to return object list and websocket event.
+   * {
+   * "data": [
+   * { .. } // DSC object
+   * ],
+   * "events": [], // websocket update record // Create, Update, Delete
+   * "connIsErrorState": false
+   * }
+   *
+   */
+  getRecords() {
+    const workloadSubscription = this.workloadService.ListWorkloadCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.workloadList = response.data  as WorkloadWorkload[];
+        this.handleDataReady();
+      }
+    );
+    this.subscriptions.push(workloadSubscription);
+
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.naplesList = response.data as ClusterDistributedServiceCard [];
+        this.handleDataReady();
+      }
+    );
+    this.subscriptions.push(dscSubscription);
+
+
+    const hostSubscription = this.clusterService.ListHostCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects  = response.data;
+        this.handleDataReady();
+      }
+    );
+    this.subscriptions.push(hostSubscription);
+  }
+
 
   deleteRecord(object: ClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error | IClusterHost; statusCode: number }> {
     return this.clusterService.DeleteHost(object.meta.name);
@@ -564,7 +429,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   searchDSCs(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const dscs = data[i][HostsComponent.HOST_FIELD_DSCS];
+      const dscs = data[i]._ui[HostsComponent.HOST_FIELD_DSCS];
       // dsc looks like {text: "000c.2981.d8a0", mac: "000c.2981.d8a0", admitted: false}
       for (let k = 0; k < dscs.length; k++) {
         const recordValueID = _.get(dscs[k], ['text']);
@@ -583,43 +448,13 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     return outputs;
   }
 
-  ngOnDestroyHook() {
-    const ts = (new Date()).getTime();
-    const hour = Utility.DEFAULT_CACHE_DURATION;
-
-    const workloadVeniceObjectCache: VeniceObjectCache = {
-      timestamp: ts,
-      duration: hour,
-      data: this.workloadList
-    };
-
-    const dscsVeniceObjectCache: VeniceObjectCache = {
-      timestamp: ts,
-      duration: hour,
-      data: this.naplesList
-    };
-
-    Utility.getInstance().setVeniceObjectCache('DistributedServiceCard', dscsVeniceObjectCache);
-    Utility.getInstance().setVeniceObjectCache('Workload', workloadVeniceObjectCache);
-
-    // We cache hosts only when we have all the hosts objects. hosts are from web-socket, user may leave the page before we get all hosts.
-    if (this.dataObjects.length >= this.searchHostsCount) {
-      const hostVeniceObjectCache: VeniceObjectCache = {
-        timestamp: ts,
-        duration: hour,
-        data: this.dataObjects as any[]
-      };
-      Utility.getInstance().setVeniceObjectCache('Host', hostVeniceObjectCache);
-    }
-  }
-
   // VS-1185.  UI blocks batch delete if selected hosts conttains any hosts that have associated workloads.
   areSelectedRowsDeletable(): boolean {
     const selectedRows = this.getSelectedDataObjects();
     if (selectedRows.length  === 0  ) {
       return false;
     }
-    const list  = this.getSelectedDataObjects().filter( (rowData) =>  (rowData[HostsComponent.HOST_FIELD_WORKLOADS] && rowData[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
+    const list  = this.getSelectedDataObjects().filter( (rowData) =>  (rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS] && rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
     return (list.length === 0 );
   }
 }

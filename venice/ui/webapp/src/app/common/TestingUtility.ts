@@ -14,15 +14,27 @@ import { IMonitoringSyslogExport, MonitoringSyslogExportConfig_facility_override
 export class TestingUtility {
   fixture: ComponentFixture<any>;
 
+  public static createDataCacheSubject(objList: any[], eventList: any[] = [], iconnIsErrorState: boolean = false) {
+    const events = TestingUtility.createWatchEvents(eventList);
+    const obj = {
+      'data':  objList,
+      'events': events.events,
+      'connIsErrorState': iconnIsErrorState
+    };
+    return new BehaviorSubject(obj);
+  }
+
   public static createWatchEventsSubject(obj: any[]) {
     return new BehaviorSubject(TestingUtility.createWatchEvents(obj));
   }
 
-  public static createWatchEvents(obj: any[]) {
+
+
+  public static createWatchEvents(obj: any[], type: string = 'Created') {
     const events = [];
-    obj.forEach( (o) => {
+    obj.forEach((o) => {
       events.push({
-        type: 'Created',
+        type: type,
         object: o
       });
     });
@@ -96,24 +108,24 @@ export class TestingUtility {
         [key: string]:
         (fieldElem: DebugElement, rowData: any, rowIndex: number) => void
       } = {},
-      actionColContent = '',
-      hasCheckbox: boolean = false) {
+    actionColContent = '',
+    hasCheckbox: boolean = false) {
 
     const rows = tableElem.queryAll(By.css('tr'));
     expect(rows.length).toBe(data.length, 'Data did not match number of entries in the table');
     rows.forEach((row, rowIndex) => {
       const rowData = data[rowIndex];
-       row.children.forEach((field, fieldIndex) => {
+      row.children.forEach((field, fieldIndex) => {
         if (hasCheckbox && fieldIndex === 0) {
           return;
         }
         // check whether table contains checkbox and reach to action icon column
-        if ( (hasCheckbox && fieldIndex === columns.length + 1) || (!hasCheckbox && fieldIndex === columns.length ) ) {
+        if ((hasCheckbox && fieldIndex === columns.length + 1) || (!hasCheckbox && fieldIndex === columns.length)) {
           // Action col
           expect(field.nativeElement.textContent).toBe(actionColContent, 'action column did not match');
           return;
         }
-        const myFieldIndex  = (hasCheckbox) ? fieldIndex - 1 : fieldIndex; // compute the right column index based on whether table contains checkbox.
+        const myFieldIndex = (hasCheckbox) ? fieldIndex - 1 : fieldIndex; // compute the right column index based on whether table contains checkbox.
         const colData = columns[myFieldIndex];
         if (caseMap[colData.field] != null) {
           // Delegate to supplied function
@@ -197,7 +209,7 @@ export class TestingUtility {
     this.sendClick(arrowElem);
     const opCSS = (dropdownOptionCSS) ? dropdownOptionCSS : '.ng-trigger.ng-trigger-overlayAnimation.ui-dropdown-panel.ui-widget .ui-dropdown-items-wrapper .ui-dropdown-item > span';
     const options = this.getElemsByCss(opCSS);
-    const selectedElem = options.find( (elem) => {
+    const selectedElem = options.find((elem) => {
       return elem.nativeElement.textContent.includes(label);
     });
     expect(selectedElem).toBeTruthy('Could not find the given option: ' + label);

@@ -121,11 +121,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
   dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
-  workloads: ReadonlyArray<WorkloadWorkload> = [];
 
   networkInterfacesEventUtility: HttpEventUtility<NetworkNetworkInterface>;
   networkInterfaces: ReadonlyArray<NetworkNetworkInterface> = [];
-  workloadList: WorkloadWorkload[] = [];
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -171,13 +169,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   init() {
     this.initializeData();
-    const wlVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('Workload');
-    if (wlVeniceObjectCacheData && wlVeniceObjectCacheData.length > 0) {
-      this.workloadList = wlVeniceObjectCacheData;
-      console.log(this.getClassName() + ' .init(), use cached data');
-    }
-    this.watchWorkloads();
-    // this.getNetworkInterfaces(); // comment it out for 2020-01 release-A
+    this.getNetworkInterfaces();
     this.getNaplesDetails();
     this.setNapleDetailToolbar(this.selectedId); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
   }
@@ -217,12 +209,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
-       /*  This block is for test only
-      this.networkService.ListNetworkInterface().subscribe(
+       // /*  This block is for test only
+       // https://10.30.2.173/configs/network/v1/networkinterfaces
+       // {"kind":"NetworkInterfaceList","api-version":"v1","list-meta":{},"items":[{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-lif2","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-lif2"}},{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-uplink128","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-uplink128"}}]}
+       // use aaaa.bbbb.0014-lif2 and  aaaa.bbbb.0014-uplink128 to find mapping between DSC and interface (LIF or uplink)
+       this.networkService.ListNetworkInterface().subscribe(
         (response) => {
             console.log('get NetworkNetworkInterface list', response);
         }
       );
+      /*
       this.networkInterfacesEventUtility = new HttpEventUtility<NetworkNetworkInterface>();
       this.networkInterfaces = this.networkInterfacesEventUtility.array;
       const subscription = this.networkService.WatchNetworkInterface().subscribe(
@@ -300,9 +296,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         // browserBrowseResponseList looks like:
         // {"kind":"","meta":{"name":"","generation-id":"","creation-time":"","mod-time":""},"responselist":[{"root-uri":"/configs/cluster/v1/hosts/naples3-host","query-type":"depended-by","max-depth":2,"total-count":2,"objects":{"/configs/cluster/v1/hosts/naples3-host":{"kind":"Host","api-version":"v1","meta":{"name":"naples3-host","generation-id":"7","resource-version":"447663","uuid":"3e41523f-80ec-4f3a-97b3-18ac71ae654d","creation-time":"2020-01-16T22:56:04.310139027Z","mod-time":"2020-01-16T22:57:51.494345219Z","self-link":"/configs/cluster/v1/hosts/naples3-host"},"uri":"/configs/cluster/v1/hosts/naples3-host","reverse":"","query-type":"depended-by","links":{"spec.host-name":{"ref-type":"named-reference","uri":[{"tenant":"default","namespace":"default","kind":"Workload","name":"Saroj","uri":"/configs/workload/v1/tenant/default/workloads/Saroj"}]}}},"/configs/workload/v1/tenant/default/workloads/Saroj":{"kind":"Workload","api-version":"v1","meta":{"name":"Saroj","tenant":"default","namespace":"default","generation-id":"1","resource-version":"447663","uuid":"33e90343-56b2-4138-8734-e831e1d9ab26","creation-time":"2020-01-19T11:10:48.221308018Z","mod-time":"2020-01-19T11:10:48.22131401Z","self-link":"/configs/workload/v1/tenant/default/workloads/Saroj"},"uri":"/configs/workload/v1/tenant/default/workloads/Saroj","reverse":"","query-type":"depended-by","links":null}}}]}
 
-        // TODO : debug me
-        // https://10.30.2.173/ browser API does not return workloads attached to host (hostname)
-
         const hostWorkloadMap = {};
         for (let i = 0; browserBrowseResponseList && browserBrowseResponseList.responselist && i < browserBrowseResponseList.responselist.length; i++) {
           const responselistObject = browserBrowseResponseList.responselist[i].objects;
@@ -326,21 +319,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     );
   }
 
-  /**
-   * Fetch workloads.
-   */
-  watchWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
-    const subscription = this.workloadService.WatchWorkload().subscribe(
-      (response) => {
-        this.workloadEventUtility.processEvents(response);
-        // TODO: workloads may change. worklist is not update. It is better to have browser.api working.
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
-    );
-    this.subscriptions.push(subscription);
-  }
 
   getNaplesDetails() {
     // We perform a get as well as a watch so that we can know if the object the user is
@@ -407,12 +385,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           // When we first get the DSC object. We try to user browser API to populate DSC's workload array.
           if ( !this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
             this.browseDSCWorkload();
-          }
-          const myWorkloads = (this.workloadList && this.workloadList.length > 0) ? this.workloadList : this.workloads;
-          if (myWorkloads && myWorkloads.length > 0) {
-          this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(myWorkloads, this.objList);
-          this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] = (this.dscsWorkloadsTuple[this.selectedObj.meta.name]) ?
-            this.dscsWorkloadsTuple[this.selectedObj.meta.name].workloads : [];
           }
         }
       },
