@@ -15,6 +15,15 @@
 #define MDIO_RD_ENA             0x2
 #define MDIO_WR_ENA             0x4
 
+#define SMI_CMD_REG             0x18
+#define SMI_DATA_REG            0x19
+#define SMI_PHY_ADDR            0x1C
+#define SMI_BUSY                (1 << 15)
+#define SMI_MODE                (1 << 12)
+#define SMI_READ                (1 << 11)
+#define SMI_WRITE               (1 << 10)
+#define DEV_BITS                5
+
 #define CPLD_ALOM_PRESENT       0x20
 
 #define MARVELL_PORT_STATE_DISABLED   0x0
@@ -34,6 +43,9 @@
 #define MARVELL_PORT4                 0x14
 #define MARVELL_PORT5                 0x15
 #define MARVELL_PORT6                 0x16
+
+#define MARVELL_PHY_CU_CTRL_REG       0x0
+#define MARVELL_PHY_POWERDN_BIT       11
 
 #ifdef __x86_64__
 int pal_is_qsfp_port_psnt(int port_no)
@@ -394,6 +406,58 @@ mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
     cpld_reg_wr(MDIO_CRTL_LO_REG, (phy << 3) | MDIO_WR_ENA | MDIO_ACC_ENA);
     usleep(100);
     cpld_reg_wr(MDIO_CRTL_LO_REG, 0);
+    return 0;
+}
+
+static int
+mdio_smi_rd (uint8_t addr, uint16_t* data, uint8_t phy)
+{
+    uint16_t tmp;
+
+    tmp = SMI_BUSY | SMI_MODE | SMI_READ | phy << DEV_BITS | addr;
+
+    mdio_wr(SMI_CMD_REG, tmp, SMI_PHY_ADDR);
+    usleep(1000);
+    cpld_mdio_rd(SMI_DATA_REG, data, SMI_PHY_ADDR);
+
+    return 0;
+}
+
+static int
+mdio_smi_wr (uint8_t addr, uint16_t data, uint8_t phy)
+{
+    uint16_t tmp;
+
+    mdio_wr(SMI_DATA_REG, data, SMI_PHY_ADDR);
+    usleep(1000);
+    tmp = SMI_BUSY | SMI_MODE | SMI_WRITE | phy << DEV_BITS | addr;
+    mdio_wr(SMI_CMD_REG, tmp, SMI_PHY_ADDR);
+    return 0;
+}
+
+// \@brief     set the power mode for copper phy
+// \@param[in] phy Marvell PHY port
+// \@param[in] powerup power up the PHY
+// \@return    0 on success, -1 on failure
+int
+pal_marvell_phy_enable (uint8_t phy, bool powerup)
+{
+    uint16_t data;
+    uint8_t addr;
+
+    data = 0x0;
+    // read the copper control register
+    addr = MARVELL_PHY_CU_CTRL_REG;
+    mdio_smi_rd(addr, &data, phy);
+    if (powerup) {
+        // reset for normal operation
+        data = data & ~(1 << MARVELL_PHY_POWERDN_BIT);
+    } else {
+        // set for power down state
+        data = data | (1 << MARVELL_PHY_POWERDN_BIT);
+    }
+    // write back data
+    mdio_smi_wr (addr, data, phy);
     return 0;
 }
 
