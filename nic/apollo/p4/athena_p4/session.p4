@@ -65,6 +65,14 @@ action session_info_per_direction(valid_flag,
                     udp_sport, udp_dport, mpls_label1, mpls_label2, mpls_label3,
                     egress_action) {
     if (valid_flag == TRUE) {
+        add_header(ethernet_0);
+        add_header(ctag_0);
+        add_header(ipv4_0);
+        add_header(udp_0);
+        add_header(gre_0);
+        add_header(mpls_label1_0);
+        add_header(mpls_label2_0);
+        add_header(mpls_label3_0);
         if (epoch1_id != 0) {
             modify_field(control_metadata.epoch1_id, epoch1_id);
             modify_field(control_metadata.epoch1_value, epoch1_value);
@@ -75,6 +83,10 @@ action session_info_per_direction(valid_flag,
             modify_field(control_metadata.epoch2_value, epoch2_value);
             modify_field(control_metadata.epoch2_id_valid, TRUE);
         }
+        modify_field(scratch_metadata.flag, ipv4_1.valid); 
+        modify_field(scratch_metadata.flag, ipv4_2.valid); 
+        modify_field(scratch_metadata.packet_len, p4i_to_p4e_header.packet_len);
+
         modify_field(control_metadata.allowed_flow_state_bitmask, allowed_flow_state_bitmask);
         modify_field(control_metadata.strip_outer_encap_flag, strip_outer_encap_flag);
         modify_field(control_metadata.strip_l2_header_flag, strip_l2_header_flag);
@@ -96,6 +108,10 @@ action session_info_per_direction(valid_flag,
         modify_field(control_metadata.mpls_label2, mpls_label2);
         modify_field(control_metadata.mpls_label3, mpls_label3);
 
+        modify_field(ipv4_2.srcAddr, scratch_metadata.addr);
+        modify_field(ipv4_2.dstAddr, scratch_metadata.addr);
+        modify_field(ipv6_2.srcAddr, nat_address);
+        modify_field(ipv6_2.dstAddr, nat_address);
         modify_field(control_metadata.egress_action, egress_action);
     }
     else {

@@ -211,6 +211,10 @@ private:
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t p4plus_table_init_(void);
 
+    /// \brief  init routine to initialize P4E Redir table
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t p4e_redir_init_(void);
+
 private:
     pipeline_cfg_t      pipeline_cfg_;
 };

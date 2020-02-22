@@ -153,8 +153,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     // ARM -> uplink (untag packets)
     key.capri_intrinsic_lif = id_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
-    key.ctag_1_valid = 0;
-    mask.ctag_1_valid_mask = 0xF;
+    //key.ctag_1_valid = 0;
+    //mask.ctag_1_valid_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
@@ -177,8 +177,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     key.capri_intrinsic_lif =
         sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
     mask.capri_intrinsic_lif_mask = 0xFFFF;
-    key.ctag_1_valid = 0;
-    mask.ctag_1_valid_mask = 0xF;
+    //key.ctag_1_valid = 0;
+    //mask.ctag_1_valid_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;

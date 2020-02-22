@@ -432,7 +432,8 @@ athena_impl::stats_init_(void) {
 }
 
 sdk_ret_t
-athena_impl::checksum_init_(void) {
+athena_impl::checksum_init_(void)
+{
     uint64_t idx;
     p4pd_error_t p4pd_ret;
     checksum_swkey_t key;
@@ -524,6 +525,32 @@ athena_impl::checksum_init_(void) {
 }
 
 sdk_ret_t
+athena_impl::p4e_redir_init_(void)
+{
+    p4e_redir_actiondata_t          data = { 0 };
+    p4pd_error_t                    p4pd_ret;
+
+    data.action_id = P4E_REDIR_P4E_TO_RXDMA_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4E_REDIR, data.action_id, NULL, NULL,
+                                       &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program P4TBL_ID_P4E_REDIR table at idx %u",
+                      data.action_id);
+        return SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    data.action_id = P4E_REDIR_P4E_TO_UPLINK_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4E_REDIR, data.action_id, NULL, NULL,
+                                       &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program P4TBL_ID_P4E_REDIR table at idx %u",
+                      data.action_id);
+        return SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 athena_impl::table_init_(void) {
     sdk_ret_t     ret;
 
@@ -535,7 +562,17 @@ athena_impl::table_init_(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // initialize checksum table
+    ret = checksum_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
     ret = nacl_init_();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = p4e_redir_init_();
     if (ret != SDK_RET_OK) {
         return ret;
     }

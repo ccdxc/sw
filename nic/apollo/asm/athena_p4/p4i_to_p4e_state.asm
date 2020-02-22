@@ -9,6 +9,9 @@ struct phv_                 p;
 %%
 
 p4i_to_p4e_state:
+    phvwr           p.control_metadata_direction, k.p4i_to_p4e_header_direction
+    phvwr           p.control_metadata_flow_miss, k.p4i_to_p4e_header_flow_miss
+
     seq             c1, k.p4i_to_p4e_header_valid, TRUE
     seq.c1          c1, k.p4i_to_p4e_header_flow_miss, FALSE
     

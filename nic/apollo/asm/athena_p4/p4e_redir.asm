@@ -1,13 +1,12 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "athena.h"
-#include "EGRESS_p4e_to_rxdma_k.h"
+#include "EGRESS_p4e_redir_k.h"
 
-struct p4e_to_rxdma_k_  k;
+struct p4e_redir_k_     k;
 struct phv_             p;
 
 %%
-
 
 p4e_to_rxdma:
     /*
@@ -64,3 +63,23 @@ p4e_to_rxdma_ipv4:
     nop.e
     phvwr           p.p4e_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV4
+
+.align
+p4e_to_uplink:
+    /*
+    phvwr           p.p4e_to_p4plus_classic_nic_ip_valid, FALSE
+    phvwr           p.p4e_to_p4plus_classic_nic_valid, FALSE
+    phvwr           p.capri_rxdma_intrinsic_valid, FALSE
+    phvwr           p.p4i_to_p4e_header_valid, FALSE
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    phvwr           p.capri_intrinsic_valid, TRUE
+    */
+    phvwr.e         p.{ p4e_to_p4plus_classic_nic_ip_valid, \
+                        p4e_to_p4plus_classic_nic_valid, \
+                        capri_rxdma_intrinsic_valid, \
+                        p4i_to_p4e_header_valid, \
+                        capri_p4_intrinsic_valid, \
+                        capri_intrinsic_valid }, 0x03
+
+
+    phvwr           p.capri_intrinsic_tm_oport, k.control_metadata_redir_oport

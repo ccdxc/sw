@@ -66,14 +66,6 @@ action p4e_to_uplink() {
     modify_field(capri_intrinsic.tm_oport, control_metadata.redir_oport);
 }
 
-@pragma stage 5
-table p4e_to_uplink {
-    actions {
-        p4e_to_uplink;
-    }
-}
-
-
 action p4e_to_rxdma() {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, control_metadata.redir_lif);
@@ -123,19 +115,20 @@ action p4e_to_rxdma() {
 }
 
 @pragma stage 5
-table p4e_to_rxdma {
+@pragma index_table
+table p4e_redir {
+    reads {
+        control_metadata.redir_type : exact;
+    }
 
     actions {
         p4e_to_rxdma;
+        p4e_to_uplink;
     }
+    size : P4E_REDIR_TABLE_SIZE; 
 }
 
 control egress_inter_pipe {
     apply(p4i_to_p4e_state);    
-    if (control_metadata.forward_to_uplink == TRUE) {
-        apply(p4e_to_uplink);
-    }
-    if (control_metadata.redir_to_rxdma == TRUE) {
-        apply(p4e_to_rxdma);
-    }
+    apply(p4e_redir);
 }

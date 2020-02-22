@@ -18,21 +18,12 @@ action nacl_redirect(redir_type, app_id, oport, lif, qtype, qid) {
     modify_field(control_metadata.p4i_drop_reason, 0);
 }
 
-@pragma stage 5
+@pragma stage 3
 table nacl {
     reads {
         control_metadata.direction          : ternary;
         control_metadata.flow_miss          : ternary;
-        key_metadata.ktype                  : ternary;
-        key_metadata.dst                    : ternary;
-        key_metadata.src                    : ternary;
-        key_metadata.proto                  : ternary;
-        key_metadata.sport                  : ternary;
-        key_metadata.dport                  : ternary;
-        ethernet_1.dstAddr                  : ternary;
         capri_intrinsic.lif                 : ternary;
-        ctag_1.valid                        : ternary;
-        ctag_1.vid                          : ternary;
     }
     actions {
         nacl_permit;

@@ -326,7 +326,8 @@ create_v4_session_info_all(uint32_t session_index,
                     mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac, uint16_t substrate_vlan,
                     uint32_t substrate_sip, uint32_t substrate_dip,
                     uint16_t substrate_udp_sport, uint16_t substrate_udp_dport,
-                    uint32_t mpls1_label, uint32_t mpls2_label)
+                    uint32_t mpls1_label, uint32_t mpls2_label,
+                    mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan)
 
 {
     sdk_ret_t                       ret = SDK_RET_OK;
@@ -334,9 +335,9 @@ create_v4_session_info_all(uint32_t session_index,
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_info_id = session_index;
-    //spec.key.direction = (HOST_TO_SWITCH | SWITCH_TO_HOST);
-    spec.key.direction = (HOST_TO_SWITCH);
+    spec.key.direction = (HOST_TO_SWITCH | SWITCH_TO_HOST);
 
+    /* Host to Switch */
     spec.data.host_to_switch_flow_info.rewrite_info.strip_l2_header = TRUE;
     spec.data.host_to_switch_flow_info.rewrite_info.strip_vlan_tag = TRUE;
 
@@ -355,10 +356,26 @@ create_v4_session_info_all(uint32_t session_index,
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_dport = substrate_udp_dport;
 
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
+
+    /* Switch to Host */
+    spec.data.switch_to_host_flow_info.rewrite_info.strip_encap_header = TRUE;
+
+    spec.data.switch_to_host_flow_info.rewrite_info.user_packet_rewrite_type = REWRITE_TYPE_NONE;
+
+    spec.data.switch_to_host_flow_info.rewrite_info.encap_type = ENCAP_TYPE_L2;
+
+    sdk::lib::memrev(spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.dmac,
+            (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.smac,
+            (uint8_t*)ep_smac, sizeof(mac_addr_t));
+    spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.vlan_id = vnic_vlan;
+
 
     ret = pds_flow_session_info_create(&spec);
     if (ret != SDK_RET_OK) {
@@ -404,7 +421,7 @@ uint32_t    substrate_sip = 0x04030201;
 uint32_t    substrate_dip = 0x01020304;
 uint8_t     substrate_ip_ttl = 64;
 uint16_t    substrate_udp_sport = 0xabcd;
-uint16_t    substrate_udp_dport = 0x1234;
+uint16_t    substrate_udp_dport = 0x19eb; /* 6635 */
 uint32_t    mpls1_label = 0x12345;
 uint32_t    mpls2_label = 0x6789a;
 
@@ -565,12 +582,13 @@ setup_flow(void)
                     &substrate_dmac, &substrate_smac, substrate_vlan,
                     substrate_sip, substrate_dip,
                     substrate_udp_sport, substrate_udp_dport,
-                    mpls1_label, mpls2_label);
+                    mpls1_label, mpls2_label,
+                    (mac_addr_t*)ep_dmac, (mac_addr_t*)ep_smac, vnic_vlan);
 
     // Setup Normalized Flow entry
     ret = create_v4_flow(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
             g_h2s_proto, g_h2s_sport, g_h2s_dport,
-            PDS_FLOW_SPEC_INDEX_CONNTRACK, g_session_index);
+            PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -712,7 +730,7 @@ main (int argc, char **argv)
 
     // wait forver
     printf("Initialization done ...\n");
-    //send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
+    send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
     send_packet("h2s pkt", g_snd_pkt_h2s, sizeof(g_snd_pkt_h2s), g_h2s_port, NULL, 0, 0);
 
     send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);

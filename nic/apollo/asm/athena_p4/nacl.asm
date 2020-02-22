@@ -15,7 +15,7 @@ nacl_permit:
 .align
 nacl_redirect:
     phvwr.!c1.e     p.capri_intrinsic_drop, 1
-    //phvwr           p.control_metadata_redir_type, d.u.nacl_redirect_d.redir_type
+    phvwr           p.control_metadata_redir_type, d.u.nacl_redirect_d.redir_type
     
     phvwr           p.control_metadata_redir_oport, d.u.nacl_redirect_d.oport
     phvwr           p.control_metadata_redir_lif, d.u.nacl_redirect_d.lif
