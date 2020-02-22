@@ -206,6 +206,9 @@ const (
 	// SecurityProfileID captures kind for ID allocation for SecurityProfile
 	SecurityProfileID = "securityProfileID"
 
+	// SecurityRulePriority captures the priority of a security rule
+	SecurityRulePriority = "securityRulePriority"
+
 	// TunnelID captures kind for ID allocation for Tunnel
 	TunnelID = "tunnelID"
 

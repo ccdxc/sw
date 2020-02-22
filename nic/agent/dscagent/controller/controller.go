@@ -596,7 +596,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 					EventType: api.EventType_UpdateEvent,
 					Interface: ev.Intf,
 				}
-				log.Infof("Updating interface state [%s]", ifev)
+				log.Infof("Updating interface state [%v]", ifev)
 				if getUpdCl() != nil {
 					operUpd.Send(&ifev)
 				}
@@ -606,7 +606,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 					EventType: api.EventType_DeleteEvent,
 					Interface: ev.Intf,
 				}
-				log.Infof("Deleting interface state [%s]", ifev)
+				log.Infof("Deleting interface state [%v]", ifev)
 				if getUpdCl() != nil {
 					operUpd.Send(&ifev)
 				}

@@ -22,12 +22,13 @@ import (
 )
 
 var (
-	infraAPI     types.InfraAPI
-	mockHal      *fakehal.Hal
-	lis          netutils.TestListenAddr
-	intfClient   halapi.IfSvcClient
-	mirrorClient halapi.MirrorSvcClient
-	subnetClient halapi.SubnetSvcClient
+	infraAPI        types.InfraAPI
+	mockHal         *fakehal.Hal
+	lis             netutils.TestListenAddr
+	intfClient      halapi.IfSvcClient
+	mirrorClient    halapi.MirrorSvcClient
+	subnetClient    halapi.SubnetSvcClient
+	secPolicyClient halapi.SecurityPolicySvcClient
 )
 
 // Implements InfraAPI that return errors for testing
@@ -72,6 +73,8 @@ func TestMain(m *testing.M) {
 	}
 	intfClient = halapi.NewIfSvcClient(conn)
 	mirrorClient = halapi.NewMirrorSvcClient(conn)
+	subnetClient = halapi.NewSubnetSvcClient(conn)
+	secPolicyClient = halapi.NewSecurityPolicySvcClient(conn)
 	code := m.Run()
 	mockHal.Stop()
 	infraAPI.Close()

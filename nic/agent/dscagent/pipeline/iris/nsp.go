@@ -28,10 +28,7 @@ func HandleNetworkSecurityPolicy(infraAPI types.InfraAPI, client halapi.NwSecuri
 	case types.Create:
 		return createNetworkSecurityPolicyHandler(infraAPI, client, nsp, vrfID, ruleIDToAppMapping)
 	case types.Update:
-		if err := deleteNetworkSecurityPolicyHandler(infraAPI, client, nsp, vrfID); err != nil {
-			log.Infof("Delete failed during update: %v", err)
-		}
-		return createNetworkSecurityPolicyHandler(infraAPI, client, nsp, vrfID, ruleIDToAppMapping)
+		return updateNetworkSecurityPolicyHandler(infraAPI, client, nsp, vrfID, ruleIDToAppMapping)
 	case types.Delete:
 		return deleteNetworkSecurityPolicyHandler(infraAPI, client, nsp, vrfID)
 	default:

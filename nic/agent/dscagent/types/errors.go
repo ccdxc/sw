@@ -122,6 +122,7 @@ const (
 	ErrCollectorDeleteDuringUpdate        = Error("ErrCollectorDeleteDuringUpdate")
 	ErrCollectorCreateDuringUpdate        = Error("ErrCollectorCreateDuringUpdate")
 	ErrCollectorStillReferenced           = Error("ErrCollectorStillReferenced")
+	ErrUnsupportedApp                     = Error("ErrUnsupportedApp")
 )
 
 // Const Info

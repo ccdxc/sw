@@ -216,10 +216,10 @@ func TestHandleNetworkSecurityPolicyInlineRulesReject(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//err = HandleNetworkSecurityPolicy(infraAPI, nwSecClient, types.Delete, nsp, 65, &mappings)
-	//if err != nil {
-	//	t.Fatal(err)
-	//}
+	err = HandleNetworkSecurityPolicy(infraAPI, nwSecClient, types.Delete, nsp, 65, &mappings)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestHandleNetworkSecurityPolicyInlineRulesLog(t *testing.T) {

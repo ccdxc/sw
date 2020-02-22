@@ -66,6 +66,146 @@ func (h Hal) InterfaceDelete(ctx context.Context, req *apuluproto.InterfaceDelet
 	}, nil
 }
 
+// SecurityProfileCreate stubbed out
+func (h Hal) SecurityProfileCreate(ctx context.Context, req *apuluproto.SecurityProfileRequest) (*apuluproto.SecurityProfileResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityProfileCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityProfileResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityProfileUpdate stubbed out
+func (h Hal) SecurityProfileUpdate(ctx context.Context, req *apuluproto.SecurityProfileRequest) (*apuluproto.SecurityProfileResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityProfileUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityProfileResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityProfileDelete stubbed out
+func (h Hal) SecurityProfileDelete(ctx context.Context, req *apuluproto.SecurityProfileDeleteRequest) (*apuluproto.SecurityProfileDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityProfileDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityProfileDeleteResponse{
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
+	}, nil
+}
+
+// SecurityPolicyCreate stubbed out
+func (h Hal) SecurityPolicyCreate(ctx context.Context, req *apuluproto.SecurityPolicyRequest) (*apuluproto.SecurityPolicyResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityPolicyCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityPolicyResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityPolicyUpdate stubbed out
+func (h Hal) SecurityPolicyUpdate(ctx context.Context, req *apuluproto.SecurityPolicyRequest) (*apuluproto.SecurityPolicyResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityPolicyUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityPolicyResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityPolicyDelete stubbed out
+func (h Hal) SecurityPolicyDelete(ctx context.Context, req *apuluproto.SecurityPolicyDeleteRequest) (*apuluproto.SecurityPolicyDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityPolicyDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityPolicyDeleteResponse{
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
+	}, nil
+}
+
+// SubnetCreate stubbed out
+func (h Hal) SubnetCreate(ctx context.Context, req *apuluproto.SubnetRequest) (*apuluproto.SubnetResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SubnetCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SubnetResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SubnetUpdate stubbed out
+func (h Hal) SubnetUpdate(ctx context.Context, req *apuluproto.SubnetRequest) (*apuluproto.SubnetResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SubnetUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SubnetResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SubnetDelete stubbed out
+func (h Hal) SubnetDelete(ctx context.Context, req *apuluproto.SubnetDeleteRequest) (*apuluproto.SubnetDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SubnetDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SubnetDeleteResponse{
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
+	}, nil
+}
+
+// MirrorSessionCreate stubbed out
+func (h Hal) MirrorSessionCreate(ctx context.Context, req *apuluproto.MirrorSessionRequest) (*apuluproto.MirrorSessionResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MirrorSessionCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.MirrorSessionResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// MirrorSessionUpdate stubbed out
+func (h Hal) MirrorSessionUpdate(ctx context.Context, req *apuluproto.MirrorSessionRequest) (*apuluproto.MirrorSessionResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MirrorSessionUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.MirrorSessionResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// MirrorSessionDelete stubbed out
+func (h Hal) MirrorSessionDelete(ctx context.Context, req *apuluproto.MirrorSessionDeleteRequest) (*apuluproto.MirrorSessionDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MirrorSessionDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.MirrorSessionDeleteResponse{
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
+	}, nil
+}
+
 // NewFakeHalServer returns a fake hal server on a specified port
 func NewFakeHalServer(listenURL string) *Hal {
 	lis, err := net.Listen("tcp", listenURL)
@@ -79,6 +219,9 @@ func NewFakeHalServer(listenURL string) *Hal {
 	}
 
 	apuluproto.RegisterIfSvcServer(f.Srv, &f)
+	apuluproto.RegisterMirrorSvcServer(f.Srv, &f)
+	apuluproto.RegisterSubnetSvcServer(f.Srv, &f)
+	apuluproto.RegisterSecurityPolicySvcServer(f.Srv, &f)
 	go f.Srv.Serve(lis)
 
 	time.Sleep(time.Second * 2)

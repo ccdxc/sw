@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/common"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu"
 	apuluutils "github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
+	apuluValidator "github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -524,12 +525,167 @@ func (a *ApuluAPI) HandleApp(oper types.Operation, app netproto.App) (apps []net
 	defer a.Unlock()
 
 	apps, err = common.HandleApp(a.InfraAPI, oper, app)
+	if err != nil {
+		return
+	}
+	// TODO Trigger this from NPM's OnAppUpdate method
+	if oper == types.Update {
+		//
+		var (
+			dat [][]byte
+		)
+		dat, err = a.InfraAPI.List("NetworkSecurityPolicy")
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to list NetworkSecurityPolicies | Err: %v", err))
+		}
+
+		for _, o := range dat {
+			var nsp netproto.NetworkSecurityPolicy
+			err := nsp.Unmarshal(o)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err))
+				continue
+			}
+			for _, r := range nsp.Spec.Rules {
+				if r.AppName == app.Name {
+					// Update NetworkSecurity Policy here
+					_, ruleIDToAppMapping, err := validator.ValidateNetworkSecurityPolicy(a.InfraAPI, nsp)
+					if err != nil {
+						break
+					}
+					if err := apuluValidator.ValidateNetworkSecurityPolicyApp(a.InfraAPI, nsp); err != nil {
+						break
+					}
+					if err := apulu.HandleNetworkSecurityPolicy(a.InfraAPI, a.SecurityPolicySvcClient, oper, nsp, ruleIDToAppMapping); err == nil {
+						break
+					}
+				}
+			}
+		}
+	}
 	return
 }
 
-// HandleNetworkSecurityPolicy unimplemented
-func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto.NetworkSecurityPolicy) ([]netproto.NetworkSecurityPolicy, error) {
-	return nil, errors.Wrapf(types.ErrNotImplemented, "NetworkSecurityPolicy %s is not implemented by Apulu Pipeline", oper)
+// HandleNetworkSecurityPolicy handles CRUD Methods for NetworkSecurityPolicy Object
+func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto.NetworkSecurityPolicy) (netSecPolicies []netproto.NetworkSecurityPolicy, err error) {
+	a.Lock()
+	defer a.Unlock()
+	err = utils.ValidateMeta(oper, nsp.Kind, nsp.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.NetworkSecurityPolicy
+		)
+		dat, err = a.InfraAPI.Read(nsp.Kind, nsp.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err)
+		}
+		netSecPolicies = append(netSecPolicies, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = a.InfraAPI.List(nsp.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var nsp netproto.NetworkSecurityPolicy
+			err := nsp.Unmarshal(o)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err))
+				continue
+			}
+			netSecPolicies = append(netSecPolicies, nsp)
+		}
+
+		return
+	case types.Create:
+		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
+		if nsp.Status.NetworkSecurityPolicyID == 0 {
+			nsp.Status.NetworkSecurityPolicyID = a.InfraAPI.AllocateID(types.NetworkSecurityPolicyID, 0)
+		}
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingNetworkSecurityPolicy netproto.NetworkSecurityPolicy
+		dat, err := a.InfraAPI.Read(nsp.Kind, nsp.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrObjNotFound)
+		}
+
+		err = existingNetworkSecurityPolicy.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err)
+		}
+
+		if proto.Equal(&nsp.Spec, &existingNetworkSecurityPolicy.Spec) {
+			return nil, nil
+		}
+
+		// Reuse ID from store
+		nsp.Status.NetworkSecurityPolicyID = existingNetworkSecurityPolicy.Status.NetworkSecurityPolicyID
+		log.Infof("Existing NetworkSecurityPolicy : %v", existingNetworkSecurityPolicy)
+		log.Infof("New NetworkSecurityPolicy: %v", nsp)
+
+	case types.Delete:
+		var existingNetworkSecurityPolicy netproto.NetworkSecurityPolicy
+		dat, err := a.InfraAPI.Read(nsp.Kind, nsp.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingNetworkSecurityPolicy.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), err)
+		}
+		nsp = existingNetworkSecurityPolicy
+
+	}
+
+	// Perform object validations
+	_, ruleIDToAppMapping, err := validator.ValidateNetworkSecurityPolicy(a.InfraAPI, nsp)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	if err := apuluValidator.ValidateNetworkSecurityPolicyApp(a.InfraAPI, nsp); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	log.Infof("NetworkSecurityPolicy: %v | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("NetworkSecurityPolicy: %v | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjEnd)
+
+	// Take a lock to ensure a single HAL API is active at any given point
+	err = apulu.HandleNetworkSecurityPolicy(a.InfraAPI, a.SecurityPolicySvcClient, oper, nsp, ruleIDToAppMapping)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
 }
 
 // HandleProfile unimplemented

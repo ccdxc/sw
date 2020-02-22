@@ -242,7 +242,6 @@ func ValidateNetworkSecurityPolicy(i types.InfraAPI, nsp netproto.NetworkSecurit
 			if len(r.Dst.ProtoPorts) != 0 || len(r.Src.ProtoPorts) != 0 {
 				log.Error(errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrDuplicateRuleinAppAndInlineRules))
 				return vrf, nil, errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrDuplicateRuleinAppAndInlineRules)
-
 			}
 
 			ruleIDAppMapping.Store(idx, &app)
@@ -352,7 +351,7 @@ func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto
 		}
 		for _, r := range rs {
 			vf := netproto.Vrf{}
-			log.Infof("unmarshal is %v/%v", vf.Unmarshal(r))
+			log.Infof("unmarshal is %v/%v", r, vf.Unmarshal(r))
 		}
 	}
 	log.Infof("Trying to find VRF [%v/%v/%v][%+v]", tenant, namespace, name, v)
