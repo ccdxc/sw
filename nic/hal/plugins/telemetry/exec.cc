@@ -34,7 +34,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     bzero(&acl_key, sizeof(hal::ipv4_tuple));
     mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
     export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
-    const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
+    const char *ctx_name = flowmon_acl_ctx_name(hal::g_hal_state->customer_default_vrf(), mirror_action);
     acl_ctx = acl::acl_get(ctx_name);
     HAL_TRACE_VERBOSE("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
     if (acl_ctx == NULL) {

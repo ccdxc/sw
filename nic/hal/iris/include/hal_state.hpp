@@ -395,6 +395,9 @@ public:
     void set_policy_mode(PolicyMode policy_mode) { policy_mode_ = policy_mode; }
     PolicyMode policy_mode(void) { return policy_mode_; }
 
+    void set_customer_default_vrf(vrf_id_t vrf) { customer_default_vrf_ = vrf; }
+    vrf_id_t customer_default_vrf(void) { return customer_default_vrf_; }
+
     bool is_microseg_enabled(void) { return (fwd_mode_ == sys::FWD_MODE_MICROSEG); }
     bool is_policy_enforced(void) { return (policy_mode_ == sys::POLICY_MODE_ENFORCE); }
     bool is_flow_aware(void)      { return (policy_mode_ == sys::POLICY_MODE_FLOW_AWARE); }
@@ -507,6 +510,7 @@ private:
     bool          policy_enforce_;
     ForwardMode   fwd_mode_;
     PolicyMode    policy_mode_;
+    vrf_id_t      customer_default_vrf_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -884,6 +888,9 @@ public:
     bool is_policy_enforced(void) { return oper_db_->is_policy_enforced(); }
     bool is_flow_aware(void) { return oper_db_->is_flow_aware(); }
     bool is_base_net(void) { return oper_db_->is_base_net(); }
+
+    void set_customer_default_vrf(vrf_id_t vrf) { oper_db_->set_customer_default_vrf(vrf); }
+    vrf_id_t customer_default_vrf(void) { return oper_db_->customer_default_vrf(); }
 
 private:
     // following come from shared memory or non-linux HBM memory

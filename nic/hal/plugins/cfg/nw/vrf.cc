@@ -584,6 +584,12 @@ end:
         }
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_FAIL);
     } else {
+        // Today there is only one customer VRF in 
+        // the system so we can cache it for easy
+        // accessibility
+        if (vrf->vrf_type == types::VRF_TYPE_CUSTOMER) {
+            g_hal_state->set_customer_default_vrf(vrf->vrf_id);
+        }
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_SUCCESS);
     }
 
