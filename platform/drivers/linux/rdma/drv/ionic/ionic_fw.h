@@ -349,7 +349,7 @@ enum ionic_v1_cqe_src_qpn_bits {
 	IONIC_V1_CQE_RECV_QPN_MASK	= 0xffffff,
 	IONIC_V1_CQE_RECV_OP_SHIFT	= 24,
 
-	/* XXX MASK could be 0x3, but need 0x1f for makeshift values:
+	/* MASK could be 0x3, but need 0x1f for makeshift values:
 	 * OP_TYPE_RDMA_OPER_WITH_IMM, OP_TYPE_SEND_RCVD
 	 */
 	IONIC_V1_CQE_RECV_OP_MASK	= 0x1f,
