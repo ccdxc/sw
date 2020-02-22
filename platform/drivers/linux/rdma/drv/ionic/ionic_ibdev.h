@@ -510,7 +510,7 @@ bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res);
 int ionic_create_cq_common(struct ionic_cq *cq,
 			   struct ionic_tbl_buf *buf,
 			   const struct ib_cq_init_attr *attr,
-			   struct ib_ucontext *ibctx,
+			   struct ionic_ctx *ctx,
 			   struct ib_udata *udata);
 void ionic_destroy_cq_common(struct ionic_ibdev *dev, struct ionic_cq *cq);
 void ionic_flush_qp(struct ionic_qp *qp);

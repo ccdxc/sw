@@ -364,6 +364,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_IB_ALLOC_PD_OBJ
 #define HAVE_IB_DEALLOC_PD_VOID
 #define HAVE_IB_UMEM_GET_UDATA
+#define HAVE_RDMA_UDATA_DRV_CTX
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_0)

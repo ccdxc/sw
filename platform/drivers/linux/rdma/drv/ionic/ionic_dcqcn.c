@@ -190,10 +190,9 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 	ionic_admin_post(dev, &wr);
 
 	rc = ionic_admin_wait(dev, &wr, IONIC_ADMIN_F_INTERRUPT);
-	if (rc) {
-		pr_warn("ionic_rdma: dcqcn profile not set on device %d\n",
-			1 + prof_i);
-	}
+	if (rc)
+		ibdev_warn(&dev->ibdev, "dcqcn profile %d not set, error %d\n",
+			   1 + prof_i, rc);
 }
 
 static ssize_t dcqcn_show_int(struct kobject *kobj,
@@ -680,14 +679,16 @@ void ionic_dcqcn_destroy(struct ionic_ibdev *dev)
 int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count)
 {
 	struct dcqcn_profile *prof;
-	int rc, prof_i = 0;
+	int rc, prof_i;
 
 	if (!prof_count)
 		return 0;
 
 	dev->dcqcn = kzalloc(sizeof(*dev->dcqcn), GFP_KERNEL);
-	if (!dev->dcqcn)
-		goto out;
+	if (!dev->dcqcn) {
+		rc = -ENOMEM;
+		goto err_cb_alloc;
+	}
 
 	spin_lock_init(&dev->dcqcn->rules_lock);
 
@@ -696,30 +697,34 @@ int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count)
 				  &dev->ibdev.dev.kobj,
 				  "dcqcn");
 	if (rc) {
-		pr_warn("ionic_rdma: dcqcn disabled\n");
+		/*
+		 * Free dev->dcqcn here. In other error paths, kfree() is
+		 * handled by the put() of the root object.
+		 */
 		kfree(dev->dcqcn);
-		dev->dcqcn = NULL;
-		return 0;
+		goto err_cb_kobj;
 	}
 
 	rc = sysfs_create_groups(&dev->dcqcn->kobj,
 				 dcqcn_root_groups);
 	if (rc)
-		goto out;
+		goto err_cb_groups;
 
 	rc = kobject_init_and_add(&dev->dcqcn->prof_kobj,
 				  &dcqcn_nonroot_type,
 				  &dev->dcqcn->kobj,
 				  "profiles");
 	if (rc)
-		goto out;
+		goto err_prof_kobj;
 
 	dev->dcqcn->profiles = kcalloc(sizeof(*dev->dcqcn->profiles),
 				       prof_count, GFP_KERNEL);
-	if (!dev->dcqcn->profiles)
-		goto out;
+	if (!dev->dcqcn->profiles) {
+		rc = -ENOMEM;
+		goto err_prof_alloc;
+	}
 
-	for (; prof_i < prof_count; ++prof_i) {
+	for (prof_i = 0; prof_i < prof_count; ++prof_i) {
 		prof = &dev->dcqcn->profiles[prof_i];
 
 		prof->dev = dev;
@@ -732,26 +737,40 @@ int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count)
 					  &dev->dcqcn->prof_kobj,
 					  "%d", 1 + prof_i);
 		if (rc)
-			goto out;
+			break;
 
 		rc = sysfs_create_groups(&prof->kobj,
 					 dcqcn_profile_groups);
 		if (rc) {
 			kobject_put(&prof->kobj);
-			goto out;
+			break;
 		}
 	}
 
-out:
-	if (dev->dcqcn)
-		dev->dcqcn->profiles_count = prof_i;
+	if (!prof_i)
+		goto err_no_prof;
 
-	if (!prof_i) {
-		pr_warn("ionic_rdma: dcqcn disabled\n");
-		ionic_dcqcn_destroy(dev);
-	} else if (prof_i != prof_count) {
-		pr_warn("ionic_rdma: some dcqcn profiles disabled\n");
+	dev->dcqcn->profiles_count = prof_i;
+	if (prof_i != prof_count) {
+		ibdev_warn(&dev->ibdev,
+			   "dcqcn initialized %d out of %d profiles\n",
+			   prof_i, prof_count);
 	}
 
 	return 0;
+
+err_no_prof:
+	/* kfree(dev->dcqcn->profiles) handled by put() of root object */
+err_prof_alloc:
+	kobject_put(&dev->dcqcn->prof_kobj);
+err_prof_kobj:
+	sysfs_remove_groups(&dev->dcqcn->kobj, dcqcn_root_groups);
+err_cb_groups:
+	kobject_put(&dev->dcqcn->kobj);
+err_cb_kobj:
+	/* kfree(dev->dcqcn) handled by put() of root object */
+	dev->dcqcn = NULL;
+err_cb_alloc:
+	ibdev_warn(&dev->ibdev, "dcqcn failed init, error %d\n", rc);
+	return rc;
 }

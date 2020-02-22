@@ -46,33 +46,12 @@
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 
-#ifdef HAVE_IB_API_UDATA
+#if defined(HAVE_IB_API_UDATA) || defined(HAVE_RDMA_UDATA_DRV_CTX)
 #include <rdma/uverbs_ioctl.h>
 
 #endif
 #define ionic_set_ecn(tos)   (((tos) | 2u) & ~1u)
 #define ionic_clear_ecn(tos)  ((tos) & ~3u)
-
-static int ionic_validate_udata(struct ib_udata *udata,
-				size_t inlen, size_t outlen)
-{
-	if (udata) {
-		if (udata->inlen < inlen || udata->outlen < outlen) {
-			pr_debug("have udata in %lu out %lu want %lu %lu\n",
-				 udata->inlen, udata->outlen,
-				 inlen, outlen);
-			return -EINVAL;
-		}
-	} else {
-		if (inlen != 0 || outlen != 0) {
-			pr_debug("no udata want %lu %lu\n",
-				 inlen, outlen);
-			return -EINVAL;
-		}
-	}
-
-	return 0;
-}
 
 static int ionic_validate_qdesc(struct ionic_qdesc *q)
 {
@@ -317,10 +296,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	phys_addr_t db_phys = 0;
 	int rc;
 
-	rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
-	if (!rc)
-		rc = ib_copy_from_udata(&req, udata, sizeof(req));
-
+	rc = ib_copy_from_udata(&req, udata, sizeof(req));
 	if (rc)
 		goto err_ctx;
 
@@ -895,16 +871,16 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
 				     u32 flags,
 				     struct ib_udata *udata)
-#endif
+#endif /* HAVE_IB_ALLOC_AH_OBJ */
 #else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
 				     struct ib_udata *udata)
-#endif
+#endif /* HAVE_CREATE_AH_FLAGS */
 #else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr)
-#endif
+#endif /* HAVE_CREATE_AH_UDATA */
 {
 #ifdef HAVE_IB_ALLOC_AH_OBJ
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
@@ -916,7 +892,6 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ah *ah;
 #endif
 #ifdef HAVE_CREATE_AH_UDATA
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(pd->ibpd.uobject);
 	struct ionic_ah_resp resp = {0};
 #endif
 	int rc;
@@ -931,16 +906,9 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		if (rc)
 			goto err_ah;
 	}
-#endif
 
-	if (ctx)
-		rc = ionic_validate_udata(udata, 0, sizeof(resp));
-	else
-		rc = ionic_validate_udata(udata, 0, 0);
-	if (rc)
-		goto err_ah;
 #endif
-
+#endif
 #ifndef HAVE_IB_ALLOC_AH_OBJ
 	ah = kzalloc(sizeof(*ah),
 		     (flags & RDMA_CREATE_AH_SLEEPABLE) ?
@@ -949,8 +917,8 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		rc = -ENOMEM;
 		goto err_ah;
 	}
-#endif
 
+#endif
 	rc = ionic_get_ahid(dev, &ah->ahid);
 	if (rc)
 		goto err_ahid;
@@ -960,7 +928,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		goto err_cmd;
 
 #ifdef HAVE_CREATE_AH_UDATA
-	if (ctx) {
+	if (udata) {
 		resp.ahid = ah->ahid;
 
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
@@ -983,7 +951,6 @@ err_cmd:
 	ionic_put_ahid(dev, ah->ahid);
 #ifdef HAVE_IB_ALLOC_AH_OBJ
 err_ahid:
-err_ah:
 	return rc;
 #else
 err_ahid:
@@ -1125,10 +1092,6 @@ static struct ib_mr *ionic_reg_user_mr(struct ib_pd *ibpd, u64 start,
 	int access = attr->access_flags;
 #endif
 	int rc;
-
-	rc = ionic_validate_udata(udata, 0, 0);
-	if (rc)
-		goto err_mr;
 
 	mr = kzalloc(sizeof(*mr), GFP_KERNEL);
 	if (!mr) {
@@ -1514,26 +1477,14 @@ static int ionic_destroy_cq_cmd(struct ionic_ibdev *dev, u32 cqid)
 int ionic_create_cq_common(struct ionic_cq *cq,
 			   struct ionic_tbl_buf *buf,
 			   const struct ib_cq_init_attr *attr,
-			   struct ib_ucontext *ibctx,
+			   struct ionic_ctx *ctx,
 			   struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
-	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
 	int rc, eq_idx;
 	unsigned long irqflags;
-
-	if (!ctx) {
-		rc = ionic_validate_udata(udata, 0, 0);
-	} else {
-		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
-		if (!rc)
-			rc = ib_copy_from_udata(&req, udata, sizeof(req));
-	}
-
-	if (rc)
-		goto err_args;
 
 	if (attr->cqe < 1 || attr->cqe + IONIC_CQ_GRACE > 0xffff) {
 		rc = -EINVAL;
@@ -1557,31 +1508,25 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 	INIT_LIST_HEAD(&cq->flush_sq);
 	INIT_LIST_HEAD(&cq->flush_rq);
 
-	if (!ctx) {
-		rc = ionic_queue_init(&cq->q, dev->hwdev,
-				      attr->cqe + IONIC_CQ_GRACE,
-				      sizeof(struct ionic_v1_cqe));
+	if (udata) {
+		rc = ib_copy_from_udata(&req, udata, sizeof(req));
 		if (rc)
-			goto err_q;
+			goto err_req;
 
-		ionic_queue_dbell_init(&cq->q, cq->cqid);
-		cq->color = true;
-		cq->reserve = cq->q.mask;
-	} else {
 		rc = ionic_validate_qdesc(&req.cq);
 		if (rc)
-			goto err_q;
+			goto err_qdesc;
 
 #ifdef HAVE_IB_UMEM_GET_UDATA
 		cq->umem = ib_umem_get(udata, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
 #else
-		cq->umem = ib_umem_get(ibctx, req.cq.addr, req.cq.size,
+		cq->umem = ib_umem_get(&ctx->ibctx, req.cq.addr, req.cq.size,
 				       IB_ACCESS_LOCAL_WRITE, 0);
 #endif
 		if (IS_ERR(cq->umem)) {
 			rc = PTR_ERR(cq->umem);
-			goto err_q;
+			goto err_umem;
 		}
 
 		cq->q.ptr = NULL;
@@ -1595,11 +1540,21 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 		if (rc)
 			goto err_resp;
+	} else {
+		rc = ionic_queue_init(&cq->q, dev->hwdev,
+				      attr->cqe + IONIC_CQ_GRACE,
+				      sizeof(struct ionic_v1_cqe));
+		if (rc)
+			goto err_q_init;
+
+		ionic_queue_dbell_init(&cq->q, cq->cqid);
+		cq->color = true;
+		cq->reserve = cq->q.mask;
 	}
 
 	rc = ionic_pgtbl_init(dev, &cq->res, buf, cq->umem, cq->q.dma, 1);
 	if (rc)
-		goto err_resp;
+		goto err_pgtbl_init;
 
 	init_completion(&cq->cq_rel_comp);
 	kref_init(&cq->cq_kref);
@@ -1619,12 +1574,16 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 err_xa:
 	ionic_pgtbl_unbuf(dev, buf);
 	ionic_put_res(dev, &cq->res);
+err_pgtbl_init:
+	if (!udata)
+		ionic_queue_destroy(&cq->q, dev->hwdev);
+err_q_init:
 err_resp:
 	if (cq->umem)
 		ib_umem_release(cq->umem);
-	else
-		ionic_queue_destroy(&cq->q, dev->hwdev);
-err_q:
+err_umem:
+err_qdesc:
+err_req:
 	ionic_put_cqid(dev, cq->cqid);
 err_cqid:
 err_args:
@@ -1698,7 +1657,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	cq->ibcq.device = ibdev;
 #endif
 
-	rc = ionic_create_cq_common(cq, &buf, attr, &ctx->ibctx, udata);
+	rc = ionic_create_cq_common(cq, &buf, attr, ctx, udata);
 	if (rc)
 		goto err_init;
 
@@ -2169,8 +2128,8 @@ static int ionic_destroy_qp_cmd(struct ionic_ibdev *dev, u32 qpid)
 }
 
 static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
-				 struct ionic_ctx *ctx,
 				 struct ionic_qp *qp,
+				 struct ib_udata *udata,
 				 bool cap_inline)
 {
 	int rc;
@@ -2197,7 +2156,7 @@ static void ionic_qp_sq_init_cmb(struct ionic_ibdev *dev,
 
 	memset_io(qp->sq_cmb_ptr, 0, qp->sq.size);
 
-	if (ctx) {
+	if (udata) {
 		iounmap(qp->sq_cmb_ptr);
 		qp->sq_cmb_ptr = NULL;
 	}
@@ -2258,7 +2217,7 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			buf->tbl_limit = 0;
 			buf->tbl_pages = 0;
 		}
-		if (ctx)
+		if (udata)
 			rc = ionic_validate_qdesc_zero(sq);
 
 		return rc;
@@ -2277,7 +2236,7 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	    max_data > ionic_v1_send_wqe_max_data(dev->max_stride))
 		goto err_sq;
 
-	if (ctx) {
+	if (udata) {
 		rc = ionic_validate_qdesc(sq);
 		if (rc)
 			goto err_sq;
@@ -2339,7 +2298,7 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		}
 	}
 
-	ionic_qp_sq_init_cmb(dev, ctx, qp, max_data > 0);
+	ionic_qp_sq_init_cmb(dev, qp, udata, max_data > 0);
 	if (qp->sq_is_cmb)
 		rc = ionic_pgtbl_init(dev, &qp->sq_res, buf, NULL,
 				      (u64)qp->sq_cmb_pgid << PAGE_SHIFT, 1);
@@ -2387,8 +2346,8 @@ static void ionic_qp_sq_destroy(struct ionic_ibdev *dev,
 }
 
 static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
-				 struct ionic_ctx *ctx,
-				 struct ionic_qp *qp)
+				 struct ionic_qp *qp,
+				 struct ib_udata *udata)
 {
 	int rc;
 
@@ -2411,7 +2370,7 @@ static void ionic_qp_rq_init_cmb(struct ionic_ibdev *dev,
 
 	memset_io(qp->rq_cmb_ptr, 0, qp->rq.size);
 
-	if (ctx) {
+	if (udata) {
 		iounmap(qp->rq_cmb_ptr);
 		qp->rq_cmb_ptr = NULL;
 	}
@@ -2470,7 +2429,7 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 			buf->tbl_limit = 0;
 			buf->tbl_pages = 0;
 		}
-		if (ctx)
+		if (udata)
 			rc = ionic_validate_qdesc_zero(rq);
 
 		return rc;
@@ -2485,7 +2444,7 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	    max_sge > ionic_v1_recv_wqe_max_sge(dev->max_stride, 0))
 		goto err_rq;
 
-	if (ctx) {
+	if (udata) {
 		rc = ionic_validate_qdesc(rq);
 		if (rc)
 			goto err_rq;
@@ -2543,7 +2502,7 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 		qp->rq_meta_head = &qp->rq_meta[0];
 	}
 
-	ionic_qp_rq_init_cmb(dev, ctx, qp);
+	ionic_qp_rq_init_cmb(dev, qp, udata);
 	if (qp->rq_is_cmb)
 		rc = ionic_pgtbl_init(dev, &qp->rq_res, buf, NULL,
 				      (u64)qp->rq_cmb_pgid << PAGE_SHIFT, 1);
@@ -2593,7 +2552,12 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 				     struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
+#ifdef HAVE_RDMA_UDATA_DRV_CTX
+	struct ionic_ctx *ctx =
+		rdma_udata_to_drv_context(udata, struct ionic_ctx, ibctx);
+#else
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
+#endif
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_qp *qp;
 	struct ionic_cq *cq;
@@ -2603,18 +2567,14 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
-	if (!ctx) {
+	if (udata) {
+		rc = ib_copy_from_udata(&req, udata, sizeof(req));
+		if (rc)
+			goto err_req;
+	} else {
 		req.sq_spec = ionic_spec;
 		req.rq_spec = ionic_spec;
-		rc = ionic_validate_udata(udata, 0, 0);
-	} else {
-		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
-		if (!rc)
-			rc = ib_copy_from_udata(&req, udata, sizeof(req));
 	}
-
-	if (rc)
-		goto err_qp;
 
 	if (attr->qp_type == IB_QPT_SMI ||
 	    attr->qp_type > IB_QPT_UD) {
@@ -2686,7 +2646,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (rc)
 		goto err_cmd;
 
-	if (ctx) {
+	if (udata) {
 		resp.qpid = qp->qpid;
 
 		if (qp->sq_is_cmb) {
@@ -2732,7 +2692,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	rc = xa_err(xa_store_irq(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
 	if (rc)
-		goto err_resp;
+		goto err_xa;
 
 	if (qp->has_sq) {
 		cq = to_ionic_cq(attr->send_cq);
@@ -2768,6 +2728,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	return &qp->ibqp;
 
+err_xa:
 err_resp:
 	ionic_destroy_qp_cmd(dev, qp->qpid);
 err_cmd:
@@ -2784,6 +2745,7 @@ err_ahid:
 err_qpid:
 	kfree(qp);
 err_qp:
+err_req:
 	return ERR_PTR(rc);
 }
 
@@ -2815,17 +2777,13 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
-	if (!ctx) {
-		req.rq_spec = ionic_spec;
-		rc = ionic_validate_udata(udata, 0, 0);
+	if (udata) {
+		rc = ib_copy_from_udata(&req, udata, sizeof(req));
+		if (rc)
+			goto err_req;
 	} else {
-		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
-		if (!rc)
-			rc = ib_copy_from_udata(&req, udata, sizeof(req));
+		req.rq_spec = ionic_spec;
 	}
-
-	if (rc)
-		goto err_srq;
 
 #ifndef HAVE_IB_ALLOC_SRQ_OBJ
 	qp = kzalloc(sizeof(*qp), GFP_KERNEL);
@@ -2833,8 +2791,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 		rc = -ENOSYS;
 		goto err_srq;
 	}
-#endif
 
+#endif
 	qp->state = IB_QPS_INIT;
 
 	rc = ionic_get_srqid(dev, &qp->qpid);
@@ -2858,7 +2816,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	rc = -ENOSYS;
 	goto err_cmd;
 
-	if (ctx) {
+	if (udata) {
 		resp.qpid = qp->qpid;
 
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
@@ -2908,11 +2866,13 @@ err_rq:
 #ifdef HAVE_IB_ALLOC_SRQ_OBJ
 err_srqid:
 err_srq:
+err_req:
 	return rc;
 #else
 err_srqid:
 	kfree(qp);
 err_srq:
+err_req:
 	return ERR_PTR(rc);
 #endif
 }
@@ -2939,7 +2899,12 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 #endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
+#if defined(HAVE_IB_API_UDATA) && defined(HAVE_RDMA_UDATA_DRV_CTX)
+	struct ionic_ctx *ctx =
+		rdma_udata_to_drv_context(udata, struct ionic_ctx, ibctx);
+#else
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
+#endif
 	struct ionic_qp *qp = to_ionic_srq(ibsrq);
 	struct ionic_cq *cq;
 	unsigned long irqflags;
@@ -3156,10 +3121,6 @@ static int ionic_modify_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	unsigned long max_rsrq;
 	int rc;
 
-	rc = ionic_validate_udata(udata, 0, 0);
-	if (rc)
-		goto err_qp;
-
 	rc = ionic_check_modify_qp(qp, attr, mask);
 	if (rc)
 		goto err_qp;
@@ -3284,7 +3245,12 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 #endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
+#if defined(HAVE_IB_API_UDATA) && defined(HAVE_RDMA_UDATA_DRV_CTX)
+	struct ionic_ctx *ctx =
+		rdma_udata_to_drv_context(udata, struct ionic_ctx, ibctx);
+#else
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
+#endif
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	struct ionic_cq *cq;
 	unsigned long irqflags;
