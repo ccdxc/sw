@@ -43,6 +43,10 @@ import (
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/nat/policies/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "NetworkSecurityPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/policies/", &{{lower $crudObject}}{{title .}} )
+						{{else if strEq $crudObject "RoutingConfig"}}
+                        	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/routingconfigs/", &{{lower $crudObject}}{{title .}} )
+						{{else if strEq $crudObject "RouteTable"}}
+                        	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/route-tables/", &{{lower $crudObject}}{{title .}} )
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
                             err := netutils.HTTPGet("http://"+cl.agentURL+"/api/tcp/proxies/", &{{lower $crudObject}}{{title .}} )
 												{{else if strEq $crudObject "Port"}}
@@ -92,6 +96,10 @@ import (
                            	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipsec/decryption/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "Route"}}
                         		err := netutils.HTTPPost("http://"+cl.agentURL+"/api/routes/", &{{lower .}}Data, &resp)
+						{{else if strEq $crudObject "RoutingConfig"}}
+							err := netutils.HTTPPost("http://"+cl.agentURL+"/api/routingconfigs/", &{{lower .}}Data, &resp)
+						{{else if strEq $crudObject "RouteTable"}}
+                        	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/route-tables/", &{{lower .}}Data, &resp)
                         {{else if strEq $crudObject "Tunnel"}}
                             err := netutils.HTTPPost("http://"+cl.agentURL+"/api/tunnels/", &postData, &resp)
                         {{else if strEq $crudObject "TCPProxyPolicy"}}
@@ -155,6 +163,10 @@ import (
                                		err := netutils.HTTPPut("http://"+cl.agentURL+"/api/security/profiles/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                              	{{else if strEq $crudObject "Tunnel"}}
                                  	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/tunnels/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+								{{else if strEq $crudObject "RoutingConfig"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/routingconfigs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+								{{else if strEq $crudObject "RouteTable"}}
+                                	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/route-tables/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
                             	{{else if strEq $crudObject "Interface"}}
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "Port"}}
@@ -211,6 +223,10 @@ import (
                               		err := netutils.HTTPDelete( "http://"+cl.agentURL+"/api/interfaces/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "Tunnel"}}
                         					err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/{{lower $crudObject}}s/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+									{{else if strEq $crudObject "RoutingConfig"}}
+                                    	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/routingconfigs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+									{{else if strEq $crudObject "RouteTable"}}
+                                    	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/route-tables/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
                         			{{else if strEq $crudObject "TCPProxyPolicy"}}
                               		err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/tcp/proxies/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "Port"}}

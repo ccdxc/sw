@@ -104,6 +104,8 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 		"/api/mirror/sessions/":       agServer.AddMirrorSessionAPIRoutes,
 		"/api/telemetry/flowexports/": agServer.AddFlowExportPolicyAPIRoutes,
 		"/api/profiles/":              agServer.AddProfileAPIRoutes,
+		"/api/routingconfigs/":        agServer.AddRoutingConfigAPIRoutes,
+		"/api/route-tables/":          agServer.AddRouteTableAPIRoutes,
 		"/api/mode/":                  c.addVeniceCoordinateRoutes,
 		"/api/debug/":                 c.addDebugRoutes,
 		"/api/mapping/":               c.addAPIMappingRoutes,

@@ -6,7 +6,6 @@ package apulu
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"strings"
 
@@ -333,9 +332,6 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 }
 
 func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, vrf netproto.Vrf) error {
-	vpcID := make([]byte, 8)
-	binary.LittleEndian.PutUint64(vpcID, vrf.Status.VrfID)
-
 	curVrfB, err := infraAPI.Read(vrf.Kind, vrf.GetKey())
 	if err != nil {
 		return err
@@ -401,7 +397,7 @@ func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	log.Infof("VRF Delete: %s: got response [%v/%v]", vrf.Name, eVrfResp.ApiStatus, eVrfResp.Response)
 
 	vpcDelReq := &halapi.VPCDeleteRequest{
-		Id: utils.ConvertID64(vrf.Status.VrfID),
+		Id: [][]byte{uid.Bytes()},
 	}
 
 	resp, err := client.VPCDelete(context.Background(), vpcDelReq)

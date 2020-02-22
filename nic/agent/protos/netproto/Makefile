@@ -7,7 +7,7 @@ SRC := app.proto agg_watch.proto collector.proto endpoint.proto  flowexport.prot
 NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto network.proto profile.proto route.proto sgpolicy.proto secprofile.proto vrf.proto collector.proto
 
 #these wont have _api.go generated
-FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto namespace.proto tenant.proto port.proto route.proto
+FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto namespace.proto tenant.proto port.proto
 
 #additionally these wont have swagger spec generated
 FILTER_OUT_SWAGGER := qos.proto copp.proto

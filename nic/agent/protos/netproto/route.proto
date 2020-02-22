@@ -19,8 +19,8 @@ service RoutingConfigApiV1 {
     option(venice.naplesRestService) = {
         Object: "RoutingConfig",
         Method: ["list", "get", "post", "put", "delete"],
-        Pattern: "/{ObjectMeta.Name}"
-        Prefix: "api/routing-configs"
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Prefix: "api/routingconfigs"
     };
 
     rpc ListRoutingConfigs (api.ListWatchOptions) returns (RoutingConfigList) {};
@@ -111,7 +111,7 @@ message BGPNeighbor {
     repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
     string Password                         = 6 [(gogoproto.jsontag) = "password,omitempty"];
 }
-
+        
 message BGPConfig {
     string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "IPAddr()"];
     uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];

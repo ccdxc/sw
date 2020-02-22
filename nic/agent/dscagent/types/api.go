@@ -100,7 +100,7 @@ type PipelineAPI interface {
 	HandleRoutingConfig(oper Operation, obj netproto.RoutingConfig) ([]netproto.RoutingConfig, error)
 
 	// HandleRouteTable handles CRUDs for RouteTable object
-	// HandleRouteTable(oper Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error)
+	HandleRouteTable(oper Operation, routetableObj netproto.RouteTable) ([]netproto.RouteTable, error)
 
 	//HandleProfile handles CRUDs for Profile object
 	HandleProfile(oper Operation, obj netproto.Profile) ([]netproto.Profile, error)

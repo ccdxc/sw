@@ -16,7 +16,99 @@
     "application/json"
   ],
   "paths": {
-    "/api/routing-configs/": {
+    "/api/route-tables/": {
+      "get": {
+        "summary": "List all RouteTable Objects",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoRouteTable"
+              }
+            }
+          }
+        },
+        "tags": [
+          "RouteTable"
+        ]
+      },
+      "post": {
+        "summary": "Creates a RouteTable Object",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoRouteTable"
+            }
+          }
+        ],
+        "tags": [
+          "RouteTable"
+        ]
+      }
+    },
+    "/api/route-tables/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "summary": "Deletes a RouteTable Object",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "RouteTable"
+        ]
+      }
+    },
+    "/api/routingconfigs/": {
       "get": {
         "summary": "List all RoutingConfig Objects",
         "operationId": "",
@@ -67,7 +159,7 @@
         ]
       }
     },
-    "/api/routing-configs/{ObjectMeta.Name}": {
+    "/api/routingconfigs/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
       "delete": {
         "summary": "Deletes a RoutingConfig Object",
         "operationId": "",
@@ -191,12 +283,12 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
+          "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination."
         },
         "max-results": {
           "type": "integer",
           "format": "int32",
-          "description": "max. number of events to be fetched for the request."
+          "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination."
         },
         "sort-order": {
           "type": "string",
@@ -521,6 +613,95 @@
         }
       }
     },
+    "netprotoRoute": {
+      "type": "object",
+      "required": [
+        "prefix",
+        "next-hop"
+      ],
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "example": "10.1.1.1/24, ff02::5/32 ",
+          "description": "Should be a valid v4 or v6 CIDR block."
+        },
+        "next-hop": {
+          "type": "string",
+          "example": "10.1.1.1/24, ff02::5/32 ",
+          "description": "Should be a valid v4 or v6 CIDR block."
+        },
+        "target-virtual-router": {
+          "type": "string"
+        }
+      }
+    },
+    "netprotoRouteTable": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoRouteTableSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoRouteTableStatus"
+        }
+      }
+    },
+    "netprotoRouteTableEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "route-table": {
+          "$ref": "#/definitions/netprotoRouteTable"
+        }
+      }
+    },
+    "netprotoRouteTableEventList": {
+      "type": "object",
+      "properties": {
+        "routeTableEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRouteTableEvent"
+          }
+        }
+      }
+    },
+    "netprotoRouteTableList": {
+      "type": "object",
+      "properties": {
+        "routeTables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRouteTable"
+          }
+        }
+      }
+    },
+    "netprotoRouteTableSpec": {
+      "type": "object"
+    },
+    "netprotoRouteTableStatus": {
+      "type": "object",
+      "properties": {
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRoute"
+          }
+        }
+      }
+    },
     "netprotoRoutingConfig": {
       "type": "object",
       "properties": {
@@ -547,7 +728,7 @@
         "event-type": {
           "$ref": "#/definitions/apiEventType"
         },
-        "ipam-policy": {
+        "routing-config": {
           "$ref": "#/definitions/netprotoRoutingConfig"
         }
       }

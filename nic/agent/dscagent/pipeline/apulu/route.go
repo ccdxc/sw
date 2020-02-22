@@ -101,6 +101,8 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	unknLocal := &pdstypes.IPAddress{
 		Af: pdstypes.IPAF_IP_AF_INET,
 	}
+
+	var autoConfig bool
 	// Configure the Underlay Peers
 	peerReq := msTypes.BGPPeerRequest{}
 	peerAFReq := msTypes.BGPPeerAfRequest{}
@@ -108,6 +110,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		rip := net.ParseIP(n.IPAddress)
 		// if set to 0.0.0.0 auto configure the neighborts learnt via DHCP
 		if rip.IsUnspecified() {
+			autoConfig = true
 			for _, i := range dsccfg.DSCInterfaceIPs {
 				peer := msTypes.BGPPeerSpec{
 					Id:           uid.Bytes(),
@@ -118,6 +121,8 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 					SendComm:     true,
 					SendExtComm:  true,
 					ConnectRetry: 5,
+					KeepAlive:    60,
+					HoldTime:     180,
 				}
 				log.Infof("Add create peer [%+v]", peer)
 				peerReq.Request = append(peerReq.Request, &peer)
@@ -142,67 +147,82 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(n.IPAddress),
 			LocalAddr:    unknLocal,
-			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
+			RemoteASN:    n.RemoteAS,
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
+			KeepAlive:    60,
+			HoldTime:     180,
 		}
 		log.Infof("Add create peer [%+v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
 
-		peerAf := msTypes.BGPPeerAfSpec{
-			Id:          uid.Bytes(),
-			PeerAddr:    ip2PDSType(n.IPAddress),
-			LocalAddr:   unknLocal,
-			Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
-			Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
-			Disable:     false,
-			NexthopSelf: false,
-			DefaultOrig: false,
+		for _, af := range n.EnableAddressFamilies {
+			peerAf := msTypes.BGPPeerAfSpec{
+				Id:          uid.Bytes(),
+				PeerAddr:    ip2PDSType(n.IPAddress),
+				LocalAddr:   unknLocal,
+				Disable:     false,
+				NexthopSelf: false,
+				DefaultOrig: false,
+			}
+			switch af {
+			case "evpn":
+				peerAf.Afi = msTypes.BGPAfi_BGP_AFI_L2VPN
+				peerAf.Safi = msTypes.BGPSafi_BGP_SAFI_EVPN
+			case "ipv4-unicast":
+				peerAf.Afi = msTypes.BGPAfi_BGP_AFI_IPV4
+				peerAf.Safi = msTypes.BGPSafi_BGP_SAFI_UNICAST
+			}
+			log.Infof("Add create peer AF [%+v]", peerAf)
+			peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 		}
-		log.Infof("Add create peer AF [%+v]", peerAf)
-		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
 
-	// Add the Venice RRs
-	for _, n := range dscConfig.Controllers {
-		h, _, err := net.SplitHostPort(n)
-		if err != nil {
-			log.Errorf("hostport returned error for [%v](%v)", n, err)
-		}
-		a, err := net.LookupHost(h)
-		if err != nil {
-			log.Errorf("LookupHost returned error for [%v](%v)", a, err)
-			continue
-		}
-		log.Info("lookuphost returned ", a)
-		peer := msTypes.BGPPeerSpec{
-			Id:       uid.Bytes(),
-			State:    msTypes.AdminState_ADMIN_STATE_ENABLE,
-			PeerAddr: ip2PDSType(a[0]),
-			// XXX-TBD change to appropriate address
-			LocalAddr:    unknLocal,
-			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     true,
-			SendExtComm:  true,
-			ConnectRetry: 5,
-		}
-		log.Infof("Add create peer [%+v]", peer)
-		peerReq.Request = append(peerReq.Request, &peer)
+	if autoConfig {
+		// Add the Venice RRs
+		for _, n := range dscConfig.Controllers {
+			h, _, err := net.SplitHostPort(n)
+			if err != nil {
+				log.Errorf("hostport returned error for [%v](%v)", n, err)
+			}
+			a, err := net.LookupHost(h)
+			if err != nil {
+				log.Errorf("LookupHost returned error for [%v](%v)", a, err)
+				continue
+			}
+			log.Info("lookuphost returned ", a)
+			peer := msTypes.BGPPeerSpec{
+				Id:       uid.Bytes(),
+				State:    msTypes.AdminState_ADMIN_STATE_ENABLE,
+				PeerAddr: ip2PDSType(a[0]),
+				// XXX-TBD change to appropriate address
+				LocalAddr:    unknLocal,
+				RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
+				SendComm:     true,
+				SendExtComm:  true,
+				ConnectRetry: 5,
+				KeepAlive:    60,
+				HoldTime:     180,
+			}
+			log.Infof("Add create peer [%+v]", peer)
+			peerReq.Request = append(peerReq.Request, &peer)
 
-		peerAf := msTypes.BGPPeerAfSpec{
-			Id:          uid.Bytes(),
-			PeerAddr:    ip2PDSType(a[0]),
-			LocalAddr:   unknLocal,
-			Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
-			Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
-			Disable:     false,
-			NexthopSelf: false,
-			DefaultOrig: false,
+			peerAf := msTypes.BGPPeerAfSpec{
+				Id:          uid.Bytes(),
+				PeerAddr:    ip2PDSType(a[0]),
+				LocalAddr:   unknLocal,
+				Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
+				Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
+				Disable:     false,
+				NexthopSelf: false,
+				DefaultOrig: false,
+			}
+			log.Infof("Add create peer AF [%+v]", peerAf)
+			peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 		}
-		log.Infof("Add create peer AF [%+v]", peerAf)
-		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
+
 	presp, err := client.BGPPeerCreate(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
@@ -281,30 +301,47 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
+			KeepAlive:    60,
+			HoldTime:     180,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
 
-		peerAf := msTypes.BGPPeerAfSpec{
-			Id:       uid.Bytes(),
-			PeerAddr: ip2PDSType(o.IPAddress),
-			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
-			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
+		for _, af := range o.EnableAddressFamilies {
+			switch af {
+			case "evpn":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:       uid.Bytes(),
+					PeerAddr: ip2PDSType(o.IPAddress),
+					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
+					Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
+				}
+				log.Infof("Add Delete peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			case "ipv4-unicast":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:       uid.Bytes(),
+					PeerAddr: ip2PDSType(o.IPAddress),
+					Afi:      msTypes.BGPAfi_BGP_AFI_IPV4,
+					Safi:     msTypes.BGPSafi_BGP_SAFI_UNICAST,
+				}
+				log.Infof("Add Delete peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			}
 		}
-		log.Infof("Add Delete peer AF [%+v]", peerAf)
-		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
 	ctx := context.TODO()
 
 	presp, err := client.BGPPeerDelete(ctx, &peerReq)
 	if err != nil {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
+		log.Infof("Peer delete Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
+		log.Infof("Peer delete Request returned (%v)[%v]", err, presp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
+	log.Infof("Peer delete returned [%v]", presp.ApiStatus)
 
 	afresp, err := client.BGPPeerAfDelete(ctx, &peerAFReq)
 	if err != nil {
@@ -315,6 +352,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Infof("PeerAF delete request returned (%v)[%v]", err, afresp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
+	log.Infof("Peer AF delete returned [%v]", afresp.ApiStatus)
 
 	peerReq = msTypes.BGPPeerRequest{}
 	peerAFReq = msTypes.BGPPeerAfRequest{}
@@ -325,11 +363,15 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Errorf("failed to parse UUID (%v)", err)
 		return err
 	}
+	unknLocal := &pdstypes.IPAddress{
+		Af: pdstypes.IPAF_IP_AF_INET,
+	}
 	for _, o := range newPeers {
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
 			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(o.IPAddress),
+			LocalAddr:    unknLocal,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
 			SendComm:     true,
 			SendExtComm:  true,
@@ -338,14 +380,36 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Infof("adding peer to be deleted [%v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
 
-		peerAf := msTypes.BGPPeerAfSpec{
-			Id:       uid.Bytes(),
-			PeerAddr: ip2PDSType(o.IPAddress),
-			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
-			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
+		for _, af := range o.EnableAddressFamilies {
+			switch af {
+			case "evpn":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:          uid.Bytes(),
+					PeerAddr:    ip2PDSType(o.IPAddress),
+					LocalAddr:   unknLocal,
+					Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
+					Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
+					Disable:     false,
+					NexthopSelf: false,
+					DefaultOrig: false,
+				}
+				log.Infof("Add new peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			case "ipv4-unicast":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:          uid.Bytes(),
+					PeerAddr:    ip2PDSType(o.IPAddress),
+					LocalAddr:   unknLocal,
+					Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
+					Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
+					Disable:     false,
+					NexthopSelf: false,
+					DefaultOrig: false,
+				}
+				log.Infof("Add new peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			}
 		}
-		log.Infof("Add Delete peer AF [%+v]", peerAf)
-		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
 	presp, err = client.BGPPeerCreate(ctx, &peerReq)
 	if err != nil {
@@ -394,18 +458,35 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
+			KeepAlive:    60,
+			HoldTime:     180,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
 
-		peerAf := msTypes.BGPPeerAfSpec{
-			Id:       uid.Bytes(),
-			PeerAddr: ip2PDSType(o.IPAddress),
-			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
-			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
+		for _, af := range o.EnableAddressFamilies {
+			switch af {
+			case "evpn":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:       uid.Bytes(),
+					PeerAddr: ip2PDSType(o.IPAddress),
+					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
+					Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
+				}
+				log.Infof("Add Delete peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+
+			case "ipv4-unicast":
+				peerAf := msTypes.BGPPeerAfSpec{
+					Id:       uid.Bytes(),
+					PeerAddr: ip2PDSType(o.IPAddress),
+					Afi:      msTypes.BGPAfi_BGP_AFI_IPV4,
+					Safi:     msTypes.BGPSafi_BGP_SAFI_UNICAST,
+				}
+				log.Infof("Add Delete peer AF [%+v]", peerAf)
+				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+			}
 		}
-		log.Infof("Add Delete peer AF [%+v]", peerAf)
-		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
 	ctx := context.TODO()
 
