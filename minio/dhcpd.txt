@@ -1,0 +1,2 @@
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/*
+nic/sdk/third-party/dhcp-server-pkg/aarch64/bin/*

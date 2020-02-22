@@ -25,7 +25,6 @@ case "$1" in
 	start)
 		printf "Starting DHCP server: "
 		ip tuntap add dev dhcp_tap mode tap >/dev/null 2>&1
-		ifconfig dhcp_tap 1.1.0.8 netmask 255.255.0.0
 		test -d /var/lib/dhcp/ || mkdir -p /var/lib/dhcp/
 		test -f /var/lib/dhcp/dhcpd.leases || touch /var/lib/dhcp/dhcpd.leases
 		start-stop-daemon -S -q -x ${DAEMON} -- -q $OPTIONS $INTERFACES

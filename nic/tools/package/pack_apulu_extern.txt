@@ -12,3 +12,11 @@ nic/tools/dhcp-server/S80dhcp-server-disable                            /etc/ini
 nic/tools/dhcp-server/S80dhcp-server                                    /nic/tools/start-dhcpd.sh
 nic/dhcp-server/dhcpd                                             /etc/default/dhcpd
 nic/conf/dhcp-server/dhcpd.conf                                   /etc/dhcp/dhcpd.conf
+nic/sdk/third-party/dhcp-server-pkg/aarch64/bin/omshell                  /usr/bin/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libdhcpctl.so.0          /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libdhcp.so.0             /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libomapi.so.0            /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libdns.so.1107           /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libisc.so.1104           /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libirs.so.161            /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/aarch64/lib/libisccfg.so.163         /usr/lib/
