@@ -18,8 +18,6 @@
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
 
-using core::learn_event_t;
-
 namespace learn {
 
 /// \brief delete IP entry from endpoint
@@ -42,10 +40,10 @@ ep_vnic_key (ep_mac_entry *mac_entry)
 }
 
 /// \brief broadcast MAC learn events to subscribers
-void broadcast_mac_event(learn_event_t event, ep_mac_entry *mac_entry);
+void broadcast_mac_event(event_id_t event, ep_mac_entry *mac_entry);
 
 /// \brief broadcast IP learn events to subscribers
-void broadcast_ip_event(learn_event_t event, ep_ip_entry *ip_entry);
+void broadcast_ip_event(event_id_t event, ep_ip_entry *ip_entry);
 
 }    // namespace learn
 

@@ -31,14 +31,14 @@ hal_callback (sdk_ret_t status, const void *cookie)
                      status, cookie);
     if (status != SDK_RET_OK) {
         PDS_TRACE_ERR("Async PDS HAL callback failure err %d", status);
-        cookie_ptr->print_debug_str(); 
+        cookie_ptr->print_debug_str();
     } else {
-        PDS_TRACE_DEBUG("Async PDS Batch success"); 
-        cookie_ptr->print_debug_str(); 
+        PDS_TRACE_DEBUG("Async PDS Batch success");
+        cookie_ptr->print_debug_str();
 
         auto state_ctxt = pds_ms::state_t::thread_context();
         for (auto& obj_uptr: cookie_ptr->objs) {
-            obj_uptr->update_store (state_ctxt.state(), false); 
+            obj_uptr->update_store (state_ctxt.state(), false);
             // For create/update operations the underlying obj is saved in store.
             // Release the obj ownership from cookie
             obj_uptr.release();
@@ -94,52 +94,54 @@ handle_port_event (core::port_event_info_t &portev)
     } else {
         PDS_TRACE_DEBUG("No intf FRL worker, event %u", portev.event);
     }
-            
+
     NBS_RELEASE_SHARED_DATA();
     NBS_EXIT_SHARED_CONTEXT();
-    NBB_DESTROY_THREAD_CONTEXT    
-    
+    NBB_DESTROY_THREAD_CONTEXT
+
     return;
 }
 
 static void
-handle_learn_event (core::learn_event_info_t &learnev)
+handle_learn_event (core::event_t *event)
 {
-    ip_addr_t zero_ip = {0};
+    static ip_addr_t zero_ip = { 0 };
 
-    PDS_TRACE_DEBUG("Got learn event type %u VPC %s Subnet %s Ifindex 0x%lx "
-                    "IpAddr %s MacAddr %s", learnev.event, learnev.vpc.str(),
-                     learnev.subnet.str(), learnev.ifindex,
-                     ipaddr2str(&learnev.ip_addr),
-                     macaddr2str(learnev.mac_addr));
-    switch (learnev.event) {
-        case core::EVENT_MAC_LEARN:
-            pds_ms::l2f_local_mac_ip_add(learnev.subnet, zero_ip,
-                                         learnev.mac_addr, learnev.ifindex);
-            break;
-        case core::EVENT_MAC_AGE:
-            pds_ms::l2f_local_mac_ip_del(learnev.subnet, zero_ip,
-                                         learnev.mac_addr);
-            break;
-        case core::EVENT_IP_LEARN:
-            pds_ms::l2f_local_mac_ip_add(learnev.subnet, learnev.ip_addr,
-                                         learnev.mac_addr, learnev.ifindex);
-            break;
-        case core::EVENT_IP_AGE:
-            pds_ms::l2f_local_mac_ip_del(learnev.subnet, learnev.ip_addr,
-                                         learnev.mac_addr);
-            break;
-        default:
-            PDS_TRACE_ERR("Unknown learn event!");
-            break;
+    PDS_TRACE_DEBUG("Got learn event %u, VPC %s Subnet %s Ifindex 0x%lx "
+                    "IpAddr %s MacAddr %s", event->event_id,
+                    event->learn.vpc.str(), event->learn.subnet.str(),
+                    event->learn.ifindex, ipaddr2str(&event->learn.ip_addr),
+                     macaddr2str(event->learn.mac_addr));
+    switch (event->event_id) {
+    case EVENT_ID_MAC_LEARN:
+        pds_ms::l2f_local_mac_ip_add(event->learn.subnet, zero_ip,
+                                     event->learn.mac_addr,
+                                     event->learn.ifindex);
+        break;
+    case EVENT_ID_IP_LEARN:
+        pds_ms::l2f_local_mac_ip_add(event->learn.subnet, event->learn.ip_addr,
+                                     event->learn.mac_addr,
+                                     event->learn.ifindex);
+        break;
+    case EVENT_ID_MAC_AGE:
+        pds_ms::l2f_local_mac_ip_del(event->learn.subnet, zero_ip,
+                                     event->learn.mac_addr);
+        break;
+    case EVENT_ID_IP_AGE:
+        pds_ms::l2f_local_mac_ip_del(event->learn.subnet,
+                                     event->learn.ip_addr,
+                                     event->learn.mac_addr);
+        break;
+    default:
+        break;
     }
-    return;
 }
 
 void
 hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 {
-    core::event_t *event = (core::event_t *) msg->data();
+    core::event_t *event = (core::event_t *)msg->data();
+
     if (!event) {
         return;
     }
@@ -151,13 +153,16 @@ hal_event_callback (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     case EVENT_ID_LIF_STATUS:
         // TODO: Need to propagate LIF events to the software-IF
         break;
-    case EVENT_ID_LEARN:
-        handle_learn_event(event->learn);
+    case EVENT_ID_MAC_LEARN:
+    case EVENT_ID_IP_LEARN:
+    case EVENT_ID_MAC_AGE:
+    case EVENT_ID_IP_AGE:
+        handle_learn_event(event);
         break;
     default:
+        PDS_TRACE_ERR("Unknown event %u", event->event_id);
         break;
     }
-    
     return;
 }
 

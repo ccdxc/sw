@@ -51,7 +51,7 @@ mac_aging_cb (event::timer_t *timer)
                       mac_entry->key2str(), ret);
         return;
     }
-    broadcast_mac_event(core::EVENT_MAC_AGE, mac_entry);
+    broadcast_mac_event(EVENT_ID_MAC_AGE, mac_entry);
 }
 
 static void
@@ -77,7 +77,7 @@ ip_aging_cb (event::timer_t *timer)
                 if (mac_entry->ip_count() == 0) {
                     aging_timer_restart(mac_entry->timer());
                 }
-                broadcast_ip_event(core::EVENT_IP_AGE, ip_entry);
+                broadcast_ip_event(EVENT_ID_IP_AGE, ip_entry);
             }
             return;
         }

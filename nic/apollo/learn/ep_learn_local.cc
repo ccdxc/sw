@@ -351,7 +351,7 @@ update_ep_mac (local_learn_ctxt_t *ctxt)
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
         aging_timer_restart(ctxt->mac_entry->timer());
-        broadcast_mac_event(core::EVENT_MAC_LEARN, ctxt->mac_entry);
+        broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:
@@ -371,7 +371,7 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
     case LEARN_TYPE_NEW_LOCAL:
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
-        broadcast_ip_event(core::EVENT_IP_LEARN, ctxt->ip_entry);
+        broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:

@@ -17,7 +17,6 @@
 #include "nic/apollo/learn/learn_state.hpp"
 
 namespace event = sdk::event_thread;
-using core::learn_event_t;
 
 namespace learn {
 
@@ -172,14 +171,13 @@ send_arp_probe (ep_ip_entry *ip_entry)
 }
 
 static void
-broadcast_learn_event (learn_event_t learn_event, vnic_entry *vnic,
+broadcast_learn_event (event_id_t learn_event, vnic_entry *vnic,
                        ep_ip_entry *ip_entry)
 {
     ::core::event_t event;
     ::core::learn_event_info_t *info = &event.learn;
 
-    event.event_id = EVENT_ID_LEARN;
-    info->event = learn_event;
+    event.event_id = learn_event;
     info->subnet = vnic->subnet();
     info->ifindex = api::objid_from_uuid(vnic->host_if());
     MAC_ADDR_COPY(info->mac_addr, vnic->mac());
@@ -190,11 +188,11 @@ broadcast_learn_event (learn_event_t learn_event, vnic_entry *vnic,
         info->vpc = { 0 };
         info->ip_addr = { 0 };
     }
-    sdk::ipc::broadcast(EVENT_ID_LEARN, &event, sizeof(event));
+    sdk::ipc::broadcast(learn_event, &event, sizeof(event));
 }
 
 void
-broadcast_mac_event (learn_event_t event, ep_mac_entry *mac_entry)
+broadcast_mac_event (event_id_t event, ep_mac_entry *mac_entry)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
@@ -205,7 +203,7 @@ broadcast_mac_event (learn_event_t event, ep_mac_entry *mac_entry)
 }
 
 void
-broadcast_ip_event (learn_event_t event, ep_ip_entry *ip_entry)
+broadcast_ip_event (event_id_t event, ep_ip_entry *ip_entry)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
