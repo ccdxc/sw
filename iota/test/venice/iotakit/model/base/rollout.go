@@ -405,7 +405,7 @@ outerLoop:
 		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
 			log.Infof("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		if r1.Spec.DSCsOnly {
@@ -416,7 +416,7 @@ outerLoop:
 		var numNodes int
 		if len(status) == 0 {
 			log.Infof("ts:%s Rollout controller node status: not found", time.Now().String())
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 
@@ -427,7 +427,7 @@ outerLoop:
 		}
 		if numNodes != len(status) {
 			log.Infof("ts:%s Rollout completed for : %d nodes", time.Now().String(), numNodes)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		log.Infof("ts:%s Rollout Node Status: Complete", time.Now().String())
@@ -444,7 +444,7 @@ outerLoop:
 		r1, err := restcls[0].RolloutV1().Rollout().Get(ctx, &obj)
 		if err != nil {
 			log.Infof("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		if r1.Spec.DSCsOnly {
@@ -453,12 +453,12 @@ outerLoop:
 		status := r1.Status.GetControllerServicesStatus()
 		if len(status) == 0 {
 			log.Infof("ts:%s Rollout controller services status: Not Found", time.Now().String())
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		if status[0].Phase != rollout.RolloutPhase_COMPLETE.String() {
 			log.Infof("ts:%s Rollout controller services status: : %+v", time.Now().String(), status[0].Phase)
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 			continue
 		}
 		numRetries = 0
@@ -568,6 +568,7 @@ outerLoop:
 		time.Sleep(5 * time.Minute) //wait for rollout to trigger retry
 		goto outerLoop
 	}
+
 	// Verify rollout overall status
 	for numRetries = 0; numRetries < 60; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}

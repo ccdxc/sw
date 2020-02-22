@@ -29,9 +29,8 @@ import (
 )
 
 var (
-	interval                         = time.Second * 30
-	memoryHogIndicator               = "memory-hog"
-	deletionGracePeriodSeconds int64 = 5
+	interval           = time.Second * 30
+	memoryHogIndicator = "memory-hog"
 )
 
 const (
@@ -533,9 +532,6 @@ func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 				},
 			},
 		},
-	}
-	if module.Name == globals.Rollout {
-		dConfig.Spec.Template.DeletionGracePeriodSeconds = &deletionGracePeriodSeconds
 	}
 	// convert to a node affinity/anti-affinity specification
 	//  only $QUORUM_NODES defined for now.

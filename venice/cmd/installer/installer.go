@@ -12,9 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/api/policy/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/coreos/go-systemd/login1"
 
 	"github.com/pensando/sw/venice/cmd/env"
@@ -23,10 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/imagestore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/systemd"
-)
-
-var (
-	gracePeriodSeconds int64 = 5
 )
 
 func copyFileContents(src, dst string) (err error) {
@@ -233,46 +226,7 @@ type installationSteps struct {
 	LoadAndInstall []installationStep
 }
 
-func runSteps(steps []installationStep, runVersion bool) error {
-	log.Infof("EvictRollout: Number of QuorumNodes %d QuorumNodes %v", len(env.QuorumNodes), env.QuorumNodes)
-	cl, err := utils.GetCluster()
-	if err != nil {
-		log.Infof("EvictRollout: Failed to get cluster info %+v", err)
-	}
-	if len(env.QuorumNodes) > 1 && runVersion && cl != nil {
-		log.Infof("EvictRollout: node undergoing rollout cl.NodeID %s\n", cl.NodeID)
-		srvInstanceList := env.ResolverClient.Lookup(globals.Rollout)
-		if srvInstanceList != nil {
-			for _, i := range srvInstanceList.Items {
-				log.Infof("EvictRollout: Service Name %v Node %v Service %v", i.Name, i.Node, i.Service)
-				if i.Node == cl.NodeID {
-					cd, err := env.K8sService.GetClient().ExtensionsV1beta1().Deployments(globals.DefaultNamespace).Get(globals.Rollout, metav1.GetOptions{})
-					if err == nil {
-						log.Infof("EvictRollout: Deployment is %+v", cd)
-						policyV1Beta := env.K8sService.GetClient().PolicyV1beta1()
-						eviction := v1beta1.Eviction{
-							ObjectMeta: metav1.ObjectMeta{
-								Name:      i.Name,
-								Namespace: globals.DefaultNamespace,
-							},
-							DeleteOptions: &metav1.DeleteOptions{
-								GracePeriodSeconds: &gracePeriodSeconds,
-							},
-						}
-						err := policyV1Beta.Evictions(eviction.Namespace).Evict(&eviction)
-						if err != nil {
-							log.Infof("EvictRollout: Eviction of rollout failed %v", err)
-						} else {
-							log.Infof("EvictRollout: successful Eviction of rollout. sleep 5 seconds")
-							time.Sleep(5 * time.Second)
-						}
-					} else {
-						log.Infof("EvictRollout: Failed to get Deployment %v", err)
-					}
-				}
-			}
-		}
-	}
+func runSteps(steps []installationStep) error {
 	syst := systemd.New()
 	for _, step := range steps {
 		log.Infof("Starting execution of step %#v", step)
@@ -364,7 +318,7 @@ func PreLoadImage() error {
 		return err
 	}
 
-	err = runSteps(installSteps.PreLoad, false)
+	err = runSteps(installSteps.PreLoad)
 	if err != nil {
 		log.Errorf("Error %v during preLoad", err)
 		return err
@@ -445,7 +399,7 @@ func LoadAndInstallImage() error {
 		return err
 	}
 
-	err = runSteps(installSteps.LoadAndInstall, true)
+	err = runSteps(installSteps.LoadAndInstall)
 	if err != nil {
 		log.Errorf("Error %v during preLoad", err)
 		return err

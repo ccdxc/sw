@@ -168,7 +168,7 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				OpStatus: opStatus,
 			},
 		}
-		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion && utils.IsRunningOnVeniceAppl() {
+		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion {
 			//Wait long enough for citadel to sync-data
 			log.Infof(" Waiting long enough (4mins) for services to comeup")
 			time.Sleep(serviceSyncDelaySeconds)
