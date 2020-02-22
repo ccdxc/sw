@@ -2,8 +2,8 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#ifndef __CORE_EVENT_HPP__
-#define __CORE_EVENT_HPP__
+#ifndef __AGENT_CORE_EVENT_HPP__
+#define __AGENT_CORE_EVENT_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_event.hpp"
@@ -48,4 +48,4 @@ sdk_ret_t handle_upg_event_ntfn(const pds_upg_spec_t *spec);
 
 }    // namespace core
 
-#endif    // __CORE_EVENT_HPP__
+#endif    // __AGENT_CORE_EVENT_HPP__

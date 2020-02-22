@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
@@ -33,6 +34,13 @@ sdk_ret_t delete_ep(ep_mac_entry *mac_entry,
 /// \brief send ARP probe for associated IP
 void send_arp_probe(ep_ip_entry *ip_entry);
 
+/// \brief get vnic key from endpoint
+static inline pds_obj_key_t
+ep_vnic_key (ep_mac_entry *mac_entry)
+{
+    return (api::uuid_from_objid(mac_entry->vnic_obj_id()));
+}
+
 /// \brief broadcast MAC learn events to subscribers
 void broadcast_mac_event(learn_event_t event, ep_mac_entry *mac_entry);
 
@@ -40,10 +48,5 @@ void broadcast_mac_event(learn_event_t event, ep_mac_entry *mac_entry);
 void broadcast_ip_event(learn_event_t event, ep_ip_entry *ip_entry);
 
 }    // namespace learn
-
-using core::EVENT_MAC_LEARN;
-using core::EVENT_MAC_AGE;
-using core::EVENT_IP_LEARN;
-using core::EVENT_IP_AGE;
 
 #endif    // __LEARN_EP_LEARN_UTILS_HPP__

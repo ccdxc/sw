@@ -17,6 +17,7 @@
 #include "nic/apollo/learn/learn_state.hpp"
 
 namespace event = sdk::event_thread;
+using core::learn_event_t;
 
 namespace learn {
 

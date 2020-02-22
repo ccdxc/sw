@@ -9,7 +9,6 @@
 #if !defined (__UTILS_HPP__)
 #define __UTILS_HPP__
 
-#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/pds_state.hpp"

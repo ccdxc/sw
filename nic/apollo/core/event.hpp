@@ -63,11 +63,11 @@ typedef struct lif_event_info_s {
 
 // MAC, IP learn specific information
 typedef enum learn_event_e {
-    EVENT_NONE = 0,
-    EVENT_MAC_LEARN = 1,
-    EVENT_MAC_AGE = 2,
-    EVENT_IP_LEARN = 3,
-    EVENT_IP_AGE = 4,
+    LEARN_EVENT_NONE = 0,
+    EVENT_MAC_LEARN  = 1,
+    EVENT_MAC_AGE    = 2,
+    EVENT_IP_LEARN   = 3,
+    EVENT_IP_AGE     = 4,
 } learn_event_t;
 
 typedef struct learn_event_info_s {

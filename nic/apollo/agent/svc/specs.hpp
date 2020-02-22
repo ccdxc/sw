@@ -60,6 +60,9 @@
 #include "nic/apollo/agent/svc/nat.hpp"
 #include "nic/apollo/agent/svc/dhcp.hpp"
 #include "nic/apollo/agent/svc/event.hpp"
+#include "nic/apollo/agent/svc/learn.hpp"
+#include "nic/apollo/learn/learn.hpp"
+#include "nic/apollo/learn/learn_state.hpp"
 #include "gen/proto/types.pb.h"
 
 using sdk::asic::pd::port_queue_credit_t;
@@ -4111,6 +4114,78 @@ pds_event_to_proto_event_response (pds::EventResponse *proto_rsp,
         PDS_TRACE_ERR("event response conversion not implemented");
     }
     return SDK_RET_INVALID_ARG;
+}
+
+static inline void
+pds_learn_mackey_proto_to_api (learn::ep_mac_key_t *mac_key,
+                               const pds::LearnMACKey &key)
+{
+    MAC_UINT64_TO_ADDR(mac_key->mac_addr, key.macaddr());
+    pds_obj_key_proto_to_api_spec(&mac_key->subnet, key.subnetid());
+}
+
+static inline void
+pds_learn_ipkey_proto_to_api (learn::ep_ip_key_t *ip_key,
+                              const pds::LearnIPKey &key)
+{
+    ipaddr_proto_spec_to_api_spec(&ip_key->ip_addr, key.ipaddr());
+    pds_obj_key_proto_to_api_spec(&ip_key->vpc, key.vpcid());
+}
+
+static inline pds::EpState
+pds_learn_state_to_proto (learn::ep_state_t state)
+{
+    pds::EpState proto_state;
+
+    switch (state) {
+    case learn::EP_STATE_LEARNING:
+        proto_state = pds::EP_STATE_LEARNING;
+        break;
+    case learn::EP_STATE_CREATED:
+        proto_state = pds::EP_STATE_CREATED;
+        break;
+    case learn::EP_STATE_PROBING:
+        proto_state = pds::EP_STATE_PROBING;
+        break;
+    case learn::EP_STATE_UPDATING:
+        proto_state = pds::EP_STATE_UPDATING;
+        break;
+    case learn::EP_STATE_DELETING:
+        proto_state =  pds::EP_STATE_DELETING;
+        break;
+    case learn::EP_STATE_DELETED:
+        proto_state = pds::EP_STATE_DELETED;
+        break;
+    default:
+        proto_state = pds::EP_STATE_NONE;
+        break;
+    }
+    return proto_state;
+}
+
+static inline pds::LearnPktDropReason
+pds_learn_pkt_drop_reason_to_proto (uint8_t reason)
+{
+    pds::LearnPktDropReason proto_reason;
+
+    switch (reason) {
+    case learn::PKT_DROP_REASON_PARSE_ERR:
+        proto_reason = pds::LEARN_PKTDROP_REASON_PARSE_ERR;
+        break;
+    case learn::PKT_DROP_REASON_RES_ALLOC_FAIL:
+        proto_reason = pds::LEARN_PKTDROP_REASON_RES_ALLOC_FAIL;
+        break;
+    case learn::PKT_DROP_REASON_MBUF_ERR:
+        proto_reason = pds::LEARN_PKTDROP_REASON_MBUF_ERR;
+        break;
+    case learn::PKT_DROP_REASON_TX_FAIL:
+        proto_reason = pds::LEARN_PKTDROP_REASON_TX_FAIL;
+        break;
+    default:
+        proto_reason = pds::LEARN_PKTDROP_REASON_NONE;
+        break;
+    }
+    return proto_reason;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

@@ -52,6 +52,10 @@ public:
     /// \brief          initiate delay deletion of this object
     sdk_ret_t delay_delete(void);
 
+    /// \brief          get the key of this entry
+    /// \return         pointer to key of this entry
+    const ep_mac_key_t *key(void) const { return &key_; }
+
     /// \brief          get the state of this entry
     /// \return         state of this entry
     ep_state_t state(void) const { return state_; }
@@ -96,10 +100,6 @@ public:
     /// \brief          get number of associated IP mappings
     /// \return         count of IP addresses
     uint16_t ip_count(void) const { return (uint16_t) ip_list_.size(); }
-
-    /// \brief          get key to this entry
-    /// \return         pointer to key
-    const ep_mac_key_t *key(void) const { return &key_; }
 
     /// \brief          return stringified key of the object (for debugging)
     string key2str(void) const {

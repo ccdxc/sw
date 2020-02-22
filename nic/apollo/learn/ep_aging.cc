@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/learn/ep_aging.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
@@ -50,7 +51,7 @@ mac_aging_cb (event::timer_t *timer)
                       mac_entry->key2str(), ret);
         return;
     }
-    broadcast_mac_event(EVENT_MAC_AGE, mac_entry);
+    broadcast_mac_event(core::EVENT_MAC_AGE, mac_entry);
 }
 
 static void
@@ -76,7 +77,7 @@ ip_aging_cb (event::timer_t *timer)
                 if (mac_entry->ip_count() == 0) {
                     aging_timer_restart(mac_entry->timer());
                 }
-                broadcast_ip_event(EVENT_IP_AGE, ip_entry);
+                broadcast_ip_event(core::EVENT_IP_AGE, ip_entry);
             }
             return;
         }
