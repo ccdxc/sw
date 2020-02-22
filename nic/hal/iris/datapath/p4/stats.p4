@@ -117,6 +117,9 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     // force tm_oport to EGRESS when packet is being dropped
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
 
+    // Don't generate a cpu copy for drop
+    modify_field(capri_intrinsic.tm_cpu, FALSE);
+
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.drop_stats_packets, drop_pkts);
     modify_field(scratch_metadata.drop_stats_pad, pad);

@@ -16,6 +16,7 @@ drop_stats:
     setcf       c2, [!c1 & c2]
     phvwr.c1    p.capri_intrinsic_tm_span_session, \
                     k.control_metadata_mirror_on_drop_session_id
+    phvwr       p.capri_intrinsic_tm_cpu, FALSE	
     phvwr.e     p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
     phvwr.c2    p.capri_intrinsic_tm_span_session, \
                     d.drop_stats_d.mirror_session_id
