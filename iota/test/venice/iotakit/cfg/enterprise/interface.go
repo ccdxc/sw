@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
+	basenetCfg "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/basenetCfg"
 	cloudCfg "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/cloud"
 	gsCfg "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/gsCfg"
 	vcenterCfg "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/vcenterCfg"
@@ -37,6 +38,9 @@ const (
 
 	//CloudCfgType for cloud
 	CloudCfgType
+
+	//BasenetCfgType for basenet
+	BasenetCfgType
 )
 
 //NewCfgModel new config model
@@ -49,6 +53,8 @@ func NewCfgModel(cfgType CfgType) CfgModel {
 		return vcenterCfg.NewVcenterCfg()
 	case CloudCfgType:
 		return cloudCfg.NewCloudCfg()
+	case BasenetCfgType:
+		return basenetCfg.NewBasenetCfg()
 	}
 
 	return nil

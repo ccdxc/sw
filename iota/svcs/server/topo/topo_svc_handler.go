@@ -154,7 +154,13 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 					cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
 					cmd += fmt.Sprintf(" --host-username %s", node.EsxUsername)
 					cmd += fmt.Sprintf(" --host-password %s", node.EsxPassword)
+				} else {
+					cmd += fmt.Sprintf(" --host-username %s", common.DefaultHostUsername)
+					cmd += fmt.Sprintf(" --host-password %s", common.DefaultHostPassword)
+				}
 
+				if node.NoMgmt {
+					cmd += fmt.Sprintf(" --no-mgmt")
 				}
 				nodeName := node.NodeName
 

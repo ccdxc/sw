@@ -145,6 +145,7 @@ func (inst *InstanceParams) getNicMgmtIP() (string, error) {
 type TestNode struct {
 	NodeName            string               // node name specific to this topology
 	NodeUUID            []string             // node UUID
+	HostIntfs           []string             // Hostinterfaces of the node
 	Type                iota.TestBedNodeType // node type
 	Personality         iota.PersonalityType // node topology
 	NodeMgmtIP          string
@@ -211,6 +212,7 @@ type TestBed struct {
 	skipConfigSetup      bool                       // skip config setup
 	hasNaplesSim         bool                       // has Naples sim nodes in the topology
 	hasNaplesHW          bool                       // testbed has Naples HW in the topology
+	useNaplesMgmt        bool                       // use naples mgmt instead of int mnic
 	allocatedVlans       []uint32                   // VLANs allocated for this testbed
 	unallocatedInstances []*InstanceParams          // currently unallocated instances
 	testResult           map[string]bool            // test result
@@ -255,6 +257,7 @@ func NewTestBed(topoName string, paramsFile string) (*TestBed, error) {
 		log.Infof("Skipping setup...")
 		return newTestBed(topoName, paramsFile, true)
 	}
+
 	return newTestBed(topoName, paramsFile, false)
 }
 
@@ -265,6 +268,11 @@ func GetTestbed(topoName string, paramsFile string) (*TestBed, error) {
 
 func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, error) {
 	var params Params
+
+	usemgmt := false
+	if os.Getenv("USE_MGMT") != "" {
+		usemgmt = true
+	}
 
 	// find the topology by name
 	topo, ok := Topologies[topoName]
@@ -306,12 +314,13 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 
 	// create a testbed instance
 	tb := TestBed{
-		Topo:       *topo,
-		Params:     params,
-		Nodes:      make([]*TestNode, len(topo.Nodes)),
-		testResult: make(map[string]bool),
-		taskResult: make(map[string]error),
-		caseResult: make(map[string]*TestCaseResult),
+		Topo:          *topo,
+		Params:        params,
+		Nodes:         make([]*TestNode, len(topo.Nodes)),
+		testResult:    make(map[string]bool),
+		taskResult:    make(map[string]error),
+		caseResult:    make(map[string]*TestCaseResult),
+		useNaplesMgmt: usemgmt,
 	}
 
 	// initialize node state
@@ -523,14 +532,13 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			node.NaplesConfigs = iota.NaplesConfigs{
 				Configs: []*iota.NaplesConfig{
 					&iota.NaplesConfig{
-						ControlIntf:     "eth1",
-						ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
-						DataIntfs:       []string{"eth2", "eth3"},
-						NaplesIpAddress: "169.254.0.1",
-						NaplesUsername:  "root",
-						NaplesPassword:  "pen123",
-						NicType:         "pensando-sim",
-						Name:            "pensando-sim",
+						ControlIntf:    "eth1",
+						ControlIp:      fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+						DataIntfs:      []string{"eth2", "eth3"},
+						NaplesUsername: "root",
+						NaplesPassword: "pen123",
+						NicType:        "pensando-sim",
+						Name:           "pensando-sim",
 					},
 				},
 			}
@@ -588,16 +596,17 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 				for _, port := range nic.Ports {
 
 					config := &iota.NaplesConfig{
-						ControlIntf:     "eth1",
-						ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
-						DataIntfs:       []string{"eth2", "eth3"},
-						NaplesIpAddress: "169.254.0.1", //Default
-						NaplesUsername:  "root",
-						NaplesPassword:  "pen123",
-						NicType:         "naples",
-						Name:            node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
-						//Enable this with BRAD PR
-						NicHint: port.MAC,
+						ControlIntf:    "eth1",
+						ControlIp:      fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+						DataIntfs:      []string{"eth2", "eth3"},
+						NaplesUsername: "root",
+						NaplesPassword: "pen123",
+						NicType:        "naples",
+						Name:           node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
+						NicHint:        port.MAC,
+					}
+					if tb.useNaplesMgmt {
+						config.NaplesIpAddress = nic.MgmtIP
 					}
 					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
 					break
@@ -632,6 +641,16 @@ func (tb *TestBed) Cleanup() {
 		client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 		client.CleanUpTestBed(context.Background(), tb.tbMsg)
 	}
+}
+
+//GetHostIntfs get host ints of node
+func (tb *TestBed) GetHostIntfs(nodeName string) []string {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return node.HostIntfs
+		}
+	}
+	return []string{}
 }
 
 func (tb *TestBed) GetDC() string {
@@ -1306,6 +1325,10 @@ func (tb *TestBed) setupTestBed() error {
 		}
 		node.instParams.NicMgmtIP = tbn.NicIpAddress
 
+		//Naples management should be used, no int mgmt present
+		if tb.useNaplesMgmt {
+			tbn.NoMgmt = true
+		}
 		//For now hack up until we get the vendor information
 		if node.instParams.Resource.ServerType == "hpe" {
 			tbn.ServerType = "hpe"
@@ -1598,7 +1621,10 @@ func (tb *TestBed) setupTestBed() error {
 						node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 						node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
 						node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
+						node.HostIntfs = append(node.HostIntfs, naplesConfig.HostIntfs...)
 					}
+				} else if IsThirdParty(node.Personality) {
+					node.HostIntfs = append(node.HostIntfs, nr.GetThirdPartyNicConfig().HostIntfs...)
 				}
 			}
 		}

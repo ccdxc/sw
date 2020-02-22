@@ -26,6 +26,8 @@ const (
 	VcenterModel = 1
 	//CloudModel
 	CloudModel = 2
+	//BaseNetModel (classic)
+	BaseNetModel = 3
 )
 
 //SysModelInterface interface for sysmodel
@@ -79,7 +81,7 @@ type ClusterActionIntf interface {
 	VerifyClusterStatus() error
 
 	FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error
-	GetFwLogObjectCount(tenantName string, bucketName string) (int, error)	
+	GetFwLogObjectCount(tenantName string, bucketName string) (int, error)
 	VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error
 	AddNaplesNodes(names []string) error
 	DeleteNaplesNodes(names []string) error
@@ -179,6 +181,7 @@ type WorkloadActionIntf interface {
 	MoveWorkloads(*objects.WorkloadCollection, *objects.HostCollection) error
 }
 
+//NewSysModel creates new model based on type
 func NewSysModel(tb *testbed.TestBed, modelType common.ModelType) (SysModelInterface, error) {
 
 	switch modelType {
@@ -186,6 +189,8 @@ func NewSysModel(tb *testbed.TestBed, modelType common.ModelType) (SysModelInter
 		return factory.NewVcenterSysModel(tb, cfgModel.VcenterCfgType)
 	case CloudModel:
 		return factory.NewCloudSysModel(tb, cfgModel.CloudCfgType)
+	case BaseNetModel:
+		return factory.NewBasenetSysModel(tb, cfgModel.BasenetCfgType)
 	}
 	return factory.NewDefaultSysModel(tb, cfgModel.GsCfgType)
 
@@ -197,6 +202,8 @@ func getModelTypeFromTopo(mtype testbed.ModelType) common.ModelType {
 		return common.VcenterModel
 	case testbed.CloudModel:
 		return common.CloudModel
+	case testbed.BaseNetModel:
+		return common.BaseNetModel
 	}
 
 	return common.DefaultModel

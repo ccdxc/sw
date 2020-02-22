@@ -1,8 +1,11 @@
 package factory
 
 import (
+	"errors"
+
 	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/base"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/basenet"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/cloud"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/enterprise"
@@ -39,7 +42,21 @@ func NewCloudSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*cloud.Sys
 
 	vsm := &cloud.SysModel{SysModel: base.SysModel{Type: common.CloudModel}}
 
-	if err := vsm.SysModel.Init(tb, cfgType); err != nil {
+	if err := vsm.Init(tb, cfgType); err != nil {
+		return nil, errors.New("could not initialize config objects")
+
+	}
+
+	return vsm, nil
+
+}
+
+// NewBasenetSysModel creates a sysmodel for a testbed
+func NewBasenetSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*basenet.SysModel, error) {
+
+	vsm := &basenet.SysModel{SysModel: base.SysModel{Type: common.BaseNetModel}}
+
+	if err := vsm.Init(tb, cfgType); err != nil {
 		return nil, err
 	}
 

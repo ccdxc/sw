@@ -300,6 +300,10 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 		statusObj.MgmtIP = n.config.Status.IPConfig.IPAddress
 	}
 
+	if n.config.Status.IPConfig != nil {
+		statusObj.MgmtIP = n.config.Status.IPConfig.IPAddress
+	}
+
 	if len(n.DSCInterfaceIPs) != 0 {
 		statusObj.DSCInterfaceIPs = n.DSCInterfaceIPs
 	}

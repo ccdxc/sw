@@ -11,6 +11,9 @@ const (
 
 	//CloudModel for equnix
 	CloudModel = 2
+
+	//BaseNetModel for classic
+	BaseNetModel = 3
 )
 
 //MockVeniceURL mock venice url

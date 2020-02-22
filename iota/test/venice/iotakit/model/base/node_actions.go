@@ -35,7 +35,7 @@ func (sm *SysModel) SetUpNaplesAuthenticationOnHosts(hc *objects.HostCollection)
 		}
 	}
 
-	return sm.JoinNaplesToVenice(testNodes)
+	return sm.SetUpNaplesPostCluster(testNodes)
 }
 
 // ReloadHosts reloads a host
@@ -1142,14 +1142,14 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 	}
 
 	// move naples to managed mode
-	err = sm.DoModeSwitchOfNaples(nodes)
+	err = sm.DoModeSwitchOfNaples(nodes, sm.NoModeSwitchReboot)
 	if err != nil {
 		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err
 	}
 
 	// add venice node to naples
-	err = sm.JoinNaplesToVenice(nodes)
+	err = sm.SetUpNaplesPostCluster(nodes)
 	if err != nil {
 		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err

@@ -516,17 +516,24 @@ func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
 			for inst, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
 				if naplesCfg.Name == entityEntry.Name {
+
 					if !in.Reload {
 						if err := node.setUpNaplesMgmtNetwork(inst, naplesCfg.NicHint); err != nil {
 							return err
 						}
 					}
-					if ip, err = node.setUpNaplesMgmtIP(naplesCfg.NicHint); err != nil {
-						return err
+
+					if naplesCfg.NaplesIpAddress == "" || strings.HasPrefix(naplesCfg.NaplesIpAddress, "169.254") {
+						if ip, err = node.setUpNaplesMgmtIP(naplesCfg.NicHint); err != nil {
+							return err
+						}
+					} else {
+						//Honor the IP address specifed by caller.
+						ip = naplesCfg.NaplesIpAddress
 					}
+
 					//Send the IP back in case it is different
 					naplesCfg.NaplesIpAddress = ip
-
 				}
 			}
 

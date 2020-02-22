@@ -19,6 +19,8 @@ func TestStringSub(t *testing.T) {
 		{input: "tcp/{{iter3:32-500}}", expected: "tcp/32"},
 		{input: "tcp/{{iter3:32-500}}", expected: "tcp/33"},
 		{input: "name-{{iter}}", expected: "name-1"},
+		{input: "{{iter}}", expected: "2"},
+		{input: "{{iter}}", expected: "3"},
 		{input: "{{$var11}}", expected: "name-0"},
 		{input: "{{ipv4-srcip:11.2.x.x}}", expected: "11.2.0.1"},
 		{input: "{{ipv4-srcip:11.2.x.x}}", expected: "11.2.0.2"},

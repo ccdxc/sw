@@ -38,16 +38,8 @@ func (sm *SysModel) WorkloadPairs() *objects.WorkloadPairCollection {
 	return &collection
 }
 
-// VerifyClusterStatus verifies venice cluster status
-func (sm *SysModel) VerifyClusterStatus() error {
-	log.Infof("Verifying cluster health..")
-
-	// check iota cluster health
-	err := sm.Tb.CheckIotaClusterHealth()
-	if err != nil {
-		log.Errorf("Invalid Iota cluster state: %v", err)
-		return err
-	}
+//VerifyVeniceStatus verify venice status
+func (sm *SysModel) VerifyVeniceStatus() error {
 
 	// check venice cluster status
 	cl, err := sm.GetCluster()
@@ -103,10 +95,30 @@ func (sm *SysModel) VerifyClusterStatus() error {
 		}
 	}
 
+	// check venice service status
+	_, err = sm.CheckVeniceServiceStatus(cl.Status.Leader)
+	if err != nil {
+		log.Errorf("Checking venice service status failed : %v", err)
+		return err
+	}
+
+	// check health of citadel
+	err = sm.CheckCitadelServiceStatus()
+	if err != nil {
+		log.Errorf("Checking venice citadel status failed : %v", err)
+		return err
+	}
+
+	return nil
+}
+
+//VerifyNaplesStatus verify naples status
+func (sm *SysModel) VerifyNaplesStatus() error {
+
 	// verify each naples health
 	for _, np := range sm.NaplesNodes {
 		// check naples status
-		err = sm.CheckNaplesHealth(np)
+		err := sm.CheckNaplesHealth(np)
 		if err != nil {
 			log.Errorf("Naples health check failed. Err: %v", err)
 			return err
@@ -171,17 +183,26 @@ func (sm *SysModel) VerifyClusterStatus() error {
 		}
 	}
 
-	// check venice service status
-	_, err = sm.CheckVeniceServiceStatus(cl.Status.Leader)
+	return nil
+
+}
+
+// VerifyClusterStatus verifies venice cluster status
+func (sm *SysModel) VerifyClusterStatus() error {
+	log.Infof("Verifying cluster health..")
+
+	// check iota cluster health
+	err := sm.Tb.CheckIotaClusterHealth()
 	if err != nil {
-		log.Errorf("Checking venice service status failed : %v", err)
+		log.Errorf("Invalid Iota cluster state: %v", err)
 		return err
 	}
 
-	// check health of citadel
-	err = sm.CheckCitadelServiceStatus()
-	if err != nil {
-		log.Errorf("Checking venice citadel status failed : %v", err)
+	if err := sm.VerifyVeniceStatus(); err != nil {
+		return err
+	}
+
+	if err := sm.VerifyNaplesStatus(); err != nil {
 		return err
 	}
 

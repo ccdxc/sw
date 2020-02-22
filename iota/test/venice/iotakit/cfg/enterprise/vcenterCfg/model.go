@@ -131,7 +131,7 @@ func (vc *VcenterCfg) CleanupAllConfig() error {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceNetworks, err := rClient.ListNetwork()
+	veniceNetworks, err := rClient.ListNetwork("")
 	if err != nil {
 		//Deleting network might fail as some workloads may be hanging of it
 		log.Errorf("err: %s", err)

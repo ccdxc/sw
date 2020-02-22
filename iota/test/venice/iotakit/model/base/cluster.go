@@ -284,6 +284,37 @@ func (sm *SysModel) InitVeniceConfig(ctx context.Context) error {
 	return sm.WaitForVeniceClusterUp(ctx)
 }
 
+// SetupLicenses setsup licesses
+func (sm *SysModel) setupLicenses(licenses []string) error {
+	// set bootstrap flag
+
+	log.Infof("Setting up licenses %v", len(licenses))
+	if len(licenses) == 0 {
+		return nil
+	}
+
+	apicl, err := apiclient.NewRestAPIClient(sm.GetVeniceURL()[0])
+	if err != nil {
+		return fmt.Errorf("cannot create rest client, err: %v", err)
+	}
+
+	features := []cluster.Feature{}
+	for _, license := range licenses {
+		log.Infof("Adding license %v", license)
+		features = append(features, cluster.Feature{FeatureKey: license})
+	}
+
+	_, err = testutils.CreateLicense(apicl, features)
+	if err != nil {
+		// 401 when auth is already bootstrapped. we are ok with that
+		if !strings.HasPrefix(err.Error(), "Status:(401)") {
+			ginkgo.Fail(fmt.Sprintf("SetAuthBootstrapFlag failed with err: %v", err))
+		}
+	}
+
+	return nil
+}
+
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
 func (sm *SysModel) SetupAuth(userID, password string) error {
 	// no need to setup auth in mock mode
@@ -334,6 +365,12 @@ func (sm *SysModel) SetupAuth(userID, password string) error {
 		if !strings.HasPrefix(err.Error(), "Status:(401)") {
 			return fmt.Errorf("UpdateRoleBinding failed with err: %v", err)
 		}
+	}
+
+	//Setup any lines
+	err = sm.setupLicenses(sm.Licenses)
+	if err != nil {
+		return err
 	}
 
 	// set bootstrap flag
@@ -691,7 +728,7 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 		log.Errorf("%v", nerr)
 		return nerr
 	}
-	if testbed.IsNaplesHW(node.Personality()) {
+	/*if testbed.IsNaplesHW(node.Personality()) {
 		if !strings.Contains(naplesStatus.Status.TransitionPhase, "REGISTRATION_DONE") {
 			nerr := fmt.Errorf("Invalid NMD phase: %v", naplesStatus.Status.TransitionPhase)
 			log.Errorf("%v", nerr)
@@ -703,7 +740,7 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 			log.Errorf("%v", nerr)
 			return nerr
 		}
-	}
+	}*/
 
 	// get naples info from Netagent
 	// Note: struct redefined here to avoid dependency on netagent package
@@ -757,7 +794,7 @@ func CreateConfigConsoleNoAuth() {
 	ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
 }
 
-func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode) error {
+func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot bool) error {
 
 	if os.Getenv("REBOOT_ONLY") != "" {
 		log.Infof("Skipping naples setup as it is just reboot")
@@ -831,6 +868,9 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode) error {
 		}
 	}
 
+	if noReboot {
+		return nil
+	}
 	// reload naples
 	var hostNames string
 	nodeMsg := &iota.NodeMsg{
@@ -861,7 +901,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode) error {
 	return nil
 }
 
-func (sm *SysModel) JoinNaplesToVenice(nodes []*testbed.TestNode) error {
+func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 
 	// get token ao authenticate to agent
 	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
@@ -922,30 +962,32 @@ func (sm *SysModel) JoinNaplesToVenice(nodes []*testbed.TestNode) error {
 		}
 	}
 
-	trig = sm.Tb.NewTrigger()
-	//Make sure we can run command on naples
-	for _, node := range nodes {
-		if testbed.IsNaplesHW(node.Personality) {
-			for _, naples := range node.NaplesConfigs.Configs {
-				trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
-				//Hack for now until we push full profile
-				trig.AddCommand(fmt.Sprintf("/nic/bin/halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
+	if !sm.NoSetupDataPathAfterSwitch {
+		trig = sm.Tb.NewTrigger()
+		//Make sure we can run command on naples
+		for _, node := range nodes {
+			if testbed.IsNaplesHW(node.Personality) {
+				for _, naples := range node.NaplesConfigs.Configs {
+					trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
+					//Hack for now until we push full profile
+					trig.AddCommand(fmt.Sprintf("/nic/bin/halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
+				}
 			}
 		}
-	}
 
-	resp, err = trig.Run()
-	if err != nil {
-		return fmt.Errorf("Error update public key on naples. Err: %v", err)
-	}
+		resp, err = trig.Run()
+		if err != nil {
+			return fmt.Errorf("Error update public key on naples. Err: %v", err)
+		}
 
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
-			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
-				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		// check the response
+		for _, cmdResp := range resp {
+			if cmdResp.ExitCode != 0 {
+				log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
+				return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+					cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
+			}
 		}
 	}
 

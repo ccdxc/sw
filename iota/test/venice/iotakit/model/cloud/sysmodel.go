@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
@@ -15,7 +16,7 @@ import (
 
 //Orchestrator Return orchestrator
 
-// CloudSysModel represents a objects.of the system under test
+// SysModel represents a objects.of the system under test
 type SysModel struct {
 	baseModel.SysModel
 }
@@ -27,6 +28,13 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	if err != nil {
 		return err
 	}
+
+	sm.NoModeSwitchReboot = true
+	sm.NoSetupDataPathAfterSwitch = true
+
+	//Setup license for overlay routing
+	sm.Licenses = []string{"OverlayRouting"}
+
 	sm.CfgModel = enterprise.NewCfgModel(cfgType)
 	if sm.CfgModel == nil {
 		return errors.New("could not initialize config objects")
@@ -46,6 +54,29 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	return sm.SetupNodes()
 }
 
+//SetupVeniceNaples setups venice and naples
+func (sm *SysModel) SetupVeniceNaples() error {
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	defer cancel()
+
+	// build venice nodes
+	for _, nr := range sm.Tb.Nodes {
+		if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			// create
+			sm.VeniceNodeMap[nr.NodeName] = objects.NewVeniceNode(nr)
+		}
+	}
+
+	// make cluster & setup auth
+	err := sm.SetupConfig(ctx)
+	if err != nil {
+		sm.Tb.CollectLogs()
+		return err
+	}
+
+	return nil
+}
+
 // AddNaplesNodes node on the fly
 func (sm *SysModel) AddNaplesNodes(names []string) error {
 	//First add to testbed.
@@ -56,14 +87,14 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 	}
 
 	// move naples to managed mode
-	err = sm.DoModeSwitchOfNaples(nodes)
+	err = sm.DoModeSwitchOfNaples(nodes, sm.NoModeSwitchReboot)
 	if err != nil {
 		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err
 	}
 
 	// add venice node to naples
-	err = sm.JoinNaplesToVenice(nodes)
+	err = sm.SetUpNaplesPostCluster(nodes)
 	if err != nil {
 		log.Errorf("Setting up naples failed. Err: %v", err)
 		return err
@@ -124,9 +155,7 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 			log.Errorf("Error creating switch: %#v. Err: %v", sw, err)
 			return err
 		}
-
 	}
-
 	//Setup any default objects
 	return nil
 }

@@ -113,6 +113,9 @@ const (
 
 	CtrlVMNaplesInterfaceIP = "169.254.0.2/24"
 
+	DefaultHostUsername = "vm"
+	DefaultHostPassword = "vm"
+
 	EsxDataVMUsername            = "vm"
 	EsxDataVMPassword            = "vm"
 	EsxDataVMInterface           = "eth1"

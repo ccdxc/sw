@@ -981,6 +981,9 @@ message TestBedNode {
     string dc_name                  = 26;
 
     string switch                   = 27;
+
+    //Don't setup mgmt on naples
+    bool no_mgmt                    = 28;                   
 }
 
 // CopyDirection defines direction whether to copy in or copy out

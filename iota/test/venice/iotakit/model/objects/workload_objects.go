@@ -349,6 +349,11 @@ func (wpc *WorkloadPairCollection) ReversePairs() *WorkloadPairCollection {
 // Bringup brings up all Workloads in the collection
 func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
 	var Workloads []*iota.Workload
+	type hostIntAlloc struct {
+		intfs    []string
+		curIndex int
+	}
+	hostIntfMap := make(map[string]*hostIntAlloc)
 
 	// if there are no Workloads, nothing to do
 	if len(wc.Workloads) == 0 {
@@ -357,7 +362,21 @@ func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
 
 	// build workload list
 	for _, wrk := range wc.Workloads {
+		if _, ok := hostIntfMap[wrk.NodeName()]; !ok {
+			hostIntfs := tb.GetHostIntfs(wrk.NodeName())
+			if len(hostIntfs) == 0 {
+				return fmt.Errorf("Found no host interfaces on node %v", wrk.NodeName())
+			}
+			hostIntfMap[wrk.NodeName()] = &hostIntAlloc{intfs: hostIntfs}
+		}
+
 		Workloads = append(Workloads, wrk.iotaWorkload)
+	}
+
+	for _, wrk := range Workloads {
+		hostAlloc, _ := hostIntfMap[wrk.NodeName]
+		wrk.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
+		hostAlloc.curIndex++
 	}
 
 	// send workload add message

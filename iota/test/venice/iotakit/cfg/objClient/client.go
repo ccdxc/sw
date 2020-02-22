@@ -36,7 +36,7 @@ type ObjClient interface {
 	DeleteHost(wrkld *cluster.Host) error
 
 	CreateNetwork(obj *network.Network) error
-	ListNetwork() (objs []*network.Network, err error)
+	ListNetwork(string) (objs []*network.Network, err error)
 	DeleteNetwork(obj *network.Network) error
 
 	CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
@@ -428,9 +428,13 @@ func (r *Client) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurityPo
 }
 
 // ListNetwork gets all networks from venice cluster
-func (r *Client) ListNetwork() (objs []*network.Network, err error) {
+func (r *Client) ListNetwork(tenant string) (objs []*network.Network, err error) {
 
-	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
 
 	for _, restcl := range r.restcls {
 		objs, err = restcl.NetworkV1().Network().List(r.ctx, &opts)
@@ -440,6 +444,98 @@ func (r *Client) ListNetwork() (objs []*network.Network, err error) {
 	}
 
 	return objs, err
+}
+
+// ListIPAMPolicy list
+func (r *Client) ListIPAMPolicy(tenant string) (objs []*network.IPAMPolicy, err error) {
+
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().IPAMPolicy().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteIPAMPolicy deletes all network object
+func (r *Client) DeleteIPAMPolicy(obj *network.IPAMPolicy) (err error) {
+
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().IPAMPolicy().Delete(r.ctx, &obj.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// ListVRFs list
+func (r *Client) ListVPC(tenant string) (objs []*network.VirtualRouter, err error) {
+
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().VirtualRouter().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteVRF deletes all network object
+func (r *Client) DeleteVPC(obj *network.VirtualRouter) (err error) {
+
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().VirtualRouter().Delete(r.ctx, &obj.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// ListTenant list
+func (r *Client) ListTenant() (objs []*cluster.Tenant, err error) {
+
+	opts := api.ListWatchOptions{}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.ClusterV1().Tenant().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteTenant deletes
+func (r *Client) DeleteTenant(obj *cluster.Tenant) (err error) {
+
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().Tenant().Delete(r.ctx, &obj.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
 }
 
 // ListApp gets all apps from venice cluster
@@ -684,6 +780,17 @@ func (r *Client) AddClusterNode(node *cluster.Node) (err error) {
 	return err
 }
 
+// UpdateClusterNode gets a list of nodes
+func (r *Client) UpdateClusterNode(node *cluster.Node) (err error) {
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().Node().Update(r.ctx, node)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
 // ListSmartNIC gets a list of smartnics
 func (r *Client) ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error) {
 	opts := api.ListWatchOptions{}
@@ -852,6 +959,112 @@ func (r *Client) ListObjectStoreObjects() (objs []*objstore.Object, err error) {
 	}
 
 	return objs, err
+}
+
+//CreateRoutingConfig create routing config
+func (r *Client) CreateRoutingConfig(nwR *network.RoutingConfig) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().RoutingConfig().Create(r.ctx, nwR)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.NetworkV1().RoutingConfig().Update(r.ctx, nwR)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return err
+
+}
+
+//CreateTenant create tenant
+func (r *Client) CreateTenant(ten *cluster.Tenant) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().Tenant().Create(r.ctx, ten)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.ClusterV1().Tenant().Update(r.ctx, ten)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return err
+
+}
+
+//CreateVPC creates vpcs
+func (r *Client) CreateVPC(vrf *network.VirtualRouter) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().VirtualRouter().Create(r.ctx, vrf)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.NetworkV1().VirtualRouter().Update(r.ctx, vrf)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return err
+
+}
+
+//CreateIPAMPolicy creates ipams
+func (r *Client) CreateIPAMPolicy(pol *network.IPAMPolicy) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().IPAMPolicy().Create(r.ctx, pol)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.NetworkV1().IPAMPolicy().Update(r.ctx, pol)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return err
+
+}
+
+//DeleteRoutingConfig deletes routing config
+func (r *Client) DeleteRoutingConfig(nwR *network.RoutingConfig) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().RoutingConfig().Delete(r.ctx, &nwR.ObjectMeta)
+		if err == nil {
+			break
+		}
+
+	}
+	return err
+
+}
+
+//ListRoutingConfig create routing config
+func (r *Client) ListRoutingConfig() (objs []*network.RoutingConfig, err error) {
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().RoutingConfig().List(r.ctx, &api.ListWatchOptions{})
+		if err == nil {
+			break
+		}
+
+	}
+
+	return objs, err
+
 }
 
 //GetNpmDebugModuleURLs gets npm debug module

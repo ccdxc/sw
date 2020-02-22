@@ -10,7 +10,7 @@ import (
 // Networks returns a list of subnets
 func (sm *SysModel) Networks() *objects.NetworkCollection {
 	snc := objects.NetworkCollection{}
-	nws, err := sm.CfgModel.ListNetwork()
+	nws, err := sm.CfgModel.ListNetwork("")
 	if err != nil {
 		log.Errorf("Error listing networks %v", err)
 		return nil

@@ -26,6 +26,8 @@ const (
 	VcenterModel = 1
 	//CloudModel for equinix
 	CloudModel = 2
+	//BaseNetModel for classic
+	BaseNetModel = 3
 )
 
 // Topology describes the topology of the testbed
@@ -66,6 +68,8 @@ var Topologies = map[string]*Topology{
 	"3VMVenice_5SimScale1000Naples":       &topo3VMVenice5NaplesSim1000Scale,
 	"3Venice_2Naples_Vcenter":             &topo3Venice2NaplesVcenter,
 	"3Venice_1Naples_Vcenter":             &topo3Venice1Naples1ThirdPartyVcenter,
+	"3Venice_1Naples_Cloud":               &topo3Venice1NaplesCloud,
+	"3Venice_2Naples_Basenet":             &topo3Venice2NaplesBasenet,
 }
 
 // 3 Venice Nodes and 3 Naples Sim nodes
@@ -1150,6 +1154,82 @@ var topo3Venice1Naples1ThirdPartyVcenter = Topology{
 	},
 }
 
+var topo3Venice1NaplesCloud = Topology{
+	NaplesImage:   "../nic/naples_fw_venice.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
+	WorkloadImage: "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         CloudModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+var topo3Venice2NaplesBasenet = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
+	WorkloadImage: "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         BaseNetModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "naples2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
 var topo3Venice2NaplesVcenter = Topology{
 	NaplesImage:   "../nic/naples_fw.tar",
 	VeniceImage:   "../bin/venice.tgz",
@@ -1157,6 +1237,7 @@ var topo3Venice2NaplesVcenter = Topology{
 	WorkloadImage: "build-160",
 	NumVlans:      10, // FIXME: what should this be??
 	Model:         VcenterModel,
+
 	Nodes: []TopoNode{
 		{
 			NodeName:    "naples1",

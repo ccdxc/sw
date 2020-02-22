@@ -509,7 +509,7 @@ func getVcenterNetworkName(n *network.Network) string {
 // Networks returns a list of subnets
 func (sm *VcenterSysModel) Networks() *objects.NetworkCollection {
 	snc := objects.NetworkCollection{}
-	nws, err := sm.CfgModel.ListNetwork()
+	nws, err := sm.CfgModel.ListNetwork("")
 	if err != nil {
 		log.Errorf("Error listing networks %v", err)
 		return nil

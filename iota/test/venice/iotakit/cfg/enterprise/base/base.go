@@ -121,6 +121,7 @@ type CfgObjects struct {
 //ConfigParams contoller
 type ConfigParams struct {
 	Dscs           []*cluster.DistributedServiceCard
+	VeniceNodes    []*cluster.Node
 	FakeDscs       []*cluster.DistributedServiceCard
 	ThirdPartyDscs []*cluster.DistributedServiceCard
 	Vlans          []uint32
@@ -148,6 +149,32 @@ func (gs *EntBaseCfg) ObjClient() objClient.ObjClient {
 //InitClient init client
 func (gs *EntBaseCfg) InitClient(ctx context.Context, urls []string) {
 	gs.Client = objClient.NewClient(ctx, urls).(*objClient.Client)
+}
+
+//WriteConfig saves config
+func (gs *EntBaseCfg) WriteConfig() {
+	ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		panic(err)
+	}
+	j, err := json.MarshalIndent(&gs.Cfg.ConfigItems, "", "  ")
+	ofile.Write(j)
+	ofile.Close()
+}
+
+//ReadConfig reads saved config
+func (gs *EntBaseCfg) ReadConfig() {
+	jsonFile, err := os.OpenFile(configFile, os.O_RDONLY, 0755)
+	if err != nil {
+		panic(err)
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	err = json.Unmarshal(byteValue, &gs.Cfg.ConfigItems)
+	if err != nil {
+		panic(err)
+	}
+	jsonFile.Close()
 }
 
 //PopulateConfig populate configuration
@@ -269,30 +296,6 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		return nil
 	}
 
-	writeConfig := func() {
-		ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-		if err != nil {
-			panic(err)
-		}
-		j, err := json.MarshalIndent(&cfg.ConfigItems, "", "  ")
-		ofile.Write(j)
-		ofile.Close()
-	}
-
-	readConfig := func() {
-		jsonFile, err := os.OpenFile(configFile, os.O_RDONLY, 0755)
-		if err != nil {
-			panic(err)
-		}
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-
-		err = json.Unmarshal(byteValue, &cfg.ConfigItems)
-		if err != nil {
-			panic(err)
-		}
-		jsonFile.Close()
-	}
-
 	if params.Regenerate {
 		//Generate fresh config if not skip setup
 		generateConfig()
@@ -305,9 +308,9 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 				return err
 			}
 		}
-		writeConfig()
+		gs.WriteConfig()
 	} else {
-		readConfig()
+		gs.ReadConfig()
 	}
 
 	setupConfigs := func() error {
@@ -766,7 +769,7 @@ func (gs *EntBaseCfg) CleanupAllConfig() error {
 		log.Errorf("err: %s", err)
 		return err
 	}
-	veniceNetworks, err := rClient.ListNetwork()
+	veniceNetworks, err := rClient.ListNetwork("")
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err

@@ -15,7 +15,7 @@ var scaleCfgenParams = &Cfgen{
 	UserParams: UserParams{},
 	RoleParams: RoleParams{},
 	NetworkParams: NetworkParams{
-		NumNetworks: 4,
+		NumNetworks: 10,
 		NetworkTemplate: &network.Network{
 			TypeMeta: api.TypeMeta{Kind: "Network"},
 			ObjectMeta: api.ObjectMeta{
@@ -90,6 +90,7 @@ var scaleCfgenParams = &Cfgen{
 			//Apps:            []string{"app-{{iter-appid:1-20000}}"},
 		},
 	},
+
 	FirewallProfileParams: FirewallProfileParams{
 		FirewallProfileTemplate: &security.FirewallProfile{
 			TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
@@ -148,6 +149,157 @@ var scaleCfgenParams = &Cfgen{
 			},
 		},
 	},
+
+	RoutingConfigParams: RoutingConfigParams{
+		NumRoutingConfigs: 1,
+		RoutingConfigTemplate: &network.RoutingConfig{
+			TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "RRConfig-node-{{iter}}",
+			},
+			Spec: network.RoutingConfigSpec{
+				BGPConfig: &network.BGPConfig{
+					ASNumber:  64001,
+					RouterId:  "{{ipv4:10.1.1.0}}",
+					Neighbors: []*network.BGPNeighbor{},
+				},
+			},
+		},
+		BgpNeihbourTemplate: &network.BGPNeighbor{
+			EnableAddressFamilies: []string{"evpn"},
+			RemoteAS:              64001,
+			MultiHop:              10,
+			IPAddress:             "{{ipv4:22.1.1.0}}",
+		},
+	},
+
+	UnderlayRoutingConfigParams: UnderlayRoutingConfigParams{
+		NumUnderlayRoutingConfigs: 1,
+		UnderlayRoutingConfigTemplate: &network.RoutingConfig{
+			TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "NaplesRRConfig-node-{{iter}}",
+			},
+			Spec: network.RoutingConfigSpec{
+				BGPConfig: &network.BGPConfig{
+					ASNumber:  64001,
+					RouterId:  "0.0.0.0",
+					Neighbors: []*network.BGPNeighbor{},
+				},
+			},
+		},
+		UnderlayBgpNeihbourTemplate: &network.BGPNeighbor{
+			RemoteAS:              65001,
+			MultiHop:              10,
+			IPAddress:             "0.0.0.0",
+			EnableAddressFamilies: []string{"ipv4-unicast"},
+		},
+	},
+
+	TenantConfigParams: TenantConfigParams{
+		NumOfTenants: 1,
+		TenantTemplate: &cluster.Tenant{
+			TypeMeta: api.TypeMeta{Kind: "Tenant", APIVersion: "v1"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "customer{{iter}}",
+			},
+			Spec: cluster.TenantSpec{},
+		},
+	},
+
+	VRFConfigParams: VRFConfigParams{
+		NumOfVRFs: 1,
+		VirtualRouterTemplate: &network.VirtualRouter{
+			TypeMeta: api.TypeMeta{Kind: "VirtualRouter"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "vpc{{iter}}",
+			},
+			Spec: network.VirtualRouterSpec{
+				Type:             "tenant",
+				RouterMACAddress: "{{mac}}",
+				VxLanVNI:         998,
+				RouteImportExport: &network.RDSpec{
+					AddressFamily: "evpn",
+					RDAuto:        true,
+					ImportRTs: []*network.RouteDistinguisher{
+						&network.RouteDistinguisher{
+							Type:          "type2",
+							AdminValue:    100,
+							AssignedValue: 100,
+						},
+					},
+					ExportRTs: []*network.RouteDistinguisher{
+						&network.RouteDistinguisher{
+							Type:          "type2",
+							AdminValue:    200,
+							AssignedValue: 100,
+						},
+						&network.RouteDistinguisher{
+							Type:          "type2",
+							AdminValue:    200,
+							AssignedValue: 101,
+						},
+					},
+				},
+			},
+		},
+	},
+
+	IPAMPConfigParams: IPAMPConfigParams{
+		NumOfIPAMPs: 1,
+		IPAMPPolicyTemplate: &network.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "vpc1DHCP{{iter}}",
+			},
+			Spec: network.IPAMPolicySpec{
+				Type: "dhcp-relay",
+				DHCPRelay: &network.DHCPRelayPolicy{
+					Servers: []*network.DHCPServer{
+						&network.DHCPServer{
+							VirtualRouter: "default",
+							IPAddress:     "192.168.1.1",
+						},
+					},
+				},
+			},
+		},
+	},
+
+	SubnetConfigParams: SubnetConfigParams{
+		NumOfSubnets: 1,
+		SubnetTemplate: &network.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "network{{iter}}",
+			},
+			Spec: network.NetworkSpec{
+				Type:        "routed",
+				IPv4Subnet:  "{{ipv4-subnet:10.x.0.0/16}}",
+				IPv4Gateway: "{{ipv4-gateway:10.x.1.1}}",
+				VxlanVNI:    998,
+				RouteImportExport: &network.RDSpec{
+					AddressFamily: "evpn",
+					RDAuto:        true,
+					ExportRTs: []*network.RouteDistinguisher{
+						&network.RouteDistinguisher{
+							AdminValue:    1000,
+							Type:          "type2",
+							AssignedValue: 1000,
+						},
+					},
+					ImportRTs: []*network.RouteDistinguisher{
+						&network.RouteDistinguisher{
+							AdminValue:    1001,
+							Type:          "type2",
+							AssignedValue: 1000,
+						},
+					},
+				},
+			},
+		},
+	},
+
 	SecurityGroupsParams:   SecurityGroupsParams{},
 	MirrorSessionParams:    MirrorSessionParams{},
 	FwLogPolicyParams:      FwLogPolicyParams{},

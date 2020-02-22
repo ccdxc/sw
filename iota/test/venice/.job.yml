@@ -49,5 +49,46 @@ e2e-targets:
           VcenterUsername: administrator@vsphere.local
           VcenterPassword: N0isytem$
           VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
+  # baremetal + linux (transparent basenet)
+ e2e-venice-2naples-basenet:
+   commands: ["make", "-C", "iota/test/venice", "venice-e2e-basenet"]
+   # commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:venice-dev@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-venice-image
+     - build-venice-upgrade-image
+   clusters:
+     - image: build-160
+       count: 3
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-7
+       count: 2
+       resources:
+         # ESX could be installed on any server
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+          VcenterUsername: administrator@vsphere.local
+          VcenterPassword: N0isytem$
+          VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
 logfiles:
   - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

@@ -47,7 +47,7 @@ func Test_datastore(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Deploy VM done")
 	TestUtils.Assert(t, vm != nil, "Deploy VM done")
 
-	err = vm.ReconfigureNetwork("iota-def-network", pgName)
+	err = vm.ReconfigureNetwork("iota-def-network", pgName, 0)
 	fmt.Printf("Error %v %v\n", pgName, err)
 	TestUtils.Assert(t, err == nil, "dvs updated")
 	/*host, err := NewHost(context.Background(), "10.10.2.30", "root", "N0isystem$")
@@ -125,7 +125,7 @@ func Test_dvs_create_delete(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Deploy VM done")
 	TestUtils.Assert(t, vm != nil, "Deploy VM done")
 
-	err = vm.ReconfigureNetwork("VM Network", "pg1")
+	err = vm.ReconfigureNetwork("VM Network", "pg1", 0)
 	TestUtils.Assert(t, err == nil, "dvs updated")
 	//	err = host.DestoryVM("build-111")
 	//err = dc.RemoveHostsFromDvs(dvsSpec)
@@ -463,7 +463,13 @@ func Test_vcenter_migration(t *testing.T) {
 */
 func Test_ovf_deploy(t *testing.T) {
 
-	TestUtils.Assert(t, false, "Ds not created")
+	host, err := NewHost(context.Background(), "tb29-host1.pensando.io", "root", "pen123!")
+
+	TestUtils.Assert(t, err == nil, "Connected to host")
+	TestUtils.Assert(t, host != nil, "Host context set")
+
+	hostVM, err3 := host.NewVM("node1-ep4")
+	TestUtils.Assert(t, hostVM != nil && err3 == nil, "VM FOND")
 
 	/*
 		vc, err := NewVcenter(context.Background(), "192.168.69.120", "administrator@vsphere.local", "N0isystem$")
@@ -485,11 +491,6 @@ func Test_ovf_deploy(t *testing.T) {
 
 		err = c.AddHost("tb36-host1.pensando.io", "root", "pen123!")
 		TestUtils.Assert(t, err == nil, "host added") */
-
-	vc1, err := NewVcenter(context.Background(), "192.168.69.120", "administrator@vsphere.local", "N0isystem$", "")
-
-	TestUtils.Assert(t, err == nil, "Connected to venter")
-	TestUtils.Assert(t, vc1 != nil, "Vencter context set")
 
 	/*
 		dc, err = vc1.SetupDataCenter("iota-dc")

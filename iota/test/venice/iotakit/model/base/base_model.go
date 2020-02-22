@@ -39,6 +39,9 @@ type SysModel struct {
 	VeniceNodeMap              map[string]*objects.VeniceNode     // Venice nodes
 	VeniceNodesMapDisconnected map[string]*objects.VeniceNode     // Venice which are not part of cluster
 	AuthToken                  string                             // authToken obtained after logging in
+	Licenses                   []string                           //enabled licenses
+	NoModeSwitchReboot         bool                               // no reboot on mode switch
+	NoSetupDataPathAfterSwitch bool                               // temp flag to set up datapath post naples
 
 	Tb *testbed.TestBed // testbed
 
@@ -109,7 +112,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 
 	doModeSwitch := func(done chan error) {
 		// move naples to managed mode
-		err := sm.DoModeSwitchOfNaples(sm.Tb.Nodes)
+		err := sm.DoModeSwitchOfNaples(sm.Tb.Nodes, sm.NoModeSwitchReboot)
 		if err != nil {
 			log.Errorf("Setting up naples failed. Err: %v", err)
 			done <- err
@@ -129,8 +132,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		}
 	}
 
-	// connect naples nodes to venice
-	return sm.JoinNaplesToVenice(sm.Tb.Nodes)
+	return sm.SetUpNaplesPostCluster(sm.Tb.Nodes)
 
 }
 
@@ -312,7 +314,8 @@ func (sm *SysModel) SetupNodes() error {
 			}
 		} else if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			for _, cnode := range clusterNodes {
-				if cnode.Name == nr.NodeName {
+				if cnode.Name == nr.NodeMgmtIP {
+					log.Infof("Setting up cluster node : %v", cnode.Name)
 					vnode := sm.VeniceNodeMap[nr.NodeName]
 					vnode.ClusterNode = cnode
 				}
@@ -491,6 +494,10 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 
 	for _, naples := range sm.FakeNaples {
 		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+	}
+
+	for _, node := range sm.VeniceNodeMap {
+		cfgParams.VeniceNodes = append(cfgParams.VeniceNodes, node.ClusterNode)
 	}
 
 	err := sm.PopulateConfig(cfgParams)

@@ -17,6 +17,14 @@ func TestCfgenPolicyGen(t *testing.T) {
 	cfg.WorkloadParams.WorkloadsPerHost = 200
 	cfg.AppParams.NumApps = 10000
 	cfg.NumDNSAlgs = 10
+	cfg.NumRoutingConfigs = 2
+	cfg.NumUnderlayRoutingConfigs = 2
+	cfg.NumNeighbors = 2
+	cfg.NumUnderlayNeighbors = 2
+	cfg.NumOfTenants = 2
+	cfg.NumOfVRFsPerTenant = 2
+	cfg.NumOfSubnetsPerVpc = 2
+	cfg.NumOfIPAMPsPerTenant = 1
 
 	// create smartnic macs from a template
 	smartnics := []*cluster.DistributedServiceCard{}
@@ -89,4 +97,47 @@ func TestCfgenPolicyGen(t *testing.T) {
 		ofile.Write(j)
 		ofile.WriteString("\n")
 	}
+
+	for _, o := range cfg.ConfigItems.RouteConfig {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
+	for _, o := range cfg.ConfigItems.UnderlayRouteConfig {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
+	for _, o := range cfg.ConfigItems.Tenants {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
+	for _, o := range cfg.ConfigItems.VRFs {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
+	for _, o := range cfg.ConfigItems.IPAMPs {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
+	for _, o := range cfg.ConfigItems.Subnets {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
 }
