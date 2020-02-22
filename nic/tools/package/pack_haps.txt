@@ -271,3 +271,6 @@ nic/conf/captrace/sample-conf.json                                  /nic/conf/ca
 
 # init config profiles
 nic/conf/profiles/qos_profile_default.json                          /nic/conf/profiles/
+
+# dhcp server
+nic/dhcp-server/S80dhcp-server-disable                              /etc/init.d/S80dhcp-server
