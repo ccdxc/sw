@@ -47,7 +47,7 @@ testcases:
         iterators : 
             type : nested
             rxflowhash     : [  'tcp6', 'udp6', 'ip6udp', 'ip6tcp' ]
-            rss            : ['disabled']
+            rss            : ['enabled']
             # vlantag        : ['on', 'off']
             # hkey           : [ 'symmetric', 'msft']
         args    :
