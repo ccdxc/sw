@@ -173,7 +173,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.InterfaceEvent{
 					EventType: api.EventType_DeleteEvent,
 					Interface: lobj,
@@ -181,6 +181,9 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
 				client.processInterfaceEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -188,7 +191,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.Interfaces {
+	for _, obj := range objmap {
 		evt := netproto.InterfaceEvent{
 			EventType: api.EventType_UpdateEvent,
 			Interface: *obj,

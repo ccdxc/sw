@@ -184,7 +184,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.{{$crudObject}}Event{
 					EventType: api.EventType_DeleteEvent,
 					{{$crudObject}}:  lobj,
@@ -192,6 +192,9 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 				log.Infof("diff{{$crudObject}}s(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
 				client.process{{$crudObject}}Event(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -199,7 +202,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.{{$crudObject}}s {
+	for _, obj := range objmap {
 		evt := netproto.{{$crudObject}}Event{
 			EventType: api.EventType_UpdateEvent,
 			{{$crudObject}}:       *obj,

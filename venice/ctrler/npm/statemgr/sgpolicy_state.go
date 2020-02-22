@@ -430,7 +430,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyUpdate(sgp *ctkit.NetworkSecurityPoli
 
 	// store it in local DB
 	err = sm.mbus.UpdateObjectWithReferences(sgps.NetworkSecurityPolicy.MakeKey("security"),
-		convertNetworkSecurityPolicy(sgps), references(sgps.NetworkSecurityPolicy))
+		convertNetworkSecurityPolicy(sgps), references(nsgp))
 	if err != nil {
 		log.Errorf("Error storing the sg policy in memdb. Err: %v", err)
 		return err

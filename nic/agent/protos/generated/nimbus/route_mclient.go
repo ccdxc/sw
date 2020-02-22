@@ -173,7 +173,7 @@ func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, re
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.RouteTableEvent{
 					EventType:  api.EventType_DeleteEvent,
 					RouteTable: lobj,
@@ -181,6 +181,9 @@ func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, re
 				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
 				client.processRouteTableEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -188,7 +191,7 @@ func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, re
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.RouteTables {
+	for _, obj := range objmap {
 		evt := netproto.RouteTableEvent{
 			EventType:  api.EventType_UpdateEvent,
 			RouteTable: *obj,
@@ -458,7 +461,7 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.RoutingConfigEvent{
 					EventType:     api.EventType_DeleteEvent,
 					RoutingConfig: lobj,
@@ -466,6 +469,9 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
 				client.processRoutingConfigEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -473,7 +479,7 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.RoutingConfigs {
+	for _, obj := range objmap {
 		evt := netproto.RoutingConfigEvent{
 			EventType:     api.EventType_UpdateEvent,
 			RoutingConfig: *obj,

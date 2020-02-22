@@ -173,7 +173,7 @@ func (client *NimbusClient) diffCollectors(objList *netproto.CollectorList, reac
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.CollectorEvent{
 					EventType: api.EventType_DeleteEvent,
 					Collector: lobj,
@@ -181,6 +181,9 @@ func (client *NimbusClient) diffCollectors(objList *netproto.CollectorList, reac
 				log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
 				client.processCollectorEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -188,7 +191,7 @@ func (client *NimbusClient) diffCollectors(objList *netproto.CollectorList, reac
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.Collectors {
+	for _, obj := range objmap {
 		evt := netproto.CollectorEvent{
 			EventType: api.EventType_UpdateEvent,
 			Collector: *obj,

@@ -292,7 +292,7 @@ func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
 	}
 
 	// save the updated app
-	sm.mbus.UpdateObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(app))
+	sm.mbus.UpdateObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(napp))
 
 	return nil
 }

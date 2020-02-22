@@ -173,7 +173,7 @@ func (client *NimbusClient) diffProfiles(objList *netproto.ProfileList, reactor 
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.ProfileEvent{
 					EventType: api.EventType_DeleteEvent,
 					Profile:   lobj,
@@ -181,6 +181,9 @@ func (client *NimbusClient) diffProfiles(objList *netproto.ProfileList, reactor 
 				log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
 				client.processProfileEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -188,7 +191,7 @@ func (client *NimbusClient) diffProfiles(objList *netproto.ProfileList, reactor 
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.Profiles {
+	for _, obj := range objmap {
 		evt := netproto.ProfileEvent{
 			EventType: api.EventType_UpdateEvent,
 			Profile:   *obj,

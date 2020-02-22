@@ -257,7 +257,7 @@ func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nf
 	fps.FirewallProfile.Status = security.FirewallProfileStatus{}
 
 	log.Infof("Sending udpate received")
-	sm.mbus.UpdateObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
+	sm.mbus.UpdateObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(nfwp))
 	log.Infof("Updated fwProfile: %+v", fwProfile)
 
 	return nil

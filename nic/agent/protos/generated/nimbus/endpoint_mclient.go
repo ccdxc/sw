@@ -173,7 +173,7 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
 			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
+			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.EndpointEvent{
 					EventType: api.EventType_DeleteEvent,
 					Endpoint:  lobj,
@@ -181,6 +181,9 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
 				client.processEndpointEvent(evt, reactor, ostream)
+			} else if ok && (nobj.GenerationID == lobj.GenerationID) {
+				//Delete it so that we don't add/update
+				delete(objmap, key)
 			}
 		} else {
 			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
@@ -188,7 +191,7 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 	}
 
 	// add/update all new objects
-	for _, obj := range objList.Endpoints {
+	for _, obj := range objmap {
 		evt := netproto.EndpointEvent{
 			EventType: api.EventType_UpdateEvent,
 			Endpoint:  *obj,

@@ -19,7 +19,7 @@ const (
 )
 
 // number of times to retry the operation
-const maxRetryCount = 10
+const maxRetryCount = 40
 
 //WorkFunc Prototype of work function.
 type WorkFunc func(ctx context.Context, workObj WorkObj) error
