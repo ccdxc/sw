@@ -23,7 +23,6 @@
                      [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
                      [expandTemplate]="expandTemplate"
-                     [isToFetchDataOnSort]="true"
                      (lazyLoadEvent)="onTableSort($event)"
                      (rowClick)="onAuditeventsTableRowClick($event)"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
@@ -33,12 +32,13 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords" fxFlex="auto"
+  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="displayRecords" fxFlex="auto"
                    fxLayout="row" [tableMenuItems]="tableMenuItems"
                    [enableColumnSelect]="true" [icon]="headerIcon" [cols]="cols"
                    (columnSelectChange)="onColumnSelectChange($event)"
                    [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true" [showTotalHits]="true"
-                   (refreshIconClick)="getAuditevents()">
+                   (refreshIconClick)="getAuditevents()" class="audit-table-header">
+    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
   </app-tableheader>
 </ng-template>
 
@@ -58,5 +58,12 @@
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <div class="auditevents-detail-div auditevents-rowexpand">
     <pre>{{displayAuditEvent()}}</pre>
+  </div>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div matTooltip="Total audit event records" class="audit-table-header-title">
+    {{ (totalHitRecords >   maxRecords  && totalHitRecords < veniceRecords)? '| Search criteria matches ' +   totalHitRecords : '' }}
+    | System has ({{veniceRecords | number}}) records
   </div>
 </ng-template>

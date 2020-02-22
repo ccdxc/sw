@@ -9,17 +9,17 @@ import { FieldselectorComponent } from '@app/components/shared/fieldselector/fie
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
-import {AuditService} from '@app/services/generated/audit.service';
-import {LRUMap} from 'lru_map';
-import {AuditAuditEvent, IAuditAuditEvent, AuditAuditEvent_outcome} from '@sdk/v1/models/generated/audit';
+import { AuditService } from '@app/services/generated/audit.service';
+import { LRUMap } from 'lru_map';
+import { AuditAuditEvent, IAuditAuditEvent, AuditAuditEvent_outcome } from '@sdk/v1/models/generated/audit';
 import { SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
-import {Observable, Subscription, zip} from 'rxjs';
-import {AdvancedSearchComponent} from '@components/shared/advanced-search/advanced-search.component';
-import {RepeaterData} from 'web-app-framework';
+import { Observable, Subscription, zip } from 'rxjs';
+import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
+import { RepeaterData } from 'web-app-framework';
 import { RowClickEvent, TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
-import {Icon} from '@app/models/frontend/shared/icon.interface';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
@@ -39,8 +39,10 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
 
-  totalRecords: number = 0;
-
+  // This totalHitRecords indicates the number of records matching searching criteria
+  totalHitRecords: number = 0;
+  veniceRecords: number = 0;
+  displayRecords: number = 0;
   auditEventFieldSelectorOutput: any;
 
   fieldFormArray = new FormArray([]);
@@ -78,15 +80,15 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
   };
   // Backend currently only supports time being sorted
   cols: TableCol[] = [
-    { field: 'user.name', header: 'Who', class: 'auditevents-column-common auditevents-column-who', sortable: false, width: 10},
-    { field: 'meta.mod-time', header: 'Time', class: 'auditevents-column-common auditevents-column-date', sortable: true, width: '180px'},
-    { field: 'action', header: 'Action', class: 'auditevents-column-common auditevents-column-action', sortable: false, width: 9},
-    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false},
-    { field: 'resource.name', header: 'Act On (name)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9},
-    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 10},
-    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 17},
-    { field: 'gateway-node', header: 'Service Node', class: 'auditevents-column-common auditevents-column-gateway_node', sortable: false, width: 9},
-    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 14},
+    { field: 'user.name', header: 'Who', class: 'auditevents-column-common auditevents-column-who', sortable: false, width: 10 },
+    { field: 'meta.mod-time', header: 'Time', class: 'auditevents-column-common auditevents-column-date', sortable: true, width: '180px' },
+    { field: 'action', header: 'Action', class: 'auditevents-column-common auditevents-column-action', sortable: false, width: 9 },
+    { field: 'resource.kind', header: 'Act On (kind)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false },
+    { field: 'resource.name', header: 'Act On (name)', class: 'auditevents-column-common auditevents-column-act_on', sortable: false, width: 9 },
+    { field: 'outcome', header: 'Outcome', class: 'auditevents-column-common auditevents-column-outcome', sortable: false, width: 10 },
+    { field: 'client-ips', header: 'Client', class: 'auditevents-column-common auditevents-column-client_ips', sortable: false, width: 17 },
+    { field: 'gateway-node', header: 'Service Node', class: 'auditevents-column-common auditevents-column-gateway_node', sortable: false, width: 9 },
+    { field: 'service-name', header: 'Service Name', class: 'auditevents-column-common auditevents-column-service_name', sortable: false, width: 14 },
   ];
 
   exportMap: CustomExportMap = {
@@ -148,9 +150,9 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
 
     this.loading = true;
     try {
-    const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', false, this.maxRecords);
+      const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', false, this.maxRecords);
 
-    this._callSearchRESTAPI(searchSearchRequest);
+      this._callSearchRESTAPI(searchSearchRequest);
     } catch (error) {
       this.controllerService.invokeErrorToaster('Input error', error.toString());
     }
@@ -193,7 +195,11 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
         this.lastUpdateTime = new Date().toISOString();
         this.dataObjects = this.mergeEntriesByName(entries);
         // response.body  is like  {total-hits: 430, actual-hits: 430, time-taken-msecs: 100, entries: Array(430)}.
-        this.totalRecords = response.body['total-hits'];  // html tableheader user showTotalHit to display total # of audit events
+        if (searchSearchRequest !== undefined && searchSearchRequest != null && searchSearchRequest.query != null && searchSearchRequest.query.fields != null && Array.isArray(searchSearchRequest.query.fields.requirements) && searchSearchRequest.query.fields.requirements.length === 0) {
+          this.veniceRecords = response.body['total-hits'];
+        }
+        this.totalHitRecords = response.body['total-hits'];
+        this.displayRecords = this.dataObjects.length;
         this.loading = false;
       },
       (error) => {
@@ -210,22 +216,22 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
    * @param entries
    */
   mergeEntriesByName(entries: IAuditAuditEvent[]): AuditAuditEvent[] {
-      const tmpMap = {};
-      entries.forEach(ele => {
-        const eleCopy = Utility.getLodash().cloneDeep(ele);
-        const key = ele.meta.name;
-          if (tmpMap.hasOwnProperty(key)) {
-            if (tmpMap[key].outcome === AuditAuditEvent_outcome.failure) {
-              eleCopy.outcome = AuditAuditEvent_outcome.failure;
-            }
-            tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
-            tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
-          } else {
-            tmpMap[key] = eleCopy;
-            tmpMap[key]['uuids'] = [eleCopy.meta.uuid];
-          }
-      });
-      return Object.values(tmpMap);
+    const tmpMap = {};
+    entries.forEach(ele => {
+      const eleCopy = Utility.getLodash().cloneDeep(ele);
+      const key = ele.meta.name;
+      if (tmpMap.hasOwnProperty(key)) {
+        if (tmpMap[key].outcome === AuditAuditEvent_outcome.failure) {
+          eleCopy.outcome = AuditAuditEvent_outcome.failure;
+        }
+        tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
+        tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
+      } else {
+        tmpMap[key] = eleCopy;
+        tmpMap[key]['uuids'] = [eleCopy.meta.uuid];
+      }
+    });
+    return Object.values(tmpMap);
   }
 
   /**

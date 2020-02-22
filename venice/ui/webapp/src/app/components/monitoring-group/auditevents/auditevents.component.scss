@@ -4,12 +4,21 @@
   @include primary-font();
 }
 
+.audit-table-header>.tableheader-container>.tableheader-title-container {
+  flex: 0 0 auto !important;
+}
+
 .auditevents-lastupdate {
   margin-right: 5px;
 }
 
 .auditevents-widget {
   height: 100%;
+}
+
+.audit-table-header-title {
+  @include primary-font(20px, #484848);
+  margin-left: 10px;
 }
 
 .auditevents-detail-div {

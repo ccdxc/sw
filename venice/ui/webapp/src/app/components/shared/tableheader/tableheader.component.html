@@ -12,7 +12,8 @@
       {{title}}
     </div>
     <div *ngIf="(count != null && count === total) || (count == null && total != null)"
-         fxFlex="nogrow" class="tableheader-title">
+         fxFlex="nogrow"
+         class="tableheader-title">
       <ng-container *ngIf="!showTotalHits && max != null && total >= max">
         {{title}} (Past {{max | number}})
       </ng-container>
@@ -20,19 +21,17 @@
         {{title}} ({{total | number}})
       </ng-container>
     </div>
-    <div *ngIf="count != null && count !== total" fxFlex="nogrow" class="tableheader-title">
-      {{title}} ({{count | number}} / {{ total | number }})
-    </div>
+
+
   </div>
   <div class="tableheader-content" fxFlex="auto" fxLayoutAlign="start center">
     <ng-content></ng-content>
     <div fxFlex></div>
     <div *ngIf="enableColumnSelect" class="tableheader-enableColumnSelect-div">
-      <p-multiSelect fxFlex="none" fxLayoutAlign="end center" appendTo="body"
-                     [options]="cols" [(ngModel)]="selectedcolumns" optionLabel="header"
-                     displaySelectedLabel="false" maxSelectedLabels="0"
-                     (onChange)="onColumnSelectChange($event)"
-                     selectedItemsLabel="{0} Columns"
+      <p-multiSelect fxFlex="none" fxLayoutAlign="end center" appendTo="body" [options]="cols"
+                     [(ngModel)]="selectedcolumns" optionLabel="header" displaySelectedLabel="false"
+                     maxSelectedLabels="0"
+                     (onChange)="onColumnSelectChange($event)" selectedItemsLabel="{0} Columns"
                      styleClass="tableviewedit-table-columns-selector"
                      defaultLabel="Choose Columns">
       </p-multiSelect>
@@ -41,8 +40,8 @@
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="5px">
     <ng-container *ngIf="lastUpdateTime != null || lastUpdateTime == ''">
-      <div class="tableheader-lastupdate" fxFlex="noshrink"
-           fxLayout="column" fxLayoutAlign="center end">
+      <div class="tableheader-lastupdate" fxFlex="noshrink" fxLayout="column"
+           fxLayoutAlign="center end">
         <div fxFlex="nogrow">
           Last Updated: {{ lastUpdateTime | PrettyDate }}
         </div>
@@ -59,7 +58,8 @@
                 [matMenuTriggerFor]="menu">settings</mat-icon>
       <mat-menu fxFlex #menu="matMenu">
         <button mat-menu-item *ngFor="let item of tableMenuItems" (click)="item.onClick()"
-                [disabled]="item.disabled" [disableRipple]="true">
+                [disabled]="item.disabled"
+                [disableRipple]="true">
           {{ item.text }}
         </button>
       </mat-menu>
