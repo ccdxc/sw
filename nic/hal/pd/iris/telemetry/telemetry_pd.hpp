@@ -50,7 +50,7 @@ typedef struct mirror_session_pd_s mirror_session_pd_t;
 struct mirror_session_pd_s {
     uint32_t hw_id;
     uint64_t pad;
-} __attribute__ ((__packed__));
+} __PACK__;
 
 }    // namespace pd
 }    // namespace hal
