@@ -254,7 +254,7 @@ func convertEPAttrs(addresses []string, mgmtIntf string, usegVLAN uint32, enicID
 	return &halapi.EndpointAttributes{
 		InterfaceKeyHandle: ifKeyHandle,
 		UsegVlan:           usegVLAN,
-		//	IpAddress:          utils.ConvertIPAddresses(addresses...),
+		IpAddress:          utils.ConvertIPAddresses(addresses...),
 	}
 }
 
