@@ -20,6 +20,8 @@
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
+#include "nic/apollo/api/impl/lif_impl.hpp"
+#include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 namespace api {
@@ -195,7 +197,8 @@ static inline sdk_ret_t
 populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
                             nexthop_actiondata_t *nh_data)
 {
-    if_entry *intf;
+    if_entry *intf, *eth_if;
+    lif_impl *lif;
     pds_encap_t encap;
 
     memset(nh_data, 0, sizeof(*nh_data));
@@ -218,9 +221,19 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
     }
     sdk::lib::memrev(nh_data->nexthop_info.dmaco,
                      spec->underlay_mac, ETH_ADDR_LEN);
-    // TODO: get this from the pinned mnic
-    sdk::lib::memrev(nh_data->nexthop_info.smaco,
-                     intf->l3_mac(), ETH_ADDR_LEN);
+    // program the src mac
+    if (!is_mac_set(intf->l3_mac())) {
+        // if user didn't give MAC explicitly, use the MAC of the corresponding
+        // lif (that is visible on DSC's linux)
+        eth_if = (if_entry *)if_entry::eth_if(intf);
+        lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT,
+                                  eth_if->ifindex());
+        sdk::lib::memrev(nh_data->nexthop_info.smaco, lif->mac(), ETH_ADDR_LEN);
+    } else {
+        // use the MAC coming in the config
+        sdk::lib::memrev(nh_data->nexthop_info.smaco,
+                         intf->l3_mac(), ETH_ADDR_LEN);
+    }
     return SDK_RET_OK;
 }
 

@@ -98,7 +98,23 @@ public:
 
         lif_cb_ctxt.lif = NULL;
         lif_cb_ctxt.type = type;
-        lif_ht_->walk(lif_type_compare_cb_, &lif_cb_ctxt);
+        lif_cb_ctxt.pinned_if = IFINDEX_INVALID;
+        lif_ht_->walk(lif_compare_cb_, &lif_cb_ctxt);
+        return lif_cb_ctxt.lif;
+    }
+
+    /// \brief     find the lif of the specific type with pinned ifindex
+    ///            matching the one provided
+    /// \param[in] type         type of the lif of interest
+    /// \param[in] pinned_if    pinned interface index
+    /// \return pointer to the lif impl instance or NULL if not found
+    lif_impl *find(lif_type_t type, pds_ifindex_t pinned_if) {
+        lif_find_cb_ctxt_t lif_cb_ctxt;
+
+        lif_cb_ctxt.lif = NULL;
+        lif_cb_ctxt.type = type;
+        lif_cb_ctxt.pinned_if = pinned_if;
+        lif_ht_->walk(lif_compare_cb_, &lif_cb_ctxt);
         return lif_cb_ctxt.lif;
     }
 
@@ -116,17 +132,29 @@ private:
     typedef struct lif_find_cb_ctxt_s {
         lif_impl *lif;
         lif_type_t type;
+        pds_ifindex_t pinned_if;
     } lif_find_cb_ctxt_t;
 
-    static bool lif_type_compare_cb_(void *entry, void *ctxt) {
+    static bool lif_compare_cb_(void *entry, void *ctxt) {
         lif_impl *lif = (lif_impl *)entry;
         lif_find_cb_ctxt_t *cb_ctxt = (lif_find_cb_ctxt_t *)ctxt;
 
         if (lif->type() == cb_ctxt->type) {
+            // found lif type of interest
+            if (cb_ctxt->pinned_if != IFINDEX_INVALID) {
+                if (lif->pinned_ifindex() == cb_ctxt->pinned_if) {
+                    // found matching lif
+                    cb_ctxt->lif = lif;
+                    return true;
+                }
+                // continue the search
+                return false;
+            }
             // break the walk
             cb_ctxt->lif = lif;
             return true;
         }
+        // this lif didn't match the matching criteria, continue the search
         return false;
     }
 
