@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+uint32_t *svr_ip_list;
+
 void pds_dhcp_relay_cfg_init(void);
 int pds_dhcp4_relay_config_update(uint32_t server_ip,
                                   uint32_t agent_ip,

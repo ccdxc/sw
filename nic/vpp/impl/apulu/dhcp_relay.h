@@ -6,36 +6,14 @@
 #define __VPP_IMPL_APULU_DHCP_RELAY_H__
 
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
+#include <nic/apollo/p4/include/apulu_defines.h>
 #include <api.h>
-
+#include <impl_db.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-always_inline int
-pds_dhcp_relay_clfy_buffer_advance_offset (vlib_buffer_t *b)
-{
-    return (VPP_P4_TO_ARM_HDR_SZ +
-            vnet_buffer(b)->l4_hdr_offset - vnet_buffer (b)->l2_hdr_offset +
-            sizeof(udp_header_t));
-}
-
-always_inline void
-pds_dhcp_relay_clfy_fill_next (u16 *next, p4_rx_cpu_hdr_t *hdr, u32 *counter)
-{
-    if(1) {
-       /* TODO cehck the source IP in dhcp server db if not send to server*/
-        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_SERVER;
-        counter[DHCP_RELAY_CLFY_COUNTER_TO_SERVER]++;
-
-    } else if (0) {
-	// TODO if source is  dhcp server send to client
-        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_CLIENT;
-        counter[DHCP_RELAY_CLFY_COUNTER_TO_CLIENT]++;
-    }
-
-    return;
-}
+#define PDS_DHCP_SERVER_NEXTHOP 1
 
 always_inline void
 pds_dhcp_relay_fill_data (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr)
@@ -48,53 +26,148 @@ pds_dhcp_relay_fill_data (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr)
 }
 
 always_inline void
-pds_dhcp_relay_clfy_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
-                        u16 *next0, u16 *next1, u32 *counter)
+pds_dhcp_relay_svr_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 {
-    p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
-    p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
+    p4_tx_cpu_hdr_t *tx0, *tx1;
 
-    vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer (p0)->l3_hdr_offset =
-         hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset =
-        hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+    tx0 = vlib_buffer_get_current(b0);
+    tx1 = vlib_buffer_get_current(b1);
 
-    vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer (p1)->l3_hdr_offset =
-         hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-    vnet_buffer (p1)->l4_hdr_offset =
-        hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+    tx0->lif_flags = 0;
+    tx0->lif_flags = 0;
 
+    tx0->nexthop_valid = 1;
+    tx1->nexthop_valid = 1;
 
-    pds_dhcp_relay_fill_data(p0, hdr0);
-    pds_dhcp_relay_fill_data(p1, hdr1);
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+    tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
 
-    vlib_buffer_advance(p0, pds_dhcp_relay_clfy_buffer_advance_offset(p0));
-    vlib_buffer_advance(p1, pds_dhcp_relay_clfy_buffer_advance_offset(p1));
+    tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    tx1->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
 
-    pds_dhcp_relay_clfy_fill_next(next0, hdr0, counter);
-    pds_dhcp_relay_clfy_fill_next(next1, hdr1, counter);
+    tx0->nexthop_id = PDS_DHCP_SERVER_NEXTHOP;
+    tx1->nexthop_id = PDS_DHCP_SERVER_NEXTHOP;
+    tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
+    tx1->nexthop_id = clib_host_to_net_u16(tx1->nexthop_id);
+
+    vnet_buffer(b0)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b0)->sw_if_index[VLIB_RX];
+    vnet_buffer(b1)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b1)->sw_if_index[VLIB_RX];
 
     return;
 }
 
 always_inline void
-pds_dhcp_relay_clfy_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
+pds_dhcp_relay_svr_fill_tx_hdr_x1 (vlib_buffer_t *b0)
 {
-    p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
+    p4_tx_cpu_hdr_t *tx0;
 
-    vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer (p)->l3_hdr_offset =
-         hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
-    vnet_buffer (p)->l4_hdr_offset =
-        hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
+    tx0 = vlib_buffer_get_current(b0);
 
-    pds_dhcp_relay_fill_data(p, hdr);
 
-    vlib_buffer_advance(p, pds_dhcp_relay_clfy_buffer_advance_offset(p));
+    tx0->lif_flags = 0;
 
-    pds_dhcp_relay_clfy_fill_next(next, hdr, counter);
+    tx0->nexthop_valid = 1;
+
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+
+    tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+
+    tx0->nexthop_id = PDS_DHCP_SERVER_NEXTHOP;
+    tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
+
+    vnet_buffer(b0)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b0)->sw_if_index[VLIB_RX];
+
+    return;
+}
+
+always_inline void
+pds_dhcp_relay_client_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
+{
+    p4_tx_cpu_hdr_t *tx0, *tx1;
+
+    pds_impl_db_vnic_entry_t *vnic_info0, *vnic_info1;
+
+    vnic_info0 = pds_impl_db_vnic_get(vnet_buffer(b0)->pds_dhcp_data.vnic_id);
+    vnic_info1 = pds_impl_db_vnic_get(vnet_buffer(b1)->pds_dhcp_data.vnic_id);
+
+    tx0 = vlib_buffer_get_current(b0);
+    tx1 = vlib_buffer_get_current(b1);
+
+    tx0->lif_flags = 0;
+    tx1->lif_flags = 0;
+
+    tx0->nexthop_valid = 1;
+    tx1->nexthop_valid = 1;
+
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+    tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
+
+    tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    tx1->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+
+    tx0->nexthop_id = vnic_info0->nh_hw_id;
+    tx1->nexthop_id = vnic_info1->nh_hw_id;
+
+    tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
+    tx1->nexthop_id = clib_host_to_net_u16(tx1->nexthop_id);
+
+    vnet_buffer(b0)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b0)->sw_if_index[VLIB_RX];
+    vnet_buffer(b1)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b1)->sw_if_index[VLIB_RX];
+
+    return;
+}
+
+always_inline void
+pds_dhcp_relay_client_fill_tx_hdr_x1 (vlib_buffer_t *b0)
+{
+    p4_tx_cpu_hdr_t *tx0;
+
+    pds_impl_db_vnic_entry_t *vnic_info0;
+
+    vnic_info0 = pds_impl_db_vnic_get(vnet_buffer(b0)->pds_dhcp_data.vnic_id);
+
+    tx0 = vlib_buffer_get_current(b0);
+
+    tx0->lif_flags = 0;
+
+    tx0->nexthop_valid = 1;
+
+    tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
+
+    tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+
+    tx0->nexthop_id = vnic_info0->nh_hw_id;
+
+    tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
+
+    vnet_buffer(b0)->sw_if_index[VLIB_TX] =
+        vnet_buffer(b0)->sw_if_index[VLIB_RX];
+
+    return;
+}
+
+
+void
+pds_dhcp_relay_fill_subnet_info(uint32_t vnic_id, uint32_t *subnet_pfx,
+                                uint32_t *subnet_ip)
+{
+    pds_impl_db_vnic_entry_t *vnic_info;
+    pds_impl_db_subnet_entry_t *subnet_info;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    u32 subnet_id = vnic_info->subnet_hw_id;
+
+    subnet_info = pds_impl_db_subnet_get(subnet_id);
+    *subnet_ip = subnet_info->vr_ip.ip4.as_u32;
+    *subnet_pfx = *subnet_ip & (0xffffffff << (32 - subnet_info->prefix_len) );
+
+    *subnet_pfx = htonl(*subnet_pfx);
+    *subnet_ip = htonl(*subnet_ip);
 
     return;
 }

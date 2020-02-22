@@ -99,6 +99,109 @@ pds_dhcp_relay_clfy_trace_add (vlib_main_t *vm,
     } PDS_PACKET_TRACE_LOOP_END;
 }
 
+always_inline int
+pds_dhcp_relay_clfy_buffer_advance_offset (vlib_buffer_t *b)
+{
+    return (VPP_P4_TO_ARM_HDR_SZ +
+            vnet_buffer(b)->l4_hdr_offset - vnet_buffer (b)->l2_hdr_offset +
+            sizeof(udp_header_t));
+}
+
+always_inline bool
+pds_dhcp_relay_server_found(u32 server_ip)
+{
+    bool svr_found = false;
+    u32 *svr_ip;
+
+    pool_foreach(svr_ip, svr_ip_list, ({
+        if(*svr_ip == server_ip) {
+            svr_found = true;
+            return svr_found;
+        }
+    }));
+
+    return svr_found;
+}
+always_inline void
+pds_dhcp_relay_clfy_fill_next (u16 *next, p4_rx_cpu_hdr_t *hdr,
+                               ip4_header_t *ip, u32 *counter)
+{
+    // check vpp db if sip is matching server ip
+    bool svr_found = pds_dhcp_relay_server_found(ip->src_address.as_u32);
+
+    if(!svr_found) {
+        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_SERVER;
+        counter[DHCP_RELAY_CLFY_COUNTER_TO_SERVER]++;
+
+    } else {
+        *next = PDS_DHCP_RELAY_CLFY_NEXT_TO_CLIENT;
+        counter[DHCP_RELAY_CLFY_COUNTER_TO_CLIENT]++;
+    }
+
+    return;
+}
+
+always_inline void
+pds_dhcp_relay_clfy_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
+                        u16 *next0, u16 *next1, u32 *counter)
+{
+    p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
+    p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
+    ip4_header_t *ip0, *ip1;
+
+    vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
+    vnet_buffer (p0)->l3_hdr_offset =
+         hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
+    vnet_buffer (p0)->l4_hdr_offset =
+        hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+
+    vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
+    vnet_buffer (p1)->l3_hdr_offset =
+         hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
+    vnet_buffer (p1)->l4_hdr_offset =
+        hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+
+    pds_dhcp_relay_fill_data(p0, hdr0);
+    pds_dhcp_relay_fill_data(p1, hdr1);
+
+    ip0 = vlib_buffer_get_current(p0) + VPP_P4_TO_ARM_HDR_SZ +
+          vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset;
+    ip1 = vlib_buffer_get_current(p1) + VPP_P4_TO_ARM_HDR_SZ +
+           vnet_buffer (p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset;
+
+    vlib_buffer_advance(p0, pds_dhcp_relay_clfy_buffer_advance_offset(p0));
+    vlib_buffer_advance(p1, pds_dhcp_relay_clfy_buffer_advance_offset(p1));
+
+    pds_dhcp_relay_clfy_fill_next(next0, hdr0, ip0, counter);
+    pds_dhcp_relay_clfy_fill_next(next1, hdr1, ip1, counter);
+
+    return;
+}
+
+always_inline void
+pds_dhcp_relay_clfy_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
+{
+    p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
+    ip4_header_t *ip;
+
+    vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
+    vnet_buffer (p)->l3_hdr_offset =
+         hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
+    vnet_buffer (p)->l4_hdr_offset =
+        hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
+
+    pds_dhcp_relay_fill_data(p, hdr);
+
+    ip = vlib_buffer_get_current(p) + VPP_P4_TO_ARM_HDR_SZ +
+         vnet_buffer (p)->l3_hdr_offset - vnet_buffer (p)->l2_hdr_offset;
+
+    vlib_buffer_advance(p, pds_dhcp_relay_clfy_buffer_advance_offset(p));
+
+    pds_dhcp_relay_clfy_fill_next(next, hdr, ip, counter);
+
+    return;
+}
+
 static uword
 pds_dhcp_relay_clfy (vlib_main_t * vm,
                      vlib_node_runtime_t * node,
@@ -231,7 +334,7 @@ pds_dhcp_relay_svr_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     vlib_buffer_advance(p0, -(pds_dhcp_relay_svr_hdr_buffer_advance_offset(p0)));
     vlib_buffer_advance(p1, -(pds_dhcp_relay_svr_hdr_buffer_advance_offset(p1)));
 
-    // TODO need to fill all the p4 tx header fileds 
+    pds_dhcp_relay_svr_fill_tx_hdr_x2(p0, p1);
 
     pds_dhcp_relay_svr_hdr_fill_next(next0, counter);
     pds_dhcp_relay_svr_hdr_fill_next(next1, counter);
@@ -244,7 +347,7 @@ pds_dhcp_relay_svr_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     vlib_buffer_advance(p, -(pds_dhcp_relay_svr_hdr_buffer_advance_offset(p)));
 
-    // TODO need to fill all the p4 tx header fileds 
+    pds_dhcp_relay_svr_fill_tx_hdr_x1(p);
 
     pds_dhcp_relay_svr_hdr_fill_next(next, counter);
 
@@ -362,8 +465,7 @@ pds_dhcp_relay_client_hdr_trace_add (vlib_main_t *vm,
 always_inline int
 pds_dhcp_relay_client_hdr_buffer_advance_offset (vlib_buffer_t *b)
 {
-    return (VPP_ARM_TO_P4_HDR_SZ +
-            vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset);
+    return (VPP_ARM_TO_P4_HDR_SZ);
 }
 
 always_inline void
@@ -384,6 +486,8 @@ pds_dhcp_relay_client_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
     // TODO need to fill all the p4 tx header fileds 
 
+    pds_dhcp_relay_client_fill_tx_hdr_x2(p0, p1);
+
     pds_dhcp_relay_client_hdr_fill_next(next0, counter);
     pds_dhcp_relay_client_hdr_fill_next(next1, counter);
 
@@ -396,6 +500,7 @@ pds_dhcp_relay_client_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vlib_buffer_advance(p, -(pds_dhcp_relay_client_hdr_buffer_advance_offset(p)));
 
     // TODO need to fill all the p4 tx header fileds 
+    pds_dhcp_relay_client_fill_tx_hdr_x1(p);
 
     pds_dhcp_relay_client_hdr_fill_next(next, counter);
 
@@ -463,6 +568,7 @@ VLIB_REGISTER_NODE (pds_dhcp_relay_client_tx_node) = {
     .format_trace = format_pds_dhcp_relay_client_hdr_trace,
 };
 
+
 int
 pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
 {
@@ -492,12 +598,13 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
             // suboption 1
             // circuit id option will be used for BD VNID and vnic_id
             o->data[len++] = PDS_DHCP_OPT_82_CIRC_ID;
-            // BD VNID takes 3 bytes and vnicid takes 4 bytes
+            // BD VNID takes 3 bytes and vnicid takes 2 bytes
             o->data[len++] = PDS_DHCP_OPT_82_CIRC_ID_LEN;
             clib_memcpy(&o->data[len], &l2_vni, 3);  // l2 vnid
             len += 3;
-            u32 *vnic_id = (u32 *) & o->data[len];
+            u16 *vnic_id = (u16 *) & o->data[len];
             *vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;  // vnic id
+            *vnic_id = clib_host_to_net_u16(*vnic_id);
             len += PDS_VNIC_ID_LEN;
 
             // suboption 5
@@ -507,7 +614,6 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
             o->data[len++] = PDS_DHCP_OPT_82_LINK_SEL_LEN;
             u32 *subnet_prefix = (u32 *) & o->data[len];
             clib_memset(subnet_prefix, 0x0, PDS_IP4_PREFIX_LEN);
-            //TODO o->data[11-14] = fill subnet prefix
             len += PDS_IP4_PREFIX_LEN;
 
             // suboption 11
@@ -517,8 +623,10 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
             o->data[len++] = PDS_DHCP_OPT_82_SVR_IDENT_LEN;
             u32 *subnet_ip = (u32 *) & o->data[len];
             clib_memset(subnet_ip, 0x0, PDS_IP4_PREFIX_LEN);
-            //TODO o->data[17-20] = fill subnet prefix
             len += PDS_IP4_PREFIX_LEN;
+
+            u32 vnic = vnet_buffer(b)->pds_dhcp_data.vnic_id;
+            pds_dhcp_relay_fill_subnet_info(vnic, subnet_prefix, subnet_ip);
 
             // suboption 151
             // suboption which stores vss type and vrf to choose subnet from
@@ -549,6 +657,76 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
     return 0;
 }
 
+int
+pds_dhcp_client_hdr_callback (vlib_main_t * vm, vlib_buffer_t *b)
+{
+    ip4_header_t *ip0;
+    u32 old0, new0;
+    ip_csum_t sum0;
+    u16 vnic_id;
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+
+    ethernet_header_t *eth0;
+
+    ip0 = vlib_buffer_get_current(b);
+
+    vlib_buffer_advance(b, - sizeof (ethernet_header_t));
+    eth0 = vlib_buffer_get_current(b);
+
+    // extract vnic and subnet info
+    vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if(vnic_info == NULL) {
+        return 1;
+    }
+    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
+    if(subnet_info == NULL) {
+        return 1;
+    }
+    // ip header filling
+    sum0 = ip0->checksum;
+    old0 = ip0->dst_address.as_u32;
+    new0 = 0xFFFFFFFF;
+    ip0->dst_address.as_u32 = new0;
+    sum0 = ip_csum_update (sum0, old0, new0, ip4_header_t /* structure */ ,
+                           dst_address /* offset of changed member */ );
+    ip0->checksum = ip_csum_fold (sum0);
+
+    sum0 = ip0->checksum;
+    old0 = ip0->src_address.as_u32;
+    new0 = subnet_info->vr_ip.ip4.as_u32;
+    new0 = clib_host_to_net_u32(new0);
+    ip0->src_address.as_u32 = new0;
+    sum0 = ip_csum_update (sum0, old0, new0, ip4_header_t /* structure */ ,
+                           src_address /* offset of changed member */ );
+    ip0->checksum = ip_csum_fold (sum0);
+
+    // eth header filling
+    eth0->type =  clib_net_to_host_u16 (ETHERNET_TYPE_IP4);
+    clib_memcpy(eth0->src_address, subnet_info->mac, ETH_ADDR_LEN);
+    clib_memset(eth0->dst_address, 0xff, ETH_ADDR_LEN);
+    return 0;
+}
+
+int
+pds_dhcp_extract_circ_id_callback (vlib_main_t * vm, vlib_buffer_t *b,
+                                dhcp_option_t *o)
+{
+    u16 vnic_id;
+
+    if (o->option == PDS_DHCP_OPT_82_CIRC_ID) {
+        if (o->length == PDS_DHCP_OPT_82_CIRC_ID_LEN) {
+            clib_memcpy(&vnic_id, &o->data[3], PDS_VNIC_ID_LEN);
+            vnet_buffer(b)->pds_dhcp_data.vnic_id = vnic_id;
+        } else {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static clib_error_t *
 pds_dhcp_relay_init (vlib_main_t * vm)
 {
@@ -559,6 +737,10 @@ pds_dhcp_relay_init (vlib_main_t * vm)
     dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
 
     dhcp_register_custom_options_cb(&pds_dhcp_options_callback);
+
+    dhcp_register_custom_client_hdr_cb(&pds_dhcp_client_hdr_callback);
+
+    dhcp_register_extract_circ_id_cb(&pds_dhcp_extract_circ_id_callback);
 
     pds_dhcp_relay_cfg_init();
 

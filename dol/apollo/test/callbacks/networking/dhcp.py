@@ -41,12 +41,13 @@ def GetDhcpOptions(testcase, packet):
     # byte 2+ -- suboption data then repeat until all suboptions done
 
     option82 = struct.pack('BB', 1, 5);  
-    # TODO suboption 1 data 3 byte VNID and 2 byte lifId  - total 5
+    # TODO suboption 1 data 3 byte VNID and 2 byte vnicId  - total 5
     # get this vnid from subnet and fill 2 bytes from lifid (where to get this from ?)
     bd_vni = 0xffff01 #fill this with true vnid
     option82 += struct.pack('BBB', 1, 2, 3)
-    lif = 0
-    option82 += struct.pack('h', lif)
+    vnic = testcase.config.localmapping.VNIC
+    vnic_id = 3
+    option82 += struct.pack('h', vnic_id)
 
     #suboption 5  subnet prefix
     option82 += struct.pack('BB', 5, 4)

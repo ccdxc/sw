@@ -17,7 +17,7 @@ pdsa_dhcp_relay_cfg_set (const pds_cfg_msg_t *msg) {
 
     rc = pds_dhcp4_relay_config_update(
         msg->dhcp_relay.spec.server_ip.addr.v4_addr,
-        msg->dhcp_relay.spec.server_ip.addr.v4_addr,
+        msg->dhcp_relay.spec.agent_ip.addr.v4_addr,
         false);
 
     if (rc == 0) {
@@ -38,7 +38,7 @@ pdsa_dhcp_relay_cfg_del (const pds_cfg_msg_t *msg) {
 
     rc = pds_dhcp4_relay_config_update(
         msg->dhcp_relay.spec.server_ip.addr.v4_addr,
-        msg->dhcp_relay.spec.server_ip.addr.v4_addr,
+        msg->dhcp_relay.spec.agent_ip.addr.v4_addr,
         true);
 
     if (rc == 0) {
