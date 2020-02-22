@@ -368,3 +368,8 @@ func GetIfIndex(subType string, slot, parent, port uint32) uint32 {
 func GetLifIndex(hwLifID uint64) uint32 {
 	return uint32((ifTypeLif << ifTypeShift) | hwLifID)
 }
+
+// BuildDestKey builds the destination key with vrf name
+func BuildDestKey(vrfName, dstIP string) string {
+	return vrfName + "-" + dstIP
+}

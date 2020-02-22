@@ -5,11 +5,13 @@ package iris
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
+	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -29,9 +31,9 @@ func HandleMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.Telemet
 	case types.Create:
 		return createMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
 	case types.Update:
-		return updateMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper)
+		return updateMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
 	case types.Delete:
-		return deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper)
+		return deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
 	default:
 		return errors.Wrapf(types.ErrUnsupportedOp, "Op: %s", oper)
 	}
@@ -39,23 +41,25 @@ func HandleMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.Telemet
 
 func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
 	var mirrorKeys []*halapi.MirrorSessionKeyHandle
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range mirror.Spec.Collectors {
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
-		destKey := mirror.Spec.VrfName + "-" + dstIP
+		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
 		_, ok := mirrorDestToIDMapping[destKey]
 		if !ok {
-			log.Error(errors.Wrapf(types.ErrCollectorNotCreated, "MirrorSession: %s | DstIP: %s", mirror.GetKey(), dstIP))
-			continue
+			// Create collector
+			col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
+			if _, err := validator.ValidateCollector(infraAPI, col, types.Create); err != nil {
+				log.Error(err)
+				return err
+			}
+			if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
+				log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+				return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+			}
 		}
 
 		mirrorDestToIDMapping[destKey].mirrorKeys = append(mirrorDestToIDMapping[destKey].mirrorKeys, mirror.GetKey())
-
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, mirror.GetKey(), mgmtIP.String(), dstIP, true); err != nil {
-			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
-			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
-		}
 
 		// Create MirrorSession handles
 		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(mirrorDestToIDMapping[destKey].sessionID))
@@ -79,8 +83,8 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	return nil
 }
 
-func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64, oper types.Operation) error {
-	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper); err != nil {
+func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
+	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
 		log.Error(errors.Wrapf(types.ErrMirrorSessionDeleteDuringUpdate, "MirrorSession: %s | MirrorSession: %v", mirror.GetKey(), err))
 	}
 	if err := createMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
@@ -90,10 +94,9 @@ func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	return nil
 }
 
-func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64, oper types.Operation) error {
+func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
 	// Delete Flow Monitor rules
 	var flowMonitorDeleteReq halapi.FlowMonitorRuleDeleteRequestMsg
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 
 	for _, flowMonitorKey := range mirrorSessionToFlowMonitorRuleMapping[mirror.GetKey()] {
 		req := &halapi.FlowMonitorRuleDeleteRequest{
@@ -117,9 +120,13 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	for _, c := range mirror.Spec.Collectors {
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
-		destKey := mirror.Spec.VrfName + "-" + dstIP
-		sessionKeys := mirrorDestToIDMapping[destKey]
+		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
+		sessionKeys, ok := mirrorDestToIDMapping[destKey]
 
+		if !ok {
+			log.Error(errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey))
+			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
+		}
 		// Remove the mirror key from the map
 		length := len(sessionKeys.mirrorKeys)
 		index := -1
@@ -133,10 +140,10 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 			sessionKeys.mirrorKeys[index] = sessionKeys.mirrorKeys[length-1]
 			sessionKeys.mirrorKeys = sessionKeys.mirrorKeys[:length-1]
 		}
-
-		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, mirror.GetKey(), mgmtIP.String(), dstIP, true); err != nil {
-			log.Error(errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
-			return errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		// Try to delete collector if ref count is 0
+		col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
+		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
+			log.Error(errors.Wrapf(types.ErrCollectorDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}
 	}
 
@@ -234,6 +241,22 @@ func convertMirrorSessionKeyHandle(mirrorID uint64) *halapi.MirrorSessionKeyHand
 	return &halapi.MirrorSessionKeyHandle{
 		KeyOrHandle: &halapi.MirrorSessionKeyHandle_MirrorsessionId{
 			MirrorsessionId: mirrorID,
+		},
+	}
+}
+
+func buildCollector(name, vrfName, dstIP string, packetSize uint32) netproto.Collector {
+	return netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      name,
+		},
+		Spec: netproto.CollectorSpec{
+			VrfName:     vrfName,
+			Destination: dstIP,
+			PacketSize:  packetSize,
 		},
 	}
 }

@@ -60,6 +60,7 @@ var typesMapCollector = map[string]*api.Struct{
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
@@ -93,6 +94,8 @@ var typesMapCollector = map[string]*api.Struct{
 			"VrfName": api.Field{Name: "VrfName", CLITag: api.CLIInfo{ID: "vrf-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vrf-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{ID: "packet-size", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"netproto.CollectorStatus": &api.Struct{

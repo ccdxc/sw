@@ -287,12 +287,6 @@ func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Oper
 
 // ValidateMirrorSession performs named reference validation on vrf and max mirror session check
 func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation) (vrf netproto.Vrf, err error) {
-	dat, _ := i.List(mirror.Kind)
-	if len(dat) == types.MaxMirrorSessions && oper == types.Create {
-		log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured))
-		return vrf, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured)
-	}
-
 	// Named reference validations
 	vrf, err = ValidateVrf(i, mirror.Tenant, mirror.Namespace, mirror.Spec.VrfName)
 	return

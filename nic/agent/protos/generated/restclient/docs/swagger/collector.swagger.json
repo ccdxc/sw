@@ -515,6 +515,10 @@
           "minLength": 1,
           "maxLength": 2048,
           "description": "Length of string should be between 1 and 2048."
+        },
+        "packet-size": {
+          "type": "integer",
+          "format": "int64"
         }
       },
       "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."

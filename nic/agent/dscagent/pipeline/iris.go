@@ -1498,7 +1498,7 @@ func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) 
 	}
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	if err := iris.HandleCollector(i.InfraAPI, i.TelemetryClient, oper, col, vrf.Status.VrfID); err != nil {
+	if err := iris.HandleCollector(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, col, vrf.Status.VrfID); err != nil {
 		log.Error(err)
 		return nil, err
 	}

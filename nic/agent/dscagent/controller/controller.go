@@ -106,6 +106,7 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 		"/api/profiles/":              agServer.AddProfileAPIRoutes,
 		"/api/routingconfigs/":        agServer.AddRoutingConfigAPIRoutes,
 		"/api/route-tables/":          agServer.AddRouteTableAPIRoutes,
+		"/api/collectors/":            agServer.AddCollectorAPIRoutes,
 		"/api/mode/":                  c.addVeniceCoordinateRoutes,
 		"/api/debug/":                 c.addDebugRoutes,
 		"/api/mapping/":               c.addAPIMappingRoutes,
@@ -280,7 +281,7 @@ func (c *API) Start(ctx context.Context) error {
 		}()
 
 		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Interface"}, c.PipelineAPI); err != nil {
+			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Interface", "Collector"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
 		}()
@@ -289,7 +290,6 @@ func (c *API) Start(ctx context.Context) error {
 			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
-
 		}()
 
 		// Start Interface update

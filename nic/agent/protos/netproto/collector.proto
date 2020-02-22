@@ -39,6 +39,7 @@ message Collector {
 message CollectorSpec {
     string VrfName     = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     string Destination = 2 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+    uint32 PacketSize  = 3 [(gogoproto.jsontag) = "packet-size,omitempty"];
 }
 
 // CollectorStatus captures the sg policy status

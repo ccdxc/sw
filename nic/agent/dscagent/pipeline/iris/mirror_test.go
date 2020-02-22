@@ -11,18 +11,6 @@ import (
 )
 
 func TestHandleMirrorSession(t *testing.T) {
-	col := netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testCollector",
-		},
-		Spec: netproto.CollectorSpec{
-			Destination: "192.168.100.101",
-		},
-		Status: netproto.CollectorStatus{Collector: 1},
-	}
 	mirror := netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
@@ -70,11 +58,23 @@ func TestHandleMirrorSession(t *testing.T) {
 		},
 		Status: netproto.MirrorSessionStatus{MirrorSessionID: 1},
 	}
-
-	if err := HandleCollector(infraAPI, telemetryClient, types.Create, col, 65); err != nil {
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	err := HandleVrf(infraAPI, vrfClient, types.Create, vrf)
+	if err != nil {
 		t.Fatal(err)
 	}
-	err := HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Create, mirror, 65)
+
+	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Create, mirror, 65)
 	if err != nil {
 		t.Fatal(err)
 	}
