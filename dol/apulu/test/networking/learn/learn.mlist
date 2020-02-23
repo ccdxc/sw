@@ -1,0 +1,23 @@
+# Feature learn endpoints
+
+feature:
+    id          : networking
+    sub         : learn
+    package     : test.networking
+    module      : networking
+    runorder    : 15000
+    enable      : True
+    ignore      : True
+
+modules:
+    - module:
+        name    : LEARN_ARP_REQ_NO_VLAN
+        spec    : arp_req.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_DHCP_DISC_NO_VLAN
+        spec    : dhcp_disc.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING

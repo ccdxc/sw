@@ -487,6 +487,10 @@ jobd/dol/apulu/lpm: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap_priority --feature lpm --sub v4_overlap
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap_priority --feature lpm --sub v4_full_overlap
 
+.PHONY: jobd/dol/apulu/learn
+jobd/dol/apulu/learn: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo learn --feature networking --sub learn
+
 .PHONY: jobd/athena/gtests
 jobd/athena/gtests: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/athena/run_gtests_athena.sh ${COVERAGE_OPTS}

@@ -229,6 +229,15 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/dol/learn:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/learn"]
+    owners: ["email:sunil@pensando.io", "email:kalyanbade@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
   apulu/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_scale_test_mock"]
     owners: ["email:kalyanbade@pensando.io", "email:akoradha@pensando.io" ]
