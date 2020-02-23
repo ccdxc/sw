@@ -81,7 +81,7 @@ def __get_devices_linux(mac_hint):
     populateChildren(entries, children)
     devs=[]
     for child in children:
-        if child.get("id") == "network":
+        if child.get("id") == "network" and ("serial" in child) and ("businfo" in child) and ("logicalname" in child):
             if MacInRange(child["serial"], mac_hint):
                 addr=str(child["businfo"].split(":")[1])
                 devs.append((child["logicalname"], int(addr, 16)))

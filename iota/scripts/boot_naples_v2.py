@@ -633,6 +633,9 @@ class NaplesManagement(EntityManagement):
             self.SSHPassInit()
 
     def __read_mac(self):
+        if self.mac_addr != None:
+            print("Skipping mac read as already read {0}".format(self.mac_addr))
+            return
         for _ in range(3):
             output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
             mac_regexp = '(?:[0-9a-fA-F]:?){12}'
