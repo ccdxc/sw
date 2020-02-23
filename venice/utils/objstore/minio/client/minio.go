@@ -124,7 +124,7 @@ func (c *Client) PutObjectOfSize(ctx context.Context, objectName string, reader 
 // PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
 // metadata shouldn't be used for storing large data
 func (c *Client) PutObjectExplicit(ctx context.Context,
-	serviceName string, objectName string, reader io.Reader, userMeta map[string]string) (int64, error) {
+	serviceName string, objectName string, reader io.Reader, size int64, userMeta map[string]string) (int64, error) {
 	// check bucket
 	s, err := c.client.BucketExists(serviceName)
 	if err != nil {
@@ -148,7 +148,7 @@ func (c *Client) PutObjectExplicit(ctx context.Context,
 		}
 	}
 
-	n, err := c.client.PutObjectWithContext(ctx, serviceName, objectName, reader, -1, minio.PutObjectOptions{UserMetadata: metaData})
+	n, err := c.client.PutObjectWithContext(ctx, serviceName, objectName, reader, size, minio.PutObjectOptions{UserMetadata: metaData})
 	return n, err
 }
 

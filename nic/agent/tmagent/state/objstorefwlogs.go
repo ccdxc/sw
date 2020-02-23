@@ -148,6 +148,7 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 				c = client
 			}
 		case l := <-lc:
+
 			// startTs gets set when:
 			// 1. logs buffer is empty - happens in the beginning
 			// 2. After latest buffer is sent to minio - happens when the hour changes
@@ -224,17 +225,17 @@ func transmitLogs(ctx context.Context,
 		meta["logcount"] = strconv.Itoa(numLogs)
 		meta["nodeid"] = nodeUUID
 
-		fmt.Println("Bucket names ", bucketName, indexBucketName, time.Now(), meta["logcount"])
+		fmt.Println("Bucket names ", bucketName, indexBucketName, time.Now(), meta["logcount"], len(objBuffer.Bytes()))
 
 		// PutObject uploads an object to the object store
 		r := bytes.NewReader(objBuffer.Bytes())
-		if err := putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, meta); err != nil {
+		if err := putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, len(objBuffer.Bytes()), meta); err != nil {
 			log.Errorf("could not put object %s", err.Error())
 		}
 
 		// The index's object name is same as the data object name
 		ir := bytes.NewReader(indexBuffer.Bytes())
-		if err := putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, map[string]string{}); err != nil {
+		if err := putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, len(indexBuffer.Bytes()), map[string]string{}); err != nil {
 			log.Errorf("could not put object %s", err.Error())
 		}
 
@@ -254,11 +255,11 @@ func transmitLogs(ctx context.Context,
 
 func putObjectHelper(ctx context.Context,
 	c objstore.Client, bucketName string, objectName string, reader io.Reader,
-	metaData map[string]string) error {
+	size int, metaData map[string]string) error {
 	// We are waiting infinitely if its a connect error, otherwise dropping the data. Is that ok?
 	for {
 		fmt.Println(" in loop")
-		if _, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, metaData); err != nil && strings.Contains(err.Error(), connectErr) {
+		if _, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, int64(size), metaData); err != nil && strings.Contains(err.Error(), connectErr) {
 			log.Errorf("connection error in putting object to object store (%s)", err)
 			continue
 		} else if err != nil {

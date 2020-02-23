@@ -1273,7 +1273,7 @@ func (m *fakeOclient) PutObjectOfSize(ctx context.Context, objectName string, re
 
 // PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
 func (m *fakeOclient) PutObjectExplicit(ctx context.Context,
-	serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
+	serviceName string, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error) {
 	return m.written, m.retErr
 }
 

@@ -64,16 +64,16 @@ func (mr *MockobjStoreBackendMockRecorder) PutObjectOfSize(ctx, objectName, read
 }
 
 // PutObjectExplicit mocks base method
-func (m *MockobjStoreBackend) PutObjectExplicit(ctx context.Context, serviceName, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
-	ret := m.ctrl.Call(m, "PutObjectExplicit", ctx, serviceName, objectName, reader, metaData)
+func (m *MockobjStoreBackend) PutObjectExplicit(ctx context.Context, serviceName, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error) {
+	ret := m.ctrl.Call(m, "PutObjectExplicit", ctx, serviceName, objectName, reader, size, metaData)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PutObjectExplicit indicates an expected call of PutObjectExplicit
-func (mr *MockobjStoreBackendMockRecorder) PutObjectExplicit(ctx, serviceName, objectName, reader, metaData interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutObjectExplicit", reflect.TypeOf((*MockobjStoreBackend)(nil).PutObjectExplicit), ctx, serviceName, objectName, reader, metaData)
+func (mr *MockobjStoreBackendMockRecorder) PutObjectExplicit(ctx, serviceName, objectName, reader, size, metaData interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutObjectExplicit", reflect.TypeOf((*MockobjStoreBackend)(nil).PutObjectExplicit), ctx, serviceName, objectName, reader, size, metaData)
 }
 
 // GetObject mocks base method

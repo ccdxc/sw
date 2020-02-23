@@ -40,7 +40,7 @@ type objStoreBackend interface {
 	// PutObjectExplicit will override the default service name given at time of initializing the client with the given
 	// service name.
 	// In terms of MinIO, the given serviceName will become the MinIO's bucket name
-	PutObjectExplicit(ctx context.Context, serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error)
+	PutObjectExplicit(ctx context.Context, serviceName string, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error)
 
 	// GetObject gets the object from object store
 	GetObject(ctx context.Context, objectName string) (io.ReadCloser, error)
@@ -210,9 +210,9 @@ func (c *client) PutObjectOfSize(ctx context.Context, objectName string, reader 
 
 // PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
 func (c *client) PutObjectExplicit(ctx context.Context,
-	serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
+	serviceName string, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error) {
 	for retry := 0; retry < maxRetry; retry++ {
-		n, err := c.client.PutObjectExplicit(ctx, serviceName, objectName, reader, metaData)
+		n, err := c.client.PutObjectExplicit(ctx, serviceName, objectName, reader, size, metaData)
 		if err == nil {
 			return n, err
 		}
