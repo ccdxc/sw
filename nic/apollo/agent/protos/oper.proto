@@ -84,6 +84,31 @@ message TechSupportResponse {
   TechSupportStatus Response  = 2;
 }
 
+// MetricSpec defines each individual metric that consists of
+// name and value
+message MetricSpec {
+  // (user visible) name of the metric
+  string Name  = 1;
+  // value of the metric (aka. counter)
+  uint64 Value = 2;
+}
+
+// MetricsSpec defines generic metrics object that can be used for any set
+// of counters per object (e.g., port counters, lif/pf counters, vpp counters,
+// s/w counters etc.)
+message MetricsSpec {
+  // Id is uuid or unique key of the object
+  bytes               Id     = 1;
+  // collection of metrics
+  repeated MetricSpec Metric = 2;
+}
+
+message Metrics {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  MetricsSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty", (gogoproto.moretags) = "meta:mandatory,immutable"];
+}
+
 // flow log type indicates whether log is generated when flow is
 // created or closed
 enum FlowLogType {
