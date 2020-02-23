@@ -468,7 +468,7 @@ hal_ret_t mirror_session_update(MirrorSessionSpec &spec, MirrorSessionResponse *
 hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionDeleteResponse *rsp);
 hal_ret_t mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp);
 hal_ret_t mirror_session_get_hw_id(mirror_session_id_t sw_id, mirror_session_id_t *hw_id);
-hal_ret_t telemetry_mirror_session_handle_repin(if_t *uplink);
+hal_ret_t telemetry_mirror_session_handle_repin();
 
 hal_ret_t collector_create(CollectorSpec &spec, CollectorResponse *rsp);
 hal_ret_t collector_update(CollectorSpec &spec, CollectorResponse *rsp);

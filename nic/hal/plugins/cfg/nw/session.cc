@@ -3418,6 +3418,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint8_t               fte_id = 0;
     uint32_t              num_sessions = 0, bucket_no = 0;
     flow_telemetry_state_t *flow_telemetry_state_p;
+    bool                  inb_bond_active_changed = false;
 
     session_age_cb_args_t args;
 #if SESSION_AGE_DEBUG
@@ -3426,6 +3427,12 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Keep track of age_timer_ticks for pps / bw calculations
     g_age_timer_ticks++;
+
+    // Re-pick inband bond0's active link
+   ret = hal_if_pick_inb_bond_active(&inb_bond_active_changed);
+   if (inb_bond_active_changed) {
+       ret = hal_if_inb_bond_active_changed();
+   }
 
     //
     // Scan Flow-Proto-State in Age-list and free if applicable
@@ -3618,9 +3625,9 @@ session_init (hal_cfg_t *hal_cfg)
     }
     t_session_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_SESSION_AGEOUT,            // timer_id
-                                      HAL_SESSION_AGE_SCAN_INTVL,
-                                      (void *)0,    // ctxt
-                                      session_age_walk_cb, true);
+                                 HAL_SESSION_AGE_SCAN_INTVL,
+                                 (void *)0,    // ctxt
+                                 session_age_walk_cb, true);
     if (!t_session_timer) {
         return HAL_RET_ERR;
     }

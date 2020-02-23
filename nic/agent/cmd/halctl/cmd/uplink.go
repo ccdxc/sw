@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -100,17 +101,26 @@ func handleUplinkShowCmd(cmd *cobra.Command, spec bool, status bool) {
 	}
 
 	// Print IFs
+	m := make(map[uint64]*halproto.InterfaceGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
+		m[resp.GetSpec().GetKeyOrHandle().GetInterfaceId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
 		if spec == true {
-			uplinkShowSpecOneResp(resp)
+			uplinkShowSpecOneResp(m[k])
 		} else if status == true {
-			uplinkShowStatusOneResp(resp)
+			uplinkShowStatusOneResp(m[k])
 		} else {
-			uplinkShowOneResp(resp)
+			uplinkShowOneResp(m[k])
 		}
 	}
 }
@@ -221,10 +231,9 @@ func uplinkShowOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_UPLINK {
 		return
 	}
-	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-16s%-10d%-10s%-10s%-10d%-10d%-10d%-10d%-10d%-10d\n",
-		ifID,
-		resp.GetSpec().GetIfUplinkInfo().GetPortNum(),
+	fmt.Printf("%-16s%-10s%-10s%-10s%-10d%-10d%-10d%-10d%-10d%-10d\n",
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetKeyOrHandle().GetInterfaceId())),
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetIfUplinkInfo().GetPortNum())),
 		strings.ToLower(strings.Replace(resp.GetSpec().GetAdminStatus().String(), "IF_STATUS_", "", -1)),
 		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
 		resp.GetStatus().GetUplinkInfo().GetUplinkLportId(),
@@ -252,10 +261,9 @@ func uplinkShowSpecOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_UPLINK {
 		return
 	}
-	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-16s%-10d%-10d\n",
-		ifID,
-		resp.GetSpec().GetIfUplinkInfo().GetPortNum(),
+	fmt.Printf("%-16s%-10s%-10d\n",
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetKeyOrHandle().GetInterfaceId())),
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetIfUplinkInfo().GetPortNum())),
 		resp.GetSpec().GetIfUplinkInfo().GetNativeL2SegmentId())
 }
 
@@ -278,9 +286,8 @@ func uplinkShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_UPLINK {
 		return
 	}
-	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 	fmt.Printf("%-16s%-10d%-10s%-10d%-10d%-10d%-10d%-10d\n",
-		ifID,
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetKeyOrHandle().GetInterfaceId())),
 		resp.GetStatus().GetIfHandle(),
 		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
 		resp.GetStatus().GetUplinkInfo().GetUplinkLportId(),

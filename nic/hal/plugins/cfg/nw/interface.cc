@@ -5522,29 +5522,14 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     // Update uplink's oper status
     ctxt.hal_if->if_op_status = new_status;
 
-    // have to repin in all modes,
-    // for inp_prop cpu entry reprogram to drive right dst_lport
 #if 0
-    // Only for hostpin, repin l2segs
-    if (!is_forwarding_mode_host_pinned()) {
-        goto end;
+    bool inb_bond_active_changed = false;
+    ret = hal_if_pick_inb_bond_active(&inb_bond_active_changed);
+    if (inb_bond_active_changed) {
+        ret = hal_if_inb_bond_active_changed();
     }
 #endif
-
-    // Walk through l2segs for this uplink
-    ret = hal_if_repin_l2segs(ctxt.hal_if);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to repin l2segs. ret: {}", ret);
-        goto end;
-    }
-
-    // Walk through mirror sessions for this uplink
-    ret = hal_if_repin_mirror_sessions(ctxt.hal_if);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to repin mirror sessions. ret: {}", ret);
-        goto end;
-    }
-
+    
 end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
@@ -5556,14 +5541,92 @@ end:
 // Re pin mirror sessions on the uplink
 //-----------------------------------------------------------------------------
 hal_ret_t
-hal_if_repin_mirror_sessions (if_t *uplink)
+hal_if_repin_mirror_sessions (void)
 {
-    hal_ret_t       ret = HAL_RET_OK;
+    hal_ret_t ret = HAL_RET_OK;
     
-    ret = telemetry_mirror_session_handle_repin(uplink);
+    ret = telemetry_mirror_session_handle_repin();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("telemetry_mirror_session_handle_repin failed! ret: {}", ret);
     }
+    return ret;
+}
+
+hal_ret_t
+hal_if_pick_inb_bond_active (bool *changed)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    if_t *hal_if = inband_mgmt_get_active_if();
+    if_t *old_if = NULL;
+    hal_handle_t new_if_handle = hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID;
+
+    *changed = false;
+    if (new_if_handle != g_hal_state->inb_bond_active_uplink()) {
+        *changed = true;
+        old_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        HAL_TRACE_DEBUG("Inband bond's active uplink change: {} => {}",
+                        old_if ? if_keyhandle_to_str(old_if) : "NULL",
+                        hal_if ? if_keyhandle_to_str(hal_if) : "NULL");
+        g_hal_state->set_inb_bond_active_uplink(new_if_handle);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+hal_if_inb_bond_active_changed (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    if_t *hal_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+
+    // Take CFG DB write lock
+    g_hal_state->cfg_db()->wlock();
+
+    HAL_TRACE_DEBUG("Reprogramming telemetry l2seg for IPFIX flows");
+    ret = hal_if_reprogram_telemetry_l2seg();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to reprogram telemetry l2seg ret {}", ret);
+    }
+
+    HAL_TRACE_DEBUG("Reprogramming l2seg for tcp tickle and tcp reset. Revisit");
+    ret = hal_if_repin_l2segs(hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to reprogram l2segs. ret {}", ret);
+    }
+
+    HAL_TRACE_DEBUG("Reprogramming mirror sessions.");
+    ret = hal_if_repin_mirror_sessions();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to repin mirror sessions. ret: {}", ret);
+    }
+
+    // Release write lock
+    g_hal_state->cfg_db()->wunlock();
+
+    return ret;
+}
+
+hal_ret_t
+hal_if_reprogram_telemetry_l2seg (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    encap_t encap;
+    l2seg_t *l2seg = NULL;
+    pd::pd_tel_l2seg_update_args_t args;
+    pd::pd_func_args_t pd_func_args = {};
+
+    encap.type = types::ENCAP_TYPE_DOT1Q;
+    encap.val = NATIVE_TELEMETRY_VLAN_ID_START;
+    l2seg = find_l2seg_by_wire_encap(encap, types::VRF_TYPE_CUSTOMER,
+                                     HAL_HANDLE_INVALID);
+
+    args.l2seg = l2seg;
+    pd_func_args.pd_tel_l2seg_update = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TEL_L2SEG_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
+    }
+
     return ret;
 }
 
@@ -5577,10 +5640,21 @@ hal_if_repin_l2segs (if_t *uplink)
     l2seg_t         *l2seg    = NULL;
     hal_handle_t    *p_hdl_id = NULL;
 
+    if (!uplink) {
+        goto end;
+    }
+
     // walk L2 segs
     for (const void *ptr : *uplink->l2seg_list) {
         p_hdl_id = (hal_handle_t *)ptr;
         l2seg = l2seg_lookup_by_handle(*p_hdl_id);
+        if (l2seg_is_telemetry(l2seg)) {
+            continue;
+        }
+        HAL_TRACE_DEBUG("l2seg: Id: {}. Trigger change of dst_lport for from_cpu",
+                        l2seg->seg_id);
+        ret = l2seg_handle_repin(l2seg);
+#if 0
         // Mgmt L2segs are classic
         if (!l2seg_is_mgmt(l2seg) &&
             (l2seg->pinned_uplink == uplink->hal_handle ||
@@ -5594,7 +5668,10 @@ hal_if_repin_l2segs (if_t *uplink)
                             "pinned uplink from: {}",
                             l2seg->seg_id, l2seg->pinned_uplink);
         }
+#endif
     }
+
+end:
     return ret;
 }
 

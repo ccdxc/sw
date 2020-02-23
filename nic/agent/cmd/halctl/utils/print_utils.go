@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
@@ -137,4 +138,80 @@ func IPAddrStrtoUint32(ip string) uint32 {
 	var addr [4]uint32
 	fmt.Sscanf(ip, "%d.%d.%d.%d", &addr[0], &addr[1], &addr[2], &addr[3])
 	return ((addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + (addr[3]))
+}
+
+// IfTypeShift bit shift for interface type
+const IfTypeShift = 28
+
+// IfSlotShift bit shift for slot
+const IfSlotShift = 24
+
+// IfParentPortShift bit shift for the parent port
+const IfParentPortShift = 16
+
+// IfTypeMask mask bits for interface type
+const IfTypeMask = 0xF
+
+// IfSlotMask mask bits for the slot
+const IfSlotMask = 0xF
+
+// IfParentPortMask mask bits for the parent port
+const IfParentPortMask = 0xFF
+
+// IfChildPortMask mask bits for the child port
+const IfChildPortMask = 0xFF
+
+// InvalidIfIndex invalid ifindex value
+const InvalidIfIndex = 0xFFFFFFFF
+
+// IfIndexToIfType gives iftype of ifindex
+func IfIndexToIfType(ifindex uint32) string {
+	ifType := (ifindex >> IfTypeShift) & IfTypeMask
+	switch ifType {
+	case 0:
+		return "None"
+	case 1:
+		return "Eth"
+	case 2:
+		return "EthPC"
+	case 3:
+		return "Tunnel"
+	case 4:
+		return "Mgmt"
+	case 5:
+		return "Up"
+	case 6:
+		return "UpPC"
+	case 7:
+		return "L3"
+	case 8:
+		return "Lif"
+	}
+	return "None"
+}
+
+// IfIndexToSlot gives slot of ifindex
+func IfIndexToSlot(ifIndex uint32) uint32 {
+	return (ifIndex >> IfSlotShift) & IfSlotMask
+}
+
+// IfIndexToParentPort gives parent port of ifindex
+func IfIndexToParentPort(ifIndex uint32) uint32 {
+	return (ifIndex >> IfParentPortShift) & IfParentPortMask
+}
+
+// IfIndexToChildPort gives child port of ifindex
+func IfIndexToChildPort(ifIndex uint32) uint32 {
+	return ifIndex & IfChildPortMask
+}
+
+// IfIndexToStr convers an ifindex to string
+func IfIndexToStr(ifIndex uint32) string {
+	if ifIndex != 0 {
+		slotStr := strconv.FormatUint(uint64(IfIndexToSlot(ifIndex)), 10)
+		parentPortStr := strconv.FormatUint(uint64(IfIndexToParentPort(ifIndex)), 10)
+		ifTypeStr := IfIndexToIfType(ifIndex)
+		return ifTypeStr + slotStr + "/" + parentPortStr
+	}
+	return "-"
 }

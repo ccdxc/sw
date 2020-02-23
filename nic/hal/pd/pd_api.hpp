@@ -261,6 +261,10 @@ typedef struct pd_l2seg_update_pinned_uplink_args_s {
     l2seg_t *l2seg;
 } __PACK__ pd_l2seg_update_pinned_uplink_args_t;
 
+typedef struct pd_tel_l2seg_update_args_s {
+    l2seg_t *l2seg;
+} __PACK__ pd_tel_l2seg_update_args_t;
+
 typedef struct pd_vrf_get_lookup_id_args_s {
     vrf_t *vrf;
     uint32_t lkup_id;
@@ -3672,7 +3676,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_EP_QUIESCE,                 339, "PD_FUNC_ID_EP_QUIESCE")\
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_ENABLE,       340, "PD_FUNC_ID_UPLINK_ERSPAN_ENABLE")\
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
-    ENTRY(PD_FUNC_ID_MAX,                        342, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TEL_L2SEG_UPDATE,           342, "PD_FUNC_ID_TEL_L2SEG_UPDATE")\
+    ENTRY(PD_FUNC_ID_MAX,                        343, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3704,6 +3709,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_l2seg_make_clone);
         PD_UNION_ARGS_FIELD(pd_l2seg_get);
         PD_UNION_ARGS_FIELD(pd_l2seg_update_pinned_uplink);
+        PD_UNION_ARGS_FIELD(pd_tel_l2seg_update);
 
         // misc apis for vrf and l2seg
         PD_UNION_ARGS_FIELD(pd_get_object_from_flow_lkupid);
@@ -4193,6 +4199,7 @@ PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
 PD_FUNCP_TYPEDEF(pd_l2seg_make_clone);
 PD_FUNCP_TYPEDEF(pd_l2seg_get);
 PD_FUNCP_TYPEDEF(pd_l2seg_update_pinned_uplink);
+PD_FUNCP_TYPEDEF(pd_tel_l2seg_update);
 
 // misc apis for vrf and l2seg
 PD_FUNCP_TYPEDEF(pd_get_object_from_flow_lkupid);

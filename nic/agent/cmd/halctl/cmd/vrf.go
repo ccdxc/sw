@@ -260,15 +260,15 @@ func vrfShowHeader() {
 	fmt.Printf("#LBSVCs:    Num. of L4 LB Services       NwSecId:    Security Profile ID\n")
 	hdrLine := strings.Repeat("-", 60)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-5s%-7s%-10s%-8s%-5s%-5s%-8s%-7s\n",
+	fmt.Printf("%-5s%-10s%-10s%-8s%-5s%-5s%-8s%-7s\n",
 		"Id", "Uplink", "Type", "#L2Segs", "#SGs", "#EPs", "#LBSVCs", "NwSecId")
 	fmt.Println(hdrLine)
 }
 
 func vrfShowOneResp(resp *halproto.VrfGetResponse) {
-	fmt.Printf("%-5d%-7d%-10s%-8d%-5d%-5d%-8d%-7d\n",
+	fmt.Printf("%-5d%-10s%-10s%-8d%-5d%-5d%-8d%-7d\n",
 		resp.GetSpec().GetKeyOrHandle().GetVrfId(),
-		resp.GetSpec().GetDesignatedUplink().GetInterfaceId(),
+		utils.IfIndexToStr(uint32(resp.GetSpec().GetDesignatedUplink().GetInterfaceId())),
 		utils.VrfTypeToStr(resp.GetSpec().GetVrfType()),
 		resp.GetStats().GetNumL2Segments(),
 		resp.GetStats().GetNumSecurityGroups(),

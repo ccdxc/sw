@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -101,15 +102,24 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 	}
 
 	// Print LIFs
+	m := make(map[uint64]*halproto.LifGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
+		m[resp.GetSpec().GetKeyOrHandle().GetLifId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
 		if spec == true {
-			lifShowSpecOneResp(resp)
+			lifShowSpecOneResp(m[k])
 		} else if status == true {
-			lifShowStatusOneResp(resp)
+			lifShowStatusOneResp(m[k])
 		}
 	}
 }
@@ -238,14 +248,7 @@ func lifShowSpecHeader() {
 }
 
 func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
-	ifID := resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()
-	ifIDStr := ""
-	if ifID >= 128 {
-		ifID -= 128
-		ifIDStr = fmt.Sprintf("uplink-%d", ifID)
-	} else {
-		ifIDStr = "-"
-	}
+	ifIDStr := utils.IfIndexToStr(uint32(resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()))
 	typeStr := strings.Replace(resp.GetSpec().GetType().String(), "LIF_TYPE_", "", -1)
 	typeStr = strings.ToLower(strings.Replace(typeStr, "_", "-", -1))
 	fmt.Printf("%-10d%-20s%-25s%-10s%-15s%-15s\n",

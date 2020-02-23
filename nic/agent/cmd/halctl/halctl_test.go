@@ -406,7 +406,7 @@ func (h *halCtlSuite) TestVrfGet(c *C) {
 		resp, err = h.getVrfs(vrfGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get VRFs")
-	AssertEquals(c, true, strings.Contains(resp, "1    0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "Designated"), fmt.Sprintf("halctl returned: %v", resp))
 	// AssertEquals(c, true, strings.Contains(resp, "vrfid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
@@ -475,7 +475,7 @@ func (h *halCtlSuite) TestUplinksGet(c *C) {
 		resp, err = h.getUplinks(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Uplinks")
-	AssertEquals(c, true, strings.Contains(resp, "uplink-2"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "Uplink"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 
@@ -498,7 +498,7 @@ func (h *halCtlSuite) TestUplinkPCsGet(c *C) {
 		resp, err = h.getUplinkPCs(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Uplinks")
-	AssertEquals(c, true, strings.Contains(resp, "uplinkpc-3"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "Interface"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 

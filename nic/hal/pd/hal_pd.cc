@@ -90,6 +90,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_GET, pd_l2seg_get);
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE, pd_l2seg_update_pinned_uplink);
+    PD_FUNC_LOAD(PD_FUNC_ID_TEL_L2SEG_UPDATE, pd_tel_l2seg_update);
 
     // misc apis for vrf and l2seg
     PD_FUNC_LOAD(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);

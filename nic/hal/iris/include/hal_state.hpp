@@ -398,6 +398,9 @@ public:
     void set_customer_default_vrf(vrf_id_t vrf) { customer_default_vrf_ = vrf; }
     vrf_id_t customer_default_vrf(void) { return customer_default_vrf_; }
 
+    void set_inb_bond_active_uplink(hal_handle_t hdl) { inb_bond_active_uplink_hdl_ = hdl; } 
+    hal_handle_t inb_bond_active_uplink(void) { return inb_bond_active_uplink_hdl_; }
+
     bool is_microseg_enabled(void) { return (fwd_mode_ == sys::FWD_MODE_MICROSEG); }
     bool is_policy_enforced(void) { return (policy_mode_ == sys::POLICY_MODE_ENFORCE); }
     bool is_flow_aware(void)      { return (policy_mode_ == sys::POLICY_MODE_FLOW_AWARE); }
@@ -511,6 +514,7 @@ private:
     ForwardMode   fwd_mode_;
     PolicyMode    policy_mode_;
     vrf_id_t      customer_default_vrf_;
+    hal_handle_t  inb_bond_active_uplink_hdl_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -883,6 +887,9 @@ public:
 
     void set_policy_mode(PolicyMode policy_mode) { oper_db_->set_policy_mode(policy_mode); }
     PolicyMode policy_mode(void) { return oper_db_->policy_mode(); }
+
+    void set_inb_bond_active_uplink(hal_handle_t hdl) { oper_db_->set_inb_bond_active_uplink(hdl); }
+    hal_handle_t inb_bond_active_uplink(void) { return oper_db_->inb_bond_active_uplink(); }
 
     bool is_microseg_enabled(void) { return oper_db_->is_microseg_enabled(); }
     bool is_policy_enforced(void) { return oper_db_->is_policy_enforced(); }

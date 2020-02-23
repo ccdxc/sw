@@ -207,6 +207,14 @@ l2seg_is_cust (l2seg_t *l2seg)
     return false;
 }
 
+bool
+l2seg_is_telemetry (l2seg_t *l2seg)
+{
+    return (l2seg->wire_encap.type == types::ENCAP_TYPE_DOT1Q &&
+            l2seg->wire_encap.val >=  NATIVE_TELEMETRY_VLAN_ID_START &&
+            l2seg->wire_encap.val <= NATIVE_TELEMETRY_VLAN_ID_END);
+}
+
 l2seg_t *
 find_l2seg_by_id (l2seg_id_t l2seg_id)
 {
@@ -409,8 +417,10 @@ l2seg_oifl_clear_hi (l2seg_t *l2seg, oif_list_id_t base_oifl_id)
         OIFL_CHECK_RET(ret);
         ret = oif_list_clr_honor_ingress(l2seg_mc_mgmt_oifl(base_oifl_id));
         OIFL_CHECK_RET(ret);
+#if 0
         ret = oif_list_clr_honor_ingress(l2seg_pr_mgmt_oifl(base_oifl_id));
         OIFL_CHECK_RET(ret);
+#endif
     }
 #if 0
     ret = oif_list_clr_honor_ingress(l2seg_bc_mgmt_oifl(base_oifl_id));

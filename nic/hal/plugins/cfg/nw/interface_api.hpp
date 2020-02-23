@@ -58,6 +58,7 @@ hal_ret_t if_enicif_get_pinned_if(if_t *pi_if,
                                   if_t **uplink_if);
 hal_ret_t if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if,
                                                uint32_t *vlan_id);
+if_t * inband_mgmt_get_active_if(void);
 
 //TODO Remove this when the above function works for all cases.
 uint32_t

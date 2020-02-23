@@ -15,6 +15,7 @@
 #include "devapi_iris.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include "nic/include/globals.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 
 namespace iris {
 
@@ -179,7 +180,7 @@ devapi_swm::initialize_lif_(channel_info_t *cinfo)
     lif_info_t info       = {0};
 
     // Create lif
-    snprintf(info.name, sizeof(info.name), "swm_lif_%d", cinfo->port_num);
+    snprintf(info.name, sizeof(info.name), "swm_lif%d", ETH_IFINDEX_TO_PARENT_PORT(cinfo->port_num));
     info.lif_id                   = cinfo->swm_lif_id;
     info.type                     = sdk::platform::LIF_TYPE_SWM;
     info.pinned_uplink_port_num   = cinfo->port_num;

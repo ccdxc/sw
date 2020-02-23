@@ -852,6 +852,23 @@ end:
         return ret;
 }
 
+hal_ret_t
+pd_tel_l2seg_update (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_tel_l2seg_update_args_t *args = 
+        pd_func_args->pd_tel_l2seg_update;
+    l2seg_t *l2seg = args->l2seg;
+
+    // Update cpu entry with the right active if of bond0
+    ret = l2seg_pd_upd_cpu_inp_prop_tbl((pd_l2seg_t *)l2seg->pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program from cpu entry for tel l2seg. err {}", ret);
+    }
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Update pinned uplink for L2seg
 // ----------------------------------------------------------------------------
@@ -1390,15 +1407,19 @@ l2seg_cpu_inp_prop_form_data (pd_l2seg_t *l2seg_pd,
     l2seg_t                     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
     hal_handle_t                if_hdl;
 
-    if_hdl = hal::l2seg_get_pinned_uplink(l2seg);
-    uplink_if = find_if_by_handle(if_hdl);
+    if (l2seg_is_telemetry(l2seg)) {
+        uplink_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+    } else {
+        if_hdl = hal::l2seg_get_pinned_uplink(l2seg);
+        uplink_if = find_if_by_handle(if_hdl);
+    }
 
     ret = if_l2seg_get_multicast_rewrite_data(uplink_if, l2seg, NULL, &rdata);
     SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
 
     nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
     if (!nwsec_prof) {
-        nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+        nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_MGMT_DEFAULT);
     }
 
     inp_prop.dir                        = FLOW_DIR_FROM_DMA;
@@ -1418,7 +1439,7 @@ l2seg_cpu_inp_prop_form_data (pd_l2seg_t *l2seg_pd,
     inp_prop.rewrite_index              = (uint16_t)rdata.rewrite_index;
     inp_prop.tunnel_rewrite_index       = (uint16_t)rdata.tunnel_rewrite_index;
     inp_prop.bounce_vnid                = (uint32_t)rdata.qid_or_vnid;
-    inp_prop.flow_learn                 = 1; // For IPFIX flows
+    inp_prop.flow_learn                 = 0; // IPFIX flows will be fwded in P4
     inp_prop.uuc_fl_pe_sup_en           = 1; 
 
     return ret;

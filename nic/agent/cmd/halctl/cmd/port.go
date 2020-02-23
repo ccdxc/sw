@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strconv"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -18,30 +18,6 @@ import (
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
-
-// IfTypeShift bit shift for interface type
-const IfTypeShift = 28
-
-// IfSlotShift bit shift for slot
-const IfSlotShift = 24
-
-// IfParentPortShift bit shift for the parent port
-const IfParentPortShift = 16
-
-// IfTypeMask mask bits for interface type
-const IfTypeMask = 0xF
-
-// IfSlotMask mask bits for the slot
-const IfSlotMask = 0xF
-
-// IfParentPortMask mask bits for the parent port
-const IfParentPortMask = 0xFF
-
-// IfChildPortMask mask bits for the child port
-const IfChildPortMask = 0xFF
-
-// InvalidIfIndex invalid ifindex value
-const InvalidIfIndex = 0xFFFFFFFF
 
 var (
 	portNum        string
@@ -259,11 +235,21 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 
 	portStatusPrintHeader()
 
+	m := make(map[uint32]*halproto.PortGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
+		m[resp.GetSpec().GetKeyOrHandle().GetPortId()] = resp
+	}
+	var keys []uint32
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		resp := m[k]
 		adminState := resp.GetSpec().GetAdminState()
 		operStatus := resp.GetStatus().GetLinkStatus().GetOperState()
 
@@ -299,7 +285,7 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 		}
 
 		fmt.Printf("%-10s%-12s%-10s%-14s\n",
-			ifIndexToPortIDStr(resp.GetSpec().GetKeyOrHandle().GetPortId()),
+			utils.IfIndexToStr(resp.GetSpec().GetKeyOrHandle().GetPortId()),
 			adminStateStr, operStatusStr,
 			xcvrStr)
 	}
@@ -428,12 +414,21 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	portShowHeaderPrint()
 
+	m := make(map[uint32]*halproto.PortGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		portShowOneResp(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetPortId()] = resp
+	}
+	var keys []uint32
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		portShowOneResp(m[k])
 	}
 }
 
@@ -531,61 +526,14 @@ func portIDStrToIfIndex(portIDStr string) uint32 {
 	portIDStr = strings.ToLower(portIDStr)
 	n, err := fmt.Sscanf(portIDStr, "eth%d/%d", &slotIndex, &portIndex)
 	if err != nil || n != 2 {
-		return InvalidIfIndex
+		return utils.InvalidIfIndex
 	}
-	ifIndex = 1 << IfTypeShift // 1 is Eth port
-	ifIndex |= slotIndex << IfSlotShift
-	ifIndex |= portIndex << IfParentPortShift
+	ifIndex = 1 << utils.IfTypeShift // 1 is Eth port
+	ifIndex |= slotIndex << utils.IfSlotShift
+	ifIndex |= portIndex << utils.IfParentPortShift
 	ifIndex |= 1 // Default child port
 
 	return ifIndex
-}
-
-func ifIndexToSlot(ifIndex uint32) uint32 {
-	return (ifIndex >> IfSlotShift) & IfSlotMask
-}
-
-func ifIndexToParentPort(ifIndex uint32) uint32 {
-	return (ifIndex >> IfParentPortShift) & IfParentPortMask
-}
-
-func ifIndexToChildPort(ifIndex uint32) uint32 {
-	return ifIndex & IfChildPortMask
-}
-
-func ifIndexToIfType(ifindex uint32) string {
-	ifType := (ifindex >> IfTypeShift) & IfTypeMask
-	switch ifType {
-	case 0:
-		return "None"
-	case 1:
-		return "Eth"
-	case 2:
-		return "EthPC"
-	case 3:
-		return "Tunnel"
-	case 4:
-		return "Mgmt"
-	case 5:
-		return "Uplink"
-	case 6:
-		return "UplinkPC"
-	case 7:
-		return "L3"
-	case 8:
-		return "Lif"
-	}
-	return "None"
-}
-
-func ifIndexToPortIDStr(ifIndex uint32) string {
-	if ifIndex != 0 {
-		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
-		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-		ifTypeStr := ifIndexToIfType(ifIndex)
-		return ifTypeStr + slotStr + "/" + parentPortStr
-	}
-	return "-"
 }
 
 func portShowOneResp(resp *halproto.PortGetResponse) {
@@ -623,7 +571,7 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 		fecStr = "None"
 	}
 
-	portStr := ifIndexToPortIDStr(spec.GetKeyOrHandle().GetPortId())
+	portStr := utils.IfIndexToStr(spec.GetKeyOrHandle().GetPortId())
 	pauseStr := strings.ToLower(strings.Replace(spec.GetPause().String(), "PORT_PAUSE_TYPE_", "", -1))
 	adminStateStr := strings.Replace(spec.GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(linkStatus.GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
@@ -704,7 +652,7 @@ func portShowStatsHeader() {
 func portShowStatsOneResp(resp *halproto.PortGetResponse) {
 	hdrLine := strings.Repeat("-", 30)
 
-	fmt.Printf("\nstats for port: %s\n\n", ifIndexToPortIDStr(resp.GetSpec().GetKeyOrHandle().GetPortId()))
+	fmt.Printf("\nstats for port: %s\n\n", utils.IfIndexToStr(resp.GetSpec().GetKeyOrHandle().GetPortId()))
 
 	if resp.GetSpec().GetPortType() == halproto.PortType_PORT_TYPE_MGMT {
 		mgmtMacStats := resp.GetStats().GetMgmtMacStats()

@@ -225,6 +225,7 @@ bool l2seg_is_oob_mgmt(l2seg_t *l2seg);
 bool l2seg_is_inband_mgmt(l2seg_t *l2seg);
 bool l2seg_is_mgmt(l2seg_t *l2seg);
 bool l2seg_is_cust(l2seg_t *l2seg);
+bool l2seg_is_telemetry(l2seg_t *l2seg);
 hal_ret_t l2seg_select_pinned_uplink(l2seg_t *l2seg);
 hal_ret_t l2seg_handle_repin(l2seg_t *l2seg);
 hal_ret_t l2seg_attach_mgmt(l2seg_t *l2seg);

@@ -425,7 +425,7 @@ hal_ret_t enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
                                                        dllist_ctxt_t *l2seg_list,
                                                        bool add);
 hal_ret_t hal_if_repin_l2segs(if_t *uplink);
-hal_ret_t hal_if_repin_mirror_sessions(if_t *uplink);
+hal_ret_t hal_if_repin_mirror_sessions(void);
 hal_ret_t hal_if_repin_ipfix_flows(if_t *uplink);
 hal_ret_t if_port_oper_state_process_event(uint32_t fp_port_num, port_event_t event);
 const char*if_status_to_str(IfStatus status);
@@ -434,6 +434,9 @@ void port_event_cb (port_event_info_t *port_event_info);
 uint32_t uplink_if_get_idx (if_t *hal_if);
 bool enicif_is_swm(if_t *hal_if);
 hal_ret_t enicif_update_host_prom(bool add);
+hal_ret_t hal_if_reprogram_telemetry_l2seg(void);
+hal_ret_t hal_if_pick_inb_bond_active(bool *changed);
+hal_ret_t hal_if_inb_bond_active_changed(void);
 
 }    // namespace hal
 

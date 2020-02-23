@@ -10,6 +10,8 @@
 
 namespace hal {
 
+#define HAL_BOND0_ACTIVE_IF_FILENAME "/sys/class/net/bond0/bonding/active_slave"
+
 uint32_t
 lif_get_lif_id (lif_t *pi_lif)
 {
@@ -601,6 +603,38 @@ lif_get_total_qcount (uint32_t hw_lif_id)
 
 end:
     return total_qcount;
+
+}
+
+if_t *
+inband_mgmt_get_active_if (void)
+{
+    FILE *fptr = fopen(HAL_BOND0_ACTIVE_IF_FILENAME, "r");
+    char ifname_str[LIF_NAME_LEN] = {0};
+    if_t *act_if = NULL;
+    lif_t *lif = NULL;
+
+    if (!fptr) {
+        HAL_TRACE_DEBUG("Failed to open bond0 active link file");
+        goto end;
+    }
+    fscanf(fptr, "%s", ifname_str);
+    lif = find_lif_by_name(ifname_str);
+    if (!lif) {
+        HAL_TRACE_DEBUG("Failed to get lif for ifname {}",
+                        ifname_str);
+        goto end;
+    }
+    act_if = find_if_by_handle(lif->pinned_uplink);
+    if (!act_if) {
+        HAL_TRACE_ERR("Failed to get pinned uplink hdl {} of lif",
+                      lif->pinned_uplink);
+        goto end;
+    }
+
+end:
+    fclose(fptr);
+    return act_if;
 }
 
 } // namespace hal

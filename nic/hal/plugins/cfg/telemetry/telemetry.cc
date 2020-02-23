@@ -183,43 +183,22 @@ mirror_session_update_uplink (mirror_session_t *session)
 }
 
 hal_ret_t
-telemetry_mirror_session_handle_repin (if_t *uplink)
+telemetry_mirror_session_handle_repin ()
 {
     hal_ret_t   ret = HAL_RET_OK;
     auto ms_ht = g_hal_state->mirror_session_ht();
-
-    HAL_TRACE_INFO("Repin uplink id {} oper {}", uplink->if_id,
-                     uplink->if_op_status);
-    if (uplink->is_oob_management) {
-        // Nothing to be done for OOB intf event
-        return ret;
-    }
-    if (uplink->if_type != intf::IF_TYPE_UPLINK) {
-        // Nothing to be done
-        return ret;
-    }
 
     auto walk_func = [](void *entry, void *ctxt) {
         mirror_session_t *session = (mirror_session_t *)entry;
         SDK_ASSERT(session != NULL);
         if_t *sess_if = session->dest_if;
-        if (sess_if && (sess_if->if_op_status == intf::IF_STATUS_DOWN)) {
-            // Session points to down interface, find the active uplink
-            if_t *new_dif = telemetry_get_active_uplink();
-            if (!new_dif) {
-                HAL_TRACE_DEBUG("Could not find active uplink");
-                return false;
-            }
-            HAL_TRACE_DEBUG("New uplink id {} oper {}", new_dif->if_id,
-                            new_dif->if_op_status);
-            session->dest_if = new_dif;
-            auto ret = mirror_session_update_uplink (session);
-            if (ret != HAL_RET_OK) {
-                // we have failed to update the newuplink, restore the old dest if.
-                session->dest_if = sess_if;
-            }
+        if_t *new_dif = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        session->dest_if = new_dif;
+        auto ret = mirror_session_update_uplink(session);
+        if (ret != HAL_RET_OK) {
+            // we have failed to update the newuplink, restore the old dest if.
+            session->dest_if = sess_if;
         }
-
         return false;
     };
 
@@ -247,7 +226,7 @@ telemetry_mirror_pick_dest_if (if_t *dest_if)
 
     if (dest_if->if_type == intf::IF_TYPE_UPLINK) {
         HAL_TRACE_DEBUG("Choosing active dest-if");
-        if_t *new_dest_if = telemetry_get_active_bond_uplink();
+        if_t *new_dest_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
         if (new_dest_if) {
             dest_if = new_dest_if;
             HAL_TRACE_DEBUG("Active bond dest-if id {}", dest_if->if_id);
