@@ -518,6 +518,182 @@ pd_collector_get(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+#define	lif_info   data.action_u.lif_lif_info
+#define om_tmoport data.action_u.output_mapping_set_tm_oport_enforce_src_lport
+hal_ret_t
+pd_uplink_erspan_enable (pd_func_args_t *pd_func_args)
+{
+    pd_uplink_erspan_enable_args_t *args = pd_func_args->
+                                           pd_uplink_erspan_enable;
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    directmap                       *lif_table = NULL;
+    uint8_t                         sessid_bitmap = 0;
+
+    if (args->if_p->direction == UPLINK_ERSPAN_DIRECTION_INGRESS) {
+        lif_actiondata_t data;
+
+        for (int i = 0; i < args->if_p->mirror_cfg.rx_sessions_count; i++) {
+            sessid_bitmap |= (1 << args->if_p->rx_mirror_session_id[i]);
+        }
+
+        lif_table = g_hal_state_pd->dm_table(P4TBL_ID_LIF);
+        SDK_ASSERT_RETURN((lif_table != NULL), HAL_RET_ERR);
+
+        memset(&data, 0, sizeof(data));
+        data.action_id = LIF_LIF_INFO_ID;
+        lif_info.ingress_mirror_en = 1;
+        lif_info.ingress_mirror_session_id = sessid_bitmap;
+
+        sdk_ret = lif_table->insert_withid(&data, args->if_p->hw_lif_id);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program for lif_id: {} {} {}",
+                          args->if_p->hw_lif_id, sdk_ret, ret);
+            return ret;
+        } else {
+            HAL_TRACE_DEBUG("programmed lif_id: {}", args->if_p->hw_lif_id);
+        }
+    }
+
+    if (args->if_p->direction == UPLINK_ERSPAN_DIRECTION_EGRESS) {
+        directmap                   *omap_table = NULL;
+        output_mapping_actiondata_t data;
+        p4pd_error_t                 pdret;
+
+        for (int i = 0; i < args->if_p->mirror_cfg.tx_sessions_count; i++) {
+            sessid_bitmap |= (1 << args->if_p->tx_mirror_session_id[i]);
+        }
+
+        omap_table = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
+        SDK_ASSERT_RETURN((omap_table != NULL), HAL_RET_ERR);
+
+        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, args->if_p->lport_id, 
+                                NULL, NULL, (void *) &data);
+        if (pdret != P4PD_SUCCESS) {
+            //
+            // Entry-not found case
+            //
+            ret = HAL_RET_ERR;
+        }
+        else {
+            //
+            // Entry found case
+            //
+            if (data.action_id != OUTPUT_MAPPING_SET_TM_OPORT_ID &&
+                data.action_id != 
+                OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID) {
+                HAL_TRACE_ERR(
+                "OMAP Entry present with conflicting action {} {}",
+                 args->if_p->lport_id, data.action_id);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+
+            if (om_tmoport.dst_lif != args->if_p->hw_lif_id) {
+                HAL_TRACE_ERR(
+                "OMAP Entry present with conflicting dst_lif {} {} {}",
+                 args->if_p->lport_id, om_tmoport.dst_lif, 
+                 args->if_p->hw_lif_id);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+
+            if (om_tmoport.mirror_en) {
+                HAL_TRACE_ERR("OMAP Entry Already present {}", 
+                args->if_p->lport_id);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+
+            om_tmoport.mirror_en = 1;
+            om_tmoport.mirror_session_id = sessid_bitmap;
+            sdk_ret = omap_table->update(args->if_p->lport_id, &data);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        }
+
+end:
+        if (ret != HAL_RET_OK) {
+            if (lif_table != NULL) {
+                lif_table->remove(args->if_p->hw_lif_id);
+            }
+            HAL_TRACE_ERR("unable to program for lport_id: {} {} {}",
+                          args->if_p->lport_id, sdk_ret, ret);
+            return ret;
+        } else {
+            HAL_TRACE_DEBUG("programmed lport_id: {}", args->if_p->lport_id);
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_uplink_erspan_disable (pd_func_args_t *pd_func_args)
+{
+    pd_uplink_erspan_disable_args_t *args = pd_func_args->
+                                            pd_uplink_erspan_disable;
+    hal_ret_t                        ret = HAL_RET_OK;
+    sdk_ret_t                        sdk_ret;
+
+    if (args->if_p->direction == UPLINK_ERSPAN_DIRECTION_INGRESS) {
+        directmap        *lif_table;
+
+        lif_table = g_hal_state_pd->dm_table(P4TBL_ID_LIF);
+        SDK_ASSERT_RETURN((lif_table != NULL), HAL_RET_ERR);
+
+        sdk_ret = lif_table->remove(args->if_p->hw_lif_id);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram for lif_id: {} {} {}",
+                          args->if_p->hw_lif_id, sdk_ret, ret);
+            return ret;
+        } else {
+            HAL_TRACE_DEBUG("deprogrammed lif_id: {}", args->if_p->hw_lif_id);
+        }
+    }
+
+    if (args->if_p->direction == UPLINK_ERSPAN_DIRECTION_EGRESS) {
+        directmap                   *omap_table = NULL;
+        output_mapping_actiondata_t  data;
+        p4pd_error_t                 pdret;
+
+        omap_table = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
+        SDK_ASSERT_RETURN((omap_table != NULL), HAL_RET_ERR);
+
+        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, args->if_p->lport_id, 
+                                NULL, NULL, (void *) &data);
+        if (pdret != P4PD_SUCCESS) {
+            HAL_TRACE_ERR("unable to read OMAP for lif_id: {} {}",
+                          args->if_p->lport_id, pdret);
+            return HAL_RET_ERR;
+        }
+
+        if (data.action_id != OUTPUT_MAPPING_SET_TM_OPORT_ID &&
+            data.action_id != 
+            OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID) {
+            HAL_TRACE_ERR(
+            "OMAP Entry present with conflicting action {} {}",
+             args->if_p->lport_id, data.action_id);
+            return HAL_RET_ERR;
+        }
+
+        om_tmoport.mirror_en = 0;
+        om_tmoport.mirror_session_id = 0;
+        sdk_ret = omap_table->update(args->if_p->lport_id, &data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram for lport_id: {} {} {}",
+                          args->if_p->lport_id, sdk_ret, ret);
+            return ret;
+        } else {
+            HAL_TRACE_DEBUG("deprogrammed lif_id: {}", args->if_p->lport_id);
+        }
+    }
+
+    return ret;
+}
+
 static hal_ret_t
 program_drop_stats_actiondata_table (drop_stats_actiondata_t *data,
                                      uint8_t sessid_bitmap, bool reason, int code)

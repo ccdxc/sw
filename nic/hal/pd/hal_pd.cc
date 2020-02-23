@@ -292,6 +292,10 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_DELETE, pd_drop_monitor_rule_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_DROP_MONITOR_RULE_GET, pd_drop_monitor_rule_get);
 
+    // uplink erspan
+    PD_FUNC_LOAD(PD_FUNC_ID_UPLINK_ERSPAN_ENABLE, pd_uplink_erspan_enable);
+    PD_FUNC_LOAD(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE, pd_uplink_erspan_disable);
+
     // collector
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_DELETE, pd_collector_delete);

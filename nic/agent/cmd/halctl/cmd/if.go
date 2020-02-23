@@ -22,21 +22,25 @@ import (
 )
 
 var (
-	ifID           uint64
-	ifStatusID     uint64
-	ifEncap        string
-	ifName         string
-	ifSubIP        string
-	ifOverlayIP    string
-	ifMplsIn       string
-	ifMplsOut      uint32
-	ifTunnelDestIP string
-	ifSourceGw     string
-	ifGwMac        string
-	ifOverlayMac   string
-	ifPfMac        string
-	ifIngressBw    uint32
-	ifEgressBw     uint32
+	ifID            uint64
+	ifStatusID      uint64
+	ifEncap         string
+	ifName          string
+	ifSubIP         string
+	ifOverlayIP     string
+	ifMplsIn        string
+	ifMplsOut       uint32
+	ifTunnelDestIP  string
+	ifSourceGw      string
+	ifGwMac         string
+	ifOverlayMac    string
+	ifPfMac         string
+	ifIngressBw     uint32
+	ifEgressBw      uint32
+	ifMirrorIDBmap  uint64
+	ifIngressMirror bool
+	ifEgressMirror  bool
+	ifDisableMirror bool
 )
 
 var ifShowCmd = &cobra.Command{
@@ -65,6 +69,14 @@ var ifUpdateCmd = &cobra.Command{
 	Short:        "Create interface",
 	Long:         "Create interface",
 	RunE:         ifUpdateCmdHandler,
+	SilenceUsage: true,
+}
+
+var ifUpdateMirrorCmd = &cobra.Command{
+	Use:          "interface-mirror",
+	Short:        "Update interface Mirror",
+	Long:         "Update interface Mirror",
+	RunE:         ifUpdateMirrorCmdHandler,
 	SilenceUsage: true,
 }
 
@@ -118,6 +130,18 @@ func init() {
 	ifUpdateCmd.MarkFlagRequired("gw-mac")
 	ifUpdateCmd.MarkFlagRequired("ingress-bw")
 	ifUpdateCmd.MarkFlagRequired("egress-bw")
+
+	debugUpdateCmd.AddCommand(ifUpdateMirrorCmd)
+	ifUpdateMirrorCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
+	ifUpdateMirrorCmd.Flags().Uint64Var(&ifMirrorIDBmap,
+		"mirror-session-id-bitmap", 0x01, "Specify mirror-session-id-bitmap")
+	ifUpdateMirrorCmd.Flags().BoolVar(&ifIngressMirror, "ingress", false,
+		"Ingress direction")
+	ifUpdateMirrorCmd.Flags().BoolVar(&ifEgressMirror, "egress", false,
+		"Egress direction")
+	ifUpdateMirrorCmd.Flags().BoolVar(&ifDisableMirror, "disable", false,
+		"Disable Mirror")
+	ifUpdateMirrorCmd.MarkFlagRequired("id")
 }
 
 func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
@@ -361,6 +385,637 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 			return errors.New(errStr)
 		}
 		fmt.Printf("Interface update succeeded. Interface ID is %d\n", intfID)
+	}
+
+	return nil
+}
+
+func ifUpdateMirrorCmdHandler(cmd *cobra.Command, args []string) error {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c)
+
+	defer c.Close()
+
+	var req *halproto.InterfaceGetRequest
+	req = &halproto.InterfaceGetRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: ifID,
+			},
+		},
+	}
+
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting if failed. %v\n", err)
+		return err
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			errStr := fmt.Sprintf("Operation failed with %v error",
+				resp.ApiStatus)
+			return errors.New(errStr)
+		}
+
+		var mirrorID [8]uint64
+		var index uint64
+		mcount := 0
+		for index = 0; index < 8; index++ {
+			mirrorID[index] = 0
+			if (ifMirrorIDBmap & (1 << index)) != 0 {
+				mirrorID[mcount] = index
+				mcount++
+			}
+		}
+
+		ms0 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[0],
+			},
+		}
+		ms1 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[1],
+			},
+		}
+		ms2 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[2],
+			},
+		}
+		ms3 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[3],
+			},
+		}
+		ms4 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[4],
+			},
+		}
+		ms5 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[5],
+			},
+		}
+		ms6 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[6],
+			},
+		}
+		ms7 := &halproto.MirrorSessionKeyHandle{
+			KeyOrHandle: &halproto.
+				MirrorSessionKeyHandle_MirrorsessionId{
+				MirrorsessionId: mirrorID[7],
+			},
+		}
+
+		msn := []*halproto.MirrorSessionKeyHandle{ms0}
+		switch mcount {
+		case 2:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1}
+			break
+		case 3:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2}
+			break
+		case 4:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2,
+				ms3}
+			break
+		case 5:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2,
+				ms3, ms4}
+			break
+		case 6:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2,
+				ms3, ms4, ms5}
+			break
+		case 7:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2,
+				ms3, ms4, ms5,
+				ms6}
+			break
+		case 8:
+			msn = []*halproto.MirrorSessionKeyHandle{ms0, ms1, ms2,
+				ms3, ms4, ms5,
+				ms6, ms7}
+			break
+		default:
+			break
+		}
+
+		var updateReq *halproto.InterfaceSpec
+		ifType := resp.GetSpec().GetType()
+		if ifType == halproto.IfType_IF_TYPE_ENIC {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+						IfEnicInfo: resp.GetSpec().
+							GetIfEnicInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+						IfEnicInfo: resp.GetSpec().
+							GetIfEnicInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+						IfEnicInfo: resp.GetSpec().
+							GetIfEnicInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfEnicInfo{
+						IfEnicInfo: resp.GetSpec().
+							GetIfEnicInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		} else if ifType == halproto.IfType_IF_TYPE_UPLINK {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+						IfUplinkInfo: resp.GetSpec().
+							GetIfUplinkInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+						IfUplinkInfo: resp.GetSpec().
+							GetIfUplinkInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+						IfUplinkInfo: resp.GetSpec().
+							GetIfUplinkInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkInfo{
+						IfUplinkInfo: resp.GetSpec().
+							GetIfUplinkInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		} else if ifType == halproto.IfType_IF_TYPE_UPLINK_PC {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkPcInfo{
+						IfUplinkPcInfo: resp.GetSpec().
+							GetIfUplinkPcInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkPcInfo{
+						IfUplinkPcInfo: resp.GetSpec().
+							GetIfUplinkPcInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkPcInfo{
+						IfUplinkPcInfo: resp.GetSpec().
+							GetIfUplinkPcInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfUplinkPcInfo{
+						IfUplinkPcInfo: resp.GetSpec().
+							GetIfUplinkPcInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		} else if ifType == halproto.IfType_IF_TYPE_TUNNEL {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfTunnelInfo{
+						IfTunnelInfo: resp.GetSpec().
+							GetIfTunnelInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfTunnelInfo{
+						IfTunnelInfo: resp.GetSpec().
+							GetIfTunnelInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfTunnelInfo{
+						IfTunnelInfo: resp.GetSpec().
+							GetIfTunnelInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfTunnelInfo{
+						IfTunnelInfo: resp.GetSpec().
+							GetIfTunnelInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		} else if ifType == halproto.IfType_IF_TYPE_CPU {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfCpuInfo{
+						IfCpuInfo: resp.GetSpec().
+							GetIfCpuInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfCpuInfo{
+						IfCpuInfo: resp.GetSpec().
+							GetIfCpuInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfCpuInfo{
+						IfCpuInfo: resp.GetSpec().
+							GetIfCpuInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfCpuInfo{
+						IfCpuInfo: resp.GetSpec().
+							GetIfCpuInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		} else if ifType == halproto.IfType_IF_TYPE_APP_REDIR {
+			if ifDisableMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfAppRedirInfo{
+						IfAppRedirInfo: resp.GetSpec().
+							GetIfAppRedirInfo(),
+					},
+				}
+			} else if ifIngressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfAppRedirInfo{
+						IfAppRedirInfo: resp.GetSpec().
+							GetIfAppRedirInfo(),
+					},
+					RxMirrorSessions: msn,
+				}
+			} else if ifEgressMirror == true {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfAppRedirInfo{
+						IfAppRedirInfo: resp.GetSpec().
+							GetIfAppRedirInfo(),
+					},
+					TxMirrorSessions: msn,
+				}
+			} else {
+				updateReq = &halproto.InterfaceSpec{
+					Meta: resp.GetSpec().GetMeta(),
+					KeyOrHandle: &halproto.InterfaceKeyHandle{
+						KeyOrHandle: &halproto.
+							InterfaceKeyHandle_InterfaceId{
+							InterfaceId: resp.GetSpec().
+								GetKeyOrHandle().
+								GetInterfaceId(),
+						},
+					},
+					Type:        resp.GetSpec().GetType(),
+					AdminStatus: resp.GetSpec().GetAdminStatus(),
+					IfInfo: &halproto.InterfaceSpec_IfAppRedirInfo{
+						IfAppRedirInfo: resp.GetSpec().
+							GetIfAppRedirInfo(),
+					},
+					TxMirrorSessions: msn,
+					RxMirrorSessions: msn,
+				}
+			}
+		}
+
+		ifUpdateReqMsg := &halproto.InterfaceRequestMsg{
+			Request: []*halproto.InterfaceSpec{updateReq},
+		}
+
+		// HAL call
+		updateRespMsg, err := client.InterfaceUpdate(
+			context.Background(), ifUpdateReqMsg)
+		if err != nil {
+			return err
+		}
+
+		for _, updateResp := range updateRespMsg.Response {
+			if updateResp.ApiStatus !=
+				halproto.ApiStatus_API_STATUS_OK {
+				errStr := fmt.Sprintf(
+					"Operation failed with %v error",
+					resp.ApiStatus)
+				return errors.New(errStr)
+			}
+			fmt.Printf(
+				"Interface update succeeded Interface ID is %d\n", ifID)
+		}
 	}
 
 	return nil
@@ -689,10 +1344,10 @@ func ifShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:    Interface ID         Handle: IF's handle\n")
 	fmt.Printf("Ifype: Interface type\n")
-	hdrLine := strings.Repeat("-", 42)
+	hdrLine := strings.Repeat("-", 78)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-22s%-10s%-10s\n",
-		"Id", "Handle", "IfType")
+	fmt.Printf("%-22s%-10s%-10s%-18s%-18s\n",
+		"Id", "Handle", "IfType", "TxMirrorSessions", "RxMirrorSessions")
 	fmt.Println(hdrLine)
 }
 
@@ -701,6 +1356,25 @@ func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
 		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
 		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(resp.GetSpec().GetType()))
+
+	indent := 0
+	for _, mirrorID := range resp.GetSpec().TxMirrorSessions {
+		fmt.Printf("%d ", mirrorID.GetMirrorsessionId())
+		indent = indent + 2
+	}
+	for ; indent < 18; indent++ {
+		fmt.Printf(" ")
+	}
+
+	indent = 0
+	for _, mirrorID := range resp.GetSpec().RxMirrorSessions {
+		fmt.Printf("%d ", mirrorID.GetMirrorsessionId())
+		indent = indent + 2
+	}
+	for ; indent < 18; indent++ {
+		fmt.Printf(" ")
+	}
+
 	fmt.Printf("\n")
 }
 

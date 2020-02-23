@@ -75,6 +75,8 @@ namespace hal {
 // Max. number of uplinks
 #define HAL_MAX_UPLINK_IF 32
 
+#define	MAX_MIRROR_SESSION_DEST	8
+
 extern uint8_t g_num_uplink_ifs;
 extern std::vector<uint8_t > g_uplink_if_ids;
 
@@ -93,6 +95,18 @@ typedef struct if_l2seg_entry_s {
 
 DEFINE_ENUM(if_acl_ref_type_t, IF_ACL_REF_TYPE)
 #undef IF_ACL_REF_TYPE
+
+enum uplink_erspan_direction_t {
+    UPLINK_ERSPAN_DIRECTION_INGRESS = 0,
+    UPLINK_ERSPAN_DIRECTION_EGRESS  = 1,
+};
+
+typedef struct if_mirror_info_s {
+    uint8_t  tx_sessions_count;
+    uint8_t  rx_sessions_count;
+    uint32_t tx_session_id[MAX_MIRROR_SESSION_DEST];
+    uint32_t rx_session_id[MAX_MIRROR_SESSION_DEST];
+} if_mirror_info_t;
 
 // Interface strucutre
 typedef struct if_s {
@@ -213,6 +227,16 @@ typedef struct if_s {
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;
+
+    // MirrorSessions related fields
+    if_mirror_info_t    mirror_spec;
+    if_mirror_info_t    mirror_cfg;
+    uint8_t             tx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
+    uint8_t             rx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
+    uplink_erspan_direction_t direction;
+
+    uint32_t                  hw_lif_id;
+    uint32_t                  lport_id;
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {

@@ -2033,6 +2033,27 @@ pd_flow_monitor_rule_get_args_init (pd_flow_monitor_rule_get_args_t *args)
     args->rule = NULL;
 }
 
+// uplink erspan
+typedef struct pd_uplink_erspan_enable_args_s {
+    if_t *if_p;
+} __PACK__ pd_uplink_erspan_enable_args_t;
+
+static inline void
+pd_uplink_erspan_enable_args_init (pd_uplink_erspan_enable_args_t *args)
+{
+    args->if_p = NULL;
+}
+
+typedef struct pd_uplink_erspan_disable_args_s {
+    if_t *if_p;
+} __PACK__ pd_uplink_erspan_disable_args_t;
+
+static inline void
+pd_uplink_erspan_disable_args_init (pd_uplink_erspan_disable_args_t *args)
+{
+    args->if_p = NULL;
+}
+
 // drop monitoring rule
 typedef struct pd_drop_monitor_rule_create_args_s {
     drop_monitor_rule_t *rule;
@@ -3649,7 +3670,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
     ENTRY(PD_FUNC_ID_SESSION_AGE_RESET,          338, "PD_FUNC_ID_SESSION_AGE_RESET")\
     ENTRY(PD_FUNC_ID_EP_QUIESCE,                 339, "PD_FUNC_ID_EP_QUIESCE")\
-    ENTRY(PD_FUNC_ID_MAX,                        340, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_ENABLE,       340, "PD_FUNC_ID_UPLINK_ERSPAN_ENABLE")\
+    ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
+    ENTRY(PD_FUNC_ID_MAX,                        342, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3869,6 +3892,10 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_mirror_session_update);
         PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
         PD_UNION_ARGS_FIELD(pd_mirror_session_get_hw_id);
+
+        // lif erspan
+        PD_UNION_ARGS_FIELD(pd_uplink_erspan_enable);
+        PD_UNION_ARGS_FIELD(pd_uplink_erspan_disable);
 
         // drop monitor rule
         PD_UNION_ARGS_FIELD(pd_drop_monitor_rule_create);
@@ -4365,6 +4392,10 @@ PD_FUNCP_TYPEDEF(pd_mirror_session_get_hw_id);
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_create);
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_delete);
 PD_FUNCP_TYPEDEF(pd_flow_monitor_rule_get);
+
+// lif erspan
+PD_FUNCP_TYPEDEF(pd_uplink_erspan_enable);
+PD_FUNCP_TYPEDEF(pd_uplink_erspan_disable);
 
 // drop monitor rule
 PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_create);
