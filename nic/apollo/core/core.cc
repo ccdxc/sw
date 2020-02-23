@@ -305,7 +305,7 @@ spawn_learn_thread (pds_state *state)
             learn::learn_thread_event_cb,
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            true);
+            true, true);
     SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
                             "learn thread create failure");
     g_thread_store[PDS_THREAD_ID_LEARN] = new_thread;

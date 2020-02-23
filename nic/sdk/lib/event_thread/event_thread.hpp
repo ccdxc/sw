@@ -114,11 +114,11 @@ public:
                                  loop_exit_func_t exit_func,
                                  message_cb message_cb,
                                  uint32_t prio, int sched_policy,
-                                 bool can_yield);
+                                 bool can_yield,
+                                 bool sync_ipc = false);
     static void destroy(event_thread *thread);
 
     void updown_up_subscribe(uint32_t thread_id, updown_up_cb cb, void *ctx);
-    
     void prepare_start(prepare_t *prepare);
     void prepare_stop(prepare_t *prepare);
 
@@ -142,7 +142,7 @@ protected:
                      sdk::lib::thread_role_t thread_role, uint64_t cores_mask,
                      loop_init_func_t init_func, loop_exit_func_t exit_func,
                      message_cb message_cb, uint32_t prio,
-                     int sched_policy, bool can_yield);
+                     int sched_policy, bool can_yield, bool sync_ipc);
     event_thread();
     ~event_thread();
 
@@ -156,6 +156,7 @@ private:
     std::map<uint32_t, updown_up_cb> updown_up_cbs_;
     std::map<uint32_t, void*> updown_up_ctxs_;
     void *user_ctx_;
+    bool sync_ipc_;
     void run_(void);
     void handle_async_(void);
     void process_lfq_(void);
