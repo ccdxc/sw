@@ -2,7 +2,7 @@ meta:
     name    : tso_regr
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 576
+    targetcount : 160
 
 testcases:
     -   name    : TSO_REGR
@@ -14,13 +14,14 @@ testcases:
             tso_offload        : [ 'on', 'off']
             lro_offload        : [ 'off']
             tx_check_sum       : [ 'on']
-            mtu                : [ '1500', '4096', '9000']
-            pktsize            : [  2048, 8192, 32768 ]
+            mtu                : [ '4096', '9000']
+            pktsize            : [  2048, 32768 ]
             vlantag            : [ 'off']
             vxlan              : [ 'off']
             proto              : [ 'tcp', 'udp']
             ipproto            : [ 'v4', 'v6']
         args    :
+            timeout : 7200
             type: host
             iperfthreads     :  1
     -   name    : TSO_LRO_REGR
@@ -32,13 +33,14 @@ testcases:
             tso_offload        : [ 'on', 'off']
             lro_offload        : [ 'on']
             tx_check_sum       : [ 'on']
-            mtu                : [ '1500', '4096', '9000']
-            pktsize            : [  2048, 8192, 32768 ]
+            mtu                : [ '4096', '9000']
+            pktsize            : [  2048, 32768 ]
             vlantag            : [ 'off']
             vxlan              : [ 'off']
             proto              : [ 'tcp', 'udp']
             ipproto            : [ 'v4', 'v6']
         args    :
+            timeout : 7200
             type: host
             iperfthreads     :  1
     -   name    : TSO_REGR_VLAN
@@ -48,15 +50,16 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
-            lro_offload        : [ 'on', 'off']
+            lro_offload        : [ 'on']
             tx_check_sum       : [ 'on']
-            mtu                : [ '1500', '4096', '9000']
-            pktsize            : [  2048, 8192, 32768 ]
+            mtu                : [ '4096', '9000']
+            pktsize            : [  2048, 32768 ]
             vlantag            : [ 'on' ]
             vxlan              : [ 'off']
             proto              : [ 'tcp', 'udp']
             ipproto            : [ 'v4', 'v6']
         args    :
+            timeout : 7200
             type: host
             iperfthreads     :  1
     -   name    : TSO_REGR_VXLAN
@@ -66,10 +69,10 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
-            lro_offload        : [ 'on', 'off']
+            lro_offload        : [ 'off']
             tx_check_sum       : [ 'on']
-            mtu                : [ '1500', '4096', '9000']
-            pktsize            : [  2048, 8192, 32768 ]
+            mtu                : [ '4096', '9000']
+            pktsize            : [  2048, 32768 ]
             vlantag            : [ 'off' ]
             vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
@@ -85,10 +88,10 @@ testcases:
         iterators :
             type               : nested
             tso_offload        : [ 'on', 'off']
-            lro_offload        : [ 'on', 'off']
+            lro_offload        : [ 'on']
             tx_check_sum       : [ 'on']
-            mtu                : [ '1500', '4096', '9000']
-            pktsize            : [  2048, 8192, 32768 ]
+            mtu                : [ '4096', '9000']
+            pktsize            : [  2048, 32768 ]
             vlantag            : [ 'on' ]
             vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
