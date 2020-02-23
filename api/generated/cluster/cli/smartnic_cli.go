@@ -43,6 +43,13 @@ var CreateDistributedServiceCardFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "dscprofile",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "id",
 		Type:   "String",
 		Help:   "",

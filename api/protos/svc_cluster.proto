@@ -14,6 +14,7 @@ import "cluster.proto";
 import "smartnic.proto";
 import "snapshot.proto";
 import "license.proto";
+import "dscprofile.proto";
 
 //-------------------------------- R E S T / g R P C  A P I ----------------------------------------------------
 
@@ -32,6 +33,7 @@ service ClusterV1 {
     option(venice.apiGrpcCrudService) = "ConfigurationSnapshot";
     option(venice.apiGrpcCrudService) = "SnapshotRestore";
     option(venice.apiGrpcCrudService) = "License";
+    option(venice.apiGrpcCrudService) = "DSCProfile";
 
 
     option (venice.apiRestService) = {
@@ -75,6 +77,11 @@ service ClusterV1 {
     option (venice.apiRestService) = {
         Object: "DistributedServiceCard"
         Method: ["put", "get", "delete", "list", "watch"]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "DSCProfile"
+        Method: ["post", "put", "get", "delete", "list", "watch"]
     };
 
     option (venice.apiRestService) = {

@@ -71,6 +71,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoAddConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddConfigurationSnapshot")(lAutoAddConfigurationSnapshotEndpoint)
 	}
+	var lAutoAddDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoAddDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddDSCProfile",
+			cluster.EncodeGrpcReqDSCProfile,
+			cluster.DecodeGrpcRespDSCProfile,
+			&cluster.DSCProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddDSCProfile")(lAutoAddDSCProfileEndpoint)
+	}
 	var lAutoAddDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoAddDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -196,6 +210,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteConfigurationSnapshot")(lAutoDeleteConfigurationSnapshotEndpoint)
+	}
+	var lAutoDeleteDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteDSCProfile",
+			cluster.EncodeGrpcReqDSCProfile,
+			cluster.DecodeGrpcRespDSCProfile,
+			&cluster.DSCProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteDSCProfile")(lAutoDeleteDSCProfileEndpoint)
 	}
 	var lAutoDeleteDistributedServiceCardEndpoint endpoint.Endpoint
 	{
@@ -323,6 +351,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetConfigurationSnapshot")(lAutoGetConfigurationSnapshotEndpoint)
 	}
+	var lAutoGetDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoGetDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetDSCProfile",
+			cluster.EncodeGrpcReqDSCProfile,
+			cluster.DecodeGrpcRespDSCProfile,
+			&cluster.DSCProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetDSCProfile")(lAutoGetDSCProfileEndpoint)
+	}
 	var lAutoGetDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoGetDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -448,6 +490,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoLabelConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelConfigurationSnapshot")(lAutoLabelConfigurationSnapshotEndpoint)
+	}
+	var lAutoLabelDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoLabelDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoLabelDSCProfile",
+			cluster.EncodeGrpcReqLabel,
+			cluster.DecodeGrpcRespDSCProfile,
+			&cluster.DSCProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoLabelDSCProfile")(lAutoLabelDSCProfileEndpoint)
 	}
 	var lAutoLabelDistributedServiceCardEndpoint endpoint.Endpoint
 	{
@@ -575,6 +631,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoListConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoListConfigurationSnapshot")(lAutoListConfigurationSnapshotEndpoint)
 	}
+	var lAutoListDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoListDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListDSCProfile",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespDSCProfileList,
+			&cluster.DSCProfileList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoListDSCProfile")(lAutoListDSCProfileEndpoint)
+	}
 	var lAutoListDistributedServiceCardEndpoint endpoint.Endpoint
 	{
 		lAutoListDistributedServiceCardEndpoint = grpctransport.NewClient(
@@ -700,6 +770,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoUpdateConfigurationSnapshotEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateConfigurationSnapshot")(lAutoUpdateConfigurationSnapshotEndpoint)
+	}
+	var lAutoUpdateDSCProfileEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateDSCProfileEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateDSCProfile",
+			cluster.EncodeGrpcReqDSCProfile,
+			cluster.DecodeGrpcRespDSCProfile,
+			&cluster.DSCProfile{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateDSCProfileEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateDSCProfile")(lAutoUpdateDSCProfileEndpoint)
 	}
 	var lAutoUpdateDistributedServiceCardEndpoint endpoint.Endpoint
 	{
@@ -847,6 +931,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AuthBootstrapCompleteEndpoint:            lAuthBootstrapCompleteEndpoint,
 		AutoAddClusterEndpoint:                   lAutoAddClusterEndpoint,
 		AutoAddConfigurationSnapshotEndpoint:     lAutoAddConfigurationSnapshotEndpoint,
+		AutoAddDSCProfileEndpoint:                lAutoAddDSCProfileEndpoint,
 		AutoAddDistributedServiceCardEndpoint:    lAutoAddDistributedServiceCardEndpoint,
 		AutoAddHostEndpoint:                      lAutoAddHostEndpoint,
 		AutoAddLicenseEndpoint:                   lAutoAddLicenseEndpoint,
@@ -856,6 +941,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoAddVersionEndpoint:                   lAutoAddVersionEndpoint,
 		AutoDeleteClusterEndpoint:                lAutoDeleteClusterEndpoint,
 		AutoDeleteConfigurationSnapshotEndpoint:  lAutoDeleteConfigurationSnapshotEndpoint,
+		AutoDeleteDSCProfileEndpoint:             lAutoDeleteDSCProfileEndpoint,
 		AutoDeleteDistributedServiceCardEndpoint: lAutoDeleteDistributedServiceCardEndpoint,
 		AutoDeleteHostEndpoint:                   lAutoDeleteHostEndpoint,
 		AutoDeleteLicenseEndpoint:                lAutoDeleteLicenseEndpoint,
@@ -865,6 +951,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoDeleteVersionEndpoint:                lAutoDeleteVersionEndpoint,
 		AutoGetClusterEndpoint:                   lAutoGetClusterEndpoint,
 		AutoGetConfigurationSnapshotEndpoint:     lAutoGetConfigurationSnapshotEndpoint,
+		AutoGetDSCProfileEndpoint:                lAutoGetDSCProfileEndpoint,
 		AutoGetDistributedServiceCardEndpoint:    lAutoGetDistributedServiceCardEndpoint,
 		AutoGetHostEndpoint:                      lAutoGetHostEndpoint,
 		AutoGetLicenseEndpoint:                   lAutoGetLicenseEndpoint,
@@ -874,6 +961,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoGetVersionEndpoint:                   lAutoGetVersionEndpoint,
 		AutoLabelClusterEndpoint:                 lAutoLabelClusterEndpoint,
 		AutoLabelConfigurationSnapshotEndpoint:   lAutoLabelConfigurationSnapshotEndpoint,
+		AutoLabelDSCProfileEndpoint:              lAutoLabelDSCProfileEndpoint,
 		AutoLabelDistributedServiceCardEndpoint:  lAutoLabelDistributedServiceCardEndpoint,
 		AutoLabelHostEndpoint:                    lAutoLabelHostEndpoint,
 		AutoLabelLicenseEndpoint:                 lAutoLabelLicenseEndpoint,
@@ -883,6 +971,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoLabelVersionEndpoint:                 lAutoLabelVersionEndpoint,
 		AutoListClusterEndpoint:                  lAutoListClusterEndpoint,
 		AutoListConfigurationSnapshotEndpoint:    lAutoListConfigurationSnapshotEndpoint,
+		AutoListDSCProfileEndpoint:               lAutoListDSCProfileEndpoint,
 		AutoListDistributedServiceCardEndpoint:   lAutoListDistributedServiceCardEndpoint,
 		AutoListHostEndpoint:                     lAutoListHostEndpoint,
 		AutoListLicenseEndpoint:                  lAutoListLicenseEndpoint,
@@ -892,6 +981,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoListVersionEndpoint:                  lAutoListVersionEndpoint,
 		AutoUpdateClusterEndpoint:                lAutoUpdateClusterEndpoint,
 		AutoUpdateConfigurationSnapshotEndpoint:  lAutoUpdateConfigurationSnapshotEndpoint,
+		AutoUpdateDSCProfileEndpoint:             lAutoUpdateDSCProfileEndpoint,
 		AutoUpdateDistributedServiceCardEndpoint: lAutoUpdateDistributedServiceCardEndpoint,
 		AutoUpdateHostEndpoint:                   lAutoUpdateHostEndpoint,
 		AutoUpdateLicenseEndpoint:                lAutoUpdateLicenseEndpoint,
@@ -2820,6 +2910,211 @@ func (a *restObjClusterV1License) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjClusterV1DSCProfile struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1DSCProfile) Create(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddDSCProfile(nctx, in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) Update(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateDSCProfile(nctx, in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) UpdateStatus(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateDSCProfile(nctx, in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) Label(ctx context.Context, in *api.Label) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelDSCProfile(nctx, in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.DSCProfile{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetDSCProfile(nctx, &in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.DSCProfile{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteDSCProfile(nctx, &in)
+}
+
+func (a *grpcObjClusterV1DSCProfile) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.DSCProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListDSCProfile(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1DSCProfile) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "DSCProfile", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchDSCProfile(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchDSCProfileClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1DSCProfile) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1DSCProfile struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1DSCProfile) Create(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddDSCProfile(ctx, in)
+}
+
+func (a *restObjClusterV1DSCProfile) Update(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateDSCProfile(ctx, in)
+}
+
+func (a *restObjClusterV1DSCProfile) UpdateStatus(ctx context.Context, in *cluster.DSCProfile) (*cluster.DSCProfile, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjClusterV1DSCProfile) Label(ctx context.Context, in *api.Label) (*cluster.DSCProfile, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelDSCProfile(ctx, in)
+}
+
+func (a *restObjClusterV1DSCProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DSCProfile, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.DSCProfile{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetDSCProfile(ctx, &in)
+}
+
+func (a *restObjClusterV1DSCProfile) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.DSCProfile, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.DSCProfile{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteDSCProfile(ctx, &in)
+}
+
+func (a *restObjClusterV1DSCProfile) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.DSCProfile, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListDSCProfile(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1DSCProfile) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchDSCProfile(ctx, options)
+}
+
+func (a *restObjClusterV1DSCProfile) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return true
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientClusterV1 struct {
 	logger log.Logger
 	client cluster.ServiceClusterV1Client
@@ -2833,6 +3128,7 @@ type crudClientClusterV1 struct {
 	grpcConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
 	grpcSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 	grpcLicense                cluster.ClusterV1LicenseInterface
+	grpcDSCProfile             cluster.ClusterV1DSCProfileInterface
 }
 
 // NewGrpcCrudClientClusterV1 creates a GRPC client for the service
@@ -2851,6 +3147,7 @@ func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluste
 		grpcConfigurationSnapshot:  &grpcObjClusterV1ConfigurationSnapshot{client: client, logger: logger},
 		grpcSnapshotRestore:        &grpcObjClusterV1SnapshotRestore{client: client, logger: logger},
 		grpcLicense:                &grpcObjClusterV1License{client: client, logger: logger},
+		grpcDSCProfile:             &grpcObjClusterV1DSCProfile{client: client, logger: logger},
 	}
 }
 
@@ -2888,6 +3185,10 @@ func (a *crudClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRestore
 
 func (a *crudClientClusterV1) License() cluster.ClusterV1LicenseInterface {
 	return a.grpcLicense
+}
+
+func (a *crudClientClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
+	return a.grpcDSCProfile
 }
 
 func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -2942,6 +3243,7 @@ type crudRestClientClusterV1 struct {
 	restConfigurationSnapshot  cluster.ClusterV1ConfigurationSnapshotInterface
 	restSnapshotRestore        cluster.ClusterV1SnapshotRestoreInterface
 	restLicense                cluster.ClusterV1LicenseInterface
+	restDSCProfile             cluster.ClusterV1DSCProfileInterface
 }
 
 // NewRestCrudClientClusterV1 creates a REST client for the service.
@@ -2961,6 +3263,7 @@ func NewRestCrudClientClusterV1(url string, httpClient *http.Client) cluster.Clu
 		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
+		restDSCProfile:             &restObjClusterV1DSCProfile{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -2981,6 +3284,7 @@ func NewStagedRestCrudClientClusterV1(url string, id string, httpClient *http.Cl
 		restConfigurationSnapshot:  &restObjClusterV1ConfigurationSnapshot{endpoints: endpoints, instance: url},
 		restSnapshotRestore:        &restObjClusterV1SnapshotRestore{endpoints: endpoints, instance: url},
 		restLicense:                &restObjClusterV1License{endpoints: endpoints, instance: url},
+		restDSCProfile:             &restObjClusterV1DSCProfile{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -3018,6 +3322,10 @@ func (a *crudRestClientClusterV1) SnapshotRestore() cluster.ClusterV1SnapshotRes
 
 func (a *crudRestClientClusterV1) License() cluster.ClusterV1LicenseInterface {
 	return a.restLicense
+}
+
+func (a *crudRestClientClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
+	return a.restDSCProfile
 }
 
 func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

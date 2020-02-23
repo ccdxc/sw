@@ -168,6 +168,7 @@ type Controller interface {
 	ConfigurationSnapshot() ConfigurationSnapshotAPI     // return ConfigurationSnapshot API interface
 	SnapshotRestore() SnapshotRestoreAPI                 // return SnapshotRestore API interface
 	License() LicenseAPI                                 // return License API interface
+	DSCProfile() DSCProfileAPI                           // return DSCProfile API interface
 	Module() ModuleAPI                                   // return Module API interface
 	EventPolicy() EventPolicyAPI                         // return EventPolicy API interface
 	FwlogPolicy() FwlogPolicyAPI                         // return FwlogPolicy API interface
@@ -467,6 +468,9 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "License":
 		obj := licenseAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "DSCProfile":
+		obj := dscprofileAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Module":
 		obj := moduleAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -638,6 +642,9 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "License":
 		obj := licenseAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "DSCProfile":
+		obj := dscprofileAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Module":
 		obj := moduleAPI{}

@@ -78,6 +78,7 @@ type Statemgr struct {
 	NetworkInterfaceReactor       ctkit.NetworkInterfaceHandler
 	IPAMPolicyReactor             ctkit.IPAMPolicyHandler
 	RoutingConfigReactor          ctkit.RoutingConfigHandler
+	DSCProfileReactor             ctkit.DSCProfileHandler
 
 	SecurityProfileStatusReactor       nimbus.SecurityProfileStatusReactor
 	AppStatusReactor                   nimbus.AppStatusReactor
@@ -215,6 +216,11 @@ func (sm *Statemgr) SetRoutingConfigReactor(handler ctkit.RoutingConfigHandler) 
 	sm.RoutingConfigReactor = handler
 }
 
+// SetDSCProfileReactor sets the DSCProfile reactor
+func (sm *Statemgr) SetDSCProfileReactor(handler ctkit.DSCProfileHandler) {
+	sm.DSCProfileReactor = handler
+}
+
 // ErrIsObjectNotFound returns true if the error is object not found
 func ErrIsObjectNotFound(err error) bool {
 	return (err == memdb.ErrObjectNotFound) || strings.Contains(err.Error(), "not found")
@@ -336,6 +342,8 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 
 	sm.SetRoutingConfigReactor(reactor)
 
+	sm.SetDSCProfileReactor(reactor)
+
 }
 
 // Run calls the feature statemgr callbacks and eastablishes the Watches
@@ -414,6 +422,12 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	err = ctrler.FirewallProfile().Watch(sm.FirewallProfileReactor)
 	if err != nil {
 		logger.Fatalf("Error watching firewall profile")
+	}
+
+	logger.Info("start watch for DSCProfile")
+	err = ctrler.DSCProfile().Watch(sm.DSCProfileReactor)
+	if err != nil {
+		logger.Fatalf("Error watching DSCProfile")
 	}
 	err = ctrler.DistributedServiceCard().Watch(sm.DistributedServiceCardReactor)
 	if err != nil {

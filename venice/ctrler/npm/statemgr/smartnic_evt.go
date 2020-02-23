@@ -26,7 +26,7 @@ func (sm *Statemgr) GetDistributedServiceCardWatchOptions() *api.ListWatchOption
 	return &opts
 }
 
-// DistributedServiceCardStateFromObj conerts from memdb object to smartNic state
+// DistributedServiceCardStateFromObj converts from memdb object to smartNic state
 func DistributedServiceCardStateFromObj(obj runtime.Object) (*DistributedServiceCardState, error) {
 	switch obj.(type) {
 	case *ctkit.DistributedServiceCard:
@@ -64,6 +64,8 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		log.Errorf("Error creating smartNic %+v. Err: %v", smartNic, err)
 		return err
 	}
+
+	log.Infof("Profile %s", smartNic.DistributedServiceCard.Spec.DSCProfile)
 
 	// see if smartnic is admitted
 	if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
@@ -132,10 +134,45 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 // OnDistributedServiceCardUpdate handles update event on smartnic
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	// see if we already have the smartNic
+	log.Infof("Update of DistributedServiceCard")
 	hs, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Error finding smartnic. Err: %v", err)
 		return err
+	}
+
+	newProfile := nsnic.Spec.DSCProfile
+	oldProfile := smartNic.DistributedServiceCard.Spec.DSCProfile
+	log.Infof("Old:%s new: %s", oldProfile,
+		newProfile)
+	if newProfile != oldProfile {
+		//Find the newProfile
+		if newProfile != "" {
+			profileState, err := sm.FindDSCProfile("", newProfile)
+			if err == nil {
+				log.Infof("Found the profile ")
+				log.Infof("Update the agent")
+				profileState.DscList[nsnic.ObjectMeta.Name] = struct{}{}
+
+				profileState.DSCProfile.Lock()
+				if sm.isDscAdmitted(nsnic) {
+					sm.mbus.UpdateObjectWithReferences(profileState.DSCProfile.MakeKey("cluster"), convertDSCProfile(profileState), references(profileState.DSCProfile))
+				}
+				profileState.DSCProfile.Unlock()
+			}
+		}
+
+		if oldProfile != "" {
+			oldProfileState, _ := sm.FindDSCProfile("", oldProfile)
+			if _, ok := oldProfileState.DscList[nsnic.ObjectMeta.Name]; ok {
+				delete(oldProfileState.DscList, nsnic.ObjectMeta.Name)
+				// Send a delete to the nic in netagent?
+			}
+		}
+		// if not found return error
+	} else {
+		//No change in profile
+		log.Infof("No change in profile")
 	}
 
 	hs.DistributedServiceCard.DistributedServiceCard = *nsnic

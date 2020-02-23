@@ -190,6 +190,10 @@ func (m mockClusterV1) License() cluster.ClusterV1LicenseInterface {
 	return nil
 }
 
+func (m mockClusterV1) DSCProfile() cluster.ClusterV1DSCProfileInterface {
+	return nil
+}
+
 func (m mockClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
 	return nil, nil
 }

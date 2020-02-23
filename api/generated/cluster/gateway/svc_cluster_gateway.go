@@ -134,6 +134,33 @@ func (a adapterClusterV1) AutoAddConfigurationSnapshot(oldctx oldcontext.Context
 	return ret.(*cluster.ConfigurationSnapshot), err
 }
 
+func (a adapterClusterV1) AutoAddDSCProfile(oldctx oldcontext.Context, t *cluster.DSCProfile, options ...grpc.CallOption) (*cluster.DSCProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoAddDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DSCProfile)
+		return a.service.AutoAddDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfile), err
+}
+
 func (a adapterClusterV1) AutoAddDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -375,6 +402,33 @@ func (a adapterClusterV1) AutoDeleteConfigurationSnapshot(oldctx oldcontext.Cont
 		return nil, err
 	}
 	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
+func (a adapterClusterV1) AutoDeleteDSCProfile(oldctx oldcontext.Context, t *cluster.DSCProfile, options ...grpc.CallOption) (*cluster.DSCProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoDeleteDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DSCProfile)
+		return a.service.AutoDeleteDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfile), err
 }
 
 func (a adapterClusterV1) AutoDeleteDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
@@ -620,6 +674,33 @@ func (a adapterClusterV1) AutoGetConfigurationSnapshot(oldctx oldcontext.Context
 	return ret.(*cluster.ConfigurationSnapshot), err
 }
 
+func (a adapterClusterV1) AutoGetDSCProfile(oldctx oldcontext.Context, t *cluster.DSCProfile, options ...grpc.CallOption) (*cluster.DSCProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoGetDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DSCProfile)
+		return a.service.AutoGetDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfile), err
+}
+
 func (a adapterClusterV1) AutoGetDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -861,6 +942,33 @@ func (a adapterClusterV1) AutoLabelConfigurationSnapshot(oldctx oldcontext.Conte
 		return nil, err
 	}
 	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
+func (a adapterClusterV1) AutoLabelDSCProfile(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*cluster.DSCProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoLabelDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfile), err
 }
 
 func (a adapterClusterV1) AutoLabelDistributedServiceCard(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
@@ -1110,6 +1218,36 @@ func (a adapterClusterV1) AutoListConfigurationSnapshot(oldctx oldcontext.Contex
 		return nil, err
 	}
 	return ret.(*cluster.ConfigurationSnapshotList), err
+}
+
+func (a adapterClusterV1) AutoListDSCProfile(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.DSCProfileList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoListDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfileList), err
 }
 
 func (a adapterClusterV1) AutoListDistributedServiceCard(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.DistributedServiceCardList, error) {
@@ -1374,6 +1512,33 @@ func (a adapterClusterV1) AutoUpdateConfigurationSnapshot(oldctx oldcontext.Cont
 		return nil, err
 	}
 	return ret.(*cluster.ConfigurationSnapshot), err
+}
+
+func (a adapterClusterV1) AutoUpdateDSCProfile(oldctx oldcontext.Context, t *cluster.DSCProfile, options ...grpc.CallOption) (*cluster.DSCProfile, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.ClusterV1AutoUpdateDSCProfile", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "DSCProfile", t.Tenant, t.Namespace, "cluster", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.DSCProfile)
+		return a.service.AutoUpdateDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.DSCProfile), err
 }
 
 func (a adapterClusterV1) AutoUpdateDistributedServiceCard(oldctx oldcontext.Context, t *cluster.DistributedServiceCard, options ...grpc.CallOption) (*cluster.DistributedServiceCard, error) {
@@ -2213,6 +2378,63 @@ func (a adapterClusterV1) AutoWatchLicense(oldctx oldcontext.Context, in *api.Li
 	return ret.(cluster.ClusterV1_AutoWatchLicenseClient), err
 }
 
+func (a adapterClusterV1) AutoWatchDSCProfile(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchDSCProfileClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchDSCProfile")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "DSCProfile", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchDSCProfile] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchDSCProfile(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchDSCProfileClient), err
+}
+
 func (e *sClusterV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -2221,6 +2443,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoAddDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfile", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.CreateOper)
 
@@ -2231,6 +2455,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
 
 	e.svcProf["AutoDeleteConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfile", "cluster", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.DeleteOper)
 
@@ -2243,6 +2469,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.GetOper)
+
+	e.svcProf["AutoGetDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfile", "cluster", apiintf.GetOper)
 
 	e.svcProf["AutoGetDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.GetOper)
 
@@ -2258,6 +2486,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Version", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoListDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfileList", "cluster", apiintf.ListOper)
+
 	e.svcProf["AutoListDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCardList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiintf.ListOper)
@@ -2269,6 +2499,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.UpdateOper)
+
+	e.svcProf["AutoUpdateDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfile", "cluster", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.UpdateOper)
 
@@ -2283,6 +2515,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgConfigurationSnapshotWatchHelper", "cluster", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgDSCProfileWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgDistributedServiceCardWatchHelper", "cluster", apiintf.WatchOper)
 

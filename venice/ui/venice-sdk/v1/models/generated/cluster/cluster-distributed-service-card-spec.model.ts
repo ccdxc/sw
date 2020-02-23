@@ -20,6 +20,7 @@ export interface IClusterDistributedServiceCardSpec {
     'mgmt-vlan': number;
     'controllers'?: Array<string>;
     'routing-config'?: string;
+    'dscprofile'?: string;
     '_ui'?: any;
 }
 
@@ -43,6 +44,7 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
     'controllers': Array<string> = null;
     /** RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in. */
     'routing-config': string = null;
+    'dscprofile': string = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardSpec]: PropInfoItem } = {
         'admit': {
             description:  `Admit allows a DistributedServiceCard to join the cluster.`,
@@ -85,6 +87,10 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
         },
         'routing-config': {
             description:  `RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.`,
+            required: false,
+            type: 'string'
+        },
+        'dscprofile': {
             required: false,
             type: 'string'
         },
@@ -180,6 +186,13 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
         } else {
             this['routing-config'] = null
         }
+        if (values && values['dscprofile'] != null) {
+            this['dscprofile'] = values['dscprofile'];
+        } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('dscprofile')) {
+            this['dscprofile'] = ClusterDistributedServiceCardSpec.propInfo['dscprofile'].default;
+        } else {
+            this['dscprofile'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -195,6 +208,7 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
                 'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterDistributedServiceCardSpec.propInfo['mgmt-vlan']),
                 'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterDistributedServiceCardSpec.propInfo['controllers']),
                 'routing-config': CustomFormControl(new FormControl(this['routing-config']), ClusterDistributedServiceCardSpec.propInfo['routing-config']),
+                'dscprofile': CustomFormControl(new FormControl(this['dscprofile']), ClusterDistributedServiceCardSpec.propInfo['dscprofile']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('ip-config') as FormGroup).controls).forEach(field => {
@@ -219,6 +233,7 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
             this._formGroup.controls['mgmt-vlan'].setValue(this['mgmt-vlan']);
             this._formGroup.controls['controllers'].setValue(this['controllers']);
             this._formGroup.controls['routing-config'].setValue(this['routing-config']);
+            this._formGroup.controls['dscprofile'].setValue(this['dscprofile']);
         }
     }
 }

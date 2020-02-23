@@ -200,7 +200,8 @@
           "Version",
           "ConfigurationSnapshot",
           "SnapshotRestore",
-          "License"
+          "License",
+          "DSCProfile"
         ],
         "Properties": {
           "Cluster": {
@@ -233,6 +234,20 @@
               "save"
             ],
             "URI": "/configs/cluster/v1/config-snapshot"
+          },
+          "DSCProfile": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "post",
+              "put",
+              "get",
+              "delete",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/cluster/v1/dscprofiles"
           },
           "DistributedServiceCard": {
             "Scopes": [

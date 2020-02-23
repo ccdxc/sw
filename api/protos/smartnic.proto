@@ -99,6 +99,8 @@ message DistributedServiceCardSpec {
 
     // RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.
     string RoutingConfig            = 8 [(gogoproto.jsontag) = "routing-config,omitempty"];
+
+    string DSCProfile               = 9 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/DSCProfile"}, (gogoproto.jsontag) = "dscprofile, omitempty"];
 }
 
 // IPConfig defines the static IP configuration for a DistributedServiceCard

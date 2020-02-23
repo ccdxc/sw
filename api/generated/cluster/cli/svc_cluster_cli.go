@@ -658,6 +658,95 @@ func restPutLicense(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetDSCProfile(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.DSCProfile); ok {
+		nv, err := restcl.ClusterV1().DSCProfile().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*cluster.DSCProfileList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.ClusterV1().DSCProfile().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteDSCProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.DSCProfile); ok {
+		nv, err := restcl.ClusterV1().DSCProfile().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostDSCProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.DSCProfile); ok {
+		nv, err := restcl.ClusterV1().DSCProfile().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutDSCProfile(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.DSCProfile); ok {
+		nv, err := restcl.ClusterV1().DSCProfile().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -699,5 +788,10 @@ func init() {
 
 	cl.AddRestPutFunc("cluster.License", "v1", restPutLicense)
 	cl.AddRestGetFunc("cluster.License", "v1", restGetLicense)
+
+	cl.AddRestPostFunc("cluster.DSCProfile", "v1", restPostDSCProfile)
+	cl.AddRestDeleteFunc("cluster.DSCProfile", "v1", restDeleteDSCProfile)
+	cl.AddRestPutFunc("cluster.DSCProfile", "v1", restPutDSCProfile)
+	cl.AddRestGetFunc("cluster.DSCProfile", "v1", restGetDSCProfile)
 
 }

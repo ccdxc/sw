@@ -6,6 +6,7 @@ audit.proto audit true
 auth.proto auth true
 browser.proto browser true
 cluster.proto cluster true
+dscprofile.proto cluster true
 endpoint.proto workload true
 eventpolicy.proto monitoring true
 events.proto events true

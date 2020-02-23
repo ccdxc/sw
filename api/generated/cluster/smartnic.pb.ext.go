@@ -421,6 +421,16 @@ func (m *DSCInfo) Normalize() {
 
 func (m *DistributedServiceCard) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *DistributedServiceCard) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -493,6 +503,28 @@ func (m *DistributedServiceCard) Normalize() {
 
 func (m *DistributedServiceCardSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "dscprofile"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "DSCProfile",
+			}
+		}
+
+		if m.DSCProfile != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"dscprofiles/"+m.DSCProfile)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *DistributedServiceCardSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

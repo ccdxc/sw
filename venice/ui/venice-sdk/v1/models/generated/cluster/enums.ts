@@ -44,6 +44,17 @@ export enum ClusterDSCCondition_status {
     'false' = "false",
 }
 
+export enum ClusterDSCProfileSpec_fwd_mode {
+    'transparent' = "transparent",
+    'insertion' = "insertion",
+}
+
+export enum ClusterDSCProfileSpec_policy_mode {
+    'base_net' = "base_net",
+    'flow_aware' = "flow_aware",
+    'enforced' = "enforced",
+}
+
 export enum ClusterDistributedServiceCardSpec_mgmt_mode {
     'host' = "host",
     'network' = "network",
@@ -227,6 +238,8 @@ export class AllEnums {
     ClusterClusterCondition_status = ClusterClusterCondition_status;
     ClusterDSCCondition_type = ClusterDSCCondition_type;
     ClusterDSCCondition_status = ClusterDSCCondition_status;
+    ClusterDSCProfileSpec_fwd_mode = ClusterDSCProfileSpec_fwd_mode;
+    ClusterDSCProfileSpec_policy_mode = ClusterDSCProfileSpec_policy_mode;
     ClusterDistributedServiceCardSpec_mgmt_mode = ClusterDistributedServiceCardSpec_mgmt_mode;
     ClusterDistributedServiceCardSpec_network_mode = ClusterDistributedServiceCardSpec_network_mode;
     ClusterDistributedServiceCardStatus_admission_phase = ClusterDistributedServiceCardStatus_admission_phase;

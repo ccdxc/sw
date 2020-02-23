@@ -101,6 +101,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"controllers":          api.CLIInfo{Path: "Spec.Controllers", Skip: false, Insert: "", Help: ""},
 			"default-gw":           api.CLIInfo{Path: "Spec.IPConfig.DefaultGW", Skip: false, Insert: "", Help: ""},
 			"dns-servers":          api.CLIInfo{Path: "Spec.IPConfig.DNSServers", Skip: false, Insert: "", Help: ""},
+			"dscprofile":           api.CLIInfo{Path: "Spec.DSCProfile", Skip: false, Insert: "", Help: ""},
 			"fw-major-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMajorVersion", Skip: false, Insert: "", Help: ""},
 			"fw-minor-ver":         api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.FwMinorVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
@@ -149,6 +150,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"Controllers": api.Field{Name: "Controllers", CLITag: api.CLIInfo{ID: "controllers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "controllers", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"RoutingConfig": api.Field{Name: "RoutingConfig", CLITag: api.CLIInfo{ID: "routing-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "routing-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DSCProfile": api.Field{Name: "DSCProfile", CLITag: api.CLIInfo{ID: "dscprofile", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dscprofile", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"cluster.DistributedServiceCardStatus": &api.Struct{

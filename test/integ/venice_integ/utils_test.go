@@ -138,3 +138,18 @@ func (it *veniceIntegSuite) createUser(tenantName, username, password string) (*
 
 	return it.restClient.AuthV1().User().Create(ctx, user)
 }
+
+// getDistributedServiceCard get DistributedServicesCard object. using REST api
+func (it *veniceIntegSuite) getDistributedServiceCard(dscName string) (*cluster.DistributedServiceCard, error) {
+	// build tenant meta
+	meta := api.ObjectMeta{
+		Name:   dscName,
+		Tenant: "default",
+	}
+	ctx, err := it.loggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	// get DistributdServiceCard
+	return it.restClient.ClusterV1().DistributedServiceCard().Get(ctx, &meta)
+}

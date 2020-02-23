@@ -2386,6 +2386,77 @@ func TestHostUpdates(t *testing.T) {
 
 }
 
+func TestDSCProfileCreateUpdateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// smartNic params
+	dscprof := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDSCProfile",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "BASE_NET",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DSCProfile().Create(&dscprof)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// verify the profile is there
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindDSCProfile("", "testDSCProfile")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Did not find DSCProfile", "1ms", "2s")
+
+	// change update
+	dscprof.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOW_AWARE.String()
+	err = stateMgr.ctrler.DSCProfile().Update(&dscprof)
+	AssertOk(t, err, "Update the DSCProfile")
+
+	// Verify Profile is updated
+	AssertEventually(t, func() (bool, interface{}) {
+		obj, err := stateMgr.FindDSCProfile("", "testDSCProfile")
+		if err == nil {
+			if obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOW_AWARE.String() {
+				return true, nil
+			}
+		}
+		return false, nil
+	}, "Didnot update the profile", "1ms", "2s")
+
+	// List Profile
+	dsclist, err := stateMgr.ListDSCProfiles()
+	AssertOk(t, err, "Error listing DSC Profiles")
+	Assert(t, (len(dsclist) == 1), "invalid number of dsc profiles")
+	// delete the smartNic
+	err = stateMgr.ctrler.DSCProfile().Delete(&dscprof)
+	AssertOk(t, err, "Error deleting the dscProfile")
+
+	// verify the endpoint is gone
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindDSCProfile("", "testDSCProfile")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Did not find DSCProfile", "1ms", "2s")
+}
+
 func TestSmartNicCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
@@ -2424,6 +2495,45 @@ func TestSmartNicCreateDelete(t *testing.T) {
 
 	_, err = stateMgr.FindDistributedServiceCardByMacAddr("0001.0203.0405")
 	AssertOk(t, err, "Could not find the smartNic")
+
+	dscprof := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDSCProfile",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "BASE_NET",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DSCProfile().Create(&dscprof)
+	AssertOk(t, err, "Could not create the smartNic profile")
+
+	// verify the profile is there
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindDSCProfile("", "testDSCProfile")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Did not find DSCProfile", "1ms", "2s")
+
+	newnic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard",
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			DSCProfile: "testDSCProfile",
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			PrimaryMAC: "0001.0203.0405",
+		},
+	}
+	err = stateMgr.ctrler.DistributedServiceCard().Update(&newnic)
+	AssertOk(t, err, "Error DistributedServicesCard update failed")
 
 	// delete the smartNic
 	err = stateMgr.ctrler.DistributedServiceCard().Delete(&snic)

@@ -3,7 +3,7 @@ true audit audit.proto svc_audit.proto
 true auth auth.proto svc_auth.proto 
 true bookstore example.proto 
 true browser browser.proto svc_browser.proto 
-true cluster cluster.proto license.proto smartnic.proto snapshot.proto svc_cluster.proto tenant.proto 
+true cluster cluster.proto dscprofile.proto license.proto smartnic.proto snapshot.proto svc_cluster.proto tenant.proto 
 true diagnostics module.proto svc_diagnostics.proto 
 true events events.proto svc_events.proto 
 true monitoring alerts.proto archive.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 

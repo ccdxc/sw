@@ -98,6 +98,10 @@ func ValidateMeta(oper types.Operation, kind string, meta api.ObjectMeta) error 
 		if len(meta.Tenant) == 0 || len(meta.Name) == 0 {
 			return errors.Wrapf(types.ErrBadRequest, "Kind: %v | Meta: %v | Err: %v", kind, meta, types.ErrEmptyFields)
 		}
+	case "profile":
+		if len(meta.Name) == 0 {
+			return errors.Wrapf(types.ErrBadRequest, "Kind: %v | Meta: %v | Err: %v", kind, meta, types.ErrEmptyFields)
+		}
 	default:
 		if len(meta.Tenant) == 0 || len(meta.Namespace) == 0 || len(meta.Name) == 0 {
 			return errors.Wrapf(types.ErrBadRequest, "Kind: %v | Meta: %v | Err: %v", kind, meta, types.ErrEmptyFields)

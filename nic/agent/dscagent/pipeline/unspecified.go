@@ -364,6 +364,7 @@ func (i *FakeAgentAPI) HandleNetwork(oper types.Operation, network netproto.Netw
 func (i *FakeAgentAPI) HandleEndpoint(oper types.Operation, endpoint netproto.Endpoint) (endpoints []netproto.Endpoint, err error) {
 	i.Lock()
 	defer i.Unlock()
+	log.Info("Received endpoint")
 
 	err = utils.ValidateMeta(oper, endpoint.Kind, endpoint.ObjectMeta)
 	if err != nil {
@@ -1312,6 +1313,7 @@ func (i *FakeAgentAPI) HandleFlowExportPolicy(oper types.Operation, netflow netp
 func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Profile) (profiles []netproto.Profile, err error) {
 	i.Lock()
 	defer i.Unlock()
+	log.Infof("Received Handle Profile:  %v Oper: %s", profile, oper)
 
 	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
 	if err != nil {

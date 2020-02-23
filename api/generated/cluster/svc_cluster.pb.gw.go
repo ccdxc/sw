@@ -92,6 +92,35 @@ func request_ClusterV1_AutoAddConfigurationSnapshot_0(ctx context.Context, marsh
 
 }
 
+func request_ClusterV1_AutoAddDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DSCProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	msg, err := client.AutoAddDSCProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_ClusterV1_AutoAddHost_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &Host{}
 	var smetadata runtime.ServerMetadata
@@ -241,6 +270,64 @@ func request_ClusterV1_AutoDeleteConfigurationSnapshot_0(ctx context.Context, ma
 	}
 
 	msg, err := client.AutoDeleteConfigurationSnapshot(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_ClusterV1_AutoDeleteDSCProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_ClusterV1_AutoDeleteDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DSCProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoDeleteDSCProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoDeleteDSCProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -547,6 +634,64 @@ func request_ClusterV1_AutoGetConfigurationSnapshot_0(ctx context.Context, marsh
 	}
 
 	msg, err := client.AutoGetConfigurationSnapshot(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
+	filter_ClusterV1_AutoGetDSCProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+)
+
+func request_ClusterV1_AutoGetDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DSCProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoGetDSCProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoGetDSCProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -895,6 +1040,43 @@ func request_ClusterV1_AutoGetVersion_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
+	filter_ClusterV1_AutoListDSCProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ClusterV1_AutoListDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoListDSCProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoListDSCProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+var (
 	filter_ClusterV1_AutoListDistributedServiceCard_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -1096,6 +1278,56 @@ func request_ClusterV1_AutoUpdateConfigurationSnapshot_0(ctx context.Context, ma
 	}
 
 	msg, err := client.AutoUpdateConfigurationSnapshot(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_ClusterV1_AutoUpdateDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &DSCProfile{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.AutoUpdateDSCProfile(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -1407,6 +1639,51 @@ func request_ClusterV1_AutoWatchConfigurationSnapshot_0(ctx context.Context, mar
 	}
 
 	stream, err := client.AutoWatchConfigurationSnapshot(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
+var (
+	filter_ClusterV1_AutoWatchDSCProfile_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ClusterV1_AutoWatchDSCProfile_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterV1Client, req *http.Request, pathParams map[string]string) (ClusterV1_AutoWatchDSCProfileClient, runtime.ServerMetadata, error) {
+	protoReq := &api.ListWatchOptions{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ClusterV1_AutoWatchDSCProfile_0); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.AutoWatchDSCProfile(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -1823,6 +2100,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("POST", pattern_ClusterV1_AutoAddDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoAddDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoAddDSCProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_ClusterV1_AutoAddHost_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1960,6 +2265,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoDeleteConfigurationSnapshot_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ClusterV1_AutoDeleteDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoDeleteDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoDeleteDSCProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2128,6 +2461,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoGetConfigurationSnapshot_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ClusterV1_AutoGetDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoGetDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoGetDSCProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2327,6 +2688,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("GET", pattern_ClusterV1_AutoListDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoListDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoListDSCProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ClusterV1_AutoListDistributedServiceCard_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2492,6 +2881,34 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 		}
 
 		forward_ClusterV1_AutoUpdateConfigurationSnapshot_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PUT", pattern_ClusterV1_AutoUpdateDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_ClusterV1_AutoUpdateDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterV1_AutoUpdateDSCProfile_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2740,6 +3157,61 @@ func RegisterClusterV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			} else {
 				forward_ClusterV1_AutoWatchConfigurationSnapshot_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
+		}
+
+	})
+
+	mux.Handle("GET", pattern_ClusterV1_AutoWatchDSCProfile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_ClusterV1_AutoWatchDSCProfile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ClusterV1_AutoWatchDSCProfile_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 			}
 		}
 
@@ -3112,6 +3584,8 @@ var (
 
 	pattern_ClusterV1_AutoAddConfigurationSnapshot_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"config-snapshot"}, ""))
 
+	pattern_ClusterV1_AutoAddDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"dscprofiles"}, ""))
+
 	pattern_ClusterV1_AutoAddHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"hosts"}, ""))
 
 	pattern_ClusterV1_AutoAddLicense_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"licenses"}, ""))
@@ -3121,6 +3595,8 @@ var (
 	pattern_ClusterV1_AutoAddTenant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"tenants"}, ""))
 
 	pattern_ClusterV1_AutoDeleteConfigurationSnapshot_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"config-snapshot"}, ""))
+
+	pattern_ClusterV1_AutoDeleteDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"dscprofiles", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoDeleteDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
 
@@ -3133,6 +3609,8 @@ var (
 	pattern_ClusterV1_AutoGetCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 
 	pattern_ClusterV1_AutoGetConfigurationSnapshot_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"config-snapshot"}, ""))
+
+	pattern_ClusterV1_AutoGetDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"dscprofiles", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoGetDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
 
@@ -3148,6 +3626,8 @@ var (
 
 	pattern_ClusterV1_AutoGetVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"version"}, ""))
 
+	pattern_ClusterV1_AutoListDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"dscprofiles"}, ""))
+
 	pattern_ClusterV1_AutoListDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"distributedservicecards"}, ""))
 
 	pattern_ClusterV1_AutoListHost_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"hosts"}, ""))
@@ -3159,6 +3639,8 @@ var (
 	pattern_ClusterV1_AutoUpdateCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"cluster"}, ""))
 
 	pattern_ClusterV1_AutoUpdateConfigurationSnapshot_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"config-snapshot"}, ""))
+
+	pattern_ClusterV1_AutoUpdateDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"dscprofiles", "O.Name"}, ""))
 
 	pattern_ClusterV1_AutoUpdateDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"distributedservicecards", "O.Name"}, ""))
 
@@ -3173,6 +3655,8 @@ var (
 	pattern_ClusterV1_AutoWatchCluster_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "cluster"}, ""))
 
 	pattern_ClusterV1_AutoWatchConfigurationSnapshot_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "config-snapshot"}, ""))
+
+	pattern_ClusterV1_AutoWatchDSCProfile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "dscprofiles"}, ""))
 
 	pattern_ClusterV1_AutoWatchDistributedServiceCard_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "distributedservicecards"}, ""))
 
@@ -3196,6 +3680,8 @@ var (
 
 	forward_ClusterV1_AutoAddConfigurationSnapshot_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoAddDSCProfile_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoAddHost_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoAddLicense_0 = runtime.ForwardResponseMessage
@@ -3205,6 +3691,8 @@ var (
 	forward_ClusterV1_AutoAddTenant_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoDeleteConfigurationSnapshot_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterV1_AutoDeleteDSCProfile_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoDeleteDistributedServiceCard_0 = runtime.ForwardResponseMessage
 
@@ -3217,6 +3705,8 @@ var (
 	forward_ClusterV1_AutoGetCluster_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetConfigurationSnapshot_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterV1_AutoGetDSCProfile_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoGetDistributedServiceCard_0 = runtime.ForwardResponseMessage
 
@@ -3232,6 +3722,8 @@ var (
 
 	forward_ClusterV1_AutoGetVersion_0 = runtime.ForwardResponseMessage
 
+	forward_ClusterV1_AutoListDSCProfile_0 = runtime.ForwardResponseMessage
+
 	forward_ClusterV1_AutoListDistributedServiceCard_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoListHost_0 = runtime.ForwardResponseMessage
@@ -3243,6 +3735,8 @@ var (
 	forward_ClusterV1_AutoUpdateCluster_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoUpdateConfigurationSnapshot_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterV1_AutoUpdateDSCProfile_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterV1_AutoUpdateDistributedServiceCard_0 = runtime.ForwardResponseMessage
 
@@ -3257,6 +3751,8 @@ var (
 	forward_ClusterV1_AutoWatchCluster_0 = runtime.ForwardResponseStream
 
 	forward_ClusterV1_AutoWatchConfigurationSnapshot_0 = runtime.ForwardResponseStream
+
+	forward_ClusterV1_AutoWatchDSCProfile_0 = runtime.ForwardResponseStream
 
 	forward_ClusterV1_AutoWatchDistributedServiceCard_0 = runtime.ForwardResponseStream
 

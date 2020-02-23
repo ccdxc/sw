@@ -208,6 +208,8 @@ const (
 
 	// SecurityRulePriority captures the priority of a security rule
 	SecurityRulePriority = "securityRulePriority"
+	// DSCProfileID captures kind for ID allocation for DSCProfile
+	DSCProfileID = "dscProfileID"
 
 	// TunnelID captures kind for ID allocation for Tunnel
 	TunnelID = "tunnelID"
@@ -226,6 +228,9 @@ const (
 
 	// SecurityProfileOffSet captures ID Alloc space for SecurityProfile
 	SecurityProfileOffSet = 15
+
+	// DSCProfileOffSet captures ID Alloc space for DSCProfile
+	DSCProfileOffset = 0 // check with abhi if we need this for DSCProfile
 
 	// TunnelOffset captures ID Alloc space for Tunnel
 	TunnelOffset = UplinkOffset + 20000

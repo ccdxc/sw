@@ -32,6 +32,13 @@
       "Field": "Book"
     }
   ],
+  "cluster.DistributedServiceCardSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "cluster/DSCProfile",
+      "Field": "DSCProfile"
+    }
+  ],
   "monitoring.AlertPolicySpec": [
     {
       "Type": "NamedRef",

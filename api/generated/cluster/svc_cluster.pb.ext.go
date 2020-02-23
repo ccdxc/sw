@@ -46,6 +46,16 @@ func (m *ConfigurationSnapshotList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *DSCProfileList) MakeKey(prefix string) string {
+	obj := DSCProfile{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *DSCProfileList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *DistributedServiceCardList) MakeKey(prefix string) string {
 	obj := DistributedServiceCard{}
 	return obj.MakeKey(prefix)
@@ -124,6 +134,12 @@ func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgConfigurationSnapshotWatchHelper) MakeKey(prefix string) string {
 	obj := ConfigurationSnapshot{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgDSCProfileWatchHelper) MakeKey(prefix string) string {
+	obj := DSCProfile{}
 	return obj.MakeKey(prefix)
 }
 
@@ -250,6 +266,48 @@ func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Clone(into interfac
 
 // Default sets up the defaults for the object
 func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgDSCProfileWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgDSCProfileWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgDSCProfileWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgDSCProfileWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgDSCProfileWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgDSCProfileWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgDSCProfileWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgDSCProfileWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgDSCProfileWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgDSCProfileWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -590,6 +648,27 @@ func (m *ConfigurationSnapshotList) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *DSCProfileList) Clone(into interface{}) (interface{}, error) {
+	var out *DSCProfileList
+	var ok bool
+	if into == nil {
+		out = &DSCProfileList{}
+	} else {
+		out, ok = into.(*DSCProfileList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*DSCProfileList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *DSCProfileList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *DistributedServiceCardList) Clone(into interface{}) (interface{}, error) {
 	var out *DistributedServiceCardList
 	var ok bool
@@ -858,8 +937,81 @@ func (m *AutoMsgConfigurationSnapshotWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgDSCProfileWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgDSCProfileWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgDSCProfileWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgDistributedServiceCardWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgDistributedServiceCardWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -890,6 +1042,18 @@ func (m *AutoMsgDistributedServiceCardWatchHelper) Normalize() {
 
 func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -1338,8 +1502,51 @@ func (m *ConfigurationSnapshotList) Normalize() {
 
 }
 
+func (m *DSCProfileList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *DSCProfileList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *DSCProfileList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
 func (m *DistributedServiceCardList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *DistributedServiceCardList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

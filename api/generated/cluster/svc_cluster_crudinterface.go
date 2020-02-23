@@ -136,6 +136,19 @@ type ClusterV1LicenseInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// ClusterV1DSCProfileInterface exposes the CRUD methods for DSCProfile
+type ClusterV1DSCProfileInterface interface {
+	Create(ctx context.Context, in *DSCProfile) (*DSCProfile, error)
+	Update(ctx context.Context, in *DSCProfile) (*DSCProfile, error)
+	UpdateStatus(ctx context.Context, in *DSCProfile) (*DSCProfile, error)
+	Label(ctx context.Context, in *api.Label) (*DSCProfile, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*DSCProfile, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*DSCProfile, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*DSCProfile, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
@@ -147,5 +160,6 @@ type ClusterV1Interface interface {
 	ConfigurationSnapshot() ClusterV1ConfigurationSnapshotInterface
 	SnapshotRestore() ClusterV1SnapshotRestoreInterface
 	License() ClusterV1LicenseInterface
+	DSCProfile() ClusterV1DSCProfileInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

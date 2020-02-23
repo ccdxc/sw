@@ -814,6 +814,11 @@ func (ma *APIClient) DistributedServiceCard() cmd.ClusterV1DistributedServiceCar
 	return nil
 }
 
+// DSCProfile returns mock DSCProfileInterface - nill till we need this functionality
+func (ma *APIClient) DSCProfile() cmd.ClusterV1DSCProfileInterface {
+	return nil
+}
+
 // Tenant returns mock Tenant - nill till we need this functionality
 func (ma *APIClient) Tenant() cmd.ClusterV1TenantInterface {
 	return nil

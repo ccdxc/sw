@@ -28,6 +28,7 @@ type grpcServerClusterV1 struct {
 	AuthBootstrapCompleteHdlr            grpctransport.Handler
 	AutoAddClusterHdlr                   grpctransport.Handler
 	AutoAddConfigurationSnapshotHdlr     grpctransport.Handler
+	AutoAddDSCProfileHdlr                grpctransport.Handler
 	AutoAddDistributedServiceCardHdlr    grpctransport.Handler
 	AutoAddHostHdlr                      grpctransport.Handler
 	AutoAddLicenseHdlr                   grpctransport.Handler
@@ -37,6 +38,7 @@ type grpcServerClusterV1 struct {
 	AutoAddVersionHdlr                   grpctransport.Handler
 	AutoDeleteClusterHdlr                grpctransport.Handler
 	AutoDeleteConfigurationSnapshotHdlr  grpctransport.Handler
+	AutoDeleteDSCProfileHdlr             grpctransport.Handler
 	AutoDeleteDistributedServiceCardHdlr grpctransport.Handler
 	AutoDeleteHostHdlr                   grpctransport.Handler
 	AutoDeleteLicenseHdlr                grpctransport.Handler
@@ -46,6 +48,7 @@ type grpcServerClusterV1 struct {
 	AutoDeleteVersionHdlr                grpctransport.Handler
 	AutoGetClusterHdlr                   grpctransport.Handler
 	AutoGetConfigurationSnapshotHdlr     grpctransport.Handler
+	AutoGetDSCProfileHdlr                grpctransport.Handler
 	AutoGetDistributedServiceCardHdlr    grpctransport.Handler
 	AutoGetHostHdlr                      grpctransport.Handler
 	AutoGetLicenseHdlr                   grpctransport.Handler
@@ -55,6 +58,7 @@ type grpcServerClusterV1 struct {
 	AutoGetVersionHdlr                   grpctransport.Handler
 	AutoLabelClusterHdlr                 grpctransport.Handler
 	AutoLabelConfigurationSnapshotHdlr   grpctransport.Handler
+	AutoLabelDSCProfileHdlr              grpctransport.Handler
 	AutoLabelDistributedServiceCardHdlr  grpctransport.Handler
 	AutoLabelHostHdlr                    grpctransport.Handler
 	AutoLabelLicenseHdlr                 grpctransport.Handler
@@ -64,6 +68,7 @@ type grpcServerClusterV1 struct {
 	AutoLabelVersionHdlr                 grpctransport.Handler
 	AutoListClusterHdlr                  grpctransport.Handler
 	AutoListConfigurationSnapshotHdlr    grpctransport.Handler
+	AutoListDSCProfileHdlr               grpctransport.Handler
 	AutoListDistributedServiceCardHdlr   grpctransport.Handler
 	AutoListHostHdlr                     grpctransport.Handler
 	AutoListLicenseHdlr                  grpctransport.Handler
@@ -73,6 +78,7 @@ type grpcServerClusterV1 struct {
 	AutoListVersionHdlr                  grpctransport.Handler
 	AutoUpdateClusterHdlr                grpctransport.Handler
 	AutoUpdateConfigurationSnapshotHdlr  grpctransport.Handler
+	AutoUpdateDSCProfileHdlr             grpctransport.Handler
 	AutoUpdateDistributedServiceCardHdlr grpctransport.Handler
 	AutoUpdateHostHdlr                   grpctransport.Handler
 	AutoUpdateLicenseHdlr                grpctransport.Handler
@@ -112,6 +118,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqConfigurationSnapshot,
 			EncodeGrpcRespConfigurationSnapshot,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddConfigurationSnapshot", logger)))...,
+		),
+
+		AutoAddDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoAddDSCProfileEndpoint,
+			DecodeGrpcReqDSCProfile,
+			EncodeGrpcRespDSCProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddDSCProfile", logger)))...,
 		),
 
 		AutoAddDistributedServiceCardHdlr: grpctransport.NewServer(
@@ -177,6 +190,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteConfigurationSnapshot", logger)))...,
 		),
 
+		AutoDeleteDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteDSCProfileEndpoint,
+			DecodeGrpcReqDSCProfile,
+			EncodeGrpcRespDSCProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteDSCProfile", logger)))...,
+		),
+
 		AutoDeleteDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteDistributedServiceCardEndpoint,
 			DecodeGrpcReqDistributedServiceCard,
@@ -238,6 +258,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqConfigurationSnapshot,
 			EncodeGrpcRespConfigurationSnapshot,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetConfigurationSnapshot", logger)))...,
+		),
+
+		AutoGetDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoGetDSCProfileEndpoint,
+			DecodeGrpcReqDSCProfile,
+			EncodeGrpcRespDSCProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetDSCProfile", logger)))...,
 		),
 
 		AutoGetDistributedServiceCardHdlr: grpctransport.NewServer(
@@ -303,6 +330,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelConfigurationSnapshot", logger)))...,
 		),
 
+		AutoLabelDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoLabelDSCProfileEndpoint,
+			DecodeGrpcReqLabel,
+			EncodeGrpcRespDSCProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoLabelDSCProfile", logger)))...,
+		),
+
 		AutoLabelDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoLabelDistributedServiceCardEndpoint,
 			DecodeGrpcReqLabel,
@@ -366,6 +400,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListConfigurationSnapshot", logger)))...,
 		),
 
+		AutoListDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoListDSCProfileEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespDSCProfileList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListDSCProfile", logger)))...,
+		),
+
 		AutoListDistributedServiceCardHdlr: grpctransport.NewServer(
 			endpoints.AutoListDistributedServiceCardEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -427,6 +468,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqConfigurationSnapshot,
 			EncodeGrpcRespConfigurationSnapshot,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateConfigurationSnapshot", logger)))...,
+		),
+
+		AutoUpdateDSCProfileHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateDSCProfileEndpoint,
+			DecodeGrpcReqDSCProfile,
+			EncodeGrpcRespDSCProfile,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateDSCProfile", logger)))...,
 		),
 
 		AutoUpdateDistributedServiceCardHdlr: grpctransport.NewServer(
@@ -551,6 +599,24 @@ func decodeHTTPrespClusterV1AutoAddConfigurationSnapshot(_ context.Context, r *h
 		return nil, errorDecoder(r)
 	}
 	var resp ConfigurationSnapshot
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoAddDSCProfile(ctx oldcontext.Context, req *DSCProfile) (*DSCProfile, error) {
+	_, resp, err := s.AutoAddDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddDSCProfile).V
+	return &r, resp.(respClusterV1AutoAddDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfile
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -717,6 +783,24 @@ func decodeHTTPrespClusterV1AutoDeleteConfigurationSnapshot(_ context.Context, r
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoDeleteDSCProfile(ctx oldcontext.Context, req *DSCProfile) (*DSCProfile, error) {
+	_, resp, err := s.AutoDeleteDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteDSCProfile).V
+	return &r, resp.(respClusterV1AutoDeleteDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfile
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteDistributedServiceCard(ctx oldcontext.Context, req *DistributedServiceCard) (*DistributedServiceCard, error) {
 	_, resp, err := s.AutoDeleteDistributedServiceCardHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -875,6 +959,24 @@ func decodeHTTPrespClusterV1AutoGetConfigurationSnapshot(_ context.Context, r *h
 		return nil, errorDecoder(r)
 	}
 	var resp ConfigurationSnapshot
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoGetDSCProfile(ctx oldcontext.Context, req *DSCProfile) (*DSCProfile, error) {
+	_, resp, err := s.AutoGetDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetDSCProfile).V
+	return &r, resp.(respClusterV1AutoGetDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfile
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1041,6 +1143,24 @@ func decodeHTTPrespClusterV1AutoLabelConfigurationSnapshot(_ context.Context, r 
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoLabelDSCProfile(ctx oldcontext.Context, req *api.Label) (*DSCProfile, error) {
+	_, resp, err := s.AutoLabelDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoLabelDSCProfile).V
+	return &r, resp.(respClusterV1AutoLabelDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoLabelDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfile
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoLabelDistributedServiceCard(ctx oldcontext.Context, req *api.Label) (*DistributedServiceCard, error) {
 	_, resp, err := s.AutoLabelDistributedServiceCardHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1203,6 +1323,24 @@ func decodeHTTPrespClusterV1AutoListConfigurationSnapshot(_ context.Context, r *
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoListDSCProfile(ctx oldcontext.Context, req *api.ListWatchOptions) (*DSCProfileList, error) {
+	_, resp, err := s.AutoListDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListDSCProfile).V
+	return &r, resp.(respClusterV1AutoListDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoListDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfileList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListDistributedServiceCard(ctx oldcontext.Context, req *api.ListWatchOptions) (*DistributedServiceCardList, error) {
 	_, resp, err := s.AutoListDistributedServiceCardHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -1361,6 +1499,24 @@ func decodeHTTPrespClusterV1AutoUpdateConfigurationSnapshot(_ context.Context, r
 		return nil, errorDecoder(r)
 	}
 	var resp ConfigurationSnapshot
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoUpdateDSCProfile(ctx oldcontext.Context, req *DSCProfile) (*DSCProfile, error) {
+	_, resp, err := s.AutoUpdateDSCProfileHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateDSCProfile).V
+	return &r, resp.(respClusterV1AutoUpdateDSCProfile).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateDSCProfile(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp DSCProfile
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -1585,6 +1741,10 @@ func (s *grpcServerClusterV1) AutoWatchLicense(in *api.ListWatchOptions, stream 
 	return s.Endpoints.AutoWatchLicense(in, stream)
 }
 
+func (s *grpcServerClusterV1) AutoWatchDSCProfile(in *api.ListWatchOptions, stream ClusterV1_AutoWatchDSCProfileServer) error {
+	return s.Endpoints.AutoWatchDSCProfile(in, stream)
+}
+
 func encodeHTTPClusterList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -1650,6 +1810,40 @@ func EncodeGrpcRespConfigurationSnapshotList(ctx context.Context, response inter
 
 // DecodeGrpcRespConfigurationSnapshotList decodes the GRPC response
 func DecodeGrpcRespConfigurationSnapshotList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPDSCProfileList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPDSCProfileList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req DSCProfileList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqDSCProfileList encodes GRPC request
+func EncodeGrpcReqDSCProfileList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCProfileList)
+	return req, nil
+}
+
+// DecodeGrpcReqDSCProfileList decodes GRPC request
+func DecodeGrpcReqDSCProfileList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*DSCProfileList)
+	return req, nil
+}
+
+// EncodeGrpcRespDSCProfileList endodes the GRPC response
+func EncodeGrpcRespDSCProfileList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespDSCProfileList decodes the GRPC response
+func DecodeGrpcRespDSCProfileList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 
