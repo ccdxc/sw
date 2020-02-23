@@ -60,7 +60,6 @@ typedef struct pds_init_params_s {
                                                 ///< files under \<cfg_path\>/pipeline/
                                                 ///< are picked by the software
     pds_event_cb_t            event_cb;         ///< callback registered for events
-    pds_upg_event_cb_t        upg_event_cb;     ///< upgrade event callbacks
 } pds_init_params_t;
 
 /// \brief initialize routine

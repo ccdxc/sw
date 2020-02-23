@@ -76,7 +76,8 @@ typedef enum p4pd_pipeline_ {
     P4_PIPELINE_INGRESS = 0,
     P4_PIPELINE_EGRESS,
     P4_PIPELINE_RXDMA,
-    P4_PIPELINE_TXDMA
+    P4_PIPELINE_TXDMA,
+    P4_PIPELINE_MAX
 } p4pd_pipeline_t;
 
 typedef enum p4pd_table_cache_ {

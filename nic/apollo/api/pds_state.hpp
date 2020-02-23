@@ -216,16 +216,14 @@ public:
     void set_system_mac(mac_addr_t mac) {
         memcpy(system_mac_, mac, sizeof(system_mac_));
     }
-    void set_upg_event_cb(pds_upg_event_cb_t event_cb) {
-        upg_event_cb_ = event_cb;
-    }
-    pds_upg_event_cb_t upg_event_cb(void) { return upg_event_cb_; }
     learn_state *learn_db(void) {
         return (learn_state *)state_[PDS_STATE_LEARN];
     }
     virtual sdk_ret_t transaction_begin(void) override;
     virtual sdk_ret_t transaction_end(bool abort) override;
 
+    // bootype. TODO: returning true now. need to fix.
+    bool coldboot(void) { return true; }
 private:
     string                  cfg_path_;
     string                  pipeline_;
@@ -243,7 +241,6 @@ private:
     uint16_t                num_data_cores_;
     state_base              *state_[PDS_STATE_MAX];
     pds_event_cb_t          event_cb_;
-    pds_upg_event_cb_t      upg_event_cb_;
     mac_addr_t              system_mac_;
     sdk::lib::kvstore       *kvstore_;
 };

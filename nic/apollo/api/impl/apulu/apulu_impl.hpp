@@ -183,6 +183,14 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) override;
 
+    /// \brief  routine to backup the states during the pipeline upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t upg_backup(void) override;
+
+    /// \brief  routine to switchover during the pipeline upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t upg_switchover(void) override;
+
     /// \brief     generic API to write to rxdma tables
     /// \param[in] addr        memory address to write the data to
     /// \param[in] tableid     table id
@@ -315,6 +323,10 @@ private:
     /// \brief  init routine to initialize p4plus tables
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t p4plus_table_init_(void);
+
+    /// \brief  routine to save the table engine config
+    /// \param[in] pipe pipeline
+    void table_engine_cfg_bkup_(p4pd_pipeline_t pipe);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;

@@ -77,8 +77,12 @@ mpartition_validate (void)
 }
 
 static sdk_ret_t
-compat_check (const pds_upg_spec_t *spec)
+compat_check (const pds_event_t *event)
 {
+    if (event->event_id != PDS_EVENT_ID_UPG) {
+        return SDK_RET_OK;
+    }
+    const pds_upg_spec_t *spec = &event->upg_spec;
     SDK_ASSERT (spec->stage == UPG_STAGE_NONE);
     (void)mpartition_validate();
     // need to terminate the pds_init
@@ -97,7 +101,7 @@ init (std::string cfg_file, std::string profile, std::string pipeline)
     init_params.trace_cb  = upg::sdk_logger;
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
-    init_params.upg_event_cb = compat_check;
+    init_params.event_cb  = compat_check;
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT; // TODO: Read from existing config
     pds_init(&init_params);
     // cannot use pds_init return value as we are exiting the execution

@@ -13,28 +13,31 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 
+// TODO : namespace to use (pds ? )
+//
 /// \defgroup UPG Upgrade Manager
 /// @{
 
 
 /// \brief upgrade stages
 typedef enum upg_stage_e {
-    UPG_STAGE_NONE = 0,
-    UPG_STAGE_START,      ///< start a new upgrade
+    UPG_STAGE_NONE = 0,   ///< invalid
+    UPG_STAGE_READY,      ///< upgarde ready check
+    UPG_STAGE_START,      ///< start an upgrade
     UPG_STAGE_PREPARE,    ///< prepare for an upgrade
     UPG_STAGE_ABORT,      ///< abort the on-going upgrade
-    UPG_STAGE_VERIFY,     ///< verify the upgrade is successful
+    UPG_STAGE_INIT,       ///< initialize the new upgrade
     UPG_STAGE_ROLLBACK,   ///< rollback to the previous version
-    UPG_STAGE_SWITCH,     ///< switch to the new version
-    UPG_STAGE_FINISH,     ///< last stage of the upgrade.
-                          ///< indicates that upgrade is done
+    UPG_STAGE_SWITCHOVER, ///< switch to the new version
+    UPG_STAGE_EXIT,       ///< exit previous or new depends on upgrade status.
+    UPG_STAGE_MAX,        ///< invalid
 } upg_stage_t;
 
 /// \brief upgrade modes
 typedef enum upg_mode_e {
     UPG_MODE_NONE = 0,
     UPG_MODE_DISRUPTIVE,        ///< disruptive upgrade
-    UPG_MODE_NON_DISRUPTIVE     ///< non disruptive single instance upgrade
+    UPG_MODE_ISSU               ///< non disruptive in service software upgrade
 } upg_mode_t;
 
 /// \brief upgrade operational table state actions
@@ -47,6 +50,64 @@ typedef enum upg_oper_state_action_e {
                                       ///< with no changes.
     UPG_OPER_STATE_ACTION_REPLACE     ///< replace the existing operational state table
 } upg_oper_state_action_t;
+
+/// \brief upgrade event id
+typedef enum upg_event_id_e {
+    // TODO : discuss on conflict with local event_ids (for example pds core)
+    UPG_EVENT_ID_REQ = 32,
+    UPG_EVENT_ID_RSP = 33,
+} upg_event_id_t;
+
+/// \brief upgrade responses
+typedef enum upg_status_e {
+    UPG_STATUS_OK = 0,     ///< operation successful
+    UPG_STATUS_FAIL,       ///< operation failed, but system is stable
+    UPG_STATUS_CRITICAL    ///< operation failed, and system is unstable
+} upg_status_t;
+
+/// \brief upgrade event msg
+/// as the upgrade mgr need to communicate with old and new images,
+/// we should not add anything in the middle.
+/// TODO: should i convert to protobuf and send
+typedef struct upg_event_msg_s {
+    upg_stage_t  stage;              ///< request stage
+    upg_status_t rsp_status;            ///< response status
+    char         rsp_thread_name[64];   ///< response thread name
+    // TODO other infos
+} __attribute__ ((packed)) upg_event_msg_t;
+
+// trace utilities
+// stage to string
+static const char *upg_stage_name[] =  {
+    [UPG_STAGE_NONE]       = "none",
+    [UPG_STAGE_READY]      = "ready",
+    [UPG_STAGE_START]      = "start",
+    [UPG_STAGE_PREPARE]    = "prepare",
+    [UPG_STAGE_ABORT]      = "abort",
+    [UPG_STAGE_INIT]       = "init",
+    [UPG_STAGE_ROLLBACK]   = "rollback",
+    [UPG_STAGE_SWITCHOVER] = "switchover",
+    [UPG_STAGE_EXIT]       = "exit",
+};
+
+static inline const char *
+upg_stage2str (upg_stage_t stage)
+{
+    return upg_stage_name[stage];
+}
+
+// status to string
+static const char *upg_status_name[] = {
+    [UPG_STATUS_OK]         = "ok",
+    [UPG_STATUS_FAIL]       = "fail",
+    [UPG_STATUS_CRITICAL]   = "critical",
+};
+
+static inline const char *
+upg_status2str (upg_status_t status)
+{
+    return upg_status_name[status];
+}
 
 /// @}
 

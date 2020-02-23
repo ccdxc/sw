@@ -15,6 +15,7 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
+#include "nic/apollo/api/include/pds_upgrade.hpp"
 
 /// \brief events from PDS HAL
 typedef enum pds_event_id_e {
@@ -26,6 +27,7 @@ typedef enum pds_event_id_e {
     PDS_EVENT_ID_LIF_UPDATE,
     PDS_EVENT_ID_LIF_UP,
     PDS_EVENT_ID_LIF_DOWN,
+    PDS_EVENT_ID_UPG,
     PDS_EVENT_ID_MAX,
 } pds_event_id_t;
 
@@ -51,10 +53,11 @@ typedef struct pds_event_s {
     union {
         pds_port_info_t port_info;
         pds_lif_event_info_t lif_info;
+        pds_upg_spec_t upg_spec;
     };
 } pds_event_t;
 
 /// \brief type of the callback function invoked to raise events
-typedef void (*pds_event_cb_t)(const pds_event_t *event);
+typedef sdk_ret_t (*pds_event_cb_t)(const pds_event_t *event);
 
 #endif    // __INCLUDE_API_PDS_EVENT_HPP__

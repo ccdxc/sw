@@ -18,19 +18,29 @@ service UpgSvc {
   rpc UpgradeRequest (UpgRequest) returns (UpgResponse) {}
 }
 
+// upgrade request type
 enum UpgReqType {
+  // invalid request
   UPG_REQ_NONE         = 0;
+  // start an upgrade
   UPG_REQ_START        = 1;
+  // compat check before an upgrade start
   UPG_REQ_COMPAT_CHECK = 2;
 }
 
+// upgrade mode
 enum UpgMode {
+  // invalid mode
   UPG_MODE_NONE           = 0;
+  // disruptive upgrade. not supported now (reserved)
   UPG_MODE_DISRUPTIVE     = 1;
-  UPG_MODE_NON_DISRUPTIVE = 2;
+  // non disruptive issu upgrade mode
+  UPG_MODE_ISSU = 2;
 }
 
+// upgrade operation table actions
 enum UpgOperStateAction {
+  // invalid action
   UPG_OPER_STATE_ACTION_NONE     = 0;
   // copy the operational tables to new memory with translation
   // memory should be reserved for duplicating the entries
@@ -45,6 +55,7 @@ enum UpgOperStateAction {
   UPG_OPER_STATE_ACTION_REPLACE  = 4;
 }
 
+// upgrade specification
 message UpgSpec {
   UpgReqType         ReqType         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   UpgMode            Mode            = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
@@ -52,16 +63,22 @@ message UpgSpec {
   UpgOperStateAction OperStateAction = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
 }
 
+// upgrade return status
 enum UpgStatus {
+  // upgrade successful
   UPG_STATUS_OK          = 0;
-  UPG_STATUS_INVALID_ARG = 1;
-  UPG_STATUS_ERR         = 2;
+  // upgrade failed
+  UPG_STATUS_FAIL        = 1;
+  // upgrade invalid args
+  UPG_STATUS_INVALID_ARG = 2;
 }
 
+// ugprade request
 message UpgRequest {
   UpgSpec Request = 1;
 }
 
+// upgrade response
 message UpgResponse {
   UpgStatus Status    = 1;
   string    StatusMsg = 2;

@@ -21,7 +21,9 @@
 #include "nic/sdk/platform/capri/capri_common.hpp"
 
 #include "nic/sdk/platform/ring/ring.hpp"
+#include "nic/sdk/platform/pal/include/pal_mem.h"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/impl_utils.hpp"
@@ -33,6 +35,7 @@
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 extern sdk_ret_t init_service_lif(uint32_t lif_id, const char *cfg_path);
+extern sdk_ret_t service_lif_upg_verify(uint32_t lif_id, const char *cfg_path);
 
 #define MEM_REGION_RXDMA_PROGRAM_NAME "rxdma_program"
 #define MEM_REGION_TXDMA_PROGRAM_NAME "txdma_program"
@@ -108,6 +111,17 @@ apulu_impl::txdma_symbols_init_(void **p4plus_symbols,
     SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
 
     return i;
+}
+
+void
+apulu_impl::table_engine_cfg_bkup_(p4pd_pipeline_t pipe) {
+    p4_tbl_eng_cfg_t *cfg;
+    uint32_t num_cfgs, max_cfgs;
+
+    num_cfgs = api::g_upg_state->tbl_eng_cfg(pipe, &cfg, &max_cfgs);
+    num_cfgs = sdk::asic::pd::asicpd_tbl_eng_cfg_get(pipe, &cfg[num_cfgs],
+                                                     max_cfgs - num_cfgs);
+    g_upg_state->incr_tbl_eng_cfg_count(pipe, num_cfgs);
 }
 
 sdk_ret_t
@@ -486,7 +500,14 @@ apulu_impl::p4plus_table_init_(void) {
     prog.control = "apulu_rxdma";
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    // configure only in hardinit
+    // for upgrade init, save the information and will be applied after p4 quiesce
+    if (api::g_pds_state.coldboot()) {
+        sdk::platform::capri::capri_p4plus_table_init(&prog,
+                                                      api::g_pds_state.platform_type());
+    } else {
+        table_engine_cfg_bkup_(P4_PIPELINE_RXDMA);
+    }
 
     p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
@@ -496,8 +517,14 @@ apulu_impl::p4plus_table_init_(void) {
     prog.control = "apulu_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog,
-                                                  api::g_pds_state.platform_type());
+    // configure only in hardinit
+    // for upgrade init, save the information and will be applied after p4 quiesce
+    if (api::g_pds_state.coldboot()) {
+        sdk::platform::capri::capri_p4plus_table_init(&prog,
+                                                      api::g_pds_state.platform_type());
+    } else {
+        table_engine_cfg_bkup_(P4_PIPELINE_TXDMA);
+    }
 
     return SDK_RET_OK;
 }
@@ -509,7 +536,7 @@ apulu_impl::pipeline_init(void) {
     std::string cfg_path = api::g_pds_state.cfg_path();
 
     p4pd_cfg.cfg_path = cfg_path.c_str();
-    ret = pipeline_p4_hbm_init(&p4pd_cfg);
+    ret = pipeline_p4_hbm_init(&p4pd_cfg, api::g_pds_state.coldboot());
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // skip the remaining if it is a soft initialization
@@ -519,26 +546,123 @@ apulu_impl::pipeline_init(void) {
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
+    // rss config is not modified across upgrades
+    // TODO : confirm this aproach is correct
+    if (api::g_pds_state.coldboot()) {
+        ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
                              P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
+    }
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
-    SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_deparser_init();
-    SDK_ASSERT(ret == SDK_RET_OK);
+    // on upgrade boot, this will be done during switchover
+    if (api::g_pds_state.coldboot()) {
+        ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
+        SDK_ASSERT(ret == SDK_RET_OK);
+        ret = sdk::asic::pd::asicpd_deparser_init();
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
 
     g_pds_impl_state.init(&api::g_pds_state);
     api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
 
-    ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
+    // on upgrade boot, just save the config to apply during switch
+    // if the id is same
+    if (api::g_pds_state.coldboot() ||
+        (api::g_upg_state->service_lif_id() != APULU_SERVICE_LIF)) {
+        ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
+    } else {
+        ret = service_lif_upg_verify(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
+    }
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    return SDK_RET_OK;
+}
+
+
+// this re-writes the common registers in the pipeline.
+// should be called in quiesced state and it should be the final
+// stage of the upgrade steps
+// if this returns OK, pipeline is switched to new.
+// if there is an error, rollback should be applied to old. so old
+// configuration should be saved by previous impl
+// keep this code very minimum to reduce the traffic hit duration.
+// avoid TRACES.
+sdk_ret_t
+apulu_impl::upg_switchover(void) {
+    sdk_ret_t ret;
+    p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
+                            P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
+    p4_tbl_eng_cfg_t *cfg;
+    uint32_t num_cfgs, max_cfgs;
+    std::list<qstate_cfg_t> q;
+
+    // return error if the pipeline is not quiesced
+    if (!sdk::asic::is_quiesced()) {
+        return SDK_RET_ERR;
+    }
+    // program generated nic/pgm_bin (generated configs)
+    sdk::platform::capri::capri_pgm_init();
+
+    // update the table engine configs
+    for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {
+        num_cfgs = api::g_upg_state->tbl_eng_cfg(pipe[i], &cfg, &max_cfgs);
+        ret = sdk::asic::pd::asicpd_tbl_eng_cfg_modify(pipe[i], cfg, num_cfgs);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+    ret = sdk::asic::pd::asicpd_deparser_init();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // TODO: DMA sram/tcam shadow copy to memory
+
+    // update pc offsets for qstate
+    q = api::g_upg_state->qstate_cfg();
+    for (std::list<qstate_cfg_t>::iterator it=q.begin();
+         it != q.end(); ++it) {
+        uint8_t pgm_off = it->pgm_off;
+        if (sdk::lib::pal_mem_write(it->addr, &pgm_off, 1) != 0) {
+            return SDK_RET_ERR;
+        }
+        PAL_barrier();
+        p4plus_invalidate_cache(it->addr, it->size, P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
+    // update rss config
+    api::g_upg_state->tbl_eng_rss_cfg(&cfg);
+    sdk::asic::pd::asicpd_rss_tbl_eng_cfg_modify(cfg);
+    return SDK_RET_OK;
+}
+
+// backup all the existing configs which will be modified during switchover.
+// invoked by upg managager when there is a failure during switchover
+// pipeline switchover and pipeline backup should be in sync
+// sequence : A(backup) -> Upgrade -> A2B(switchover) ->
+//          : B(switchover_failure) -> Rollback -> B2A(switchover) -> success/failure
+// B2A(switchover_failure) cannot be recoverd
+sdk_ret_t
+apulu_impl::upg_backup(void) {
+    p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
+                            P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
+    p4_tbl_eng_cfg_t *cfg;
+    p4plus_prog_t prog;
+    uint32_t rss_tblid = P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR;
+
+    // backup table engine config
+    for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {
+        table_engine_cfg_bkup_(pipe[i]);
+    }
+    // backup rss table engine config
+    api::g_upg_state->tbl_eng_rss_cfg(&cfg);
+    sdk::asic::pd::asicpd_rss_tbl_eng_cfg_get("apulu_rxdma", rss_tblid, cfg);
+
+    // TODO : backup pc offsets for qstate
     return SDK_RET_OK;
 }
 

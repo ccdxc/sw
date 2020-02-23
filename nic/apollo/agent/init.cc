@@ -156,7 +156,6 @@ init_pds (std::string cfg_file, std::string profile, std::string pipeline)
         }
     }
     init_params.event_cb = handle_event_ntfn;
-    init_params.upg_event_cb = handle_upg_event_ntfn;
     ret = pds_init(&init_params);
     return ret;
 }

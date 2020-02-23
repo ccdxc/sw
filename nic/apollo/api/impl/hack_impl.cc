@@ -21,6 +21,7 @@
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 
 using sdk::platform::capri::LIFManager;
 using sdk::platform::utils::program_info;
@@ -129,5 +130,82 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     lif_info.queue_info[0].entries = 1; // 2 Queues
     api::impl::devapi_impl::lif_program_tx_scheduler(&lif_info);
 
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief     routine to validate service LIFs config during upgrade
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
+{
+    uint8_t pgm_offset = 0;
+    int32_t rv;
+    std::string prog_info_file;
+    lifqstate_t lif_qstate;
+
+    prog_info_file = std::string(cfg_path) + std::string("/") +
+        std::string(LDD_INFO_FILE_RPATH) +
+        std::string("/") + std::string(LDD_INFO_FILE_NAME);
+
+    program_info *pginfo = program_info::factory(prog_info_file.c_str());
+    SDK_ASSERT(pginfo != NULL);
+    api::g_pds_state.set_prog_info(pginfo);
+
+    sdk::platform::utils::LIFQState qstate = { 0 };
+    qstate.lif_id = lif_id;
+    qstate.hbm_address = api::g_pds_state.mempartition()->start_addr(JLIF2QSTATE_MAP_NAME);
+    if (qstate.hbm_address == INVALID_MEM_ADDRESS) {
+        PDS_TRACE_ERR("LIF map not found");
+        return SDK_RET_ERR;
+    }
+    rv = sdk::platform::capri::get_pc_offset(pginfo,
+                                        "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
+    if (rv != 0) {
+        PDS_TRACE_ERR("TXDMA stage0 pgm not found");
+        return SDK_RET_ERR;
+    }
+
+    // read qstate and compare with the existing config
+    rv = sdk::platform::capri::read_qstate(
+        qstate.hbm_address, (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
+    if (rv != 0) {
+        PDS_TRACE_ERR("RXDMA qstate read failed");
+        return SDK_RET_ERR;
+    }
+    if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
+        (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
+        (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
+        PDS_TRACE_ERR("RXDMA qstate config mismatch found");
+        return SDK_RET_ERR;
+    }
+
+    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %u, to offset %u",
+                    qstate.hbm_address, lif_qstate.pc, pgm_offset);
+
+    rv = sdk::platform::capri::read_qstate(qstate.hbm_address + sizeof(lifqstate_t),
+                 (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
+    if (rv != 0) {
+        PDS_TRACE_ERR("TXDMA qstate read failed");
+        return SDK_RET_ERR;
+    }
+    if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
+        (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
+        (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
+        PDS_TRACE_ERR("TXDMA qstate config mismatch found");
+        return SDK_RET_ERR;
+    }
+
+    PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %u, to offset %u",
+                    qstate.hbm_address + sizeof(lifqstate_t), lif_qstate.pc, pgm_offset);
+
+    // save the qstate hbm address
+    if (pgm_offset != lif_qstate.pc) {
+        lif_qstate.pc = pgm_offset;
+        api::g_upg_state->set_qstate_cfg(qstate.hbm_address, sizeof(lifqstate_t), pgm_offset);
+        api::g_upg_state->set_qstate_cfg(qstate.hbm_address + sizeof(lifqstate_t),
+                                         sizeof(lifqstate_t), pgm_offset);
+    }
     return SDK_RET_OK;
 }

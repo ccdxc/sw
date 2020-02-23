@@ -215,7 +215,8 @@ do {                                                       \
     ENTRY(SDK_RET_HW_SW_OO_SYNC,              20,   "h/w, s/w out of sync")    \
     ENTRY(SDK_RET_OBJ_CLONE_ERR,              21,   "object clone failure")    \
     ENTRY(SDK_RET_IN_PROGRESS,                22,   "operation in progress")   \
-    ENTRY(SDK_RET_MAX,                        23,   "max return value")        \
+    ENTRY(SDK_RET_UPG_CRITICAL,               23,   "upgrade critcal failure") \
+    ENTRY(SDK_RET_MAX,                        24,   "max return value")        \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)

@@ -8,9 +8,9 @@
 
 #include "nic/apollo/api/include/pds_init.hpp"
 
-namespace upg {
+namespace api {
 
 sdk_ret_t upg_init(pds_init_params_t *params);
 
-}    // namespace upg
+}    // namespace api
 #endif    // __API_UPGRADE_HPP__

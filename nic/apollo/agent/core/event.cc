@@ -36,17 +36,15 @@ update_event_listener (void *ctxt)
     return SDK_RET_OK;
 }
 
-void
+sdk_ret_t
 handle_event_ntfn (const pds_event_t *event)
 {
     PDS_TRACE_DEBUG("Rcvd event {} ntfn", event->event_id);
+    // ignore upgrade events now
+    if (event->event_id == PDS_EVENT_ID_UPG) {
+        return SDK_RET_OK;
+    }
     publish_event(event);
-}
-
-sdk_ret_t
-handle_upg_event_ntfn (const pds_upg_spec_t *spec)
-{
-    // TODO
     return SDK_RET_OK;
 }
 

@@ -13,9 +13,9 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 
-namespace upg {
+namespace api {
 
-upg_state *upg_state::upg_state_ = NULL;
+upg_state *g_upg_state;
 
 #define PDS_UPG_SHM_NAME        "pds_upgrade"
 #define PDS_UPG_SHM_PSTATE_NAME "pds_upgrade_pstate"
@@ -51,6 +51,9 @@ upg_state::init_(bool shm_create) {
         return SDK_RET_ERR;
     }
 
+    // set the upgrade stage to default
+    last_spec_.stage = UPG_STAGE_NONE;
+
     PDS_TRACE_DEBUG("Upgrade shared mem %s done", op);
     return SDK_RET_OK;
 }
@@ -65,31 +68,47 @@ upg_state *
 upg_state::factory(bool shm_create) {
     sdk_ret_t ret;
     void *mem;
+    upg_state *ustate;
 
     mem = SDK_CALLOC(api::PDS_MEM_ALLOC_UPG, sizeof(upg_state));
     if (!mem) {
         PDS_TRACE_ERR("Upgrade state alloc failed");
         return NULL;
     }
-    upg_state_ = new (mem) upg_state();
-    ret = upg_state_->init_(shm_create);
+    ustate = new (mem) upg_state();
+    ret = ustate->init_(shm_create);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Upgrade state init failed");
         goto err_exit;
     }
-    return upg_state_;
+    return ustate;
 
 err_exit:
 
-    SDK_FREE(api::PDS_MEM_ALLOC_UPG, upg_state_);
-    upg_state_ = NULL;
+    SDK_FREE(api::PDS_MEM_ALLOC_UPG, ustate);
+    ustate = NULL;
     return NULL;
 }
 
-upg_state *
-upg_state::get_instance(void) {
-    SDK_ASSERT(upg_state_);
-    return upg_state_;
+uint32_t
+upg_state::tbl_eng_cfg(p4pd_pipeline_t pipe, p4_tbl_eng_cfg_t **cfg, uint32_t *max_cfgs) {
+    *cfg = &tbl_eng_cfgs_[pipe][0];
+    *max_cfgs = P4TBL_ID_MAX;
+    return tbl_eng_cfgs_count_[pipe];
 }
 
-}    // namespace upg
+void
+upg_state::incr_tbl_eng_cfg_count(p4pd_pipeline_t pipe, uint32_t ncfgs) {
+    tbl_eng_cfgs_count_[pipe] += ncfgs;
+}
+
+void
+upg_state::set_qstate_cfg(uint64_t addr, uint32_t size, uint32_t pgm_off) {
+    qstate_cfg_t q;
+    q.addr = addr;
+    q.size = size;
+    q.pgm_off = pgm_off;
+    qstate_cfgs_.push_back(q);
+}
+
+}    // namespace api

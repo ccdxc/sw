@@ -277,7 +277,7 @@ pds_init (pds_init_params_t *params)
         api::g_pds_state.cfg_path().c_str());
 
     // upgrade initialize
-    ret = upg::upg_init(params);
+    ret = api::upg_init(params);
     if (ret != SDK_RET_OK) {
         return SDK_RET_ERR;
     }

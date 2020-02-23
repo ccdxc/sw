@@ -46,19 +46,19 @@ SDK_DEFINE_MAP_EXTERN(asic_type_t, ASIC_TYPE)
     ENTRY(SDK_BOOT_TYPE_COLD,      0, "SDK_BOOT_TYPE_COLD")                 \
     ENTRY(SDK_BOOT_TYPE_ISSU,      1, "SDK_BOOT_TYPE_ISSU")                 \
 
-SDK_DEFINE_ENUM(boot_type_t, BOOT_TYPE)
+SDK_DEFINE_ENUM(boot_type_t,        BOOT_TYPE)
 SDK_DEFINE_ENUM_TO_STR(boot_type_t, BOOT_TYPE)
-SDK_DEFINE_MAP_EXTERN(boot_type_t, BOOT_TYPE)
+SDK_DEFINE_MAP_EXTERN(boot_type_t,  BOOT_TYPE)
 // #undef BOOT_TYPE
 
 static inline bool
-boot_type_cold(boot_type_t type)
+boot_type_cold (boot_type_t type)
 {
     return type == SDK_BOOT_TYPE_COLD;
 }
 
 static inline bool
-boot_type_issu(boot_type_t type)
+boot_type_issu (boot_type_t type)
 {
     return type == SDK_BOOT_TYPE_ISSU;
 }

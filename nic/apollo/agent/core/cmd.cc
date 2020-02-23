@@ -20,6 +20,7 @@
 namespace core {
 
 static thread_local sdk::event_thread::io_t cmd_accept_io;
+extern void upg_event_subscribe(void);
 
 static void
 cmd_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
@@ -91,6 +92,9 @@ cmd_server_thread_init (void *ctxt)
 {
     int fd;
     struct sockaddr_un sock_addr;
+
+    // register for upgrade events
+    upg_event_subscribe();
 
     // initialize unix socket
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
