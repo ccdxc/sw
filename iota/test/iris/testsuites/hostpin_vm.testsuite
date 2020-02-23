@@ -43,7 +43,6 @@ testbundles:
         - flowlog/flowlog.testbundle
         - networking/cps.testbundle
         - flowstats/flowstats.testbundle
-        - tcp_proxy/tcp_proxy.testbundle
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle
         - linktest/linktest.testbundle
@@ -56,7 +55,7 @@ testbundles:
         - mnic/mnic_hostpin.testbundle
         - mnic/mnic_hostpin_naples_only.testbundle
         - penctl/penctl_hostpin.testbundle
-        - naples_upgrade/naples_upgrade_hostpin.testbundle
+        #- naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
