@@ -113,3 +113,4 @@ captrace.syms
 *.swo
 *.dat
 *_log.txt
+sdk/third-party/dhcp-server-pkg/aarch64/
