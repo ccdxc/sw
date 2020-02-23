@@ -1786,7 +1786,7 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 			Type: ifType,
 		},
 		Status: netproto.InterfaceStatus{
-			InterfaceID: uint64(status.GetIfIndex()),
+			InterfaceID: utils.EthIfIndexToUplinkIfIndex(uint64(status.GetIfIndex())),
 			OperStatus:  status.GetLinkStatus().GetOperState().String(),
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: spec.KeyOrHandle.GetPortId(),
