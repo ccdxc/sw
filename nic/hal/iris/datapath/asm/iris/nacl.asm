@@ -33,12 +33,14 @@ nacl_permit:
   phvwr.c2      p.control_metadata_qid, d.u.nacl_permit_d.qid
 
   seq           c2, d.u.nacl_permit_d.ingress_mirror_en, 1
-  phvwr.c2      p.capri_intrinsic_tm_span_session, \
+  or.c2         r1, k.capri_intrinsic_tm_span_session, \
                     d.u.nacl_permit_d.ingress_mirror_session_id
+  phvwr.c2      p.capri_intrinsic_tm_span_session, r1
 
   seq           c2, d.u.nacl_permit_d.egress_mirror_en, 1
-  phvwr.c2      p.control_metadata_egress_mirror_session_id, \
+  or.c2         r1, k.control_metadata_egress_mirror_session_id, \
                     d.u.nacl_permit_d.egress_mirror_session_id
+  phvwr.c2      p.control_metadata_egress_mirror_session_id, r1
 
   seq           c2, d.u.nacl_permit_d.rewrite_en, 1
   phvwr.c2      p.rewrite_metadata_rewrite_index[11:0], \

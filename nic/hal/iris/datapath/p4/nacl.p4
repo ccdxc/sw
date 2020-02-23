@@ -36,7 +36,9 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
         modify_field(capri_intrinsic.tm_cpu, TRUE);
     }
     if (ingress_mirror_en == TRUE) {
-        modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
+        bit_or(capri_intrinsic.tm_span_session,
+               capri_intrinsic.tm_span_session,
+               ingress_mirror_session_id);
     }
 
     modify_field(copp_metadata.policer_index, policer_index);
@@ -44,8 +46,9 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
     modify_field(control_metadata.nacl_egress_drop, egress_drop);
 
     if (egress_mirror_en == TRUE) {
-        modify_field(control_metadata.egress_mirror_session_id,
-                egress_mirror_session_id);
+        bit_or(control_metadata.egress_mirror_session_id,
+               control_metadata.egress_mirror_session_id,
+               egress_mirror_session_id);
     }
 
     if (rewrite_en == TRUE) {

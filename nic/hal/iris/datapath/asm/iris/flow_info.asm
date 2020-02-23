@@ -109,8 +109,9 @@ f_flow_info_thread_1:
   bcf           [c1], flow_skip
 
   /* mirror session id and logging */
-  phvwrpair.!c1 p.capri_intrinsic_tm_span_session, \
-                    d.u.flow_info_d.ingress_mirror_session_id, \
+  or            r1, k.capri_intrinsic_tm_span_session, \
+                    d.u.flow_info_d.ingress_mirror_session_id
+  phvwrpair     p.capri_intrinsic_tm_span_session, r1, \
                     p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
   phvwr         p.control_metadata_egress_mirror_session_id, \
                     d.u.flow_info_d.egress_mirror_session_id

@@ -460,9 +460,9 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
     }
 
     /* mirror session id */
-    if (ingress_mirror_overwrite == TRUE) {
-        modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
-    }
+    bit_or(capri_intrinsic.tm_span_session, capri_intrinsic.tm_span_session,
+           ingress_mirror_session_id);
+
     modify_field(control_metadata.egress_mirror_session_id,
                  egress_mirror_session_id);
     if (mirror_on_drop_overwrite == TRUE) {
