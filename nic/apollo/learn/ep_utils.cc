@@ -45,7 +45,7 @@ delete_ip_entry (ep_ip_entry *ip_entry)
     ret = ip_entry->del_from_db();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
-                      ip_entry->key2str(), ret);
+                      ip_entry->key2str().c_str(), ret);
         return ret;
     }
     return ip_entry->delay_delete();
@@ -59,11 +59,11 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
     ret = delete_ip_mapping(ip_entry, bctxt);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
-                      ip_entry->key2str(), ret);
+                      ip_entry->key2str().c_str(), ret);
         return ret;
     }
 
-    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str());
+    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
     return delete_ip_entry(ip_entry);
 }
 
@@ -108,7 +108,7 @@ delete_mac_entry (ep_mac_entry *mac_entry)
     ret = mac_entry->del_from_db();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
-                      mac_entry->key2str(), ret);
+                      mac_entry->key2str().c_str(), ret);
         return ret;
     }
     return mac_entry->delay_delete();
@@ -143,7 +143,7 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
     if (ret != SDK_RET_OK) {
         pds_batch_destroy(bctxt);
         PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
-                      mac_entry->key2str(), ret);
+                      mac_entry->key2str().c_str(), ret);
         return ret;
     }
 
@@ -152,7 +152,7 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to commit API batch, error code %u", ret);
         return SDK_RET_ERR;
     }
-    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str());
+    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
 
     // delete sw state for all IP entries
     mac_entry->walk_ip_list(delete_ip_entry_cb, nullptr);
@@ -171,13 +171,12 @@ send_arp_probe (ep_ip_entry *ip_entry)
 }
 
 static void
-broadcast_learn_event (event_id_t learn_event, vnic_entry *vnic,
-                       ep_ip_entry *ip_entry)
+fill_learn_event (event_t *event, event_id_t learn_event, vnic_entry *vnic,
+                  ep_ip_entry *ip_entry)
 {
-    ::core::event_t event;
-    ::core::learn_event_info_t *info = &event.learn;
+    core::learn_event_info_t *info = &event->learn;
 
-    event.event_id = learn_event;
+    event->event_id = learn_event;
     info->subnet = vnic->subnet();
     info->ifindex = api::objid_from_uuid(vnic->host_if());
     MAC_ADDR_COPY(info->mac_addr, vnic->mac());
@@ -188,29 +187,28 @@ broadcast_learn_event (event_id_t learn_event, vnic_entry *vnic,
         info->vpc = { 0 };
         info->ip_addr = { 0 };
     }
-    sdk::ipc::broadcast(learn_event, &event, sizeof(event));
 }
 
 void
-broadcast_mac_event (event_id_t event, ep_mac_entry *mac_entry)
+fill_mac_event (event_t *event, event_id_t learn_event, ep_mac_entry *mac_entry)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
 
     vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
     vnic = vnic_db()->find(&vnic_key);
-    broadcast_learn_event(event, vnic, nullptr);
+    fill_learn_event(event, learn_event, vnic, nullptr);
 }
 
 void
-broadcast_ip_event (event_id_t event, ep_ip_entry *ip_entry)
+fill_ip_event (event_t *event, event_id_t learn_event, ep_ip_entry *ip_entry)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
 
     vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
     vnic = vnic_db()->find(&vnic_key);
-    broadcast_learn_event(event, vnic, ip_entry);
+    fill_learn_event(event, learn_event, vnic, ip_entry);
 }
 
 }    // namespace learn

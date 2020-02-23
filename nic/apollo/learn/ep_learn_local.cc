@@ -371,6 +371,7 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
     case LEARN_TYPE_NEW_LOCAL:
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
+        ctxt->mac_entry->add_ip(ctxt->ip_entry);
         broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
         break;
     case LEARN_TYPE_MOVE_L2L:

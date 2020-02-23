@@ -18,6 +18,8 @@
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
 
+using core::event_t;
+
 namespace learn {
 
 /// \brief delete IP entry from endpoint
@@ -39,11 +41,38 @@ ep_vnic_key (ep_mac_entry *mac_entry)
     return (api::uuid_from_objid(mac_entry->vnic_obj_id()));
 }
 
-/// \brief broadcast MAC learn events to subscribers
-void broadcast_mac_event(event_id_t event, ep_mac_entry *mac_entry);
+/// \brief build MAC learn event
+void fill_mac_event(event_t *event, event_id_t learn_event,
+                    ep_mac_entry *mac_entry);
 
-/// \brief broadcast IP learn events to subscribers
-void broadcast_ip_event(event_id_t event, ep_ip_entry *ip_entry);
+/// \brief build IP learn event
+void fill_ip_event(event_t *event, event_id_t learn_event,
+                   ep_ip_entry *ip_entry);
+
+/// \brief broadcast learn event to subscribers
+static inline void
+broadcast_learn_event (event_t *event)
+{
+    sdk::ipc::broadcast(event->event_id, event, sizeof(*event));
+}
+
+static inline void
+broadcast_mac_event (event_id_t learn_event, ep_mac_entry *mac_entry)
+{
+    event_t event;
+
+    fill_mac_event(&event, learn_event, mac_entry);
+    broadcast_learn_event(&event);
+}
+
+static inline void
+broadcast_ip_event (event_id_t learn_event, ep_ip_entry *ip_entry)
+{
+    event_t event;
+
+    fill_ip_event(&event, learn_event, ip_entry);
+    broadcast_learn_event(&event);
+}
 
 }    // namespace learn
 
