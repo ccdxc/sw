@@ -385,7 +385,7 @@ class SubnetObjectClient(base.ConfigClientBase):
 
     def CreateObjects(self, node):
         super().CreateObjects(node)
-        # Create VNIC and Remote Mapping Objects
+        # Create VNIC objects
         vnic.client.CreateObjects(node)
         rmapping.client.CreateObjects(node)
         # Create Metaswitch objects

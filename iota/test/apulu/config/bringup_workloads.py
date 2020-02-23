@@ -44,18 +44,17 @@ def __add_workloads():
         wl_msg.node_name = ep.node_name
         wl_msg.ip_prefix = ep.ip_addresses[0]
         # wl_msg.ipv6_prefix = ep.ip_addresses[1]
-        wl_msg.mac_address = str(ep.macaddr)
-        #wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+        wl_msg.mac_address = ep.macaddr
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
         wl_msg.encap_vlan = ep.vlan
-        interface = api.AllocateHostInterfaceForNode(wl_msg.node_name)
+        interface = ep.interface
         if interface != None: wl_msg.interface = interface
         wl_msg.parent_interface = wl_msg.interface
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
         _add_exposed_ports(wl_msg)
-        api.Logger.info("Workload-name %s node-name %s, ip-prefix %s mac %s" % (wl_msg.workload_name, wl_msg.node_name, wl_msg.ip_prefix, str(ep.macaddr)))
+        api.Logger.info(f"Workload {wl_msg.workload_name} Node {wl_msg.node_name} Intf {wl_msg.interface} IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address}")
 
     if len(req.workloads):
         api.Logger.info("Adding %d Workloads" % len(req.workloads))

@@ -40,7 +40,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Origin = topo.OriginTypes.FIXED
         self.UUID = None
         # marked HwHabitant when object is in hw
-        self.HwHabitant = True
+        self.HwHabitant = False
         self.Singleton = False
         self.ObjType = objtype
         self.Parent = None
@@ -407,16 +407,13 @@ class ConfigClientBase(base.ConfigClientBase):
             return False
         return True
 
+    #TODO: cleanup APIs & deprecate
     def CreateObjects(self, node):
         fixed, discovered = [], []
         for obj in self.Objects(node):
             (fixed if obj.IsOriginFixed() else discovered).append(obj)
 
         logger.info("%s objects: fixed: %d discovered %d" %(self.ObjType.name, len(fixed), len(discovered)))
-        # set HwHabitant to false for discovered objects
-        for obj in discovered:
-            obj.SetHwHabitant(False)
-
         # return if there is no fixed object
         if len(fixed) == 0:
             logger.info(f"Skip Creating {self.ObjType.name} Objects in {node}")
@@ -466,5 +463,15 @@ class ConfigClientBase(base.ConfigClientBase):
         result = list(map(lambda x: x.RollbackUpdate(), cfgObjects))
         if not all(result):
             logger.info(f"RollbackUpdate {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
+
+    def OperateObjects(self, node, oper, cfgObjects=None):
+        if not cfgObjects:
+            cfgObjects = self.Objects(node)
+        logger.info(f"{oper} {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: getattr(x, oper)(), cfgObjects))
+        if not all(result):
+            logger.info(f"{oper} {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
         return True

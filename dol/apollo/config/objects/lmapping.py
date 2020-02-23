@@ -134,11 +134,11 @@ class LocalMappingObject(base.ConfigObjectBase):
         return grpcmsg
 
     def GetGrpcSvcMappingReadMessage(self):
-        grpcmsg = service_pb2.SvcMappingRequest()
-        key = grpcmsg.Id.add()
+        grpcmsg = service_pb2.SvcMappingGetRequest()
+        key = grpcmsg.Key.add()
         key.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, key.BackendIP)
-        key.Port = self.LBPort
+        key.BackendPort = self.LBPort
         return grpcmsg
 
 
@@ -196,21 +196,19 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             return False
 
         if utils.IsServiceMappingSupported():
-            logger.info(f"Creating {len(self.Objects(node))} SVC {self.ObjType.name} Objects in {node}")
+            logger.info(f"Reading {len(self.Objects(node))} SVC {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects(node)))
             api.client[node].Get(api.ObjectTypes.SVCMAPPING, msgs)
         return True
 
     def GetVnicAddresses(self, vnic):
-        ip_addresses = []
+        ipv4_addresses = []
+        v4pfxlen = str(vnic.SUBNET.IPPrefix[1].prefixlen)
         for mapping in self.Objects(vnic.Node):
-            if hasattr(mapping, "VNIC") and mapping.VNIC.GID() == vnic.GID():
-                if mapping.AddrFamily == 'IPV6':
-                    ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[0].prefixlen))
-                else:
-                    ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[1].prefixlen))
-
-        return ip_addresses
+            if mapping.IsV6() or (mapping.VNIC.GID() != vnic.GID()):
+                continue
+            ipv4_addresses.append(mapping.IP + "/" + v4pfxlen)
+        return ipv4_addresses
 
 client = LocalMappingObjectClient()
 

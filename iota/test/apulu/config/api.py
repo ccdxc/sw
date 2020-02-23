@@ -20,6 +20,7 @@ class Endpoint:
         self.vlan = vnic_inst.VlanId
         self.ip_addresses = ip_addresses
         self.node_name = vnic_inst.Node
+        self.interface = GetObjClient('interface').GetHostInterfaceName(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx)
 
 class VnicRoute:
     def __init__(self, vnic_inst, ip_addresses):
@@ -31,19 +32,6 @@ class VnicRoute:
         else:
             self.vnic_ip = None
 
-def __get_vnic_ip_address(vnic_addresses, iptype):
-    for ipaddr in vnic_addresses:
-        ippfx = ipaddress.ip_interface(ipaddr).network
-        if isinstance(ippfx, iptype):
-            return ipaddr
-    return None
-
-def __get_vnic_addresses(vnic_addresses):
-    ip_addresses = []
-    ip_addresses.append(__get_vnic_ip_address(vnic_addresses, ipaddress.IPv4Network))
-    ip_addresses.append(__get_vnic_ip_address(vnic_addresses, ipaddress.IPv6Network))
-    return ip_addresses
-
 def GetEndpoints():
     naplesHosts = api.GetNaplesHostnames()
     eps = []
@@ -51,8 +39,7 @@ def GetEndpoints():
         vnics = vnic.client.Objects(node)
         for vnic_inst in vnics:
             vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
-            ip_addresses = __get_vnic_addresses(vnic_addresses)
-            ep = Endpoint(vnic_inst, ip_addresses)
+            ep = Endpoint(vnic_inst, vnic_addresses)
             eps.append(ep)
 
     return eps
@@ -73,23 +60,9 @@ def GetVnicRoutes():
 def GetObjClient(objname):
     return ObjClient[objname]
 
-def __findWorkloadsByIP(ip):
-    wloads = api.GetWorkloads()
-    for wload in wloads:
-        if wload.ip_address == ip or\
-           wload.ipv6_address == ip:
-            return wload
-    api.Logger.error("Workload {} not found".format(ip))
-    return None
-
 def __vnics_in_same_segment(vnic1, vnic2):
-    vnic1_ip_addresses = lmapping.client.GetVnicAddresses(vnic1)
-    for vnic1_ip in vnic1_ip_addresses:
-        vnic2_ip_addresses = lmapping.client.GetVnicAddresses(vnic2)
-        for vnic2_ip in vnic2_ip_addresses:
-            if ipaddress.ip_interface(vnic1_ip).network == ipaddress.ip_interface(vnic2_ip).network:
-                return True
-
+    if vnic1.SUBNET.GID() == vnic2.SUBNET.GID():
+        return True
     return False
 
 def __vnics_are_local_to_igw_pair(vnic1, vnic2):
@@ -102,11 +75,9 @@ def __vnics_are_local_to_igw_pair(vnic1, vnic2):
 
 def __findWorkloadByVnic(vnic_inst):
     wloads = api.GetWorkloads()
-    vnic1_ip_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
+    vnic_mac = vnic_inst.MACAddr.get()
     for wload in wloads:
-        if wload.ip_prefix in vnic1_ip_addresses:
-            return wload
-        elif wload.ipv6_prefix in vnic1_ip_addresses:
+        if wload.mac_address == vnic_mac:
             return wload
     return None
 
@@ -121,16 +92,6 @@ def __getWorkloadPairsBy(wl_pair_type):
         for vnic2 in vnics:
             if vnic1 == vnic2:
                 continue
-            find_in_same_segment = \
-                    (wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY or \
-                    wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
-
-            if find_in_same_segment and not __vnics_in_same_segment(vnic1, vnic2):
-                continue
-
-            w1 = __findWorkloadByVnic(vnic1)
-            w2 = __findWorkloadByVnic(vnic2)
-            assert(w1 and w2)
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and vnic1.Node == vnic2.Node:
@@ -138,6 +99,16 @@ def __getWorkloadPairsBy(wl_pair_type):
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_ONLY and not __vnics_are_local_to_igw_pair(vnic1, vnic2):
                 continue
 
+            find_in_same_segment = \
+                    (wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY or \
+                    wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
+            # TODO: do we need this here?
+            if find_in_same_segment and not __vnics_in_same_segment(vnic1, vnic2):
+                continue
+
+            w1 = __findWorkloadByVnic(vnic1)
+            w2 = __findWorkloadByVnic(vnic2)
+            assert(w1 and w2)
             wl_pairs.append((w1, w2))
 
     return wl_pairs
@@ -190,7 +161,7 @@ def ProcessObjectsByOperation(oper, objtype, selected_objs = None):
 def __findVnicObjectByWorkload(wl):
     vnics = vnic.client.Objects(wl.node_name)
     for vnic_ in vnics:
-        if str(vnic_.MACAddr.get()) == wl.mac_address:
+        if vnic_.MACAddr.get() == wl.mac_address:
             return vnic_
     return None
 

@@ -1,9 +1,7 @@
-# Scale VxLAN Topology Specification for Host mode
+# Scale VxLAN Topology Specification for apulu 4G DSC in Host mode
 meta:
-    id: TOPO_VxLAN_HOSTMODE_SCALE
+    id: TOPO_VxLAN_HOSTMODE_4G_SCALE
 
-# scale is based on apulu for 4G DSC
-#
 # 1 Device
 # 9 VPCs (1 underlay + 8 Tenants)
 # 8 Subnets (as we can have only 8 Host interfaces)
@@ -12,7 +10,7 @@ meta:
 # 1638400 Remote mappings
 # 32 V4 Route table (each with 1023 routes)
 # 32 V4 Security Policy (each with 4 rules)
-# 2048 Tunnels
+# 2047 Tunnels
 # 1602 Nexthops (1600 overlay + 2 underlay)
 # 360 NexthopGroups (each has random [1-8] no of nexthops)
 
@@ -27,7 +25,7 @@ device:
     macaddress  : macaddr/0000.bbbb.bbb1
     encap       : vxlan # vxlan or mplsodup
     tunnel      :
-        - count : 1024
+        - count : 1023
           type  : underlay
         - count : 1024
           type  : underlay-ecmp
@@ -83,7 +81,7 @@ vpc:
               # usehostif - Inherit subnet's host lif (default true)
               usehostif: false
           rmap:                       # Remote IP mappings per subnet
-            - count : 204800
+            - count : 204 #204800
       #nat:
       #  count : 1
       #  addrtype : PUBLIC_AND_SERVICE

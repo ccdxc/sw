@@ -20,6 +20,7 @@ import apollo.config.objects.host.lif as lif
 from apollo.config.objects.port import client as PortClient
 
 import interface_pb2 as interface_pb2
+import types_pb2 as types_pb2
 
 class InterfaceStatus(base.StatusObjectBase):
     def __init__(self):
@@ -192,6 +193,11 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return self.__hostifs_iter[node].rrnext()
         return None
 
+    def GetHostInterfaceName(self, node, hostifindex):
+        if self.__hostifs[node]:
+            return self.__hostifs[node].get(hostifindex, None)
+        return None
+
     def GetL3UplinkInterface(self, node):
         if self.__uplinkl3ifs[node]:
             return self.__uplinkl3ifs_iter[node].rrnext()
@@ -213,11 +219,28 @@ class InterfaceObjectClient(base.ConfigClientBase):
             lifend = lifstart + obj.LifCount - 1
             spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
             ifobj = InterfaceObject(spec, ifspec, node=node)
-            # self.Objs[node].update({ifobj.InterfaceId: ifobj})
             self.__hostifs[node].update({ifobj.InterfaceId: ifobj})
 
         if self.__hostifs[node]:
             self.__hostifs_iter[node] = utils.rrobiniter(self.__hostifs[node].values())
+        return
+
+    def __generate_iota_host_interfaces_map(self, node):
+        resps = self.ReadLifs(node)
+
+        if utils.IsDryRun():
+            return
+        for r in resps:
+            if not utils.ValidateGrpcResponse(r):
+                logger.error(f"INTERFACE LIF get request failed with {r}")
+                continue
+            for lif in r.Response:
+                intf_type = lif.Spec.Type
+                if intf_type != types_pb2.LIF_TYPE_HOST:
+                    continue
+                key = self.GetKeyfromSpec(lif.Spec)
+                intf_name = lif.Status.Name
+                self.__hostifs[node].update({key: intf_name})
         return
 
     def __generate_l3_uplink_interfaces(self, node, parent, iflist):
@@ -252,6 +275,9 @@ class InterfaceObjectClient(base.ConfigClientBase):
     def GenerateHostInterfaces(self, node, topospec):
         if not utils.IsInterfaceSupported():
             return
+        if not utils.IsDol():
+            self.__generate_iota_host_interfaces_map(node)
+            return
         hostifspec = getattr(topospec, 'hostinterface', None)
         if not hostifspec:
             return
@@ -283,6 +309,17 @@ class InterfaceObjectClient(base.ConfigClientBase):
             api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
             list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return
+
+
+    def GetGrpcReadAllLifMessage(self):
+        grpcmsg = interface_pb2.LifGetRequest()
+        return grpcmsg
+
+    def ReadLifs(self, node):
+        if utils.IsDryRun(): return
+        msg = self.GetGrpcReadAllLifMessage()
+        resp = api.client[node].Request(api.ObjectTypes.INTERFACE, 'LifGet', [msg])
+        return resp
 
     def ReadObjects(self, node):
         msg = self.GetGrpcReadAllMessage(node)

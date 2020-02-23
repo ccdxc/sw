@@ -93,9 +93,8 @@ def __generate(node, topospec):
     # Generate Port Configuration
     PortClient.GenerateObjects(node, topospec)
 
-    if utils.IsDol():
-        # Generate Host Interface Configuration
-        InterfaceClient.GenerateHostInterfaces(node, topospec)
+    # Generate Host Interface Configuration
+    InterfaceClient.GenerateHostInterfaces(node, topospec)
 
     # Generate Mirror session configuration before vnic
     MirrorClient.GenerateObjects(node, topospec)
@@ -115,6 +114,10 @@ def __generate(node, topospec):
     return
 
 def __create(node):
+    if utils.IsSkipSetup():
+        logger.info("Skip Creating objects in pds-agent for node ", node)
+        return
+
     logger.info("Creating objects in pds-agent for node ", node)
     # Start the Batch
     BatchClient.Start(node)
@@ -143,6 +146,9 @@ def __create(node):
 
     # Commit the Batch
     BatchClient.Commit(node)
+
+    # Create remote mapping objects one by one
+    # RmappingClient.OperateObjects(node, 'Create')
     return
 
 def __read(node):
@@ -164,8 +170,8 @@ def __read(node):
     # DHCPRelayClient.ReadObjects(node)
     NATPbClient.ReadObjects(node)
     # BGPPbClient.ReadObjects(node)
-    # LmappingClient.ReadObjects(node)
-    # RmappingClient.ReadObjects(node)
+    LmappingClient.ReadObjects(node)
+    RmappingClient.ReadObjects(node)
     PolicerClient.ReadObjects(node)
     return
 

@@ -178,6 +178,10 @@ def GetFilteredObjects(objs, maxlimits, randomize=False):
         return GetRandomSamples(objs, num)
     return objs[0:num]
 
+def IsSkipSetup():
+    skip_setup = getattr(GlobalOptions, 'skip_setup', None)
+    return skip_setup
+
 def IsDryRun():
     return GlobalOptions.dryrun
 
@@ -292,7 +296,7 @@ def ValidateCreate(obj, resps):
         if ValidateGrpcResponse(resp, expApiStatus):
             obj.SetHwHabitant(True)
         else:
-            logger.error(f"Creation/Restoration failed for {obj}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
+            logger.error(f"[Re]Creation failed for {obj}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
             obj.Show()
             return False
     return True
@@ -399,7 +403,7 @@ def CreateObject(obj):
         return True
 
     def RestoreObj(robj, node):
-        logger.info("Recreating object %s" % (robj))
+        logger.info("[Re]Creating object %s" % (robj))
 
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first

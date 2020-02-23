@@ -91,7 +91,7 @@ class BatchObjectClient:
             cookie = INVALID_BATCH_COOKIE
         else:
             cookie = batchStatus[0].BatchContext.BatchCookie
-        logger.info("Setting Batch cookie to ", cookie)
+        # logger.info("Setting Batch cookie to ", cookie)
         self.GetObjectByKey(node).SetBatchCookie(cookie)
         if commitStatus:
             self.GetObjectByKey(node).SetBatchCommitStatus(commitStatus)

@@ -365,6 +365,7 @@ class NexthopObjectClient(base.ConfigClientBase):
         else:
             logger.info(f"Creating {len(self.Objects(node))} {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
+            list(map(lambda x: x.SetHwHabitant(True), self.Objects(node)))
         api.client[node].Create(self.ObjType, msgs)
         return
 

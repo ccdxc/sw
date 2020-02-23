@@ -10,7 +10,8 @@ testcases:
         stress  : True
         iterators :
             type    : nested
-            objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            #objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            objtype : [ policy, route, rmapping, lmapping ]
             oper    : [ delete ]
 
     -   name    : API_CRUD_SCALE_UPDATE

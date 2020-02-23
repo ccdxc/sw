@@ -2,7 +2,7 @@
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 
-MEMCMDS = ["free -m", "/data/ps_mem.py", "/nic/bin/pdsctl show system memory"]
+MEMCMDS = ["date", "free -m", "/data/ps_mem.py", "/nic/bin/pdsctl show system memory"]
 
 def RunMemoryCmds(node):
     req = api.Trigger_CreateExecuteCommandsRequest()

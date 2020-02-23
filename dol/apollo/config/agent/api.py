@@ -148,6 +148,16 @@ class ClientStub:
             resps.append(self.__rpcs[op](obj, timeout=MAX_GRPC_WAIT))
         return resps
 
+    def DoRpc(self, rpcname, objs):
+        resps = []
+        rpc = getattr(self.__stub, rpcname, None)
+        if not rpc:
+            logger.error(f"Invalid RPC {rpcname}")
+            return resps
+        for obj in objs:
+            resps.append(rpc(obj, timeout=MAX_GRPC_WAIT))
+        return resps
+
 class ApolloAgentClientRequest:
     def __init__(self, stub, req,):
         self.__stub = stub
@@ -300,6 +310,10 @@ class ApolloAgentClient:
     def Get(self, objtype, objs):
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
+
+    def Request(self, objtype, rpcname, objs):
+        if GlobalOptions.dryrun: return
+        return self.__stubs[objtype].DoRpc(rpcname, objs)
 
     def Start(self, objtype, obj):
         if GlobalOptions.dryrun: return

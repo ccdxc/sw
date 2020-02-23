@@ -34,6 +34,31 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+
+ e2e-scale-linux-bm:
+   commands: ["sh", "-c", "make apulu-networking && ./run_iota.sh --pipeline apulu --testsuite apulu_scale"]
+   owners: ["email:param@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-apulu-arm
+     - build-iota
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         server-type: server-a
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/all_corefiles.tgz
