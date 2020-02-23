@@ -4526,6 +4526,9 @@ func TestApis(t *testing.T) {
 	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, "byteArray", opt) != "" {
 		t.Errorf("Got wrong value")
 	}
+	if getPdsaCastPrintFunc(gogoproto.FieldDescriptorProto_TYPE_BYTES) != "pds_ms_print_byte_array" {
+		t.Errorf("Got wrong value")
+	}
 	if addStr("a", "b") != "ab" {
 		t.Errorf("Got wrong value")
 	}

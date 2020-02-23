@@ -17,6 +17,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_get_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include <google/protobuf/util/json_util.h>
 
 #define SHARED_DATA_TYPE SMS_SHARED_LOCAL
 
@@ -32,6 +33,25 @@
     {{$mib    := $param.Mib}}
     {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
+    /*===== Set Dump Spec: {{$msgName}} =====*/
+    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+        std::string cfg;
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = true;
+        options.always_print_primitive_fields = true;
+        options.preserve_proto_field_names = true;
+        google::protobuf::util::MessageToJsonString(req, &cfg, options);
+        PDS_TRACE_DEBUG("{{$msgName}} configuration:");
+        PDS_TRACE_DEBUG("%s", cfg.c_str());
+        {{$fields := .Fields}}
+        {{range $fields}}
+          {{$castFn := getPdsaCastPrintFunc .Type}}
+          {{if (eq $castFn "pds_ms_print_byte_array")}}
+        {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}");
+          {{end}}
+        {{end}}
+    }
+
     /*===== Set MS Table: {{$struct}} =====*/
     NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid) {
@@ -305,6 +325,17 @@
     {{$mib    := $param.Mib}}
     {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
+    /*===== Get Dump Spec: {{$msgName}} =====*/
+    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+        std::string cfg;
+        google::protobuf::util::JsonPrintOptions options;
+        options.add_whitespace = true;
+        options.always_print_primitive_fields = true;
+        options.preserve_proto_field_names = true;
+        google::protobuf::util::MessageToJsonString(req, &cfg, options);
+        PDS_TRACE_DEBUG("{{$msgName}} configuration:");
+        PDS_TRACE_DEBUG("%s", cfg.c_str());
+    }
     /*===== Get MS Table: {{$struct}} =====*/
     {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
     {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}

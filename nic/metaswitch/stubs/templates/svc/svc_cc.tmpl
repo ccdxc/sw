@@ -94,6 +94,7 @@ Status
               {{$param := (getPdsaSetGlobalOpts $reqMsg $cam)}}
               {{$struct := $param.Struct}}
               {{$updForDel := $param.UpdateForDelete}}
+        pds_ms_set_dump_{{$struct | ToLower}}(proto_spec);
               {{if (HasSuffix $rpc "Delete")}}
         pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
                 {{if $updForDel}}
@@ -153,6 +154,7 @@ Status
                       {{$param := (getPdsaGetGlobalOpts $specMsg $cam)}}
                       {{$struct := $param.Struct}}
                 PDS_MS_GET_SHARED_START();
+                pds_ms_get_dump_{{$struct | ToLower}}(proto_spec);
                 pds_ms_pre_get_{{$struct | ToLower}}(proto_spec, resp);
                 pds_ms_get_{{$struct | ToLower}}(proto_spec, resp);
                 pds_ms_post_get_{{$struct | ToLower}}(proto_spec, resp);
@@ -185,6 +187,7 @@ Status
                         {{end}}
                       {{end}}  
                     PDS_MS_GET_SHARED_START();
+                    pds_ms_get_dump_{{$struct | ToLower}}(proto_status);
                     pds_ms_pre_get_{{$struct | ToLower}}(proto_status, resp);
                     pds_ms_get_{{$struct | ToLower}}(proto_status, resp);
                     pds_ms_post_get_{{$struct | ToLower}}(proto_status, resp);
@@ -199,6 +202,7 @@ Status
                   {{$struct := $param.Struct}}
                   {{if (HasSuffix $rpc "Get")}}
                 PDS_MS_GET_SHARED_START();
+                pds_ms_get_dump_{{$struct | ToLower}}(proto_spec);
                 pds_ms_pre_get_{{$struct | ToLower}}(proto_spec, resp);
                 pds_ms_get_{{$struct | ToLower}}(proto_spec, resp);
                 pds_ms_postget_{{$struct | ToLower}}(proto_spec, resp);

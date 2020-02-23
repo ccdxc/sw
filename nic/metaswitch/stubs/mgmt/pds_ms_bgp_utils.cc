@@ -38,8 +38,8 @@ update_bgp_route_map_table (NBB_ULONG correlator)
                 return true;
                 });
 
-    PDS_TRACE_VERBOSE ("****** bgpRouteMapTable ext-comm:: %s (len=%d)\n",
-                       str.c_str(), str.length());
+    PDS_TRACE_DEBUG ("ORF: bgpRouteMapTable ext-comm:: %s (len=%d)\n",
+                      str.c_str(), str.length());
 
     // set length appropriately
     if (!str.empty()) {

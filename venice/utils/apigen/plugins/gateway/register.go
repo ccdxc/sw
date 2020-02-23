@@ -820,6 +820,13 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 	return ret, err
 }
 
+func getPdsaCastPrintFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type) string {
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES {
+		return "pds_ms_print_byte_array"
+	}
+	return ""
+}
+
 func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, camInfoFieldTypeName string, f pdsaFieldOpt) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_FIXED32 && camInfoFieldTypeName == "byteArray" {
 		return "NBB_PUT_LONG"
@@ -3982,6 +3989,7 @@ func init() {
 	reg.RegisterFunc("TypeIsMessage", typeIsMessage)
 	reg.RegisterFunc("getPdsaCastSetFunc", getPdsaCastSetFunc)
 	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
+	reg.RegisterFunc("getPdsaCastPrintFunc", getPdsaCastPrintFunc)
 	reg.RegisterFunc("getCppTypeFieldFromProto", getCppTypeFieldFromProto)
 	reg.RegisterFunc("getRowStatusOid", getRowStatusOid)
 	reg.RegisterFunc("isRepeatedField", isRepeatedField)

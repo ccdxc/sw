@@ -3,6 +3,7 @@
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "include/sdk/base.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 #define SHARED_DATA_TYPE CSS_LOCAL
 using namespace types;
@@ -125,6 +126,25 @@ pds_ms_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_
     auto str = (const unsigned char*) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
+// API to print "bytes" field of protos
+NBB_VOID
+pds_ms_print_byte_array (string in_str, string in_msg, string in_field)
+{
+    // print only if the field has some input
+    if (in_str.length())
+    {
+        int len = 3*in_str.length();
+        int buf_idx = 0;
+        char buffer [len];
+        auto str = (const unsigned char*) in_str.c_str();
+        for(int j = 0; j < in_str.length(); j++) {
+            buf_idx += snprintf(buffer+buf_idx, len-buf_idx, "%02X:", str[j]);
+        }
+        PDS_TRACE_DEBUG ("%s.%s: \"%s\"",
+                          in_msg.c_str(), in_field.c_str(), buffer);
     }
 }
 

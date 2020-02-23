@@ -49,6 +49,7 @@ extern "C" {
                                              NBB_LONG row_status);
     NBB_VOID pds_ms_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type);
+    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req);
     NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
     NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
     NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
@@ -75,6 +76,7 @@ extern "C" {
     bool     pds_ms_pre_fill_get_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}});
     NBB_VOID pds_ms_reg_pre_get_{{$struct | ToLower}}(pre_get_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_get_{{$struct | ToLower}}(post_get_{{$struct | ToLower}}_func_type);
+    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req);
     NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
     NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
     NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
