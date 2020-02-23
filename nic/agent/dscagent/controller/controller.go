@@ -706,24 +706,6 @@ func (c *API) getMappingHandler(r *http.Request) (interface{}, error) {
 	return resp, err
 }
 
-func (c *API) handleDSCRoutingInfo(obj types.DistributedServiceCardStatus) {
-	//Handle DSC Routing Info
-	c.Lock()
-	defer c.Unlock()
-
-	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
-		log.Infof("Controller API: handleDSCRoutingInfo | Obj: %v", obj)
-
-		if len(obj.DSCStaticRoutes) != 0 {
-			for _, route := range obj.DSCStaticRoutes {
-				if err := c.PipelineAPI.HandleCPRoutingConfig(route); err != nil {
-					log.Error(err)
-				}
-			}
-		}
-	}
-}
-
 func (c *API) handleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
 	//Handle DSC Interface Info
 	c.Lock()

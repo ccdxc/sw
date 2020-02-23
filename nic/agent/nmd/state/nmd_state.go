@@ -1553,10 +1553,6 @@ func (n *NMD) SyncDHCPState() {
 	for _, intf := range n.IPClient.GetInterfaceIPs() {
 		n.DSCInterfaceIPs = append(n.DSCInterfaceIPs, agentTypes.DSCInterfaceIP{IfID: uint32(intf.IfID), DestPrefixLen: uint32(intf.PrefixLen), IPAddress: intf.IPAddress.String(), GatewayIP: intf.GwIP.String()})
 	}
-
-	for _, route := range n.IPClient.GetStaticRoutes() {
-		n.DSCStaticRoutes = append(n.DSCStaticRoutes, agentTypes.DSCStaticRoute{DestAddr: route.DestAddr.String(), DestPrefixLen: route.DestPrefixLen, NextHop: route.NextHopAddr.String()})
-	}
 }
 
 func runCmd(cmdStr string) error {

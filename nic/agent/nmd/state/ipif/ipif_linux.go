@@ -368,6 +368,8 @@ func (c *IPClient) GetDHCPState() string {
 
 // GetStaticRoutes returns the set of static routes received via dhcp
 func (c *IPClient) GetStaticRoutes() []StaticRoute {
+	c.dhcpState.Lock()
+	defer c.dhcpState.Unlock()
 	log.Infof("GetStaticRoutes: %v", c.dhcpState.StaticRoutes)
 	return c.dhcpState.StaticRoutes
 }
@@ -582,6 +584,7 @@ func (d *DHCPState) parseClasslessStaticRoutes(routes []byte) {
 			break
 		}
 		gateway := net.IP{routes[0], routes[1], routes[2], routes[3]}
+		routes = routes[4:]
 
 		staticRoute := StaticRoute{DestAddr: destination, DestPrefixLen: prefixLen, NextHopAddr: gateway}
 
