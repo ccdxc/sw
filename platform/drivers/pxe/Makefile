@@ -3,6 +3,7 @@
 #
 TOP = ../../..
 IPXEGENDIR = $(TOP)/platform/gen/ipxe
+EFI_PCI_IPXE = $(TOP)/platform/drivers/pxe/efi_pci.c
 IONIC_IPXE = $(wildcard $(TOP)/platform/drivers/pxe/*.c) $(wildcard $(TOP)/platform/drivers/pxe/*.h)
 IONIC_COMMON = $(wildcard $(TOP)/platform/drivers/common/*.h)
 IONIC_SRC = $(IONIC_IPXE) $(IONIC_COMMON)
@@ -37,6 +38,7 @@ $(IPXEMOD)/src/bin-x86_64-efi/ionic.efirom: .ipxefiles
 
 .ipxefiles: $(IPXEMOD) $(IONIC_SRC)
 	cp $(IONIC_SRC) $(IPXEMOD)/src/drivers/net/
+	cp $(EFI_PCI_IPXE) $(IPXEMOD)/src/interface/efi/
 	touch $@
 
 $(IPXEMOD):
