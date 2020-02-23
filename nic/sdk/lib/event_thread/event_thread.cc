@@ -340,7 +340,7 @@ event_thread::run_(void) {
     t_event_thread_ = this;
 
     if (this->sync_ipc_) {
-        sdk::ipc::ipc_init_sync(this->thread_id());
+        sdk::ipc::ipc_init_sync(this->thread_id(), create_ipc_watcher, this);
     } else {
         sdk::ipc::ipc_init_async(this->thread_id(), create_ipc_watcher, this);
     }

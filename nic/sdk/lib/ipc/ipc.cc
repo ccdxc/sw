@@ -97,6 +97,8 @@ class ipc_service_sync : public ipc_service {
 public:
     ipc_service_sync();
     ipc_service_sync(uint32_t client_id);
+    ipc_service_sync(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                     const void *fd_watch_cb_ctx);
     virtual void request(uint32_t recipient, uint32_t msg_code,
                          const void *data, size_t data_length,
                          response_oneshot_cb cb, const void *cookie) override;
@@ -241,6 +243,17 @@ ipc_service_sync::ipc_service_sync(uint32_t client_id)
     : ipc_service(client_id) {
 }
 
+ipc_service_sync::ipc_service_sync(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                                    const void *fd_watch_cb_ctx)
+    : ipc_service(client_id) {
+ 
+    zmq_ipc_server_ptr server = std::make_shared<zmq_ipc_server>(
+        this->get_id_());
+
+    this->set_server_(server);
+    fd_watch_cb(server->fd(), sdk::ipc::server_receive, NULL, fd_watch_cb_ctx);
+}
+
 void
 ipc_service_sync::request(uint32_t recipient, uint32_t msg_code,
                           const void *data, size_t data_length,
@@ -284,7 +297,6 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
                            this->fd_watch_cb_ctx_);
     }    
 }
-
 
 ipc_service_async::ipc_service_async(uint32_t client_id,
                                      fd_watch_cb fd_watch_cb,
@@ -510,6 +522,16 @@ ipc_init_sync (uint32_t client_id)
     assert(t_ipc_service == nullptr);
     t_ipc_service = std::make_shared<ipc_service_sync>(client_id);
 }
+
+void
+ipc_init_sync (uint32_t client_id, fd_watch_cb fd_watch_cb,
+               const void *fd_watch_cb_ctx)
+{
+    assert(t_ipc_service == nullptr);
+    t_ipc_service = std::make_shared<ipc_service_sync>(
+        client_id, fd_watch_cb, fd_watch_cb_ctx);
+}
+
 
 void
 request (uint32_t recipient, uint32_t msg_code, const void *data,

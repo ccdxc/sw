@@ -68,6 +68,9 @@ extern void ipc_init_metaswitch(uint32_t client_id,
 
 extern void ipc_init_sync(uint32_t client_id);
 
+extern void ipc_init_sync(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                          const void *fd_watch_cb_ctx);
+
 ///
 /// Sending
 ///
