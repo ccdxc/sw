@@ -73,7 +73,7 @@ targets:
 
   apollo/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/pds_scale_test_mock"]
-    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -82,7 +82,7 @@ targets:
 
   apollo/pds_scale_test_mock_no_batch:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/pds_scale_test_mock_no_batch"]
-    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -150,7 +150,7 @@ targets:
 
   artemis/pds_scale_test_mock:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/pds_scale_test_mock"]
-    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -159,7 +159,7 @@ targets:
 
   artemis/scale_test_sim:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/scale_test_sim"]
-    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -231,7 +231,7 @@ targets:
 
   apulu/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_scale_test_mock"]
-    owners: ["email:saratk@pensando.io", "email:akoradha@pensando.io" ]
+    owners: ["email:kalyanbade@pensando.io", "email:akoradha@pensando.io" ]
     area:
     sub-area:
     feature:
