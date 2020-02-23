@@ -43,10 +43,10 @@ packets:
         headers     :
             outereth:
                 src     : callback://networking/packets/GetUplinkPortMac
-                dst     : callback://networking/packets/GetUnderlayRemoteMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMacFromRoute/direction=TX,ipkt=FROM_HOST_PKT
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : callback://networking/packets/GetTunnelIPFromRoute
+                dst     : callback://networking/packets/GetTunnelIPFromRoute/direction=TX,ipkt=FROM_HOST_PKT
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -58,7 +58,7 @@ packets:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/route/TUNNEL/MACAddr
+                dst     : callback://networking/packets/GetTunnelMacFromRoute/direction=TX,ipkt=FROM_HOST_PKT
 
 buffers:
     - buffer:

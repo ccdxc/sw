@@ -23,10 +23,6 @@ from apollo.config.objects.nexthop_group import client as NexthopGroupClient
 from apollo.config.objects.tunnel import client as TunnelClient
 from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
-DEFAULT_ROUTE_PRIORITY = 0
-MIN_ROUTE_PRIORITY = 65535
-MAX_ROUTE_PRIORITY = 1
-
 class RouteObject():
     def __init__(self, node, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
         super().__init__()
@@ -114,6 +110,7 @@ class RouteTableObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
+        logger.info(f"- PriorityEnabled:{self.PriorityType != None}")
         logger.info("- HasDefaultRoute:%s|HasBlackHoleRoute:%s"\
                     %(self.HasDefaultRoute, self.HasBlackHoleRoute))
         logger.info("- VPCPeering:%s Peer Vpc%d" %(self.VPCPeeringEnabled, self.PeerVPCId))
@@ -127,8 +124,6 @@ class RouteTableObject(base.ConfigObjectBase):
         elif self.NhGroup:
             logger.info("- TEP: None")
             logger.info("- NexthopGroup%d" % (self.NhGroup.Id))
-        # FIXME: remove
-        return
         for route in self.routes.values():
             route.Show()
         return
@@ -411,7 +406,7 @@ class RouteObjectClient(base.ConfigClientBase):
             ipaddr = ipaddress.ip_network(base)
             af = ipaddr.version
             spec = routetbl_spec_obj
-            priority = DEFAULT_ROUTE_PRIORITY
+            priority = topo.DEFAULT_ROUTE_PRIORITY
             priorityType = getattr(spec, "priority", None)
             if priorityType:
                 priority = __get_priority(priorityType, True)
@@ -531,22 +526,22 @@ class RouteObjectClient(base.ConfigClientBase):
 
         def __get_priority(priotype, firstVal=False, priority=0):
             if priotype ==  "increasing":
-                if firstVal: return MIN_ROUTE_PRIORITY
+                if firstVal: return topo.MIN_ROUTE_PRIORITY
                 return (priority - 1)
             elif priotype == "decreasing":
-                if firstVal: return MAX_ROUTE_PRIORITY
+                if firstVal: return topo.MAX_ROUTE_PRIORITY
                 return (priority + 1)
             elif priotype == "random":
-                return (random.randint(MAX_ROUTE_PRIORITY, MIN_ROUTE_PRIORITY))
+                return (random.randint(topo.MAX_ROUTE_PRIORITY, topo.MIN_ROUTE_PRIORITY))
             else:
                 logger.error("Unknown priority type", priotype)
-                return (random.randint(MAX_ROUTE_PRIORITY, MIN_ROUTE_PRIORITY))
+                return (random.randint(topo.MAX_ROUTE_PRIORITY, topo.MIN_ROUTE_PRIORITY))
 
         def __get_user_specified_routes(routespec):
             routes = OrderedDict()
             spec = routetbl_spec_obj
             priorityType = getattr(spec, "priority", None)
-            priority = DEFAULT_ROUTE_PRIORITY
+            priority = topo.DEFAULT_ROUTE_PRIORITY
             if priorityType:
                 priority = __get_priority(spec.priority, True)
             if routespec:

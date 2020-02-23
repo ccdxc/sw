@@ -4,13 +4,13 @@ import pdb
 from infra.common.logging import logger
 
 from apollo.config.store import client as EzAccessStoreClient
+from apollo.config.store import EzAccessStore
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 from apollo.config.agent.api import ObjectTypes as ObjectTypes
 import apollo.config.utils as utils
 import apollo.config.topo as topo
-import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 
 import tunnel_pb2 as tunnel_pb2
@@ -19,11 +19,11 @@ import copy
 
 class TunnelStatus(base.StatusObjectBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.TUNNEL)
+        super().__init__(ObjectTypes.TUNNEL)
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
-        super().__init__(api.ObjectTypes.TUNNEL, node)
+        super().__init__(ObjectTypes.TUNNEL, node)
         self.__spec = spec
         if (hasattr(spec, 'id')):
             self.Id = spec.id
@@ -233,9 +233,9 @@ class TunnelObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Linking %s to %s " % (cObj, self))
-        if cObj.ObjType == api.ObjectTypes.NEXTHOP:
+        if cObj.ObjType == ObjectTypes.NEXTHOP:
             self.NexthopId = cObj.NexthopId
-        elif cObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+        elif cObj.ObjType == ObjectTypes.NEXTHOPGROUP:
             self.NexthopGroupId = cObj.Id
         else:
             logger.error(" - ERROR: %s not handling %s restoration" %\
@@ -251,9 +251,9 @@ class TunnelObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
-        if dObj.ObjType == api.ObjectTypes.NEXTHOP:
+        if dObj.ObjType == ObjectTypes.NEXTHOP:
             self.NexthopId = dObj.Duplicate.NexthopId
-        #elif dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+        #elif dObj.ObjType == ObjectTypes.NEXTHOPGROUP:
         #    self.NexthopGroupId = 0
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
@@ -295,7 +295,7 @@ class TunnelObject(base.ConfigObjectBase):
 
 class TunnelObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.TUNNEL, Resmgr.MAX_TUNNEL)
+        super().__init__(ObjectTypes.TUNNEL, Resmgr.MAX_TUNNEL)
         return
 
     def AddObject(self, node, obj):
@@ -307,7 +307,7 @@ class TunnelObjectClient(base.ConfigClientBase):
 
     def AssociateObjects(self, node):
         logger.info(f"Filling nexthops on {node}")
-        NhClient = EzAccessStoreClient[node].GetConfigClient(api.ObjectTypes.NEXTHOP)
+        NhClient = EzAccessStore.GetConfigClient(ObjectTypes.NEXTHOP)
         for tun in self.Objects(node):
             if tun.IsUnderlay():
                 if tun.NexthopId == None:

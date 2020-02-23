@@ -7,8 +7,11 @@ from scapy.all import *
 from infra.common.logging import logger
 import infra.api.api as infra_api
 from apollo.config.resmgr import Resmgr
+from apollo.config.store import EzAccessStore
 import apollo.config.utils as utils
 import apollo.config.topo as topo
+
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
@@ -46,25 +49,6 @@ def __get_packet_template_from_policy_impl(rule, policy):
 
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
     return __get_packet_template_from_policy_impl(testcase.config.tc_rule, testcase.config.policy)
-
-def __get_non_default_random_route(route):
-    routes = list(route.routes.values())
-    numroutes = len(routes)
-    if numroutes == 0:
-        return None
-    elif numroutes == 1:
-        route = None
-        if not utils.isDefaultRoute(routes[0].ipaddr):
-            route = routes[0]
-        if route:
-            return route.ipaddr
-        else:
-            return None
-    while True:
-        route = random.choice(routes)
-        if not utils.isDefaultRoute(route.ipaddr):
-            break
-    return route.ipaddr
 
 def __get_host_from_pfx_impl(pfx, af):
     """
@@ -173,35 +157,27 @@ def GetUsableHostFromPolicy(testcase, packet, args=None):
     pfxpos = __get_pfx_position_selector(testcase.module.args)
     return __get_usable_host_from_rule(rule, policy, pfxpos)
 
-def __reset_tunnel(routetbl, addr):
-    if routetbl.PriorityType is True:
-        routes = routetbl.routes
-        min_priority = 65535
-        nh_type_res = None
-        result = None
-        for route in routes.values():
-            if route.Priority == 0: assert 0
-            if addr in route.ipaddr:
-                if route.Priority < min_priority:
-                    min_priority = route.Priority
-                    nh_type_res = route.NextHopType
-                    if nh_type_res == "tep":
-                        result = route.TunnelId
-                    elif nh_type_res == "nexthop":
-                        result = route.NexthopId
-                    elif nh_type_res == "nhg":
-                        result = route.NexthopGroupId
-                    elif nh_type_res == "vpcpeer":
-                        result = route.PeerVPCId
-        # use this for getting the nexthop info
-        [routetbl.TunEncap, routetbl.TunIP] = utils.getTunInfo(nh_type_res, result)
+def __get_non_default_random_route(routeTable):
+    routes = list(routeTable.routes.values())
+    numroutes = len(routes)
+    route = None
+    if numroutes == 0:
+        pass
+    elif numroutes == 1:
+        if not utils.isDefaultRoute(routes[0].ipaddr):
+            route = routes[0]
+    else:
+        while True:
+            route = random.choice(routes)
+            if not utils.isDefaultRoute(route.ipaddr):
+                break
+    return route
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
     route = __get_non_default_random_route(testcase.config.route)
+    routepfx = route.ipaddr if route else None
     pfxpos = __get_pfx_position_selector(testcase.module.args)
-    addr = __get_host_from_pfx(route, testcase.config.route.AddrFamily, pfxpos)
-    #reset the nexthop/tunnel values based on priority for this destination
-    __reset_tunnel(testcase.config.route, addr)
+    addr = __get_host_from_pfx(routepfx, testcase.config.route.AddrFamily, pfxpos)
     return addr
 
 def __get_random_port_in_range(beg=utils.L4PORT_MIN, end=utils.L4PORT_MAX):
@@ -517,8 +493,76 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
 def GetTunnelIPFromMapping(testcase, packet, args=None):
     return str(testcase.config.remotemapping.TUNNEL.RemoteIPAddr)
 
-def GetTunnelIPFromRoute(testcase, packet, args=None):
-    return str(testcase.config.route.TUNNEL.RemoteIPAddr)
+def __getTunObject(nh_type, id):
+    if nh_type == "tep":
+        objtype = ObjectTypes.TUNNEL
+    else:
+        #TODO: Handle nh, nhgroup, vpc_peer
+        assert(0)
+    dutNode = EzAccessStore.GetDUTNode()
+    objClient = EzAccessStore.GetConfigClient(objtype)
+    return objClient.GetObjectByKey(dutNode, id)
+
+def __get_matching_route(routetbl, addr):
+    addr = ipaddress.ip_address(addr)
+    matching_route = None
+    if routetbl.PriorityType:
+        min_priority = topo.MIN_ROUTE_PRIORITY + 1
+        routes = routetbl.routes
+        for route in routes.values():
+            routePriority = route.Priority
+            if routePriority == 0: assert 0
+            if addr in route.ipaddr:
+                if routePriority < min_priority:
+                    min_priority = routePriority
+                    matching_route = route
+    else:
+        #TODO: move everything to above model
+        assert(0)
+    return matching_route
+
+def __get_matching_route_tep(routetbl, addr):
+    matching_route = __get_matching_route(routetbl, addr)
+    logger.info(f"Testcase Matching route - {matching_route}")
+    nh_type = matching_route.NextHopType
+    if nh_type == "tep":
+        nh_objid = matching_route.TunnelId
+    elif nh_type == "nexthop":
+        nh_objid = matching_route.NexthopId
+    elif nh_type == "nhg":
+        nh_objid = matching_route.NexthopGroupId
+    elif nh_type == "vpcpeer":
+        nh_objid = matching_route.PeerVPCId
+    return __getTunObject(nh_type, nh_objid)
+
+
+def __get_tunnel_from_route(tc, args):
+    routetbl = tc.config.route
+    pktid = getattr(args, 'ipkt', None)
+    if pktid and routetbl.PriorityType:
+        ipkt = tc.packets.Get(pktid).GetScapyPacket()
+        packet_tuples = __get_packet_tuples(ipkt)
+        addr = packet_tuples[1] if args.direction == 'TX' else packet_tuples[0]
+        tep = __get_matching_route_tep(routetbl, addr)
+    else:
+        tep = routetbl.TUNNEL
+    return tep
+
+def GetTunnelIPFromRoute(tc, pkt, args=None):
+    tep = __get_tunnel_from_route(tc, args)
+    return str(tep.RemoteIPAddr)
+
+def GetTunnelMacFromRoute(tc, pkt, args=None):
+    tep = __get_tunnel_from_route(tc, args)
+    return tep.MACAddr
+
+def GetUnderlayRemoteMacFromRoute(tc, pkt, args=None):
+    tep = __get_tunnel_from_route(tc, args)
+    if tep.IsUnderlay():
+        nh = tep.NEXTHOP
+    else:
+        assert(0)
+    return nh.underlayMACAddr.get()
 
 def __is_any_cfg_deleted(tc):
     nexthop = None

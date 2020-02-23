@@ -793,19 +793,6 @@ def MergeDicts(objs1, objs2):
         objs.update({obj.Id: obj})
     return objs
 
-def getTunInfo(nh_type, id):
-    if nh_type == "tep":
-        tuns = EzAccessStoreClient[node].tunnels.GetAll()
-        for tun in tuns:
-            if tun.Id == id:
-                return (tun.EncapValue, str(tun.RemoteIPAddr))
-    elif nh_type == "nexthop":
-        return (None, None)
-    elif nh_type == "nhg":
-        return (None, None)
-    elif nh_type == "vpcpeer":
-        return (None, None)
-
 # For debug purposes
 def dump(obj):
    for attr in dir(obj):
@@ -826,9 +813,10 @@ def DumpTestcaseConfig(obj):
     for attr in tcAttrs:
         cfgObj = getattr(obj, attr, None)
         if cfgObj: DumpObject(cfgObj)
-    cfgObj = getattr(obj, 'tc_rule', None)
-    if cfgObj:
-        logger.info(" === Selected Policy rule ===")
+    ruleObj = getattr(obj, 'tc_rule', None)
+    objs = list(filter(None, [ruleObj]))
+    for cfgObj in objs:
+        logger.info(" === Selected rule/route ===")
         cfgObj.Show()
     logger.info("========== Testcase config end ==========")
     return
