@@ -79,7 +79,7 @@ stage_id_t
 name_to_stage_id (std::string stage)
 {
     // TODO: empty error
-    stage_id_t id = STAGE_ID_VALIDATION;
+    stage_id_t id = STAGE_ID_COMPAT_CHECK;
     boost::algorithm::to_lower(stage);
     auto found = fsm_stagename_to_id.find(stage);
     if (found != fsm_stagename_to_id.end()) {

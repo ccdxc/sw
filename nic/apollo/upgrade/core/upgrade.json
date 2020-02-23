@@ -8,7 +8,7 @@
     ]
   },
   "stages": {
-    "validation": {
+    "compatibility_check": {
       "rsp_timeout": "100ms",
       "events": [
         {
@@ -84,7 +84,7 @@
       "events": [
         {
           "name": "svc_rsp_ok",
-          "next_stage": "upgrade"
+          "next_stage": "switchover"
         },
         {
           "name": "svc_rsp_fail",
@@ -100,7 +100,7 @@
         }
       ]
     },
-    "upgrade": {
+    "switchover": {
       "rsp_timeout": "100ms",
       "events": [
         {

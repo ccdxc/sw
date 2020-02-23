@@ -33,7 +33,7 @@ pds_register_callback (stage_callback_t cb_type,
 
 // TODO:params ??
 sdk_ret_t
-pds_do_upgrade (void) {
-    return do_upgrade();
+pds_do_switchover (void) {
+    return do_switchover();
 }
 }

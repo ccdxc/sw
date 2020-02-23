@@ -8,7 +8,7 @@
 int
 main (int argc, char *argv[])
 {
-    upg::pds_do_upgrade();
+    upg::pds_do_switchover();
     return 0;
 }
 

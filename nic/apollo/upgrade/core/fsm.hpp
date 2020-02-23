@@ -51,5 +51,5 @@ static  sdk_ret_t send_paralle_event(/* eventi, service ep order*/) {
     sdk_ret_t register_callback(stage_callback_t cb_type, stage_id_t cb_stage,
                                     void *(*callback)(void *), void *arg);
 
-    sdk_ret_t do_upgrade(void);
+    sdk_ret_t do_switchover(void);
 }

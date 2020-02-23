@@ -15,15 +15,15 @@
 namespace upg {
     /// \brief Core upgrade stages
     /// \remark
-    /// upgrade orchestration will happen to start from the validation stage
-    /// (STAGE_ID_VALIDATION) to the exit stage (STAGE_ID_EXIT). Internal stage change
+    /// upgrade orchestration will happen to start from the compatibility_check stage
+    /// (STAGE_ID_COMPAT_CHECK) to the exit stage (STAGE_ID_EXIT). Internal stage change
     /// will happen base on predefined logic from a json file.
     typedef enum stage_id_t {
-        STAGE_ID_VALIDATION = 0,
+        STAGE_ID_COMPAT_CHECK = 0,
         STAGE_ID_START = 1,
         STAGE_ID_PREPARE = 2,
         STAGE_ID_BACKUP = 3,
-        STAGE_ID_UPGRADE = 4,
+        STAGE_ID_SWITCHOVER = 4,
         STAGE_ID_VERIFY = 5,
         STAGE_ID_FINISH = 6,
         STAGE_ID_ABORT = 7,
@@ -54,7 +54,7 @@ namespace upg {
     /// \brief          Exported API for initiating pds upgrade
     /// \param[in]      void
     /// \return         pds upgrade status
-    extern sdk_ret_t pds_do_upgrade(void) __attribute__ ((visibility
+    extern sdk_ret_t pds_do_switchover(void) __attribute__ ((visibility
                                                           ("default") ));
 }
 #endif    //__PDS_UPGMGR_HPP___

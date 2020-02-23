@@ -8,10 +8,10 @@
 namespace upg {
 
     stage_transition_t stage_transitions[] = {
-    stage_transition_t(STAGE_ID_VALIDATION, SVC_RSP_OK,   STAGE_ID_START),
-    stage_transition_t(STAGE_ID_VALIDATION, SVC_RSP_FAIL, STAGE_ID_EXIT),
-    stage_transition_t(STAGE_ID_VALIDATION, SVC_RSP_CRIT, STAGE_ID_EXIT),
-    stage_transition_t(STAGE_ID_VALIDATION, SVC_RSP_NONE, STAGE_ID_EXIT),
+    stage_transition_t(STAGE_ID_COMPAT_CHECK, SVC_RSP_OK,   STAGE_ID_START),
+    stage_transition_t(STAGE_ID_COMPAT_CHECK, SVC_RSP_FAIL, STAGE_ID_EXIT),
+    stage_transition_t(STAGE_ID_COMPAT_CHECK, SVC_RSP_CRIT, STAGE_ID_EXIT),
+    stage_transition_t(STAGE_ID_COMPAT_CHECK, SVC_RSP_NONE, STAGE_ID_EXIT),
 
     stage_transition_t(STAGE_ID_START, SVC_RSP_OK,   STAGE_ID_PREPARE),
     stage_transition_t(STAGE_ID_START, SVC_RSP_FAIL, STAGE_ID_ABORT),
@@ -23,15 +23,15 @@ namespace upg {
     stage_transition_t(STAGE_ID_PREPARE, SVC_RSP_CRIT, STAGE_ID_CRITICAL),
     stage_transition_t(STAGE_ID_PREPARE, SVC_RSP_NONE, STAGE_ID_ABORT),
 
-    stage_transition_t(STAGE_ID_BACKUP, SVC_RSP_OK,   STAGE_ID_UPGRADE),
+    stage_transition_t(STAGE_ID_BACKUP, SVC_RSP_OK,   STAGE_ID_SWITCHOVER),
     stage_transition_t(STAGE_ID_BACKUP, SVC_RSP_FAIL, STAGE_ID_ROLLBACK),
     stage_transition_t(STAGE_ID_BACKUP, SVC_RSP_CRIT, STAGE_ID_CRITICAL),
     stage_transition_t(STAGE_ID_BACKUP, SVC_RSP_NONE, STAGE_ID_ROLLBACK),
 
-    stage_transition_t(STAGE_ID_UPGRADE, SVC_RSP_OK,   STAGE_ID_VERIFY),
-    stage_transition_t(STAGE_ID_UPGRADE, SVC_RSP_FAIL, STAGE_ID_ROLLBACK),
-    stage_transition_t(STAGE_ID_UPGRADE, SVC_RSP_CRIT, STAGE_ID_CRITICAL),
-    stage_transition_t(STAGE_ID_UPGRADE, SVC_RSP_NONE, STAGE_ID_ROLLBACK),
+    stage_transition_t(STAGE_ID_SWITCHOVER, SVC_RSP_OK,   STAGE_ID_VERIFY),
+    stage_transition_t(STAGE_ID_SWITCHOVER, SVC_RSP_FAIL, STAGE_ID_ROLLBACK),
+    stage_transition_t(STAGE_ID_SWITCHOVER, SVC_RSP_CRIT, STAGE_ID_CRITICAL),
+    stage_transition_t(STAGE_ID_SWITCHOVER, SVC_RSP_NONE, STAGE_ID_ROLLBACK),
 
     stage_transition_t(STAGE_ID_VERIFY, SVC_RSP_OK,   STAGE_ID_FINISH),
     stage_transition_t(STAGE_ID_VERIFY, SVC_RSP_FAIL, STAGE_ID_ROLLBACK),
@@ -73,7 +73,7 @@ svc_t svc[] = {
 event_sequence_t event_sequence = PARALLEL;
 
 idl_stage_t idl_stages_cfg[] = {
-    idl_stage_t("validation",
+    idl_stage_t("compatibility_check",
                 "",
                 "",
                 "",
@@ -97,7 +97,7 @@ idl_stage_t idl_stages_cfg[] = {
                 "",
                 "pre_a.sh:pre_b.sh",
                 "post_a.sh:post:b.sh"),
-    idl_stage_t("upgrade",
+    idl_stage_t("switchover",
                 "100",
                 "pdsageny:vpp:sysmgr",
                 "serial",

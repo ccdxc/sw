@@ -39,11 +39,11 @@ to_transition (stage_id_t stage_id)
 static void
 init_stage_id_name_mapping (void)
 {
-    fsm_stagename_to_id["validation"] = STAGE_ID_VALIDATION;
+    fsm_stagename_to_id["compatibility_check"] = STAGE_ID_COMPAT_CHECK;
     fsm_stagename_to_id["start"]      = STAGE_ID_START;
     fsm_stagename_to_id["prepare"]    = STAGE_ID_PREPARE;
     fsm_stagename_to_id["backup"]     = STAGE_ID_BACKUP;
-    fsm_stagename_to_id["upgrade"]    = STAGE_ID_UPGRADE;
+    fsm_stagename_to_id["switchover"]    = STAGE_ID_SWITCHOVER;
     fsm_stagename_to_id["verify"]     = STAGE_ID_VERIFY;
     fsm_stagename_to_id["finish"]     = STAGE_ID_FINISH;
     fsm_stagename_to_id["abort"]      = STAGE_ID_ABORT;
@@ -51,11 +51,11 @@ init_stage_id_name_mapping (void)
     fsm_stagename_to_id["critical"]   = STAGE_ID_CRITICAL;
     fsm_stagename_to_id["exit"]       = STAGE_ID_EXIT;
 
-    fsm_stageid_to_name[STAGE_ID_VALIDATION] = "validation";
+    fsm_stageid_to_name[STAGE_ID_COMPAT_CHECK] = "compatibility_check";
     fsm_stageid_to_name[STAGE_ID_START] = "start";
     fsm_stageid_to_name[STAGE_ID_PREPARE] = "prepare";
     fsm_stageid_to_name[STAGE_ID_BACKUP] = "backup";
-    fsm_stageid_to_name[STAGE_ID_UPGRADE] = "upgrade";
+    fsm_stageid_to_name[STAGE_ID_SWITCHOVER] = "switchover";
     fsm_stageid_to_name[STAGE_ID_VERIFY] = "verify";
     fsm_stageid_to_name[STAGE_ID_FINISH] = "finish";
     fsm_stageid_to_name[STAGE_ID_ABORT] = "abort";
@@ -193,8 +193,8 @@ register_callback (stage_callback_t cb_type, stage_id_t cb_stage,
 }
 
 sdk_ret_t
-do_upgrade (void)
+do_switchover (void)
 {
-    return run_fsm(STAGE_ID_VALIDATION, STAGE_ID_EXIT);
+    return run_fsm(STAGE_ID_COMPAT_CHECK, STAGE_ID_EXIT);
 }
 }
