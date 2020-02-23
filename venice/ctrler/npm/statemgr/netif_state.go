@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
@@ -236,11 +238,12 @@ func convertNetworkInterfaceObject(ifcfg *NetworkInterfaceState) *netproto.Inter
 			Kind: "Interface",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:          ifcfg.NetworkInterfaceState.Tenant,
-			Namespace:       ifcfg.NetworkInterfaceState.Namespace,
+			Tenant:          globals.DefaultTenant,
+			Namespace:       globals.DefaultNamespace,
 			Name:            ifcfg.NetworkInterfaceState.Name,
 			GenerationID:    ifcfg.NetworkInterfaceState.GenerationID,
 			ResourceVersion: ifcfg.NetworkInterfaceState.ResourceVersion,
+			UUID:            ifcfg.NetworkInterfaceState.UUID,
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:        convertIFTypeToAgentProto(ifcfg.NetworkInterfaceState.Spec.Type),

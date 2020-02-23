@@ -18,6 +18,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+const oobIntfName = "oob_mnic0"
+
 // currentRoutingConfig is cached routing config that has been configured on metaswitch
 var currentRoutingConfig *netproto.RoutingConfig
 
@@ -56,10 +58,18 @@ func HandleRouteConfig(infraAPI types.InfraAPI, client msTypes.BGPSvcClient, ope
 func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcClient, rtCfg netproto.RoutingConfig) error {
 	// we can have only one routing config on the NAPLES card.
 	if currentRoutingConfig != nil {
-		log.Errorf("RoutingConfig: %s | Err: Create with existing routing config[%s]", rtCfg.GetKey(), currentRoutingConfig.GetKey())
-		return errors.Wrapf(types.ErrBadRequest, "RoutingConfig: %s | Err: Create with existing routing config[%s]", rtCfg.GetKey(), currentRoutingConfig.GetKey())
+		log.Infof("RoutingConfig: %s | Err: Create with existing routing config[%s]", rtCfg.GetKey(), currentRoutingConfig.GetKey())
+		return nil
 	}
 	log.Infof("RoutingConfig: %s Begin create", rtCfg.GetKey())
+	rid := rtCfg.Spec.BGPConfig.RouterId
+	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
+
+	// For now till NPM does proper filtering of RoutingConfig only accept Routing Config with AutoConfig
+	if !rip.IsUnspecified() {
+		log.Infof("ignoring Routing Config with set Router ID [%v]", rtCfg.Name)
+		return nil
+	}
 	uid, err := uuid.FromString(rtCfg.UUID)
 	if err != nil {
 		log.Errorf("failed to parse UUID (%v)", err)
@@ -67,14 +77,39 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	dsccfg := infraAPI.GetConfig()
 	ctx := context.TODO()
-	rid := rtCfg.Spec.BGPConfig.RouterId
-	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
-	if rip.IsUnspecified() {
-		if dsccfg.LoopbackIP != "" {
-			rid = dsccfg.LoopbackIP
-		} else {
+
+	if dsccfg.LoopbackIP != "" {
+		rid = dsccfg.LoopbackIP
+	} else {
+		if len(dsccfg.DSCInterfaceIPs) > 0 {
 			rid = dsccfg.DSCInterfaceIPs[0].IPAddress
+		} else {
+			intf, err := net.InterfaceByName(oobIntfName)
+			if err != nil {
+				log.Errorf("BGP Create could not get IP Address for router ID (%s)", err)
+				return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
+			}
+			addrs, err := intf.Addrs()
+			if err != nil {
+				log.Errorf("BGP Create could not get IP Address for router ID (%s)", err)
+				return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
+			}
+		GotIP:
+			for _, a := range addrs {
+				switch aip := a.(type) {
+				case *net.IPNet:
+					rid = aip.IP.String()
+					break GotIP
+				case *net.IPAddr:
+					rid = aip.IP.String()
+					break GotIP
+				}
+			}
 		}
+	}
+	if rid == "" {
+		log.Errorf("BGP Create could not get IP Address for router ID (%s)", err)
+		return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
 	}
 
 	req := msTypes.BGPRequest{
@@ -260,6 +295,11 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	var newPeers []*netproto.BGPNeighbor
 	var delPeers []*netproto.BGPNeighbor
 
+	// NAPLES can have only one RoutingConfig.
+	if rtCfg.Name != currentRoutingConfig.Name {
+		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
+		return nil
+	}
 	// Peer counts are only a handful a seq walk is fine.
 	for _, o := range currentRoutingConfig.Spec.BGPConfig.Neighbors {
 		found := false
@@ -441,6 +481,11 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 }
 
 func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcClient, rtCfg netproto.RoutingConfig) error {
+	// NAPLES can have only one RoutingConfig.
+	if rtCfg.Name != currentRoutingConfig.Name {
+		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
+		return nil
+	}
 	// Delte configured peers
 	uid, err := uuid.FromString(currentRoutingConfig.UUID)
 	if err != nil {

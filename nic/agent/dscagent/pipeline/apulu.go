@@ -48,6 +48,7 @@ type ApuluAPI struct {
 	CPRouteSvcClient        msapi.CPRouteSvcClient
 	MirrorClient            halapi.MirrorSvcClient
 	RouteSvcClient          halapi.RouteSvcClient
+	LocalInterfaces         map[string]string
 }
 
 // NewPipelineAPI returns the implemetor of PipelineAPI
@@ -73,6 +74,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		RoutingClient:           msapi.NewBGPSvcClient(conn),
 		EvpnClient:              msapi.NewEvpnSvcClient(conn),
 		MirrorClient:            halapi.NewMirrorSvcClient(conn),
+		LocalInterfaces:         make(map[string]string),
 	}
 
 	if err := a.PipelineInit(); err != nil {
@@ -133,42 +135,6 @@ func (a *ApuluAPI) PipelineInit() error {
 		log.Error(err)
 		return err
 	}
-
-	// Create the Loopback interface
-	lb := netproto.Interface{
-		TypeMeta: api.TypeMeta{
-			Kind: "Interface",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "loopbackTEP",
-			UUID:      uuid.NewV4().String(),
-		},
-		Spec: netproto.InterfaceSpec{
-			Type:        netproto.InterfaceSpec_LOOPBACK.String(),
-			AdminStatus: netproto.IFStatus_UP.String(),
-		},
-	}
-
-	ifName, err := utils.GetIfName(lb.UUID[24:], utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
-	if err != nil {
-		log.Error(errors.Wrapf(types.ErrBadRequest,
-			"Failed to form interface name, uuid %v, loopback 0, err %v",
-			lb.UUID, err))
-		return err
-	}
-	lb.Name = ifName
-
-	if _, err := a.HandleInterface(types.Create, lb); err != nil {
-		log.Errorf("Init: Failed to create loopback interface: Err: %s", err)
-	}
-	// Temp inject loopback so venice can be updated
-	ifEvnt := types.UpdateIfEvent{
-		Oper: types.Create,
-		Intf: lb,
-	}
-	a.InfraAPI.UpdateIfChannel() <- ifEvnt
 
 	// initialize stream for Lif events
 	a.initEventStream()
@@ -408,6 +374,11 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	// Take a lock to ensure a single HAL API is active at any given point
 	a.Lock()
 	defer a.Unlock()
+	uidStr, ok := a.LocalInterfaces[intf.Name]
+	if !ok {
+		log.Infof("Inteface: %s not local, ignoring", intf.GetKey())
+		return nil, nil
+	}
 
 	err = utils.ValidateMeta(oper, intf.Kind, intf.ObjectMeta)
 	if err != nil {
@@ -462,7 +433,6 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType)
 		}
-		fallthrough
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingIntf netproto.Interface
@@ -503,8 +473,10 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		intf = existingIntf
 	}
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
+	defer log.Infof("Interface: %v | Op: %s | Err: %v | %s", intf, oper, err, types.InfoHandleObjEnd)
 
+	// Use the UUID from the cache when interacting with PDS Agent
+	intf.UUID = uidStr
 	err = apulu.HandleInterface(a.InfraAPI, a.InterfaceClient, a.SubnetClient, oper, intf)
 	if err != nil {
 		log.Error(err)
@@ -1240,6 +1212,9 @@ func (a *ApuluAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Li
 	case "Endpoint":
 		str := fmt.Sprintf("spec.node-uuid=%s", a.InfraAPI.GetDscName())
 		ret.FieldSelector = str
+		// case "Interface":
+		// 	ret.FieldSelector = fmt.Sprintf("status.dsc=%s", a.InfraAPI.GetDscName())
+		// 	log.Infof("returning WatchOptions for Interface [%v]", ret.FieldSelector)
 	}
 	return ret
 }
@@ -1296,6 +1271,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		},
 		Status: netproto.InterfaceStatus{
 			Name:        "",
+			DSC:         a.InfraAPI.GetDscName(),
 			InterfaceID: uint64(status.GetIfIndex()),
 			IFHostStatus: netproto.InterfaceHostStatus{
 				HostIfName: status.GetName(),
@@ -1304,6 +1280,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		},
 	}
 	log.Infof("Creating host interface [%+v]", i)
+	a.LocalInterfaces[i.Name] = i.UUID
 	ifEvnt := types.UpdateIfEvent{
 		Oper: types.Create,
 		Intf: i,
@@ -1355,6 +1332,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 			VrfName: "default",
 		},
 		Status: netproto.InterfaceStatus{
+			DSC:         a.InfraAPI.GetDscName(),
 			InterfaceID: uint64(status.GetIfIndex()),
 			OperStatus:  status.GetLinkStatus().GetOperState().String(),
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
@@ -1363,6 +1341,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		},
 	}
 	log.Infof("Creating Uplink interface [%+v]", i)
+	a.LocalInterfaces[i.Name] = i.UUID
 	ifEvnt := types.UpdateIfEvent{
 		Oper: types.Create,
 		Intf: i,

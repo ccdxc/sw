@@ -497,6 +497,10 @@
         "host-ifname": {
           "type": "string",
           "description": "interface name seen by the host driver."
+        },
+        "dsc": {
+          "type": "string",
+          "description": "DSC is the name of the dsc it belongs to."
         }
       },
       "description": "InterfaceHostStatus is populated for PF and VF."

@@ -36,12 +36,12 @@ func HandleErr(oper int, apiStatus halapi.ApiStatus, err error, format string) e
 		}
 	case types.Update:
 		if !(apiStatus == halapi.ApiStatus_API_STATUS_OK) {
-			log.Error(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
+			log.Error(errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String()))
 			return errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
 		}
 	case types.Delete:
 		if !(apiStatus == halapi.ApiStatus_API_STATUS_OK) {
-			log.Error(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
+			log.Error(errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String()))
 			return errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
 		}
 	}
@@ -164,20 +164,20 @@ func ConvertIPPrefix(address string) (ipAddress *halapi.IPPrefix, err error) {
 	return
 }
 
-// RDToBytes converts the RouteDistinguisher to bytes
-func RDToBytes(r *netproto.RouteDistinguisher) []byte {
+// RTToBytes converts the RouteDistinguisher to bytes
+func RTToBytes(r *netproto.RouteDistinguisher) []byte {
 	var ret = make([]byte, 8)
 	switch strings.ToLower(r.Type) {
 	case strings.ToLower(netproto.RouteDistinguisher_Type0.String()):
-		binary.BigEndian.PutUint16(ret[0:2], uint16(0))
+		binary.BigEndian.PutUint16(ret[0:2], uint16(0x0002))
 		binary.BigEndian.PutUint16(ret[2:4], uint16(r.AdminValue))
 		binary.BigEndian.PutUint32(ret[4:8], uint32(r.AssignedValue))
 	case strings.ToLower(netproto.RouteDistinguisher_Type1.String()):
-		binary.BigEndian.PutUint16(ret[0:2], uint16(1))
+		binary.BigEndian.PutUint16(ret[0:2], uint16(0x0102))
 		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
 		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))
 	case strings.ToLower(netproto.RouteDistinguisher_Type2.String()):
-		binary.BigEndian.PutUint16(ret[0:2], uint16(2))
+		binary.BigEndian.PutUint16(ret[0:2], uint16(0x0202))
 		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
 		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))
 	}

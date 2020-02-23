@@ -106,6 +106,9 @@ message InterfaceSpec {
 message InterfaceHostStatus {
     // interface name seen by the host driver
     string HostIfName   = 1 [(gogoproto.jsontag) = "host-ifname,omitempty"];
+
+    // DSC is the name of the dsc it belongs to
+    string DSC          = 2 [(gogoproto.jsontag) = "dsc,omitempty"];
 }
 
 message InterfaceUplinkStatus {

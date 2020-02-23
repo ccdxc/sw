@@ -6,10 +6,11 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/jsonpb"
+	"github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -51,9 +52,66 @@ var nlriPrefixShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(bgpShowCmd)
+	bgpShowCmd.PersistentFlags().Bool("json", false, "output in json")
 	bgpShowCmd.AddCommand(peerShowCmd)
 	bgpShowCmd.AddCommand(peerAfShowCmd)
 	bgpShowCmd.AddCommand(nlriPrefixShowCmd)
+}
+
+const bgpGlobalStr = `BGP Global Configuration
+Local ASN   : %d
+Router ID   : %v
+Cluster ID  : %v
+`
+const bgpPeerStr = `BGP Peer details
+------------------------------------
+UUID            : %s
+Admin State     : %v
+Local Address   : %v
+Remote Address  : %v
+Remote ASN      : %d
+Authentication  : %v
+Flags           : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
+Timers          : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+
+Status          : %v
+Previous State  : %v
+Last Err Recvd  : %v
+Last Err Sent   : %v
+------------------------------------
+`
+
+const bgpNLRI = `
+------------------------------------
+AFI/SAFI        : [ %v/%v ]
+Route Source    : %d
+Path ID         : %d
+AS Path         : %v
+Originator      : %v
+Next Hop Addr   : %v
+BestPath        : %v
+Prefix          : %v
+------------------------------------
+`
+
+const bgpPeerAFStr = `BGP Peer Address Family
+------------------------------------
+UUID            : %s
+AFI/SAFI        : [ %v/%v ]
+LocalAddress    : %v
+Remote Address  : %v
+Flags           : [ Disable: %v /Next-Hop-Self: %v / Default-originate: %v ]
+------------------------------------
+`
+
+func printBGPPeerAF(paf pegasusClient.BGPPeerAf) string {
+	uid, err := uuid.FromBytes(paf.Spec.Id)
+	uidStr := ""
+	if err != nil {
+		uidStr = uid.String()
+	}
+
+	return fmt.Sprintf(bgpPeerAFStr, uidStr, paf.Spec.Afi.String(), paf.Spec.Safi.String(), utils.PdsIPToString(paf.Spec.LocalAddr), utils.PdsIPToString(paf.Spec.PeerAddr), paf.Spec.Disable, paf.Spec.NexthopSelf, paf.Spec.DefaultOrig)
 }
 
 func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
@@ -74,10 +132,13 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Operation failed with error")
 	}
 
-	m := jsonpb.Marshaler{Indent: "\t"}
-	response, _ := m.MarshalToString(respMsg)
-	fmt.Println(string(response))
-
+	v := utils.NewBGPSpec(respMsg.Response.Spec)
+	if cmd.Flag("json").Value.String() == "true" {
+		b, _ := json.MarshalIndent(v, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	}
+	fmt.Printf(bgpGlobalStr, v.LocalASN, v.RouterId, v.ClusterId)
 	return nil
 }
 
@@ -99,14 +160,25 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Operation failed with error")
 	}
 
-	if len(respMsg.Response) != 0 {
-		m := jsonpb.Marshaler{Indent: "\t"}
-		response, _ := m.MarshalToString(respMsg)
-		fmt.Println(string(response))
-	} else {
-		fmt.Println("Got empty response")
+	doJSON := cmd.Flag("json").Value.String() == "true"
+	peers := []*utils.ShadowBGPPeer{}
+	for _, p := range respMsg.Response {
+		peer := utils.NewBGPPeer(p)
+		if doJSON {
+			peers = append(peers, peer)
+		} else {
+			fmt.Printf(bgpPeerStr, peer.Spec.Id, peer.Spec.State.String(), peer.Spec.LocalAddr,
+				peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Spec.RRClient,
+				peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime, peer.Spec.KeepAlive,
+				peer.Status.Status, peer.Status.PrevStatus, peer.Status.LastErrorRcvd,
+				peer.Status.LastErrorSent)
+		}
 	}
-
+	if doJSON {
+		b, _ := json.MarshalIndent(peers, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	}
 	return nil
 }
 
@@ -129,9 +201,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(respMsg.Response) != 0 {
-		m := jsonpb.Marshaler{Indent: "\t"}
-		response, _ := m.MarshalToString(respMsg)
-		fmt.Println(string(response))
+		fmt.Println()
 	} else {
 		fmt.Println("Got empty response")
 	}
@@ -158,9 +228,8 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(respMsg.Response) != 0 {
-		m := jsonpb.Marshaler{Indent: "\t"}
-		response, _ := m.MarshalToString(respMsg)
-		fmt.Println(string(response))
+		b, _ := json.MarshalIndent(respMsg.Response, "", "  ")
+		fmt.Println(string(b))
 	} else {
 		fmt.Println("Got empty response")
 	}

@@ -90,7 +90,7 @@ func ValidateMeta(oper types.Operation, kind string, meta api.ObjectMeta) error 
 	}
 
 	switch strings.ToLower(kind) {
-	case "tenant":
+	case "tenant", "interface":
 		if len(meta.Name) == 0 {
 			return errors.Wrapf(types.ErrBadRequest, "Kind: %v | Meta: %v | Err: %v", kind, meta, types.ErrEmptyFields)
 		}

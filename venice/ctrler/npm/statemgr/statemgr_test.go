@@ -2466,8 +2466,6 @@ func TestNetworkInterfaceConvert(t *testing.T) {
 	nif := convertNetworkInterfaceObject(netifState)
 	Assert(t, nif != nil, "convert failed")
 	Assert(t, nif.Name == agentNetif.Name, "name did not match")
-	Assert(t, nif.Namespace == agentNetif.Namespace, "namespace did not match")
-	Assert(t, nif.Tenant == agentNetif.Tenant, "Tenant did not match")
 	Assert(t, cNetif.Status.Type == convertAgentIFToAPIProto(agentNetif.Spec.Type), "Type did not match [%v/%v]", nif.Spec.Type, convertAgentIFToAPIProto(agentNetif.Spec.Type))
 
 	tests := []struct {
