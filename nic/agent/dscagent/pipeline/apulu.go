@@ -1537,6 +1537,8 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 			},
 		}
 
+		a.LocalInterfaces[i.Name] = i.UUID
+
 		if _, err := a.HandleInterface(types.Create, i); err != nil {
 			log.Error(err)
 			return err
