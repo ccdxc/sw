@@ -605,7 +605,18 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
     p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP req) "
+        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP offer 68) "
+                      "-> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    // dhcpd seems to be using dest port 67
+    key.key_metadata_dport = 67;
+    SDK_ASSERT(apulu_impl_db()->nacl_idxr()->alloc(&nacl_idx) == SDK_RET_OK);
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx, &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (host lif, DHCP offer 67) "
                       "-> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;

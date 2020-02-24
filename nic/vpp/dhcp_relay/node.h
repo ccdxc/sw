@@ -34,7 +34,7 @@
 
 // server header node related defines
 #define foreach_dhcp_relay_svr_hdr_counter                  \
-    _(TX, "Sent on Netwrok interface " )                    \
+    _(TX, "Sent on Network interface " )                    \
 
 #define foreach_dhcp_relay_svr_hdr_next                     \
     _(INTF_OUT, "interface-tx" )                            \

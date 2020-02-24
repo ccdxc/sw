@@ -13,7 +13,8 @@
 extern "C" {
 #endif
 
-#define PDS_DHCP_SERVER_NEXTHOP 1
+// FIXME : temp until reinject to linux comes in
+#define PDS_DHCP_SERVER_NEXTHOP 9
 
 always_inline void
 pds_dhcp_relay_fill_data (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr)
@@ -84,14 +85,24 @@ pds_dhcp_relay_svr_fill_tx_hdr_x1 (vlib_buffer_t *b0)
 }
 
 always_inline void
-pds_dhcp_relay_client_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
+pds_dhcp_relay_client_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
+                                      bool *error0, bool *error1)
 {
     p4_tx_cpu_hdr_t *tx0, *tx1;
+
+    *error0 = false;
+    *error1 = false;
 
     pds_impl_db_vnic_entry_t *vnic_info0, *vnic_info1;
 
     vnic_info0 = pds_impl_db_vnic_get(vnet_buffer(b0)->pds_dhcp_data.vnic_id);
+    if (!vnic_info0) {
+        *error0 = true;
+    }
     vnic_info1 = pds_impl_db_vnic_get(vnet_buffer(b1)->pds_dhcp_data.vnic_id);
+    if (!vnic_info1) {
+        *error1 = true;
+    }
 
     tx0 = vlib_buffer_get_current(b0);
     tx1 = vlib_buffer_get_current(b1);
@@ -108,8 +119,12 @@ pds_dhcp_relay_client_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
     tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     tx1->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
 
-    tx0->nexthop_id = vnic_info0->nh_hw_id;
-    tx1->nexthop_id = vnic_info1->nh_hw_id;
+    if (vnic_info0) {
+        tx0->nexthop_id = vnic_info0->nh_hw_id;
+    }
+    if (vnic_info1) {
+        tx1->nexthop_id = vnic_info1->nh_hw_id;
+    }
 
     tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
     tx1->nexthop_id = clib_host_to_net_u16(tx1->nexthop_id);
@@ -123,13 +138,19 @@ pds_dhcp_relay_client_fill_tx_hdr_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 }
 
 always_inline void
-pds_dhcp_relay_client_fill_tx_hdr_x1 (vlib_buffer_t *b0)
+pds_dhcp_relay_client_fill_tx_hdr_x1 (vlib_buffer_t *b0, bool *error0)
 {
     p4_tx_cpu_hdr_t *tx0;
 
     pds_impl_db_vnic_entry_t *vnic_info0;
 
     vnic_info0 = pds_impl_db_vnic_get(vnet_buffer(b0)->pds_dhcp_data.vnic_id);
+    if (!vnic_info0) {
+        *error0 = true;
+        return;
+    }
+
+    *error0 = false;
 
     tx0 = vlib_buffer_get_current(b0);
 
@@ -152,7 +173,7 @@ pds_dhcp_relay_client_fill_tx_hdr_x1 (vlib_buffer_t *b0)
 }
 
 
-void
+always_inline void
 pds_dhcp_relay_fill_subnet_info(uint32_t vnic_id, uint32_t *subnet_pfx,
                                 uint32_t *subnet_ip)
 {
