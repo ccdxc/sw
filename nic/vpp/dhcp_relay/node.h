@@ -47,6 +47,10 @@
     _(INTF_OUT, "interface-tx" )                            \
     _(DROP, "error-drop")                                   \
 
+#define foreach_dhcp_relay_linux_inject_counter                \
+    _(TX, "Reinjected to Linux" )                           \
+    _(SOCK_ERR, "Socket create error" )                     \
+    _(SEND_ERR, "Socket send error" )                       \
 
 // clfy node related defines
 typedef enum
@@ -110,5 +114,22 @@ typedef enum
 typedef struct dhcp_relay_client_hdr_trace_s {
     mac_addr_t client_mac;
 } dhcp_relay_client_hdr_trace_t;
+
+typedef enum
+{
+#define _(n,s) DHCP_RELAY_LINUX_INJECT_COUNTER_##n,
+    foreach_dhcp_relay_linux_inject_counter
+#undef _
+    DHCP_RELAY_LINUX_INJECT_COUNTER_LAST,
+} dhcp_relay_linnux_out_counter_t;
+
+typedef struct dhcp_relay_linux_inject_trace_s {
+    int error;
+    int sys_errno;
+} dhcp_relay_linux_inject_trace_t;
+
+typedef struct dhcp_relay_main_s {
+    int *inject_fds;
+} dhcp_relay_main_t;
 
 #endif    // __VPP_DHCP_RELAY_NODE_H__

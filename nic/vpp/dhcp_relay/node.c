@@ -2,6 +2,11 @@
  *  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
  */
 
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <string.h>
 #include "includes.h"
 #include "pdsa_vpp_cfg.h"
 
@@ -11,12 +16,12 @@ VLIB_PLUGIN_REGISTER () = {
 };
 // *INDENT-ON*
 
-// used to fill dmac for traffic towards client
-mac_addr_t vnic_mac[128];
-
 vlib_node_registration_t pds_dhcp_relay_clfy_node;
 vlib_node_registration_t pds_dhcp_relay_svr_tx_node;
 vlib_node_registration_t pds_dhcp_relay_client_tx_node;
+vlib_node_registration_t pds_dhcp_relay_linux_inject_node;
+
+dhcp_relay_main_t dhcp_relay_main;
 
 // clfy node
 
@@ -263,6 +268,195 @@ VLIB_REGISTER_NODE (pds_dhcp_relay_clfy_node) = {
     .format_trace = format_pds_dhcp_relay_clfy_trace,
 };
 
+always_inline int
+pds_dhcp_relay_linux_inject_fd_get (void)
+{
+    dhcp_relay_main_t *dm = &dhcp_relay_main;
+    int thread_id = vlib_get_thread_index();
+    int fd;
+    const int sock_opt = 1;
+
+    if (PREDICT_TRUE(dm->inject_fds[thread_id] != -1)) {
+        return dm->inject_fds[thread_id];
+    }
+
+    fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (fd < 0) {
+        return -1;
+    }
+    // set flag so that socket expects application to frame IP4 header
+    if (setsockopt(fd, IPPROTO_IP, IP_HDRINCL, &sock_opt, sizeof(sock_opt)) < 0) {
+        return -1;
+    }
+    dm->inject_fds[thread_id] = fd;
+    return fd;
+}
+
+always_inline void
+pds_dhcp_relay_linux_inject_x1 (vlib_main_t *vm,
+                                vlib_node_runtime_t *node,
+                                vlib_buffer_t *p, u32 *counter)
+{
+    static struct sockaddr_in sin;
+    ip4_header_t *ip4 = vlib_buffer_get_current(p);
+    int fd, ret, err;
+
+    fd = pds_dhcp_relay_linux_inject_fd_get();
+    if (PREDICT_FALSE(-1 == fd)) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SOCK_ERR]++;
+        err = DHCP_RELAY_LINUX_INJECT_COUNTER_SOCK_ERR;
+        goto end;
+    }
+    // set dest addr as hint to Linux kernel to route the packet
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = ip4->dst_address.as_u32;
+
+    ret = sendto(fd, ip4, p->current_length, 0, (struct sockaddr *) &sin,
+                 sizeof(struct sockaddr));
+    if (ret < 0) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR]++;
+        err = DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR;
+        goto end;
+    }
+    counter[DHCP_RELAY_LINUX_INJECT_COUNTER_TX]++;
+    err = DHCP_RELAY_LINUX_INJECT_COUNTER_TX;
+
+end:
+    if (p->flags & VLIB_BUFFER_IS_TRACED) {
+        dhcp_relay_linux_inject_trace_t *t = vlib_add_trace(vm, node, p, sizeof (t[0]));
+        t->error = err;
+        t->sys_errno = errno;
+    }
+    return;
+}
+
+always_inline void
+pds_dhcp_relay_linux_inject_x2 (vlib_main_t *vm,
+                                vlib_node_runtime_t *node,
+                                vlib_buffer_t *p0, vlib_buffer_t *p1,
+                                u32 *counter)
+{
+    static struct sockaddr_in sin0, sin1;
+    ip4_header_t *ip40 = vlib_buffer_get_current(p0);
+    ip4_header_t *ip41 = vlib_buffer_get_current(p1);
+    int fd, ret0, ret1, err1, err2, errno1 = 0, errno2 = 0;
+
+    fd = pds_dhcp_relay_linux_inject_fd_get();
+    if (PREDICT_FALSE(-1 == fd)) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SOCK_ERR] += 2;
+        err1 = err2 = DHCP_RELAY_LINUX_INJECT_COUNTER_SOCK_ERR;
+        goto end;
+    }
+    // set dest addr as hint to Linux kernel to route the packet
+    sin0.sin_family = AF_INET;
+    sin1.sin_family = AF_INET;
+    sin0.sin_addr.s_addr = ip40->dst_address.as_u32;
+    sin1.sin_addr.s_addr = ip41->dst_address.as_u32;
+
+    ret0 = sendto(fd, ip40, p0->current_length, 0, (struct sockaddr *) &sin0,
+                  sizeof(struct sockaddr));
+    errno1 = errno;
+    ret1 = sendto(fd, ip41, p1->current_length, 0, (struct sockaddr *) &sin1,
+                  sizeof(struct sockaddr));
+    errno2 = errno;
+    if (ret0 < 0 && ret1 < 0) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR] += 2;
+        err1 = err2 = DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR;
+        goto end;
+    }
+
+    if (ret0 > 0) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_TX]++;
+        err1 = DHCP_RELAY_LINUX_INJECT_COUNTER_TX;
+    } else {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR]++;
+        err2 = DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR;
+    }
+    if (ret1 > 0) {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_TX]++;
+        err2 = DHCP_RELAY_LINUX_INJECT_COUNTER_TX;
+    } else {
+        counter[DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR]++;
+        err2 = DHCP_RELAY_LINUX_INJECT_COUNTER_SEND_ERR;
+    }
+
+end:
+    if (p0->flags & VLIB_BUFFER_IS_TRACED) {
+        dhcp_relay_linux_inject_trace_t *t0 = vlib_add_trace(vm, node, p0, sizeof(t0[0]));
+        t0->error = err1;
+        t0->sys_errno = errno1;
+    }
+    if (p1->flags & VLIB_BUFFER_IS_TRACED) {
+        dhcp_relay_linux_inject_trace_t *t1 = vlib_add_trace(vm, node, p1, sizeof(t1[0]));
+        t1->error = err2;
+        t1->sys_errno = errno2;
+    }
+    return;
+}
+
+static uword
+pds_dhcp_relay_linux_inject (vlib_main_t *vm,
+                             vlib_node_runtime_t *node,
+                             vlib_frame_t *from_frame)
+{
+    u32 counter[DHCP_RELAY_LINUX_INJECT_COUNTER_LAST] = {0};
+
+    PDS_PACKET_LOOP_START {
+        PDS_PACKET_DUAL_LOOP_START(READ, READ) {
+            pds_dhcp_relay_linux_inject_x2(vm, node,
+                                           PDS_PACKET_BUFFER(0),
+                                           PDS_PACKET_BUFFER(1),
+                                           counter);
+        } PDS_PACKET_DUAL_LOOP_END;
+        PDS_PACKET_SINGLE_LOOP_START {
+            pds_dhcp_relay_linux_inject_x1(vm, node,
+                                           PDS_PACKET_BUFFER(0),
+                                           counter);
+        } PDS_PACKET_SINGLE_LOOP_END;
+    } PDS_PACKET_LOOP_END_NO_ENQUEUE;
+
+#define _(n, s) \
+    vlib_node_increment_counter (vm, pds_dhcp_relay_linux_inject_node.index,   \
+                                 DHCP_RELAY_LINUX_INJECT_COUNTER_##n,          \
+                                 counter[DHCP_RELAY_LINUX_INJECT_COUNTER_##n]);
+    foreach_dhcp_relay_linux_inject_counter
+#undef _
+
+    vlib_buffer_free(vm, PDS_PACKET_BUFFER_INDEX_PTR(0), from_frame->n_vectors);
+    return from_frame->n_vectors;
+}
+
+static char * pds_dhcp_relay_linux_inject_error_strings[] = {
+#define _(n,s) s,
+    foreach_dhcp_relay_linux_inject_counter
+#undef _
+};
+
+static u8 *
+format_pds_dhcp_relay_linux_inject_trace (u8 *s, va_list *args)
+{
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    dhcp_relay_linux_inject_trace_t *t =
+                            va_arg(*args, dhcp_relay_linux_inject_trace_t *);
+
+    s = format(s, "Error - %s, errno - %s",
+               pds_dhcp_relay_linux_inject_error_strings[t->error],
+               strerror(t->sys_errno));
+    return s;
+}
+
+VLIB_REGISTER_NODE (pds_dhcp_relay_linux_inject_node) = {
+    .function = pds_dhcp_relay_linux_inject,
+    .name = "pds-dhcp-relay-linux-inject",
+    /* Takes a vector of packets. */
+    .vector_size = sizeof (u32),
+
+    .n_errors = DHCP_RELAY_LINUX_INJECT_COUNTER_LAST,
+    .error_strings = pds_dhcp_relay_linux_inject_error_strings,
+    .format_trace = format_pds_dhcp_relay_linux_inject_trace,
+};
+
 // server header node
 
 static u8 *
@@ -341,7 +535,7 @@ pds_dhcp_relay_svr_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
     return;
 }
-    
+
 always_inline void
 pds_dhcp_relay_svr_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
@@ -355,9 +549,9 @@ pds_dhcp_relay_svr_hdr_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 }
     
 static uword
-pds_dhcp_relay_svr_hdr (vlib_main_t * vm,
-                        vlib_node_runtime_t * node,
-                        vlib_frame_t * from_frame)
+pds_dhcp_relay_svr_hdr (vlib_main_t *vm,
+                        vlib_node_runtime_t *node,
+                        vlib_frame_t *from_frame)
 {
     /*add corresponding p4 hdr details for packet towards server*/
     u32 counter[DHCP_RELAY_SVR_HDR_COUNTER_LAST] = {0};
@@ -397,9 +591,9 @@ static char * pds_dhcp_relay_svr_hdr_error_strings[] = {
 #undef _
 };
 
-VLIB_REGISTER_NODE (pds_dhcp_relay_svr_tx_node) = {
+VLIB_REGISTER_NODE(pds_dhcp_relay_svr_tx_node) = {
     .function = pds_dhcp_relay_svr_hdr,
-    .name = "pds-dhcp-relay-svr-tx",
+    .name = "pds-dhcp-relay-svr-p4-inject",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -744,9 +938,14 @@ pds_dhcp_extract_circ_id_callback (vlib_main_t * vm, vlib_buffer_t *b,
 static clib_error_t *
 pds_dhcp_relay_init (vlib_main_t * vm)
 {
+    int no_threads = vec_len(vlib_worker_threads);
+
+    clib_memset(&dhcp_relay_main, 0, sizeof(dhcp_relay_main_t));
+    vec_validate_init_empty(dhcp_relay_main.inject_fds, (no_threads - 1), -1);
+
     pds_dhcp_relay_pipeline_init();
 
-    dhcp_register_server_next_node_tx(vm, (u8 *) "pds-dhcp-relay-svr-tx");
+    dhcp_register_server_next_node_tx(vm, (u8 *) "pds-dhcp-relay-linux-inject");
 
     dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
 
