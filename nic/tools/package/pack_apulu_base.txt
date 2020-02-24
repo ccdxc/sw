@@ -134,6 +134,7 @@ nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
 nic/apollo/tools/apulu/sysinit.sh                                 /nic/tools/
+nic/tools/clear_nic_config.sh                                     /nic/tools/
 nic/tools/syskill.sh                                              /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
