@@ -16,15 +16,15 @@ using pds_ms::Error;
 // NHPI
 //-------------------------------------------------------------------------
 NBB_BYTE hals_l3_integ_subcomp_t::nhpi_add_update_ecmp(ATG_NHPI_ADD_UPDATE_ECMP *add_update_ecmp_ips) { 
+    NBB_BYTE rc;
     try {
         hals_ecmp_t ecmp;
-        ecmp.handle_add_upd_ips(add_update_ecmp_ips);
+        rc = ecmp.handle_add_upd_ips(add_update_ecmp_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("ECMP Add Update processing failed %s", e.what());
-        add_update_ecmp_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 }
 
 NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp(ATG_NHPI_DELETE_ECMP *delete_ecmp_ips) {
@@ -35,7 +35,6 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp(ATG_NHPI_DELETE_ECMP *delete_
     } catch (Error& e) {
         PDS_TRACE_ERR ("ECMP Delete processing failed %s", e.what());
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 }
 
@@ -62,15 +61,15 @@ NBB_BYTE hals_l3_integ_subcomp_t::nhpi_delete_ecmp_nh(NBB_CORRELATOR ecmp_corr,
 };
 
 NBB_BYTE hals_l3_integ_subcomp_t::ropi_update_route(ATG_ROPI_UPDATE_ROUTE *update_route) {
+    NBB_BYTE rc;
     try {
         hals_route_t route;
-        route.handle_add_upd_ips(update_route);
+        rc = route.handle_add_upd_ips(update_route);
     } catch (Error& e) {
         PDS_TRACE_ERR ("Route Add Update processing failed %s", e.what());
-        update_route->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 };
 
 NBB_BYTE hals_l3_integ_subcomp_t::ropi_delete_route(ATG_ROPI_ROUTE_ID route_id) {
@@ -81,7 +80,6 @@ NBB_BYTE hals_l3_integ_subcomp_t::ropi_delete_route(ATG_ROPI_ROUTE_ID route_id) 
     } catch (Error& e) {
         PDS_TRACE_ERR ("Route Delete processing failed %s", e.what());
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
     return ATG_OK;
 };
 

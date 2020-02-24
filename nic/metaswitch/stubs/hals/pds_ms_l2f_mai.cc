@@ -289,7 +289,8 @@ pds_batch_ctxt_guard_t l2f_mai_t::make_batch_pds_spec_() {
     return bctxt_guard_;
 }
 
-void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
+NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
+    NBB_BYTE rc = ATG_OK;
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     cookie_t *cookie = nullptr;
     parse_ips_info_(update_fdb_mac);
@@ -313,7 +314,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         if (store_info_.subnet_obj == nullptr) {
             PDS_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d MAC %s add-upd",
                             ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
-            return;
+            return rc;
         }
         if (store_info_.mac_obj == nullptr) {
             // New FDB entry - Populate cache
@@ -424,6 +425,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
 
         // All processing complete, only batch commit remains -
         // safe to release the cookie_uptr_ unique_ptr
+        rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
@@ -439,7 +441,6 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    update_fdb_mac->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG("MS BD %d MAC %s Add PDS Batch commit successful",
                     ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
     if (PDS_MOCK_MODE()) {
@@ -447,6 +448,7 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {

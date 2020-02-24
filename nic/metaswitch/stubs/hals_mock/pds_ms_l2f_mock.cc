@@ -13,8 +13,9 @@ namespace pds_ms {
 using pds_ms::bd_obj_t;
 using pds_ms::state_t;
 
-void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips)
+NBB_BYTE l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips)
 {
+    return ATG_OK;
 }
 
 void l2f_integ_subcomp_t::delete_bd(const ATG_L2_BD_ID *bd_id,
@@ -36,7 +37,8 @@ void l2f_integ_subcomp_t::delete_bd_if(const ATG_L2_BD_ID *bd_id,
 {
 }
 
-void l2f_integ_subcomp_t::add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac) {
+NBB_BYTE l2f_integ_subcomp_t::add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac) {
+    return ATG_OK;
 }
 void l2f_integ_subcomp_t::delete_fdb_mac(l2f::FdbMacKey *key) {
 }

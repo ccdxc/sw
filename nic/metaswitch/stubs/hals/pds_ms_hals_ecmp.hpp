@@ -30,7 +30,7 @@ using pds_ms::pds_batch_ctxt_guard_t;
 
 class hals_ecmp_t {
 public:    
-    void handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips);
+    NBB_BYTE handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips);
     void handle_delete(NBB_CORRELATOR pathset_id);
 
 private:

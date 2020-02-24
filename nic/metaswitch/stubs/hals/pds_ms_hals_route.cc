@@ -134,9 +134,9 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     return bctxt_guard_;
 }
 
-void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
+NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    add_upd_route_ips->return_code = ATG_OK;
+    NBB_BYTE rc = ATG_OK;
 
     parse_ips_info_(add_upd_route_ips);
 
@@ -148,7 +148,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
     if ((add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_CONNECTED) ||
         (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
         PDS_TRACE_DEBUG("Ignore connected route");
-        return;
+        return rc;
     }
 
     // Alloc new cookie and cache IPS
@@ -160,7 +160,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
         if (is_pds_obj_key_invalid(rttable_key)) {
             PDS_TRACE_DEBUG("Ignore MS route for VRF %d that does not"
                             " have Route table ID", ips_info_.vrf_id);
-            return;
+            return rc;
         }
         pds_bctxt_guard = make_batch_pds_spec_(rttable_key); 
         // Flush any outstanding batch
@@ -241,6 +241,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
 
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
@@ -250,7 +251,6 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
                     .append(" err=").append(std::to_string(ret)));
         //TODO: Is rollback required here ?
     }
-    add_upd_route_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("Route %s: Add/Upd PDS Batch commit successful", 
                      ippfx2str(&ips_info_.pfx));
     if (PDS_MOCK_MODE()) {
@@ -258,6 +258,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {

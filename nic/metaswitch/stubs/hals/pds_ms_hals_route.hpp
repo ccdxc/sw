@@ -29,7 +29,7 @@ using pds_ms::pds_batch_ctxt_guard_t;
 
 class hals_route_t {
 public:    
-    void handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips);
+    NBB_BYTE handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips);
     void handle_delete(ATG_ROPI_ROUTE_ID route_id);
 
 private:

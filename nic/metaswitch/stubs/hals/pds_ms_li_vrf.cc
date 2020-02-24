@@ -168,8 +168,8 @@ pds_batch_ctxt_guard_t li_vrf_t::prepare_pds(state_t::context_t& state_ctxt,
     return pds_bctxt_guard;
 }
 
-void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
-    vrf_add_upd_ips->return_code = ATG_OK;
+NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
+    NBB_BYTE rc = ATG_OK;
     parse_ips_info_(vrf_add_upd_ips);
     pds_ms::cookie_t* cookie;
 
@@ -185,7 +185,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
             // Delete is on the way
             PDS_TRACE_INFO ("VRF %d: VRF AddUpd IPS for unknown VRF",
                             ips_info_.vrf_id);
-            return;
+            return rc;
         }
         if (op_create_) {
             PDS_TRACE_INFO ("MS VRF %d UUID %s Create IPS", ips_info_.vrf_id,
@@ -262,6 +262,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
 
         // All processing complete, only batch commit remains - 
         // safe to release the cookie_uptr_ unique_ptr
+        rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
@@ -279,7 +280,6 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    vrf_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("MS VRF  %d: Add/Upd PDS Batch commit successful", 
                      ips_info_.vrf_id);
     
@@ -288,6 +288,7 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 // API for Direct Fastpath update from MGMT stub to HAL stub bypassing

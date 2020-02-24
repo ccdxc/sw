@@ -25,7 +25,7 @@ namespace pds_ms {
 
 class li_vxlan_port {
 public:    
-   void handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_tnl_add_upd);
+   NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_tnl_add_upd);
    void handle_delete(ms_ifindex_t vxlan_port_ifindex);
    void add_pds_tep_spec(pds_batch_ctxt_t bctxt, if_obj_t* vxp_if_obj,
                          tep_obj_t* tep_obj, bool op_create);

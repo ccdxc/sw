@@ -24,7 +24,7 @@ namespace pds_ms {
 
 class li_intf_t {
 public:    
-   void handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
+   NBB_BYTE handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
    void handle_delete(NBB_ULONG phy_port_ifindex);
 
 private:

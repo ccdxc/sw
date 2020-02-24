@@ -16,15 +16,16 @@
 namespace pds_ms {
 
 // Class that implements the L2F Integration subcomponent interface 
-void l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips) {
+NBB_BYTE l2f_integ_subcomp_t::add_upd_bd(ATG_BDPI_UPDATE_BD *update_bd_ips) {
+    NBB_BYTE rc;
     try {
         l2f_bd_t bd;
-        bd.handle_add_upd_ips(update_bd_ips);
+        rc = bd.handle_add_upd_ips(update_bd_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("BD Add Update processing failed %s", e.what());
-        update_bd_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
+    return rc;
 }
 
 void l2f_integ_subcomp_t::delete_bd(const ATG_L2_BD_ID *bd_id,
@@ -61,14 +62,16 @@ void l2f_integ_subcomp_t::delete_bd_if(const ATG_L2_BD_ID *bd_id,
     }
 }
 
-void l2f_integ_subcomp_t::add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac) {
+NBB_BYTE l2f_integ_subcomp_t::add_upd_fdb_mac(ATG_BDPI_UPDATE_FDB_MAC *update_fdb_mac) {
+    NBB_BYTE rc;
     try {
         l2f_mai_t mai;
-        mai.handle_add_upd_mac(update_fdb_mac);
+        rc = mai.handle_add_upd_mac(update_fdb_mac);
     } catch (Error& e) {
-        update_fdb_mac->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
         PDS_TRACE_ERR ("BDPI Remote MAC Add/Upd failed %s", e.what());
     }
+    return rc;
 }
 
 void l2f_integ_subcomp_t::delete_fdb_mac(l2f::FdbMacKey *key) {

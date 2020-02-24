@@ -176,8 +176,8 @@ pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
     return pds_bctxt_guard;
 }
 
-void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
-    bd_add_upd_ips->return_code = ATG_OK;
+NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
+    NBB_BYTE rc = ATG_OK;
     parse_ips_info_(bd_add_upd_ips);
     pds_ms::cookie_t* cookie;
 
@@ -188,7 +188,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
             // The prev BD IPS response could have possibly been delayed
             // beyond Subnet Spec delete - Ignore and return success to MS
             PDS_TRACE_INFO ("BD %d: AddUpd IPS for unknown BD", ips_info_.bd_id);
-            return;
+            return rc;
         }
         bd_obj_uptr_t bd_obj_uptr; 
         if (op_create_) {
@@ -279,6 +279,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
 
         // All processing complete, only batch commit remains - 
         // safe to release the cookie_uptr_ unique_ptr
+        rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
         auto ret = pds_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
@@ -298,7 +299,6 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    bd_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("MS BD %d: Add/Upd PDS Batch commit successful", 
                      ips_info_.bd_id);
 
@@ -307,6 +307,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {

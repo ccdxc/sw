@@ -33,15 +33,15 @@ li_integ_subcomp_t* li_is ()
 // Physical port (Front panel port)
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
+    NBB_BYTE rc;
     try {
         li_intf_t intf;
-        intf.handle_add_upd_ips (port_add_upd_ips);
+        rc = intf.handle_add_upd_ips (port_add_upd_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("Interface Add Update processing failed %s", e.what());
-        port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
-    // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 }
 
 NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
@@ -59,15 +59,16 @@ NBB_BYTE li_integ_subcomp_t::port_delete(NBB_ULONG port_ifindex) {
 // VRF
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vrf_add_update(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
+    NBB_BYTE rc;
     try {
         li_vrf_t vrf;
-        vrf.handle_add_upd_ips (vrf_add_upd_ips);
+        rc = vrf.handle_add_upd_ips (vrf_add_upd_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
-        vrf_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 }
 
 NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_len) {
@@ -85,15 +86,16 @@ NBB_BYTE li_integ_subcomp_t::vrf_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_
 // VXLAN tunnel (TEP)
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vxlan_add_update(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
+    NBB_BYTE rc;
     try {
         li_vxlan_tnl vxtnl;
-        vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd_ips);
+        rc = vxtnl.handle_add_upd_ips (vxlan_tnl_add_upd_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("Vxlan Tunnel Add Update processing failed %s", e.what());
-        vxlan_tnl_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 }
 
 NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
@@ -111,15 +113,16 @@ NBB_BYTE li_integ_subcomp_t::vxlan_delete(NBB_ULONG vxlan_tnl_ifindex) {
 // VXLAN port (TEP, VNI)
 //---------------------------------
 NBB_BYTE li_integ_subcomp_t::vxlan_port_add_update(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
+    NBB_BYTE rc;
     try {
         li_vxlan_port vxport;
-        vxport.handle_add_upd_ips (vxlan_port_add_upd_ips);
+        rc = vxport.handle_add_upd_ips (vxlan_port_add_upd_ips);
     } catch (Error& e) {
         PDS_TRACE_ERR ("Vxlan Port Add Update processing failed %s", e.what());
-        vxlan_port_add_upd_ips->return_code = ATG_UNSUCCESSFUL;
+        rc = ATG_UNSUCCESSFUL;
     }
     // Always return ATG_OK - fill the actual return code in the IPS
-    return ATG_OK;
+    return rc;
 }
 
 NBB_BYTE li_integ_subcomp_t::vxlan_port_delete(NBB_ULONG vxlan_port_ifindex) {

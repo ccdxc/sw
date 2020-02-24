@@ -26,7 +26,7 @@ namespace pds_ms {
 
 class li_vrf_t {
 public:    
-   void handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
+   NBB_BYTE handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
    void handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len);
    // Synchronous HAL update completion
    sdk_ret_t update_pds_synch(state_t::context_t&& state_ctxt,

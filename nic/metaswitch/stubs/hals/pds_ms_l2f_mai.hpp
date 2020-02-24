@@ -27,7 +27,7 @@ void l2f_del_remote_macs_for_bd(state_t::context_t& state_ctxt, ms_bd_id_t bd_id
 
 class l2f_mai_t {
 public:    
-   void handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* fdb_add_upd);
+   NBB_BYTE handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* fdb_add_upd);
    void handle_delete_mac(l2f::FdbMacKey *key);
    void handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* ip_add_upd);
    void handle_delete_ip(const ATG_MAI_MAC_IP_ID* ip_add_upd);

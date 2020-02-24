@@ -216,9 +216,9 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
     return bctxt_guard_;
 }
 
-void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
+NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    vxlan_tnl_add_upd_ips->return_code = ATG_OK;
+    NBB_BYTE rc = ATG_OK;
 
     parse_ips_info_(vxlan_tnl_add_upd_ips);
     // Alloc new cookie and cache IPS
@@ -234,7 +234,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
         PDS_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
-            return;
+            return rc;
         } 
     } else {
         // Create Tunnel
@@ -292,6 +292,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
 
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
@@ -300,7 +301,6 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                     .append(ips_info_.tep_ip_str)
                     .append(" err=").append(std::to_string(ret)));
     }
-    vxlan_tnl_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
                      ips_info_.tep_ip_str.c_str());
     if (PDS_MOCK_MODE()) {
@@ -308,6 +308,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {

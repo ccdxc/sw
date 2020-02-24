@@ -20,7 +20,7 @@ namespace pds_ms {
 
 class l2f_bd_t {
 public:    
-   void handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd);
+   NBB_BYTE handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd);
    void handle_delete(NBB_ULONG bd_id);
    void handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex);
    void handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex);

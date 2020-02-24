@@ -252,11 +252,11 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(state_t::context_t&
     return bctxt_guard_;
 }
 
-void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
-    add_upd_ecmp_ips->return_code = ATG_OK;
+NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
+    NBB_BYTE rc = ATG_OK;
     if (!parse_ips_info_(add_upd_ecmp_ips)) {
         // Nothing to do
-        return;
+        return rc;
     }
 
     if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
@@ -287,7 +287,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                                   " %d needs to be half of previous number %d -"
                                   " Ignore this update", ips_info_.pathset_id,
                                   num_nexthops, prev_num_nexthops); 
-                    return;
+                    return rc;
                 }
                 PDS_TRACE_DEBUG ("MS Underlay ECMP %ld update - NH Removal"
                                  " (optimization)", ips_info_.pathset_id);
@@ -334,7 +334,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                 PDS_TRACE_ERR ("MS Overlay ECMP %ld: Update IPS Num nexthops %ld"
                                " NOT SUPPORTED", 
                                ips_info_.pathset_id, ips_info_.nexthops.size());
-                return;
+                return rc;
             }
         }
         pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
@@ -426,6 +426,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
 
     // All processing complete, only batch commit remains - 
     // safe to release the cookie unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
@@ -434,7 +435,6 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     .append(std::to_string(ips_info_.pathset_id))
                     .append(" err=").append(std::to_string(ret)));
     }
-    add_upd_ecmp_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
                      ips_info_.pathset_id);
 
@@ -443,6 +443,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {

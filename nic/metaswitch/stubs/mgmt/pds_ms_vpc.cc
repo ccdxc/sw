@@ -241,9 +241,9 @@ sdk_ret_t
 vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
+    ms_vrf_id_t vrf_id = 0;
 
     try {
-        ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_alloc(spec);
         // cache VPC spec to be used in hals stub
@@ -254,6 +254,8 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process VPC %s VRF %d create (error=%d)",
                                spec->key.str(), vrf_id, ret_status);
+                // Delete the cached spec
+                pds_cache_vpc_spec(spec, vrf_id, true);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
         } else {
@@ -261,11 +263,15 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process underlay VPC %s create (error=%d)",
                                spec->key.str(), ret_status);
+                // Delete the cached spec
+                pds_cache_vpc_spec(spec, vrf_id, true);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
             auto ret = li_vrf_underlay_vpc_commit_pds_synch(*spec, true);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Error commiting Underlay VPC to HAL");
+                // Delete the cached spec
+                pds_cache_vpc_spec(spec, vrf_id, true);
                 return ret;
             }
             // Commit UUID mapping store
@@ -277,6 +283,9 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                          rtm_index);
     } catch (const Error& e) {
         PDS_TRACE_ERR ("VPC %s create failed %s", spec->key.str(), e.what());
+        if (vrf_id != 0) {
+            pds_cache_vpc_spec(spec, vrf_id, true);
+        }
         return e.rc();
     }
     return SDK_RET_OK;

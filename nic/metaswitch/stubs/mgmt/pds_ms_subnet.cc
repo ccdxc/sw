@@ -366,7 +366,7 @@ cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, pds_ms_subnet_cache_o
         if (subnet_obj == nullptr) {
             return cleanup;
         }
-        if (!subnet_obj->properties().hal_created) {
+        if (subnet_obj->properties().hal_created) {
             // Let L2F BD stub release the UUID
             cleanup = false;
         }
@@ -422,9 +422,10 @@ sdk_ret_t
 subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
+    ms_bd_id_t bd_id = 0;
 
     try {
-        auto bd_id = subnet_uuid_2_idx_alloc(spec->key);
+        bd_id = subnet_uuid_2_idx_alloc(spec->key);
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::CREATE);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
@@ -432,7 +433,7 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
             PDS_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
                            spec->key.str(), bd_id, ret_status);
 
-            // Internal BD ID already released - Delete the cached subnet spec
+            // Delete the cached subnet spec
             cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
@@ -441,6 +442,10 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         PDS_TRACE_ERR ("Subnet %s creation failed %s",
                         spec->key.str(), e.what());
+        // Internal BD ID already released - Delete the cached subnet spec
+        if (bd_id != 0) {
+            cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL);
+        }
         return e.rc();
     }
     return SDK_RET_OK;
@@ -450,9 +455,12 @@ sdk_ret_t
 subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
+    ms_bd_id_t bd_id = 0;
+    bool delete_completed = false;
 
     try {
-        auto bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
+        bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
+        // Mark as deleted so that L2F stub can release the Subnet UUID
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
@@ -464,6 +472,7 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
                            spec->key.str(), bd_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
+        delete_completed = true;
 
         if (cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL)) {
             // Subnet UUID is released by the L2F BD stub usually.
@@ -479,6 +488,10 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         PDS_TRACE_ERR ("Subnet %s deletion failed %s",
                         spec->key.str(), e.what());
+        if (bd_id != 0 && !delete_completed) {
+            cache_subnet_spec (spec, bd_id,
+                               pds_ms_subnet_cache_op_t::REVERT_MARK_DEL);
+        }
         return e.rc();
     }
     return SDK_RET_OK;

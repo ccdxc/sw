@@ -206,19 +206,19 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
     return bctxt_guard_;
 }
 
-void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
+NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    port_add_upd_ips->return_code = ATG_OK;
+    NBB_BYTE rc = ATG_OK;
 
     parse_ips_info_(port_add_upd_ips);
 
     if (ms_ifindex_to_pds_type (ips_info_.ifindex) != IF_TYPE_L3) {
         // Nothing to do for non-L3 interfaces
-        return;
+        return rc;
     }
     if (port_add_upd_ips->port_settings.no_switch_port == ATG_NO) {
         // Only processing L3 port creates
-        return;
+        return rc;
     }
 
     // Alloc new cookie and cache IPS
@@ -236,7 +236,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         if (unlikely(!cache_new_obj_in_cookie_())) {
             // No change
             PDS_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
-            return;
+            return rc;
         }
 
         pds_bctxt_guard = make_batch_pds_spec_();
@@ -288,6 +288,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         };
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
@@ -296,7 +297,6 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                     .append(std::to_string(ips_info_.ifindex))
                     .append(" err=").append(std::to_string(ret)));
     }
-    port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful",
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
@@ -304,6 +304,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void li_intf_t::handle_delete(NBB_ULONG ifindex) {

@@ -166,9 +166,9 @@ pds_batch_ctxt_guard_t li_vxlan_port::make_batch_pds_spec_() {
     return bctxt_guard_;
 }
 
-void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
+NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
 
-    vxlan_port_add_upd_ips->return_code = ATG_OK;
+    NBB_BYTE rc = ATG_OK;
 
     parse_ips_info_(vxlan_port_add_upd_ips);
     if (!vxlan_port_add_upd_ips->port_properties.l3_capable) {
@@ -177,7 +177,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
-        return;
+        return rc;
     }
 
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
@@ -263,6 +263,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
 
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
@@ -272,7 +273,6 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                     .append("VNI ").append(std::to_string(ips_info_.vni))
                     .append(" err=").append(std::to_string(ret)));
     }
-    vxlan_port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
     PDS_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful", 
                      ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
     if (PDS_MOCK_MODE()) {
@@ -280,6 +280,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
         cb.detach();
     }
+    return rc;
 }
 
 void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {

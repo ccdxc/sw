@@ -26,7 +26,7 @@ namespace pds_ms {
 
 class li_vxlan_tnl {
 public:    
-   void handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
+   NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
    void handle_delete(NBB_ULONG vxlan_tnl_ifindex);
 
 private:
