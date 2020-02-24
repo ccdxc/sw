@@ -309,6 +309,9 @@ apulu_impl::nacl_init_(void) {
 
     // drop all DHCP responses from host lifs to prevent DHCP server spoofing
     // by workloads
+    // TODO:
+    // 1. address the case where DHCP server is running as workload
+    // 2. why not ask user to configure this as infra policy ?
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));

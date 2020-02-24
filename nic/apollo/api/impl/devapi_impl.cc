@@ -58,6 +58,7 @@ lif_spec_from_info (pds_lif_spec_t &spec, lif_info_t *info)
 {
     spec.key = uuid_from_objid(LIF_IFINDEX(info->lif_id));
     spec.id = info->lif_id;
+    strncpy(spec.name, info->name, sizeof(spec.name));
     spec.pinned_ifidx = info->pinned_uplink_port_num;
     spec.type = info->type;
     spec.vlan_strip_en = info->vlan_strip_en;
@@ -75,9 +76,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
     }
-
     lif_impl_db()->insert(lif);
-
     PDS_TRACE_DEBUG("Inserted lif %u %s %u %s",
                     info->lif_id, info->name, info->type,
                     macaddr2str(info->mac));
@@ -102,12 +101,9 @@ devapi_impl::lif_init(lif_info_t *info) {
         PDS_TRACE_ERR("Lif %u not found", info->lif_id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
-
     lif_spec_from_info(spec, info);
-
     // program tx scheduler
     lif_program_tx_scheduler(info);
-
     ret = lif->create(&spec);
     if (ret == SDK_RET_OK) {
         PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",

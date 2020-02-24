@@ -126,7 +126,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     static uint32_t oob_lif = 0;
     nexthop_actiondata_t nh_data = { 0 };
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "oob%u", oob_lif++);
+    strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating oob lif %s", name_);
     // TODO: fix this once block indexer starts working
     // allocate required nexthops
@@ -287,7 +287,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     p4i_device_info_actiondata_t p4i_device_info_data;
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "dsc%u", inb_lif++);
+    strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating inband lif %s", name_);
     // allocate required nexthops
     //ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_, 2);
@@ -474,7 +474,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     static uint32_t dplif = 0;
     nexthop_actiondata_t nh_data = { 0 };
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "swdp%u", dplif++);
+    strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s", name_);
     // allocate required nexthop to point to ARM datapath lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
@@ -774,13 +774,13 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
-        snprintf(name_, SDK_MAX_NAME_LEN, "host_mgmt%u", hmlif++);
+        strncpy(name_, spec->name, sizeof(name_));
         PDS_TRACE_DEBUG("Creating host lif %s for naples mgmt", name_);
         host_mgmt_lif = this;
         int_mgmt_lif =
             lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT);
     } else if (spec->type == sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT) {
-        snprintf(name_, SDK_MAX_NAME_LEN, "int_mgmt%u", imlif++);
+        strncpy(name_, spec->name, sizeof(name_));
         PDS_TRACE_DEBUG("Creating internal mgmt. lif %s", name_);
         int_mgmt_lif = this;
         host_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_HOST_MGMT);
@@ -957,7 +957,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     nexthop_actiondata_t nh_data = { 0 };
     uint32_t idx, nacl_idx = PDS_IMPL_NACL_BLOCK_LEARN_MIN;
 
-    snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
+    strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating learn lif %s", name_);
     // allocate required nexthop to point to ARM datapath lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);

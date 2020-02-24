@@ -18,6 +18,8 @@ typedef struct pds_lif_spec_s {
     pds_obj_key_t    key;
     ///< internal lif id
     pds_lif_id_t     id;
+    ///< name of the lif, if any
+    char name[SDK_MAX_NAME_LEN];
     ///< if index of the pinned port/lif
     pds_ifindex_t    pinned_ifidx;
     ///< type of lif
