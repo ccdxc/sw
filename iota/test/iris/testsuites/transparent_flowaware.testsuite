@@ -27,6 +27,7 @@ setup:
         - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config
+        - step : config.netagent.naples_inband_ip_config
         - step : testcases.drivers.install_iperf
 
 common:
@@ -47,6 +48,7 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle
         - networking/connectivity.testbundle
+        - networking/telemetry.testbundle
         - flowlog/flowlog.testbundle
         #- classic/rdma.testbundle
         - linktest/linktest.testbundle

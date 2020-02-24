@@ -212,7 +212,7 @@ InterfaceServiceImpl::InterfaceGet(ServerContext *context,
 {
     uint32_t    i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("Received if get ");
+    HAL_TRACE_VERBOSE("Received if get ");
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }

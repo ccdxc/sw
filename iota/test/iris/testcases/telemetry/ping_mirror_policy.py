@@ -5,14 +5,34 @@ import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.telemetry.utils as utils
 import pdb
 
+is_wl_type_bm = False
+collector_dest = None
+
 def Setup(tc):
+    global is_wl_type_bm
+    global collector_dest
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
     tc.workloads = api.GetWorkloads()
+
+    collector_dest = tc.args.collector
+    for wl in tc.workloads:
+        # for BM type set untag collector
+        if api.IsBareMetalWorkloadType(wl.node_name):
+            is_wl_type_bm = True
+            collector_dest = "10.255.0.2"
+            break
+
+    if (is_wl_type_bm == True) and (tc.iterators.proto != "icmp"):
+        api.Logger.info("Skipping {} test for baremetal workloads".format(tc.iterators.proto))
+        tc.skip = True
+        return api.types.status.SUCCESS
 
     #agent_api.DeleteMirrors()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    global is_wl_type_bm
+    global collector_dest
     policies = utils.GetTargetJsons('mirror', tc.iterators.proto)
     mirror_json_obj = None
     result = api.types.status.SUCCESS
@@ -23,6 +43,7 @@ def Trigger(tc):
         #pdb.set_trace()
         #mirror_json_obj = utils.ReadJson(policy_json)
         #agent_api.ConfigureMirror(mirror_json_obj.mirrors, oper = agent_api.CfgOper.ADD)
+
         verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
         newObjects = agent_api.AddOneConfig(policy_json)
         if len (newObjects) == 0:
@@ -32,33 +53,38 @@ def Trigger(tc):
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push mirror objects")
             return api.types.status.FAILURE
+
         # Get collector
         for wl in tc.workloads:
-            if tc.args.collector == wl.ip_address:
+            if collector_dest == wl.ip_address:
                 collector_wl = wl
                 break
         ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror')
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count
-        
+
         # Update collector
         newObjects = agent_api.QueryConfigs(kind='MirrorSession')
-        for obj in newObjects:
-            obj.spec.collectors[0].export_config.destination = "192.168.100.102"
-        # Now push the update as we modified
-        agent_api.UpdateConfigObjects(newObjects)
+
+        if is_wl_type_bm == False:
+            collector_dest = "192.168.100.102"
         # Get new collector
         for wl in tc.workloads:
-            if wl.ip_address == "192.168.100.102":
+            if wl.ip_address == collector_dest:
                 collector_wl = wl
                 break
+
+        for obj in newObjects:
+            obj.spec.collectors[0].export_config.destination = collector_dest
+        # Now push the update as we modified
+        agent_api.UpdateConfigObjects(newObjects)
         # Rerun the tests
         ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror')
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count
-        
+
         # Delete the objects
         agent_api.DeleteConfigObjects(newObjects)
         agent_api.RemoveConfigObjects(newObjects)

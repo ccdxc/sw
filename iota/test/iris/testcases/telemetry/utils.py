@@ -12,9 +12,9 @@ from scapy import packet
 from scapy.all import Ether
 import glob
 import iota.harness.api as api
+import ipaddress as ipaddr
 from datetime import datetime
 
-global uplink_vlan
 uplink_vlan = 0
 
 def GetProtocolDirectory(feature, proto):
@@ -46,7 +46,13 @@ def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
     elif protocol == 'udp':
         cmd = "hping3 --{} -p {} -c 1 {} -I {}".format(protocol.lower(), int(destination_port), destination_ip, src_wl.interface)
     else:
-        cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
+        # Workaround for hping issue on BM workload over VLAN tagged sub-if;
+        # hping sends local host addr as source IP for hping on tagged sub-if;
+        # hence using ping instead of hping on BM.
+        if api.IsBareMetalWorkloadType(src_wl.node_name):
+            cmd = "ping -c 1 {} ".format(destination_ip)
+        else:
+            cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
         
     return cmd
 
@@ -83,13 +89,19 @@ def VerifyVlan():
         if pkt.haslayer('GRE'):
             spanpktsfound = True
             inner=Ether(pkt['Raw'].load[20:])
+            #api.Logger.info("Pkt: {}".format(pkt))
+            #api.Logger.info("Inner Pkt: {}".format(inner))
             if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
                 result = api.types.status.FAILURE
+                api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan: {} ".format(uplink_vlan, inner['Dot1Q'].vlan))
+                api.Logger.info("Inner Pkt: {}".format(inner))
             elif (inner.haslayer('Dot1Q') and inner['Dot1Q'].vlan != uplink_vlan):
                 result = api.types.status.FAILURE
-                api.Logger.info("Vlan id: %s" % (inner['Dot1Q'].vlan))
+                api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan id: {}".format(uplink_vlan, inner['Dot1Q'].vlan))
+                api.Logger.info("Inner Pkt: {}".format(inner))
     if spanpktsfound == False:
        result = api.types.status.FAILURE
+       api.Logger.info("VerifyVlan Failed: spanpkts not found ")
     return result
 
 def VerifyTimeStamp(command):
@@ -133,9 +145,10 @@ def VerifyCmd(cmd, action, feature):
         if feature == 'mirror':
             if 'pcap' in cmd.command:
                 if VerifyVlan() == api.types.status.FAILURE:
-                      result = api.types.status.FAILURE
+                    result = api.types.status.FAILURE
+                    api.Logger.info("VerifyVlan failed")
                 if VerifyTimeStamp(cmd) == api.types.status.FAILURE:
-                      result = api.types.status.FAILURE
+                    result = api.types.status.FAILURE
         elif feature == 'flowmon':
             matchObj = re.search( r'(.*)2055: UDP, length(.*)', cmd.stdout, 0)
             if matchObj is None:
@@ -152,6 +165,7 @@ def GetDestPort(port):
     return port 
 
 def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, action, feature):
+    backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
     
@@ -159,40 +173,65 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     # to avoid flooding on the vswitch
     if (collector_w.node_name != src_wl.node_name):
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                                   "ping -c1 %s -I %s" % (src_wl.ip_address, collector_w.interface))
+                                   "ping -c 1 %s " % (src_wl.ip_address))
     if (collector_w.node_name != dest_wl.node_name):
         api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                                   "ping -c1 %s -I %s" % (destination_ip, collector_w.interface))
+                                   "ping -c 1 %s " % (destination_ip))
     if feature == 'mirror':
-        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -c 10 -nnSXi %s ip proto gre -w mirror.pcap" % (collector_w.interface), background=True)
-        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -c 10 -nni %s ip proto gre" % (collector_w.interface), background=True)
     elif feature == 'flowmon':
-        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
+        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
                                "tcpdump -c 10 -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
+
+    background_trig_resp = api.Trigger(backgroun_req)
+
+    #delay for background cmds to start before issuing ping
+    if feature == 'flowmon':
+        time.sleep(2)
+    if feature == 'mirror':
+        time.sleep(2)
 
     cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
+
+    #api.Logger.info("Trigger resp commands")
+    #for cmd in trig_resp.commands:
+    #    api.PrintCommandResults(cmd)
+
     if feature == 'flowmon':
-        time.sleep(6)
-    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+        time.sleep(2)
+    if feature == 'mirror':
+        time.sleep(2)
+
+    term_resp = api.Trigger_TerminateAllCommands(background_trig_resp)
+    background_resp = api.Trigger_AggregateCommandsResponse(background_trig_resp, term_resp)
+
+    #api.Logger.info("background resp commands")
+    #for cmd in background_resp.commands:
+    #    api.PrintCommandResults(cmd)
+
+    #resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
     if feature == 'mirror':
         dir_path = os.path.dirname(os.path.realpath(__file__))
         api.CopyFromWorkload(collector_w.node_name, collector_w.workload_name, ['mirror.pcap'], dir_path)
-    for cmd in resp.commands:
+
+    for cmd in background_resp.commands:
         result = VerifyCmd(cmd, action, feature)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
-            break;
+            break
 
     return result
 
 def GetSourceWorkload(verif, tc):
+    global uplink_vlan
     workloads = api.GetWorkloads()
     sip = verif['src_ip']
     src_wl = None
@@ -216,13 +255,30 @@ def GetSourceWorkload(verif, tc):
             api.Logger.info("wl.ip_address: {}".format(wl.ip_address))
     return src_wl
 
-def GetDestWorkload(verif, tc):
+def GetDestWorkload(verif, tc, src_w):
     workloads = api.GetWorkloads()
     dip = verif['dst_ip']
     dst_wl = None
+    # For dest workload selection,
+    # check and select the workload in same subnet as source
     for wl in workloads:
+        if src_w.ip_address == wl.ip_address:
+            continue
+        src_ip_pref = ipaddr.IPv4Interface(src_w.ip_prefix)
+        src_ip_subnet = src_ip_pref.network
+
+        wl_ip_pref = ipaddr.IPv4Interface(wl.ip_prefix)
+        wl_ip_subnet = wl_ip_pref.network
+
+        #source & dest IP not in same subnet
+        if src_ip_subnet != wl_ip_subnet:
+            continue
+
+        if 'any' in dip or 'any' in verif['src_ip']:
+            if wl.node_name == src_w.node_name:
+                continue
         if '/24' in dip or 'any' in dip:
-            if verif['src_ip'] != wl.ip_address:
+            if src_w.ip_address != wl.ip_address:
                 dst_wl = wl
                 break
         else:
@@ -247,7 +303,7 @@ def RunAll(collector_w, verif_json, tc, feature):
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)
-        dest_w = GetDestWorkload(verif[i], tc)
+        dest_w = GetDestWorkload(verif[i], tc, src_w)
         if src_w == None:
             continue
         if dest_w == None:
@@ -255,6 +311,10 @@ def RunAll(collector_w, verif_json, tc, feature):
         # If both workload nodes are not naples, continue
         if not src_w.IsNaples():
             if not dest_w.IsNaples():
+                continue
+        if api.IsBareMetalWorkloadType(collector_w.node_name):
+            if (dest_w.node_name == src_w.node_name):
+                api.Logger.info("Source and Dest workloads are same {}".format(dest_w.node_name))
                 continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']

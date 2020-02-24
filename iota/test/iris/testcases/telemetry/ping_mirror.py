@@ -9,6 +9,16 @@ def Setup(tc):
         tc.workload_pairs = api.GetLocalWorkloadPairs()
     else:
         tc.workload_pairs = api.GetRemoteWorkloadPairs()
+
+    for pair in tc.workload_pairs:
+        w1 = pair[0]
+        w2 = pair[1]
+        # check if BM type
+        if api.IsBareMetalWorkloadType(w1.node_name):
+            api.Logger.info("For BM type, this test is not supported yet")
+            tc.skip = True
+            break
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):

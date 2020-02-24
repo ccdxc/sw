@@ -9,6 +9,13 @@ def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
     tc.workloads = api.GetWorkloads()
 
+    for wl in tc.workloads:
+        # check if BM type
+        if api.IsBareMetalWorkloadType(wl.node_name):
+            api.Logger.info("For BM type, this test is not supported yet")
+            tc.skip = True
+            break
+
     #agent_api.DeleteMirrors()
     return api.types.status.SUCCESS
 

@@ -39,14 +39,17 @@ def Main(step):
         # Make sure console is enabled
         CreateConfigConsoleNoAuth()
         api.CopyToNaples(n, [NAPLES_CONFIG_SPEC_LOCAL], "")
-        cmd = "mv /system-config.json /sysconfig/config0/system-config.json"
-        api.Trigger_AddNaplesCommand(req, n, cmd)
+
+        if GlobalOptions.skip_firmware_upgrade is not True:
+            cmd = "mv /system-config.json /sysconfig/config0/system-config.json"
+            api.Trigger_AddNaplesCommand(req, n, cmd)
 
         if common.PenctlGetModeStatus(n) != "NETWORK" or \
            common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":
             api.Logger.info("Host [{}] is in HOST mode. Initiating mode change.".format(n))
             ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "1.1.1.2/24")
             if ret == None:
+                api.Logger.info("Failed to change mode for node: {}".format(n))
                 return api.types.status.FAILURE
 
         #hack for now, need to set date
@@ -58,6 +61,7 @@ def Main(step):
     for cmd in resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
+            api.Logger.info("Failed to execute command")
             return api.types.status.FAILURE
 
     num_retries = 60
