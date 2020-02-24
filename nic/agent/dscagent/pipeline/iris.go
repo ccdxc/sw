@@ -1731,7 +1731,8 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 			UUID:      uid,
 		},
 		Spec: netproto.InterfaceSpec{
-			Type: netproto.InterfaceSpec_HOST_PF.String(),
+			Type:        netproto.InterfaceSpec_HOST_PF.String(),
+			AdminStatus: strings.ToLower(netproto.IFStatus_UP.String()),
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: uint64(lifIndex),
@@ -1783,7 +1784,8 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 			UUID:      uid,
 		},
 		Spec: netproto.InterfaceSpec{
-			Type: ifType,
+			Type:        ifType,
+			AdminStatus: strings.ToLower(netproto.IFStatus_UP.String()),
 		},
 		Status: netproto.InterfaceStatus{
 			InterfaceID: utils.EthIfIndexToUplinkIfIndex(uint64(status.GetIfIndex())),

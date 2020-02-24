@@ -30,7 +30,7 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 		},
 		ObjectMeta: agentNetif.ObjectMeta,
 		Spec: network.NetworkInterfaceSpec{
-			AdminStatus: network.IFStatus_UP.String(),
+			AdminStatus: agentNetif.Spec.AdminStatus,
 		},
 		Status: network.NetworkInterfaceStatus{
 			DSC: nodeID,
