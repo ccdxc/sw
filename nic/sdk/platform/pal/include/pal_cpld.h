@@ -28,6 +28,8 @@
 #define CPLD_REGISTER_QSFP_PORT1_WARNING_TEMP 0x35
 #define CPLD_REGISTER_QSFP_PORT2_ALARM_TEMP   0x36
 #define CPLD_REGISTER_QSFP_PORT2_WARNING_TEMP 0x37
+#define CPLD_REGISTER_SYSTEM_HEALTH0          0x38
+#define CPLD_REGISTER_SYSTEM_HEALTH1          0x39
 #define CPLD_CONF_FLASH_READ_BYTE             0x50
 #define CPLD_DATA_CACHE_END_ADDR              0x5f
 #define CPLD_REGISTER_ID                      0x80
@@ -92,9 +94,22 @@
 #define GPIOHANDLE_REQUEST_ACTIVE_LOW   (1UL << 2)
 #define GPIOHANDLE_REQUEST_OPEN_DRAIN   (1UL << 3)
 #define GPIOHANDLE_REQUEST_OPEN_SOURCE  (1UL << 4)
+
+// CPLD Health0 Register Definitions 
+#define SYSTEM_HEALTH0_CARD_STATUS      0
+#define SYSTEM_HEALTH0_LIVENESS         1
+#define SYSTEM_HEALTH0_PORT0_LINK       3
+#define SYSTEM_HEALTH0_PORT1_LINK       4
+
+typedef enum {
+   SYSMOND_HEALTH_NOT_OK = 0,
+   SYSMOND_HEALTH_OK = 1
+} pal_cpld_health_t;
+
 typedef void (*cpld_upgrade_status_cb_t)(pal_cpld_status_t, int, void *ctxt);
 
 int cpld_reg_bit_set(int reg, int bit);
+int cpld_reg_bits_set(int reg, int bit, int nbits, int val);
 int cpld_reg_bit_reset(int reg, int bit);
 int cpld_reg_rd(uint8_t addr);
 int cpld_reg_wr(uint8_t addr, uint8_t data);
@@ -128,6 +143,10 @@ bool pal_cpld_verify_idcode(void);
 int pal_cpld_erase(void);
 int pal_cpld_read_flash(uint8_t *buf, uint32_t size);
 int pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg);
+void pal_cpld_set_card_status(uint8_t status);
+void pal_cpld_increment_liveness(void);
+void pal_cpld_set_port0_link_status(uint8_t status);
+void pal_cpld_set_port1_link_status(uint8_t status);
 void pal_power_cycle(void);
 bool pal_cpld_hwlock_enabled(void);
 int pal_write_qsfp_temp(int data, int port);

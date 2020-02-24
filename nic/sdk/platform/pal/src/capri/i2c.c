@@ -140,12 +140,13 @@ int pal_fru_read(const uint8_t *buffer, uint32_t size, uint32_t nretry)
 int pal_qsfp_read(const uint8_t *buffer, uint32_t size,
                   uint32_t offset, uint32_t nretry, uint32_t port)
 {
-    if (port == QSFP_PORT_1)
+    if (port == QSFP_PORT_1) {
         return pal_i2c_read(buffer, size, offset, nretry,
                             QSFP_1_I2C_BUS, QSFP_1_SLAVE_ADDRESS, ADDR_LEN_8BIT);
-    else if (port == QSFP_PORT_2)
+    } else if (port == QSFP_PORT_2) {
         return pal_i2c_read(buffer, size, offset, nretry,
                             QSFP_2_I2C_BUS, QSFP_2_SLAVE_ADDRESS, ADDR_LEN_8BIT);
+    }
     return -1;
 }
 
@@ -175,4 +176,19 @@ int smbus_read(const uint8_t *buffer, uint32_t size,
 {
     return pal_i2c_read(buffer, size, offset,
                         nretry, bus, slaveaddr, ADDR_LEN_8BIT);
+}
+
+int pal_qsfp_dom_read(const uint8_t *buffer, uint32_t size,
+                      uint32_t offset, uint32_t nretry, uint32_t port)
+{
+    if (port == QSFP_PORT_1) {
+        return pal_i2c_read(buffer, size, offset, nretry,
+                            QSFP_DOM_1_I2C_BUS,
+                            QSFP_DOM_1_SLAVE_ADDRESS, ADDR_LEN_8BIT);
+    } else if (port == QSFP_PORT_2) {
+        return pal_i2c_read(buffer, size, offset, nretry,
+                            QSFP_DOM_2_I2C_BUS,
+                            QSFP_DOM_2_SLAVE_ADDRESS, ADDR_LEN_8BIT);
+    }
+    return -1;
 }

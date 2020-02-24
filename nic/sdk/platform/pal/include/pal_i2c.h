@@ -38,4 +38,6 @@ int smbus_write(const uint8_t *buffer, uint32_t size,
 int smbus_read(const uint8_t *buffer, uint32_t size,
                 uint32_t offset, uint32_t nretry,
                 uint32_t bus, uint32_t slaveaddr);
+int pal_qsfp_dom_read(const uint8_t *buffer, uint32_t size,
+                      uint32_t offset, uint32_t nretry, uint32_t port);
 #endif /* __PAL_FRU_IMPL_H__ */

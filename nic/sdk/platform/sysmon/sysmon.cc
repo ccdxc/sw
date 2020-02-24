@@ -3,6 +3,8 @@
  */
 #include "sysmon_internal.hpp"
 
+#define HEALTH_OK 1
+#define HEALTH_NOK 0
 sysmon_cfg_t g_sysmon_cfg;
 
 systemled_t currentstatus = {UKNOWN_STATE, LED_COLOR_NONE};
@@ -15,6 +17,7 @@ monfunc_t monfunclist[] = {
     { checkdisk        },
     { checkmemory      },
     { checkpostdiag    },
+    { checkliveness    },
     { checkpower       }
 };
 
@@ -37,21 +40,29 @@ sysmgrsystemled (systemled_t led) {
             currentstatus.event = CRITICAL_EVENT;
             currentstatus.color = LED_COLOR_YELLOW;
             pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            //health not ok
+            pal_cpld_set_card_status(SYSMOND_HEALTH_NOT_OK);
             break;
         case NON_CRITICAL_EVENT:
             currentstatus.event = NON_CRITICAL_EVENT;
             currentstatus.color = LED_COLOR_YELLOW;
             pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            //health not ok
+            pal_cpld_set_card_status(SYSMOND_HEALTH_NOT_OK);
             break;
         case PROCESS_CRASHED_EVENT:
             currentstatus.event = PROCESS_CRASHED_EVENT;
             currentstatus.color = LED_COLOR_YELLOW;
             pal_system_set_led(LED_COLOR_YELLOW, LED_FREQUENCY_0HZ);
+            //health not ok
+            pal_cpld_set_card_status(SYSMOND_HEALTH_NOT_OK);
             break;
         case EVERYTHING_WORKING:
             currentstatus.event = EVERYTHING_WORKING;
             currentstatus.color = LED_COLOR_GREEN;
             pal_system_set_led(LED_COLOR_GREEN, LED_FREQUENCY_0HZ);
+            //health ok
+            pal_cpld_set_card_status(SYSMOND_HEALTH_OK);
             break;
         default:
             return;
@@ -75,6 +86,7 @@ sysmon_init (sysmon_cfg_t *sysmon_cfg)
 
     //check for panic dump
     checkpanicdump();
+    //sysmon_ipc_init();
 
     SDK_TRACE_INFO("HBM Threshold temperature is %u",
                    g_sysmon_cfg.catalog->hbmtemperature_threshold());

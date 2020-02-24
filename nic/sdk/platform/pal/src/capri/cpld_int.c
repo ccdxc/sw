@@ -35,6 +35,10 @@ int cpld_reg_bit_set(int reg, int bit)
 {
     return -1;
 }
+int cpld_reg_bits_set(int reg, int bit, int nbits, int val)
+{
+    return -1;
+}
 
 int cpld_reg_bit_reset(int reg, int bit)
 {
@@ -310,6 +314,42 @@ cpld_reg_bit_set(int reg, int bit)
         return cpld_data;
     }
     cpld_data |= mask;
+    rc = cpld_write(reg, cpld_data);
+    if (!pal_wr_unlock(CPLDLOCK)) {
+        pal_mem_trace("Failed to unlock.\n");
+        return -1;
+    }
+    return rc;
+}
+
+int
+cpld_reg_bits_set(int reg, int bit, int nbits, int val)
+{
+    int cpld_data = 0;
+    int mask = 0;
+    int rc = -1;
+
+    if (val >= (1 << nbits)) {
+        pal_mem_trace("Incompatible value and mask\n");
+        return -1;
+    }
+
+    mask = (1 << nbits) - 1;
+    mask = mask << bit;
+
+    if (!pal_wr_lock(CPLDLOCK)) {
+        pal_mem_trace("Could not lock pal.lck\n");
+        return -1;
+    }
+    cpld_data = cpld_read(reg);
+    if (cpld_data == -1) {
+        if (!pal_wr_unlock(CPLDLOCK)) {
+            pal_mem_trace("Failed to unlock.\n");
+            return -1;
+        }
+        return cpld_data;
+    }
+    cpld_data = (cpld_data & ((0xff)^(mask))) | (val << bit);
     rc = cpld_write(reg, cpld_data);
     if (!pal_wr_unlock(CPLDLOCK)) {
         pal_mem_trace("Failed to unlock.\n");

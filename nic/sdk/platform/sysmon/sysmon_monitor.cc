@@ -60,5 +60,14 @@ checkcattrip(void)
     }
 }
 
+void
+checkliveness(void)
+{
+    if (g_sysmon_cfg.liveness_event_cb) {
+        g_sysmon_cfg.liveness_event_cb();
+    }
+}
+
 // MONFUNC(checkfrequency);
 // MONFUNC(checkcattrip);
+// MONFUNC(checkliveness);

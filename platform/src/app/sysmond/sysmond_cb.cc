@@ -4,9 +4,12 @@
 
 #include "sysmond_cb.hpp"
 #include "platform/src/app/sysmond/logger.h"
+#include "platform/src/app/sysmond/cpld/sysmond_cpld_cb.hpp"
 #include "platform/src/app/sysmond/delphi/sysmond_delphi_cb.hpp"
 #include "platform/src/app/sysmond/event_recorder/sysmond_eventrecorder_cb.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+
+sdk::lib::catalog *g_catalog;
 
 void
 event_cb_init (void)
@@ -37,6 +40,7 @@ void
 temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
                sysmond_hbm_threshold_event_t hbm_event)
 {
+    cpld_temp_event_cb(temperature);
     delphi_temp_event_cb(temperature);
     eventrecorder_temp_event_cb(temperature, hbm_event);
 }
@@ -58,6 +62,12 @@ void
 postdiag_event_cb ()
 {
     eventrecorder_postdiag_event_cb();
+}
+
+void
+liveness_event_cb (void)
+{
+    cpld_liveness_event_cb();
 }
 
 void

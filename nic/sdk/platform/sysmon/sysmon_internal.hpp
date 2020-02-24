@@ -13,6 +13,7 @@
 #include "platform/pal/include/pal.h"
 #include "include/sdk/base.hpp"
 #include <boost/property_tree/ptree.hpp>
+#include "include/sdk/types.hpp"
 #include <boost/property_tree/json_parser.hpp>
 #include "sysmon.hpp"
 
@@ -28,6 +29,21 @@ typedef struct sysmond_db_s {
     uint32_t frequency;
 } sysmond_db_t;
 
+// event identifiers
+typedef enum event_id_e {
+    EVENT_ID_NONE               = 0,
+    EVENT_ID_HAL_UP             = 1,
+    EVENT_ID_PORT_STATUS        = 2,
+    EVENT_ID_XCVR_STATUS        = 3,
+    EVENT_ID_UPLINK_STATUS      = 4,
+    EVENT_ID_HOST_LIF_CREATE    = 5,
+    EVENT_ID_LIF_STATUS         = 6,
+    EVENT_ID_UPG                = 7,
+    EVENT_ID_UPG_STAGE_STATUS   = 8,
+    EVENT_ID_MICRO_SEG          = 9,
+    EVENT_ID_NCSI               = 10,
+} event_id_t;
+
 #define UPTIME_FILENAME "/obfl/uptime.log"
 #define MONFUNC(fnc) \
 static monfunc_t monfunc_t_##fnc \
@@ -42,6 +58,7 @@ void sysmgrsystemled(systemled_t led);
 void checkcattrip(void);
 void checkfrequency(void);
 void checkruntime(void);
+void checkliveness(void);
 void checktemperature(void);
 void checkdisk(void);
 void checkmemory(void);

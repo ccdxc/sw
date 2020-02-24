@@ -360,4 +360,24 @@ cpld_reg_wr(uint8_t reg, uint8_t data)
 {
     return -1;
 }
+
+void
+pal_cpld_increment_liveness(void)
+{
+}
+
+void
+pal_cpld_set_port0_link_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_set_port1_link_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_set_card_status(uint8_t status)
+{
+}
 #endif

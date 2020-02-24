@@ -246,5 +246,87 @@ qsfp_sprom_parse (int port, uint8_t *data)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+qsfp_read_temp (int port, uint8_t *data)
+{
+    pal_ret_t ret = sdk::lib::qsfp_dom_read(data, 1, QSFP_MODULE_TEMPERATURE,
+                                            MAX_XCVR_ACCESS_RETRIES,
+                                            port + 1);
+    if (ret == sdk::lib::PAL_RET_NOK) {
+        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+qsfp_read_temp_high_alarm (int port, uint8_t *data)
+{
+    pal_ret_t ret = sdk::lib::qsfp_dom_read(data, 1, QSFP_MODULE_TEMP_HIGH_ALARM,
+                                            MAX_XCVR_ACCESS_RETRIES,
+                                            port + 1);
+    if (ret == sdk::lib::PAL_RET_NOK) {
+        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+qsfp_read_temp_high_warning (int port, uint8_t *data)
+{
+    pal_ret_t ret = sdk::lib::qsfp_dom_read(data, 1, QSFP_MODULE_TEMP_HIGH_WARNING,
+                                            MAX_XCVR_ACCESS_RETRIES,
+                                            port + 1);
+    if (ret == sdk::lib::PAL_RET_NOK) {
+        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+read_qsfp_temperature(int port, qsfp_temperature_t *qsfp_temp_data)
+{
+    sdk_ret_t sdk_ret;
+    int temperature;
+    int warning_temperature;
+    int alarm_temperature;
+    uint8_t data;
+
+    sdk_ret = qsfp_read_temp(port, &data);
+    if (sdk_ret == SDK_RET_OK &&
+        (data > QSFP_TEMP_SANE_MIN && data < QSFP_TEMP_SANE_MAX)) {
+            temperature = (int) data;
+    } else {
+            temperature = INVALID_TEMP;
+    }
+
+    sdk_ret = qsfp_read_temp_high_warning(port, &data);
+    if (sdk_ret == SDK_RET_OK &&
+        (data > QSFP_TEMP_SANE_MIN && data < QSFP_TEMP_SANE_MAX)) {
+            warning_temperature = (int) data;
+    } else {
+            warning_temperature = INVALID_TEMP;
+    }
+
+    sdk_ret = qsfp_read_temp_high_alarm(port, &data);
+    if (sdk_ret == SDK_RET_OK &&
+        (data > QSFP_TEMP_SANE_MIN && data < QSFP_TEMP_SANE_MAX)) {
+            alarm_temperature = (int) data;
+    } else {
+            alarm_temperature = INVALID_TEMP;
+    }
+
+    qsfp_temp_data->temperature = temperature;
+    qsfp_temp_data->warning_temperature = warning_temperature;
+    qsfp_temp_data->alarm_temperature = alarm_temperature;
+
+    return SDK_RET_OK;
+}
+
 } // namespace platform
 } // namespace sdk

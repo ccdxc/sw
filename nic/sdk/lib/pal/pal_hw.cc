@@ -40,6 +40,8 @@ typedef int (*marvell_link_status_fn_t)(uint8_t addr, uint16_t *data, uint8_t ph
 typedef int (*get_cpld_id_fn_t)(void);
 typedef int (*get_cpld_rev_fn_t)(void);
 typedef int (*cpld_write_qsfp_temp_fn_t)(uint32_t temperature, uint32_t port);
+typedef int (*qsfp_dom_read_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                                  uint32_t nretry, uint32_t port);
 
 typedef struct pal_hw_vectors_s {
     hw_init_fn_t                hw_init;
@@ -68,6 +70,7 @@ typedef struct pal_hw_vectors_s {
     get_cpld_id_fn_t            get_cpld_id;
     get_cpld_rev_fn_t           get_cpld_rev;
     cpld_write_qsfp_temp_fn_t   cpld_write_qsfp_temp;
+    qsfp_dom_read_fn_t          qsfp_dom_read;
 } pal_hw_vectors_t;
 
 static pal_hw_vectors_t   gl_hw_vecs;
@@ -167,6 +170,10 @@ pal_init_hw_vectors (void)
     gl_hw_vecs.cpld_write_qsfp_temp = (cpld_write_qsfp_temp_fn_t)dlsym(gl_lib_handle,
                                                      "pal_write_qsfp_temp");
     SDK_ASSERT(gl_hw_vecs.cpld_write_qsfp_temp);
+
+    gl_hw_vecs.qsfp_dom_read = (qsfp_dom_read_fn_t)dlsym(gl_lib_handle,
+                                                     "pal_qsfp_dom_read");
+    SDK_ASSERT(gl_hw_vecs.qsfp_dom_read);
     return PAL_RET_OK;
 }
 
@@ -423,6 +430,22 @@ pal_hw_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port)
     return (*gl_hw_vecs.cpld_write_qsfp_temp)(temperature, port);
 }
 
+static pal_ret_t
+pal_hw_qsfp_dom_read(const uint8_t *buffer, uint32_t size,
+                     uint32_t offset, uint32_t nretry, uint32_t port)
+{
+    pal_ret_t ret = PAL_RET_OK;
+    if(size == 0) {
+        SDK_TRACE_DEBUG("%s::size cannot be zero", __FUNCTION__);
+        return PAL_RET_NOK;
+    }
+
+    if((*gl_hw_vecs.qsfp_dom_read)(buffer, size, offset, nretry, port) != 0) {
+        ret = PAL_RET_NOK;
+    }
+
+    return ret;
+}
 
 static pal_ret_t
 pal_hw_init_rwvectors (void)
@@ -454,6 +477,7 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.get_cpld_rev = pal_hw_get_cpld_rev;
     gl_pal_info.rwvecs.get_cpld_id = pal_hw_get_cpld_id;
     gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_hw_cpld_write_qsfp_temp;
+    gl_pal_info.rwvecs.qsfp_dom_read = pal_hw_qsfp_dom_read;
 
     pal_init_hw_vectors();
 

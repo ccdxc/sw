@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "include/sdk/base.hpp"
+#include "platform/drivers/xcvr_qsfp.hpp"
 #include "third-party/asic/capri/verif/apis/cap_nwl_sbus_api.h"
 #include "third-party/asic/capri/verif/apis/cap_sbus_api.h"
 
@@ -27,6 +28,7 @@ namespace sensor {
 #define LOCAL_TEMP_FILE "/sys/class/hwmon/hwmon0/temp1_input"
 #define DIE_TEMP_FILE "/sys/class/hwmon/hwmon0/temp2_input"
 
+#define MAX_PORTS 2
 #define DIE_TEMP_STANDARD_DEVIATION 22500
 
 typedef struct system_temperature {
@@ -35,12 +37,7 @@ typedef struct system_temperature {
     int hbmtemp;
     int hbmwarningtemp;
     int hbmcriticaltemp;
-    int qsfp1temp;
-    int qsfp2temp;
-    int qsfp1warningtemp;
-    int qsfp2warningtemp;
-    int qsfp1alarmtemp;
-    int qsfp2alarmtemp;
+    sdk::platform::qsfp_temperature_t xcvrtemp[MAX_PORTS];
 } system_temperature_t;
 
 typedef struct system_power {

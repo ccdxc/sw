@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2019, Pensando Systems Inc.
- */
+*/
 
+#include "asic/pd/pd.hpp"
 #include "sysmon_internal.hpp"
 #include "platform/sensor/sensor.hpp"
-#include "asic/pd/pd.hpp"
+#include "platform/drivers/xcvr_qsfp.hpp"
+
 using namespace sdk::asic::pd;
 using namespace sdk::platform::sensor;
 
@@ -68,7 +70,6 @@ checktemperature(void)
                        "Die temperature", temperature.dietemp);
             max_die_temp = temperature.dietemp;
         }
-        pal_write_core_temp(temperature.dietemp);
 
         temperature.localtemp /= 1000;
         if (max_local_temp < temperature.localtemp) {
@@ -76,24 +77,15 @@ checktemperature(void)
                        "Local temperature", temperature.localtemp);
             max_local_temp = temperature.localtemp;
         }
-        pal_write_board_temp(temperature.localtemp);
 
         if (max_hbm_temp < temperature.hbmtemp) {
             SDK_TRACE_INFO("HBM temperature is : %uC", temperature.hbmtemp);
             max_hbm_temp = temperature.hbmtemp;
         }
-        pal_write_hbm_temp(temperature.hbmtemp);
 
-        // Adding place holders for updating qsfp temperature to cpld
-        pal_write_hbmwarning_temp(temperature.hbmwarningtemp);
-        pal_write_hbmcritical_temp(temperature.hbmcriticaltemp);
-        pal_write_hbmfatal_temp(g_sysmon_cfg.catalog->hbmtemperature_threshold());
-        pal_write_qsfp_temp(temperature.qsfp1temp, QSFP_PORT1);
-        pal_write_qsfp_temp(temperature.qsfp2temp, QSFP_PORT2);
-        pal_write_qsfp_alarm_temp(temperature.qsfp1alarmtemp, QSFP_PORT1);
-        pal_write_qsfp_alarm_temp(temperature.qsfp2alarmtemp, QSFP_PORT2);
-        pal_write_qsfp_warning_temp(temperature.qsfp1warningtemp, QSFP_PORT1);
-        pal_write_qsfp_warning_temp(temperature.qsfp2warningtemp, QSFP_PORT2);
+        //TODO walk the ports once notification works correctly
+        sdk::platform::read_qsfp_temperature(0, &temperature.xcvrtemp[0]);
+        sdk::platform::read_qsfp_temperature(1, &temperature.xcvrtemp[1]);
 
         if (startingfrequency_1100 == 1) {
             changefrequency(temperature.hbmtemp);

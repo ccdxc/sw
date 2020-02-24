@@ -71,6 +71,8 @@ typedef struct pal_rwvectors_s {
     int         (*get_cpld_rev)(void);
     int         (*get_cpld_id)(void);
     int         (*cpld_write_qsfp_temp)(uint32_t temperature, uint32_t port);
+    pal_ret_t   (*qsfp_dom_read)(const uint8_t *buffer, uint32_t size,
+                                 uint32_t offset, uint32_t nretry, uint32_t port);
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
@@ -250,6 +252,14 @@ pal_cpld_rev_old (void)
 static inline int
 pal_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port) {
     return gl_pal_info.rwvecs.cpld_write_qsfp_temp(temperature, port);
+}
+
+static inline pal_ret_t
+qsfp_dom_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+              uint32_t nretry, uint32_t port)
+{
+    return gl_pal_info.rwvecs.qsfp_dom_read(buffer, size, offset,
+                                        nretry, port);
 }
 
 }    // namespace lib

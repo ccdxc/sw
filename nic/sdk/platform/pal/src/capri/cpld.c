@@ -159,6 +159,26 @@ pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t
 }
 
 void
+pal_cpld_set_card_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_increment_liveness(void)
+{
+}
+
+void
+pal_cpld_set_port0_link_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_set_port1_link_status(uint8_t status)
+{
+}
+
+void
 pal_power_cycle(void)
 {
 }
@@ -719,6 +739,45 @@ int
 pal_cpld_write_flash(const uint8_t *buf, uint32_t size, cpld_upgrade_status_cb_t cpld_upgrade_status_cb, void *arg)
 {
     return cpld_write_flash(buf, size, cpld_upgrade_status_cb, arg);
+}
+
+void
+pal_cpld_set_card_status(uint8_t status)
+{
+    if (status == 0)
+        cpld_reg_bit_reset(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_CARD_STATUS);
+    else
+        cpld_reg_bit_set(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_CARD_STATUS);
+}
+
+void
+pal_cpld_increment_liveness(void)
+{
+    uint8_t health0;
+    uint8_t counter;
+
+    health0 = cpld_reg_rd(CPLD_REGISTER_SYSTEM_HEALTH0);
+    counter = (health0 & 0x06) >> SYSTEM_HEALTH0_LIVENESS;
+    counter = (counter + 1) % 4;
+    cpld_reg_bits_set(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_LIVENESS, 2, counter);
+}
+
+void
+pal_cpld_set_port0_link_status(uint8_t status)
+{
+    if (status == 0)
+        cpld_reg_bit_reset(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_PORT0_LINK);
+    else
+        cpld_reg_bit_set(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_PORT0_LINK);
+}
+
+void
+pal_cpld_set_port1_link_status(uint8_t status)
+{
+    if (status == 0)
+        cpld_reg_bit_reset(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_PORT1_LINK);
+    else
+        cpld_reg_bit_set(CPLD_REGISTER_SYSTEM_HEALTH0, SYSTEM_HEALTH0_PORT1_LINK);
 }
 
 void

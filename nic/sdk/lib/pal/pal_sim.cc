@@ -271,6 +271,15 @@ pal_sim_qsfp_write(const uint8_t *buffer, uint32_t size, uint32_t offset,
     return PAL_RET_OK;
 }
 
+pal_ret_t
+pal_sim_qsfp_dom_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                      uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_sim_qsfp_dom_read");
+    return PAL_RET_OK;
+}
+
+
 static bool
 pal_sim_is_qsfp_port_present(int port_no)
 {
@@ -298,6 +307,7 @@ pal_sim_init_rwvectors (void)
                             pal_sim_is_qsfp_port_present;
     gl_pal_info.rwvecs.qsfp_read = pal_sim_qsfp_read;
     gl_pal_info.rwvecs.qsfp_write = pal_sim_qsfp_write;
+    gl_pal_info.rwvecs.qsfp_dom_read = pal_sim_qsfp_dom_read;
     pal_init_sim_vectors();
 
     return PAL_RET_OK;

@@ -191,6 +191,14 @@ pal_default_cpld_write_qsfp_temp(uint32_t temperature, uint32_t port) {
     return -1;
 }
 
+static inline pal_ret_t
+pal_default_qsfp_dom_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
+                          uint32_t nretry, uint32_t port)
+{
+    SDK_TRACE_DEBUG("PAL default pal_default_qsfp_dom_read");
+    return PAL_RET_OK;
+}
+
 pal_ret_t
 pal_default_init_rwvectors (void)
 {
@@ -224,6 +232,7 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.get_cpld_id = pal_default_get_cpld_id;
     gl_pal_info.rwvecs.get_cpld_rev = pal_default_get_cpld_rev;
     gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_default_cpld_write_qsfp_temp;
+    gl_pal_info.rwvecs.qsfp_dom_read = pal_default_qsfp_dom_read;
 
     return PAL_RET_OK;
 }

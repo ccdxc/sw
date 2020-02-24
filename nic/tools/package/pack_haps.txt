@@ -143,6 +143,7 @@ nic/build/aarch64/iris/lib/libtwheel.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libevent_thread.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libpenipc.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libpenipc_ev.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libzmq.so                                /nic/lib/libzmq.so.3
 nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                      /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/

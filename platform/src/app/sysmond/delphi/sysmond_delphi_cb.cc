@@ -80,14 +80,12 @@ delphi_temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
     asictemp.hbm_temperature = temperature->hbmtemp;
     asictemp.local_temperature = temperature->localtemp;
     asictemp.die_temperature = temperature->dietemp;
-    asictemp.qsfp_port1_temperature = temperature->qsfp1temp;
-    asictemp.qsfp_port2_temperature = temperature->qsfp2temp;
-    asictemp.qsfp_port1_warning_temperature = temperature->qsfp1warningtemp;
-    asictemp.qsfp_port2_warning_temperature = temperature->qsfp2warningtemp;
-    asictemp.qsfp_port1_alarm_temperature = temperature->qsfp1alarmtemp;
-    asictemp.qsfp_port2_alarm_temperature = temperature->qsfp2alarmtemp;
-
-    // svc->ChangeAsicFrequency();
+    asictemp.qsfp_port1_temperature = temperature->xcvrtemp[0].temperature;
+    asictemp.qsfp_port2_temperature = temperature->xcvrtemp[1].temperature;
+    asictemp.qsfp_port1_warning_temperature = temperature->xcvrtemp[0].warning_temperature;
+    asictemp.qsfp_port2_warning_temperature = temperature->xcvrtemp[1].warning_temperature;
+    asictemp.qsfp_port1_alarm_temperature = temperature->xcvrtemp[0].alarm_temperature;
+    asictemp.qsfp_port2_alarm_temperature = temperature->xcvrtemp[1].alarm_temperature;
 
     // Publish Delphi object
     delphi::objects::AsicTemperatureMetrics::Publish(key, &asictemp);

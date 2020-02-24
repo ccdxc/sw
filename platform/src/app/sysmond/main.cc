@@ -1,17 +1,18 @@
 /*
  * Copyright (c) 2019, Pensando Systems Inc.
- */
-#include "lib/thread/thread.hpp"
-#include "lib/periodic/periodic.hpp"
-#include "lib/event_thread/event_thread.hpp"
-#include "platform/sysmon/sysmon.hpp"
-#include "platform/asicerror/interrupts.hpp"
-#include "platform/capri/csrint/csr_init.hpp"
-#include "platform/evutils/include/evutils.h"
-#include "logger.h"
-#include "delphi/sysmond_delphi.hpp"
-#include "sysmond_cb.hpp"
+*/
 #include "cmd.hpp"
+#include "logger.h"
+#include "sysmond_cb.hpp"
+#include "lib/thread/thread.hpp"
+#include "delphi/sysmond_delphi.hpp"
+#include "lib/periodic/periodic.hpp"
+#include "platform/sysmon/sysmon.hpp"
+#include "nic/sdk/lib/ipc/ipc_ev.hpp"
+#include "lib/event_thread/event_thread.hpp"
+#include "platform/evutils/include/evutils.h"
+#include "platform/capri/csrint/csr_init.hpp"
+#include "platform/asicerror/interrupts.hpp"
 
 #define SYSMOND_TIMER_ID_POLL 1
 #define ASICERROR_TIMER_ID_POLL 2
@@ -133,7 +134,7 @@ main(int argc, char *argv[])
 
     sdk::platform::capri::csr_init();
 
-    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
+    g_catalog = sdk::lib::catalog::factory();
 
     sysmon_cfg.frequency_change_event_cb = frequency_change_event_cb;
     sysmon_cfg.cattrip_event_cb = cattrip_event_cb;
@@ -142,9 +143,14 @@ main(int argc, char *argv[])
     sysmon_cfg.memory_event_cb = memory_event_cb;
     sysmon_cfg.panic_event_cb = panic_event_cb;
     sysmon_cfg.postdiag_event_cb = postdiag_event_cb;
-    sysmon_cfg.catalog = catalog;
+    sysmon_cfg.liveness_event_cb = liveness_event_cb;
+    sysmon_cfg.catalog = g_catalog;
 
-    // init the lib
+    //TODO: Use enum for IDs
+    sdk::ipc::ipc_init_ev_default(14);
+    sysmon_grpc_init();
+
+    // init the lib; initialize ipc.
     sysmon_init(&sysmon_cfg);
 
     intr_cfg.intr_event_cb = intr_event_cb;
