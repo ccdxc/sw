@@ -116,7 +116,7 @@ def __get_devices_freebsd(mac_hint):
         intf=intf.split("@")[0] 
         pciID=pci.split(":")[1] 
         intf=intf.replace("ion", "ionic")
-        macAddrCmd = "ifconfig " + intf + " | " + "grep hwaddr | cut -d ' ' -f 2 " 
+        macAddrCmd = "ifconfig " + intf + " | grep -e ether -e hwaddr | cut -d ' ' -f 2"
         output=subprocess.check_output(macAddrCmd, shell=True)
         macAddr = str(output, "UTF-8").split()[0]
         if MacInRange(macAddr, mac_hint):
