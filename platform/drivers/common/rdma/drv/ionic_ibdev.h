@@ -449,6 +449,8 @@ struct ionic_qp {
 
 	int			dcqcn_profile;
 
+	struct ib_ud_header	*hdr;
+
 #ifdef __FreeBSD__
 	struct sysctl_ctx_list	debug_ctx;
 	struct sysctl_oid	*debug;
@@ -461,6 +463,7 @@ struct ionic_ah {
 	struct ib_ah		ibah;
 	u32			ahid;
 	int			sgid_index;
+	struct ib_ud_header	hdr;
 };
 
 struct ionic_mr {

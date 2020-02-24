@@ -6,7 +6,6 @@ ionic_sysctl.c \
 ionic_ibdev.c \
 ionic_dcqcn.c \
 ionic_queue.c \
-ionic_kcompat.c \
 ionic_res.c \
 ionic_admin.c \
 ionic_controlpath.c \

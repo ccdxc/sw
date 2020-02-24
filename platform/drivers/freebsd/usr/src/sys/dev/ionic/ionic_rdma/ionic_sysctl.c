@@ -497,7 +497,6 @@ static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 	ionic_int(ctx, parent, &dev->inuse_qpid.next_id,
 		  "next_qpid", "Next QP ID");
 
-
 	ionic_hweight(ctx, parent,
 		      dev->inuse_restbl.inuse,
 		      dev->inuse_restbl.inuse_size,

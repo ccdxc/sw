@@ -219,7 +219,6 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "size_qpid:\t%u\n", dev->size_qpid);
 	seq_printf(s, "next_qpid:\t%u\n", dev->inuse_qpid.next_id);
 
-
 	seq_printf(s, "inuse_restbl:\t%u\n",
 		   bitmap_weight(dev->inuse_restbl.inuse,
 				 dev->inuse_restbl.inuse_size));

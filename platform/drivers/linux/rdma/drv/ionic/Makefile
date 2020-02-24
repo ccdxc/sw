@@ -7,4 +7,4 @@ ionic_rdma-y :=	\
 	ionic_ibdev.o ionic_queue.o ionic_sysfs.o \
 	ionic_controlpath.o ionic_datapath.o \
 	ionic_admin.o ionic_pgtbl.o ionic_stats.o \
-	ionic_dcqcn.o ionic_kcompat.o ionic_res.o
+	ionic_dcqcn.o ionic_res.o

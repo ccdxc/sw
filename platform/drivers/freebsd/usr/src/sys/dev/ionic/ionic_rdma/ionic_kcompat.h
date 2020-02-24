@@ -34,12 +34,11 @@
 #ifndef IONIC_KCOMPAT
 #define IONIC_KCOMPAT
 
-#include <rdma/ib_pack.h>
 #include <rdma/ib_verbs.h>
 
 /****************************************************************************
  *
- * Compatibility for kernel-only features (not affected by OFA version)
+ * Compatibility for kernel-only features not affected by OFA version
  *
  */
 #include <linux/sysfs.h>
@@ -52,8 +51,7 @@
 
 #define FW_INFO "[Firmware Info]: "
 
-extern const struct sysfs_ops kobj_sysfs_ops;
-
+#if __FreeBSD_version < 1200518
 static inline int
 sysfs_create_group_check_name(struct kobject *kobj,
 			      const struct attribute_group *grp)
@@ -71,6 +69,8 @@ sysfs_create_group_check_name(struct kobject *kobj,
 }
 #define sysfs_create_group sysfs_create_group_check_name
 
+#endif /* __FreeBSD_version < 1200518 r351937 */
+/* TODO: This is necessary because linuxkpi panics on !grp->name */
 static inline int
 sysfs_remove_group_check_name(struct kobject *kobj,
 			      const struct attribute_group *grp)
@@ -88,25 +88,51 @@ sysfs_remove_group_check_name(struct kobject *kobj,
 }
 #define sysfs_remove_group sysfs_remove_group_check_name
 
-int sysfs_create_groups(struct kobject *kobj,
-			const struct attribute_group **groups);
-
-void sysfs_remove_groups(struct kobject *kobj,
-			 const struct attribute_group **groups);
-
-static inline bool
-dev_is_pci(struct device *d)
+#if __FreeBSD_version < 1200518
+static inline int sysfs_create_groups(struct kobject *kobj,
+				      const struct attribute_group **groups)
 {
-	return true;
+	int error = 0;
+	int i;
+
+	if (!groups)
+		return 0;
+
+	for (i = 0; groups[i]; i++) {
+		error = sysfs_create_group(kobj, groups[i]);
+		if (error) {
+			while (--i >= 0)
+				sysfs_remove_group(kobj, groups[i]);
+			break;
+		}
+	}
+	return error;
 }
 
+#endif /* __FreeBSD_version < 1200518 r351937 */
+#if __FreeBSD_version < 1201502
+static inline void sysfs_remove_groups(struct kobject *kobj,
+				       const struct attribute_group **groups)
+{
+	int i;
+
+	if (!groups)
+		return;
+	for (i = 0; groups[i]; i++)
+		sysfs_remove_group(kobj, groups[i]);
+}
+
+#endif /* __FreeBSD_version < 1201502 r354613 */
 #define local_irq_save(f) do { (f) = 0; } while (0)
 #define local_irq_restore(f) (void)(f)
 
-static inline int raw_smp_processor_id(void)
-{
-	return curcpu;
-}
+extern bool ionic_dyndbg_enable;
+
+#undef print_hex_dump_debug
+#define print_hex_dump_debug(...) do {					\
+		if (ionic_dyndbg_enable)				\
+			print_hex_dump(NULL, ##__VA_ARGS__);		\
+	} while (0)
 
 /* Create an xarray from a radix_tree_root */
 #include <linux/radix-tree.h>
@@ -130,7 +156,6 @@ static inline void xa_init(struct xarray *xa)
 	spin_lock_irqsave(&(_xa)->x_lock, _flags)
 #define xa_unlock_irqrestore(_xa, _flags)				\
 	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
-
 
 #define xa_iter radix_tree_iter
 #define xa_for_each_slot(_xa, _slot, _iter)				\
@@ -340,7 +365,72 @@ struct ib_device_ops {
 			    struct rdma_hw_stats *stats, u8 port, int index);
 };
 
-void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops);
+static inline void ib_set_device_ops(struct ib_device *dev,
+				     const struct ib_device_ops *ops)
+{
+#define SET_DEVICE_OP(name) \
+	(dev->name = dev->name ?: ops->name)
+
+	SET_DEVICE_OP(add_gid);
+	SET_DEVICE_OP(alloc_hw_stats);
+	SET_DEVICE_OP(alloc_mr);
+	SET_DEVICE_OP(alloc_mw);
+	SET_DEVICE_OP(alloc_pd);
+	SET_DEVICE_OP(alloc_ucontext);
+	SET_DEVICE_OP(alloc_xrcd);
+	SET_DEVICE_OP(attach_mcast);
+	SET_DEVICE_OP(check_mr_status);
+	SET_DEVICE_OP(create_ah);
+	SET_DEVICE_OP(create_cq);
+	SET_DEVICE_OP(create_qp);
+	SET_DEVICE_OP(create_srq);
+	SET_DEVICE_OP(dealloc_mw);
+	SET_DEVICE_OP(dealloc_pd);
+	SET_DEVICE_OP(dealloc_ucontext);
+	SET_DEVICE_OP(dealloc_xrcd);
+	SET_DEVICE_OP(del_gid);
+	SET_DEVICE_OP(dereg_mr);
+	SET_DEVICE_OP(destroy_ah);
+	SET_DEVICE_OP(destroy_cq);
+	SET_DEVICE_OP(destroy_qp);
+	SET_DEVICE_OP(destroy_srq);
+	SET_DEVICE_OP(detach_mcast);
+	SET_DEVICE_OP(disassociate_ucontext);
+	SET_DEVICE_OP(drain_rq);
+	SET_DEVICE_OP(drain_sq);
+	SET_DEVICE_OP(get_dev_fw_str);
+	SET_DEVICE_OP(get_dma_mr);
+	SET_DEVICE_OP(get_hw_stats);
+	SET_DEVICE_OP(get_link_layer);
+	SET_DEVICE_OP(get_netdev);
+	SET_DEVICE_OP(get_port_immutable);
+	SET_DEVICE_OP(map_mr_sg);
+	SET_DEVICE_OP(mmap);
+	SET_DEVICE_OP(modify_ah);
+	SET_DEVICE_OP(modify_cq);
+	SET_DEVICE_OP(modify_device);
+	SET_DEVICE_OP(modify_port);
+	SET_DEVICE_OP(modify_qp);
+	SET_DEVICE_OP(modify_srq);
+	SET_DEVICE_OP(peek_cq);
+	SET_DEVICE_OP(poll_cq);
+	SET_DEVICE_OP(post_recv);
+	SET_DEVICE_OP(post_send);
+	SET_DEVICE_OP(post_srq_recv);
+	SET_DEVICE_OP(query_ah);
+	SET_DEVICE_OP(query_device);
+	SET_DEVICE_OP(query_gid);
+	SET_DEVICE_OP(query_pkey);
+	SET_DEVICE_OP(query_port);
+	SET_DEVICE_OP(query_qp);
+	SET_DEVICE_OP(query_srq);
+	SET_DEVICE_OP(reg_user_mr);
+	SET_DEVICE_OP(req_ncomp_notif);
+	SET_DEVICE_OP(req_notify_cq);
+	SET_DEVICE_OP(rereg_user_mr);
+	SET_DEVICE_OP(resize_cq);
+#undef SET_DEVICE_OP
+}
 
 enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_SLEEP = 1,
@@ -352,10 +442,9 @@ enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_PHY_TEST = 7,
 };
 
-extern bool ionic_dyndbg_enable;
 #define ibdev_dbg(ibdev, ...) do {					\
-	if (ionic_dyndbg_enable)					\
-		dev_info(&(ibdev)->dev, ##__VA_ARGS__);			\
+		if (ionic_dyndbg_enable)				\
+			dev_info(&(ibdev)->dev, ##__VA_ARGS__);		\
 	} while (0)
 #define ibdev_info(ibdev, ...)	dev_info(&(ibdev)->dev, ##__VA_ARGS__)
 #define ibdev_warn(ibdev, ...)	dev_warn(&(ibdev)->dev, ##__VA_ARGS__)
@@ -363,15 +452,5 @@ extern bool ionic_dyndbg_enable;
 
 #define ibdev_warn_ratelimited(ibdev, ...)				\
 	dev_warn_ratelimited(&(ibdev)->dev, ##__VA_ARGS__)
-
-/**
- * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format
- * @header:UD header struct
- * @buf:Buffer to unpack into
- *
- * roce_ud_header_pack() unpacks the UD header structure @header from RoCE wire
- * format in the buffer @buf.
- */
-int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
 #endif /* IONIC_KCOMPAT */

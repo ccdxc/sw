@@ -61,16 +61,4 @@ void ionic_dbg_rm_mr(struct ionic_mr *mr);
 void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
 void ionic_dbg_rm_qp(struct ionic_qp *qp);
 
-/* make print_hex_dump_debug useful */
-
-#include <ionic_kpicompat.h>
-
-extern bool ionic_dyndbg_enable;
-
-#undef print_hex_dump_debug
-#define print_hex_dump_debug(...) do {					\
-	if (ionic_dyndbg_enable)					\
-		print_hex_dump(NULL, ##__VA_ARGS__);			\
-} while (0)
-
 #endif /* IONIC_SYSCTL_H */

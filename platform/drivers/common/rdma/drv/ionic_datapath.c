@@ -55,11 +55,13 @@ MODULE_PARM_DESC(ionic_rdma_xxx_qp_dbell, "XXX Enable ringing qp doorbell (to te
 module_param_named(xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_qp_dbell, "XXX Enable ringing qp doorbell (to test handling of dev failure).");
 #endif
-#endif /* NOT_UPSTREAM */
 
+#endif /* NOT_UPSTREAM */
 static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
+#endif /* NOT_UPSTREAM */
 	struct ionic_v1_cqe *qcqe = ionic_queue_at_prod(&cq->q);
 
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
@@ -67,10 +69,11 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 
 	rmb();
 
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&dev->ibdev, "poll cq %u prod %u\n", cq->cqid, cq->q.prod);
 	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qcqe, BIT(cq->q.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 	*cqe = qcqe;
 
 	return true;
@@ -289,11 +292,12 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 #endif /* IONIC_SRQ_XRC */
 
+#ifdef NOT_UPSTREAM
 		ibdev_warn(&dev->ibdev,
 			   "qp %d recv cqe with error\n", qp->qpid);
 		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			       cqe, BIT(cq->q.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 		goto out;
 	}
 
@@ -491,11 +495,12 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta->len = be32_to_cpu(cqe->status_length);
 		meta->ibsts = ionic_to_ib_status(meta->len);
 		meta->remote = false;
-
+#ifdef NOT_UPSTREAM
 		ibdev_warn(qp->ibqp.device,
 			   "qp %d msn cqe with error\n", qp->qpid);
 		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			       cqe, sizeof(*cqe), true);
+#endif /* NOT_UPSTREAM */
 	}
 
 	return 0;
@@ -533,11 +538,12 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta->len = st_len;
 		meta->ibsts = ionic_to_ib_status(st_len);
 		meta->remote = false;
-
+#ifdef NOT_UPSTREAM
 		ibdev_warn(qp->ibqp.device,
 			   "qp %d npg cqe with error\n", qp->qpid);
 		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			       cqe, sizeof(*cqe), true);
+#endif /* NOT_UPSTREAM */
 	}
 
 	return 0;
@@ -852,8 +858,10 @@ static void ionic_prep_base(struct ionic_qp *qp,
 			    struct ionic_sq_meta *meta,
 			    struct ionic_v1_wqe *wqe)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = to_ionic_ibdev(qp->ibqp.device);
 
+#endif /* NOT_UPSTREAM */
 	meta->wrid = wr->wr_id;
 	meta->ibsts = IB_WC_SUCCESS;
 	meta->signal = false;
@@ -883,11 +891,12 @@ static void ionic_prep_base(struct ionic_qp *qp,
 		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
 	}
 
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&dev->ibdev,
 		  "post send %u prod %u\n", qp->qpid, qp->sq.prod);
 	print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     wqe, BIT(qp->sq.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 	ionic_queue_produce(&qp->sq);
 }
 
@@ -1266,7 +1275,6 @@ static void ionic_post_recv_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	pos = qp->rq_cmb_prod;
 	end = qp->rq.prod;
 
-
 	if (pos > end) {
 		cmb_ptr = qp->rq_cmb_ptr + ((size_t)pos << stride_log2);
 		wqe_ptr = ionic_queue_at(&qp->rq, pos);
@@ -1299,7 +1307,9 @@ static void ionic_post_recv_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 static int ionic_prep_recv(struct ionic_qp *qp,
 			   const struct ib_recv_wr *wr)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = to_ionic_ibdev(qp->ibqp.device);
+#endif /* NOT_UPSTREAM */
 	struct ionic_rq_meta *meta;
 	struct ionic_v1_wqe *wqe;
 	s64 signed_len;
@@ -1339,11 +1349,12 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 		wqe->base.flags |= cpu_to_be16(IONIC_V1_FLAG_FENCE);
 
 #endif /* IONIC_SRQ_XRC */
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&dev->ibdev,
 		  "post recv %u prod %u\n", qp->qpid, qp->rq.prod);
 	print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     wqe, BIT(qp->rq.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 	ionic_queue_produce(&qp->rq);
 
 	qp->rq_meta_head = meta->next;
@@ -1354,14 +1365,12 @@ static int ionic_prep_recv(struct ionic_qp *qp,
 
 #ifdef HAVE_CONST_IB_WR
 static int ionic_post_send_common(struct ionic_ibdev *dev,
-				  struct ionic_ctx *ctx,
 				  struct ionic_cq *cq,
 				  struct ionic_qp *qp,
 				  const struct ib_send_wr *wr,
 				  const struct ib_send_wr **bad)
 #else
 static int ionic_post_send_common(struct ionic_ibdev *dev,
-				  struct ionic_ctx *ctx,
 				  struct ionic_cq *cq,
 				  struct ionic_qp *qp,
 				  struct ib_send_wr *wr,
@@ -1375,7 +1384,7 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 	if (!bad)
 		return -EINVAL;
 
-	if (ctx || !qp->has_sq) {
+	if (!qp->has_sq) {
 		*bad = wr;
 		return -EINVAL;
 	}
@@ -1461,14 +1470,12 @@ out:
 
 #ifdef HAVE_CONST_IB_WR
 static int ionic_post_recv_common(struct ionic_ibdev *dev,
-				  struct ionic_ctx *ctx,
 				  struct ionic_cq *cq,
 				  struct ionic_qp *qp,
 				  const struct ib_recv_wr *wr,
 				  const struct ib_recv_wr **bad)
 #else
 static int ionic_post_recv_common(struct ionic_ibdev *dev,
-				  struct ionic_ctx *ctx,
 				  struct ionic_cq *cq,
 				  struct ionic_qp *qp,
 				  struct ib_recv_wr *wr,
@@ -1482,7 +1489,7 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 	if (!bad)
 		return -EINVAL;
 
-	if (ctx || !qp->has_rq) {
+	if (!qp->has_rq) {
 		*bad = wr;
 		return -EINVAL;
 	}
@@ -1563,11 +1570,10 @@ static int ionic_post_send(struct ib_qp *ibqp,
 #endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
 	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 
-	return ionic_post_send_common(dev, ctx, cq, qp, wr, bad);
+	return ionic_post_send_common(dev, cq, qp, wr, bad);
 }
 
 #ifdef HAVE_CONST_IB_WR
@@ -1581,11 +1587,10 @@ static int ionic_post_recv(struct ib_qp *ibqp,
 #endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
 	struct ionic_cq *cq = to_ionic_cq(ibqp->recv_cq);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 
-	return ionic_post_recv_common(dev, ctx, cq, qp, wr, bad);
+	return ionic_post_recv_common(dev, cq, qp, wr, bad);
 }
 
 #ifdef IONIC_SRQ_XRC
@@ -1600,7 +1605,6 @@ static int ionic_post_srq_recv(struct ib_srq *ibsrq,
 #endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
 	struct ionic_cq *cq = NULL;
 	struct ionic_qp *qp = to_ionic_srq(ibsrq);
 
@@ -1612,10 +1616,10 @@ static int ionic_post_srq_recv(struct ib_srq *ibsrq,
 		cq = to_ionic_cq(ibsrq->ext.xrc.cq);
 #endif
 
-	return ionic_post_recv_common(dev, ctx, cq, qp, wr, bad);
+	return ionic_post_recv_common(dev, cq, qp, wr, bad);
 }
-#endif /* IONIC_SRQ_XRC */
 
+#endif /* IONIC_SRQ_XRC */
 static const struct ib_device_ops ionic_datapath_ops = {
 #ifdef HAVE_RDMA_DEV_OPS_EXT
 	.driver_id		= RDMA_DRIVER_IONIC,

@@ -54,8 +54,8 @@ MODULE_PARM_DESC(ionic_rdma_xxx_aq_dbell, "XXX Enable ringing aq doorbell (to te
 module_param_named(xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
 #endif
-#endif /* NOT_UPSTREAM */
 
+#endif /* NOT_UPSTREAM */
 /* not a valid queue position or negative error status */
 #define IONIC_ADMIN_POSTED 0x10000
 
@@ -149,7 +149,9 @@ static void ionic_admin_reset_wdog(struct ionic_aq *aq)
 static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 				 struct ionic_v1_cqe **cqe)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
+#endif /* NOT_UPSTREAM */
 	struct ionic_v1_cqe *qcqe = ionic_queue_at_prod(&cq->q);
 
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
@@ -157,11 +159,12 @@ static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 
 	rmb();
 
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&dev->ibdev, "poll admin cq %u prod %u\n",
 		  cq->cqid, cq->q.prod);
 	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qcqe, BIT(cq->q.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 	*cqe = qcqe;
 
 	return true;
@@ -283,11 +286,12 @@ cq_next:
 
 		*wqe = wr->wqe;
 
+#ifdef NOT_UPSTREAM
 		ibdev_dbg(&dev->ibdev, "post admin prod %u\n", aq->q.prod);
 		print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ionic_queue_at_prod(&aq->q),
 				     BIT(aq->q.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 		ionic_queue_produce(&aq->q);
 	}
 
@@ -388,7 +392,11 @@ void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	int aq_idx;
 
+#ifdef __FreeBSD__
+	aq_idx = curcpu % dev->aq_count;
+#else
 	aq_idx = raw_smp_processor_id() % dev->aq_count;
+#endif
 	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
 }
 
@@ -487,7 +495,6 @@ int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
 	}
 	return rc;
 }
-
 
 static int ionic_verbs_status_to_rc(u32 status)
 {
@@ -858,10 +865,11 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 
 	rmb();
 
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&eq->dev->ibdev, "poll eq prod %u\n", eq->q.prod);
 	print_hex_dump_debug("eqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qeqe, BIT(eq->q.stride_log2), true);
-
+#endif /* NOT_UPSTREAM */
 	*eqe = *qeqe;
 
 	return true;
@@ -939,8 +947,8 @@ static void ionic_srq_event(struct ionic_ibdev *dev, struct ionic_qp *qp,
 	if (qp->ibsrq.event_handler)
 		qp->ibsrq.event_handler(&ibev, qp->ibsrq.srq_context);
 }
-#endif /* IONIC_SRQ_XRC */
 
+#endif /* IONIC_SRQ_XRC */
 static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 {
 	struct ib_event ibev;
@@ -964,8 +972,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 		ionic_srq_event(dev, qp, code);
 		goto out;
 	}
-#endif /* IONIC_SRQ_XRC */
 
+#endif /* IONIC_SRQ_XRC */
 	ibev.device = &dev->ibdev;
 	ibev.element.qp = &qp->ibqp;
 

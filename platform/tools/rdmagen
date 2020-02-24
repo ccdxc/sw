@@ -36,7 +36,6 @@ DRV_FILES=(
     "ionic_datapath.c"
     "ionic_dcqcn.c"
     "ionic_fw.h"
-    "ionic_kcompat.c"
     "ionic_kcompat.h"
     "ionic_pgtbl.c"
     "ionic_queue.c"

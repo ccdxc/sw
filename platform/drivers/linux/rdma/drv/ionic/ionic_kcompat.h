@@ -6,12 +6,11 @@
 #ifndef IONIC_KCOMPAT
 #define IONIC_KCOMPAT
 
-#include <rdma/ib_pack.h>
 #include <rdma/ib_verbs.h>
 
 /****************************************************************************
  *
- * Compatibility for kernel-only features (not affected by OFA version)
+ * Compatibility for kernel-only features not affected by OFA version
  *
  */
 #include <linux/version.h>
@@ -58,8 +57,6 @@
 /* Use dma_alloc_coherent() */
 #endif
 
-#define IF_LLADDR(ndev) (ndev->dev_addr)
-
 #ifdef HAVE_XARRAY
 #ifdef HAVE_XARRAY_FOR_EACH_ARGS
 #include <linux/xarray.h>
@@ -96,7 +93,6 @@ static inline void xa_init(struct xarray *xa)
 	spin_lock_irqsave(&(_xa)->x_lock, _flags)
 #define xa_unlock_irqrestore(_xa, _flags)				\
 	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
-
 #endif /* HAVE_RADIX_TREE_LOCK */
 
 #define xa_iter radix_tree_iter
@@ -183,6 +179,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 4_14b)
+#define HAVE_MANDATORY_IB_MODIFY_PORT
 #define HAVE_GET_DEV_FW_STR_LEN
 #else /* 4.14.0 and later */
 #define HAVE_IB_SRQ_HAS_CQ
@@ -511,7 +508,83 @@ struct ib_device_ops {
 			    struct rdma_hw_stats *stats, u8 port, int index);
 };
 
-void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops);
+static inline void ib_set_device_ops(struct ib_device *dev,
+				     const struct ib_device_ops *ops)
+{
+#define SET_DEVICE_OP(name) \
+	(dev->name = dev->name ?: ops->name)
+
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(add_gid);
+#endif
+	SET_DEVICE_OP(alloc_hw_stats);
+	SET_DEVICE_OP(alloc_mr);
+	SET_DEVICE_OP(alloc_mw);
+	SET_DEVICE_OP(alloc_pd);
+	SET_DEVICE_OP(alloc_ucontext);
+	SET_DEVICE_OP(alloc_xrcd);
+	SET_DEVICE_OP(attach_mcast);
+	SET_DEVICE_OP(check_mr_status);
+	SET_DEVICE_OP(create_ah);
+	SET_DEVICE_OP(create_cq);
+	SET_DEVICE_OP(create_qp);
+	SET_DEVICE_OP(create_srq);
+	SET_DEVICE_OP(dealloc_mw);
+	SET_DEVICE_OP(dealloc_pd);
+	SET_DEVICE_OP(dealloc_ucontext);
+	SET_DEVICE_OP(dealloc_xrcd);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(del_gid);
+#endif
+	SET_DEVICE_OP(dereg_mr);
+	SET_DEVICE_OP(destroy_ah);
+	SET_DEVICE_OP(destroy_cq);
+	SET_DEVICE_OP(destroy_qp);
+	SET_DEVICE_OP(destroy_srq);
+	SET_DEVICE_OP(detach_mcast);
+	SET_DEVICE_OP(disassociate_ucontext);
+	SET_DEVICE_OP(drain_rq);
+	SET_DEVICE_OP(drain_sq);
+#ifdef HAVE_GET_DEV_FW_STR
+	SET_DEVICE_OP(get_dev_fw_str);
+#endif
+	SET_DEVICE_OP(get_dma_mr);
+	SET_DEVICE_OP(get_hw_stats);
+	SET_DEVICE_OP(get_link_layer);
+	SET_DEVICE_OP(get_netdev);
+	SET_DEVICE_OP(get_port_immutable);
+#ifdef HAVE_GET_VECTOR_AFFINITY
+	SET_DEVICE_OP(get_vector_affinity);
+#endif
+	SET_DEVICE_OP(map_mr_sg);
+	SET_DEVICE_OP(mmap);
+	SET_DEVICE_OP(modify_ah);
+	SET_DEVICE_OP(modify_cq);
+	SET_DEVICE_OP(modify_device);
+	SET_DEVICE_OP(modify_port);
+	SET_DEVICE_OP(modify_qp);
+	SET_DEVICE_OP(modify_srq);
+	SET_DEVICE_OP(peek_cq);
+	SET_DEVICE_OP(poll_cq);
+	SET_DEVICE_OP(post_recv);
+	SET_DEVICE_OP(post_send);
+	SET_DEVICE_OP(post_srq_recv);
+	SET_DEVICE_OP(query_ah);
+	SET_DEVICE_OP(query_device);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(query_gid);
+#endif
+	SET_DEVICE_OP(query_pkey);
+	SET_DEVICE_OP(query_port);
+	SET_DEVICE_OP(query_qp);
+	SET_DEVICE_OP(query_srq);
+	SET_DEVICE_OP(reg_user_mr);
+	SET_DEVICE_OP(req_ncomp_notif);
+	SET_DEVICE_OP(req_notify_cq);
+	SET_DEVICE_OP(rereg_user_mr);
+	SET_DEVICE_OP(resize_cq);
+#undef SET_DEVICE_OP
+}
 
 #endif /* HAVE_CUSTOM_IB_SET_DEVICE_OPS */
 #ifndef HAVE_IB_PORT_PHYS_STATE
@@ -546,14 +619,4 @@ enum {
 };
 
 #endif /* HAVE_RDMA_DRIVER_ID */
-/**
- * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format
- * @header:UD header struct
- * @buf:Buffer to unpack into
- *
- * roce_ud_header_pack() unpacks the UD header structure @header from RoCE wire
- * format in the buffer @buf.
- */
-int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
-
 #endif /* IONIC_KCOMPAT */

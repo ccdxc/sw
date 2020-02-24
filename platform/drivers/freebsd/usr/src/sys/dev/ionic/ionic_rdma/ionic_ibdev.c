@@ -233,7 +233,6 @@ static int ionic_modify_device(struct ib_device *ibdev, int mask,
 	return 0;
 }
 
-/* TODO remove for Linux 4.14+ */
 static int ionic_modify_port(struct ib_device *ibdev, u8 port, int mask,
 			     struct ib_port_modify *attr)
 {
@@ -401,14 +400,7 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 		goto err_dev;
 	}
 
-	/* Ensure that our parent is a true PCI device */
 	hwdev = ionic_api_get_device(handle);
-	if (!dev_is_pci(hwdev)) {
-		netdev_err(ndev,
-			   "ionic_rdma: Cannot bind to non-PCI device\n");
-		rc = -ENXIO;
-		goto err_dev;
-	}
 
 	ibdev = ib_alloc_device(sizeof(*dev));
 	if (!ibdev) {

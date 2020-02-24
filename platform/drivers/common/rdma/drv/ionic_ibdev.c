@@ -259,12 +259,12 @@ static int ionic_del_gid(struct ib_device *ibdev, u8 port,
 			 unsigned int index, void **context)
 #else
 static int ionic_del_gid(const struct ib_gid_attr *attr, void **context)
-#endif
+#endif /* HAVE_IB_GID_DEV_PORT_INDEX */
 {
 	return 0;
 }
-#endif /* HAVE_IB_GID_DEV_PORT_INDEX */
 
+#endif /* HAVE_REQUIRED_IB_GID */
 static int ionic_query_pkey(struct ib_device *ibdev, u8 port, u16 index,
 			    u16 *pkey)
 {
@@ -294,13 +294,14 @@ static int ionic_modify_device(struct ib_device *ibdev, int mask,
 	return 0;
 }
 
-/* TODO remove for Linux 4.14+ */
+#ifdef HAVE_MANDATORY_IB_MODIFY_PORT
 static int ionic_modify_port(struct ib_device *ibdev, u8 port, int mask,
 			     struct ib_port_modify *attr)
 {
 	return 0;
 }
 
+#endif /* HAVE_MANDATORY_IB_MODIFY_PORT */
 static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 				    struct ib_port_immutable *attr)
 {
@@ -422,7 +423,9 @@ static const struct ib_device_ops ionic_dev_ops = {
 #endif
 	.query_pkey		= ionic_query_pkey,
 	.modify_device		= ionic_modify_device,
+#ifdef HAVE_MANDATORY_IB_MODIFY_PORT
 	.modify_port		= ionic_modify_port,
+#endif
 
 	.get_port_immutable	= ionic_get_port_immutable,
 	.get_dev_fw_str		= ionic_get_dev_fw_str,
@@ -501,14 +504,17 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 		goto err_dev;
 	}
 
-	/* Ensure that our parent is a true PCI device */
 	hwdev = ionic_api_get_device(handle);
+#ifndef __FreeBSD__
+
+	/* Ensure that our parent is a true PCI device */
 	if (!dev_is_pci(hwdev)) {
 		netdev_err(ndev,
 			   "ionic_rdma: Cannot bind to non-PCI device\n");
 		rc = -ENXIO;
 		goto err_dev;
 	}
+#endif /* __FreeBSD__ */
 
 #ifdef HAVE_IB_ALLOC_DEV_CONTAINER
 	dev = ib_alloc_device(ionic_ibdev, ibdev);
@@ -709,8 +715,8 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 
 #ifdef HAVE_REQUIRED_DMA_DEVICE
 	ibdev->dma_device = ibdev->dev.parent;
-#endif
 
+#endif
 #ifdef HAVE_RDMA_DRIVER_ID
 #ifndef HAVE_RDMA_DEV_OPS_EXT
 	ibdev->driver_id = RDMA_DRIVER_IONIC;

@@ -490,26 +490,14 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	return 0;
 }
 
-static int ionic_set_ah_attr(struct ionic_ibdev *dev,
-			     struct rdma_ah_attr *ah_attr,
-			     void *hdr_buf, int sgid_index)
-
+static void ionic_set_ah_attr(struct ionic_ibdev *dev,
+			      struct rdma_ah_attr *ah_attr,
+			      struct ib_ud_header *hdr,
+			      int sgid_index)
 {
-	struct ib_ud_header *hdr = NULL;
 	u32 flow_label;
 	u16 vlan = 0;
 	u8  tos, ttl;
-	int rc;
-
-	hdr = kzalloc(sizeof(*hdr), GFP_KERNEL);
-	if (!hdr) {
-		rc = -ENOMEM;
-		return rc;
-	}
-
-	rc = roce_ud_header_unpack(hdr_buf, hdr);
-	if (rc)
-		goto err_hdr;
 
 	if (hdr->vlan_present)
 		vlan = be16_to_cpu(hdr->vlan.tag);
@@ -535,11 +523,6 @@ static int ionic_set_ah_attr(struct ionic_ibdev *dev,
 	rdma_ah_set_port_num(ah_attr, 1);
 	rdma_ah_set_grh(ah_attr, NULL, flow_label, sgid_index, ttl, tos);
 	rdma_ah_set_dgid_raw(ah_attr, &hdr->grh.destination_gid);
-
-err_hdr:
-	kfree(hdr);
-
-	return rc;
 }
 
 static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
@@ -560,7 +543,6 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 		}
 	};
 	enum ionic_admin_flags admin_flags = 0;
-	struct ib_ud_header *hdr;
 	dma_addr_t hdr_dma = 0;
 	void *hdr_buf;
 	gfp_t gfp = GFP_ATOMIC;
@@ -574,15 +556,9 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 	else
 		admin_flags |= IONIC_ADMIN_F_BUSYWAIT;
 
-	hdr = kmalloc(sizeof(*hdr), gfp);
-	if (!hdr) {
-		rc = -ENOMEM;
-		goto err_hdr;
-	}
-
-	rc = ionic_build_hdr(dev, hdr, attr, false);
+	rc = ionic_build_hdr(dev, &ah->hdr, attr, false);
 	if (rc)
-		goto err_buf;
+		goto err_hdr;
 
 	ah->sgid_index = rdma_ah_read_grh(attr)->sgid_index;
 
@@ -592,10 +568,9 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 		goto err_buf;
 	}
 
-	hdr_len = ib_ud_header_pack(hdr, hdr_buf);
+	hdr_len = ib_ud_header_pack(&ah->hdr, hdr_buf);
 	hdr_len -= IB_BTH_BYTES;
 	hdr_len -= IB_DETH_BYTES;
-
 	ibdev_dbg(&dev->ibdev, "roce packet header template\n");
 	print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 			     hdr_buf, hdr_len, true);
@@ -618,54 +593,7 @@ static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 err_dma:
 	contig_kfree(hdr_buf, PAGE_SIZE);
 err_buf:
-	kfree(hdr);
 err_hdr:
-	return rc;
-}
-
-static int ionic_query_ah_cmd(struct ionic_ibdev *dev,
-			      struct ionic_ah *ah,
-			      struct rdma_ah_attr *ah_attr)
-{
-	struct ionic_admin_wr wr = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
-		.wqe = {
-			.op = IONIC_V1_ADMIN_QUERY_AH,
-			.id_ver = cpu_to_le32(ah->ahid),
-		}
-	};
-	dma_addr_t hdr_dma;
-	void *hdr_buf = NULL;
-	int rc;
-
-	if (dev->admin_opcodes <= IONIC_V1_ADMIN_QUERY_AH)
-		return -ENOSYS;
-
-	hdr_buf = contig_kmalloc(PAGE_SIZE, GFP_KERNEL);
-	if (!hdr_buf) {
-		rc = -ENOMEM;
-		goto err_buf;
-	}
-
-	hdr_dma = dma_map_single(dev->hwdev, hdr_buf,
-				 PAGE_SIZE, DMA_TO_DEVICE);
-	rc = dma_mapping_error(dev->hwdev, hdr_dma);
-	if (rc)
-		goto err_dma;
-
-	wr.wqe.query_ah.dma_addr = cpu_to_le64(hdr_dma);
-
-	ionic_admin_post(dev, &wr);
-	rc = ionic_admin_wait(dev, &wr, 0);
-
-	dma_unmap_single(dev->hwdev, hdr_dma, PAGE_SIZE, DMA_FROM_DEVICE);
-
-	if (!rc)
-		rc = ionic_set_ah_attr(dev, ah_attr, hdr_buf, ah->sgid_index);
-
-err_dma:
-	contig_kfree(hdr_buf, PAGE_SIZE);
-err_buf:
 	return rc;
 }
 
@@ -754,7 +682,9 @@ static int ionic_query_ah(struct ib_ah *ibah,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
 	struct ionic_ah *ah = to_ionic_ah(ibah);
 
-	return ionic_query_ah_cmd(dev, ah, ah_attr);
+	ionic_set_ah_attr(dev, ah_attr, &ah->hdr, ah->sgid_index);
+
+	return 0;
 }
 
 static int ionic_destroy_ah(struct ib_ah *ibah)
@@ -1510,7 +1440,6 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 			}
 		}
 	};
-	struct ib_ud_header *hdr = NULL;
 	void *hdr_buf = NULL;
 	dma_addr_t hdr_dma = 0;
 	int rc, hdr_len = 0;
@@ -1547,15 +1476,14 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 		wr.wqe.mod_qp.qkey_dest_qpn = cpu_to_le32(attr->qkey);
 
 	if (mask & IB_QP_AV) {
-		hdr = kmalloc(sizeof(*hdr), GFP_KERNEL);
-		if (!hdr) {
+		if (!qp->hdr) {
 			rc = -ENOMEM;
 			goto err_hdr;
 		}
 
-		rc = ionic_build_hdr(dev, hdr, &attr->ah_attr, true);
+		rc = ionic_build_hdr(dev, qp->hdr, &attr->ah_attr, true);
 		if (rc)
-			goto err_buf;
+			goto err_hdr;
 
 		qp->sgid_index = rdma_ah_read_grh(&attr->ah_attr)->sgid_index;
 
@@ -1565,10 +1493,9 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 			goto err_buf;
 		}
 
-		hdr_len = ib_ud_header_pack(hdr, hdr_buf);
+		hdr_len = ib_ud_header_pack(qp->hdr, hdr_buf);
 		hdr_len -= IB_BTH_BYTES;
 		hdr_len -= IB_DETH_BYTES;
-
 		ibdev_dbg(&dev->ibdev, "roce packet header template\n");
 		print_hex_dump_debug("hdr ", DUMP_PREFIX_OFFSET, 16, 1,
 				     hdr_buf, hdr_len, true);
@@ -1601,8 +1528,6 @@ err_dma:
 	if (mask & IB_QP_AV)
 		contig_kfree(hdr_buf, PAGE_SIZE);
 err_buf:
-	if (mask & IB_QP_AV)
-		kfree(hdr);
 err_hdr:
 	return rc;
 }
@@ -1731,8 +1656,8 @@ static int ionic_query_qp_cmd(struct ionic_ibdev *dev,
 #endif
 
 	if (mask & IB_QP_AV)
-		rc = ionic_set_ah_attr(dev, &attr->ah_attr,
-				       hdr_buf, qp->sgid_index);
+		ionic_set_ah_attr(dev, &attr->ah_attr,
+				  qp->hdr, qp->sgid_index);
 
 err_hdrdma:
 	contig_kfree(hdr_buf, PAGE_SIZE);
@@ -2237,6 +2162,12 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	qp->has_rq = true;
 
 	if (qp->has_ah) {
+		qp->hdr = kzalloc(sizeof(*qp->hdr), GFP_KERNEL);
+		if (!qp->hdr) {
+			rc = -ENOMEM;
+			goto err_ah_alloc;
+		}
+
 		rc = ionic_get_ahid(dev, &qp->ahid);
 		if (rc)
 			goto err_ahid;
@@ -2361,6 +2292,8 @@ err_sq:
 	if (qp->has_ah)
 		ionic_put_ahid(dev, qp->ahid);
 err_ahid:
+	kfree(qp->hdr);
+err_ah_alloc:
 	ionic_put_qpid(dev, qp->qpid);
 err_qpid:
 	kfree(qp);
@@ -2700,8 +2633,10 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 
 	ionic_qp_rq_destroy(dev, ctx, qp);
 	ionic_qp_sq_destroy(dev, ctx, qp);
-	if (qp->has_ah)
+	if (qp->has_ah) {
 		ionic_put_ahid(dev, qp->ahid);
+		kfree(qp->hdr);
+	}
 	ionic_put_qpid(dev, qp->qpid);
 
 	ionic_put_res(dev, &qp->rrq_res);

@@ -506,8 +506,8 @@ static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 		  "size_srqid", "Total SRQ IDs");
 	ionic_int(ctx, parent, &dev->next_srqid,
 		  "next_srqid", "Next SRQ ID");
-#endif /* IONIC_SRQ_XRC */
 
+#endif /* IONIC_SRQ_XRC */
 	ionic_hweight(ctx, parent,
 		      dev->inuse_restbl.inuse,
 		      dev->inuse_restbl.inuse_size,

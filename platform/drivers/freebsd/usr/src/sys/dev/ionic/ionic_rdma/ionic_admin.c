@@ -148,7 +148,6 @@ static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 		  cq->cqid, cq->q.prod);
 	print_hex_dump_debug("cqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qcqe, BIT(cq->q.stride_log2), true);
-
 	*cqe = qcqe;
 
 	return true;
@@ -274,7 +273,6 @@ cq_next:
 		print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
 				     ionic_queue_at_prod(&aq->q),
 				     BIT(aq->q.stride_log2), true);
-
 		ionic_queue_produce(&aq->q);
 	}
 
@@ -371,7 +369,7 @@ void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 {
 	int aq_idx;
 
-	aq_idx = raw_smp_processor_id() % dev->aq_count;
+	aq_idx = curcpu % dev->aq_count;
 	ionic_admin_post_aq(dev->aq_vec[aq_idx], wr);
 }
 
@@ -470,7 +468,6 @@ int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
 	}
 	return rc;
 }
-
 
 static int ionic_verbs_status_to_rc(u32 status)
 {
@@ -826,7 +823,6 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 	ibdev_dbg(&eq->dev->ibdev, "poll eq prod %u\n", eq->q.prod);
 	print_hex_dump_debug("eqe ", DUMP_PREFIX_OFFSET, 16, 1,
 			     qeqe, BIT(eq->q.stride_log2), true);
-
 	*eqe = *qeqe;
 
 	return true;
@@ -877,7 +873,6 @@ out:
 		kref_put(&cq->cq_kref, ionic_cq_complete);
 }
 
-
 static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 {
 	struct ib_event ibev;
@@ -895,7 +890,6 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 			  "missing qpid %#x code %u\n", qpid, code);
 		goto out;
 	}
-
 
 	ibev.device = &dev->ibdev;
 	ibev.element.qp = &qp->ibqp;

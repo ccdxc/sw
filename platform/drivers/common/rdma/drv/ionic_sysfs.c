@@ -226,8 +226,8 @@ static int ionic_dev_info_show(struct seq_file *s, void *v)
 				 dev->size_srqid));
 	seq_printf(s, "size_srqid:\t%u\n", dev->size_srqid);
 	seq_printf(s, "next_srqid:\t%u\n", dev->next_srqid);
-#endif /* IONIC_SRQ_XRC */
 
+#endif /* IONIC_SRQ_XRC */
 	seq_printf(s, "inuse_restbl:\t%u\n",
 		   bitmap_weight(dev->inuse_restbl.inuse,
 				 dev->inuse_restbl.inuse_size));
