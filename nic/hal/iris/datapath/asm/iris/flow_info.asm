@@ -241,7 +241,9 @@ flow_miss_common:
   seq           c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_TCP
   smneb         c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq           c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
-  bcf           [c1&c2&c3], flow_miss_tcp_non_syn_first_pkt_drop
+  setcf         c1, [c1 & c2 & c3]
+  phvwr.c1      p.control_metadata_drop_reason[DROP_TCP_NON_SYN_FIRST_PKT], 1
+  phvwr.c1      p.capri_intrinsic_drop, 1
   seq           c2, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   bcf           [c2], flow_miss_unicast
   seq           c2, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
