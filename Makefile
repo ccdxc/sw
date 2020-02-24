@@ -881,6 +881,22 @@ bundle-image:
 	ln -f bin/venice-install/venice_appl_os.tgz bin/bundle/venice_appl_os.tgz
 	cd bin/bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
 
+bundle-apulu-image:
+	cd bin/venice-install && tar -cf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
+	mkdir -p apulu-bundle/bin
+	mkdir -p apulu-bundle/nic
+	mkdir -p apulu-bundle/bin/venice-install
+	ln -f bin/venice.tgz apulu-bundle/bin/venice.tgz
+	ln -f nic/naples_fw_venice.tar apulu-bundle/nic/naples_fw.tar
+	ln -f bin/venice-install/venice_appl_os.tgz apulu-bundle/bin/venice-install/venice_appl_os.tgz
+	@ #bundle.py creates metadata.json for the bundle image
+	@tools/scripts/bundle.py -v ${BUNDLE_VERSION}  -d ${BUILD_DATE} -p "apulu-bundle/"
+	ln -f apulu-bundle/bin/venice.tgz apulu-bundle/venice.tgz
+	ln -f apulu-bundle/nic/naples_fw.tar apulu-bundle/naples_fw.tar
+	ln -f apulu-bundle/bin/venice-install/venice_appl_os.tgz apulu-bundle/venice_appl_os.tgz
+	cd apulu-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+	cd apulu-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
+
 bundle-upgrade-image:
 	mkdir -p upgrade-bundle/bin
 	mkdir -p upgrade-bundle/nic

@@ -4,9 +4,13 @@ package upg
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"os/exec"
 	"sync"
 
 	"github.com/pensando/sw/nic/agent/nmd/api"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -64,7 +68,31 @@ func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 	if u.upgsdk != nil {
 		return u.upgsdk.StartDisruptiveUpgrade(firmwarePkgName)
 	}
+	if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
+		log.Infof("NAPLES_PIPELINE is %v", val)
+		if val == globals.NaplesPipelineApollo {
+			log.Infof("Found Apulu pipeline")
+			_, err := os.Stat("/nic/tools/fwupdate")
+			if err == nil {
+				_, err = os.Stat("/update/" + firmwarePkgName)
+				if err != nil {
+					return err
+				}
+			}
+			//fwupdate -p /update/naples_fw_venice.tar -i all ; fwupdate -s altfw ; reboot
+			cmdString := fmt.Sprintf("rm -f /sysconfig/config0/pen-netagent.db ; /nic/tools/fwupdate -p /update/%s -i all ; fwupdate -s altfw ; reboot", firmwarePkgName)
+			log.Infof("command string %s", cmdString)
+			cmd := exec.Command("bash", "-c", cmdString)
+			if err = cmd.Run(); err != nil {
+				log.Infof("fwupdate execution error %v", err)
+				return err
+			}
 
+		}
+	} else {
+		log.Infof("Errored. NAPLES_PIPELINE is %v ok %v", val, ok)
+		return errors.New("NAPLES_PIPELINE not set")
+	}
 	go u.UpgSuccessful()
 	return nil
 }
