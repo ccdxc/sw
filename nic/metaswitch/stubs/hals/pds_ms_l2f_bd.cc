@@ -224,6 +224,11 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                 // Enter thread-safe context to access/modify global state
                 auto state_ctxt = state_t::thread_context();
                 state_ctxt.state()->bd_store().erase(bd_add_upd_ips->bd_id.bd_id);
+                auto subnet_obj = state_ctxt.state()->subnet_store().
+                    get(bd_add_upd_ips->bd_id.bd_id);
+                if (subnet_obj != nullptr) {
+                    subnet_obj->properties().hal_created = false;
+                }
             }
 
             if (unlikely(ips_mock)) return; // UT
@@ -288,6 +293,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         if (op_create_) {
             state_ctxt.state()->bd_store().add_upd(ips_info_.bd_id,
                                                    std::move(bd_obj_uptr));
+            store_info_.subnet_obj->properties().hal_created = true;
         }
     } // End of state thread_context
       // Do Not access/modify global state after this
@@ -339,6 +345,24 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         // Cannot add Subnet Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
+        // Ensure that Subnet is actually deleted before releasing the UUID
+        // For Subnet VNI change, MS internally deletes existing BD and
+        // creates a new BD for the same subnet
+        if ((store_info_.subnet_obj == nullptr) ||
+            (store_info_.subnet_obj->properties().spec_invalid) ||
+            // Even if subnet store obj is present check if
+            // it is a different subnet that got allocated the same BD ID
+            // because of indexer wrap around 
+            (store_info_.subnet_obj->spec().key != 
+             store_info_.bd_obj->properties().subnet))  {
+
+            PDS_TRACE_DEBUG ("MS BD %d UUID %s Release", ips_info_.bd_id,
+                             subnet_uuid.str());
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(subnet_uuid);
+        } else {
+            store_info_.subnet_obj->properties().hal_created = false;
+        }
         // Remove the BD Obj from store
         // All remote MACs should have been walked and delete spec
         // added to the batch before this
@@ -352,11 +376,10 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++++++ MS BD %d Delete: Rcvd Async PDS"
-                            " response %s +++++++++++++",
-                            l_bd_id, (pds_status) ? "Success" : "Failure");
-            auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->remove_uuid(subnet_uuid);
+            PDS_TRACE_DEBUG("++++++++++ Subnet %s MS BD %d Delete: Rcvd Async"
+                            " PDS response %s +++++++++++++",
+                            subnet_uuid.str(), l_bd_id,
+                            (pds_status) ? "Success" : "Failure");
         };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr

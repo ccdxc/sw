@@ -180,6 +180,10 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
+    PDS_TRACE_DEBUG("%s Subnet %s BD ID: %d",
+                     (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
+                     subnet_spec->key.str(), bd_id);
+
     pds::EvpnBdSpec evpn_bd_spec;
     populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
     pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -191,7 +195,8 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
     // Get IRB If Index
     if_index = bd_id_to_ms_ifindex (bd_id);
-    PDS_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X",
+    PDS_TRACE_DEBUG("IRB Interface %s:: BD ID: %d MSIfIndex: 0x%X",
+                     (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
                      bd_id, if_index);
 
     // Update IRB to VRF binding
@@ -218,7 +223,8 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
         // Get Lif's MS IfIndex
         if_index = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
-        PDS_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+        PDS_TRACE_DEBUG ("SW Interface %s:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+                          (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
                           subnet_spec->host_if.str(), lif_ifindex, if_index);
 
         // Set Lif interface settings
@@ -308,16 +314,66 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
-static void
-cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete)
+enum class pds_ms_subnet_cache_op_t {
+    CREATE,
+    MARK_DEL,
+    REVERT_MARK_DEL,
+    COMMIT_DEL
+};
+
+static bool
+cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, pds_ms_subnet_cache_op_t op)
 {
+    bool cleanup = false;
+
     auto state_ctxt = state_t::thread_context();
-    if (op_delete) {
-        state_ctxt.state()->subnet_store().erase(bd_id);
-        return;
+    switch (op) {
+    case pds_ms_subnet_cache_op_t::CREATE:
+    {    
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+        if ((subnet_obj != nullptr) &&
+            (spec->key != subnet_obj->spec().key)) {
+            throw Error(std::string("Another subnet ")
+                        .append(subnet_obj->spec().key.str())
+                        .append(" already exists with same internal BD ID ")
+                        .append(std::to_string(bd_id)), SDK_RET_ERR);
+        }
+        subnet_obj_uptr_t subnet_obj_uptr (new subnet_obj_t(*spec));
+        state_ctxt.state()->subnet_store().add_upd(bd_id, std::move(subnet_obj_uptr));
+        break;
     }
-    subnet_obj_uptr_t subnet_obj_uptr (new subnet_obj_t(*spec));
-    state_ctxt.state()->subnet_store().add_upd(bd_id, std::move(subnet_obj_uptr));
+    case pds_ms_subnet_cache_op_t::MARK_DEL:
+    {
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+        if (subnet_obj == nullptr) {
+            return cleanup;
+        }
+        subnet_obj->properties().spec_invalid = true;
+        break;
+    }
+    case pds_ms_subnet_cache_op_t::REVERT_MARK_DEL:
+    {
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+        if (subnet_obj == nullptr) {
+            return cleanup;
+        }
+        subnet_obj->properties().spec_invalid = false;
+        break;
+    }
+    case pds_ms_subnet_cache_op_t::COMMIT_DEL:
+        cleanup = true;
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+        if (subnet_obj == nullptr) {
+            return cleanup;
+        }
+        if (!subnet_obj->properties().hal_created) {
+            // Let L2F BD stub release the UUID
+            cleanup = false;
+        }
+        state_ctxt.state()->subnet_store().erase(bd_id);
+        break;
+    }
+    return cleanup;
 }
 
 static ms_bd_id_t
@@ -369,15 +425,15 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     try {
         auto bd_id = subnet_uuid_2_idx_alloc(spec->key);
-        cache_subnet_spec (spec, bd_id, false /* Create new*/);
+        cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::CREATE);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
                            spec->key.str(), bd_id, ret_status);
 
-            // Internal BD ID already release - Delete the cached subnet spec
-            cache_subnet_spec (spec, bd_id, true /* Delete */);
+            // Internal BD ID already released - Delete the cached subnet spec
+            cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
         PDS_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed",
@@ -397,15 +453,26 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     try {
         auto bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
+        cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            cache_subnet_spec (spec, bd_id,
+                               pds_ms_subnet_cache_op_t::REVERT_MARK_DEL);
+
             PDS_TRACE_ERR ("Failed to process subnet %s bd %d delete (error=%d)",
                            spec->key.str(), bd_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
 
-        cache_subnet_spec (spec, bd_id, true /* Delete */);
+        if (cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL)) {
+            // Subnet UUID is released by the L2F BD stub usually.
+            // But if L2F BD stub was never invoked for this subnet
+            // for whatever reason then release the UUID here
+            PDS_TRACE_DEBUG ("MS BD %d UUID %s Release", bd_id, spec->key.str());
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(spec->key);
+        }
         PDS_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed",
                          spec->key.str(), bd_id);
 

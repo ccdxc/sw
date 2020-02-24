@@ -21,10 +21,14 @@ namespace pds_ms {
 class subnet_obj_t : public slab_obj_t<subnet_obj_t>,
                      public base_obj_t {
 public:
+    struct properties_t {
+        bool spec_invalid = false;
+        bool hal_created = false;
+    };
     subnet_obj_t(const pds_subnet_spec_t& spec) : pds_spec_(spec) {};
     pds_subnet_spec_t& spec(void) {return pds_spec_;}
     const pds_subnet_spec_t& spec(void) const {return pds_spec_;}
-//    ms_bd_id_t key(void) const {return pds_spec_.key.id;}
+    properties_t& properties() {return prop_;}
 
 public:
     // to store import RTs for ORF support
@@ -33,6 +37,9 @@ public:
 private:  
     pds_subnet_spec_t  pds_spec_;  // PDS owned
                                    // Fields will not be modified by MS HAL Stubs 
+    properties_t prop_;
+
+
 };
 
 class subnet_store_t : public obj_store_t <ms_bd_id_t, subnet_obj_t> {

@@ -365,6 +365,12 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         // Cannot add VPC Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
+        // Ensure that VPC is actually deleted before releasing the VPC UUID
+        if (store_info_.vpc_obj->properties().spec_invalid) {
+            PDS_TRACE_DEBUG ("MS VRF %d UUID %s Release", ips_info_.vrf_id, vpc_uuid.str());
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(vpc_uuid);
+        }
         // Delete the VRF route table
         state_ctxt.state()->route_table_store().erase(make_pds_rttable_key_());
         state_ctxt.state()->vpc_store().erase(ips_info_.vrf_id);
@@ -381,8 +387,6 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
                             " response %s +++++++++",
                             vpc_uuid.str(), vrf_id,
                             (pds_status) ? "Success" : "Failure");
-            auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->remove_uuid(vpc_uuid);
         };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr

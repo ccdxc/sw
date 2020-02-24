@@ -91,28 +91,40 @@ populate_lim_vrf_spec (ms_vrf_id_t      vrf_id,
     req.set_vrfnamelen (vrf_name.length());
 }
 
-static void
+static bool
 pds_cache_vpc_spec (pds_vpc_spec_t *vpc_spec, ms_vrf_id_t vrf_id,
                               bool op_delete)
 {
+    bool cleanup = true;
     auto state_ctxt = pds_ms::state_t::thread_context();
 
     if (op_delete) {
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
-        if (vpc_obj == nullptr) {return;}
+        if (vpc_obj == nullptr) {return cleanup;}
         if (vpc_obj->properties().hal_created) {
             PDS_TRACE_DEBUG("VPC %d already created in HAL - marking for delete",
                             vrf_id);
             vpc_obj->properties().spec_invalid = true;
+            // Let LI VRF stub release the UUID
+            cleanup = false;
         } else {
             PDS_TRACE_DEBUG("VPC %d not created in HAL yet - remove from store",
                             vpc_obj->properties().vrf_id);
             state_ctxt.state()->vpc_store().erase(vpc_obj->properties().vrf_id);
         }
-        return;
+        return cleanup;
     }
-    auto vpc_obj = new pds_ms::vpc_obj_t(vrf_id, *vpc_spec);
+    auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+    if ((vpc_obj != nullptr) &&
+        (vpc_spec->key != vpc_obj->properties().vpc_spec.key)) {
+        throw Error(std::string("Another VPC ")
+                    .append(vpc_obj->properties().vpc_spec.key.str())
+                    .append(" already exists with same internal VRF ID ")
+                    .append(std::to_string(vrf_id)), SDK_RET_ERR);
+    }
+    vpc_obj = new pds_ms::vpc_obj_t(vrf_id, *vpc_spec);
     state_ctxt.state()->vpc_store().add_upd(vrf_id, vpc_obj);
+    return cleanup;
 }
 
 static types::ApiStatus
@@ -284,15 +296,6 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
 
-        if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-            auto ret = li_vrf_underlay_vpc_delete_pds_synch(spec->key);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Error commiting Underlay VPC to HAL");
-                return ret;
-            }
-            pds_cache_vpc_spec(spec, vrf_id, true);
-            return SDK_RET_OK;
-        }
         ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
@@ -302,7 +305,14 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         PDS_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
                          spec->key.str(), vrf_id);
         // Remove cached VPC spec, after successful reply from MS
-        pds_cache_vpc_spec(spec, vrf_id, true);
+        if (pds_cache_vpc_spec(spec, vrf_id, true)) {
+            // VPC UUID is released by the LI VRF stub usually.
+            // But if LI VRF stub was never invoked for this VPC
+            // for whatever reason then release the UUID here
+            PDS_TRACE_DEBUG ("MS VRF %d UUID %s Release", vrf_id, spec->key.str());
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(spec->key);
+        }
 
     } catch (const Error& e) {
         PDS_TRACE_ERR ("VPC %s deletion failed %s", spec->key.str(), e.what());
