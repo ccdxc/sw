@@ -264,7 +264,7 @@ apulu_impl::nacl_init_(void) {
     p4pd_error_t p4pd_ret;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
-    uint32_t idx = PDS_IMPL_NACL_GLOBAL_MIN;
+    uint32_t idx = PDS_IMPL_NACL_BLOCK_GLOBAL_MIN;
 
     // drop all IPv6 traffic
     memset(&key, 0, sizeof(key));
@@ -349,7 +349,7 @@ apulu_impl::nacl_init_(void) {
         goto error;
     }
     // make sure we stayed with in the global entry range in the TCAM table
-    SDK_ASSERT(idx <= PDS_IMPL_NACL_LEARN_MIN);
+    SDK_ASSERT(idx <= PDS_IMPL_NACL_BLOCK_LEARN_MIN);
     return SDK_RET_OK;
 
 error:

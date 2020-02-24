@@ -50,11 +50,13 @@
 #define P4_LIF_TYPE_HOST_MGMT                   5  // host<->arm mgmt. lifs
 
 // NACL table partitioning
-#define PDS_IMPL_NACL_GLOBAL_MIN                0
-#define PDS_IMPL_NACL_GLOBAL_MAX                7
-#define PDS_IMPL_NACL_LEARN_MIN                 8
-#define PDS_IMPL_NACL_LEARN_MAX                 15
-#define PDS_IMPL_NACL_GENERIC_MIN               16
+#define PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MIN    0
+#define PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MAX    7
+#define PDS_IMPL_NACL_BLOCK_GLOBAL_MIN               8
+#define PDS_IMPL_NACL_BLOCK_GLOBAL_MAX               15
+#define PDS_IMPL_NACL_BLOCK_LEARN_MIN                16
+#define PDS_IMPL_NACL_BLOCK_LEARN_MAX                23
+#define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              24
 
 namespace api {
 namespace impl {

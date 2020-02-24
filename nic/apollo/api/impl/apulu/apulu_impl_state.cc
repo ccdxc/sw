@@ -46,7 +46,9 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     SDK_ASSERT(nacl_idxr_ != NULL);
     // pre-allocate indices for the reserved portion of NACL table
     // and manage it separately
-    nacl_idxr_->alloc_block((uint32_t)0, PDS_IMPL_NACL_GENERIC_MIN, false);
+    nacl_idxr_->alloc_block(PDS_IMPL_NACL_BLOCK_GLOBAL_MIN,
+                    PDS_IMPL_NACL_BLOCK_GENERIC_MIN - PDS_IMPL_NACL_BLOCK_GLOBAL_MIN,
+                    false);
 
     // bookkeeping for CoPP table
     p4pd_global_table_properties_get(P4TBL_ID_COPP, &tinfo);

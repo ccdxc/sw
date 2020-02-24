@@ -944,7 +944,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
     nexthop_actiondata_t nh_data = { 0 };
-    uint32_t idx, nacl_idx = PDS_IMPL_NACL_LEARN_MIN;
+    uint32_t idx, nacl_idx = PDS_IMPL_NACL_BLOCK_LEARN_MIN;
 
     snprintf(name_, SDK_MAX_NAME_LEN, "learn%u", lif_num++);
     PDS_TRACE_DEBUG("Creating learn lif %s", name_);
@@ -1054,7 +1054,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
-    SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_GENERIC_MIN);
+    SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_BLOCK_GENERIC_MIN);
 
     // program the LIF table
     ret = program_lif_table(id_, P4_LIF_TYPE_ARM_LEARN,
