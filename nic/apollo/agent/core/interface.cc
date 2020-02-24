@@ -16,12 +16,6 @@ interface_create (pds_if_spec_t *spec,
     sdk_ret_t ret;
     pds_if_info_t info;
 
-    if (pds_if_read(&spec->key, &info) != SDK_RET_ENTRY_NOT_FOUND) {
-        PDS_TRACE_ERR("Failed to create interface {}, interface exists already",
-                      spec->key.str());
-        return sdk::SDK_RET_ENTRY_EXISTS;
-    }
-
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::interface_create(spec, bctxt)) != SDK_RET_OK) {
@@ -30,6 +24,11 @@ interface_create (pds_if_spec_t *spec,
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
+        if (pds_if_read(&spec->key, &info) != SDK_RET_ENTRY_NOT_FOUND) {
+            PDS_TRACE_ERR("Failed to create interface {}, interface "
+                          "exists already", spec->key.str());
+            return sdk::SDK_RET_ENTRY_EXISTS;
+        }
         if ((ret = pds_if_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create interface {}, err {}",
                           spec->key.str(), ret);
@@ -47,12 +46,6 @@ interface_update (pds_if_spec_t *spec,
     sdk_ret_t ret;
     pds_if_info_t info;
 
-    if (pds_if_read(&spec->key, &info) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update interface {}, interface not found",
-                      spec->key.str());
-        return sdk::SDK_RET_ENTRY_EXISTS;
-    }
-
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::interface_update(spec, bctxt)) != SDK_RET_OK) {
@@ -61,6 +54,11 @@ interface_update (pds_if_spec_t *spec,
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
+        if (pds_if_read(&spec->key, &info) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update interface {}, interface not found",
+                          spec->key.str());
+            return sdk::SDK_RET_ENTRY_EXISTS;
+        }
         if ((ret = pds_if_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update interface {}, err {}",
                           spec->key.str(), ret);
@@ -77,12 +75,6 @@ interface_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
     sdk_ret_t ret;
     pds_if_info_t info;
 
-    if (pds_if_read(key, &info) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete interface {}, interface not found",
-                      key->str());
-        return sdk::SDK_RET_ENTRY_EXISTS;
-    }
-
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::interface_delete(&info.spec, bctxt)) != SDK_RET_OK) {
@@ -91,6 +83,11 @@ interface_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
+        if (pds_if_read(key, &info) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to delete interface {}, interface not found",
+                          key->str());
+            return sdk::SDK_RET_ENTRY_EXISTS;
+        }
         if ((ret = pds_if_delete(key, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete interface {}, err {}",
                           key->str(), ret);
