@@ -169,7 +169,7 @@ func testAPICRUDOps() func() {
 				},
 				Spec: network.NetworkSpec{
 					Type:        network.NetworkType_Bridged.String(),
-					IPv4Subnet:  "255.255.255.0",
+					IPv4Subnet:  "10.0.0.0/8",
 					IPv4Gateway: "10.1.1.1",
 				},
 			}
@@ -271,7 +271,7 @@ func testAPICRUDOps() func() {
 				},
 				Spec: network.NetworkSpec{
 					Type:        network.NetworkType_Bridged.String(),
-					IPv4Subnet:  "255.255.255.0",
+					IPv4Subnet:  "10.0.0.0/8",
 					IPv4Gateway: "11.1.1.1",
 				},
 			}
