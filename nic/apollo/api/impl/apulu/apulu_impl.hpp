@@ -35,6 +35,13 @@
 // reserved NAT h/w id
 #define PDS_IMPL_RSVD_NAT_HW_ID                0
 
+// reserved DHCP relay NACL index
+// NOTE:
+// this index must be between PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MIN and
+// PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MAX
+#define PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1     0
+#define PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2     1
+
 // policer refresh interval in micro seconds
 #define PDS_POLICER_DEFAULT_REFRESH_INTERVAL   250
 

@@ -45,10 +45,19 @@
 #define P4_IPADDR_TO_IPADDR(p4_ip_, ip_, af_)                                \
 {                                                                            \
     (ip_).af = (af_);                                                        \
-    if (af_ == IP_AF_IPV6) {                                                 \
+    if ((af_) == IP_AF_IPV6) {                                               \
         sdk::lib::memrev((ip_).addr.v6_addr.addr8, (p4_ip_), IP6_ADDR8_LEN); \
     } else {                                                                 \
         memcpy(&(ip_).addr.v4_addr, (p4_ip_), IP4_ADDR8_LEN);                \
+    }                                                                        \
+}
+
+#define IPADDR_TO_P4_IPADDR(p4_ip_, ip_, af_)                                \
+{                                                                            \
+    if ((af_) == IP_AF_IPV6) {                                               \
+        sdk::lib::memrev(p4_ip_, (ip_)->addr.v6_addr.addr8, IP6_ADDR8_LEN);    \
+    } else {                                                                 \
+        memcpy((p4_ip_), &(ip_)->addr.v4_addr, IP4_ADDR8_LEN);               \
     }                                                                        \
 }
 
