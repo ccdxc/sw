@@ -19,12 +19,14 @@
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/linkmgr/linkmgr_ipc.hpp"
 #include "nic/sdk/linkmgr/linkmgr_internal.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "gen/proto/types.pb.h"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -1157,8 +1159,6 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
-    // hal_handle_t                hal_handle = 0;
-    // if_create_app_ctxt_t        *app_ctxt = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1169,10 +1169,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt = (if_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     hal_if = (if_t *)dhl_entry->obj;
-    // hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("if_id : {}:create commit cb", hal_if->if_id);
 
@@ -1183,10 +1181,8 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    //
-    // Update MirrorSessions info, as needed
-    //
     if (ret == HAL_RET_OK) {
+        // Install mirror for interface
         ret = if_update_mirror_sessions(hal_if);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("if-mirror update failed, ret : {}", ret);
@@ -1428,9 +1424,9 @@ hal_ret_t
 interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    // l2seg_t                     *l2seg = NULL;
-    // lif_t                       *lif = NULL;
     if_t                        *hal_if = NULL;
+    if_t                        *uplink_if = NULL;
+    lif_t                       *lif = NULL;
     if_create_app_ctxt_t        app_ctxt;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
@@ -1544,6 +1540,21 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_create_commit_cb,
                              if_create_abort_cb,
                              if_create_cleanup_cb);
+    if (ret == HAL_RET_OK) {
+        // Installing NCSI NACL
+        if (hal_if->if_type == intf::IF_TYPE_ENIC &&
+            hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+            lif = find_lif_by_handle(hal_if->lif_handle);
+            if (lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+                uplink_if = lif_get_pinned_uplink(lif);
+                ret = acl_install_ncsi_redirect(hal_if, uplink_if);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to install ncsi nacl redirect. err {}", ret);
+                    goto end;
+                }
+            }
+        }
+    }
 
 end:
     if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
@@ -3674,6 +3685,7 @@ enic_if_create (const InterfaceSpec& spec, if_t *hal_if)
             }
             enicif_classic_add_l2seg(hal_if, l2seg);
         }
+
     } else if (hal_if->enic_type == intf::IF_ENIC_TYPE_GFT) {
 
         MAC_UINT64_TO_ADDR(hal_if->mac_addr,
@@ -4085,6 +4097,8 @@ hal_ret_t
 validate_if_delete (if_t *hal_if)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    bool        skip_acl_check = false;
+    lif_t       *lif = NULL;
 
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
@@ -4107,14 +4121,23 @@ validate_if_delete (if_t *hal_if)
         HAL_TRACE_ERR("invalid if type");
     }
 
-    for (unsigned i = 0;
-         (ret == HAL_RET_OK) && i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
-        if (hal_if->acl_list[i]->num_elems()) {
-            ret = HAL_RET_OBJECT_IN_USE;
-            HAL_TRACE_ERR("If delete failure, acls still referring {}:",
-                          static_cast<if_acl_ref_type_t>(i));
-            hal_print_handles_block_list(hal_if->acl_list[i]);
-            goto end;
+    if (hal_if->if_type == intf::IF_TYPE_ENIC &&
+        hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        lif = find_lif_by_handle(hal_if->lif_handle);
+        if (lif && lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+            skip_acl_check = true;
+        }
+    }
+    if (!skip_acl_check) {
+        for (unsigned i = 0;
+             (ret == HAL_RET_OK) && i < SDK_ARRAY_SIZE(hal_if->acl_list); i++) {
+            if (hal_if->acl_list[i]->num_elems()) {
+                ret = HAL_RET_OBJECT_IN_USE;
+                HAL_TRACE_ERR("If delete failure, acls still referring {}:",
+                              static_cast<if_acl_ref_type_t>(i));
+                hal_print_handles_block_list(hal_if->acl_list[i]);
+                goto end;
+            }
         }
     }
 
@@ -4147,6 +4170,7 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *intf = NULL;
+    lif_t                       *lif = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
     if (cfg_ctxt == NULL) {
@@ -4166,6 +4190,11 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("delete del cb {}", intf->if_id);
 
+    if (intf->if_type == intf::IF_TYPE_ENIC && 
+        intf->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        lif = find_lif_by_handle(intf->lif_handle);
+    }
+
     // First of all, delete the interface from all the relevant OIF lists.
     // This needs to be done before the PD call to delete the interface.
     ret = if_update_oif_lists(intf, false);
@@ -4183,8 +4212,23 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
         HAL_TRACE_ERR("Failed to delete if pd, err : {}", ret);
     }
 
-end:
+    if (lif && lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+        // Release write lock
+        hal_handle_cfg_db_lock(false, false);
+        // Take read lock
+        hal_handle_cfg_db_lock(true, true);
+        ret = acl_uninstall_ncsi_redirect();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to uninstall ncsi nacl redirect. err {}", ret);
+            goto end;
+        }
+        // Release read lock
+        hal_handle_cfg_db_lock(true, false);
+         // Take write lock
+        hal_handle_cfg_db_lock(false, true);
+    }
 
+end:
     return ret;
 }
 

@@ -35,6 +35,65 @@ acl_get_priority(acl_t *pi_acl)
     return pi_acl->priority;
 }
 
+
+// ----------------------------------------------------------------------------
+// Install NCSI redirect to oob_mnic0
+// ----------------------------------------------------------------------------
+hal_ret_t
+acl_install_ncsi_redirect (if_t *oob_mnic_enic, if_t *oob_uplink_if)
+{
+    hal_ret_t        ret;
+    AclSpec          spec;
+    AclResponse      rsp;
+    AclSelector      *match;
+    AclActionInfo    *action;
+    uint32_t         acl_id;
+    uint32_t         priority;
+
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID;
+    priority = ACL_NCSI_OOB_REDIRECT_PRIORITY;
+
+    match = spec.mutable_match();
+    action = spec.mutable_action();
+    spec.mutable_key_or_handle()->set_acl_id(acl_id);
+    spec.set_priority(priority);
+
+    // Action
+    action->set_action(acl::AclAction::ACL_ACTION_REDIRECT);
+    action->mutable_redirect_if_key_handle()->set_interface_id(oob_mnic_enic->if_id);
+
+    // Selector
+    match->mutable_src_if_key_handle()->set_interface_id(oob_uplink_if->if_id);
+    match->mutable_eth_selector()->set_eth_type(ETH_TYPE_NCSI);
+    match->mutable_eth_selector()->set_eth_type_mask(0xffff);
+
+    HAL_TRACE_DEBUG("Installing ACL for bcast-arp");
+    ret = hal::acl_create(spec, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to install bcast arp. err: {}", ret);
+    }
+    return ret;
+}
+hal_ret_t
+acl_uninstall_ncsi_redirect (void)
+{
+    hal_ret_t           ret;
+    AclDeleteRequest    req;
+    AclDeleteResponse   rsp;
+    uint32_t            acl_id;
+
+
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID;
+    req.mutable_key_or_handle()->set_acl_id(acl_id);
+
+    HAL_TRACE_DEBUG("UnInstalling ACL for ncsi redirect");
+    ret = hal::acl_delete(req, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall ncsi redirect. err: {}", ret);
+    }
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Install Bcast all
 // ----------------------------------------------------------------------------

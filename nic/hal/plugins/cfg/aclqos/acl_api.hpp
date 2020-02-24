@@ -33,6 +33,7 @@ hal_ret_t acl_install_mcast_mld_lr(if_t *hal_if);
 hal_ret_t acl_install_mcast_mld_ld(if_t *hal_if);
 hal_ret_t acl_install_mcast_ipv6_nsol(if_t *hal_if);
 hal_ret_t acl_install_mcast_all(if_t *hal_if);
+hal_ret_t acl_install_ncsi_redirect(if_t *oob_mnic_enic, if_t *oob_uplink_if);
 
 hal_ret_t acl_uninstall_bcast_all(if_t *hal_if);
 hal_ret_t acl_uninstall_bcast_arp(if_t *hal_if);
@@ -51,6 +52,7 @@ hal_ret_t acl_uninstall_mcast_mld_lr(if_t *hal_if);
 hal_ret_t acl_uninstall_mcast_mld_ld(if_t *hal_if);
 hal_ret_t acl_uninstall_mcast_ipv6_nsol(if_t *hal_if);
 hal_ret_t acl_uninstall_mcast_all(if_t *hal_if);
+hal_ret_t acl_uninstall_ncsi_redirect(void);
 
 // Micro seg init
 hal_ret_t hal_acl_micro_seg_init(void);

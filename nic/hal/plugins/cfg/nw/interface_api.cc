@@ -633,7 +633,9 @@ inband_mgmt_get_active_if (void)
     }
 
 end:
-    fclose(fptr);
+    if (fptr) {
+        fclose(fptr);
+    }
     return act_if;
 }
 

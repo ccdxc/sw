@@ -425,11 +425,13 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                         as->int_as.tnnl_vnid;
                     data.action_u.nacl_nacl_permit.tunnel_originate = 1;
                 } else {
-                    // support only non-native segments for DOL testing
-                    data.action_u.nacl_nacl_permit.tunnel_vnid =
-                        as->int_as.tnnl_vnid;
-                    data.action_u.nacl_nacl_permit.tunnel_rewrite_index =
-                        g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+                    if (as->int_as.tnnl_vnid != 0) {
+                        // support only non-native segments for DOL testing
+                        data.action_u.nacl_nacl_permit.tunnel_vnid =
+                            as->int_as.tnnl_vnid;
+                        data.action_u.nacl_nacl_permit.tunnel_rewrite_index =
+                            g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
+                    }
                 }
 #endif
             }

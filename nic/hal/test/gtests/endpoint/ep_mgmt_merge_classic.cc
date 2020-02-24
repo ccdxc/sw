@@ -387,6 +387,13 @@ TEST_F(ep_mgmt_merge_classic_test, test1)
     ASSERT_EQ(create_enic(enic_oob, oob_lifid, intf::IF_ENIC_TYPE_CLASSIC,
                           0, 0, l2seg_id_cl_up3), HAL_RET_OK);
 
+    // Delete enic
+    ASSERT_EQ(delete_enic(enic_oob), HAL_RET_OK);
+
+    // Create enic back
+    ASSERT_EQ(create_enic(enic_oob, oob_lifid, intf::IF_ENIC_TYPE_CLASSIC,
+                          0, 0, l2seg_id_cl_up3), HAL_RET_OK);
+
     // Create Classic EPs
     ASSERT_EQ(create_ep(vrf_id_cl_up1, l2seg_id_cl_up1, enic_inb1, 0x000010002001), HAL_RET_OK);
     ASSERT_EQ(create_ep(vrf_id_cl_up2, l2seg_id_cl_up2, enic_inb2, 0x000010002002), HAL_RET_OK);
