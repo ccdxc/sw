@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_stooge.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
 
 namespace api {
@@ -79,6 +80,17 @@ public:
     virtual sdk_ret_t populate_msg(pds_msg_t *msg,
                                    api_obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     activate the epoch in the dataplane by programming
+    ///            stage 0 tables, if any
+    /// \param[in] epoch    epoch being activated
+    /// \param[in] api_op   api operation
+    /// \param[in] orig_obj old/original version of the unmodified object
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
+                                      api_obj_ctxt_t *obj_ctxt) override;
+
     /// \brief          read config
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -134,6 +146,9 @@ private:
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;
+
+    ///< impl object instance
+    impl_base     *impl_;
 
     /// dhcp_state is friend of dhcp_relay
     friend class dhcp_state;

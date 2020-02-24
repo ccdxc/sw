@@ -48,8 +48,8 @@ public:
     /// \brief Factory method to instantiate an impl object
     ///
     /// \param[in] impl Object id
-    /// \param[in] args Args (not interpreted by this class)
-    static impl_base *factory(impl_obj_id_t obj_id, void *args);
+    /// \param[in] spec     configuration spec (not interpreted by this class)
+    static impl_base *factory(impl_obj_id_t obj_id, void *spec);
 
     /// \brief Release all the resources associated with this object
     ///

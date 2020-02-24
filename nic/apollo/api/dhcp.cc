@@ -21,6 +21,7 @@ namespace api {
 
 // DHCP relay API implementation
 dhcp_relay::dhcp_relay() {
+    impl_ = NULL;
     ht_ctxt_.reset();
 }
 
@@ -35,6 +36,11 @@ dhcp_relay::factory(pds_dhcp_relay_spec_t *spec) {
     relay = dhcp_db()->alloc_relay();
     if (relay) {
         new (relay) dhcp_relay();
+        relay->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_DHCP_RELAY, spec);
+        if (relay->impl_ == NULL) {
+            dhcp_relay::destroy(relay);
+            return NULL;
+        }
     }
     return relay;
 }
@@ -100,6 +106,12 @@ dhcp_relay::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
         msg->cfg_msg.dhcp_relay.spec = obj_ctxt->api_params->dhcp_relay_spec;
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_relay::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 void
