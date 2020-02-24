@@ -1,0 +1,74 @@
+meta:
+    name    : rdma_longevity
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox ]
+    targetcount : 150
+
+testcases:
+    #=======================================
+    # Init
+    #=======================================
+    -   name    : Build_Rdma
+        testcase: testcases.rdma.build_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Insmod_Rdma
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test, Multiple QPs, All Msgs
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_MultiQPs
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8, 125]
+            duration : [28800]
+            size     : [65536]
+            numsges  : [4, 8, 16]
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            port_flap: ['true']
+        args    :
+            type: remote_only
+
+    #==========================================
+    # 4K QPs with Krping in parallel
+    #==========================================
+    -   name    : Rc_Bw_4k_qps_with_krping
+        testcase: testcases.rdma.rdma_perf_krping
+        stress  : True
+        iterators :
+            type     : nested
+            server_inv: ['yes']
+            local_dma_lkey: ['yes']
+            size     : [65536]
+            num_qp   : [125]
+            threads  : [32]
+            bidir    : ['yes']
+            mtu      : [4096]
+            size     : [64512]
+            duration : [28800]
+            numsges  : [16]
+            command  : ['ib_read_bw']
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only

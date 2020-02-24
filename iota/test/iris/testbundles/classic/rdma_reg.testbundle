@@ -417,6 +417,25 @@ testcases:
             numsges  : [16]
             command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
 
+    #==========================================
+    # 4K QPs with Krping in parallel
+    #==========================================
+    -   name    : Rc_Bw_4k_qps_with_krping
+        testcase: testcases.rdma.rdma_perf_krping
+        stress  : True
+        iterators :
+            type     : nested
+            server_inv: ['yes']
+            local_dma_lkey: ['yes']
+            size     : [65536]
+            num_qp   : [125]
+            threads  : [32]
+            bidir    : ['yes']
+            mtu      : [4096]
+            size     : [64512]
+            duration : [1200]
+            numsges  : [16]
+            command  : ['ib_read_bw']
 
     #=======================================
     # Teardown
