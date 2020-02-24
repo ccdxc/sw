@@ -26,14 +26,26 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${SCRIPTS_SRC:="$TOP/platform/tools/drivers-esx"}
 : ${VIB_GEN:="$TOP/platform/tools/gen_esx_vib.py"}
 : ${VIB:="$TOP/platform/drivers/esxi/vib/"}
-
-# Products generated
-: ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth"}
-#This has to be updated once ESX version is built
 : ${DRIVERS_SRC:="$TOP/platform/drivers/"}
 : ${ESXI_VIB_SRC:="$TOP/platform/drivers/"}
-: ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
-: ${GEN_PKG:="$GEN_DIR.tar.xz"}
+
+# Products generated
+# This has to be updated once ESX version is built
+
+if [ $1 -eq 67 ]
+then
+    : ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth"}
+    : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
+    : ${GEN_PKG:="$GEN_DIR.tar.xz"}
+elif [ $1 -eq 65 ]
+then
+    : ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth-65"}
+    : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
+    : ${GEN_PKG:="$GEN_DIR.tar.xz"}
+else
+    echo "Bad argument, should be 67 or 65"
+    exit
+fi
 
 # Always start clean
 rm -rf "$GEN_DIR"
@@ -73,4 +85,5 @@ cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"
 
 #Finally generate vib too
-"$VIB_GEN" --drivers-pkg $GEN_PKG
+"$VIB_GEN" --drivers-pkg $GEN_PKG --vib-version $1
+

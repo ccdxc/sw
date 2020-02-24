@@ -76,7 +76,8 @@ package-ionic:
 .PHONY: package-esx
 package-esx:
 	@echo "Building ESX IONIC driver package."
-	${TOPDIR}/platform/tools/drivers-esx.sh
+	${TOPDIR}/platform/tools/drivers-esx.sh 65
+	${TOPDIR}/platform/tools/drivers-esx.sh 67
 
 .PHONY: package-ipxe
 package-ipxe:
