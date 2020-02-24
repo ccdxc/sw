@@ -641,14 +641,16 @@ enum txq_desc_opcode {
  *                      is calculated starting at @csum_start bytes
  *                      into the packet to the end of the packet.
  *                      The checksum insertion position is given
- *                      in @csum_offset.  This feature is only
- *                      applicable to protocols such as TCP, UDP
- *                      and ICMP where a standard (i.e. the
- *                      'IP-style' checksum) one's complement
- *                      16-bit checksum is used, using an IP
- *                      pseudo-header to seed the calculation.
- *                      Software will preload the L4 checksum
- *                      field with the IP pseudo-header checksum.
+ *                      in @csum_offset, which is the offset from
+ *                      @csum_start to the checksum field in the L4
+ *                      header.  This feature is only applicable to
+ *                      protocols such as TCP, UDP and ICMP where a
+ *                      standard (i.e. the 'IP-style' checksum)
+ *                      one's complement 16-bit checksum is used,
+ *                      using an IP pseudo-header to seed the
+ *                      calculation.  Software will preload the L4
+ *                      checksum field with the IP pseudo-header
+ *                      checksum.
  *
  *                      For tunnel encapsulation, @csum_start and
  *                      @csum_offset refer to the inner L4
@@ -729,8 +731,8 @@ enum txq_desc_opcode {
  *                inner-most L4 header.
  * @mss:          Desired MSS value for TSO.  Only applicable for
  *                TXQ_DESC_OPCODE_TSO.
- * @csum_start:   Offset into inner-most L3 header of checksum
- * @csum_offset:  Offset into inner-most L4 header of checksum
+ * @csum_start:   Offset from packet to first byte checked in L4 checksum.
+ * @csum_offset:  Offset from csum_start to L4 checksum field.
  */
 
 #define IONIC_TXQ_DESC_OPCODE_MASK		0xf
