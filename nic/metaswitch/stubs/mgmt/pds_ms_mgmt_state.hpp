@@ -121,7 +121,7 @@ public:
         uuid_pending_delete_.clear();
     }
     void set_pending_uuid_delete(const pds_obj_key_t& uuid) {
-        PDS_TRACE_VERBOSE("UUID %s in pending Delete list", uuid.str());
+        PDS_TRACE_DEBUG("UUID %s in pending Delete list", uuid.str());
         uuid_pending_delete_.push_back(uuid);
     }
     // Commit all pending UUID operations to permanent store
@@ -134,14 +134,14 @@ public:
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
     void set_rt_pending_add(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
-        PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
-                          rt2str(rt_str), type, id);
+        PDS_TRACE_DEBUG("Push RT %s (type=%d, id=%d) to add list",
+                         rt_str, type, id);
         rt_pending_add_.emplace_back(rt_str, type, id);
     }
     void set_rt_pending_delete(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
-        PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
-                          rt2str(rt_str), type, id);
+        PDS_TRACE_DEBUG("Push RT %s (type=%d, id=%d) to del list",
+                         rt_str, type, id);
         rt_pending_delete_.emplace_back(rt_str, type, id);
     }
     void clear_rt_pending() {

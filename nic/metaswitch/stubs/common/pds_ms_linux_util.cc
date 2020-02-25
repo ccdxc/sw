@@ -40,17 +40,17 @@ get_linux_intf_mac_addr (const std::string& if_name, mac_addr_t& if_mac)
     }
 
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        PDS_TRACE_VERBOSE ("Looping Linux interfaces - current %s", ifa->ifa_name);
+        PDS_TRACE_VERBOSE("Looping Linux interfaces - current %s", ifa->ifa_name);
 
         if (if_name == ifa->ifa_name) {
-            PDS_TRACE_VERBOSE ("Found %s - get MAC", ifa->ifa_name);
             SDK_ASSERT(ifa->ifa_addr);
             SDK_ASSERT(ifa->ifa_addr->sa_family == AF_PACKET);
 
             struct sockaddr_ll *sock_addr = (struct sockaddr_ll*)ifa->ifa_addr;
             SDK_ASSERT(sock_addr->sll_halen == ETH_ADDR_LEN);
             memcpy (if_mac, sock_addr->sll_addr, ETH_ADDR_LEN);
-
+            PDS_TRACE_DEBUG("Found %s - get MAC %s", ifa->ifa_name,
+                             macaddr2str(if_mac));
             ret = true;
             goto exit;
         }
@@ -205,12 +205,12 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
             if (errno == EAGAIN) {
                 // Exit thread on timeout to avoid permanently waiting in case 
                 // the netlink request never went through
-                PDS_TRACE_INFO ("Netlink Recv Timeout");
+                PDS_TRACE_INFO("Netlink Recv Timeout");
                 return;
             }
             // Some socket error - try again
-            PDS_TRACE_VERBOSE("Netlink Recv socket error %s %d, try again", 
-                              strerror(errno), errno);
+            PDS_TRACE_ERR("Netlink Recv socket error %s %d, try again", 
+                          strerror(errno), errno);
             continue;
         }
         auto nlhdr = (struct nlmsghdr *) netlink_rcv_buf_;
@@ -219,18 +219,18 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
                 PDS_TRACE_VERBOSE("Received a non-ack Netlink message");
                 continue;
             }
-            PDS_TRACE_INFO ("Netlink Recv response len %ld", rtn);
+            PDS_TRACE_INFO("Netlink Recv response len %ld", rtn);
             auto nle = (struct nlmsgerr *) NLMSG_DATA(nlhdr);
             nlhdr = &(nle->msg);
             if (!((nlhdr->nlmsg_seq == seq) && (nlhdr->nlmsg_pid == pid))) { 
-                PDS_TRACE_VERBOSE ("Netlink Recv unknown msg pid %ld seq %lld exp pid %ld seq %lld", 
+                PDS_TRACE_VERBOSE("Netlink Recv unknown msg pid %ld seq %lld exp pid %ld seq %lld", 
                                    nlhdr->nlmsg_pid, nlhdr->nlmsg_seq, pid, seq); 
                 continue;
             }
             if (nle->error == 0) {
-                PDS_TRACE_DEBUG ("Netlink Recv Status %s %d", strerror(nle->error), nle->error);
+                PDS_TRACE_DEBUG("Netlink Recv Status %s %d", strerror(nle->error), nle->error);
             } else {
-                PDS_TRACE_ERR ("Netlink Recv ERROR %s %d", strerror(nle->error), nle->error);
+                PDS_TRACE_ERR("Netlink Recv ERROR %s %d", strerror(nle->error), nle->error);
             }
             return;
         }

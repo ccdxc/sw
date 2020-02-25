@@ -162,8 +162,8 @@ interface_uuid_fetch(const pds_obj_key_t& key, bool del_op = false)
                     .append(" in Interface request"), SDK_RET_INVALID_ARG);
     }
     auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
-    PDS_TRACE_VERBOSE("Fetched Interface UUID %s MSIfindex 0x%X",
-                      key.str(), interface_uuid_obj->ms_id());
+    PDS_TRACE_DEBUG("Fetched Interface UUID %s MSIfindex 0x%X",
+                     key.str(), interface_uuid_obj->ms_id());
     if (del_op) {
         mgmt_ctxt.state()->set_pending_uuid_delete(key);
     }
@@ -182,7 +182,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
            auto eth_ifindex = api::objid_from_uuid(spec->l3_if_info.port);
 
             ms_ifindex = pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
-            PDS_TRACE_INFO ("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",
+            PDS_TRACE_INFO("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",
                             spec->key.str(), eth_ifindex, ms_ifindex);
 
             l3_intf_create(spec->key, ms_ifindex, eth_ifindex);
@@ -192,14 +192,14 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 
         } else if (spec->type == PDS_IF_TYPE_LOOPBACK) {
             ms_ifindex = pds_to_ms_ifindex(LOOPBACK_IF_ID, IF_TYPE_LOOPBACK);
-            PDS_TRACE_INFO ("Loopback Intf Create:: UUID %s to MS[0x%X]]",
+            PDS_TRACE_INFO("Loopback Intf Create:: UUID %s to MS[0x%X]]",
                             spec->key.str(),  ms_ifindex);
 
             // Cache Intf UUID to MS IfIndex
             interface_uuid_alloc(spec->key, ms_ifindex);
         } else {
             PDS_TRACE_DEBUG("Ignoring unknown interface %s type %d",
-                          spec->key.str(), spec->type);
+                             spec->key.str(), spec->type);
             return SDK_RET_OK;
         }
  

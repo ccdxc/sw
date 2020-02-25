@@ -27,7 +27,7 @@ mgmt_state_t::mgmt_state_t(void) {
 
 void mgmt_state_t::commit_pending_uuid() {
     for (auto& uuid_pair: uuid_pending_create_) {
-        PDS_TRACE_VERBOSE("Commit create UUID %s", uuid_pair.first.str());
+        PDS_TRACE_DEBUG("Commit create UUID %s", uuid_pair.first.str());
         uuid_store_[uuid_pair.first] = std::move(uuid_pair.second);
     }
     uuid_pending_create_.clear();
@@ -39,7 +39,7 @@ void mgmt_state_t::commit_pending_uuid() {
         // NOTE - Assumption that the deleted UUID will not be
         //        used again for Create immediately
         if (uuid_it->second->delay_release()) continue;
-        PDS_TRACE_VERBOSE("Commit delete UUID %s", uuid.str());
+        PDS_TRACE_DEBUG("Commit delete UUID %s", uuid.str());
         uuid_store_.erase(uuid_it);
     }
     uuid_pending_delete_.clear();
@@ -81,10 +81,10 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
 void mgmt_state_t::set_pending_uuid_create(const pds_obj_key_t& uuid, 
                              uuid_obj_uptr_t&& obj) {
     if (lookup_uuid(uuid) != nullptr) {
-        PDS_TRACE_VERBOSE("Cannot create existing UUID %s", uuid.str());
+        PDS_TRACE_DEBUG("Cannot create existing UUID %s", uuid.str());
         return;
     }
-    PDS_TRACE_VERBOSE("UUID %s in pending Create list", uuid.str());
+    PDS_TRACE_DEBUG("UUID %s in pending Create list", uuid.str());
     uuid_pending_create_[uuid] = std::move(obj);
 }
 

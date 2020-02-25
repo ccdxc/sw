@@ -51,8 +51,8 @@ struct lif_walk_ctxt_t {
 bool lif_walk_cb(void* obj, void* ctxt) {
     auto lif =  (api::impl::lif_impl *) obj;
     auto lif_ctxt = (lif_walk_ctxt_t *) ctxt;
-    PDS_TRACE_VERBOSE("Pinned uplink 0x%x Ifname %s",
-                      lif->pinned_ifindex(), lif->name());
+    PDS_TRACE_DEBUG("Pinned uplink 0x%x Ifname %s",
+                     lif->pinned_ifindex(), lif->name());
     if (lif->pinned_ifindex() == lif_ctxt->pds_ifindex) {
         lif_ctxt->ifname = lif->name();
         return true;
@@ -67,7 +67,7 @@ pds_ifindex_to_ifname (uint32_t pds_ifindex)
     ctxt.pds_ifindex = pds_ifindex;
 
     if (lif_db() != nullptr) {
-        PDS_TRACE_VERBOSE("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
+        PDS_TRACE_DEBUG("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
         lif_db()->walk(lif_walk_cb, &ctxt);
         if (!ctxt.ifname.empty()) {
             PDS_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());

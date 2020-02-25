@@ -411,8 +411,8 @@ subnet_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
                     .append(" in Subnet request"), SDK_RET_INVALID_ARG);
     }
     auto subnet_uuid_obj = (subnet_uuid_obj_t*) uuid_obj;
-    PDS_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d",
-                      key.str(), subnet_uuid_obj->ms_id());
+    PDS_TRACE_DEBUG("Fetched Subnet UUID %s = BD %d",
+                     key.str(), subnet_uuid_obj->ms_id());
     if (del_op) {
         mgmt_ctxt.state()->set_pending_uuid_delete(key);
     }

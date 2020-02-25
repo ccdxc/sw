@@ -127,7 +127,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
     } else {
         // Update request but no change in the fields we are
         // interested in
-        PDS_TRACE_VERBOSE ("MS If 0x%lx: No-op update", ips_info_.ifindex);
+        PDS_TRACE_DEBUG("MS If 0x%lx: No-op update", ips_info_.ifindex);
         return false;
     }
     // Update the local store info context so that the make_pds_spec

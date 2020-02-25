@@ -228,8 +228,8 @@ vpc_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
                     .append(" in VPC request"), SDK_RET_INVALID_ARG);
     }
     auto vpc_uuid_obj = (vpc_uuid_obj_t*) uuid_obj;
-    PDS_TRACE_VERBOSE("Fetched VPC UUID %s = VRF %d",
-                      key.str(), vpc_uuid_obj->ms_id());
+    PDS_TRACE_DEBUG("Fetched VPC UUID %s = VRF %d",
+                     key.str(), vpc_uuid_obj->ms_id());
     if (del_op) {
         mgmt_ctxt.state()->set_pending_uuid_delete(key);
     }
