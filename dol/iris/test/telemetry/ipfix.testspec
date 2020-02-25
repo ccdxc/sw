@@ -927,7 +927,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
-                vlan            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
@@ -965,7 +965,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
-                vlan            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
@@ -994,7 +994,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0
-                vlan            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
@@ -1032,7 +1032,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0
-                vlan            : 0
+                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
