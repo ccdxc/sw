@@ -2,16 +2,20 @@
 import time
 import iota.harness.api as api
 import iota.test.apulu.utils.pdsctl as pdsctl
+from apollo.config.store import client as EzAccessStoreClient
 
 def verifyFlowLogging(af, workload_pairs):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-
     if af != "ipv4":
         return api.types.status.SUCCESS
     log_file = "/var/log/pensando/vpp_flow.log"
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
+        # skip this node if learning is enabled. Flow logging is not enabled
+        # on learnt VNICs.
+        if EzAccessStoreClient[w1.node_name].IsDeviceLearningEnabled():
+            continue
         api.Logger.info("Checking ping %s <-> %s in vpp flow logs" % (
             w1.ip_address, w2.ip_address))
         command = "date"
