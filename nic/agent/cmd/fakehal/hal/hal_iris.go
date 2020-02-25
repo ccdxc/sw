@@ -128,6 +128,22 @@ func (h Hal) InterfaceDelete(ctx context.Context, req *irisproto.InterfaceDelete
 	}, nil
 }
 
+// InterfaceGet stubbed out
+func (h Hal) InterfaceGet(ctx context.Context, req *irisproto.InterfaceGetRequestMsg) (*irisproto.InterfaceGetResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got InterfaceGet Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.InterfaceGetResponseMsg{
+		Response: []*irisproto.InterfaceGetResponse{
+			{
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+				Spec:      &irisproto.InterfaceSpec{},
+			},
+		},
+	}, nil
+}
+
 // L2SegmentCreate stubbed out
 func (h Hal) L2SegmentCreate(ctx context.Context, req *irisproto.L2SegmentRequestMsg) (*irisproto.L2SegmentResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

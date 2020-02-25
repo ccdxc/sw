@@ -40,6 +40,11 @@ func HandleErr(oper int, apiStatus halapi.ApiStatus, err error, format string) e
 			log.Error(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
 			return errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
 		}
+	case types.Get:
+		if !(apiStatus == halapi.ApiStatus_API_STATUS_OK) {
+			log.Error(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
+			return errors.Wrapf(types.ErrDatapathHandling, "%s | Status: %s", format, apiStatus.String())
+		}
 	}
 	return nil
 }

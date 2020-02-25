@@ -31,7 +31,7 @@ func HandleInterface(infraAPI types.InfraAPI, client halapi.InterfaceClient, ope
 }
 
 func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorToIDMap map[string]uint64) error {
-	intfReqMsg := convertInterface(intf, collectorToIDMap)
+	intfReqMsg := convertInterface(intf, collectorToIDMap, nil)
 	resp, err := client.InterfaceCreate(context.Background(), intfReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
@@ -48,7 +48,23 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 }
 
 func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClient, intf netproto.Interface, collectorToIDMap map[string]uint64) error {
-	intfReqMsg := convertInterface(intf, collectorToIDMap)
+	// Get the InterfaceSpec from HAL and populate the required field
+	intfGetReq := &halapi.InterfaceGetRequestMsg{
+		Request: []*halapi.InterfaceGetRequest{
+			{
+				KeyOrHandle: convertIfKeyHandles(0, intf.Status.InterfaceID)[0],
+			},
+		},
+	}
+
+	getResp, err := client.InterfaceGet(context.Background(), intfGetReq)
+	if getResp != nil {
+		if err := utils.HandleErr(types.Get, getResp.Response[0].ApiStatus, err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
+			return err
+		}
+	}
+
+	intfReqMsg := convertInterface(intf, collectorToIDMap, getResp.Response[0].Spec)
 	resp, err := client.InterfaceUpdate(context.Background(), intfReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
@@ -88,7 +104,7 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	return nil
 }
 
-func convertInterface(intf netproto.Interface, collectorToIDMap map[string]uint64) *halapi.InterfaceRequestMsg {
+func convertInterface(intf netproto.Interface, collectorToIDMap map[string]uint64, spec *halapi.InterfaceSpec) *halapi.InterfaceRequestMsg {
 	var txMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
 	var rxMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
 	for _, c := range intf.Spec.TxCollectors {
@@ -97,6 +113,24 @@ func convertInterface(intf netproto.Interface, collectorToIDMap map[string]uint6
 	for _, c := range intf.Spec.RxCollectors {
 		rxMirrorSessionhandles = append(rxMirrorSessionhandles, convertMirrorSessionKeyHandle(collectorToIDMap[c]))
 	}
+
+	// Use the spec during update
+	if spec != nil {
+		spec.TxMirrorSessions = txMirrorSessionhandles
+		spec.RxMirrorSessions = rxMirrorSessionhandles
+		switch strings.ToLower(intf.Spec.Type) {
+		case "uplink_eth":
+			fallthrough
+		case "uplink_mgmt":
+			return &halapi.InterfaceRequestMsg{
+				Request: []*halapi.InterfaceSpec{
+					spec,
+				},
+			}
+		}
+		return nil
+	}
+
 	switch strings.ToLower(intf.Spec.Type) {
 	case "uplink_eth":
 		return &halapi.InterfaceRequestMsg{

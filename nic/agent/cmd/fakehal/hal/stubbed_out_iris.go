@@ -184,15 +184,6 @@ func (h Hal) LifSetQState(ctx context.Context, req *irisproto.SetQStateRequestMs
 	return nil, nil
 }
 
-// InterfaceGet stubbed out
-func (h Hal) InterfaceGet(ctx context.Context, req *irisproto.InterfaceGetRequestMsg) (*irisproto.InterfaceGetResponseMsg, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got InterfaceGet Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
 // AddL2SegmentOnUplink stubbed out
 func (h Hal) AddL2SegmentOnUplink(ctx context.Context, req *irisproto.InterfaceL2SegmentRequestMsg) (*irisproto.InterfaceL2SegmentResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")
