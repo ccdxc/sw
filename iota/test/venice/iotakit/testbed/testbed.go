@@ -70,6 +70,7 @@ type InstanceParams struct {
 	NicConsolePort string // NIC's console server port
 	NicMgmtIP      string // NIC's oob mgmt port address
 	NodeCimcIP     string // CIMC ip address of the server
+	NodeCimcNcsiIP string // CIMC NCSI ip address of the server
 	NodeServer     string // NodeServer whether server is ucs/hpe
 	Tag            string // Tag to have some clue of the instance
 	Resource       struct {
@@ -760,6 +761,7 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 		NicConsolePort:      node.instParams.NicConsolePort,
 		NicIpAddress:        node.instParams.NicMgmtIP,
 		CimcIpAddress:       node.instParams.NodeCimcIP,
+		CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
 		ServerType:          node.instParams.NodeServer,
 		CimcUsername:        common.DefaultCimcUserName,
 		CimcPassword:        common.DefaultCimcPassword,
@@ -876,6 +878,7 @@ func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 			NicConsolePort:      node.instParams.NicConsolePort,
 			NicIpAddress:        node.instParams.NicMgmtIP,
 			CimcIpAddress:       node.instParams.NodeCimcIP,
+			CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
 			CimcUsername:        common.DefaultCimcUserName,
 			CimcPassword:        common.DefaultCimcPassword,
 			NicUuid:             node.instParams.Resource.NICUuid,
@@ -1313,6 +1316,7 @@ func (tb *TestBed) setupTestBed() error {
 			NicConsolePort:      node.instParams.NicConsolePort,
 			NicIpAddress:        node.instParams.NicMgmtIP,
 			CimcIpAddress:       node.instParams.NodeCimcIP,
+			CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
 			ServerType:          node.instParams.NodeServer,
 			CimcUsername:        common.DefaultCimcUserName,
 			CimcPassword:        common.DefaultCimcPassword,

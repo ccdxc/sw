@@ -228,7 +228,7 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []
 	var agentBinary string
 
 	if reboot {
-		if err := n.RestartNode(""); err != nil {
+		if err := n.RestartNode("", false); err != nil {
 			log.Errorf("Restart node %v failed. Err: %v", n.GetNodeInfo().Name, err)
 			return err
 		}
@@ -305,7 +305,7 @@ func (n *TestNode) CleanUpNode(cfg *ssh.ClientConfig, reboot bool) error {
 
 	if reboot {
 		log.Infof("TOPO SVC | CleanupNode | Restaring TestNode: %v, IPAddress: %v", n.GetNodeInfo().Name, n.GetNodeInfo().IPAddress)
-		err := n.RestartNode("")
+		err := n.RestartNode("", false)
 		if err != nil {
 			return err
 		}

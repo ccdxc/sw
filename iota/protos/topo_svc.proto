@@ -43,6 +43,8 @@ service TopologyApi {
     // Load Node will save, reboot and load context
     rpc ReloadNodes (ReloadMsg) returns (ReloadMsg) {};
 
+    rpc IpmiNodeAction (ReloadMsg) returns (ReloadMsg) {};
+
     // DeleteNodes removes a node from the e2e cluster
     rpc DeleteNodes (NodeMsg) returns (NodeMsg) {};
 
@@ -110,6 +112,8 @@ message ReloadMsg {
     bool skip_restore               = 3;
 
     string restart_method           = 4;
+
+    bool use_ncsi                   = 5;
 }
 
 enum PersonalityType {
@@ -984,6 +988,8 @@ message TestBedNode {
 
     //Don't setup mgmt on naples
     bool no_mgmt                    = 28;                   
+
+    string cimc_ncsi_ip             = 29;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

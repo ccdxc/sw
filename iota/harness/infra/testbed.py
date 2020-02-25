@@ -221,7 +221,8 @@ class _Testbed:
                 node_msg.cimc_ip_address = instance.NodeCimcIP
                 node_msg.cimc_username = getattr(instance,"NodeCimcUsername","admin")
                 node_msg.cimc_password = getattr(instance,"NodeCimcPassword","N0isystem$")
-
+            if getattr(instance, "NodeCimcNcsiIP", "") != "":
+                node_msg.cimc_ncsi_ip = instance.NodeCimcNcsiIP
 
             #If Vlan base not set, ask topo server to allocate.
             if not getattr(self.__tbspec, "TestbedVlanBase", None):

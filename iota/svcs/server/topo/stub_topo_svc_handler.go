@@ -66,8 +66,8 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 	return req, nil
 }
 
-// IpmiNodeControl runs any ipmi power command on node
-func (*StubTopologyService) IpmiNodeControl(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
+// IpmiNodeAction runs any ipmi power command on node
+func (*StubTopologyService) IpmiNodeAction(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
 	resp := &iota.ReloadMsg{}
 	return resp, nil
 }

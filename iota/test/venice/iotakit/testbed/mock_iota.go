@@ -278,6 +278,12 @@ func (ms *mockIotaServer) ReloadNodes(ctx context.Context, req *iota.ReloadMsg) 
 	return req, nil
 }
 
+func (ms *mockIotaServer) IpmiNodeAction(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
+	log.Debugf("IpmiNodeAction(): Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 func (ms *mockIotaServer) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Debugf("AddWorkloads(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

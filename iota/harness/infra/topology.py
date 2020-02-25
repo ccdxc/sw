@@ -321,10 +321,11 @@ class Node(object):
             cimc_ip = getattr(self._Node__inst,"NodeCimcIP","")
             if cimc_ip == "":
                 return None
-            return Node.CimcInfo(cimc_ip, 
-                                 getattr(self._Node__inst.Resource, "NodeCimcNcsiIP", ""),
+            node = Node.CimcInfo(cimc_ip, 
+                                 getattr(self._Node__inst,"NodeCimcNcsiIP", ""),
                                  getattr(self._Node__inst,"NodeCimcUsername","admin"),
                                  getattr(self._Node__inst,"NodeCimcPassword","N0isystem$"))
+            return node
         except:
             Logger.debug("failed to parse cimc info. error was: {0}".format(traceback.format_exc()))
         return None
@@ -782,11 +783,12 @@ class Topology(object):
     def Nodes(self):
         return self.__nodes.values()
 
-    def IpmiNodes(self, node_names, ipmiMethod):
+    def IpmiNodes(self, node_names, ipmiMethod, useNcsi=False):
         if ipmiMethod not in self.IpmiMethods:
             raise ValueError('ipmiMethod must be one of {0}'.format(self.IpmiMethods))
         req = topo_pb2.ReloadMsg()
         req.restart_method = ipmiMethod
+        req.use_ncsi = useNcsi
         for node_name in node_names:
             if node_name not in self.__nodes:
                 Logger.error("Node %s not found" % node_name)
@@ -795,17 +797,18 @@ class Topology(object):
             msg = req.node_msg.nodes.add()
             msg.name = node_name
 
-        resp = api.IpmiNodeControl(req)
+        resp = api.IpmiNodeAction(req)
         if not api.IsApiResponseOk(resp):
             return types.status.FAILURE
 
         return types.status.SUCCESS
 
-    def RestartNodes(self, node_names, restartMethod=RestartMethodAuto):
+    def RestartNodes(self, node_names, restartMethod=RestartMethodAuto, useNcsi=False):
         if restartMethod not in self.RestartMethods:
             raise ValueError('restartMethod must be one of {0}'.format(self.RestartMethods))
         req = topo_pb2.ReloadMsg()
         req.restart_method = restartMethod
+        req.use_ncsi = useNcsi
         for node_name in node_names:
             if node_name not in self.__nodes:
                 Logger.error("Node %s not found" % node_name)

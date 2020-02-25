@@ -35,6 +35,7 @@ type TestNode struct {
 	CimcUserName string
 	CimcPassword string
 	CimcIP       string
+	CimcNcsiIp   string
 	info         NodeInfo
 	//Use when workload are local managed rather than agent
 	controlNode       TestNodeInterface
@@ -131,8 +132,8 @@ type TestNodeInterface interface {
 	AddNode() error
 	GetAgentURL() (string, error)
 	GetNodeIP() (string, error)
-	IpmiNodeControl(name string, restoreState bool, method string) error
-	ReloadNode(name string, restoreState bool, method string) error
+	IpmiNodeControl(name string, restoreState bool, method string, useNcsi bool) error
+	ReloadNode(name string, restoreState bool, method string, useNcsi bool) error
 	SetNodeMsg(*iota.Node)
 	GetNodeMsg(name string) *iota.Node
 	GetNodeInfo() NodeInfo
@@ -179,6 +180,7 @@ type NodeInfo struct {
 	CimcUserName   string
 	CimcPassword   string
 	CimcIP         string
+	CimcNcsiIp     string
 	ApcInfo        *iota.ApcInfo
 	IPAddress      string
 	Username       string

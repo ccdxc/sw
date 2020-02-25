@@ -185,18 +185,27 @@ func (n *TestNode) GetNodeIP() (string, error) {
 	return ip, nil
 }
 
-func (n *TestNode) IpmiNodeCommand(method string) error {
-	var addr, ip string
+func (n *TestNode) IpmiNodeCommand(method string, useNcsi bool) error {
+	var addr, ip, cimcIp string
 	var err error
 	var sshCfg *ssh.ClientConfig
 
 	log.Infof("using ipmi command %s on node %s", method, n.Node.Name)
-	if n.CimcIP == "" {
+	if n.info.CimcIP == "" {
 		log.Errorf("user requested ipmi command but no cimc ip in node object")
 		return err
 	}
+	if useNcsi {
+		if n.info.CimcNcsiIp == "" {
+			log.Errorf("user requested ncsi, but no ncsi ip specified for node %s", n.Node.Name)
+			return err
+		}
+		cimcIp = n.info.CimcNcsiIp
+	} else {
+		cimcIp = n.info.CimcIP
+	}
 	cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power %s",
-		n.CimcIP, n.CimcUserName, n.CimcPassword, method)
+		cimcIp, n.info.CimcUserName, n.info.CimcPassword, method)
 
 	splitCmd := strings.Split(cmd, " ")
 	if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
@@ -255,7 +264,7 @@ func inList(src string, list []string) bool {
 }
 
 // ipmi control of node.
-func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string) error {
+func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string, useNcsi bool) error {
 	var agentBinary string
 	var err error
 
@@ -273,7 +282,7 @@ func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string
 		}
 	}
 
-	if err = n.IpmiNodeCommand(method); err != nil {
+	if err = n.IpmiNodeCommand(method, useNcsi); err != nil {
 		log.Errorf("ipmi control of node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
@@ -341,21 +350,31 @@ func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string
 }
 
 //RestartNode Restart node
-func (n *TestNode) RestartNode(method string) error {
+func (n *TestNode) RestartNode(method string, useNcsi bool) error {
 
 	var command string
-	var addr, ip string
+	var addr, ip, cimcIp string
 	var err error
 	var sshCfg *ssh.ClientConfig
 	var nrunner *runner.Runner
 
 	log.Infof("Restarting node: %v", n.info.Name)
 
+	if useNcsi {
+		if n.info.CimcNcsiIp == "" {
+			log.Errorf("user requested ncsi, but no ncsi ip specified for node %s", n.Node.Name)
+			return err
+		}
+		cimcIp = n.info.CimcNcsiIp
+	} else {
+		cimcIp = n.info.CimcIP
+	}
+
 	if method == "" || method == "reboot" {
-		if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
+		if err = n.waitForNodeUp(1); err != nil && n.info.CimcIP != "" {
 			//Node not up, do a cimc reset
 			cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
-				n.CimcIP, n.CimcUserName, n.CimcPassword)
+				cimcIp, n.info.CimcUserName, n.info.CimcPassword)
 
 			splitCmd := strings.Split(cmd, " ")
 			if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
@@ -394,11 +413,11 @@ func (n *TestNode) RestartNode(method string) error {
 		}
 	} else if method == "ipmi" {
 		log.Infof("restarting node %s using ipmi", n.Node.Name)
-		if n.CimcIP == "" {
+		if cimcIp == "" {
 			log.Errorf("user requested ipmi reset but no cimc ip in node object")
 		} else {
 			cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
-				n.CimcIP, n.CimcUserName, n.CimcPassword)
+				cimcIp, n.info.CimcUserName, n.info.CimcPassword)
 
 			splitCmd := strings.Split(cmd, " ")
 			if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
@@ -427,7 +446,7 @@ func (n *TestNode) RestartNode(method string) error {
 				}
 				time.Sleep(2 * time.Minute)
 				cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power on",
-					n.CimcIP, n.CimcUserName, n.CimcPassword)
+					n.info.CimcIP, n.info.CimcUserName, n.info.CimcPassword)
 				splitCmd := strings.Split(cmd, " ")
 				if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
 					log.Errorf("TOPO SVC | Failed to call ipmi power on: %v", stdout)
@@ -479,7 +498,7 @@ func (n *TestNode) RestartNode(method string) error {
 }
 
 // ReloadNode saves and reboots the nodes.
-func (n *TestNode) ReloadNode(name string, restoreState bool, method string) error {
+func (n *TestNode) ReloadNode(name string, restoreState bool, method string, useNcsi bool) error {
 	var agentBinary string
 
 	if n.Node == nil {
@@ -493,7 +512,7 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string) err
 		return err
 	}
 
-	if err = n.RestartNode(method); err != nil {
+	if err = n.RestartNode(method, useNcsi); err != nil {
 		log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
@@ -557,7 +576,7 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string) err
 }
 
 // ReloadNode saves and reboots the nodes.
-func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string) error {
+func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string, useNcsi bool) error {
 	pool, _ := errgroup.WithContext(context.Background())
 	for _, mn := range n.managedNodes {
 		mn := mn
@@ -569,7 +588,7 @@ func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string) 
 					return err
 				}
 
-				err = mn.ReloadNode(name, restoreState, method)
+				err = mn.ReloadNode(name, restoreState, method, useNcsi)
 				if err != nil {
 					return errors.Wrapf(err, "Reload failed for node %v", name)
 				}

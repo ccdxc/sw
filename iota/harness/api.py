@@ -120,6 +120,10 @@ def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
+def IpmiNodeAction(req):
+    Logger.debug("IpmiNodeAction:")
+    return __rpc(req, gl_topo_svc_stub.IpmiNodeAction)
+
 def DoSwitchOperation(req):
     Logger.debug("Doing Switch operation:")
     return __rpc(req, gl_topo_svc_stub.DoSwitchOperation)
@@ -894,11 +898,11 @@ def CopyFromNaples(node_name, files, dest_dir):
 def CopyFromWorkload(node_name, workload_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name, workload_name, files, dest_dir)
 
-def RestartNodes(nodes, restartMode=''):
-    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes,restartMode)
+def RestartNodes(nodes, restartMode='', useNcsi=False):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes,restartMode,useNcsi)
 
-def IpmiNodes(nodes, ipmiMethod):
-    return store.GetTestbed().GetCurrentTestsuite().GetTopology().IpmiNodes(nodes,ipmiMethod)
+def IpmiNodes(nodes, ipmiMethod, useNcsi=False):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().IpmiNodes(nodes,ipmiMethod,useNcsi)
 
 def ReinitForTestsuite():
     return store.GetTestbed().InitForTestsuite()
