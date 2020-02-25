@@ -144,49 +144,55 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 		return nil, false, errInvalidInputType
 	}
 
-	// get user meta from the context
-	userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
-	if !ok || userMeta == nil {
-		a.logger.Errorf("no user present in context passed to alert update operation in alert hook")
-		return nil, false, errNoUserInContext
-	}
-	userSelfLink := (&auth.User{ObjectMeta: *userMeta}).MakeURI("configs", "v1", "auth")
+	// As of today, system does not ack/resolve the alert. Those requests come only from the user. So, avoid
+	// going through the below code if the request comes from API Server.
+	if apiutils.IsUserRequestCtx(ctx) {
+		// get user meta from the context
+		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
+		if !ok || userMeta == nil {
+			a.logger.Errorf("no user present in context passed to alert update operation in alert hook")
+			return nil, false, errNoUserInContext
+		}
+		userSelfLink := (&auth.User{ObjectMeta: *userMeta}).MakeURI("configs", "v1", "auth")
 
-	temp := strings.Split(alert.Status.Reason.GetPolicyID(), "/")
-	if len(temp) != 2 {
-		return nil, false, errInvalidInputType
-	}
-	policyName, policyUUID := temp[0], temp[1]
+		temp := strings.Split(alert.Status.Reason.GetPolicyID(), "/")
+		if len(temp) != 2 {
+			return nil, false, errInvalidInputType
+		}
+		policyName, policyUUID := temp[0], temp[1]
 
-	// these two variables are used in the closures passed to consistent update requirement.
-	flags := alertUpdateFlags{
-		alert:           alert,
-		userSelfLink:    userSelfLink,
-		alertPolicyUUID: policyUUID,
+		// these two variables are used in the closures passed to consistent update requirement.
+		flags := alertUpdateFlags{
+			alert:           alert,
+			userSelfLink:    userSelfLink,
+			alertPolicyUUID: policyUUID,
+		}
+
+		// update alert
+		curAlertObj := &monitoring.Alert{}
+		alertUpdFn := a.getAlertUpdFunc(&flags)
+		reqs := []apiintf.ConstUpdateItem{
+			{Key: key, Func: alertUpdFn, Into: curAlertObj},
+		}
+
+		apKey := (&monitoring.AlertPolicy{
+			ObjectMeta: api.ObjectMeta{Name: policyName, Tenant: alert.GetTenant()},
+		}).MakeKey("monitoring")
+		if err := kv.Get(ctx, apKey, &monitoring.AlertPolicy{}); err == nil {
+			curAlertPolicyObj := &monitoring.AlertPolicy{}
+			polUpdateFn := a.getAlertPolUpdFunc(&flags)
+			reqs = append(reqs, apiintf.ConstUpdateItem{Key: apKey, Func: polUpdateFn, Into: curAlertPolicyObj})
+		}
+		rq, err := apiutils.GetRequirements(ctx)
+		if err != nil {
+			return *curAlertObj, true, err
+		}
+		rq.(apiintf.RequirementSet).NewConsUpdateRequirement(reqs)
+
+		return *curAlertObj, false, nil
 	}
 
-	// update alert
-	curAlertObj := &monitoring.Alert{}
-	alertUpdFn := a.getAlertUpdFunc(&flags)
-	reqs := []apiintf.ConstUpdateItem{
-		{Key: key, Func: alertUpdFn, Into: curAlertObj},
-	}
-
-	apKey := (&monitoring.AlertPolicy{
-		ObjectMeta: api.ObjectMeta{Name: policyName, Tenant: alert.GetTenant()},
-	}).MakeKey("monitoring")
-	if err := kv.Get(ctx, apKey, &monitoring.AlertPolicy{}); err == nil {
-		curAlertPolicyObj := &monitoring.AlertPolicy{}
-		polUpdateFn := a.getAlertPolUpdFunc(&flags)
-		reqs = append(reqs, apiintf.ConstUpdateItem{Key: apKey, Func: polUpdateFn, Into: curAlertPolicyObj})
-	}
-	rq, err := apiutils.GetRequirements(ctx)
-	if err != nil {
-		return *curAlertObj, true, err
-	}
-	rq.(apiintf.RequirementSet).NewConsUpdateRequirement(reqs)
-
-	return *curAlertObj, false, nil
+	return alert, true, nil
 }
 
 func validateAlertDestinationSpec(ad *monitoring.AlertDestinationSpec) error {

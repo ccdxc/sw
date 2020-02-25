@@ -65,12 +65,12 @@ func TestMemDb(t *testing.T) {
 	Assert(t, len(objs) == 1, "invalid number of alert destinations, expected: %v, got: %v", 1, len(objs))
 	Assert(t, mDb.GetAlertDestination("dest-1") != nil, "failed to get alert destination")
 
-	Assert(t, !mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, "p1", "dummy"),
-		"expected no outstanding alerts but found")
-	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", nil),
-		"expected no outstanding alerts but found")
-	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", &api.ObjectRef{}),
-		"expected no outstanding alerts but found")
+	_, found := mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, "p1", "dummy")
+	Assert(t, !found, "expected no outstanding alerts but found")
+	_, found = mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", nil)
+	Assert(t, !found, "expected no outstanding alerts but found")
+	_, found = mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, "p1", "dummy message", &api.ObjectRef{})
+	Assert(t, !found, "expected no outstanding alerts but found")
 
 	alert := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5),
 		monitoring.AlertState_OPEN, "test-alert1",
@@ -81,10 +81,10 @@ func TestMemDb(t *testing.T) {
 
 	// add new alert to the cache
 	mDb.AddOrUpdateAlertToGrps(alert)
-	Assert(t, mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.EventURI), "no outstanding alert found, but expected one")
-	Assert(t, mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert found, but expected one")
+	_, found = mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.EventURI)
+	Assert(t, found, "no outstanding alert found, but expected one")
+	_, found = mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.Message, alert.Status.ObjectRef)
+	Assert(t, found, "no outstanding alert found, but expected one")
 	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
 	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
 		"expected 1 state in cache")
@@ -94,10 +94,10 @@ func TestMemDb(t *testing.T) {
 	// update existing alert to the cache
 	alert.Spec.State = monitoring.AlertState_ACKNOWLEDGED.String()
 	mDb.AddOrUpdateAlertToGrps(alert)
-	Assert(t, mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.EventURI), "no outstanding alert found, but expected one")
-	Assert(t, mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert found, but expected one")
+	_, found = mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.EventURI)
+	Assert(t, found, "no outstanding alert found, but expected one")
+	_, found = mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.Message, alert.Status.ObjectRef)
+	Assert(t, found, "no outstanding alert found, but expected one")
 	Assert(t, len(mDb.alertsByPolicy) == 1, "expected 1 alert policy")
 	Assert(t, len(mDb.alertsByPolicy[fmt.Sprintf("%s.%s", alert.Tenant, alert.Status.Reason.PolicyID)]) == 1,
 		"expected 1 state in cache")
@@ -111,10 +111,10 @@ func TestMemDb(t *testing.T) {
 
 	// delete the alert from cache
 	mDb.DeleteAlertFromGrps(alert)
-	Assert(t, !mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.EventURI), "no outstanding alert expected, but found one")
-	Assert(t, !mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID,
-		alert.Status.Message, alert.Status.ObjectRef), "no outstanding alert expected, but found one")
+	_, found = mDb.AnyOutstandingAlertsByURI(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.EventURI)
+	Assert(t, !found, "no outstanding alert expected, but found one")
+	_, found = mDb.AnyOutstandingAlertsByMessageAndRef(globals.DefaultTenant, alert.Status.Reason.PolicyID, alert.Status.Message, alert.Status.ObjectRef)
+	Assert(t, !found, "no outstanding alert expected, but found one")
 	Assert(t, len(mDb.alertsByPolicy) == 0, "expected 0 alert policy")
 
 	// add the same alert again and delete

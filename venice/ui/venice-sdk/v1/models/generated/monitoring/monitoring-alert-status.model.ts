@@ -22,6 +22,7 @@ export interface IMonitoringAlertStatus {
     'reason'?: IMonitoringAlertReason;
     'acknowledged'?: IMonitoringAuditInfo;
     'resolved'?: IMonitoringAuditInfo;
+    'total-hits'?: number;
     '_ui'?: any;
 }
 
@@ -45,6 +46,8 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     'acknowledged': MonitoringAuditInfo = null;
     /** Username and time at which the alert was resolved. */
     'resolved': MonitoringAuditInfo = null;
+    /** TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the alert instead we update this counter. */
+    'total-hits': number = null;
     public static propInfo: { [prop in keyof IMonitoringAlertStatus]: PropInfoItem } = {
         'severity': {
             enum: MonitoringAlertStatus_severity,
@@ -87,6 +90,11 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
             description:  `Username and time at which the alert was resolved.`,
             required: false,
             type: 'object'
+        },
+        'total-hits': {
+            description:  `TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the alert instead we update this counter.`,
+            required: false,
+            type: 'number'
         },
     }
 
@@ -175,6 +183,13 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
         } else {
             this['resolved'].setValues(null, fillDefaults);
         }
+        if (values && values['total-hits'] != null) {
+            this['total-hits'] = values['total-hits'];
+        } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('total-hits')) {
+            this['total-hits'] = MonitoringAlertStatus.propInfo['total-hits'].default;
+        } else {
+            this['total-hits'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -190,6 +205,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
                 'reason': CustomFormGroup(this['reason'].$formGroup, MonitoringAlertStatus.propInfo['reason'].required),
                 'acknowledged': CustomFormGroup(this['acknowledged'].$formGroup, MonitoringAlertStatus.propInfo['acknowledged'].required),
                 'resolved': CustomFormGroup(this['resolved'].$formGroup, MonitoringAlertStatus.propInfo['resolved'].required),
+                'total-hits': CustomFormControl(new FormControl(this['total-hits']), MonitoringAlertStatus.propInfo['total-hits']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('source') as FormGroup).controls).forEach(field => {
@@ -234,6 +250,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
             this['reason'].setFormGroupValuesToBeModelValues();
             this['acknowledged'].setFormGroupValuesToBeModelValues();
             this['resolved'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['total-hits'].setValue(this['total-hits']);
         }
     }
 }

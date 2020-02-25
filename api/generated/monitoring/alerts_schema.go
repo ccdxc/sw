@@ -71,6 +71,7 @@ var typesMapAlerts = map[string]*api.Struct{
 			"severity":         api.CLIInfo{Path: "Status.Severity", Skip: false, Insert: "", Help: ""},
 			"state":            api.CLIInfo{Path: "Spec.State", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"total-hits":       api.CLIInfo{Path: "Status.TotalHits", Skip: false, Insert: "", Help: ""},
 			"user":             api.CLIInfo{Path: "Status.Acknowledged.User", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"values":           api.CLIInfo{Path: "Status.Reason.MatchedRequirements[].Values", Skip: false, Insert: "", Help: ""},
@@ -278,6 +279,8 @@ var typesMapAlerts = map[string]*api.Struct{
 			"Acknowledged": api.Field{Name: "Acknowledged", CLITag: api.CLIInfo{ID: "acknowledged", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "acknowledged", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuditInfo"},
 
 			"Resolved": api.Field{Name: "Resolved", CLITag: api.CLIInfo{ID: "resolved", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resolved", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AuditInfo"},
+
+			"TotalHits": api.Field{Name: "TotalHits", CLITag: api.CLIInfo{ID: "total-hits", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"monitoring.AuditInfo": &api.Struct{

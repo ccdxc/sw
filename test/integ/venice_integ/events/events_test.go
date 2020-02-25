@@ -898,6 +898,9 @@ func TestEventsAlertEngine(t *testing.T) {
 				eventattrs.Severity_DEBUG.String(),
 				eventattrs.Severity_WARN.String(),
 				eventattrs.Severity_INFO.String()}},
+			{Key: "type", Operator: "equals", Values: []string{
+				eventtypes.SERVICE_STOPPED.String(),
+				eventtypes.LEADER_LOST.String()}},
 		}, []string{})
 
 	alertPolicy2, err = ti.apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
@@ -983,7 +986,7 @@ func TestEventsAlertEngine(t *testing.T) {
 		}
 
 		// wait for the batch interval
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 		// if objRef!=nil, this should increase the hits but not recreate the alerts.
 		// it will recreate alerts otherwise.
 		for i := range recordEvents {
@@ -1062,7 +1065,8 @@ func TestEventsAlertEngine(t *testing.T) {
 
 				if test.expSuccess {
 					for _, alert := range alerts {
-						if alert.Status.Message == test.expMessage {
+						// expecting a hit count of 2 since we duplicated all the events after the batch interval
+						if alert.Status.Message == test.expMessage && alert.Status.TotalHits == 2 {
 							return true, nil
 						}
 					}
@@ -1073,7 +1077,7 @@ func TestEventsAlertEngine(t *testing.T) {
 				}
 
 				return false, fmt.Sprintf("expected: %v, obtained: %v", test, alerts)
-			}, "did not receive the expected alert", string("200ms"), string("20s"))
+			}, "did not receive the expected alert", string("1s"), string("20s"))
 		}
 	}()
 

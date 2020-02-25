@@ -45,6 +45,17 @@ var _ = Describe("alert test", func() {
 		}
 		ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", podName))
 
+		// wait for the pod to be running again and delete it (this should increase total-hits on the existing alert)
+		Eventually(func() bool {
+			out := ts.tu.LocalCommandOutput(fmt.Sprintf(
+				"kubectl get pods  --field-selector=status.phase=Running,spec.nodeName=%s | grep pen-citadel | awk '{print $1}'", serviceStoppedOn))
+			if utils.IsEmpty(out) {
+				return false
+			}
+			ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", strings.TrimSpace(out)))
+			return true
+		}, 60, 1).Should(BeTrue(), "could not find the running pod")
+
 		// ensure the respective alert got generated
 		var alertObjMeta api.ObjectMeta
 		Eventually(func() bool {

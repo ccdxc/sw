@@ -35,7 +35,7 @@ type alertsGroup struct {
 
 // AnyOutstandingAlertsByURI returns true if there an outstanding alert by the given tenant, policy and URI,
 // otherwise false.
-func (m *MemDb) AnyOutstandingAlertsByURI(tenant, policyID, URI string) bool {
+func (m *MemDb) AnyOutstandingAlertsByURI(tenant, policyID, URI string) (string, bool) {
 	m.RLock()
 	defer m.RUnlock()
 
@@ -43,25 +43,26 @@ func (m *MemDb) AnyOutstandingAlertsByURI(tenant, policyID, URI string) bool {
 
 	if alertsByPolicy, found := m.alertsByPolicy[key]; found {
 		if grp, found := alertsByPolicy[monitoring.AlertState_OPEN]; found {
-			if _, ok := grp.grpByEventURI[URI]; ok {
-				return true
+			if aName, ok := grp.grpByEventURI[URI]; ok {
+				return aName, true
 			}
 		}
 
 		if grp, found := alertsByPolicy[monitoring.AlertState_ACKNOWLEDGED]; found {
-			if _, ok := grp.grpByEventURI[URI]; ok {
-				return true
+			if aName, ok := grp.grpByEventURI[URI]; ok {
+				return aName, true
 			}
 		}
 	}
-	return false
+	return "", false
 }
 
 // AnyOutstandingAlertsByMessageAndRef returns true if there an outstanding alert by the given tenant, policy,
 // message and object ref, otherwise false.
-func (m *MemDb) AnyOutstandingAlertsByMessageAndRef(tenant, policyID, message string, objectRef *api.ObjectRef) bool {
+func (m *MemDb) AnyOutstandingAlertsByMessageAndRef(tenant, policyID, message string,
+	objectRef *api.ObjectRef) (string, bool) {
 	if objectRef == nil {
-		return false
+		return "", false
 	}
 
 	m.RLock()
@@ -72,18 +73,18 @@ func (m *MemDb) AnyOutstandingAlertsByMessageAndRef(tenant, policyID, message st
 
 	if alertsByPolicy, found := m.alertsByPolicy[key]; found {
 		if grp, found := alertsByPolicy[monitoring.AlertState_OPEN]; found {
-			if _, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
-				return true
+			if aName, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
+				return aName, true
 			}
 		}
 
 		if grp, found := alertsByPolicy[monitoring.AlertState_ACKNOWLEDGED]; found {
-			if _, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
-				return true
+			if aName, ok := grp.grpByEventMessageAndObjectRef[evtMessageObjRefKey]; ok {
+				return aName, true
 			}
 		}
 	}
-	return false
+	return "", false
 }
 
 // AddOrUpdateAlertToGrps adds the given alert to cache groups.

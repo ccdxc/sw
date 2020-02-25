@@ -2625,6 +2625,14 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "status.total-hits",
+            "description": "TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the alert instead we update this counter.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -7900,6 +7908,14 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "status.total-hits",
+            "description": "TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the alert instead we update this counter.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -13874,6 +13890,11 @@
         "resolved": {
           "$ref": "#/definitions/monitoringAuditInfo",
           "description": "Username and time at which the alert was resolved."
+        },
+        "total-hits": {
+          "type": "integer",
+          "format": "int32",
+          "description": "TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the alert instead we update this counter."
         }
       },
       "description": "Status part of the alert object."

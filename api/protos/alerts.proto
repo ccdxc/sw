@@ -112,6 +112,12 @@ message AlertStatus {
   // Username and time at which the alert was resolved
   AuditInfo Resolved              = 8 [(gogoproto.nullable) = true,
                                        (gogoproto.jsontag) = "resolved, omitempty"];
+
+  // TotalHits on this alert, If there is an exisiting alert for the condition, we do not re-create the
+  // alert instead we update this counter
+  int32 TotalHits                 = 9 [(gogoproto.nullable) = true,
+                                       (gogoproto.jsontag) = "total-hits, omitempty"];
+
 }
 
 // Alert defines an alert object

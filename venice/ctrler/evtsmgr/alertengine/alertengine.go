@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ var (
 	maxRetry                  = 15
 	numAPIClients             = 10
 	alertPolicyUpdateInterval = 10 * time.Second
+	alertUpdateInterval       = 10 * time.Second
 )
 
 //
@@ -88,12 +90,19 @@ type alertEngineImpl struct {
 	eventsQueue               chan *evtsapi.Event       // queue holding events that were not processed due to apiserver connection failure
 	apiClients                *apiClients
 	alertPolicyStatusCounters *alertPolicyStatusCounters
+	alertHitCounter           *alertHitCounter
 }
 
 // alertPolicyStatusCounters represents the alert policy status that needs to be updated with the API server
 type alertPolicyStatusCounters struct {
 	sync.Mutex
 	counters map[string]*apStatusCounters
+}
+
+// alertHitCounter represents the alert total-hit counter that needs to be updated with API server
+type alertHitCounter struct {
+	sync.Mutex
+	counter map[string]int32
 }
 
 // apStatusCounters captures the status counters
@@ -129,12 +138,14 @@ func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, configWatcher
 		eventsQueue:               make(chan *evtsapi.Event, 500),
 		apiClients:                &apiClients{clients: make([]apiclient.Services, 0, numAPIClients)},
 		alertPolicyStatusCounters: &alertPolicyStatusCounters{counters: make(map[string]*apStatusCounters)},
+		alertHitCounter:           &alertHitCounter{counter: make(map[string]int32)},
 	}
 
-	ae.wg.Add(3)
+	ae.wg.Add(4)
 	go ae.createAPIClients(numAPIClients)
 	go ae.processEventsFromQueue()
 	go ae.updateAlertPolicies()
+	go ae.updateAlerts()
 
 	return ae, nil
 }
@@ -210,7 +221,6 @@ func (a *alertEngineImpl) processEvent(reqID string, apCl apiclient.Services, ev
 		memdb.WithEnabledFilter(true))
 
 	if len(alertPolicies) == 0 {
-		a.logger.Infof("found 0 policies to run against the evt: {%s}", evt.Message)
 		return
 	}
 
@@ -391,14 +401,16 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 			},
 			EventURI:  evt.GetSelfLink(),
 			ObjectRef: evt.GetObjectRef(),
+			TotalHits: 1,
 		},
 	}
 	alert.SelfLink = alert.MakeURI("configs", "v1", "monitoring")
 
 	alertCreated, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		// check there is an existing alert from the same event
-		if a.memDb.AnyOutstandingAlertsByURI(alertPolicy.GetTenant(), policyID, evt.GetSelfLink()) {
+		if alertName, found := a.memDb.AnyOutstandingAlertsByURI(alertPolicy.GetTenant(), policyID, evt.GetSelfLink()); found {
 			a.logger.Infof("{req: %s} outstanding alert found that matches the event URI", reqID)
+			a.updateAlertHitCounter(alertPolicy.GetTenant(), alertName) // update total-hits on the alert
 			return false, nil
 		}
 
@@ -412,8 +424,10 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 				}
 			}
 
-			if a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), policyID, message, evt.GetObjectRef()) {
+			if alertName, found := a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), policyID,
+				message, evt.GetObjectRef()); found {
 				a.logger.Infof("{req: %s} outstanding alert found that matches the message and object ref. ", reqID)
+				a.updateAlertHitCounter(alertPolicy.GetTenant(), alertName) // update total-hits on the alert
 				return false, nil
 			}
 		}
@@ -438,6 +452,89 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 	}
 
 	return alertCreated.(bool), err
+}
+
+// updateAlertHitCounter updates the local cache with alert hit counter; and these will be eventually
+// propagated to API server.
+func (a *alertEngineImpl) updateAlertHitCounter(tenant, alertName string) {
+	a.alertHitCounter.Lock()
+	key := fmt.Sprintf("%s:%s", tenant, alertName)
+	if _, found := a.alertHitCounter.counter[key]; !found {
+		a.alertHitCounter.counter[key] = 1
+	} else {
+		a.alertHitCounter.counter[key]++
+	}
+	a.alertHitCounter.Unlock()
+}
+
+// updateAlerts helper function to update total hits on the alert object in the intervals of 10s
+// NOTE: evtsmgr will lose the local cache during restarts, as a result alerts will not updated.
+func (a *alertEngineImpl) updateAlerts() {
+	defer a.wg.Done()
+
+	ticker := time.NewTicker(alertUpdateInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Info("context cancelled, returning from update alert policies")
+			return
+		case <-ticker.C:
+			a.updateAlertsHelper()
+		}
+	}
+}
+
+// helper function to update alerts hit counter
+func (a *alertEngineImpl) updateAlertsHelper() {
+	apCl := a.getAPIClient()
+	if apCl == nil {
+		a.logger.Infof("no API client available, skipping alert policy update")
+		return
+	}
+
+	a.alertHitCounter.Lock()
+	for key, value := range a.alertHitCounter.counter {
+		tmp := strings.Split(key, ":")
+		tenant, alertName := tmp[0], tmp[1]
+		_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			alert, err := apCl.MonitoringV1().Alert().Get(ctx,
+				&api.ObjectMeta{
+					Name:   alertName,
+					Tenant: tenant,
+				}) // get the alert
+			if err != nil {
+				errStatus, _ := status.FromError(err)
+				if errStatus.Code() == codes.NotFound {
+					a.logger.Errorf("local cache reported that the alert found, but it's not found in API server")
+					return nil, nil
+				} else if errStatus.Code() == codes.Unavailable { // API server unavailable, retry in the next interval
+					return nil, nil
+				}
+				return nil, err
+			}
+
+			alert.Status.TotalHits += value
+
+			alert, err = apCl.MonitoringV1().Alert().UpdateStatus(ctx, alert) // update the alert with new counter
+			if err != nil {
+				errStatus, _ := status.FromError(err)
+				a.logger.Debugf("failed to update alert {%v}, increment total-hits by 1, err: %v, %v", alertName, err, errStatus)
+				return nil, err
+			}
+
+			// delete the entry after successful update to avoid backlog of old entries
+			delete(a.alertHitCounter.counter, key)
+
+			return nil, nil
+		}, 2*time.Second, maxRetry)
+
+		if err != nil {
+			a.logger.Errorf("failed to update alert {%v}, increment total-hits by: 1, err: %v", alertName, err)
+		}
+	}
+	a.alertHitCounter.Unlock()
 }
 
 // updateAlertPolicyStatusCounters during alert creation, the respective alert policy needs to be updated
