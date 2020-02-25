@@ -7,8 +7,48 @@
   margin-right: 10px;
 }
 
+.naples-chart-container {
+  margin: 10px 20px;
+  width: 680px;
+}
+
+.naples-card-workloads-container {
+  border: 1px solid black;
+  margin: 20px;
+  min-width: 450px;
+  box-shadow: rgb(181, 146, 227) 0px 0px 3px 0px;
+  border: 1px solid rgb(206, 197, 189);
+
+  .naples-card-workloads-title {
+    font-size: 16px;
+    margin-top: 10px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .naples-card-workloads-table {
+    margin: 10px;
+    max-height: 640px;
+    overflow: auto;
+
+    td {
+      vertical-align: top;
+
+      .naples-workloads-cell {
+        font-size: 12px;
+        width: 100%;
+      }
+    }
+  }
+
+}
+
 .naples-table-container {
   min-height: 600px;
+}
+
+.naples-table-container .ui-table-scrollable-body {
+  overflow-x: hidden;
 }
 
 .naples-row-icon {

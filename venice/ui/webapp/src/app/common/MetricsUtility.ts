@@ -102,6 +102,8 @@ import { Chart } from 'chart.js';
   */
 export class MetricsUtility {
 
+  public static FIVE_MINUTES: number = 5 * 60 * 1000;
+
   public static getStatArrowDirection(prev: number, curr: number): StatArrowDirection {
     if (prev < curr) {
       return StatArrowDirection.UP;
@@ -154,6 +156,34 @@ export class MetricsUtility {
       mergeFunction
     };
     return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector, functionToUse, sortOrder, groupByField), pollingOptions: pollOptions };
+  }
+
+  public static topTenQuery(kind: string, fields: string[], selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.top,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+    groupByField: string = null
+  ): Telemetry_queryMetricsQuerySpec {
+    const topTenQuery: ITelemetry_queryMetricsQuerySpec = {
+      'kind': kind,
+      'name': null,
+      'selector': selector,
+      function: functionToUse,
+      'group-by-field': groupByField,
+      'group-by-time': null,
+      fields: fields != null ? fields : [],
+      'sort-order': sortOrder,
+      'start-time': 'now() - 5m' as any,
+      'end-time': 'now()' as any,
+    };
+    return new Telemetry_queryMetricsQuerySpec(topTenQuery);
+  }
+
+  public static topTenQueryPolling(kind: string, fields: string[], selector: IFieldsSelector = null,
+    functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.top,
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+    groupByField: string = null
+  ): MetricsPollingQuery {
+    return { query: MetricsUtility.topTenQuery(kind, fields, selector, functionToUse, sortOrder, groupByField), pollingOptions: {} };
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment

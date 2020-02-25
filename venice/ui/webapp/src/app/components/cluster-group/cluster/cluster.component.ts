@@ -119,6 +119,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
               'Cluster.UnhealthyNICs': '#e62e71'
             }
           },
+          DisplayLabel: {
+            labelFormat: (label: string) => label.replace(' DSCs', '')
+          },
           FieldSelector: {
             selectedValues: []
           }

@@ -29,7 +29,15 @@ import { forkJoin, Observable, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
+interface ChartData {
+  // macs or ids of the dsc
+  labels: string[];
+  // values of the card
+  datasets: { [key: string]: any}[];
+}
 
 @Component({
   selector: 'app-naples',
@@ -176,6 +184,15 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   workloadList: WorkloadWorkload[] = [];
   searchDSCsCount: number = 0;
 
+  // this map is used to make sure the same card always has the same color
+  dscMacToColorMap: {[key: string]: string} = {};
+  top10CardTelemetryData: ITelemetry_queryMetricsQueryResponse = null;
+  top10CardChartData: ChartData[];
+  top10CardChartOptions: {[key: string]: any}[];
+  chosenCardMac: string;
+  chosenCard: ClusterDistributedServiceCard;
+  ASSOCIATED_WORKLOADS: string = NaplesComponent.NAPLES_FIELD_WORKLOADS;
+
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
@@ -183,11 +200,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     protected workloadService: WorkloadService,
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService
-
   ) {
     super(controllerService, cdr, uiconfigsService);
   }
-
 
   deleteRecord(object: ClusterDistributedServiceCard): Observable<{ body: IClusterDistributedServiceCard | IApiStatus | Error; statusCode: number; }> {
     return this.clusterService.DeleteDistributedServiceCard(object.meta.name);
@@ -209,11 +224,177 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   postNgInit() {
     this.buildAdvSearchCols();
     this.provideCustomOptions();
+    this.getTop10CardsDSCAndActiveSessions();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/dscs' }]
     });
     this.getDSCTotalCount();  // start retrieving data.
+  }
+
+  generateChartOptions (title: string, addSmallestUnit: boolean = false) {
+    const scales = {
+      yAxes: [{
+        ticks: {
+          beginAtZero: true
+        }
+      }]
+    };
+    if (addSmallestUnit) {
+      scales.yAxes[0].ticks['stepSize'] = 1;
+    }
+    return {
+      title: {
+        display: true,
+        text: title,
+        fontSize: 16
+      },
+      responsive: true,
+      scales,
+      legend: {
+        display: true,
+        labels: {
+          boxWidth: 0,
+          fontSize: 12
+        }
+      },
+      hover: {
+        onHover: function(e) {
+          const point = this.getElementAtEvent(e);
+          e.target.style.cursor = (point && point.length) ? 'pointer' : 'default';
+        }
+      },
+      tooltips: {
+        intersect : false,
+        callbacks: {
+          label: function(tooltipItem, data) {
+            return data['datasets'][0]['data'][tooltipItem['index']];
+          }
+        }
+      },
+      onClick: (e, data) => {
+        // only display workloads when cards and workloads are loaded
+        if (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount &&
+            data && data.length > 0 && data[0]) {
+          const index = data[0]._index;
+          const chart = data[0]._chart;
+          if (index >= 0 && chart && chart.config && chart.config.data) {
+            const chartData = chart.config.data;
+            if (chartData.labels.length > 0 && chartData.labels[index] &&
+                this.chosenCardMac !== chartData.labels[index]) {
+              this.chosenCardMac = chartData.labels[index];
+              const card: ClusterDistributedServiceCard =
+                this.dataObjects.find(item => item.spec.id === this.chosenCardMac);
+              if (card) {
+                this.chosenCard = card;
+                if (this.top10CardTelemetryData) {
+                  this.processTop10CardTelemetryData(this.top10CardTelemetryData);
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  generateChartData (labels: string[], values: number[]) {
+    const numOfColors = Utility.allColors.length;
+    const bgColors: string[] = labels.map((label: string, idx: number) => {
+      // selected card has 1 as opacity
+      const opacity = this.matchCardMacToCardId(label) === this.chosenCardMac ? 1 : 0.3;
+      let color = this.dscMacToColorMap[label];
+      if (!color) {
+        const mapSize = Object.keys(this.dscMacToColorMap).length;
+        color = Utility.allColors[mapSize % numOfColors];
+        this.dscMacToColorMap[label] = color;
+      }
+      return Utility.convertHexColorToRGBAColor(color, opacity);
+    });
+    return {
+      labels: labels.map((mac, idx) => this.matchCardMacToCardId(mac)),
+      datasets: [
+          {
+            label: (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount) ?
+              '(Click the bar to see the workloads running on this DSC)' : '',
+            backgroundColor: bgColors,
+            data: values
+          }
+      ]
+    };
+  }
+
+  matchCardMacToCardId (mac: string): string {
+    if (this.dataObjects) {
+      const card: ClusterDistributedServiceCard =
+          this.dataObjects.find(item => item.meta && item.meta.name === mac);
+      if (card) {
+        return card.spec.id;
+      }
+    }
+    return mac;
+  }
+
+  getTop10CardsDSCAndActiveSessions() {
+    const queryList: TelemetryPollingMetricQueries = {
+      queries: [],
+      tenant: Utility.getInstance().getTenant()
+    };
+    const query1: MetricsPollingQuery = MetricsUtility.topTenQueryPolling(
+          'SessionSummaryMetrics', ['TotalActiveSessions']);
+    const query2: MetricsPollingQuery = MetricsUtility.topTenQueryPolling(
+          'FteCPSMetrics', ['ConnectionsPerSecond']);
+    queryList.queries.push(query1);
+    queryList.queries.push(query2);
+
+    // refresh every 5 minutes
+    const sub = this.metricsqueryService.pollMetrics
+        ('top10nCards', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
+      (data: ITelemetry_queryMetricsQueryResponse) => {
+        if (data && data.results && data.results.length === queryList.queries.length) {
+          this.top10CardTelemetryData = data;
+          this.processTop10CardTelemetryData(data);
+        }
+      },
+      (err) => {
+        this.controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC matics.');
+      }
+    );
+  }
+
+  processTop10CardTelemetryData(data: ITelemetry_queryMetricsQueryResponse) {
+    this.top10CardChartData = [];
+    this.top10CardChartOptions = [];
+    const clock: any = new Date();
+    const prettyDate = new PrettyDatePipe('en-US');
+    const now: string = prettyDate.transform(clock);
+    let hourDifference: any = (clock.getTimezoneOffset()) / 60;
+    if (hourDifference > 0) {
+      hourDifference = -(hourDifference);
+    } else {
+      hourDifference = '+' + -(hourDifference);
+    }
+    data.results.forEach((result, idx) => {
+      if (MetricsUtility.resultHasData(result)) {
+        const chartS = result.series[0];
+        chartS.values.sort((a, b) => a[1] - b[1]);
+        const cardMacs: string[] = [];
+        const cardValues: number[] = [];
+        chartS.values.forEach(metric => {
+          if (metric[1] && metric[1] > 0) {
+            cardMacs.push(metric[2]);
+            cardValues.push(metric[1]);
+          }
+        });
+        if (cardValues.length > 0) {
+          const title = idx === 0 ? 'Active Sessions' : 'Connection Per Second';
+          const graphTitle = `${title} - Top ${cardValues.length} DSCs at ${now} ${hourDifference}h`;
+          this.top10CardChartData.push(this.generateChartData(cardMacs, cardValues));
+          this.top10CardChartOptions.push(this.generateChartOptions(graphTitle,
+            cardValues[cardValues.length - 1] <= 5));
+        }
+      }
+    });
   }
 
   getDSCTotalCount() {
