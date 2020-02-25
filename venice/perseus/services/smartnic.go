@@ -309,8 +309,6 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 		log.Errorf("failed to parse UUID (%v)", err)
 		return
 	}
-	CfgAsn = evtRtConfig.Spec.BGPConfig.ASNumber
-	m.configurePeers()
 	req := pegasusClient.BGPRequest{
 		Request: &pegasusClient.BGPSpec{
 			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,
@@ -381,6 +379,9 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				return
 			}
 			log.Infof("BGP Global Spec Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.ApiStatus)
+			CfgAsn = updCfg.globalCfg.LocalASN
+			m.configurePeers()
+			log.Infof("BGP setting Local ASN to [%v]", CfgAsn)
 		case Update:
 			resp, err := m.pegasusClient.BGPUpdate(ctx, &req)
 			if err != nil || resp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {

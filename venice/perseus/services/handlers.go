@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"net"
 	"sync"
 
 	"github.com/satori/go.uuid"
@@ -67,10 +68,12 @@ func (m *ServiceHandlers) configurePeers() {
 }
 
 func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
+	log.Infof("configurePeer snic %+v CfgAsn %d", nic, CfgAsn)
 	if nic.phase != "admitted" || nic.ip == "" || nic.uuid == "" || CfgAsn == 0 {
 		// wait for all information to be right
 		// might have to handle case where nic was admitted previously
 		// TODO
+		log.Infof("ignoring configure peer")
 		return
 	}
 	uid, err := uuid.FromString(nic.uuid)
@@ -85,6 +88,7 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		PeerAddr:     ip2PDSType(nic.ip),
 		LocalAddr:    ip2PDSType(""),
 		RemoteASN:    CfgAsn,
+		State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
 		SendComm:     true,
 		SendExtComm:  true,
 		ConnectRetry: 5,
@@ -130,7 +134,12 @@ func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.Netwo
 	snic.name = evtIntf.Status.DSC
 	snic.pushed = false
 	if evtIntf.Spec.IPConfig != nil {
-		snic.ip = evtIntf.Spec.IPConfig.IPAddress
+		ip, _, err := net.ParseCIDR(evtIntf.Spec.IPConfig.IPAddress)
+		if err != nil {
+			log.Errorf("could not parse IP CIDR (%s)", err)
+			return
+		}
+		snic.ip = ip.String()
 	}
 	m.snicMap[evtIntf.Status.DSC] = snic
 	m.configurePeer(snic, false)
