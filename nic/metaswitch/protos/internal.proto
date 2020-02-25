@@ -16,7 +16,6 @@ message EvpnBdSpec {
     uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_EVPN_BD_ENTITY_IX_INDEX"}];
     uint32 EviIndex     = 2 [(venice.pdsaFields) = {Field:"evi_index", SetKeyOidIndex: "AMB_EVPN_BD_EVI_INDEX_INDEX"}];
     uint32 VNI          = 3 [(venice.pdsaFields) = {Field:"vni"}];
-
 }
 
 message EvpnIfBindCfgSpec { 
@@ -49,8 +48,9 @@ message LimGenIrbIfSpec {
     };
 
     uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_ENT_IX_INDEX"}];
-    uint32 BDType      = 2 [(venice.pdsaFields) = {Field:"bd_type", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_TYPE"}];
-    uint32 BDIndex       = 3 [(venice.pdsaFields) = {Field:"bd_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_INDEX"}];
+    uint32 BDType       = 2 [(venice.pdsaFields) = {Field:"bd_type", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_TYPE"}];
+    uint32 BDIndex      = 3 [(venice.pdsaFields) = {Field:"bd_index", SetKeyOidIndex: "AMB_LIM_GEN_IRB_IF_BD_INDEX"}];
+    bytes  MACAddress   = 4 [(venice.pdsaFields) = {Field:"mac_address"}];
 }
 
 message LimInterfaceCfgSpec {

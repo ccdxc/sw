@@ -3138,6 +3138,7 @@ spec to configure ext-comm ORF route map table
 | EntityIndex | [uint32](#uint32) |  |  |
 | BDType | [uint32](#uint32) |  |  |
 | BDIndex | [uint32](#uint32) |  |  |
+| MACAddress | [bytes](#bytes) |  |  |
 
 
 

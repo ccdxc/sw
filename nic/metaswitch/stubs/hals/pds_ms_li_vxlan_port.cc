@@ -66,6 +66,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     auto& tep_prop = store_info_.tep_obj->properties();
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
     // Underlay NH is shared with Type 2 TEP
+    PDS_TRACE_DEBUG("Type 5 TEP setting Underlay NH Group %d", tep_prop.hal_uecmp_idx);
     spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
     spec.nat = false;
     return spec;
@@ -222,6 +223,12 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
             // ----------------------------------------------------------------
             if (unlikely(ips_mock)) return; // UT
 
+            if (!pds_status) {
+                // Delete the L3 VXLAN port from the TEP back reference list
+                auto state_ctxt = state_t::thread_context();
+                auto tep_obj = state_ctxt.state()->tep_store().get(l_tep_ip);
+                tep_obj->del_l3_vxlan_port(vxlan_port_add_upd_ips->id.if_index);
+            }
             NBB_CREATE_THREAD_CONTEXT
             NBS_ENTER_SHARED_CONTEXT(li_proc_id);
             NBS_GET_SHARED_DATA();
@@ -275,6 +282,13 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
     }
     PDS_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful", 
                      ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
+
+    // Add the L3 VXLAN port from the TEP back reference list
+    { // Enter thread-safe context to access/modify global state
+        auto state_ctxt = pds_ms::state_t::thread_context();
+        auto tep_obj = state_ctxt.state()->tep_store().get(ips_info_.tep_ip);
+        tep_obj->add_l3_vxlan_port(ips_info_.if_index);
+    }
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
@@ -313,6 +327,9 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
                         ipaddr2str(&tep_ip), vxlan_port_ifindex);
 
         pds_bctxt_guard = make_batch_pds_spec_(); 
+
+        // Delete the L3 VXLAN port from the TEP back reference list
+        store_info_.tep_obj->del_l3_vxlan_port(ips_info_.if_index);
 
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch

@@ -5,6 +5,7 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_tnl.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_port.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -141,7 +142,8 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
     return true;
 }
 
-pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
+pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
+                                                          state_ctxt) {
     pds_batch_ctxt_guard_t bctxt_guard_;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -190,6 +192,22 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
             if (!PDS_MOCK_MODE()) {
                 ret = pds_tep_update(&tep_spec, bctxt);
             }
+
+            // For TEP uecmp update need to update all L3 VXLAN Ports
+            auto l_tep_obj = store_info_.tep_obj;
+            store_info_.tep_obj->walk_l3_vxlan_ports(
+                [&state_ctxt, l_tep_obj, bctxt] (ms_ifindex_t vxp_ifindex) -> bool {
+                    auto vxp_if_obj = state_ctxt.state()->if_store().get(vxp_ifindex);
+                    SDK_ASSERT(vxp_if_obj != nullptr);
+                    auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
+                    PDS_TRACE_DEBUG("TEP %s Updating Underlay ECMP Index for MS"
+                                    " L3 VXLAN Port %d",
+                                    ipaddr2str(&vxp_prop.tep_ip), vxp_ifindex);
+                    li_vxlan_port vxp;
+                    vxp.add_pds_tep_spec(bctxt, vxp_if_obj, l_tep_obj,
+                                         false /* Op Update */);
+                    return false; // continue loop
+                });
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS TEP Create or Update failed for TEP ")
@@ -197,20 +215,18 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_() {
                         .append(" err=").append(std::to_string(ret)));
         }
 
-        auto nhgroup_spec = make_pds_nhgroup_spec_();
         if (op_create_) {
+            // Create Overlay ECMP entry for a new TEP 
+            // No change in Overlay ECMP for TEP update
+            auto nhgroup_spec = make_pds_nhgroup_spec_();
             if (!PDS_MOCK_MODE()) {
                 ret = pds_nexthop_group_create(&nhgroup_spec, bctxt);
             }
-        } else {
-            if (!PDS_MOCK_MODE()) {
-                ret = pds_nexthop_group_update(&nhgroup_spec, bctxt);
+            if (unlikely (ret != SDK_RET_OK)) {
+                throw Error(std::string("PDS ECMP Create failed for TEP ")
+                            .append(ips_info_.tep_ip_str)
+                            .append(" err=").append(std::to_string(ret)));
             }
-        }
-        if (unlikely (ret != SDK_RET_OK)) {
-            throw Error(std::string("PDS ECMP Create or Update failed for TEP ")
-                        .append(ips_info_.tep_ip_str)
-                        .append(" err=").append(std::to_string(ret)));
         }
     }
     return bctxt_guard_;
@@ -229,20 +245,25 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
 
     fetch_store_info_(state_ctxt.state());
 
+    ms_ps_id_t uecmp_ps;
+    NBB_CORR_GET_VALUE(uecmp_ps, vxlan_tnl_add_upd_ips->vxlan_settings.pathset_id);
+
     if (store_info_.tep_obj != nullptr) {
         // Update Tunnel
-        PDS_TRACE_INFO ("TEP %s: Update IPS", ips_info_.tep_ip_str.c_str());
+        PDS_TRACE_INFO ("TEP %s Update IPS Underlay ECMP Pathset %d DP Corr %d",
+                        ips_info_.tep_ip_str.c_str(), uecmp_ps, ips_info_.hal_uecmp_idx);
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
             return rc;
         } 
     } else {
         // Create Tunnel
-        PDS_TRACE_INFO ("TEP %s: Create IPS", ips_info_.tep_ip_str.c_str());
+        PDS_TRACE_INFO ("TEP %s Create IPS Underlay ECMP Pathset %d DP Corr %d",
+                        ips_info_.tep_ip_str.c_str(), uecmp_ps, ips_info_.hal_uecmp_idx);
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
     }
-    pds_bctxt_guard = make_batch_pds_spec_(); 
+    pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
 
     // If we have batched multiple IPS earlier flush it now
     // Cannot add a Tunnel create to an existing batch
@@ -339,7 +360,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
         tep_ip = store_info_.tep_obj->properties().tep_ip;
         PDS_TRACE_INFO ("TEP %s: Delete IPS", ipaddr2str(&tep_ip));
 
-        pds_bctxt_guard = make_batch_pds_spec_ (); 
+        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt); 
 
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch

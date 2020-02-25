@@ -70,8 +70,30 @@ public:
         PDS_TRACE_DEBUG ("  - TEP: %s ", ipaddr2str (&(prop_.tep_ip)));
     }
 
+    void add_l3_vxlan_port(ms_ifindex_t vxp_ifindex) {
+        PDS_TRACE_DEBUG ("TEP %s Add L3 Vxlan Port 0x%x",
+                         ipaddr2str (&(prop_.tep_ip)), vxp_ifindex);
+        l3_vxlan_ports_.push_back(vxp_ifindex);
+    }
+    void del_l3_vxlan_port(ms_ifindex_t vxp_ifindex) {
+        PDS_TRACE_DEBUG ("TEP %s Delete L3 Vxlan Port 0x%x",
+                         ipaddr2str (&(prop_.tep_ip)), vxp_ifindex);
+        l3_vxlan_ports_.erase(std::remove(l3_vxlan_ports_.begin(), l3_vxlan_ports_.end(),
+                                          vxp_ifindex));
+    }
+    void walk_l3_vxlan_ports(std::function<bool(ms_ifindex_t)> cb) {
+        for(auto vxp_ifi: l3_vxlan_ports_) {
+            if (cb(vxp_ifi)) {
+                return;
+            }
+        }
+    }
+
 private:
     properties_t  prop_;
+    // List of L3 VXLAN ports created for this TEP
+    // Assuming no duplicates - else need to change to std::set
+    std::vector<ms_ifindex_t> l3_vxlan_ports_;
 };
 
 class tep_store_t : public obj_store_t<ip_addr_t, tep_obj_t, ip_hash> {

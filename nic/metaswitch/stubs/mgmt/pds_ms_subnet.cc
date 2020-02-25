@@ -96,6 +96,7 @@ populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_bdindex (bd_id);
     req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
+    req.set_macaddress (subnet_spec->vr_mac, ETH_ADDR_LEN);
 }
 
 static void

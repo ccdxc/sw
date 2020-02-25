@@ -54,7 +54,7 @@ private:
     void cache_obj_in_cookie_for_create_op_(void); 
     bool cache_obj_in_cookie_for_update_op_(void);
     void cache_obj_in_cookie_for_delete_op_(void); 
-    pds_batch_ctxt_guard_t make_batch_pds_spec_ (void);
+    pds_batch_ctxt_guard_t make_batch_pds_spec_ (state_t::context_t& state_ctxt);
     void fetch_store_info_(pds_ms::state_t* state);
 
     void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
