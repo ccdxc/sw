@@ -80,7 +80,7 @@ func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 				}
 			}
 			//fwupdate -p /update/naples_fw_venice.tar -i all ; fwupdate -s altfw ; reboot
-			cmdString := fmt.Sprintf("rm -f /sysconfig/config0/pen-netagent.db ; /nic/tools/fwupdate -p /update/%s -i all ; fwupdate -s altfw ; reboot", firmwarePkgName)
+			cmdString := fmt.Sprintf("/update/clear_nic_config.sh remove-config ; /nic/tools/fwupdate -p /update/%s -i all ; fwupdate -s altfw ; reboot", firmwarePkgName)
 			log.Infof("command string %s", cmdString)
 			cmd := exec.Command("bash", "-c", cmdString)
 			if err = cmd.Run(); err != nil {
