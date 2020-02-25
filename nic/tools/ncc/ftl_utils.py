@@ -51,6 +51,14 @@ def is_table_ftl_gen(table, pddict):
     for annotation_dict in pddict['tables'][table]['annotations']:
         if 'capi_bitfields_struct' in annotation_dict:
             return True
+    return False
+
+# hbm based table
+def is_table_hbm_table(table, pddict):
+    for annotation_dict in pddict['tables'][table]['annotations']:
+        if 'hbm_table' in annotation_dict:
+            return True
+    return False
 
 # index based table
 def is_table_index_based(table, pddict):
@@ -65,8 +73,15 @@ def is_table_gen_hints(table, pddict):
     return not is_table_index_based(table, pddict)
 
 # TODO use pragmas
-def is_table_pad_256(table):
-    return 'v4' in str(table)
+def is_table_pad_256(table, pipeline):
+    if 'v4' in str(table):
+        return True
+
+    # TODO nexthop and session_track is 256 bits in Apulu
+    if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table)):
+        return True
+
+    return False
 
 def is_hash_field(field_name):
     for field in hash_field_list:
@@ -497,8 +512,7 @@ ${table_name}::genhash_(sdk_table_api_params_t *params) {
     }
 
     hashkey->build_key(params->entry);
-    sdk::table::internal::base_table_entry_swizzle(
-                        get_sw_entry_pointer(hashkey), params->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(hashkey), params->entry_size);
 
     if (!params->hash_valid) {
 #ifdef SIM

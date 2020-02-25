@@ -259,6 +259,7 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
 @pragma stage 4
 @pragma index_table
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table nexthop {
     reads {
         p4e_i2e.nexthop_id  : exact;

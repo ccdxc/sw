@@ -25,6 +25,7 @@
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 #define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    4096    // 256
 #define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   4096    // 256
@@ -125,6 +126,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx, nacl_idx;
     static uint32_t oob_lif = 0;
     nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating oob lif %s", name_);
@@ -139,17 +141,10 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for ARM to uplink traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.port =
-        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", key_, nh_idx_);
-        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
-        goto error;
-    }
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.port =
+            g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
+    nexthop_info_entry.write(nh_idx_);
 
     // cap ARP packets from oob lif(s) to 256 pps
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);

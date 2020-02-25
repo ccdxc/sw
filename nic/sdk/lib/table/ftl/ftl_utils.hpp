@@ -33,26 +33,6 @@
     }\
 }
 
-#ifndef SIM
-#define CRC32X(crc, value) __asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
-#define RBITX(value) __asm__("rbit %x0, %x1": "=r"(value) : "r"(value))
-#define RBITW(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
-#define REVX(value) __asm__("rev %x0, %x1": "=r"(value) : "r"(value))
-static inline uint32_t
-crc32_aarch64(const uint64_t *p)
-{
-    uint32_t crc = 0;
-    for (auto i = 0; i < 8; i++) {
-        auto v = p[i];
-        RBITX(v);
-        REVX(v);
-        CRC32X(crc, v);
-    }
-    RBITW(crc);
-    return crc;
-}
-#endif
-
 static inline void *
 get_sw_entry_pointer (base_table_entry_t *p)
 {

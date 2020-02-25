@@ -104,6 +104,7 @@
 //:: f.write('#include "gen/p4gen/p4/include/p4pd.h"\n')
 //:: f.write('#include "nic/sdk/include/sdk/mem.hpp"\n')
 //:: f.write('#include "nic/sdk/lib/table/ftl/ftl_utils.hpp"\n')
+//:: f.write('#include "nic/sdk/lib/utils/utils.hpp"\n')
 //:: f.write('\n')
 //:: f.close()
 //::
@@ -120,7 +121,9 @@
 
 #include "include/sdk/base_table_entry.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
-
+#include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
+#include "gen/p4gen/p4/include/p4pd.h"
 //::
 //::     k_d_action_data_json = {}
 //::     k_d_action_data_json['INGRESS_KD'] = {}
@@ -507,7 +510,7 @@
 //::                    pad_to_512 = 512 - (kd_size)
 //::                #endif
 //::                if (pad_to_512):
-//::                    if is_table_pad_256(table):
+//::                    if is_table_pad_256(table, pipeline):
 //::                        ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 256, '')
 //::                    else:
 //::                        ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512, '')
@@ -618,11 +621,31 @@ public:
                  ${args});
     }
 
+//::                tableid = 'P4' + caps_p4prog + 'TBL_ID_' + table.upper()
+//::                ######################################
+//::                # INDEX BASED TABLES
+//::                ######################################
 //::                # if the table is index based entry_size calculation is different
 //::                # and alloc method is not required
 //::                if is_table_index_based(table, pddict):
     static uint32_t entry_size(void) {
         return sizeof(${struct_full_name});
+    }
+
+    static uint32_t entry_size_bits(void) {
+        return entry_size() * 8;
+    }
+
+    sdk_ret_t write(uint32_t index) {
+        // swizzle the hwentry
+        sdk::lib::swizzle(this, entry_size());
+
+//::                # hbm table writes
+//::                if is_table_hbm_table(table, pddict):
+        sdk::asic::pd::asicpd_hbm_table_entry_write(
+                    ${tableid}, index, (uint8_t *)this, entry_size_bits());
+//::                #endif
+        return SDK_RET_OK;
     }
 //::                else:
     static uint32_t entry_size(void) {
@@ -1046,7 +1069,6 @@ public:
 //::                # dont generate derived class methods for index tables
 //::                if not is_table_index_based(table, pddict):
 //::                    num_hints = ftl_hash_field_cnt()-1
-//::                    tableid = 'P4' + caps_p4prog + 'TBL_ID_' + table.upper()
 //::                    ftl_table_using_str += 'using sdk::table::' + struct_name + ';\n'
 //::                    ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, struct_name, struct_full_name)
 //::                #endif

@@ -37,13 +37,13 @@ memrd(Apictx *ctx) {
                      (uint8_t*)get_sw_entry_pointer(ctx->entry),
                      ctx->entry_size);
     }
-    base_table_entry_swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 memwr(Apictx *ctx) {
-    base_table_entry_swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
     if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
         ftl_memcpy((uint8_t *)get_va(ctx),
                    get_sw_entry_pointer(ctx->entry),
@@ -95,4 +95,3 @@ memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries,
 } // namespace internal
 } // namespace table
 } // namespace sdk
-
