@@ -159,6 +159,10 @@ func StartOpenLdapServer(name string, skipPorts ...int) (string, int, error) {
 			continue
 		}
 
+		if strings.Contains(string(out), "address already in use") {
+			log.Errorf("address already in use, retrying")
+			continue
+		}
 		if err != nil {
 			return "", 0, fmt.Errorf("%s, err: %v", out, err)
 		}
