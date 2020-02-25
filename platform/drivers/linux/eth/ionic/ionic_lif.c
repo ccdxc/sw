@@ -2724,7 +2724,7 @@ int ionic_lifs_alloc(struct ionic *ionic)
 		return -ENOMEM;
 
 	lif = ionic_lif_alloc(ionic, 0);
-	if (lif) {
+	if (lif && !IS_ERR(lif)) {
 		ionic_lif_identify(ionic, IONIC_LIF_TYPE_CLASSIC, lid);
 		lif->identity = lid;
 		lif->lif_type = IONIC_LIF_TYPE_CLASSIC;
@@ -2733,9 +2733,10 @@ int ionic_lifs_alloc(struct ionic *ionic)
 		kfree(lid);
 		clear_bit(0, ionic->ethbits);
 		clear_bit(0, ionic->lifbits);
+		return -ENOMEM;
 	}
 
-	return PTR_ERR_OR_ZERO(lif);
+	return 0;
 }
 
 static void ionic_lif_reset(struct ionic_lif *lif)

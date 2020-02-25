@@ -444,11 +444,14 @@ static void ionic_remove(struct pci_dev *pdev)
 	if (!ionic)
 		return;
 
-	ionic_devlink_unregister(ionic);
-	ionic_lifs_unregister(ionic);
-	ionic_lifs_deinit(ionic);
-	ionic_lifs_free(ionic);
-	ionic_bus_free_irq_vectors(ionic);
+	if (ionic->master_lif) {
+		ionic_devlink_unregister(ionic);
+		ionic_lifs_unregister(ionic);
+		ionic_lifs_deinit(ionic);
+		ionic_lifs_free(ionic);
+		ionic_bus_free_irq_vectors(ionic);
+	}
+
 	ionic_port_reset(ionic);
 	ionic_reset(ionic);
 	ionic_dev_teardown(ionic);
