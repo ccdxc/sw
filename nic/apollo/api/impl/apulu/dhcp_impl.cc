@@ -83,7 +83,6 @@ sdk_ret_t
 dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                              pds_epoch_t epoch, api_op_t api_op,
                              api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
     nacl_actiondata_t data = { 0 };
@@ -173,10 +172,10 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
 
     default:
-        ret = sdk::SDK_RET_INVALID_OP;
+        return sdk::SDK_RET_INVALID_OP;
         break;
     }
-    return ret;
+    return sdk::SDK_RET_OK;
 }
 
 sdk_ret_t
