@@ -66,8 +66,9 @@ namespace hal {
 #define ACL_QUIESCE_ENTRY_ID             4
 #define ACL_EPLEARN_ENTRY_ID_BEGIN       5
 #define ACL_EPLEARN_ENTRY_ID_END         10
-#define ACL_NCSI_OOB_REDIRECT_ID         11
-#define ACL_NCSI_BCAST_ARP               12
+#define ACL_NCSI_OOB_REDIRECT_ID1        11
+#define ACL_NCSI_OOB_REDIRECT_ID2        12
+#define ACL_NCSI_BCAST_ARP               13
 #define ACL_NCSI_BCAST_DHCP_CLIENT       ACL_NCSI_BCAST_ARP + 2
 #define ACL_NCSI_BCAST_DHCP_SERVER       ACL_NCSI_BCAST_DHCP_CLIENT + 2
 #define ACL_NCSI_BCAST_NETBIOS_NS        ACL_NCSI_BCAST_DHCP_SERVER + 2

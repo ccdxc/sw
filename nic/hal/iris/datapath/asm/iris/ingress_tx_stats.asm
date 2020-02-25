@@ -81,22 +81,10 @@ ingress_tx_stats2:
     setcf       c2, [c2 & c3]
     phvwr.c2    p.capri_intrinsic_tm_replicate_en, 0
     or          r1, r0, k.control_metadata_uplink, P4_I2E_FLAGS_UPLINK
-    // or          r1, r1, k.control_metadata_nic_mode, P4_I2E_FLAGS_NIC_MODE
     or          r1, r1, k.l3_metadata_ip_frag, P4_I2E_FLAGS_IP_FRAGMENT
     phvwrm      p.control_metadata_i2e_flags, r1, \
                     ((1 << P4_I2E_FLAGS_UPLINK) | \
                      (1 << P4_I2E_FLAGS_IP_FRAGMENT))
-    //  phvwrm      p.control_metadata_i2e_flags, r1, \
-    //                  (1 << P4_I2E_FLAGS_UPLINK)
-    // or          r1, r1, k.control_metadata_nic_mode, P4_I2E_FLAGS_NIC_MODE
-    // phvwrm      p.control_metadata_i2e_flags, r1, \
-    //                 ((1 << P4_I2E_FLAGS_UPLINK) | (1 << P4_I2E_FLAGS_NIC_MODE))
-    // seq         c2, k.control_metadata_uplink, TRUE
-    // seq.c2      c2, k.control_metadata_nic_mode, TRUE
-    // setcf       c2, [c2 & !c3]
-    seq         c2, k.control_metadata_uplink, TRUE
-    setcf       c2, [c2 & !c3]
-    phvwr.c2    p.control_metadata_dst_lport, 0
 
 
 #include "tcp_options_fixup.h"

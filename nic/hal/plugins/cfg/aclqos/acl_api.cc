@@ -50,7 +50,7 @@ acl_install_ncsi_redirect (if_t *oob_mnic_enic, if_t *oob_uplink_if)
     uint32_t         acl_id;
     uint32_t         priority;
 
-    acl_id = ACL_NCSI_OOB_REDIRECT_ID;
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID1;
     priority = ACL_NCSI_OOB_REDIRECT_PRIORITY;
 
     match = spec.mutable_match();
@@ -67,10 +67,33 @@ acl_install_ncsi_redirect (if_t *oob_mnic_enic, if_t *oob_uplink_if)
     match->mutable_eth_selector()->set_eth_type(ETH_TYPE_NCSI);
     match->mutable_eth_selector()->set_eth_type_mask(0xffff);
 
-    HAL_TRACE_DEBUG("Installing ACL for bcast-arp");
+    HAL_TRACE_DEBUG("Installing ACL for NCSI uplink -> oob_mnic");
     ret = hal::acl_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to install bcast arp. err: {}", ret);
+        HAL_TRACE_ERR("Unable to install NCSI uplink -> oob_mnic. err: {}", ret);
+    }
+
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID2;
+    priority = ACL_NCSI_OOB_REDIRECT_PRIORITY;
+
+    match = spec.mutable_match();
+    action = spec.mutable_action();
+    spec.mutable_key_or_handle()->set_acl_id(acl_id);
+    spec.set_priority(priority);
+
+    // Action
+    action->set_action(acl::AclAction::ACL_ACTION_REDIRECT);
+    action->mutable_redirect_if_key_handle()->set_interface_id(oob_uplink_if->if_id);
+
+    // Selector
+    match->mutable_src_if_key_handle()->set_interface_id(oob_mnic_enic->if_id);
+    match->mutable_eth_selector()->set_eth_type(ETH_TYPE_NCSI);
+    match->mutable_eth_selector()->set_eth_type_mask(0xffff);
+
+    HAL_TRACE_DEBUG("Installing ACL for NCSI oob_mnic -> uplink");
+    ret = hal::acl_create(spec, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to install NCSI oob_mnic -> uplink. err: {}", ret);
     }
     return ret;
 }
@@ -82,14 +105,22 @@ acl_uninstall_ncsi_redirect (void)
     AclDeleteResponse   rsp;
     uint32_t            acl_id;
 
-
-    acl_id = ACL_NCSI_OOB_REDIRECT_ID;
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID1;
     req.mutable_key_or_handle()->set_acl_id(acl_id);
 
-    HAL_TRACE_DEBUG("UnInstalling ACL for ncsi redirect");
+    HAL_TRACE_DEBUG("UnInstalling ACL for NCSI uplink -> oob_mnic");
     ret = hal::acl_delete(req, &rsp);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to uninstall ncsi redirect. err: {}", ret);
+        HAL_TRACE_ERR("Unable to uninstall NCSI uplink -> oob_mnic. err: {}", ret);
+    }
+
+    acl_id = ACL_NCSI_OOB_REDIRECT_ID2;
+    req.mutable_key_or_handle()->set_acl_id(acl_id);
+
+    HAL_TRACE_DEBUG("UnInstalling ACL for ncsi oob_mnic -> uplink");
+    ret = hal::acl_delete(req, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall NCSI oob_mnic -> uplink. err: {}", ret);
     }
     return ret;
 }

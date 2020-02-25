@@ -65,25 +65,10 @@ action ingress_tx_stats(ucast_bytes, ucast_pkts, mcast_bytes, mcast_pkts,
     modify_field(control_metadata.i2e_flags,
 		 control_metadata.uplink << P4_I2E_FLAGS_UPLINK,
                  (1 << P4_I2E_FLAGS_UPLINK));
-    // modify_field(control_metadata.i2e_flags,
-    //              control_metadata.nic_mode << P4_I2E_FLAGS_NIC_MODE,
-    //              (1 << P4_I2E_FLAGS_NIC_MODE));
     modify_field(control_metadata.i2e_flags,
         l3_metadata.ip_frag << P4_I2E_FLAGS_IP_FRAGMENT,
                 (1 << P4_I2E_FLAGS_IP_FRAGMENT));
 
-    if ((control_metadata.uplink == TRUE) and
-        ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) or
-         (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST))) {
-        modify_field(control_metadata.dst_lport, 0);
-    }
-
-    // if ((control_metadata.uplink == TRUE) and
-    //     (control_metadata.nic_mode == NIC_MODE_CLASSIC) and
-    //     ((flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) or
-    //      (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST))) {
-    //     modify_field(control_metadata.dst_lport, 0);
-    // }
 }
 
 @pragma stage 5
