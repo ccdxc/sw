@@ -57,7 +57,8 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 
 	if !foundCollector {
 		mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, col.GetKey(), mgmtIP.String(), dstIP, true); err != nil {
+		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
 		}
@@ -130,7 +131,8 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	delete(mirrorDestToIDMapping, destKey)
 
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-	if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, col.GetKey(), mgmtIP.String(), dstIP, true); err != nil {
+	compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())
+	if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
 		log.Error(errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 		return errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
 	}

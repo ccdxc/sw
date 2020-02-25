@@ -50,7 +50,8 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	for _, c := range netflow.Spec.Exports {
 		var destPort int
 		dstIP := c.Destination
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, netflow.GetKey(), mgmtIP.String(), dstIP, false); err != nil {
+		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), netflow.GetKey())
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
@@ -177,7 +178,8 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		dstIP := c.Destination
-		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, netflow.GetKey(), mgmtIP.String(), dstIP, false); err != nil {
+		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), netflow.GetKey())
+		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
