@@ -1,0 +1,54 @@
+meta:
+    name        : controlplane
+    description : Apulu conntrol plane Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.apulu
+
+images:
+    naples: nic/naples_fw_venice.tar
+
+setup:
+    topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
+    config  :
+        #- step : utils.naples_workloads
+        - step : verif.config.verify_oob
+        - step : config.set_max_mtu
+        - step : config.topology
+          args :
+             spec : 2naples_bm_static_node1.cfgyml
+             node : node1
+        - step : config.topology
+          args :
+             spec : 2naples_bm_static_node2.cfgyml
+             node : node2
+        - step : config.bringup_workloads
+        - step : config.add_routes
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_links
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        #-   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/apulu/testbundles/
+        - networking/underlay.testbundle
+
+    regression:
+        # Relative paths from iota/test/apulu/testbundles/
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
+    #- step      : testcases.frequency.clock_settings_td

@@ -7,6 +7,7 @@ device:
     mode        : host # bitw (default), host
     stack       : ipv4 # ipv4 (default), ipv6
     bridging    : false # false (default), true
+    overlay     : false # false (default), true
     learning    : false # false (default), true
     ipaddress   : '1.0.0.2' # Taken from resmgr
     gateway     : '1.0.0.1' # Taken from resmgr
@@ -56,6 +57,24 @@ vpc:
           type       : underlay
           l3intfid   : 2
           macaddress : macaddr/00ae.cd00.14cd
+      bgpglobal:
+        - localasn      : 100
+          routerid      : 11.11.11.11
+      bgppeer:
+        # underlay bgp peer 1
+        - peeraddr      : 9.1.0.2
+          localaddr     : 9.1.0.1
+          remoteasn     : 600
+          bgppeeraf:
+              afi       : ipv4
+              safi      : unicast
+        # underlay bgp peer 2
+        - peeraddr      : 9.2.0.2
+          localaddr     : 9.2.0.1
+          remoteasn     : 600
+          bgppeeraf:
+              afi       : ipv4
+              safi      : unicast
     - id         : 1
       stack      : ipv4 # dual, ipv4 , ipv6
       count      : 1

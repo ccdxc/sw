@@ -1,0 +1,36 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+rebase: true
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+  # baremetal + baremetal docker test cases
+ e2e-linux-bm-container:
+   commands: ["sh", "-c", "make controlplane && ./run_iota.sh --pipeline apulu --testsuite controlplane --dry"]
+   owners: ["email:sai@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-apulu-arm
+     - build-iota
+   clusters:
+     - image: build-7
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/all_corefiles.tgz

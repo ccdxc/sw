@@ -17,7 +17,7 @@ class BgpObject(base.ConfigObjectBase):
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].BgpIdAllocator)
         self.GID("BGP%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP)
         self.LocalASN = getattr(spec, "localasn", 0)
         self.RouterId = int(ipaddress.ip_address(getattr(spec, "routerid", 0)))
         self.ClusterId = getattr(spec, "clusterid", 0)
@@ -75,7 +75,7 @@ class BgpObjectClient(base.ConfigClientBase):
             self.Objs[node].update({obj.Id: obj})
         bgpSpec = getattr(vpcspec, 'bgpglobal', None)
         if not bgpSpec:
-            logger.info("No BGP config in topology")
+            logger.info(f"No BGP config in VPC {vpc.VPCId}")
             return
 
         for bgp_spec_obj in bgpSpec:

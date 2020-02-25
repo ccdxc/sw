@@ -19,7 +19,7 @@ class BgpPeerObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.BGP_PEER, node)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].BgpPeerIdAllocator)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER)
         self.GID("BGPPeer%d"%self.Id)
         self.State = getattr(spec, "adminstate", None)
         self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", None))
@@ -115,7 +115,7 @@ class BgpPeerObjectClient(base.ConfigClientBase):
     def GetBgpPeerObject(self, node, peerid):
         return self.GetObjectByKey(node, peerid)
 
-    def GenerateObjects(self, node, parent, vpcspec):
+    def GenerateObjects(self, node, vpc, vpcspec):
         def __add_bgp_peer(peerspec):
             peerafspec = getattr(peerspec, "bgppeeraf", None)
             peeraf_obj = BgpPeerAfObject(node, peerafspec)
@@ -125,7 +125,7 @@ class BgpPeerObjectClient(base.ConfigClientBase):
 
         bgpPeer = getattr(vpcspec, 'bgppeer', None)
         if not bgpPeer:
-            logger.info("No BGP peer config in topology")
+            logger.info(f"No BGP peer config in VPC {vpc.VPCId}")
             return
 
         for peerspec in bgpPeer:

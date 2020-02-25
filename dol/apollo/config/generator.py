@@ -27,8 +27,8 @@ from apollo.config.objects.dhcprelay import client as DHCPRelayClient
 from apollo.config.objects.nat_pb import client as NATPbClient
 from apollo.config.objects.policer import client as PolicerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPClient
-from apollo.config.objects.metaswitch.bgp import client as BGPPeerClient
-from apollo.config.objects.metaswitch.bgp import client as BGPPeerAfClient
+from apollo.config.objects.metaswitch.bgp_peer import client as BGPPeerClient
+from apollo.config.objects.metaswitch.bgp_peeraf import client as BGPPeerAfClient
 from apollo.config.objects.metaswitch.evpnevi import client as EvpnEviClient
 from apollo.config.objects.metaswitch.evpnevirt import client as EvpnEviRtClient
 from apollo.config.objects.metaswitch.evpnipvrf import client as EvpnIpVrfClient

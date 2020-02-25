@@ -5,6 +5,7 @@ import random
 from apollo.config.generator import ObjectInfo as ObjClient
 from apollo.config.agent.api import ObjectTypes as APIObjTypes
 import apollo.config.objects.vnic as vnic
+import apollo.config.objects.metaswitch.bgp_peer as bgp_peer
 import apollo.config.objects.lmapping as lmapping
 import iota.harness.api as api
 
@@ -250,3 +251,11 @@ def RestoreObjects(oper, objlist):
 def GetPolicyObjectsByWorkload(wl):
     return GetObjClient(APIObjTypes.POLICY.name.lower()).Objects(wl.node_name)
 
+def GetUnderlayWorkloadPairs():
+    naplesHosts = api.GetNaplesHostnames()
+    workloads = []
+    bgppeers = []
+    for node in naplesHosts:
+        bgppeers = bgp_peer.client.Objects(node)
+        #TODO - get workloads from bgp peer objects
+        return workloads
