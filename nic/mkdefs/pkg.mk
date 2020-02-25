@@ -42,6 +42,14 @@ package-clean-debug:
 	@rm -f  $(TOPDIR)/debug_x86_64_iris.tgz
 	@rm -f  $(TOPDIR)/debug_x86_64_iris.tar
 
+package-clean-pegasus:
+	@rm -f $(TOPDIR)/pegasus.tar
+	@rm -f $(TOPDIR)/pegasus.tgz
+
+package-pegasus: package-clean-pegasus pegasus
+	 cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
+		--target pegasus --pipeline apulu --no-strip
+
 package-debug: package-clean-debug
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target debug --no-strip
 
