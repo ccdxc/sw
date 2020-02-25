@@ -14,12 +14,13 @@ import apollo.config.objects.base as base
 import evpn_pb2 as evpn_pb2
 
 class EvpnEviObject(base.ConfigObjectBase):
-    def __init__(self, node, evpnevispec):
+    def __init__(self, node, parent, evpnevispec):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI, node)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnEviIdAllocator)
         self.GID("EvpnEvi%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        #self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.SubnetId = getattr(evpnevispec, 'subnetid', None)
         self.AutoRD = getattr(evpnevispec, 'autord', None)
@@ -106,9 +107,9 @@ class EvpnEviObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI, Resmgr.MAX_BGP_EVPN_EVI)
         return
 
-    def GenerateObjects(self, node, subnetspec):
+    def GenerateObjects(self, node, subnet, subnetspec):
         def __add_evpn_evi_config(evpnevispec):
-            obj = EvpnEviObject(node, evpnevispec)
+            obj = EvpnEviObject(node, subnet, evpnevispec)
             self.Objs[node].update({obj.Id: obj})
         evpneviSpec = getattr(subnetspec, 'evpnevi', None)
         if not evpneviSpec:

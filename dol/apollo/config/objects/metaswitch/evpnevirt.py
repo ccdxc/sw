@@ -14,12 +14,13 @@ import apollo.config.objects.base as base
 import evpn_pb2 as evpn_pb2
 
 class EvpnEviRtObject(base.ConfigObjectBase):
-    def __init__(self, node, evpnevirtspec):
+    def __init__(self, node, parent, evpnevirtspec):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI_RT, node)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnEviRtIdAllocator)
-        self.GID("EvpnEvi%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.GID("EvpnEviRt%d"%self.Id)
+        #self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.SubnetId = getattr(evpnevirtspec, 'subnetid', None)
         self.RT = getattr(evpnevirtspec, 'rt', None)
@@ -79,9 +80,9 @@ class EvpnEviRtObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI_RT, Resmgr.MAX_BGP_EVPN_EVI_RT)
         return
 
-    def GenerateObjects(self, node, subnetspec):
+    def GenerateObjects(self, node, subnet, subnetspec):
         def __add_evpn_evi_rt_config(evpnevirtspec):
-            obj = EvpnEviRtObject(node, evpnevirtspec)
+            obj = EvpnEviRtObject(node, subnet, evpnevirtspec)
             self.Objs[node].update({obj.Id: obj})
         evpnEviRtSpec = getattr(subnetspec, 'evpnevirt', None)
         if not evpnEviRtSpec:

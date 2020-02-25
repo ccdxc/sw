@@ -103,8 +103,8 @@ class SubnetObject(base.ConfigObjectBase):
         rmapping.client.GenerateObjects(node, self, spec)
 
         # Generate Metaswitch Objects configuration
-        evpnevi.client.GenerateObjects(node,  spec)
-        evpnevirt.client.GenerateObjects(node,  spec)
+        evpnevi.client.GenerateObjects(node, self, spec)
+        evpnevirt.client.GenerateObjects(node, self, spec)
 
         return
 

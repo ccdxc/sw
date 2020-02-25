@@ -99,7 +99,7 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate Interface Configuration
         InterfaceClient.GenerateObjects(node, self, spec)
-       
+
         # Generate NextHop configuration
         NhClient.GenerateObjects(node, self, spec)
 
@@ -131,8 +131,8 @@ class VpcObject(base.ConfigObjectBase):
         meter.client.GenerateObjects(node, self, spec)
 
         # Generate Metaswitch configuration
-        evpnipvrf.client.GenerateObjects(node, spec)
-        evpnipvrfrt.client.GenerateObjects(node, spec)
+        evpnipvrf.client.GenerateObjects(node, self, spec)
+        evpnipvrfrt.client.GenerateObjects(node, self, spec)
 
         self.V4RouteTableId = route.client.GetRouteV4TableId(node, self.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(node, self.VPCId)

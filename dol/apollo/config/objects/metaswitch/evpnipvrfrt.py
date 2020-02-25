@@ -14,14 +14,14 @@ import apollo.config.objects.base as base
 import evpn_pb2 as evpn_pb2
 
 class EvpnIpVrfRtObject(base.ConfigObjectBase):
-    def __init__(self, node, evpnipvrfrtspec):
+    def __init__(self, node, parent, evpnipvrfrtspec):
         super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF_RT, node)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnIpVrfIdAllocator)
         self.GID("EvpnIPVrfRt%d"%self.Id)
-        self.UUID = utils.PdsUuid(self.Id)
+        self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
-        self.VPCId = getattr(evpnipvrfrtspec, 'vpcid', None)
+        self.VPCId = getattr(evpnipvrfrtspec, 'vpcid', parent.VPCId)
         self.RT = getattr(evpnipvrfrtspec, 'rt', None)
         self.RTType = getattr(evpnipvrfrtspec, 'rttype', 0)
         self.VRFName = getattr(evpnipvrfrtspec, 'vrfname', None)
@@ -83,9 +83,9 @@ class EvpnIpVrfRtObjectClient(base.ConfigClientBase):
     def GetEvpnIpVrfRtObject(self, node, id):
         return self.GetObjectByKey(node, id)
 
-    def GenerateObjects(self, node, vpcspec):
+    def GenerateObjects(self, node, vpc, vpcspec):
         def __add_evpn_ip_vrf_rt_config(evpnipvrfrtspec):
-            obj = EvpnIpVrfRtObject(node, evpnipvrfrtspec)
+            obj = EvpnIpVrfRtObject(node, vpc, evpnipvrfrtspec)
             self.Objs[node].update({obj.Id: obj})
         evpnIpVrfRtSpec = getattr(vpcspec, 'evpnipvrfrt', None)
         if not evpnIpVrfRtSpec:
