@@ -18,6 +18,7 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
 
 using sdk::lib::catalog;
 
@@ -41,7 +42,7 @@ if_entry::factory(pds_obj_key_t& key, pds_ifindex_t ifindex) {
         new (intf) if_entry();
     }
     memcpy(&intf->key_, &key, sizeof(key_));
-    //intf->type_ = PDS_IF_TYPE_ETH;
+    intf->type_ = ifindex_to_pds_if_type(ifindex);
     intf->ifindex_ = ifindex;
     return intf;
 }

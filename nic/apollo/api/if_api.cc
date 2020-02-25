@@ -85,7 +85,8 @@ pds_if_info_from_entry (void *entry, void *ctxt)
     if_entry *intf = (if_entry *)entry;
     pds_if_read_args_t *args = (pds_if_read_args_t *)ctxt;
 
-    if (intf->type() != PDS_IF_TYPE_NONE) {
+    if ((intf->type() != PDS_IF_TYPE_NONE) &&
+        (intf->type() != PDS_IF_TYPE_ETH)) {
         intf->read(&info);
         args->cb(&info, args->ctxt);
     }

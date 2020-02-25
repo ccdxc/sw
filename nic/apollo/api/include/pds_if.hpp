@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 
@@ -35,6 +36,25 @@ typedef enum pds_if_type_e {
     // Loopback interface
     PDS_IF_TYPE_LOOPBACK  = 5,
 } pds_if_type_t;
+
+static inline pds_if_type_t
+ifindex_to_pds_if_type (pds_ifindex_t ifindex)
+{
+    switch (IFINDEX_TO_IFTYPE(ifindex)) {
+    case IF_TYPE_ETH:
+        return PDS_IF_TYPE_ETH;
+    case IF_TYPE_UPLINK:
+        return PDS_IF_TYPE_UPLINK;
+    case IF_TYPE_UPLINK_PC:
+        return PDS_IF_TYPE_UPLINK_PC;
+    case IF_TYPE_L3:
+        return PDS_IF_TYPE_L3;
+    case IF_TYPE_LOOPBACK:
+        return PDS_IF_TYPE_LOOPBACK;
+    default:
+        return PDS_IF_TYPE_NONE;
+    }
+}
 
 /// \brief interface admin/operational state
 typedef enum pds_if_state_e {
