@@ -417,11 +417,6 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	// Take a lock to ensure a single HAL API is active at any given point
 	a.Lock()
 	defer a.Unlock()
-	uidStr, ok := a.LocalInterfaces[intf.Name]
-	if !ok {
-		log.Infof("Inteface: %s not local, ignoring", intf.GetKey())
-		return nil, nil
-	}
 
 	err = utils.ValidateMeta(oper, intf.Kind, intf.ObjectMeta)
 	if err != nil {
@@ -515,6 +510,13 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		}
 		intf = existingIntf
 	}
+
+	uidStr, ok := a.LocalInterfaces[intf.Name]
+	if !ok {
+		log.Infof("Inteface: %s not local, ignoring", intf.GetKey())
+		return nil, nil
+	}
+
 	// Use the UUID from the cache when interacting with PDS Agent
 	intf.UUID = uidStr
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
@@ -526,6 +528,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		cfg := a.InfraAPI.GetConfig()
 		oldLoopbackIf = cfg.LoopbackIP
 	}
+
 	err = apulu.HandleInterface(a.InfraAPI, a.InterfaceClient, a.SubnetClient, oper, intf)
 	if err != nil {
 		log.Error(err)

@@ -77,12 +77,14 @@ subnet_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_subnet = subnet_db()->alloc();
     if (cloned_subnet) {
         new (cloned_subnet) subnet_entry();
+        if (cloned_subnet->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_subnet->impl_ = impl_->clone();
         if (unlikely(cloned_subnet->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone subnet %s impl", key_.str());
             goto error;
         }
-        cloned_subnet->init_config(api_ctxt);
         cloned_subnet->hw_id_ = hw_id_;
     }
     return cloned_subnet;
