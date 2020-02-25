@@ -165,6 +165,16 @@ func (c *Netctrler) StartNetworkSecurityPolicyWatch() error {
 	return nil
 }
 
+// EnableSelectivePushForKind enable selective push for kind
+func (c *Netctrler) EnableSelectivePushForKind(kind string) error {
+	return c.StateMgr.EnableSelectivePushForKind(kind)
+}
+
+// DisableSelectivePushForKind disable selective push for kind
+func (c *Netctrler) DisableSelectivePushForKind(kind string) error {
+	return c.StateMgr.DisableSelectivePushForKind(kind)
+}
+
 // runDebugRESTServer starts REST server for debug purposes
 func (c *Netctrler) runDebugRESTServer(restURL string) error {
 	// start a debug http server

@@ -387,7 +387,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 	snic := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: name,
+			Name: macAddr,
 		},
 		Spec: cluster.DistributedServiceCardSpec{
 			MgmtMode:    "NETWORK",
@@ -432,7 +432,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 }
 
 // DeleteHost deletes a workload
-func (it *integTestSuite) DeleteHost(name string) error {
+func (it *integTestSuite) DeleteHost(name, macAddr string) error {
 	// create a dummy tenant object
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
@@ -450,7 +450,7 @@ func (it *integTestSuite) DeleteHost(name string) error {
 	snic := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
-			Name: name,
+			Name: macAddr,
 		},
 		Spec: cluster.DistributedServiceCardSpec{
 			Admit:       false,
@@ -465,6 +465,7 @@ func (it *integTestSuite) DeleteHost(name string) error {
 	// need to de-admit before deleting
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), &snic)
 	if err != nil {
+		log.Infof("Deleting snc %v..", err)
 		return err
 	}
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Delete(context.Background(), &snic.ObjectMeta)

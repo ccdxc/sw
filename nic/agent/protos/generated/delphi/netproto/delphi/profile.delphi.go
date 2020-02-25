@@ -15,7 +15,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Tenant object
+// profile object
 type Profile struct {
 	Meta    *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key     string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`

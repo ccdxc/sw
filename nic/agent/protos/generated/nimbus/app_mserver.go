@@ -36,11 +36,11 @@ func (ms *MbusServer) FindApp(objmeta *api.ObjectMeta) (*netproto.App, error) {
 }
 
 // ListApps lists all Apps in the mbus
-func (ms *MbusServer) ListApps(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.App, error) {
+func (ms *MbusServer) ListApps(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.App, error) {
 	var objlist []*netproto.App
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("App", filters)
+	objs := ms.memDB.ListObjectsForReceiver("App", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("App", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("App", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)

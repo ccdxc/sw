@@ -36,11 +36,11 @@ func (ms *MbusServer) FindNetwork(objmeta *api.ObjectMeta) (*netproto.Network, e
 }
 
 // ListNetworks lists all Networks in the mbus
-func (ms *MbusServer) ListNetworks(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Network, error) {
+func (ms *MbusServer) ListNetworks(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Network, error) {
 	var objlist []*netproto.Network
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Network", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Network", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := NetworkFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Network", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Network", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := NetworkFromObj(oo)

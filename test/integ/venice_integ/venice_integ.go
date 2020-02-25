@@ -906,6 +906,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		os.Exit(1)
 	}
 
+	os.RemoveAll(path.Dir(globals.NetAgentDBPath))
+
 	os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
 
 	// We need a fairly high limit because all clients are collapsed into a single process

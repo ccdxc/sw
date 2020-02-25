@@ -785,8 +785,24 @@ func (gs *EntBaseCfg) CleanupAllConfig() error {
 		return err
 	}
 
-	log.Infof("Cleanup: hosts %d, sgpolicy %d workloads %d hosts %d networks %d",
-		len(veniceHosts), len(veniceSGPolicies), len(veniceWorkloads), len(veniceHosts), len(veniceNetworks))
+	mirrorSessions, err := rClient.ListMirrorSessions()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
+	log.Infof("Cleanup: hosts %d, sgpolicy %d workloads %d hosts %d networks %d mirror sessions %d",
+		len(veniceHosts), len(veniceSGPolicies), len(veniceWorkloads), len(veniceHosts), len(veniceNetworks),
+		len(mirrorSessions))
+
+	// delete venice objects
+	for _, obj := range mirrorSessions {
+		if err := rClient.DeleteMirrorSession(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
 
 	// delete venice objects
 	for _, obj := range veniceSGPolicies {

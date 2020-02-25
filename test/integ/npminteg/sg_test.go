@@ -527,6 +527,8 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 	// if not present create the default tenant
 	it.CreateTenant("default")
+	err := it.npmCtrler.StateMgr.EnableSelectivePushForKind("SecurityProfile")
+	c.Assert(err, IsNil)
 	// create sg in watcher
 	fwp := security.FirewallProfile{
 		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
@@ -554,7 +556,7 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 		},
 	}
 
-	_, err := it.apisrvClient.SecurityV1().FirewallProfile().Delete(context.Background(), &fwp.ObjectMeta)
+	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Delete(context.Background(), &fwp.ObjectMeta)
 
 	c.Assert(err, IsNil)
 
@@ -572,7 +574,26 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 
 	c.Assert(err, IsNil)
 
-	// verify all agents have the security group
+	// verify that agents should not have recived
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
+			profiles, _ := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
+			return len(profiles) == 0, nil
+		}, "Sg not found on agent", "10ms", it.pollTimeout())
+	}
+
+	//Check whetheer we have receivers
+
+	for _, ag := range it.agents {
+		ok, err := it.npmCtrler.StateMgr.DSCAddedAsReceiver(ag.dscAgent.InfraAPI.GetDscName())
+		c.Assert(err, IsNil)
+		Assert(c, ok, "DSC not added")
+	}
+
+	//Now add all receivers
+
+	// verify that agents should not have recived
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
 			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}

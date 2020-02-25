@@ -36,11 +36,11 @@ func (ms *MbusServer) FindInterface(objmeta *api.ObjectMeta) (*netproto.Interfac
 }
 
 // ListInterfaces lists all Interfaces in the mbus
-func (ms *MbusServer) ListInterfaces(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Interface, error) {
+func (ms *MbusServer) ListInterfaces(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Interface, error) {
 	var objlist []*netproto.Interface
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Interface", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Interface", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWa
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Interface", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Interface", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)

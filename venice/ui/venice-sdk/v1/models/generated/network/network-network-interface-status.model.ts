@@ -20,7 +20,7 @@ export interface INetworkNetworkInterfaceStatus {
     'primary-mac'?: string;
     'if-host-status'?: INetworkNetworkInterfaceHostStatus;
     'if-uplink-status'?: INetworkNetworkInterfaceUplinkStatus;
-    'mirror-enabled'?: boolean;
+    'mirror-sessions'?: Array<string>;
     'cluster-node'?: string;
     '_ui'?: any;
 }
@@ -37,7 +37,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'primary-mac': string = null;
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
-    'mirror-enabled': boolean = null;
+    'mirror-sessions': Array<string> = null;
     /** Set only if interface is on Venice Node. */
     'cluster-node': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceStatus]: PropInfoItem } = {
@@ -75,9 +75,9 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             required: false,
             type: 'object'
         },
-        'mirror-enabled': {
+        'mirror-sessions': {
             required: false,
-            type: 'boolean'
+            type: 'Array<string>'
         },
         'cluster-node': {
             description:  `Set only if interface is on Venice Node.`,
@@ -110,6 +110,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         super();
         this['if-host-status'] = new NetworkNetworkInterfaceHostStatus();
         this['if-uplink-status'] = new NetworkNetworkInterfaceUplinkStatus();
+        this['mirror-sessions'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -167,12 +168,12 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
         } else {
             this['if-uplink-status'].setValues(null, fillDefaults);
         }
-        if (values && values['mirror-enabled'] != null) {
-            this['mirror-enabled'] = values['mirror-enabled'];
-        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('mirror-enabled')) {
-            this['mirror-enabled'] = NetworkNetworkInterfaceStatus.propInfo['mirror-enabled'].default;
+        if (values && values['mirror-sessions'] != null) {
+            this['mirror-sessions'] = values['mirror-sessions'];
+        } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('mirror-sessions')) {
+            this['mirror-sessions'] = [ NetworkNetworkInterfaceStatus.propInfo['mirror-sessions'].default];
         } else {
-            this['mirror-enabled'] = null
+            this['mirror-sessions'] = [];
         }
         if (values && values['cluster-node'] != null) {
             this['cluster-node'] = values['cluster-node'];
@@ -195,7 +196,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
                 'primary-mac': CustomFormControl(new FormControl(this['primary-mac']), NetworkNetworkInterfaceStatus.propInfo['primary-mac']),
                 'if-host-status': CustomFormGroup(this['if-host-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-host-status'].required),
                 'if-uplink-status': CustomFormGroup(this['if-uplink-status'].$formGroup, NetworkNetworkInterfaceStatus.propInfo['if-uplink-status'].required),
-                'mirror-enabled': CustomFormControl(new FormControl(this['mirror-enabled']), NetworkNetworkInterfaceStatus.propInfo['mirror-enabled']),
+                'mirror-sessions': CustomFormControl(new FormControl(this['mirror-sessions']), NetworkNetworkInterfaceStatus.propInfo['mirror-sessions']),
                 'cluster-node': CustomFormControl(new FormControl(this['cluster-node']), NetworkNetworkInterfaceStatus.propInfo['cluster-node']),
             });
             // We force recalculation of controls under a form group
@@ -225,7 +226,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             this._formGroup.controls['primary-mac'].setValue(this['primary-mac']);
             this['if-host-status'].setFormGroupValuesToBeModelValues();
             this['if-uplink-status'].setFormGroupValuesToBeModelValues();
-            this._formGroup.controls['mirror-enabled'].setValue(this['mirror-enabled']);
+            this._formGroup.controls['mirror-sessions'].setValue(this['mirror-sessions']);
             this._formGroup.controls['cluster-node'].setValue(this['cluster-node']);
         }
     }

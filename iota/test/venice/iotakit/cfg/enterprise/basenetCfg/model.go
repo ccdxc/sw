@@ -2,7 +2,6 @@ package basenetCfg
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
@@ -24,26 +23,9 @@ func NewBasenetCfg() *BasenetCfg {
 
 //CleanupAllConfig cleans up config which is independent
 func (vc *BasenetCfg) CleanupAllConfig() error {
-	var err error
 
-	rClient := vc.Client
+	return vc.EntBaseCfg.CleanupAllConfig()
 
-	// get all venice configs
-	veniceHosts, err := rClient.ListHost()
-	if err != nil {
-		log.Errorf("err: %s", err)
-		return err
-	}
-
-	for _, obj := range veniceHosts {
-		if err := rClient.DeleteHost(obj); err != nil {
-			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
-			log.Errorf("%s", err)
-			return err
-		}
-	}
-
-	return nil
 }
 
 //IsConfigPushComplete checks whether config push is complete.

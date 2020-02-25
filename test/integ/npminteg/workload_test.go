@@ -187,7 +187,7 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	Assert(c, err != nil, "was able to update workload to empty host")
 
 	// verify we cant delete the host
-	err = it.DeleteHost("testHost")
+	err = it.DeleteHost("testHost", "0001.0203.0405")
 	Assert(c, err != nil, "was able to delete host while workloads are refering to it")
 
 	// delete the workload
@@ -196,7 +196,7 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	time.Sleep(time.Millisecond * 10)
 
 	// finalyy delete the host
-	err = it.DeleteHost("testHost")
+	err = it.DeleteHost("testHost", "0001.0203.0405")
 	AssertOk(c, err, "Error deleting host")
 }
 

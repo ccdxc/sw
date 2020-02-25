@@ -313,3 +313,19 @@ func (sm *SysModel) VerifySystemHealth(collectLogOnErr bool) error {
 
 	return nil
 }
+
+//NetworkInterfaces return all network interfaces
+func (sm *SysModel) NetworkInterfaces() *objects.NetworkInterfaceCollection {
+
+	intfc := objects.NewInterfaceCollection(sm.ObjClient(), sm.Tb)
+
+	intfs, err := sm.ObjClient().ListNetworkInterfaces()
+	if err != nil {
+		intfc.SetError(err)
+	}
+	for _, wf := range intfs {
+		intfc.Interfaces = append(intfc.Interfaces, wf)
+	}
+
+	return intfc
+}

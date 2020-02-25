@@ -42,11 +42,11 @@ func (ms *MbusServer) Find{{$crudObject}}(objmeta *api.ObjectMeta) (*netproto.{{
 }
 
 // List{{$crudObject}}s lists all {{$crudObject}}s in the mbus
-func (ms *MbusServer) List{{$crudObject}}s(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.{{$crudObject}}, error) {
+func (ms *MbusServer) List{{$crudObject}}s(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.{{$crudObject}}, error) {
     var objlist []*netproto.{{$crudObject}}
 
     // walk all objects
-    objs := ms.memDB.ListObjects("{{$crudObject}}", filters)
+    objs := ms.memDB.ListObjectsForReceiver("{{$crudObject}}", nodeID, filters)
     for _, oo := range objs {
         obj, err := {{$crudObject}}FromObj(oo)
         if err == nil {
@@ -363,7 +363,7 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
     }
 
     // walk all objects
-    objs := eh.server.memDB.ListObjects("{{$crudObject}}", filters)
+    objs := eh.server.memDB.ListObjectsForReceiver("{{$crudObject}}", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
     for _, oo := range objs {
         obj, err := {{$crudObject}}FromObj(oo)

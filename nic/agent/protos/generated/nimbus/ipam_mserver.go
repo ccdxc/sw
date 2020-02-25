@@ -36,11 +36,11 @@ func (ms *MbusServer) FindIPAMPolicy(objmeta *api.ObjectMeta) (*netproto.IPAMPol
 }
 
 // ListIPAMPolicys lists all IPAMPolicys in the mbus
-func (ms *MbusServer) ListIPAMPolicys(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.IPAMPolicy, error) {
+func (ms *MbusServer) ListIPAMPolicys(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.IPAMPolicy, error) {
 	var objlist []*netproto.IPAMPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("IPAMPolicy", filters)
+	objs := ms.memDB.ListObjectsForReceiver("IPAMPolicy", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := IPAMPolicyFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.List
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("IPAMPolicy", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("IPAMPolicy", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := IPAMPolicyFromObj(oo)

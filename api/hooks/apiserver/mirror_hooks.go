@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -23,7 +23,7 @@ type mirrorSessionHooks struct {
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
 	veniceMaxPacketSize           = 256
-	veniceMaxCollectorsPerSession = 1
+	veniceMaxCollectorsPerSession = 8
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -51,6 +51,8 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		return i, true, nil
 	}
 	// checks:
+	// Either Match Rule could be present or Interface selector, not both
+	// If Match rule we treat it as flow based rule else it is treated as catch all for interfaces
 	// PacketSize <= 256 if collector is Venice
 	// StartCondition: if specified, must not be in the past
 	// StopCondition: MUST be specified, MaxPacketCount <= 1000, expiryDuration <= 2h
@@ -65,6 +67,14 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	// Atleast 1 valid match rule
 	// Filter validation, ALL_DROPS cannot be used with specific DROP conditions
 	// ALL_PKTS implies all good packets, it can be specified with DROP condition(s)
+
+	if len(ms.Spec.MatchRules) != 0 && ms.Spec.InterfaceSelector != nil {
+		return i, false, fmt.Errorf("Either Match rules or Interface selector can be set, not both")
+	}
+
+	if len(ms.Spec.PacketFilters) != 0 && ms.Spec.InterfaceSelector != nil {
+		return i, false, fmt.Errorf("Interface selector could only be set with no packet filters")
+	}
 
 	if len(ms.Spec.Collectors) == 0 || len(ms.Spec.Collectors) > veniceMaxCollectorsPerSession {
 		return i, false, fmt.Errorf("Need atleast one mirror collector, upto %d max", veniceMaxCollectorsPerSession)
@@ -91,6 +101,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			return i, false, fmt.Errorf("Unsupported format used for schedule-time")
 		}
 	}
+
 	dropAllFilter := false
 	dropReasonFilter := false
 	allPktsFilter := false
@@ -111,6 +122,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	if len(ms.Spec.MatchRules) == 0 {
 		matchAll = true
 	}
+
 	for _, mr := range ms.Spec.MatchRules {
 
 		if mr.AppProtoSel != nil {
@@ -151,7 +163,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			return i, false, fmt.Errorf("Cannot use multiple match-rules when match-all is used")
 		}
 	}
-	if matchAll && !dropOnlyFilter {
+	if ms.Spec.InterfaceSelector == nil && matchAll && !dropOnlyFilter {
 		return i, false, fmt.Errorf("Match-all type rule can be used only for mirror-on-drop")
 	}
 

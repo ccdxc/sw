@@ -582,8 +582,19 @@ func (sm *SysModel) Networks() *objects.NetworkCollection {
 	return nil
 }
 
+// NewMirrorSession creates a new mirrorsession
 func (sm *SysModel) NewMirrorSession(name string) *objects.MirrorSessionCollection {
-	return nil
+	return objects.NewMirrorSession(name, sm.ObjClient(), sm.Tb)
+}
+
+// MirrorSessions returns all Mirror Sessions in the model
+func (sm *SysModel) MirrorSessions() *objects.MirrorSessionCollection {
+	msc := objects.MirrorSessionCollection{}
+	for _, sess := range msc.Sessions {
+		msc.Sessions = append(msc.Sessions, sess)
+	}
+
+	return &msc
 }
 
 func (sm *SysModel) NewNetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection {

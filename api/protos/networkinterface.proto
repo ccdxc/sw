@@ -146,7 +146,7 @@ message NetworkInterfaceStatus {
     NetworkInterfaceHostStatus IFHostStatus     = 6 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
     NetworkInterfaceUplinkStatus IFUplinkStatus = 7 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];
 
-    bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
+    repeated string MirroSessions               = 8 [(gogoproto.jsontag) = "mirror-sessions"];
     
     // Set only if interface is on Venice Node.
     string ClusterNode                          = 9 [(gogoproto.jsontag) = "cluster-node,omitempty"];

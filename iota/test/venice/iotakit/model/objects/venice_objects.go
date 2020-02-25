@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -112,7 +113,7 @@ func (vnc *VeniceNodeCollection) NonLeaders() *VeniceNodeCollection {
 		return vnc
 	}
 
-	nonLeaders := VeniceNodeCollection{}
+	nonLeaders := VeniceNodeCollection{CollectionCommon: vnc.CollectionCommon}
 	for _, node := range vnc.Nodes {
 		if cl.Status.Leader == node.iotaNode.Name || cl.Status.Leader == node.iotaNode.IpAddress {
 			continue
@@ -133,7 +134,7 @@ func (vnc *VeniceNodeCollection) Any(num int) *VeniceNodeCollection {
 		return vnc
 	}
 
-	newVnc := &VeniceNodeCollection{Nodes: []*VeniceNode{}}
+	newVnc := &VeniceNodeCollection{Nodes: []*VeniceNode{}, CollectionCommon: vnc.CollectionCommon}
 	tmpArry := make([]*VeniceNode, len(vnc.Nodes))
 	copy(tmpArry, vnc.Nodes)
 	for i := 0; i < num; i++ {
@@ -156,7 +157,7 @@ func (vnc *VeniceNodeCollection) SelectByPercentage(percent int) (*VeniceNodeCol
 		return nil, fmt.Errorf("venice collection error (%s)", vnc.err)
 	}
 
-	ret := &VeniceNodeCollection{}
+	ret := &VeniceNodeCollection{CollectionCommon: vnc.CollectionCommon}
 	for i, node := range vnc.Nodes {
 		ret.Nodes = append(ret.Nodes, node)
 		if (i + 1) >= len(vnc.Nodes)*percent/100 {
@@ -194,7 +195,7 @@ func (vnc *VeniceNodeCollection) Select(sel string) (*VeniceNodeCollection, erro
 	if vnc.HasError() {
 		return nil, fmt.Errorf("node collection error (%s)", vnc.err)
 	}
-	ret := &VeniceNodeCollection{}
+	ret := &VeniceNodeCollection{CollectionCommon: vnc.CollectionCommon}
 	params, err := parseSelectorString(sel)
 	if err != nil {
 		return ret, fmt.Errorf("could not parse selector")
@@ -235,6 +236,37 @@ func (vnc *VeniceNodeCollection) CaptureGRETCPDump(ctx context.Context) (string,
 	}
 
 	return stopResp[0].GetStdout(), nil
+}
+
+func (vnc *VeniceNodeCollection) GetGRETCPDumpCount(ctx context.Context) (int, error) {
+
+	trig := vnc.Testbed.NewTrigger()
+
+	trig.AddBackgroundCommand("tcpdump -x -nni eth0 ip proto gre -w test.pcap",
+		vnc.Nodes[0].Name()+"_venice", vnc.Nodes[0].Name())
+
+	resp, err := trig.Run()
+	if err != nil {
+		return 0, fmt.Errorf("Error running command %v", err.Error())
+	}
+
+	<-ctx.Done()
+	stopResp, err := trig.StopCommands(resp)
+	if err != nil {
+		return 0, fmt.Errorf("Error stopping command %v", err.Error())
+	}
+
+	trig = vnc.Testbed.NewTrigger()
+
+	trig.AddCommand("tcpdump -r test1.pcap  | wc -l",
+		vnc.Nodes[0].Name()+"_venice", vnc.Nodes[0].Name())
+
+	resp, err = trig.Run()
+	if err != nil {
+		return 0, fmt.Errorf("Error running command %v", err.Error())
+	}
+
+	return strconv.Atoi(strings.TrimSuffix(stopResp[0].GetStdout(), "\n"))
 }
 
 //GetVeniceNodeWithService  Get nodes running service

@@ -36,11 +36,11 @@ func (ms *MbusServer) FindEndpoint(objmeta *api.ObjectMeta) (*netproto.Endpoint,
 }
 
 // ListEndpoints lists all Endpoints in the mbus
-func (ms *MbusServer) ListEndpoints(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Endpoint, error) {
+func (ms *MbusServer) ListEndpoints(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Endpoint, error) {
 	var objlist []*netproto.Endpoint
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Endpoint", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Endpoint", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatc
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Endpoint", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Endpoint", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)

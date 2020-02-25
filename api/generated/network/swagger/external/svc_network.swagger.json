@@ -976,11 +976,13 @@
             "type": "string"
           },
           {
-            "name": "status.mirror-enabled",
+            "name": "status.mirror-sessions",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           {
             "name": "status.cluster-node",
@@ -7975,9 +7977,11 @@
         "if-uplink-status": {
           "$ref": "#/definitions/networkNetworkInterfaceUplinkStatus"
         },
-        "mirror-enabled": {
-          "type": "boolean",
-          "format": "boolean"
+        "mirror-sessions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "cluster-node": {
           "type": "string",

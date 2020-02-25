@@ -99,6 +99,7 @@ type ObjectIntf interface {
 	Naples() *objects.NaplesCollection
 	Networks() *objects.NetworkCollection
 	Workloads() *objects.WorkloadCollection
+	NetworkInterfaces() *objects.NetworkInterfaceCollection
 	WorkloadPairs() *objects.WorkloadPairCollection
 	NetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection
 	DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolicyCollection

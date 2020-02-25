@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
+	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 )
 
 var (
@@ -107,6 +108,38 @@ func (ms *MbusServer) DeleteObjectWithReferences(key string, obj memdb.Object,
 	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
 	return ms.memDB.DeleteObjectWithReferences(key, obj, refs)
 }
+
+// AddObjectWithReferences adds object to mbus with refs
+func (ms *MbusServer) AddPushObject(key string, obj memdb.Object, refs map[string]apiintf.ReferenceObj, receivers []objReceiver.Receiver) (memdb.PushObjectHandle, error) {
+
+	return ms.memDB.AddPushObject(key, obj, refs, receivers)
+}
+
+func (ms *MbusServer) AddReceiver(ID string) (objReceiver.Receiver, error) {
+	return ms.memDB.AddReceiver(ID)
+}
+
+func (ms *MbusServer) DeleteReceiver(recv objReceiver.Receiver) error {
+	return ms.memDB.DeleteReceiver(recv)
+}
+
+func (ms *MbusServer) FindReceiver(ID string) (objReceiver.Receiver, error) {
+	return ms.memDB.FindReceiver(ID)
+}
+
+//Exposing watch objects for unit testing
+func (ms *MbusServer) WatchObjects(kind string, watcher *memdb.Watcher) error {
+	return ms.memDB.WatchObjects(kind, watcher)
+}
+
+func (ms *MbusServer) EnableSelectivePushForKind(kind string) error {
+	return ms.memDB.EnableSelctivePush(kind)
+}
+
+func (ms *MbusServer) DisableSelectivePushForKind(kind string) error {
+	return ms.memDB.DisableKindPushFilter(kind)
+}
+
 
 // AddNodeState adds node state to an object
 func (ms *MbusServer) AddNodeState(nodeID string, obj memdb.Object) error {
@@ -229,7 +262,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 				} 
 				
-				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), filters)
+				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nodeID, filters)
 				if err != nil {
 					log.Errorf("Error getting a list of objects. Err: %v", err)
 					return nil, err
@@ -536,7 +569,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		switch kind {
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
-			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err

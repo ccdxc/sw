@@ -12,8 +12,15 @@ import (
 	"github.com/pensando/sw/api/graph"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
+
+	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api"
+)
+
+const (
+	maxReceivers = 8000
 )
 
 // Object is the interface all objects have to implement
@@ -87,6 +94,14 @@ type objState struct {
 	pendingObjs []Event // pending events when objet is in unresolved delete
 }
 
+func (obj *objState) Key() string {
+	return obj.key
+}
+
+func (obj *objState) SetValue(newObj Object) {
+	obj.obj = newObj
+}
+
 func (obj *objState) addToPending(event EventType, key string, newObj Object,
 	refs map[string]apiintf.ReferenceObj) {
 	obj.pendingObjs = append(obj.pendingObjs,
@@ -130,6 +145,10 @@ func (obj *objState) updateUnResolved() {
 	obj.resolveState = unresolvedUpdate
 }
 
+func (obj *objState) Object() Object {
+	return obj.obj
+}
+
 //FilterFn filter function
 type FilterFn func(obj, prev Object) bool
 
@@ -157,26 +176,72 @@ type Objdb struct {
 // Memdb is database of all objects
 type Memdb struct {
 	sync.Mutex
-	objdb           map[string]*Objdb
+	objdb           map[string]*Objdb //Db for for all broadcast objects
 	registeredKinds map[string]bool
+	pushdb          *pushDB
+	pObjDB          map[string]*pushObjDB //DB for all push objects
 	objGraph        graph.Interface
 	dbAddResolver   resolver
 	dbDelResolver   resolver
 }
 
+type objIntf interface {
+	addToPending(event EventType, key string, newObj Object,
+		refs map[string]apiintf.ReferenceObj)
+	getAndClearPending() []Event
+	isResolved() bool
+	isDelUnResolved() bool
+	isAddUnResolved() bool
+	isUpdateUnResolved() bool
+	resolved()
+	addUnResolved()
+	deleteUnResolved()
+	updateUnResolved()
+	Object() Object
+	Key() string
+	Lock()
+	Unlock()
+	SetValue(obj Object)
+}
+
+type objDBInterface interface {
+	watchEvent(obj objIntf, et EventType) error
+	getObject(key string) objIntf
+	setObject(key string, obj objIntf)
+	deleteObject(key string)
+	dbType() objDBType
+	Lock()
+	Unlock()
+}
+
+func sendToWatcher(ev Event, watcher *Watcher) error {
+	//fmt.Printf("Sending obj evemt %v %v\n", ev, obj.GetObjectMeta().GetKey())
+	select {
+	case watcher.Channel <- ev:
+	default:
+		log.Errorf("too slow agent and watcher events are greater than channel capacity")
+		// TODO: too slow agent and watcher events are greater than channel capacity..
+		// come up with a policy.. either close the connection or drop the events or something else
+	}
+	//log.Infof("Sending  Event %v kind %v, object %+v to watcher %v",
+	//	ev.EventType, ev.Obj.GetObjectKind(), ev.Obj.GetObjectMeta(), watcher.Name)
+	return nil
+
+}
+
 // watchEvent sends out watch event to all watchers
-func (od *Objdb) watchEvent(obj Object, et EventType) error {
+func (od *Objdb) watchEvent(obj objIntf, et EventType) error {
 	done := false
 	// create the event
 	ev := Event{
 		EventType: et,
-		Obj:       obj,
+		Obj:       obj.Object(),
 	}
 	od.WatchLock.RLock()
 	// send it to each watcher
 	for _, watcher := range od.watchers {
 		if len(watcher.Filters) != 0 {
-			if filters, ok := watcher.Filters[obj.GetObjectKind()]; ok {
+			if filters, ok := watcher.Filters[obj.Object().GetObjectKind()]; ok {
 				for _, flt := range filters {
 					if !flt(ev.Obj, nil) {
 						done = true
@@ -189,16 +254,7 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 				}
 			}
 		}
-		//fmt.Printf("Sending obj evemt %v %v\n", ev, obj.GetObjectMeta().GetKey())
-		select {
-		case watcher.Channel <- ev:
-		default:
-			log.Errorf("too slow agent and watcher events are greater than channel capacity")
-			// TODO: too slow agent and watcher events are greater than channel capacity..
-			// come up with a policy.. either close the connection or drop the events or something else
-		}
-		//log.Infof("Sending  Event %v kind %v, object %+v to watcher %v",
-		//	ev.EventType, ev.Obj.GetObjectKind(), ev.Obj.GetObjectMeta(), watcher.Name)
+		sendToWatcher(ev, watcher)
 	}
 	od.WatchLock.RUnlock()
 
@@ -215,6 +271,7 @@ func NewMemdb() *Memdb {
 
 	md.dbAddResolver = newAddResolver(&md)
 	md.dbDelResolver = newDeleteResolver(&md)
+	md.pushdb = newPushDB(&md)
 
 	md.objGraph, _ = graph.NewCayleyStore()
 
@@ -268,17 +325,43 @@ func (md *Memdb) getObjdb(kind string) *Objdb {
 	return od
 }
 
+type objDBType int
+
+const (
+	regularObjDBType objDBType = iota
+	pushObjDBType              = 1
+)
+
+func (md *Memdb) getObjectDB(dbType objDBType, kind string) objDBInterface {
+
+	if dbType == pushObjDBType {
+		return md.getPushObjectDBByType(kind)
+	}
+
+	return md.getObjectDBByType(kind)
+}
+
+func (md *Memdb) getPushObjdb(kind string) *pushObjDB {
+
+	return md.pushdb.getPushObjdb(kind)
+}
+
 // WatchObjects watches for changes on an object kind
 // TODO: Add support for watch support with resource version
 func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
-	od.WatchLock.Lock()
-	// add the channel to watch list and return
-	od.watchers = append(od.watchers, watcher)
-	od.watchMap[watcher.Name] = watcher
-	od.WatchLock.Unlock()
+	if !md.pushdb.KindEnabled(kind) {
+		od.WatchLock.Lock()
+		od.watchers = append(od.watchers, watcher)
+		od.watchMap[watcher.Name] = watcher
+		od.WatchLock.Unlock()
+	} else {
+		log.Infof("PushDB watch for kind %v", kind)
+		return md.pushdb.AddWatcher(kind, watcher)
+	}
+
 	return nil
 }
 
@@ -287,16 +370,21 @@ func (md *Memdb) StopWatchObjects(kind string, watcher *Watcher) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
-	// lock object db
-	od.WatchLock.Lock()
-	for i, other := range od.watchers {
-		if other == watcher {
-			od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
-			delete(od.watchMap, watcher.Name)
-			break
+	if !md.pushdb.KindEnabled(kind) {
+		// lock object db
+		od.WatchLock.Lock()
+		for i, other := range od.watchers {
+			if other == watcher {
+				od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
+				delete(od.watchMap, watcher.Name)
+				break
+			}
 		}
+		od.WatchLock.Unlock()
+	} else {
+		md.pushdb.RemoveWatcher(kind, watcher)
 	}
-	od.WatchLock.Unlock()
+
 	return nil
 }
 
@@ -318,55 +406,315 @@ func getSKindDKindFieldKey(key string) (string, string, string) {
 	return memDbKind(parts[0]), memDbKind(parts[1]), parts[2]
 }
 
-//AddObjectWithReferences add object with refs
-func (md *Memdb) AddObjectWithReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) error {
+//AddPushObject add push object to memdb
+func (md *Memdb) AddPushObject(key string, obj Object, refs map[string]apiintf.ReferenceObj, receivers []objReceiver.Receiver) (PushObjectHandle, error) {
+
 	if obj.GetObjectKind() == "" {
 		log.Errorf("Object kind is empty: %+v", obj)
 	}
 	md.filterOutRefs(refs)
 	// get objdb
-	od := md.getObjdb(obj.GetObjectKind())
 	if key == "" {
 		key = memdbKey(obj.GetObjectMeta())
 	}
 
+	newObj := &pObjState{objState: objState{
+		key:       key,
+		obj:       obj,
+		nodeState: make(map[string]Object),
+	},
+		bitMap:     bitset.New(maxReceivers),
+		sentBitMap: bitset.New(maxReceivers),
+		delBitMap:  bitset.New(maxReceivers),
+		pushdb:     md.pushdb,
+	}
+
+	for _, recv := range receivers {
+		r, ok := recv.(*receiver)
+		if !ok {
+			return nil, errors.New("Invalid receiver")
+		}
+		_, err := md.FindReceiver(r.ID)
+		if err != nil {
+			return nil, fmt.Errorf("Receiver %v not found", r.ID)
+		}
+		newObj.bitMap.Set(r.bitID)
+	}
+
+	err := md.addObject(md.getPushObjectDBByType(obj.GetObjectKind()), key, newObj, refs)
+	if err != nil {
+		return nil, err
+	}
+	return newObj, nil
+}
+
+func (md *Memdb) removeObjReceivers(pObj PushObjectHandle, receviers []objReceiver.Receiver) error {
+
+	pObjState, ok := pObj.(*pObjState)
+	if !ok {
+		return errors.New("Invalid push object type")
+	}
+
+	pObjState.Lock()
+	defer pObjState.Unlock()
+	for _, recv := range receviers {
+		r, ok := recv.(*receiver)
+		if !ok {
+			return errors.New("Invalid receiver")
+		}
+		_, err := md.FindReceiver(r.ID)
+		if err != nil {
+			return fmt.Errorf("Receiver %v not found", r.ID)
+		}
+
+		if pObjState.bitMap.Test(r.bitID) {
+			//Send to the receiver.
+			if pObjState.isResolved() {
+				md.pushdb.Lock()
+				kindWatchMap, ok := md.pushdb.watchMap[r.bitID]
+				if ok {
+					ev := Event{
+						EventType: DeleteEvent,
+						Obj:       pObjState.Object(),
+					}
+					watcher, ok := kindWatchMap[pObjState.obj.GetObjectKind()]
+					if ok {
+						log.Infof("Sending to receiver %p %v %v", watcher, watcher.Name, ev.Obj.GetObjectKind())
+						sendToWatcher(ev, watcher)
+					}
+				}
+				md.pushdb.Unlock()
+			}
+			pObjState.bitMap.Clear(r.bitID)
+			pObjState.sentBitMap.Clear(r.bitID)
+			pObjState.delBitMap.Clear(r.bitID)
+		}
+	}
+	return nil
+}
+
+func (md *Memdb) removeObjReceiverByBitID(obj *pObjState, id uint) {
+
+	pObjState := obj
+	if pObjState.bitMap.Test(id) {
+		//Send to the receiver.
+		if pObjState.isResolved() {
+			md.pushdb.Lock()
+			kindWatchMap, ok := md.pushdb.watchMap[id]
+			if ok {
+				ev := Event{
+					EventType: DeleteEvent,
+					Obj:       pObjState.Object(),
+				}
+				watcher, ok := kindWatchMap[pObjState.obj.GetObjectKind()]
+				if ok {
+					log.Infof("Sending to receiver %p %v %v", watcher, watcher.Name, ev.Obj.GetObjectKind())
+					sendToWatcher(ev, watcher)
+				}
+			}
+			md.pushdb.Unlock()
+		}
+		pObjState.bitMap.Clear(id)
+		pObjState.sentBitMap.Clear(id)
+		pObjState.delBitMap.Clear(id)
+	}
+
+}
+
+type receiver struct {
+	bitID uint
+	ID    string
+}
+
+//AddReceiver adds a receiver
+func (md *Memdb) AddReceiver(ID string) (objReceiver.Receiver, error) {
+	return md.pushdb.AddReceiver(ID)
+}
+
+//DeleteReceiver delete receiver
+func (md *Memdb) DeleteReceiver(recvr objReceiver.Receiver) error {
+	return md.pushdb.DeleteReceiver(recvr)
+}
+
+func (r *receiver) id() string {
+	return r.ID
+}
+
+func (r *receiver) bitid() uint {
+	return r.bitID
+}
+
+//EnableSelctivePush enables kind fitering
+func (md *Memdb) EnableSelctivePush(kind string) error {
+	return md.pushdb.EnableKind(kind)
+}
+
+//DisableKindPushFilter disables kind fitering
+func (md *Memdb) DisableKindPushFilter(kind string) error {
+	return md.pushdb.DisableKind(kind)
+}
+
+//FindReceiver find  receiver
+func (md *Memdb) FindReceiver(ID string) (objReceiver.Receiver, error) {
+	return md.pushdb.FindReceiver(ID)
+}
+
+//AddTObjectWithReferences add object with refs
+func (md *Memdb) AddTObjectWithReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) (PushObjectHandle, error) {
+	return nil, nil
+}
+
+func (od *Objdb) dbType() objDBType {
+	return regularObjDBType
+}
+
+func (od *Objdb) getObject(key string) objIntf {
+	obj, ok := od.objects[key]
+	if !ok {
+		return nil
+	}
+	return obj
+}
+
+func (od *Objdb) setObject(key string, obj objIntf) {
+	od.objects[key] = obj.(*objState)
+}
+
+func (od *Objdb) deleteObject(key string) {
+	delete(od.objects, key)
+}
+
+func (md *Memdb) getObjectDBByType(kind string) objDBInterface {
+
+	return md.getObjdb(kind)
+}
+
+func (md *Memdb) getPushObjectDBByType(kind string) objDBInterface {
+
+	return md.getPObjectDBByType(kind)
+}
+
+func (od *pushObjDB) getObject(key string) objIntf {
+	obj, ok := od.objects[key]
+	if !ok {
+		return nil
+	}
+	return obj
+}
+
+func (md *Memdb) getPObjectDBByType(kind string) objDBInterface {
+
+	return md.getPushObjdb(kind)
+}
+
+//AddObjectWithReferences add object with refs
+func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[string]apiintf.ReferenceObj) error {
+	if obj.Object().GetObjectKind() == "" {
+		log.Errorf("Object kind is empty: %+v", obj)
+	}
+
+	if key == "" {
+		key = memdbKey(obj.Object().GetObjectMeta())
+	}
 	// if we have the object, make this an update
 	od.Lock()
-	existingObj, ok := od.objects[key]
-	if ok {
+	existingObj := od.getObject(key)
+	if existingObj != nil {
 		//If delete is not resolved, add to pending
 		od.Unlock()
 		if existingObj.isDelUnResolved() {
-			existingObj.addToPending(CreateEvent, key, obj, refs)
+			existingObj.addToPending(CreateEvent, key, obj.Object(), refs)
 			return nil
 		}
-		return md.UpdateObjectWithReferences(key, obj, refs)
+		return md.updateObject(od, key, obj, refs)
 	}
 
-	md.updateReferences(key, obj, refs)
+	md.updateReferences(key, obj.Object(), refs)
+	od.setObject(key, obj)
+	od.Unlock()
+
+	if md.dbAddResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
+		log.Infof("Add Object key %v resolved", key)
+		obj.Lock()
+		obj.resolved()
+		obj.Unlock()
+		od.watchEvent(obj, CreateEvent)
+		md.dbAddResolver.trigger(od.dbType(), key, obj.Object())
+	} else {
+		obj.Lock()
+		obj.addUnResolved()
+		obj.Unlock()
+		log.Infof("Add Object key %v unresolved, refs %v", key, refs)
+	}
+	return nil
+}
+
+// UpdateObjectWithReferences updates an object in memdb and sends out watch notifications
+func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs map[string]apiintf.ReferenceObj) error {
+	if key == "" {
+		key = memdbKey(obj.Object().GetObjectMeta())
+	}
+	md.filterOutRefs(refs)
+
+	// lock object db
+	od.Lock()
+
+	// if we dont have the object, return error
+	ostate := od.getObject(key)
+	if ostate == nil {
+		od.Unlock()
+		log.Errorf("Object {%+v} not found", obj.Object().GetObjectMeta())
+		return errObjNotFound
+	}
+
 	// add it to db and send out watch notification
+
+	ostate.Lock()
+	od.Unlock()
+	if ostate.isDelUnResolved() {
+		//If it is marked for delete, wait it out
+		//reason to wait out is because create could be queued too.
+		log.Infof("Update Object key %v delete unresolved", key)
+		ostate.addToPending(UpdateEvent, key, obj.Object(), refs)
+		ostate.Unlock()
+		return nil
+	}
+
+	md.updateReferences(key, obj.Object(), refs)
+	ostate.SetValue(obj.Object())
+
+	if md.dbAddResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
+		log.Infof("Update Object key %v resolved", key)
+		event := UpdateEvent
+		if ostate.isAddUnResolved() {
+			//It was not resolved before, hence set it to create now
+			//change even to create event as we never sent the object
+			event = CreateEvent
+		}
+		ostate.resolved()
+		ostate.Unlock()
+		od.watchEvent(ostate, event)
+		md.dbAddResolver.trigger(od.dbType(), key, obj.Object())
+	} else {
+		log.Infof("Update Object key %v unresolved", key)
+		ostate.updateUnResolved()
+		ostate.Unlock()
+	}
+	return nil
+}
+
+//AddObjectWithReferences add object with refs
+func (md *Memdb) AddObjectWithReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) error {
+	if key == "" {
+		key = memdbKey(obj.GetObjectMeta())
+	}
 	newObj := &objState{
 		key:       key,
 		obj:       obj,
 		nodeState: make(map[string]Object),
 	}
-	od.objects[key] = newObj
-	od.Unlock()
 
-	if md.dbAddResolver.resolvedCheck(key, obj) {
-		log.Infof("Add Object key %v resolved", key)
-		newObj.Lock()
-		newObj.resolved()
-		newObj.Unlock()
-		od.watchEvent(obj, CreateEvent)
-		md.dbAddResolver.trigger(key, obj)
-	} else {
-		newObj.Lock()
-		newObj.addUnResolved()
-		newObj.Unlock()
-		log.Infof("Add Object key %v unresolved, refs %v", key, refs)
-	}
-	return nil
+	return md.addObject(md.getObjectDBByType(obj.GetObjectKind()), key, newObj, refs)
 }
 
 // AddObject adds an object to memdb and sends out watch notifications
@@ -379,59 +727,23 @@ func (md *Memdb) UpdateObjectWithReferences(key string, obj Object, refs map[str
 	if key == "" {
 		key = memdbKey(obj.GetObjectMeta())
 	}
-	md.filterOutRefs(refs)
-	// get objdb
-	od := md.getObjdb(obj.GetObjectKind())
 
-	// lock object db
-	od.Lock()
-
-	// if we dont have the object, return error
-	ostate, ok := od.objects[key]
-	if !ok {
-		od.Unlock()
-		log.Errorf("Object {%+v} not found", obj.GetObjectMeta())
-		return errObjNotFound
+	updObj := &objState{
+		key:       key,
+		obj:       obj,
+		nodeState: make(map[string]Object),
 	}
-
-	// add it to db and send out watch notification
-
-	ostate.Lock()
-	od.Unlock()
-	if ostate.isDelUnResolved() {
-		//If it is marked for delete, wait it out
-		//reason to wait out is because create could be queued too.
-		ostate.addToPending(UpdateEvent, key, obj, refs)
-		ostate.Unlock()
-		return nil
-	}
-
-	md.updateReferences(key, obj, refs)
-	ostate.obj = obj
-
-	if md.dbAddResolver.resolvedCheck(key, obj) {
-		//log.Infof("Update Object key %v resolved", key)
-		event := UpdateEvent
-		if ostate.isAddUnResolved() {
-			//It was not resolved before, hence set it to create now
-			//change even to create event as we never sent the object
-			event = CreateEvent
-		}
-		ostate.resolved()
-		ostate.Unlock()
-		od.watchEvent(obj, event)
-		md.dbAddResolver.trigger(key, obj)
-	} else {
-		//log.Infof("Update Object key %v unresolved", key)
-		ostate.updateUnResolved()
-		ostate.Unlock()
-	}
-	return nil
+	return md.updateObject(md.getObjectDBByType(obj.GetObjectKind()), key, updObj, refs)
 }
 
 //UpdateObject update object with references
 func (md *Memdb) UpdateObject(obj Object) error {
-	return md.UpdateObjectWithReferences("", obj, nil)
+	updObj := &objState{
+		key:       "",
+		obj:       obj,
+		nodeState: make(map[string]Object),
+	}
+	return md.updateObject(md.getObjectDBByType(obj.GetObjectKind()), "", updObj, nil)
 }
 
 func (md *Memdb) clearReferences(key string) {
@@ -464,22 +776,17 @@ func (md *Memdb) updateReferences(key string, obj Object, refs map[string]apiint
 }
 
 // DeleteObjectWithReferences deletes an object from memdb and sends out watch notifications
-func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) error {
-	// get objdb
-	od := md.getObjdb(obj.GetObjectKind())
+func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs map[string]apiintf.ReferenceObj) error {
+	// if we dont have the object, return error
 
 	md.filterOutRefs(refs)
 	// lock object db
 	od.Lock()
 
-	// if we dont have the object, return error
-	if key == "" {
-		key = memdbKey(obj.GetObjectMeta())
-	}
-	existingObj, ok := od.objects[key]
-	if !ok {
+	existingObj := od.getObject(key)
+	if existingObj == nil {
 		od.Unlock()
-		log.Errorf("Object {%+v} not found", obj.GetObjectMeta())
+		log.Errorf("Object {%+v} not found", obj.Object().GetObjectMeta())
 		return errors.New("Object not found")
 	}
 	od.Unlock()
@@ -487,20 +794,20 @@ func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[str
 	existingObj.Lock()
 	if !(existingObj.isResolved()) {
 		log.Infof("Exisiting object unresolved, pending add for %v", key)
-		existingObj.addToPending(DeleteEvent, key, obj, refs)
+		existingObj.addToPending(DeleteEvent, key, obj.Object(), refs)
 		existingObj.Unlock()
 		return nil
 	}
 
-	if md.dbDelResolver.resolvedCheck(key, obj) {
+	if md.dbDelResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
 		// add it to db and send out watch notification
 		log.Infof("Delete Object key %v resolved, refs %v", key, refs)
 		existingObj.Unlock()
 		od.Lock()
-		delete(od.objects, key)
+		od.deleteObject(key)
 		od.Unlock()
-		od.watchEvent(existingObj.obj, DeleteEvent)
-		md.dbDelResolver.trigger(key, obj)
+		od.watchEvent(existingObj, DeleteEvent)
+		md.dbDelResolver.trigger(od.dbType(), key, obj.Object())
 	} else {
 		log.Infof("Delete Object key %v unresolved, refs %v", key, refs)
 		existingObj.deleteUnResolved()
@@ -508,6 +815,20 @@ func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[str
 	}
 
 	return nil
+}
+
+// DeleteObjectWithReferences deletes an object from memdb and sends out watch notifications
+func (md *Memdb) DeleteObjectWithReferences(key string, obj Object, refs map[string]apiintf.ReferenceObj) error {
+	if key == "" {
+		key = memdbKey(obj.GetObjectMeta())
+	}
+
+	delObj := &objState{
+		key:       key,
+		obj:       obj,
+		nodeState: make(map[string]Object),
+	}
+	return md.deleteObject(md.getObjectDBByType(obj.GetObjectKind()), key, delObj, nil)
 }
 
 // DeleteObject deletes an object from memdb and sends out watch notifications
@@ -533,9 +854,10 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 	return ostate.obj, nil
 }
 
-// ListObjects returns a list of all objects of a kind
+// ListObjects returns a list of all receivers
 func (md *Memdb) ListObjects(kind string, filters []FilterFn) []Object {
 	done := false
+
 	// get objdb
 	od := md.getObjdb(kind)
 
@@ -567,6 +889,16 @@ func (md *Memdb) ListObjects(kind string, filters []FilterFn) []Object {
 	}
 
 	return objs
+}
+
+// ListObjectsForReceiver returns a list of all receivers
+func (md *Memdb) ListObjectsForReceiver(kind string, receiverID string, filters []FilterFn) []Object {
+
+	if md.pushdb.KindEnabled(kind) {
+		return md.pushdb.ListObjects(kind, receiverID)
+	}
+
+	return md.ListObjects(kind, filters)
 }
 
 // AddNodeState adds node state to an object

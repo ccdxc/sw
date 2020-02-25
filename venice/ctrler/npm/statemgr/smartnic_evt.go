@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -17,6 +18,7 @@ import (
 type DistributedServiceCardState struct {
 	DistributedServiceCard *ctkit.DistributedServiceCard `json:"-"` // smartNic object
 	stateMgr               *Statemgr                     // pointer to state manager
+	recvHandle             objReceiver.Receiver
 }
 
 //GetDistributedServiceCardWatchOptions gets options
@@ -45,9 +47,15 @@ func DistributedServiceCardStateFromObj(obj runtime.Object) (*DistributedService
 
 // NewDistributedServiceCardState creates new smartNic state object
 func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stateMgr *Statemgr) (*DistributedServiceCardState, error) {
+	recvHandle, err := stateMgr.mbus.AddReceiver(smartNic.Status.PrimaryMAC)
+	if err != nil {
+		return nil, fmt.Errorf("Error add dsc %v", err)
+	}
+	log.Infof("Added DSC %v as a receiver", smartNic.Status.PrimaryMAC)
 	hs := &DistributedServiceCardState{
 		DistributedServiceCard: smartNic,
 		stateMgr:               stateMgr,
+		recvHandle:             recvHandle,
 	}
 	smartNic.HandlerCtx = hs
 
@@ -229,6 +237,13 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 
 	log.Infof("Deleting smart nic: %+v", smartNic)
 
+	defer func() {
+		err := sm.mbus.DeleteReceiver(hs.recvHandle)
+		if err != nil {
+			log.Errorf("Error deleting receiver %v", err.Error())
+		}
+		log.Infof("Removed DSC %v as a receiver", hs.DistributedServiceCard.Status.PrimaryMAC)
+	}()
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {

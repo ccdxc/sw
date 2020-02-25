@@ -36,11 +36,11 @@ func (ms *MbusServer) FindSecurityProfile(objmeta *api.ObjectMeta) (*netproto.Se
 }
 
 // ListSecurityProfiles lists all SecurityProfiles in the mbus
-func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.SecurityProfile, error) {
+func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.SecurityProfile, error) {
 	var objlist []*netproto.SecurityProfile
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SecurityProfile", filters)
+	objs := ms.memDB.ListObjectsForReceiver("SecurityProfile", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SecurityProfile", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("SecurityProfile", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)

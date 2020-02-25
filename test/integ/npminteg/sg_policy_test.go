@@ -339,7 +339,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// create a new agent instance
 	agNum := len(it.agents)
-	agent, err := CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", agNum))
+	agent, err := CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("0001.%02x00.0000", agNum))
 	c.Assert(err, IsNil)
 	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("0001.%02x00.0000", agNum))
 	AssertOk(c, err, "Error creating new host")
@@ -400,7 +400,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	snic.Status.Conditions[0].Status = "TRUE"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
-	agent, err = CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", agNum))
+	agent, err = CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("0001.%02x00.0000", agNum))
 	c.Assert(err, IsNil)
 
 	// verify policy status reflects snic being healthy
@@ -418,7 +418,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// stop the new agent
 	agent.dscAgent.Stop()
-	err = it.DeleteHost(fmt.Sprintf("testHost-%d", agNum))
+	err = it.DeleteHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("0001.%02x00.0000", agNum))
 	AssertOk(c, err, "Error deleting new host")
 
 	// verify policy status reflects agent going away

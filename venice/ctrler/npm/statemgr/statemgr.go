@@ -48,6 +48,7 @@ type Topics struct {
 	SecurityProfileTopic       *nimbus.SecurityProfileTopic
 	NetworkSecurityPolicyTopic *nimbus.NetworkSecurityPolicyTopic
 	NetworkInterfaceTopic      *nimbus.InterfaceTopic
+	CollectorTopic             *nimbus.CollectorTopic
 	AggregateTopic             *nimbus.AggregateTopic
 	IPAMPolicyTopic            *nimbus.IPAMPolicyTopic
 	RoutingConfigTopic         *nimbus.RoutingConfigTopic
@@ -79,6 +80,7 @@ type Statemgr struct {
 	IPAMPolicyReactor             ctkit.IPAMPolicyHandler
 	RoutingConfigReactor          ctkit.RoutingConfigHandler
 	DSCProfileReactor             ctkit.DSCProfileHandler
+	MirrorSessionReactor          ctkit.MirrorSessionHandler
 
 	SecurityProfileStatusReactor       nimbus.SecurityProfileStatusReactor
 	AppStatusReactor                   nimbus.AppStatusReactor
@@ -89,6 +91,7 @@ type Statemgr struct {
 	IPAMPolicyStatusReactor            nimbus.IPAMPolicyStatusReactor
 	AggregateStatusReactor             nimbus.AggStatusReactor
 	RoutingConfigStatusReactor         nimbus.RoutingConfigStatusReactor
+	CollectorStatusReactor             nimbus.CollectorStatusReactor
 }
 
 // SetSecurityProfileStatusReactor sets the SecurityProfileStatusReactor
@@ -99,6 +102,11 @@ func (sm *Statemgr) SetSecurityProfileStatusReactor(handler nimbus.SecurityProfi
 // SetNetworkInterfaceStatusReactor sets the InterfaceStatusReactor
 func (sm *Statemgr) SetNetworkInterfaceStatusReactor(handler nimbus.InterfaceStatusReactor) {
 	sm.NetworkInterfaceStatusReactor = handler
+}
+
+// SetCollectorStatusReactor sets the CollectorStatusReactor
+func (sm *Statemgr) SetCollectorStatusReactor(handler nimbus.CollectorStatusReactor) {
+	sm.CollectorStatusReactor = handler
 }
 
 // SetAppStatusReactor sets the AppStatusReactor
@@ -209,6 +217,11 @@ func (sm *Statemgr) SetWorkloadReactor(handler ctkit.WorkloadHandler) {
 // SetNetworkInterfaceReactor sets the NetworkInterface reactor
 func (sm *Statemgr) SetNetworkInterfaceReactor(handler ctkit.NetworkInterfaceHandler) {
 	sm.NetworkInterfaceReactor = handler
+}
+
+// SetMirrorSessionReactor sets the  MirrorSession reactor
+func (sm *Statemgr) SetMirrorSessionReactor(handler ctkit.MirrorSessionHandler) {
+	sm.MirrorSessionReactor = handler
 }
 
 // SetRoutingConfigReactor sets the RoutingConfig reactor
@@ -338,6 +351,8 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 
 	sm.SetNetworkInterfaceReactor(reactor)
 
+	sm.SetMirrorSessionReactor(reactor)
+
 	sm.SetIPAMPolicyReactor(reactor)
 
 	sm.SetRoutingConfigReactor(reactor)
@@ -454,6 +469,11 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		logger.Fatalf("Error watching network-interface")
 	}
 
+	err = ctrler.MirrorSession().Watch(sm.MirrorSessionReactor)
+	if err != nil {
+		logger.Fatalf("Error watching mirror")
+	}
+
 	err = ctrler.IPAMPolicy().Watch(sm.IPAMPolicyReactor)
 	if err != nil {
 		logger.Fatalf("Error watching ipam-policy")
@@ -500,6 +520,13 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		log.Errorf("Error starting network interface RPC server")
 		return err
 	}
+
+	sm.topics.CollectorTopic, err = nimbus.AddCollectorTopic(mserver, sm.CollectorStatusReactor)
+	if err != nil {
+		log.Errorf("Error starting collector interface RPC server")
+		return err
+	}
+
 	sm.topics.IPAMPolicyTopic, err = nimbus.AddIPAMPolicyTopic(mserver, sm.IPAMPolicyStatusReactor)
 	if err != nil {
 		log.Errorf("Error starting network interface RPC server: %v", err)
@@ -529,6 +556,83 @@ func (sm *Statemgr) registerKindsWithMbus() {
 	sm.mbus.RegisterKind("Collector")
 }
 
+//EnableSelectivePushForKind enable selective push for a kind
+func (sm *Statemgr) EnableSelectivePushForKind(kind string) error {
+	return sm.mbus.EnableSelectivePushForKind(kind)
+}
+
+//DisableSelectivePushForKind disable selective push for a kind
+func (sm *Statemgr) DisableSelectivePushForKind(kind string) error {
+	return sm.mbus.DisableSelectivePushForKind(kind)
+}
+
+//DSCAddedAsReceiver checks whether DSC is added as receiver
+func (sm *Statemgr) DSCAddedAsReceiver(ID string) (bool, error) {
+	if _, err := sm.mbus.FindReceiver(ID); err == nil {
+		return true, nil
+	}
+
+	return false, fmt.Errorf("DSC %v not added as receiver", ID)
+}
+
+/*
+
+//Sample Code to push object to receivers
+
+func (sm *Statemgr) ReferenceCodeForSelectivePush() {
+
+	//NOTE :
+
+	//Push object should be enabled by kind that will be sent to agents
+
+	//This should be done when npm start to specicy which kind of  objects should be subjected to selective push
+	sm.EnableSelectivePushForKind("SecurityProfile")
+
+
+	//Try to find the DSC by primary MAC
+	_, err := sm.mbus.FindReceiver(ID)
+	if err != nil {
+		return false, fmt.Errorf("Receiver %v", ID)
+	}
+
+	//Add new object along with receivers.
+	receivers := []memdb.Receiver{recvr}
+	pushObj, err := sm.mbus.AddPushObject(app.MakeKey("security"), convertApp(aps), references(app), receivers)
+	if err != nil {
+		return false, fmt.Errorf("Error adding  %v", ID)
+	}
+
+	//Try to add a different receiver to existing object
+	diffRecvr, err = sm.mbus.FindReceiver(ID_DIFFERNET)
+	if err != nil {
+		return false, fmt.Errorf("Receiver %v", ID)
+	}
+
+
+	receivers = []memdb.Receiver{diffRecvr}
+	pushObj.AddObjReceivers(receivers)
+	if err != nil {
+		return false, fmt.Errorf("Receiver %v", ID)
+	}
+
+	//Remove Receivers (Delete will be sent)
+	err = pushObj.RemoveObjReceivers(receivers)
+	if err != nil {
+		return false, fmt.Errorf("Receiver %v", ID)
+	}
+
+	//udpateObect as is
+	pushObj.UpdateObjectWithReferences()
+
+	pushObj.DeleteObjectWithReferences()
+
+	if err != nil {
+		return false, fmt.Errorf("Error adding  %v", ID)
+	}
+}
+
+
+*/
 // runPeriodicUpdater runs periodic and write objects back
 func runPeriodicUpdater(queue chan updatable) {
 	ticker := time.NewTicker(1 * time.Second)

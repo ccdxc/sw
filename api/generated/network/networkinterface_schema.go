@@ -67,7 +67,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
 			"mac-address":      api.CLIInfo{Path: "Spec.MACAddress", Skip: false, Insert: "", Help: ""},
-			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
+			"mirror-sessions":  api.CLIInfo{Path: "Status.MirroSessions", Skip: false, Insert: "", Help: ""},
 			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Status.Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
@@ -134,7 +134,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 
 			"IFUplinkStatus": api.Field{Name: "IFUplinkStatus", CLITag: api.CLIInfo{ID: "if-uplink-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-uplink-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.NetworkInterfaceUplinkStatus"},
 
-			"MirrorEnabled": api.Field{Name: "MirrorEnabled", CLITag: api.CLIInfo{ID: "mirror-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+			"MirroSessions": api.Field{Name: "MirroSessions", CLITag: api.CLIInfo{ID: "mirror-sessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-sessions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ClusterNode": api.Field{Name: "ClusterNode", CLITag: api.CLIInfo{ID: "cluster-node", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cluster-node", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},

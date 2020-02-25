@@ -4,9 +4,14 @@ package statemgr
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
+	"math"
+	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,16 +21,37 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/featureflags"
+	memdb "github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
+
+func stringSliceEqual(X, Y []string) bool {
+	m := make(map[string]int)
+
+	for _, y := range Y {
+		m[y]++
+	}
+
+	for _, x := range X {
+		if m[x] > 0 {
+			m[x]--
+			continue
+		}
+		//not present or execess
+		return false
+	}
+
+	return len(m) == 0
+}
 
 // createRoutingConfig utility function to create a routing config
 func createRoutingConfig(stateMgr *Statemgr, tenant, name, IP string) (*network.RoutingConfig, error) {
@@ -216,6 +242,114 @@ func createEndpoint(stateMgr *Statemgr, tenant, endpoint, net string) (*workload
 	}
 
 	return &ep, stateMgr.ctrler.Endpoint().Create(&ep)
+}
+
+func createMirror(stateMgr *Statemgr, tenant, mirrorName string, collectors []monitoring.MirrorCollector, selector *labels.Selector) (*monitoring.MirrorSession, error) {
+	mr := monitoring.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: "default",
+			Name:      mirrorName,
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			InterfaceSelector: selector,
+			Collectors:        collectors,
+		},
+	}
+
+	// create sg
+	err := stateMgr.ctrler.MirrorSession().Create(&mr)
+
+	return &mr, err
+}
+
+func updateMirror(stateMgr *Statemgr, tenant, mirrorName string, collectors []monitoring.MirrorCollector, selector *labels.Selector) (*monitoring.MirrorSession, error) {
+	mr := monitoring.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: "default",
+			Name:      mirrorName,
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			InterfaceSelector: selector,
+			Collectors:        collectors,
+		},
+	}
+
+	err := stateMgr.ctrler.MirrorSession().Update(&mr)
+
+	return &mr, err
+}
+
+func deleteMirror(stateMgr *Statemgr, tenant, mirrorName string, selector *labels.Selector) (*monitoring.MirrorSession, error) {
+	mr := monitoring.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: "default",
+			Name:      mirrorName,
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			InterfaceSelector: selector,
+		},
+	}
+
+	// create sg
+	err := stateMgr.ctrler.MirrorSession().Delete(&mr)
+
+	return &mr, err
+}
+
+func createNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, label map[string]string) (*network.NetworkInterface, error) {
+	nr := network.NetworkInterface{
+		TypeMeta: api.TypeMeta{Kind: "NetworkInterface"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   intfName,
+			Labels: label,
+		},
+		Spec:   network.NetworkInterfaceSpec{},
+		Status: network.NetworkInterfaceStatus{DSC: dsc},
+	}
+
+	// create sg
+	err := stateMgr.ctrler.NetworkInterface().Create(&nr)
+
+	return &nr, err
+}
+
+func updateNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, label map[string]string) (*network.NetworkInterface, error) {
+	nr := network.NetworkInterface{
+		TypeMeta: api.TypeMeta{Kind: "NetworkInterface"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   intfName,
+			Labels: label,
+		},
+		Spec:   network.NetworkInterfaceSpec{},
+		Status: network.NetworkInterfaceStatus{DSC: dsc},
+	}
+
+	// create sg
+	err := stateMgr.ctrler.NetworkInterface().Update(&nr)
+
+	return &nr, err
+}
+
+func deleteNetworkInterface(stateMgr *Statemgr, intfName string, label map[string]string) (*network.NetworkInterface, error) {
+	nr := network.NetworkInterface{
+		TypeMeta: api.TypeMeta{Kind: "NetworkInterface"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   intfName,
+			Labels: label,
+		},
+		Spec: network.NetworkInterfaceSpec{},
+	}
+
+	// create sg
+	err := stateMgr.ctrler.NetworkInterface().Delete(&nr)
+
+	return &nr, err
 }
 
 // createVirtualRouter utility function to create a VirtualRouter
@@ -2488,8 +2622,14 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		foundDistributedServiceCard, err := stateMgr.FindDistributedServiceCard("default", "testDistributedServiceCard")
 		if err == nil && foundDistributedServiceCard.DistributedServiceCard.Status.PrimaryMAC == "0001.0203.0405" {
+			recvr, err := stateMgr.mbus.FindReceiver(foundDistributedServiceCard.DistributedServiceCard.Status.PrimaryMAC)
+			if recvr == nil || err != nil {
+				return false, nil
+			}
 			return true, nil
+
 		}
+
 		return false, nil
 	}, "Did not find DSC", "1ms", "2s")
 
@@ -2543,6 +2683,10 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindDistributedServiceCard("default", "testDistributedServiceCard")
 		if err != nil {
+			recvr, err := stateMgr.mbus.FindReceiver(snic.Status.PrimaryMAC)
+			if recvr != nil || err == nil {
+				return false, nil
+			}
 			return true, nil
 		}
 		return false, nil
@@ -3105,6 +3249,3221 @@ func TestModuleObject(t *testing.T) {
 	AssertOk(t, err, "failed to Delete Module")
 }
 
+func getCollectors(start, end int) (collectors []monitoring.MirrorCollector) {
+
+	for i := start; i < end; i++ {
+		collectors = append(collectors, monitoring.MirrorCollector{ExportCfg: &monitoring.MirrorExportConfig{
+			Destination: getCollectorName(i),
+		}})
+	}
+
+	return
+}
+
+func getCollectorName(i int) string {
+	return "col-" + strconv.Itoa(i)
+}
+
+func TestMirrorCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	numCollectors := 10
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		Assert(t, err != nil, "Error finding collector  ")
+		Assert(t, col == nil, "Error finding collector  ")
+	}
+
+}
+
+func TestMirrorCreateDeleteCollectorReuse(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	numCollectors := 10
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = createMirror(stateMgr, "default", "testMirror1", collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 2, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		Assert(t, err != nil, "Error finding collector  ")
+		Assert(t, col == nil, "Error finding collector  ")
+	}
+
+}
+
+func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	numCollectors := 10
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = createMirror(stateMgr, "default", "testMirror1", collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 2, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	//Add new collectors for same mirror
+	newCollectors := getCollectors(numCollectors, numCollectors+10)
+	_, err = updateMirror(stateMgr, "default", "testMirror1", newCollectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := numCollectors; i < numCollectors+10; i++ {
+		fmt.Printf("Checking collector %v", getCollectorName(i))
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	//Remove some and add new ones
+	newCollectors = getCollectors(0, numCollectors+5)
+	_, err = updateMirror(stateMgr, "default", "testMirror1", newCollectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for i := numCollectors; i < numCollectors+5; i++ {
+		fmt.Printf("Checking collector %v", getCollectorName(i))
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	for i := numCollectors + 5; i < numCollectors+10; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		Assert(t, err != nil, "Error finding collector  ")
+		Assert(t, col == nil, "Error finding collector  ")
+	}
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 2, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	for i := 0; i < numCollectors; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		AssertOk(t, err, "Error finding collector  ")
+		Assert(t, col.pushObj != nil, "push object not set")
+		Assert(t, col.refCount == 1, "push object not set")
+		Assert(t, col.obj != nil, "push object not set")
+		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	for i := 0; i < numCollectors+10; i++ {
+		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
+		Assert(t, err != nil, "Error finding collector  ")
+		Assert(t, col == nil, "Error finding collector  ")
+	}
+
+}
+
+func createDSC(stateMgr *Statemgr, dscName string, mac string) (*cluster.DistributedServiceCard, error) {
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: dscName,
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			PrimaryMAC: mac,
+		},
+	}
+
+	// create the smartNic
+	err := stateMgr.ctrler.DistributedServiceCard().Create(&snic)
+
+	return &snic, err
+}
+
+func genMACAddresses(count int) []string {
+	var macAddresses []string
+	macAddress := make(map[uint64]bool)
+	for i := 0; i < count; i++ {
+		for true {
+			num := uint64(rand.Int63n(math.MaxInt64))
+			if _, ok := macAddress[num]; !ok {
+				b := make([]byte, 8)
+				macAddress[num] = true
+				binary.BigEndian.PutUint64(b, num)
+				b[0] = (b[0] | 2) & 0xfe
+				mac := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+				macAddresses = append(macAddresses, mac)
+				break
+			}
+		}
+	}
+
+	return macAddresses
+}
+
+func createsDSCs(stateMgr *Statemgr, start, end int) []*cluster.DistributedServiceCard {
+
+	dscs := []*cluster.DistributedServiceCard{}
+	macs := genMACAddresses(end - start + 1)
+	for i := start; i < end; i++ {
+		id := strconv.Itoa(i)
+		dsc, _ := createDSC(stateMgr, "dsc"+id, macs[i])
+		dscs = append(dscs, dsc)
+	}
+
+	return dscs
+}
+
+func TestNetworkInterfaceCreateDelete(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	dscs := createsDSCs(stateMgr, 0, 1)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	_, err = createNetworkInterface(stateMgr, "intf1", dscs[0].Status.PrimaryMAC, labels.Set{"env": "production", "app": "procurement"})
+	AssertOk(t, err, "Error creating interface ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrNetworkInterface.FindNetworkInterface("intf1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Interface not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.findInterfacesByLabel(labels.Set{"env": "production", "app": "procurement"})
+	AssertOk(t, err, "Error creating interface ")
+	Assert(t, len(intfs) == 1, "Number of interfaces don't match")
+
+	intfs, err = smgrNetworkInterface.findInterfacesByLabel(labels.Set{"env": "production1", "app": "procurement"})
+	AssertOk(t, err, "Error creating interface ")
+	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+
+	_, err = deleteNetworkInterface(stateMgr, "intf1", labels.Set{"env": "production", "app": "procurement"})
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrNetworkInterface.FindNetworkInterface("intf1")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Interface session found", "1ms", "1s")
+
+}
+
+func TestNetworkInterfaceCreateDeleteMultiple(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 20
+
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+	label2 := map[string]string{
+		"env": "production1", "app": "procurement1",
+	}
+	for i := 0; i < numOfIntfs; i++ {
+
+		intf := "intf" + strconv.Itoa(i)
+
+		_, err = createNetworkInterface(stateMgr, intf, dscs[i].Status.PrimaryMAC, label1)
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(intf)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.findInterfacesByLabel(label1)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(label1))
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
+
+		intfs, err = smgrNetworkInterface.findInterfacesByLabel(label2)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		intf := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, intf, label1)
+		AssertOk(t, err, "Error creating mirror session ")
+
+		intfs, err := smgrNetworkInterface.findInterfacesByLabel(label1)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == numOfIntfs-(i+1), "Number of interfaces don't match")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(intf)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+	}
+
+}
+
+func TestNetworkInterfaceCreateDeleteMultipleLabelChange(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 20
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+	label2 := map[string]string{
+		"env": "production1", "app": "procurement1",
+	}
+	for i := 0; i < numOfIntfs; i++ {
+
+		intf := "intf" + strconv.Itoa(i)
+
+		_, err = createNetworkInterface(stateMgr, intf, dscs[i].Status.PrimaryMAC, label1)
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(intf)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.findInterfacesByLabel(label1)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
+
+		intfs, err = smgrNetworkInterface.findInterfacesByLabel(label2)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+
+		intf := "intf" + strconv.Itoa(i)
+
+		_, err = updateNetworkInterface(stateMgr, intf, dscs[i].Status.PrimaryMAC, label2)
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(intf)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.findInterfacesByLabel(label1)
+		AssertOk(t, err, "Error creating interface ")
+		log.Infof("Number of interfaces %v", len(intfs))
+		Assert(t, len(intfs) == numOfIntfs-(i+1), "Number of interfaces don't match")
+
+		intfs, err = smgrNetworkInterface.findInterfacesByLabel(label2)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		intf := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, intf, label2)
+		AssertOk(t, err, "Error creating mirror session ")
+
+		intfs, err := smgrNetworkInterface.findInterfacesByLabel(label2)
+		AssertOk(t, err, "Error creating interface ")
+		Assert(t, len(intfs) == numOfIntfs-(i+1), "Number of interfaces don't match")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(intf)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+	}
+
+}
+
+func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	label2 := map[string]string{
+		"env1": "production", "app2": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	newCollectorsCnt := 10
+	collectors := getCollectors(0, numCollectors)
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, nil)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	newCollectorsCnt := 10
+	collectors := getCollectors(0, numCollectors)
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, nil)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	numOfIntfs2 := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	label2 := map[string]string{
+		"env1": "production", "app1": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	for i := 0; i < numOfIntfs2; i++ {
+		name := "intf-1-" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	newCollectorsCnt := 10
+	collectors := getCollectors(0, numCollectors)
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label2 has not collectors yet
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label1 collectors need to be removed
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label2 collectors need to be addeded
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	numOfIntfs2 := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"key": "value", "env": "production",
+	}
+
+	label2 := map[string]string{
+		"key": "value", "app": "procurement",
+	}
+
+	//label3 is common factor
+	label3 := map[string]string{
+		"key": "value",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	for i := 0; i < numOfIntfs2; i++ {
+		name := "intf-1-" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	newCollectorsCnt := 10
+	collectors := getCollectors(0, numCollectors)
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label2 has not collectors yet
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label3)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label1 collectors need to be removed
+	//label2 collectors need to be addeded
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	//label2 collectors need to be addeded
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	label2 := map[string]string{
+		"env1": "production", "app1": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	//Now change the label on interfaces
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = updateNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error updating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	//Now change the label on interfaces
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = updateNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error updating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+}
+
+func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	numOfIntfs2 := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs+numOfIntfs2)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"key": "value", "env": "production",
+	}
+
+	label2 := map[string]string{
+		"key": "value", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	for i := 0; i < numOfIntfs2; i++ {
+		name := "intf-1-" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[numOfIntfs+i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	newCollectorsCnt := 5
+	collectors := getCollectors(0, numCollectors)
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	mirrorSesssion, err := createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	mirrorSesssion1, err := createMirror(stateMgr, "default", "testMirror1", newCollectors, labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, intf.mirrorSessions[0] == mirrorSesssion.Name, "Mirror session name did not match")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
+		Assert(t, ok, "Collector not present")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	log.Infof("Number of interfaces %v %v", len(intfs), numOfIntfs)
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	//Now add label1 to label2
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = updateNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error updating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs+numOfIntfs2, "Number of interfaces don't match")
+
+	//label2 has not collectors yet
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs2; i++ {
+		name := "intf-1-" + strconv.Itoa(i)
+		_, err = updateNetworkInterface(stateMgr, name, dscs[numOfIntfs+i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error updating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs2, "Number of interfaces don't match")
+
+	//label2 has not collectors yet
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
+		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		log.Infof("Mirror session name %v %v", intf.mirrorSessions[0], mirrorSesssion.Name)
+		Assert(t, intf.mirrorSessions[0] == mirrorSesssion.Name, "Mirror session name did not match")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	//Delete the mirror session1
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+}
+
+type watchWrapper struct {
+	watcher  *memdb.Watcher
+	evtsRcvd *eventsMap
+	evtsExp  *eventsMap
+	ctx      context.Context
+	cancel   context.CancelFunc
+}
+
+type eventsMap struct {
+	sync.Mutex
+	evKindMap map[memdb.EventType]map[string]int
+}
+
+var watchMap map[string]*watchWrapper
+
+func ResetWatchMap() {
+	watchMap = make(map[string]*watchWrapper)
+}
+
+func StartWatch(context context.Context, w *memdb.Watcher) {
+
+	for true {
+
+		// verify we get a watch event
+		select {
+		case evt, ok := <-w.Channel:
+			if ok {
+				watchMap[w.Name].evtsRcvd.Update(evt, evt.Obj.GetObjectKind())
+			}
+		case <-context.Done():
+			log.Infof("Stopped watcher")
+			return
+		}
+	}
+
+}
+
+func addWatcher(watcher *memdb.Watcher) *watchWrapper {
+	evtRcvd := &eventsMap{}
+	evtExp := &eventsMap{}
+	evtRcvd.Reset()
+	ctx, cancel := context.WithCancel(context.Background())
+	watchMap[watcher.Name] = &watchWrapper{ctx: ctx, cancel: cancel}
+	watchMap[watcher.Name].evtsRcvd = evtRcvd
+	watchMap[watcher.Name].evtsExp = evtExp
+	watchMap[watcher.Name].watcher = watcher
+	go StartWatch(ctx, watcher)
+	return watchMap[watcher.Name]
+}
+
+func (e *eventsMap) Reset() {
+	e.Lock()
+	defer e.Unlock()
+	e.evKindMap = make(map[memdb.EventType]map[string]int)
+	e.evKindMap[memdb.CreateEvent] = make(map[string]int)
+	e.evKindMap[memdb.UpdateEvent] = make(map[string]int)
+	e.evKindMap[memdb.DeleteEvent] = make(map[string]int)
+}
+
+func (e *eventsMap) Update(evt memdb.Event, kind string) {
+	e.Lock()
+	defer e.Unlock()
+	kindMap, _ := e.evKindMap[evt.EventType]
+	kindMap[kind]++
+}
+
+func stopWatchers(t *testing.T, watchers []*watchWrapper) {
+
+	// setup concurrent watches, registration should succeed now
+	for _, watch := range watchers {
+		watch.cancel()
+	}
+}
+
+func (e *eventsMap) Equal(other *eventsMap) bool {
+	e.Lock()
+	defer e.Unlock()
+
+	for evt, kindMap := range e.evKindMap {
+		otherKindMap, _ := other.evKindMap[evt]
+		if len(otherKindMap) != len(kindMap) {
+			//Still check from
+			if len(otherKindMap) < len(kindMap) {
+				tmp := kindMap
+				kindMap = otherKindMap
+				otherKindMap = tmp
+
+			}
+			for kind, cnt := range otherKindMap {
+				if val, ok := kindMap[kind]; !ok {
+					if cnt != 0 {
+						return false
+					}
+				} else if cnt != val {
+					return false
+				}
+
+			}
+		}
+		for kind, cnt := range kindMap {
+			if otherKindMap[kind] != cnt {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (e *eventsMap) Diff(exp *eventsMap) {
+	e.Lock()
+	defer e.Unlock()
+
+	for evt, kindMap := range e.evKindMap {
+		expKindMap, _ := exp.evKindMap[evt]
+		for kind, cnt := range kindMap {
+			expKindCnt, ok := expKindMap[kind]
+			if !ok {
+				log.Infof("Event : %v Kind : %v Exp : %v Actual : %v", evt, kind, expKindCnt, cnt)
+
+			} else if expKindCnt != cnt {
+				log.Infof("Event : %v Kind : %v Exp : %v Actual : %v", evt, kind, expKindCnt, cnt)
+			}
+		}
+		//Check for kinds not present but where expected
+		for kind, cnt := range expKindMap {
+			otherKindCnt, ok := kindMap[kind]
+			if !ok {
+				log.Infof("Event : %v Kind : %v Exp : %v Actual : %v", evt, kind, cnt, otherKindCnt)
+				log.Infof("MAP : %v ", e.evKindMap)
+			}
+		}
+	}
+}
+
+func verifyEvObjects(t *testing.T, watch *watchWrapper,
+	duration time.Duration) error {
+
+	timedOutEvent := time.After(duration)
+	for true {
+		select {
+		case <-timedOutEvent:
+			watch.evtsRcvd.Diff(watch.evtsExp)
+			log.Infof("fail Matched...")
+			return errors.New("Event expectation failed")
+		default:
+			if watch.evtsRcvd.Equal(watch.evtsExp) {
+				return nil
+			}
+			time.Sleep(50 * time.Millisecond)
+
+		}
+	}
+	return nil
+}
+
+func TestWatcherWithMirrorCreateDelete(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	errs := make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	for iter := 0; iter < 3; iter++ {
+		numCollectors := 1
+		collectors := getCollectors(0, numCollectors)
+		for _, watcher := range watchers {
+			watcher.evtsRcvd.Reset()
+		}
+		_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, ok, "Collector not present")
+		}
+
+		for _, watcher := range watchers {
+			watcher.evtsExp.Reset()
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		}
+
+		errs := make(chan error, len(watchers))
+		for _, watcher := range watchers {
+			watcher := watcher
+			go func() {
+				errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+			}()
+
+		}
+
+		for _ = range watchers {
+			err := <-errs
+			AssertOk(t, err, "Error verifying objects")
+		}
+
+		for _, watcher := range watchers {
+			watcher.evtsExp.Reset()
+			watcher.evtsRcvd.Reset()
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		}
+
+		_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session found", "1ms", "1s")
+
+		errs = make(chan error, len(watchers))
+		for _, watcher := range watchers {
+			watcher := watcher
+			go func() {
+				errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+			}()
+
+		}
+
+		for _ = range watchers {
+			err := <-errs
+			AssertOk(t, err, "Error verifying objects")
+		}
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		}
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	label2 := map[string]string{
+		"env1": "production1", "app1": "procurement1",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	errs := make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = 0
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 0
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 0
+	}
+
+	//Lets up update the mirror
+
+	//Add new collectors for same mirror
+	_, err = updateMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 0
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+}
+
+func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	errs := make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	newCollectorsCnt := 5
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	//Lets up update the mirror
+
+	//Add new collectors for same mirror
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 1
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	errs := make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	newCollectorsCnt := 1
+	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	allCollectors := make([]monitoring.MirrorCollector, len(collectors))
+	copy(allCollectors, collectors)
+	allCollectors = append(allCollectors, newCollectors...)
+	//Lets up update the mirror
+
+	//Add new collectors for same mirror
+	_, err = updateMirror(stateMgr, "default", "testMirror", allCollectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror", newCollectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for _, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
+	// create network state manager
+	ResetWatchMap()
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	numOfIntfs2 := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs+numOfIntfs2)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+	//Start watchers
+
+	watchers := []*watchWrapper{}
+	for _, dsc := range dscs {
+		watcher := &memdb.Watcher{Name: dsc.Status.PrimaryMAC}
+		watcher.Channel = make(chan memdb.Event, (1000))
+		watchWrap := addWatcher(watcher)
+		watchers = append(watchers, watchWrap)
+		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		AssertOk(t, err, "Error watching")
+		err = stateMgr.mbus.WatchObjects("Interface", watcher)
+		AssertOk(t, err, "Error watching")
+	}
+	defer stopWatchers(t, watchers)
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	label2 := map[string]string{
+		"env1": "production", "app1": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	for i := 0; i < numOfIntfs2; i++ {
+		name := "intf-1-" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i+numOfIntfs].Status.PrimaryMAC, labels.Set(label2))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 10
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	for index, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
+		if index < numOfIntfs {
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		}
+	}
+
+	errs := make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	//newCollectorsCnt := 5
+	//newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	for i, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		//watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		if i >= numOfIntfs {
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		}
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+	}
+
+	//Lets up update the mirror
+
+	//Add new collectors for same mirror
+	_, err = updateMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label2)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	for i, watcher := range watchers {
+		watcher.evtsExp.Reset()
+		watcher.evtsRcvd.Reset()
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		if i >= numOfIntfs {
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		}
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	errs = make(chan error, len(watchers))
+	for _, watcher := range watchers {
+		watcher := watcher
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watcher.watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for _ = range watchers {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+
+func TestM(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+	_, err = createMirror(stateMgr, "default", "testMirror", collectors, labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session found", "1ms", "1s")
+
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	AssertOk(t, err, "Error find interfaces")
+	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+	for _, intf := range intfs {
+		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
 func TestMain(m *testing.M) {
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{

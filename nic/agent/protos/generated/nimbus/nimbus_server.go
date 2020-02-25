@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	memdb "github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -104,6 +105,37 @@ func (ms *MbusServer) DeleteObjectWithReferences(key string, obj memdb.Object,
 	ms.Stats(obj.GetObjectKind(), "DeleteEvent").Inc()
 	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
 	return ms.memDB.DeleteObjectWithReferences(key, obj, refs)
+}
+
+// AddObjectWithReferences adds object to mbus with refs
+func (ms *MbusServer) AddPushObject(key string, obj memdb.Object, refs map[string]apiintf.ReferenceObj, receivers []objReceiver.Receiver) (memdb.PushObjectHandle, error) {
+
+	return ms.memDB.AddPushObject(key, obj, refs, receivers)
+}
+
+func (ms *MbusServer) AddReceiver(ID string) (objReceiver.Receiver, error) {
+	return ms.memDB.AddReceiver(ID)
+}
+
+func (ms *MbusServer) DeleteReceiver(recv objReceiver.Receiver) error {
+	return ms.memDB.DeleteReceiver(recv)
+}
+
+func (ms *MbusServer) FindReceiver(ID string) (objReceiver.Receiver, error) {
+	return ms.memDB.FindReceiver(ID)
+}
+
+//Exposing watch objects for unit testing
+func (ms *MbusServer) WatchObjects(kind string, watcher *memdb.Watcher) error {
+	return ms.memDB.WatchObjects(kind, watcher)
+}
+
+func (ms *MbusServer) EnableSelectivePushForKind(kind string) error {
+	return ms.memDB.EnableSelctivePush(kind)
+}
+
+func (ms *MbusServer) DisableSelectivePushForKind(kind string) error {
+	return ms.memDB.DisableKindPushFilter(kind)
 }
 
 // AddNodeState adds node state to an object
@@ -227,7 +259,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(AppStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListApps(context.Background(), filters)
+			objlist, err := eh.server.ListApps(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -247,7 +279,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(CollectorStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListCollectors(context.Background(), filters)
+			objlist, err := eh.server.ListCollectors(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -267,7 +299,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(EndpointStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListEndpoints(context.Background(), filters)
+			objlist, err := eh.server.ListEndpoints(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -287,7 +319,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(IPAMPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListIPAMPolicys(context.Background(), filters)
+			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -307,7 +339,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(InterfaceStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListInterfaces(context.Background(), filters)
+			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -327,7 +359,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(NetworkStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListNetworks(context.Background(), filters)
+			objlist, err := eh.server.ListNetworks(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -347,7 +379,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), filters)
+			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -367,7 +399,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(ProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListProfiles(context.Background(), filters)
+			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -387,7 +419,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListRouteTables(context.Background(), filters)
+			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -407,7 +439,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(RoutingConfigStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListRoutingConfigs(context.Background(), filters)
+			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -427,7 +459,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(SecurityProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListSecurityProfiles(context.Background(), filters)
+			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -447,7 +479,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				filters = eh.statusReactor.(VrfStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
-			objlist, err := eh.server.ListVrfs(context.Background(), filters)
+			objlist, err := eh.server.ListVrfs(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -1081,7 +1113,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		switch kind {
 
 		case "App":
-			objlist, err := eh.server.ListApps(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListApps(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1096,7 +1128,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Collector":
-			objlist, err := eh.server.ListCollectors(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListCollectors(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1111,7 +1143,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Endpoint":
-			objlist, err := eh.server.ListEndpoints(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListEndpoints(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1126,7 +1158,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "IPAMPolicy":
-			objlist, err := eh.server.ListIPAMPolicys(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1141,7 +1173,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Interface":
-			objlist, err := eh.server.ListInterfaces(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1156,7 +1188,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Network":
-			objlist, err := eh.server.ListNetworks(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListNetworks(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1171,7 +1203,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "NetworkSecurityPolicy":
-			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1186,7 +1218,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Profile":
-			objlist, err := eh.server.ListProfiles(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1201,7 +1233,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "RouteTable":
-			objlist, err := eh.server.ListRouteTables(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1216,7 +1248,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "RoutingConfig":
-			objlist, err := eh.server.ListRoutingConfigs(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1231,7 +1263,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "SecurityProfile":
-			objlist, err := eh.server.ListSecurityProfiles(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1246,7 +1278,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Vrf":
-			objlist, err := eh.server.ListVrfs(context.Background(), watcher.Filters[kind])
+			objlist, err := eh.server.ListVrfs(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err

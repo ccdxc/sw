@@ -36,11 +36,11 @@ func (ms *MbusServer) FindCollector(objmeta *api.ObjectMeta) (*netproto.Collecto
 }
 
 // ListCollectors lists all Collectors in the mbus
-func (ms *MbusServer) ListCollectors(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Collector, error) {
+func (ms *MbusServer) ListCollectors(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Collector, error) {
 	var objlist []*netproto.Collector
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Collector", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Collector", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := CollectorFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *CollectorTopic) ListCollectors(ctx context.Context, objsel *api.ListWa
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Collector", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Collector", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := CollectorFromObj(oo)

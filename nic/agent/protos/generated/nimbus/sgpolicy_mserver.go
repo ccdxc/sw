@@ -36,11 +36,11 @@ func (ms *MbusServer) FindNetworkSecurityPolicy(objmeta *api.ObjectMeta) (*netpr
 }
 
 // ListNetworkSecurityPolicys lists all NetworkSecurityPolicys in the mbus
-func (ms *MbusServer) ListNetworkSecurityPolicys(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.NetworkSecurityPolicy, error) {
+func (ms *MbusServer) ListNetworkSecurityPolicys(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.NetworkSecurityPolicy, error) {
 	var objlist []*netproto.NetworkSecurityPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("NetworkSecurityPolicy", filters)
+	objs := ms.memDB.ListObjectsForReceiver("NetworkSecurityPolicy", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := NetworkSecurityPolicyFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Con
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("NetworkSecurityPolicy", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("NetworkSecurityPolicy", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := NetworkSecurityPolicyFromObj(oo)

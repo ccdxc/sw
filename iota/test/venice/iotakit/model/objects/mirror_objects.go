@@ -5,6 +5,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
@@ -104,7 +105,6 @@ func (msc *MirrorSessionCollection) Commit() error {
 	}
 	for _, sess := range msc.Sessions {
 		err := msc.Client.CreateMirrorSession(sess.VeniceMirrorSess)
-		log.Infof("Create mirror session failed %v", err)
 		if err != nil {
 			// try updating it
 			err = msc.Client.UpdateMirrorSession(sess.VeniceMirrorSess)
@@ -159,6 +159,19 @@ func (msc *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCo
 		if nmsc.err != nil {
 			return nmsc
 		}
+	}
+
+	return msc
+}
+
+// SetInterfaceSelector add interface selector
+func (msc *MirrorSessionCollection) SetInterfaceSelector(selector *labels.Selector) *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
+	}
+
+	for _, sess := range msc.Sessions {
+		sess.VeniceMirrorSess.Spec.InterfaceSelector = selector
 	}
 
 	return msc

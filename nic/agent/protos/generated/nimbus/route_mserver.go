@@ -36,11 +36,11 @@ func (ms *MbusServer) FindRouteTable(objmeta *api.ObjectMeta) (*netproto.RouteTa
 }
 
 // ListRouteTables lists all RouteTables in the mbus
-func (ms *MbusServer) ListRouteTables(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.RouteTable, error) {
+func (ms *MbusServer) ListRouteTables(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.RouteTable, error) {
 	var objlist []*netproto.RouteTable
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("RouteTable", filters)
+	objs := ms.memDB.ListObjectsForReceiver("RouteTable", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := RouteTableFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *RouteTableTopic) ListRouteTables(ctx context.Context, objsel *api.List
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("RouteTable", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("RouteTable", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := RouteTableFromObj(oo)
@@ -563,11 +563,11 @@ func (ms *MbusServer) FindRoutingConfig(objmeta *api.ObjectMeta) (*netproto.Rout
 }
 
 // ListRoutingConfigs lists all RoutingConfigs in the mbus
-func (ms *MbusServer) ListRoutingConfigs(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.RoutingConfig, error) {
+func (ms *MbusServer) ListRoutingConfigs(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.RoutingConfig, error) {
 	var objlist []*netproto.RoutingConfig
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("RoutingConfig", filters)
+	objs := ms.memDB.ListObjectsForReceiver("RoutingConfig", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := RoutingConfigFromObj(oo)
 		if err == nil {
@@ -883,7 +883,7 @@ func (eh *RoutingConfigTopic) ListRoutingConfigs(ctx context.Context, objsel *ap
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("RoutingConfig", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("RoutingConfig", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := RoutingConfigFromObj(oo)

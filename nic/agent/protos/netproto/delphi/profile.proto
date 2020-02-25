@@ -4,18 +4,20 @@
 // protobuf specification for Profile 
 //------------------------------------------------------------------------------
 
+// profile object
+
 syntax = "proto3";
+
 package dnetproto;
 
 // Mandatory imports.
 import "github.com/pensando/sw/nic/agent/protos/netproto/profile.proto";
 import "delphi.proto";
 
-
-// Tenant object
+// profile object
 message Profile {
     option (delphi.update_event) = true;
-    delphi.ObjectMeta       Meta            = 1;
-    string                  Key             = 2;
-    netproto.Profile        Profile         = 3;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.Profile    Profile     = 3;
 }

@@ -6,7 +6,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/labels"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -206,9 +207,60 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 		},
 	},
 	{
-		// Empty src/dst rules
+		// both match rules and interface selector
 		ObjectMeta: api.ObjectMeta{
 			Name:   "Test Mirror Session 7",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "VENICE",
+				},
+			},
+			MatchRules: []monitoring.MatchRule{
+				{
+					AppProtoSel: &monitoring.AppProtoSelector{
+						ProtoPorts: []string{"UDP"},
+					},
+				},
+			},
+
+			InterfaceSelector: labels.SelectorFromSet(labels.Set{"app": "procurement"}),
+		},
+	},
+
+	{
+		// Interface selector not with ALL_PKTS filter
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 8",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "VENICE",
+				},
+			},
+			InterfaceSelector: labels.SelectorFromSet(labels.Set{"app": "procurement"}),
+		},
+	},
+	{
+		// Empty src/dst rules
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 9",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -237,7 +289,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// Match-all + specific rule
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 8",
+			Name:   "Test Mirror Session 10",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -274,7 +326,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// drop reason + drop all
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 9",
+			Name:   "Test Mirror Session 11",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -311,7 +363,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// max pkt size
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 10",
+			Name:   "Test Mirror Session 12",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{
@@ -341,7 +393,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 	{
 		// matchAll-2 empty match rule
 		ObjectMeta: api.ObjectMeta{
-			Name:   "Test Mirror Session 11",
+			Name:   "Test Mirror Session 13",
 			Tenant: "Tenant 1",
 		},
 		TypeMeta: api.TypeMeta{

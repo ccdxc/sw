@@ -36,11 +36,11 @@ func (ms *MbusServer) FindVrf(objmeta *api.ObjectMeta) (*netproto.Vrf, error) {
 }
 
 // ListVrfs lists all Vrfs in the mbus
-func (ms *MbusServer) ListVrfs(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Vrf, error) {
+func (ms *MbusServer) ListVrfs(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Vrf, error) {
 	var objlist []*netproto.Vrf
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Vrf", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Vrf", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := VrfFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *VrfTopic) ListVrfs(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Vrf", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Vrf", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := VrfFromObj(oo)

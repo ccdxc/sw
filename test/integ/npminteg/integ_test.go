@@ -213,7 +213,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.logger, resolverServer.GetListenURL(), fmt.Sprintf("testHost-%d", i))
+		agent, err := CreateAgent(it.logger, resolverServer.GetListenURL(), fmt.Sprintf("0001.%02x00.0000", i))
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}

@@ -36,11 +36,11 @@ func (ms *MbusServer) FindProfile(objmeta *api.ObjectMeta) (*netproto.Profile, e
 }
 
 // ListProfiles lists all Profiles in the mbus
-func (ms *MbusServer) ListProfiles(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Profile, error) {
+func (ms *MbusServer) ListProfiles(ctx context.Context, nodeID string, filters []memdb.FilterFn) ([]*netproto.Profile, error) {
 	var objlist []*netproto.Profile
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Profile", filters)
+	objs := ms.memDB.ListObjectsForReceiver("Profile", nodeID, filters)
 	for _, oo := range objs {
 		obj, err := ProfileFromObj(oo)
 		if err == nil {
@@ -356,7 +356,7 @@ func (eh *ProfileTopic) ListProfiles(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Profile", filters)
+	objs := eh.server.memDB.ListObjectsForReceiver("Profile", nodeID, filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := ProfileFromObj(oo)

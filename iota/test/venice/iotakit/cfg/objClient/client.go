@@ -45,6 +45,9 @@ type ObjClient interface {
 	DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 	UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
+	ListNetworkInterfaces() (objs []*network.NetworkInterface, err error)
+	UpdateNetworkInterface(sgp *network.NetworkInterface) error
+
 	CreateApp(app *security.App) error
 	ListApp() (objs []*security.App, err error)
 	DeleteApp(app *security.App) error
@@ -427,6 +430,32 @@ func (r *Client) ListNetworkSecurityPolicy() (objs []*security.NetworkSecurityPo
 	return objs, err
 }
 
+// ListNetworkInterfaces lists all network interfaces
+func (r *Client) ListNetworkInterfaces() (objs []*network.NetworkInterface, err error) {
+	opts := api.ListWatchOptions{}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().NetworkInterface().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// UpdateNetworkInterface updates network interface
+func (r *Client) UpdateNetworkInterface(nw *network.NetworkInterface) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().NetworkInterface().Update(r.ctx, nw)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
 // ListNetwork gets all networks from venice cluster
 func (r *Client) ListNetwork(tenant string) (objs []*network.Network, err error) {
 
@@ -581,6 +610,21 @@ func (r *Client) DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy
 	}
 
 	return err
+}
+
+// ListMirrorSessions gets all mirror sessions from venice cluster
+func (r *Client) ListMirrorSessions() (objs []*monitoring.MirrorSession, err error) {
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.MonitoringV1().MirrorSession().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
 }
 
 // DeleteApp deletes App object
