@@ -63,9 +63,11 @@ func NewNMDStateMachine() *NMDStateMachine {
 						e.Err = err
 						return
 					}
-					// TODO We need to temporarily need to run dhclient here to ensure that the default routes are installed. Move this to dhcp config eventually
-					e.Err = runCmd(fmt.Sprintf("dhclient %s", nmd.IPClient.GetIPClientIntf()))
 
+					if nmd.Pipeline != nil && nmd.Pipeline.GetPipelineType() != globals.NaplesPipelineApollo {
+						// TODO We need to temporarily need to run dhclient here to ensure that the default routes are installed. Move this to dhcp config eventually
+						e.Err = runCmd(fmt.Sprintf("dhclient %s", nmd.IPClient.GetIPClientIntf()))
+					}
 				},
 
 				"doNTP": func(e *fsm.Event) {

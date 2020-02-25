@@ -176,30 +176,61 @@ func NewNMD(pipeline Pipeline,
 		}
 	}
 
-	config := nmd.DistributedServiceCard{
-		ObjectMeta: api.ObjectMeta{
-			Name:   "DistributedServiceCardConfig",
-			Tenant: "default",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "DistributedServiceCard",
-		},
-		Spec: nmd.DistributedServiceCardSpec{
-			Mode:       nmd.MgmtMode_HOST.String(),
-			PrimaryMAC: fru.MacStr,
-			ID:         fru.MacStr,
-			DSCProfile: nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
-			IPConfig: &cluster.IPConfig{
-				IPAddress:  "",
-				DefaultGW:  "",
-				DNSServers: nil,
+	var config nmd.DistributedServiceCard
+	// For apulu pipeline, bring up naples in network mode
+	if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+		config = nmd.DistributedServiceCard{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "DistributedServiceCardConfig",
+				Tenant: "default",
 			},
-		},
-		Status: nmd.DistributedServiceCardStatus{
-			Fru:      fru,
-			TimeZone: "UTC",
-			DSCName:  fru.MacStr,
-		},
+			TypeMeta: api.TypeMeta{
+				Kind: "DistributedServiceCard",
+			},
+			Spec: nmd.DistributedServiceCardSpec{
+				Mode:        nmd.MgmtMode_NETWORK.String(),
+				NetworkMode: nmd.NetworkMode_OOB.String(),
+				PrimaryMAC:  fru.MacStr,
+				ID:          fru.MacStr,
+				DSCProfile:  nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
+				IPConfig: &cluster.IPConfig{
+					IPAddress:  "",
+					DefaultGW:  "",
+					DNSServers: nil,
+				},
+			},
+			Status: nmd.DistributedServiceCardStatus{
+				Fru:      fru,
+				TimeZone: "UTC",
+				DSCName:  fru.MacStr,
+			},
+		}
+	} else {
+		config = nmd.DistributedServiceCard{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "DistributedServiceCardConfig",
+				Tenant: "default",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "DistributedServiceCard",
+			},
+			Spec: nmd.DistributedServiceCardSpec{
+				Mode:       nmd.MgmtMode_HOST.String(),
+				PrimaryMAC: fru.MacStr,
+				ID:         fru.MacStr,
+				DSCProfile: nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
+				IPConfig: &cluster.IPConfig{
+					IPAddress:  "",
+					DefaultGW:  "",
+					DNSServers: nil,
+				},
+			},
+			Status: nmd.DistributedServiceCardStatus{
+				Fru:      fru,
+				TimeZone: "UTC",
+				DSCName:  fru.MacStr,
+			},
+		}
 	}
 	// List available NaplesProfiles
 
