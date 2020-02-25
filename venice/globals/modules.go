@@ -16,6 +16,7 @@ const (
 	EvtsMgr               = "pen-evtsmgr"
 	Spyglass              = "pen-spyglass"
 	ElasticSearch         = "pen-elastic"
+	ElasticSearchCurator  = "pen-elastic-curator"
 	EvtsProxy             = "pen-evtsproxy"
 	KubeAPIServer         = "pen-kube-apiserver"
 	KubeScheduler         = "pen-kube-scheduler"

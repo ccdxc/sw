@@ -1,0 +1,60 @@
+actions:
+  1:
+    action: delete_indices
+    description: >-
+      Delete audit log indices that are older than 30 days
+    options:
+      ignore_empty_list: True # ignore empty actionable list and exit cleanly
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*external.default.auditlogs.*$'
+      exclude:
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y-%m-%d'
+      unit: days
+      unit_count: 30
+      exclude:
+  2:
+    action: delete_indices
+    description: >-
+      Delete event indices that are older than 10 days
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*external.default.events.*$'
+      exclude:
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y-%m-%d'
+      unit: days
+      unit_count: 10
+      exclude:
+  3:
+    action: delete_indices
+    description: Delete older events and audit log indices once the disk reaches a threshold of 10G
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: space
+      disk_space: 10 # 10G
+      use_age: True
+      source: creation_date
+    - filtertype: pattern
+      kind: regex
+      value: '(^.*external.default.configs.*$|searchguard)'  # exclude configs and searchguard indices from getting deleted
+      exclude: True

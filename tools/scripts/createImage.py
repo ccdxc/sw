@@ -72,6 +72,7 @@ static_images = {
     'pen-filebeat' : 'registry.test.pensando.io:5000/pen-filebeat:v0.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.6',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.15',
+    'pen-elastic-curator': 'registry.test.pensando.io:5000/elasticsearch-curator:v0.1',
     'pen-pause' : 'k8s.gcr.io/pause:3.1',
 }
 
@@ -132,7 +133,9 @@ imageConfig['imageMap'] = imageMap
 
 # the order in which the services get upgraded. For now fill up with some random order.
 imageConfig['upgradeOrder'] = ['pen-cmd', 'pen-apiserver', 'pen-apigw',  'pen-npm', 'pen-tpm', 'pen-spyglass', 'pen-evtsmgr', 'pen-tsm', 'pen-evtsproxy',
-                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd', 'pen-filebeat', 'pen-ntp',  'pen-elastic', "pen-vos", "pen-citadel", "pen-vtsa", "pen-rollout", "pen-orchhub"]
+                               'pen-kube-controller-manager', 'pen-kube-scheduler', 'pen-kube-apiserver', 'pen-etcd',
+                               'pen-filebeat', 'pen-ntp',  'pen-elastic', 'pen-elastic-curator', "pen-vos",
+                               "pen-citadel", "pen-vtsa", "pen-rollout", "pen-orchhub"]
 
 # installInfo is used by the installer during installation of this image.
 # This has 2 steps. Preload and LoadAndInstall.

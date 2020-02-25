@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	k8sv1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8smeta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -521,11 +521,17 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 	totalNumberOfNodes := len(c.nodesHealth.nodes)
 
 	// check if all the k8s k8sServices are populated
-	for svc := range k8sModules {
+	for svc, config := range k8sModules {
 		if k8sModules[svc].Spec.Disabled {
 			continue
 		}
+
+		if config.Spec.Type == protos.ModuleSpec_CronJob {
+			continue
+		}
+
 		if _, ok := c.servicesHealth.services[svc]; !ok {
+			c.logger.Errorf("could not find any instances for service: %s", svc)
 			return false, []string{"waiting for service updates from k8s"}
 		}
 	}

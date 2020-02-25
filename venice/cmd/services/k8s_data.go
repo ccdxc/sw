@@ -723,4 +723,32 @@ var k8sModules = map[string]protos.Module{
 			Disabled: true,
 		},
 	},
+	globals.ElasticSearchCurator: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ElasticSearchCurator,
+		},
+		Spec: protos.ModuleSpec{
+			Type:     protos.ModuleSpec_CronJob,
+			Schedule: "*/30 * * * *", // run every 30 mins
+			Submodules: []protos.ModuleSpec_Submodule{
+				{
+					Name: globals.ElasticSearchCurator,
+					Args: []string{"/bin/sh", "-c",
+						fmt.Sprintf("curator --config /usr/share/%s/curator.yml /actions.yml", globals.ElasticSearchCurator)},
+				},
+			},
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+				elasticClientCredsVolume,
+				{
+					Name:      "config",
+					HostPath:  globals.ElasticCuratorConfigFile,
+					MountPath: fmt.Sprintf("/usr/share/%s/curator.yml", globals.ElasticSearchCurator),
+				},
+			},
+		},
+	},
 }

@@ -22,6 +22,11 @@ var (
 	retryDelay = 2 * time.Second
 )
 
+//
+// TODO: Since we have moved this functionality to elastic-curator cron job. We don't need this code anymore.
+// Once the new feature stabilizes, we can remove this.
+//
+
 // Curator represents elastic index manager service for
 //  - handling index retention and expiration (for now)
 //

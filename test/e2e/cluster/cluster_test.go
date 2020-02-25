@@ -189,16 +189,16 @@ func validateCluster() {
 		}, 2*sysContainersHoldOffTimeSec, 1).Should(BeEmpty(), "pen-etcd container should not be running on %s(%s)", ts.tu.IPToNameMap[nonQnode], nonQnode)
 	}
 
-	By(fmt.Sprintf("kubernetes indicated all pods to be Running"))
+	By(fmt.Sprintf("kubernetes indicated all deployment/daemonset pods to be Running"))
 	Eventually(func() string {
-		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods --no-headers"), "\n")
+		out := strings.Split(ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get pods --no-headers | grep -v %s", globals.ElasticSearchCurator)), "\n")
 		for _, line := range out {
 			if !strings.Contains(line, "Running") {
 				return line
 			}
 		}
 		return ""
-	}, 120, 1).Should(BeEmpty(), "All pods should be in Running state")
+	}, 120, 1).Should(BeEmpty(), "All deployment/daemonset pods should be in Running state")
 
 	Eventually(func() string {
 		// TODO: remove workaround for following Kubernetes issues when move to a version with proper fixes:
@@ -206,8 +206,8 @@ func validateCluster() {
 		// https://github.com/kubernetes/kubernetes/issues/82346
 		// refer PR https://github.com/pensando/sw/pull/15711
 		// Ignore condition Ready == false (i.e. consider the pod good assuming all other conditions are True)
-		return ts.tu.LocalCommandOutput(`kubectl get pods --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type != "Ready" and .status == "False") ] | length ) > 0 ) | .metadata.namespace + "/" + .metadata.name'`)
-	}, 180, 1).Should(BeEmpty(), "All pods should be in Ready state")
+		return ts.tu.LocalCommandOutput(fmt.Sprintf(`kubectl get pods --all-namespaces -o json | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type != "Ready" and .status == "False") ] | length ) > 0 ) | .metadata.namespace + "/" + .metadata.name' | grep -v %s`, globals.ElasticSearchCurator))
+	}, 180, 1).Should(BeEmpty(), "All deployment/daemonset pods should be in Ready state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 	apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)

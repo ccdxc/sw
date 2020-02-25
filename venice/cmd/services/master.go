@@ -19,19 +19,17 @@ import (
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/ops"
-	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+	"github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
-	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/elastic/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 const (
@@ -249,6 +247,7 @@ func NewMasterService(nodeID string, options ...MasterOption) types.MasterServic
 		m.resolverSvc = NewResolverService(m.k8sSvc)
 	}
 
+	/* FIXME: remove this once elastic-curator cron stabilizes.
 	// Initialize curator service
 	if m.esCuratorSvc == nil {
 		resolverClient, ok := env.ResolverClient.(resolver.Interface)
@@ -261,6 +260,7 @@ func NewMasterService(nodeID string, options ...MasterOption) types.MasterServic
 			log.Errorf("Error starting curator service, err: %v", err)
 		}
 	}
+	*/
 
 	if m.diagModuleSvc == nil {
 		m.diagModuleSvc = module.GetUpdater(globals.Cmd, globals.APIServer, env.ResolverClient, env.Logger.WithContext("submodule", "diagnostics"))
@@ -410,6 +410,7 @@ func (m *masterService) startLeaderServices() error {
 		go auth.RunLeaderInstanceServer(":"+env.Options.GRPCLeaderInstancePort, m.leaderInstanceRPCStopChannel)
 	}
 
+	/* FIXME: remove this once elastic-curator cron stabilizes.
 	// Start elastic curator service
 	if m.esCuratorSvc != nil {
 		m.esCuratorSvc.Start()
@@ -431,6 +432,7 @@ func (m *masterService) startLeaderServices() error {
 			ScanInterval:    elastic.IndexScanInterval,
 		})
 	}
+	*/
 
 	go performQuorumDefrag(true)
 
@@ -453,8 +455,10 @@ func (m *masterService) Stop() {
 	m.k8sSvc.Stop()
 	m.resolverSvc.Stop()
 
+	/* FIXME: remove this once elastic-curator cron stabilizes.
 	// Stop elastic curator service
 	m.esCuratorSvc.Stop()
+	*/
 
 	close(m.updateCh)
 	<-m.closeCh

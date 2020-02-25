@@ -342,6 +342,15 @@ func (c *Configs) GenerateKubeMasterConfig(nodeID, virtualIP string) error {
 func (c *Configs) RemoveKubeMasterConfig() {
 }
 
+// GenerateElasticCuratorConfig is a mock implementation for elastic curator config generation.
+func (c *Configs) GenerateElasticCuratorConfig(elasticLocations []string) error {
+	return nil
+}
+
+// RemoveElasticCuratorConfig is a mock implementation for removing elastic curator config.
+func (c *Configs) RemoveElasticCuratorConfig() {
+}
+
 // K8sService is a mock implementation of kubernetes service to deploy and watch modules.
 type K8sService struct {
 	sync.Mutex
@@ -941,6 +950,11 @@ func (n *NodeService) ElasticDiscoveryConfig(elasticLocations []string) error {
 
 // ElasticMgmtConfig is dummy
 func (n *NodeService) ElasticMgmtConfig() error {
+	return nil
+}
+
+// ElasticCuratorConfig mock impl
+func (n *NodeService) ElasticCuratorConfig(elasticLocations []string) error {
 	return nil
 }
 

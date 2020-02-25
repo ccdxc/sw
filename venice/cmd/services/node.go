@@ -100,6 +100,7 @@ func (s *nodeService) InitConfigFiles() {
 	s.configs.GenerateElasticAuthConfig(s.nodeID)
 	s.configs.GenerateElasticDiscoveryConfig([]string{})
 	s.configs.GenerateElasticMgmtConfig("", len(env.QuorumNodes))
+	s.configs.GenerateElasticCuratorConfig([]string{})
 }
 
 // Stop stops the services that run on all controller nodes in the
@@ -118,6 +119,21 @@ func (s *nodeService) Stop() {
 	s.configs.RemoveElasticDiscoveryConfig()
 	s.configs.RemoveElasticMgmtConfig()
 	s.configs.RemoveElasticAuthConfig()
+	s.configs.RemoveElasticCuratorConfig()
+}
+
+func (s *nodeService) ElasticCuratorConfig(elasticLocations []string) error {
+	if !s.enabled {
+		log.Warnf("Skipping %s config generation, node not enabled", globals.ElasticSearchCurator)
+		return nil
+	}
+
+	if err := s.configs.GenerateElasticCuratorConfig(elasticLocations); err != nil {
+		log.Errorf("Failed to generate %s config with error: %v", globals.ElasticSearchCurator, err)
+		return err
+	}
+
+	return nil
 }
 
 // FileBeatConfig with the location of the Elastic servers

@@ -394,6 +394,7 @@ helper-containers:
 	@cd tools/docker-files/dind; docker build -t ${REGISTRY_URL}/${DIND_CONTAINER}  .
 	@cd tools/docker-files/e2e; docker build -t ${REGISTRY_URL}/${E2E_CONTAINER} .
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.15 .
+	@cd tools/docker-files/elasticsearch-curator; docker build -t ${REGISTRY_URL}/elasticsearch-curator:v0.1 .
 	@cd tools/docker-files/filebeat; docker build -t ${REGISTRY_URL}/pen-filebeat:v0.2 .
 	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.3 .
 

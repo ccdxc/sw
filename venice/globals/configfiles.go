@@ -21,6 +21,9 @@ const (
 	// ElasticDataVolumeDir is used by Elastic for storing indexed data
 	ElasticDataVolumeDir = "/var/lib/pensando/" + ElasticSearch + "/elasticsearch/data"
 
+	// ElasticCuratorConfigFile config for elastic curator service
+	ElasticCuratorConfigFile = "/etc/pensando/" + ElasticSearchCurator + "/curator.yml"
+
 	// EtcdConfigFile is written by CMD when starting cluster
 	EtcdConfigFile = "/etc/pensando/" + Etcd + "/etcd.conf"
 

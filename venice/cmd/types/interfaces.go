@@ -116,6 +116,9 @@ type NodeService interface {
 	// ElasticMgmtConfig configures the node's mgmt-addr that is needed by
 	// elastic instance to bind and publish to its peers
 	ElasticMgmtConfig() error
+
+	// ElasticCuratorConfig adds/updates the elastic servers in elastic curator config file
+	ElasticCuratorConfig(elasticLocation []string) error
 }
 
 // MasterService is the interface for starting/stopping master services (that run on node winning leader election)

@@ -28,6 +28,7 @@ mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-scheduler
 mkdir -p /host/etc/pensando/configs/kubernetes/pen-kube-controller-manager
 mkdir -p /host/etc/pensando/configs/kubernetes/pen-kubelet
 mkdir -p /host/etc/pensando/configs/pen-ntp
+mkdir -p /host/etc/pensando/configs/pen-elastic-curator
 mkdir -p /host/var/log/pensando
 mkdir -p /host/var/log/pensando/elastic
 mkdir -p /host/var/log/pensando/filebeat

@@ -32,6 +32,9 @@ message ModuleSpec {
 
         // ReplicaSet are created for each deployment with the desired number of replicas requested.
         ReplicaSet = 3;
+
+        // CronJob(s) are created for each CrobJob deployment.
+        CronJob    = 4;
     }
 
     // Type contains the type of the module.
@@ -135,7 +138,10 @@ message ModuleSpec {
     string RestrictNodes = 5;
 
     // Disabled is set to true if the module is disabled due to licences
-    bool Disabled = 6;
+    bool Disabled        = 6;
+
+    // Schedule specifies the schedule for the cron job. This field is applicable only for CronJob modules
+    string Schedule      = 7;
 }
 
 message ModuleStatus {

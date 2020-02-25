@@ -16,6 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
 
+	batchv1 "k8s.io/api/batch/v1"
+	v1beta1 "k8s.io/api/batch/v1beta1"
 	clientTypes "k8s.io/api/extensions/v1beta1"
 	rbac "k8s.io/api/rbac/v1beta1"
 
@@ -306,6 +308,20 @@ func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 			},
 		}
 	}
+	cjList, err := client.BatchV1beta1().CronJobs(defaultNS).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for ii := range cjList.Items {
+		foundModules[cjList.Items[ii].Name] = protos.Module{
+			TypeMeta: api.TypeMeta{
+				Kind: "Module",
+			},
+			Spec: protos.ModuleSpec{
+				Type: protos.ModuleSpec_CronJob,
+			},
+		}
+	}
 	return foundModules, nil
 }
 
@@ -316,6 +332,8 @@ func (k *k8sService) deployModule(module *protos.Module) {
 		createDaemonSet(k.client, module)
 	case protos.ModuleSpec_Deployment:
 		createDeployment(k.client, module)
+	case protos.ModuleSpec_CronJob:
+		createCronjob(k.client, module)
 	}
 }
 
@@ -593,6 +611,58 @@ func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 	return err
 }
 
+// createCronJobConfig creates a cron job object.
+func createCronJobConfig(module *protos.Module) *v1beta1.CronJob {
+	volumes, volumeMounts := makeVolumes(module)
+	containers := makeContainers(module, volumeMounts)
+	m := module.GetSpec()
+
+	successfulJobHistoryLimit := int32(1)
+	failedJobsHistoryLimit := int32(1)
+	return &v1beta1.CronJob{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: module.Name,
+		},
+		Spec: v1beta1.CronJobSpec{
+			Schedule: m.Schedule,
+			JobTemplate: v1beta1.JobTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"name": module.Name,
+					},
+				},
+				Spec: batchv1.JobSpec{
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{
+							Containers:    containers,
+							Volumes:       volumes,
+							HostNetwork:   true,
+							RestartPolicy: "Never",
+						},
+					},
+				},
+			},
+			SuccessfulJobsHistoryLimit: &successfulJobHistoryLimit,
+			FailedJobsHistoryLimit:     &failedJobsHistoryLimit,
+		},
+	}
+}
+
+// createCronjob creates a cron job using k8s client.
+func createCronjob(client k8sclient.Interface, module *protos.Module) error {
+	cjConfig := createCronJobConfig(module)
+	cj, err := client.BatchV1beta1().CronJobs(defaultNS).Create(cjConfig)
+	if err == nil {
+		log.Infof("Created CronJob %+v", cj)
+	} else if errors.IsAlreadyExists(err) {
+		log.Infof("CronJob %+v already exists", cjConfig)
+	} else {
+		log.Errorf("Failed to create CronJob %+v with error: %v", cjConfig, err)
+	}
+
+	return err
+}
+
 // deleteModules deletes modules using k8s.
 func (k *k8sService) deleteModules(modules map[string]protos.Module) {
 	for name, module := range modules {
@@ -601,6 +671,8 @@ func (k *k8sService) deleteModules(modules map[string]protos.Module) {
 			k.deleteDaemonSet(name)
 		case protos.ModuleSpec_Deployment:
 			k.deleteDeployment(name)
+		case protos.ModuleSpec_CronJob:
+			k.deleteCronJob(name)
 		}
 	}
 }
@@ -643,6 +715,21 @@ func (k *k8sService) deleteDeployment(name string) error {
 	} else {
 		log.Errorf("Failed to delete Deployment %v with error: %v", name, err)
 	}
+	return err
+}
+
+// deleteCronJob deletes a CronJob object.
+func (k *k8sService) deleteCronJob(name string) error {
+	err := k.client.BatchV1beta1().CronJobs(defaultNS).Delete(name, nil)
+	if err == nil {
+		log.Infof("Deleted CronJob %v", name)
+	} else if errors.IsNotFound(err) {
+		log.Infof("CronJob %v not found", name)
+		err = nil
+	} else {
+		log.Errorf("Failed to delete CronJob %v with error: %v", name, err)
+	}
+
 	return err
 }
 

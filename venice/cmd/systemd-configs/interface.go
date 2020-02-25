@@ -16,6 +16,8 @@ type Interface interface {
 	RemoveElasticDiscoveryConfig()
 	GenerateElasticMgmtConfig(mgmtAddr string, quorumSize int) error
 	RemoveElasticMgmtConfig()
+	GenerateElasticCuratorConfig(elasticServerAddrs []string) error
+	RemoveElasticCuratorConfig()
 }
 
 type configs struct{}
@@ -61,6 +63,12 @@ func (c *configs) GenerateElasticAuthConfig(nodeID string) error {
 }
 func (c *configs) RemoveElasticAuthConfig() {
 	RemoveElasticAuthConfig()
+}
+func (c *configs) GenerateElasticCuratorConfig(elasticServerAddrs []string) error {
+	return GenerateElasticCuratorConfig(elasticServerAddrs)
+}
+func (c *configs) RemoveElasticCuratorConfig() {
+	RemoveElasticCuratorConfig()
 }
 
 // New object implementing the Interface
