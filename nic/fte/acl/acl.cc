@@ -24,7 +24,7 @@ static uint32_t acl_ctx_key_size_(void) {
 
 static ht *g_ctx_ht = ht::factory(16, acl_ctx_get_key_func_,
                                   acl_ctx_key_size_(),
-                                  false /* not thread_safe */,
+                                  true /* thread_safe */,
                                   true /* key is a string */);
 
 //------------------------------------------------------------------------

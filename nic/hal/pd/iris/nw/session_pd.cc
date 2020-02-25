@@ -1901,8 +1901,32 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
             info = d.action_u.session_state_tcp_session_state_info;
+            ss->tcp_ts_option = info.tcp_ts_option_negotiated;
+            ss->tcp_sack_perm_option = info.tcp_sack_perm_option_negotiated;
+
+            // Initiator flow specific information
             ss->iflow_state.state = (session::FlowTCPState)info.iflow_tcp_state;
-            ss->rflow_state.state = (session::FlowTCPState)info.rflow_tcp_state;
+            ss->iflow_state.tcp_seq_num = info.iflow_tcp_seq_num;
+            ss->iflow_state.tcp_ack_num = info.iflow_tcp_ack_num;
+            ss->iflow_state.tcp_win_sz = info.iflow_tcp_win_sz;
+            ss->iflow_state.syn_ack_delta = info.syn_cookie_delta;
+            ss->iflow_state.tcp_mss = info.iflow_tcp_mss;
+            ss->iflow_state.tcp_win_scale = info.iflow_tcp_win_scale;
+            ss->iflow_state.tcp_ws_option_sent = info.iflow_tcp_ws_option_sent;
+            ss->iflow_state.tcp_ts_option_sent = info.iflow_tcp_ts_option_sent;
+            ss->iflow_state.tcp_sack_perm_option_sent =
+                                          info.iflow_tcp_sack_perm_option_sent;
+            ss->iflow_state.exception_bmap = info.iflow_exceptions_seen;
+
+            // Responder flow specific information
+            ss->rflow_state.state =
+              (session::FlowTCPState)info.rflow_tcp_state;
+            ss->rflow_state.tcp_seq_num = info.rflow_tcp_seq_num;
+            ss->rflow_state.tcp_ack_num = info.rflow_tcp_ack_num;
+            ss->rflow_state.tcp_win_sz = info.rflow_tcp_win_sz;
+            ss->rflow_state.tcp_mss = info.rflow_tcp_mss;
+            ss->rflow_state.tcp_win_scale = info.rflow_tcp_win_scale;
+            ss->rflow_state.exception_bmap = info.rflow_exceptions_seen;
         }
     }
 

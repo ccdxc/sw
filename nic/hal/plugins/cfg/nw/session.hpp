@@ -501,6 +501,7 @@ struct session_s {
     uint16_t            is_ipfix_flow:1;          // to track ipfix flows
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
+    uint16_t            aging_enqueued:1;         // is session aging action taken already
     uint16_t            syncing_session:1;        // Session in the midst of syncing by vMotion
     uint16_t            is_in_half_open_state:1;  // TCP Session is in Half-open state
     uint64_t            sfw_rule_id;              // sfw rule id
@@ -564,8 +565,6 @@ typedef struct session_get_stream_filter_ {
 
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_CFG_MAX_SESSIONS               65535
-
-#define SESSION_AGE_DEBUG                  0
 
 session_t *find_session_by_handle(hal_handle_t handle);
 session_t *find_session_from_spec(const SessionSpec& spec, uint32_t lookup_vrf);

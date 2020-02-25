@@ -434,7 +434,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
         rtsp_msg_t msg = {};
 
         if (!rtsp_parse_msg((const char*)payload, pkt_len, &offset, &msg)) {
-            ERR("failed to parse message");
+            HAL_TRACE_VERBOSE("failed to parse message");
             incr_parse_error(ctrl_sess);
             return pkt_len;
         }

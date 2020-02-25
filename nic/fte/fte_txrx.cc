@@ -401,6 +401,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 
     while (true) {
         process_arq_new();
+        curr_thread->punch_heartbeat();
         process_softq();
 
 #ifdef SIM

@@ -90,6 +90,10 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	tableInfoShowCmdHandler(nil, nil)
 	fmt.Printf("\nTable Dump logs\n\n")
 	tableDumpShowCmdHandler(nil, nil)
+	fmt.Printf("\nInterrupt Dump\n\n")
+	interruptShowCmdHandler(nil, nil)
+	fmt.Printf("\nSystem Drop Stats\n\n")
+	systemDropStatsShowCmdHandler(nil, nil)
 
 	fmt.Printf("Flush HAL logs\n\n")
 	flushLogsDebugCmdHandler(nil, nil)

@@ -82,16 +82,6 @@
                                         "Command" : "/nic/bin/halctl show techsupport"
                                 },
 				{
-                                        "Name" : "Show Table Dump id 19",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show table dump --table-id 19"
-                                },
-				{
-                                        "Name" : "Show Table Dump id 34",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show table dump --table-id 34"
-                                },
-				{
                                         "Name" : "Show Agent Mirror Sessions",
                                         "Method" : 0,
                                         "Command" : "curl  localhost:9007/api/mirror/sessions/ | jq ."
@@ -110,56 +100,6 @@
                                         "Name" : "Show Nwsec Policy Count",
                                         "Method" : 0,
                                         "Command" : "/nic/bin/halctl show nwsec policy | grep \"Rule Id\" | wc -l"
-                                },
-                                {
-                                        "Name" : "Drop Statistics",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show system statistics drop"
-                                },
-                                {
-                                        "Name" : "System Statistics",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show system statistics"
-                                },
-                                {
-                                        "Name" : "Port Statistics",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show port statistics"
-                                },
-                                {
-                                        "Name" : "System Statistics intf",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl system statistics intf"
-                                },
-                                {
-                                        "Name" : "Interrupts",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show interrupts"
-                                },
-                                {
-                                        "Name" : "Table Statistics",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl system statistics table"
-                                },
-                                {
-                                        "Name" : "Mirror",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show mirror"
-                                },
-                                {
-                                        "Name" : "Collector",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show collector"
-                                },
-                                {
-                                        "Name" : "Flow-Monitor",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show flow-monitor"
-                                },
-                                {
-                                        "Name" : "Session",
-                                        "Method" : 0,
-                                        "Command" : "/nic/bin/halctl show session"
                                 },
 				{
                                         "Name" : "NaplesStatus Delphi Object",

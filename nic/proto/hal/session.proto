@@ -226,6 +226,8 @@ message SessionSpec {
   FlowSpec             responder_flow         = 7;   // responder flow
   FlowSpec             peer_initiator_flow    = 8;   // peer initiator flow
   FlowSpec             peer_responder_flow    = 9;   // peer responder flow
+  bool                 deleting               = 10;  // is the session to be deleted
+  bool                 tcp_aging_enqueued     = 11;  // is TCP aging enqueued
 }
 
 // SessionRequestMsg is batched session request message
