@@ -5,55 +5,195 @@
 
 #include <linux/ctype.h>
 #include <linux/debugfs.h>
+#include <linux/configfs.h>
 #include <linux/module.h>
 
 #include "ionic_sysfs.h"
 #include "ionic_ibdev.h"
 
+/* Global per-module config knobs */
 bool ionic_dbg_enable = true;
+int ionic_sqcmb_order = 5; /* 32 pages */
+bool ionic_sqcmb_inline = false;
+int ionic_rqcmb_order = 5; /* 32 pages */
+u16 ionic_aq_depth = 63;
+int ionic_aq_count = 4;
+u16 ionic_eq_depth = 511;
+u16 ionic_eq_isr_budget = 10;
+u16 ionic_eq_work_budget = 1000;
+int ionic_max_pd = 1024;
+static bool ionic_nosupport = false;
+int ionic_spec = IONIC_SPEC_HIGH;
+
+#ifdef HAVE_CONFIGFS
+#define IRCFG_ACCESS(_var, _type, _fmt, _func)				\
+static ssize_t ionic_rdma_##_var##_show(struct config_item *item,	\
+					char *pg)			\
+{									\
+	return sprintf(pg, #_fmt "\n", ionic_##_var);			\
+}									\
+									\
+static ssize_t ionic_rdma_##_var##_store(struct config_item *item,	\
+					 const char *pg, size_t count)	\
+{									\
+	_type tmp;							\
+	int ret;							\
+									\
+	ret = _func;							\
+	if (ret)							\
+		return ret;						\
+	ionic_##_var = tmp;						\
+	return count;							\
+}
+
+#define IRCFG_BOOL(_var)						\
+	IRCFG_ACCESS(_var, bool, "%d", kstrtobool(pg, &tmp))
+#define IRCFG_INT(_var)							\
+	IRCFG_ACCESS(_var, int, "%d", kstrtoint(pg, 0, &tmp))
+#define IRCFG_U16(_var)							\
+	IRCFG_ACCESS(_var, u16, "%u", kstrtou16(pg, 0, &tmp))
+
+IRCFG_BOOL(dbg_enable);
+IRCFG_INT(sqcmb_order);
+IRCFG_BOOL(sqcmb_inline);
+IRCFG_INT(rqcmb_order);
+IRCFG_U16(aq_depth);
+IRCFG_INT(aq_count);
+IRCFG_U16(eq_depth);
+IRCFG_U16(eq_isr_budget);
+IRCFG_U16(eq_work_budget);
+IRCFG_INT(max_pd);
+IRCFG_BOOL(nosupport);
+
+/* Special handling for spec */
+static ssize_t ionic_rdma_spec_show(struct config_item *item, char *pg)
+{
+	return sprintf(pg, "%d\n", ionic_spec);
+}
+
+static ssize_t ionic_rdma_spec_store(struct config_item *item,
+				     const char *pg, size_t count)
+{
+	int tmp;
+	int ret;
+
+	ret = kstrtoint(pg, 0, &tmp);
+	if (!ret) {
+		if (tmp != IONIC_SPEC_LOW &&
+		    tmp != IONIC_SPEC_HIGH &&
+		    !ionic_nosupport) {
+			pr_info("ionic_rdma: invalid spec %d, using %d",
+				tmp, IONIC_SPEC_LOW);
+			pr_info("ionic_rdma: valid values are %d and %d\n",
+				IONIC_SPEC_LOW, IONIC_SPEC_HIGH);
+			tmp = IONIC_SPEC_LOW;
+		}
+		ionic_spec = tmp;
+	}
+	return ret ? ret : count;
+}
+
+static ssize_t ionic_rdma_description_show(struct config_item *item, char *pg)
+{
+	return sprintf(pg,
+"ionic_rdma driver configuration values\n"
+"dbg_enable      Expose resource info in debugfs\n"
+"sqcmb_order     Only alloc sq cmb less than order\n"
+"sqcmb_inline    Only alloc sq cmb when using inline data\n"
+"rqcmb_order     Only alloc rq cmb less than order\n"
+"aq_depth        Min depth for admin queues\n"
+"aq_count        Limit number of admin queues created\n"
+"eq_depth        Min depth for event queues\n"
+"eq_isr_budget   Max events to poll per round in isr context\n"
+"eq_work_budget  Max events to poll per round in work context\n"
+"max_pd          Max number of PDs\n"
+"nosupport       Enable unsupported config values\n"
+"spec            Max SGEs to speculatively load\n");
+}
+
+CONFIGFS_ATTR(ionic_rdma_, dbg_enable);
+CONFIGFS_ATTR(ionic_rdma_, sqcmb_order);
+CONFIGFS_ATTR(ionic_rdma_, sqcmb_inline);
+CONFIGFS_ATTR(ionic_rdma_, rqcmb_order);
+CONFIGFS_ATTR(ionic_rdma_, aq_depth);
+CONFIGFS_ATTR(ionic_rdma_, aq_count);
+CONFIGFS_ATTR(ionic_rdma_, eq_depth);
+CONFIGFS_ATTR(ionic_rdma_, eq_isr_budget);
+CONFIGFS_ATTR(ionic_rdma_, eq_work_budget);
+CONFIGFS_ATTR(ionic_rdma_, max_pd);
+CONFIGFS_ATTR(ionic_rdma_, nosupport);
+CONFIGFS_ATTR(ionic_rdma_, spec);
+CONFIGFS_ATTR_RO(ionic_rdma_, description);
+
+static struct configfs_attribute *ionic_rdma_attrs[] = {
+	&ionic_rdma_attr_dbg_enable,
+	&ionic_rdma_attr_sqcmb_order,
+	&ionic_rdma_attr_sqcmb_inline,
+	&ionic_rdma_attr_rqcmb_order,
+	&ionic_rdma_attr_aq_depth,
+	&ionic_rdma_attr_aq_count,
+	&ionic_rdma_attr_eq_depth,
+	&ionic_rdma_attr_eq_isr_budget,
+	&ionic_rdma_attr_eq_work_budget,
+	&ionic_rdma_attr_max_pd,
+	&ionic_rdma_attr_nosupport,
+	&ionic_rdma_attr_spec,
+	&ionic_rdma_attr_description,
+	NULL,
+};
+
+#ifdef HAVE_CONFIGFS_CONST
+static const struct config_item_type ionic_rdma_type = {
+#else
+static struct config_item_type ionic_rdma_type = {
+#endif
+	.ct_attrs	= ionic_rdma_attrs,
+	.ct_owner	= THIS_MODULE,
+};
+
+static struct configfs_subsystem ionic_rdma_subsys = {
+	.su_group = {
+		.cg_item = {
+			.ci_namebuf = "ionic_rdma",
+			.ci_type = &ionic_rdma_type,
+		},
+	},
+};
+#else /* HAVE_CONFIGFS */
 module_param_named(dbgfs, ionic_dbg_enable, bool, 0444);
 MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
 
-int ionic_sqcmb_order = 5; /* 32 pages */
 module_param_named(sqcmb_order, ionic_sqcmb_order, int, 0644);
 MODULE_PARM_DESC(sqcmb_order, "Only alloc sq cmb less than order.");
 
-bool ionic_sqcmb_inline = false;
 module_param_named(sqcmb_inline, ionic_sqcmb_inline, bool, 0644);
-MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb for inline data capability.");
+MODULE_PARM_DESC(sqcmb_inline, "Only alloc sq cmb when using inline data.");
 
-int ionic_rqcmb_order = 5; /* 32 pages */
 module_param_named(rqcmb_order, ionic_rqcmb_order, int, 0644);
 MODULE_PARM_DESC(rqcmb_order, "Only alloc rq cmb less than order.");
 
-u16 ionic_aq_depth = 63;
 module_param_named(aq_depth, ionic_aq_depth, ushort, 0444);
 MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
 
-int ionic_aq_count = 4;
-module_param_named(ionic_rdma_aq_count, ionic_aq_count, int, 0644);
-MODULE_PARM_DESC(ionic_rdma_aq_count, "Limit number of admin queues created.");
+module_param_named(aq_count, ionic_aq_count, int, 0644);
+MODULE_PARM_DESC(aq_count, "Limit number of admin queues created.");
 
-u16 ionic_eq_depth = 511;
 module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
 MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
 
-u16 ionic_eq_isr_budget = 10;
 module_param_named(isr_budget, ionic_eq_isr_budget, ushort, 0644);
 MODULE_PARM_DESC(isr_budget, "Max events to poll per round in isr context.");
 
-u16 ionic_eq_work_budget = 1000;
 module_param_named(work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
-int ionic_max_pd = 1024;
 module_param_named(max_pd, ionic_max_pd, int, 0444);
 MODULE_PARM_DESC(max_pd, "Max number of PDs.");
 
-static bool ionic_nosupport = false;
 module_param_named(nosupport, ionic_nosupport, bool, 0644);
 MODULE_PARM_DESC(nosupport, "Enable unsupported config values");
 
+/* Special handling for spec */
 static int ionic_set_spec(const char *val, const struct kernel_param *kp)
 {
 	int rc, tmp;
@@ -62,10 +202,14 @@ static int ionic_set_spec(const char *val, const struct kernel_param *kp)
 	if (rc)
 		return rc;
 
-	if (tmp != 8 && tmp != 16 && !ionic_nosupport) {
-		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
-		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
-		tmp = 8;
+	if (tmp != IONIC_SPEC_LOW &&
+	    tmp != IONIC_SPEC_HIGH &&
+	    !ionic_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using %d\n",
+			tmp, IONIC_SPEC_LOW);
+		pr_info("ionic_rdma: valid spec values are %d and %d\n",
+			IONIC_SPEC_LOW, IONIC_SPEC_HIGH);
+		tmp = IONIC_SPEC_LOW;
 	}
 
 	*(int *)kp->arg = tmp;
@@ -76,9 +220,9 @@ static const struct kernel_param_ops ionic_spec_ops = {
 	.set = ionic_set_spec,
 	.get = param_get_int,
 };
-int ionic_spec = 16;
 module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
-MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
+MODULE_PARM_DESC(spec, "Max SGEs to speculatively load.");
+#endif /* HAVE_CONFIGFS */
 
 static void ionic_umem_show(struct seq_file *s, const char *w,
 			    struct ib_umem *umem)
@@ -1163,4 +1307,28 @@ void ionic_dbg_rm_qp(struct ionic_qp *qp)
 	debugfs_remove_recursive(qp->debug);
 
 	qp->debug = NULL;
+}
+
+int ionic_dbg_init(void)
+{
+#ifdef HAVE_CONFIGFS
+	int ret;
+
+	config_group_init(&ionic_rdma_subsys.su_group);
+	mutex_init(&ionic_rdma_subsys.su_mutex);
+	ret = configfs_register_subsystem(&ionic_rdma_subsys);
+	if (ret)
+		mutex_destroy(&ionic_rdma_subsys.su_mutex);
+	return ret;
+#else
+	return 0;
+#endif
+}
+
+void ionic_dbg_exit(void)
+{
+#ifdef HAVE_CONFIGFS
+	configfs_unregister_subsystem(&ionic_rdma_subsys);
+	mutex_destroy(&ionic_rdma_subsys.su_mutex);
+#endif
 }

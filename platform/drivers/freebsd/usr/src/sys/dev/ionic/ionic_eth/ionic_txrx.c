@@ -182,12 +182,20 @@ TUNABLE_STR("hw.ionic.fw_update_ver", ionic_fw_update_ver,
 SYSCTL_STRING(_hw_ionic, OID_AUTO, fw_update_ver, CTLFLAG_RWTUN,
     ionic_fw_update_ver, 0, "Firmware version that needs to be programmed.");
 
+#ifdef NETAPP_PATCH
+int ionic_cdp_vlan = 1;
+#else
 int ionic_cdp_vlan = 0;
+#endif /* NETAPP_PATCH */
 TUNABLE_INT("hw.ionic.cdp_vlan", &ionic_cdp_vlan);
 SYSCTL_INT(_hw_ionic, OID_AUTO, cdp_vlan, CTLFLAG_RDTUN,
     &ionic_cdp_vlan, 0, "Receive CDP tagged with this vlan");
 
+#ifdef NETAPP_PATCH
+int ionic_lldp_vlan = 1;
+#else
 int ionic_lldp_vlan = 0;
+#endif /* NETAPP_PATCH */
 TUNABLE_INT("hw.ionic.lldp_vlan", &ionic_lldp_vlan);
 SYSCTL_INT(_hw_ionic, OID_AUTO, lldp_vlan, CTLFLAG_RDTUN,
     &ionic_lldp_vlan, 0, "Receive LLDP tagged with this vlan");
@@ -1412,7 +1420,7 @@ ionic_xmit(struct ifnet *ifp, struct ionic_txque *txq, struct mbuf **m)
 	/*
 	 * Reset the timer if queue is not full,
 	 * we might be recovering from TxQ full condition.
-	 */	
+	 */
 	if (!txq->full)
 		txq->wdog_start = 0;
 
@@ -1911,7 +1919,7 @@ ionic_rdma_sniffer_sysctl(SYSCTL_HANDLER_ARGS)
 		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
 	else
 		rx_mode &= ~RX_MODE_F_RDMA_SNIFFER;
-	
+
 	ionic_lif_rx_mode(lif, rx_mode);
 
 	return (err);

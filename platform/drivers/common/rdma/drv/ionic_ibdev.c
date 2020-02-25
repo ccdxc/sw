@@ -119,15 +119,16 @@ static int ionic_query_device(struct ib_device *ibdev,
 		min(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
 		    ionic_spec);
 	attr->max_recv_sge =
-		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    ionic_spec);
-	attr->max_sge_rd = attr->max_send_sge;
+		min3(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
+		     ionic_spec,
+		     IONIC_SPEC_RD_RCV);
+	attr->max_sge_rd = min(attr->max_send_sge, IONIC_SPEC_RD_RCV);
 #else
 	attr->max_sge =
 		min3(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
 		     ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
 		     ionic_spec);
-	attr->max_sge_rd = attr->max_sge;
+	attr->max_sge_rd = min(attr->max_sge, IONIC_SPEC_RD_RCV);
 #endif
 	attr->max_cq = dev->inuse_cqid.inuse_size;
 	attr->max_cqe = IONIC_MAX_CQ_DEPTH;
@@ -936,11 +937,11 @@ static void ionic_netdev_discover(void)
 	VNET_FOREACH(vnet) {
 		IFNET_RLOCK();
 		CURVNET_SET_QUIET(vnet);
-#if __FreeBSD_version >= 1200000
+#if !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000
 		CK_STAILQ_FOREACH(ndev, &V_ifnet, if_link)
 #else
 		TAILQ_FOREACH(ndev, &V_ifnet, if_link)
-#endif
+#endif /* !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000 */
 			ionic_netdev_event(&ionic_netdev_notifier,
 					   NETDEV_REGISTER, ndev);
 		CURVNET_RESTORE();
@@ -990,6 +991,10 @@ static int __init ionic_mod_init(void)
 		goto err_evt_workq;
 	}
 
+	rc = ionic_dbg_init();
+	if (rc)
+		goto err_dbg;
+
 	rc = register_netdevice_notifier(&ionic_netdev_notifier);
 	if (rc)
 		goto err_notifier;
@@ -1001,6 +1006,8 @@ static int __init ionic_mod_init(void)
 	return 0;
 
 err_notifier:
+	ionic_dbg_exit();
+err_dbg:
 	destroy_workqueue(ionic_evt_workq);
 err_evt_workq:
 	destroy_workqueue(ionic_dev_workq);
@@ -1031,6 +1038,8 @@ static void __exit ionic_mod_exit(void)
 
 	destroy_workqueue(ionic_evt_workq);
 	destroy_workqueue(ionic_dev_workq);
+
+	ionic_dbg_exit();
 
 	BUILD_BUG_ON(sizeof(struct ionic_v1_cqe) != 32);
 	BUILD_BUG_ON(sizeof(struct ionic_v1_base_hdr) != 16);

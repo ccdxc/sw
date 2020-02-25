@@ -61,4 +61,7 @@ void ionic_dbg_rm_mr(struct ionic_mr *mr);
 void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp);
 void ionic_dbg_rm_qp(struct ionic_qp *qp);
 
+static inline int ionic_dbg_init(void) { return 0; }
+static inline void ionic_dbg_exit(void) {}
+
 #endif /* IONIC_SYSCTL_H */

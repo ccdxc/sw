@@ -65,6 +65,14 @@
 #define IONIC_GID_TBL_LEN	256
 #define IONIC_PKEY_TBL_LEN	1
 
+#define IONIC_SPEC_RD_RCV	4
+#define IONIC_SPEC_LOW		8
+#ifdef NETAPP_PATCH
+#define IONIC_SPEC_HIGH		12
+#else
+#define IONIC_SPEC_HIGH		16
+#endif /* NETAPP_PATCH */
+
 #define IONIC_META_LAST		((void *)1ul)
 #define IONIC_META_POSTED	((void *)2ul)
 

@@ -45,9 +45,9 @@
 #include <linux/delay.h>
 #include <linux/etherdevice.h>
 #include <ionic_kpicompat.h>
-#if __FreeBSD_version >= 1200000
+#if !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000
 #include <ck_queue.h>
-#endif
+#endif /* !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000 */
 
 #define FW_INFO "[Firmware Info]: "
 
@@ -88,7 +88,7 @@ sysfs_remove_group_check_name(struct kobject *kobj,
 }
 #define sysfs_remove_group sysfs_remove_group_check_name
 
-#if __FreeBSD_version < 1200518
+#if defined(NETAPP_PATCH) || __FreeBSD_version < 1200518
 static inline int sysfs_create_groups(struct kobject *kobj,
 				      const struct attribute_group **groups)
 {
@@ -109,8 +109,8 @@ static inline int sysfs_create_groups(struct kobject *kobj,
 	return error;
 }
 
-#endif /* __FreeBSD_version < 1200518 r351937 */
-#if __FreeBSD_version < 1201502
+#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1200518 r351937 */
+#if defined(NETAPP_PATCH) || __FreeBSD_version < 1201502
 static inline void sysfs_remove_groups(struct kobject *kobj,
 				       const struct attribute_group **groups)
 {
@@ -122,7 +122,7 @@ static inline void sysfs_remove_groups(struct kobject *kobj,
 		sysfs_remove_group(kobj, groups[i]);
 }
 
-#endif /* __FreeBSD_version < 1201502 r354613 */
+#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1201502 r354613 */
 #define local_irq_save(f) do { (f) = 0; } while (0)
 #define local_irq_restore(f) (void)(f)
 

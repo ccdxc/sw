@@ -52,11 +52,11 @@ int
 ionic_get_msix_irq(struct ionic *ionic, unsigned int num)
 {
 
-#if __FreeBSD_version >= 1200000
+#if !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000
 	return (ionic->pdev->dev.irq_start + num);
 #else
 	return (ionic->pdev->dev.msix + num);
-#endif
+#endif /* !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000 */
 }
 
 const char *

@@ -113,7 +113,7 @@ ionic_dev_setup(struct ionic *ionic)
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
-	/* 
+	/*
 	 * BAR2 resources
 	 */
 

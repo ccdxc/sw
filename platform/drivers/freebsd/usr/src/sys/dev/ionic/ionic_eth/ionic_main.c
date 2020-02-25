@@ -1145,6 +1145,7 @@ ionic_qos_class_type_update(struct ionic_lif *lif,
 
 	return (0);
 }
+
 /*
  * Validate user parameters.
  */

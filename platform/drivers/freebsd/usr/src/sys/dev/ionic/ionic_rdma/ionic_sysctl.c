@@ -42,7 +42,7 @@ SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dyndbg_enable, CTLFLAG_RWTUN,
     &ionic_dyndbg_enable, 0, "Print to dmesg for debug prints");
 
 bool ionic_dbg_enable = true;
-SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbgfs_enable, CTLFLAG_RDTUN,
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, dbg_enable, CTLFLAG_RDTUN,
     &ionic_dbg_enable, 0, "Expose resource info in debug sysctls");
 
 int ionic_sqcmb_order = 5; /* 32 pages */
@@ -86,6 +86,7 @@ SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, nosupport,
     CTLFLAG_RWTUN | CTLFLAG_SKIP,
     &ionic_nosupport, 0, "Enable unsupported config values");
 
+/* Special handling for spec */
 static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	int *spec = oidp->oid_arg1;
@@ -98,19 +99,23 @@ static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 	error = SYSCTL_IN(req, &tmp, sizeof(tmp));
 	if (error)
 		return (error);
-	if (tmp != 8 && tmp != 16 && !ionic_nosupport) {
-		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
-		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
-		tmp = 8;
+	if (tmp != IONIC_SPEC_LOW &&
+	    tmp != IONIC_SPEC_HIGH &&
+	    !ionic_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using %d\n",
+			tmp, IONIC_SPEC_LOW);
+		pr_info("ionic_rdma: valid spec values are %d and %d\n",
+			IONIC_SPEC_LOW, IONIC_SPEC_HIGH);
+		tmp = IONIC_SPEC_LOW;
 	}
 
 	*spec = tmp;
 
 	return (0);
 }
-int ionic_spec = 16;
+int ionic_spec = IONIC_SPEC_HIGH;
 SYSCTL_PROC(_hw_ionic_rdma, OID_AUTO, spec, CTLFLAG_RWTUN | CTLTYPE_INT,
-    &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs for speculation");
+    &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs to speculatively load");
 
 static struct sysctl_oid *ionic_node(struct sysctl_ctx_list *ctx,
 				     struct sysctl_oid_list *parent,

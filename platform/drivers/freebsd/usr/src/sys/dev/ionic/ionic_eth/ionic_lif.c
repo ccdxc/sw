@@ -540,7 +540,7 @@ ionic_adminq_clean(struct ionic_adminq* adminq, int limit)
 		if (__IONIC_DEBUG)
 			print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET,
 			    16, 1, comp, sizeof(struct admin_comp), true);
-	
+
 		adminq->comp_index = IONIC_MOD_INC(adminq, comp_index);
 		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
 		/* Roll over condition, flip color. */
@@ -1199,7 +1199,7 @@ ionic_change_mtu(struct ifnet *ifp, int new_mtu)
 	ionic_calc_rx_size(lif);
 	mbuf_size_changed = (old_mbuf_size != lif->rx_mbuf_size);
 
-	/* 
+	/*
 	 * If mbuf size has not changed then there is no need to
 	 * reprogram queues.
 	 */
@@ -1591,7 +1591,7 @@ ionic_adminq_alloc(struct ionic_lif *lif, unsigned int qnum,
 
 error_out:
 	ionic_dev_intr_unreserve(lif, &adminq->intr);
-	
+
 	if (adminq->cmd_ring) {
 		ionic_dma_free(adminq->lif->ionic, &adminq->cmd_dma);
 		adminq->cmd_ring = NULL;
@@ -1697,7 +1697,7 @@ ionic_notifyq_alloc(struct ionic_lif *lif, unsigned int qnum,
 
 error_out:
 	ionic_dev_intr_unreserve(lif, &notifyq->intr);
-	
+
 	if (notifyq->cmd_ring) {
 		ionic_dma_free(notifyq->lif->ionic, &notifyq->cmd_dma);
 		notifyq->cmd_ring = NULL;
@@ -2157,7 +2157,7 @@ ionic_notifyq_free(struct ionic_lif *lif, struct ionic_notifyq *notifyq)
 	if (notifyq->intr.vector)
 		free_irq(notifyq->intr.vector, notifyq);
 	ionic_dev_intr_unreserve(lif, &notifyq->intr);
-	
+
 	if (notifyq->cmd_ring) {
 		ionic_dma_free(notifyq->lif->ionic, &notifyq->cmd_dma);
 		notifyq->cmd_ring = NULL;
@@ -2271,7 +2271,7 @@ ionic_setup_intr_coal(struct ionic_lif *lif, int coal)
 
 	if (ident->dev.intr_coal_div == 0)
 		return (ENXIO);
-	
+
 	if (coal > lif->intr_coalesce_max_us) {
 		IONIC_NETDEV_ERROR(ifp, "value %d out of range, max: %d\n",
 		    coal, lif->intr_coalesce_max_us);
@@ -2991,7 +2991,7 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 		IONIC_LIF_LOCK(lif);
 		lif->link_speed = comp->link_change.link_speed;
 		lif->link_up = comp->link_change.link_status ?  true : false;
-	
+
 		ionic_get_link_status(lif);
 		if_printf(ifp, "[eid:%ld]link status: %s speed: %d\n",
 		    comp_eid, (lif->link_up ? "up" : "down"),
@@ -3371,7 +3371,7 @@ ionic_rx_empty(struct ionic_rxque *rxq)
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 	IONIC_RX_TRACE(rxq, "head: %d tail: %d desc_posted: %d\n",
 	    rxq->head_index, rxq->tail_index, IONIC_Q_LENGTH(rxq));
-	
+
 	while (!IONIC_Q_EMPTY(rxq)) {
 		rxbuf = &rxq->rxbuf[rxq->tail_index];
 		KASSERT(rxbuf->m, ("%s: ionic_rx_empty rxbuf empty for %d",
@@ -3763,7 +3763,7 @@ ionic_lif_reset_stats(struct ionic_lif *lif)
 	return (ionic_adminq_post_wait(lif, &ctx));
 }
 /*
- * Register device MAC address. 
+ * Register device MAC address.
  */
 static int
 ionic_station_add(struct ionic_lif *lif)

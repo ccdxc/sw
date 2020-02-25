@@ -52,9 +52,9 @@
 #include <linux/delay.h>
 #include <linux/etherdevice.h>
 #include <ionic_kpicompat.h>
-#if __FreeBSD_version >= 1200000
+#if !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000
 #include <ck_queue.h>
-#endif
+#endif /* !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000 */
 
 #define FW_INFO "[Firmware Info]: "
 
@@ -98,7 +98,7 @@ sysfs_remove_group_check_name(struct kobject *kobj,
 #define sysfs_remove_group sysfs_remove_group_check_name
 
 #ifdef NOT_UPSTREAM
-#if __FreeBSD_version < 1200518
+#if defined(NETAPP_PATCH) || __FreeBSD_version < 1200518
 static inline int sysfs_create_groups(struct kobject *kobj,
 				      const struct attribute_group **groups)
 {
@@ -119,9 +119,9 @@ static inline int sysfs_create_groups(struct kobject *kobj,
 	return error;
 }
 
-#endif /* __FreeBSD_version < 1200518 r351937 */
+#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1200518 r351937 */
 #endif /* NOT_UPSTREAM */
-#if __FreeBSD_version < 1201502
+#if defined(NETAPP_PATCH) || __FreeBSD_version < 1201502
 static inline void sysfs_remove_groups(struct kobject *kobj,
 				       const struct attribute_group **groups)
 {
@@ -133,7 +133,7 @@ static inline void sysfs_remove_groups(struct kobject *kobj,
 		sysfs_remove_group(kobj, groups[i]);
 }
 
-#endif /* __FreeBSD_version < 1201502 r354613 */
+#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1201502 r354613 */
 #define local_irq_save(f) do { (f) = 0; } while (0)
 #define local_irq_restore(f) (void)(f)
 
@@ -151,6 +151,9 @@ extern bool ionic_dyndbg_enable;
 #ifdef NOT_UPSTREAM
 #include <linux/version.h>
 #include <linux/netdevice.h>
+#if defined(OFA_KERNEL)
+#include "ionic_kcompat_ofa.h"
+#endif
 
 #if defined(RHEL_RELEASE_VERSION)
 #define IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
@@ -160,18 +163,23 @@ extern bool ionic_dyndbg_enable;
 	(LINUX_VERSION_CODE < KERNEL_VERSION(LX_MAJ, LX_MIN, 0))
 #endif
 
-#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99)
-#else /* 4.14.0 and later */
-#define HAVE_GET_VECTOR_AFFINITY
-#endif
-
-#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 99,99)
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 7,6)
 #define netdev_notifier_info_to_dev(ptr) (ptr)
 #endif
 
-#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99)
-#else /* 4.10.0 and later */
-#define HAVE_NETDEV_MAX_MTU
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,4, /* RHEL */ 99,99)
+#else /* 4.4 and later */
+#define HAVE_CONFIGFS
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99)
+#else /* 4.14 and later */
+#define HAVE_GET_VECTOR_AFFINITY
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,15, /* RHEL */ 99,99)
+#else /* 4.15 and later */
+#define HAVE_CONFIGFS_CONST
 #endif
 
 #if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99)
@@ -274,7 +282,6 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #else /* __FreeBSD__ */
 #ifdef NOT_UPSTREAM
 #if defined(OFA_KERNEL)
-#include "ionic_kcompat_ofa.h"
 #define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
 	OFA_COMPAT_CHECK(OFA_KERNEL, OFA)
 #else
@@ -388,7 +395,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_CREATE_AH_FLAGS
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_0)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_1)
 #else /* 5.1 and later */
 #define HAVE_IB_REGISTER_DEVICE_NAME_ONLY
 #define HAVE_IB_ALLOC_DEV_CONTAINER
@@ -400,27 +407,48 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_RDMA_UDATA_DRV_CTX
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_0)
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(5,2, 99,99)
+/* OFA 4.7 adds the ibdev print macros, but doesn't define this */
+static inline void dynamic_ibdev_dbg(struct ib_device *___dev, ...) { }
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_2a)
 #else /* 5.2 and later */
 #define HAVE_IB_ALLOC_AH_OBJ
 #define HAVE_IB_DESTROY_AH_VOID
 #define HAVE_IB_ALLOC_SRQ_OBJ
-#define HAVE_IB_DESTROY_SRQ_VOID
 #define HAVE_IB_API_UDATA
 #define HAVE_IBDEV_PRINT
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_0)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,2, /* RHEL */ 99,99, /* OFA */ 5_2b)
+#else /* 5.2 and later */
+#define HAVE_IB_ALLOC_MR_UDATA
+#define HAVE_IB_DESTROY_SRQ_VOID
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,3, /* RHEL */ 99,99, /* OFA */ 5_3)
 #else /* 5.3 and later */
 #define HAVE_RDMA_DEV_OPS_EXT
 #define HAVE_IB_ALLOC_CQ_OBJ
 #define HAVE_IB_DESTROY_CQ_VOID
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_3)
 #else /* 5.4 and later */
 #define HAVE_IB_PORT_PHYS_STATE
 #define HAVE_IBDEV_PRINT_RATELIMITED
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,5, /* RHEL */ 99,99, /* OFA */ 5_3)
+#else /* 5.5 and later */
+#define HAVE_IB_UMEM_GET_NODMASYNC
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,6, /* RHEL */ 99,99, /* OFA */ 5_3)
+#define HAVE_IB_GENERIC_UOBJECT
+#else /* 5.6 and later */
+#define HAVE_IB_UMEM_GET_IBDEV
 #endif
 #endif /* NOT_UPSTREAM */
 #endif /* __FreeBSD__ */

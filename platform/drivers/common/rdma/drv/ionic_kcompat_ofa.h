@@ -41,6 +41,10 @@
 #define MLNX_OFED_4_2__4_19c		1
 #define MLNX_OFED_4_2__4_20		1
 #define MLNX_OFED_4_2__5_0		1
+#define MLNX_OFED_4_2__5_1		1
+#define MLNX_OFED_4_2__5_2a		1
+#define MLNX_OFED_4_2__5_2b		1
+#define MLNX_OFED_4_2__5_3		1
 
 /* MLNX_OFED_LINUX-4.4-1.0.0.0-ubuntu18.04-x86_64 */
 #define OFA_COMPAT_d647238		MLNX_OFED_4_4
@@ -53,6 +57,10 @@
 #define MLNX_OFED_4_4__4_19c		1
 #define MLNX_OFED_4_4__4_20		1
 #define MLNX_OFED_4_4__5_0		1
+#define MLNX_OFED_4_4__5_1		1
+#define MLNX_OFED_4_4__5_2a		1
+#define MLNX_OFED_4_4__5_2b		1
+#define MLNX_OFED_4_4__5_3		1
 
 /* MLNX_OFED_LINUX-4.5-1.0.1.0-debian9.0-x86_64 */
 /* MLNX_OFED_LINUX-4.5-1.0.1.0-ubuntu18.04-x86_64 */
@@ -64,6 +72,10 @@
 #define MLNX_OFED_4_5__4_19b		1
 #define MLNX_OFED_4_5__4_20		1
 #define MLNX_OFED_4_5__5_0		1
+#define MLNX_OFED_4_5__5_1		1
+#define MLNX_OFED_4_5__5_2a		1
+#define MLNX_OFED_4_5__5_2b		1
+#define MLNX_OFED_4_5__5_3		1
 
 /* MLNX_OFED_LINUX-4.6-1.0.1.1-ubuntu18.04-x86_64 */
 #define OFA_COMPAT_a2cfe08		MLNX_OFED_4_6
@@ -72,6 +84,20 @@
 #define MLNX_OFED_4_6__umem_get		1
 #define MLNX_OFED_4_6__reg_user_mr	1
 #define MLNX_OFED_4_6__5_0		1
+#define MLNX_OFED_4_6__5_1		1
+#define MLNX_OFED_4_6__5_2a		1
+#define MLNX_OFED_4_6__5_2b		1
+#define MLNX_OFED_4_6__5_3		1
+
+/* MLNX_OFED_LINUX-4.7-3.2.9.0-rhel7.6-x86_64 */
+#define OFA_COMPAT_457f064		MLNX_OFED_4_7
+
+#define MLNX_OFED_4_7__support		1
+#define MLNX_OFED_4_7__umem_get_udata	1
+#define MLNX_OFED_4_7__reg_user_mr	1
+#define MLNX_OFED_4_7__xarray		1
+#define MLNX_OFED_4_7__5_2b		1
+#define MLNX_OFED_4_7__5_3		1
 
 /* macro magic...
  * OFA_COMPAT_CHECK(OFA_KERNEL, OFA)
@@ -93,12 +119,18 @@
 #error Missing support for OFED version
 #endif
 
-#if OFA_COMPAT_CHECK(OFA_KERNEL, umem_get)
-#define ib_umem_get(c,s,l,a,f) ib_umem_get(c,s,l,a,f,0)
+#if OFA_COMPAT_CHECK(OFA_KERNEL, umem_get_udata)
+#define HAVE_IB_UMEM_GET_OFA_UDATA
+#elif OFA_COMPAT_CHECK(OFA_KERNEL, umem_get)
+#define HAVE_IB_UMEM_GET_OFA
 #endif
 
 #if OFA_COMPAT_CHECK(OFA_KERNEL, reg_user_mr)
 #define HAVE_IB_USER_MR_INIT_ATTR
+#endif
+
+#if OFA_COMPAT_CHECK(OFA_KERNEL, xarray)
+#define HAVE_XARRAY
 #endif
 
 #endif
