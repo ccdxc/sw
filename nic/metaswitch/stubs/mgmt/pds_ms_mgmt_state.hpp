@@ -132,23 +132,25 @@ public:
     uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid);
 
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
-    void set_rt_pending_add_(const uint8_t *rt_str, rt_type_e type,
+    void set_rt_pending_add(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to add list",
-                          rt_str, type, id);
+                          rt2str(rt_str), type, id);
         rt_pending_add_.emplace_back(rt_str, type, id);
     }
-    void set_rt_pending_delete_(const uint8_t *rt_str, rt_type_e type,
+    void set_rt_pending_delete(const uint8_t *rt_str, rt_type_e type,
                              pend_rt_t::ms_id_t id) {
         PDS_TRACE_VERBOSE ("Push RT %s (type=%d, id=%d) to del list",
-                          rt_str, type, id);
+                          rt2str(rt_str), type, id);
         rt_pending_delete_.emplace_back(rt_str, type, id);
     }
-    void clear_rt_pending_() {
+    void clear_rt_pending() {
         rt_pending_add_.clear();
         rt_pending_delete_.clear();
     }
-    void redo_rt_pending_();
+    vector<pend_rt_t>& get_rt_pending_add() { return rt_pending_add_;}
+    vector<pend_rt_t>& get_rt_pending_delete() { return rt_pending_delete_;}
+    static void redo_rt_pending(vector<pend_rt_t>&, bool);
 
 private:
     static mgmt_state_t* g_state_;

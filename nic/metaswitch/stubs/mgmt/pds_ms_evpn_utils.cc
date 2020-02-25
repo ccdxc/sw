@@ -109,7 +109,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
             // in case of failure, we need to add the RT back to subnet
             // add it to temp del list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->set_rt_pending_delete_ (
+            mgmt_ctxt.state()->set_rt_pending_delete (
                 (unsigned char *)req.rt().c_str(),
                 rt_type_e::EVI, ms_bd_id);
         }
@@ -125,7 +125,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
             // in case of failure, we need to delete the RT from subnet
             // add it to temp add list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->set_rt_pending_add_ (
+            mgmt_ctxt.state()->set_rt_pending_add (
                 (unsigned char *)req.rt().c_str(),
                 rt_type_e::EVI, ms_bd_id);
         }
@@ -245,7 +245,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             // in case of failure, we need to add the RT back to vpc
             // add it to temp del list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->set_rt_pending_delete_ (
+            mgmt_ctxt.state()->set_rt_pending_delete (
                 (unsigned char *)req.rt().c_str(),
                 rt_type_e::VRF, ms_vrf_id);
         }
@@ -261,7 +261,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             // in case of failure, we need to delete the RT from vpc
             // add it to temp add list
             auto mgmt_ctxt = mgmt_state_t::thread_context();
-            mgmt_ctxt.state()->set_rt_pending_add_ (
+            mgmt_ctxt.state()->set_rt_pending_add (
                 (unsigned char *)req.rt().c_str(),
                 rt_type_e::VRF, ms_vrf_id);
         }
