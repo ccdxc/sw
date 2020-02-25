@@ -226,12 +226,20 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
 		return errors.New("Operation failed with error")
 	}
+	doJSON := cmd.Flag("json").Value.String() == "true"
 
-	if len(respMsg.Response) != 0 {
-		b, _ := json.MarshalIndent(respMsg.Response, "", "  ")
+	nlris := []*utils.ShadowBGPNLRIPrefixStatus{}
+	for _, p := range respMsg.Response {
+		nlris = append(nlris, utils.NewBGPNLRIPrefixStatus(p.Status))
+		if !doJSON {
+
+		}
+	}
+
+	if doJSON {
+		b, _ := json.MarshalIndent(nlris, "", "  ")
 		fmt.Println(string(b))
-	} else {
-		fmt.Println("Got empty response")
+		return nil
 	}
 
 	return nil

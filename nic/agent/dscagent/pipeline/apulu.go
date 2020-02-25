@@ -141,6 +141,49 @@ func (a *ApuluAPI) PipelineInit() error {
 	return nil
 }
 
+// HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
+func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
+	// Create the Loopback interface
+	lb := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			UUID:      uuid.NewV4().String(),
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:        netproto.InterfaceSpec_LOOPBACK.String(),
+			AdminStatus: netproto.IFStatus_UP.String(),
+		},
+	}
+
+	ifName, err := utils.GetIfName(a.InfraAPI.GetDscName(), utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, loopback 0, err %v",
+			lb.UUID, err))
+		return
+	}
+	lb.Name = ifName
+
+	if _, ok := a.LocalInterfaces[lb.Name]; ok {
+		log.Infof("loopback interface already created [%v]", lb.Name)
+		return
+	}
+	a.LocalInterfaces[lb.Name] = lb.UUID
+	if _, err := a.HandleInterface(types.Create, lb); err != nil {
+		log.Errorf("Init: Failed to create loopback interface: Err: %s", err)
+	}
+	// inject loopback so venice can be updated
+	ifEvnt := types.UpdateIfEvent{
+		Oper: types.Create,
+		Intf: lb,
+	}
+	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+}
+
 // HandleDevice handles CRUD methods for Device objects
 func (a *ApuluAPI) HandleDevice(oper types.Operation) error {
 	a.Lock()
@@ -472,17 +515,29 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		}
 		intf = existingIntf
 	}
+	// Use the UUID from the cache when interacting with PDS Agent
+	intf.UUID = uidStr
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
 	defer log.Infof("Interface: %v | Op: %s | Err: %v | %s", intf, oper, err, types.InfoHandleObjEnd)
 
-	// Use the UUID from the cache when interacting with PDS Agent
-	intf.UUID = uidStr
+	// Check for Loopback Update
+	oldLoopbackIf := ""
+	if intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
+		cfg := a.InfraAPI.GetConfig()
+		oldLoopbackIf = cfg.LoopbackIP
+	}
 	err = apulu.HandleInterface(a.InfraAPI, a.InterfaceClient, a.SubnetClient, oper, intf)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
-
+	if intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
+		cfg := a.InfraAPI.GetConfig()
+		if cfg.LoopbackIP != oldLoopbackIf {
+			log.Infof("BGP RID change detected, deleting and recreating BGP config")
+			apulu.UpdateBGPLoopbackConfig(a.InfraAPI, a.RoutingClient)
+		}
+	}
 	return
 }
 
@@ -1522,7 +1577,7 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      netproto.InterfaceSpec_L3.String() + l3uuid,
+				Name:      uplinkInterface.Name,
 				UUID:      l3uuid,
 			},
 			Spec: netproto.InterfaceSpec{

@@ -33,33 +33,37 @@ func NewNLRIPrefix(in []byte) *NLRIPrefix {
 	}
 	switch ret.Type {
 	case 2:
-		ret.Prefix = &EVPNType2Route{}
-		ret.Prefix.parseBytes(in[2:])
+		p := &EVPNType2Route{}
+		p.parseBytes(in[2:])
+		ret.Prefix = newEVPNType2Route(p)
+
 	case 5:
-		ret.Prefix = &EVPNType5Route{}
-		ret.Prefix.parseBytes(in[2:])
+		p := &EVPNType5Route{}
+		p.parseBytes(in[2:])
+		ret.Prefix = newEVPNType5Route(p)
 	}
 	return ret
 }
 
 type EVPNType2Route struct {
-	RD            []byte
-	RDStr         string
-	ESI           []byte
-	ESIStr        string
-	EthTagID      []byte
-	EthTagIDstr   string
-	MACAddrLen    int
-	MACAddress    []byte
-	MACAddressStr string
-	IPAddressLen  int
-	IPAddress     []byte
-	IPAddressStr  string
-	MPLSLabel1    []byte
-	MPLSLabel2    []byte
+	RD           []byte
+	ESI          []byte
+	EthTagID     []byte
+	MACAddrLen   int
+	MACAddress   []byte
+	IPAddressLen int
+	IPAddress    []byte
+	MPLSLabel1   []byte
+	MPLSLabel2   []byte
 }
 
 type ShadowEVPNType2Route struct {
+	RD         string
+	ESI        string
+	EthTagID   string
+	MACAddress string
+	IPAddress  string
+	*EVPNType2Route
 }
 
 func (a *EVPNType2Route) parseBytes(in []byte) {
@@ -69,30 +73,21 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 	cur := 0
 	copy(a.RD, in[cur:cur+8])
 	cur += 8
-	a.RDStr = fmt.Sprintf("%v", a.RD)
 	copy(a.ESI, in[cur:cur+10])
 	cur += 10
-	a.ESIStr = fmt.Sprintf("%v", a.ESI)
 	copy(a.EthTagID, in[cur:cur+4])
-	a.EthTagIDstr = fmt.Sprintf("%v", a.EthTagID)
 	cur += 4
 	a.MACAddrLen = int(in[cur])
 	cur += 1
 	copy(a.MACAddress, in[cur:cur+6])
 	cur += 6
-	mac := net.HardwareAddr(a.MACAddress)
-	a.MACAddressStr = mac.String()
 	a.IPAddressLen = int(in[cur])
 	switch a.IPAddressLen {
 	case 4:
 		copy(a.IPAddress, in[cur:cur+4])
-		ip := net.IP(a.IPAddress)
-		a.IPAddressStr = ip.String()
 		cur += 4
 	case 16:
 		copy(a.IPAddress, in[cur:cur+16])
-		ip := net.IP(a.IPAddress)
-		a.IPAddressStr = ip.String()
 		cur += 16
 	}
 	copy(a.MPLSLabel1, in[cur:cur+3])
@@ -102,22 +97,71 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 	}
 }
 
+func newEVPNType2Route(in *EVPNType2Route) *ShadowEVPNType2Route {
+	return &ShadowEVPNType2Route{
+		EVPNType2Route: in,
+		RD:             fmt.Sprintf("%v", in.RD),
+		ESI:            fmt.Sprintf("%v", in.ESI),
+		EthTagID:       fmt.Sprintf("%v", in.EthTagID),
+		MACAddress:     net.HardwareAddr(in.MACAddress).String(),
+		IPAddress:      net.IP(in.IPAddress).String(),
+	}
+}
+
 type EVPNType5Route struct {
-	RD             [8]byte
-	RDStr          string
-	ESI            [10]byte
-	ESIStr         string
-	EthTagID       [4]byte
-	EthTagIDstr    string
-	IPPrefixLen    int
-	IPPrefix       []byte
-	IPPrefixStr    string
-	GWIPAddress    []byte
-	GWIPAddressStr string
+	RD          []byte
+	ESI         []byte
+	EthTagID    []byte
+	IPPrefixLen int
+	IPPrefix    []byte
+	GWIPAddress []byte
+	MPLSLabel1  []byte
+}
+
+type ShadowEVPNType5Route struct {
+	RD          string
+	ESI         string
+	EthTagID    string
+	IPPrefix    string
+	GWIPAddress string
+	*EVPNType5Route
 }
 
 func (a *EVPNType5Route) parseBytes(in []byte) {
+	if len(in) < type5MinLen {
+		log.Errorf("invalid length [%d] for evpn type2", len(in))
+	}
+	cur := 0
+	copy(a.RD, in[cur:cur+8])
+	cur += 8
+	copy(a.ESI, in[cur:cur+10])
+	cur += 10
+	copy(a.EthTagID, in[cur:cur+4])
+	cur += 4
+	a.IPPrefixLen = int(in[cur])
+	if len(in) == type5MinLen {
+		copy(a.IPPrefix, in[cur:cur+4])
+		cur += 4
+		copy(a.GWIPAddress, in[cur:cur+4])
+		cur += 4
+	} else {
+		copy(a.IPPrefix, in[cur:cur+16])
+		cur += 16
+		copy(a.GWIPAddress, in[cur:cur+16])
+		cur += 16
+	}
+	copy(a.MPLSLabel1, in[cur:cur+3])
+}
 
+func newEVPNType5Route(in *EVPNType5Route) *ShadowEVPNType5Route {
+	return &ShadowEVPNType5Route{
+		EVPNType5Route: in,
+		RD:             fmt.Sprintf("%v", in.RD),
+		ESI:            fmt.Sprintf("%v", in.ESI),
+		EthTagID:       fmt.Sprintf("%v", in.EthTagID),
+		IPPrefix:       net.IP(in.IPPrefix).String(),
+		GWIPAddress:    net.IP(in.GWIPAddress).String(),
+	}
 }
 
 type EVPNPrefix interface {
@@ -229,9 +273,18 @@ func NewBGPPeer(in *mstypes.BGPPeer) *ShadowBGPPeer {
 
 // ShadowBGPNLRIPrefixStatus is a shadow of the BGPNLRIPrefixStatus
 type ShadowBGPNLRIPrefixStatus struct {
-	Prefix      NLRIPrefix
+	Prefix      *NLRIPrefix
 	ASPathStr   string
 	PathOrigId  string
 	NextHopAddr string
 	*mstypes.BGPNLRIPrefixStatus
+}
+
+func NewBGPNLRIPrefixStatus(in *mstypes.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
+	return &ShadowBGPNLRIPrefixStatus{
+		ASPathStr:   string(in.ASPathStr),
+		PathOrigId:  string(in.PathOrigId),
+		NextHopAddr: string(in.NextHopAddr),
+		Prefix:      NewNLRIPrefix(in.Prefix),
+	}
 }

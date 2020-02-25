@@ -17,14 +17,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
-	restapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
+	"github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -130,6 +128,9 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 	c.InfraAPI.StoreConfig(obj)
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") && len(obj.Controllers) != 0 {
 
+		// let the pipeline do its thing
+		c.PipelineAPI.HandleVeniceCoordinates(obj)
+
 		// Replay stored configs. This is a best-effort replay. Not marking errors as fatal since controllers will
 		// eventually get the configs to a cluster-wide consistent state
 		if err := c.PipelineAPI.ReplayConfigs(); err != nil {
@@ -161,41 +162,6 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 				log.Error(errors.Wrapf(types.ErrNPMControllerStart, "Controller API: %s", err))
 			}
 		}()
-
-		// Create the Loopback interface
-		lb := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				UUID:      uuid.NewV4().String(),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type:        netproto.InterfaceSpec_LOOPBACK.String(),
-				AdminStatus: netproto.IFStatus_UP.String(),
-			},
-		}
-
-		ifName, err := utils.GetIfName(c.InfraAPI.GetDscName(), utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrBadRequest,
-				"Failed to form interface name, uuid %v, loopback 0, err %v",
-				lb.UUID, err))
-			return err
-		}
-		lb.Name = ifName
-
-		if _, err := c.PipelineAPI.HandleInterface(types.Create, lb); err != nil {
-			log.Errorf("Init: Failed to create loopback interface: Err: %s", err)
-		}
-		// Temp inject loopback so venice can be updated
-		ifEvnt := types.UpdateIfEvent{
-			Oper: types.Create,
-			Intf: lb,
-		}
-		c.InfraAPI.UpdateIfChannel() <- ifEvnt
 
 		tsdb.Init(c.WatchCtx, &tsdb.Opts{
 			ClientName:     types.Netagent,

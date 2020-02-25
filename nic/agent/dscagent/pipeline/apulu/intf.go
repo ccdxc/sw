@@ -7,6 +7,7 @@ package apulu
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
@@ -39,7 +40,8 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		log.Errorf("Interface: %s convert failed | Err: %v", intf.GetKey(), err)
 		return errors.Wrapf(types.ErrBadRequest, "Interface: %s convert failed | Err: %v", intf.GetKey(), err)
 	}
-	log.Infof("Creating Inteface [%+v]", intfReq.Request[0])
+	uid, _ := uuid.FromBytes(intfReq.Request[0].Id)
+	log.Infof("Creating Inteface [%v] UUID [%v][%v]", intf.GetKey(), uid.String(), intfReq.Request[0].Id)
 	resp, err := client.InterfaceCreate(context.Background(), intfReq)
 	if err != nil {
 		log.Errorf("Interface: %s create failed | Err: %v", intf.GetKey(), err)
@@ -54,7 +56,13 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 	dat, _ := intf.Marshal()
 	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
 		cfg := infraAPI.GetConfig()
-		cfg.LoopbackIP = intf.Spec.IPAddress
+		log.Infof("updating loopback TEP IP to [%s]", intf.Spec.IPAddress)
+		ip, _, err := net.ParseCIDR(intf.Spec.IPAddress)
+		if err != nil {
+			log.Errorf("could not parse loopback IP (%s)", err)
+		} else {
+			cfg.LoopbackIP = ip.String()
+		}
 		infraAPI.StoreConfig(cfg)
 	}
 	if err := infraAPI.Store(intf.Kind, intf.GetKey(), dat); err != nil {
@@ -157,6 +165,18 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 			}
 		}
 	}
+	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
+		cfg := infraAPI.GetConfig()
+		log.Infof("updating loopback TEP IP to [%s]", intf.Spec.IPAddress)
+		ip, _, err := net.ParseCIDR(intf.Spec.IPAddress)
+		if err != nil {
+			log.Errorf("could not parse loopback IP (%s)", err)
+		} else {
+			cfg.LoopbackIP = ip.String()
+		}
+
+		infraAPI.StoreConfig(cfg)
+	}
 	if intf.Spec.Type != netproto.InterfaceSpec_HOST_PF.String() {
 		resp, err := client.InterfaceUpdate(context.Background(), intfReq)
 		if err != nil {
@@ -194,6 +214,12 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
 			return err
 		}
+	}
+	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
+		cfg := infraAPI.GetConfig()
+		log.Infof("updating loopback TEP IP to []")
+		cfg.LoopbackIP = ""
+		infraAPI.StoreConfig(cfg)
 	}
 	log.Infof("Inteface: %s delete | Status: %s", intf.GetKey(), resp.ApiStatus)
 

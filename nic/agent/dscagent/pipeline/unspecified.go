@@ -125,6 +125,11 @@ func (i *FakeAgentAPI) PipelineInit() error {
 	return nil
 }
 
+// HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
+func (i *FakeAgentAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
+	log.Infof("FakeAgent got venice co-ordinates [%+v]", dsc)
+}
+
 // HandleVrf handles CRUD Methods for Vrf Object
 func (i *FakeAgentAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []netproto.Vrf, err error) {
 	i.Lock()

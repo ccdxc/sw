@@ -207,6 +207,11 @@ func (i *IrisAPI) PipelineInit() error {
 	return nil
 }
 
+// HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
+func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
+	log.Infof("Iris API: received venice co-ordinates [%v]", dsc)
+}
+
 // HandleVrf handles CRUD Methods for Vrf Object
 func (i *IrisAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []netproto.Vrf, err error) {
 	i.Lock()

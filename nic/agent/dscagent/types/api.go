@@ -57,6 +57,9 @@ type PipelineAPI interface {
 	// PipelineInit sets up the pipeline and creates default objects needed
 	PipelineInit() error
 
+	// HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
+	HandleVeniceCoordinates(dsc DistributedServiceCardStatus)
+
 	// HandleVrf handles CRUDs for VRF object
 	HandleVrf(oper Operation, obj netproto.Vrf) ([]netproto.Vrf, error)
 

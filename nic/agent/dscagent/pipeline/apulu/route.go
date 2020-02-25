@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/utils/log"
@@ -216,6 +217,11 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 	if autoConfig {
 		// Add the Venice RRs
+		dsccfg := infraAPI.GetConfig()
+		localIP := unknLocal
+		if dsccfg.LoopbackIP != "" {
+			localIP = utils.IPAddrStrToPDSIPAddr(dsccfg.LoopbackIP)
+		}
 		for _, n := range dscConfig.Controllers {
 			h, _, err := net.SplitHostPort(n)
 			if err != nil {
@@ -232,7 +238,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 				State:    msTypes.AdminState_ADMIN_STATE_ENABLE,
 				PeerAddr: ip2PDSType(a[0]),
 				// XXX-TBD change to appropriate address
-				LocalAddr:    unknLocal,
+				LocalAddr:    localIP,
 				RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
 				SendComm:     true,
 				SendExtComm:  true,
@@ -246,7 +252,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			peerAf := msTypes.BGPPeerAfSpec{
 				Id:          uid.Bytes(),
 				PeerAddr:    ip2PDSType(a[0]),
-				LocalAddr:   unknLocal,
+				LocalAddr:   localIP,
 				Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
 				Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
 				Disable:     false,
@@ -295,6 +301,10 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	var newPeers []*netproto.BGPNeighbor
 	var delPeers []*netproto.BGPNeighbor
 
+	if currentRoutingConfig == nil {
+		log.Infof("ignoring Routing Config Update [%v]", rtCfg.Name)
+		return nil
+	}
 	// NAPLES can have only one RoutingConfig.
 	if rtCfg.Name != currentRoutingConfig.Name {
 		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
@@ -574,4 +584,14 @@ func HandleRouteTable(infraAPI types.InfraAPI, rtSvc pdstypes.RouteSvcClient, op
 		return errors.Wrapf(types.ErrUnsupportedOp, "Op: %s", oper)
 	}
 	return nil
+}
+
+func UpdateBGPLoopbackConfig(infraAPI types.InfraAPI, client msTypes.BGPSvcClient) {
+	// Loopback IP changed. Delete and create the loopback config
+	if currentRoutingConfig == nil {
+		return
+	}
+	rtcfg := currentRoutingConfig
+	deleteRoutingConfigHandler(infraAPI, client, *currentRoutingConfig)
+	createRoutingConfigHandler(infraAPI, client, *rtcfg)
 }
