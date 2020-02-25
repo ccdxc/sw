@@ -1,0 +1,118 @@
+<div fxFlex="auto" fxLayout="column">
+  <div *ngIf="isInline">
+    <ng-container *ngTemplateOutlet="editButtonContainer;">
+    </ng-container>
+  </div>
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newVcenter-container">
+    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+    <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="newVcenter-content">
+      <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
+    </div>
+  </div>
+</div>
+<ng-template #singleMode>
+  <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+    <div fxFlex="nogrow" fxLayout="column">
+      <span formGroupName="meta" [ngClass]="{requiredField: isNameRequired()}">
+        <input fxFlex="nogrow" formControlName="name" class="newVcenter-input" appErrorTooltip
+               spellcheck="false" type="text"
+               pInputText appFloatLabel="Name">
+      </span>
+      <div fxFlex="10px"></div>
+      <span formGroupName="spec" [ngClass]="{requiredField: isUriRequired()}">
+        <input fxFlex="nogrow" formControlName="uri" class="newVcenter-input" appErrorTooltip
+               spellcheck="false" type="text"
+               pInputText appFloatLabel="URI">
+      </span>
+      <div fxFlex="10px"></div>
+      <fieldset>
+        <legend>Credential</legend>
+        <div fxflex="nogrow" fxLayout="column" class="newVcenter-cred-box"
+             [formGroup]="newObject.$formGroup.get(['spec','credentials'])">
+          <div class="newVcenter-radio-container" *ngIf="!isInline">
+            <mat-radio-group fxFlex="nogrow" class="newVenter-attach-radio"
+                             fxLayoutAlign="start center" fxLayoutGap="10px"
+                             formControlName="auth-type">
+              <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
+                                *ngFor="let option of credentialTypes" [value]="option.label">
+                {{option.label}}
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+          <div fxFlex="5px"></div>
+          <div fxLayout="column"
+               [ngSwitch]="newObject.$formGroup.get(['spec','credentials', 'auth-type']).value">
+            <div fxLayout="column" *ngSwitchCase="'username-password'" [@slideInOut]>
+              <span
+                    [ngClass]="{requiredField: isCredentialRequired('username', 'username-password')}">
+                <input fxFlex="nogrow" class="newVcenter-input" formControlName="username"
+                       appErrorTooltip spellcheck="false" appFloatLabel="User Name"
+                       type="text" pInputText>
+              </span>
+              <div fxFlex="10px"></div>
+              <span
+                    [ngClass]="{requiredField: isCredentialRequired('password', 'username-password')}">
+                <input fxFlex="nogrow" class="newVcenter-input" formControlName="password"
+                       appErrorTooltip spellcheck="false" appFloatLabel="Password"
+                       type="password" pInputText>
+              </span>
+              <div fxFlex="10px"></div>
+              <span [ngClass]="{requiredField: isConfirmPwdRequired()}">
+                <input fxFlex="nogrow" class="newVcenter-input" formControlName="confirmPassword"
+                       appErrorTooltip spellcheck="false" appFloatLabel="Confirm Password"
+                       type="password" pInputText>
+              </span>
+            </div>
+            <div fxLayout="column" *ngSwitchCase="'token'" [@slideInOut]>
+              <span
+                    [ngClass]="{textarea: true,requiredField: isCredentialRequired('bearer-token', 'token')}">
+                <textarea fxFlex="100" formControlName="bearer-token" class="newVcenter-textarea"
+                          appErrorTooltip spellcheck="false" type="text" pInputTextarea
+                          autoResize="autoResize" appFloatLabel="Token"></textarea>
+              </span>
+            </div>
+            <div fxLayout="column" *ngSwitchCase="'certs'" [@slideInOut]>
+              <span
+                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('key-data', 'certs')}">
+                <textarea fxFlex="100" formControlName="key-data" class="newVcenter-textarea"
+                          appErrorTooltip spellcheck="false" type="text" pInputTextarea
+                          autoResize="autoResize" appFloatLabel="Private Key"></textarea>
+              </span>
+              <div fxFlex="10px"></div>
+              <span
+                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('cert-data', 'certs')}">
+                <textarea fxFlex="100" formControlName="cert-data" class="newVcenter-textarea"
+                          appErrorTooltip spellcheck="false" type="text" pInputTextarea
+                          autoResize="autoResize" appFloatLabel="Cert"></textarea>
+              </span>
+              <div fxFlex="10px"></div>
+              <span
+                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('ca-data', 'certs')}">
+                <textarea fxFlex="100" formControlName="ca-data" class="newVcenter-textarea"
+                          appErrorTooltip spellcheck="false" type="text" pInputTextarea
+                          autoResize="autoResize" appFloatLabel="CA Bundle"></textarea>
+              </span>
+            </div>
+            <div fxFlex="10px"></div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #editButtonContainer>
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="end center">
+    <div class="newVcenter-buttoncontainer">
+      <div fxFlex="nogrow" class="button-container">
+        <button [disabled]="!isFormValid()" (click)="saveObject()"
+                [title]="getTooltip()"
+                class="global-button-primary newVcenter-save">SAVE</button>
+      </div>
+      <div fxFlex="nogrow" class="button-container">
+        <button (click)="cancelObject()"
+                class="global-button-neutral newVcenter-cancel">CANCEL</button>
+      </div>
+    </div>
+  </div>
+</ng-template>

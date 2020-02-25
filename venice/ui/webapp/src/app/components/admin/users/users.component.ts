@@ -69,8 +69,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   public static PASSWORD_REGEX: string = '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{9,}$';
   public static PASSWORD_MESSAGE: string = 'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character';
   public static CONFIRM_PASSWORD_DESCRIPTION: string = 'Confirmation password should match with original password';
-  public static CONFIRM_PASSWORD_MESSAGE: string = 'Confirmation password does not match with original password';
-
 
   public static UI_PANEL_USER = 'user';
   public static UI_PANEL_ROLE = 'role';

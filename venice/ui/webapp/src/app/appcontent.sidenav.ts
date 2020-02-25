@@ -219,6 +219,28 @@ export const sideNavMenu: SideNavItem[] = [
     ]
   },
   {
+    label: 'Controller',
+    icon: {
+      cssClass: 'app-l-side-nav-controller',
+    },
+    roleGuard: {
+      opt: [
+        UIRolePermissions.orchestrationorchestrator_read
+      ]
+    },
+    link: ['/controller'],
+    children: [
+      {
+        label: 'vCenter',
+        icon: {
+          cssClass: 'app-l-side-nav-controller-vcenter'
+        },
+        roleGuard: UIRolePermissions.orchestrationorchestrator_read,
+        link: ['/controller', 'vcenter']
+      }
+    ]
+  },
+  {
     label: 'Admin',
     icon: {
       cssClass: 'app-l-side-nav-admin',

@@ -55,6 +55,9 @@ export class Utility {
   public static DEFAULT_CACHE_DURATION: number = 1000 * 60 * 60; // 60 minutes
   public static DEFAULT_OPEN_ALERTS_NUMBER_TO_STOP_TOASTER: number = 1000;
 
+  // Define password not match message
+  public static CONFIRM_PASSWORD_MESSAGE: string = 'Confirmation password does not match with original password';
+
   // Define Valid Mac address format
   public static MACADDRESS_REGEX =
     /^([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})$/;

@@ -228,6 +228,16 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/monitoring/ico-export-policy.svg") center center no-repeat;
 }
 
+.app-l-side-nav-controller {
+  background: url("/assets/images/icons/controller/controller-white.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.app-l-side-nav-controller-vcenter {
+  background: url("/assets/images/icons/controller/vcenter-white.svg") center center no-repeat;
+  background-size: contain;
+}
+
 .app-l-side-nav-monitoring-fwlogs {
   background: url("/assets/images/icons/monitoring/icon-firewall-policy.svg") center center no-repeat;
 }

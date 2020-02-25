@@ -1,0 +1,77 @@
+<app-pagebody [icon]="bodyicon" header="vCenter Integration Overview">
+  <div fxFlex class="vcenter-integrations-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+</app-pagebody>
+<ng-template #DataTable>
+  <app-tableviewedit fxLayout="column" style="height: 100%;"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [createTemplate]="createTemplate"
+                     [enableCheckbox]="true"
+                     [tableLoading]="tableLoading"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+</ng-template>
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row">
+      <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
+                       title="vCenter Integrations"
+                       [total]="dataObjects.length" [icon]="headerIcon"
+                       [enableColumnSelect]="true"
+                       [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+      </app-tableheader>
+    </div>
+  </div>
+
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newvcenter-integration (formClose)="creationFormClose()" fxFlex="none"
+                              [existingObjects]='dataObjects'>
+  </app-newvcenter-integration>
+</ng-template>
+
+<!-- TABLE BODY -->
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'status.last-connected'">
+      {{rowData.status['last-connected'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<!-- TABLE ACTION -->
+<ng-template #actionTemplate let-rowData>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Update vCenter Integration"
+              *roleGuard="'orchestrationorchestrator_update'"
+              class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit
+    </mat-icon>
+    <mat-icon matTooltip="Delete vCenter Integration"
+              *roleGuard="'orchestrationorchestrator_delete'"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete
+    </mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <app-newvcenter-integration [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                              (formClose)="closeRowExpand()" fxFlex="none">
+  </app-newvcenter-integration>
+</ng-template>

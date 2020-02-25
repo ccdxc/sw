@@ -62,7 +62,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
       Utility.isControlValueMatchOtherControlValueValidator(
         this.newAuthUser.$formGroup.get(['spec', 'password']),
         'confirmPassword',
-        UsersComponent.CONFIRM_PASSWORD_MESSAGE)
+        Utility.CONFIRM_PASSWORD_MESSAGE)
     ]);
 
   }

@@ -2,7 +2,7 @@
 //  const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.7.100.63:10001"  // Reno
 // const URL = "10.7.100.76:10001"; // Titus
-//  const URL = "10.7.100.75:10001"  // For CalSoftInc
+const URL = "10.7.100.75:10001"  // For CalSoftInc
 // const URL = "192.168.71.124:10001" // Ubuntu Box
 // const URL = "10.8.101.146"  // Vipin's setup
 // const URL = "10.7.100.53:10001"; // Jay
@@ -19,7 +19,7 @@
 // const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
 // const URL = "10.30.1.111" // arunkumar's esx server
 // const URL = "10.30.5.171" // Venky's server 
-const URL = "10.30.5.234" // Dave's server 
+// const URL = "10.30.5.234" // Dave's server 
 
 const PROXY_CONFIG =
   {

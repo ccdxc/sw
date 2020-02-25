@@ -75,6 +75,10 @@ export const routes: Routes = [
         loadChildren: '@components/cluster-group/cluster-group.module#ClusterGroupModule',
       },
       {
+        path: 'controller',
+        loadChildren: '@components/controller/controller.module#ControllerModule',
+      },
+      {
         path: 'searchresult',
         component: SearchresultComponent,
       },
