@@ -53,6 +53,7 @@ type PolicyState struct {
 	shm                *ipc.SharedMem
 	ipc                []*ipc.IPC
 	wg                 sync.WaitGroup
+	singleBucket       bool
 	logsChannel        chan singleLog
 	objStoreFileFormat fileFormat
 	zipObjects         bool
@@ -103,6 +104,7 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		logsChannel:        make(chan singleLog, logChannelSize),
 		objStoreFileFormat: csvFileFormat,
 		zipObjects:         true,
+		singleBucket:       true,
 	}
 
 	state.connectSyslog()

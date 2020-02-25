@@ -21,6 +21,8 @@ import (
 
 const timeFormat = "2006-01-02T15:04:05"
 const bucketPrefix = "fwlogs"
+const bucketName = "fwlogs"
+const singleBucket = true
 
 var _ = Describe("tests for storing firewall logs in object store", func() {
 	Context("push firewall logs in object store for default tenant", func() {
@@ -42,13 +44,26 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 				h, _, _ := t.Clock()
 				napleID := snic.Status.PrimaryMAC
 				timestamp := time.Date(y, m, dt, h, 0, 0, 0, time.UTC)
-				fwLogClient, err := objstore.NewClient(bucketPrefix,
-					napleID+"-"+strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1),
-					ts.tu.Resolver(), objstore.WithTLSConfig(tlcConfig))
+				var fwLogClient objstore.Client
+				var err error
+				if singleBucket {
+					// fwlogs.fwlogs
+					fwLogClient, err = objstore.NewClient(bucketPrefix,
+						bucketName, ts.tu.Resolver(), objstore.WithTLSConfig(tlcConfig))
+				} else {
+					fwLogClient, err = objstore.NewClient(bucketPrefix,
+						napleID+"-"+strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1),
+						ts.tu.Resolver(), objstore.WithTLSConfig(tlcConfig))
+				}
 				Expect(err).NotTo(HaveOccurred())
-				fmt.Println("Bucket name",
-					bucketPrefix+"."+napleID+"-"+
-						strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
+
+				if singleBucket {
+					fmt.Println("Bucket name", bucketPrefix+"."+bucketName)
+				} else {
+					fmt.Println("Bucket name",
+						bucketPrefix+"."+napleID+"-"+
+							strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
+				}
 
 				// get the current list of objects in objectstore
 				objects, err := fwLogClient.ListObjects("")

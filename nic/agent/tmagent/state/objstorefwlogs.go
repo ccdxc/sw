@@ -37,6 +37,8 @@ const (
 	numLogTransmitWorkers = 10
 	workItemBufferSize    = 1000
 	connectErr            = "connect:" // copied from vos
+	fwlogsBucketName      = "fwlogs.fwlogs"
+	fwLogCSVVersion       = "v1"
 )
 
 // TestObject is used for testing
@@ -80,13 +82,13 @@ func (s *PolicyState) ObjStoreInit(nodeUUID string,
 	w := newWorkers(s.ctx, numLogTransmitWorkers, workItemBufferSize)
 
 	go periodicTransmit(s.ctx, rc, s.logsChannel,
-		periodicTransmitTime, testChannel, nodeUUID, s.objStoreFileFormat, s.zipObjects, w)
+		periodicTransmitTime, testChannel, nodeUUID, s.objStoreFileFormat, s.zipObjects, s.singleBucket, w)
 	return nil
 }
 
 func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan singleLog,
 	periodicTransmitTime time.Duration, testChannel chan<- TestObject,
-	nodeUUID string, ff fileFormat, zip bool, w *workers) {
+	nodeUUID string, ff fileFormat, zip bool, singleBucket bool, w *workers) {
 
 	var c objstore.Client
 	clientChannel := make(chan interface{}, 1)
@@ -117,7 +119,11 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 
 	helper := func() {
 		if c != nil {
-			w.postWorkItem(transmitLogs(ctx, c, bufferedLogs, index, len(bufferedLogs), startTs, endTs, testChannel, nodeUUID, ff, zip))
+			w.postWorkItem(transmitLogs(ctx,
+				c, bufferedLogs, index,
+				len(bufferedLogs), startTs, endTs,
+				testChannel, nodeUUID, ff, zip,
+				singleBucket))
 		}
 
 		// If client has not been initialized yet then drop the collected logs and move on.
@@ -185,19 +191,33 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 
 func transmitLogs(ctx context.Context,
 	c objstore.Client, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
-	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool) func() {
+	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool, singleBucket bool) func() {
 	return func() {
 		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
-		bucketName := getBucketName(bucketPrefix, nodeUUID, startTs)
+		bucketName := getBucketName(bucketPrefix, nodeUUID, startTs, singleBucket)
 		indexBucketName := getIndexBucketName(bucketName)
 
 		// The logs in input slice logs are already sorted according to their Ts.
-		// Every entry in the logs slice, convert to JSON and write to buffer.
+		// Every entry in the logs slice, convert to CSV or JSON and write to buffer.
 		// TODO: What format is needed by GraphDB?
 
 		var objNameBuffer, objBuffer, indexBuffer bytes.Buffer
 		fStartTs := startTs.UTC().Format(timeFormat)
 		fEndTs := endTs.UTC().Format(timeFormat)
+		if singleBucket {
+			y, m, d := startTs.Date()
+			h, _, _ := startTs.Clock()
+			objNameBuffer.WriteString(strings.ToLower(strings.Replace(nodeUUID, ":", "-", -1)))
+			objNameBuffer.WriteString("/")
+			objNameBuffer.WriteString(strconv.Itoa(y))
+			objNameBuffer.WriteString("/")
+			objNameBuffer.WriteString(strconv.Itoa(int(m)))
+			objNameBuffer.WriteString("/")
+			objNameBuffer.WriteString(strconv.Itoa(d))
+			objNameBuffer.WriteString("/")
+			objNameBuffer.WriteString(strconv.Itoa(h))
+			objNameBuffer.WriteString("/")
+		}
 		objNameBuffer.WriteString(fStartTs)
 		objNameBuffer.WriteString("_")
 		objNameBuffer.WriteString(fEndTs)
@@ -224,8 +244,10 @@ func transmitLogs(ctx context.Context,
 		meta["endts"] = fEndTs
 		meta["logcount"] = strconv.Itoa(numLogs)
 		meta["nodeid"] = nodeUUID
+		meta["csvversion"] = fwLogCSVVersion
 
-		fmt.Println("Bucket names ", bucketName, indexBucketName, time.Now(), meta["logcount"], len(objBuffer.Bytes()))
+		log.Infof("dataBucketName %s, indexBucketName %s, time %s, logcount %s, data len %d",
+			bucketName, indexBucketName, time.Now().String(), meta["logcount"], len(objBuffer.Bytes()))
 
 		// PutObject uploads an object to the object store
 		r := bytes.NewReader(objBuffer.Bytes())
@@ -258,7 +280,6 @@ func putObjectHelper(ctx context.Context,
 	size int, metaData map[string]string) error {
 	// We are waiting infinitely if its a connect error, otherwise dropping the data. Is that ok?
 	for {
-		fmt.Println(" in loop")
 		if _, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, int64(size), metaData); err != nil && strings.Contains(err.Error(), connectErr) {
 			log.Errorf("connection error in putting object to object store (%s)", err)
 			continue
@@ -333,16 +354,20 @@ func getJSONIndexBuffer(logs interface{}, b *bytes.Buffer) {
 	// not implemented
 }
 
-func getBucketName(bucketPrefix string, dscID string, ts time.Time) string {
+func getBucketName(bucketPrefix string, dscID string, ts time.Time, singleBucket bool) string {
 	var b bytes.Buffer
-	y, m, d := ts.Date()
-	h, _, _ := ts.Clock()
-	t := time.Date(y, m, d, h, 0, 0, 0, time.UTC)
-	b.WriteString(bucketPrefix)
-	b.WriteString(".")
-	b.WriteString(strings.ToLower(strings.Replace(dscID, ":", "-", -1)))
-	b.WriteString("-")
-	b.WriteString(strings.Replace(strings.Replace(t.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
+	if singleBucket {
+		b.WriteString(fwlogsBucketName)
+	} else {
+		y, m, d := ts.Date()
+		h, _, _ := ts.Clock()
+		t := time.Date(y, m, d, h, 0, 0, 0, time.UTC)
+		b.WriteString(bucketPrefix)
+		b.WriteString(".")
+		b.WriteString(strings.ToLower(strings.Replace(dscID, ":", "-", -1)))
+		b.WriteString("-")
+		b.WriteString(strings.Replace(strings.Replace(t.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
+	}
 	return b.String()
 }
 
