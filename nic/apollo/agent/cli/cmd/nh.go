@@ -25,10 +25,17 @@ var (
 )
 
 var nhShowCmd = &cobra.Command{
-	Use:   "nh",
+	Use:   "nexthop",
 	Short: "show nexthop information",
 	Long:  "show nexthop object information",
 	Run:   nhShowCmdHandler,
+}
+
+var nhGroupShowCmd = &cobra.Command{
+	Use:   "nexthop-group",
+	Short: "show nexthop group information",
+	Long:  "show nexthop group object information",
+	Run:   nhGroupShowCmdHandler,
 }
 
 func init() {
@@ -36,6 +43,95 @@ func init() {
 	nhShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	nhShowCmd.Flags().StringVar(&nhType, "type", "overlay", "Specify nexthop type (overlay, underlay or ip)")
 	nhShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop ID")
+
+	showCmd.AddCommand(nhGroupShowCmd)
+	nhGroupShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	nhGroupShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop group ID")
+}
+
+func nhGroupShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewNhSvcClient(c)
+
+	var req *pds.NhGroupGetRequest
+	if cmd != nil && cmd.Flags().Changed("id") {
+		// Get specific NhGroup
+		req = &pds.NhGroupGetRequest{
+			Id: [][]byte{uuid.FromStringOrNil(nhID).Bytes()},
+		}
+	} else {
+		req = &pds.NhGroupGetRequest{
+			Id: [][]byte{},
+		}
+	}
+
+	// PDS call
+	respMsg, err := client.NhGroupGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting nexthop group failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	// Print Nexthop groups
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printNhGroupHeader()
+		for _, resp := range respMsg.Response {
+			printNhGroup(resp)
+		}
+	}
+}
+
+func printNhGroupHeader() {
+	hdrLine := strings.Repeat("-", 106)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-40s%-10s%-16s%-40s\n", "Id", "HwID", "Type", "Members")
+	fmt.Println(hdrLine)
+}
+
+func printNhGroup(resp *pds.NhGroup) {
+	spec := resp.GetSpec()
+	status := resp.GetStatus()
+	typeStr := strings.Replace(spec.GetType().String(), "NEXTHOP_GROUP_TYPE_", "", -1)
+	typeStr = strings.Replace(typeStr, "_", "-", -1)
+	members := spec.GetMembers()
+	first := true
+	for _, member := range members {
+		if first {
+			fmt.Printf("%-40s%-10d%-16s%-40s\n",
+				uuid.FromBytesOrNil(spec.GetId()).String(),
+				status.GetHwId(), typeStr,
+				uuid.FromBytesOrNil(member.GetId()).String())
+			first = false
+		} else {
+			fmt.Printf("%-66s%-40s\n",
+				"",
+				uuid.FromBytesOrNil(member.GetId()).String())
+		}
+	}
 }
 
 func nhShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -190,8 +286,9 @@ func printNexthop(nh *pds.Nexthop) {
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{
 			info := spec.GetUnderlayNhInfo()
-			fmt.Printf("%-40s%-10d%-20s\n",
-				uuid.FromBytesOrNil(spec.GetId()), info.GetL3Interface(),
+			fmt.Printf("%-40s%-40s%-20s\n",
+				uuid.FromBytesOrNil(spec.GetId()).String(),
+				uuid.FromBytesOrNil(info.GetL3Interface()).String(),
 				utils.MactoStr(info.GetUnderlayMAC()))
 		}
 	}

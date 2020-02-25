@@ -281,6 +281,12 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
             goto end;
         }
     }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+
     return Status::OK;
 
 end:
@@ -343,6 +349,12 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
             goto end;
         }
     }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+
     return Status::OK;
 
 end:
@@ -393,6 +405,12 @@ NhSvcImpl::NhGroupDelete(ServerContext *context,
             goto end;
         }
     }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+
     return Status::OK;
 
 end:

@@ -119,7 +119,7 @@ func printSubnet(subnet *pds.Subnet) {
 		egSecPol = uuid.FromBytesOrNil(x[0]).String()
 	}
 
-	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3d\n",
+	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
