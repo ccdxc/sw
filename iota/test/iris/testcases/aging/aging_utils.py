@@ -6,6 +6,10 @@ import iota.test.iris.config.netagent.api as netagent_cfg_api
 import yaml
 import pdb
 
+DEFAULT_TCP_TIMEOUT = 3600
+DEFAULT_UDP_TIMEOUT = 30
+DEFAULT_ICMP_TIMEOUT = 6
+
 def timetoseconds(time):
     seconds = 0
     h = time.find("h")

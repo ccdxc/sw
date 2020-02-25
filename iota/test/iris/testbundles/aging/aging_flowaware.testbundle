@@ -1,0 +1,25 @@
+meta:
+    name    : aging_flowaware
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 20 
+
+testcases:
+    -   name    : AgingICMPSessions
+        testcase: testcases.aging.ping
+        args    :
+            type: remote_only
+            skip_security_prof: True
+
+    -   name    : AgingUdpSessions
+        testcase: testcases.aging.udp
+        args    :
+            type: remote_only
+            skip_security_prof: True
+
+    -   name    : AgingTcpSessions
+        testcase: testcases.aging.tcp
+        args    :
+            type: remote_only
+            skip_security_prof: True
+

@@ -44,7 +44,7 @@ def Trigger(tc):
 
             #Get it from the config
             cmd_cookie = "sleep"
-            api.Trigger_AddNaplesCommand(req, server.node_name, "sleep %s"%(int(timeout%5)), timeout=300)
+            api.Trigger_AddNaplesCommand(req, server.node_name, "sleep %s"%(int(timeout)%5), timeout=300)
             tc.cmd_cookies.append(cmd_cookie)
         
             cmd_cookie = "After aging show session"

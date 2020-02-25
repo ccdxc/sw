@@ -50,6 +50,7 @@ testbundles:
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
         - flowlog/flowlog.testbundle
+        - aging/aging_flowaware.testbundle
         #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle

@@ -10,7 +10,10 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pairs = api.GetRemoteWorkloadPairs()
+    if tc.args.type == 'local_only':
+        pairs = api.GetLocalWorkloadPairs()
+    else:
+        pairs = api.GetRemoteWorkloadPairs()
     tc.cmd_cookies = []
     server,client  = pairs[0]
     naples = server

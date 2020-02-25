@@ -13,6 +13,7 @@ testcases:
             timeout           : [30s]
         args    :
             type: remote_only
+            skip_security_prof: False
 
     -   name    : AgingUdpSessions
         testcase: testcases.aging.udp
@@ -22,6 +23,7 @@ testcases:
             timeout           : [30s]
         args    :
             type: local_only
+            skip_security_prof: False
 
     -   name    : AgingTcpSessions
         testcase: testcases.aging.tcp
@@ -31,6 +33,7 @@ testcases:
             timeout           : [20s]
         args    :
             type: local_only
+            skip_security_prof: False
 
     -   name    : ConnSetupTimeout
         testcase: testcases.aging.tcp_conn_setup_timeout

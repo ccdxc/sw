@@ -110,8 +110,8 @@ def doTriggerIcmp(tc):
     #
     cmd_cookie = "trigger ping: Create case"
     cmd = "ping -c %d %s -I %s" %\
-          (numPkts, tc.server.ip_address, tc.client.interface)
-    add_command(tc, hostReq, cmd_cookie, cmd, tc.client, False)
+          (numPkts, tc.client.ip_address, tc.server.interface)
+    add_command(tc, hostReq, cmd_cookie, cmd, tc.server, False)
 
     #
     # Issue "halctl clear session" to force delete of the
@@ -299,9 +299,12 @@ def verifyIcmp(tc):
 
     if not logsForCommand:
         return api.types.status.FAILURE
-    direction = 'from-uplink' if tc.naples == tc.server else 'from-host'
-    return shmDumpHelper.verifyIcmp(logsForCommand, src=tc.client.ip_address,
-                                    dst=tc.server.ip_address, direction=direction,
+    # We force the naples to be client however for icmp we ping the client
+    # from the server. So naples (client) would see the first packet from
+    # the wire.
+    direction = 'from-uplink'
+    return shmDumpHelper.verifyIcmp(logsForCommand, src=tc.server.ip_address,
+                                    dst=tc.client.ip_address, direction=direction,
                                     statsMatch=True, nPackets=numPkts)
 
 def verifyUdp(tc):

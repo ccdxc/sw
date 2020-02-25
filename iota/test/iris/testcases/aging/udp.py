@@ -10,7 +10,10 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pairs = api.GetRemoteWorkloadPairs()
+    if tc.args.type == 'local_only':
+        pairs = api.GetLocalWorkloadPairs()
+    else:
+        pairs = api.GetRemoteWorkloadPairs()
     tc.cmd_cookies = []
     server,client  = pairs[0]
     naples = server
@@ -33,10 +36,14 @@ def Trigger(tc):
     server_port = api.AllocateUdpPort()
     basecmd = 'iperf -u '
     timeout_str = 'udp-timeout'
-    timeout = get_timeout(timeout_str)
+    if not tc.args.skip_security_prof:
+        timeout = get_timeout(timeout_str)
+    else:
+        timeout = DEFAULT_UDP_TIMEOUT
 
     #Step 0: Update the timeout in the config object
-    update_timeout(timeout_str, tc.iterators.timeout)
+    if not tc.args.skip_security_prof:
+        update_timeout(timeout_str, tc.iterators.timeout)
 
     #profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     #api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
@@ -48,7 +55,6 @@ def Trigger(tc):
     #tc.config_update_fail = 0
     #if (timeout != timetoseconds(tc.iterators.timeout)):
     #    tc.config_update_fail = 1
-    timeout = timetoseconds(tc.iterators.timeout)
 
     cmd_cookie = "start server"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,

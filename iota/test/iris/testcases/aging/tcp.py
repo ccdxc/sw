@@ -13,7 +13,10 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pairs = api.GetLocalWorkloadPairs(naples=True)
+    if tc.args.type == 'local_only':
+        pairs = api.GetLocalWorkloadPairs()
+    else:
+        pairs = api.GetRemoteWorkloadPairs()
     tc.cmd_cookies = []
     server,client  = pairs[0]
     naples = server
@@ -34,8 +37,11 @@ def Trigger(tc):
     tc.cmd_cookies.append(cmd_cookie)
 
     #Step 0: Update the timeout in the config object
-    update_timeout('tcp-timeout', tc.iterators.timeout)
-    #update_timeout('tcp-connection-setup', "0s")
+    if not tc.args.skip_security_prof:
+        update_timeout('tcp-timeout', tc.iterators.timeout)
+        timeout = timetoseconds(tc.iterators.timeout)
+    else:
+        timeout = DEFAULT_TCP_TIMEOUT
 
     #profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     #api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
@@ -47,7 +53,6 @@ def Trigger(tc):
     #tc.config_update_fail = 0
     #if (timeout != timetoseconds(tc.iterators.timeout)):
     #    tc.config_update_fail = 1
-    timeout = timetoseconds(tc.iterators.timeout)
 
     server_port = api.AllocateTcpPort() 
     client_port = api.AllocateTcpPort()
@@ -85,7 +90,10 @@ def Trigger(tc):
     tc.cmd_cookies.append(cmd_cookie)
 
     #Get it from the config
-    timeout += get_timeout('tcp-close') + (TCP_TICKLE_GAP * NUM_TICKLES) + GRACE_TIME
+    if not tc.args.skip_security_prof:
+        timeout += get_timeout('tcp-close') + (TCP_TICKLE_GAP * NUM_TICKLES) + GRACE_TIME
+    else:
+        timeout += GRACE_TIME
     cmd_cookie = "sleep"
     api.Trigger_AddNaplesCommand(req2, naples.node_name, "sleep %s" % timeout, timeout=300)
     tc.cmd_cookies.append(cmd_cookie)

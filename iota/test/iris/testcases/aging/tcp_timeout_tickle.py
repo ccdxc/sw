@@ -14,7 +14,10 @@ def Setup(tc):
 
 def Trigger(tc):
     api.Logger.info("Trigger.")
-    pairs = api.GetLocalWorkloadPairs(naples=True)
+    if tc.args.type == 'local_only':
+        pairs = api.GetLocalWorkloadPairs()
+    else:
+        pairs = api.GetRemoteWorkloadPairs()
     tc.cmd_cookies1 = []
     tc.cmd_cookies2 = []
     tc.cmd_cookies3 = []
