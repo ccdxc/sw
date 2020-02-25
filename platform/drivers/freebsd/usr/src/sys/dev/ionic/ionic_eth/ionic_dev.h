@@ -265,7 +265,6 @@ const char *ionic_phy_type_str(enum phy_type type);
 #define IONIC_WDOG_TRIG_FWHB1		5	/* Force fw_heartbeat to 1 */
 #define IONIC_WDOG_TRIG_TXQ		6	/* Force one TxQ watchdog */
 extern int ionic_wdog_error_trigger;
-extern int ionic_dev_cmd_auto_disable;
 extern int ionic_cmd_hb_interval;
 extern int ionic_fw_hb_interval;
 

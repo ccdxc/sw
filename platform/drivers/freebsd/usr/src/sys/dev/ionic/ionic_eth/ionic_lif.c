@@ -3901,7 +3901,6 @@ ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data,
 {
 	struct ionic_dma_info fw_dma;
 	struct ifnet *ifp = lif->netdev;
-	struct ionic_dev *idev = &lif->ionic->idev;
 	dma_addr_t buf_pa;
 	void *buf;
 	uint32_t buf_sz, copy_sz, offset;
@@ -3938,8 +3937,6 @@ ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data,
 		offset += copy_sz;
 	}
 
-	/* Quiesce the fw heartbeat while doing the install. */
-	ionic_fw_hb_stop(idev);
 	if (ionic_firmware_install(lif, &fw_slot)) {
 		IONIC_NETDEV_INFO(ifp, "firmware install failed\n");
 		err = EIO;
@@ -3952,7 +3949,6 @@ ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data,
 		goto err_out_free_buf;
 	}
 
-	ionic_fw_hb_start(idev);
 err_out_free_buf:
 	ionic_dma_free(lif->ionic, &fw_dma);
 	IONIC_LIF_UNLOCK(lif);

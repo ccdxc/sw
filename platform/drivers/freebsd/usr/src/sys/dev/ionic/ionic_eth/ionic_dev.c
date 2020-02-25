@@ -161,13 +161,6 @@ ionic_dev_cmd_disable(struct ionic_dev *idev)
 
 	KASSERT(IONIC_DEV_LOCK_OWNED(ionic), ("device not locked"));
 
-	/*
-	 * Don't disable dev cmd if user requested so.
-	 */
-	if (!ionic_dev_cmd_auto_disable) {
-		return;
-	}
-
 	if (idev->dev_cmd_disabled)
 		return;
 
@@ -771,15 +764,16 @@ ionic_fw_hb_work(struct work_struct *work)
 			if (idev->fw_hb_state == IONIC_FW_HB_RUNNING) {
 				idev->fw_hb_state = IONIC_FW_HB_STALE;
 			} else if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
-				IONIC_DEV_ERROR(ionic->dev,
+				IONIC_DEV_INFO(ionic->dev,
 				    "fw heartbeat stuck (%u)\n", fw_heartbeat);
-				goto disable;
 			}
 		} else {
 			/* Update stored value; go RUNNING */
 			idev->fw_hb_last = fw_heartbeat;
 			if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
 				idev->fw_hb_state = IONIC_FW_HB_RUNNING;
+				IONIC_DEV_INFO(ionic->dev,
+				    "fw heartbeat recovered (%u)\n", fw_heartbeat);
 			}
 		}
 	}

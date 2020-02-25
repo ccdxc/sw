@@ -143,11 +143,6 @@ TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
     &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
 
-int ionic_dev_cmd_auto_disable = true;
-TUNABLE_INT("hw.ionic.dev_cmd_auto_disable", &ionic_dev_cmd_auto_disable);
-SYSCTL_INT(_hw_ionic, OID_AUTO, dev_cmd_auto_disable, CTLFLAG_RWTUN,
-    &ionic_dev_cmd_auto_disable, 0, "Enable device self-disable after error.");
-
 int ionic_wdog_error_trigger = 0;
 TUNABLE_INT("hw.ionic.wdog_error_trigger", &ionic_wdog_error_trigger);
 SYSCTL_INT(_hw_ionic, OID_AUTO, wdog_error_trigger, CTLFLAG_RWTUN,
