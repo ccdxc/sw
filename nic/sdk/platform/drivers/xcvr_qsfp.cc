@@ -253,8 +253,8 @@ qsfp_read_temp (int port, uint8_t *data)
                                             MAX_XCVR_ACCESS_RETRIES,
                                             port + 1);
     if (ret == sdk::lib::PAL_RET_NOK) {
-        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
-                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        //SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       //port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -267,8 +267,8 @@ qsfp_read_temp_high_alarm (int port, uint8_t *data)
                                             MAX_XCVR_ACCESS_RETRIES,
                                             port + 1);
     if (ret == sdk::lib::PAL_RET_NOK) {
-        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
-                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        //SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       //port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -281,8 +281,8 @@ qsfp_read_temp_high_warning (int port, uint8_t *data)
                                             MAX_XCVR_ACCESS_RETRIES,
                                             port + 1);
     if (ret == sdk::lib::PAL_RET_NOK) {
-        SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
-                       port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
+        //SDK_TRACE_ERR ("qsfp_read_temp_high_warning: port %d, failed to read temp: 0x%x",
+                       //port+1, QSFP_MODULE_TEMP_HIGH_WARNING);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
