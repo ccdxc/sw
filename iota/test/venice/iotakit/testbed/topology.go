@@ -50,6 +50,7 @@ var Topologies = map[string]*Topology{
 	"1Venice_2NaplesSim":                  &topo1Venice2NaplesSim,
 	"1Venice_2Naples":                     &topo1Venice2Naples,
 	"1Venice_1Naples":                     &topo1Venice1Naples,
+	"1Venice_1Naples_Basenet":             &topo1Venice1NaplesBasenet,
 	"3Venice_1Naples":                     &topo3Venice1Naples,
 	"3Venice_2Naples":                     &topo3Venice2Naples,
 	"3VeniceBM_2Naples":                   &topo3VeniceBM2Naples,
@@ -241,6 +242,31 @@ var topo3Venice1Naples = Topology{
 		},
 		{
 			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+// one venice node and one Naples baremetal nodes
+var topo1Venice1NaplesBasenet = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
+	WorkloadImage: "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         BaseNetModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice1",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",

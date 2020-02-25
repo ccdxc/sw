@@ -25,6 +25,25 @@ func (sm *SysModel) Events() *objects.EventsCollection {
 }
 
 // LinkUpEventsSince returns all the link up events since the given time from any of the given naples collection
+func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection {
+	var naplesNames []string
+	for _, naples := range npc.Nodes {
+		naplesNames = append(naplesNames, naples.Name())
+	}
+
+	fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",
+		eventtypes.SYSTEM_COLDBOOT, fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
+
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+		return &objects.EventsCollection{}
+	}
+
+	return &objects.EventsCollection{List: eventsList}
+}
+
+// LinkUpEventsSince returns all the link up events since the given time from any of the given naples collection
 func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection {
 	var naplesNames []string
 	for _, naples := range npc.Nodes {
