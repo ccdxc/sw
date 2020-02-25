@@ -782,6 +782,19 @@ pd_ep_quiesce_args_init (pd_ep_quiesce_args_t *args)
     return;
 }
 
+typedef struct pd_ep_normalization_args_s {
+    ep_t            *ep;
+    bool            disable;
+} __PACK__ pd_ep_normalization_args_t;
+
+static inline void
+pd_ep_normalization_args_init (pd_ep_normalization_args_t *args)
+{
+    args->ep      = NULL;
+    args->disable = false;
+    return;
+}
+
 typedef struct pd_ep_delete_args_s {
     vrf_t        *vrf;
     l2seg_t         *l2seg;
@@ -887,6 +900,7 @@ typedef struct pd_session_create_args_s {
     session_state_t    *session_state;
     SessionResponse    *rsp;
     uint64_t            clock;
+    uint64_t            last_seen_clock;
 } __PACK__ pd_session_create_args_t;
 
 static inline void
@@ -899,6 +913,7 @@ pd_session_create_args_init (pd_session_create_args_t *args)
     args->update_iflow = false;
     args->update_rflow = false;
     args->clock = 0;
+    args->last_seen_clock = 0;
 
     return;
 }
@@ -934,6 +949,7 @@ typedef struct pd_session_update_args_s {
     session_state_t    *session_state;
     SessionResponse    *rsp;
     uint64_t            clock;
+    uint64_t            last_seen_clock;
 } __PACK__ pd_session_update_args_t;
 
 static inline void
@@ -947,6 +963,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     args->update_rflow = false;
     args->iflow_hash = 0;
     args->clock = 0;
+    args->last_seen_clock = 0;
     args->nwsec_prof = NULL;
 
     return;
@@ -963,20 +980,6 @@ pd_session_get_args_init (pd_session_get_args_t *args)
 {
     args->session = NULL;
     args->session_state = NULL;
-    args->rsp = NULL;
-
-    return;
-}
-
-typedef struct pd_session_age_reset_args_s {
-    session_t          *session;
-    SessionResponse    *rsp;
-} __PACK__ pd_session_age_reset_args_t;
-
-static inline void
-pd_session_age_reset_args_init (pd_session_age_reset_args_t *args)
-{
-    args->session = NULL;
     args->rsp = NULL;
 
     return;
@@ -3672,7 +3675,7 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
     ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
     ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
-    ENTRY(PD_FUNC_ID_SESSION_AGE_RESET,          338, "PD_FUNC_ID_SESSION_AGE_RESET")\
+    ENTRY(PD_FUNC_ID_EP_NORMALIZATION,           338, "PD_FUNC_ID_EP_NORMALIZATION")\
     ENTRY(PD_FUNC_ID_EP_QUIESCE,                 339, "PD_FUNC_ID_EP_QUIESCE")\
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_ENABLE,       340, "PD_FUNC_ID_UPLINK_ERSPAN_ENABLE")\
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
@@ -3768,13 +3771,13 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_ep_restore);
         PD_UNION_ARGS_FIELD(pd_ep_ipsg_change);
         PD_UNION_ARGS_FIELD(pd_ep_quiesce);
+        PD_UNION_ARGS_FIELD(pd_ep_normalization);
 
         // session calls
         PD_UNION_ARGS_FIELD(pd_session_create);
         PD_UNION_ARGS_FIELD(pd_session_update);
         PD_UNION_ARGS_FIELD(pd_session_delete);
         PD_UNION_ARGS_FIELD(pd_session_get);
-        PD_UNION_ARGS_FIELD(pd_session_age_reset);
         PD_UNION_ARGS_FIELD(pd_get_cpu_bypass_flowid);
         PD_UNION_ARGS_FIELD(pd_flow_hash_get);
 
@@ -4256,13 +4259,13 @@ PD_FUNCP_TYPEDEF(pd_ep_get);
 PD_FUNCP_TYPEDEF(pd_ep_restore);
 PD_FUNCP_TYPEDEF(pd_ep_ipsg_change);
 PD_FUNCP_TYPEDEF(pd_ep_quiesce);
+PD_FUNCP_TYPEDEF(pd_ep_normalization);
 
 // session calls
 PD_FUNCP_TYPEDEF(pd_session_create);
 PD_FUNCP_TYPEDEF(pd_session_update);
 PD_FUNCP_TYPEDEF(pd_session_delete);
 PD_FUNCP_TYPEDEF(pd_session_get);
-PD_FUNCP_TYPEDEF(pd_session_age_reset);
 PD_FUNCP_TYPEDEF(pd_session_get_for_age_thread);
 PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
 PD_FUNCP_TYPEDEF(pd_flow_hash_get);

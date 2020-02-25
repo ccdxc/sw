@@ -65,15 +65,11 @@ namespace hal {
 
 #define EP_UPDATE_SESSION_TIMER                      (250) 
 
-// flow direction tells whether flow is from or to the workload
-typedef enum ep_vmotion_state_s {
-    VMOTION_STATE_NONE             = 0, // No vMotion
-    VMOTION_STATE_MIGRATE_IN       = 1, // vMotion in progress and EP is moving in
-    VMOTION_STATE_MIGRATE_OUT      = 2, // vMotion in progress and EP is moving out
-    VMOTION_STATE_MIGRATE_FAIL     = 3, // vMotion failed in the middle
-    VMOTION_STATE_DONE             = 4, // vMotion completed
-} ep_vmotion_state_t;
-
+typedef enum ep_vmotion_type_s {
+    VMOTION_TYPE_MIGRATE_NONE,
+    VMOTION_TYPE_MIGRATE_IN,
+    VMOTION_TYPE_MIGRATE_OUT
+} ep_vmotion_type_t;
 
 typedef hal_ret_t (*dhcp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
         DhcpStatus *dhcp_status);
@@ -128,6 +124,7 @@ typedef struct ep_s {
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
+    ep_vmotion_type_t    vmotion_type;         // vMotion type - Migrate IN/OUT
     MigrationState       vmotion_state;        // Vmotion state
     ip_addr_t            old_homing_host_ip;   // IP Address of host where the ep was homed - for vMotion
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
@@ -273,8 +270,10 @@ hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
 bool endpoint_is_remote(ep_t *ep);
 hal_ret_t endpoint_migration_status_update (ep_t *ep, MigrationState migration_state);
-void      endpoint_migration_session_age_reset(ep_t *ep);
+void endpoint_migration_session_age_reset(ep_t *ep);
+hal_ret_t endpoint_migration_normalization_cfg(ep_t *ep, bool disable);
 hal_ret_t endpoint_migration_if_update(ep_t *ep);
+void ep_sessions_delete(ep_t *ep);
 
 hal_ret_t ep_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t ep_restore_cb(void *obj, uint32_t len);

@@ -567,8 +567,6 @@ typedef struct session_get_stream_filter_ {
 #define HAL_CFG_MAX_SESSIONS               65535
 
 session_t *find_session_by_handle(hal_handle_t handle);
-session_t *find_session_from_spec(const SessionSpec& spec, uint32_t lookup_vrf);
-//session_t *find_session_by_id(session_id_t session_id);
 
 extern void *session_get_key_func (void *entry);
 extern uint32_t session_key_size (void);

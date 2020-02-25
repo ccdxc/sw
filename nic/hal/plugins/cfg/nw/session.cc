@@ -60,7 +60,7 @@ using namespace sdk::lib;
                               sizeof(ipv4_header_t)+sizeof(tcp_header_t)+TCP_TS_OPTION_LEN)
 #define TCP_IPV4_PKT_SZ (sizeof(ether_header_t)+\
                          sizeof(ipv4_header_t)+sizeof(tcp_header_t))
-#define TIME_DIFF(val1, val2) ((val1 <= val2)?(val2-val1):(val1-val2))
+#define TIME_DIFF(val1, val2) ((val1 > val2) ? (val1 - val2) : 0)
 
 sdk::lib::indexer      *g_flow_proto_state_indexer;
 sdk::types::mem_addr_t  g_flow_telemetry_hbm_start;
@@ -166,38 +166,6 @@ session_t *
 find_session_by_handle (hal_handle_t handle)
 {
     return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
-}
-
-session_t *
-find_session_from_spec (const SessionSpec& spec, uint32_t lookup_vrf)
-{
-    session_t      *session = NULL;
-    flow_key_t      flow_key = {0};
-
-    if (spec.has_initiator_flow()) {
-        extract_flow_key_from_spec(spec.vrf_key_handle().vrf_id(), &flow_key,
-                                   spec.initiator_flow().flow_key());
-        flow_key.dir = 1; // TEMP
-        flow_key.lkpvrf = lookup_vrf;
-
-        HAL_TRACE_DEBUG("spec lookup: iKey {}", flowkey2str(flow_key));
-
-        session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(flow_key));
-
-        if (session)
-            return session;
-    }
-    if (spec.has_responder_flow()) {
-        extract_flow_key_from_spec(spec.vrf_key_handle().vrf_id(), &flow_key,
-                                   spec.responder_flow().flow_key());
-        flow_key.dir = 1; // TEMP
-        flow_key.lkpvrf = lookup_vrf;
-
-        HAL_TRACE_DEBUG("spec lookup: rKey {}", flowkey2str(flow_key));
-
-        session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(flow_key));
-    }
-    return session;
 }
 
 //------------------------------------------------------------------------------

@@ -373,10 +373,6 @@ flow_miss_multicast_sup_copy_mgmt:
   phvwr.e       p.capri_intrinsic_tm_cpu, 1
   phvwr         p.capri_intrinsic_tm_replicate_en, 1 // repl_ptr comes from inp_props
   
-flow_miss_tcp_non_syn_first_pkt_drop:
-  phvwr.e       p.control_metadata_drop_reason[DROP_TCP_NON_SYN_FIRST_PKT], 1
-  phvwr         p.capri_intrinsic_drop, 1
-
 flow_miss_input_properites_miss_drop:
   phvwr.e       p.control_metadata_drop_reason[DROP_INPUT_PROPERTIES_MISS], 1
   phvwr         p.capri_intrinsic_drop, 1

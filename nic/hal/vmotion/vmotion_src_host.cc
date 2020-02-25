@@ -20,17 +20,24 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
 {
     auto ep = vmn_ep->get_ep();
 
-    HAL_TRACE_INFO("Source Host end EP: {}", macaddr2str(ep->l2_key.mac_addr));
+    HAL_TRACE_INFO("Source Host end EP: {:p}, ep_handle:{}", (void *)ep, vmn_ep->get_ep_handle());
 
-    // Remove EP Quiesce NACL entry
-    ep_quiesce(ep, FALSE);
+    if (ep) {
+        // Remove EP Quiesce NACL entry
+        if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
+            ep_quiesce(ep, FALSE);
+            VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
+        }
 
-    ep->vmotion_state = migration_state;
+        if (migration_state == MigrationState::SUCCESS) {
+            ep_sessions_delete(ep);
+        }
 
+        ep->vmotion_state = migration_state;
+    }
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
 }
-
 
 vmotion_src_host_fsm_def *
 vmotion_src_host_fsm_def::factory(void)
@@ -52,9 +59,11 @@ vmotion_src_host_fsm_def::vmotion_src_host_fsm_def(void)
     FSM_SM_BEGIN((sm_def))
         FSM_STATE_BEGIN(STATE_SRC_HOST_INIT, 0, NULL, NULL)
             FSM_TRANSITION(EVT_SYNC_BEGIN, SM_FUNC(proc_sync_begin), STATE_SRC_HOST_SYNC)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_SYNC, 0, NULL, NULL)
             FSM_TRANSITION(EVT_SYNC_DONE, SM_FUNC(proc_evt_sync_done), STATE_SRC_HOST_SYNCED)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_SYNCED, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNC_REQ, SM_FUNC(proc_term_sync_req), STATE_SRC_HOST_TERM_SYNC)
@@ -149,7 +158,7 @@ vmotion_src_host_fsm_def::proc_evt_sync_done(fsm_state_ctx ctx, fsm_event_data d
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
 
-    HAL_TRACE_INFO("Sync Done EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Sync Done EP: {}", vmn_ep->get_ep_handle());
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_SYNC_END);
 
@@ -165,23 +174,24 @@ bool
 vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep            *vmn_ep       = reinterpret_cast<vmotion_ep *>(ctx);
+    auto                  *ep           = vmn_ep->get_ep();
     SessionGetResponseMsg *rsp          = new SessionGetResponseMsg;
     unsigned int           cur_sessions = 0;
     unsigned int           sess_count   = 0;
     bool                   ret          = true;
 
-    HAL_TRACE_INFO("Term Sync Req EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Term Sync Req EP: {}", vmn_ep->get_ep_handle());
 
     // Add EP Quiesce NACL entry
-    ep_quiesce(vmn_ep->get_ep(), TRUE);
+    ep_quiesce(ep, TRUE);
+    VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     // Reset the enic interface to NULL in PD
-    if (endpoint_migration_if_update(vmn_ep->get_ep()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to update pd state for EP moved:  {}",
-                      ep_l2_key_to_str(vmn_ep->get_ep()));
+    if (endpoint_migration_if_update(ep) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to update pd state for EP moved:  {}", ep_l2_key_to_str(ep));
     }
 
-    if (hal::ep_get_session_info(vmn_ep->get_ep(), rsp, vmn_ep->get_last_sync_time()) != HAL_RET_OK) {
+    if (hal::ep_get_session_info(ep, rsp, vmn_ep->get_last_sync_time()) != HAL_RET_OK) {
         return false;
     }
 
@@ -214,10 +224,10 @@ end:
 bool
 vmotion_src_host_fsm_def::proc_term_sync_done(fsm_state_ctx ctx, fsm_event_data data)
 {
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    vmotion_ep     *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
 
-    HAL_TRACE_INFO("Term Sync Done EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Term Sync Done EP: {}", vmn_ep->get_ep_handle());
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_END);
 
@@ -234,7 +244,7 @@ vmotion_src_host_fsm_def::proc_term_synced_ack(fsm_state_ctx ctx, fsm_event_data
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
 
-    HAL_TRACE_INFO("Term Sync Ack EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Term Sync Ack EP: {}", vmn_ep->get_ep_handle());
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_EP_MOVED);
 
@@ -251,7 +261,17 @@ vmotion_src_host_fsm_def::proc_ep_moved_ack(fsm_state_ctx ctx, fsm_event_data da
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    HAL_TRACE_INFO("Ep Moved Ack EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Ep Moved Ack EP: {}", vmn_ep->get_ep_handle());
+
+    return true;
+}
+
+bool
+vmotion_src_host_fsm_def::proc_ep_delete(fsm_state_ctx ctx, fsm_event_data data)
+{
+    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+
+    src_host_end(vmn_ep, MigrationState::ABORTED);
 
     return true;
 }
@@ -398,8 +418,12 @@ src_host_thread_rcv_event (void *message, void *ctx)
     vmotion_ep            *vmn_ep = (vmotion_ep *)ctx;
     vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
 
-    HAL_TRACE_ERR("vMotion src host event thread error. EP: {} Event:{} Flags: {}",
-                  macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr), *evt, *vmn_ep->get_flags());
+    HAL_TRACE_INFO("vMotion src host event thread. EP: {} Event:{} Flags: {}",
+                  vmn_ep->get_ep_handle(), *evt, *vmn_ep->get_flags());
+
+    if (*evt == VMOTION_EVT_EP_MV_ABORT) {
+        vmn_ep->process_event(EVT_EP_DELETE_RCVD, NULL);
+    }
 
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
 }

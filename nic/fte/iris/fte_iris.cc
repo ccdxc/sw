@@ -202,27 +202,6 @@ ctx_t::lookup_flow_objs (void)
             HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
                               dep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
         }
-    } else if (protobuf_request() && sess_status_) {
-        l2seg_id_t l2seg_id = sess_status_->l2seg_id();
-        sl2seg_ = hal::find_l2seg_by_id(l2seg_id);
-        mac_addr_t smac = {0};
-        mac_addr_t dmac = {0};
-
-        MAC_UINT64_TO_ADDR(smac, sess_status_->smac());
-        sep_ = hal::find_ep_by_l2_key(l2seg_id, smac);
-        if (sep_) {
-            HAL_TRACE_VERBOSE("src ep {} found by L2 lookup seg_id:{} smac:{}",
-                              sep_->hal_handle, l2seg_id, macaddr2str(sep_->l2_key.mac_addr));
-        }
-        MAC_UINT64_TO_ADDR(dmac, sess_status_->dmac());
-        dep_ = hal::find_ep_by_l2_key(l2seg_id, dmac);
-        if (dep_) {
-            HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
-                              dep_->hal_handle, l2seg_id, macaddr2str(dep_->l2_key.mac_addr));
-        }
-
-        key_.lkpvrf = sess_status_->lookup_vrf();
-        HAL_TRACE_VERBOSE("Session Status Lookup vrf {}", key_.lkpvrf);
     } else if (existing_session()) {
         sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                       session_->iflow->config.l2_info.smac);
@@ -266,6 +245,7 @@ ctx_t::lookup_flow_objs (void)
     }
 
     if (dep_) {
+        dep_handle_ = dep_->hal_handle;
         if (sep_ && dep_->l2seg_handle == sep_->l2seg_handle) {
             dl2seg_ = sl2seg_;
         } else {
@@ -618,9 +598,9 @@ ctx_t::update_flow_table()
         session_cfg.session_id = sess_spec_->session_id();
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
-        if (sess_status_) {
+        if (sync_session_request()) {
             session_args.session_state  = &session_state;
-            session_cfg.syncing_session = sess_status_->session_syncing(); 
+            session_cfg.syncing_session = session_exists ? FALSE : TRUE;
         }
     }
 
@@ -867,7 +847,7 @@ ctx_t::update_flow_table()
         HAL_TRACE_VERBOSE("Session {} of session {} successful", update_type, session_handle);
     }
 
-    if (protobuf_request()) {
+    if (sess_resp()) {
         sess_resp_->mutable_status()->set_session_handle(session_handle);
     }
 

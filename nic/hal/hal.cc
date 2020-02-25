@@ -286,9 +286,6 @@ hal_init (hal_cfg_t *hal_cfg)
         g_hal_state->set_policy_mode(sys::POLICY_MODE_ENFORCE);
     }
 
-    // vmotion thread init
-    hal_vmotion_init(hal_cfg); 
-
     // start monitoring HAL heartbeat
     hb::heartbeat_init();
 

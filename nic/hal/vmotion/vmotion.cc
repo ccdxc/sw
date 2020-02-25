@@ -12,6 +12,17 @@ namespace hal {
 vmotion_dst_host_fsm_def* vmotion::dst_host_fsm_def_ = vmotion_dst_host_fsm_def::factory();
 vmotion_src_host_fsm_def* vmotion::src_host_fsm_def_ = vmotion_src_host_fsm_def::factory();
 
+hal_ret_t
+vmotion_init (int vmotion_port)
+{
+    HAL_TRACE_DEBUG("vmotion init port:{}", vmotion_port);
+    vmotion *vm =
+        vmotion::factory(VMOTION_MAX_THREADS, (vmotion_port ? vmotion_port : VMOTION_PORT));
+
+    g_hal_state->set_vmotion(vm);
+
+    return HAL_RET_OK;
+}
 //-----------------------------------------------------------------------------
 // spawn vmotion thread
 //-----------------------------------------------------------------------------
@@ -153,22 +164,28 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
 {
     vmotion_ep *vmn_ep = get_vmotion_ep(ep);
 
-    if (!vmn_ep) {
-        if (event == VMOTION_EVT_EP_MV_START) {
-            vmn_ep = create_vmotion_ep(ep, VMOTION_TYPE_MIGRATE_IN);
-            if (!vmn_ep) {
-                HAL_TRACE_ERR("EP Creation failed in run vMotion");
-            }
-        } else {
-            HAL_TRACE_ERR("vMotion trigger failed. Event:{}", event);
-        }
+    if (event == VMOTION_EVT_EP_MV_COLD) {
+        // vMotion is happening from a non-pensando device to locally here.
+        // We do - Disable TCP Normalization for the EP that migrated
+        endpoint_migration_normalization_cfg(ep, true);
         return;
     }
-    vmotion_thread_evt_t *evt =
-        (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
-    *evt = event;
 
-    sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
+    if (event == VMOTION_EVT_EP_MV_START) {
+        if (!vmn_ep) {
+            vmn_ep = create_vmotion_ep(ep, VMOTION_TYPE_MIGRATE_IN);
+        } else {
+            HAL_TRACE_ERR("vmotion ep already exists");
+        }
+    }
+
+    if (vmn_ep) {
+        vmotion_thread_evt_t *evt =
+            (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
+        *evt = event;
+
+        sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
+    }
 }
 
 vmotion_ep *
@@ -180,7 +197,7 @@ vmotion::get_vmotion_ep(ep_t *ep)
 }
 
 vmotion_ep *
-vmotion::create_vmotion_ep(ep_t *ep, vmotion_type_t type)
+vmotion::create_vmotion_ep(ep_t *ep, ep_vmotion_type_t type)
 {
     auto vmn_ep = vmotion_ep::factory(ep, type);
 
@@ -205,8 +222,20 @@ vmotion::delete_vmotion_ep(vmotion_ep *vmn_ep)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+vmotion::vmotion_handle_ep_del(ep_t *ep)
+{
+    if (ep->vmotion_type != VMOTION_TYPE_MIGRATE_NONE) {
+        run_vmotion(ep, VMOTION_EVT_EP_MV_ABORT);
+
+        // Loop the sessions, and start aging timer
+        endpoint_migration_session_age_reset(ep);
+    }
+    return HAL_RET_OK;
+}
+
 vmotion_ep *
-vmotion_ep::factory(ep_t *ep, vmotion_type_t type)
+vmotion_ep::factory(ep_t *ep, ep_vmotion_type_t type)
 {
     vmotion_ep *mem = (vmotion_ep *)g_hal_state->vmotion_ep_slab()->alloc();
     if (!mem) {
@@ -232,7 +261,7 @@ vmotion_ep::destroy(vmotion_ep *vmn_ep)
 }
 
 hal_ret_t
-vmotion_ep::init(ep_t *ep, vmotion_type_t type)
+vmotion_ep::init(ep_t *ep, ep_vmotion_type_t type)
 {
     if ((type != VMOTION_TYPE_MIGRATE_IN) && (type != VMOTION_TYPE_MIGRATE_OUT)) {
         return HAL_RET_ERR;
@@ -242,6 +271,8 @@ vmotion_ep::init(ep_t *ep, vmotion_type_t type)
     vmotion_type_       = type;
     ep_hdl_             = ep->hal_handle;
     old_homing_host_ip_ = ep->old_homing_host_ip;
+
+    ep->vmotion_type = type;
 
     if (type == VMOTION_TYPE_MIGRATE_IN) {
         sm_ = new fsm_state_machine_t(get_vmotion()->get_dst_host_fsm_def_func,

@@ -435,16 +435,12 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         return HAL_RET_HANDLE_INVALID;
     }
 
-    if (spec.endpoint_attrs().vmotion_state() != NONE) {
-        if (!spec.endpoint_attrs().has_old_homing_host_ip()) {
-            HAL_TRACE_ERR("EP has vMotion state but not Old homing host IP");
-            return HAL_RET_INVALID_ARG;
-        }
-        if (spec.endpoint_attrs().vmotion_state() != IN_PROGRESS) {
-            HAL_TRACE_ERR("vMotion state:{} not expected in endpoint create",
-                           spec.endpoint_attrs().vmotion_state());
-            return HAL_RET_INVALID_ARG;
-        }
+    if ((spec.endpoint_attrs().vmotion_state() != NONE) &&
+        (spec.endpoint_attrs().vmotion_state() != IN_PROGRESS) &&
+        (spec.endpoint_attrs().vmotion_state() != COLD)) {
+        HAL_TRACE_ERR("vMotion state:{} not expected in endpoint create",
+                      spec.endpoint_attrs().vmotion_state());
+        return HAL_RET_INVALID_ARG;
     }
 
     MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
@@ -2334,6 +2330,13 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
     }
+
+    ret = g_hal_state->get_vmotion()->vmotion_handle_ep_del(ep);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete ep in vMotion context. err : {}", ret);
+        return ret;
+    }
+
     return ret;
 }
 
@@ -2386,6 +2389,33 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
     return;
 }
 
+void
+ep_sessions_delete(ep_t *ep)
+{
+    void                        *ep_timer = NULL;
+
+    HAL_TRACE_DEBUG("Delete sessions in the EP:{}", ep->hal_handle);
+
+    for (uint8_t idx=0; idx<HAL_MAX_DATA_THREAD; idx++) {
+        if (!dllist_empty(&ep->session_list_head[idx])) {
+            ep_session_delete_args_t *ctxt =
+                (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
+                                                       sizeof(ep_session_delete_args_t));
+            SDK_ASSERT(ctxt != NULL);
+
+            sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head[idx]);
+            ctxt->ep_handle = ep->hal_handle;
+
+            ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
+                                                EP_UPDATE_SESSION_TIMER, (void *)ctxt,
+                                                ep_session_delete_cb, false);
+            if (!ep_timer) {
+                HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
+            }
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 // Update PI DBs as vrf_delete_del_cb() was a succcess
 //      a. Delete from vrf id hash table
@@ -2417,27 +2447,7 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    for (uint8_t idx=0; idx<HAL_MAX_DATA_THREAD; idx++) {
-        if (!dllist_empty(&ep->session_list_head[idx])) {
-            ep_session_delete_args_t    *ctxt = NULL;
-            void                        *ep_timer = NULL;
-
-            ctxt = (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
-                                                          sizeof(ep_session_delete_args_t));
-            SDK_ASSERT(ctxt != NULL);
-
-            sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head[idx]);
-            ctxt->ep_handle = ep->hal_handle;
-
-            ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
-                                                EP_UPDATE_SESSION_TIMER, (void *)ctxt,
-                                                ep_session_delete_cb, false);
-            if (!ep_timer) {
-                HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
-                return HAL_RET_ERR;
-            }
-        }
-    }
+    ep_sessions_delete(ep);
 
     hal_handle_free(hal_handle);
 
@@ -3175,6 +3185,8 @@ ep_handle_vmotion(ep_t *ep, MigrationState mig_state)
         vmotion_thrd_evt = VMOTION_EVT_EP_MV_DONE;
     } else if (mig_state == ABORTED) {
         vmotion_thrd_evt = VMOTION_EVT_EP_MV_ABORT;
+    } else if (mig_state == COLD) {
+        vmotion_thrd_evt = VMOTION_EVT_EP_MV_COLD;
     } else {
         HAL_TRACE_ERR("Invalid vMotion state {}", mig_state);
         return HAL_RET_ERR;
@@ -3266,15 +3278,51 @@ endpoint_migration_status_update (ep_t *ep, MigrationState migration_state)
     return HAL_RET_OK;
 }
 
+static void
+endpoint_migration_normalization_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_handle_t ep_hdl = (hal_handle_t) ctxt;
+    ep_t        *ep = find_ep_by_handle(ep_hdl);
+
+    HAL_TRACE_INFO("vMotion EP:{} Ptr:{:p}", ep_hdl, (void *)ep);
+
+    if (ep) {
+        endpoint_migration_normalization_cfg(ep, false);
+
+        ep->vmotion_state = MigrationState::SUCCESS;
+    }
+}
+
+hal_ret_t
+endpoint_migration_normalization_cfg(ep_t *ep, bool disable)
+{
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd::pd_ep_normalization_args_t  pd_ep_normalization_args = {0};
+    hal_ret_t                       ret;
+
+    pd_ep_normalization_args.ep       = ep;
+    pd_ep_normalization_args.disable  = disable;
+
+    pd_func_args.pd_ep_normalization = &pd_ep_normalization_args;
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_NORMALIZATION, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("EP NORMALIZATION failed EP {} err : {}", ep_l2_key_to_str(ep), ret);
+    }
+
+    if (disable) {
+        sdk::lib::timer_schedule(HAL_TIMER_ID_EP_VMOTION_NORMALIZATION, VMOTION_SESS_NORMALIZATION,
+                                 reinterpret_cast<void *>(ep->hal_handle),
+                                 endpoint_migration_normalization_timer_cb, false);
+    }
+    return ret;
+}
+
 void
 endpoint_migration_session_age_reset (ep_t *ep)
 {
     hal_handle_id_list_entry_t        *entry = NULL;
-    pd::pd_session_age_reset_args_t   args;
-    pd::pd_func_args_t                pd_func_args = {0};
     dllist_ctxt_t                     *curr, *next;
-
-    pd_func_args.pd_session_age_reset = &args;
 
     for (uint8_t fte_id = 0; fte_id < HAL_MAX_DATA_THREAD; fte_id++) {
         dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
@@ -3282,10 +3330,6 @@ endpoint_migration_session_age_reset (ep_t *ep)
 
             session_t *session = hal::find_session_by_handle(entry->handle_id);
             if (session) {
-                args.session = session;
-
-                pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_AGE_RESET, &pd_func_args);
-
                 session->syncing_session = false;
             }
         }

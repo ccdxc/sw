@@ -161,7 +161,14 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
     // Lookup old session
     ret = lookup_session();
 
-    if (ret == HAL_RET_SESSION_NOT_FOUND) {
+    if (ret == HAL_RET_OK) {
+        if (sync_session_request() && (!session()->syncing_session)) {
+            return HAL_RET_ENTRY_EXISTS;
+        } else if (flow_miss()) {
+            // Flow miss + existing session
+            incr_fte_retransmit_packets();
+        }
+    } else if (ret == HAL_RET_SESSION_NOT_FOUND) {
         // Create new session only in the case of flow miss pkt
         if (flow_miss()) {
             // Create new session
@@ -184,9 +191,6 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         } else {
             ret = HAL_RET_OK;
         }
-    } else if (flow_miss()) {
-        // Flow miss + existing session
-        incr_fte_retransmit_packets();
     }
 
     return ret;
@@ -312,8 +316,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
 // Initialize the context from GRPC protobuf
 //------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(SessionSpec* spec, SessionStatus *status, SessionStats *stats,
-            SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
+ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
             feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
@@ -325,8 +328,6 @@ ctx_t::init(SessionSpec* spec, SessionStatus *status, SessionStats *stats,
     }
 
     sess_spec_   = spec;
-    sess_status_ = status;
-    sess_stats_  = stats;
     sess_resp_   = rsp;
 
     ret = init_flows(iflow, rflow);
@@ -336,6 +337,43 @@ ctx_t::init(SessionSpec* spec, SessionStatus *status, SessionStats *stats,
     }
 
     return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Initialize the context from GRPC protobuf for synced sessions
+//------------------------------------------------------------------------------
+hal_ret_t
+ctx_t::init(SessionSpec* spec, SessionStatus* status, SessionStats* stats, hal::l2seg_t* l2seg,
+            hal_handle_t vrf_handle, flow_t iflow[], flow_t rflow[],
+            feature_state_t feature_state[], uint16_t num_features)
+{
+    mac_addr_t smac = {0};
+    mac_addr_t dmac = {0};
+    hal_ret_t  ret;
+
+    ret = init(FLOW_MISS_LIFQ, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init ctx, err={}", ret);
+        return ret;
+    }
+
+    sess_spec_   = spec;
+    sess_status_ = status;
+    sess_stats_  = stats;
+    key_.lkpvrf  = vrf_handle;
+    sl2seg_      = l2seg;
+
+    MAC_UINT64_TO_ADDR(smac, sess_status_->smac());
+    sep_ = hal::find_ep_by_l2_key(l2seg->seg_id, smac);
+    MAC_UINT64_TO_ADDR(dmac, sess_status_->dmac());
+    dep_ = hal::find_ep_by_l2_key(l2seg->seg_id, dmac);
+
+    HAL_TRACE_VERBOSE("VRF:{} l2seg_id:{}, sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
+                      l2seg->seg_id, (void *)sl2seg_, (void *)sep_, (void *)dep_);
+
+    ret = init_flows(iflow, rflow);
+
+    return ret;
 }
 
 //------------------------------------------------------------------------------------
@@ -659,6 +697,14 @@ ctx_t::swap_flow_objs()
     dep_handle_ = dep_handle;
     sl2seg_ = dl2seg_;
     dl2seg_ = dl2seg;
+
+    if ((!dep_) && (protobuf_request())) {
+        if (sl2seg_) {
+            dl2seg_ = sl2seg_;
+            dif_ = hal::find_if_by_handle(sl2seg_->pinned_uplink);
+        }
+        HAL_TRACE_VERBOSE("SWAP DIF Lookup.. sl2seg:{:p} dif:{:p}", (void *)sl2seg_, (void*)dif_);
+    }
 }
 
 bool

@@ -202,23 +202,36 @@ start_tcp_cxnsetup_timer (fte::ctx_t& ctx, bool status) {
  *   the session. If the session is not created due to some error
  *   in the pipeline, then this timer will not be started.
  */
-static void
+bool
 process_tcp_syn(fte::ctx_t& ctx)
 {
     const fte::cpu_rxhdr_t  *cpu_rxhdr = ctx.cpu_rxhdr();
     uint8_t                  tcp_flags;
 
-    HAL_TRACE_DEBUG("Processing TCP SYN");
     if (cpu_rxhdr == NULL) {
-        return;
+        return true;
     }
 
     tcp_flags = cpu_rxhdr->tcp_flags;
-    if ((tcp_flags & TCP_FLAG_SYN) && (!ctx.existing_session())) {
-        // Start TCP connection setup timer
-        // if we have a session
-        ctx.register_completion_handler(start_tcp_cxnsetup_timer);
+
+    HAL_TRACE_DEBUG("Processing TCP SYN Flags:{} Existing:{}", tcp_flags, ctx.existing_session());
+
+    if (!ctx.existing_session()) {
+        if (tcp_flags & TCP_FLAG_SYN) {
+            // Start TCP connection setup timer
+            ctx.register_completion_handler(start_tcp_cxnsetup_timer);
+        } else {
+            // Non Syn packet is received, and session is a new one
+            // Assumption is - In general, TCP Non Syn packet will be dropped in the P4
+            // pipeline itself during normalization logic.
+            // But in case of vMotion, for migration scenarios from a non-pensando device to
+            // a pensando device, reception of non-syn packet is a valid one. Those flows will
+            // be crated with 'Connection Tracking' disabled. Return false here, to continue
+            // the pipeline instead of enabling connection tracking. 
+            return false;
+        }
     }
+    return true;
 }
 
 fte::pipeline_action_t
@@ -239,8 +252,11 @@ conntrack_exec(fte::ctx_t& ctx)
         }
 
         if (ctx.flow_miss() && !ctx.drop()) {
-            process_tcp_syn(ctx);
+            if (!process_tcp_syn(ctx)) {
+                return fte::PIPELINE_CONTINUE;
+            }
         }
+
         if (ctx.protobuf_request()) {
             net_conntrack_extract_session_state_from_spec(&flowupd.flow_state,
                                             ctx.sess_spec()->initiator_flow().flow_data());

@@ -17,6 +17,7 @@
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/plugins/cfg/nw/microseg.hpp"
+#include "nic/hal/vmotion/vmotion.hpp"
 
 namespace hal {
 
@@ -847,6 +848,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
 
             // 5. Install ACLs for micro seg mode.
             ret = hal_acl_micro_seg_init();
+
+            // 6. vMotion Init
+            ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
         }
 
         hal::g_hal_state->set_policy_mode(spec->policy_mode());

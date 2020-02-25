@@ -61,6 +61,7 @@ private:
     bool process_ep_moved(fsm_state_ctx ctx, fsm_event_data data);
     bool process_rarp_req(fsm_state_ctx ctx, fsm_event_data data);
     bool process_ep_move_done(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_ep_move_abort(fsm_state_ctx ctx, fsm_event_data data);
     bool process_send_term_sync_rarp(fsm_state_ctx ctx, fsm_event_data data);
     bool process_send_term_sync_ep_move_done(fsm_state_ctx ctx, fsm_event_data data);
     bool process_send_term_req(fsm_state_ctx ctx, fsm_event_data data);

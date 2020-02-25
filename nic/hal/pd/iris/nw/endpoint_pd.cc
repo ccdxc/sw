@@ -170,6 +170,12 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
 
     ep_pd = (pd_ep_t *)args->ep->pd;
 
+    // deprogram any vMotion Quiescing entry
+    ep_pd_depgm_quiesce_entry(ep_pd);
+
+    // deprogram any vMotion normalization nacl entry
+    ep_pd_depgm_normalization_entry(ep_pd);
+
     // deprogram hw
     ret = ep_pd_depgm_ipsg_tbl_ip_entries(args->ep,
                                           &(args->ep->ip_list_head));
@@ -1130,6 +1136,37 @@ end:
 // EP Quiesce entry add/delete
 // ----------------------------------------------------------------------------
 hal_ret_t
+ep_pd_depgm_quiesce_entry (pd_ep_t *pd_ep)
+{
+    acl_tcam  *acl_tbl = g_hal_state_pd->acl_table();
+    hal_ret_t  ret = HAL_RET_OK;
+
+    HAL_TRACE_VERBOSE("EP Quiesce NACL remove at: Src:{} Dst:{}.",
+                      pd_ep->ep_quiesce_src_nacl_hdl, pd_ep->ep_quiesce_dst_nacl_hdl);
+
+    if (pd_ep->ep_quiesce_src_nacl_hdl != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_ep->ep_quiesce_src_nacl_hdl);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP Quiesce Source NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_quiesce_src_nacl_hdl);
+        }
+        pd_ep->ep_quiesce_src_nacl_hdl = INVALID_INDEXER_INDEX;
+    }
+
+    if (pd_ep->ep_quiesce_dst_nacl_hdl != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_ep->ep_quiesce_dst_nacl_hdl);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP Quiesce Destination NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_quiesce_dst_nacl_hdl);
+        }
+        pd_ep->ep_quiesce_dst_nacl_hdl = INVALID_INDEXER_INDEX;
+    }
+    return ret;
+}
+
+hal_ret_t
 pd_ep_quiesce (pd_func_args_t *pd_func_args)
 {
     hal_ret_t              ret = HAL_RET_OK;
@@ -1151,17 +1188,19 @@ pd_ep_quiesce (pd_func_args_t *pd_func_args)
 
     if (args->entry_add) {
         pi_if = find_if_by_handle(pi_ep->if_handle);
+        uint64_t mac = MAC_TO_UINT64(pi_ep->l2_key.mac_addr);
 
         // Install destination NACL - Drop any traffic destined towards this local EP
+#if 0
         memset(&key, 0, sizeof(key));
         memset(&mask, 0, sizeof(mask));
         memset(&data, 0, sizeof(data));
         // Key
         key.entry_inactive_nacl              = 0;
         mask.entry_inactive_nacl_mask        = 0x1;
-        key.control_metadata_from_cpu        = 0;
-        mask.control_metadata_from_cpu_mask  = 0x1;
-        memcpy(key.ethernet_dstAddr, pi_ep->l2_key.mac_addr, sizeof(mac_addr_t));
+        key.flow_lkp_metadata_lkp_dir        = 1;
+        memset(&mask.flow_lkp_metadata_lkp_dir_mask, ~0, sizeof(mask.flow_lkp_metadata_lkp_dir_mask));
+        memcpy(key.ethernet_dstAddr, &mac, sizeof(mac_addr_t));
         memset(mask.ethernet_dstAddr_mask, 0xFF, sizeof(mac_addr_t));
         // Data
         data.action_id                 = NACL_NACL_DENY_ID;
@@ -1173,15 +1212,15 @@ pd_ep_quiesce (pd_func_args_t *pd_func_args)
         } else {
             HAL_TRACE_ERR("EP Quiesce NACL programming error. ret: {}", ret);
         }
-
+#endif
         // Install source NACL - Drop any traffic coming from this local EP
         memset(&key, 0, sizeof(key));
         memset(&mask, 0, sizeof(mask));
         // Key
         key.entry_inactive_nacl              = 0;
-        mask.entry_inactive_nacl_mask        = 0x1;
+        memset(&mask.entry_inactive_nacl_mask, ~0, sizeof(mask.entry_inactive_nacl_mask));
         key.control_metadata_src_lport       = if_get_lport_id(pi_if);
-        mask.control_metadata_src_lport_mask = 0xFFFF;
+        memset(&mask.control_metadata_src_lport_mask, ~0, sizeof(mask.control_metadata_src_lport_mask));
         // Data
         data.action_id                 = NACL_NACL_DENY_ID;
 
@@ -1194,30 +1233,127 @@ pd_ep_quiesce (pd_func_args_t *pd_func_args)
             HAL_TRACE_ERR("EP Quiesce NACL programming error. ret: {}", ret);
         }
     } else {
-        HAL_TRACE_DEBUG("EP Quiesce NACL removed at: Src:{} Dst:{}.",
-                        pd_ep->ep_quiesce_src_nacl_hdl, pd_ep->ep_quiesce_dst_nacl_hdl);
-
-        ret = acl_tbl->remove(pd_ep->ep_quiesce_src_nacl_hdl);
-
-        if (ret == HAL_RET_OK) {
-            pd_ep->ep_quiesce_src_nacl_hdl = INVALID_INDEXER_INDEX;
-        } else {
-            HAL_TRACE_ERR("EP Quiesce Source NACL removing error. ret: {} hndl: {}",
-                          ret, pd_ep->ep_quiesce_src_nacl_hdl);
-        }
-
-        ret = acl_tbl->remove(pd_ep->ep_quiesce_dst_nacl_hdl);
-
-        if (ret == HAL_RET_OK) {
-            pd_ep->ep_quiesce_dst_nacl_hdl = INVALID_INDEXER_INDEX;
-        } else {
-            HAL_TRACE_ERR("EP Quiesce Destination NACL removing error. ret: {} hndl: {}",
-                          ret, pd_ep->ep_quiesce_dst_nacl_hdl);
-        }
+        ep_pd_depgm_quiesce_entry(pd_ep);
     }
     return ret;
 }
 
+// ----------------------------------------------------------------------------
+// EP normalization entry add/delete
+// ----------------------------------------------------------------------------
+hal_ret_t
+ep_pd_depgm_normalization_entry (pd_ep_t *pd_ep)
+{
+    acl_tcam  *acl_tbl = g_hal_state_pd->acl_table();
+    hal_ret_t  ret = HAL_RET_OK;
+
+    HAL_TRACE_VERBOSE("EP Normalization NACL remove at: Src:{} Dst:{}.",
+                      pd_ep->ep_normalization_src_nacl_hdl, pd_ep->ep_normalization_dst_nacl_hdl);
+
+    if (pd_ep->ep_normalization_src_nacl_hdl != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_ep->ep_normalization_src_nacl_hdl);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP Normalization Source NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_normalization_src_nacl_hdl);
+        }
+        pd_ep->ep_normalization_src_nacl_hdl = INVALID_INDEXER_INDEX;
+    }
+
+    if (pd_ep->ep_normalization_dst_nacl_hdl != INVALID_INDEXER_INDEX) {
+        ret = acl_tbl->remove(pd_ep->ep_normalization_dst_nacl_hdl);
+
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP Normalization Destination NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_normalization_dst_nacl_hdl);
+        }
+        pd_ep->ep_normalization_dst_nacl_hdl = INVALID_INDEXER_INDEX;
+    }
+    return ret;
+}
+
+hal_ret_t
+pd_ep_normalization (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd_ep_normalization_args_t  *args = pd_func_args->pd_ep_normalization;
+    ep_t                        *pi_ep = args->ep;
+    pd_ep_t                     *pd_ep = (pd_ep_t *)pi_ep->pd;
+    acl_tcam                    *acl_tbl = g_hal_state_pd->acl_table();
+    nacl_swkey_t                 key;
+    nacl_swkey_mask_t            mask;
+    nacl_actiondata_t            data;
+    if_t                        *pi_if = NULL;
+
+    if (!pd_ep) {
+        HAL_TRACE_ERR("EP normalization NACL error. pd_ep not found");
+        return HAL_RET_ERR;
+    }
+
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    if (args->disable) {
+        uint64_t drop_reason = (1ull << DROP_TCP_NON_SYN_FIRST_PKT);
+        uint64_t mac = MAC_TO_UINT64(pi_ep->l2_key.mac_addr);
+
+        pi_if = find_if_by_handle(pi_ep->if_handle);
+
+        // Install destination NACL
+        memset(&key, 0, sizeof(key));
+        memset(&mask, 0, sizeof(mask));
+        memset(&data, 0, sizeof(data));
+        // Key
+        key.entry_inactive_nacl              = 0;
+        mask.entry_inactive_nacl_mask        = 0x1;
+        key.flow_lkp_metadata_lkp_dir        = 1;
+        memset(&mask.flow_lkp_metadata_lkp_dir_mask, ~0, sizeof(mask.flow_lkp_metadata_lkp_dir_mask));
+        memcpy(key.ethernet_dstAddr, &mac, sizeof(mac_addr_t));
+        memset(mask.ethernet_dstAddr_mask, 0xFF, sizeof(mac_addr_t));
+        memcpy(key.control_metadata_drop_reason, (uint8_t *)&drop_reason, sizeof(key.control_metadata_drop_reason));
+        memcpy(mask.control_metadata_drop_reason_mask, (uint8_t *)&drop_reason, sizeof(key.control_metadata_drop_reason));
+
+        // Data
+        data.action_id                 = NACL_NACL_PERMIT_ID;
+
+        data.action_u.nacl_nacl_permit.discard_drop = true;
+
+        ret = acl_tbl->insert(&key, &mask, &data, ACL_QUIESCE_ENTRY_PRIORITY,
+                              &pd_ep->ep_normalization_dst_nacl_hdl);
+        if (ret == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("EP normalization NACL programmed at: {}.", pd_ep->ep_normalization_dst_nacl_hdl);
+        } else {
+            HAL_TRACE_ERR("EP normalization NACL programming error. ret: {}", ret);
+        }
+
+        // Install source NACL - Drop any traffic coming from this local EP
+        memset(&key, 0, sizeof(key));
+        memset(&mask, 0, sizeof(mask));
+        // Key
+        key.entry_inactive_nacl              = 0;
+        memset(&mask.entry_inactive_nacl_mask, ~0, sizeof(mask.entry_inactive_nacl_mask));
+        key.control_metadata_src_lport       = if_get_lport_id(pi_if);
+        memset(&mask.control_metadata_src_lport_mask, ~0, sizeof(mask.control_metadata_src_lport_mask));
+        memcpy(key.control_metadata_drop_reason, (uint8_t *)&drop_reason, sizeof(key.control_metadata_drop_reason));
+        memcpy(mask.control_metadata_drop_reason_mask, (uint8_t *)&drop_reason, sizeof(key.control_metadata_drop_reason));
+
+        // Data
+        data.action_id                 = NACL_NACL_PERMIT_ID;
+
+        data.action_u.nacl_nacl_permit.discard_drop = true;
+
+        ret = acl_tbl->insert(&key, &mask, &data, ACL_QUIESCE_ENTRY_PRIORITY,
+                              &pd_ep->ep_normalization_src_nacl_hdl);
+        if (ret == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("EP normalization NACL programmed at: {}. lport:{}",
+                             pd_ep->ep_normalization_src_nacl_hdl, key.control_metadata_src_lport);
+        } else {
+            HAL_TRACE_ERR("EP Normalization NACL programming error. ret: {}", ret);
+        }
+    } else {
+        ep_pd_depgm_normalization_entry(pd_ep);
+    }
+    return ret;
+}
 // ----------------------------------------------------------------------------
 // Linking PI <-> PD
 // ----------------------------------------------------------------------------

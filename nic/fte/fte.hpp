@@ -59,16 +59,13 @@ hal_ret_t session_create(SessionSpec& spec, SessionResponse *rsp);
 hal_ret_t session_delete(SessionDeleteRequest& spec, SessionDeleteResponse *rsp);
 hal_ret_t session_get(hal::session_t *session, SessionGetResponse *response);
 
-// vMotion session request
-hal_ret_t session_create(SessionSpec& spec, SessionStatus& status, SessionStats& stats,
-                         SessionResponse *rsp);
+// sync session request - Create or Update
+hal_ret_t sync_session(fte_session_args_t args);
 
 // Session delete request
 hal_ret_t session_delete_in_fte(hal_handle_t session_handle, bool force_delete=false);
 hal_ret_t session_delete(hal::session_t *session, bool force_delete=false);
 hal_ret_t session_delete_async(hal::session_t *session, bool force_delete=false);
-hal_ret_t session_update(SessionSpec& spec, SessionStatus& status, SessionStats& stats,
-                         SessionResponse *rsp, uint64_t feature_bitmap);
 hal_ret_t session_update_async(hal::session_t *session, uint64_t bitmap);
 hal_ret_t session_update_in_fte(hal_handle_t session_handle, uint64_t bitmap);
 

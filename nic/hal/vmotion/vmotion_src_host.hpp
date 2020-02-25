@@ -28,13 +28,14 @@ enum vmotion_src_host_fsm_state_t {
      STATE_SRC_HOST_END
 };
 
-#define SRC_HOST_EVENT_ENTRIES(ENTRY)                          \
-    ENTRY(EVT_SYNC_BEGIN,             0, "EVT_SYNC_BEGIN")     \
-    ENTRY(EVT_SYNC_DONE,              1, "EVT_SYNC_DONE")      \
-    ENTRY(EVT_TERM_SYNC_REQ,          2, "EVT_TERM_SYNC_REQ")  \
-    ENTRY(EVT_TERM_SYNC_DONE,         3, "EVT_TERM_SYNC_DONE") \
-    ENTRY(EVT_TERM_SYNCED_ACK,        4, "EVT_TERM_SYNCED_ACK")\
-    ENTRY(EVT_SRC_EP_MOVED_ACK,       5, "EVT_SRC_EP_MOVED_ACK")
+#define SRC_HOST_EVENT_ENTRIES(ENTRY)                            \
+    ENTRY(EVT_SYNC_BEGIN,             0, "EVT_SYNC_BEGIN")       \
+    ENTRY(EVT_SYNC_DONE,              1, "EVT_SYNC_DONE")        \
+    ENTRY(EVT_TERM_SYNC_REQ,          2, "EVT_TERM_SYNC_REQ")    \
+    ENTRY(EVT_TERM_SYNC_DONE,         3, "EVT_TERM_SYNC_DONE")   \
+    ENTRY(EVT_TERM_SYNCED_ACK,        4, "EVT_TERM_SYNCED_ACK")  \
+    ENTRY(EVT_SRC_EP_MOVED_ACK,       5, "EVT_SRC_EP_MOVED_ACK") \
+    ENTRY(EVT_EP_DELETE_RCVD,         6, "EVT_EP_DELETE_RCVD")
 
 DEFINE_ENUM(vmotion_src_host_fsm_event_t, SRC_HOST_EVENT_ENTRIES)
 
@@ -52,6 +53,7 @@ private:
     bool proc_term_sync_done(fsm_state_ctx ctx, fsm_event_data data);
     bool proc_term_synced_ack(fsm_state_ctx ctx, fsm_event_data data);
     bool proc_ep_moved_ack(fsm_state_ctx ctx, fsm_event_data data);
+    bool proc_ep_delete(fsm_state_ctx ctx, fsm_event_data data);
     void state_src_host_end_entry(fsm_state_ctx ctx);
 
     fsm_state_machine_def_t src_host_sm_def_;

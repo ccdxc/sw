@@ -13,8 +13,10 @@
 #include "gen/proto/fwlog.pb.h"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/fte/fte_core.hpp"
+#include "gen/proto/vmotion.grpc.pb.h"
 
 using fwlog::FWEvent;
+using vmotion_msg::VmotionSync;
 
 #define MAX_FEATURES 255
 
@@ -517,6 +519,12 @@ class ctx_t;
 
 static const uint8_t MAX_FLOW_KEYS = 3;
 
+typedef struct fte_session_args_t {
+    VmotionSync       sync_msg;
+    l2seg_id_t        l2seg_id;   
+    hal_handle_t      vrf_handle;
+} fte_session_args_t;
+
 // FTE context passed between features in a pipeline
 class ctx_t {
 public:
@@ -527,8 +535,10 @@ public:
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
                    flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
-    hal_ret_t init(SessionSpec *spec, SessionStatus *status, SessionStats *stats,
-                   SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
+    hal_ret_t init(SessionSpec *spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
+                   feature_state_t feature_state[], uint16_t num_features);
+    hal_ret_t init(SessionSpec* spec, SessionStatus* status, SessionStats* stats,
+                   hal::l2seg_t* l2seg, hal_handle_t vrf_handle, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
@@ -596,6 +606,7 @@ public:
 
     //proto spec is valid when flow update triggered via hal proto api
     bool protobuf_request() { return sess_spec_ != NULL; }
+    bool sync_session_request() { return sess_status_ != NULL; }
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
     session::SessionGetResponse* sess_get_resp() { return sess_get_resp_; }

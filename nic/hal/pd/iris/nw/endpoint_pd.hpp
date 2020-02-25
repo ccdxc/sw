@@ -16,6 +16,8 @@ struct pd_ep_s {
     uint32_t                reg_mac_tbl_idx;         // Only in classic mode
     acl_tcam_entry_handle_t ep_quiesce_src_nacl_hdl; // EP Quiesce source NACL Handle
     acl_tcam_entry_handle_t ep_quiesce_dst_nacl_hdl; // EP Quiesce destination NACL Handle
+    acl_tcam_entry_handle_t ep_normalization_src_nacl_hdl; // EP Normalization source NACL Handle
+    acl_tcam_entry_handle_t ep_normalization_dst_nacl_hdl; // EP Normalization dest NACL Handle
 
     // pi ptr
     void                    *pi_ep;
@@ -53,6 +55,10 @@ ep_pd_init (pd_ep_t *ep)
 
     // Set here if you want to initialize any fields
     ep->reg_mac_tbl_idx = INVALID_INDEXER_INDEX;
+    ep->ep_quiesce_src_nacl_hdl       = INVALID_INDEXER_INDEX;
+    ep->ep_quiesce_dst_nacl_hdl       = INVALID_INDEXER_INDEX;
+    ep->ep_normalization_src_nacl_hdl = INVALID_INDEXER_INDEX;
+    ep->ep_normalization_dst_nacl_hdl = INVALID_INDEXER_INDEX;
 
     return ep;
 }
@@ -167,6 +173,8 @@ hal_ret_t pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
                                    l2seg_t *attached_l2seg,
                                    table_oper_t oper);
 hal_ret_t ep_pd_depgm_registered_mac(pd_ep_t *pd_ep);
+hal_ret_t ep_pd_depgm_quiesce_entry (pd_ep_t *pd_ep);
+hal_ret_t ep_pd_depgm_normalization_entry(pd_ep_t *pd_ep);
 
 hal_ret_t ep_pd_depgm_ipsg_tbl_ip_entries(ep_t *pi_ep,
                                           dllist_ctxt_t *pi_ep_list);

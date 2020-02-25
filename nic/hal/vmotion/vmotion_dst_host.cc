@@ -15,23 +15,40 @@ namespace hal {
 using namespace vmotion_msg;
 
 void
-dst_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
+dst_host_end (vmotion_ep *vmn_ep)
 {
     auto ep = vmn_ep->get_ep();
 
-    HAL_TRACE_INFO("Dest Host end EP: {}", macaddr2str(ep->l2_key.mac_addr));
-    // TODO - Check whether quiesce entry is there or not, if there delete it.
-    // TODO - Clean up any other things to be cleaned up. e.g. timer
+    HAL_TRACE_INFO("Dest Host end EP: {:p}, Hdl: {}, MigState:{} exited:{}", (void *)ep,
+                   vmn_ep->get_ep_handle(), vmn_ep->get_migration_state(),
+                   VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep));
 
-    // Send success/failure notification to Net Agent
-    endpoint_migration_status_update (ep, migration_state);
+    if (VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep)) {
+        return;
+    }
 
-    ep->vmotion_state = migration_state;
+    if (ep) {
+        // In Abort scenario, all these ep cleanup routines will be done in main thread itself
+        if ((vmn_ep->get_migration_state() == MigrationState::SUCCESS) ||
+            (vmn_ep->get_migration_state() == MigrationState::FAILED)) {
+            // Remove EP Quiesce NACL entry
+            if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
+                ep_quiesce(ep, FALSE);
+                VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
+            }
+            // Loop the sessions, and start aging timer
+            endpoint_migration_session_age_reset(ep);
+            // Send success/failure notification to Net Agent
+            endpoint_migration_status_update(ep, vmn_ep->get_migration_state());
+        }
+        ep->vmotion_state = vmn_ep->get_migration_state();
+    }
+
+    VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
 
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
 }
-
 
 vmotion_dst_host_fsm_def *
 vmotion_dst_host_fsm_def::factory(void)
@@ -53,22 +70,26 @@ vmotion_dst_host_fsm_def::vmotion_dst_host_fsm_def(void)
     FSM_SM_BEGIN((sm_def))
         FSM_STATE_BEGIN(STATE_DST_HOST_INIT, 0, NULL, NULL)
             FSM_TRANSITION(EVT_START_SYNC, SM_FUNC(process_start_sync), STATE_DST_HOST_SYNC_REQ)
+            FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_SYNC_REQ, 0, NULL, NULL)
             FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_SYNC_REQ)
             FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_SYNC_REQ)
+            FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
             FSM_TRANSITION(EVT_SYNC, SM_FUNC(process_sync), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_SYNC_END, SM_FUNC(process_sync_end), STATE_DST_HOST_SYNCED)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_SYNCING, 0, NULL, NULL)
             FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_SYNCING)
+            FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
             FSM_TRANSITION(EVT_SYNC_END, SM_FUNC(process_sync_end), STATE_DST_HOST_SYNCED)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_SYNCED, 0, SM_FUNC_ARG_1(state_dst_host_synced), NULL)
             FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_send_term_sync_rarp), STATE_DST_HOST_SYNCED)
             FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_send_term_sync_ep_move_done), STATE_DST_HOST_SYNCED)
             FSM_TRANSITION(EVT_DST_TERM_SYNC_REQ, SM_FUNC(process_send_term_req), STATE_DST_HOST_TERM_SYNC_START)
+            FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNC_START, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNC, SM_FUNC(process_term_sync), STATE_DST_HOST_TERM_SYNCING)
@@ -93,7 +114,7 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage   msg_rsp;
 
-    HAL_TRACE_INFO("Dest Host Start Sync EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host Start Sync EP: {}", vmn_ep->get_ep_handle());
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_INIT);
     msg_rsp.mutable_init()->set_mac_address(MAC_TO_UINT64(vmn_ep->get_ep()->l2_key.mac_addr));
@@ -105,6 +126,7 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
 
     // Add EP Quiesce NACL entry
     ep_quiesce(vmn_ep->get_ep(), TRUE);
+    VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     return true;
 }
@@ -113,7 +135,7 @@ bool
 vmotion_dst_host_fsm_def::process_rarp_req(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    HAL_TRACE_INFO("Dest Host EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
     VMOTION_FLAG_SET_RARP_RCVD(vmn_ep);
     return true;
 }
@@ -122,8 +144,17 @@ bool
 vmotion_dst_host_fsm_def::process_ep_move_done(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    HAL_TRACE_INFO("Dest Host EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
     VMOTION_FLAG_SET_EP_MOV_DONE_RCVD(vmn_ep);
+    return true;
+}
+
+bool
+vmotion_dst_host_fsm_def::process_ep_move_abort(fsm_state_ctx ctx, fsm_event_data data)
+{
+    vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
+    vmn_ep->set_migration_state(MigrationState::ABORTED);
     return true;
 }
 
@@ -133,10 +164,9 @@ vmotion_dst_host_fsm_def::process_sync(fsm_state_ctx ctx, fsm_event_data data)
     vmotion_ep     *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     ep_t           *ep = vmn_ep->get_ep();
     l2seg_t        *l2seg = NULL;
-    session_t      *session = NULL;
-    SessionResponse rsp;
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     pd::pd_func_args_t                       pd_func_args = {0};
+    fte::fte_session_args_t sess_args;
 
     if (!ep) {
         HAL_TRACE_ERR("Dest Host Sync EP is not found");
@@ -158,44 +188,12 @@ vmotion_dst_host_fsm_def::process_sync(fsm_state_ctx ctx, fsm_event_data data)
                     macaddr2str(ep->l2_key.mac_addr), ep->l2seg_handle, ep->vrf_handle,
                     l2seg->vrf_handle, args.hwid);
 
-    for (auto i = 0; i < ((VmotionMessage *)data)->sync().sessions_size(); i++) {
-        // Mark the session as syncing
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_session_syncing(1);
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_lookup_vrf(args.hwid);
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_l2seg_id(l2seg->seg_id);
+    sess_args.l2seg_id   = l2seg->seg_id;
+    sess_args.vrf_handle = args.hwid;
+    sess_args.sync_msg   =  ((VmotionMessage *)data)->sync();
 
-        if ((((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                       mutable_spec()->has_initiator_flow()) &&
-            ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                      mutable_spec()->mutable_initiator_flow()->\
-                                      mutable_flow_key()->has_l2_key())
-        {
-            HAL_TRACE_DEBUG("Dest Host Sync Spec L2Seg:{} EP L2Seg:{}",
-                    (((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                    mutable_spec()->mutable_initiator_flow()->mutable_flow_key()->\
-                    mutable_l2_key()->l2_segment_id()), ep->l2_key.l2_segid);
+    fte::sync_session(sess_args);
 
-            ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->mutable_spec()->\
-                mutable_initiator_flow()->mutable_flow_key()->mutable_l2_key()->\
-                set_l2_segment_id(ep->l2_key.l2_segid);
-        }
-
-        auto spec   = ((VmotionMessage *)data)->sync().sessions(i).spec();
-        auto status = ((VmotionMessage *)data)->sync().sessions(i).status();
-        auto stats  = ((VmotionMessage *)data)->sync().sessions(i).stats();
-
-        session = find_session_from_spec(spec, args.hwid);
-
-        if (!session) {
-            HAL_TRACE_INFO("Dest Host Sync Session not found");
-            fte::session_create(spec, status, stats, &rsp);
-        } else {
-            HAL_TRACE_INFO("Dest Host Sync Session found");
-        }
-    }
     return true;
 }
 
@@ -212,7 +210,7 @@ vmotion_dst_host_fsm_def::process_send_term_req(fsm_state_ctx ctx, fsm_event_dat
     VmotionMessage  msg_rsp;
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
 
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
 
     if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
@@ -226,7 +224,7 @@ vmotion_dst_host_fsm_def::process_send_term_sync_rarp(fsm_state_ctx ctx, fsm_eve
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
 
     VMOTION_FLAG_SET_RARP_RCVD(vmn_ep);
     if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
@@ -240,7 +238,7 @@ vmotion_dst_host_fsm_def::process_send_term_sync_ep_move_done(fsm_state_ctx ctx,
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
 
     VMOTION_FLAG_SET_EP_MOV_DONE_RCVD(vmn_ep);
     if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
@@ -255,13 +253,9 @@ vmotion_dst_host_fsm_def::process_term_sync(fsm_state_ctx ctx, fsm_event_data da
     vmotion_ep     *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     ep_t           *ep = vmn_ep->get_ep();
     l2seg_t        *l2seg = NULL;
-    session_t      *session = NULL;
-    SessionResponse rsp;
+    fte::fte_session_args_t sess_args;
     hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
     pd::pd_func_args_t                       pd_func_args = {0};
-
-    // Set the feature id to run update on
-    uint64_t      bitmap = (uint64_t)(1 << fte::feature_id("pensando.io/network:fwding"));
 
     if (!ep) {
         HAL_TRACE_ERR("Dest Host term Sync EP is not found");
@@ -283,48 +277,12 @@ vmotion_dst_host_fsm_def::process_term_sync(fsm_state_ctx ctx, fsm_event_data da
                     macaddr2str(ep->l2_key.mac_addr), ep->l2seg_handle, ep->vrf_handle,
                     l2seg->vrf_handle, args.hwid);
 
-    for (auto i = 0; i < ((VmotionMessage *)data)->sync().sessions_size(); i++) {
-        // Mark the session as syncing
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_session_syncing(1);
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_lookup_vrf(args.hwid);
-        ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                  mutable_status()->set_l2seg_id(l2seg->seg_id);
+    sess_args.l2seg_id   = l2seg->seg_id;
+    sess_args.vrf_handle = args.hwid;
+    sess_args.sync_msg   =  ((VmotionMessage *)data)->sync();
 
-        if ((((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                       mutable_spec()->has_initiator_flow()) &&
-            ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                                      mutable_spec()->mutable_initiator_flow()->\
-                                      mutable_flow_key()->has_l2_key())
-        {
-            HAL_TRACE_DEBUG("Dest Host Term Sync Spec L2Seg:{} EP L2Seg:{}",
-                    (((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->\
-                    mutable_spec()->mutable_initiator_flow()->mutable_flow_key()->\
-                    mutable_l2_key()->l2_segment_id()), ep->l2_key.l2_segid);
+    fte::sync_session(sess_args);
 
-            ((VmotionMessage *)data)->mutable_sync()->mutable_sessions(i)->mutable_spec()->\
-                mutable_initiator_flow()->mutable_flow_key()->mutable_l2_key()->\
-                set_l2_segment_id(ep->l2_key.l2_segid);
-        }
-
-        auto spec   = ((VmotionMessage *)data)->sync().sessions(i).spec();
-        auto status = ((VmotionMessage *)data)->sync().sessions(i).status();
-        auto stats  = ((VmotionMessage *)data)->sync().sessions(i).stats();
-
-        session = find_session_from_spec(spec, args.hwid);
-
-        HAL_TRACE_INFO("Dest Host Term Sync - Session {:p}. Syncing:{}", (void *)session,
-                        session ? session->syncing_session : 0);
-        if (!session) {
-            fte::session_create(spec, status, stats, &rsp);
-        } else {
-            // If its syncing session only, process term sync update
-            if (session->syncing_session) {
-                fte::session_update(spec, status, stats, &rsp, bitmap);
-            }
-        }
-    }
     return true;
 }
 
@@ -334,7 +292,7 @@ vmotion_dst_host_fsm_def::process_term_sync_end(fsm_state_ctx ctx, fsm_event_dat
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
 
-    HAL_TRACE_INFO("Dest Host Term Sync End EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host Term Sync End EP: {}", vmn_ep->get_ep_handle());
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_ACK);
 
@@ -391,16 +349,16 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
 
-    HAL_TRACE_INFO("Dest Host EP Moved EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
+    HAL_TRACE_INFO("Dest Host EP Moved EP: {}", vmn_ep->get_ep_handle());
 
     // Remove EP Quiesce NACL entry
-    ep_quiesce(vmn_ep->get_ep(), FALSE);
+    if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
+        ep_quiesce(vmn_ep->get_ep(), FALSE);
+        VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
+    }
 
     // send rarp request packet out
     do_proxy_rarp_send(vmn_ep->get_ep());
-
-    // Loop the sessions, and start aging timer
-    endpoint_migration_session_age_reset(vmn_ep->get_ep());
 
     // Send EP MOVED ACK message to source host
     msg_rsp.set_type(VMOTION_MSG_TYPE_EP_MOVED_ACK);
@@ -408,6 +366,8 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
         HAL_TRACE_ERR("vmotion: unable to send ep moved ack message");
         return false;
     }
+
+    vmn_ep->set_migration_state(MigrationState::SUCCESS);
 
     return true;
 }
@@ -417,8 +377,8 @@ vmotion_dst_host_fsm_def::state_dst_host_synced(fsm_state_ctx ctx)
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    HAL_TRACE_INFO("State Host Synced EP: {} Flags: {}",
-                   macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr), *vmn_ep->get_flags());
+    HAL_TRACE_INFO("State Host Synced EP: {} Flags: {}", vmn_ep->get_ep_handle(),
+                   *vmn_ep->get_flags());
 
     if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
         vmn_ep->throw_event(EVT_DST_TERM_SYNC_REQ, NULL);
@@ -429,12 +389,7 @@ vmotion_dst_host_fsm_def::state_dst_host_synced(fsm_state_ctx ctx)
 void
 vmotion_dst_host_fsm_def::state_dst_host_end(fsm_state_ctx ctx)
 {
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    auto        ep = vmn_ep->get_ep();
-
-    HAL_TRACE_INFO("State dest Host end EP: {}", macaddr2str(ep->l2_key.mac_addr));
-
-    dst_host_end(vmn_ep, MigrationState::SUCCESS);
+    dst_host_end(reinterpret_cast<vmotion_ep *>(ctx));
 }
 
 static void
@@ -448,7 +403,8 @@ dst_host_thread_rcv_sock_msg(sdk::event_thread::io_t *io, int sock_fd, int event
     ret = vmotion_recv_msg(msg, sock_fd);
 
     if (ret == HAL_RET_CONN_CLOSED) {
-        dst_host_end(vmn_ep, MigrationState::FAILED);
+        vmn_ep->set_migration_state(MigrationState::FAILED);
+        dst_host_end(vmn_ep);
         return;
     }
 
@@ -500,7 +456,7 @@ dst_host_thread_rcv_event (void *message, void *ctx)
     vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
 
     HAL_TRACE_DEBUG("vMotion dst host event thread. EP: {} Event:{} Flags: {}",
-                    macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr), *evt, *vmn_ep->get_flags());
+                    vmn_ep->get_ep_handle(), *evt, *vmn_ep->get_flags());
 
     if (*evt == VMOTION_EVT_RARP_RCVD) {
         vmn_ep->process_event(EVT_RARP_RCVD, NULL);
@@ -530,10 +486,11 @@ vmotion_ep::dst_host_init()
 
     bzero(&addr, sizeof(addr));
     addr.sin_family      = AF_INET;
-    addr.sin_port        = htons(50055); // TEMP
+    addr.sin_port        = htons(get_vmotion()->get_vmotion_port());
     addr.sin_addr.s_addr = htonl(get_old_homing_host_ip().addr.v4_addr);
 
-    HAL_TRACE_INFO("connecting to old host. Addr:{}", addr.sin_addr.s_addr);
+    HAL_TRACE_INFO("connecting to old host. Addr:{} Port:{}",
+                   addr.sin_addr.s_addr, get_vmotion()->get_vmotion_port());
 
     // Connect to server socket
     if (connect(sock_fd_, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
@@ -552,7 +509,8 @@ vmotion_ep::dst_host_init()
 
 end:
     if (ret == HAL_RET_ERR) {
-        dst_host_end(this, MigrationState::FAILED);
+        this->set_migration_state(MigrationState::FAILED);
+        dst_host_end(this);
     }
 
     return HAL_RET_OK;
