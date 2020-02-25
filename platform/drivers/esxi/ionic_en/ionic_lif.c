@@ -685,6 +685,12 @@ ionic_notifyq_link_change_event(struct lif *lif)
         vmk_LinkState new_link_state;
         vmk_AddrCookie driver_data;
 
+        if (uplink_handle->uplink_dev == NULL) {
+                ionic_en_warn("Ignore link change actions since device is "
+                              "not fully initialized");
+                return;
+        }
+
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
         new_link_state = (lif->info->status.link_status == PORT_OPER_STATUS_UP) ?
                          VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
