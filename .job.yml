@@ -203,6 +203,7 @@ dependencies:
   api:
     - reference: test/ci_targets/e2e
     - reference: venice/ui
+    - reference: iota/test/venice
   dol/apollo:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-networking
