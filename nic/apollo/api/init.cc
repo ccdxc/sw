@@ -142,18 +142,22 @@ sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
 static void
 power_event_cb (sdk::platform::sensor::system_power_t *power)
 {
+#if 0
     PDS_TRACE_VERBOSE("Power of pin is {}W, pout1 is {}W, pout2 is {}W",
                       power->pin/1000000, power->pout1/1000000,
                       power->pout2/1000000);
+#endif
 }
 
 static void
 temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
                sysmond_hbm_threshold_event_t hbm_event)
 {
+#if 0
     PDS_TRACE_VERBOSE("Die temperature is {}C, local temperature is {}C,"
                       " HBM temperature is {}C", temperature->dietemp/1000,
                       temperature->localtemp/1000, temperature->hbmtemp);
+#endif
 }
 
 /**
