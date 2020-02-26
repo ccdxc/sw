@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := upg.submake
-MODULE_PIPELINE := iris gft
+MODULE_PIPELINE := iris gft apulu
 include ${MKDEFS}/post.mk

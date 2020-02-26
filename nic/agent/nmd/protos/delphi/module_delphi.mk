@@ -2,6 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = nmd_delphi.submake
-MODULE_PIPELINE = iris
+MODULE_PIPELINE = iris apulu
 MODULE_DEPS     := ${NICDIR}/agent/nmd/protos/delphi/naples_status.proto
 include ${MKDEFS}/post.mk
