@@ -122,8 +122,8 @@ typedef struct pds_if_loopback_status_s {
 
 /// \brief interface status
 typedef struct pds_if_status_s {
-    pds_ifindex_t ifindex;      ///< encoded interface index
-    pds_if_state_t    state;    ///< operational status of the interface
+    pds_ifindex_t ifindex;   ///< encoded interface index
+    pds_if_state_t state;    ///< operational status of the interface
     union {
         /// uplink interface operational status
         pds_if_uplink_status_t uplink_status;

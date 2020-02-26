@@ -257,6 +257,29 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
     return SDK_RET_OK;
 }
 
+pds_if_state_t
+if_entry::state(void) {
+    sdk_ret_t ret;
+    if_entry *eth_if;
+    port_args_t port_args = { 0 };
+
+    // get the eth interface corresponding to this interface entry
+    eth_if = if_entry::eth_if((if_entry *)this);
+    if (eth_if == NULL) {
+        return PDS_IF_STATE_NONE;
+    }
+    // and get the oper state of the eth interface
+    ret = sdk::linkmgr::port_get(eth_if->port_info(), &port_args);
+    if (likely(ret == SDK_RET_OK)) {
+        if (port_args.oper_status == port_oper_status_t::PORT_OPER_STATUS_UP) {
+            return PDS_IF_STATE_UP;
+        }
+        return PDS_IF_STATE_DOWN;
+    }
+    PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex_, ret);
+    return PDS_IF_STATE_NONE;
+}
+
 sdk_ret_t
 if_entry::read(pds_if_info_t *info) {
     sdk_ret_t ret;
@@ -265,6 +288,7 @@ if_entry::read(pds_if_info_t *info) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    info->status.state = this->state();
     if (impl_) {
         return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                               (impl::obj_info_t *)info);
@@ -298,7 +322,7 @@ if_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_IF, this);
 }
 
-const if_entry *
+if_entry *
 if_entry::eth_if(if_entry *intf) {
     switch (intf->type()) {
     case PDS_IF_TYPE_UPLINK:

@@ -18,7 +18,7 @@ done
 
 if [ -z "$IPADDR" ]
 then
-    IPADDR=$(ip addr | grep 'inet ' | grep -v 127.0 | head -n 1 | awk '{print $2;}' | awk -F/ '{print $1}') 
+    IPADDR=$(ip addr | grep 'inet ' | grep -v 127.0 | head -n 1 | awk '{print $2;}' | awk -F/ '{print $1}')
 fi
 if [ -z "$CLUSTER" ]
 then
@@ -32,7 +32,7 @@ CLUSTER=$(echo $CLUSTER | sed 's/,/","/g')
 curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-dscs" : true,"ntp-servers": [ "'${NTPSERVER}'" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
 
 #wait for services to come up
-sleep 30
+sleep 60
 
 #create tenant
 curl -k --header "Content-Type: application/json"   --request POST   --data  ' { "kind": "Tenant", "meta": { "name": "default" } } ' https://$IPADDR/configs/cluster/v1/tenants

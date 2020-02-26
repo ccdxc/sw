@@ -239,11 +239,15 @@ public:
     /// \return return pointer to the port specific information
     void *port_info(void) { return if_info_.port_.port_info_; }
 
+    /// \brief    return oper status
+    /// \return interface operational state
+    pds_if_state_t state(void);
+
     /// \brief    return eth interface entry corresponding to the given
     ///           interface
     /// \param[in] intf    interface instance
     /// \return eth interface corresponding to the given interface or NULL
-    static const if_entry *eth_if(if_entry *intf);
+    static if_entry *eth_if(if_entry *intf);
 
 private:
     /// \brief constructor
