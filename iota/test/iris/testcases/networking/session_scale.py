@@ -81,6 +81,7 @@ def printPeerList(peerList):
     return out
 
 def showStats(tc):
+    api.Logger.info("Running showStats...")
     dec = "="*20
     print("%s"%"X"*60)
     for w in tc.workloadPeers.keys():
@@ -90,8 +91,11 @@ def showStats(tc):
         except Exception as e:
             #traceback.print_exc()
             api.Logger.error("Failed to show traffic stats for %s : %s"%(w.workload_name, e))
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
 def switchPortFlap(tc):
+    api.Logger.info("Running switchPortFlap...")
     flap_count = 1
     num_ports = 1
     interval = 2
@@ -102,8 +106,11 @@ def switchPortFlap(tc):
     ret = api.FlapDataPorts(naples_nodes, num_ports, down_time, flap_count, interval)
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Failed to flap the switch port")
+        return ret
+    return api.types.status.SUCCESS
 
 def securityPolicyChangeEvent(tc):
+    api.Logger.info("Running securityPolicyChangeEvent...")
     agent_api.DeleteSgPolicies()
 
     for proto in ["tcp", "udp"]:
@@ -121,6 +128,7 @@ def securityPolicyChangeEvent(tc):
 
     newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
     agent_api.PushConfigObjects(newObjects)
+    return api.types.status.SUCCESS
 
 def connectTrex(tc):
     for w, peerList in tc.workloadPeers.items():

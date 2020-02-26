@@ -256,12 +256,12 @@ class TestcaseBackgroundTrigger:
         self.__terminate = terminate
         self.__task_inst = None
 
-    def StartTask(self, tc):
-        callback_fn = getattr(tc, self.__task, None)
+    def StartTask(self, module, args):
+        callback_fn = getattr(module, self.__task, None)
         assert(callback_fn)
 
         self.__task_inst = taskmgr.BackgroundTask(callback_fn, self.__sleep_interval, 
-                                                  self.__trigger=='repeat', tc)
+                                                  self.__trigger=='repeat', [args])
         self.__task_inst.setName(self.__task)
         self.__task_inst.start()
         return types.status.SUCCESS
@@ -542,7 +542,7 @@ class Testcase:
                 result = setup_result
             else:
                 for bt in self.__background_tasks:
-                    bt_trigger_result = bt.StartTask(self.__tc)
+                    bt_trigger_result = bt.StartTask(self.__tc, iter_data)
                     if bt_trigger_result != types.status.SUCCESS:
                         result = bt_trigger_result
 
