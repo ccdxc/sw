@@ -249,13 +249,14 @@ class _Testbed:
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
             else:
-                Logger.info ("Skipped switch setup")
-                if not GlobalOptions.skip_setup:    
+                if not GlobalOptions.skip_setup and not GlobalOptions.skip_switch_init:
                     Logger.info ("Setting up Testbed Network")
                     resp = self.SetupTestBedNetwork()
                     if resp != types.status.SUCCESS:
                         Logger.info("Vlan programming failed, ignoring")
                         #assert(0)
+                else:
+                    Logger.info ("Skipped switch setup")
         return msg
 
     def __cleanup_testbed(self):

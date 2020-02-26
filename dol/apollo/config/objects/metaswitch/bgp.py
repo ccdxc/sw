@@ -83,7 +83,7 @@ class BgpObject(base.ConfigObjectBase):
               },
               "spec": {
                   "bgp-config": {
-                      "router-id": ipaddress.ip_address(self.RouterId).exploded,
+                      "router-id": ipaddress.ip_address(0).exploded,
                       "as-number": self.LocalASN,
                       "neighbors" :  peers,
                   }
