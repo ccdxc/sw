@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/globals"
 
@@ -82,6 +83,23 @@ var _ = Describe("archive tests", func() {
 			Expect(err).Should(BeNil())
 			auditevents := strings.Split(logstr, "\n")
 			Expect(len(auditevents)).Should(BeNumerically(">", 20000))
+			objs, err := ts.restSvc.ObjstoreV1().Object().List(ts.loggedInCtx, &api.ListWatchOptions{
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Namespace: objstore.Buckets_auditevents.String(),
+				},
+			})
+			Expect(err).Should(BeNil())
+			Expect(len(objs)).Should(BeNumerically(">", 0))
+			for _, obj := range objs {
+				// tenant and namespace in object meta are  not set in results returned from List
+				obj.Namespace = objstore.Buckets_auditevents.String()
+				obj.Tenant = globals.DefaultTenant
+				Eventually(func() error {
+					_, err = ts.restSvc.ObjstoreV1().Object().Delete(ts.loggedInCtx, &obj.ObjectMeta)
+					return err
+				}, 10, 1).Should(BeNil())
+			}
 		})
 		AfterEach(func() {
 			Eventually(func() error {

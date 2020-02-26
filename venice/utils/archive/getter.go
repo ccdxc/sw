@@ -22,7 +22,6 @@ type getter struct {
 	sync.RWMutex
 	apiServer string
 	rslvr     resolver.Interface
-	b         balancer.Balancer
 	logger    log.Logger
 	apicl     apiclient.Services
 }
@@ -69,18 +68,16 @@ func (g *getter) refreshAPIClient() error {
 }
 
 // NewGetter returns the archive.Getter implementation TODO: Can have a cache based implementation in future
-func NewGetter(apiServer string, b balancer.Balancer, rslvr resolver.Interface, logger log.Logger) Getter {
+func NewGetter(apiServer string, rslvr resolver.Interface, logger log.Logger) Getter {
 	if gGetter != nil {
 		gGetter.apiServer = apiServer
 		gGetter.rslvr = rslvr
-		gGetter.b = b
 		gGetter.logger = logger
 	}
 	getterOnce.Do(func() {
 		gGetter = &getter{
 			apiServer: apiServer,
 			rslvr:     rslvr,
-			b:         b,
 			logger:    logger,
 		}
 		gGetter.refreshAPIClient()

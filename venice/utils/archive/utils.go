@@ -6,7 +6,7 @@ import (
 	"github.com/pensando/sw/venice/utils/archive/protos"
 )
 
-// RegisterService registers diagnostics service
+// RegisterService registers archive service
 func RegisterService(srv *grpc.Server, service Service) {
 	protos.RegisterArchiveServer(srv, service)
 }

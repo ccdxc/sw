@@ -40,13 +40,15 @@ func (c *client) Close() {
 }
 
 // NewClientGetter returns an implementation of ClientGetter
-func NewClientGetter(name string, logtype string, b balancer.Balancer, rslvr resolver.Interface, l log.Logger) (ClientGetter, error) {
+func NewClientGetter(name string, logtype string, rslvr resolver.Interface, l log.Logger) (ClientGetter, error) {
 	var clgetter ClientGetterFunc
 	switch logtype {
 	case monitoring.ArchiveRequestSpec_Event.String(), monitoring.ArchiveRequestSpec_AuditEvent.String():
 		clgetter = func() (Client, error) {
+			b := balancer.New(rslvr)
 			svccl, err := rpckit.NewRPCClient(name, globals.Spyglass, rpckit.WithBalancer(b))
 			if err != nil {
+				b.Close()
 				return nil, err
 			}
 			return &client{

@@ -50,7 +50,7 @@ func (o *objstoreExporter) Export(ctx context.Context, reader archive.TransformR
 	target = fmt.Sprintf("%s.%s", target, "gz")
 	r, w := io.Pipe()
 	go func() {
-		gzipWriter, _ := gzip.NewWriterLevel(w, gzip.BestCompression) // error will be nil if level is correct
+		gzipWriter, _ := gzip.NewWriterLevel(w, gzip.DefaultCompression) // error will be nil if level is correct
 		_, err := io.Copy(gzipWriter, reader)
 		if err != nil {
 			o.logger.ErrorLog("method", "Export", "msg", "error copying data to gzip writer", "error", err)
@@ -83,7 +83,7 @@ func (o *objstoreExporter) Delete(req *monitoring.ArchiveRequest) error {
 }
 
 // NewObjstoreExporter returns an Exporter backed by object store. Data is compressed using gzip before saving to object store
-func NewObjstoreExporter(reqType string, rslvr resolver.Interface, logger log.Logger, options ...Option) (archive.Exporter, error) {
+func NewObjstoreExporter(reqType, tenant string, rslvr resolver.Interface, logger log.Logger, options ...Option) (archive.Exporter, error) {
 	var bucket string
 	switch reqType {
 	case monitoring.ArchiveRequestSpec_Event.String():
@@ -112,7 +112,7 @@ func NewObjstoreExporter(reqType string, rslvr resolver.Interface, logger log.Lo
 		}
 		tlsc.ServerName = globals.Vos
 
-		objstoreClient, err := objstore.NewClient("default", bucket, rslvr, objstore.WithTLSConfig(tlsc))
+		objstoreClient, err := objstore.NewClient(tenant, bucket, rslvr, objstore.WithTLSConfig(tlsc))
 		if err != nil {
 			return nil, err
 		}

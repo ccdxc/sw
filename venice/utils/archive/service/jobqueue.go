@@ -67,8 +67,8 @@ func (jq *jobQueue) CancelJobs() {
 
 func (jq *jobQueue) AddJob(j archive.Job) error {
 	req := j.GetArchiveRequest()
-	if req.Status.Status != monitoring.ArchiveRequestStatus_Scheduled.String() && req.Status.Status != "" {
-		jq.logger.DebugLog("method", "AddJob", "msg", fmt.Sprintf("archive request [%s|%s] for log type [%s] has already been processed, status [%s]", req.Tenant, req.Name, req.Spec.Type, req.Status.Status))
+	if !shouldProcessJob(j) {
+		jq.logger.InfoLog("method", "AddJob", "msg", fmt.Sprintf("archive request [%s|%s] for log type [%s] has already been processed, status [%s]", req.Tenant, req.Name, req.Spec.Type, req.Status.Status))
 		return nil
 	}
 	jq.RLock()
@@ -222,6 +222,7 @@ func (jq *jobQueue) updateArchiveRequestStatus(req *monitoring.ArchiveRequest) (
 		}
 	}()
 	b := balancer.New(jq.rslvr)
+	defer b.Close()
 	grpcOpts := []rpckit.Option{rpckit.WithBalancer(b)}
 	// create a grpc client
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
@@ -235,11 +236,21 @@ func (jq *jobQueue) updateArchiveRequestStatus(req *monitoring.ArchiveRequest) (
 	defer apicl.Close()
 	result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return apicl.MonitoringV1().ArchiveRequest().UpdateStatus(ctx, req)
-	}, 100*time.Millisecond, 100)
+	}, 500*time.Millisecond, 20)
 	if err != nil {
 		jq.logger.ErrorLog("method", "updateArchiveRequestStatus", "msg", fmt.Sprintf("failed to update archive request status for [%s]", req.Name), "error", err)
 		return nil, err
 	}
 	jq.logger.DebugLog("method", "updateArchiveRequestStatus", "msg", fmt.Sprintf("updated archive request status [%#v]", *req))
 	return result.(*monitoring.ArchiveRequest), nil
+}
+
+func shouldProcessJob(j archive.Job) bool {
+	req := j.GetArchiveRequest()
+	switch req.Status.Status {
+	case monitoring.ArchiveRequestStatus_Scheduled.String(), monitoring.ArchiveRequestStatus_Running.String(), "":
+		return true
+	default:
+		return false
+	}
 }

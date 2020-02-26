@@ -104,7 +104,7 @@ func (s *serviceImpl) pickExporter(req *monitoring.ArchiveRequest) (archive.Expo
 	// in future we can pick an exporter based on archive policy
 	evtExpter, ok := gService.exporters[req.Spec.Type]
 	if !ok {
-		return exporter.NewObjstoreExporter(req.Spec.Type, s.rslvr, s.logger)
+		return exporter.NewObjstoreExporter(req.Spec.Type, req.Tenant, s.rslvr, s.logger)
 	}
 	return evtExpter, nil
 

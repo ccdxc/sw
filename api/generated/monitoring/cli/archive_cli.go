@@ -15,6 +15,13 @@ import (
 // CreateArchiveRequestFlags specifies flags for ArchiveRequest create operation
 var CreateArchiveRequestFlags = []gen.CliFlag{
 	{
+		ID:     "tenants",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "type",
 		Type:   "String",
 		Help:   "",

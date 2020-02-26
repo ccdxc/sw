@@ -17,6 +17,7 @@ export interface IMonitoringArchiveQuery {
     'labels'?: ILabelsSelector;
     'start-time'?: Date;
     'end-time'?: Date;
+    'tenants'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -34,6 +35,8 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
     'start-time': Date = null;
     /** EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z. */
     'end-time': Date = null;
+    /** OR of tenants within the scope of which archive needs to be performed. If not specified, it will be set to tenant of the logged in user. Also users in non default tenant can archive logs in their tenant scope only. */
+    'tenants': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringArchiveQuery]: PropInfoItem } = {
         'texts': {
             description:  `OR of Text-requirements to be matched, Exclude is not supported for Text search.`,
@@ -59,6 +62,11 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
             description:  `EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.`,
             required: false,
             type: 'Date'
+        },
+        'tenants': {
+            description:  `OR of tenants within the scope of which archive needs to be performed. If not specified, it will be set to tenant of the logged in user. Also users in non default tenant can archive logs in their tenant scope only.`,
+            required: false,
+            type: 'Array<string>'
         },
     }
 
@@ -87,6 +95,7 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
         this['texts'] = new Array<SearchTextRequirement>();
         this['fields'] = new FieldsSelector();
         this['labels'] = new LabelsSelector();
+        this['tenants'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -128,6 +137,13 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
         } else {
             this['end-time'] = null
         }
+        if (values && values['tenants'] != null) {
+            this['tenants'] = values['tenants'];
+        } else if (fillDefaults && MonitoringArchiveQuery.hasDefaultValue('tenants')) {
+            this['tenants'] = [ MonitoringArchiveQuery.propInfo['tenants'].default];
+        } else {
+            this['tenants'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -140,6 +156,7 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
                 'labels': CustomFormGroup(this['labels'].$formGroup, MonitoringArchiveQuery.propInfo['labels'].required),
                 'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringArchiveQuery.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), MonitoringArchiveQuery.propInfo['end-time']),
+                'tenants': CustomFormControl(new FormControl(this['tenants']), MonitoringArchiveQuery.propInfo['tenants']),
             });
             // generate FormArray control elements
             this.fillFormArray<SearchTextRequirement>('texts', this['texts'], SearchTextRequirement);
@@ -173,6 +190,7 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
             this['labels'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['start-time'].setValue(this['start-time']);
             this._formGroup.controls['end-time'].setValue(this['end-time']);
+            this._formGroup.controls['tenants'].setValue(this['tenants']);
         }
     }
 }

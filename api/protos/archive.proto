@@ -24,6 +24,9 @@ message ArchiveQuery {
     api.Timestamp StartTime               = 4 [(gogoproto.jsontag) = "start-time,omitempty"];
     // EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
     api.Timestamp EndTime                 = 5 [(gogoproto.jsontag) = "end-time,omitempty"];
+    // OR of tenants within the scope of which archive needs to be performed. If not specified, it will be set to tenant
+    // of the logged in user. Also users in non default tenant can archive logs in their tenant scope only.
+    repeated string Tenants               = 6 [(gogoproto.jsontag) = "tenants,omitempty"];
 }
 
 message ArchiveRequestSpec {

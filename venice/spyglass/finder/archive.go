@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/archive"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -187,6 +188,9 @@ func archiveQuery(req *monitoring.ArchiveRequest) (es.Query, error) {
 				Operator: "gte",
 				Values:   []string{startTime.Format(time.RFC3339Nano)},
 			}
+			if searchReq.Query.Fields == nil {
+				searchReq.Query.Fields = &fields.Selector{}
+			}
 			searchReq.Query.Fields.Requirements = append(searchReq.Query.Fields.Requirements, fieldReq)
 		}
 	}
@@ -198,13 +202,26 @@ func archiveQuery(req *monitoring.ArchiveRequest) (es.Query, error) {
 				Operator: "lte",
 				Values:   []string{endTime.Format(time.RFC3339Nano)},
 			}
+			if searchReq.Query.Fields == nil {
+				searchReq.Query.Fields = &fields.Selector{}
+			}
 			searchReq.Query.Fields.Requirements = append(searchReq.Query.Fields.Requirements, fieldReq)
 		}
 	}
 	searchReq.Query.Texts = req.Spec.Query.Texts
-	query, err := QueryBuilder(searchReq)
+	rquery, err := QueryBuilder(searchReq)
 	if err != nil {
 		return nil, err
 	}
+	tquery := es.NewBoolQuery().QueryName("TenantsScoping")
+	for _, tenant := range req.Spec.Query.Tenants {
+		tquery = tquery.Should(es.NewMatchPhraseQuery("meta.tenant", tenant))
+	}
+	// events not belonging to any tenants should be able to match; audit events always belong to a tenant; non-default tenant archive request must be scoped to its tenant
+	if req.Spec.Type == monitoring.ArchiveRequestSpec_AuditEvent.String() || req.Tenant != globals.DefaultTenant {
+		tquery = tquery.MinimumNumberShouldMatch(1)
+	}
+	query := es.NewBoolQuery().QueryName("ArchiveRequestQuery")
+	query = query.Must(rquery, tquery)
 	return query, nil
 }

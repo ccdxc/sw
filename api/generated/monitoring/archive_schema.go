@@ -27,6 +27,8 @@ var typesMapArchive = map[string]*api.Struct{
 			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{ID: "start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"Tenants": api.Field{Name: "Tenants", CLITag: api.CLIInfo{ID: "tenants", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenants", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.ArchiveRequest": &api.Struct{
@@ -77,6 +79,7 @@ var typesMapArchive = map[string]*api.Struct{
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"status":           api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"tenants":          api.CLIInfo{Path: "Spec.Query.Tenants", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
 			"uri":              api.CLIInfo{Path: "Status.URI", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},

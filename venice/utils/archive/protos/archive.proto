@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
-// protobuf specification for debug actions served by any grpc service created by rpckit.
+// protobuf specification for canceling archive request
 //---------------------------------------------------------------------------------------
 
 syntax = "proto3";

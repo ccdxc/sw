@@ -120,7 +120,7 @@ func (t *tInfo) startSpyglass() error {
 	archiveService := archmock.GetMockArchiveService()
 	if t.apiServerAddr != "" {
 		t.objstorecl = memclient.NewMemObjstore()
-		expter, err := archexp.NewObjstoreExporter(monitoring.ArchiveRequestSpec_AuditEvent.String(), t.rslvr, t.logger, archexp.WithObjectstoreClient(t.objstorecl))
+		expter, err := archexp.NewObjstoreExporter(monitoring.ArchiveRequestSpec_AuditEvent.String(), globals.DefaultTenant, t.rslvr, t.logger, archexp.WithObjectstoreClient(t.objstorecl))
 		if err != nil {
 			return err
 		}
