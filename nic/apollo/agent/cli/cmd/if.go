@@ -88,10 +88,10 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printIfHeader() {
-	hdrLine := strings.Repeat("-", 143)
+	hdrLine := strings.Repeat("-", 177)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-14s%-14s%-11s%-40s%-6s%-6s%-18s%-14s%-20s\n",
-		"IfIndex", "Interface", "AdminState", "Port", "LifID",
+	fmt.Printf("%-12s%-14s%-11s%-11s%-40s%-6s%-40s%-18s%-14s%-20s\n",
+		"IfIndex", "Interface", "AdminState", "OperState", "Port", "LifID",
 		"VPC", "IPPrefix", "Encap", "MACAddress")
 	fmt.Println(hdrLine)
 }
@@ -104,6 +104,9 @@ func printIf(intf *pds.Interface) {
 	adminState := strings.Replace(spec.GetAdminStatus().String(),
 		"IF_STATUS_", "", -1)
 	adminState = strings.Replace(adminState, "_", "-", -1)
+	operState := strings.Replace(status.GetOperStatus().String(),
+		"IF_STATUS_", "", -1)
+	operState = strings.Replace(operState, "_", "-", -1)
 	portNum := ""
 	vpc := "-"
 	ipPrefix := "-"
@@ -116,13 +119,13 @@ func printIf(intf *pds.Interface) {
 		portNum = uuid.FromBytesOrNil(spec.GetUplinkSpec().GetPortId()).String()
 	case pds.IfType_IF_TYPE_L3:
 		portNum = uuid.FromBytesOrNil(spec.GetL3IfSpec().GetPortId()).String()
-		vpc = fmt.Sprint(spec.GetL3IfSpec().GetVpcId())
+		vpc = uuid.FromBytesOrNil(spec.GetL3IfSpec().GetVpcId()).String()
 		ipPrefix = utils.IPPrefixToStr(spec.GetL3IfSpec().GetPrefix())
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())
 		encap = utils.EncapToString(spec.GetL3IfSpec().GetEncap())
 	}
-	fmt.Printf("0x%-12x%-14s%-11s%-40s%-6s%-6s%-18s%-14s%-20s\n",
-		ifIndex, ifStr, adminState, portNum, lifId,
+	fmt.Printf("0x%-12x%-14s%-11s%-11s%-40s%-6s%-6s%-18s%-14s%-20s\n",
+		ifIndex, ifStr, adminState, operState, portNum, lifId,
 		vpc, ipPrefix, encap, mac)
 }
 

@@ -17,14 +17,26 @@ import (
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
 
-const IfTypeShift = 28
-const IfSlotShift = 24
-const IfParentPortShift = 16
-const IfTypeMask = 0xF
-const IfSlotMask = 0xF
-const IfParentPortMask = 0xFF
-const IfChildPortMask = 0xFF
-const InvalidIfIndex = 0xFFFFFFFF
+const (
+	ifTypeNone        = 0
+	ifTypeEth         = 1
+	ifTypeEthPC       = 2
+	ifTypeTunnel      = 3
+	ifTypeUplink      = 5
+	ifTypeUplinkPC    = 6
+	ifTypeL3          = 7
+	ifTypeLif         = 8
+	ifTypeLoopback    = 9
+	ifTypeShift       = 28
+	ifSlotShift       = 24
+	ifParentPortShift = 16
+	ifTypeMask        = 0xF
+	ifSlotMask        = 0xF
+	ifParentPortMask  = 0xFF
+	ifChildPortMask   = 0xFF
+	ifNameDelimiter   = "-"
+	invalidIfIndex    = 0xFFFFFFFF
+)
 
 var (
 	portID         string
@@ -457,62 +469,72 @@ func portIDStrToIfIndex(portIDStr string) uint32 {
 	portIDStr = strings.ToLower(portIDStr)
 	n, err := fmt.Sscanf(portIDStr, "eth%d/%d", &slotIndex, &portIndex)
 	if err != nil || n != 2 {
-		return InvalidIfIndex
+		return invalidIfIndex
 	}
-	ifIndex = 1 << IfTypeShift // 1 is Eth port
-	ifIndex |= slotIndex << IfSlotShift
-	ifIndex |= portIndex << IfParentPortShift
+	ifIndex = 1 << ifTypeShift // 1 is Eth port
+	ifIndex |= slotIndex << ifSlotShift
+	ifIndex |= portIndex << ifParentPortShift
 	ifIndex |= 1 // Default child port
 
 	return ifIndex
 }
 
 func ifIndexToSlot(ifIndex uint32) uint32 {
-	return (ifIndex >> IfSlotShift) & IfSlotMask
+	return (ifIndex >> ifSlotShift) & ifSlotMask
 }
 
 func ifIndexToParentPort(ifIndex uint32) uint32 {
-	return (ifIndex >> IfParentPortShift) & IfParentPortMask
+	return (ifIndex >> ifParentPortShift) & ifParentPortMask
 }
 
 func ifIndexToChildPort(ifIndex uint32) uint32 {
-	return ifIndex & IfChildPortMask
+	return ifIndex & ifChildPortMask
 }
 
 func ifIndexToIfType(ifindex uint32) string {
-	ifType := (ifindex >> IfTypeShift) & IfTypeMask
+	ifType := (ifindex >> ifTypeShift) & ifTypeMask
 	switch ifType {
-	case 0:
+	case ifTypeNone:
 		return "None"
-	case 1:
+	case ifTypeEth:
 		return "Eth"
-	case 2:
+	case ifTypeEthPC:
 		return "EthPC"
-	case 3:
+	case ifTypeTunnel:
 		return "Tunnel"
-	case 4:
-		return "Mgmt"
-	case 5:
+	case ifTypeLoopback:
+		return "lo"
+	case ifTypeUplink:
 		return "Uplink"
-	case 6:
+	case ifTypeUplinkPC:
 		return "UplinkPC"
-	case 7:
+	case ifTypeL3:
 		return "L3"
-	case 8:
+	case ifTypeLif:
 		return "Lif"
 	}
 	return "None"
 }
 
+func ifIndexToID(ifIndex uint32) uint32 {
+	return ifIndex &^ (ifTypeMask << ifTypeShift)
+}
+
 func ifIndexToPortIdStr(ifIndex uint32) string {
-	if ifIndex != 0 {
-		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
-		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-		ifTypeStr := ifIndexToIfType(ifIndex)
-		return ifTypeStr + slotStr + "/" + parentPortStr
-	} else {
+	if ifIndex == 0 {
 		return "-"
 	}
+	ifType := (ifIndex >> ifTypeShift) & ifTypeMask
+	ifTypeStr := ifIndexToIfType(ifIndex)
+	switch ifType {
+	case ifTypeEth:
+		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+		return ifTypeStr + slotStr + ifNameDelimiter + parentPortStr
+	case ifTypeEthPC, ifTypeTunnel, ifTypeL3, ifTypeLif, ifTypeLoopback:
+		return ifTypeStr + strconv.FormatUint(uint64(ifIndexToID(ifIndex)), 10)
+	}
+	return "-"
 }
 
 func printPortStats(resp *pds.Port) {

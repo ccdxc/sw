@@ -58,16 +58,20 @@ func ByteIPv6AddrtoStr(addr []byte) string {
 }
 
 func IPv4PrefixToStr(pfx *pds.IPv4Prefix) string {
-    return fmt.Sprintf("%s/%d", Uint32IPAddrtoStr(pfx.GetAddr()), pfx.GetLen())
+	return fmt.Sprintf("%s/%d", Uint32IPAddrtoStr(pfx.GetAddr()), pfx.GetLen())
 }
 
 func IPv6PrefixToStr(pfx *pds.IPv6Prefix) string {
-    return fmt.Sprintf("%s/%d", ByteIPv6AddrtoStr(pfx.GetAddr()), pfx.GetLen())
+	return fmt.Sprintf("%s/%d", ByteIPv6AddrtoStr(pfx.GetAddr()), pfx.GetLen())
 }
 
 // IPPrefixToStr converts prefix to string
 func IPPrefixToStr(pfx *pds.IPPrefix) string {
-	return fmt.Sprintf("%s/%d", IPAddrToStr(pfx.GetAddr()), pfx.GetLen())
+	pfxStr := IPAddrToStr(pfx.GetAddr())
+	if pfxStr == "-" {
+		return "-/-"
+	}
+	return fmt.Sprintf("%s/%d", pfxStr, pfx.GetLen())
 }
 
 // EncapToString converts encap to string
