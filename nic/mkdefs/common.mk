@@ -21,7 +21,6 @@ export THIRD_PARTY_INCLUDES := \
        ${TOPDIR}/nic/hal/third-party/grpc/include \
        ${TOPDIR}/nic/hal/third-party/google/include \
        ${TOPDIR}/nic/hal/third-party/openssl/include \
-       ${TOPDIR}/nic/third-party/libz/include \
        ${SDK_THIRD_PARTY_INCLUDES}
 
 export NIC_COMMON_LDLIBS_x86_64     := zmq

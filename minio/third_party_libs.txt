@@ -35,13 +35,13 @@ nic/third-party/gflags/include/*
 nic/third-party/gflags/x86_64/*
 nic/third-party/gflags/aarch64/*
 
-nic/third-party/libz/*
 nic/third-party/libxml2/*
 nic/third-party/liblzma/*
 nic/third-party/libicuuc/*
 nic/third-party/rocksdb/*
 
 nic/sdk/third-party/liblmdb/*
+nic/sdk/third-party/libz/*
 
 nic/third-party/libconfig/OBJS/x86_64/include/*
 nic/third-party/libconfig/OBJS/x86_64/lib/*

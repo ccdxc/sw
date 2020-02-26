@@ -21,6 +21,7 @@ export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/gmp/include \
        ${SDKDIR}/third-party/ncurses/include \
        ${SDKDIR}/third-party/openssl/include \
+       ${SDKDIR}/third-party/libz/include \
        ${SDKDIR}/third-party/liblmdb/include
 
 export SDK_THIRD_PARTY_VPP_INCLUDES := \
