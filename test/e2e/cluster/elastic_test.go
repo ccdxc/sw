@@ -193,12 +193,17 @@ var _ = Describe("elastic cluster test", func() {
 
 			if stats.Shards.Total != stats.Shards.Successful { // wait until all the shards become ready
 				cmd := fmt.Sprintf("wget -O- --no-check-certificate --private-key=/var/lib/pensando/pki/shared/elastic"+
-					"-client-auth/key.pem  --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
-					"pem https://%s:9200/_cat/shards/%s", ts.tu.VeniceNodeIPs[0], eventsIndex)
+					"-client-auth/key.pem --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
+					"pem https://%s:9200/_cat/shards/%s?pretty", ts.tu.VeniceNodeIPs[0], eventsIndex)
 				shardsOut := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], cmd)
 
-				return fmt.Errorf("expected successful shards: %v, got : %v, shard status: %s", stats.Shards.Total,
-					stats.Shards.Successful, shardsOut)
+				cmd = fmt.Sprintf("wget -O- --no-check-certificate --private-key=/var/lib/pensando/pki/shared/elastic"+
+					"-client-auth/key.pem  --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
+					"pem https://%s:9200/_cluster/allocation/explain?pretty", ts.tu.VeniceNodeIPs[0])
+				clusterAllocOut := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], cmd)
+
+				return fmt.Errorf("expected successful shards: %v, got : %v, shard status: %s, cluster allocation: %s",
+					stats.Shards.Total, stats.Shards.Successful, shardsOut, clusterAllocOut)
 			}
 			si.Total = stats.Shards.Total
 			si.Successful = stats.Shards.Successful
