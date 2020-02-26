@@ -127,9 +127,10 @@ extern uint32_t cpucb_handle_key_size(void);
 
 hal_ret_t cpucb_get_by_id (cpucb_id_t cpucb_id, cpucb_t &cpucb, lif_id_t lif_id = HAL_LIF_CPU);
 
-#ifdef __x86_64__
 hal_ret_t
 cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp);
+
+#ifdef __x86_64__
 
 hal_ret_t cpucb_create(cpucb::CpuCbSpec& spec,
                        cpucb::CpuCbResponse *rsp);

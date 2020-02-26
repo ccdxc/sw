@@ -321,6 +321,8 @@ cpucb_delete (cpucb::CpuCbDeleteRequest& req, cpucb::CpuCbDeleteResponse *rsp)
     return HAL_RET_OK;
 }
 
+#endif
+
 hal_ret_t
 cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
 {
@@ -345,6 +347,5 @@ cpucb_get_stats ( lif_id_t lif_id, LifGetResponse *rsp)
     }
     return ret;
 }
-#endif
 
 }    // namespace hal

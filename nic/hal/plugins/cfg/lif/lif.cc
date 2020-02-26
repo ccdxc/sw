@@ -83,12 +83,10 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     }
 
     if (lif->lif_id == HAL_LIF_CPU) {
-#ifdef __x86_64__
         ret = cpucb_get_stats(lif->lif_id, rsp);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("cpucb pd stats get failed");
         }
-#endif
     } else {
 
         // Getting PD information
