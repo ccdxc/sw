@@ -407,6 +407,8 @@ public:
     bool is_flow_aware(void)      { return (policy_mode_ == sys::POLICY_MODE_FLOW_AWARE); }
     bool is_base_net(void)        { return (policy_mode_ == sys::POLICY_MODE_BASE_NET); }
 
+    uint64_t mgmt_if_mac(platform_type_t platform);
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -477,6 +479,7 @@ private:
     ip_addr_t               mytep_ip_;
     hal_forwarding_mode_t   forwarding_mode_;
     uint32_t                mgmt_vlan_;
+    uint64_t                mgmt_if_mac_ = 0;
     uint32_t                swm_vlan_;
     hal_uplink_flood_mode_t uplink_flood_mode_;
     if_id_t                 app_redir_if_id_;
@@ -899,6 +902,8 @@ public:
 
     void set_customer_default_vrf(vrf_id_t vrf) { oper_db_->set_customer_default_vrf(vrf); }
     vrf_id_t customer_default_vrf(void) { return oper_db_->customer_default_vrf(); }
+
+    uint64_t mgmt_if_mac(void) { return oper_db_->mgmt_if_mac(platform_); }
 
 private:
     // following come from shared memory or non-linux HBM memory

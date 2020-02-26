@@ -2,6 +2,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include <sys/ioctl.h>
+#include <net/if.h>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include "nic/hal/hal.hpp"
 #include "nic/include/base.hpp"
@@ -69,6 +71,8 @@
 #define HAL_STATE_STORE_VADDR                   0x400000000    // starting from 16G
 #define HAL_SERIALIZED_STATE_STORE_VADDR        0x480000000    // starting from 18G
 #define HAL_STATE_OBJ                           "halstate"
+
+static const char *g_mgmt_if_name = "bond0";
 
 using namespace boost::interprocess;
 
@@ -1530,6 +1534,60 @@ hal_oper_db::destroy(hal_oper_db *oper_db)
     } else {
         HAL_FREE(HAL_MEM_ALLOC_INFRA, oper_db);
     }
+}
+
+//------------------------------------------------------------------------------
+// mangement interface mac APIs
+//------------------------------------------------------------------------------
+static hal_ret_t
+hal_get_if_mac (const char *if_name, uint64_t *mac)
+{
+    int fd;
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+
+    if (if_name == NULL || mac == NULL) {
+        HAL_TRACE_ERR( "Invalid params");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == -1) {
+        HAL_TRACE_ERR("Sock init failed, {}",
+                      strerror(errno));
+        return HAL_RET_ERR;
+    }
+
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name , if_name , IFNAMSIZ-1);
+    auto ret = ioctl(fd, SIOCGIFHWADDR, &ifr);
+    close(fd);
+    if (ret == -1) {
+        HAL_TRACE_ERR("IOCTL failed, {}", strerror(errno));
+        return HAL_RET_ERR;
+    }
+
+    HAL_TRACE_INFO("Interface: {} MAC Address : {}", if_name,
+                   macaddr2str((uint8_t*)ifr.ifr_hwaddr.sa_data));
+    *mac = MAC_TO_UINT64(ifr.ifr_hwaddr.sa_data);
+    return HAL_RET_OK;
+}
+
+uint64_t
+hal_oper_db::mgmt_if_mac(platform_type_t platform) {
+    hal_ret_t hal_ret;
+
+    if (platform == platform_type_t::PLATFORM_TYPE_HW &&
+        mgmt_if_mac_ == 0) {
+        hal_ret = hal_get_if_mac(g_mgmt_if_name, &mgmt_if_mac_);
+        if (unlikely(hal_ret != HAL_RET_OK)) {
+            HAL_TRACE_ERR("Failed to get mac address for mgmt interface: {}",
+                          g_mgmt_if_name);
+            mgmt_if_mac_ = 0;
+            return mgmt_if_mac_;
+        }
+    }
+    return mgmt_if_mac_;
 }
 
 //------------------------------------------------------------------------------

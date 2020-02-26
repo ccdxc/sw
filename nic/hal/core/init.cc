@@ -16,8 +16,6 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 
-uint64_t g_mgmt_if_mac;
-
 namespace hal {
 
 using boost::property_tree::ptree;
@@ -716,21 +714,14 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     device_cfg->feature_profile = device->get_feature_profile();
     device_cfg->admin_state = device->get_port_admin_state() ?
         port_admin_state_t::PORT_ADMIN_STATE_DOWN : port_admin_state_t::PORT_ADMIN_STATE_UP;
-    g_mgmt_if_mac = device->get_mgmt_if_mac();
-#ifndef SIM
-    if (g_mgmt_if_mac == 0) {
-        g_mgmt_if_mac = PENSANDO_NIC_MAC;
-    }
-#endif
     device_cfg->device_profile = device->device_profile();
     device_cfg->mgmt_vlan = device->get_mgmt_vlan() ? device->get_mgmt_vlan() : NATIVE_VLAN_ID;
 
-    printf("Hal forwarding mode: %s, feature_profile: %d, port_admin_state: %d, mgmt_vlan: %d, mgmt_mac: %lu \n",
+    printf("Hal forwarding mode: %s, feature_profile: %d, port_admin_state: %d, mgmt_vlan: %d\n",
            FORWARDING_MODES_str(device_cfg->forwarding_mode),
            device_cfg->feature_profile,
            (int)device_cfg->admin_state,
-           device_cfg->mgmt_vlan,
-           g_mgmt_if_mac);
+           device_cfg->mgmt_vlan);
     return HAL_RET_OK;
 }
 

@@ -12,8 +12,6 @@
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 
-extern uint64_t g_mgmt_if_mac;
-
 namespace hal {
 namespace pd {
 
@@ -781,17 +779,18 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
 
         /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via rtep ep */
-	if (g_mgmt_if_mac == 0) {
+        auto mgmt_mac = g_hal_state->mgmt_if_mac();
+        if (mgmt_mac == 0) {
             mac = ep_get_rmac(rtep_ep, l2seg);
             if (!mac) {
-                HAL_TRACE_ERR("Mgmt interface mac is not populated! Check device.conf");
+                HAL_TRACE_ERR("Mgmt interface mac is not populated!");
                 return HAL_RET_ERR;
             }
             memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
-	} else {
-            MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac)
+        } else {
+            MAC_UINT64_TO_ADDR(smac, mgmt_mac);
             memcpy(tnnl_rw_key->mac_sa, smac, sizeof(mac_addr_t));
-	}
+        }
 
         /* Populate vxlan encap params */
         if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
