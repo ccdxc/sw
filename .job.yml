@@ -2,7 +2,7 @@
 version: 2.0
 builds:
   build-iris-x86:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && V=1 make PIPELINE=iris package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_iris_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build && cd .. && ./tools/scripts/check-local-files.sh"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && make checks && cd nic && V=1 make PIPELINE=iris package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_iris_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build && cd .. && ./tools/scripts/check-local-files.sh"]
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/build_iris_x86.tar.gz

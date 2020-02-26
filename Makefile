@@ -142,6 +142,10 @@ checks: nic-protos goimports-src golint-src govet-src ginkgo-src
 
 # nic-protos builds protos from nic to help generate go files that are needed
 nic-protos:
+	make -C nic/upgrade_manager/export/upggosdk
+	make -C nic/agent/nmd/protos/delphi
+	make -C nic/sysmgr/proto
+	make -C nic/agent/protos/netproto delphi-gen
 	make -C nic/metaswitch/protos
 	make -C nic/apollo/agent/protos
 
