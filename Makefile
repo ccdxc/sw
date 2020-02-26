@@ -726,12 +726,15 @@ naples-firmware-elba:
 naples-firmware-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
 	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+naples-firmware-apulu-tarball:
+	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
+	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_venice.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
 
 naples-firmware-tarball-iris: NAPLES_FW_TAR=naples_fw_all.tgz
 naples-firmware-tarball-iris: naples-firmware-tarball
 
 naples-firmware-tarball-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
-naples-firmware-tarball-apulu: naples-firmware-tarball
+naples-firmware-tarball-apulu: naples-firmware-apulu-tarball
 
 naples-protos-apulu:
 	tar -zcf naples-protos-apulu.tgz nic/build/aarch64/${PIPELINE}/gen/proto/
@@ -832,7 +835,11 @@ venice-image:
 	$(MAKE) install
 	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
 	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
-	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
+	@if [ -z ${APULU_PIPELINE} ]; then \
+	        cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
+	else \
+	        cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
+	fi
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
 venice-upgrade-image:
@@ -849,6 +856,8 @@ venice-upgrade-image:
 	cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.upg.tgz
 	printf "\n+++++++++++++++++ complete venice-upgrade-image $$(date) +++++++++++++++++\n"
 
+ci-venice-apulu-image:
+	$(MAKE) venice-image APULU_PIPELINE=1
 ci-venice-image:
 	$(MAKE) venice-image
 ci-venice-upgrade-image:
@@ -890,7 +899,7 @@ bundle-apulu-image:
 	mkdir -p apulu-bundle/bin
 	mkdir -p apulu-bundle/nic
 	mkdir -p apulu-bundle/bin/venice-install
-	ln -f bin/venice.tgz apulu-bundle/bin/venice.tgz
+	ln -f bin/venice.apulu.tgz apulu-bundle/bin/venice.tgz
 	ln -f nic/naples_fw_venice.tar apulu-bundle/nic/naples_fw.tar
 	ln -f bin/venice-install/venice_appl_os.tgz apulu-bundle/bin/venice-install/venice_appl_os.tgz
 	@ #bundle.py creates metadata.json for the bundle image

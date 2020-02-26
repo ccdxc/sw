@@ -7,6 +7,7 @@ then
 fi
 
 echo "Get Naples firmware..."
+tar -zxf naples_fw_all_apulu.tgz
 tar -zxf naples_fw_all.tgz
 if [ $? -ne 0 ]; then
   echo "Failed to untar naples firmware"
@@ -36,12 +37,13 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "Make Venice ISO..."
+cp /sw/bin/venice.apulu.tgz bin/
 cp /sw/bin/venice.tgz bin/
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "Make Venice ISO..."
 make venice-iso
 if [ $? -ne 0 ]; then
   exit 1
@@ -49,6 +51,12 @@ fi
 
 echo "Make bundle image..."
 make bundle-image
+if [ $? -ne 0 ]; then
+  exit 1
+fi
+
+echo "Make apulu bundle image..."
+make bundle-apulu-image
 if [ $? -ne 0 ]; then
   exit 1
 fi
@@ -74,12 +82,15 @@ fi
 
 echo "Copy artifacts..."
 mkdir -p /sw/output/bundle
+mkdir -p /sw/output/apulu-bundle
 cp /sw/build_iris_sim.tar.gz /sw/output
 cp /sw/bin/venice_apidoc.pdf /sw/output
 mv bin/venice.tgz /sw/output
 mv tools/docker-files/ova/output/venice.ova /sw/output
 mv tools/docker-files/ova/output/venice.qcow2 /sw/output
 mv bin/bundle/bundle.tar /sw/output/bundle/
+mv apulu-bundle/bundle.tar /sw/output/apulu-bundle/
+mv bin/venice.apulu.tgz /sw/output
 mv bin/pen-install.iso /sw/output/
 
 mkdir -p /sw/output/pxe/tftpboot/pxelinux.cfg

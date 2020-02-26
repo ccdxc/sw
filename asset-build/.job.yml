@@ -11,6 +11,8 @@ targets:
       - build-venice-image
       - build-iris-arm
       - build-iris-x86-sim
+      - build-apulu-arm
+      - build-venice-apulu-image
 
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
