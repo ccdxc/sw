@@ -177,7 +177,7 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
             // TBD if session limits needs to be applied for
             // transparent policy-enforced, then we need to 
             // get the limits from a default profile 
-            if (hal::g_hal_state->is_policy_enforced()) { 
+            if (likely(!protobuf_request() && hal::g_hal_state->is_policy_enforced())) { 
                 // check for flood protection limits
                 ret = apply_session_limit();
                 if (ret != HAL_RET_OK) {

@@ -65,7 +65,12 @@ packets:
         encaps      : callback://networking/packets/GetExpectedPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+                prio    : callback://networking/packets/GetExpectedPacketCos
+                vlan    : ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+            ipv4:
+                tos     : ref://testcase/config/flow/txqos/dscp
+            ipv6:
+                tc      : ref://testcase/config/flow/txqos/dscp
             tcp:
                 flags: ack
 

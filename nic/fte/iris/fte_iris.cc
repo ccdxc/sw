@@ -1278,7 +1278,7 @@ ctx_t::apply_session_limit(void)
     nwsec_prof =
         hal::find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
 
-    if (nwsec_prof == NULL || cpurxhdr == NULL) {
+    if (nwsec_prof == NULL) {
         goto end;
     }
 
