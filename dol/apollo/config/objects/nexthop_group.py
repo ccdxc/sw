@@ -47,6 +47,15 @@ class NexthopGroupObject(base.ConfigObjectBase):
         self.Show()
         return
 
+    def Dup(self):
+        dupObj = copy.copy(self)
+        dupObj.Id = next(ResmgrClient[self.Node].NexthopGroupIdAllocator) + Resmgr.BaseDuplicateIdAllocator
+        dupObj.GID('DupNexthopGroup%d'%dupObj.Id)
+        dupObj.UUID = utils.PdsUuid(dupObj.Id, dupObj.ObjType)
+        dupObj.Interim = True
+        self.Duplicate = dupObj
+        return dupObj
+
     def get_nexthop_list(self):
         nexthop_list = ""
         for i in self.Nexthops:
@@ -163,6 +172,14 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         ResmgrClient[node].CreateUnderlayNhGroupAllocator()
         ResmgrClient[node].CreateOverlayNhGroupAllocator()
         ResmgrClient[node].CreateDualEcmpNhGroupAllocator()
+
+    def AddObjToDict(self, obj, node):
+         self.Objs[node].update({obj.Id: obj})
+         return
+
+    def DeleteObjFromDict(self, obj, node):
+         self.Objs[node].pop(obj.Id, None)
+         return
 
     def AssociateObjects(self, node):
         logger.info("Filling nexthops")

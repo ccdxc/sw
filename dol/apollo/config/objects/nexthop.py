@@ -102,6 +102,7 @@ class NexthopObject(base.ConfigObjectBase):
         dupObj.NexthopId = next(ResmgrClient[self.Node].NexthopIdAllocator) + Resmgr.BaseDuplicateIdAllocator
         dupObj.GID('DupNexthop%d'%dupObj.NexthopId)
         dupObj.UUID = utils.PdsUuid(dupObj.NexthopId, dupObj.ObjType)
+        dupObj.Interim = True
         self.Duplicate = dupObj
         return dupObj
 
@@ -386,9 +387,9 @@ class NexthopObjectClient(base.ConfigClientBase):
 
     def DeleteObjects(self, node):
         if utils.IsPipelineApulu():
-            cfgObjects = self.__underlay_objs[node].values()
+            cfgObjects = self.__underlay_objs[node].copy().values()
         else:
-            cfgObjects = self.Objects(node)
+            cfgObjects = self.Objs[node].copy().values()
         logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Delete(), cfgObjects))
         if not all(result):
@@ -399,9 +400,10 @@ class NexthopObjectClient(base.ConfigClientBase):
 
     def RestoreObjects(self, node):
         if utils.IsPipelineApulu():
-            cfgObjects = self.__underlay_objs[node].values()
+            temp = self.__underlay_objs[node].copy().values()
         else:
-            cfgObjects = self.Objects(node)
+            temp = self.Objs[node].copy().values()
+        cfgObjects = list(filter(lambda x: not(x.IsInterim()), temp))
         logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Create(), cfgObjects))
         if not all(result):

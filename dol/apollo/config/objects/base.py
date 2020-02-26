@@ -54,6 +54,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Dirty = False
         self.Node = node
         self.Duplicate = None
+        self.Interim = False
         return
 
     def __get_GrpcMsg(self, op):
@@ -232,6 +233,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def IsDeleted(self):
         return self.deleted
+
+    def IsInterim(self):
+        return self.Interim
 
     def SetBaseClassAttr(self):
         logger.error("Method not implemented by class: %s" % self.__class__)
@@ -438,7 +442,7 @@ class ConfigClientBase(base.ConfigClientBase):
         return True
 
     def DeleteObjects(self, node):
-        cfgObjects = self.Objects(node)
+        cfgObjects = self.Objs[node].copy().values()
         logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Delete(), cfgObjects))
         if not all(result):
@@ -448,7 +452,8 @@ class ConfigClientBase(base.ConfigClientBase):
         return True
 
     def RestoreObjects(self, node):
-        cfgObjects = self.Objects(node)
+        temp = self.Objs[node].copy().values()
+        cfgObjects = list(filter(lambda x: not(x.IsInterim()), temp))
         logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Create(), cfgObjects))
         if not all(result):

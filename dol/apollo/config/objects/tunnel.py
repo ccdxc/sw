@@ -111,6 +111,7 @@ class TunnelObject(base.ConfigObjectBase):
         dupObj.Id = next(ResmgrClient[self.Node].TunnelIdAllocator)
         dupObj.GID("DupTunnel%d"%dupObj.Id)
         dupObj.UUID = utils.PdsUuid(dupObj.Id, dupObj.ObjType)
+        dupObj.Interim = True
         self.Duplicate = dupObj
         return dupObj
 
@@ -253,8 +254,8 @@ class TunnelObject(base.ConfigObjectBase):
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == ObjectTypes.NEXTHOP:
             self.NexthopId = dObj.Duplicate.NexthopId
-        #elif dObj.ObjType == ObjectTypes.NEXTHOPGROUP:
-        #    self.NexthopGroupId = 0
+        elif dObj.ObjType == ObjectTypes.NEXTHOPGROUP:
+            self.NexthopGroupId = dObj.Duplicate.Id
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))

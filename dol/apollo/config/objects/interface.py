@@ -121,6 +121,7 @@ class InterfaceObject(base.ConfigObjectBase):
         dupObj.InterfaceId = next(ResmgrClient[self.Node].InterfaceIdAllocator)
         dupObj.GID("DupInterface ID:%s"%dupObj.InterfaceId)
         dupObj.UUID = utils.PdsUuid(dupObj.InterfaceId, dupObj.ObjType)
+        dupObj.Interim = True
         self.Duplicate = dupObj
         return dupObj
 

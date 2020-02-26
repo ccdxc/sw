@@ -221,6 +221,7 @@ class RouteTableObject(base.ConfigObjectBase):
         """
         # TODO: get vpc
         dependees = [ ]
+        return dependees #updating routes in routetable for dependees is yet to be done
         if self.TUNNEL:
             dependees.append(self.TUNNEL)
         for route in self.routes.values():
@@ -278,6 +279,9 @@ class RouteTableObject(base.ConfigObjectBase):
         logger.info(" - Linking %s to %s " % (cObj, self))
         if cObj.ObjType == api.ObjectTypes.TUNNEL:
             self.TunnelId = cObj.Id
+        elif cObj.ObjType == api.ObjectTypes.NEXTHOP or\
+             cObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+            logger.info(" - Nh or Nhg updated, ignoring for now")
         else:
             logger.error(" - ERROR: %s not handling %s restoration" %\
                          (self.ObjType.name, cObj.ObjType))
@@ -293,7 +297,10 @@ class RouteTableObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunnelId = dObj.Duplicate.Id
+            self.TunnelId = dObj.Duplicate.Id 
+        elif dObj.ObjType == api.ObjectTypes.NEXTHOP or\
+             dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+            logger.info(" - Nh or Nhg updated, ignoring for now")
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))
