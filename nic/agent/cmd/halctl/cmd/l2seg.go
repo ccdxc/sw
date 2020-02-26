@@ -376,7 +376,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 
 	ifIDStr := "-"
 	if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
-		ifIDStr = fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
+		ifIDStr = utils.IfIndexToStr(uint32(resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()))
 	}
 
 	vrfTypeStr := "Mgmt"

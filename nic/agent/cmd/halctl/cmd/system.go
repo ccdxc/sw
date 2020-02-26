@@ -6,7 +6,7 @@ package cmd
 
 import (
 	"bytes"
-	"container/list"
+	// "container/list"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,6 +16,7 @@ import (
 	// "math/rand"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -2510,14 +2511,7 @@ func intfStatsHeader() {
 }
 
 func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
-	portStr := fmt.Sprint(resp.GetSpec().GetKeyOrHandle().GetPortId())
-
-	intfStr := ""
-	if portStr == "9" {
-		intfStr += "Uplink-OOB"
-	} else {
-		intfStr += "Uplink-" + portStr
-	}
+	intfStr := utils.IfIndexToStr(resp.GetSpec().GetKeyOrHandle().GetPortId())
 
 	var rxUc uint64
 	var rxMc uint64
@@ -2594,12 +2588,21 @@ func uplinkStatsShow(c *grpc.ClientConn) {
 		return
 	}
 
+	m := make(map[uint32]*halproto.PortGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		intfUplinkShowOneResp(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetPortId()] = resp
+	}
+	var keys []uint32
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		intfUplinkShowOneResp(m[k])
 	}
 }
 
@@ -2686,40 +2689,55 @@ func lifStatsShow(c *grpc.ClientConn) {
 		Request: []*halproto.LifGetRequest{req},
 	}
 
-	mnicList := list.New()
-	proxyList := list.New()
-	hostList := list.New()
-
 	// HAL call
 	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
 	if err != nil {
 		fmt.Printf("Getting Lif failed. %v\n", err)
 		return
 	}
+	m := make(map[uint64]*halproto.LifGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		lifName := resp.GetSpec().GetName()
-		if strings.Contains(lifName, "mnic") || strings.Contains(lifName, "accel") || strings.Contains(lifName, "admin") {
-			mnicList.PushBack(resp)
-		} else if strings.Contains(lifName, "proxy") {
-			proxyList.PushBack(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetLifId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		lifName := m[k].GetSpec().GetName()
+		if strings.Contains(lifName, "mnic") {
+			intfMnicLifShowOneResp(m[k])
 		} else {
-			hostList.PushBack(resp)
+			intfHostLifShowOneResp(m[k])
 		}
 	}
 
-	for e := mnicList.Front(); e != nil; e = e.Next() {
-		intfMnicLifShowOneResp(e.Value.(*halproto.LifGetResponse))
-	}
-	for e := proxyList.Front(); e != nil; e = e.Next() {
-		intfProxyLifShowOneResp(e.Value.(*halproto.LifGetResponse))
-	}
-	for e := hostList.Front(); e != nil; e = e.Next() {
-		intfHostLifShowOneResp(e.Value.(*halproto.LifGetResponse))
-	}
+	// mnicList := list.New()
+	// proxyList := list.New()
+	// hostList := list.New()
+	// lifName := resp.GetSpec().GetName()
+	// if strings.Contains(lifName, "mnic") || strings.Contains(lifName, "accel") || strings.Contains(lifName, "admin") {
+	// 	mnicList.PushBack(resp)
+	// } else if strings.Contains(lifName, "proxy") {
+	// 	proxyList.PushBack(resp)
+	// } else {
+	// 	hostList.PushBack(resp)
+	// }
+
+	// for e := mnicList.Front(); e != nil; e = e.Next() {
+	// 	intfMnicLifShowOneResp(e.Value.(*halproto.LifGetResponse))
+	// }
+	// for e := proxyList.Front(); e != nil; e = e.Next() {
+	// 	intfProxyLifShowOneResp(e.Value.(*halproto.LifGetResponse))
+	// }
+	// for e := hostList.Front(); e != nil; e = e.Next() {
+	// 	intfHostLifShowOneResp(e.Value.(*halproto.LifGetResponse))
+	// }
 }
 
 func intfStatsShow(c *grpc.ClientConn) {
