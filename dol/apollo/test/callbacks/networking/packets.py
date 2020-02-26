@@ -579,7 +579,7 @@ def __is_any_cfg_deleted(tc):
         objs = [device, vpc, subnet]
     else:
         objs = [device, vpc, routetable, subnet, vnic, lmapping, rmapping]
-    values = list(map(lambda x: not(x.IsHwHabitant()), list(filter(None, objs))))
+    values = list(map(lambda x: not(x.IsHwHabitant()) or (x.IsDirty()), list(filter(None, objs))))
     if any(values):
         return True
     return False

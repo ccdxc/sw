@@ -24,34 +24,47 @@ def Setup(tc):
         api.Logger.error("Skipping Testcase due to no workload pairs.")
         result = api.types.status.FAILURE
 
-    selected_objs = None
     tc.opers = __getOperations(tc.iterators.oper)
+    tc.selected_objs = config_api.SetupConfigObjects(tc.iterators.objtype)
+
+    return result
+
+def Trigger(tc):
     tc.is_config_deleted = False
     tc.is_config_updated = False
     for op in tc.opers:
-        selected_objs = config_api.ProcessObjectsByOperation(op, tc.iterators.objtype, selected_objs)
+        res = config_api.ProcessObjectsByOperation(op, tc.selected_objs)
         if op == 'Delete':
             tc.is_config_deleted = True
         elif op == 'Update':
             tc.is_config_updated = True
-    tc.selected_objs = selected_objs
-    return result
+        if res != api.types.status.SUCCESS:
+            break;
 
-def Trigger(tc):
-    tc.cmd_cookies, tc.resp = traffic_utils.pingWorkloads(tc.workload_pairs, tc.iterators.ipaf)
-    return api.types.status.SUCCESS
+    tc.cmd_cookies = None
+    tc.resp = None
+    if res == api.types.status.SUCCESS:
+        tc.cmd_cookies, tc.resp = traffic_utils.pingWorkloads(tc.workload_pairs, tc.iterators.ipaf)
+
+    return res
 
 def Verify(tc):
     result = api.types.status.SUCCESS
     if tc.resp is None:
-        api.Logger.error("verifyPing failed - no response")
-        return api.types.status.FAILURE
+        api.Logger.error("verify - no response")
+        return api.types.status.SUCCESS
     commands = tc.resp.commands
     cookie_idx = 0
     for cmd in commands:
         if tc.is_config_deleted:
             res = config_api.IsAnyConfigDeleted(tc.workload_pairs[cookie_idx])
-            if (res is True and cmd.exit_code == 0) or (res is False and cmd.exit_code != 0):
+            # nexthop, interface and tunnel create duplicate objects after delete operation, so traffic should not fail
+            if tc.iterators.objtype in [ 'nexthop', 'interface', 'tunnel' ]:
+                if cmd.exit_code != 0:
+                    api.Logger.error("verifyPing failed for %s" % (tc.cmd_cookies[cookie_idx]))
+                    api.PrintCommandResults(cmd)
+                    result = api.types.status.FAILURE
+            elif (res is True and cmd.exit_code == 0) or (res is False and cmd.exit_code != 0):
                 api.Logger.error("verifyPing failed for %s" % (tc.cmd_cookies[cookie_idx]))
                 api.PrintCommandResults(cmd)
                 result = api.types.status.FAILURE

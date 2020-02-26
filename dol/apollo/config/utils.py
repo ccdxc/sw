@@ -54,6 +54,8 @@ IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name
 IF_TYPE_SHIFT = 28
 LIF_IF_LIF_ID_MASK = 0xFFFFFF
 
+INVALID_BATCH_COOKIE = 0
+
 def LifId2LifIfIndex(lifid):
     return ((topo.InterfaceTypes.LIF << IF_TYPE_SHIFT) | (lifid))
 
@@ -170,7 +172,7 @@ def GetRandomSamples(objList, num):
     return random.sample(objList, k=num)
 
 def GetFilteredObjects(objs, maxlimits, randomize=False):
-    if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
+    if maxlimits == None or maxlimits == 0 or maxlimits >= len(objs):
         num = len(objs)
     else:
         num = maxlimits
@@ -260,54 +262,86 @@ def GetAttrFromResponse(obj, resp, attr):
         return [result]
     return result
 
-def ValidateCommit(obj, operation, expectedResp):
-    if IsDryRun():
-        return True
-    ret = False
-    logger.info(f"ValidateCommit {obj} with {operation} and expected {expectedResp}")
-    if obj.IsHwHabitant():
-        if operation == 'Create':
-            ret = expectedResp == types_pb2.API_STATUS_EXISTS_ALREADY
-        elif operation == 'Delete' or operation == 'Update':
-            if expectedResp == types_pb2.API_STATUS_OK:
-                if operation == 'Delete':
-                    obj.SetHwHabitant(False)
-                ret = True
-    else:
-        if operation == 'Create':
-            if expectedResp == types_pb2.API_STATUS_OK:
-                obj.SetHwHabitant(True)
-                ret = True
-        elif operation == 'Delete' or operation == 'Update':
-            if expectedResp == types_pb2.API_STATUS_NOT_FOUND:
-                ret = True
-    return ret
+def SetObjectHwHabitantStatus(obj, oper, status):
+    if oper == 'Create' or oper == 'Update':
+        if status == types_pb2.API_STATUS_OK:
+            obj.SetHwHabitant(True)
+    elif oper == 'Delete':
+        if status == types_pb2.API_STATUS_OK:
+            obj.SetHwHabitant(False)
+    return
 
-def ValidateCreate(obj, resps):
+def ValidateBatch(batchList, cookie):
+    for item in batchList:
+        oper = item[0]
+        obj = item[1]
+        operStatus = item[2]
+        commitStatus = item[3]
+
+        if IsDryRun():
+            SetObjectHwHabitantStatus(oper, obj, types_pb2.API_STATUS_OK)
+            continue
+
+        is_obj_present = obj.IsHwHabitant()
+
+        logger.info(f"ValidateBatch: operation {oper} for {obj} on {obj.Node}, obj_present {is_obj_present}")
+        expApiStatus = types_pb2.API_STATUS_OK
+        if is_obj_present == True:
+            if oper == 'Create':
+                expApiStatus = types_pb2.API_STATUS_EXISTS_ALREADY
+                operResp = ValidateCreate(obj, operStatus, expApiStatus)
+            elif oper == 'Update' or oper == 'Delete':
+                expApiStatus = types_pb2.API_STATUS_OK
+                if oper == 'Delete':
+                    operResp = ValidateDelete(obj, operStatus, expApiStatus)
+                else:
+                    operResp = ValidateUpdate(obj, operStatus, expApiStatus)
+        else:
+            if oper == 'Create':
+                expApiStatus = types_pb2.API_STATUS_OK
+                operResp = ValidateCreate(obj, operStatus, expApiStatus)
+            elif oper == 'Update' or oper == 'Delete':
+                expApiStatus = types_pb2.API_STATUS_NOT_FOUND
+                if oper == 'Delete':
+                    operResp = ValidateDelete(obj, operStatus, expApiStatus)
+                else:
+                    operResp = ValidateUpdate(obj, operStatus, expApiStatus)
+
+        logger.info(f"ValidateBatch: recvd {operStatus} and {commitStatus} and expcted {expApiStatus}")
+
+        # setting HwHabitant for an object only if operation succeeds
+        SetObjectHwHabitantStatus(obj, oper, expApiStatus)
+
+        # if batch is created internally
+        if cookie == INVALID_BATCH_COOKIE:
+            return operResp
+        else:
+            commitResp = (expApiStatus == commitStatus)
+            exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
+            if obj.ObjType in exception:
+                return commitResp
+            else:
+                # all stateful objects are validated in agent db currently, hence
+                # return operation status. Once agent db is removed then change it to batch commit status
+                return operResp
+
+        return True
+
+def ValidateCreate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun():
         # assume creation was fine in case of dry run
         obj.SetHwHabitant(True)
         return True
-    if obj.IsHwHabitant():
-        expApiStatus = types_pb2.API_STATUS_EXISTS_ALREADY
-    else:
-        expApiStatus = types_pb2.API_STATUS_OK
     for resp in resps:
-        if ValidateGrpcResponse(resp, expApiStatus):
-            obj.SetHwHabitant(True)
-        else:
-            logger.error(f"[Re]Creation failed for {obj}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
+        if not ValidateGrpcResponse(resp, expApiStatus):
+            logger.error(f"[Re]Creation failed for {obj} on {obj.Node}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
             obj.Show()
             return False
+        SetObjectHwHabitantStatus(obj, 'Create', expApiStatus)
     return True
 
-def ValidateRead(obj, resps):
+def ValidateRead(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun(): return True
-    # set the appropriate expected status
-    if obj.IsHwHabitant():
-        expApiStatus = types_pb2.API_STATUS_OK
-    else:
-        expApiStatus = types_pb2.API_STATUS_NOT_FOUND
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if ValidateGrpcResponse(resp):
@@ -317,14 +351,14 @@ def ValidateRead(obj, resps):
                         if hasattr(obj, 'Status'):
                             obj.Status.Update(response.Status)
                     else:
-                        logger.info(f"ValidateRead failed for {obj}, received resp {resp} & expected status {expApiStatus}")
+                        logger.info(f"ValidateRead failed for {obj} on {obj.Node}, received resp {resp} & expected status {expApiStatus}")
                         return False
         else:
-            logger.info(f"ValidateRead failed for {obj} with unexpected status, received resp {resp} & expected status {expApiStatus}")
+            logger.info(f"ValidateRead failed for {obj} on {obj.Node} with unexpected status, received resp {resp} & expected status {expApiStatus}")
             return False
     return True
 
-def ValidateDelete(obj, resps):
+def ValidateDelete(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun():
         # assume deletion was fine in case of dry run
         obj.SetHwHabitant(False)
@@ -332,32 +366,24 @@ def ValidateDelete(obj, resps):
     for resp in resps:
         respStatus = GetAttrFromResponse(obj, resp, 'ApiStatus')
         for status in respStatus:
-            if status == types_pb2.API_STATUS_OK:
-                obj.SetHwHabitant(False)
-            elif not obj.IsHwHabitant() and status == types_pb2.API_STATUS_NOT_FOUND:
-                obj.SetHwHabitant(False)
-            else:
-                logger.error(f"Deletion failed for {obj}, received {status}")
+            if status != expApiStatus:
+                logger.error(f"Deletion failed for {obj} on {obj.Node}, received {resp} but expected {expApiStatus}")
                 obj.Show()
                 return False
+        SetObjectHwHabitantStatus(obj, 'Delete', expApiStatus)
     return True
 
-def ValidateUpdate(obj, resps):
+def ValidateUpdate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun(): return True
-    expApiStatus = types_pb2.API_STATUS_OK
-    if obj.HasPrecedent():
-        if not obj.Precedent.IsHwHabitant():
-            expApiStatus = types_pb2.API_STATUS_NOT_FOUND
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if expApiStatus == types_pb2.API_STATUS_OK:
-                obj.SetHwHabitant(True)
+                SetObjectHwHabitantStatus(obj, 'Update', expApiStatus)
                 InformDependents(obj, 'UpdateNotify')
         else:
-            logger.error(f"Update failed for {obj.__repr__()}, received {resp.ApiStatus}, expected {expApiStatus}")
+            logger.error(f"Update failed for {obj} on {obj.Node}, received {resp.ApiStatus}, expected {expApiStatus}")
             obj.PrepareRollbackUpdate()
             obj.SetDirty(False)
-            obj.SetHwHabitant(True)
             return False
     return True
 
@@ -386,25 +412,19 @@ def TriggerCreate(obj, node):
     batchClient.Start(node)
     cookie = GetBatchCookie(node)
     msg = obj.GetGrpcCreateMessage(cookie)
-    resps = api.client[node].Create(obj.ObjType, [msg])
-    ret = ValidateCreate(obj, resps)
+    operStatus = api.client[node].Create(obj.ObjType, [msg])
     batchClient.Commit(node)
-    # device and mapping are stateless objects, operation status updated only after batch commit
-    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
-    if obj.ObjType in exception:
-        commitStatus = GetBatchCommitStatus(node)
-        return ValidateCommit(obj, 'Create', commitStatus)
-    return ret
+    commitStatus = GetBatchCommitStatus(node)
+    validate = ('Create', obj, operStatus, commitStatus)
+    return ValidateBatch([validate], cookie)
 
-#TODO - Fix validation returns appropriately for DOL & IOTA
 def CreateObject(obj):
     if IsDryRun() and obj.IsHwHabitant():
-        logger.info("Already restored %s" % (obj))
+        logger.info(f"Already restored {obj} on {obj.Node}")
         return True
 
     def RestoreObj(robj, node):
-        logger.info("[Re]Creating object %s" % (robj))
-
+        logger.info(f"[Re]Creating object {robj} on {node}")
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first
             # and all dependents should be updated to point to the new object
@@ -413,7 +433,7 @@ def CreateObject(obj):
             # inconsistency. Doing it this way in DOL, since IOTA scale test cases
             # uses the same code, and at full scale we can't create an object
             # without freeing another.
-            logger.info("Deleting object %s" % (robj.Duplicate))
+            logger.info(f"Deleting object {robj.Duplicate} on {robj.Node}")
             TriggerDelete(robj.Duplicate, node)
             confClient = EzAccessStoreClient[node].GetConfigClient(robj.ObjType)
             if confClient == None:
@@ -430,48 +450,42 @@ def CreateObject(obj):
         CreateObject(childObj)
     return True
 
-def ReadObject(obj):
+def ReadObject(obj, expApiStatus = types_pb2.API_STATUS_OK):
     msg = obj.GetGrpcReadMessage()
     resps = api.client[obj.Node].Get(obj.ObjType, [msg])
-    return ValidateRead(obj, resps)
+    return ValidateRead(obj, resps, expApiStatus)
 
 def UpdateObject(obj):
-    logger.info("Updating object %s" % (obj))
+    logger.info(f"Updating object {obj} on {obj.Node}")
     node = obj.Node
     batchClient = EzAccessStore.GetBatchClient()
     batchClient.Start(node)
     cookie = GetBatchCookie(node)
     msg = obj.GetGrpcUpdateMessage(cookie)
-    resps = api.client[node].Update(obj.ObjType, [msg])
+    operStatus = api.client[node].Update(obj.ObjType, [msg])
     batchClient.Commit(node)
-    ret = ValidateUpdate(obj, resps)
-    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
-    if obj.ObjType in exception:
-        commitStatus = GetBatchCommitStatus(node)
-        return ValidateCommit(obj, 'Update', commitStatus)
-    return ret
+    commitStatus = GetBatchCommitStatus(node)
+    validate = ('Update', obj, operStatus, commitStatus)
+    return ValidateBatch([validate], cookie)
 
 def TriggerDelete(obj, node):
     batchClient = EzAccessStore.GetBatchClient()
     batchClient.Start(node)
     cookie = GetBatchCookie(node)
     msg = obj.GetGrpcDeleteMessage(cookie)
-    resps = api.client[node].Delete(obj.ObjType, [msg])
+    operStatus = api.client[node].Delete(obj.ObjType, [msg])
     batchClient.Commit(node)
-    ret = ValidateDelete(obj, resps)
-    exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
-    if obj.ObjType in exception:
-        commitStatus = GetBatchCommitStatus(node)
-        return ValidateCommit(obj, 'Delete', commitStatus)
-    return ret
+    commitStatus = GetBatchCommitStatus(node)
+    validate = ('Delete', obj, operStatus, commitStatus)
+    return ValidateBatch([validate], cookie)
 
 def DeleteObject(obj):
     if IsDryRun() and not obj.IsHwHabitant():
-        logger.info("Already deleted %s" % (obj))
+        logger.info(f"Already deleted {obj} on {obj.Node}")
         return True
 
     def DelObj(dobj, node):
-        logger.info("Deleting object %s" % (dobj))
+        logger.info(f"Deleting object {dobj} on {node}")
         #TODO: Ideally a new dependee object should be created first
         # and all dependents should be updated to point to the new object
         # before we delete this. Otherwise, for a moment, the dependent objects

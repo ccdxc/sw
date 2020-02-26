@@ -118,7 +118,7 @@ class InterfaceObject(base.ConfigObjectBase):
 
     def Dup(self):
         dupObj = copy.copy(self)
-        dupObj.InterfaceId = next(ResmgrClient[self.Node].InterfaceIdAllocator)
+        dupObj.InterfaceId = next(ResmgrClient[self.Node].InterfaceIdAllocator) + Resmgr.BaseDuplicateIdAllocator
         dupObj.GID("DupInterface ID:%s"%dupObj.InterfaceId)
         dupObj.UUID = utils.PdsUuid(dupObj.InterfaceId, dupObj.ObjType)
         dupObj.Interim = True

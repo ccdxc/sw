@@ -57,6 +57,15 @@ class DeviceObject(base.ConfigObjectBase):
             tunnel.client.GenerateObjects(node, self, spec.tunnel)
         return
 
+    def Read(self, spec=None):
+        if self.IsDirty():
+            logger.info("Not reading object from Hw since it is marked Dirty")
+            return True
+        expApiStatus = types_pb2.API_STATUS_OK
+        utils.ReadObject(self, expApiStatus)
+        # TODO: fix ValidateObject after delete operation
+        return True
+
     def UpdateAttributes(self):
         self.IPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
         self.GatewayAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)

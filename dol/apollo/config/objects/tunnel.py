@@ -108,7 +108,7 @@ class TunnelObject(base.ConfigObjectBase):
 
     def Dup(self):
         dupObj = copy.copy(self)
-        dupObj.Id = next(ResmgrClient[self.Node].TunnelIdAllocator)
+        dupObj.Id = next(ResmgrClient[self.Node].TunnelIdAllocator) + Resmgr.BaseDuplicateIdAllocator
         dupObj.GID("DupTunnel%d"%dupObj.Id)
         dupObj.UUID = utils.PdsUuid(dupObj.Id, dupObj.ObjType)
         dupObj.Interim = True

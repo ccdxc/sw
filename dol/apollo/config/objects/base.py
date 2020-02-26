@@ -145,7 +145,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
         if self.IsDirty():
             logger.info("Not reading object from Hw since it is marked Dirty")
             return True
-        return utils.ReadObject(self)
+        # set the appropriate expected status
+        if self.IsHwHabitant():
+            expApiStatus = types_pb2.API_STATUS_OK
+        else:
+            expApiStatus = types_pb2.API_STATUS_NOT_FOUND
+        return utils.ReadObject(self, expApiStatus)
 
     def Delete(self, spec=None):
         utils.DeleteObject(self)
@@ -173,7 +178,6 @@ class ConfigObjectBase(base.ConfigObjectBase):
                 clone = self.CopyObject()
                 clone.Precedent = None
                 self.Precedent = clone
-                self.HwHabitant = False
                 self.UpdateAttributes()
                 logger.info("Updated values -")
                 self.Show()
@@ -190,7 +194,6 @@ class ConfigObjectBase(base.ConfigObjectBase):
         if self.HasPrecedent():
             self.RollbackAttributes()
             self.Precedent = None
-            self.HwHabitant = False
             self.SetDirty(True)
             logger.info("Object rolled back to -")
             self.Show()

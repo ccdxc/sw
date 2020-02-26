@@ -138,25 +138,23 @@ def __getRandomSamples(objlist, num = None):
         num = limit
     return random.sample(objlist, k=num)
 
-# Perform operation <oper> on <selected_objs>
-# <selected_objs> = None, then use objects of type <objtype> for <oper>
-def ProcessObjectsByOperation(oper, objtype, selected_objs = None):
-    select_objs = selected_objs
+def SetupConfigObjects(objtype):
+    maxlimit = __getMaxLimit(objtype)
+    select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
+    select_objs = __getRandomSamples(__getObjects(objtype), select_count)
+    api.Logger.info(f"selected_objs: {select_objs}")
+    return select_objs
+
+def ProcessObjectsByOperation(oper, select_objs):
     supported_ops = [ 'Create', 'Read', 'Delete', 'Update' ]
+    res = api.types.status.SUCCESS
     if oper is None or oper not in supported_ops:
-        return select_objs
-    if select_objs is None:
-        maxlimit = __getMaxLimit(objtype)
-        select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
-        select_objs = __getRandomSamples(__getObjects(objtype), select_count)
-    res = list()
+        return res
     for obj in select_objs:
         getattr(obj, oper)()
         if not getattr(obj, 'Read')():
             api.Logger.error(f"{oper} failed for object: {obj}")
-        else:
-            res.append(obj)
-    api.Logger.info(f"selected_objs: {res}")
+            res = api.types.status.FAILURE
     return res
 
 def __findVnicObjectByWorkload(wl):
@@ -238,13 +236,13 @@ def RestoreObjects(oper, objlist):
             for obj in objlist:
                 obj.Create()
                 if ReadConfigObject(obj) is False:
-                    api.Logger.error(f"Read object failed for {obj} after {oper} operation")
+                    api.Logger.error(f"RestoreObjects:Read object failed for {obj} after {oper} operation")
                     rs = False
         elif oper == 'Update':
             for obj in objlist:
                 obj.RollbackUpdate()
                 if ReadConfigObject(obj) is False:
-                    api.Logger.error(f"Read object failed for {obj} after {oper} operation")
+                    api.Logger.error(f"RestoreObjects:Read object failed for {obj} after {oper} operation")
                     rs = False
     return rs
 
