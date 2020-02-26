@@ -27,6 +27,12 @@
           "icmp": "6s",
           "icmp-drop": "30s"
         },
+        "rate-limits" : {
+			"tcp-half-open-session-limit" : 0,
+			"udp-active-session-limit": 0, 
+			"icmp-active-session-limit": 0,         
+			"other-active-session-limit" : 0
+		},
         "enable-connection-tracking": true,
         "enable-tcp-normalization": true,
         "enable-ip-normalization": true,

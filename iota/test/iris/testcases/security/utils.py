@@ -11,6 +11,7 @@ import iota.harness.api as api
 import iota.harness.infra.store as store
 import iota.test.iris.utils.ip_rule_db.util.proto as proto
 import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
+import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 def SetHalLogsLevel(node_name, level):
     cmd = '/nic/bin/halctl debug trace --level %s'%level
@@ -367,3 +368,70 @@ def SetupLocalRuleDbPerNaple(policy_json):
 
     api.Logger.info("Successully setup local DB for Naples")
     return dbByNode
+
+def GetServerClientSinglePair(kind, naples=True):
+    if kind == 'remote':
+        pairs = api.GetRemoteWorkloadPairs()
+    else:
+        pairs = api.GetLocalWorkloadPairs(naples=naples)
+    if len(pairs) == 0:
+        api.Logger.info("No workloads found")
+        return (None, None)
+    server,client = pairs[0]
+    if not server.IsNaples():
+        if not client.IsNaples():
+            api.Logger.info("Naples workloads not found")
+            return (None , None)
+    return (server, client)
+
+
+def GetSessionLimit(session):
+    #Query will get the reference of objects on store
+    store_profile_objects = netagent_cfg_api.QueryConfigs(kind='SecurityProfile')
+    if len(store_profile_objects) == 0:
+        api.Logger.error("No security profile objects in store")
+        return api.types.status.FAILURE
+
+    for object in store_profile_objects:
+        if (session == 'tcp'):
+            return object.spec.rate_limits.tcp_half_open_session_limit
+        elif (session == 'udp'):
+            return object.spec.rate_limits.udp_active_session_limit
+        elif (session == 'icmp'):
+            return object.spec.rate_limits.icmp_active_session_limit
+        elif (session == 'other'):
+            return object.spec.rate_limits.other_session_limit
+    return api.types.status.FAILURE
+
+def SetSessionLimit(session, limit):
+    #Query will get the reference of objects on store
+    store_profile_objects = netagent_cfg_api.QueryConfigs(kind='SecurityProfile')
+
+    if len(store_profile_objects) == 0:
+        api.Logger.error("No security profile objects in store")
+        return api.types.status.FAILURE
+
+    for object in store_profile_objects:
+        if (session == 'tcp'):
+            object.spec.rate_limits.tcp_half_open_session_limit = limit
+        elif (session == 'udp'):
+            object.spec.rate_limits.udp_active_session_limit    = limit
+        elif (session == 'icmp'):
+            object.spec.rate_limits.icmp_active_session_limit   = limit
+        elif (session == 'other'):
+            object.spec.rate_limits.other_session_limit         = limit
+        elif (session == 'all'):
+            object.spec.rate_limits.tcp_half_open_session_limit = limit
+            object.spec.rate_limits.udp_active_session_limit    = limit
+            object.spec.rate_limits.icmp_active_session_limit   = limit
+            object.spec.rate_limits.other_session_limit         = limit
+        else:
+            api.Logger.error("unsupported security profile session type %s"%session)
+            return api.types.status.FAILURE
+
+    #Now push the update as we modified.
+    netagent_cfg_api.UpdateConfigObjects(store_profile_objects)
+
+    time.sleep(5)
+
+    return api.types.status.SUCCESS
