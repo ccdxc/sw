@@ -168,6 +168,20 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 	}
 	lb.Name = ifName
 
+	// Find if we already have the interface in BoltDB (in case of stateful reboot)
+	{
+		curLB := netproto.Interface{}
+		o, err := a.InfraAPI.Read("Interface", lb.GetKey())
+		if err == nil {
+			err = curLB.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Could not parse existing Interface object")
+			} else {
+				lb = curLB
+			}
+		}
+	}
+
 	if _, ok := a.LocalInterfaces[lb.Name]; ok {
 		log.Infof("loopback interface already created [%v]", lb.Name)
 		return
@@ -190,7 +204,13 @@ func (a *ApuluAPI) HandleDevice(oper types.Operation) error {
 	defer a.Unlock()
 	log.Infof("Device Op: %s | %s", oper, types.InfoHandleObjBegin)
 	defer log.Infof("Device Op: %s | %s", oper, types.InfoHandleObjEnd)
-	return apulu.HandleDevice(oper, a.DeviceSvcClient)
+	cfg := a.InfraAPI.GetConfig()
+	var lbip *halapi.IPAddress
+
+	if cfg.LoopbackIP != "" {
+		lbip = apuluutils.ConvertIPAddress(cfg.LoopbackIP)
+	}
+	return apulu.HandleDevice(oper, a.DeviceSvcClient, lbip)
 }
 
 // HandleVrf handles CRUD Methods for Vrf Object
@@ -534,11 +554,16 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		log.Error(err)
 		return nil, err
 	}
-	if intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
+	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
 		cfg := a.InfraAPI.GetConfig()
 		if cfg.LoopbackIP != oldLoopbackIf {
-			log.Infof("BGP RID change detected, deleting and recreating BGP config")
+			log.Infof("BGP RID change detected, deleting and recreating BGP config and updating Device")
 			apulu.UpdateBGPLoopbackConfig(a.InfraAPI, a.RoutingClient)
+
+			if cfg.LoopbackIP != "" {
+				lbip := apuluutils.ConvertIPAddress(cfg.LoopbackIP)
+				apulu.HandleDevice(types.Update, a.DeviceSvcClient, lbip)
+			}
 		}
 	}
 	return
@@ -1237,6 +1262,65 @@ func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto
 
 // ReplayConfigs replays last known configs from boltDB
 func (a *ApuluAPI) ReplayConfigs() error {
+
+	// Replay RoutingConfig Object
+	rtCfgs, err := a.InfraAPI.List("RoutingConfig")
+	if err == nil {
+		for _, o := range rtCfgs {
+			var rtcfg netproto.RoutingConfig
+			err := rtcfg.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to RoutingConfig, Err: %v", err)
+				continue
+			}
+			creator, ok := rtcfg.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted RoutingConfig object")
+				if _, err := a.HandleRoutingConfig(types.Create, rtcfg); err != nil {
+					log.Errorf("Failed to recreate RoutingConfig: %v. Err: %v", rtcfg.GetKey(), err)
+				}
+			}
+		}
+	}
+
+	rtTbls, err := a.InfraAPI.List("RouteTable")
+	if err == nil {
+		for _, o := range rtTbls {
+			var rtbl netproto.RouteTable
+			err := rtbl.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to RouteTable, Err: %v", err)
+				continue
+			}
+			creator, ok := rtbl.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted RouteTable object")
+				if _, err := a.HandleRouteTable(types.Create, rtbl); err != nil {
+					log.Errorf("Failed to recreate RouteTable: %v. Err: %v", rtbl.GetKey(), err)
+				}
+			}
+		}
+	}
+
+	ipams, err := a.InfraAPI.List("IPAMPolicy")
+	if err == nil {
+		for _, o := range ipams {
+			var ipam netproto.IPAMPolicy
+			err := ipam.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to IPAM Policy, Err: %v", err)
+				continue
+			}
+			creator, ok := ipam.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted IPAM Policy object")
+				if _, err := a.HandleIPAMPolicy(types.Create, ipam); err != nil {
+					log.Errorf("Failed to recreate IPAM Policy: %v. Err: %v", ipam.GetKey(), err)
+				}
+			}
+		}
+	}
+
 	// Replay vrf objects
 	vrfs, err := a.InfraAPI.List("Vrf")
 	if err == nil {
@@ -1256,6 +1340,26 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 		}
 	}
+
+	subnets, err := a.InfraAPI.List("Network")
+	if err == nil {
+		for _, o := range subnets {
+			var netw netproto.Network
+			err := netw.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Network, Err: %v", err)
+				continue
+			}
+			creator, ok := netw.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Network object")
+				if _, err := a.HandleNetwork(types.Create, netw); err != nil {
+					log.Errorf("Failed to recreate Network: %v. Err: %v", netw.GetKey(), err)
+				}
+			}
+		}
+	}
+
 	return errors.Wrapf(types.ErrNotImplemented, "Not all config replays not implemented by pipeline")
 }
 
@@ -1325,7 +1429,8 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 			UUID:      uid.String(),
 		},
 		Spec: netproto.InterfaceSpec{
-			Type: netproto.InterfaceSpec_HOST_PF.String(),
+			Type:        netproto.InterfaceSpec_HOST_PF.String(),
+			AdminStatus: netproto.IFStatus_UP.String(),
 		},
 		Status: netproto.InterfaceStatus{
 			Name:        "",

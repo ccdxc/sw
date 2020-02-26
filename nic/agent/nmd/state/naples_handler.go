@@ -273,7 +273,9 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	}
 
 	// Persist device files
-	if n.Pipeline.GetPipelineType() != globals.NaplesPipelineApollo {
+	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+		// Skip writing device files in case of apollo pipeline
+	} else {
 		if err = n.writeDeviceFiles(); err != nil {
 			err = fmt.Errorf("failed to persist device config. Err: %v ", err)
 			return

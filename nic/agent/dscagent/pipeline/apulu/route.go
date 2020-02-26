@@ -13,7 +13,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/utils/log"
@@ -220,7 +219,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		dsccfg := infraAPI.GetConfig()
 		localIP := unknLocal
 		if dsccfg.LoopbackIP != "" {
-			localIP = utils.IPAddrStrToPDSIPAddr(dsccfg.LoopbackIP)
+			localIP = ip2PDSType(dsccfg.LoopbackIP)
 		}
 		for _, n := range dscConfig.Controllers {
 			h, _, err := net.SplitHostPort(n)
@@ -586,6 +585,7 @@ func HandleRouteTable(infraAPI types.InfraAPI, rtSvc pdstypes.RouteSvcClient, op
 	return nil
 }
 
+// UpdateBGPLoopbackConfig updates the BGP config when loopback IP address changes
 func UpdateBGPLoopbackConfig(infraAPI types.InfraAPI, client msTypes.BGPSvcClient) {
 	// Loopback IP changed. Delete and create the loopback config
 	if currentRoutingConfig == nil {

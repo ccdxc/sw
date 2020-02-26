@@ -188,7 +188,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 			log.Errorf("Interface: %s update failed  | Status: %s", intf.GetKey(), resp.ApiStatus)
 			return errors.Wrapf(types.ErrBoltDBStoreCreate, "Interface: %s update failed | Status: %s", intf.GetKey(), resp.ApiStatus)
 		}
-		log.Infof("Inteface: %s update | Status: %s | Resp: %v", intf.GetKey(), resp.ApiStatus, resp.Response)
+		log.Infof("Interface: %s update | Status: %s | Resp: %v", intf.GetKey(), resp.ApiStatus, resp.Response)
 
 	}
 

@@ -42,6 +42,14 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	}
 	netif.CreationTime = api.Timestamp{Timestamp: *creationTime}
 
+	switch netif.Spec.AdminStatus {
+	case netproto.IFStatus_UP.String():
+		netif.Spec.AdminStatus = network.IFStatus_UP.String()
+	case netproto.IFStatus_DOWN.String():
+		netif.Spec.AdminStatus = network.IFStatus_DOWN.String()
+	default:
+		netif.Spec.AdminStatus = network.IFStatus_UP.String()
+	}
 	switch agentNetif.Status.OperStatus {
 	case "UP":
 		netif.Status.OperStatus = network.IFStatus_UP.String()

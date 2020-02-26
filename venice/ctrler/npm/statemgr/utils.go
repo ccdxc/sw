@@ -20,8 +20,8 @@ func cloneRD(in *network.RouteDistinguisher) *netproto.RouteDistinguisher {
 	}
 }
 
-// ParseTOIPAddress parses a string to a netproto IPaddress
-func ParseTOIPAddress(in string) (*netproto.IPAddress, error) {
+// ParseToIPAddress parses a string to a netproto IPaddress
+func ParseToIPAddress(in string) (*netproto.IPAddress, error) {
 	ip := net.ParseIP(in)
 	if ip == nil {
 		return nil, fmt.Errorf("could not parse ip")
@@ -33,7 +33,7 @@ func ParseTOIPAddress(in string) (*netproto.IPAddress, error) {
 	}
 	return &netproto.IPAddress{
 		Type:      netproto.IPAF_IP_AF_INET,
-		V4Address: binary.LittleEndian.Uint32(ip.To4()),
+		V4Address: binary.BigEndian.Uint32(ip.To4()),
 	}, nil
 }
 
@@ -54,7 +54,7 @@ func ParseToIPPrefix(in string) (*netproto.IPPrefix, error) {
 		PrefixLen: uint32(len),
 		Address: netproto.IPAddress{
 			Type:      netproto.IPAF_IP_AF_INET,
-			V4Address: binary.LittleEndian.Uint32(ip.To4()),
+			V4Address: binary.BigEndian.Uint32(ip.To4()),
 		},
 	}, nil
 }

@@ -92,6 +92,13 @@ func convertNetwork(nw *NetworkState) *netproto.Network {
 			log.Errorf("failed to parse IP Subnet [%v](%s)", nw.Network.Spec.IPv4Subnet, err)
 			return nil
 		}
+		gw, err := ParseToIPAddress(nw.Network.Spec.IPv4Gateway)
+		if err != nil {
+			log.Errorf("failed to parse IP Gateway")
+		} else {
+			// XXX-TODO(): validate that gateway is in the subnet.
+			ipn.Address = *gw
+		}
 		ntn.Spec.V4Address = append(ntn.Spec.V4Address, *ipn)
 	}
 

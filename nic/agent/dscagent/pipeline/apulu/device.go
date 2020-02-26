@@ -15,12 +15,12 @@ import (
 )
 
 // HandleDevice handles CRUD operations on device
-func HandleDevice(oper types.Operation, client halapi.DeviceSvcClient) error {
+func HandleDevice(oper types.Operation, client halapi.DeviceSvcClient, lbip *halapi.IPAddress) error {
 	switch oper {
 	case types.Create:
-		return createDeviceHandler(client)
+		return createDeviceHandler(client, lbip)
 	case types.Update:
-		return updateDeviceHandler(client)
+		return updateDeviceHandler(client, lbip)
 	case types.Delete:
 		return deleteDeviceHandler(client)
 	default:
@@ -28,7 +28,7 @@ func HandleDevice(oper types.Operation, client halapi.DeviceSvcClient) error {
 	}
 }
 
-func createDeviceHandler(client halapi.DeviceSvcClient) error {
+func createDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) error {
 	deviceRequest := &halapi.DeviceRequest{
 		Request: &halapi.DeviceSpec{
 			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
@@ -37,6 +37,7 @@ func createDeviceHandler(client halapi.DeviceSvcClient) error {
 			LearningEn:       true,
 			LearnAgeTimeout:  300,
 			OverlayRoutingEn: true,
+			IPAddr:           lbip,
 		},
 	}
 	resp, err := client.DeviceCreate(context.Background(), deviceRequest)
@@ -51,8 +52,27 @@ func createDeviceHandler(client halapi.DeviceSvcClient) error {
 	return nil
 }
 
-func updateDeviceHandler(client halapi.DeviceSvcClient) error {
-	// TODO: devise a way to get updates or push all the logic from this file to HandleDevice in apulu.go
+func updateDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) error {
+	deviceRequest := &halapi.DeviceRequest{
+		Request: &halapi.DeviceSpec{
+			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
+			Profile:          halapi.DeviceProfile_DEVICE_PROFILE_DEFAULT,
+			BridgingEn:       true,
+			LearningEn:       true,
+			LearnAgeTimeout:  300,
+			OverlayRoutingEn: true,
+			IPAddr:           lbip,
+		},
+	}
+	resp, err := client.DeviceUpdate(context.Background(), deviceRequest)
+	log.Infof("update DeviceHandler Response: %v. Err : %v", resp, err)
+	if err == nil {
+		if resp != nil {
+			if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update failed for Device")); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
