@@ -184,6 +184,10 @@ hal_init (void)
     sdk::ipc::ipc_init_metaswitch(core::PDS_AGENT_THREAD_ID_ROUTING,
                                   &ipc_init_cb);
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, &hal_event_callback, NULL);
+    sdk::ipc::subscribe(EVENT_ID_MAC_LEARN, &hal_event_callback, NULL);
+    sdk::ipc::subscribe(EVENT_ID_IP_LEARN, &hal_event_callback, NULL);
+    sdk::ipc::subscribe(EVENT_ID_MAC_AGE, &hal_event_callback, NULL);
+    sdk::ipc::subscribe(EVENT_ID_IP_AGE, &hal_event_callback, NULL);
     return true;
 }
 
