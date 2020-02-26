@@ -117,9 +117,12 @@ def Trigger(tc):
             tc.stg3[(n,i)] = get_lifresets(req, n, i)
 
     # Force a FW heartbeat timeout
+    # FreeBSD no longer disable dev cmd for Fw heartbeat.
+    """
     for n in tc.nodes:
         api.Logger.info("Stage 3: Force FW heartbeat failure on %s" % n)
         set_wdog_error(req, n, WDOG_ERR_FW_HB1)
+    """
     api.Trigger_AddHostCommand(req, n, "sleep 15")
 
     # Check dmesg
@@ -176,6 +179,8 @@ def Verify(tc):
         api.Logger.info("%s LIF reset confirmed" % n)
 
     # Verify stage 3
+    # FreeBSD no longer disable dev cmd for Fw heartbeat.
+    """
     api.Logger.info("Stage 3: Verifying FW heartbeat dev_cmd lockout")
     for n in tc.nodes:
         any_msg = False
@@ -187,7 +192,7 @@ def Verify(tc):
             api.Logger.warn("%s No dev_cmd lockout found" % n)
             return api.types.status.FAILURE
         api.Logger.info("%s dev_cmd lockout confirmed" % n)
-
+    """
     return api.types.status.SUCCESS
 
 def Teardown(tc):
