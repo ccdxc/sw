@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := nmd.gobin
 ifeq ($(PIPELINE), iris)
-MODULE_PREREQS  := agent_halproto.submake nmd_halproto.submake
+MODULE_PREREQS  := agent_halproto.submake nmd_halproto.submake nmd_delphi.submake agent_delphidp.submake
 endif
 MODULE_PIPELINE := iris apulu
 MODULE_FLAGS    := -ldflags="-s -w"

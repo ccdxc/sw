@@ -13,4 +13,5 @@ pb:
                 -I${GOPATH}/src/github.com/pensando/sw/nic/delphi/proto/delphi/ \
 
 build: pb
-	go build
+
+gen-clean: ;

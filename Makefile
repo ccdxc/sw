@@ -25,6 +25,9 @@ nic/agent/protos/tpmprotos  \
 nic/agent/protos/tsproto \
 nic/agent/protos/nmd \
 nic/agent/protos/evtprotos \
+nic/agent/nmd/protos/delphi \
+nic/sysmgr/proto \
+nic/upgrade_manager/export/upggosdk \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
 venice/cmd/grpc/server/certificates/certapi \
 venice/evtsproxy/rpcserver/evtsproxyproto \

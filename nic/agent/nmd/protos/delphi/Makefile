@@ -10,5 +10,6 @@ delphi-build:
                -I ../../../../delphi/proto/delphi/
 	goimports -w *.go
 
+gen-clean: ;
 clean:
 	 rm -rf nmd.delphi.go
