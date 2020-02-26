@@ -134,9 +134,14 @@ penctl-version:
 .PHONY: firmware
 firmware:
 ifeq ($(PIPELINE),apulu)
+ifeq ($(CUSTOMDOCKERCONTEXT), 1)
+	echo "Skip certain targets for custom dev_docker build"
+endif
+ifneq ($(CUSTOMDOCKERCONTEXT), 1)
 	OUT_DIR=output FLAVOR=-venice NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
 	mv naples_fw_.tar naples_fw_venice.tar
 	${MAKE} ARCH=x86_64 package-pegasus
+endif
 endif
 	OUT_DIR=output NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
 ifeq ($(PIPELINE),iris)

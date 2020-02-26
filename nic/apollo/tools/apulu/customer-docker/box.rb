@@ -29,6 +29,9 @@ if user != ""
   run "localedef -i en_US -f UTF-8 en_US.UTF-8"
 end
 
+run "echo 'export CUSTOM_DOCKER=1' >> /home/#{user}/.bash_profile"
+
+env CUSTOMDOCKERCONTEXT: "1"
 env GOPATH: "/usr"
 
 inside "/etc" do
