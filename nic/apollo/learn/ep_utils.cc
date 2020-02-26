@@ -33,9 +33,8 @@ delete_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
 }
 
 static sdk_ret_t
-delete_ip_entry (ep_ip_entry *ip_entry)
+delete_ip_entry (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
 {
-    ep_mac_entry *mac_entry = ip_entry->mac_entry();
     sdk_ret_t ret;
 
     event::timer_stop(ip_entry->timer());
@@ -64,7 +63,7 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
     }
 
     PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
-    return delete_ip_entry(ip_entry);
+    return delete_ip_entry(ip_entry, ip_entry->mac_entry());
 }
 
 static bool
@@ -83,8 +82,9 @@ static bool
 delete_ip_entry_cb (void *obj, void *ctxt)
 {
     ep_ip_entry *ip_entry = (ep_ip_entry *)obj;
+    ep_mac_entry *mac_entry = (ep_mac_entry *)ctxt;
 
-    return (delete_ip_entry(ip_entry) == SDK_RET_OK);
+    return (delete_ip_entry(ip_entry, mac_entry) == SDK_RET_OK);
 }
 
 static sdk_ret_t
@@ -148,14 +148,16 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
     }
 
     ret = pds_batch_commit(bctxt);
+    LEARN_COUNTER_INCR(api_calls);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to commit API batch, error code %u", ret);
+        LEARN_COUNTER_INCR(api_failure);
         return SDK_RET_ERR;
     }
     PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
 
     // delete sw state for all IP entries
-    mac_entry->walk_ip_list(delete_ip_entry_cb, nullptr);
+    mac_entry->walk_ip_list(delete_ip_entry_cb, mac_entry);
     return delete_mac_entry(mac_entry);
 }
 

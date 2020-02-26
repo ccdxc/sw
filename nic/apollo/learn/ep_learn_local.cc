@@ -352,6 +352,7 @@ update_ep_mac (local_learn_ctxt_t *ctxt)
         // start MAC aging timer
         aging_timer_restart(ctxt->mac_entry->timer());
         broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
+        LEARN_COUNTER_INCR(vnics);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:
@@ -373,6 +374,7 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
         ctxt->ip_entry->add_to_db();
         ctxt->mac_entry->add_ip(ctxt->ip_entry);
         broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
+        LEARN_COUNTER_INCR(l3_mappings);
         break;
     case LEARN_TYPE_MOVE_L2L:
     case LEARN_TYPE_MOVE_R2L:
@@ -484,7 +486,9 @@ process_learn_pkt (void *mbuf)
 
     // submit the apis in sync mode
     ret = pds_batch_commit(ctxt.bctxt);
+    LEARN_COUNTER_INCR(api_calls);
     if (unlikely(ret != SDK_RET_OK)) {
+        LEARN_COUNTER_INCR(api_failure);
         goto error;
     }
 
