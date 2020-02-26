@@ -404,11 +404,13 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   getRolloutFailureReasons(): string[] {
     if (this.selectedRollout.status.state === RolloutRolloutStatus_state.failure) {
       const controllerNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['controller-nodes-status']);
+      const controllerServicesReasons = this.getNodesFailureReasons(this.selectedRollout.status['controller-services-status']);
       const nicsNodesReasons = this.getNodesFailureReasons(this.selectedRollout.status['dscs-status'], true);
       let reasons = [];
-      if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0) {
+      if (controllerNodesReasons.length > 0 || nicsNodesReasons.length > 0 || controllerServicesReasons.length > 0) {
         reasons = reasons.concat(controllerNodesReasons);
         reasons = reasons.concat(nicsNodesReasons);
+        reasons = reasons.concat(controllerServicesReasons);
       }
       return reasons;
     }

@@ -521,7 +521,12 @@ export class Utility {
   }
 
   static isValidDate(date: any): boolean {
-    return (date instanceof Date && !isNaN(date.valueOf()));
+    // return (date instanceof Date && !isNaN(date.valueOf()));
+    return (new Date(date) instanceof Date && !isNaN(date.valueOf()));
+  }
+
+  static isDateString(date: string): boolean {
+    return !(isNaN(Date.parse(date)));
   }
 
   static computeAge(dateOfBirth: string): number {
@@ -1829,6 +1834,20 @@ export class Utility {
 
     // Check if the first is less than second
     if (d1 < d2) { return -1; }
+  }
+
+  /**
+   * Returns date string without timezone information
+   * @param inputString Date String
+   */
+  public static returnDateTime(inputString: string): string {
+    const milliseconds = Date.parse(inputString);
+    if (!isNaN(milliseconds) && inputString.split(' ').length > 1) {
+        const dateString = new Date(milliseconds);
+        const resultValue = (dateString).toISOString().split('.'); // ["2020-02-14T13:15:29", "000Z"]
+        return resultValue[0]; // For inputString: '2020-02-14 13:15:29 UTC', ' 13:15:29 2020-02-14 GMT'
+    }
+    return inputString; // For inputString: '2020-02-14', '13:28:30', 'abc'
   }
 
   public static isModelNameUniqueValidator(existingTechSupportRequest: any[], objectname: string): ValidatorFn {

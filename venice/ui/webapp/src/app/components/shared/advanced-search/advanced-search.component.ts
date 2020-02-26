@@ -369,7 +369,7 @@ export class AdvancedSearchComponent implements OnInit {
             try {
               processedValue = ele.valueFormControl.map(e => this.formatDate(e));
             } catch (error) {
-               throw error;
+              throw error;
             }
           } else {
             processedValue = ele.valueFormControl.map(e => e);
@@ -462,7 +462,7 @@ export class AdvancedSearchComponent implements OnInit {
             try {
               processedValue = ele.valueFormControl.map(e => this.formatDate(e));
             } catch (error) {
-               throw error;
+              throw error;
             }
           } else {
             processedValue = ele.valueFormControl.map(e => e);
@@ -563,4 +563,5 @@ export class AdvancedSearchComponent implements OnInit {
     }
     this.cancelEmitter.emit(null);
   }
+
 }

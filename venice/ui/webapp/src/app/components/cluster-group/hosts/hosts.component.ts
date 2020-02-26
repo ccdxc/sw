@@ -92,7 +92,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   macToNameMap: { [key: string]: string; } = {};
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<ClusterHost> = [];
-  dataObjectsBackUp: ReadonlyArray<ClusterHost>  = [];
+  dataObjectsBackUp: ReadonlyArray<ClusterHost> = [];
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
 
@@ -127,7 +127,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   maxWorkloadsPerRow: number = 8;
 
   naplesList: ClusterDistributedServiceCard[] = [];
-  workloadList: WorkloadWorkload[] = [] ;
+  workloadList: WorkloadWorkload[] = [];
   searchHostsCount: number = 0;
 
   constructor(private clusterService: ClusterService,
@@ -196,7 +196,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
   buildAdvSearchCols() {
     this.advSearchCols = this.cols.filter((col: TableCol) => {
-      return (col.field !== 'meta.mod-time' && col.field !== 'meta.creation-time' && col.field !== 'spec.dscs' && col.field !== 'workloads');
+      return (col.field !== 'spec.dscs' && col.field !== 'workloads');
     });
     this.advSearchCols.push(
       {
@@ -293,13 +293,13 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
    */
   handleDataReady() {
     // When naplesList is ready, build DSC-maps
-    if ( this.naplesList ) {
+    if (this.naplesList) {
       const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList);
       this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
       this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
     }
-     // When workload and hostList are ready, build host-workload map
-    if (this.workloadList && this.dataObjects  ) {
+    // When workload and hostList are ready, build host-workload map
+    if (this.workloadList && this.dataObjects) {
       this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchHosts);  // host[i] -> workloads[] map
     }
   }
@@ -322,7 +322,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         if (response.connIsErrorState) {
           return;
         }
-        this.workloadList = response.data  as WorkloadWorkload[];
+        this.workloadList = response.data as WorkloadWorkload[];
         this.handleDataReady();
       }
     );
@@ -333,7 +333,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         if (response.connIsErrorState) {
           return;
         }
-        this.naplesList = response.data as ClusterDistributedServiceCard [];
+        this.naplesList = response.data as ClusterDistributedServiceCard[];
         this.handleDataReady();
       }
     );
@@ -345,7 +345,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         if (response.connIsErrorState) {
           return;
         }
-        this.dataObjects  = response.data;
+        this.dataObjects = response.data;
         this.handleDataReady();
       }
     );
@@ -451,10 +451,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   // VS-1185.  UI blocks batch delete if selected hosts conttains any hosts that have associated workloads.
   areSelectedRowsDeletable(): boolean {
     const selectedRows = this.getSelectedDataObjects();
-    if (selectedRows.length  === 0  ) {
+    if (selectedRows.length === 0) {
       return false;
     }
-    const list  = this.getSelectedDataObjects().filter( (rowData) =>  (rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS] && rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
-    return (list.length === 0 );
+    const list = this.getSelectedDataObjects().filter((rowData) => (rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS] && rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
+    return (list.length === 0);
   }
 }

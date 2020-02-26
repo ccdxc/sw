@@ -430,7 +430,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   buildAdvSearchCols() {
     this.advSearchCols = this.cols.filter((col: TableCol) => {
-      return (col.field !== 'meta.mod-time' && col.field !== 'meta.creation-time' && col.field !== 'workloads');
+      return (col.field !== 'workloads');
     });
     this.advSearchCols.push(
       {

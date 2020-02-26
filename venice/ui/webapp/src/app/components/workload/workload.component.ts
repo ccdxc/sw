@@ -248,7 +248,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   buildAdvSearchCols() {
     this.advSearchCols = this.cols.filter((col: TableCol) => {
-      return (col.field !== 'meta.mod-time' && col.field !== 'meta.creation-time' && col.field !== 'spec.interfaces');
+      return (col.field !== 'spec.interfaces');
     });
     this.advSearchCols.push(
       {
@@ -428,7 +428,9 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
         // if there are too many workloads in Venice, take longer time so table has time to render.
         if (this.searchWorkloadCount > 300) {
           clearTimeout(this.dataMappingTimer);
-          this.dataMappingTimer = setTimeout(this.mapData, 300);
+          this.dataMappingTimer = setTimeout(() => {
+            this.mapData();
+          }, 300);
         } else {
           this.mapData();
         }
@@ -580,7 +582,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * @param order
    */
   onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
-    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
+    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;

@@ -12,12 +12,12 @@ import { LazyLoadEvent } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { TabcontentInterface } from 'web-app-framework';
-import { RowClickEvent, TableCol, CustomExportMap  } from '.';
+import { RowClickEvent, TableCol, CustomExportMap } from '.';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
 import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
-import { SafeStylePipe} from '../Pipes/SafeStyle.pipe';
+import { SafeStylePipe } from '../Pipes/SafeStyle.pipe';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -615,7 +615,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
    * @param msg
    */
   invokeAPIonMultipleRecords(observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string,
-    successCallback: () => void = null, errorCallback: (error: any) =>  void = null
+    successCallback: () => void = null, errorCallback: (error: any) => void = null
   ) {
     if (observables.length <= 0) {
       return;
@@ -701,28 +701,28 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
    * @param isShowToasterOnSearchNoResult default is true.
    */
   onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent: AdvancedSearchComponent,
-     isShowToasterOnSearchHasResult: boolean = false,
-     isShowToasterOnSearchNoResult: boolean = true ): any[] | ReadonlyArray<any> {
-       try {
-        const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
-        const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
-        const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
-        const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
+    isShowToasterOnSearchHasResult: boolean = false,
+    isShowToasterOnSearchNoResult: boolean = true): any[] | ReadonlyArray<any> {
+    try {
+      const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
+      const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
+      const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
+      const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
 
-        const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
-        const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
-        if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
-          this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
-        } else {
-          if (isShowToasterOnSearchHasResult) {
-              this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
-          }
+      const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
+      const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
+      if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
+        this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
+      } else {
+        if (isShowToasterOnSearchHasResult) {
+          this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
         }
-        return searchResults;
-        } catch (error) {
-         this.controllerService.invokeErrorToaster('Error', error.toString());
-         return [];
-       }
+      }
+      return searchResults;
+    } catch (error) {
+      this.controllerService.invokeErrorToaster('Error', error.toString());
+      return [];
+    }
   }
 }
 

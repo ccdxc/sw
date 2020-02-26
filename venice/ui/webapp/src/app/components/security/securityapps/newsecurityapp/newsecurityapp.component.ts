@@ -102,7 +102,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
   }
 
   setToolbar() {
-    if (!this.isInline && this.uiconfigsService.isFeatureEnabled(UIRolePermissions.securityapp_create)) {
+    if (!this.isInline && this.uiconfigsService.isAuthorized(UIRolePermissions.securityapp_create)) {
       // If it is not inline, we change the toolbar buttons, and save the old one
       // so that we can set it back when we are done
       const currToolbar = this._controllerService.getToolbarData();

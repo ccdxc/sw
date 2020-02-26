@@ -104,7 +104,69 @@ export class TableUtility {
 
     notin(value, filter: any[]): boolean {
       return !TableUtility.filterConstraints['in'](value, filter);
-    }
+    },
+
+    gt(value, filter): boolean {
+      if (filter === undefined || filter === null || (typeof filter === 'string' && filter.trim() === '')) {
+        return true;
+      }
+
+      if (value === undefined || value === null) {
+        return false;
+      }
+
+      if (Utility.isDateString(filter)) {
+        value = value.split('.')[0];
+        filter = filter.split('.')[0];
+        return (new Date(value.toString())).getTime() > (new Date(filter.toString())).getTime();
+      }
+      return value > filter;
+    },
+
+    lt(value, filter): boolean {
+      if (filter === undefined || filter === null || (typeof filter === 'string' && filter.trim() === '')) {
+        return true;
+      }
+
+      if (value === undefined || value === null) {
+        return false;
+      }
+
+      if (Utility.isDateString(filter)) {
+        value = value.split('.')[0];
+        filter = filter.split('.')[0];
+        return (new Date(value.toString())).getTime() < (new Date(filter.toString())).getTime();
+      }
+      return value < filter;
+    },
+
+    gte(value, filter): boolean {
+      if (filter === undefined || filter === null || (typeof filter === 'string' && filter.trim() === '')) {
+        return true;
+      }
+
+      if (value === undefined || value === null) {
+        return false;
+      }
+      value = value.split('.')[0];
+      filter = filter.split('.')[0];
+      return ((new Date(value.toString())).getTime() > (new Date(filter.toString())).getTime()) || (value.toString().toLowerCase()).includes(filter.toString().toLowerCase());
+    },
+
+    lte(value, filter): boolean {
+      if (filter === undefined || filter === null || (typeof filter === 'string' && filter.trim() === '')) {
+        return true;
+      }
+
+      if (value === undefined || value === null) {
+        return false;
+      }
+      value = value.split('.')[0];
+      filter = filter.split('.')[0];
+
+      return ((new Date(value.toString())).getTime() < (new Date(filter.toString())).getTime()) || (value.toString().toLowerCase()).includes(filter.toString().toLowerCase());
+    },
+
   };
 
 
@@ -331,6 +393,11 @@ export class TableUtility {
 
     for (let i = 0; i < requirements.length; i++) {
       const req = requirements[i];
+      // check for meta.creation time and meta.modification time
+      if (Utility.isDateString(req.values[0])) {
+        const timeFrame = (req.values[0]).split('.');
+        req.values[0] = timeFrame[0];
+      }
       // since requirements[i] are "AND" relations.  Find workload where  (meta.name = 'wl2' && spec.host='naples1')
       searchResults = (i === 0) ? TableUtility.searchTableOneField(req, data) : TableUtility.searchTableOneField(req, searchResults);
     }
@@ -367,7 +434,7 @@ export class TableUtility {
     for (let i = 0; data && i < data.length; i++) {
       const recordValue = recordToStringFunction(data[i]);  // JSON.stringify(data[i]);
       const texts = searchText.text;
-      for (let j = 0; texts && j < texts.length; j++) {
+      for (let j = 0; texts && j < texts.length; j++)   {
         const text = trimTextValueFunction(texts[j]);
         const activateFunc = TableUtility.filterConstraints['contains'];
         if (activateFunc && activateFunc(recordValue, text) && !outputs.find(output => _.isEqual(output, data[i]))) {
@@ -397,7 +464,7 @@ export class TableUtility {
         const activateFunc = TableUtility.filterConstraints[operator];
         if (!isSearchingLabels) {
           if (Array.isArray(recordValue)) {
-            for (let k = 0; k < recordValue.length ; k ++) {
+            for (let k = 0; k < recordValue.length; k++) {
               if (activateFunc && activateFunc(recordValue[k], searchValues[j])) {
                 outputs.push(data[i]);
               }
@@ -443,6 +510,15 @@ export class TableUtility {
       case 'not equals':
         return 'notcontains';
       case 'in':
+        return 'contains';
+      case 'gt':
+        return 'gt';
+      case 'gte':
+        return 'gte';
+      case 'lt':
+        return 'lt';
+      case 'lte':
+        return 'lte';
       default:
         return 'contains';
     }
