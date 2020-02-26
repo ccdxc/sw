@@ -30,6 +30,7 @@
 #include "nic/apollo/agent/svc/nat.hpp"
 #include "nic/apollo/agent/svc/event.hpp"
 #include "nic/apollo/agent/svc/learn.hpp"
+#include "nic/apollo/agent/svc/oper.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
@@ -77,6 +78,7 @@ svc_reg (void)
     NatSvcImpl            nat_svc;
     EventSvcImpl          event_svc;
     LearnSvcImpl          learn_svc;
+    OperSvcImpl           oper_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -112,6 +114,7 @@ svc_reg (void)
     server_builder->RegisterService(&nat_svc);
     server_builder->RegisterService(&event_svc);
     server_builder->RegisterService(&learn_svc);
+    server_builder->RegisterService(&oper_svc);
     pds_ms::mgmt_svc_init(server_builder);
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());
