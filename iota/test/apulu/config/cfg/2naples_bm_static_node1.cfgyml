@@ -59,7 +59,7 @@ vpc:
           macaddress : macaddr/00ae.cd00.14cd
       bgpglobal:
         - localasn      : 100
-          routerid      : 11.11.11.11
+          routerid      : 9.9.9.9
       bgppeer:
         # underlay bgp peer 1
         - peeraddr      : 9.1.0.2

@@ -225,7 +225,7 @@ class _Testbed:
                 node_msg.cimc_ncsi_ip = instance.NodeCimcNcsiIP
 
             #If Vlan base not set, ask topo server to allocate.
-            if not getattr(self.__tbspec, "TestbedVlanBase", None):
+            if not (getattr(self.__tbspec, "TestbedVlanBase", None) or GlobalOptions.skip_switch_init):
                 switch_ips = {}
                 if instance.Type == "bm":
                     for nw in instance.DataNetworks:
@@ -249,7 +249,9 @@ class _Testbed:
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
             else:
-                if not GlobalOptions.skip_setup:
+                Logger.info ("Skipped switch setup")
+                if not GlobalOptions.skip_setup:    
+                    Logger.info ("Setting up Testbed Network")
                     resp = self.SetupTestBedNetwork()
                     if resp != types.status.SUCCESS:
                         Logger.info("Vlan programming failed, ignoring")

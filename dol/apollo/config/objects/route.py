@@ -3,9 +3,11 @@ import pdb
 import ipaddress
 import random
 import copy
+import json
 from collections import OrderedDict, defaultdict
 
 from infra.common.logging import logger
+from infra.common.glopts  import GlobalOptions
 
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
@@ -66,7 +68,11 @@ class RouteObject():
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
         super().__init__(api.ObjectTypes.ROUTE, node)
-        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+        if GlobalOptions.netagent:
+            # HACK : fix correctly
+            # FIXME : no idea what this means, fix properly so route table gets created
+            self.SetOrigin(topo.OriginTypes.FIXED)
+        elif (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
@@ -78,6 +84,8 @@ class RouteTableObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
             self.NEXTHOP = NexthopClient.GetV4Nexthop(node, parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
+        if af == utils.IP_VERSION_4:
+            parent.V4RouteTableName = self.GID()
         self.UUID = utils.PdsUuid(self.RouteTblId, self.ObjType)
         self.routes = routes
         self.TUNNEL = tunobj
@@ -183,6 +191,21 @@ class RouteTableObject(base.ConfigObjectBase):
                 #TODO move to per route populate nh eventually
                 self.PopulateNh(rtspec, self)
         return
+
+    def PopulateAgentJson(self):
+        # TBD: the actual route table spec
+        spec = {
+            "kind": "RouteTable",
+            "meta": {
+                "name": self.GID(),
+                "namespace": "default",
+                "tenant": self.VPC.GID(),
+                "uuid" : self.UUID.UuidStr
+            },
+            "spec": {
+            }
+        }
+        return json.dumps(spec)
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():

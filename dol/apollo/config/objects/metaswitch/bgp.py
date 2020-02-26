@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import json
 
 from infra.common.logging import logger
 
@@ -10,6 +11,7 @@ from apollo.config.resmgr import Resmgr
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
+from apollo.config.objects.metaswitch.bgp_peer import client as BGPPeerClient
 
 class BgpObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
@@ -60,6 +62,34 @@ class BgpObject(base.ConfigObjectBase):
         if spec['id'] != self.GetKey():
             return False
         return True
+
+    def PopulateAgentJson(self):
+        peers = []
+        for obj in BGPPeerClient.Objects(self.Node):
+            peerjson = {
+                    "ip-address": obj.PeerAddr.exploded,
+                    "remote-as": obj.RemoteASN,
+                    "enable-address-families": [obj.PeerAf.Afi, obj.PeerAf.Safi]
+                }
+            peers.append(peerjson)
+
+        spec = {
+              "kind": "RoutingConfig",
+              "meta": {
+                "name": self.GID(),
+                "tenant": "default",
+                "namespace": "default",
+                "uuid": self.UUID.UuidStr
+              },
+              "spec": {
+                  "bgp-config": {
+                      "router-id": ipaddress.ip_address(self.RouterId).exploded,
+                      "as-number": self.LocalASN,
+                      "neighbors" :  peers,
+                  }
+              }
+            }
+        return json.dumps(spec)
 
 class BgpObjectClient(base.ConfigClientBase):
     def __init__(self):

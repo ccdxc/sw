@@ -3,6 +3,7 @@ import os
 import pdb
 import grpc
 import enum
+import requests
 
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
@@ -119,6 +120,30 @@ class ClientModule:
     def MsgReq(self, op):
         return self.__msg_reqs[op]
 
+class ClientRESTModule:
+    def __init__(self, ip, uri):
+        self.url = "http://" + ip + ":8888" + uri
+        return
+
+    def Create(self, objs):
+        resps = []
+        for obj in objs:
+            pdata = obj.PopulateAgentJson()
+            if not pdata:
+                logger.info("Invalid Post Data from object %s"%obj.GID())
+                continue
+            logger.info("Obj:%s Posting to URL %s"%(obj.GID(), self.url))
+            logger.info("PostData: %s"%pdata)
+            if GlobalOptions.dryrun:
+                return
+            rdata = requests.post(self.url, pdata)
+            if rdata.status_code != 200:
+                logger.error("Obj:%s POST FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
+            else:
+                resps.append(rdata)
+        return resps
+
+
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
         self.__stub = stubclass(channel)
@@ -168,6 +193,7 @@ class ApolloAgentClient:
         self.__channel = None
         self.__stubs = [None] * ObjectTypes.MAX
         self.__msgreqs = [None] * ObjectTypes.MAX
+        self.__restreqs = [None] * ObjectTypes.MAX
         if ip == None:
             self.agentip = self.__get_agent_ip()
         else:
@@ -176,6 +202,7 @@ class ApolloAgentClient:
         self.__create_msgreq_table()
         self.__connect()
         self.__create_stubs()
+        self.__create_restreq_table()
         return
 
     def __get_agent_port(self):
@@ -292,10 +319,21 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.STATIC_ROUTE] = ClientModule(cp_route_pb2, 'CPStaticRoute')
         return
 
+    def __create_restreq_table(self):
+        self.__restreqs[ObjectTypes.VPC] = ClientRESTModule(self.agentip, "/api/vrfs/")
+        self.__restreqs[ObjectTypes.ROUTE] = ClientRESTModule(self.agentip, "/api/route-tables/")
+        self.__restreqs[ObjectTypes.SUBNET] = ClientRESTModule(self.agentip, "/api/networks/")
+        self.__restreqs[ObjectTypes.BGP] = ClientRESTModule(self.agentip, "/api/routingconfigs/")
+        return
+
     def GetGRPCMsgReq(self, objtype, op):
         return self.__msgreqs[objtype].MsgReq(op)
 
     def Create(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.__restreqs[objtype]:
+                return # unsupported object
+            return self.__restreqs[objtype].Create(objs)
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.CREATE, objs)
 

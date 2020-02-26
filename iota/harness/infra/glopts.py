@@ -59,6 +59,8 @@ parser.add_argument('--skip-sanity', dest='skip_sanity',
                     action='store_true', help='Skip sanity testbundles.')
 parser.add_argument('--skip-setup', dest='skip_setup',
                     action='store_true', help='Skip iota setup')
+parser.add_argument('--skip-switch-init', dest='skip_switch_init',
+                    action='store_true', help='Skip Switch Initialization')
 parser.add_argument('--stress', dest='stress',
                     action='store_true', help='Enable stress test mode.')
 parser.add_argument('--bundle-stress', dest='bundle_stress',type=int, default=1,
@@ -73,6 +75,10 @@ parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Use gold firmware for testing')
 parser.add_argument('--fast-upgrade', dest='fast_upgrade',
                     action='store_true', help='install firmware only')
+parser.add_argument('--netagent', dest='netagent', action='store_true',
+                    help='Use REST queries to netagent instead of GRPC',
+                    default=False)
+
 GlobalOptions = parser.parse_args()
 
 GlobalOptions.default_username = "vm"

@@ -1,7 +1,10 @@
 #! /usr/bin/python3
 import pdb
+import json
+import requests
 
 from infra.common.logging import logger
+from infra.common.glopts  import GlobalOptions
 
 from apollo.config.store import client as EzAccessStoreClient
 
@@ -52,6 +55,7 @@ class VpcObject(base.ConfigObjectBase):
         self.Nat46_pfx = None
         self.V4RouteTableId = 0
         self.V6RouteTableId = 0
+        self.V4RouteTableName = ""
         if spec.type == 'underlay':
             self.Type = vpc_pb2.VPC_TYPE_UNDERLAY
             self.IPPrefix[0] = ResmgrClient[node].ProviderIpV6Network
@@ -243,6 +247,27 @@ class VpcObject(base.ConfigObjectBase):
             utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
         return
 
+    def PopulateAgentJson(self):
+        if self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
+            # Nothing more to be done
+            return None
+        spec = {
+            "kind": "Vrf",
+            "meta": {
+                "name": self.GID(),
+                "namespace": "default",
+                "tenant": self.GID(),
+                "uuid" : self.UUID.UuidStr
+            },
+            "spec": {
+                "vrf-type": "CUSTOMER",
+                "v4-route-table": self.V4RouteTableName,
+                "router-mac": str(self.VirtualRouterMACAddr),
+                "vxlan-vni": self.Vnid,
+            }
+        }
+        return json.dumps(spec)
+
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
@@ -367,6 +392,10 @@ class VpcObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self, node):
+        if GlobalOptions.netagent:
+            route.client.CreateObjects(node)
+
+        # netagent requires route table before vpc
         super().CreateObjects(node)
 
         # Create Nexthop object
@@ -382,7 +411,8 @@ class VpcObjectClient(base.ConfigClientBase):
         policer.client.CreateObjects(node)
 
         # Create Route object.
-        route.client.CreateObjects(node)
+        if not GlobalOptions.netagent:
+            route.client.CreateObjects(node)
 
         # Create Meter Objects
         meter.client.CreateObjects(node)

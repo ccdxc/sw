@@ -3,6 +3,7 @@ import pdb
 import ipaddress
 import itertools
 import copy
+import json
 from infra.common.logging import logger
 
 from apollo.config.store import client as EzAccessStoreClient
@@ -223,6 +224,50 @@ class SubnetObject(base.ConfigObjectBase):
             if self.HostIfUuid:
                 spec.HostIf = self.HostIfUuid.GetUuid()
         return
+
+    def PopulateAgentJson(self):
+        # TBD: Check the route import/export
+        spec = {
+                "kind": "Network",
+                "meta": {
+                    "name": self.GID(),
+                    "namespace": "default",
+                    "tenant": self.VPC.GID(),
+                    "uuid" : self.VPC.UUID.UuidStr
+                    },
+                "spec": {
+                    "vrf-name": self.VPC.GID(),
+                    "v4-address": [
+                        {
+                            "prefix-len": self.IPPrefix[1]._prefixlen,
+                            "address": {
+                                "type": 1,
+                                "v4-address": int.from_bytes(self.IPPrefix[1].network_address.packed, byteorder='big')
+                                }
+                            }
+                        ],
+                    "vxlan-vni": self.Vnid,
+                    "route-import-export": {
+                        "address-family": "evpn",
+                        "rd-auto": True,
+                        "rt-export": [
+                            {
+                                "type": "type2",
+                                "admin-value": 101,
+                                "assigned-value": 101
+                                }
+                            ],
+                        "rt-import": [
+                            {
+                                "type": "type2",
+                                "admin-value": 101,
+                                "assigned-value": 101
+                                }
+                            ]
+                        }
+                    }
+                }
+        return json.dumps(spec)
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():

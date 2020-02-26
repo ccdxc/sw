@@ -4,6 +4,7 @@ import copy
 from collections import defaultdict
 
 from infra.common.logging import logger
+from infra.common.glopts  import GlobalOptions
 import infra.config.base as base
 
 import apollo.config.agent.api as api
@@ -250,6 +251,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         assert(0)
         return
 
+    def PopulateAgentJson(self):
+        logger.error("Method not implemented by class: %s" % self.__class__)
+        assert(0)
+        return
+
     def GetGrpcCreateMessage(self, cookie=0):
         grpcmsg = self.__get_GrpcMsg(api.ApiOps.CREATE)
         self.__populate_BatchContext(grpcmsg, cookie)
@@ -421,11 +427,14 @@ class ConfigClientBase(base.ConfigClientBase):
 
         self.ShowObjects(node)
         logger.info(f"Creating {len(fixed)} {self.ObjType.name} Objects in {node}")
-        cookie = utils.GetBatchCookie(node)
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
-        api.client[node].Create(self.ObjType, msgs)
-        #TODO: Add validation for create & based on that set HW habitant
-        list(map(lambda x: x.SetHwHabitant(True), fixed))
+        if GlobalOptions.netagent:
+            api.client[node].Create(self.ObjType, fixed)
+        else:
+            cookie = utils.GetBatchCookie(node)
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
+            api.client[node].Create(self.ObjType, msgs)
+            #TODO: Add validation for create & based on that set HW habitant
+            list(map(lambda x: x.SetHwHabitant(True), fixed))
         return True
 
     def DeleteObjects(self, node):
