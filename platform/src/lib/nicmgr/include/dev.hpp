@@ -154,6 +154,7 @@ public:
     void SetThread(sdk::lib::thread *thr) { thread = thr; }
     void SetUpgradeMode(UpgradeMode mode) { upgrade_mode = mode; }
     UpgradeMode GetUpgradeMode(void) { return upgrade_mode; }
+    bool IsHostManaged(void) { return fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC; }
     struct ev_loop *ev_loop(void) { return EV_A; }
     string CfgPath(void) { return cfg_path; };
 

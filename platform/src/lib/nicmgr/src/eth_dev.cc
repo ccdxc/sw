@@ -505,6 +505,7 @@ Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     for (uint32_t dev = 0; dev < spec->pcie_total_vfs; dev++) {
         // Copy the PF's spec and modify it
         struct eth_devspec *vf_spec = new struct eth_devspec(*spec);
+        vf_spec->vf_dev = true;
         vf_spec->name = vf_spec->name + "_vf_" + std::to_string(dev);
         // Keeping the mac for VF as 0
         vf_spec->mac_addr = 0;

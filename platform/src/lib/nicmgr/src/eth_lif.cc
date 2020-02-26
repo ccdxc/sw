@@ -42,6 +42,7 @@ namespace psp
 
 #include "adminq.hpp"
 #include "edmaq.hpp"
+#include "dev.hpp"
 #include "eth_dev.hpp"
 #include "eth_if.h"
 #include "eth_lif.hpp"
@@ -787,6 +788,15 @@ EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
     bool posted = false;
     struct edmaq_ctx ctx = {0};
 
+    if (!DeviceManager::GetInstance()->IsHostManaged()) {
+        NIC_LOG_ERR("{}: Firmware download not allowed, not host managed!", hal_lif_info_.name);
+        return (IONIC_RC_EPERM);
+    }
+    if (spec->vf_dev) {
+        NIC_LOG_ERR("{}: Firmware download not allowed on VF interface!", hal_lif_info_.name);
+        return (IONIC_RC_EPERM);
+    }
+
     NIC_LOG_INFO("{}: {} addr {:#x} offset {:#x} length {}", hal_lif_info_.name,
                  opcode_to_str((cmd_opcode_t)cmd->opcode), cmd->addr, cmd->offset, cmd->length);
 
@@ -893,6 +903,15 @@ EthLif::_CmdFwControl(void *req, void *req_data, void *resp, void *resp_data)
     status_code_t status = IONIC_RC_SUCCESS;
     int err;
     char buf[512] = {0};
+
+    if (!DeviceManager::GetInstance()->IsHostManaged()) {
+        NIC_LOG_ERR("{}: Firmware control not allowed, not host managed!", hal_lif_info_.name);
+        return (IONIC_RC_EPERM);
+    }
+    if (spec->vf_dev) {
+        NIC_LOG_ERR("{}: Firmware control not allowed on VF interface!", hal_lif_info_.name);
+        return (IONIC_RC_EPERM);
+    }
 
     switch (cmd->oper) {
 

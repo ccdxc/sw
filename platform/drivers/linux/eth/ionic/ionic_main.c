@@ -80,7 +80,7 @@ static const char *ionic_error_to_str(enum status_code code)
 	}
 }
 
-static int ionic_error_to_errno(enum status_code code)
+int ionic_error_to_errno(enum status_code code)
 {
 	switch (code) {
 	case IONIC_RC_SUCCESS:
@@ -121,6 +121,7 @@ static int ionic_error_to_errno(enum status_code code)
 		return -EIO;
 	}
 }
+EXPORT_SYMBOL_GPL(ionic_error_to_errno);
 
 static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 {

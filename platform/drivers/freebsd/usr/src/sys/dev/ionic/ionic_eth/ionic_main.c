@@ -203,6 +203,50 @@ ionic_error_to_str(enum status_code code)
 	}
 }
 
+int
+ionic_error_to_errno(enum status_code code)
+{
+	switch (code) {
+	case IONIC_RC_SUCCESS:
+		return 0;
+	case IONIC_RC_EVERSION:
+	case IONIC_RC_EQTYPE:
+	case IONIC_RC_EQID:
+	case IONIC_RC_EINVAL:
+	case IONIC_RC_ENOSUPP:
+		return -EINVAL;
+	case IONIC_RC_EPERM:
+		return -EPERM;
+	case IONIC_RC_ENOENT:
+		return -ENOENT;
+	case IONIC_RC_EAGAIN:
+		return -EAGAIN;
+	case IONIC_RC_ENOMEM:
+		return -ENOMEM;
+	case IONIC_RC_EFAULT:
+		return -EFAULT;
+	case IONIC_RC_EBUSY:
+		return -EBUSY;
+	case IONIC_RC_EEXIST:
+		return -EEXIST;
+	case IONIC_RC_ENOSPC:
+		return -ENOSPC;
+	case IONIC_RC_ERANGE:
+		return -ERANGE;
+	case IONIC_RC_BAD_ADDR:
+		return -EFAULT;
+	case IONIC_RC_EOPCODE:
+	case IONIC_RC_EINTR:
+	case IONIC_RC_DEV_CMD:
+	case IONIC_RC_ERROR:
+	case IONIC_RC_ERDMA:
+	case IONIC_RC_EIO:
+	default:
+		return -EIO;
+	}
+}
+EXPORT_SYMBOL_GPL(ionic_error_to_errno);
+
 static const char *
 ionic_opcode_to_str(enum cmd_opcode opcode)
 {
@@ -309,7 +353,8 @@ ionic_adminq_check_err(struct ionic_lif *lif, struct ionic_admin_ctx *ctx,
 		    name, ctx->cmd.cmd.opcode, timeout ? "TIMEOUT": status,
 		    timeout ? -1 : ctx->comp.comp.status);
 
-		err = timeout ? ETIMEDOUT : ctx->comp.comp.status;
+		err = timeout ? ETIMEDOUT :
+			-ionic_error_to_errno(ctx->comp.comp.status);
 		if (timeout)
 			ionic_adminq_flush(lif);
 

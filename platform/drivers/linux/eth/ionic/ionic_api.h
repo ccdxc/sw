@@ -243,4 +243,11 @@ struct ionic_admin_ctx {
  */
 int ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx);
 
+/** ionic_error_to_errno - Transform ionic_if errors to os errno.
+ * @code:		Ionic error number.
+ *
+ * Return:		Negative OS error number or zero.
+ */
+int ionic_error_to_errno(enum status_code code);
+
 #endif /* IONIC_API_H */

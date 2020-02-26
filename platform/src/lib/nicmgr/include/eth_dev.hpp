@@ -81,6 +81,7 @@ struct eth_devspec {
     uint8_t pcie_port;
     uint32_t pcie_total_vfs;
     bool host_dev;
+    bool vf_dev;
     // Network
     uint32_t uplink_port_num;
     std::string qos_group;

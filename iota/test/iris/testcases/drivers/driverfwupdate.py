@@ -79,13 +79,30 @@ def Trigger(tc):
         if LoadFwDriver(tc.os, node) is api.types.status.FAILURE:
             return api.types.status.FAILURE
         for i in api.GetNaplesHostInterfaces(node):
-            api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.fw_update=1" % host.GetNaplesSysctl(i))
+            #
+            # In local testing, this step completes in 35-40s, but the default
+            # timeout is 30s.  Therefore, increase the timeout to 60s.
+            #
+            # The iota logs may contain messages such as "CHECK_ERR: Nicmgr
+            # crashed for host: node2?"  Please note, this is due to finding
+            # the string "fw heartbeat stuck" in the host dmesg.  This is
+            # currently the expected behavior when doing fw update.  If nicmgr
+            # does crash, than expect subsequent tests to fail, otherwise the
+            # CHECK_ERR message in the iota test logs may be ignored.
+            #
+            api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.fw_update=1" % host.GetNaplesSysctl(i),
+                    timeout=60)
 
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if tc.os != host.OS_TYPE_BSD:
+        api.Logger.info("Not implemented")
+        return api.types.status.IGNORED
+
+    result = api.types.status.SUCCESS
 
     for node in tc.nodes:
         # this is required to bring the testbed into operation state
@@ -95,15 +112,20 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
-    for cmd in tc.resp.commands:
-        if cmd.exit_code != 0:
-            if tc.os == host.OS_TYPE_BSD:
-                if cmd.stdout.find("firmware update took") != -1:
-                    api.Logger.info("Firmware update didn't work")
-                    api.PrintCommandResults(cmd)
-                    return api.types.status.FAILURE
+    if api.GetNicMode() == 'classic':
+        expect_exit_code = 0
+    else:
+        # expect OS's EPERM (FreeBSD/Linux is 1) (IONIC_RC_EPERM is 4)
+        expect_exit_code = 1
 
-    return api.types.status.SUCCESS
+    for cmd in tc.resp.commands:
+        if cmd.exit_code != expect_exit_code:
+            api.PrintCommandResults(cmd)
+            api.Logger.error("Expected exit code %d" % expect_exit_code)
+            api.Logger.error("Actual exit code %d" % cmd.exit_code)
+            result = api.types.status.FAILURE
+
+    return result
 
 def Teardown(tc):
     return api.types.status.SUCCESS

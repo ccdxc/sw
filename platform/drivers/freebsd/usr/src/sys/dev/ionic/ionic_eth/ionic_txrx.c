@@ -3306,7 +3306,7 @@ ionic_firmware_update2(struct ionic_lif *lif)
 	if_printf(ifp, "firmware update took %ld secs\n", (jiffies - time)/HZ);
 	firmware_put(fw, FIRMWARE_UNLOAD);
 
-	return (0);
+	return (err);
 }
 
 static int

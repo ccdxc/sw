@@ -3927,11 +3927,11 @@ ionic_firmware_update(struct ionic_lif *lif, const void *const fw_data,
 	while (offset < fw_sz) {
 		copy_sz = min(buf_sz, fw_sz - offset);
 		bcopy(fw_data + offset, buf, copy_sz);
-		if (ionic_firmware_download(lif, buf_pa, offset, copy_sz)) {
+		err = ionic_firmware_download(lif, buf_pa, offset, copy_sz);
+		if (err) {
 			IONIC_NETDEV_ERROR(ifp,
 			    "upload failed at offset: 0x%x addr 0x%lx"
 			    " len 0x%x\n", offset, buf_pa, copy_sz);
-			err = EIO;
 			goto err_out_free_buf;
 		}
 		offset += copy_sz;

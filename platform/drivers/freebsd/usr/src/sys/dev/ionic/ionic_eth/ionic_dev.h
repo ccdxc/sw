@@ -250,6 +250,7 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 int ionic_desc_avail(int ndescs, int head, int tail);
 
 const char *ionic_error_to_str(enum status_code code);
+int ionic_error_to_errno(enum status_code code);
 const char *ionic_port_oper_status_str(enum port_oper_status status);
 const char *ionic_port_admin_state_str(enum PortAdminState state);
 const char *ionic_port_fec_type_str(enum port_fec_type type);

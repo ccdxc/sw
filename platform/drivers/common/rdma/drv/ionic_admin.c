@@ -496,35 +496,6 @@ int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
 	return rc;
 }
 
-static int ionic_verbs_status_to_rc(u32 status)
-{
-	switch (status) {
-	case IONIC_RC_SUCCESS:	return 0;
-	case IONIC_RC_EPERM:	return -EPERM;
-	case IONIC_RC_ENOENT:	return -ENOENT;
-	case IONIC_RC_EINTR:	return -EINTR;
-	case IONIC_RC_EAGAIN:	return -EAGAIN;
-	case IONIC_RC_ENOMEM:	return -ENOMEM;
-	case IONIC_RC_EFAULT:	return -EFAULT;
-	case IONIC_RC_EBUSY:	return -EBUSY;
-	case IONIC_RC_EEXIST:	return -EEXIST;
-	case IONIC_RC_ENOSPC:	return -ENOSPC;
-	case IONIC_RC_ERANGE:	return -ERANGE;
-	case IONIC_RC_BAD_ADDR: return -EFAULT;
-	case IONIC_RC_DEV_CMD:	return -ENOTTY;
-	case IONIC_RC_ENOSUPP:	return -ENODEV;
-	case IONIC_RC_ERDMA:	return -EPROTO;
-	case IONIC_RC_EINVAL:
-	case IONIC_RC_EVERSION:
-	case IONIC_RC_EOPCODE:
-	case IONIC_RC_EQID:
-	case IONIC_RC_EQTYPE:	return -EINVAL;
-	case IONIC_RC_EIO:
-	case IONIC_RC_ERROR:
-	default:		return -EIO;
-	}
-}
-
 static int ionic_rdma_devcmd(struct ionic_ibdev *dev,
 			     struct ionic_admin_ctx *admin)
 {
@@ -536,7 +507,7 @@ static int ionic_rdma_devcmd(struct ionic_ibdev *dev,
 
 	wait_for_completion(&admin->work);
 
-	rc = ionic_verbs_status_to_rc(admin->comp.comp.status);
+	rc = ionic_error_to_errno(admin->comp.comp.status);
 err_cmd:
 	return rc;
 }
