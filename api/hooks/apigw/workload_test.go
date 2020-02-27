@@ -33,6 +33,14 @@ func TestWorkloadHooksRegistration(t *testing.T) {
 	AssertOk(t, err, "error getting service profile for Workload delete")
 	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for workload delete profile", len(prof.PreCallHooks())))
 
+	prof, err = svc.GetCrudServiceProfile("Workload", apiintf.CreateOper)
+	AssertOk(t, err, "error getting service profile for Workload delete")
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for workload create profile", len(prof.PreCallHooks())))
+
+	prof, err = svc.GetCrudServiceProfile("Workload", apiintf.UpdateOper)
+	AssertOk(t, err, "error getting service profile for Workload delete")
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for workload update profile", len(prof.PreCallHooks())))
+
 	// test error
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerWorkloadHooks(svc)
@@ -136,4 +144,84 @@ func TestWorkloadUserContextHook(t *testing.T) {
 				fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
 		}
 	}
+}
+
+func TestWorkloadInterfaceValidation(t *testing.T) {
+	tests := []struct {
+		in     *workload.Workload
+		expErr bool
+	}{
+		{
+			in: &workload.Workload{
+				Spec: workload.WorkloadSpec{
+					Interfaces: []workload.WorkloadIntfSpec{
+						workload.WorkloadIntfSpec{
+							ExternalVlan: 0,
+							Network:      "",
+						},
+					},
+				},
+			},
+			expErr: false,
+		},
+		{
+			in: &workload.Workload{
+				Spec: workload.WorkloadSpec{
+					Interfaces: []workload.WorkloadIntfSpec{
+						workload.WorkloadIntfSpec{
+							ExternalVlan: 0,
+							Network:      "test",
+						},
+					},
+				},
+			},
+			expErr: false,
+		},
+		{
+			in: &workload.Workload{
+				Spec: workload.WorkloadSpec{
+					Interfaces: []workload.WorkloadIntfSpec{
+						workload.WorkloadIntfSpec{
+							ExternalVlan: 10,
+							Network:      "",
+						},
+					},
+				},
+			},
+			expErr: false,
+		},
+		{
+			in: &workload.Workload{
+				Spec: workload.WorkloadSpec{
+					Interfaces: []workload.WorkloadIntfSpec{
+						workload.WorkloadIntfSpec{
+							ExternalVlan: 10,
+							Network:      "",
+						},
+						workload.WorkloadIntfSpec{
+							ExternalVlan: 10,
+							Network:      "test",
+						},
+					},
+				},
+			},
+			expErr: true,
+		},
+	}
+
+	r := &workloadHooks{}
+	logConfig := log.GetDefaultConfig("TestAPIGwWorkloadHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for i, tc := range tests {
+		_, _, _, err := r.validateInterfaces(context.Background(), tc.in)
+		if !tc.expErr {
+			AssertOk(t, err, "tc %d failed", i)
+		} else {
+			Assert(t, err != nil, "tc %d: Expected err to be nil", i)
+		}
+	}
+	// Test passing in bad type errs
+	_, _, _, err := r.validateInterfaces(context.Background(), workload.WorkloadSpec{})
+	Assert(t, err != nil, "Expected error when passing in bad type")
+
 }

@@ -296,20 +296,20 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.eeff",
-								ExternalVlan: 100,
+								MACAddress: "aabb.ccdd.eeff",
+								Network:    "PG1",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.ddff",
-								ExternalVlan: 200,
+								MACAddress: "aabb.ccdd.ddff",
+								Network:    "PG2",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.ddee",
-								ExternalVlan: 300,
+								MACAddress: "aabb.ccdd.ddee",
+								Network:    "PG3",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.ccee",
-								ExternalVlan: 400,
+								MACAddress: "aabb.ccdd.ccee",
+								Network:    "PG4",
 							},
 						},
 					},
@@ -475,16 +475,16 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.eeff",
-								ExternalVlan: 100,
+								MACAddress: "aabb.ccdd.eeff",
+								Network:    "PG1",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa.ccdd.ddff",
-								ExternalVlan: 200,
+								MACAddress: "aaaa.ccdd.ddff",
+								Network:    "PG2",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aaaa.aadd.ddff",
-								ExternalVlan: 200,
+								MACAddress: "aaaa.aadd.ddff",
+								Network:    "PG2",
 							},
 						},
 					},
@@ -678,12 +678,12 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.eeff",
-								ExternalVlan: 100,
+								MACAddress: "aabb.ccdd.eeff",
+								Network:    "PG1",
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress:   "aabb.ccdd.ddff",
-								ExternalVlan: 200,
+								MACAddress: "aabb.ccdd.ddff",
+								Network:    "PG2",
 							},
 						},
 					},
@@ -1081,9 +1081,9 @@ func TestWorkloads(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{
 						Name: createVMWorkloadName(v.VcID, dcName, "virtualmachine-40"),
 						Labels: map[string]string{
-							NameKey:           "test-vm",
-							NamespaceKey:      dcName,
-							utils.OrchNameKey: v.VcID,
+							NameKey:            "test-vm",
+							utils.NamespaceKey: dcName,
+							utils.OrchNameKey:  v.VcID,
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -1437,9 +1437,9 @@ func TestWorkloads(t *testing.T) {
 					Labels: map[string]string{
 						fmt.Sprintf("%s%s", VcLabelPrefix, "cat1"): "tag1:tag2",
 						fmt.Sprintf("%s%s", VcLabelPrefix, "cat2"): "tag1",
-						NameKey:           "test-vm",
-						NamespaceKey:      dcName,
-						utils.OrchNameKey: "127.0.0.1:8990",
+						NameKey:            "test-vm",
+						utils.NamespaceKey: dcName,
+						utils.OrchNameKey:  "127.0.0.1:8990",
 					},
 				}
 				expWorkload := &workload.Workload{

@@ -153,7 +153,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 		if workloadObj.Spec.HostName != "" {
 			dcName := v.getDCNameForHost(workloadObj.Spec.HostName)
-			addNamespaceLabel(workloadObj.Labels, dcName)
+			utils.AddOrchNamespaceLabel(workloadObj.Labels, dcName)
 		}
 	}
 
@@ -444,7 +444,7 @@ func (v *VCHub) deleteWorkload(workloadObj *workload.Workload) {
 	v.Log.Debugf("Deleting workload %s", workloadObj.Name)
 	dcName := ""
 	if workloadObj.Labels != nil {
-		dcName = workloadObj.Labels[NamespaceKey]
+		dcName = workloadObj.Labels[utils.NamespaceKey]
 	} else if workloadObj.Spec.HostName != "" {
 		// Try to get it from host
 		dcName = v.getDCNameForHost(workloadObj.Spec.HostName)
@@ -706,7 +706,6 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 			continue
 		}
 
-		var externalVlan uint32
 		var pgObj *PenPG
 		var nw *ctkit.Network
 		var err error
@@ -716,8 +715,7 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 			if pgObj != nil {
 				nw, err = v.StateMgr.Controller().Network().Find(&pgObj.NetworkMeta)
 				if err == nil {
-					externalVlan = nw.Spec.VlanID
-					v.Log.Debugf("Setting vlan %v for vnic %s", externalVlan, macStr)
+					v.Log.Debugf("Setting network %v for vnic %s", nw.Name, macStr)
 				} else {
 					v.Log.Errorf("Received EP with no corresponding venice network: PG: %s DC: %s Network meta %+v, err %s", pgID, dcName, pgObj.NetworkMeta, err)
 					continue
@@ -740,8 +738,8 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 		v.addVnicInfoForWorkload(workloadName, entry)
 
 		vnic := workload.WorkloadIntfSpec{
-			MACAddress:   macStr,
-			ExternalVlan: externalVlan,
+			MACAddress: macStr,
+			Network:    nw.Name,
 		}
 		res = append(res, vnic)
 	}
@@ -891,18 +889,16 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey str
 			v.Log.Errorf("PenPG not found for PG Id %s", pgKey)
 			continue
 		}
-		var externalVlan uint32
 		nw, err := v.StateMgr.Controller().Network().Find(&penPG.NetworkMeta)
 		if err == nil {
-			externalVlan = nw.Spec.VlanID
-			v.Log.Infof("Setting vlan %v for vnic %s", externalVlan, macStr)
+			v.Log.Infof("Setting network %v for vnic %s", nw.Name, macStr)
 		} else {
 			v.Log.Infof("No venice network for PG %s", pgKey)
 			continue
 		}
 		interfaces = append(interfaces, workload.WorkloadIntfSpec{
-			MACAddress:   macStr,
-			ExternalVlan: externalVlan,
+			MACAddress: macStr,
+			Network:    nw.Name,
 		})
 		// needed later by assignUsegs
 		vmkNicInfo.Interfaces[macStr] = &vnicEntry{
@@ -947,6 +943,6 @@ func (v *VCHub) addWorkloadLabels(workloadObj *workload.Workload, name, dcName s
 	if name != "" {
 		addNameLabel(workloadObj.Labels, name)
 	}
-	addNamespaceLabel(workloadObj.Labels, dcName)
+	utils.AddOrchNamespaceLabel(workloadObj.Labels, dcName)
 	utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 }

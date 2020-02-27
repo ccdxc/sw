@@ -56,6 +56,13 @@ var CreateWorkloadFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "network",
+		Type:   "StringSlice",
+		Help:   "Network this interface will belong to",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeWorkloadOper(obj interface{}) error {

@@ -141,6 +141,13 @@
       "Field": "Network"
     }
   ],
+  "workload.WorkloadIntfSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "network/Network",
+      "Field": "Network"
+    }
+  ],
   "workload.WorkloadSpec": [
     {
       "Type": "NamedRef",

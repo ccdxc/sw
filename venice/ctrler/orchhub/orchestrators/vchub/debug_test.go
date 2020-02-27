@@ -92,7 +92,7 @@ func TestDebug(t *testing.T) {
 	testDebug(DebugUseg, params, `{"PG":{"#Pen-PG-n1-primary":2,"#Pen-PG-n1-secondary":3},"Hosts":{}}`)
 
 	params = map[string]string{}
-	testDebug(DebugCache, params, `{"Workload":{"default/default/127.0.0.1:8989--vm-19":{"kind":"Workload","api-version":"v1","meta":{"name":"127.0.0.1:8989--vm-19","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1","io.pensando.vcenter.name-space":""},"creation-time":"","mod-time":""},"spec":{"host-name":"127.0.0.1:8989--host-14"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`)
+	testDebug(DebugCache, params, `{"Workload":{"default/default/127.0.0.1:8989--vm-19":{"kind":"Workload","api-version":"v1","meta":{"name":"127.0.0.1:8989--vm-19","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.namespace":"","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1"},"creation-time":"","mod-time":""},"spec":{"host-name":"127.0.0.1:8989--host-14"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`)
 
 	params = map[string]string{}
 	testDebug(DebugState, params, `{"PenTestDC":{"ID":"datacenter-2","DVS":{"#Pen-DVS-PenTestDC":{"ID":"dvs-21","PGs":{"#Pen-PG-n1":{"ID":"dvportgroup-25","Network":"n1"}}}}}}`)

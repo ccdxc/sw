@@ -279,7 +279,7 @@ func TestVCSyncHost(t *testing.T) {
 		conv.MacString(pNicMac),
 	)
 	utils.AddOrchNameLabel(staleHost2.Labels, "AnotherVC")
-	addNamespaceLabel(staleHost2.Labels, "AnotherDC")
+	utils.AddOrchNamespaceLabel(staleHost2.Labels, "AnotherDC")
 	err = sm.Controller().Host().Create(&staleHost2)
 	AssertOk(t, err, "failed to create host")
 
@@ -290,7 +290,7 @@ func TestVCSyncHost(t *testing.T) {
 		conv.MacString(pNicMac),
 	)
 	utils.AddOrchNameLabel(staleHost.Labels, orchConfig.Name)
-	addNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
+	utils.AddOrchNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
 	// replace stale host with same mac but different VC by this one
 	vchub.fixStaleHost(&staleHost)
 
@@ -301,7 +301,7 @@ func TestVCSyncHost(t *testing.T) {
 		conv.MacString(pNicMac),
 	)
 	utils.AddOrchNameLabel(staleHost3.Labels, orchConfig.Name)
-	addNamespaceLabel(staleHost3.Labels, dc1.Obj.Name)
+	utils.AddOrchNamespaceLabel(staleHost3.Labels, dc1.Obj.Name)
 	err = sm.Controller().Host().Create(&staleHost3)
 	AssertOk(t, err, "failed to create host")
 
@@ -327,7 +327,7 @@ func TestVCSyncHost(t *testing.T) {
 		"",
 	)
 	utils.AddOrchNameLabel(host1.Labels, orchConfig.Name)
-	addNamespaceLabel(host1.Labels, dc1.Obj.Name)
+	utils.AddOrchNamespaceLabel(host1.Labels, dc1.Obj.Name)
 
 	time.Sleep(1 * time.Second)
 
@@ -560,8 +560,11 @@ func TestVCSyncVM(t *testing.T) {
 						return false, fmt.Errorf("Workload %s had no interfaces", wlName)
 					}
 					for _, inf := range wl.Spec.Interfaces {
-						if inf.ExternalVlan != 100 {
-							return false, fmt.Errorf("interface did not have external valn set correctly - found %d", inf.ExternalVlan)
+						if inf.Network != "pg1" {
+							return false, fmt.Errorf("interface did not have network set correctly - found %s", inf.Network)
+						}
+						if inf.ExternalVlan != 0 {
+							return false, fmt.Errorf("interface's external vlan was not 0, found %d", inf.ExternalVlan)
 						}
 					}
 				}

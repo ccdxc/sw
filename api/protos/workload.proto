@@ -86,6 +86,10 @@ message WorkloadIntfSpec {
 
     // List of all IP addresses configured on a Workload Interface
     repeated string IpAddresses = 4 [(gogoproto.jsontag) = "ip-addresses,omitempty"];
+
+    // Network this interface will belong to
+    // cli-help: Network this interface will belong to
+    string Network              = 5  [(venice.objRelation) = {Type: "NamedRef", To: "network/Network"}, (gogoproto.jsontag) = "network,omitempty"];
 }
 
 // Status of a Workload interface
@@ -105,6 +109,9 @@ message WorkloadIntfStatus {
 
     // External vlan assigned for this interface
     uint32 ExternalVlan         = 5 [(gogoproto.jsontag) = "external-vlan, omitempty"];
+
+    // Network this interface belongs to
+    string Network              = 6  [(gogoproto.jsontag) = "network,omitempty"];
 }
 
 message WorkloadMigrationStatus {

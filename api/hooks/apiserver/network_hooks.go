@@ -9,14 +9,17 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -67,6 +70,103 @@ func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatu
 		ret = append(ret, fmt.Errorf("maximum of 2 egress security policies are allowed"))
 	}
 	return ret
+}
+
+// Checks that for any orch info deletion, no workloads from the orch info are using this network
+func (h *networkHooks) networkOrchConfigPrecommit(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	in, ok := i.(network.Network)
+	if !ok {
+		h.logger.ErrorLog("method", "networkOrchConfigPrecommit", "msg", fmt.Sprintf("API server network hook called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+
+	if in.Tenant != globals.DefaultTenant {
+		// Since orch config can only live in default tenant scope,
+		// this hook check is not needed if tenant is different
+		return i, true, nil
+	}
+
+	existingObj := &network.Network{}
+	err := kv.Get(ctx, key, existingObj)
+	if err != nil {
+		return i, true, fmt.Errorf("Failed to get existing object: %s", err)
+	}
+
+	// Build new network's orch info map
+	orchMap := map[string](map[string]bool){}
+
+	for _, config := range in.Spec.Orchestrators {
+		if _, ok := orchMap[config.Name]; !ok {
+			orchMap[config.Name] = map[string]bool{}
+		}
+		entry := orchMap[config.Name]
+		entry[config.Namespace] = true
+	}
+
+	// determine which orch infos are being deleted
+	delMap := map[string](map[string]bool){}
+	for _, config := range existingObj.Spec.Orchestrators {
+		entry, ok := orchMap[config.Name]
+		deleted := false
+		if !ok {
+			deleted = true
+		}
+		if _, ok := entry[config.Namespace]; !ok {
+			deleted = true
+		}
+		if deleted {
+			if _, ok := delMap[config.Name]; !ok {
+				delMap[config.Name] = map[string]bool{}
+			}
+			delMap[config.Name][config.Namespace] = true
+		}
+	}
+
+	if len(delMap) == 0 {
+		// no deletions to orchestrator info
+		return i, true, nil
+	}
+
+	// Fetch workloads
+	var workloads workload.WorkloadList
+	wl := workload.Workload{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: in.Tenant,
+		},
+	}
+	listKey := wl.MakeKey(string(apiclient.GroupWorkload))
+	err = kv.List(ctx, listKey, &workloads)
+	if err != nil {
+		return i, true, fmt.Errorf("Error retrieving workloads: %s", err)
+	}
+
+	// check workloads
+	for _, wl := range workloads.Items {
+		orch, ok := utils.GetOrchNameFromObj(wl.Labels)
+		if !ok {
+			continue
+		}
+		delNs, ok := delMap[orch]
+		if !ok {
+			continue
+		}
+		namespace, ok := utils.GetOrchNamespaceFromObj(wl.Labels)
+		if !ok {
+			continue
+		}
+		if _, ok := delNs[namespace]; !ok {
+			continue
+		}
+		// Check the workloads interfaces to see if it's using this network
+		for _, inf := range wl.Spec.Interfaces {
+			if inf.Network == in.Name {
+				// workload relies on this orch config
+				return i, true, fmt.Errorf("Cannot remove orchestrator info %s, namespace %s, as workloads from this orchestrator are using this network", orch, namespace)
+			}
+		}
+	}
+
+	return i, true, nil
 }
 
 func (h *networkHooks) validateVirtualrouterConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
@@ -193,6 +293,7 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
 	svc.GetCrudService("NetworkInterface", apiintf.CreateOper).WithPreCommitHook(hooks.networkIntfPrecommitHook)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.networkIntfPrecommitHook)
+	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 }
 
 func init() {

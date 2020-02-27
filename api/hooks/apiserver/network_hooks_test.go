@@ -2,15 +2,22 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/generated/workload"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -242,4 +249,248 @@ func TestPrecommitHooks(t *testing.T) {
 	Assert(t, kvw, "Expecting kv write to be true")
 	Assert(t, len(txn.Cmps) == 0, "expecting no comparator to be added to txn")
 	Assert(t, len(txn.Ops) == 1, "expecting one operation to be added to txn")
+}
+
+func TestNetworkOrchestratorRemoval(t *testing.T) {
+	logConfig := &log.Config{
+		Module:      "Network-hooks",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		CtxSelector: log.ContextAll,
+		LogToStdout: true,
+		LogToFile:   false,
+	}
+
+	// Initialize logger config
+	l := log.SetConfig(logConfig)
+	hooks := &networkHooks{
+		logger: l,
+	}
+
+	schema := runtime.GetDefaultScheme()
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(schema)}
+	kv, err := store.New(config)
+	AssertOk(t, err, "Error instantiating KVStore")
+
+	nw := &network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "nw",
+			Tenant: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type: network.NetworkType_Bridged.String(),
+			Orchestrators: []*network.OrchestratorInfo{
+				&network.OrchestratorInfo{
+					Name:      "o1",
+					Namespace: "namespace1",
+				},
+				&network.OrchestratorInfo{
+					Name:      "o1",
+					Namespace: "namespace2",
+				},
+				&network.OrchestratorInfo{
+					Name:      "o2",
+					Namespace: "namesapce1",
+				},
+			},
+		},
+	}
+
+	ctx := context.TODO()
+	// Create orch
+	o1 := makeOrchObj("o1", "10.1.1.1")
+	key := o1.MakeKey(string(apiclient.GroupOrchestration))
+	err = kv.Create(ctx, key, o1)
+	defer kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "kv operation failed")
+
+	o2 := makeOrchObj("o2", "10.1.1.11")
+	key = o2.MakeKey(string(apiclient.GroupOrchestration))
+	err = kv.Create(ctx, key, o2)
+	defer kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "kv operation failed")
+
+	// Create network
+	err = kv.Create(ctx, nw.MakeKey(string(apiclient.GroupNetwork)), nw)
+	AssertOk(t, err, "kv operation failed")
+
+	// Create workloads
+	h1 := makeHostObj("h1", "aaaa.bbbb.cccc", "")
+	key = h1.MakeKey(string(apiclient.GroupCluster))
+	err = kv.Create(ctx, key, h1)
+	defer kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "kv operation failed")
+
+	// Even numbers belong to o1
+	for i := 0; i < 5; i++ {
+		wl := makeWorkloadObj(fmt.Sprintf("w%d", i), "h1", []workload.WorkloadIntfSpec{
+			workload.WorkloadIntfSpec{
+				MACAddress: "aaaa.bbbb.cccc",
+				Network:    "nw",
+			},
+			workload.WorkloadIntfSpec{
+				MACAddress: "aaaa.bbbb.dddd",
+			},
+		})
+		key := wl.MakeKey(string(apiclient.GroupWorkload))
+		if i%2 == 0 {
+			utils.AddOrchNameLabel(wl.Labels, "o1")
+			utils.AddOrchNamespaceLabel(wl.Labels, "namespace1")
+		}
+		err = kv.Create(ctx, key, wl)
+		AssertOk(t, err, "kv operation failed")
+
+		defer kv.Delete(ctx, key, nil)
+	}
+
+	{
+		// validate remove orch config o1 - namespace1 fails
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace2",
+					},
+					&network.OrchestratorInfo{
+						Name:      "o2",
+						Namespace: "namesapce1",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have failed
+		Assert(t, err != nil, "orch info removal should have failed")
+	}
+	{
+		// validate remove orch config o1 - namespace2 succeeds
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace1",
+					},
+					&network.OrchestratorInfo{
+						Name:      "o2",
+						Namespace: "namesapce1",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		AssertOk(t, err, "orch info removal should have succeeded")
+	}
+
+	{
+		// validate remove orch config o2 - namespace1 should succeed
+		// Adding orch config o1 namespace3 should succeed
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type: network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace1",
+					},
+					&network.OrchestratorInfo{
+						Name:      "o1",
+						Namespace: "namespace3",
+					},
+				},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err = hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		AssertOk(t, err, "orch info removal should have succeeded")
+	}
+
+	// Remove interfaces using o1 from workloads
+	// modify even numbers
+	for i := 0; i < 5; i++ {
+		if i%2 == 0 {
+			wl := makeWorkloadObj(fmt.Sprintf("w%d", i), "h1", []workload.WorkloadIntfSpec{
+				workload.WorkloadIntfSpec{
+					MACAddress: "aaaa.bbbb.dddd",
+				},
+			})
+			utils.AddOrchNameLabel(wl.Labels, "o1")
+			utils.AddOrchNamespaceLabel(wl.Labels, "namespace1")
+
+			key := wl.MakeKey(string(apiclient.GroupWorkload))
+			err = kv.Update(ctx, key, wl)
+			AssertOk(t, err, "kv operation failed")
+		}
+	}
+
+	{
+		// validate remove orch config o1 - namespace1 succeeds
+		nw = &network.Network{
+			ObjectMeta: api.ObjectMeta{
+				Name:   "nw",
+				Tenant: globals.DefaultTenant,
+			},
+			Spec: network.NetworkSpec{
+				Type:          network.NetworkType_Bridged.String(),
+				Orchestrators: []*network.OrchestratorInfo{},
+			},
+		}
+		key := nw.MakeKey(string(apiclient.GroupNetwork))
+		_, _, err := hooks.networkOrchConfigPrecommit(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *nw)
+
+		// Should have succeeded
+		AssertOk(t, err, "orch info removal should have succeeded")
+	}
+
+	// Delete remaining workloads
+	for i := 0; i < 5; i++ {
+		if i%2 != 0 {
+			wl := makeWorkloadObj(fmt.Sprintf("w%d", i), "h1", nil)
+			key := wl.MakeKey(string(apiclient.GroupWorkload))
+			kv.Delete(ctx, key, nil)
+		}
+	}
+}
+
+func makeWorkloadObj(name, host string, infs []workload.WorkloadIntfSpec) *workload.Workload {
+	workload := &workload.Workload{
+		ObjectMeta: api.ObjectMeta{
+			Name:            name,
+			Tenant:          globals.DefaultTenant,
+			ResourceVersion: "1",
+			Labels:          map[string]string{},
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "Workload",
+			APIVersion: "v1",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName:   host,
+			Interfaces: infs,
+		},
+	}
+	return workload
 }

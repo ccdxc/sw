@@ -711,6 +711,23 @@ func TestEndpointStaleDelete(t *testing.T) {
 	err = stateMgr.ctrler.Host().Create(&host)
 	AssertOk(t, err, "Could not create the host")
 
+	netwrk := &network.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "network100",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 100,
+		},
+	}
+
+	// create network
+	err = stateMgr.ctrler.Network().Create(netwrk)
+	AssertOk(t, err, "Could not create the network")
+
 	// verify network got created
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindHost("", "testHost")
@@ -735,6 +752,11 @@ func TestEndpointStaleDelete(t *testing.T) {
 					MACAddress:   "0001.0203.0405",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
+				},
+				{
+					MACAddress:   "0001.0203.0406",
+					MicroSegVlan: 100,
+					Network:      "network100",
 				},
 			},
 		},
@@ -1638,6 +1660,11 @@ func TestWorkloadCreateDelete(t *testing.T) {
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
+				{
+					MACAddress:   "0001.0203.0406",
+					MicroSegVlan: 100,
+					Network:      "network100",
+				},
 			},
 		},
 	}
@@ -1736,6 +1763,40 @@ func TestWorkloadUpdate(t *testing.T) {
 	err = stateMgr.ctrler.Host().Create(&host)
 	AssertOk(t, err, "Could not create the host")
 
+	netwrk := &network.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "network100",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 100,
+		},
+	}
+
+	// create network
+	err = stateMgr.ctrler.Network().Create(netwrk)
+	AssertOk(t, err, "Could not create the network")
+
+	netwrk = &network.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "network101",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 101,
+		},
+	}
+
+	// create network
+	err = stateMgr.ctrler.Network().Create(netwrk)
+	AssertOk(t, err, "Could not create the network")
+
 	// workload params
 	wr := workload.Workload{
 		TypeMeta: api.TypeMeta{Kind: "Workload"},
@@ -1751,6 +1812,11 @@ func TestWorkloadUpdate(t *testing.T) {
 					MACAddress:   "0001.0203.0405",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
+				},
+				{
+					MACAddress:   "0001.0203.0406",
+					MicroSegVlan: 100,
+					Network:      "network100",
 				},
 			},
 		},
@@ -1779,17 +1845,25 @@ func TestWorkloadUpdate(t *testing.T) {
 		if err == nil {
 			return true, nil
 		}
+		_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0406")
+		if err == nil {
+			return true, nil
+		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoints not foud", "1ms", "2s")
 
 	// verify we can find the endpoint associated with the workload
 	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
 	AssertOk(t, err, "Could not find the endpoint")
 	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0406")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
 
-	// update workload external vlan
+	// update workload external vlan and network
 	nwr := ref.DeepCopy(wr).(workload.Workload)
 	nwr.Spec.Interfaces[0].ExternalVlan = 2
+	nwr.Spec.Interfaces[1].Network = "network101"
 	err = stateMgr.ctrler.Workload().Update(&nwr)
 	AssertOk(t, err, "Could not update the workload")
 
@@ -1804,11 +1878,18 @@ func TestWorkloadUpdate(t *testing.T) {
 	// verify we can find the new network for the workload
 	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-2")
 	AssertOk(t, err, "Could not find updated network")
+	nw1, err := stateMgr.FindNetwork("default", "network101")
+	AssertOk(t, err, "Could not find updated network")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
 		if err == nil {
 			_, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+			return ok, nil
+		}
+		_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0406")
+		if err == nil {
+			_, ok := nw1.FindEndpoint("testWorkload-0001.0203.0406")
 			return ok, nil
 		}
 		return false, nil
@@ -1931,9 +2012,9 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	// verify we can find the new endpoint
 
-	// delete second interface
+	// delete third interface
 	nwr = ref.DeepCopy(nwr).(workload.Workload)
-	nwr.Spec.Interfaces = nwr.Spec.Interfaces[0:1]
+	nwr.Spec.Interfaces = nwr.Spec.Interfaces[0:2]
 	err = stateMgr.ctrler.Workload().Update(&nwr)
 	AssertOk(t, err, "Could not update the workload")
 

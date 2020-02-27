@@ -3841,6 +3841,10 @@
             "type": "string"
           },
           "description": "List of all IP addresses configured on a Workload Interface."
+        },
+        "network": {
+          "type": "string",
+          "description": "Network this interface will belong to."
         }
       },
       "description": "Spec of a Workload interface."
@@ -3872,6 +3876,10 @@
           "type": "integer",
           "format": "int64",
           "description": "External vlan assigned for this interface."
+        },
+        "network": {
+          "type": "string",
+          "description": "Network this interface belongs to."
         }
       },
       "description": "Status of a Workload interface."

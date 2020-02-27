@@ -65,6 +65,7 @@ var typesMapWorkload = map[string]*api.Struct{
 			"migration-timeout": api.CLIInfo{Path: "Spec.MigrationTimeout", Skip: false, Insert: "", Help: ""},
 			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"network":           api.CLIInfo{Path: "Spec.Interfaces[].Network", Skip: false, Insert: "", Help: "Network this interface will belong to"},
 			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"stage":             api.CLIInfo{Path: "Status.MigrationStatus.Stage", Skip: false, Insert: "", Help: ""},
@@ -83,6 +84,8 @@ var typesMapWorkload = map[string]*api.Struct{
 			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{ID: "external-vlan", Path: "", Skip: false, Insert: "", Help: "External vlan associated with the workload"}, JSONTag: "external-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"IpAddresses": api.Field{Name: "IpAddresses", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: "Network this interface will belong to"}, JSONTag: "network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadIntfStatus": &api.Struct{
@@ -97,6 +100,8 @@ var typesMapWorkload = map[string]*api.Struct{
 			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{ID: "external-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadMigrationStatus": &api.Struct{

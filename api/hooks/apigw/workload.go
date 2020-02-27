@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -34,12 +35,38 @@ func (a *workloadHooks) userContext(ctx context.Context, in interface{}) (contex
 	return nctx, in, false, nil
 }
 
+// validateInterfaces validates the interfaces of the workload
+func (a *workloadHooks) validateInterfaces(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw validateInterfaces pre-call hook called")
+	wrkld, ok := in.(*workload.Workload)
+	if !ok {
+		return ctx, in, true, errors.New("invalid input type")
+	}
+	for i, inf := range wrkld.Spec.Interfaces {
+		if inf.ExternalVlan != 0 && len(inf.Network) != 0 {
+			return ctx, in, true, fmt.Errorf("Interface %d: External Vlan and Network cannot both be specified", i)
+		}
+	}
+	return ctx, in, false, nil
+}
+
 func (a *workloadHooks) registerWorkloadHooks(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetCrudServiceProfile("Workload", apiintf.DeleteOper)
 	if err != nil {
 		return err
 	}
 	prof.AddPreCallHook(a.userContext)
+
+	prof, err = svc.GetCrudServiceProfile("Workload", apiintf.CreateOper)
+	if err != nil {
+		return err
+	}
+	prof.AddPreCallHook(a.validateInterfaces)
+	prof, err = svc.GetCrudServiceProfile("Workload", apiintf.UpdateOper)
+	if err != nil {
+		return err
+	}
+	prof.AddPreCallHook(a.validateInterfaces)
 	return nil
 }
 

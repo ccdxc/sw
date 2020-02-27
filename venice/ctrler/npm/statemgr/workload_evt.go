@@ -151,6 +151,10 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 	} else {
 		for idx, intf := range nwrk.Spec.Interfaces {
 			// check what changed
+			if w.Spec.Interfaces[idx].Network != intf.Network {
+				// network changed delete old endpoints
+				recreate = true
+			}
 			if w.Spec.Interfaces[idx].ExternalVlan != intf.ExternalVlan {
 				// external VLAN changed delete old endpoints
 				recreate = true
@@ -297,22 +301,26 @@ func (ws *WorkloadState) createEndpoints() error {
 	defer ws.stateMgr.Unlock()
 	for ii := range ws.Workload.Spec.Interfaces {
 		var netName string
-		ns, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-		if err != nil {
-
-			// check if we have a network for this workload
-			netName = ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-			ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
-			//if err != nil {
-			// Create networks since all creates are idempotent
-			err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+		if len(ws.Workload.Spec.Interfaces[ii].Network) == 0 {
+			ns, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 			if err != nil {
-				log.Errorf("Error creating network. Err: %v", err)
-				return err
+
+				// check if we have a network for this workload
+				netName = ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+				ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+				if err != nil {
+					// Create networks since all creates are idempotent
+					err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+					if err != nil {
+						log.Errorf("Error creating network. Err: %v", err)
+						return err
+					}
+				}
+			} else {
+				netName = ns.Network.Network.Name
 			}
-			//}
 		} else {
-			netName = ns.Network.Network.Name
+			netName = ws.Workload.Spec.Interfaces[ii].Network
 		}
 
 		// check if we already have the endpoint for this workload
@@ -411,10 +419,15 @@ func (ws *WorkloadState) deleteEndpoints() error {
 		var nw *NetworkState
 		var err error
 		// find the network for the interface
-		nw, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-		if err != nil {
-			netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+		if len(ws.Workload.Spec.Interfaces[ii].Network) != 0 {
+			netName := ws.Workload.Spec.Interfaces[ii].Network
 			nw, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		} else {
+			nw, err = ws.stateMgr.FindNetworkByVlanID(ws.Workload.Tenant, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+			if err != nil {
+				netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+				nw, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+			}
 		}
 
 		if err != nil {

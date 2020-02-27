@@ -63,6 +63,9 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 	"workload.EndpointStatus": []apiintf.ObjRelation{
 		{Type: "WeakRef", To: "network/Network", Field: "Network"},
 	},
+	"workload.WorkloadIntfSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/Network", Field: "Network"},
+	},
 	"workload.WorkloadSpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "cluster/Host", Field: "HostName"},
 	},

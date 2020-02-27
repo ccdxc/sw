@@ -13,6 +13,7 @@ export interface IWorkloadWorkloadIntfSpec {
     'micro-seg-vlan': number;
     'external-vlan': number;
     'ip-addresses'?: Array<string>;
+    'network'?: string;
     '_ui'?: any;
 }
 
@@ -28,6 +29,8 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     'external-vlan': number = null;
     /** List of all IP addresses configured on a Workload Interface. */
     'ip-addresses': Array<string> = null;
+    /** Network this interface will belong to. */
+    'network': string = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadIntfSpec]: PropInfoItem } = {
         'mac-address': {
             description:  `MACAddress contains the MAC address of the interface as seen by the workload. Should be a valid MAC address.`,
@@ -49,6 +52,11 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             description:  `List of all IP addresses configured on a Workload Interface.`,
             required: false,
             type: 'Array<string>'
+        },
+        'network': {
+            description:  `Network this interface will belong to.`,
+            required: false,
+            type: 'string'
         },
     }
 
@@ -115,6 +123,13 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
         } else {
             this['ip-addresses'] = [];
         }
+        if (values && values['network'] != null) {
+            this['network'] = values['network'];
+        } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('network')) {
+            this['network'] = WorkloadWorkloadIntfSpec.propInfo['network'].default;
+        } else {
+            this['network'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -126,6 +141,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
                 'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan']),
                 'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan']),
                 'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses']),
+                'network': CustomFormControl(new FormControl(this['network']), WorkloadWorkloadIntfSpec.propInfo['network']),
             });
         }
         return this._formGroup;
@@ -141,6 +157,7 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             this._formGroup.controls['micro-seg-vlan'].setValue(this['micro-seg-vlan']);
             this._formGroup.controls['external-vlan'].setValue(this['external-vlan']);
             this._formGroup.controls['ip-addresses'].setValue(this['ip-addresses']);
+            this._formGroup.controls['network'].setValue(this['network']);
         }
     }
 }

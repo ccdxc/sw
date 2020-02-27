@@ -359,6 +359,28 @@ func (m *Workload) Normalize() {
 
 func (m *WorkloadIntfSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "network"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Network",
+			}
+		}
+
+		if m.Network != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"networks/"+tenant+"/"+m.Network)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -448,6 +470,19 @@ func (m *WorkloadSpec) References(tenant string, path string, resp map[string]ap
 
 		if len(uref.Refs) > 0 {
 			resp[tag] = uref
+		}
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "interfaces"
+
+		for _, v := range m.Interfaces {
+
+			v.References(tenant, tag, resp)
+
 		}
 	}
 }

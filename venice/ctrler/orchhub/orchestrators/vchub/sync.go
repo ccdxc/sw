@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
 func (v *VCHub) sync() {
@@ -136,7 +137,7 @@ func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts 
 
 	// Deleting stale hosts
 	for _, host := range hosts {
-		if !isObjForDC(host.Labels, v.VcID, dc.Name) {
+		if !utils.IsObjForOrch(host.Labels, v.VcID, dc.Name) {
 			// Filter out hosts not for this Orch
 			v.Log.Debugf("Skipping host %s", host.Name)
 			continue
@@ -300,7 +301,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 
 	// Deleting stale workloads and build useg state
 	for _, workload := range workloads {
-		if !isObjForDC(workload.Labels, v.VcID, dcName) {
+		if !utils.IsObjForOrch(workload.Labels, v.VcID, dcName) {
 			// Filter out workloads not for this Orch/DC
 			v.Log.Debugf("Skipping workload %s", workload.Name)
 			continue

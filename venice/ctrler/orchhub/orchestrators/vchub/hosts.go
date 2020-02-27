@@ -173,7 +173,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	if dispName != "" {
 		addNameLabel(hostObj.Labels, dispName)
 	}
-	addNamespaceLabel(hostObj.Labels, penDC.Name)
+	utils.AddOrchNamespaceLabel(hostObj.Labels, penDC.Name)
 
 	if existingHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
@@ -241,7 +241,7 @@ searchHosts:
 		return fmt.Errorf("Duplicate Host %s is being used by non-VC application", hostFound.Name)
 	}
 
-	if !isObjForVC(hostFound.Labels, v.VcID) {
+	if !utils.IsObjForOrch(hostFound.Labels, v.VcID, "") {
 		// host found, but not used by this VC
 		v.Log.Infof("Deleting host that belonged to another VC %s", vcID)
 	}
@@ -256,7 +256,7 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 		v.Log.Debugf("deleteHost - no lables")
 		return
 	}
-	dcName, ok := obj.Labels[NamespaceKey]
+	dcName, ok := obj.Labels[utils.NamespaceKey]
 	if !ok {
 		v.Log.Debugf("deleteHost - no namespace")
 		return
@@ -288,7 +288,7 @@ func (v *VCHub) DeleteHosts() {
 		v.Log.Errorf("Failed to get host list. Err : %v", err)
 	}
 	for _, host := range hosts {
-		if !isObjForVC(host.Labels, v.VcID) {
+		if !utils.IsObjForOrch(host.Labels, v.VcID, "") {
 			// Filter out hosts not for this Orch
 			v.Log.Debugf("Skipping host %s", host.Name)
 			continue
@@ -319,7 +319,7 @@ func (v *VCHub) getDCNameForHost(hostName string) string {
 		v.Log.Errorf("Host %s has no labels", hostName)
 		return ""
 	}
-	if dcName, ok := hostObj.Labels[NamespaceKey]; ok {
+	if dcName, ok := hostObj.Labels[utils.NamespaceKey]; ok {
 		return dcName
 	}
 	v.Log.Errorf("Host %s has no namespace label", hostName)

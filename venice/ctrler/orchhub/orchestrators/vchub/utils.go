@@ -18,8 +18,6 @@ var (
 	VcLabelPrefix = fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "vcenter.")
 	// NameKey is the display name of the vm in vcenter
 	NameKey = createLabelKey("display-name")
-	// NamespaceKey is the datacenter Name in vcenter
-	NamespaceKey = createLabelKey("name-space") // typically DC Name
 )
 
 func createLabelKey(tag string) string {
@@ -51,17 +49,13 @@ func retainSpecialLabels(existingLabels, newLabels map[string]string) {
 	if v, ok := existingLabels[NameKey]; ok {
 		newLabels[NameKey] = v
 	}
-	if v, ok := existingLabels[NamespaceKey]; ok {
-		newLabels[NamespaceKey] = v
+	if v, ok := existingLabels[utils.NamespaceKey]; ok {
+		newLabels[utils.NamespaceKey] = v
 	}
 }
 
 func addNameLabel(labels map[string]string, name string) {
 	labels[NameKey] = name
-}
-
-func addNamespaceLabel(labels map[string]string, name string) {
-	labels[NamespaceKey] = name
 }
 
 func createPGName(networkName string) string {
@@ -82,32 +76,6 @@ func isPensandoDVS(name, dcName string) bool {
 
 func createDVSName(dcName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultDVSPrefix, dcName)
-}
-
-func isObjForVC(labels map[string]string, vcID string) bool {
-	if labels == nil {
-		return false
-	}
-	vc, ok := labels[utils.OrchNameKey]
-	if !ok || vc != vcID {
-		return false
-	}
-	return true
-}
-
-func isObjForDC(labels map[string]string, vcID string, dcName string) bool {
-	if labels == nil {
-		return false
-	}
-	vc, ok := labels[utils.OrchNameKey]
-	dc, dcOk := labels[NamespaceKey]
-	if !ok || !dcOk {
-		return false
-	}
-	if vc != vcID || dc != dcName {
-		return false
-	}
-	return true
 }
 
 func isPensandoHost(hConfig *types.HostConfigInfo) bool {
