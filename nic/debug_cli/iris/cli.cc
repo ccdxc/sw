@@ -16,6 +16,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/iris/p4pd_cfg.hpp"
 #include "nic/debug_cli/include/cli.hpp"
+#include "nic/hal/core/core.hpp"
 
 static bool pd_inited = 0;
 int
@@ -70,6 +71,13 @@ cli_init (char *ptr)
     asic_cfg.asm_cfg[1].sort_func = NULL;
     asic_cfg.asm_cfg[1].base_addr = std::string(JP4PLUS_PRGM);
 #endif
+
+    asic_cfg.catalog = catalog::factory(asic_cfg.cfg_path, "",
+                                        platform_type_t::PLATFORM_TYPE_HW);
+    auto device_cfg_path  = std::string(SYSCONFIG_PATH) + "/" + DEVICE_CFG_FNAME;
+    auto device = sdk::lib::device::factory(device_cfg_path);
+    SDK_ASSERT(device != NULL);
+    asic_cfg.device_profile = device->device_profile();
 
     // asic_cfg.completion_func = asiccfg_init_completion_event;
     asic_cfg.completion_func = NULL;

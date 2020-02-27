@@ -1,0 +1,9 @@
+meta:
+    name    : p4ctl
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 10
+
+testcases:
+    -   name    : CHECK_TABLE_LIST
+        testcase: testcases.p4ctl.list_table

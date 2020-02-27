@@ -51,8 +51,6 @@ nic/build/aarch64/iris/lib/libmisc.so                                           
 nic/build/aarch64/iris/lib/libpcietlp.so                                        /platform/lib/
 nic/build/aarch64/iris/lib/libgtest.so                                          /platform/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpal.so                                         /nic/lib/
-nic/build/aarch64/iris/lib/libsensor.so                                         /platform/lib/
-nic/build/aarch64/iris/lib/libsysmon.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libasicerror.so                                      /platform/lib/
 nic/build/aarch64/iris/lib/libncsi.so                                           /platform/lib/
 

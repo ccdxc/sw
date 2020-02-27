@@ -178,6 +178,8 @@ nic/build/aarch64/iris/lib/libsdkring.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsdkftl.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgr.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgr_iris.so                        /nic/lib/
+nic/build/aarch64/iris/lib/libsensor.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libsysmon.so                             /nic/lib/
 
 #test binaries
 nic/build/aarch64/iris/lib/libfte_base_test.so                       /nic/lib/
