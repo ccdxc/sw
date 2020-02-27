@@ -3,6 +3,7 @@ package audit
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"testing"
@@ -28,6 +29,7 @@ import (
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/authz"
+	objstore2 "github.com/pensando/sw/venice/utils/objstore/client"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -71,7 +73,7 @@ func TestAuditLogArchive(t *testing.T) {
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
 	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
-	createAuditLogs(t, ti, 50)
+	Assert(t, createAuditLogs(t, ti, 50) > 0, "unable to create audit logs")
 	currts, _ := types.TimestampProto(time.Now())
 	tests := []testData{
 		{
@@ -203,10 +205,15 @@ func TestAuditLogArchive(t *testing.T) {
 		},
 	}
 	for i := 0; i < len(tests); i++ {
-		createArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
-		err = verifyArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
-		AssertOk(t, err, "error verifying archive requests")
-		deleteArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
+		AssertEventually(t, func() (bool, interface{}) {
+			createArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
+			err = verifyArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
+			if err != nil {
+				return false, err
+			}
+			deleteArchiveRequests(superAdminCtx, t, ti, tests[i:i+1])
+			return true, nil
+		}, "error verifying archive requests", "3s", "30s")
 	}
 	// stop spyglass
 	ti.fdr.Stop()
@@ -703,11 +710,13 @@ func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 				return false, err
 			}
 			t.Logf("archive request: %v", req)
-			objname, err := ExtractObjectNameFromURI(req.Status.URI)
+			var objname string
+			objname, err = ExtractObjectNameFromURI(req.Status.URI)
 			if err != nil {
 				return false, err
 			}
-			stats, err := ti.objstorecl.StatObject(objname)
+			var stats *objstore2.ObjectStats
+			stats, err = ti.objstorecl.StatObject(objname)
 			if err != nil {
 				return false, err
 			}
@@ -715,11 +724,13 @@ func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 				err = fmt.Errorf("test [%s] failed, unexpected size [%d] for object [%s]", test.name, stats.Size, objname)
 				return false, err
 			}
-			r, err := ti.objstorecl.GetObject(ctx, objname)
+			var r io.ReadCloser
+			r, err = ti.objstorecl.GetObject(ctx, objname)
 			if err != nil {
 				return false, err
 			}
-			evts, err := ExtractArchive(r)
+			var evts string
+			evts, err = ExtractArchive(r)
 			if err != nil {
 				return false, err
 			}
