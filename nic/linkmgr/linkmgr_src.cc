@@ -8,6 +8,7 @@
 #include "nic/sdk/linkmgr/port_serdes.hpp"
 #include "linkmgr_src.hpp"
 #include "linkmgr_ipc.hpp"
+#include "linkmgr_event_recorder.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/hal/hal.hpp"
@@ -320,6 +321,9 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
         HAL_TRACE_ERR("linkmgr init failed");
         return HAL_RET_ERR;
     }
+
+    // event recorder init
+    event_recorder_init();
 
     linkmgr_create_ports(sdk_cfg);
 

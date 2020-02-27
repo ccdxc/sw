@@ -11,6 +11,8 @@
 #ifndef __IF_HPP__
 #define __IF_HPP__
 
+#include <string>
+
 enum {
     IF_TYPE_NONE       = 0,
     IF_TYPE_ETH        = 1,
@@ -62,6 +64,9 @@ enum {
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
 
+#define ETH_IFINDEX_TO_SLOT(ifindex_)           \
+            ((ifindex_ >> ETH_IF_SLOT_SHIFT) & ETH_IF_SLOT_MASK)
+
 #define ETH_IFINDEX_TO_PARENT_PORT(ifindex_)    \
             ((ifindex_ >> ETH_IF_PARENT_PORT_SHIFT) & ETH_IF_PARENT_PORT_MASK)
 
@@ -80,5 +85,49 @@ enum {
             (ifindex_ & LIF_IF_LIF_ID_MASK)
 #define LOOPBACK_IFINDEX_TO_LOOPBACK_IF_ID(ifindex_)    \
             (ifindex_ & LOOPBACK_IF_ID_MASK)
+
+static inline std::string
+ifindex_to_type_str (uint32_t ifindex) {
+    uint32_t type = IFINDEX_TO_IFTYPE(ifindex);
+
+	switch (type) {
+	case IF_TYPE_ETH:
+		return "Eth";
+	case IF_TYPE_ETH_PC:
+		return "EthPC";
+	case IF_TYPE_TUNNEL:
+		return "Tunnel";
+	case IF_TYPE_MGMT:
+		return "Mgmt";
+	case IF_TYPE_UPLINK:
+		return "Uplink";
+	case IF_TYPE_UPLINK_PC:
+		return "UplinkPC";
+	case IF_TYPE_L3:
+		return "L3";
+	case IF_TYPE_LIF:
+		return "Lif";
+    case IF_TYPE_LOOPBACK:
+        return "Loopback";
+    case IF_TYPE_NONE:
+    default:
+        return "None";
+	}
+}
+
+static inline std::string
+eth_ifindex_to_str (uint32_t ifindex)
+{
+    uint32_t slot;
+    uint32_t parent_port;
+
+    if (ifindex != IFINDEX_INVALID) {
+        slot = ETH_IFINDEX_TO_SLOT(ifindex);
+        parent_port = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
+        return ifindex_to_type_str(ifindex) + std::to_string(slot) + "/"
+                                            + std::to_string(parent_port);
+    }
+    return "-";
+}
 
 #endif    // __IF_HPP__

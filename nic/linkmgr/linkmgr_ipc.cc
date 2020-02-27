@@ -5,6 +5,7 @@
 #include "linkmgr_src.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/hal/core/event_ipc.hpp"
+#include "linkmgr_event_recorder.hpp"
 
 namespace linkmgr {
 namespace ipc {
@@ -26,6 +27,9 @@ port_event_notify (port_event_info_t *port_event_info)
     event.port.event = port_event;
     event.port.speed = port_speed;
     sdk::ipc::broadcast(event_id_t::EVENT_ID_PORT_STATUS, &event, sizeof(event));
+
+    // publish to event recorder
+    linkmgr::port_event_recorder_notify(port_event_info);
 }
 
 static void
@@ -40,7 +44,6 @@ send_xcvr_event (xcvr_event_info_t *xcvr_event_info)
     memcpy(event.xcvr.sprom, xcvr_event_info->xcvr_sprom, XCVR_SPROM_SIZE);
     sdk::ipc::broadcast(event_id_t::EVENT_ID_XCVR_STATUS, &event, sizeof(event));
 }
-
 
 void
 xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
