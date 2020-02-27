@@ -606,6 +606,7 @@ class Testcase:
 
             if result != types.status.SUCCESS or GlobalOptions.dryrun:
                 if self.__ignored or result == types.status.IGNORED:
+                    Logger.info("Test failed, marking as ignored")
                     Logger.info("Iteration Instance: %s FINAL RESULT = %d" % (instance_id, result))
                     iter_data.SetStatus(types.status.IGNORED)
                     final_result = types.status.SUCCESS

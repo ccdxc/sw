@@ -69,6 +69,7 @@ class TestBundle:
         self.result = types.status.FAILURE
         self.selected = None
         self.__tbunResults = []
+        self.__ignoreList = []
 
     def Name(self):
         return self.__spec.meta.name
@@ -108,6 +109,12 @@ class TestBundle:
         if mode == 'json':
             return json.dumps(self.__tbunResults)
         return self.__tbunResults
+
+    def setIgnoreList(self, ignore):
+        self.__ignoreList = ignore
+
+    def getIgnoreList(self):
+        return self.__ignoreList
 
     def __resolve_selector(self):
         if getattr(self.__spec, "selector", None):
@@ -180,6 +187,8 @@ class TestBundle:
                     selected_list = loader.RunCallback(self.__sel_entry, 'Main', False, selected)
                 for tc in self.__testcases:
                     owner = tc._Testcase__get_owner()
+                    if tc.Name() in self.__ignoreList:
+                        tc._Testcase__ignored = True
                     api.CurrentTestcase = tc
                     tcResId = "TB:{0}_TC:{1}_SELECTED:{2}_COUNT:{3}".format(self.Name(), tc.Name(), selected, _i)
                     tcResult = TestCaseResult(tcId=tcResId, name=tc.Name(), desc="", owner=owner,

@@ -78,6 +78,7 @@ class TestSuite:
         self.__stats_target = 0
         self.result = types.status.FAILURE
         self.__skip = self.__apply_skip_filters()
+        self.__ignoreList = getattr(spec.meta, "ignore_list", [])
         return
 
     def Abort(self):
@@ -263,6 +264,7 @@ class TestSuite:
     def __execute_testbundles(self):
         result = types.status.SUCCESS
         for tbun in self.__testbundles:
+            tbun.setIgnoreList(self.__ignoreList)
             self.__curr_tbun = tbun
             ret = tbun.Main()
             #Don't propogate disabled status up.

@@ -1,13 +1,13 @@
 meta:
-    name        : transparent_basenet
-    description : Transparent Basenet Test Suite
+    name        : transparent_basenet_swm
+    description : Transparent Basenet Test Suite in SWM testbed
     description : Classic NIC Testsuite
     mode        : hardware
     cfgmode     : netagent
     #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
     nicmode     : classic
     os          : [ linux, freebsd ]
-    ignore_list : []
+    ignore_list : [ link_reset, ping_oob_mnic0_intf, Unicast_MAC_Filter, Broadcast_MAC_Filter, Multicast_MAC_Filter, MacValidation_Subifs, MacChange_Subifs, all_multi_on, VF_api, DriverWatchdog, DriverFwUpdate, DriverStatsReset, CPLD_UPGRADE_REVISION_CHECK, DRIVER_CSUM_INVALID, DRIVER_CSUM_VALID, UplinkIntf_RX_SGL_SIZE ]
 
 packages:
     - iota.test.iris
@@ -27,6 +27,7 @@ setup:
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
         - step : testcases.penctl.install
+        - step : testcases.swm.set_ncsi
 
 common:
     verifs:
@@ -49,7 +50,7 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle
         - networking/connectivity.testbundle
-        - classic/rdma.testbundle
+        #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - mtu/mtu.testbundle
@@ -79,13 +80,12 @@ testbundles:
 
     extended:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_ext.testbundle
+        #- classic/rdma_ext.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
         #- classic/rdma_reg.testbundle
         #- classic/rdma_stress.testbundle
-        #- classic/rdma_longevity.testbundle
         - tso/tso_regr.testbundle
         - rss/rss.testbundle
         - classic/driver-features.testbundle
