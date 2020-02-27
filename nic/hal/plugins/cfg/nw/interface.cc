@@ -1314,6 +1314,10 @@ uplink_if_get_oper_state(uint32_t fp_port_num)
     hal_ret_t   ret = HAL_RET_OK;
     port_args_t args = {0};
 
+    if (hal::is_platform_type_sim()) {
+        return intf::IF_STATUS_UP;
+    }
+
     args.port_num = fp_port_num;
     ret = linkmgr::port_get(&args);
     if (ret != HAL_RET_OK) {
