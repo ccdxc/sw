@@ -181,14 +181,18 @@ pds_dhcp_relay_fill_subnet_info(uint32_t vnic_id, uint32_t *subnet_pfx,
     pds_impl_db_subnet_entry_t *subnet_info;
 
     vnic_info = pds_impl_db_vnic_get(vnic_id);
-    u32 subnet_id = vnic_info->subnet_hw_id;
+    if (vnic_info) {
+        u32 subnet_id = vnic_info->subnet_hw_id;
 
-    subnet_info = pds_impl_db_subnet_get(subnet_id);
-    *subnet_ip = subnet_info->vr_ip.ip4.as_u32;
-    *subnet_pfx = *subnet_ip & (0xffffffff << (32 - subnet_info->prefix_len) );
+        subnet_info = pds_impl_db_subnet_get(subnet_id);
+        if (subnet_info) {
+            *subnet_ip = subnet_info->vr_ip.ip4.as_u32;
+            *subnet_pfx = *subnet_ip & (0xffffffff << (32 - subnet_info->prefix_len) );
 
-    *subnet_pfx = htonl(*subnet_pfx);
-    *subnet_ip = htonl(*subnet_ip);
+            *subnet_pfx = htonl(*subnet_pfx);
+            *subnet_ip = htonl(*subnet_ip);
+        }
+    }
 
     return;
 }

@@ -73,10 +73,11 @@ typedef struct p4_tx_cpu_hdr_s {
     union {
         uint16_t lif_flags;
         struct {
-            uint16_t lif_sbit0_ebit7    : 8;
-            uint16_t lif_sbit8_ebit10   : 3;
-            uint16_t nexthop_valid      : 1;
-            uint16_t pad                : 4;
+            uint16_t lif_sbit0_ebit7        : 8;
+            uint16_t lif_sbit8_ebit10       : 3;
+            uint16_t nexthop_valid          : 1;
+            uint16_t local_mapping_overide  : 1;
+            uint16_t pad                    : 3;
         };
     };
     uint8_t nexthop_type;

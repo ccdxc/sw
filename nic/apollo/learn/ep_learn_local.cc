@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/l2.hpp"
+#include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
@@ -119,6 +120,38 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
     ip_addr_t *ip = &ctxt->ip_key.ip_addr;
 
     switch (ctxt->impl_info.pkt_type) {
+    case PKT_TYPE_DHCP:
+    {
+        dhcp_header_t *dhcp = (dhcp_header_t *) (pkt_data +
+                                                 ctxt->impl_info.l3_offset +
+                                                 IPV4_MIN_HDR_LEN +
+                                                 UDP_HDR_LEN);
+        dhcp_option_t *op = dhcp->options;
+        bool dhcp_request = false;
+        bool ip_found = false;
+        while (op->option != DHCP_PACKET_OPTION_END) {
+            if (DHCP_PACKET_OPTION_MSG_TYPE == op->option) {
+                if (DHCP_PACKET_REQUEST == op->data[0]) {
+                    dhcp_request = true;
+                } else {
+                    // this is not msg of our interest
+                    break;
+                }
+            } else if (DHCP_PACKET_OPTION_REQ_IP_ADDR == op->option) { 
+                ip->af = IP_AF_IPV4;
+                ip->addr.v4_addr = ntohl((*(op->data_as_u32)));
+                ip_found = true;
+            }
+            if (dhcp_request && ip_found) {
+                break;
+            }
+            op = (dhcp_option_t *) (op->data + op->length);
+        }
+        if (!dhcp_request || !ip_found || (0 == ip->addr.v4_addr)) {
+            return false;
+        }
+        break;
+    }
     case PKT_TYPE_ARP:
     {
         arp_hdr_t *arp_hdr = (arp_hdr_t *) (pkt_data +
@@ -139,7 +172,6 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
         break;
     }
     case PKT_TYPE_IPV4:
-    case PKT_TYPE_DHCP:
         IPV4_HDR_SIP_GET(pkt_data + ctxt->impl_info.l3_offset, ip->addr.v4_addr);
         // dhcp packets other than ack have src IP set to 0.0.0.0
         if (ip->addr.v4_addr == 0) {
@@ -430,11 +462,7 @@ add_tx_pkt_hdr (void *mbuf, local_learn_ctxt_t *ctxt)
     }
 
     tx_info.slif = ctxt->impl_info.lif;
-    if (ctxt->impl_info.pkt_type == PKT_TYPE_DHCP) {
-        tx_info.nh_type = impl::LEARN_NH_TYPE_DATAPATH_MNIC;
-    } else {
-        tx_info.nh_type = impl::LEARN_NH_TYPE_NONE;
-    }
+    tx_info.nh_type = impl::LEARN_NH_TYPE_NONE;
     impl::arm_to_p4_tx_hdr_fill(learn_lif_mbuf_data_start(mbuf), &tx_info);
     return SDK_RET_OK;
 }

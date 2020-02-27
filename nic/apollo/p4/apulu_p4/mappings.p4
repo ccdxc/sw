@@ -88,7 +88,9 @@ action local_mapping_info(entry_valid, vnic_id,
             modify_field(control_metadata.local_mapping_done, TRUE);
         }
     } else {
-        modify_field(control_metadata.local_mapping_miss, TRUE);
+        if (arm_to_p4i.local_mapping_overide == FALSE) {
+            modify_field(control_metadata.local_mapping_miss, TRUE);
+        }
         modify_field(control_metadata.local_mapping_done, TRUE);
     }
 
