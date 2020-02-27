@@ -9,14 +9,14 @@ targets:
     feature:
 
   linux:
-    commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.linux | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
+    commands: ["sh", "-c", "make -C $GOPATH/src/github.com/pensando/sw/nic/upgrade_manager/export/upggosdk && cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.linux | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
     owners: ["email:arathore@pensando.io"]
     area:
     sub-area:
     feature:
 
   freebsd:
-    commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.freebsd | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
+    commands: ["sh", "-c", "make -C $GOPATH/src/github.com/pensando/sw/nic/upgrade_manager/export/upggosdk && cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.freebsd | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
     owners: ["email:arathore@pensando.io"]
     area:
     sub-area:

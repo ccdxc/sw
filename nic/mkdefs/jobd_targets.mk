@@ -361,7 +361,7 @@ jobd/make/nic:
 
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}
-	cd ${NICDIR} && ${MAKE} sysmgr_delphidp.submake
+	cd ${NICDIR}/.. && ${MAKE} -C nic/sysmgr/proto
 	cd ${NICDIR}/.. && ${MAKE} -C nic/agent/dscagent
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
 	${NICDIR}/tools/release.sh
