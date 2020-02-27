@@ -33,15 +33,32 @@ def Setup(tc):
 def Trigger(tc):
     try:
         for _iter in range(tc.iterators.count):
+            reboot_type = tc.iterators.reboot_types
             api.Logger.info("Iter: %d" % _iter)
             uptime1 = GetNaplesUptime(tc.node_name)
             start_time = time.time()
-            api.Logger.info("Issuing IPMI server restart")
-            ret = api.RestartNodes([tc.node_name], 'ipmi')
-            if ret != api.types.status.SUCCESS:
-                api.Logger.info("IPMI server restart failed")
-                return api.types.status.FAILURE
-            api.Logger.info("IPMI server restart done")
+            if reboot_type == "offon":
+                api.Logger.info("Powering off the server")
+                ret = api.IpmiNodes([tc.node_name], ipmiMethod="off", useNcsi=True)
+                if ret != api.types.status.SUCCESS:
+                    api.Logger.info("IPMI power off failed")
+                    return api.types.status.FAILURE
+                api.Logger.info("Server powered off")
+                time.sleep(5)
+                api.Logger.info("Powering on the server")
+                ret = api.IpmiNodes([tc.node_name], ipmiMethod="on", useNcsi=True)
+                if ret != api.types.status.SUCCESS:
+                    api.Logger.info("IPMI power on failed")
+                    return api.types.status.FAILURE
+                api.Logger.info("Server powered on")
+            else: 
+                api.Logger.info("Issuing IPMI server reboot: %s" % reboot_type)
+                ret = api.IpmiNodes([tc.node_name], ipmiMethod=reboot_type, useNcsi=True)
+                if ret != api.types.status.SUCCESS:
+                    api.Logger.info("IPMI server restart failed")
+                    return api.types.status.FAILURE
+                api.Logger.info("IPMI server restart done")
+                
             tc.test_node.WaitForHost()
             elapsed_time = time.time() - start_time
             uptime2 =  GetNaplesUptime(tc.node_name)
@@ -52,7 +69,7 @@ def Trigger(tc):
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("Unable to connect ot ILO in NCSI mode")
                 return api.types.status.FAILURE
-            api.Logger.info("IPMI server restart successfull")
+            api.Logger.info("IPMI server %s successfull" % reboot_type)
     except:
         api.Logger.error(traceback.format_exc())
         return api.types.status.FAILURE

@@ -43,7 +43,7 @@ def Trigger(tc):
                 api.Logger.error("ILO not accessible in NCSI mode")
                 return api.types.status.ERROR
             api.Logger.info("Flapping data ports")
-            ret = api.FlapDataPorts([tc.node_name], num_ports_per_node=2, down_time=30,
+            ret = api.FlapDataPorts([tc.node_name], num_ports_per_node=2, down_time=10,
                                     flap_count=1)
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("Data ports flap not successfull")

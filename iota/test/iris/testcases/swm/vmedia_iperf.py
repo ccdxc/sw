@@ -15,11 +15,17 @@ from .utils.ncsi_ops import set_ncsi_mode
 from .utils.dedicated_mode_ops import set_dedicated_mode
 from .utils.common import get_redfish_obj
 from .utils.host import tuneLinux
+from .utils.vmedia_ops import mount_vmedia
+from .utils.vmedia_ops import eject_vmedia
+
+VMEDIA_PATH = "http://pxe/iso/swm_test/test_vmedia_iperf.iso"
 
 def Setup(tc):
+    tc.mounted = False
+    tc.RF = None
     naples_nodes = api.GetNaplesNodes()
     if len(naples_nodes) == 0:
-        api.Logger.error("No naples node found")
+        api.Logger.error("No naples node found, exiting...")
         return api.types.status.ERROR
     tc.test_node = naples_nodes[0]
     tc.node_name = tc.test_node.Name()
@@ -31,17 +37,24 @@ def Setup(tc):
         
     tc.ilo_ip = cimc_info.GetIp()
     tc.ilo_ncsi_ip = cimc_info.GetNcsiIp()
-    tc.cimc_info = cimc_info
-
-    if ping(tc.ilo_ip, 2) == api.types.status.SUCCESS:
-        tc.initial_mode = "dedicated"
-    elif ping(tc.ilo_ncsi_ip, 2) == api.types.status.SUCCESS:
-        tc.initial_mode = "ncsi"
-    else:
-        api.Logger.error('ILO unreachable')
-        return api.types.status.FAILURE
+    try:
+        check_set_ncsi(cimc_info)
+        # Create a Redfish client object
+        tc.RF = get_redfish_obj(cimc_info, mode="ncsi")
+        # Mount vmedia
+        if mount_vmedia(tc.RF, VMEDIA_PATH) != api.types.status.SUCCESS:
+            api.Logger.error("Mounting vmedia unsuccessful")
+            return api.types.status.ERROR
+        api.Logger.info("Vmedia mount success")
+        time.sleep(10)
+        tc.mounted = True
+    except:
+        api.Logger.error(traceback.format_exc())
+        return api.types.status.ERROR
+    
     # Tune linux settings
     tuneLinux()
+
     workload_pairs = api.GetRemoteWorkloadPairs()
     
     if not workload_pairs:
@@ -52,12 +65,52 @@ def Setup(tc):
 
     return api.types.status.SUCCESS
 
+def __execute_cmd(node_name, cmd, timeout=None):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    if timeout:
+        api.Trigger_AddHostCommand(req, node_name, cmd, timeout=timeout)
+    else:
+        api.Trigger_AddHostCommand(req, node_name, cmd)
+
+    resp = api.Trigger(req)
+    if resp is None:
+        raise RuntimeError("Failed to trigger on host %s cmd %s" % (node_name, cmd))
+    return resp
+
+def _run_vmedia_traffic(node_name):
+    retries = 10
+    for _i in range(retries):
+        cddev = "/dev/sr0"
+        cmd = "ls %s" % cddev
+        resp = __execute_cmd(node_name, cmd)
+        cmd = resp.commands.pop()
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            cddev = "/dev/sr1"
+            cmd = "ls %s" % cddev
+            resp = __execute_cmd(node_name, cmd)
+            cmd = resp.commands.pop()
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                api.Logger.info("Device not available %s" % cddev)
+                if _i < (retries - 1):
+                    api.Logger.info("Retrying after 30s...")
+                    time.sleep(30)
+                continue
+        api.Logger.info("Vmedia is mapped to device %s" % (cddev))
+        cmd = "dd if=%s of=/dev/null bs=1M" % cddev
+        resp = __execute_cmd(node_name, cmd, timeout=3600)
+        cmd = resp.commands.pop()
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            raise RuntimeError("Vmedia traffic test is not successfull")
+        return
+    raise RuntimeError("Vmedia device was not detected on the host after %d retries"
+                       % (retries))
+
 def Trigger(tc):
-    max_pings = int(getattr(tc.args, "max_pings", 60))
-    num_runs = int(getattr(tc.args, "num_runs", 1))
     serverCmd = None
     clientCmd = None
-    mode = tc.initial_mode
     IPERF_TIMEOUT = 86400
     try:
         serverReq = api.Trigger_CreateExecuteCommandsRequest()
@@ -99,35 +152,7 @@ def Trigger(tc):
         time.sleep(5)
         tc.iperf_client_resp = api.Trigger(clientReq)
 
-        for _i in range(num_runs):
-            RF = get_redfish_obj(tc.cimc_info, mode=mode)
-            obs_mode = get_nic_mode(RF)
-            api.Logger.info("Iteration %d: curr_mode %s" % (_i, obs_mode))
-            if mode != obs_mode:
-                raise RuntimeError("Expected NIC mode %s, observed %s" % (mode, obs_mode))
-
-            next_mode = "dedicated" if mode == "ncsi" else "ncsi"
-            if next_mode == "ncsi":
-                ret = set_ncsi_mode(RF, mode="dhcp")
-            else:
-                ret = set_dedicated_mode(RF, mode="dhcp")
-            if ret != api.types.status.SUCCESS:
-                api.Logger.error("Mode switch from %s -> %s failed" %(mode, next_mode))
-                return api.types.status.FAILURE
-
-            api.Logger.info("Switched mode to %s" % (next_mode))
-            time.sleep(5)
-            if ret == api.types.status.SUCCESS:
-                curr_ilo_ip = tc.ilo_ip if next_mode == "dedicated" else tc.ilo_ncsi_ip
-                ret = ping(curr_ilo_ip, max_pings)
-                if ret != api.types.status.SUCCESS:
-                    RF.logout()
-                    raise RuntimeError('Unable to ping ILO, Port Switch fail from'
-                                      ' %s -> %s' % (mode, next_mode))
-                api.Logger.info("Mode switch from %s -> %s successful" % (mode, next_mode))
-            else:
-                raise RuntimeError('Mode switch config failed')
-            mode = next_mode
+        _run_vmedia_traffic(tc.node_name)
     except:
         api.Logger.error(traceback.format_exc())
         return api.types.status.FAILURE
@@ -173,4 +198,14 @@ def Verify(tc):
     return api.types.status.SUCCESS
 
 def Teardown(tc):
+    try:
+        if tc.mounted is True:
+            if eject_vmedia(tc.RF) != api.types.status.SUCCESS:
+                api.Logger.error("Ejecting vmedia unsuccessful")
+        if tc.RF:
+            tc.RF.logout()
+    except:
+        api.Logger.error(traceback.format_exc())
+        return api.types.status.ERROR
+
     return api.types.status.SUCCESS

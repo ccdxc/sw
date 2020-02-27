@@ -40,10 +40,12 @@ def Setup(tc):
 def Trigger(tc):
     try:
         api.Logger.info("Issuing server reset")
-        ret = api.RestartNodes([tc.node_name], 'reboot')
+        #ret = api.RestartNodes([tc.node_name], restartMode='ipmi', useNcsi=True)
+        ret = api.IpmiNodes([tc.node_name], 'cycle', useNcsi=True)
         if ret != api.types.status.SUCCESS:
-            api.Logger.error("server reset failed")
+            api.Logger.info("IPMI server restart failed")
             return api.types.status.FAILURE
+        api.Logger.info("IPMI server restart done")
 
         tc.test_node.WaitForHost()
         api.Logger.info("Server reboot successful")

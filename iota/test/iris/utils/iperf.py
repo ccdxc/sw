@@ -39,7 +39,7 @@ def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_co
         cmd.append('-u')
         if bandwidth: 
             cmd.extend(["-b", str(bandwidth)])
-            cmd.append("-w10000")
+        #cmd.append("-w10000")
 
     if jsonOut:
         cmd.append('-J')
