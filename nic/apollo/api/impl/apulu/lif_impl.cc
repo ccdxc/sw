@@ -620,7 +620,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     // allocate and program copp table entry for flow miss
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-    policer = { sdk::POLICER_TYPE_PPS, 300000, 30000 };
+    policer = { sdk::POLICER_TYPE_PPS, 300000, 300000 }; // (type, pps, burst) 
     program_copp_entry_(&policer, idx, false);
 
     // redirect flow miss encapped TCP traffic from uplinks to s/w datapath lif

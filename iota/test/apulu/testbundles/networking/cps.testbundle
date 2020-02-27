@@ -14,8 +14,8 @@ testcases:
             type      : simple
             #proto     : [ tcp, udp ]
             proto     : [ udp ]
-            cps       : [ 100 ]
-            duration  : [ 10 ]
+            cps       : [ 150000 ]
+            duration  : [ 1 ]
             #cps       : [ 20, 20 ]
             #duration  : [ 10, 10 ]
 

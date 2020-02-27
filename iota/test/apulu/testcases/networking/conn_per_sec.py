@@ -41,7 +41,7 @@ def getTunables(tc):
     if tc.iterators.proto == 'tcp':
         tunables['pcap_file'] = "http_get.pcap"
     elif tc.iterators.proto == 'udp':
-        tunables['pcap_file'] = "sip_0.pcap"
+        tunables['pcap_file'] = "chargen-udp.pcap" #"sip_0.pcap"
     else:
         raise Exception("Pcap file not defined for proto: %s"%
                         tc.iterators.proto)

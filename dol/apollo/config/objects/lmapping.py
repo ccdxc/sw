@@ -157,10 +157,11 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         c = 0
         v6c = 0
         v4c = 0
-        if hasattr(vnic_spec_obj, 'lmap'):
+        hasLocalMap = hasattr(vnic_spec_obj, 'lmap')
+        if hasLocalMap: #iota case
             lmap_spec = vnic_spec_obj.lmap[0]
-            lmap_count = lmap_spec.count
-        else:
+            lmap_count = len(vnic_spec_obj.lmap)
+        else: #Dol case
             lmap_spec = vnic_spec_obj
             lmap_count = vnic_spec_obj.ipcount
         while c < lmap_count:
@@ -168,12 +169,18 @@ class LocalMappingObjectClient(base.ConfigClientBase):
                 obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_6, v6c)
                 self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
-                v6c = v6c + 1
+                if c < lmap_count and hasLocalMap:
+                    lmap_spec = vnic_spec_obj.lmap[c]
+                else:
+                    v6c = v6c + 1
             if c < lmap_count and isV4Stack:
                 obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_4, v4c)
                 self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
-                v4c = v4c + 1
+                if c < lmap_count and hasLocalMap:
+                    lmap_spec = vnic_spec_obj.lmap[c]
+                else: 
+                    v4c = v4c + 1
         return
 
     def CreateObjects(self, node):
