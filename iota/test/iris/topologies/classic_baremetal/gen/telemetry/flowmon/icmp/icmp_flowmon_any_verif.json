@@ -1,0 +1,18 @@
+[
+    {
+        "protocol": "icmp", 
+        "src_ip": "any",
+        "result": "flowmon", 
+        "dst_ip": "any", 
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "icmp", 
+        "src_ip": "any", 
+        "result": "flowmon", 
+        "dst_ip": "any",
+        "collector": "flowmon", 
+        "port": "120"
+    }
+]

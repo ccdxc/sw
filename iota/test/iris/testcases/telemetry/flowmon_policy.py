@@ -5,16 +5,10 @@ import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.telemetry.utils as utils
 import pdb
 
+
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
     tc.workloads = api.GetWorkloads()
-
-    for wl in tc.workloads:
-        # check if BM type
-        if api.IsBareMetalWorkloadType(wl.node_name):
-            api.Logger.info("For BM type, this test is not supported yet")
-            tc.skip = True
-            break
 
     #agent_api.DeleteMirrors()
     return api.types.status.SUCCESS
@@ -27,6 +21,7 @@ def Trigger(tc):
     count = 0
     ret_count = 0
     for policy_json in policies:
+        collector_dest = None
         #pdb.set_trace()
         verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
         newObjects = agent_api.AddOneConfig(policy_json)
@@ -37,9 +32,15 @@ def Trigger(tc):
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push flowmon objects")
             return api.types.status.FAILURE
+
+        # Get collector to find the workload
+        for obj in newObjects:
+            collector_dest = obj.spec.exports[0].destination
+            api.Logger.info("export-dest: {} ".format(collector_dest))
+
         # Get collector
         for wl in tc.workloads:
-            if tc.args.collector == wl.ip_address:
+            if collector_dest == wl.ip_address:
                 collector_wl = wl
                 break
         ret = utils.RunAll(collector_wl, verif_json, tc, 'flowmon')
@@ -49,6 +50,9 @@ def Trigger(tc):
         agent_api.DeleteConfigObjects(newObjects)
         agent_api.RemoveConfigObjects(newObjects)
         api.Logger.info("policy_json = {}, count = {}, total_count = {}".format(policy_json, ret_count, count))
+        if result != api.types.status.SUCCESS:
+            api.Logger.info("policy_json = {}, Encountered FAILURE, stopping".format(policy_json))
+            break
     tc.SetTestCount(count)
     return result
 

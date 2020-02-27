@@ -40,7 +40,7 @@ def GetTcpDumpCmd(intf, protocol = None, port = 0):
 
     return cmd
 
-def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
+def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port, is_wl_bm_type = False):
     if protocol == 'tcp':
         cmd = "hping3 -S -p {} -c 1 {} -I {}".format(int(destination_port), destination_ip, src_wl.interface)
     elif protocol == 'udp':
@@ -49,7 +49,7 @@ def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
         # Workaround for hping issue on BM workload over VLAN tagged sub-if;
         # hping sends local host addr as source IP for hping on tagged sub-if;
         # hence using ping instead of hping on BM.
-        if api.IsBareMetalWorkloadType(src_wl.node_name):
+        if is_wl_bm_type:
             cmd = "ping -c 1 {} ".format(destination_ip)
         else:
             cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
@@ -194,15 +194,19 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     if feature == 'mirror':
         time.sleep(2)
 
-    cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
+    if api.IsBareMetalWorkloadType(src_wl.node_name):
+        cmd = GetNpingCmd(protocol, destination_ip, destination_port)
+    else:
+        cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port, False)
+
     api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
 
-    #api.Logger.info("Trigger resp commands")
-    #for cmd in trig_resp.commands:
-    #    api.PrintCommandResults(cmd)
+    api.Logger.info("Trigger resp commands")
+    for cmd in trig_resp.commands:
+        api.PrintCommandResults(cmd)
 
     if feature == 'flowmon':
         time.sleep(2)
@@ -303,9 +307,9 @@ def RunAll(collector_w, verif_json, tc, feature):
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)
-        dest_w = GetDestWorkload(verif[i], tc, src_w)
         if src_w == None:
             continue
+        dest_w = GetDestWorkload(verif[i], tc, src_w)
         if dest_w == None:
             continue
         # If both workload nodes are not naples, continue

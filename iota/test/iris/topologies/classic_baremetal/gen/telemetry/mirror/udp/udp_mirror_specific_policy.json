@@ -1,0 +1,66 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "MirrorSession", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "mirror-2", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "match-rules": [
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.5.0.2"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.5.0.1"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.5.0.1"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.5.0.2"
+                            ]
+                        }
+                    }
+                ], 
+                "collectors": [
+                    {
+                        "export-config": {
+                            "destination": "10.255.0.2"
+                        }, 
+                        "type": "erspan"
+                    }
+                ]
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/mirror/sessions/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

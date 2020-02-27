@@ -1,0 +1,70 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "FlowExportPolicy", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "flow-export-ipfix-0", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "template-interval": "5m", 
+                "exports": [
+                    {
+                        "destination": "10.255.0.2",
+                        "proto-port": {
+                            "protocol": "udp", 
+                            "port": "2055"
+                        }
+                    }
+                ], 
+                "interval": "1s", 
+                "match-rules": [
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.6.0.2"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.6.0.0/24"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.6.0.0/24"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.6.0.2"
+                            ]
+                        }
+                    }
+                ], 
+                "format": "IPFIX"
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/telemetry/flowexports/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

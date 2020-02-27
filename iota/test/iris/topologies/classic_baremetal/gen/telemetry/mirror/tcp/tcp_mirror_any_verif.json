@@ -1,0 +1,16 @@
+[
+    {
+        "src_ip": "any",
+        "dst_ip": "any", 
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "any", 
+        "dst_ip": "any",
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }
+]
