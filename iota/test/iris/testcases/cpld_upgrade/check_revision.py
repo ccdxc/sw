@@ -59,7 +59,7 @@ def Trigger(tc):
                 api.Logger.error("Not using the latest build.")
                 return api.types.status.FAILURE
             # iterate through all the bit files
-            for counter in range(len(data["bitfiles"][0])):
+            for counter in range(len(data["bitfiles"])):
                 # iterate through all part number for each bit file
                 for pcounter in range(len(data["bitfiles"][counter]["partnumber"])):
                     mani_partnumber = data["bitfiles"][counter]["partnumber"][pcounter]
