@@ -82,14 +82,21 @@ pds_dst_addr_get (uint32_t dst_addr, ip_addr_t *dst)
 
 static inline int
 pds_mapping_dmac_get (mac_addr_t mac_addr, uint32_t dst_addr,
-                      uint16_t vpc_id)
+                      uint16_t vpc_id, uint16_t bd_id)
 {
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     ip_addr_t dst;
     sdk_ret_t ret;
+    uint32_t vr_ip = 0;
+    uint8_t *vr_mac;
 
+    pds_impl_db_vr_ip_mac_get(bd_id, &vr_ip, &vr_mac);
+    if (vr_ip == dst_addr) {
+        memcpy(mac_addr, vr_mac, ETH_ADDR_LEN);
+        return 0;
+    }
     pds_dst_addr_get(dst_addr, &dst);
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_id, &dst);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
@@ -127,11 +134,12 @@ pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
     uint16_t bd_id;
     int ret;
 
+    bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
+
     if (pds_impl_db_bridging_en_get()) {
         vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
-        ret = pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id);
+        ret = pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id, bd_id);
     } else {
-        bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
         ret = pds_bd_vr_mac_get(mac_addr, bd_id);
     }
     return ret;

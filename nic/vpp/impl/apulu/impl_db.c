@@ -115,6 +115,18 @@ pds_impl_db_subnet_set (uint8_t pfx_len,
 IMPL_DB_ENTRY_DEL(uint16_t, subnet);
 IMPL_DB_ENTRY_GET(uint16_t, subnet);
 
+void
+pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_mac)
+{
+    pds_impl_db_subnet_entry_t *entry = pds_impl_db_subnet_get(subnet);
+    if (PREDICT_FALSE(!entry)) {
+        return;
+    }
+    *vr_ip = entry->vr_ip.ip4.data_u32;
+    *vr_mac = entry->mac;
+    return;
+}
+
 int
 pds_impl_db_device_set (const u8 *mac, const u8 *ip, u8 ip4, u8 bridging_en)
 {

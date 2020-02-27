@@ -64,8 +64,13 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
             goto error;
         }
 
-        // Ethernet
         e0 = vlib_buffer_get_current(p0) + VPP_P4_TO_ARM_HDR_SZ;
+        if (0 == clib_memcmp(mac, e0->src_address, ETH_ADDR_LEN)) {
+            // this is arp probe sent by host to detect DAD, so drop this.
+            counter[ARP_PROXY_COUNTER_DAD_DROP]++;
+            goto error;
+        }
+        // Ethernet
         clib_memcpy(&e0->dst_address, &e0->src_address, ETH_ADDR_LEN);
         clib_memcpy(&e0->src_address, mac, ETH_ADDR_LEN);
 

@@ -14,6 +14,7 @@
     _(VNIC_MISSING, "VNIC not present")                     \
     _(NO_MAC, "MAC not found for ARP request")              \
     _(NOT_ARP_REQUEST, "Not an ARP request" )               \
+    _(DAD_DROP, "Duplicate address detection drops")        \
 
 #define foreach_arp_proxy_next                              \
     _(EXIT, "pds-arp-proxy-exit")                           \
