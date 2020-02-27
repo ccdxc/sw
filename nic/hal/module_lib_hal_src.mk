@@ -35,6 +35,7 @@ MODULE_SRCS     := ${MODULE_SRCS} \
                    ${MODULE_SRC_DIR}/src/internal/proxyrcb.cc \
                    ${MODULE_SRC_DIR}/src/internal/proxyccb.cc \
                    ${MODULE_SRC_DIR}/src/internal/rawrcb.cc \
+                   ${MODULE_SRC_DIR}/src/internal/delphi_events.cc \
                    ${MODULE_SRC_DIR}/src/internal/system.cc
 endif
 MODULE_INCS     = ${TOPDIR}/nic/hal/third-party/openssl/include \

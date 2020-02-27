@@ -540,8 +540,6 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
 
     if (logger_ != NULL) {
         fw_log(logger_, t_fwlg);
-    } else {
-        HAL_TRACE_ERR("fte logger is null");
     }
 }
 

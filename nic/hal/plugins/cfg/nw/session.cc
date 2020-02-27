@@ -27,6 +27,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
 #include "gen/proto/flowstats/flowstats.delphi.hpp"
+#include "nic/hal/src/internal/delphi_events.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -83,6 +84,7 @@ std::ostream& operator<<(std::ostream& os, const hal::flow_state_t& val) {
 
 thread_local void *t_session_timer;
 session_stats_t  *g_session_stats;
+session_limit_stats_tracker_t *g_session_limit_stats_trckr = NULL;
 
 sdk_spinlock_t          g_flow_telemetry_slock;
 flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
@@ -2380,6 +2382,164 @@ update_session_stats_thr_safe(uint64_t *stat_ptr, bool decr)
     __sync_lock_release(&g_session_stats_updt_locked_);
 }
 
+static void
+update_session_thresh_reset_status(session_t *session,
+                      types::IPProtocol ip_proto,
+                      bool low_thresh_reset,
+                      bool high_thresh_reset)
+{
+    switch(ip_proto) {
+    case IPPROTO_TCP:
+        g_session_limit_stats_trckr->tcp_half_open_sess_limit_low_thresh_reset
+            = low_thresh_reset ? 1 : 0;
+        g_session_limit_stats_trckr->tcp_half_open_sess_limit_high_thresh_reset
+            = high_thresh_reset ? 1 : 0;
+        break;
+    case IPPROTO_UDP:
+        g_session_limit_stats_trckr->udp_sess_limit_low_thresh_reset
+            = low_thresh_reset ? 1 : 0;
+        g_session_limit_stats_trckr->udp_sess_limit_high_thresh_reset
+            = high_thresh_reset ? 1 : 0;
+        break;
+    case IPPROTO_ICMP:
+        g_session_limit_stats_trckr->icmp_sess_limit_low_thresh_reset
+            = low_thresh_reset ? 1 : 0;
+        g_session_limit_stats_trckr->icmp_sess_limit_high_thresh_reset
+            = high_thresh_reset ? 1 : 0;
+        break;
+    default:
+        g_session_limit_stats_trckr->other_sess_limit_low_thresh_reset
+            = low_thresh_reset ? 1 : 0;
+        g_session_limit_stats_trckr->other_sess_limit_high_thresh_reset
+            = high_thresh_reset ? 1 : 0;
+        break;
+    }
+}
+
+// check for flood protection limits/threshold reach state and raise event
+void
+check_and_generate_session_limit_event (session_t *session)
+{
+    bool                         send_flag = false;
+    bool                         low_threshold_reset = 0;
+    bool                         high_threshold_reset = 0;
+    uint32_t                     num_active_session = 0;
+    eventtypes::EventTypes       session_limit_event;
+    types::IPProtocol            ip_proto = types::IPPROTO_NONE;
+    hal::vrf_t                  *vrf = NULL;
+    hal::nwsec_profile_t        *nwsec_prof = NULL;
+    uint64_t                     session_limit = 0;
+    flow_key_t                   key = session->iflow->config.key;
+
+    // TBD if session limits needs to be applied for
+    // transparent policy-enforced, then we need to
+    // check and generate events when it reaches the limits.
+    if (!(hal::g_hal_state->is_policy_enforced())) {
+        return;
+    }
+
+    vrf = vrf_lookup_by_handle(session->vrf_handle);
+    if ((vrf != NULL) && (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID)) {
+        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+    }
+    if (nwsec_prof == NULL) {
+        // No valid nwsec profile, hence no session limits.
+        return;
+    }
+    if (key.flow_type == FLOW_TYPE_V4 ||
+        key.flow_type == FLOW_TYPE_V6) {
+        ip_proto = key.proto;
+    }
+    switch (ip_proto) {
+    case types::IPPROTO_TCP:
+        session_limit = ((nwsec_prof != NULL) ? nwsec_prof->tcp_half_open_session_limit : 0);
+        num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions;
+        low_threshold_reset = g_session_limit_stats_trckr->tcp_half_open_sess_limit_low_thresh_reset;
+        high_threshold_reset = g_session_limit_stats_trckr->tcp_half_open_sess_limit_high_thresh_reset;
+        break;
+    case types::IPPROTO_UDP:
+        session_limit = ((nwsec_prof != NULL) ? nwsec_prof->udp_active_session_limit: 0);
+        num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->udp_sessions;
+        low_threshold_reset = g_session_limit_stats_trckr->udp_sess_limit_low_thresh_reset;
+        high_threshold_reset = g_session_limit_stats_trckr->udp_sess_limit_high_thresh_reset;
+        break;
+    case types::IPPROTO_ICMP:
+        session_limit = ((nwsec_prof != NULL) ? nwsec_prof->icmp_active_session_limit: 0);
+        num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->icmp_sessions;
+        low_threshold_reset = g_session_limit_stats_trckr->icmp_sess_limit_low_thresh_reset;
+        high_threshold_reset = g_session_limit_stats_trckr->icmp_sess_limit_high_thresh_reset;
+        break;
+    default: //L2 or other sessions
+        session_limit = ((nwsec_prof != NULL) ? nwsec_prof->other_active_session_limit: 0);
+        num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->other_active_sessions;
+        low_threshold_reset = g_session_limit_stats_trckr->other_sess_limit_low_thresh_reset;
+        high_threshold_reset = g_session_limit_stats_trckr->other_sess_limit_high_thresh_reset;
+        break;
+    }
+
+    if (!session_limit) {
+        // session limit not configured, return
+        return;
+    }
+    if (num_active_session < ((session_limit/100)*SESS_LIMIT_LOWER_THRESHOLD)) {
+        // count fell below low threshold
+        low_threshold_reset = 1;
+        update_session_thresh_reset_status(session, ip_proto,
+                low_threshold_reset, high_threshold_reset);
+        return;
+    }
+    if (!high_threshold_reset && (num_active_session < ((session_limit/100)*SESS_LIMIT_UPPER_THRESHOLD))) {
+        // count fell below high threshold
+        high_threshold_reset = 1;
+    }
+
+    if (high_threshold_reset && (num_active_session >= session_limit)) {
+        high_threshold_reset = 0;
+        // limit reached, raise limit reached event
+        switch(ip_proto) {
+        case IPPROTO_TCP:
+            session_limit_event = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_REACHED;
+            break;
+        case IPPROTO_UDP:
+            session_limit_event = eventtypes::UDP_ACTIVE_SESSION_LIMIT_REACHED;
+            break;
+        case IPPROTO_ICMP:
+            session_limit_event = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_REACHED;
+            break;
+        default:
+            session_limit_event = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_REACHED;
+            break;
+        }
+        send_flag = true;
+    } else if (low_threshold_reset &&
+            (num_active_session >= ((session_limit/100)*SESS_LIMIT_UPPER_THRESHOLD))) {
+        low_threshold_reset = 0;
+        // limit reached, raise limit approach event
+        switch(ip_proto) {
+        case IPPROTO_TCP:
+            session_limit_event = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_APPROACH;
+            break;
+        case IPPROTO_UDP:
+            session_limit_event = eventtypes::UDP_ACTIVE_SESSION_LIMIT_APPROACH;
+            break;
+        case IPPROTO_ICMP:
+            session_limit_event = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_APPROACH;
+            break;
+        default:
+            session_limit_event = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_APPROACH;
+            break;
+        }
+        send_flag = true;
+    }
+    update_session_thresh_reset_status(session, ip_proto,
+            low_threshold_reset, high_threshold_reset);
+
+    if (send_flag) {
+        // Raise delphi event of type session_limit_event.
+        hal_session_event_notify(session_limit_event);
+    }
+}
+
 inline void
 update_global_session_stats (session_t *session, bool decr=false)
 {
@@ -2549,6 +2709,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
         HAL_SESSION_STATS_PTR(session->fte_id)->num_session_create_err += 1;
     } else {
         update_global_session_stats(session);
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
     }
 
     return ret;
@@ -2683,6 +2845,8 @@ session_delete(const session_args_t *args, session_t *session)
     }
 
     update_global_session_stats(session, true);
+    // Check and raise session limit approach/reached event
+    check_and_generate_session_limit_event(session);
 
     session_cleanup(session);
 
@@ -2989,6 +3153,8 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         session->is_in_half_open_state = 0;
         update_session_stats_thr_safe(
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
     }
 
     // Check if its a TCP flow with connection tracking enabled.
@@ -3373,6 +3539,8 @@ session_age_cb (void *entry, void *ctxt)
                 session->is_in_half_open_state = 0;
                 update_session_stats_thr_safe(
                         &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+                // Check and raise session limit approach/reached event
+                check_and_generate_session_limit_event(session);
             }
             // Stop processing if we have reached the maximum limit per FTE
             // We will process the rest in the next round
@@ -3592,6 +3760,10 @@ session_init (hal_cfg_t *hal_cfg)
         SDK_SPINLOCK_INIT(&g_flow_telemetry_slock, PTHREAD_PROCESS_SHARED);
     }
 
+    g_session_limit_stats_trckr = (session_limit_stats_tracker_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESSION_SUMMARY_STATS,
+            (sizeof(session_limit_stats_tracker_t)));
+    SDK_ASSERT(g_session_limit_stats_trckr != NULL);
+
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);
 
     // wait until the periodic thread is ready
@@ -3734,6 +3906,8 @@ schedule_tcp_close_timer (session_t *session)
         session->is_in_half_open_state = 0;
         update_session_stats_thr_safe(
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
     }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
@@ -3830,6 +4004,8 @@ schedule_tcp_half_closed_timer (session_t *session)
         session->is_in_half_open_state = 0;
         update_session_stats_thr_safe(
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
     }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
@@ -3871,6 +4047,8 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
         session->is_in_half_open_state = 0;
         update_session_stats_thr_safe(
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
     }
 
     args.session = session;
@@ -3933,6 +4111,8 @@ schedule_tcp_cxnsetup_timer (session_t *session)
     // Keep track of number of TCP half open sessions
     update_session_stats_thr_safe(
             &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, false);
+    // Check and raise session limit approach/reached event
+    check_and_generate_session_limit_event(session);
 
     HAL_TRACE_VERBOSE("TCP Cxn Setup timer started for session {}",
                       session->hal_handle);
@@ -3958,6 +4138,8 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
             session->is_in_half_open_state = 0;
             update_session_stats_thr_safe(
                     &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
+            // Check and raise session limit approach/reached event
+            check_and_generate_session_limit_event(session);
         }
     } else {
         flow = session->rflow;

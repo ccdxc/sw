@@ -25,6 +25,7 @@
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/src/internal/delphi_events.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
 #include "nic/hal/src/stats/stats.hpp"
@@ -105,6 +106,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
 static hal_ret_t
 hal_delphi_thread_init (hal_cfg_t *hal_cfg)
 {
+    hal_ret_t            ret = HAL_RET_OK;
     sdk::lib::thread    *hal_thread;
 
     delphi::SetLogger(std::shared_ptr<logger>(utils::hal_logger()));
@@ -120,6 +122,11 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
     SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "Failed to spawn delphic thread");
     hal_thread->start(hal_thread);
+
+    ret = hal_events_recorder_init();
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+                            "Failed to initialize HAL Events recorder");
+
     return HAL_RET_OK;
 }
 

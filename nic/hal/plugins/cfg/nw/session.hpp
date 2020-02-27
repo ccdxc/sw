@@ -20,6 +20,7 @@
 #include "gen/proto/session.grpc.pb.h"
 #include "nic/p4/common/defines.h"
 #include "gen/proto/internal.grpc.pb.h"
+#include "gen/proto/eventtypes.pb.h"
 
 #define HAL_MAX_INACTIVTY_TIMEOUT    0xFFFFFFFF
 
@@ -473,7 +474,6 @@ typedef struct session_args_s {
     bool               valid_rflow;                       // Rflow valid ?
     bool               update_iflow;                      // Update Iflow ?
     bool               update_rflow;                      // Update Rflow ?
-    bool               is_ipfix_flow;                     // IPFix flow ?
     hal_handle_t       vrf_handle;                        // src vrf
     hal_handle_t       sep_handle;                        // source ep
     hal_handle_t       dep_handle;                        // dest ep
@@ -549,6 +549,22 @@ typedef struct session_stats_ {
     uint64_t    icmp_session_drop_count;   // no. of dropped ICMP sessions exceeding the ICMP session limit
     uint64_t    other_session_drop_count;  // no. of dropped sessions exceeding the other active session limit
 } __PACK__ session_stats_t;
+
+#define SESS_LIMIT_LOWER_THRESHOLD 65
+#define SESS_LIMIT_UPPER_THRESHOLD 80
+// For now below structure is used for session limits stats tracker
+// which is primarily used for session limit validation and
+// for session limit threshold tracking.
+typedef struct session_limit_stats_tracker_ {
+    uint8_t     udp_sess_limit_low_thresh_reset:1;             // UDP session count fell below low threshold
+    uint8_t     udp_sess_limit_high_thresh_reset:1;            // UDP session count fell below high threshold
+    uint8_t     icmp_sess_limit_low_thresh_reset:1;            // ICMP session count fell below low threshold
+    uint8_t     icmp_sess_limit_high_thresh_reset:1;           // ICMP session count fell below high threshold
+    uint8_t     other_sess_limit_low_thresh_reset:1;           // Other session count fell below low threshold
+    uint8_t     other_sess_limit_high_thresh_reset:1;          // Other session count fell below high threshold
+    uint8_t     tcp_half_open_sess_limit_low_thresh_reset:1;   // TCP half-open session count fell below low threshold
+    uint8_t     tcp_half_open_sess_limit_high_thresh_reset:1;  // TCP half-open session count fell below high threshold
+} __PACK__ session_limit_stats_tracker_t;
 
 typedef struct session_get_ {
     grpc::ServerWriter<session::SessionGetResponseMsg> *writer;
