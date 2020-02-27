@@ -238,6 +238,7 @@ type CtkitObject interface {
 	Lock()
 	Unlock()
 	GetKind() string
+	GetResourceVersion() string
 	SetEvent(kvstore.WatchEventType)
 	SetNewObj(newObj CtkitObject)
 	GetNewObj() CtkitObject

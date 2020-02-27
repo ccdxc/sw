@@ -279,7 +279,7 @@ func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
 	}
 
 	// create it in apiserver
-	return ws.stateMgr.ctrler.Network().CreateEvent(&nwt)
+	return ws.stateMgr.ctrler.Network().Create(&nwt)
 }
 
 // createEndpoints tries to create all endpoints for a workload

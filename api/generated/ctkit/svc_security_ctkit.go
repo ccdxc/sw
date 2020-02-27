@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleSecurityGroupEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*securitygroupCtx)
 				ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *securitygroupCtx) GetKey() string {
 
 func (ctx *securitygroupCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *securitygroupCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *securitygroupCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,8 +662,9 @@ func (ct *ctrlerCtx) StopWatchSecurityGroup(handler SecurityGroupHandler) error 
 // SecurityGroupAPI returns
 type SecurityGroupAPI interface {
 	Create(obj *security.SecurityGroup) error
-	CreateEvent(obj *security.SecurityGroup) error
+	SyncCreate(obj *security.SecurityGroup) error
 	Update(obj *security.SecurityGroup) error
+	SyncUpdate(obj *security.SecurityGroup) error
 	Delete(obj *security.SecurityGroup) error
 	Find(meta *api.ObjectMeta) (*SecurityGroup, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*SecurityGroup, error)
@@ -687,8 +697,11 @@ func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
 	return nil
 }
 
-// CreateEvent creates SecurityGroup object and synchronously triggers local event
-func (api *securitygroupAPI) CreateEvent(obj *security.SecurityGroup) error {
+// SyncCreate creates SecurityGroup object and updates the cache
+func (api *securitygroupAPI) SyncCreate(obj *security.SecurityGroup) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -696,19 +709,18 @@ func (api *securitygroupAPI) CreateEvent(obj *security.SecurityGroup) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on SecurityGroup object
@@ -726,6 +738,27 @@ func (api *securitygroupAPI) Update(obj *security.SecurityGroup) error {
 
 	api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on SecurityGroup object and updates the cache
+func (api *securitygroupAPI) SyncUpdate(obj *security.SecurityGroup) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes SecurityGroup object
@@ -958,6 +991,11 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventNoResolver(evt *kvstore.Wat
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*networksecuritypolicyCtx)
 				ct.stats.Counter("NetworkSecurityPolicy_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1022,6 +1060,10 @@ func (ctx *networksecuritypolicyCtx) GetKey() string {
 
 func (ctx *networksecuritypolicyCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *networksecuritypolicyCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *networksecuritypolicyCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1438,8 +1480,9 @@ func (ct *ctrlerCtx) StopWatchNetworkSecurityPolicy(handler NetworkSecurityPolic
 // NetworkSecurityPolicyAPI returns
 type NetworkSecurityPolicyAPI interface {
 	Create(obj *security.NetworkSecurityPolicy) error
-	CreateEvent(obj *security.NetworkSecurityPolicy) error
+	SyncCreate(obj *security.NetworkSecurityPolicy) error
 	Update(obj *security.NetworkSecurityPolicy) error
+	SyncUpdate(obj *security.NetworkSecurityPolicy) error
 	Delete(obj *security.NetworkSecurityPolicy) error
 	Find(meta *api.ObjectMeta) (*NetworkSecurityPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkSecurityPolicy, error)
@@ -1472,8 +1515,11 @@ func (api *networksecuritypolicyAPI) Create(obj *security.NetworkSecurityPolicy)
 	return nil
 }
 
-// CreateEvent creates NetworkSecurityPolicy object and synchronously triggers local event
-func (api *networksecuritypolicyAPI) CreateEvent(obj *security.NetworkSecurityPolicy) error {
+// SyncCreate creates NetworkSecurityPolicy object and updates the cache
+func (api *networksecuritypolicyAPI) SyncCreate(obj *security.NetworkSecurityPolicy) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1481,19 +1527,18 @@ func (api *networksecuritypolicyAPI) CreateEvent(obj *security.NetworkSecurityPo
 			return err
 		}
 
-		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on NetworkSecurityPolicy object
@@ -1511,6 +1556,27 @@ func (api *networksecuritypolicyAPI) Update(obj *security.NetworkSecurityPolicy)
 
 	api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on NetworkSecurityPolicy object and updates the cache
+func (api *networksecuritypolicyAPI) SyncUpdate(obj *security.NetworkSecurityPolicy) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes NetworkSecurityPolicy object
@@ -1743,6 +1809,11 @@ func (ct *ctrlerCtx) handleAppEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*appCtx)
 				ct.stats.Counter("App_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1807,6 +1878,10 @@ func (ctx *appCtx) GetKey() string {
 
 func (ctx *appCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *appCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *appCtx) SetEvent(event kvstore.WatchEventType) {
@@ -2223,8 +2298,9 @@ func (ct *ctrlerCtx) StopWatchApp(handler AppHandler) error {
 // AppAPI returns
 type AppAPI interface {
 	Create(obj *security.App) error
-	CreateEvent(obj *security.App) error
+	SyncCreate(obj *security.App) error
 	Update(obj *security.App) error
+	SyncUpdate(obj *security.App) error
 	Delete(obj *security.App) error
 	Find(meta *api.ObjectMeta) (*App, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*App, error)
@@ -2257,8 +2333,11 @@ func (api *appAPI) Create(obj *security.App) error {
 	return nil
 }
 
-// CreateEvent creates App object and synchronously triggers local event
-func (api *appAPI) CreateEvent(obj *security.App) error {
+// SyncCreate creates App object and updates the cache
+func (api *appAPI) SyncCreate(obj *security.App) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -2266,19 +2345,18 @@ func (api *appAPI) CreateEvent(obj *security.App) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().App().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().App().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().App().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleAppEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on App object
@@ -2296,6 +2374,27 @@ func (api *appAPI) Update(obj *security.App) error {
 
 	api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on App object and updates the cache
+func (api *appAPI) SyncUpdate(obj *security.App) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().App().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleAppEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes App object
@@ -2528,6 +2627,11 @@ func (ct *ctrlerCtx) handleFirewallProfileEventNoResolver(evt *kvstore.WatchEven
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*firewallprofileCtx)
 				ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -2592,6 +2696,10 @@ func (ctx *firewallprofileCtx) GetKey() string {
 
 func (ctx *firewallprofileCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *firewallprofileCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *firewallprofileCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3008,8 +3116,9 @@ func (ct *ctrlerCtx) StopWatchFirewallProfile(handler FirewallProfileHandler) er
 // FirewallProfileAPI returns
 type FirewallProfileAPI interface {
 	Create(obj *security.FirewallProfile) error
-	CreateEvent(obj *security.FirewallProfile) error
+	SyncCreate(obj *security.FirewallProfile) error
 	Update(obj *security.FirewallProfile) error
+	SyncUpdate(obj *security.FirewallProfile) error
 	Delete(obj *security.FirewallProfile) error
 	Find(meta *api.ObjectMeta) (*FirewallProfile, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*FirewallProfile, error)
@@ -3042,8 +3151,11 @@ func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
 	return nil
 }
 
-// CreateEvent creates FirewallProfile object and synchronously triggers local event
-func (api *firewallprofileAPI) CreateEvent(obj *security.FirewallProfile) error {
+// SyncCreate creates FirewallProfile object and updates the cache
+func (api *firewallprofileAPI) SyncCreate(obj *security.FirewallProfile) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3051,19 +3163,18 @@ func (api *firewallprofileAPI) CreateEvent(obj *security.FirewallProfile) error 
 			return err
 		}
 
-		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on FirewallProfile object
@@ -3081,6 +3192,27 @@ func (api *firewallprofileAPI) Update(obj *security.FirewallProfile) error {
 
 	api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on FirewallProfile object and updates the cache
+func (api *firewallprofileAPI) SyncUpdate(obj *security.FirewallProfile) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes FirewallProfile object
@@ -3313,6 +3445,11 @@ func (ct *ctrlerCtx) handleCertificateEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*certificateCtx)
 				ct.stats.Counter("Certificate_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -3377,6 +3514,10 @@ func (ctx *certificateCtx) GetKey() string {
 
 func (ctx *certificateCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *certificateCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *certificateCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3793,8 +3934,9 @@ func (ct *ctrlerCtx) StopWatchCertificate(handler CertificateHandler) error {
 // CertificateAPI returns
 type CertificateAPI interface {
 	Create(obj *security.Certificate) error
-	CreateEvent(obj *security.Certificate) error
+	SyncCreate(obj *security.Certificate) error
 	Update(obj *security.Certificate) error
+	SyncUpdate(obj *security.Certificate) error
 	Delete(obj *security.Certificate) error
 	Find(meta *api.ObjectMeta) (*Certificate, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Certificate, error)
@@ -3827,8 +3969,11 @@ func (api *certificateAPI) Create(obj *security.Certificate) error {
 	return nil
 }
 
-// CreateEvent creates Certificate object and synchronously triggers local event
-func (api *certificateAPI) CreateEvent(obj *security.Certificate) error {
+// SyncCreate creates Certificate object and updates the cache
+func (api *certificateAPI) SyncCreate(obj *security.Certificate) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3836,19 +3981,18 @@ func (api *certificateAPI) CreateEvent(obj *security.Certificate) error {
 			return err
 		}
 
-		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Certificate object
@@ -3866,6 +4010,27 @@ func (api *certificateAPI) Update(obj *security.Certificate) error {
 
 	api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Certificate object and updates the cache
+func (api *certificateAPI) SyncUpdate(obj *security.Certificate) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Certificate object
@@ -4098,6 +4263,11 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventNoResolver(evt *kvstore.W
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*trafficencryptionpolicyCtx)
 				ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -4162,6 +4332,10 @@ func (ctx *trafficencryptionpolicyCtx) GetKey() string {
 
 func (ctx *trafficencryptionpolicyCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *trafficencryptionpolicyCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *trafficencryptionpolicyCtx) SetEvent(event kvstore.WatchEventType) {
@@ -4578,8 +4752,9 @@ func (ct *ctrlerCtx) StopWatchTrafficEncryptionPolicy(handler TrafficEncryptionP
 // TrafficEncryptionPolicyAPI returns
 type TrafficEncryptionPolicyAPI interface {
 	Create(obj *security.TrafficEncryptionPolicy) error
-	CreateEvent(obj *security.TrafficEncryptionPolicy) error
+	SyncCreate(obj *security.TrafficEncryptionPolicy) error
 	Update(obj *security.TrafficEncryptionPolicy) error
+	SyncUpdate(obj *security.TrafficEncryptionPolicy) error
 	Delete(obj *security.TrafficEncryptionPolicy) error
 	Find(meta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*TrafficEncryptionPolicy, error)
@@ -4612,8 +4787,11 @@ func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPol
 	return nil
 }
 
-// CreateEvent creates TrafficEncryptionPolicy object and synchronously triggers local event
-func (api *trafficencryptionpolicyAPI) CreateEvent(obj *security.TrafficEncryptionPolicy) error {
+// SyncCreate creates TrafficEncryptionPolicy object and updates the cache
+func (api *trafficencryptionpolicyAPI) SyncCreate(obj *security.TrafficEncryptionPolicy) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -4621,19 +4799,18 @@ func (api *trafficencryptionpolicyAPI) CreateEvent(obj *security.TrafficEncrypti
 			return err
 		}
 
-		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
+		newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+			newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on TrafficEncryptionPolicy object
@@ -4651,6 +4828,27 @@ func (api *trafficencryptionpolicyAPI) Update(obj *security.TrafficEncryptionPol
 
 	api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on TrafficEncryptionPolicy object and updates the cache
+func (api *trafficencryptionpolicyAPI) SyncUpdate(obj *security.TrafficEncryptionPolicy) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes TrafficEncryptionPolicy object

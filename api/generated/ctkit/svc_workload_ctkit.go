@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleEndpointEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*endpointCtx)
 				ct.stats.Counter("Endpoint_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *endpointCtx) GetKey() string {
 
 func (ctx *endpointCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *endpointCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *endpointCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,8 +662,9 @@ func (ct *ctrlerCtx) StopWatchEndpoint(handler EndpointHandler) error {
 // EndpointAPI returns
 type EndpointAPI interface {
 	Create(obj *workload.Endpoint) error
-	CreateEvent(obj *workload.Endpoint) error
+	SyncCreate(obj *workload.Endpoint) error
 	Update(obj *workload.Endpoint) error
+	SyncUpdate(obj *workload.Endpoint) error
 	Delete(obj *workload.Endpoint) error
 	Find(meta *api.ObjectMeta) (*Endpoint, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Endpoint, error)
@@ -687,8 +697,11 @@ func (api *endpointAPI) Create(obj *workload.Endpoint) error {
 	return nil
 }
 
-// CreateEvent creates Endpoint object and synchronously triggers local event
-func (api *endpointAPI) CreateEvent(obj *workload.Endpoint) error {
+// SyncCreate creates Endpoint object and updates the cache
+func (api *endpointAPI) SyncCreate(obj *workload.Endpoint) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -696,19 +709,18 @@ func (api *endpointAPI) CreateEvent(obj *workload.Endpoint) error {
 			return err
 		}
 
-		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
+		newObj, writeErr = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
+			newObj, writeErr = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Endpoint object
@@ -726,6 +738,27 @@ func (api *endpointAPI) Update(obj *workload.Endpoint) error {
 
 	api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Endpoint object and updates the cache
+func (api *endpointAPI) SyncUpdate(obj *workload.Endpoint) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Endpoint object
@@ -958,6 +991,11 @@ func (ct *ctrlerCtx) handleWorkloadEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*workloadCtx)
 				ct.stats.Counter("Workload_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1022,6 +1060,10 @@ func (ctx *workloadCtx) GetKey() string {
 
 func (ctx *workloadCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *workloadCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *workloadCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1438,16 +1480,20 @@ func (ct *ctrlerCtx) StopWatchWorkload(handler WorkloadHandler) error {
 // WorkloadAPI returns
 type WorkloadAPI interface {
 	Create(obj *workload.Workload) error
-	CreateEvent(obj *workload.Workload) error
+	SyncCreate(obj *workload.Workload) error
 	Update(obj *workload.Workload) error
+	SyncUpdate(obj *workload.Workload) error
 	Delete(obj *workload.Workload) error
 	Find(meta *api.ObjectMeta) (*Workload, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Workload, error)
 	Watch(handler WorkloadHandler) error
 	StopWatch(handler WorkloadHandler) error
 	StartMigration(obj *workload.Workload) (*workload.Workload, error)
+	SyncStartMigration(obj *workload.Workload) (*workload.Workload, error)
 	FinishMigration(obj *workload.Workload) (*workload.Workload, error)
+	SyncFinishMigration(obj *workload.Workload) (*workload.Workload, error)
 	AbortMigration(obj *workload.Workload) (*workload.Workload, error)
+	SyncAbortMigration(obj *workload.Workload) (*workload.Workload, error)
 }
 
 // dummy struct that implements WorkloadAPI
@@ -1475,8 +1521,11 @@ func (api *workloadAPI) Create(obj *workload.Workload) error {
 	return nil
 }
 
-// CreateEvent creates Workload object and synchronously triggers local event
-func (api *workloadAPI) CreateEvent(obj *workload.Workload) error {
+// SyncCreate creates Workload object and updates the cache
+func (api *workloadAPI) SyncCreate(obj *workload.Workload) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1484,19 +1533,18 @@ func (api *workloadAPI) CreateEvent(obj *workload.Workload) error {
 			return err
 		}
 
-		_, err = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
+		newObj, writeErr = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
+			newObj, writeErr = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Workload object
@@ -1514,6 +1562,27 @@ func (api *workloadAPI) Update(obj *workload.Workload) error {
 
 	api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Workload object and updates the cache
+func (api *workloadAPI) SyncUpdate(obj *workload.Workload) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Workload object
@@ -1609,6 +1678,29 @@ func (api *workloadAPI) StartMigration(obj *workload.Workload) (*workload.Worklo
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncStartMigration is an API action. Cache will be updated
+func (api *workloadAPI) SyncStartMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.WorkloadV1().Workload().StartMigration(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.WorkloadV1().Workload().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // FinishMigration is an API action
 func (api *workloadAPI) FinishMigration(obj *workload.Workload) (*workload.Workload, error) {
 	if api.ct.resolver != nil {
@@ -1623,6 +1715,29 @@ func (api *workloadAPI) FinishMigration(obj *workload.Workload) (*workload.Workl
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncFinishMigration is an API action. Cache will be updated
+func (api *workloadAPI) SyncFinishMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.WorkloadV1().Workload().FinishMigration(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.WorkloadV1().Workload().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // AbortMigration is an API action
 func (api *workloadAPI) AbortMigration(obj *workload.Workload) (*workload.Workload, error) {
 	if api.ct.resolver != nil {
@@ -1633,6 +1748,29 @@ func (api *workloadAPI) AbortMigration(obj *workload.Workload) (*workload.Worklo
 		}
 
 		return apicl.WorkloadV1().Workload().AbortMigration(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncAbortMigration is an API action. Cache will be updated
+func (api *workloadAPI) SyncAbortMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.WorkloadV1().Workload().AbortMigration(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.WorkloadV1().Workload().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }

@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*rolloutCtx)
 				ct.stats.Counter("Rollout_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *rolloutCtx) GetKey() string {
 
 func (ctx *rolloutCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *rolloutCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *rolloutCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,17 +662,22 @@ func (ct *ctrlerCtx) StopWatchRollout(handler RolloutHandler) error {
 // RolloutAPI returns
 type RolloutAPI interface {
 	Create(obj *rollout.Rollout) error
-	CreateEvent(obj *rollout.Rollout) error
+	SyncCreate(obj *rollout.Rollout) error
 	Update(obj *rollout.Rollout) error
+	SyncUpdate(obj *rollout.Rollout) error
 	Delete(obj *rollout.Rollout) error
 	Find(meta *api.ObjectMeta) (*Rollout, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(handler RolloutHandler) error
 	StopWatch(handler RolloutHandler) error
 	CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	SyncCreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 	UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	SyncUpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 	StopRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	SyncStopRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 	RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	SyncRemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 }
 
 // dummy struct that implements RolloutAPI
@@ -691,8 +705,11 @@ func (api *rolloutAPI) Create(obj *rollout.Rollout) error {
 	return nil
 }
 
-// CreateEvent creates Rollout object and synchronously triggers local event
-func (api *rolloutAPI) CreateEvent(obj *rollout.Rollout) error {
+// SyncCreate creates Rollout object and updates the cache
+func (api *rolloutAPI) SyncCreate(obj *rollout.Rollout) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -700,19 +717,18 @@ func (api *rolloutAPI) CreateEvent(obj *rollout.Rollout) error {
 			return err
 		}
 
-		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
+		newObj, writeErr = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
+			newObj, writeErr = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Rollout object
@@ -730,6 +746,27 @@ func (api *rolloutAPI) Update(obj *rollout.Rollout) error {
 
 	api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Rollout object and updates the cache
+func (api *rolloutAPI) SyncUpdate(obj *rollout.Rollout) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Rollout object
@@ -825,6 +862,29 @@ func (api *rolloutAPI) CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncCreateRollout is an API action. Cache will be updated
+func (api *rolloutAPI) SyncCreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.RolloutV1().Rollout().CreateRollout(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.RolloutV1().Rollout().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // UpdateRollout is an API action
 func (api *rolloutAPI) UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
 	if api.ct.resolver != nil {
@@ -835,6 +895,29 @@ func (api *rolloutAPI) UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 		}
 
 		return apicl.RolloutV1().Rollout().UpdateRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncUpdateRollout is an API action. Cache will be updated
+func (api *rolloutAPI) SyncUpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.RolloutV1().Rollout().UpdateRollout(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.RolloutV1().Rollout().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -853,6 +936,29 @@ func (api *rolloutAPI) StopRollout(obj *rollout.Rollout) (*rollout.Rollout, erro
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncStopRollout is an API action. Cache will be updated
+func (api *rolloutAPI) SyncStopRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.RolloutV1().Rollout().StopRollout(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.RolloutV1().Rollout().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // RemoveRollout is an API action
 func (api *rolloutAPI) RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
 	if api.ct.resolver != nil {
@@ -863,6 +969,29 @@ func (api *rolloutAPI) RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 		}
 
 		return apicl.RolloutV1().Rollout().RemoveRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncRemoveRollout is an API action. Cache will be updated
+func (api *rolloutAPI) SyncRemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.RolloutV1().Rollout().RemoveRollout(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.RolloutV1().Rollout().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1018,6 +1147,11 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*rolloutactionCtx)
 				ct.stats.Counter("RolloutAction_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1082,6 +1216,10 @@ func (ctx *rolloutactionCtx) GetKey() string {
 
 func (ctx *rolloutactionCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *rolloutactionCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *rolloutactionCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1498,8 +1636,9 @@ func (ct *ctrlerCtx) StopWatchRolloutAction(handler RolloutActionHandler) error 
 // RolloutActionAPI returns
 type RolloutActionAPI interface {
 	Create(obj *rollout.RolloutAction) error
-	CreateEvent(obj *rollout.RolloutAction) error
+	SyncCreate(obj *rollout.RolloutAction) error
 	Update(obj *rollout.RolloutAction) error
+	SyncUpdate(obj *rollout.RolloutAction) error
 	Delete(obj *rollout.RolloutAction) error
 	Find(meta *api.ObjectMeta) (*RolloutAction, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RolloutAction, error)
@@ -1532,8 +1671,11 @@ func (api *rolloutactionAPI) Create(obj *rollout.RolloutAction) error {
 	return nil
 }
 
-// CreateEvent creates RolloutAction object and synchronously triggers local event
-func (api *rolloutactionAPI) CreateEvent(obj *rollout.RolloutAction) error {
+// SyncCreate creates RolloutAction object and updates the cache
+func (api *rolloutactionAPI) SyncCreate(obj *rollout.RolloutAction) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1541,19 +1683,18 @@ func (api *rolloutactionAPI) CreateEvent(obj *rollout.RolloutAction) error {
 			return err
 		}
 
-		_, err = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
+		newObj, writeErr = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
+			newObj, writeErr = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on RolloutAction object
@@ -1571,6 +1712,27 @@ func (api *rolloutactionAPI) Update(obj *rollout.RolloutAction) error {
 
 	api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on RolloutAction object and updates the cache
+func (api *rolloutactionAPI) SyncUpdate(obj *rollout.RolloutAction) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes RolloutAction object

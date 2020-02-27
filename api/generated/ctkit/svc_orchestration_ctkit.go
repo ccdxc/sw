@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*orchestratorCtx)
 				ct.stats.Counter("Orchestrator_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *orchestratorCtx) GetKey() string {
 
 func (ctx *orchestratorCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *orchestratorCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *orchestratorCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,8 +662,9 @@ func (ct *ctrlerCtx) StopWatchOrchestrator(handler OrchestratorHandler) error {
 // OrchestratorAPI returns
 type OrchestratorAPI interface {
 	Create(obj *orchestration.Orchestrator) error
-	CreateEvent(obj *orchestration.Orchestrator) error
+	SyncCreate(obj *orchestration.Orchestrator) error
 	Update(obj *orchestration.Orchestrator) error
+	SyncUpdate(obj *orchestration.Orchestrator) error
 	Delete(obj *orchestration.Orchestrator) error
 	Find(meta *api.ObjectMeta) (*Orchestrator, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Orchestrator, error)
@@ -687,8 +697,11 @@ func (api *orchestratorAPI) Create(obj *orchestration.Orchestrator) error {
 	return nil
 }
 
-// CreateEvent creates Orchestrator object and synchronously triggers local event
-func (api *orchestratorAPI) CreateEvent(obj *orchestration.Orchestrator) error {
+// SyncCreate creates Orchestrator object and updates the cache
+func (api *orchestratorAPI) SyncCreate(obj *orchestration.Orchestrator) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -696,19 +709,18 @@ func (api *orchestratorAPI) CreateEvent(obj *orchestration.Orchestrator) error {
 			return err
 		}
 
-		_, err = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
+		newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
+			newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Orchestrator object
@@ -726,6 +738,27 @@ func (api *orchestratorAPI) Update(obj *orchestration.Orchestrator) error {
 
 	api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Orchestrator object and updates the cache
+func (api *orchestratorAPI) SyncUpdate(obj *orchestration.Orchestrator) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Orchestrator object

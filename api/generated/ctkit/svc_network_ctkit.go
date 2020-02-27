@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleNetworkEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*networkCtx)
 				ct.stats.Counter("Network_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *networkCtx) GetKey() string {
 
 func (ctx *networkCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *networkCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *networkCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,8 +662,9 @@ func (ct *ctrlerCtx) StopWatchNetwork(handler NetworkHandler) error {
 // NetworkAPI returns
 type NetworkAPI interface {
 	Create(obj *network.Network) error
-	CreateEvent(obj *network.Network) error
+	SyncCreate(obj *network.Network) error
 	Update(obj *network.Network) error
+	SyncUpdate(obj *network.Network) error
 	Delete(obj *network.Network) error
 	Find(meta *api.ObjectMeta) (*Network, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Network, error)
@@ -687,8 +697,11 @@ func (api *networkAPI) Create(obj *network.Network) error {
 	return nil
 }
 
-// CreateEvent creates Network object and synchronously triggers local event
-func (api *networkAPI) CreateEvent(obj *network.Network) error {
+// SyncCreate creates Network object and updates the cache
+func (api *networkAPI) SyncCreate(obj *network.Network) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -696,19 +709,18 @@ func (api *networkAPI) CreateEvent(obj *network.Network) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().Network().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().Network().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().Network().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().Network().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Network object
@@ -726,6 +738,27 @@ func (api *networkAPI) Update(obj *network.Network) error {
 
 	api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Network object and updates the cache
+func (api *networkAPI) SyncUpdate(obj *network.Network) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().Network().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Network object
@@ -958,6 +991,11 @@ func (ct *ctrlerCtx) handleServiceEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*serviceCtx)
 				ct.stats.Counter("Service_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1022,6 +1060,10 @@ func (ctx *serviceCtx) GetKey() string {
 
 func (ctx *serviceCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *serviceCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *serviceCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1438,8 +1480,9 @@ func (ct *ctrlerCtx) StopWatchService(handler ServiceHandler) error {
 // ServiceAPI returns
 type ServiceAPI interface {
 	Create(obj *network.Service) error
-	CreateEvent(obj *network.Service) error
+	SyncCreate(obj *network.Service) error
 	Update(obj *network.Service) error
+	SyncUpdate(obj *network.Service) error
 	Delete(obj *network.Service) error
 	Find(meta *api.ObjectMeta) (*Service, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Service, error)
@@ -1472,8 +1515,11 @@ func (api *serviceAPI) Create(obj *network.Service) error {
 	return nil
 }
 
-// CreateEvent creates Service object and synchronously triggers local event
-func (api *serviceAPI) CreateEvent(obj *network.Service) error {
+// SyncCreate creates Service object and updates the cache
+func (api *serviceAPI) SyncCreate(obj *network.Service) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1481,19 +1527,18 @@ func (api *serviceAPI) CreateEvent(obj *network.Service) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().Service().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().Service().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().Service().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().Service().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Service object
@@ -1511,6 +1556,27 @@ func (api *serviceAPI) Update(obj *network.Service) error {
 
 	api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Service object and updates the cache
+func (api *serviceAPI) SyncUpdate(obj *network.Service) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().Service().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Service object
@@ -1743,6 +1809,11 @@ func (ct *ctrlerCtx) handleLbPolicyEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*lbpolicyCtx)
 				ct.stats.Counter("LbPolicy_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1807,6 +1878,10 @@ func (ctx *lbpolicyCtx) GetKey() string {
 
 func (ctx *lbpolicyCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *lbpolicyCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *lbpolicyCtx) SetEvent(event kvstore.WatchEventType) {
@@ -2223,8 +2298,9 @@ func (ct *ctrlerCtx) StopWatchLbPolicy(handler LbPolicyHandler) error {
 // LbPolicyAPI returns
 type LbPolicyAPI interface {
 	Create(obj *network.LbPolicy) error
-	CreateEvent(obj *network.LbPolicy) error
+	SyncCreate(obj *network.LbPolicy) error
 	Update(obj *network.LbPolicy) error
+	SyncUpdate(obj *network.LbPolicy) error
 	Delete(obj *network.LbPolicy) error
 	Find(meta *api.ObjectMeta) (*LbPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*LbPolicy, error)
@@ -2257,8 +2333,11 @@ func (api *lbpolicyAPI) Create(obj *network.LbPolicy) error {
 	return nil
 }
 
-// CreateEvent creates LbPolicy object and synchronously triggers local event
-func (api *lbpolicyAPI) CreateEvent(obj *network.LbPolicy) error {
+// SyncCreate creates LbPolicy object and updates the cache
+func (api *lbpolicyAPI) SyncCreate(obj *network.LbPolicy) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -2266,19 +2345,18 @@ func (api *lbpolicyAPI) CreateEvent(obj *network.LbPolicy) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on LbPolicy object
@@ -2296,6 +2374,27 @@ func (api *lbpolicyAPI) Update(obj *network.LbPolicy) error {
 
 	api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on LbPolicy object and updates the cache
+func (api *lbpolicyAPI) SyncUpdate(obj *network.LbPolicy) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes LbPolicy object
@@ -2528,6 +2627,11 @@ func (ct *ctrlerCtx) handleVirtualRouterEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*virtualrouterCtx)
 				ct.stats.Counter("VirtualRouter_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -2592,6 +2696,10 @@ func (ctx *virtualrouterCtx) GetKey() string {
 
 func (ctx *virtualrouterCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *virtualrouterCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *virtualrouterCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3008,8 +3116,9 @@ func (ct *ctrlerCtx) StopWatchVirtualRouter(handler VirtualRouterHandler) error 
 // VirtualRouterAPI returns
 type VirtualRouterAPI interface {
 	Create(obj *network.VirtualRouter) error
-	CreateEvent(obj *network.VirtualRouter) error
+	SyncCreate(obj *network.VirtualRouter) error
 	Update(obj *network.VirtualRouter) error
+	SyncUpdate(obj *network.VirtualRouter) error
 	Delete(obj *network.VirtualRouter) error
 	Find(meta *api.ObjectMeta) (*VirtualRouter, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*VirtualRouter, error)
@@ -3042,8 +3151,11 @@ func (api *virtualrouterAPI) Create(obj *network.VirtualRouter) error {
 	return nil
 }
 
-// CreateEvent creates VirtualRouter object and synchronously triggers local event
-func (api *virtualrouterAPI) CreateEvent(obj *network.VirtualRouter) error {
+// SyncCreate creates VirtualRouter object and updates the cache
+func (api *virtualrouterAPI) SyncCreate(obj *network.VirtualRouter) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3051,19 +3163,18 @@ func (api *virtualrouterAPI) CreateEvent(obj *network.VirtualRouter) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on VirtualRouter object
@@ -3081,6 +3192,27 @@ func (api *virtualrouterAPI) Update(obj *network.VirtualRouter) error {
 
 	api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on VirtualRouter object and updates the cache
+func (api *virtualrouterAPI) SyncUpdate(obj *network.VirtualRouter) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes VirtualRouter object
@@ -3313,6 +3445,11 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventNoResolver(evt *kvstore.WatchEve
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*networkinterfaceCtx)
 				ct.stats.Counter("NetworkInterface_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -3377,6 +3514,10 @@ func (ctx *networkinterfaceCtx) GetKey() string {
 
 func (ctx *networkinterfaceCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *networkinterfaceCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *networkinterfaceCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3793,8 +3934,9 @@ func (ct *ctrlerCtx) StopWatchNetworkInterface(handler NetworkInterfaceHandler) 
 // NetworkInterfaceAPI returns
 type NetworkInterfaceAPI interface {
 	Create(obj *network.NetworkInterface) error
-	CreateEvent(obj *network.NetworkInterface) error
+	SyncCreate(obj *network.NetworkInterface) error
 	Update(obj *network.NetworkInterface) error
+	SyncUpdate(obj *network.NetworkInterface) error
 	Delete(obj *network.NetworkInterface) error
 	Find(meta *api.ObjectMeta) (*NetworkInterface, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*NetworkInterface, error)
@@ -3827,8 +3969,11 @@ func (api *networkinterfaceAPI) Create(obj *network.NetworkInterface) error {
 	return nil
 }
 
-// CreateEvent creates NetworkInterface object and synchronously triggers local event
-func (api *networkinterfaceAPI) CreateEvent(obj *network.NetworkInterface) error {
+// SyncCreate creates NetworkInterface object and updates the cache
+func (api *networkinterfaceAPI) SyncCreate(obj *network.NetworkInterface) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3836,19 +3981,18 @@ func (api *networkinterfaceAPI) CreateEvent(obj *network.NetworkInterface) error
 			return err
 		}
 
-		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on NetworkInterface object
@@ -3866,6 +4010,27 @@ func (api *networkinterfaceAPI) Update(obj *network.NetworkInterface) error {
 
 	api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on NetworkInterface object and updates the cache
+func (api *networkinterfaceAPI) SyncUpdate(obj *network.NetworkInterface) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes NetworkInterface object
@@ -4098,6 +4263,11 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventNoResolver(evt *kvstore.WatchEvent) er
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*ipampolicyCtx)
 				ct.stats.Counter("IPAMPolicy_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -4162,6 +4332,10 @@ func (ctx *ipampolicyCtx) GetKey() string {
 
 func (ctx *ipampolicyCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *ipampolicyCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *ipampolicyCtx) SetEvent(event kvstore.WatchEventType) {
@@ -4578,8 +4752,9 @@ func (ct *ctrlerCtx) StopWatchIPAMPolicy(handler IPAMPolicyHandler) error {
 // IPAMPolicyAPI returns
 type IPAMPolicyAPI interface {
 	Create(obj *network.IPAMPolicy) error
-	CreateEvent(obj *network.IPAMPolicy) error
+	SyncCreate(obj *network.IPAMPolicy) error
 	Update(obj *network.IPAMPolicy) error
+	SyncUpdate(obj *network.IPAMPolicy) error
 	Delete(obj *network.IPAMPolicy) error
 	Find(meta *api.ObjectMeta) (*IPAMPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*IPAMPolicy, error)
@@ -4612,8 +4787,11 @@ func (api *ipampolicyAPI) Create(obj *network.IPAMPolicy) error {
 	return nil
 }
 
-// CreateEvent creates IPAMPolicy object and synchronously triggers local event
-func (api *ipampolicyAPI) CreateEvent(obj *network.IPAMPolicy) error {
+// SyncCreate creates IPAMPolicy object and updates the cache
+func (api *ipampolicyAPI) SyncCreate(obj *network.IPAMPolicy) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -4621,19 +4799,18 @@ func (api *ipampolicyAPI) CreateEvent(obj *network.IPAMPolicy) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().IPAMPolicy().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on IPAMPolicy object
@@ -4651,6 +4828,27 @@ func (api *ipampolicyAPI) Update(obj *network.IPAMPolicy) error {
 
 	api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on IPAMPolicy object and updates the cache
+func (api *ipampolicyAPI) SyncUpdate(obj *network.IPAMPolicy) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes IPAMPolicy object
@@ -4883,6 +5081,11 @@ func (ct *ctrlerCtx) handleRoutingConfigEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*routingconfigCtx)
 				ct.stats.Counter("RoutingConfig_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -4947,6 +5150,10 @@ func (ctx *routingconfigCtx) GetKey() string {
 
 func (ctx *routingconfigCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *routingconfigCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *routingconfigCtx) SetEvent(event kvstore.WatchEventType) {
@@ -5363,8 +5570,9 @@ func (ct *ctrlerCtx) StopWatchRoutingConfig(handler RoutingConfigHandler) error 
 // RoutingConfigAPI returns
 type RoutingConfigAPI interface {
 	Create(obj *network.RoutingConfig) error
-	CreateEvent(obj *network.RoutingConfig) error
+	SyncCreate(obj *network.RoutingConfig) error
 	Update(obj *network.RoutingConfig) error
+	SyncUpdate(obj *network.RoutingConfig) error
 	Delete(obj *network.RoutingConfig) error
 	Find(meta *api.ObjectMeta) (*RoutingConfig, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoutingConfig, error)
@@ -5397,8 +5605,11 @@ func (api *routingconfigAPI) Create(obj *network.RoutingConfig) error {
 	return nil
 }
 
-// CreateEvent creates RoutingConfig object and synchronously triggers local event
-func (api *routingconfigAPI) CreateEvent(obj *network.RoutingConfig) error {
+// SyncCreate creates RoutingConfig object and updates the cache
+func (api *routingconfigAPI) SyncCreate(obj *network.RoutingConfig) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -5406,19 +5617,18 @@ func (api *routingconfigAPI) CreateEvent(obj *network.RoutingConfig) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on RoutingConfig object
@@ -5436,6 +5646,27 @@ func (api *routingconfigAPI) Update(obj *network.RoutingConfig) error {
 
 	api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on RoutingConfig object and updates the cache
+func (api *routingconfigAPI) SyncUpdate(obj *network.RoutingConfig) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes RoutingConfig object
@@ -5668,6 +5899,11 @@ func (ct *ctrlerCtx) handleRouteTableEventNoResolver(evt *kvstore.WatchEvent) er
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*routetableCtx)
 				ct.stats.Counter("RouteTable_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -5732,6 +5968,10 @@ func (ctx *routetableCtx) GetKey() string {
 
 func (ctx *routetableCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *routetableCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *routetableCtx) SetEvent(event kvstore.WatchEventType) {
@@ -6148,8 +6388,9 @@ func (ct *ctrlerCtx) StopWatchRouteTable(handler RouteTableHandler) error {
 // RouteTableAPI returns
 type RouteTableAPI interface {
 	Create(obj *network.RouteTable) error
-	CreateEvent(obj *network.RouteTable) error
+	SyncCreate(obj *network.RouteTable) error
 	Update(obj *network.RouteTable) error
+	SyncUpdate(obj *network.RouteTable) error
 	Delete(obj *network.RouteTable) error
 	Find(meta *api.ObjectMeta) (*RouteTable, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RouteTable, error)
@@ -6182,8 +6423,11 @@ func (api *routetableAPI) Create(obj *network.RouteTable) error {
 	return nil
 }
 
-// CreateEvent creates RouteTable object and synchronously triggers local event
-func (api *routetableAPI) CreateEvent(obj *network.RouteTable) error {
+// SyncCreate creates RouteTable object and updates the cache
+func (api *routetableAPI) SyncCreate(obj *network.RouteTable) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -6191,19 +6435,18 @@ func (api *routetableAPI) CreateEvent(obj *network.RouteTable) error {
 			return err
 		}
 
-		_, err = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
+		newObj, writeErr = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on RouteTable object
@@ -6221,6 +6464,27 @@ func (api *routetableAPI) Update(obj *network.RouteTable) error {
 
 	api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on RouteTable object and updates the cache
+func (api *routetableAPI) SyncUpdate(obj *network.RouteTable) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes RouteTable object

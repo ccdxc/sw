@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleBufferEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*bufferCtx)
 				ct.stats.Counter("Buffer_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *bufferCtx) GetKey() string {
 
 func (ctx *bufferCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *bufferCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *bufferCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,15 +662,18 @@ func (ct *ctrlerCtx) StopWatchBuffer(handler BufferHandler) error {
 // BufferAPI returns
 type BufferAPI interface {
 	Create(obj *staging.Buffer) error
-	CreateEvent(obj *staging.Buffer) error
+	SyncCreate(obj *staging.Buffer) error
 	Update(obj *staging.Buffer) error
+	SyncUpdate(obj *staging.Buffer) error
 	Delete(obj *staging.Buffer) error
 	Find(meta *api.ObjectMeta) (*Buffer, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Buffer, error)
 	Watch(handler BufferHandler) error
 	StopWatch(handler BufferHandler) error
 	Commit(obj *staging.CommitAction) (*staging.CommitAction, error)
+	SyncCommit(obj *staging.CommitAction) (*staging.CommitAction, error)
 	Clear(obj *staging.ClearAction) (*staging.ClearAction, error)
+	SyncClear(obj *staging.ClearAction) (*staging.ClearAction, error)
 }
 
 // dummy struct that implements BufferAPI
@@ -689,8 +701,11 @@ func (api *bufferAPI) Create(obj *staging.Buffer) error {
 	return nil
 }
 
-// CreateEvent creates Buffer object and synchronously triggers local event
-func (api *bufferAPI) CreateEvent(obj *staging.Buffer) error {
+// SyncCreate creates Buffer object and updates the cache
+func (api *bufferAPI) SyncCreate(obj *staging.Buffer) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -698,19 +713,18 @@ func (api *bufferAPI) CreateEvent(obj *staging.Buffer) error {
 			return err
 		}
 
-		_, err = apicl.StagingV1().Buffer().Create(context.Background(), obj)
+		newObj, writeErr = apicl.StagingV1().Buffer().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+			newObj, writeErr = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Buffer object
@@ -728,6 +742,27 @@ func (api *bufferAPI) Update(obj *staging.Buffer) error {
 
 	api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Buffer object and updates the cache
+func (api *bufferAPI) SyncUpdate(obj *staging.Buffer) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Buffer object
@@ -823,6 +858,29 @@ func (api *bufferAPI) Commit(obj *staging.CommitAction) (*staging.CommitAction, 
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncCommit is an API action. Cache will be updated
+func (api *bufferAPI) SyncCommit(obj *staging.CommitAction) (*staging.CommitAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.StagingV1().Buffer().Commit(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.StagingV1().Buffer().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // Clear is an API action
 func (api *bufferAPI) Clear(obj *staging.ClearAction) (*staging.ClearAction, error) {
 	if api.ct.resolver != nil {
@@ -833,6 +891,29 @@ func (api *bufferAPI) Clear(obj *staging.ClearAction) (*staging.ClearAction, err
 		}
 
 		return apicl.StagingV1().Buffer().Clear(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncClear is an API action. Cache will be updated
+func (api *bufferAPI) SyncClear(obj *staging.ClearAction) (*staging.ClearAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.StagingV1().Buffer().Clear(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.StagingV1().Buffer().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }

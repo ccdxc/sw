@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*moduleCtx)
 				ct.stats.Counter("Module_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *moduleCtx) GetKey() string {
 
 func (ctx *moduleCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *moduleCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *moduleCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,14 +662,16 @@ func (ct *ctrlerCtx) StopWatchModule(handler ModuleHandler) error {
 // ModuleAPI returns
 type ModuleAPI interface {
 	Create(obj *diagnostics.Module) error
-	CreateEvent(obj *diagnostics.Module) error
+	SyncCreate(obj *diagnostics.Module) error
 	Update(obj *diagnostics.Module) error
+	SyncUpdate(obj *diagnostics.Module) error
 	Delete(obj *diagnostics.Module) error
 	Find(meta *api.ObjectMeta) (*Module, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error)
 	Watch(handler ModuleHandler) error
 	StopWatch(handler ModuleHandler) error
 	Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
+	SyncDebug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
 }
 
 // dummy struct that implements ModuleAPI
@@ -688,8 +699,11 @@ func (api *moduleAPI) Create(obj *diagnostics.Module) error {
 	return nil
 }
 
-// CreateEvent creates Module object and synchronously triggers local event
-func (api *moduleAPI) CreateEvent(obj *diagnostics.Module) error {
+// SyncCreate creates Module object and updates the cache
+func (api *moduleAPI) SyncCreate(obj *diagnostics.Module) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -697,19 +711,18 @@ func (api *moduleAPI) CreateEvent(obj *diagnostics.Module) error {
 			return err
 		}
 
-		_, err = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
+		newObj, writeErr = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
+			newObj, writeErr = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Module object
@@ -727,6 +740,27 @@ func (api *moduleAPI) Update(obj *diagnostics.Module) error {
 
 	api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Module object and updates the cache
+func (api *moduleAPI) SyncUpdate(obj *diagnostics.Module) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Module object
@@ -818,6 +852,29 @@ func (api *moduleAPI) Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.D
 		}
 
 		return apicl.DiagnosticsV1().Module().Debug(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncDebug is an API action. Cache will be updated
+func (api *moduleAPI) SyncDebug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.DiagnosticsV1().Module().Debug(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.DiagnosticsV1().Module().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }

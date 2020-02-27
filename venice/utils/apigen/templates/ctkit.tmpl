@@ -177,6 +177,11 @@ func (ct *ctrlerCtx) handle{{.}}EventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*{{ToLower .}}Ctx)
 				ct.stats.Counter("{{.}}_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -243,6 +248,10 @@ func (ctx *{{ToLower .}}Ctx) GetKey() string {
 
 func (ctx *{{ToLower .}}Ctx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *{{ToLower .}}Ctx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *{{ToLower .}}Ctx) SetEvent(event kvstore.WatchEventType) {
@@ -661,14 +670,16 @@ func (ct *ctrlerCtx) StopWatch{{.}}(handler {{.}}Handler) error {
 // {{.}}API returns
 type {{.}}API interface {
 	Create(obj *{{$pkgname}}.{{.}}) error
-	CreateEvent(obj *{{$pkgname}}.{{.}}) error
+	SyncCreate(obj *{{$pkgname}}.{{.}}) error
 	Update(obj *{{$pkgname}}.{{.}}) error
+	SyncUpdate(obj *{{$pkgname}}.{{.}}) error
 	Delete(obj *{{$pkgname}}.{{.}}) error
 	Find(meta *api.ObjectMeta) (*{{.}}, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*{{.}}, error)
 	Watch(handler {{.}}Handler) error
 	StopWatch(handler {{.}}Handler) error {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
-  {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {{end}}
+  {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)
+  Sync{{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {{end}}
 }
 
 // dummy struct that implements {{.}}API
@@ -696,8 +707,11 @@ func (api *{{ToLower .}}API) Create(obj *{{$pkgname}}.{{.}}) error {
 	return nil
 }
 
-// CreateEvent creates {{.}} object and synchronously triggers local event
-func (api *{{ToLower .}}API) CreateEvent(obj *{{$pkgname}}.{{.}}) error {
+// SyncCreate creates {{.}} object and updates the cache
+func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -705,19 +719,18 @@ func (api *{{ToLower .}}API) CreateEvent(obj *{{$pkgname}}.{{.}}) error {
 			return err
 		}
 
-		_, err = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
+		newObj, writeErr = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+			newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
+	}
+	
+	if writeErr == nil {
+		api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
-	api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	return writeErr
 }
 
 // Update triggers update on {{.}} object
@@ -737,6 +750,27 @@ func (api *{{ToLower .}}API) Update(obj *{{$pkgname}}.{{.}}) error {
 	return nil
 }
 
+// SyncUpdate triggers update on {{.}} object and updates the cache
+func (api *{{ToLower .}}API) SyncUpdate(obj *{{$pkgname}}.{{.}}) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+	}
+	
+	if writeErr == nil {
+		api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
+}
+
 // Delete deletes {{.}} object
 func (api *{{ToLower .}}API) Delete(obj *{{$pkgname}}.{{.}}) error {
 	if api.ct.resolver != nil {
@@ -753,7 +787,6 @@ func (api *{{ToLower .}}API) Delete(obj *{{$pkgname}}.{{.}}) error {
 	api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 	return nil
 }
-
 
 // MakeKey generates a KV store key for the object
 func (api *{{ToLower .}}API) getFullKey(tenant, name string) string {
@@ -829,6 +862,29 @@ func (api *{{ToLower $obj}}API) {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$p
 		}
 
 		return apicl.{{$srvname}}().{{$obj}}().{{.Name}}(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// Sync{{.Name}} is an API action. Cache will be updated
+func (api *{{ToLower $obj}}API) Sync{{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.{{$srvname}}().{{$obj}}().{{.Name}}(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.{{$srvname}}().{{$obj}}().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handle{{$obj}}Event(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})	
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }

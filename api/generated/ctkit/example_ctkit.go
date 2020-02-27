@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleOrderEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*orderCtx)
 				ct.stats.Counter("Order_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *orderCtx) GetKey() string {
 
 func (ctx *orderCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *orderCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *orderCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,15 +662,18 @@ func (ct *ctrlerCtx) StopWatchOrder(handler OrderHandler) error {
 // OrderAPI returns
 type OrderAPI interface {
 	Create(obj *bookstore.Order) error
-	CreateEvent(obj *bookstore.Order) error
+	SyncCreate(obj *bookstore.Order) error
 	Update(obj *bookstore.Order) error
+	SyncUpdate(obj *bookstore.Order) error
 	Delete(obj *bookstore.Order) error
 	Find(meta *api.ObjectMeta) (*Order, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Order, error)
 	Watch(handler OrderHandler) error
 	StopWatch(handler OrderHandler) error
 	Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	SyncApplydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
 	Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	SyncCleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
 }
 
 // dummy struct that implements OrderAPI
@@ -689,8 +701,11 @@ func (api *orderAPI) Create(obj *bookstore.Order) error {
 	return nil
 }
 
-// CreateEvent creates Order object and synchronously triggers local event
-func (api *orderAPI) CreateEvent(obj *bookstore.Order) error {
+// SyncCreate creates Order object and updates the cache
+func (api *orderAPI) SyncCreate(obj *bookstore.Order) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -698,19 +713,18 @@ func (api *orderAPI) CreateEvent(obj *bookstore.Order) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Order().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Order().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Order object
@@ -728,6 +742,27 @@ func (api *orderAPI) Update(obj *bookstore.Order) error {
 
 	api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Order object and updates the cache
+func (api *orderAPI) SyncUpdate(obj *bookstore.Order) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Order object
@@ -823,6 +858,29 @@ func (api *orderAPI) Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncApplydiscount is an API action. Cache will be updated
+func (api *orderAPI) SyncApplydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.BookstoreV1().Order().Applydiscount(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.BookstoreV1().Order().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // Cleardiscount is an API action
 func (api *orderAPI) Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
 	if api.ct.resolver != nil {
@@ -833,6 +891,29 @@ func (api *orderAPI) Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.
 		}
 
 		return apicl.BookstoreV1().Order().Cleardiscount(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncCleardiscount is an API action. Cache will be updated
+func (api *orderAPI) SyncCleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.BookstoreV1().Order().Cleardiscount(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.BookstoreV1().Order().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -988,6 +1069,11 @@ func (ct *ctrlerCtx) handleBookEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*bookCtx)
 				ct.stats.Counter("Book_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1052,6 +1138,10 @@ func (ctx *bookCtx) GetKey() string {
 
 func (ctx *bookCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *bookCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *bookCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1468,14 +1558,16 @@ func (ct *ctrlerCtx) StopWatchBook(handler BookHandler) error {
 // BookAPI returns
 type BookAPI interface {
 	Create(obj *bookstore.Book) error
-	CreateEvent(obj *bookstore.Book) error
+	SyncCreate(obj *bookstore.Book) error
 	Update(obj *bookstore.Book) error
+	SyncUpdate(obj *bookstore.Book) error
 	Delete(obj *bookstore.Book) error
 	Find(meta *api.ObjectMeta) (*Book, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Book, error)
 	Watch(handler BookHandler) error
 	StopWatch(handler BookHandler) error
 	Restock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
+	SyncRestock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
 }
 
 // dummy struct that implements BookAPI
@@ -1503,8 +1595,11 @@ func (api *bookAPI) Create(obj *bookstore.Book) error {
 	return nil
 }
 
-// CreateEvent creates Book object and synchronously triggers local event
-func (api *bookAPI) CreateEvent(obj *bookstore.Book) error {
+// SyncCreate creates Book object and updates the cache
+func (api *bookAPI) SyncCreate(obj *bookstore.Book) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1512,19 +1607,18 @@ func (api *bookAPI) CreateEvent(obj *bookstore.Book) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Book().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Book().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Book object
@@ -1542,6 +1636,27 @@ func (api *bookAPI) Update(obj *bookstore.Book) error {
 
 	api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Book object and updates the cache
+func (api *bookAPI) SyncUpdate(obj *bookstore.Book) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Book object
@@ -1633,6 +1748,29 @@ func (api *bookAPI) Restock(obj *bookstore.RestockRequest) (*bookstore.RestockRe
 		}
 
 		return apicl.BookstoreV1().Book().Restock(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncRestock is an API action. Cache will be updated
+func (api *bookAPI) SyncRestock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.BookstoreV1().Book().Restock(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.BookstoreV1().Book().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1788,6 +1926,11 @@ func (ct *ctrlerCtx) handlePublisherEventNoResolver(evt *kvstore.WatchEvent) err
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*publisherCtx)
 				ct.stats.Counter("Publisher_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1852,6 +1995,10 @@ func (ctx *publisherCtx) GetKey() string {
 
 func (ctx *publisherCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *publisherCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *publisherCtx) SetEvent(event kvstore.WatchEventType) {
@@ -2268,8 +2415,9 @@ func (ct *ctrlerCtx) StopWatchPublisher(handler PublisherHandler) error {
 // PublisherAPI returns
 type PublisherAPI interface {
 	Create(obj *bookstore.Publisher) error
-	CreateEvent(obj *bookstore.Publisher) error
+	SyncCreate(obj *bookstore.Publisher) error
 	Update(obj *bookstore.Publisher) error
+	SyncUpdate(obj *bookstore.Publisher) error
 	Delete(obj *bookstore.Publisher) error
 	Find(meta *api.ObjectMeta) (*Publisher, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Publisher, error)
@@ -2302,8 +2450,11 @@ func (api *publisherAPI) Create(obj *bookstore.Publisher) error {
 	return nil
 }
 
-// CreateEvent creates Publisher object and synchronously triggers local event
-func (api *publisherAPI) CreateEvent(obj *bookstore.Publisher) error {
+// SyncCreate creates Publisher object and updates the cache
+func (api *publisherAPI) SyncCreate(obj *bookstore.Publisher) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -2311,19 +2462,18 @@ func (api *publisherAPI) CreateEvent(obj *bookstore.Publisher) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Publisher object
@@ -2341,6 +2491,27 @@ func (api *publisherAPI) Update(obj *bookstore.Publisher) error {
 
 	api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Publisher object and updates the cache
+func (api *publisherAPI) SyncUpdate(obj *bookstore.Publisher) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Publisher object
@@ -2573,6 +2744,11 @@ func (ct *ctrlerCtx) handleStoreEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*storeCtx)
 				ct.stats.Counter("Store_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -2637,6 +2813,10 @@ func (ctx *storeCtx) GetKey() string {
 
 func (ctx *storeCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *storeCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *storeCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3053,14 +3233,16 @@ func (ct *ctrlerCtx) StopWatchStore(handler StoreHandler) error {
 // StoreAPI returns
 type StoreAPI interface {
 	Create(obj *bookstore.Store) error
-	CreateEvent(obj *bookstore.Store) error
+	SyncCreate(obj *bookstore.Store) error
 	Update(obj *bookstore.Store) error
+	SyncUpdate(obj *bookstore.Store) error
 	Delete(obj *bookstore.Store) error
 	Find(meta *api.ObjectMeta) (*Store, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Store, error)
 	Watch(handler StoreHandler) error
 	StopWatch(handler StoreHandler) error
 	AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error)
+	SyncAddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error)
 }
 
 // dummy struct that implements StoreAPI
@@ -3088,8 +3270,11 @@ func (api *storeAPI) Create(obj *bookstore.Store) error {
 	return nil
 }
 
-// CreateEvent creates Store object and synchronously triggers local event
-func (api *storeAPI) CreateEvent(obj *bookstore.Store) error {
+// SyncCreate creates Store object and updates the cache
+func (api *storeAPI) SyncCreate(obj *bookstore.Store) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3097,19 +3282,18 @@ func (api *storeAPI) CreateEvent(obj *bookstore.Store) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Store().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Store().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Store object
@@ -3127,6 +3311,27 @@ func (api *storeAPI) Update(obj *bookstore.Store) error {
 
 	api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Store object and updates the cache
+func (api *storeAPI) SyncUpdate(obj *bookstore.Store) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Store object
@@ -3218,6 +3423,29 @@ func (api *storeAPI) AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, 
 		}
 
 		return apicl.BookstoreV1().Store().AddOutage(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncAddOutage is an API action. Cache will be updated
+func (api *storeAPI) SyncAddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.BookstoreV1().Store().AddOutage(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.BookstoreV1().Store().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -3373,6 +3601,11 @@ func (ct *ctrlerCtx) handleCouponEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*couponCtx)
 				ct.stats.Counter("Coupon_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -3437,6 +3670,10 @@ func (ctx *couponCtx) GetKey() string {
 
 func (ctx *couponCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *couponCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *couponCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3853,8 +4090,9 @@ func (ct *ctrlerCtx) StopWatchCoupon(handler CouponHandler) error {
 // CouponAPI returns
 type CouponAPI interface {
 	Create(obj *bookstore.Coupon) error
-	CreateEvent(obj *bookstore.Coupon) error
+	SyncCreate(obj *bookstore.Coupon) error
 	Update(obj *bookstore.Coupon) error
+	SyncUpdate(obj *bookstore.Coupon) error
 	Delete(obj *bookstore.Coupon) error
 	Find(meta *api.ObjectMeta) (*Coupon, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Coupon, error)
@@ -3887,8 +4125,11 @@ func (api *couponAPI) Create(obj *bookstore.Coupon) error {
 	return nil
 }
 
-// CreateEvent creates Coupon object and synchronously triggers local event
-func (api *couponAPI) CreateEvent(obj *bookstore.Coupon) error {
+// SyncCreate creates Coupon object and updates the cache
+func (api *couponAPI) SyncCreate(obj *bookstore.Coupon) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3896,19 +4137,18 @@ func (api *couponAPI) CreateEvent(obj *bookstore.Coupon) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Coupon object
@@ -3926,6 +4166,27 @@ func (api *couponAPI) Update(obj *bookstore.Coupon) error {
 
 	api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Coupon object and updates the cache
+func (api *couponAPI) SyncUpdate(obj *bookstore.Coupon) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Coupon object
@@ -4158,6 +4419,11 @@ func (ct *ctrlerCtx) handleCustomerEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*customerCtx)
 				ct.stats.Counter("Customer_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -4222,6 +4488,10 @@ func (ctx *customerCtx) GetKey() string {
 
 func (ctx *customerCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *customerCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *customerCtx) SetEvent(event kvstore.WatchEventType) {
@@ -4638,8 +4908,9 @@ func (ct *ctrlerCtx) StopWatchCustomer(handler CustomerHandler) error {
 // CustomerAPI returns
 type CustomerAPI interface {
 	Create(obj *bookstore.Customer) error
-	CreateEvent(obj *bookstore.Customer) error
+	SyncCreate(obj *bookstore.Customer) error
 	Update(obj *bookstore.Customer) error
+	SyncUpdate(obj *bookstore.Customer) error
 	Delete(obj *bookstore.Customer) error
 	Find(meta *api.ObjectMeta) (*Customer, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Customer, error)
@@ -4672,8 +4943,11 @@ func (api *customerAPI) Create(obj *bookstore.Customer) error {
 	return nil
 }
 
-// CreateEvent creates Customer object and synchronously triggers local event
-func (api *customerAPI) CreateEvent(obj *bookstore.Customer) error {
+// SyncCreate creates Customer object and updates the cache
+func (api *customerAPI) SyncCreate(obj *bookstore.Customer) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -4681,19 +4955,18 @@ func (api *customerAPI) CreateEvent(obj *bookstore.Customer) error {
 			return err
 		}
 
-		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
+		newObj, writeErr = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+			newObj, writeErr = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Customer object
@@ -4711,6 +4984,27 @@ func (api *customerAPI) Update(obj *bookstore.Customer) error {
 
 	api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Customer object and updates the cache
+func (api *customerAPI) SyncUpdate(obj *bookstore.Customer) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Customer object

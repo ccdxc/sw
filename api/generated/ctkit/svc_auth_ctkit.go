@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*userCtx)
 				ct.stats.Counter("User_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *userCtx) GetKey() string {
 
 func (ctx *userCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *userCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *userCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,16 +662,20 @@ func (ct *ctrlerCtx) StopWatchUser(handler UserHandler) error {
 // UserAPI returns
 type UserAPI interface {
 	Create(obj *auth.User) error
-	CreateEvent(obj *auth.User) error
+	SyncCreate(obj *auth.User) error
 	Update(obj *auth.User) error
+	SyncUpdate(obj *auth.User) error
 	Delete(obj *auth.User) error
 	Find(meta *api.ObjectMeta) (*User, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error)
 	Watch(handler UserHandler) error
 	StopWatch(handler UserHandler) error
 	PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	SyncPasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
 	PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error)
+	SyncPasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error)
 	IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
+	SyncIsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
 }
 
 // dummy struct that implements UserAPI
@@ -690,8 +703,11 @@ func (api *userAPI) Create(obj *auth.User) error {
 	return nil
 }
 
-// CreateEvent creates User object and synchronously triggers local event
-func (api *userAPI) CreateEvent(obj *auth.User) error {
+// SyncCreate creates User object and updates the cache
+func (api *userAPI) SyncCreate(obj *auth.User) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -699,19 +715,18 @@ func (api *userAPI) CreateEvent(obj *auth.User) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().User().Create(context.Background(), obj)
+		newObj, writeErr = apicl.AuthV1().User().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.AuthV1().User().Update(context.Background(), obj)
+			newObj, writeErr = apicl.AuthV1().User().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on User object
@@ -729,6 +744,27 @@ func (api *userAPI) Update(obj *auth.User) error {
 
 	api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on User object and updates the cache
+func (api *userAPI) SyncUpdate(obj *auth.User) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.AuthV1().User().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes User object
@@ -824,6 +860,29 @@ func (api *userAPI) PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User,
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncPasswordChange is an API action. Cache will be updated
+func (api *userAPI) SyncPasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().User().PasswordChange(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().User().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // PasswordReset is an API action
 func (api *userAPI) PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error) {
 	if api.ct.resolver != nil {
@@ -838,6 +897,29 @@ func (api *userAPI) PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, e
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncPasswordReset is an API action. Cache will be updated
+func (api *userAPI) SyncPasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().User().PasswordReset(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().User().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // IsAuthorized is an API action
 func (api *userAPI) IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error) {
 	if api.ct.resolver != nil {
@@ -848,6 +930,29 @@ func (api *userAPI) IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.Us
 		}
 
 		return apicl.AuthV1().User().IsAuthorized(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncIsAuthorized is an API action. Cache will be updated
+func (api *userAPI) SyncIsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().User().IsAuthorized(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().User().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1003,6 +1108,11 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*authenticationpolicyCtx)
 				ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1067,6 +1177,10 @@ func (ctx *authenticationpolicyCtx) GetKey() string {
 
 func (ctx *authenticationpolicyCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *authenticationpolicyCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *authenticationpolicyCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1483,16 +1597,20 @@ func (ct *ctrlerCtx) StopWatchAuthenticationPolicy(handler AuthenticationPolicyH
 // AuthenticationPolicyAPI returns
 type AuthenticationPolicyAPI interface {
 	Create(obj *auth.AuthenticationPolicy) error
-	CreateEvent(obj *auth.AuthenticationPolicy) error
+	SyncCreate(obj *auth.AuthenticationPolicy) error
 	Update(obj *auth.AuthenticationPolicy) error
+	SyncUpdate(obj *auth.AuthenticationPolicy) error
 	Delete(obj *auth.AuthenticationPolicy) error
 	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(handler AuthenticationPolicyHandler) error
 	StopWatch(handler AuthenticationPolicyHandler) error
 	LdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	SyncLdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
 	LdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	SyncLdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
 	TokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
+	SyncTokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
 }
 
 // dummy struct that implements AuthenticationPolicyAPI
@@ -1520,8 +1638,11 @@ func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error
 	return nil
 }
 
-// CreateEvent creates AuthenticationPolicy object and synchronously triggers local event
-func (api *authenticationpolicyAPI) CreateEvent(obj *auth.AuthenticationPolicy) error {
+// SyncCreate creates AuthenticationPolicy object and updates the cache
+func (api *authenticationpolicyAPI) SyncCreate(obj *auth.AuthenticationPolicy) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1529,19 +1650,18 @@ func (api *authenticationpolicyAPI) CreateEvent(obj *auth.AuthenticationPolicy) 
 			return err
 		}
 
-		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
+		newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+			newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on AuthenticationPolicy object
@@ -1559,6 +1679,27 @@ func (api *authenticationpolicyAPI) Update(obj *auth.AuthenticationPolicy) error
 
 	api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on AuthenticationPolicy object and updates the cache
+func (api *authenticationpolicyAPI) SyncUpdate(obj *auth.AuthenticationPolicy) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes AuthenticationPolicy object
@@ -1654,6 +1795,29 @@ func (api *authenticationpolicyAPI) LdapConnectionCheck(obj *auth.Authentication
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncLdapConnectionCheck is an API action. Cache will be updated
+func (api *authenticationpolicyAPI) SyncLdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // LdapBindCheck is an API action
 func (api *authenticationpolicyAPI) LdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
 	if api.ct.resolver != nil {
@@ -1668,6 +1832,29 @@ func (api *authenticationpolicyAPI) LdapBindCheck(obj *auth.AuthenticationPolicy
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
+// SyncLdapBindCheck is an API action. Cache will be updated
+func (api *authenticationpolicyAPI) SyncLdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
 // TokenSecretGenerate is an API action
 func (api *authenticationpolicyAPI) TokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error) {
 	if api.ct.resolver != nil {
@@ -1678,6 +1865,29 @@ func (api *authenticationpolicyAPI) TokenSecretGenerate(obj *auth.TokenSecretReq
 		}
 
 		return apicl.AuthV1().AuthenticationPolicy().TokenSecretGenerate(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncTokenSecretGenerate is an API action. Cache will be updated
+func (api *authenticationpolicyAPI) SyncTokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.AuthV1().AuthenticationPolicy().TokenSecretGenerate(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1833,6 +2043,11 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*roleCtx)
 				ct.stats.Counter("Role_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1897,6 +2112,10 @@ func (ctx *roleCtx) GetKey() string {
 
 func (ctx *roleCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *roleCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *roleCtx) SetEvent(event kvstore.WatchEventType) {
@@ -2313,8 +2532,9 @@ func (ct *ctrlerCtx) StopWatchRole(handler RoleHandler) error {
 // RoleAPI returns
 type RoleAPI interface {
 	Create(obj *auth.Role) error
-	CreateEvent(obj *auth.Role) error
+	SyncCreate(obj *auth.Role) error
 	Update(obj *auth.Role) error
+	SyncUpdate(obj *auth.Role) error
 	Delete(obj *auth.Role) error
 	Find(meta *api.ObjectMeta) (*Role, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Role, error)
@@ -2347,8 +2567,11 @@ func (api *roleAPI) Create(obj *auth.Role) error {
 	return nil
 }
 
-// CreateEvent creates Role object and synchronously triggers local event
-func (api *roleAPI) CreateEvent(obj *auth.Role) error {
+// SyncCreate creates Role object and updates the cache
+func (api *roleAPI) SyncCreate(obj *auth.Role) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -2356,19 +2579,18 @@ func (api *roleAPI) CreateEvent(obj *auth.Role) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().Role().Create(context.Background(), obj)
+		newObj, writeErr = apicl.AuthV1().Role().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
+			newObj, writeErr = apicl.AuthV1().Role().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Role object
@@ -2386,6 +2608,27 @@ func (api *roleAPI) Update(obj *auth.Role) error {
 
 	api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Role object and updates the cache
+func (api *roleAPI) SyncUpdate(obj *auth.Role) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.AuthV1().Role().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Role object
@@ -2618,6 +2861,11 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*rolebindingCtx)
 				ct.stats.Counter("RoleBinding_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -2682,6 +2930,10 @@ func (ctx *rolebindingCtx) GetKey() string {
 
 func (ctx *rolebindingCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *rolebindingCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *rolebindingCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3098,8 +3350,9 @@ func (ct *ctrlerCtx) StopWatchRoleBinding(handler RoleBindingHandler) error {
 // RoleBindingAPI returns
 type RoleBindingAPI interface {
 	Create(obj *auth.RoleBinding) error
-	CreateEvent(obj *auth.RoleBinding) error
+	SyncCreate(obj *auth.RoleBinding) error
 	Update(obj *auth.RoleBinding) error
+	SyncUpdate(obj *auth.RoleBinding) error
 	Delete(obj *auth.RoleBinding) error
 	Find(meta *api.ObjectMeta) (*RoleBinding, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*RoleBinding, error)
@@ -3132,8 +3385,11 @@ func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
 	return nil
 }
 
-// CreateEvent creates RoleBinding object and synchronously triggers local event
-func (api *rolebindingAPI) CreateEvent(obj *auth.RoleBinding) error {
+// SyncCreate creates RoleBinding object and updates the cache
+func (api *rolebindingAPI) SyncCreate(obj *auth.RoleBinding) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3141,19 +3397,18 @@ func (api *rolebindingAPI) CreateEvent(obj *auth.RoleBinding) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
+		newObj, writeErr = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+			newObj, writeErr = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on RoleBinding object
@@ -3171,6 +3426,27 @@ func (api *rolebindingAPI) Update(obj *auth.RoleBinding) error {
 
 	api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on RoleBinding object and updates the cache
+func (api *rolebindingAPI) SyncUpdate(obj *auth.RoleBinding) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes RoleBinding object
@@ -3403,6 +3679,11 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*userpreferenceCtx)
 				ct.stats.Counter("UserPreference_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -3467,6 +3748,10 @@ func (ctx *userpreferenceCtx) GetKey() string {
 
 func (ctx *userpreferenceCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *userpreferenceCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *userpreferenceCtx) SetEvent(event kvstore.WatchEventType) {
@@ -3883,8 +4168,9 @@ func (ct *ctrlerCtx) StopWatchUserPreference(handler UserPreferenceHandler) erro
 // UserPreferenceAPI returns
 type UserPreferenceAPI interface {
 	Create(obj *auth.UserPreference) error
-	CreateEvent(obj *auth.UserPreference) error
+	SyncCreate(obj *auth.UserPreference) error
 	Update(obj *auth.UserPreference) error
+	SyncUpdate(obj *auth.UserPreference) error
 	Delete(obj *auth.UserPreference) error
 	Find(meta *api.ObjectMeta) (*UserPreference, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*UserPreference, error)
@@ -3917,8 +4203,11 @@ func (api *userpreferenceAPI) Create(obj *auth.UserPreference) error {
 	return nil
 }
 
-// CreateEvent creates UserPreference object and synchronously triggers local event
-func (api *userpreferenceAPI) CreateEvent(obj *auth.UserPreference) error {
+// SyncCreate creates UserPreference object and updates the cache
+func (api *userpreferenceAPI) SyncCreate(obj *auth.UserPreference) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -3926,19 +4215,18 @@ func (api *userpreferenceAPI) CreateEvent(obj *auth.UserPreference) error {
 			return err
 		}
 
-		_, err = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
+		newObj, writeErr = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+			newObj, writeErr = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on UserPreference object
@@ -3956,6 +4244,27 @@ func (api *userpreferenceAPI) Update(obj *auth.UserPreference) error {
 
 	api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on UserPreference object and updates the cache
+func (api *userpreferenceAPI) SyncUpdate(obj *auth.UserPreference) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes UserPreference object

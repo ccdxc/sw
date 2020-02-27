@@ -63,6 +63,10 @@ func (ctx *testObjCtx) GetKind() string {
 	return ctx.obj.TypeMeta.Kind
 }
 
+func (ctx *testObjCtx) GetResourceVersion() string {
+	return ctx.obj.TypeMeta.Kind
+}
+
 func (ctx *testObjCtx) GetKey() string {
 	return ctx.obj.GetKey()
 }

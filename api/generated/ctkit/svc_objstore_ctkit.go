@@ -173,6 +173,11 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*bucketCtx)
 				ct.stats.Counter("Bucket_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -237,6 +242,10 @@ func (ctx *bucketCtx) GetKey() string {
 
 func (ctx *bucketCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *bucketCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *bucketCtx) SetEvent(event kvstore.WatchEventType) {
@@ -653,8 +662,9 @@ func (ct *ctrlerCtx) StopWatchBucket(handler BucketHandler) error {
 // BucketAPI returns
 type BucketAPI interface {
 	Create(obj *objstore.Bucket) error
-	CreateEvent(obj *objstore.Bucket) error
+	SyncCreate(obj *objstore.Bucket) error
 	Update(obj *objstore.Bucket) error
+	SyncUpdate(obj *objstore.Bucket) error
 	Delete(obj *objstore.Bucket) error
 	Find(meta *api.ObjectMeta) (*Bucket, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Bucket, error)
@@ -687,8 +697,11 @@ func (api *bucketAPI) Create(obj *objstore.Bucket) error {
 	return nil
 }
 
-// CreateEvent creates Bucket object and synchronously triggers local event
-func (api *bucketAPI) CreateEvent(obj *objstore.Bucket) error {
+// SyncCreate creates Bucket object and updates the cache
+func (api *bucketAPI) SyncCreate(obj *objstore.Bucket) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -696,19 +709,18 @@ func (api *bucketAPI) CreateEvent(obj *objstore.Bucket) error {
 			return err
 		}
 
-		_, err = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
+		newObj, writeErr = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
+			newObj, writeErr = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Bucket object
@@ -726,6 +738,27 @@ func (api *bucketAPI) Update(obj *objstore.Bucket) error {
 
 	api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Bucket object and updates the cache
+func (api *bucketAPI) SyncUpdate(obj *objstore.Bucket) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Bucket object
@@ -958,6 +991,11 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
+				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*objectCtx)
 				ct.stats.Counter("Object_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -1022,6 +1060,10 @@ func (ctx *objectCtx) GetKey() string {
 
 func (ctx *objectCtx) GetKind() string {
 	return ctx.obj.GetKind()
+}
+
+func (ctx *objectCtx) GetResourceVersion() string {
+	return ctx.obj.GetResourceVersion()
 }
 
 func (ctx *objectCtx) SetEvent(event kvstore.WatchEventType) {
@@ -1438,8 +1480,9 @@ func (ct *ctrlerCtx) StopWatchObject(handler ObjectHandler) error {
 // ObjectAPI returns
 type ObjectAPI interface {
 	Create(obj *objstore.Object) error
-	CreateEvent(obj *objstore.Object) error
+	SyncCreate(obj *objstore.Object) error
 	Update(obj *objstore.Object) error
+	SyncUpdate(obj *objstore.Object) error
 	Delete(obj *objstore.Object) error
 	Find(meta *api.ObjectMeta) (*Object, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Object, error)
@@ -1472,8 +1515,11 @@ func (api *objectAPI) Create(obj *objstore.Object) error {
 	return nil
 }
 
-// CreateEvent creates Object object and synchronously triggers local event
-func (api *objectAPI) CreateEvent(obj *objstore.Object) error {
+// SyncCreate creates Object object and updates the cache
+func (api *objectAPI) SyncCreate(obj *objstore.Object) error {
+	newObj := obj
+	evtType := kvstore.Created
+	var writeErr error
 	if api.ct.resolver != nil {
 		apicl, err := api.ct.apiClient()
 		if err != nil {
@@ -1481,19 +1527,18 @@ func (api *objectAPI) CreateEvent(obj *objstore.Object) error {
 			return err
 		}
 
-		_, err = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
+		newObj, writeErr = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
+			newObj, writeErr = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
+			evtType = kvstore.Updated
 		}
-		if err != nil {
-			api.ct.logger.Errorf("Error creating object in api server. Err: %v", err)
-			return err
-		}
-		return err
 	}
 
-	api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Created})
-	return nil
+	if writeErr == nil {
+		api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+
+	return writeErr
 }
 
 // Update triggers update on Object object
@@ -1511,6 +1556,27 @@ func (api *objectAPI) Update(obj *objstore.Object) error {
 
 	api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Updated})
 	return nil
+}
+
+// SyncUpdate triggers update on Object object and updates the cache
+func (api *objectAPI) SyncUpdate(obj *objstore.Object) error {
+	newObj := obj
+	var writeErr error
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return err
+		}
+
+		newObj, writeErr = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
+	}
+
+	if writeErr == nil {
+		api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+	}
+
+	return writeErr
 }
 
 // Delete deletes Object object
