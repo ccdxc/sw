@@ -625,7 +625,11 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
             break;
     }
     mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    sdk::lib::memrev(mapping_data.dmaci, spec->overlay_mac, ETH_ADDR_LEN);
+    if (spec->skey.type == PDS_MAPPING_TYPE_L2) {
+        sdk::lib::memrev(mapping_data.dmaci, spec->skey.mac_addr, ETH_ADDR_LEN);
+    } else {
+        sdk::lib::memrev(mapping_data.dmaci, spec->overlay_mac, ETH_ADDR_LEN);
+    }
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
                                    NULL, &mapping_data,
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl_);
