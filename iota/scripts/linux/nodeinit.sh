@@ -21,22 +21,30 @@ chown vm:vm /pensando
 # find all the ionic interfaces and the mgmt interfaces
 ifs=""
 mgmt_ifs=""
-for net in /sys/class/net/* ; do
-    n=`basename $net`
-    if [ ! -e $net/device/vendor ] ; then
-    continue
-    fi
-    v=`cat $net/device/vendor`
-    if [ $v != "0x1dd8" ] ; then
-        continue
-    fi
 
-    ifs+=" $n"
-    d=`cat $net/device/device`
-    if [ $d == "0x1004" ] ; then
-        mgmt_ifs+=" $n"
-    fi
-done
+bringup_ifs() {
+    for net in /sys/class/net/* ; do
+    	n=`basename $net`
+    	if [ ! -e $net/device/vendor ] ; then
+    	continue
+    	fi
+    	v=`cat $net/device/vendor`
+    	if [ $v != "0x1dd8" ] ; then
+    		continue
+    	fi
+
+    	ifs+=" $n"
+    	d=`cat $net/device/device`
+    	if [ $d == "0x1004" ] ; then
+    		mgmt_ifs+=" $n"
+    	fi
+    done
+    for i in $ifs
+    do
+        ifconfig $i up
+    done
+
+}
 
 dhcp_disable() {
     # Check if it is centos
@@ -44,7 +52,6 @@ dhcp_disable() {
     os_version=`awk -F= '$1=="VERSION_ID" { print $2 ;}' /etc/os-release | sed -e 's/\([678]\)\../\1/'`
     if [[ $os_str == *"Ubuntu"* ]]; then
         echo "Ubuntu: No need to disable DHCP on Naples IFs"
-        return
     elif [[ $os_str == *"CentOS"* || $os_str == *"Red Hat"* ]]; then
         echo "CentOS/RHEL: Explicitly disabling DHCP on Naples IFs"
         # Create network interface scripts
@@ -64,14 +71,14 @@ dhcp_disable() {
         if [[ $os_version == *"8"* ]]; then
             nmcli connection load /etc/sysconfig/network-scripts/ifcfg-$i
         else
-        sudo service network restart
+            sudo service network restart
         fi
-        # Bringup all interfaces
-        for i in $ifs
-        do
-            ifconfig $i up
-        done
     fi
+    # Bringup all interfaces
+    for i in $ifs
+    do
+        ifconfig $i up
+    done
 }
 
 if [ -n "$skip_install" ]; then
@@ -102,6 +109,7 @@ else
         insmod drivers/eth/ionic/ionic.ko || (dmesg && exit 1)
         sleep 2
 
+        bringup_ifs
         dhcp_disable
 
         if [ -n "$no_mgmt" ]; then
