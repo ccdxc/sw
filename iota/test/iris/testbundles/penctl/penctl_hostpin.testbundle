@@ -25,6 +25,7 @@ testcases:
 
     -   name    : CHECK_METRICS
         testcase: testcases.penctl.lif_metrics
+        ignore  : True
 
     -   name    : CHECK_DIAG
         testcase: testcases.penctl.diag

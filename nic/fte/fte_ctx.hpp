@@ -485,6 +485,9 @@ typedef struct fte_txrx_stats_s {
     hal::pd::cpupkt_qinfo_stats_t qinfo[FTE_MAX_CPU_QUEUES];
 } __PACK__ fte_txrx_stats_t;
 
+// NOTE -- These stats go into HBM so the memory size needs to adhere to
+// the hbm region size. Delphi pointers also needs to be adjusted in fte_txrx.cc
+// when someone adds/deletes from this!!
 typedef struct fte_hbm_stats_ {
     struct {
         uint64_t          cps;                         // Number of connections per second processed by this FTE

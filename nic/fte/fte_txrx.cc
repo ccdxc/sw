@@ -25,7 +25,7 @@
 #include "nic/hal/pd/hal_pd.hpp"
 
 #define FTE_EXPORT_STATS_SIZE     7
-#define FTE_LIFQ_METRICS_OFFSET   16
+#define FTE_LIFQ_METRICS_OFFSET   32 
 #define FTE_MAX_SOFTQ_BATCH_SZ    128
 namespace hal {
 extern hal::session_stats_t  *g_session_stats;

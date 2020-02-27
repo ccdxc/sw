@@ -26,12 +26,6 @@ namespace psp
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 #include "nic/sdk/lib/thread/thread.hpp"
-
-#ifdef NICMGR_DELPHI_METRICS_ENABLE
-#include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
-#endif
-
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/misc/include/misc.h"
@@ -204,6 +198,8 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     host_lif_stats_addr = 0;
 
     NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
+
+    AddLifMetrics();
 
     // Lif Config
     lif_config_addr = pd->nicmgr_mem_alloc(sizeof(union lif_config));
@@ -2730,14 +2726,6 @@ EthLif::DelphiMountEventHandler(bool mounted)
     if (!mounted) {
         return;
     }
-#ifdef NICMGR_DELPHI_METRICS_ENABLE
-    auto lif_stats =
-        delphi::objects::LifMetrics::NewLifMetrics(hal_lif_info_.lif_id, lif_stats_addr);
-    if (lif_stats == NULL) {
-        NIC_LOG_ERR("{}: Failed lif metrics registration with delphi", hal_lif_info_.name);
-        throw;
-    }
-#endif  // NICMGR_DELPHI_METRICS_ENABLE
 }
 
 void

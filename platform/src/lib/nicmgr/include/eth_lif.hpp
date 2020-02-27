@@ -134,6 +134,8 @@ class EthLif
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
+    void AddLifMetrics(void);
+
     EV_P;
 
   private:

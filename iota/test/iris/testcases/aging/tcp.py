@@ -103,7 +103,7 @@ def Trigger(tc):
     tc.cmd_cookies.append(cmd_cookie)
 
     cmd_cookie = "show session yaml"
-    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --yaml".format(server_port, server.ip_address))
+    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --yaml --ipproto 6".format(server_port, server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
     trig_resp2 = api.Trigger(req2)

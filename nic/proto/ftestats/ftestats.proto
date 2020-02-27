@@ -42,6 +42,7 @@ message FteLifQMetrics {
     delphi.Counter software_queue_packets     = 9  [(venice.metricsField) = {DisplayName: "Software-config-Q Requests" Description: "Number of packets that hit the FTE config path"}];
     delphi.Counter queued_tx_packets          = 10 [(venice.metricsField) = {DisplayName: "Queued-Tx Packets" Description: "Number of packets enqueue in the FTE TX queue"}];
     delphi.Counter freed_tx_packets          = 11 [(venice.metricsField) = {DisplayName: "Freed-Tx Packets" Description: "Number of dropped or non-flowmiss packets for which the CPU resources are freed"}]; 
+    delphi.Counter max_session_threshold_drops = 12 [(venice.metricsField) = {DisplayName: "Max Session Threshold Drops" Description: "Number of flowmiss packets dropped due to max session limit being hit"}];
 }
 
 message SessionSummaryMetrics {
