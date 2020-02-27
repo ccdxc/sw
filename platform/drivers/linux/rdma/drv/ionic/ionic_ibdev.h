@@ -6,26 +6,39 @@
 #ifndef IONIC_IBDEV_H
 #define IONIC_IBDEV_H
 
+#include "ionic_kcompat.h"
+
 #include <linux/device.h>
 #include <linux/netdevice.h>
+#ifdef HAVE_XARRAY
+#include <linux/xarray.h>
+#endif
 #include <rdma/ib_umem.h>
 #include <rdma/ib_verbs.h>
 #include <rdma/ib_pack.h>
+#if defined(HAVE_RDMA_DRIVER_ID)
+#include <rdma/rdma_user_ioctl_cmds.h>
+#endif
+#if defined(HAVE_IB_API_UDATA) || defined(HAVE_RDMA_UDATA_DRV_CTX)
+#include <rdma/uverbs_ioctl.h>
+#endif
 
 #include <rdma/ionic-abi.h>
 #include <ionic_api.h>
 #include <ionic_regs.h>
 
-#include "ionic_kcompat.h"
 #include "ionic_fw.h"
 #include "ionic_sysfs.h"
 #include "ionic_queue.h"
 #include "ionic_res.h"
 
-#ifdef HAVE_XARRAY
-#include <linux/xarray.h>
-#endif
+#ifdef HAVE_RDMA_DRIVER_ID
+/* Upstream: QIB, EFA, SIW, <us> */
+enum {
+        RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
+};
 
+#endif
 #define DRIVER_NAME		"ionic_rdma"
 #define DRIVER_SHORTNAME	"ionr"
 
@@ -42,11 +55,7 @@
 
 #define IONIC_SPEC_RD_RCV	4
 #define IONIC_SPEC_LOW		8
-#ifdef NETAPP_PATCH
-#define IONIC_SPEC_HIGH		12
-#else
 #define IONIC_SPEC_HIGH		16
-#endif /* NETAPP_PATCH */
 
 #define IONIC_META_LAST		((void *)1ul)
 #define IONIC_META_POSTED	((void *)2ul)

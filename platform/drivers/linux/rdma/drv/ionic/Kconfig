@@ -1,6 +1,9 @@
+# SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 config INFINIBAND_IONIC_RDMA
-	tristate "Pensando RDMA Driver"
+	tristate "Pensando DSC RoCE/RDMA Driver"
 	depends on NETDEVICES && ETHERNET && PCI && INET && CONFIG_64BIT
 	---help---
-	  This driver provides low-level InfiniBand support for
-	  Pensando PCI Express host channel adapters (HCAs).
+	  This is a RoCE/RDMA driver for the Pensando Distributed Services
+	  Card (DSC).
+
+	  To learn more, visit our website at <https://pensando.io>.

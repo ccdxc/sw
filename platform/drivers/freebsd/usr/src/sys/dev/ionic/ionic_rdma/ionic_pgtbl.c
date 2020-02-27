@@ -31,6 +31,8 @@
  * SOFTWARE.
  */
 
+#include <linux/dma-mapping.h>
+
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 

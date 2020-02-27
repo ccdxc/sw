@@ -80,8 +80,8 @@ static ssize_t ionic_rdma_spec_store(struct config_item *item,
 	ret = kstrtoint(pg, 0, &tmp);
 	if (!ret) {
 		if (tmp != IONIC_SPEC_LOW &&
-		    tmp != IONIC_SPEC_HIGH &&
-		    !ionic_nosupport) {
+		    !ionic_nosupport &&
+		    tmp != IONIC_SPEC_HIGH) {
 			pr_info("ionic_rdma: invalid spec %d, using %d",
 				tmp, IONIC_SPEC_LOW);
 			pr_info("ionic_rdma: valid values are %d and %d\n",
@@ -203,8 +203,8 @@ static int ionic_set_spec(const char *val, const struct kernel_param *kp)
 		return rc;
 
 	if (tmp != IONIC_SPEC_LOW &&
-	    tmp != IONIC_SPEC_HIGH &&
-	    !ionic_nosupport) {
+	    !ionic_nosupport &&
+	    tmp != IONIC_SPEC_HIGH) {
 		pr_info("ionic_rdma: invalid spec %d, using %d\n",
 			tmp, IONIC_SPEC_LOW);
 		pr_info("ionic_rdma: valid spec values are %d and %d\n",

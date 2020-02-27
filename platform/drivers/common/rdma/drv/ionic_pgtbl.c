@@ -39,8 +39,9 @@
 
 #ifndef __FreeBSD__
 #include <linux/mman.h>
-
 #endif
+#include <linux/dma-mapping.h>
+
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 

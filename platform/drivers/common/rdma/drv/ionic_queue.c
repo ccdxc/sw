@@ -39,7 +39,9 @@
 
 #include <linux/dma-mapping.h>
 
+#ifdef NOT_UPSTREAM
 #include "ionic_kcompat.h"
+#endif
 #include "ionic_queue.h"
 
 int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,

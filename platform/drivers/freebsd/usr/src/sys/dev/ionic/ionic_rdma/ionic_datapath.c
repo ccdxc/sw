@@ -1289,34 +1289,22 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 
 	spin_lock_irqsave(&qp->sq_lock, irqflags);
 
-	if (qp->ibqp.qp_type == IB_QPT_UD || qp->ibqp.qp_type == IB_QPT_GSI) {
-		while (wr) {
-			if (ionic_queue_full(&qp->sq)) {
-				ibdev_dbg(&dev->ibdev, "queue full");
-				rc = -ENOMEM;
-				goto out;
-			}
+	while (wr) {
+		if (ionic_queue_full(&qp->sq)) {
+			ibdev_dbg(&dev->ibdev, "queue full");
+			rc = -ENOMEM;
+			goto out;
+		}
 
+		if (qp->ibqp.qp_type == IB_QPT_UD ||
+		    qp->ibqp.qp_type == IB_QPT_GSI)
 			rc = ionic_prep_one_ud(qp, wr);
-			if (rc)
-				goto out;
-
-			wr = wr->next;
-		}
-	} else {
-		while (wr) {
-			if (ionic_queue_full(&qp->sq)) {
-				ibdev_dbg(&dev->ibdev, "queue full");
-				rc = -ENOMEM;
-				goto out;
-			}
-
+		else
 			rc = ionic_prep_one_rc(qp, wr);
-			if (rc)
-				goto out;
+		if (rc)
+			goto out;
 
-			wr = wr->next;
-		}
+		wr = wr->next;
 	}
 
 out:

@@ -49,7 +49,6 @@ MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_DESCRIPTION("Pensando RoCE HCA driver");
 MODULE_LICENSE("Dual BSD/GPL");
 
-/* XXX update or delete version string before submitting upstream */
 #define DRIVER_VERSION "0.8.0"
 #define DRIVER_DESCRIPTION "Pensando RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando RoCE HCA"
@@ -812,8 +811,7 @@ static int __init ionic_mod_init(void)
 {
 	int rc;
 
-	pr_info("%s ver %s : %s\n",
-		DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
+	pr_info("%s : %s\n", DRIVER_NAME, DRIVER_DESCRIPTION);
 
 	ionic_dev_workq = create_singlethread_workqueue(DRIVER_NAME "-dev");
 	if (!ionic_dev_workq) {

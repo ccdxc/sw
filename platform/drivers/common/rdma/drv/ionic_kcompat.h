@@ -37,8 +37,8 @@
  */
 #endif /* __FreeBSD__ */
 
-#ifndef IONIC_KCOMPAT
-#define IONIC_KCOMPAT
+#ifndef IONIC_KCOMPAT_H
+#define IONIC_KCOMPAT_H
 
 #include <rdma/ib_verbs.h>
 
@@ -54,7 +54,7 @@
 #include <ionic_kpicompat.h>
 #if !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000
 #include <ck_queue.h>
-#endif /* !defined(NETAPP_PATCH) && __FreeBSD_version >= 1200000 */
+#endif /* __FreeBSD_version >= 1200000 */
 
 #define FW_INFO "[Firmware Info]: "
 
@@ -119,7 +119,7 @@ static inline int sysfs_create_groups(struct kobject *kobj,
 	return error;
 }
 
-#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1200518 r351937 */
+#endif /* __FreeBSD_version < 1200518 r351937 */
 #endif /* NOT_UPSTREAM */
 #if defined(NETAPP_PATCH) || __FreeBSD_version < 1201502
 static inline void sysfs_remove_groups(struct kobject *kobj,
@@ -133,7 +133,7 @@ static inline void sysfs_remove_groups(struct kobject *kobj,
 		sysfs_remove_group(kobj, groups[i]);
 }
 
-#endif /* defined(NETAPP_PATCH) || __FreeBSD_version < 1201502 r354613 */
+#endif /* __FreeBSD_version < 1201502 r354613 */
 #define local_irq_save(f) do { (f) = 0; } while (0)
 #define local_irq_restore(f) (void)(f)
 
@@ -526,12 +526,6 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 
 #endif /* HAVE_IB_SRQ_HAS_CQ */
 #endif /* IONIC_SRQ_XRC */
-#ifdef HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
-#define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
-	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
-			   IB_LINK_LAYER_ETHERNET)
-
-#endif
 #ifdef HAVE_CUSTOM_IB_SET_DEVICE_OPS
 struct ib_device_ops {
 #ifdef HAVE_CONST_IB_WR
@@ -799,12 +793,4 @@ enum ib_port_phys_state {
 	dev_warn_ratelimited(&(ibdev)->dev, ##__VA_ARGS__)
 
 #endif /* HAVE_IBDEV_PRINT_RATELIMITED */
-#ifdef HAVE_RDMA_DRIVER_ID
-#include <rdma/rdma_user_ioctl_cmds.h>
-/* Upstream: QIB, EFA, SIW, <us> */
-enum {
-	RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
-};
-
-#endif /* HAVE_RDMA_DRIVER_ID */
-#endif /* IONIC_KCOMPAT */
+#endif /* IONIC_KCOMPAT_H */

@@ -34,6 +34,8 @@
 #ifndef IONIC_IBDEV_H
 #define IONIC_IBDEV_H
 
+#include "ionic_kcompat.h"
+
 #include <linux/device.h>
 #include <linux/netdevice.h>
 #include <rdma/ib_umem.h>
@@ -44,12 +46,10 @@
 #include <ionic_api.h>
 #include <ionic_regs.h>
 
-#include "ionic_kcompat.h"
 #include "ionic_fw.h"
 #include "ionic_sysctl.h"
 #include "ionic_queue.h"
 #include "ionic_res.h"
-
 
 #define DRIVER_NAME		"ionic_rdma"
 #define DRIVER_SHORTNAME	"ionr"

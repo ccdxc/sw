@@ -39,7 +39,9 @@
 
 #include <linux/interrupt.h>
 #include <linux/module.h>
+#ifdef NOT_UPSTREAM
 #include <linux/printk.h>
+#endif
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
@@ -571,7 +573,7 @@ static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
 						  int comp_vector)
 {
 	struct ionic_cq *cq;
-	struct ionic_tbl_buf buf = {0};
+	struct ionic_tbl_buf buf = {};
 	struct ib_cq_init_attr attr = {
 		.cqe = ionic_aq_depth,
 		.comp_vector = comp_vector,

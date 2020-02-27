@@ -81,11 +81,13 @@ int ionic_max_pd = 1024;
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, max_pd, CTLFLAG_RDTUN,
     &ionic_max_pd, 0, "Max number of PDs");
 
+#ifdef NOT_UPSTREAM
 static bool ionic_nosupport = false;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, nosupport,
     CTLFLAG_RWTUN | CTLFLAG_SKIP,
     &ionic_nosupport, 0, "Enable unsupported config values");
 
+#endif
 /* Special handling for spec */
 static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 {
@@ -100,8 +102,10 @@ static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error)
 		return (error);
 	if (tmp != IONIC_SPEC_LOW &&
-	    tmp != IONIC_SPEC_HIGH &&
-	    !ionic_nosupport) {
+#ifdef NOT_UPSTREAM
+	    !ionic_nosupport &&
+#endif
+	    tmp != IONIC_SPEC_HIGH) {
 		pr_info("ionic_rdma: invalid spec %d, using %d\n",
 			tmp, IONIC_SPEC_LOW);
 		pr_info("ionic_rdma: valid spec values are %d and %d\n",
@@ -290,7 +294,7 @@ typedef int (*ionic_ctrl_handler)(void *context,
 static int ionic_sysctl_ctrl(SYSCTL_HANDLER_ARGS)
 {
 	ionic_ctrl_handler handle_ctrl;
-	char buf[256] = {0};
+	char buf[256] = {};
 	int rc;
 
 	rc = sysctl_handle_string(oidp, buf, sizeof(buf), req);

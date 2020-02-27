@@ -22,7 +22,9 @@ u16 ionic_eq_depth = 511;
 u16 ionic_eq_isr_budget = 10;
 u16 ionic_eq_work_budget = 1000;
 int ionic_max_pd = 1024;
+#ifdef NOT_UPSTREAM
 static bool ionic_nosupport = false;
+#endif
 int ionic_spec = IONIC_SPEC_HIGH;
 
 #ifdef HAVE_CONFIGFS
@@ -63,7 +65,9 @@ IRCFG_U16(eq_depth);
 IRCFG_U16(eq_isr_budget);
 IRCFG_U16(eq_work_budget);
 IRCFG_INT(max_pd);
+#ifdef NOT_UPSTREAM
 IRCFG_BOOL(nosupport);
+#endif
 
 /* Special handling for spec */
 static ssize_t ionic_rdma_spec_show(struct config_item *item, char *pg)
@@ -80,8 +84,10 @@ static ssize_t ionic_rdma_spec_store(struct config_item *item,
 	ret = kstrtoint(pg, 0, &tmp);
 	if (!ret) {
 		if (tmp != IONIC_SPEC_LOW &&
-		    tmp != IONIC_SPEC_HIGH &&
-		    !ionic_nosupport) {
+#ifdef NOT_UPSTREAM
+		    !ionic_nosupport &&
+#endif
+		    tmp != IONIC_SPEC_HIGH) {
 			pr_info("ionic_rdma: invalid spec %d, using %d",
 				tmp, IONIC_SPEC_LOW);
 			pr_info("ionic_rdma: valid values are %d and %d\n",
@@ -107,7 +113,9 @@ static ssize_t ionic_rdma_description_show(struct config_item *item, char *pg)
 "eq_isr_budget   Max events to poll per round in isr context\n"
 "eq_work_budget  Max events to poll per round in work context\n"
 "max_pd          Max number of PDs\n"
+#ifdef NOT_UPSTREAM
 "nosupport       Enable unsupported config values\n"
+#endif
 "spec            Max SGEs to speculatively load\n");
 }
 
@@ -121,7 +129,9 @@ CONFIGFS_ATTR(ionic_rdma_, eq_depth);
 CONFIGFS_ATTR(ionic_rdma_, eq_isr_budget);
 CONFIGFS_ATTR(ionic_rdma_, eq_work_budget);
 CONFIGFS_ATTR(ionic_rdma_, max_pd);
+#ifdef NOT_UPSTREAM
 CONFIGFS_ATTR(ionic_rdma_, nosupport);
+#endif
 CONFIGFS_ATTR(ionic_rdma_, spec);
 CONFIGFS_ATTR_RO(ionic_rdma_, description);
 
@@ -136,7 +146,9 @@ static struct configfs_attribute *ionic_rdma_attrs[] = {
 	&ionic_rdma_attr_eq_isr_budget,
 	&ionic_rdma_attr_eq_work_budget,
 	&ionic_rdma_attr_max_pd,
+#ifdef NOT_UPSTREAM
 	&ionic_rdma_attr_nosupport,
+#endif
 	&ionic_rdma_attr_spec,
 	&ionic_rdma_attr_description,
 	NULL,
@@ -190,9 +202,11 @@ MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 module_param_named(max_pd, ionic_max_pd, int, 0444);
 MODULE_PARM_DESC(max_pd, "Max number of PDs.");
 
+#ifdef NOT_UPSTREAM
 module_param_named(nosupport, ionic_nosupport, bool, 0644);
 MODULE_PARM_DESC(nosupport, "Enable unsupported config values");
 
+#endif
 /* Special handling for spec */
 static int ionic_set_spec(const char *val, const struct kernel_param *kp)
 {
@@ -203,8 +217,10 @@ static int ionic_set_spec(const char *val, const struct kernel_param *kp)
 		return rc;
 
 	if (tmp != IONIC_SPEC_LOW &&
-	    tmp != IONIC_SPEC_HIGH &&
-	    !ionic_nosupport) {
+#ifdef NOT_UPSTREAM
+	    !ionic_nosupport &&
+#endif
+	    tmp != IONIC_SPEC_HIGH) {
 		pr_info("ionic_rdma: invalid spec %d, using %d\n",
 			tmp, IONIC_SPEC_LOW);
 		pr_info("ionic_rdma: valid spec values are %d and %d\n",

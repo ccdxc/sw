@@ -235,7 +235,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req;
-	struct ionic_ctx_resp resp = {0};
+	struct ionic_ctx_resp resp = {};
 	phys_addr_t db_phys = 0;
 	int rc;
 
@@ -630,7 +630,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
-	struct ionic_ah_resp resp = {0};
+	struct ionic_ah_resp resp = {};
 	int rc;
 	u32 flags = 0;
 
@@ -1287,7 +1287,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_cq *cq;
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
-	struct ionic_tbl_buf buf = {0};
+	struct ionic_tbl_buf buf = {};
 	int rc;
 
 	cq = kzalloc(sizeof(*cq), GFP_KERNEL);
@@ -1428,10 +1428,6 @@ static int ionic_modify_qp_cmd(struct ionic_ibdev *dev,
 				.access_flags = cpu_to_be16(flags),
 				.rq_psn = cpu_to_le32(attr->rq_psn),
 				.sq_psn = cpu_to_le32(attr->sq_psn),
-#ifdef HAVE_QP_RATE_LIMIT
-				.rate_limit_kbps =
-					cpu_to_le32(attr->rate_limit),
-#endif
 				.pmtu = (attr->path_mtu + 7),
 				.retry = (attr->retry_cnt |
 					  (attr->rnr_retry << 4)),
@@ -1651,9 +1647,6 @@ static int ionic_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->rnr_retry = query_rqbuf->retry_rnrtry >> 4;
 	attr->alt_port_num = 0;
 	attr->alt_timeout = 0;
-#ifdef HAVE_QP_RATE_LIMIT
-	attr->rate_limit = be32_to_cpu(query_sqbuf->rate_limit_kbps);
-#endif
 
 	if (mask & IB_QP_AV)
 		ionic_set_ah_attr(dev, &attr->ah_attr,
@@ -2114,8 +2107,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	struct ionic_qp *qp;
 	struct ionic_cq *cq;
 	struct ionic_qp_req req;
-	struct ionic_qp_resp resp = {0};
-	struct ionic_tbl_buf sq_buf = {0}, rq_buf = {0};
+	struct ionic_qp_resp resp = {};
+	struct ionic_tbl_buf sq_buf = {}, rq_buf = {};
 	unsigned long irqflags;
 	int rc;
 
@@ -2456,7 +2449,8 @@ static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 	    !ionic_qp_cur_state_is_ok(qp->state, attr->cur_qp_state))
 		return -EINVAL;
 
-	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask))
+	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
+				IB_LINK_LAYER_ETHERNET))
 		return -EINVAL;
 
 	/* unprivileged qp not allowed privileged qkey */
@@ -2582,9 +2576,6 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	init_attr->create_flags = 0;
 	init_attr->port_num = 0;
 	init_attr->rwq_ind_tbl = ibqp->rwq_ind_tbl;
-#ifdef HAVE_QP_INIT_SRC_QPN
-	init_attr->source_qpn = 0;
-#endif
 
 err_cmd:
 	return rc;
@@ -2676,6 +2667,7 @@ static const struct ib_device_ops ionic_controlpath_ops = {
 	.modify_qp		= ionic_modify_qp,
 	.query_qp		= ionic_query_qp,
 	.destroy_qp		= ionic_destroy_qp,
+
 };
 
 void ionic_controlpath_setops(struct ionic_ibdev *dev)
@@ -2704,8 +2696,5 @@ void ionic_controlpath_setops(struct ionic_ibdev *dev)
 		0;
 	dev->ibdev.uverbs_ex_cmd_mask =
 		BIT_ULL(IB_USER_VERBS_EX_CMD_CREATE_QP)		|
-#ifdef HAVE_EX_CMD_MODIFY_QP
-		BIT_ULL(IB_USER_VERBS_EX_CMD_MODIFY_QP)		|
-#endif
 		0;
 }

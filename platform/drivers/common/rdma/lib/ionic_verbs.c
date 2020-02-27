@@ -2256,42 +2256,25 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 #endif /* IONIC_LIB_STATS */
 	old_prod = qp->sq.prod;
 
-	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
-		while (wr) {
-			if (ionic_queue_full(&qp->sq)) {
+	while (wr) {
+		if (ionic_queue_full(&qp->sq)) {
 #ifdef NOT_UPSTREAM
-				ionic_dbg(ctx,
-					  "send queue full cons %u prod %u",
-					  qp->sq.cons, qp->sq.prod);
+			ionic_dbg(ctx,
+				  "send queue full cons %u prod %u",
+				  qp->sq.cons, qp->sq.prod);
 #endif /* NOT_UPSTREAM */
-				rc = ENOMEM;
-				goto out;
-			}
+			rc = ENOMEM;
+			goto out;
+		}
 
+		if (qp->vqp.qp.qp_type == IBV_QPT_UD)
 			rc = ionic_v1_prep_one_ud(qp, wr);
-			if (rc)
-				goto out;
-
-			wr = wr->next;
-		}
-	} else {
-		while (wr) {
-			if (ionic_queue_full(&qp->sq)) {
-#ifdef NOT_UPSTREAM
-				ionic_dbg(ctx,
-					  "send queue full cons %u prod %u",
-					  qp->sq.cons, qp->sq.prod);
-#endif /* NOT_UPSTREAM */
-				rc = ENOMEM;
-				goto out;
-			}
-
+		else
 			rc = ionic_v1_prep_one_rc(qp, wr, send_path);
-			if (rc)
-				goto out;
+		if (rc)
+			goto out;
 
-			wr = wr->next;
-		}
+		wr = wr->next;
 	}
 
 out:

@@ -3,7 +3,7 @@
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  */
 
-#include <linux/printk.h>
+#include <linux/dma-mapping.h>
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"

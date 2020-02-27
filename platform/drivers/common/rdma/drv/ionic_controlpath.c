@@ -38,7 +38,9 @@
 #endif /* __FreeBSD__ */
 
 #include <linux/module.h>
+#ifdef NOT_UPSTREAM
 #include <linux/printk.h>
+#endif
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
 #include <rdma/ib_user_verbs.h>
@@ -46,10 +48,6 @@
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
 
-#if defined(HAVE_IB_API_UDATA) || defined(HAVE_RDMA_UDATA_DRV_CTX)
-#include <rdma/uverbs_ioctl.h>
-
-#endif
 #define ionic_set_ecn(tos)   (((tos) | 2u) & ~1u)
 #define ionic_clear_ecn(tos)  ((tos) & ~3u)
 
@@ -292,7 +290,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ctx *ctx;
 #endif
 	struct ionic_ctx_req req;
-	struct ionic_ctx_resp resp = {0};
+	struct ionic_ctx_resp resp = {};
 	phys_addr_t db_phys = 0;
 	int rc;
 
@@ -456,6 +454,7 @@ static struct ib_pd *ionic_alloc_pd(struct ib_device *ibdev,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_pd *pd;
 #endif
+#if defined(NOT_UPSTREAM) || defined(__FreeBSD__)
 	int rc;
 
 #ifndef HAVE_IB_ALLOC_PD_OBJ
@@ -484,6 +483,10 @@ err_pdid:
 err_pd:
 	return ERR_PTR(rc);
 #endif
+#else
+
+	return ionic_get_pdid(dev, &pd->pdid);
+#endif /* defined(NOT_UPSTREAM) || defined(__FreeBSD__) */
 }
 
 #if defined(HAVE_IB_API_UDATA)
@@ -501,8 +504,8 @@ static int ionic_dealloc_pd(struct ib_pd *ibpd)
 #ifndef HAVE_IB_ALLOC_PD_OBJ
 	kfree(pd);
 #endif
-
 #ifndef HAVE_IB_DEALLOC_PD_VOID
+
 	return 0;
 #endif
 }
@@ -810,7 +813,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ah *ah;
 #endif
 #ifdef HAVE_CREATE_AH_UDATA
-	struct ionic_ah_resp resp = {0};
+	struct ionic_ah_resp resp = {};
 #endif
 	int rc;
 #ifndef HAVE_CREATE_AH_FLAGS
@@ -916,8 +919,8 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 #ifndef HAVE_IB_ALLOC_AH_OBJ
 	kfree(ah);
 #endif
-
 #ifndef HAVE_IB_DESTROY_AH_VOID
+
 	return 0;
 #endif
 }
@@ -1261,10 +1264,14 @@ err_mr:
 
 static int ionic_map_mr_page(struct ib_mr *ibmr, u64 dma)
 {
+#ifdef NOT_UPSTREAM
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
+#endif
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
 
+#ifdef NOT_UPSTREAM
 	ibdev_dbg(&dev->ibdev, "dma %p\n", (void *)dma);
+#endif
 	return ionic_pgtbl_page(&mr->buf, dma);
 }
 
@@ -1589,7 +1596,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 #else
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 #endif
-	struct ionic_tbl_buf buf = {0};
+	struct ionic_tbl_buf buf = {};
 	int rc;
 
 #ifndef HAVE_IB_ALLOC_CQ_OBJ
@@ -1656,8 +1663,8 @@ static int ionic_destroy_cq(struct ib_cq *ibcq)
 #ifndef HAVE_IB_ALLOC_CQ_OBJ
 	kfree(cq);
 #endif
-
 #ifndef HAVE_IB_DESTROY_CQ_VOID
+
 	return 0;
 #endif
 }
@@ -2518,8 +2525,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	struct ionic_qp *qp;
 	struct ionic_cq *cq;
 	struct ionic_qp_req req;
-	struct ionic_qp_resp resp = {0};
-	struct ionic_tbl_buf sq_buf = {0}, rq_buf = {0};
+	struct ionic_qp_resp resp = {};
+	struct ionic_tbl_buf sq_buf = {}, rq_buf = {};
 	unsigned long irqflags;
 	int rc;
 
@@ -2736,8 +2743,8 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 #endif
 	struct ionic_cq *cq;
 	struct ionic_srq_req req;
-	struct ionic_srq_resp resp = {0};
-	struct ionic_tbl_buf rq_buf = {0};
+	struct ionic_srq_resp resp = {};
+	struct ionic_tbl_buf rq_buf = {};
 	unsigned long irqflags;
 	int rc;
 
@@ -3064,7 +3071,12 @@ static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 	    !ionic_qp_cur_state_is_ok(qp->state, attr->cur_qp_state))
 		return -EINVAL;
 
+#ifdef HAVE_IB_MODIFY_QP_IS_OK_LINK_LAYER
+	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
+				IB_LINK_LAYER_ETHERNET))
+#else
 	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask))
+#endif
 		return -EINVAL;
 
 	/* unprivileged qp not allowed privileged qkey */
@@ -3298,6 +3310,7 @@ static const struct ib_device_ops ionic_controlpath_ops = {
 	.modify_qp		= ionic_modify_qp,
 	.query_qp		= ionic_query_qp,
 	.destroy_qp		= ionic_destroy_qp,
+
 #ifdef HAVE_IB_ALLOC_UCTX_OBJ
 	INIT_RDMA_OBJ_SIZE(ib_ucontext, ionic_ctx, ibctx),
 #endif

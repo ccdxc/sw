@@ -112,6 +112,7 @@ struct uionic_qp_resp {
 	__u64 rq_cmb_offset;
 };
 
+#ifdef IONIC_SRQ_XRC
 struct uionic_srq {
 	struct ibv_create_xsrq ibv_cmd;
 	struct ionic_qdesc rq;
@@ -125,6 +126,8 @@ struct uionic_srq_resp {
 	__u32 rsvd;
 	__u64 rq_cmb_offset;
 };
+
+#endif /* IONIC_SRQ_XRC */
 #else
 DECLARE_DRV_CMD(uionic_ctx, IB_USER_VERBS_CMD_GET_CONTEXT,
 		ionic_ctx_req, ionic_ctx_resp);
@@ -134,8 +137,10 @@ DECLARE_DRV_CMD(uionic_cq, IB_USER_VERBS_CMD_CREATE_CQ,
 		ionic_cq_req, ionic_cq_resp);
 DECLARE_DRV_CMD(uionic_qp, IB_USER_VERBS_EX_CMD_CREATE_QP,
 		ionic_qp_req, ionic_qp_resp);
+#ifdef IONIC_SRQ_XRC
 DECLARE_DRV_CMD(uionic_srq, IB_USER_VERBS_CMD_CREATE_XSRQ,
 		ionic_srq_req, ionic_srq_resp);
-#endif /* __FreeBSD__ */
+#endif /* IONIC_SRQ_XRC */
 
+#endif /* __FreeBSD__ */
 #endif /* __IONIC_ABI_H__ */

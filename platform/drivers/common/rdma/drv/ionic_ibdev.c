@@ -56,16 +56,14 @@
 
 #include "ionic_fw.h"
 #include "ionic_ibdev.h"
-#ifdef HAVE_IB_API_UDATA
-#include <rdma/uverbs_ioctl.h>
-#endif
 
 MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_DESCRIPTION("Pensando RoCE HCA driver");
 MODULE_LICENSE("Dual BSD/GPL");
 
-/* XXX update or delete version string before submitting upstream */
+#ifdef NOT_UPSTREAM
 #define DRIVER_VERSION "0.8.0"
+#endif
 #define DRIVER_DESCRIPTION "Pensando RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando RoCE HCA"
 
@@ -718,20 +716,16 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	ibdev->dma_device = ibdev->dev.parent;
 
 #endif
-#ifdef HAVE_RDMA_DRIVER_ID
-#ifndef HAVE_RDMA_DEV_OPS_EXT
+#if defined(HAVE_RDMA_DRIVER_ID) && !defined(HAVE_RDMA_DEV_OPS_EXT)
 	ibdev->driver_id = RDMA_DRIVER_IONIC;
 #endif
-#endif
-#ifdef HAVE_IB_REGISTER_DEVICE_NAME
-#ifdef HAVE_IB_REGISTER_DEVICE_NAME_ONLY
+#if defined(HAVE_IB_REGISTER_DEVICE_NAME_ONLY)
 	rc = ib_register_device(ibdev, "ionic_%d");
-#else
+#elif defined(HAVE_IB_REGISTER_DEVICE_NAME)
 	rc = ib_register_device(ibdev, "ionic_%d", NULL);
-#endif /* HAVE_IB_REGISTER_DEVICE_NAME_ONLY */
 #else
 	rc = ib_register_device(ibdev, NULL);
-#endif /* HAVE_IB_REGISTER_DEVICE_NAME */
+#endif
 	if (rc)
 		goto err_register;
 
@@ -976,8 +970,7 @@ static int __init ionic_mod_init(void)
 {
 	int rc;
 
-	pr_info("%s ver %s : %s\n",
-		DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
+	pr_info("%s : %s\n", DRIVER_NAME, DRIVER_DESCRIPTION);
 
 	ionic_dev_workq = create_singlethread_workqueue(DRIVER_NAME "-dev");
 	if (!ionic_dev_workq) {

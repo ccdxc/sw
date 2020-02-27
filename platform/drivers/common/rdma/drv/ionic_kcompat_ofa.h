@@ -3,8 +3,9 @@
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  */
 
-#ifndef IONIC_KCOMPAT_OFA
-#define IONIC_KCOMPAT_OFA
+#ifndef IONIC_KCOMPAT_OFA_H
+#define IONIC_KCOMPAT_OFA_H
+#ifdef NOT_UPSTREAM
 
 /* There is no semantic versioning for OFED kernel api.
  *
@@ -133,4 +134,5 @@
 #define HAVE_XARRAY
 #endif
 
-#endif
+#endif /* NOT_UPSTREAM */
+#endif /* IONIC_KCOMPAT_OFA_H */

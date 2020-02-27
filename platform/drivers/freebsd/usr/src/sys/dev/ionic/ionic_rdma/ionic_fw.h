@@ -933,4 +933,4 @@ static inline unsigned ionic_v1_stat_off(struct ionic_v1_stat *hdr)
 	return hdr->type_off & IONIC_V1_STAT_OFF_MASK;
 }
 
-#endif
+#endif /* IONIC_FW_H */

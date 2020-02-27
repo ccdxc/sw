@@ -106,18 +106,4 @@ struct uionic_qp_resp {
 	__u64 rq_cmb_offset;
 };
 
-struct uionic_srq {
-	struct ibv_create_xsrq ibv_cmd;
-	struct ionic_qdesc rq;
-	__u8 rq_spec;
-	__u8 rsvd[7];
-};
-
-struct uionic_srq_resp {
-	struct ibv_create_srq_resp ibv_resp;
-	__u32 qpid;
-	__u32 rsvd;
-	__u64 rq_cmb_offset;
-};
-
 #endif /* __IONIC_ABI_H__ */
