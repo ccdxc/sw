@@ -19,13 +19,8 @@ flow_info:
   phvwr.c1      p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
   phvwr.c1      p.control_metadata_dst_lport, d.u.flow_info_d.dst_lport
 
-  // nat info
-  phvwr         p.nat_metadata_nat_l4_port, d.u.flow_info_d.nat_l4_port
-  phvwr         p.nat_metadata_twice_nat_idx, d.u.flow_info_d.twice_nat_idx
-
   seq           c1, d.u.flow_info_d.multicast_en, TRUE
   bcf           [c1], flow_info_multicast
-  phvwr         p.nat_metadata_nat_ip, d.u.flow_info_d.nat_ip
   seq           c1, d.u.flow_info_d.flow_only_policy, TRUE
   bcf           [c1], flow_info_policy_only
   nop.!c1.e

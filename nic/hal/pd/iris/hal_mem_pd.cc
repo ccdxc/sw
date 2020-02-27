@@ -988,19 +988,6 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                                tinfo.actiondata_struct_size,
                                                false, true);
                 SDK_ASSERT(acl_table_ != NULL);
-#if 0
-            } else if ((tid == P4TBL_ID_DDOS_SRC_VF) ||
-                       (tid == P4TBL_ID_DDOS_SRC_DST) ||
-                       (tid == P4TBL_ID_DDOS_SERVICE)) {
-                // Allow dup entries must be set to true for ddos tcam tables
-                if (!tinfo.is_oflow_table) {
-                    tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
-                        tcam::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                      tinfo.key_struct_size, tinfo.actiondata_struct_size, true,
-                                      ENTRY_TRACE_EN, table_health_monitor);
-                    SDK_ASSERT(tcam_tables_[tid - P4TBL_ID_TCAM_MIN] != NULL);
-                }
-#endif
             } else {
                 if (!tinfo.is_oflow_table) {
                     tcam_tables_[tid - P4TBL_ID_TCAM_MIN] =
@@ -1014,39 +1001,32 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
             break;
 
         case P4_TBL_TYPE_INDEX:
-            if (tid == P4TBL_ID_TWICE_NAT) {
+            if (tid == P4TBL_ID_SESSION_STATE || tid == P4TBL_ID_FLOW_INFO ||
+                tid == P4TBL_ID_FLOW_STATS) {
+                sdk_table_factory_params_t params;
+
+                bzero(&params, sizeof(sdk_table_factory_params_t));
+                params.entry_trace_en = false;
+                params.table_id = tid;
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                       tinfo.actiondata_struct_size, true,
-                                       ENTRY_TRACE_EN, table_health_monitor);
+                    (directmap*)sldirectmap::factory(&params);
+                // Set read/write thru mode for Flow Info, Session State & Session Stats tables
+                p4pd_ret = p4pd_table_properties_set_write_mode(tid, P4_TBL_WRITE_MODE_WRITE_THRU);
+                if (p4pd_ret != P4PD_SUCCESS) {
+                    HAL_TRACE_ERR("Failed to set table write thru mode {} for tid {}", P4_TBL_WRITE_MODE_WRITE_THRU, tid);
+                    SDK_ASSERT(0);
+                }
+                p4pd_ret = p4pd_table_properties_set_read_thru_mode(tid, true);
+                if (p4pd_ret != P4PD_SUCCESS) {
+                    HAL_TRACE_ERR("Failed to set table read thru mode to true for tid {}", tid);
+                    SDK_ASSERT(0);
+                }
             } else {
                 bool trace_en = true;
-                if (tid == P4TBL_ID_SESSION_STATE || tid == P4TBL_ID_FLOW_INFO ||
-                    tid == P4TBL_ID_FLOW_STATS) {
-                    sdk_table_factory_params_t params;
-
-                    bzero(&params, sizeof(sdk_table_factory_params_t));
-                    params.entry_trace_en = false;
-                    params.table_id = tid;
-                    dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                        (directmap*)sldirectmap::factory(&params);
-                    // Set read/write thru mode for Flow Info, Session State & Session Stats tables
-                    p4pd_ret = p4pd_table_properties_set_write_mode(tid, P4_TBL_WRITE_MODE_WRITE_THRU);
-                    if (p4pd_ret != P4PD_SUCCESS) {
-                        HAL_TRACE_ERR("Failed to set table write thru mode {} for tid {}", P4_TBL_WRITE_MODE_WRITE_THRU, tid);
-                        SDK_ASSERT(0);
-                    }
-                    p4pd_ret = p4pd_table_properties_set_read_thru_mode(tid, true);
-                    if (p4pd_ret != P4PD_SUCCESS) {
-                        HAL_TRACE_ERR("Failed to set table read thru mode to true for tid {}", tid);
-                        SDK_ASSERT(0);
-                    }
-                } else {
-                    dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
-                        directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
-                                           tinfo.actiondata_struct_size, false,
-                                           trace_en, table_health_monitor);
-                }
+                dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
+                    directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
+                                       tinfo.actiondata_struct_size, false,
+                                       trace_en, table_health_monitor);
             }
             SDK_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;

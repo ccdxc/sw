@@ -26,8 +26,7 @@ MODULE_SRCS     := $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/flow/*.cc)
 ifeq ($(ARCH),x86_64)
 MODULE_SRCS     := ${MODULE_SRCS} \
-                   $(wildcard ${MODULE_SRC_DIR}/l4lb/*.cc) \
-				   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
+                   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/rdma/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/internal/*.cc)
 else

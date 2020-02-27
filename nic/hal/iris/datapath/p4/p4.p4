@@ -6,7 +6,6 @@
 #include "nic/p4/include/intrinsic.p4"
 #include "nic/p4/include/app_headers.p4"
 #include "l4.p4"
-#include "nat.p4"
 #include "apps.p4"
 #include "copp.p4"
 #include "flow.p4"
@@ -193,7 +192,6 @@ header_type scratch_metadata_t {
         ethtype                    : 16;
         num_labels                 : 2;
         drop_count                 : 8;
-        flow_agg_index             : 16;
         ttl                        : 8;
         drop_stats_packets         : 40;
         drop_stats_pad             : 79;

@@ -52,14 +52,14 @@ p4plus_app_classic_nic_post_vlan_strip:
   sub           r6, r7, 14
   phvwrpair     p.p4_to_p4plus_classic_nic_valid, TRUE, \
                 p.capri_rxdma_intrinsic_valid, TRUE
-  phvwrpair     p.capri_deparser_len_udp_opt_l2_checksum_len, r6, \
-                p.p4_to_p4plus_classic_nic_p4plus_app_id, \
-                k.control_metadata_p4plus_app_id[3:0]
+  phvwr         p.capri_deparser_len_udp_opt_l2_checksum_len, r6
+  phvwr         p.p4_to_p4plus_classic_nic_p4plus_app_id, \
+                    k.control_metadata_p4plus_app_id[3:0]
   phvwr         p.capri_rxdma_intrinsic_rx_splitter_offset, \
                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
                 P4PLUS_CLASSIC_NIC_HDR_SZ)
-  phvwrpair.e   p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
-                p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
+  phvwr         p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr.e       p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
   phvwr.f       p.p4_to_p4plus_classic_nic_packet_len, r7
 
 .align
@@ -100,11 +100,11 @@ p4plus_app_tcp_proxy:
                     p4_to_p4plus_tcp_proxy_payload_len}, r3
 
   phvwr         p.capri_rxdma_intrinsic_valid, TRUE
-  phvwr.e       p.capri_rxdma_intrinsic_rx_splitter_offset, \
+  phvwr         p.capri_rxdma_intrinsic_rx_splitter_offset, \
                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                      CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_TCP_PROXY_HDR_SZ)
-  phvwrpair     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
-                    p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
+  phvwr.e       p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr.f           p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
 
 .align
 p4plus_app_cpu:
@@ -130,10 +130,8 @@ p4plus_app_cpu_raw_redir_common:
 
 p4plus_app_cpu_l4_icmp:
   seq         c1, k.icmp_valid, TRUE
-  or.c1       r1, k.icmp_typeCode_s8_e15, \
-              k.icmp_typeCode_s0_e7, 8
   bcf         [!c1], p4plus_app_cpu_l4_udp
-  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, r1
+  phvwr.c1    p.p4_to_p4plus_cpu_l4_sport, k.icmp_typeCode
   b           p4plus_app_cpu_common
   nop
 
@@ -152,11 +150,11 @@ p4plus_app_cpu_common:
   .assert(offsetof(p, p4_to_p4plus_cpu_ip_valid) - offsetof(p, capri_rxdma_intrinsic_valid) == 2)
   phvwr       p.{p4_to_p4plus_cpu_ip_valid, p4_to_p4plus_cpu_valid, \
                  capri_rxdma_intrinsic_valid}, 0x7
-  phvwr.e     p.capri_rxdma_intrinsic_rx_splitter_offset, \
+  phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, \
               (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
               P4PLUS_CPU_HDR_SZ)
-  phvwrpair   p.capri_rxdma_intrinsic_qid, k.control_metadata_qid, \
-                p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
+  phvwr.e     p.capri_rxdma_intrinsic_qid, k.control_metadata_qid
+  phvwr.f     p.capri_rxdma_intrinsic_qtype, k.control_metadata_qtype[2:0]
 
 .align
 p4plus_app_ipsec:

@@ -1188,10 +1188,10 @@ pd_ep_quiesce (pd_func_args_t *pd_func_args)
 
     if (args->entry_add) {
         pi_if = find_if_by_handle(pi_ep->if_handle);
-        uint64_t mac = MAC_TO_UINT64(pi_ep->l2_key.mac_addr);
 
         // Install destination NACL - Drop any traffic destined towards this local EP
 #if 0
+        uint64_t mac = MAC_TO_UINT64(pi_ep->l2_key.mac_addr);
         memset(&key, 0, sizeof(key));
         memset(&mask, 0, sizeof(mask));
         memset(&data, 0, sizeof(data));

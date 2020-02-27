@@ -12,7 +12,6 @@ header_type rewrite_metadata_t {
     }
 }
 
-@pragma pa_field_union xgress rewrite_metadata.tunnel_ip nat_metadata.nat_ip
 metadata rewrite_metadata_t rewrite_metadata;
 
 action rewrite(mac_sa, mac_da) {
@@ -66,24 +65,6 @@ table rewrite {
     actions {
         nop;
         rewrite;
-        ipv4_nat_src_rewrite;
-        ipv4_nat_dst_rewrite;
-        ipv4_nat_src_udp_rewrite;
-        ipv4_nat_dst_udp_rewrite;
-        ipv4_nat_src_tcp_rewrite;
-        ipv4_nat_dst_tcp_rewrite;
-        ipv4_twice_nat_rewrite;
-        ipv4_twice_nat_udp_rewrite;
-        ipv4_twice_nat_tcp_rewrite;
-        ipv6_nat_src_rewrite;
-        ipv6_nat_dst_rewrite;
-        ipv6_nat_src_udp_rewrite;
-        ipv6_nat_dst_udp_rewrite;
-        ipv6_nat_src_tcp_rewrite;
-        ipv6_nat_dst_tcp_rewrite;
-        ipv6_twice_nat_rewrite;
-        ipv6_twice_nat_udp_rewrite;
-        ipv6_twice_nat_tcp_rewrite;
     }
     default_action : nop;
     size : REWRITE_TABLE_SIZE;
@@ -99,13 +80,7 @@ control process_rewrites {
             apply(tunnel_decap_copy_inner);
             apply(tunnel_decap);
         }
-        apply(twice_nat);
         apply(rewrite);
-
-        // if (control_metadata.nic_mode_e == NIC_MODE_SMART) {
-        //     apply(twice_nat);
-        //     apply(rewrite);
-        // }
     }
     if (tunnel_metadata.tunnel_originate_egress == TRUE) {
         apply(tunnel_encap_update_inner);

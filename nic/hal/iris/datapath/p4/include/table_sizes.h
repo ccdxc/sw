@@ -7,7 +7,7 @@
 #define FLOW_HASH_TABLE_SIZE                               2097152
 #define FLOW_HASH_OVERFLOW_TABLE_SIZE                      262144
 #define FLOW_TABLE_SIZE                                    1048576
-#define FLOW_STATE_TABLE_SIZE                              1048576
+#define FLOW_STATE_TABLE_SIZE                              524288
 #define REGISTERED_MACS_TABLE_SIZE                         8192
 #define REGISTERED_MACS_OTCAM_TABLE_SIZE                   1024
 #define NACL_TABLE_SIZE                                    512

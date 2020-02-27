@@ -515,16 +515,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
         // Set the tunnel originate flag
         d.action_u.flow_info_flow_info.tunnel_originate =
                                                         flow_attrs->tunnel_orig;
-        // L4 LB (NAT) Info
-        d.action_u.flow_info_flow_info.nat_l4_port = flow_attrs->nat_l4_port;
-        memcpy(d.action_u.flow_info_flow_info.nat_ip, &flow_attrs->nat_ip.addr,
-               sizeof(ipvx_addr_t));
-        if (flow_cfg->key.flow_type == FLOW_TYPE_V6) {
-            memrev(d.action_u.flow_info_flow_info.nat_ip,
-                   sizeof(d.action_u.flow_info_flow_info.nat_ip));
-        }
-        d.action_u.flow_info_flow_info.twice_nat_idx = flow_attrs->twice_nat_idx;
-
         // QOS Info
         d.action_u.flow_info_flow_info.qos_class_en = flow_attrs->qos_class_en;
         d.action_u.flow_info_flow_info.qos_class_id = flow_attrs->qos_class_id;

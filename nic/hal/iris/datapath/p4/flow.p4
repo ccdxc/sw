@@ -29,8 +29,8 @@ header_type flow_info_metadata_t {
         flow_role                : 1;  // initiator flow (0) or responder flow (1)
         flow_ttl                 : 8;  // Initial ttl seen
         flow_ttl_change_detected : 1;  // records that flow ttl change is seen
-        flow_index               : 20; // flow info table index and for  P4+ pipeline
-        session_state_index      : 20; // index to iflow and rflow state
+        flow_index               : 20; // flow info table index and for P4+ pipeline
+        session_state_index      : 19; // index to iflow and rflow state
     }
 }
 
@@ -188,7 +188,7 @@ action flow_miss() {
                 add_to_field(capri_intrinsic.tm_replicate_ptr, 6);
             } else {
                 if (l4_metadata.policy_enf_cfg_en == TRUE) {
-                    // Sup copy. Mgmt Repls. 
+                    // Sup copy. Mgmt Repls.
                     modify_field(capri_intrinsic.tm_cpu, TRUE);
                     modify_field(capri_intrinsic.tm_replicate_en, TRUE);
                 } else {
@@ -208,156 +208,6 @@ action flow_miss() {
     }
 }
 
-// // entry 0 of flow_info table will be programmed as the miss entry
-// action flow_miss() {
-//     // Notes:
-//     // ------
-//     // Smart L2seg:
-//     //  - flow_miss_idx    : WLs
-//     // Classic L2seg: 
-//     //  - flow_miss_idx    : BC
-//     //  - flow_miss_idx + 1: MC
-//     //  - flow_miss_idx + 2: Prom
-//     //  - flow_miss_idx + 3: BC + WLs :: (flow_miss_idx + 3 ~ flow_miss_idx) -> (Smart L2seg's flow_miss_idx)
-//     //  - flow_miss_idx + 4: MC + WLs :: (flow_miss_idx + 4 ~ flow_miss_idx + 1)  -> (Smart L2seg's flow_miss_idx)
-//     // Multicast Group:
-//     //  - mc_idx    : MC OIFs + ALL_MC OIFs 
-//     //  - mc_idx + 1: MC OIFs + ALL_MC OIFs + WLS :: (mc_idx + 1 ~ mc_idx) -> (Smart L2seg's flow_miss_idx)
-//     //
-//     // 
-//     // - mode switch is not enabled
-//     //                   : fall to flow miss logic
-//     // - mode switch is enabled, registered mac is a hit with smart nic mode:
-//     //                   : fall to flow miss logic
-//     // - mode switch is enabled 
-//     //   - classic mode
-//     //   - mcast:
-//     //     - reg_mac:
-//     //       - hit:
-//     //         - allow_flood: 1
-//     //           - Classic MC replications + WL replications
-//     //           - repl_ptr + 1
-//     //         - allow_flood: 0
-//     //           - Classic MC replications picked up in registered_macs.
-//     //       - miss:
-//     //         - allow_flood: 1
-//     //           - Classic ALL_MC replications + WL replications
-//     //           - repl_ptr + 3
-//     //         - allow_flood: 0
-//     //           - Classic ALL_MC replications picked up in registered_macs.
-//     //   - bcast:
-//     //     - allow_flood: 1
-//     //       - Classic BC replications + WL replications
-//     //       - repl_ptr + 3
-//     //     - allow_flood: 0
-//     //       - Classic BC replications picked up in registered_macs
-//     //   - ucast
-//     //     - reg_mac_hit: 1
-//     //       - fwd info from reg_mac
-//     //     - reg_mac_hit: 0
-//     //       - Prom. replications picked in registered_macs
-//     if ((control_metadata.mode_switch_en == FALSE ) or
-//         ((control_metadata.registered_mac_miss == FALSE) and
-//          (control_metadata.registered_mac_nic_mode == NIC_MODE_SMART))) {
-// 
-//         validate_flow_key();
-// 
-//         if (flow_lkp_metadata.lkp_vrf == 0) {
-//             modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
-//             drop_packet();
-//         }
-// 
-//         if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
-//             ((tcp.flags & TCP_FLAG_SYN) != TCP_FLAG_SYN) and
-//             (l4_metadata.tcp_non_syn_first_pkt_drop == ACT_DROP)) {
-//             modify_field(control_metadata.drop_reason, DROP_TCP_NON_SYN_FIRST_PKT);
-//             drop_packet();
-//         }
-// 
-//         modify_field (capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-//         modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
-// 
-//         if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-//             modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
-//                          (1 << P4_I2E_FLAGS_FLOW_MISS));
-//             modify_field(control_metadata.flow_miss_ingress, TRUE);
-//             modify_field(control_metadata.dst_lport, CPU_LPORT);
-//         }
-// 
-//         if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_CPU) {
-//             modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
-//                          (1 << P4_I2E_FLAGS_FLOW_MISS));
-//             modify_field(control_metadata.flow_miss_ingress, TRUE);
-//             modify_field(control_metadata.dst_lport, CPU_LPORT);
-//         }
-// 
-//         if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_DROP) {
-//             modify_field(control_metadata.drop_reason, DROP_FLOW_MISS);
-//             drop_packet();
-//         }
-// 
-//         if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_FLOOD) {
-//             if (control_metadata.allow_flood == TRUE) {
-//                 modify_field(capri_intrinsic.tm_replicate_en, TRUE);
-//                 modify_field(capri_intrinsic.tm_replicate_ptr,
-//                              control_metadata.flow_miss_idx);
-//                 modify_field(rewrite_metadata.rewrite_index,
-//                              flow_miss_metadata.rewrite_index);
-//                 modify_field(rewrite_metadata.tunnel_rewrite_index,
-//                              flow_miss_metadata.tunnel_rewrite_index);
-//                 modify_field(rewrite_metadata.tunnel_vnid,
-//                              flow_miss_metadata.tunnel_vnid);
-//                 modify_field(tunnel_metadata.tunnel_originate,
-//                              flow_miss_metadata.tunnel_originate);
-//             } else {
-//                     modify_field(control_metadata.drop_reason,
-//                                  DROP_MULTI_DEST_NOT_PINNED_UPLINK);
-//                     drop_packet();
-//             }
-//         }
-// 
-//         if (control_metadata.mdest_flow_miss_action == FLOW_MISS_ACTION_REDIRECT) {
-//             modify_field(rewrite_metadata.tunnel_rewrite_index,
-//                          control_metadata.flow_miss_idx);
-//         }
-//     } else {
-//         // Only shared mgmt traffic on uplinks should come here.
-//         modify_field(control_metadata.nic_mode, NIC_MODE_CLASSIC);
-//         if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
-//             if (control_metadata.registered_mac_miss == FALSE) { 
-//                 if (control_metadata.registered_mac_nic_mode == NIC_MODE_CLASSIC) {
-//                     if (control_metadata.allow_flood == TRUE) {
-//                         // Classic MC replications + WL replications
-//                         add(capri_intrinsic.tm_replicate_ptr, 
-//                             capri_intrinsic.tm_replicate_ptr, 1); 
-//                     } else {
-//                         // Classic MC replications picked up in registered_macs.
-//                     }
-//                 } else {
-//                     // hit and smart should never happen.
-//                 }
-//             } else {
-//                 // reg_mac is a miss
-//                 if (control_metadata.allow_flood == TRUE) {
-//                     // Classic ALL_MC replications + WL replications
-//                     add_to_field(capri_intrinsic.tm_replicate_ptr, 3);
-//                 } else {
-//                     // Classic ALL_MC replications picked up in registered_macs.
-//                 }
-//             }
-//         } else {
-//             if (flow_lkp_metadata.pkt_type == PACKET_TYPE_BROADCAST) {
-//                 if (control_metadata.allow_flood == TRUE) {
-//                     // Classic BC replications + WL replications
-//                     add_to_field(capri_intrinsic.tm_replicate_ptr, 3);
-//                 } else {
-//                     // Classic BC replications picked up in registered_macs
-//                 }
-//             }
-//         }
-//     }
-// }
-
 action flow_hit_drop(start_timestamp, mirror_on_drop_overwrite,
                      mirror_on_drop_en, mirror_on_drop_session_id) {
     /* mirror on drop */
@@ -376,14 +226,13 @@ action flow_hit_drop(start_timestamp, mirror_on_drop_overwrite,
     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
 }
 
-action flow_info(flow_only_policy, dst_lport_en, dst_lport, 
+action flow_info(flow_only_policy, dst_lport_en, dst_lport,
                  multicast_ptr, multicast_en, ingress_mirror_overwrite,
                  ingress_mirror_session_id, egress_mirror_session_id,
                  mirror_on_drop_overwrite, mirror_on_drop_en,
                  mirror_on_drop_session_id,
                  rewrite_index, tunnel_en, tunnel_rewrite_index, tunnel_vnid,
-                 tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
-                 qid_en, log_en, rewrite_flags,
+                 tunnel_originate, qid_en, log_en, rewrite_flags,
                  flow_conn_track, flow_ttl, flow_role,
                  session_state_index, start_timestamp,
                  qos_class_en, qos_class_id,
@@ -395,7 +244,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
     } else {
         if (flow_only_policy == TRUE) {
             if (control_metadata.skip_flow_update == TRUE) {
-                modify_field(l4_metadata.flow_conn_track, FALSE); 
+                modify_field(l4_metadata.flow_conn_track, FALSE);
                 // return;
             }
             if (control_metadata.from_cpu == TRUE) {
@@ -408,7 +257,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
                 } else {
                     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
                         if (control_metadata.registered_mac_miss == TRUE) {
-                            // MSeg Repls. tm_repl_ptr from inp_props 
+                            // MSeg Repls. tm_repl_ptr from inp_props
                             modify_field(capri_intrinsic.tm_replicate_en, TRUE);
                             add_to_field(capri_intrinsic.tm_replicate_ptr, 4);
                         } else {
@@ -421,7 +270,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
                         modify_field(capri_intrinsic.tm_replicate_en, TRUE);
                         add_to_field(capri_intrinsic.tm_replicate_ptr, 3);
                     }
-                } 
+                }
             } else {
                 if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
                     if (control_metadata.registered_mac_miss == TRUE) {
@@ -445,7 +294,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
                         modify_field(capri_intrinsic.tm_replicate_en, TRUE);
                         add_to_field(capri_intrinsic.tm_replicate_ptr, 6);
                     }
-                } 
+                }
             }
         }
     }
@@ -492,11 +341,6 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
      modify_field(rewrite_metadata.rewrite_index, rewrite_index);
      modify_field(rewrite_metadata.flags, rewrite_flags);
 
-    /* NAT rewrite data */
-    modify_field(nat_metadata.nat_ip, nat_ip);
-    modify_field(nat_metadata.nat_l4_port, nat_l4_port);
-    modify_field(nat_metadata.twice_nat_idx, twice_nat_idx);
-
     /* tunnel info */
     if (tunnel_en == TRUE) {
         modify_field(tunnel_metadata.tunnel_originate, tunnel_originate);
@@ -521,111 +365,7 @@ action flow_info(flow_only_policy, dst_lport_en, dst_lport,
     modify_field(scratch_metadata.export_id, export_id2);
     modify_field(scratch_metadata.export_id, export_id3);
     modify_field(scratch_metadata.export_id, export_id4);
-
-    /* promote size of data fields to multiple of bytes */
-    modify_field(scratch_metadata.size16, twice_nat_idx);
-
 }
-// // Srini: Topic came up while discussing with Sarat on VM Move case.
-// // We should mention that we won't support more than one mirror session
-// // per flow.
-// // Is p4+ expecting a flow_index per flow or per session ?
-// // We should have a flag here which enables/disables connection tracking.
-// // Change all timestamps to be 48 bit.
-// action flow_info(dst_lport, multicast_ptr, multicast_en, qtype,
-//                  ingress_mirror_session_id, egress_mirror_session_id,
-//                  mirror_on_drop_overwrite, mirror_on_drop_en,
-//                  mirror_on_drop_session_id,
-//                  rewrite_index, tunnel_rewrite_index, tunnel_vnid,
-//                  tunnel_originate, nat_ip, nat_l4_port, twice_nat_idx,
-//                  qid_en, log_en, rewrite_flags,
-//                  flow_conn_track, flow_ttl, flow_role,
-//                  session_state_index, start_timestamp,
-//                  qos_class_en, qos_class_id,
-//                  expected_src_lif_check_en, expected_src_lif,
-//                  export_id1, export_id2, export_id3, export_id4) {
-//     /* expected src lif check */
-//     if ((expected_src_lif_check_en == TRUE) and
-//         (p4plus_to_p4.p4plus_app_id != P4PLUS_APPTYPE_CPU) and
-//         (expected_src_lif != control_metadata.src_lif)) {
-//         modify_field(control_metadata.drop_reason, DROP_SRC_LIF_MISMATCH);
-//         drop_packet();
-//     }
-// 
-//     /* egress port/vf */
-//     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-//     modify_field(capri_intrinsic.tm_replicate_en, multicast_en);
-//     modify_field(capri_intrinsic.tm_replicate_ptr, multicast_ptr);
-//     modify_field(control_metadata.dst_lport, dst_lport);
-// 
-//     if (qos_class_en == TRUE) {
-//         modify_field(qos_metadata.qos_class_id, qos_class_id);
-//     }
-// 
-//     /* qid */
-//     if (qid_en == TRUE) {
-//         modify_field(control_metadata.qid, tunnel_vnid);
-//         modify_field(control_metadata.qtype, qtype);
-//     }
-// 
-//     /* mirror session id */
-//     modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
-//     modify_field(control_metadata.egress_mirror_session_id,
-//                  egress_mirror_session_id);
-//     if (mirror_on_drop_overwrite == TRUE) {
-//         modify_field(control_metadata.mirror_on_drop_en, mirror_on_drop_en);
-//         modify_field(control_metadata.mirror_on_drop_session_id,
-//                      mirror_on_drop_session_id);
-//     }
-// 
-//     /* logging - need to create a copy */
-//     if (log_en == TRUE) {
-//         modify_field(capri_intrinsic.tm_cpu, TRUE);
-//     }
-// 
-//     /* flow info */
-//     modify_field(flow_info_metadata.session_state_index, session_state_index);
-//     modify_field(flow_info_metadata.flow_role, flow_role);
-// 
-//     // ttl change detected
-//     if ((l4_metadata.ip_ttl_change_detect_en == 1) and
-//         (flow_ttl != flow_lkp_metadata.ip_ttl)) {
-//         modify_field(flow_info_metadata.flow_ttl_change_detected, 1);
-//     }
-//     // Flow Connection Tracking enabled
-//     modify_field(l4_metadata.flow_conn_track, flow_conn_track);
-// 
-//     /* rewrite index */
-//     modify_field(rewrite_metadata.rewrite_index, rewrite_index);
-//     modify_field(rewrite_metadata.flags, rewrite_flags);
-// 
-//     /* NAT rewrite data */
-//     modify_field(nat_metadata.nat_ip, nat_ip);
-//     modify_field(nat_metadata.nat_l4_port, nat_l4_port);
-//     modify_field(nat_metadata.twice_nat_idx, twice_nat_idx);
-// 
-//     /* tunnel info */
-//     modify_field(tunnel_metadata.tunnel_originate, tunnel_originate);
-//     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-//     modify_field(rewrite_metadata.tunnel_vnid, tunnel_vnid);
-// 
-//     /* dummy ops to keep compiler happy */
-//     modify_field(scratch_metadata.flag, mirror_on_drop_overwrite);
-//     modify_field(scratch_metadata.flow_start_timestamp, start_timestamp);
-//     modify_field(scratch_metadata.qid_en, qid_en);
-//     modify_field(scratch_metadata.qos_class_en, qos_class_en);
-//     modify_field(scratch_metadata.log_en, log_en);
-//     modify_field(scratch_metadata.flag, expected_src_lif_check_en);
-//     modify_field(scratch_metadata.lif, expected_src_lif);
-//     modify_field(scratch_metadata.ttl, flow_ttl);
-//     modify_field(scratch_metadata.export_id, export_id1);
-//     modify_field(scratch_metadata.export_id, export_id2);
-//     modify_field(scratch_metadata.export_id, export_id3);
-//     modify_field(scratch_metadata.export_id, export_id4);
-// 
-//     /* promote size of data fields to multiple of bytes */
-//     modify_field(scratch_metadata.size16, twice_nat_idx);
-// }
 
 // We can add new parameters as we need. For now if none of the
 // rewrite fields are set that measn the packet will not be

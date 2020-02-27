@@ -129,7 +129,8 @@ encap_erspan:
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                   p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
-  phvwri      p.{gre_C...gre_proto}, GRE_PROTO_ERSPAN_T3
+  phvwr       p.{gre_C...gre_ver}, r0
+  phvwr       p.gre_proto, GRE_PROTO_ERSPAN_T3
   phvwrpair   p.erspan_t3_version, 0x2, p.erspan_t3_bso, 0
   seq         c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
   phvwr.c1    p.erspan_t3_direction, 1

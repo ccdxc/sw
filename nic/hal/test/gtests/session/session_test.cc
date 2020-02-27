@@ -1513,6 +1513,7 @@ TEST_F(session_test, test8)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
+#if 0
     // Create l4lb
     l4lb_spec.mutable_key_or_handle()->mutable_service_key()->mutable_service_ip_address()->
         set_ip_af(types::IP_AF_INET);
@@ -1526,7 +1527,7 @@ TEST_F(session_test, test8)
     ret = hal::l4lbservice_create(l4lb_spec, &l4lb_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-
+#endif
 
     // Create Session
     // CIP -> VIP ==> CIP -> PIP :: DNAT

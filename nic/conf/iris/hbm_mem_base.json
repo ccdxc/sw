@@ -364,12 +364,12 @@
         },
         {
             "name": "flow_info",
-            "size": "65536K",
+            "size": "32M",
             "cache": "p4ig"
         },
         {
             "name": "session_state",
-            "size": "65536K",
+            "size": "32M",
             "cache": "p4ig"
         },
         {

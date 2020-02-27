@@ -811,34 +811,6 @@ p4pd_tunnel_decap_copy_inner_init (void)
 }
 
 //-----------------------------------------------------------------------------
-// Twice NAT:
-//  0: nop entry
-//-----------------------------------------------------------------------------
-static hal_ret_t
-p4pd_twice_nat_init (void)
-{
-    hal_ret_t               ret;
-    sdk_ret_t               sdk_ret;
-    directmap               *dm;
-    twice_nat_actiondata_t    data = { 0 };
-
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
-    SDK_ASSERT(dm != NULL);
-
-    // "catch-all" nop entry
-    data.action_id = TWICE_NAT_NOP_ID;
-    sdk_ret = dm->insert_withid(&data, TWICE_NAT_NOP_ENTRY);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("twice nat table write failure, idx : {}, err : {}",
-                      TWICE_NAT_NOP_ENTRY, ret);
-        return ret;
-    }
-
-    return HAL_RET_OK;
-}
-
-//-----------------------------------------------------------------------------
 // Rewrite table:
 //  0: nop entry
 //  1: decap vlan entry
@@ -1584,7 +1556,6 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 
     // initialize all P4 egress tables with default entries, if any
     SDK_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
-    SDK_ASSERT(p4pd_twice_nat_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
     SDK_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
