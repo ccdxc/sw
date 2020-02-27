@@ -453,13 +453,17 @@ func getMgmtNetwork(inst int) string {
 	return Common.EsxNaplesMgmtNetwork + "-" + strconv.Itoa(inst)
 }
 
+func (node *esxHwNode) ctrlVMName() string {
+	return Common.EsxControlVMNamePrefix + node.name
+}
+
 func (node *esxHwNode) setUpNaplesMgmtNetwork(inst int, hint string) error {
 
 	if err := node.createNaplesMgmtSwitch(inst, hint); err != nil {
 		return errors.Wrap(err, "Failed to create naples mgmt switch")
 	}
 
-	ctrlVM, err := node.host.NewVM(Common.EsxControlVMName)
+	ctrlVM, err := node.host.NewVM(node.ctrlVMName())
 	if err != nil {
 		return errors.Wrap(err, "Failed to find control VM")
 	}

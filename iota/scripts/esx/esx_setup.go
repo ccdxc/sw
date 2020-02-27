@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	restartTimeout = 300 //300 seconds for node restart
+	restartTimeout   = 300 //300 seconds for node restart
+	esxControlVMName = "iota-control-vm"
 )
 
 var (
@@ -148,7 +149,7 @@ func initEsxCtrlVM() (string, error) {
 		return "", err
 	}
 
-	err = host.DestoryVM(constants.EsxControlVMName)
+	err = host.DestoryVM(esxControlVMName)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Delete control node failed %v ", err.Error())
 	}
@@ -165,7 +166,7 @@ func initEsxCtrlVM() (string, error) {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to create networks %v ", err.Error())
 	}
 
-	vmInfo, err := host.DeployVM("", "", constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
+	vmInfo, err := host.DeployVM("", "", esxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
 
 	if err != nil {
 

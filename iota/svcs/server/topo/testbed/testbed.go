@@ -45,6 +45,10 @@ func (n *TestNode) removeHostFromVcenter(host *vmware.Host) error {
 	return nil
 }
 
+func (n *TestNode) ctrlVMName() string {
+	return constants.EsxControlVMNamePrefix + n.info.Name
+}
+
 func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 	log.Infof("Cleaning up esx node %v", n.GetNodeInfo().IPAddress)
 	host, err := vmware.NewHost(context.Background(), n.GetNodeInfo().IPAddress, n.GetNodeInfo().Username, n.GetNodeInfo().Password)
@@ -70,12 +74,12 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 		if vm == nil {
 			continue
 		}
-		if vm.Name() == constants.EsxControlVMName {
+		if vm.Name() == n.ctrlVMName() {
 			//Ignore control VM delete
 			//vm.ReconfigureNetwork(constants.EsxNaplesMgmtNetwork, constants.EsxDefaultNetwork)
 			on, _ := host.PoweredOn(vm.Name())
 			if !on {
-				_, err := host.BootVM(constants.EsxControlVMName)
+				_, err := host.BootVM(n.ctrlVMName())
 				if err != nil {
 					log.Errorf("TOPO SVC | CleanTestBed | Boot control node failed %v", err.Error())
 					return err
@@ -194,8 +198,8 @@ func (n *TestNode) initEsxNode() error {
 		log.Errorf("TOPO SVC | InitTestBed | Add Network failed %v", err.Error())
 	}
 
-	if !host.VMExists(constants.EsxControlVMName) {
-		vmInfo, err = host.DeployVM("", "", constants.EsxControlVMName,
+	if !host.VMExists(n.ctrlVMName()) {
+		vmInfo, err = host.DeployVM("", "", n.ctrlVMName(),
 			constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
 		if err != nil {
 			log.Errorf("TOPO SVC | InitTestBed | Add control node failed %v", err.Error())
@@ -203,17 +207,17 @@ func (n *TestNode) initEsxNode() error {
 		}
 	} else {
 		log.Infof("Control VM exists on %v", n.GetNodeInfo().IPAddress)
-		if on, _ := host.PoweredOn(constants.EsxControlVMName); !on {
+		if on, _ := host.PoweredOn(n.ctrlVMName()); !on {
 			log.Infof("Control VM exists already powered on %v", n.GetNodeInfo().IPAddress)
-			vmInfo, err = host.BootVM(constants.EsxControlVMName)
+			vmInfo, err = host.BootVM(n.ctrlVMName())
 			if err != nil {
 				log.Errorf("TOPO SVC | InitTestBed | Boot control node failed %v", err.Error())
 				return err
 			}
 		} else {
 			log.Infof("Trying to get IP of Control VM %v", n.GetNodeInfo().IPAddress)
-			ip, _ := host.GetVMIP(constants.EsxControlVMName)
-			vmInfo = &vmware.VMInfo{IP: ip, Name: constants.EsxControlVMName}
+			ip, _ := host.GetVMIP(n.ctrlVMName())
+			vmInfo = &vmware.VMInfo{IP: ip, Name: n.ctrlVMName()}
 		}
 	}
 

@@ -228,6 +228,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 		srcHost      string
 		dstHost      string
 		workloadName string
+		vlanOverride uint32
 		err          error
 	}
 	dupCheck := make(map[string]bool)
@@ -272,7 +273,7 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 		dupCheck[key] = true
 
 		moveRequests = append(moveRequests, &moveRequest{srcHost: mSrcNode.GetNodeInfo().IPAddress,
-			srcNodeName: mvReq.SrcNodeName, dstNodeName: mvReq.DstNodeName,
+			srcNodeName: mvReq.SrcNodeName, dstNodeName: mvReq.DstNodeName, vlanOverride: mvReq.VlanOverride,
 			dstHost: mvDstNode.GetNodeInfo().IPAddress, workloadName: mvReq.WorkloadName})
 
 		//All Good to trigger vmotion

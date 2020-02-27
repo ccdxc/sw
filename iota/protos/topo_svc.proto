@@ -587,8 +587,11 @@ message WorkloadMove {
     // entity name to run command on
     string              workload_name    = 4;
 
+    //override vlan after vmotion if set
+    uint32              vlan_override    = 5;
+
     // workload move response
-    IotaAPIResponse     api_response     = 5;
+    IotaAPIResponse     api_response     = 6;
 }
 
 // WorkloadMoveMsg move workloads 

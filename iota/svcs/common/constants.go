@@ -67,8 +67,7 @@ const (
 	// IotaWorkloadImage is the docker image that will be used for workloads
 	IotaWorkloadImage = "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
 
-	// EsxControlVmName Esx Control VM name
-	EsxControlVMName = "iota-control-vm"
+	EsxControlVMNamePrefix = "iota-control-vm-"
 
 	// EsxDataVmName Esx Data VM prefix
 	EsxDataVMPrefix = "iota-data-vm-"

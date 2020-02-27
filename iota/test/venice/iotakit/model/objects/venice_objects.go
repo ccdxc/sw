@@ -251,14 +251,14 @@ func (vnc *VeniceNodeCollection) GetGRETCPDumpCount(ctx context.Context) (int, e
 	}
 
 	<-ctx.Done()
-	stopResp, err := trig.StopCommands(resp)
+	_, err = trig.StopCommands(resp)
 	if err != nil {
 		return 0, fmt.Errorf("Error stopping command %v", err.Error())
 	}
 
 	trig = vnc.Testbed.NewTrigger()
 
-	trig.AddCommand("tcpdump -r test1.pcap  | wc -l",
+	trig.AddCommand("tcpdump -r test.pcap  | wc -l",
 		vnc.Nodes[0].Name()+"_venice", vnc.Nodes[0].Name())
 
 	resp, err = trig.Run()
@@ -266,7 +266,7 @@ func (vnc *VeniceNodeCollection) GetGRETCPDumpCount(ctx context.Context) (int, e
 		return 0, fmt.Errorf("Error running command %v", err.Error())
 	}
 
-	return strconv.Atoi(strings.TrimSuffix(stopResp[0].GetStdout(), "\n"))
+	return strconv.Atoi(strings.TrimSuffix(resp[0].GetStdout(), "\n"))
 }
 
 //GetVeniceNodeWithService  Get nodes running service

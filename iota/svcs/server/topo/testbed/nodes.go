@@ -169,12 +169,12 @@ func (n *TestNode) GetNodeIP() (string, error) {
 			return "", err
 		}
 
-		if on, _ := host.PoweredOn(constants.EsxControlVMName); !on {
+		if on, _ := host.PoweredOn(n.ctrlVMName()); !on {
 			fmt.Printf("Connecting  failed not on \n", n.info.IPAddress, n.info.Username, n.info.Password)
 			log.Errorf("TOPO SVC | GetNodeIP | Control VM not powered on")
 			return "", errors.New("Control VM not powered on ")
 		}
-		ip, err = host.GetVMIP(constants.EsxControlVMName)
+		ip, err = host.GetVMIP(n.ctrlVMName())
 		if err != nil {
 			fmt.Printf("Connecting  failed %v\n", n.info.IPAddress, n.info.Username, n.info.Password, err.Error())
 			log.Errorf("TOPO SVC | GetNodeIP | Failed to get IP address for control VM  %v", err.Error())

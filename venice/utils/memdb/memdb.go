@@ -613,6 +613,7 @@ func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[
 		log.Errorf("Object kind is empty: %+v", obj)
 	}
 
+	md.filterOutRefs(refs)
 	if key == "" {
 		key = memdbKey(obj.Object().GetObjectMeta())
 	}

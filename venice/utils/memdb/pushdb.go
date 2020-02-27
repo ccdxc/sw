@@ -160,7 +160,7 @@ func (pf *objPushFilter) ReceiversCount() int {
 
 func (pf *objPushFilter) KindReceiversCount(kind string) int {
 	pf.Lock()
-	pf.Unlock()
+	defer pf.Unlock()
 	count := 0
 	for _, kindMap := range pf.watchMap {
 		if _, ok := kindMap[kind]; ok {
@@ -172,7 +172,7 @@ func (pf *objPushFilter) KindReceiversCount(kind string) int {
 
 func (pf *objPushFilter) ReceiverEnabled(kind string, ID string) bool {
 	pf.Lock()
-	pf.Unlock()
+	defer pf.Unlock()
 
 	recv, ok := pf.idMap[ID]
 	if !ok {
@@ -198,7 +198,7 @@ func (pf *objPushFilter) ReceiverEnabled(kind string, ID string) bool {
 
 func (pf *objPushFilter) AddWatcher(kind string, watcher *Watcher) error {
 	pf.Lock()
-	pf.Unlock()
+	defer pf.Unlock()
 	if recv, ok := pf.idMap[watcher.Name]; ok {
 		bitID := recv.(*receiver).bitID
 		if _, ok := pf.watchMap[bitID]; !ok {
@@ -213,7 +213,7 @@ func (pf *objPushFilter) AddWatcher(kind string, watcher *Watcher) error {
 
 func (pf *objPushFilter) RemoveWatcher(kind string, watcher *Watcher) error {
 	pf.Lock()
-	pf.Unlock()
+	defer pf.Unlock()
 	if recv, ok := pf.idMap[watcher.Name]; ok {
 		bitID := recv.(*receiver).bitID
 		delete(pf.watchMap, bitID)
