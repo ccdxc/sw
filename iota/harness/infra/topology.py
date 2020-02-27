@@ -322,7 +322,7 @@ class Node(object):
             if cimc_ip == "":
                 return None
             node = Node.CimcInfo(cimc_ip, 
-                                 getattr(self._Node__inst,"NodeCimcNcsiIP", ""),
+                                 getattr(self._Node__inst.Resource,"NodeCimcNcsiIP", ""),
                                  getattr(self._Node__inst,"NodeCimcUsername","admin"),
                                  getattr(self._Node__inst,"NodeCimcPassword","N0isystem$"))
             return node

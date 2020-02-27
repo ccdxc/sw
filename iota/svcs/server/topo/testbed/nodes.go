@@ -461,7 +461,6 @@ func (n *TestNode) RestartNode(method string, useNcsi bool) error {
 		n.GrpcClient.Client.Close()
 		n.GrpcClient = nil
 	}
-
 	time.Sleep(60 * time.Second)
 
 	if err = n.waitForNodeUp(restartTimeout); err != nil {
