@@ -96,6 +96,13 @@ if [ $image_sz -gt $max_diag_img_sz ]; then
 else
     echo "DiagFW is ready under sw/nic/buildroot/output_diag/images/naples_diagfw.tar. Diagfw Size: $image_sz bytes"
     echo 'Please check diagfw sanity before publishing it'
+    #Publish the artifacts if RELEASE is non-zero
+    if [ ! -z $RELEASE ]; then
+        docker_exec "cd /usr/src/github.com/pensando/sw/asset-build/asset-push && go build"
+        cd $TOPDIR
+        asset-build/asset-push/asset-push builds hourly $RELEASE $TOPDIR/nic/buildroot/output_diag/images/naples_diagfw.tar
+    fi
+
     exit 0
 fi
 
