@@ -113,6 +113,14 @@ sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec,
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vnic_read(pds_obj_key_t *key, pds_vnic_info_t *info);
 
+typedef void (*vnic_read_cb_t)(pds_vnic_info_t *info, void *ctxt);
+
+/// \brief Read all VNIC information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vnic_read_all(vnic_read_cb_t vnic_read_cb, void *ctxt);
+
 /// \brief Update VNIC specification
 /// \param[in] spec Specififcation
 /// \param[in] bctxt batch context if API is invoked in a batch

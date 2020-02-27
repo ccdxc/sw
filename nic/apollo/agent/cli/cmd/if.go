@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -133,10 +134,14 @@ func lifGetNameFromKey(key []byte) string {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
-		return ""
+		return "-"
 	}
 	defer c.Close()
+
+	invalidUuid := make([]byte, 16)
+	if bytes.Equal(key, invalidUuid) {
+		return "-"
+	}
 
 	req := &pds.LifGetRequest{
 		Id: [][]byte{key},
@@ -145,13 +150,11 @@ func lifGetNameFromKey(key []byte) string {
 	client := pds.NewIfSvcClient(c)
 	respMsg, err := client.LifGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Get Lif failed. %v\n", err)
-		return ""
+		return "-"
 	}
 
 	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
-		return ""
+		return "-"
 	}
 	resp := respMsg.Response[0]
 	return resp.GetStatus().GetName()

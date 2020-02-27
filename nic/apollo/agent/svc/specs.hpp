@@ -1363,7 +1363,7 @@ pds_vnic_api_stats_to_proto (pds::VnicStats *proto_stats,
 
 // populate proto buf from vnic API info
 static inline void
-pds_vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
+pds_vnic_api_info_to_proto (pds_vnic_info_t *api_info, void *ctxt)
 {
     pds::VnicGetResponse *proto_rsp = (pds::VnicGetResponse *)ctxt;
     auto vnic = proto_rsp->add_response();

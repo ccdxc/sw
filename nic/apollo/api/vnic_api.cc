@@ -70,6 +70,40 @@ pds_vnic_read (_In_ pds_obj_key_t *key, _Out_ pds_vnic_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_vnic_read_args_s {
+    vnic_read_cb_t cb;
+    void *ctxt;
+} pds_vnic_read_args_t;
+
+bool
+pds_vnic_info_from_entry (void *entry, void *ctxt)
+{
+    vnic_entry *vnic = (vnic_entry *)entry;
+    pds_vnic_read_args_t *args = (pds_vnic_read_args_t *)ctxt;
+    pds_vnic_info_t info;
+
+    memset(&info, 0, sizeof(pds_vnic_info_t));
+
+    // call entry read
+    vnic->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_vnic_read_all (vnic_read_cb_t vnic_read_cb, void *ctxt)
+{
+    pds_vnic_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = vnic_read_cb;
+
+    return vnic_db()->walk(pds_vnic_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_vnic_update (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {

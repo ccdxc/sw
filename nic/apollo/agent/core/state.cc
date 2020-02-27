@@ -139,12 +139,6 @@ cfg_db::init(void) {
     }
     service_map_ = new(mem) service_db_t();
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vnic_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    vnic_map_ = new(mem) vnic_db_t();
-
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(route_table_db_t));
     if (mem == NULL) {
         return false;
@@ -175,9 +169,6 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_TEP] =
         slab::factory("tep", SLAB_ID_TEP, sizeof(pds_tep_spec_t),
                       16, true, true, true);
-    slabs_[SLAB_ID_VNIC] =
-        slab::factory("vnic", SLAB_ID_VNIC, sizeof(pds_vnic_spec_t),
-                      16, true, true, true);
     slabs_[SLAB_ID_ROUTE] =
         slab::factory("route_table", SLAB_ID_ROUTE,
                       sizeof(pds_route_table_spec_t),
@@ -204,7 +195,6 @@ cfg_db::cfg_db() {
     vpc_peer_map_ = NULL;
     subnet_map_ = NULL;
     service_map_ = NULL;
-    vnic_map_ = NULL;
     route_table_map_ = NULL;
     mirror_session_map_ = NULL;
     nh_map_ = NULL;
@@ -245,7 +235,6 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, service_map_);
-    FREE(MEM_ALLOC_ID_INFRA, vnic_map_);
     FREE(MEM_ALLOC_ID_INFRA, route_table_map_);
     FREE(MEM_ALLOC_ID_INFRA, mirror_session_map_);
     FREE(MEM_ALLOC_ID_INFRA, nh_map_);
@@ -498,32 +487,6 @@ agent_state::nh_group_db_walk(nh_group_walk_cb_t cb, void *ctxt) {
 bool
 agent_state::del_from_nh_group_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(nh_group, key);
-}
-
-sdk_ret_t
-agent_state::add_to_vnic_db(pds_obj_key_t *key, pds_vnic_spec_t *spec) {
-    ADD_TO_OBJ_DB(vnic, key, spec);
-}
-
-pds_vnic_spec_t *
-agent_state::find_in_vnic_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(vnic, key);
-}
-
-sdk_ret_t
-agent_state::vnic_db_walk(vnic_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(vnic);
-    auto it_end = DB_END(vnic);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_vnic_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(vnic, key);
 }
 
 sdk_ret_t

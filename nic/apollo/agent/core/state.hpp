@@ -13,7 +13,6 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
@@ -29,7 +28,6 @@ typedef sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*vpc_peer_walk_cb_t)(pds_vpc_peer_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
@@ -46,7 +44,6 @@ typedef enum slab_id_e {
     SLAB_ID_SUBNET,
     SLAB_ID_SERVICE,
     SLAB_ID_TEP,
-    SLAB_ID_VNIC,
     SLAB_ID_ROUTE,
     SLAB_ID_MIRROR,
     SLAB_ID_NEXTHOP,
@@ -60,14 +57,12 @@ typedef unordered_map<pds_obj_key_t, pds_vpc_peer_spec_t *, pds_obj_key_hash> vp
 typedef unordered_map<pds_obj_key_t , pds_subnet_spec_t *, pds_obj_key_hash> subnet_db_t;
 typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_mapping_hash_fn> service_db_t;
 typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
-typedef unordered_map<pds_obj_key_t, pds_vnic_spec_t *, pds_obj_key_hash> vnic_db_t;
 typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_spec_t *, pds_obj_key_hash> nh_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_group_spec_t *, pds_obj_key_hash> nh_group_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
-typedef vnic_db_t::const_iterator vnic_it_t;
 
 class cfg_db {
 public:
@@ -80,7 +75,6 @@ public:
     vpc_peer_db_t *vpc_peer_map(void) { return vpc_peer_map_; }
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     service_db_t *service_map(void) { return service_map_; }
-    vnic_db_t *vnic_map(void) { return vnic_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
     nh_db_t *nh_map(void) { return nh_map_; }
     nh_group_db_t *nh_group_map(void) { return nh_group_map_; }
@@ -107,9 +101,6 @@ public:
     }
     slab_ptr_t service_slab(void) const {
         return slabs_[SLAB_ID_SERVICE];
-    }
-    slab_ptr_t vnic_slab(void) const {
-        return slabs_[SLAB_ID_VNIC];
     }
     slab_ptr_t if_slab(void) const {
         return slabs_[SLAB_ID_IF];
@@ -141,7 +132,6 @@ private:
     pds_obj_key_t underlay_vpc_;
     subnet_db_t *subnet_map_;
     service_db_t *service_map_;
-    vnic_db_t *vnic_map_;
     route_table_db_t *route_table_map_;
     pds_device_spec_t device_;
     mirror_session_db_t *mirror_session_map_;
@@ -206,13 +196,6 @@ public:
     bool del_from_service_db(pds_svc_mapping_key_t *key);
     slab_ptr_t service_slab(void) const { return cfg_db_->service_slab(); }
 
-    pds_vnic_spec_t *find_in_vnic_db(pds_obj_key_t *key);
-    sdk_ret_t add_to_vnic_db(pds_obj_key_t *key,
-                             pds_vnic_spec_t *spec);
-    sdk_ret_t vnic_db_walk(vnic_walk_cb_t cb, void *ctxt);
-    bool del_from_vnic_db(pds_obj_key_t *key);
-    slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
-
     slab_ptr_t if_slab(void) const { return cfg_db_->if_slab(); }
 
     pds_route_table_spec_t *find_in_route_table_db(pds_obj_key_t *key);
@@ -262,7 +245,6 @@ private:
     vpc_peer_db_t *vpc_peer_map(void) const { return cfg_db_->vpc_peer_map();  }
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }
     service_db_t *service_map(void) const { return cfg_db_->service_map();  }
-    vnic_db_t *vnic_map(void) const { return cfg_db_->vnic_map();  }
     route_table_db_t *route_table_map(void) const { return
         cfg_db_->route_table_map();
     }
