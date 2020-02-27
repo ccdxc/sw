@@ -181,12 +181,22 @@ public:
     struct info_t {
         ms_id_t  ms_ifindex;
         uint32_t  eth_ifindex = 0;
-        info_t(uint32_t ifi, uint32_t eifi)
-            : ms_ifindex(ifi), eth_ifindex (eifi) {};
+        ip_prefix_t ip_prfx;
+        info_t(uint32_t ifi, uint32_t eifi, const ip_prefix_t& ip)
+            : ms_ifindex(ifi), eth_ifindex (eifi), ip_prfx(ip) {};
     };
-    interface_uuid_obj_t(const pds_obj_key_t& uuid, uint32_t ifi, uint32_t eifi)
+    interface_uuid_obj_t(const pds_obj_key_t& uuid, uint32_t ifi, uint32_t eifi,
+        const ip_prefix_t& ip)
         : uuid_obj_t(uuid_obj_type_t::INTERFACE, uuid),
-          info_(ifi, eifi) {};
+          info_(ifi, eifi, ip) {};
+
+    void set_ip(const ip_prefix_t& ip) {
+        memcpy(&info_.ip_prfx, &ip, sizeof(ip_prefix_t));
+    }
+    void reset_ip() {
+        memset(&info_.ip_prfx, 0, sizeof(ip_prefix_t));
+    }
+    ip_prefix_t& ip() { return info_.ip_prfx; }
 
     ms_id_t ms_id() { return info_.ms_ifindex; }
     info_t info() { return info_; }

@@ -49,14 +49,65 @@ populate_lim_addr_spec (ip_prefix_t                 *ip_prefix,
     }
 }
 
+// In addition to interface uuid fecthing, this API also marks the
+// uuid object to be pending deleted in case of delete operation
+static interface_uuid_obj_t::info_t
+interface_uuid_fetch(const pds_obj_key_t& key, bool del_op = false)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj == nullptr) {
+        throw Error(std::string("Unknown UUID in Interface Request ")
+                    .append(key.str()), SDK_RET_ENTRY_NOT_FOUND);
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::INTERFACE) {
+        throw Error(std::string("Wrong UUID ").append(key.str())
+                    .append(" containing ").append(uuid_obj->str())
+                    .append(" in Interface request"), SDK_RET_INVALID_ARG);
+    }
+    auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
+    PDS_TRACE_DEBUG("Fetched Interface UUID %s MSIfindex 0x%X",
+                     key.str(), interface_uuid_obj->ms_id());
+    if (del_op) {
+        mgmt_ctxt.state()->set_pending_uuid_delete(key);
+    }
+    return interface_uuid_obj->info();
+}
+
+static void
+interface_uuid_ip_prefix (const pds_obj_key_t& key, ip_prefix_t& ip_prfx,
+                          bool reset = false)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj == nullptr) {
+        throw Error(std::string("Unknown UUID in Interface Request ")
+                    .append(key.str()), SDK_RET_ENTRY_NOT_FOUND);
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::INTERFACE) {
+        throw Error(std::string("Wrong UUID ").append(key.str())
+                    .append(" containing ").append(uuid_obj->str())
+                    .append(" in Interface request"), SDK_RET_INVALID_ARG);
+    }
+    auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
+    if (reset) {
+        interface_uuid_obj->reset_ip();
+    } else {
+        interface_uuid_obj->set_ip(ip_prfx);
+    }
+}
+
 static types::ApiStatus
 process_interface_update (pds_if_spec_t *if_spec,
                           ms_ifindex_t ms_ifindex,
-                          NBB_LONG      row_status)
+                          NBB_LONG      row_status, 
+                          bool update = false)
 {
     pds::LimInterfaceAddrSpec lim_addr_spec;
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
     bool has_ip_addr = false;
+    bool ip_update = false;
+    ip_prefix_t *intf_ip_prfx = NULL;
 
     if (if_spec->type == PDS_IF_TYPE_L3) {
         // Create L3 interfaces
@@ -64,6 +115,7 @@ process_interface_update (pds_if_spec_t *if_spec,
         populate_lim_l3_intf_cfg_spec (lim_if_spec, ms_ifindex);
         pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, 
                                    PDS_MS_CTM_GRPC_CORRELATOR);
+        intf_ip_prfx = &if_spec->l3_if_info.ip_prefix;
         if (!ip_addr_is_zero(&if_spec->l3_if_info.ip_prefix.addr)) {
             has_ip_addr = true;
             populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec,
@@ -76,6 +128,7 @@ process_interface_update (pds_if_spec_t *if_spec,
         lim_swif_spec.set_ifid(LOOPBACK_IF_ID); lim_swif_spec.set_iftype(pds::LIM_IF_TYPE_LOOPBACK);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status,
                                         PDS_MS_CTM_GRPC_CORRELATOR);
+        intf_ip_prfx = &if_spec->loopback_if_info.ip_prefix;
         if (!ip_addr_is_zero(&if_spec->loopback_if_info.ip_prefix.addr)) {
             has_ip_addr = true;
             populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
@@ -86,11 +139,48 @@ process_interface_update (pds_if_spec_t *if_spec,
         }
     }
 
+    if (update) {
+        auto ifinfo = interface_uuid_fetch(if_spec->key);
+        // if we have an existing intf ip and not same as updated
+        // interface ip, then delete the ip address. updated IP,
+        // it configured, will be added subsequently
+        if (!ip_addr_is_zero(&ifinfo.ip_prfx.addr)  &&
+            !IPADDR_EQ (&ifinfo.ip_prfx.addr, &intf_ip_prfx->addr)) {
+            pds::LimInterfaceAddrSpec lim_del_addr_spec;
+            pds::LimIntfType iftype = pds::LIM_IF_TYPE_LOOPBACK;
+            uint32_t ifid = LOOPBACK_IF_ID;
+            ip_update = true;
+            if (ifinfo.eth_ifindex) {
+                iftype = pds::LIM_IF_TYPE_ETH;
+                ifid = api::objid_from_uuid(if_spec->l3_if_info.port);
+            }
+            PDS_TRACE_INFO("Deleting IP address for interface update");
+            populate_lim_addr_spec (&ifinfo.ip_prfx, lim_del_addr_spec,
+                                    iftype, ifid);
+            pds_ms_set_amb_lim_l3_if_addr (lim_del_addr_spec, AMB_ROW_DESTROY,
+                                           PDS_MS_CTM_GRPC_CORRELATOR);
+
+            if (iftype == pds::LIM_IF_TYPE_LOOPBACK) {
+                // remove redistribute connected rule
+                pds::lim_l3_if_addr_pre_set(lim_del_addr_spec, AMB_ROW_DESTROY,
+                                            PDS_MS_CTM_GRPC_CORRELATOR);
+            }
+            if (!has_ip_addr) {
+                // no ip address for interface. reset the cached ip.
+                interface_uuid_ip_prefix (if_spec->key, ifinfo.ip_prfx, true);
+            }
+        }
+    }
+
     if (has_ip_addr) {
         PDS_TRACE_INFO("Setting IP address for interface");
         // Configure IP Address
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status,
                                        PDS_MS_CTM_GRPC_CORRELATOR);
+        if (ip_update) {
+            // ip address is modified. update cached ip
+            interface_uuid_ip_prefix (if_spec->key, *intf_ip_prfx, false);
+        }
     }
 
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
@@ -101,7 +191,7 @@ process_interface_update (pds_if_spec_t *if_spec,
 
 static void
 interface_uuid_alloc(const pds_obj_key_t& key, uint32_t &ms_ifindex,
-                     uint32_t eth_ifindex = 0)
+                     uint32_t eth_ifindex, ip_prefix_t &ip_prfx)
 {
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
@@ -111,7 +201,8 @@ interface_uuid_alloc(const pds_obj_key_t& key, uint32_t &ms_ifindex,
                     .append(uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
     }
     interface_uuid_obj_uptr_t interface_uuid_obj
-                              (new interface_uuid_obj_t(key, ms_ifindex, eth_ifindex));
+                              (new interface_uuid_obj_t
+                              (key, ms_ifindex, eth_ifindex, ip_prfx));
     mgmt_ctxt.state()->set_pending_uuid_create(key,
                                                std::move(interface_uuid_obj));
     return;
@@ -147,29 +238,6 @@ l3_intf_create (const pds_obj_key_t& if_uuid, ms_ifindex_t ms_ifindex,
     state_ctxt.state()->if_store().add_upd(ms_ifindex, new_if_obj);
 }
 
-static interface_uuid_obj_t::info_t
-interface_uuid_fetch(const pds_obj_key_t& key, bool del_op = false)
-{
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
-    if (uuid_obj == nullptr) {
-        throw Error(std::string("Unknown UUID in Interface Request ")
-                    .append(key.str()), SDK_RET_ENTRY_NOT_FOUND);
-    }
-    if (uuid_obj->obj_type() != uuid_obj_type_t::INTERFACE) {
-        throw Error(std::string("Wrong UUID ").append(key.str())
-                    .append(" containing ").append(uuid_obj->str())
-                    .append(" in Interface request"), SDK_RET_INVALID_ARG);
-    }
-    auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
-    PDS_TRACE_DEBUG("Fetched Interface UUID %s MSIfindex 0x%X",
-                     key.str(), interface_uuid_obj->ms_id());
-    if (del_op) {
-        mgmt_ctxt.state()->set_pending_uuid_delete(key);
-    }
-    return interface_uuid_obj->info();
-}
-
 sdk_ret_t
 interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
@@ -188,7 +256,8 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
             l3_intf_create(spec->key, ms_ifindex, eth_ifindex);
 
             // Cache Intf UUID to MS IfIndex
-            interface_uuid_alloc(spec->key, ms_ifindex, eth_ifindex);
+            interface_uuid_alloc(spec->key, ms_ifindex, eth_ifindex,
+                                 spec->l3_if_info.ip_prefix);
 
         } else if (spec->type == PDS_IF_TYPE_LOOPBACK) {
             ms_ifindex = pds_to_ms_ifindex(LOOPBACK_IF_ID, IF_TYPE_LOOPBACK);
@@ -196,7 +265,8 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
                             spec->key.str(),  ms_ifindex);
 
             // Cache Intf UUID to MS IfIndex
-            interface_uuid_alloc(spec->key, ms_ifindex);
+            interface_uuid_alloc(spec->key, ms_ifindex, 0,
+                                 spec->loopback_if_info.ip_prefix);
         } else {
             PDS_TRACE_DEBUG("Ignoring unknown interface %s type %d",
                              spec->key.str(), spec->type);
@@ -275,7 +345,7 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
         // interface address to Metaswitch. If address is same then metaswitch
         // will treat it as a no-ip
         ret_status = process_interface_update(spec, ms_ifindex,
-                                              AMB_ROW_ACTIVE);
+                                              AMB_ROW_ACTIVE, true);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process interface UUID %s "
                            "MS-Interface 0x%X "

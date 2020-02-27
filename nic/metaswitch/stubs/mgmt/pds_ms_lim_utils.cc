@@ -18,7 +18,7 @@ lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
 {
     pds_ms::pds_ms_config_t  conf = {0};
     conf.correlator  = correlator;
-    conf.row_status  = AMB_ROW_ACTIVE;
+    conf.row_status  = row_status;
     conf.entity_index = PDS_MS_RTM_DEF_ENT_INDEX;
     conf.admin_status = AMB_ADMIN_STATUS_UP;
 
@@ -27,7 +27,8 @@ lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
     pds_ms_convert_ip_addr_to_amb_ip_addr(lo_ipaddr, &conf.lo_addr_type,
                                           &conf.lo_addr_len, conf.lo_addr, false);
 
-    PDS_TRACE_INFO("Adding redistributed connected rule to BGP for address %s",
+    PDS_TRACE_INFO("%s redistributed connected rule to BGP for address %s",
+                   (row_status == AMB_ROW_DESTROY) ? "Removing" : "Adding",
                    ipaddr2str(&lo_ipaddr));
     pds_ms::pds_ms_rtm_redis_connected (&conf);
 }
