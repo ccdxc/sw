@@ -26,6 +26,7 @@ testcases:
             skip_security_prof: False
 
     -   name    : AgingTcpSessions
+        ignore  : True
         testcase: testcases.aging.tcp
         iterators:
             type              : simple
