@@ -62,10 +62,10 @@ ipfix_flow_hash_complete:
     // table 0 : lookup flow_info
     addi        r1, r0, loword(p4_flow_info_base)
     addui       r1, r1, hiword(p4_flow_info_base)
-    add         r1, r1, d.flow_hash_info_d.flow_index, 6
+    add         r1, r1, d.flow_hash_info_d.flow_index, 5
     phvwr       p.common_te0_phv_table_addr, r1
     phvwri      p.common_te0_phv_table_pc, ipfix_flow_info[33:6]
-    phvwr       p.common_te0_phv_table_raw_table_size, 6
+    phvwr       p.common_te0_phv_table_raw_table_size, 5
     phvwr       p.common_te0_phv_table_lock_en, 0
 
     // enable table 0 in next stage
