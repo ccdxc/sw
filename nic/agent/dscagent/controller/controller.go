@@ -22,7 +22,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
-	"github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
+	restapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
@@ -291,6 +291,12 @@ func (c *API) Start(ctx context.Context) error {
 
 		go func() {
 			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
+				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+			}
+		}()
+
+		go func() {
+			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"IPAMPolicy"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
 		}()
