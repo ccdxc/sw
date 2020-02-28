@@ -61,9 +61,10 @@ class DeviceObject(base.ConfigObjectBase):
         if self.IsDirty():
             logger.info("Not reading object from Hw since it is marked Dirty")
             return True
+        # TODO: fix ValidateObject after delete operation
+        # currently device read always returns API_STATUS_OK (for create/delete/update op)
         expApiStatus = types_pb2.API_STATUS_OK
         utils.ReadObject(self, expApiStatus)
-        # TODO: fix ValidateObject after delete operation
         return True
 
     def UpdateAttributes(self):

@@ -493,9 +493,14 @@ def DeleteObject(obj):
         # inconsistency. Doing it this way in DOL, since IOTA scale test cases
         # uses the same code, and at full scale we can't create an object
         # without freeing another.
+        obj_present = dobj.IsHwHabitant()
         ret = TriggerDelete(dobj, node)
         if not ret:
             return False
+
+        # create duplicate object only if object is present
+        if not obj_present:
+            return True
 
         if IsUpdateSupported():
             if dobj.ObjType == api.ObjectTypes.TUNNEL or\

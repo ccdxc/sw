@@ -142,7 +142,7 @@ def SetupConfigObjects(objtype):
     maxlimit = __getMaxLimit(objtype)
     select_count = int(maxlimit / 2) if maxlimit >= 2 else maxlimit
     select_objs = __getRandomSamples(__getObjects(objtype), select_count)
-    api.Logger.info(f"selected_objs: {select_objs}")
+    api.Logger.verbose(f"selected_objs: {select_objs}")
     return select_objs
 
 def ProcessObjectsByOperation(oper, select_objs):

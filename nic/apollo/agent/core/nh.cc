@@ -47,6 +47,10 @@ nh_create (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
 static inline sdk_ret_t
 nh_update_validate (pds_obj_key_t *key, pds_nexthop_spec_t *spec)
 {
+    if ((spec = agent_state::state()->find_in_nh_db(key)) == NULL) {
+        PDS_TRACE_ERR("Failed to update nh {}, nh not found", key->str());
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
     return SDK_RET_OK;
 }
 
