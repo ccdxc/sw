@@ -100,6 +100,10 @@ metrics_schema_t port_metrics_schema = {
             .type = METRICS_COLUMN_COUNTER64,
         },
         {
+            .name = "Frames Rx 64B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
             .name = "Frames Rx 65B-127B",
             .type = METRICS_COLUMN_COUNTER64,
         },
@@ -365,6 +369,144 @@ metrics_schema_t port_metrics_schema = {
         },
         {
             .name = "Frames Tx truncated",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = NULL,
+            .type = METRICS_COLUMN_RSVD,
+        },
+    }
+};
+
+metrics_schema_t mgmt_port_metrics_schema = {
+    .name = "Port",
+    .columns = {
+        {
+            .name = "Frames Rx ok",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx all",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx bad fcs",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx bad all",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Octets Rx ok",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Octets Rx all",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx unicast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx multicast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx broadcast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx pause",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx bad length",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx undersized",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx oversized",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx fragments",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx jabber",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 64B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 65B-127B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 128B-255B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 256B-511B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 512B-1023B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx 1024B-1518B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx > 1518B",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Rx fifo full",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx ok",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx all",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx bad",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Octets Tx ok",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Octets Tx total",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx unicast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx multicast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx broadcast",
+            .type = METRICS_COLUMN_COUNTER64,
+        },
+        {
+            .name = "Frames Tx pause",
             .type = METRICS_COLUMN_COUNTER64,
         },
         {
