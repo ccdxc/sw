@@ -125,6 +125,13 @@
           "Description": "Number of dropped or non-flowmiss packets for which the CPU resources are freed",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "MaxSessionThresholdDrops",
+          "DisplayName": "Max Session Threshold Drops",
+          "Description": "Number of flowmiss packets dropped due to max session limit being hit",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [

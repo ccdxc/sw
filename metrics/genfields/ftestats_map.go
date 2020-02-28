@@ -22,6 +22,7 @@ func init() {
 		"SoftwareQueuePackets",
 		"QueuedTxPackets",
 		"FreedTxPackets",
+		"MaxSessionThresholdDrops",
 	}
 
 	msgFieldMaps["SessionSummaryMetrics"] = []string{
