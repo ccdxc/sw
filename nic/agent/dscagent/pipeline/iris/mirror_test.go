@@ -10,6 +10,85 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestHandleMirrorSessionUpdates(t *testing.T) {
+	mirror := netproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testMirror",
+		},
+		Spec: netproto.MirrorSessionSpec{
+			PacketSize: 128,
+			Collectors: []netproto.MirrorCollector{
+				{
+					ExportCfg: netproto.MirrorExportConfig{Destination: "192.168.100.101"},
+				},
+			},
+		},
+	}
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	err := HandleVrf(infraAPI, vrfClient, types.Create, vrf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cols, err := infraAPI.List("Collector")
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldCount := len(cols)
+	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Create, mirror, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cols, err = infraAPI.List("Collector")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cols) != oldCount+1 {
+		t.Fatalf("Expected %d collector, got %d", oldCount+1, len(cols))
+	}
+	mirror.Spec.Collectors[0].ExportCfg.Destination = "192.168.100.103"
+	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Update, mirror, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cols, err = infraAPI.List("Collector")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cols) != oldCount+1 {
+		t.Fatalf("Expected %d collector, got %d", oldCount+1, len(cols))
+	}
+	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Delete, mirror, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cols, err = infraAPI.List("Collector")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cols) != oldCount {
+		t.Fatalf("Expected %d collector, got %d", oldCount, len(cols))
+	}
+	err = HandleVrf(infraAPI, vrfClient, types.Delete, vrf)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestHandleMirrorSession(t *testing.T) {
 	mirror := netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},

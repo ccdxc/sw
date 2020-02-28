@@ -140,8 +140,18 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 }
 
 func updateFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, netflow netproto.FlowExportPolicy, vrfID uint64) error {
-	if err := deleteFlowExportPolicyHandler(infraAPI, telemetryClient, intfClient, epClient, netflow, vrfID); err != nil {
-		log.Error(errors.Wrapf(types.ErrFlowExportPolicyDeleteDuringUpdate, "FlowExportPolicy: %s | FlowExportPolicy: %v", netflow.GetKey(), err))
+	var existingNetflow netproto.FlowExportPolicy
+	dat, err := infraAPI.Read(netflow.Kind, netflow.GetKey())
+	if err != nil {
+		return err
+	}
+	err = existingNetflow.Unmarshal(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
+		return errors.Wrapf(types.ErrUnmarshal, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
+	}
+	if err := deleteFlowExportPolicyHandler(infraAPI, telemetryClient, intfClient, epClient, existingNetflow, vrfID); err != nil {
+		log.Error(errors.Wrapf(types.ErrFlowExportPolicyDeleteDuringUpdate, "FlowExportPolicy: %s | FlowExportPolicy: %v", existingNetflow.GetKey(), err))
 	}
 	if err := createFlowExportPolicyHandler(infraAPI, telemetryClient, intfClient, epClient, netflow, vrfID); err != nil {
 		log.Error(errors.Wrapf(types.ErrFlowExportPolicyCreateDuringUpdate, "FlowExportPolicy: %s | FlowExportPolicy: %v", netflow.GetKey(), err))

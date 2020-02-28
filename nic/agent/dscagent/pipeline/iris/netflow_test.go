@@ -10,6 +10,74 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestHandleNetflowUpdates(t *testing.T) {
+	netflow := netproto.FlowExportPolicy{
+		TypeMeta: api.TypeMeta{Kind: "Netflow"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetflow",
+		},
+		Spec: netproto.FlowExportPolicySpec{
+			Interval: "30s",
+			Exports: []netproto.ExportConfig{
+				{
+					Destination: "192.168.100.101",
+					Transport: &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "2055",
+					},
+				},
+			},
+		},
+	}
+	internalCol := "collector|_internal-192.168.100.101"
+	internalCol1 := "collector|_internal-192.168.100.103"
+	var col1Count, col2Count int
+	if _, ok := lateralDB[internalCol]; ok {
+		col1Count = len(lateralDB[internalCol])
+	}
+	if _, ok := lateralDB[internalCol1]; ok {
+		col2Count = len(lateralDB[internalCol1])
+	}
+	err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Create, netflow, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := lateralDB[internalCol]; !ok {
+		t.Fatalf("192.168.100.101 collector not created. DB %v", lateralDB)
+	}
+	if len(lateralDB[internalCol]) != col1Count+1 {
+		t.Fatalf("Collector keys not populated for 192.168.100.101. %v", lateralDB[internalCol])
+	}
+	netflow.Spec.Exports[0].Destination = "192.168.100.103"
+	err = HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflow, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, ok := lateralDB[internalCol]; ok && len(lateralDB[internalCol]) != col1Count {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+	if _, ok := lateralDB[internalCol1]; !ok {
+		t.Fatalf("192.168.100.103 collector not created. DB %v", lateralDB)
+	}
+	if len(lateralDB[internalCol1]) != col2Count+1 {
+		t.Fatalf("Collector keys not populated. %v", lateralDB[internalCol1])
+	}
+	err = HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Delete, netflow, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := lateralDB[internalCol]; ok && len(lateralDB[internalCol]) != col1Count {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+	if _, ok := lateralDB[internalCol1]; ok && len(lateralDB[internalCol1]) != col2Count {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+}
+
 func TestHandleNetflow(t *testing.T) {
 	t.Skip("Skipped till we figure out a way to ensure the lateral objects are correctly handled in the absensce of venice configs")
 	t.Parallel()

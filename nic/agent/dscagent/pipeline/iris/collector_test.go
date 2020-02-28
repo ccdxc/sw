@@ -11,6 +11,56 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestHandleCollectorUpdates(t *testing.T) {
+	col := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testCollector",
+		},
+		Spec: netproto.CollectorSpec{
+			Destination: "192.168.100.101",
+		},
+	}
+	err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	internalCol := "collector|_internal-192.168.100.101"
+	internalCol1 := "collector|_internal-192.168.100.103"
+	if _, ok := lateralDB[internalCol]; !ok {
+		t.Fatalf("192.168.100.101 collector not created. DB %v", lateralDB)
+	}
+	if len(lateralDB[internalCol]) != 1 {
+		t.Fatalf("Collector keys not populated for 192.168.100.101. %v", lateralDB[internalCol])
+	}
+	col.Spec.Destination = "192.168.100.103"
+	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Update, col, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := lateralDB[internalCol]; ok && len(lateralDB[internalCol]) != 0 {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+	if _, ok := lateralDB[internalCol1]; !ok {
+		t.Fatalf("192.168.100.103 collector not created. DB %v", lateralDB)
+	}
+	if len(lateralDB[internalCol1]) != 1 {
+		t.Fatalf("Collector keys not populated. %v", lateralDB[internalCol1])
+	}
+	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := lateralDB[internalCol]; ok && len(lateralDB[internalCol]) != 0 {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+	if _, ok := lateralDB[internalCol1]; ok && len(lateralDB[internalCol1]) != 0 {
+		t.Fatalf("192.168.100.101 should be removed. DB %v", lateralDB)
+	}
+}
+
 func TestMirrorSessionIDRefcouting(t *testing.T) {
 	cols := []netproto.Collector{
 		{

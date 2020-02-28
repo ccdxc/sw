@@ -84,8 +84,18 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 }
 
 func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
-	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
-		log.Error(errors.Wrapf(types.ErrMirrorSessionDeleteDuringUpdate, "MirrorSession: %s | MirrorSession: %v", mirror.GetKey(), err))
+	var existingMirror netproto.MirrorSession
+	dat, err := infraAPI.Read(mirror.Kind, mirror.GetKey())
+	if err != nil {
+		return err
+	}
+	err = existingMirror.Unmarshal(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+		return errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+	}
+	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, existingMirror, vrfID); err != nil {
+		log.Error(errors.Wrapf(types.ErrMirrorSessionDeleteDuringUpdate, "MirrorSession: %s | MirrorSession: %v", existingMirror.GetKey(), err))
 	}
 	if err := createMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
 		log.Error(errors.Wrapf(types.ErrMirrorSessionCreateDuringUpdate, "MirrorSession: %s | MirrorSession: %v", mirror.GetKey(), err))

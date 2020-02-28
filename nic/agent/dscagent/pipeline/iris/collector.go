@@ -88,8 +88,18 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 }
 
 func updateCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, col netproto.Collector, vrfID uint64) error {
-	if err := deleteCollectorHandler(infraAPI, telemetryClient, intfClient, epClient, col, vrfID); err != nil {
-		log.Error(errors.Wrapf(types.ErrCollectorDeleteDuringUpdate, "Collector: %s | Collector: %v", col.GetKey(), err))
+	var existingCol netproto.Collector
+	dat, err := infraAPI.Read(col.Kind, col.GetKey())
+	if err != nil {
+		return err
+	}
+	err = existingCol.Unmarshal(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
+		return errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+	}
+	if err := deleteCollectorHandler(infraAPI, telemetryClient, intfClient, epClient, existingCol, vrfID); err != nil {
+		log.Error(errors.Wrapf(types.ErrCollectorDeleteDuringUpdate, "Collector: %s | Collector: %v", existingCol.GetKey(), err))
 	}
 	if err := createCollectorHandler(infraAPI, telemetryClient, intfClient, epClient, col, vrfID); err != nil {
 		log.Error(errors.Wrapf(types.ErrCollectorCreateDuringUpdate, "Collector: %s | Collector: %v", col.GetKey(), err))
