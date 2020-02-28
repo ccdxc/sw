@@ -72,6 +72,7 @@ func TestGetFields(t *testing.T) {
 		"SoftwareQueuePackets",
 		"QueuedTxPackets",
 		"FreedTxPackets",
+		"MaxSessionThresholdDrops",
 	}
 	sort.Strings(v)
 	sort.Strings(ftestatsAnswer)
