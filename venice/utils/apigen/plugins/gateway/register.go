@@ -88,6 +88,7 @@ type PdsaGlobalOpts struct {
 	FillFn          string
 	ActionFn        string
 	UpdateForDelete bool
+	SpecMsg         string
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -594,9 +595,12 @@ type pdsaFieldOpt struct {
 	IgnoreIfEmpty          bool
 	IsZeroIPValid          bool
 	SetKeyOidAddrIndex     string
+	GetKeyOidAddrIndex     string
 	SetKeyOidAddrTypeIndex string
+	GetKeyOidAddrTypeIndex string
 	AddrTypeFieldName      string
 	AddrLenFieldName       string
+	IsInternalField        bool
 }
 
 type fieldMetricOptions struct {
@@ -799,7 +803,10 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.GetKeyOidLenIndex = o.GetKeyOidLenIndex
 		ret.IgnoreIfEmpty = o.IgnoreIfEmpty
 		ret.SetKeyOidAddrIndex = o.SetKeyOidAddrIndex
+		ret.GetKeyOidAddrIndex = o.GetKeyOidAddrIndex
 		ret.SetKeyOidAddrTypeIndex = o.SetKeyOidAddrTypeIndex
+		ret.GetKeyOidAddrTypeIndex = o.GetKeyOidAddrTypeIndex
+		ret.IsInternalField = o.IsInternalField
 		ret.AddrTypeFieldName = o.AddrTypeFieldName
 		ret.AddrLenFieldName = o.AddrLenFieldName
 		if o.IsZeroIPValid {
@@ -1110,6 +1117,7 @@ func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.FillFn = r.FillFn
 	pdsaGlobOpts.ActionFn = r.ActionFn
 	pdsaGlobOpts.UpdateForDelete = r.UpdateForDelete
+	pdsaGlobOpts.SpecMsg = r.SpecMsg
 	return pdsaGlobOpts, nil
 }
 
@@ -1123,6 +1131,7 @@ func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
 	pdsaGlobOpts.FillFn = r.FillFn
 	pdsaGlobOpts.ActionFn = r.ActionFn
+	pdsaGlobOpts.SpecMsg = r.SpecMsg
 	return pdsaGlobOpts, nil
 }
 
@@ -2541,6 +2550,14 @@ func getListTypeMsg(msg *descriptor.Message) (*descriptor.Message, error) {
 		}
 	}
 	return nil, errors.New("list item not found")
+}
+
+func getMsg(file *descriptor.File, pkg string, childMsg string) *descriptor.Message {
+	ret, err := file.Reg.LookupMsg("", pkg+childMsg)
+	if err != nil {
+		glog.Fatalf("Could not find message (%s)", "."+pkg+"."+childMsg)
+	}
+	return ret
 }
 
 func getRootMsgFromMap(msgmap map[string]string, msg string, pkg string) string {
@@ -3996,6 +4013,7 @@ func init() {
 	reg.RegisterFunc("addStr", addStr)
 	reg.RegisterFunc("getResponseRootMsg", getResponseRootMsg)
 	reg.RegisterFunc("getRequestRootMsg", getRequestRootMsg)
+	reg.RegisterFunc("getMsg", getMsg)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

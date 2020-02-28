@@ -149,20 +149,22 @@ NBB_VOID bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
                                AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
                                NBB_LONG           row_status);
 NBB_VOID bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
-                             NBB_ULONG correlator, bool op_update);
+                             NBB_ULONG correlator, NBB_VOID* kh, bool op_update);
 
 NBB_VOID bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator, bool op_update=false);
+                          NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
 
 NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator, bool op_update=false);
+                          NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
 
-NBB_VOID bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp);
+NBB_VOID bgp_rm_ent_pre_get(pds::BGPSpec &req, pds::BGPGetResponse* resp, NBB_VOID* kh);
+NBB_VOID bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp, NBB_VOID* kh);
 NBB_VOID bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
-                                   pds::BGPPeerAfGetResponse* resp);
+                                   pds::BGPPeerAfGetResponse* resp,
+                                   NBB_VOID* kh);
 bool bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data);
-NBB_VOID bgp_peer_status_get_fill_func (pds::BGPPeerStatus& req,
+NBB_VOID bgp_peer_status_get_fill_func (pds::BGPPeerSpec& req,
                                         NBB_ULONG*          oid);
 
 NBB_VOID bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
@@ -184,19 +186,31 @@ NBB_VOID bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec&        req,
 NBB_VOID evpn_evi_pre_set (EvpnEviSpec  &req,
                            NBB_LONG     row_status,
                            NBB_ULONG    test_correlator,
+                           NBB_VOID*    kh,
                            bool         op_update=false);
+NBB_VOID evpn_evi_pre_get (EvpnEviSpec &req, EvpnEviGetResponse* resp,
+                           NBB_VOID* kh);
 NBB_VOID evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                               NBB_LONG       row_status,
                               NBB_ULONG      test_correlator,
+                              NBB_VOID*      kh,
                               bool           op_update=false);
+NBB_VOID evpn_evi_rt_pre_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
+                              NBB_VOID* kh);
 NBB_VOID evpn_ip_vrf_pre_set (EvpnIpVrfSpec  &req,
                               NBB_LONG       row_status,
                               NBB_ULONG      test_correlator,
+                              NBB_VOID*      kh,
                               bool           op_update=false);
+NBB_VOID evpn_ip_vrf_pre_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
+                              NBB_VOID* kh);
 NBB_VOID evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec  &req,
                                  NBB_LONG       row_status,
                                  NBB_ULONG      test_correlator,
+                                 NBB_VOID*      kh,
                                  bool           op_update=false);
+NBB_VOID evpn_ip_vrf_rt_pre_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
+                                 NBB_VOID *kh);
 NBB_VOID evpn_evi_get_fill_func (EvpnEviSpec&    req,
                                  NBB_ULONG*       oid);
 NBB_VOID evpn_evi_set_fill_func (EvpnEviSpec&    req,
@@ -221,7 +235,7 @@ NBB_VOID evpn_ip_vrf_rt_set_fill_func (EvpnIpVrfRtSpec&      req,
                                    AMB_GEN_IPS           *mib_msg,
                                    AMB_EVPN_IP_VRF_RT    *data,
                                    NBB_LONG         row_status);
-NBB_VOID evpn_mac_ip_get_fill_func (EvpnMacIpSpec& req, NBB_ULONG *oid);
+NBB_VOID evpn_mac_ip_get_fill_func (EvpnMacIpStatus& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_fill_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_fill_name_field (EvpnIpVrfSpec& req, AMB_GEN_IPS *mib_msg);
 NBB_VOID evpn_ip_vrf_rt_fill_name_field (EvpnIpVrfRtSpec& req,
@@ -250,9 +264,10 @@ types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,
 NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,
                                 NBB_ULONG correlator,
+                                NBB_VOID* kh,
                                 bool      op_update=false);
 NBB_VOID cp_route_pre_set(pds::CPStaticRouteSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator, bool op_update=false);
+                          NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
 NBB_VOID update_bgp_route_map_table (NBB_ULONG correlator);
 } // namespace pds
 

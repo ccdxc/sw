@@ -97,7 +97,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	log.Infof("Creating IP Vrf EVI [%+v]", evrfReq.Request[0])
 	ctx := context.TODO()
-	eVrfResp, err := msc.EvpnIpVrfSpecCreate(ctx, &evrfReq)
+	eVrfResp, err := msc.EvpnIpVrfCreate(ctx, &evrfReq)
 	if err != nil {
 		log.Infof("EVPN VRF Spec Create received resp (%v)[%+v]", err, eVrfResp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring EVPN VRF | Err: %v", vrf.GetKey(), err)
@@ -110,12 +110,23 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 
 	defer func() {
 		if !success {
-			delresp, err := msc.EvpnIpVrfSpecDelete(ctx, &evrfReq)
+			// Create Metaswitch related objects
+			key := &msTypes.EvpnIpVrfKey{
+				VPCId: uid.Bytes(),
+			}
+			evrfReq := msTypes.EvpnIpVrfDeleteRequest{
+				Request: []*msTypes.EvpnIpVrfKeyHandle{
+					{
+						IdOrKey: &msTypes.EvpnIpVrfKeyHandle_Key{key},
+					},
+				},
+			}
+			delresp, err := msc.EvpnIpVrfDelete(ctx, &evrfReq)
 			if err != nil {
 				log.Infof("EVPN VRF Spec cleanup received resp (%v)[%+v]", err, delresp)
 			}
 			if delresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-				log.Infof("EVPN VRF Spec cleanup received resp (%v)[%v, %v]", err, delresp.ApiStatus, delresp.Response)
+				log.Infof("EVPN VRF Spec cleanup received resp (%v)[%v]", err, delresp.ApiStatus)
 			}
 		}
 	}()
@@ -167,24 +178,37 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			log.Infof("add Evi VRF RT [%+v]", evirt)
 			rtReq.Request = append(rtReq.Request, &evirt)
 		}
-		eVrfRTResp, err := msc.EvpnIpVrfRtSpecCreate(ctx, &rtReq)
+
+		rtDelReq := msTypes.EvpnIpVrfRtDeleteRequest{}
+		for _, rt := range rts {
+			key := &msTypes.EvpnIpVrfRtKey{
+				RT:    utils.RTToBytes(rt.rt),
+				VPCId: uid.Bytes(),
+			}
+			evirt := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+			}
+			log.Infof("add Evi VRF RT [%+v]", evirt)
+			rtDelReq.Request = append(rtDelReq.Request, &evirt)
+		}
+		eVrfRTResp, err := msc.EvpnIpVrfRtCreate(ctx, &rtReq)
 		if err != nil {
-			log.Infof("EVPN VRF RT Spec Create received resp (%v)[%+v]", err, eVrfRTResp)
+			log.Infof("EVPN VRF RT Create received resp (%v)[%+v]", err, eVrfRTResp)
 			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring  EVPN VRF RT | Err: %v", vrf.GetKey(), err)
 		}
 		if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-			log.Infof("EVPN VRF RT Spec Create received resp (%v)[%v, %v] req[%+v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response, rtReq)
+			log.Infof("EVPN VRF RT Create received resp (%v)[%v, %v] req[%+v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response, rtReq)
 			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring EVPN VRF RT  | status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
 		}
 		log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 		defer func() {
 			if !success {
-				delresp, err := msc.EvpnIpVrfRtSpecDelete(ctx, &rtReq)
+				delresp, err := msc.EvpnIpVrfRtDelete(ctx, &rtDelReq)
 				if err != nil {
-					log.Infof("EVPN VRF RT Spec cleanup received resp (%v)[%+v]", err, delresp)
+					log.Infof("EVPN VRF RT cleanup received resp (%v)[%+v]", err, delresp)
 				}
 				if delresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-					log.Infof("EVPN VRF RT Spec cleanup received resp (%v)[%v, %v]", err, delresp.ApiStatus, delresp.Response)
+					log.Infof("EVPN VRF RT cleanup received resp (%v)[%v]", err, delresp.ApiStatus)
 				}
 			}
 		}()
@@ -245,7 +269,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			},
 		}
 
-		eVrfResp, err := msc.EvpnIpVrfSpecUpdate(ctx, &evrfReq)
+		eVrfResp, err := msc.EvpnIpVrfUpdate(ctx, &evrfReq)
 		if err != nil {
 			log.Infof("EVPN VRF Spec Create received resp (%v)[%+v]", err, eVrfResp)
 			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring  EVPN VRF | Err: %v", vrf.GetKey(), err)
@@ -256,7 +280,8 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		}
 	}
 
-	var rtDelReq, rtAddReq msTypes.EvpnIpVrfRtRequest
+	var rtAddReq msTypes.EvpnIpVrfRtRequest
+	var rtDelReq msTypes.EvpnIpVrfRtDeleteRequest
 	curRts := curVrf.Spec.RouteImportExport
 	newRts := vrf.Spec.RouteImportExport
 	if curRts == nil {
@@ -291,12 +316,14 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			}
 		}
 		if !found {
-			ert := msTypes.EvpnIpVrfRtSpec{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				RT:     utils.RTToBytes(r),
-				RTType: msTypes.EvpnRtType_EVPN_RT_EXPORT,
+			key := &msTypes.EvpnIpVrfRtKey{
+				VPCId: uid.Bytes(),
+				RT:    utils.RTToBytes(r),
 			}
+			ert := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+			}
+
 			log.Infof("adding RT to req [%v]", ert)
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 		}
@@ -329,17 +356,18 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			}
 		}
 		if !found {
-			ert := msTypes.EvpnIpVrfRtSpec{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				RT:     utils.RTToBytes(r),
-				RTType: msTypes.EvpnRtType_EVPN_RT_IMPORT,
+			key := &msTypes.EvpnIpVrfRtKey{
+				VPCId: uid.Bytes(),
+				RT:    utils.RTToBytes(r),
+			}
+			ert := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
 			}
 			log.Infof("adding RT to req [%v]", ert)
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 		}
 	}
-	eVrfRTResp, err := msc.EvpnIpVrfRtSpecCreate(ctx, &rtAddReq)
+	eVrfRTResp, err := msc.EvpnIpVrfRtCreate(ctx, &rtAddReq)
 	if err != nil {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%+v]", err, eVrfRTResp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Configuring  EVPN VRF RT | Err: %v", vrf.GetKey(), err)
@@ -350,16 +378,16 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
-	eVrfRTResp, err = msc.EvpnIpVrfRtSpecDelete(ctx, &rtDelReq)
+	eVrfRTDResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtDelReq)
 	if err != nil {
-		log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%+v]", err, eVrfRTResp)
+		log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTDResp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
+		log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTDResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTDResp.ApiStatus)
 	}
-	log.Infof("VRF RT Delete: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
+	log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTDResp.ApiStatus)
 
 	dat, _ := vrf.Marshal()
 
@@ -385,57 +413,61 @@ func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 
 	if curVrf.Spec.RouteImportExport != nil {
-		rtReq := msTypes.EvpnIpVrfRtRequest{}
+		rtReq := msTypes.EvpnIpVrfRtDeleteRequest{}
 		for _, rt := range vrf.Spec.RouteImportExport.ExportRTs {
-			ert := msTypes.EvpnIpVrfRtSpec{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				RT:     utils.RTToBytes(rt),
-				RTType: msTypes.EvpnRtType_EVPN_RT_EXPORT,
+			// Create Metaswitch related objects
+			key := &msTypes.EvpnIpVrfRtKey{
+				VPCId: uid.Bytes(),
+				RT:    utils.RTToBytes(rt),
+			}
+			ert := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
 			}
 			rtReq.Request = append(rtReq.Request, &ert)
 		}
 		for _, rt := range vrf.Spec.RouteImportExport.ImportRTs {
-			ert := msTypes.EvpnIpVrfRtSpec{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				RT:     utils.RTToBytes(rt),
-				RTType: msTypes.EvpnRtType_EVPN_RT_IMPORT,
+			key := &msTypes.EvpnIpVrfRtKey{
+				VPCId: uid.Bytes(),
+				RT:    utils.RTToBytes(rt),
+			}
+			ert := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
 			}
 			rtReq.Request = append(rtReq.Request, &ert)
 		}
-		eVrfRTResp, err := msc.EvpnIpVrfRtSpecDelete(ctx, &rtReq)
+		eVrfRTResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtReq)
 		if err != nil {
-			log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%+v]", err, eVrfRTResp)
+			log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTResp)
 			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
 		}
 		if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-			log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
+			log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTResp.ApiStatus)
 			return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %v", vrf.GetKey(), eVrfRTResp.ApiStatus)
 		}
-		log.Infof("VRF RT Delete: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
+		log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTResp.ApiStatus)
 	}
 
-	evrfReq := msTypes.EvpnIpVrfRequest{
-		Request: []*msTypes.EvpnIpVrfSpec{
+	key := &msTypes.EvpnIpVrfKey{
+		VPCId: uid.Bytes(),
+	}
+	evrfReq := msTypes.EvpnIpVrfDeleteRequest{
+		Request: []*msTypes.EvpnIpVrfKeyHandle{
 			{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				VNI:    vrf.Spec.VxLANVNI,
-				AutoRD: msTypes.EvpnCfg_EVPN_CFG_AUTO,
+				IdOrKey: &msTypes.EvpnIpVrfKeyHandle_Key{key},
 			},
 		},
 	}
-	eVrfResp, err := msc.EvpnIpVrfSpecDelete(ctx, &evrfReq)
+
+	eVrfResp, err := msc.EvpnIpVrfDelete(ctx, &evrfReq)
 	if err != nil {
 		log.Infof("EVPN VRF Spec Delete received resp (%v)[%+v]", err, eVrfResp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Err: %v", vrf.GetKey(), err)
 	}
 	if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Infof("EVPN VRF Spec Delete received resp (%v)[%v, %v]", err, eVrfResp.ApiStatus, eVrfResp.Response)
+		log.Infof("EVPN VRF Spec Delete received resp (%v)[%v]", err, eVrfResp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF | Status: %s", vrf.GetKey(), eVrfResp.ApiStatus)
 	}
-	log.Infof("VRF Delete: %s: got response [%v/%v]", vrf.Name, eVrfResp.ApiStatus, eVrfResp.Response)
+	log.Infof("VRF Delete: %s: got response [%v]", vrf.Name, eVrfResp.ApiStatus)
 
 	vpcDelReq := &halapi.VPCDeleteRequest{
 		Id: [][]byte{uid.Bytes()},

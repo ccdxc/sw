@@ -63,20 +63,18 @@ class Client {
     }
 
     void peerGet() {
-        pds::BGPPeerRequest req;
+        pds::BGPPeerGetRequest req;
         pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
-        auto ent = req.add_request();
+        auto keyh = req.add_request();
+        auto ent = keyh->mutable_key();
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_id(std::to_string(11));
-        ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_remoteasn(1);
 
         grpc::Status status = stub_->BGPPeerGet(&context, req, &res);
 
@@ -104,20 +102,18 @@ class Client {
     }
 
     void peerDelete() {
-        pds::BGPPeerRequest req;
-        pds::BGPPeerResponse res;
+        pds::BGPPeerDeleteRequest req;
+        pds::BGPPeerDeleteResponse res;
         grpc::ClientContext context;
 
-        auto ent = req.add_request();
+        auto keyh = req.add_request();
+        auto ent = keyh->mutable_key();
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_id(std::to_string(1));
-        ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_remoteasn(1);
         grpc::Status status = stub_->BGPPeerDelete(&context, req, &res);
 
         if (status.ok()) {
@@ -129,7 +125,7 @@ class Client {
     }
 
     void peerGetAll() {
-        pds::BGPPeerRequest req;
+        pds::BGPPeerGetRequest req;
         pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
@@ -162,7 +158,7 @@ class Client {
 };
 
 int main(int argc, char** argv) {
-    Client client(grpc::CreateChannel("localhost:50057",
+    Client client(grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials()));
 
 

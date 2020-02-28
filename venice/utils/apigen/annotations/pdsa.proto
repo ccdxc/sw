@@ -10,6 +10,7 @@ message GlobalOpts {
     string FillFn          = 3;
     string ActionFn        = 4;
     bool   UpdateForDelete = 5;
+    string SpecMsg         = 6;
 }
 
 // Venice Option extensions applicable to messages
@@ -31,9 +32,13 @@ message PdsaFields {
   bool   IgnoreIfEmpty          = 10;
   bool   IsZeroIPValid          = 11;
   string SetKeyOidAddrIndex     = 12;
-  string SetKeyOidAddrTypeIndex = 13;
-  string AddrTypeFieldName      = 14;
-  string AddrLenFieldName       = 15;
+  string GetKeyOidAddrIndex     = 13;
+  string SetKeyOidAddrTypeIndex = 14;
+  string GetKeyOidAddrTypeIndex = 15;
+  string AddrTypeFieldName      = 16;
+  string AddrLenFieldName       = 17;
+  string KeysMsg                = 18;
+  bool   IsInternalField        = 19;
 }
 
 // PDSA Option extensions applicable to Fields

@@ -203,7 +203,7 @@ static void create_bgp_global_proto_grpc () {
 
 static void create_evpn_evi_proto_grpc () {
     EvpnEviRequest  request;
-    EvpnResponse    response;
+    EvpnEviResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -225,7 +225,7 @@ static void create_evpn_evi_proto_grpc () {
     proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
 
     printf ("Pushing EVPN Evi proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -235,17 +235,17 @@ static void create_evpn_evi_proto_grpc () {
 }
 
 static void delete_evpn_evi_proto_grpc () {
-    EvpnEviRequest  request;
-    EvpnResponse    response;
+    EvpnEviDeleteRequest  request;
+    EvpnEviDeleteResponse response;
     ClientContext   context;
     Status          ret_status;
 
-    auto proto_spec = request.add_request ();
-    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi UUID is same as subnet UUID
+    auto keyh = request.add_request ();
+    auto proto_spec = keyh->mutable_key();
     proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
 
     printf ("Pushing EVPN Evi delete proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviSpecDelete(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -294,7 +294,7 @@ static void create_route_proto_grpc (bool second=false) {
 
 static void create_evpn_evi_rt_proto_grpc () {
     EvpnEviRtRequest    request;
-    EvpnResponse        response;
+    EvpnEviRtResponse   response;
     ClientContext       context;
     Status              ret_status;
 
@@ -305,7 +305,7 @@ static void create_evpn_evi_rt_proto_grpc () {
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN Evi RT proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviRtSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviRtCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -315,18 +315,16 @@ static void create_evpn_evi_rt_proto_grpc () {
 }
 
 static void delete_evpn_evi_rt_proto_grpc () {
-    EvpnEviRtRequest    request;
-    EvpnResponse        response;
-    ClientContext       context;
-    Status              ret_status;
+    EvpnEviRtDeleteRequest  request;
+    EvpnEviRtDeleteResponse response;
+    ClientContext           context;
+    Status                  ret_status;
 
     auto proto_spec = request.add_request ();
     proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
-    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
 
     printf ("Pushing EVPN Evi RT Delete proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviRtSpecDelete(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviRtDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -518,12 +516,13 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
 }
 
 static void delete_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
-    BGPPeerRequest  request;
-    BGPPeerResponse response;
-    ClientContext   context;
-    Status          ret_status;
+    BGPPeerDeleteRequest  request;
+    BGPPeerDeleteResponse response;
+    ClientContext         context;
+    Status                ret_status;
 
-    auto proto_spec = request.add_request();
+    auto keyh= request.add_request();
+    auto proto_spec = keyh->mutable_key();
     auto peeraddr = proto_spec->mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -537,7 +536,6 @@ static void delete_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo && g_node_id !=3) {
@@ -686,7 +684,7 @@ static void create_vpc_proto_grpc () {
 
 static void create_evpn_ip_vrf_proto_grpc () {
     EvpnIpVrfRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -696,7 +694,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
     proto_spec->set_vni(200);
 
     printf ("Pushing EVPN IP VRF proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -707,7 +705,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
 
 static void create_evpn_ip_vrf_rt_proto_grpc () {
     EvpnIpVrfRtRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfRtResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -719,7 +717,7 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN IP VRF RT proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfRtSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfRtCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -748,17 +746,16 @@ static void delete_vpc_proto_grpc () {
 }
 
 static void delete_evpn_ip_vrf_proto_grpc () {
-    EvpnIpVrfRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfDeleteRequest request;
+    EvpnIpVrfDeleteResponse response;
     ClientContext   context;
     Status          ret_status;
 
     auto proto_spec = request.add_request();
     proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
 
     printf ("Pushing EVPN IP VRF Delete proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfSpecDelete(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -768,20 +765,19 @@ static void delete_evpn_ip_vrf_proto_grpc () {
 }
 
 static void delete_evpn_ip_vrf_rt_proto_grpc () {
-    EvpnIpVrfRtRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfRtDeleteRequest request;
+    EvpnIpVrfRtDeleteResponse response;
     ClientContext   context;
     Status          ret_status;
 
-    auto proto_spec = request.add_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    auto keyh = request.add_request();
+    auto proto_spec = keyh->mutable_key();
     proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     proto_spec->set_rt(rt,8);
-    proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN IP VRF RT Delete proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfRtSpecDelete(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfRtDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -791,7 +787,7 @@ static void delete_evpn_ip_vrf_rt_proto_grpc () {
 }
 
 static void get_peer_status_all() {
-    BGPPeerRequest       request;
+    BGPPeerGetRequest       request;
     BGPPeerGetResponse   response;
     ClientContext        context;
     Status               ret_status;
@@ -804,13 +800,6 @@ static void get_peer_status_all() {
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  VRF Id               : %d\n", 1); // TODO: how to convert UUID to VrfID.. auto-gen wont support fillFn in get
-            auto paddr = resp.localaddr().v4addr();
-            struct in_addr ip_addr;
-            ip_addr.s_addr = paddr;
-            printf ("  Local Address        : %s\n", inet_ntoa(ip_addr));
-            paddr = resp.peeraddr().v4addr();
-            ip_addr.s_addr = paddr;
-            printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());
             uint8_t ler[2];
@@ -830,16 +819,16 @@ static void get_peer_status_all() {
 }
 
 static void get_evpn_mac_ip_all () {
-    EvpnMacIpSpecRequest    request;
+    EvpnMacIpGetRequest request;
     EvpnMacIpGetResponse    response;
     ClientContext           context;
     Status                  ret_status;
 
-    ret_status = g_evpn_stub_->EvpnMacIpSpecGet(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnMacIpGet(&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of EVPN MAC IP Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
-            auto resp = response.response(i).spec();
+            auto resp = response.response(i).status();
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  Source       : %s\n", (resp.source() == 2) ? "Remote" : "Local");

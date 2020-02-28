@@ -6,6 +6,7 @@
 syntax = "proto3";
 package pds;
 
+import "gogo.proto";
 import "pdsa.proto";
 import "meta/meta.proto";
 import "types.proto";
@@ -13,44 +14,51 @@ import "types.proto";
 // Evpn service definition
 service EvpnSvc
 {
-  rpc EvpnEviSpecCreate (EvpnEviRequest) returns (EvpnResponse) {}
-  rpc EvpnEviSpecUpdate (EvpnEviRequest) returns (EvpnResponse) {}
-  rpc EvpnEviSpecDelete (EvpnEviRequest) returns (EvpnResponse) {}
-  rpc EvpnEviSpecGet (EvpnEviRequest) returns (EvpnEviGetResponse) {}
-  rpc EvpnEviRtSpecCreate (EvpnEviRtRequest) returns (EvpnResponse) {}
-  rpc EvpnEviRtSpecUpdate (EvpnEviRtRequest) returns (EvpnResponse) {}
-  rpc EvpnEviRtSpecDelete (EvpnEviRtRequest) returns (EvpnResponse) {}
-  rpc EvpnEviRtSpecGet (EvpnEviRtRequest) returns (EvpnEviRtGetResponse) {}
-  rpc EvpnIpVrfSpecCreate (EvpnIpVrfRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfSpecUpdate (EvpnIpVrfRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfSpecDelete (EvpnIpVrfRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfSpecGet (EvpnIpVrfRequest) returns (EvpnIpVrfGetResponse) {}
-  rpc EvpnIpVrfRtSpecCreate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfRtSpecUpdate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfRtSpecDelete (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfRtSpecGet (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtGetResponse) {}
-  rpc EvpnMacIpSpecGet  (EvpnMacIpSpecRequest) returns (EvpnMacIpGetResponse) {}
+  rpc EvpnEviCreate (EvpnEviRequest) returns (EvpnEviResponse) {}
+  rpc EvpnEviUpdate (EvpnEviRequest) returns (EvpnEviResponse) {}
+  rpc EvpnEviDelete (EvpnEviDeleteRequest) returns (EvpnEviDeleteResponse) {}
+  rpc EvpnEviGet (EvpnEviGetRequest) returns (EvpnEviGetResponse) {}
+  rpc EvpnEviRtCreate (EvpnEviRtRequest) returns (EvpnEviRtResponse) {}
+  rpc EvpnEviRtUpdate (EvpnEviRtRequest) returns (EvpnEviRtResponse) {}
+  rpc EvpnEviRtDelete (EvpnEviRtDeleteRequest) returns (EvpnEviRtDeleteResponse) {}
+  rpc EvpnEviRtGet (EvpnEviRtGetRequest) returns (EvpnEviRtGetResponse) {}
+  rpc EvpnIpVrfCreate (EvpnIpVrfRequest) returns (EvpnIpVrfResponse) {}
+  rpc EvpnIpVrfUpdate (EvpnIpVrfRequest) returns (EvpnIpVrfResponse) {}
+  rpc EvpnIpVrfDelete (EvpnIpVrfDeleteRequest) returns (EvpnIpVrfDeleteResponse) {}
+  rpc EvpnIpVrfGet (EvpnIpVrfGetRequest) returns (EvpnIpVrfGetResponse) {}
+  rpc EvpnIpVrfRtCreate (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtResponse) {}
+  rpc EvpnIpVrfRtUpdate (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtResponse) {}
+  rpc EvpnIpVrfRtDelete (EvpnIpVrfRtDeleteRequest) returns (EvpnIpVrfRtDeleteResponse) {}
+  rpc EvpnIpVrfRtGet (EvpnIpVrfRtGetRequest) returns (EvpnIpVrfRtGetResponse) {}
+  rpc EvpnMacIpGet  (EvpnMacIpGetRequest) returns (EvpnMacIpGetResponse) {}
 }
 
-// EVPN Configured or Auto Values
+// EVPN configured or auto values
 enum EvpnCfg {
   EVPN_CFG_INVALID = 0;
   EVPN_CFG_MANUAL  = 2;
   EVPN_CFG_AUTO    = 3;
 }
 
+// encapsulation
 enum EvpnEncaps {
   EVPN_ENCAP_INVALID = 0;
   EVPN_ENCAP_MPLS    = 1;
   EVPN_ENCAP_VXLAN   = 2;
 }
 
+// route-target type
 enum EvpnRtType {
   EVPN_RT_INVALID         = 0;
   EVPN_RT_IMPORT          = 1;
   EVPN_RT_EXPORT          = 2;
   EVPN_RT_IMPORT_EXPORT   = 3;
   EVPN_RT_NONE            = 4;
+}
+
+// EvpnEvi create and update request
+message EvpnEviRequest {
+  repeated EvpnEviSpec Request = 1;
 }
 
 // EVPN EVI configuration
@@ -66,16 +74,87 @@ message EvpnEviSpec {
     FillFn: "evpn_evi_get_fill_func"
   };
 
-  bytes       Id       = 1; // spec UUID key 
-  bytes       SubnetId = 2; // reference to subnet spec
-  EvpnCfg     AutoRD   = 3 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
-  bytes       RD       = 4 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
-  EvpnCfg     AutoRT   = 5 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}];
-  EvpnRtType  RTType   = 6 [(venice.pdsaFields) = {Field:"auto_rt_type"}];
-  EvpnEncaps  Encap    = 7 [(venice.pdsaFields) = {Field:"encapsulation"}];
+  // unique key/identifier of spec
+  bytes      Id       = 1;
+  // reference to subnet spec
+  bytes      SubnetId = 2;
+  // manual or auto route-distinguisher 
+  EvpnCfg    AutoRD   = 3 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
+  // route-distinguisher, in case of manual configuration
+  bytes      RD       = 4 [(venice.pdsaFields) = {Field:"cfg_rd"}];
+  // manual or auto route-target. in case of manual route-target, 
+  // route-targets should be configured with EvpnEviRtSpec
+  EvpnCfg    AutoRT   = 5 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}];
+  // route-target type, applicable to auto route-targets only
+  EvpnRtType RTType   = 6 [(venice.pdsaFields) = {Field:"auto_rt_type"}];
+  // data place encapsulation
+  EvpnEncaps Encap    = 7 [(venice.pdsaFields) = {Field:"encapsulation"}];
 
   // Internal only
-  uint32      EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  uint32     EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", IsInternalField: true}];
+}
+
+// operational status of EVPN EVI, if any
+message EvpnEviStatus {
+}
+
+// EVPN EVI object
+message EvpnEvi {
+  EvpnEviSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnEviStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN EVI create and update response
+message EvpnEviResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnEviStatus   Response  = 2;
+}
+
+// EVPN EVI key parameters
+message EvpnEviKey {
+    // reference to subnet spec
+  bytes SubnetId = 1;
+}
+
+// EVPN EVI key handle for get and delete 
+message EvpnEviKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_EVPN_EVI_OID_LEN",
+    Mib:     "evpnEviTable",
+    FillFn:  "evpn_evi_set_fill_func_keyhandle"
+    SpecMsg: "EvpnEviSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_OID_LEN",
+    Mib:    "evpnEviTable",
+    FillFn: "evpn_evi_get_fill_func_keyhandle"
+  };
+  //unique identifier or key parameters
+  oneof id_or_key {
+    bytes      Id  = 1;
+    EvpnEviKey Key = 2;
+  }
+}
+
+// EVPN EVI delete request
+message EvpnEviDeleteRequest {
+  repeated EvpnEviKeyHandle Request = 1;
+}
+
+// EVPN EVI delete response
+message EvpnEviDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN EVI get request
+message EvpnEviGetRequest {
+  repeated EvpnEviKeyHandle Request = 1;
+}
+
+// EVPN EVI get response
+message EvpnEviGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated EvpnEvi Response  = 2;
 }
 
 // EVPN IP VRF configuration
@@ -98,7 +177,80 @@ message EvpnIpVrfSpec {
   bytes   RD     = 5 [(venice.pdsaFields) = {Field:"route_distinguisher"}];
 
   // Internal only
-  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", IsInternalField: true}];
+}
+
+// operational status of EVPN IP VRF, if any
+message EvpnIpVrfStatus {
+}
+
+// EVPN IP VRF object
+message EvpnIpVrf {
+  EvpnIpVrfSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnIpVrfStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EvpnIPVrf create and update request
+message EvpnIpVrfRequest {
+  repeated EvpnIpVrfSpec Request = 1;
+}
+
+// EVPN IP VRF create and update response
+message EvpnIpVrfResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnIpVrfStatus Response  = 2;
+}
+
+// EVPN IP VRF key parameters
+message EvpnIpVrfKey {
+  // reference to vpc spec
+  bytes VPCId = 1;
+}
+
+// EVPN IP VRF key handle
+message EvpnIpVrfKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_EVPN_IP_VRF_OID_LEN",
+    Mib:     "evpnIpVrfTable",
+    FillFn:  "evpn_ip_vrf_set_fill_func_keyhandle"
+    SpecMsg: "EvpnIpVrfSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
+    Mib:    "evpnIpVrfTable",
+    FillFn: "evpn_ip_vrf_get_fill_func_keyhandle"
+  };
+  //unique identifier or key parameters
+  oneof id_or_key {
+    bytes        Id  = 1;
+    EvpnIpVrfKey Key = 2;
+  }
+}
+
+// EVPN IP VRF delete request
+message EvpnIpVrfDeleteRequest {
+  repeated EvpnIpVrfKeyHandle Request = 1;
+}
+
+// EVPN IP VRF delete response
+message EvpnIpVrfDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN IP VRF get request
+message EvpnIpVrfGetRequest {
+  repeated EvpnIpVrfKeyHandle Request = 1;
+}
+
+// EVPN IP VRF get response
+message EvpnIpVrfGetResponse {
+  types.ApiStatus   ApiStatus = 1;
+  repeated EvpnIpVrf Response  = 2;
+}
+
+//EvpnEviRtSpec create and update request
+message EvpnEviRtRequest {
+  repeated EvpnEviRtSpec Request = 1;
 }
 
 // EVPN EVI RT Configuration
@@ -120,7 +272,86 @@ message EvpnEviRtSpec {
   EvpnRtType RTType   = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only
-  uint32     EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  uint32     EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", IsInternalField: true}];
+}
+
+// operational status of EVPN EVI RT, if any
+message EvpnEviRtStatus {
+}
+
+// EVPN EVI RT object
+message EvpnEviRt {
+  EvpnEviRtSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnEviRtStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN EVI RT create and update response
+message EvpnEviRtResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnEviRtStatus   Response  = 2;
+}
+
+// EVPN EVI RT delete response
+message EvpnDeleteResponse {
+  types.ApiStatus  ApiStatus = 1;
+}
+
+// EVPN EVI RT key
+message EvpnEviRtKey {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
+    Mib:    "evpnEviRtTable",
+    FillFn: "evpn_evi_rt_set_fill_func"
+  };
+  // reference to subnet spec
+  bytes SubnetId = 1;
+  bytes RT       = 2;
+}
+
+// EVPN EVI RT Key Handle
+message EvpnEviRtKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_EVPN_EVI_RT_OID_LEN",
+    Mib:     "evpnEviRtTable",
+    FillFn:  "evpn_evi_rt_set_fill_func_keyhandle"
+    SpecMsg: "EvpnEviRtSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
+    Mib:    "evpnEviRtTable",
+    FillFn: "evpn_evi_rt_get_fill_func_keyhandle"
+  };
+  //unique identifier or key parameters
+  oneof id_or_key {
+    bytes        Id  = 1;
+    EvpnEviRtKey Key = 2;
+  }
+}
+
+// EVPN EVI RT delete request
+message EvpnEviRtDeleteRequest {
+  repeated EvpnEviRtKeyHandle Request = 1;
+}
+
+// EVPN EVI RT delete response
+message EvpnEviRtDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN EVI RT get request
+message EvpnEviRtGetRequest {
+  repeated EvpnEviRtKeyHandle Request = 1;
+}
+
+// EVPN EVI RT get response
+message EvpnEviRtGetResponse {
+  types.ApiStatus   ApiStatus = 1;
+  repeated EvpnEviRt Response  = 2;
+}
+
+// EVPN EVI RT create/update request
+message EvpnIpVrfRtRequest {
+  repeated EvpnIpVrfRtSpec Request = 1;
 }
 
 // EVPN IP VRF RT Configuration
@@ -142,112 +373,129 @@ message EvpnIpVrfRtSpec {
   EvpnRtType RTType = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only
-  string    VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  string    VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX", IsInternalField: true}];
 }
 
-// EvpnEvi create and update request
-message EvpnEviRequest {
-  // requests
-  repeated EvpnEviSpec  Request = 1;
+// operational status of EVPN IP VRF RT, if any
+message EvpnIpVrfRtStatus {
 }
 
-// EvpnIPVrf create and update request
-message EvpnIpVrfRequest {
-  // requests
-  repeated EvpnIpVrfSpec Request = 1;
-}
-
-//EvpnEviRtSpec create and update request
-message EvpnEviRtRequest {
-  // requests
-  repeated EvpnEviRtSpec Request = 1;
-}
-
-message EvpnIpVrfRtRequest {
-  // requests
-  repeated EvpnIpVrfRtSpec Request = 1;
-}
-
-// operational status of EVPN, if any
-message EvpnStatus {
-}
-
-// EVPN specs create and update response
-message EvpnResponse {
-  types.ApiStatus ApiStatus = 1;
-  EvpnStatus Response       = 2;
-}
-
-message EvpnEvi {
-  EvpnEviSpec Spec = 1;
-}
-
-// EvpnEviSpec get response
-message EvpnEviGetResponse {
-  types.ApiStatus  ApiStatus = 1;
-  repeated EvpnEvi Response  = 2;
-}
-
-message EvpnIpVrf {
-  EvpnIpVrfSpec Spec = 1;
-}
-
-// EvpnIpVrfSpec get response
-message EvpnIpVrfGetResponse {
-  types.ApiStatus    ApiStatus   = 1;
-  repeated EvpnIpVrf Response    = 2;
-}
-
-message EvpnEviRt {
-  EvpnEviRtSpec Spec = 1;
-}
-
-// EvpnEviRtSpec get response
-message EvpnEviRtGetResponse {
-  types.ApiStatus    ApiStatus   = 1;
-  repeated EvpnEviRt Response    = 2;
-}
-
+// EVPN IP VRF RT object
 message EvpnIpVrfRt {
-  EvpnIpVrfRtSpec Spec = 1;
+  EvpnIpVrfRtSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnIpVrfRtStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
-// EvpnIpVrfRtSpec get response
-message EvpnIpVrfRtGetResponse {
-  types.ApiStatus      ApiStatus   = 1;
-  repeated EvpnIpVrfRt Response    = 2;
+// EVPN IP VRF RT create and update response
+message EvpnIpVrfRtResponse {
+  types.ApiStatus   ApiStatus = 1;
+  EvpnIpVrfRtStatus Response  = 2;
 }
+
+// EVPN IP VRF RT key parameters
+message EvpnIpVrfRtKey {
+  // reference to vpc spec
+  bytes VPCId = 1;
+  bytes RT    = 2;
+}
+
+// EVPN IP VRF RT key handle
+message EvpnIpVrfRtKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_EVPN_IP_VRF_RT_OID_LEN",
+    Mib:     "evpnIpVrfRtTable",
+    FillFn:  "evpn_ip_vrf_rt_set_fill_func_keyhandle",
+    SpecMsg: "EvpnIpVrfRtSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_EVPN_IP_VRF_RT_OID_LEN",
+    Mib:    "evpnIpVrfRtTable",
+    FillFn: "evpn_ip_vrf_rt_get_fill_func_keyhandle"
+  };
+  //unique identifier or key parameters
+  oneof id_or_key {
+    bytes          Id  = 1;
+    EvpnIpVrfRtKey Key = 2;
+  }
+}
+
+// EVPN IP VRF RT delete request
+message EvpnIpVrfRtDeleteRequest {
+  repeated EvpnIpVrfRtKeyHandle Request = 1;
+}
+
+// EVPN IP VRF RT delete response
+message EvpnIpVrfRtDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN IP VRF RT get request
+message EvpnIpVrfRtGetRequest {
+  repeated EvpnIpVrfRtKeyHandle Request = 1;
+}
+
+// EVPN IP VRF RT get response
+message EvpnIpVrfRtGetResponse {
+  types.ApiStatus     ApiStatus = 1;
+  repeated EvpnIpVrfRt Response  = 2;
+}
+
+// EVPN Source Type
 enum EvpnSource {
     EVPN_SOURCE_NONE    = 0;
     EVPN_SOURCE_LOCAL   = 1;
     EVPN_SOURCE_REMOTE  = 2;
 }
 
-// EVPN MAC IP Table Get
-message EvpnMacIpSpec {
+// EVPN MAC IP Table entries
+message EvpnMacIpStatus {
   option (venice.pdsaGetGlobOpts) = {
     OidLen: "AMB_EVPN_MAC_IP_OID_LEN",
     Mib:    "evpnMacIpTable"
     FillFn: "evpn_mac_ip_get_fill_func"
   };
 
-  uint32            EVIId           = 1 [(venice.pdsaFields) = {Field:"evi_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
-  uint32            EthTagID        = 2 [(venice.pdsaFields) = {Field:"ethernet_tag_id", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
-  bytes             MACAddress      = 3 [(venice.pdsaFields) = {Field:"mac_address", GetKeyOidIndex: "AMB_EVPN_MAC_IP_MAC_ADDR_INDEX"}];
-  types.IPAddress   IPAddress       = 4 [(venice.pdsaFields) = {Field:"ip_address", SetKeyOidAddrIndex: "AMB_EVPN_MAC_IP_IP_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_EVPN_MAC_IP_ADDR_TYPE_INDEX"}];
-  uint32            PathID          = 5 [(venice.pdsaFields) = {Field:"path_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_PATH_IX_INDEX"}];
-  EvpnSource        Source          = 6 [(venice.pdsaFields) = {Field:"source"}];
-  types.IPAddress   NHAddress       = 7 [(venice.pdsaFields) = {Field:"bgp_nh_addr"}];
-  uint32            LocalIfId       = 8 [(venice.pdsaFields) = {Field:"local_interface"}];
+  uint32          EVIId      = 1 [(venice.pdsaFields) = {Field:"evi_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
+  uint32          EthTagID   = 2 [(venice.pdsaFields) = {Field:"ethernet_tag_id", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
+  bytes           MACAddress = 3 [(venice.pdsaFields) = {Field:"mac_address", GetKeyOidIndex: "AMB_EVPN_MAC_IP_MAC_ADDR_INDEX"}];
+  types.IPAddress IPAddress  = 4 [(venice.pdsaFields) = {Field:"ip_address", GetKeyOidAddrIndex: "AMB_EVPN_MAC_IP_IP_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_EVPN_MAC_IP_ADDR_TYPE_INDEX"}];
+  uint32          PathID     = 5 [(venice.pdsaFields) = {Field:"path_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_PATH_IX_INDEX"}];
+  EvpnSource      Source     = 6 [(venice.pdsaFields) = {Field:"source"}];
+  types.IPAddress NHAddress  = 7 [(venice.pdsaFields) = {Field:"bgp_nh_addr"}];
+  uint32          LocalIfId  = 8 [(venice.pdsaFields) = {Field:"local_interface"}];
 }
 
-message EvpnMacIpSpecRequest {
-  // requests
-  repeated EvpnMacIpSpec Request = 1;
+// EVPN MAC IP Table Key
+message EvpnMacIpKey {
+  uint32          EVIId      = 1;
+  uint32          EthTagID   = 2;
+  bytes           MACAddress = 3;
+  types.IPAddress IPAddress  = 4;
+  uint32          PathID     = 5;
 }
 
+// EVPN MAC IP Table key handle for get and delete
+message EvpnMacIpKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_EVPN_MAC_IP_OID_LEN",
+    Mib:     "evpnMacIpTable"
+    FillFn:  "evpn_mac_ip_key_get_fill_func"
+    SpecMsg: "EvpnMacIpStatus"
+  };
+  oneof id_or_key {
+    bytes        Id  = 1;
+    EvpnMacIpKey Key = 2;
+  }
+}
+
+// EVPN MAC IP get request
+message EvpnMacIpGetRequest {
+  repeated EvpnMacIpKeyHandle Request = 1;
+}
+
+// EVPN MAC IP
 message EvpnMacIp {
-  EvpnMacIpSpec Spec = 1;
+  EvpnMacIpStatus Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
 // EVPN MAC IP get response

@@ -237,8 +237,6 @@ type ShadowBGPPeerStatus struct {
 	Id            string
 	LastErrorRcvd string
 	LastErrorSent string
-	LocalAddr     string
-	PeerAddr      string
 	Status        string
 	PrevStatus    string
 	*mstypes.BGPPeerStatus
@@ -249,8 +247,6 @@ func newBGPPeerStatus(in *mstypes.BGPPeerStatus) ShadowBGPPeerStatus {
 		Id:            "",
 		LastErrorRcvd: string(in.LastErrorRcvd),
 		LastErrorSent: string(in.LastErrorSent),
-		LocalAddr:     PdsIPToString(in.LocalAddr),
-		PeerAddr:      PdsIPToString(in.PeerAddr),
 		Status:        in.Status.String(),
 		PrevStatus:    in.PrevStatus.String(),
 		BGPPeerStatus: in,

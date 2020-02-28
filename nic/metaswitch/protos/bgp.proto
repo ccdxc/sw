@@ -31,17 +31,17 @@ import "common.proto";
 service BGPSvc {
   rpc BGPCreate (BGPRequest) returns (BGPResponse) {}
   rpc BGPUpdate (BGPRequest) returns (BGPResponse) {}
-  rpc BGPDelete (BGPRequest) returns (BGPResponse) {}
-  rpc BGPGet (BGPRequest) returns (BGPGetResponse) {}
+  rpc BGPDelete (BGPDeleteRequest) returns (BGPDeleteResponse) {}
+  rpc BGPGet (BGPGetRequest) returns (BGPGetResponse) {}
   rpc BGPPeerCreate (BGPPeerRequest) returns (BGPPeerResponse) {}
   rpc BGPPeerUpdate (BGPPeerRequest) returns (BGPPeerResponse) {}
-  rpc BGPPeerDelete (BGPPeerRequest) returns (BGPPeerResponse) {}
-  rpc BGPPeerGet (BGPPeerRequest) returns (BGPPeerGetResponse) {}
+  rpc BGPPeerDelete (BGPPeerDeleteRequest) returns (BGPPeerDeleteResponse) {}
+  rpc BGPPeerGet (BGPPeerGetRequest) returns (BGPPeerGetResponse) {}
   rpc BGPPeerAfCreate (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
   rpc BGPPeerAfUpdate (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
-  rpc BGPPeerAfDelete (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
-  rpc BGPPeerAfGet (BGPPeerAfRequest) returns (BGPPeerAfGetResponse) {}
-  rpc BGPNLRIPrefixGet (BGPNLRIPrefixRequest) returns (BGPNLRIPrefixGetResponse) {}
+  rpc BGPPeerAfDelete (BGPPeerAfDeleteRequest) returns (BGPPeerAfDeleteResponse) {}
+  rpc BGPPeerAfGet (BGPPeerAfGetRequest) returns (BGPPeerAfGetResponse) {}
+  rpc BGPNLRIPrefixGet (BGPNLRIPrefixGetRequest) returns (BGPNLRIPrefixGetResponse) {}
 }
 
 // BGP address family identifier
@@ -83,57 +83,85 @@ enum BGPPeerState {
   BGP_PEER_STATE_ESTABLISHED = 6;
 }
 
-
 // BGP configuration
 message BGPSpec {
   option (venice.pdsaSetGlobOpts) = {
-      OidLen: "AMB_BGP_RM_OID_LEN",
-      Mib:    "bgpRmEntTable"
-      FillFn: "bgp_rm_ent_set_fill_func"
-      UpdateForDelete: true
+    OidLen:          "AMB_BGP_RM_OID_LEN",
+    Mib:             "bgpRmEntTable",
+    FillFn:          "bgp_rm_ent_set_fill_func",
+    UpdateForDelete: true,
   };
   option (venice.pdsaGetGlobOpts) = {
-      OidLen: "AMB_BGP_RM_OID_LEN",
-      Mib:    "bgpRmEntTable",
-      FillFn: "bgp_rm_ent_get_fill_func"
+    OidLen: "AMB_BGP_RM_OID_LEN",
+    Mib:    "bgpRmEntTable",
+    FillFn: "bgp_rm_ent_get_fill_func",
   };
   // unique key/identifier of BGP config
-  bytes   Id        = 1;
+  bytes      Id        = 1;
   // the local autonomous system number
-  uint32  LocalASN  = 2 [(venice.pdsaFields) = {Field: "local_as"}];
+  uint32     LocalASN  = 2 [(venice.pdsaFields) = {Field: "local_as"}];
   // router ID for this bgp instance
-  fixed32 RouterId  = 3 [(venice.pdsaFields) = {Field: "local_identifier"}];
+  fixed32    RouterId  = 3 [(venice.pdsaFields) = {Field: "local_identifier"}];
   // cluster ID of the local router. if not configured, router ID will be used
   // as cluster ID
-  fixed32 ClusterId = 4 [(venice.pdsaFields) = {Field: "cluster_id"}];
+  fixed32    ClusterId = 4 [(venice.pdsaFields) = {Field: "cluster_id"}];
 
   // internal-only fields
-  AdminState State  = 1000 [(venice.pdsaFields) = {Field: "admin_status"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  AdminState State     = 1000 [(venice.pdsaFields) = {Field: "admin_status", IsInternalField: true}];
 }
 
-// operational status of BGP spec, if any
+// operational status of BGP
 message BGPStatus {
 }
 
 // BGP object
 message BGP {
-  BGPSpec   Spec   = 1;
-  BGPStatus Status = 2;
+  BGPSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  BGPStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
-// BGP spec create and update request
+// BGP create and update request
 message BGPRequest {
-  // requests
   BGPSpec Request = 1;
 }
 
-// BGP spec create and update response
+// BGP create and update response
 message BGPResponse {
   types.ApiStatus ApiStatus = 1;
   BGPStatus       Response  = 2;
 }
 
-// BGP spec get response
+// BGP KeyHandle used in Get/Delete
+message BGPKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:          "AMB_BGP_RM_OID_LEN",
+    Mib:             "bgpRmEntTable"
+    UpdateForDelete: true
+    SpecMsg:         "BGPSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_BGP_RM_OID_LEN",
+    Mib:    "bgpRmEntTable",
+  };
+  bytes Id = 1;
+}
+
+// BGP delete request
+message BGPDeleteRequest {
+  BGPKeyHandle Request = 1;
+}
+
+// BGP delete response
+message BGPDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// BGP get request
+message BGPGetRequest {
+  BGPKeyHandle Request = 1;
+}
+
+// BGP get response
 message BGPGetResponse {
   types.ApiStatus ApiStatus = 1;
   BGP             Response  = 2;
@@ -142,14 +170,14 @@ message BGPGetResponse {
 // BGP peer configurations
 message BGPPeerSpec {
   option (venice.pdsaSetGlobOpts) = {
-      OidLen: "AMB_BGP_PER_OID_LEN",
-      Mib:    "bgpPeerTable",
-      FillFn: "bgp_peer_set_fill_func"
+    OidLen: "AMB_BGP_PER_OID_LEN",
+    Mib:    "bgpPeerTable",
+    FillFn: "bgp_peer_set_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
-      OidLen: "AMB_BGP_PER_OID_LEN",
-      Mib:    "bgpPeerTable",
-      FillFn: "bgp_peer_get_fill_func"
+    OidLen: "AMB_BGP_PER_OID_LEN",
+    Mib:    "bgpPeerTable",
+    FillFn: "bgp_peer_get_fill_func"
   };
   // unique key/identifier of peer
   bytes           Id           = 1;
@@ -159,9 +187,9 @@ message BGPPeerSpec {
   AdminState      State        = 2 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP local IP address. control plane chooses the local IP address of the
   // session if an all 0 IP address is provided
-  types.IPAddress LocalAddr    = 3 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_LOCAL_ADD_TYP_INDEX"}];
+  types.IPAddress LocalAddr    = 3 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_LOCAL_ADD_TYP_INDEX", GetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
   // BGP peer IP address
-  types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_REMOTE_ADD_TYP_IX"}];
+  types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_REMOTE_ADD_TYP_IX", GetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
   // remote 4-byte AS number
   uint32          RemoteASN    = 5 [(venice.pdsaFields) = {Field: "remote_as"}];
   // send regular community attributes to neighbor
@@ -183,32 +211,25 @@ message BGPPeerSpec {
 // BGP peer status
 message BGPPeerStatus {
   option (venice.pdsaGetGlobOpts) = {
-      OidLen: "AMB_BGP_PRST_OID_LEN",
-      Mib:    "bgpPeerStatusTable",
-      FillFn: "bgp_peer_status_get_fill_func"
+    OidLen:  "AMB_BGP_PRST_OID_LEN",
+    Mib:     "bgpPeerStatusTable",
+    FillFn:  "bgp_peer_status_get_fill_func",
+    SpecMsg: "BGPPeerSpec"
   };
-  // unique key/identifier of peer
-  bytes           Id            = 1;
   // BGP session status
-  BGPPeerState    Status        = 2 [(venice.pdsaFields) = {Field: "state"}];
+  BGPPeerState Status        = 1 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session previous status
-  BGPPeerState    PrevStatus    = 3 [(venice.pdsaFields) = {Field: "last_state"}];
+  BGPPeerState PrevStatus    = 2 [(venice.pdsaFields) = {Field: "last_state"}];
   // last error received
-  bytes           LastErrorRcvd = 4 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes        LastErrorRcvd = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last error sent
-  bytes           LastErrorSent = 5 [(venice.pdsaFields) = {Field: "last_error_sent"}];
-
-  // internal only
-  // BGP local IP address
-  types.IPAddress LocalAddr     = 1000 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
-  // BGP peer IP address
-  types.IPAddress PeerAddr      = 1001 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
+  bytes        LastErrorSent = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
 }
 
 // BGP peer object
 message BGPPeer {
-  BGPPeerSpec   Spec   = 1;
-  BGPPeerStatus Status = 2;
+  BGPPeerSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  BGPPeerStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
 // BGP peer create and update response
@@ -218,7 +239,6 @@ message BGPPeerResponse {
 
 // BGP peer create and update request
 message BGPPeerRequest {
-  // requests
   repeated BGPPeerSpec Request = 1;
 }
 
@@ -228,30 +248,71 @@ message BGPPeerGetResponse {
   repeated BGPPeer Response  = 2;
 }
 
+// BGP peer key parameters
+message BGPPeerKey {
+  // BGP local IP address
+  types.IPAddress LocalAddr = 1;
+  // BGP peer IP address
+  types.IPAddress PeerAddr  = 2;
+}
+
+// BGP peer get and delete key handle
+message BGPPeerKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_BGP_PER_OID_LEN",
+    Mib:    "bgpPeerTable",
+    SpecMsg: "BGPPeerSpec"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_BGP_PRST_OID_LEN",
+    Mib:    "bgpPeerStatusTable",
+  };
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes      Id  = 1;
+    BGPPeerKey Key = 2; 
+  }
+}
+
+// BGP peer delete request
+message BGPPeerDeleteRequest {
+  repeated BGPPeerKeyHandle Request = 1;
+}
+
+// BGP peer delete response
+message BGPPeerDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// BGP peer get request
+message BGPPeerGetRequest {
+  repeated BGPPeerKeyHandle Request = 1;
+}
+
 // BGP peer AF configurations
 message BGPPeerAfSpec {
   option (venice.pdsaSetGlobOpts) = {
-      OidLen: "AMB_BGP_PAS_OID_LEN",
-      Mib:    "bgpPeerAfiSafiTable",
-      FillFn: "bgp_peer_af_set_fill_func"
-      UpdateForDelete: true
+    OidLen:          "AMB_BGP_PAS_OID_LEN",
+    Mib:             "bgpPeerAfiSafiTable",
+    FillFn:          "bgp_peer_af_set_fill_func"
+    UpdateForDelete: true
   };
   option (venice.pdsaGetGlobOpts) = {
-      OidLen: "AMB_BGP_PAS_OID_LEN",
-      Mib:    "bgpPeerAfiSafiTable",
-      FillFn: "bgp_peer_af_get_fill_func"
+    OidLen: "AMB_BGP_PAS_OID_LEN",
+    Mib:    "bgpPeerAfiSafiTable",
+    FillFn: "bgp_peer_af_get_fill_func"
   };
 
   // unique key/identifier of peer AF config
   bytes           Id          = 1;
   // BGP local IP address
-  types.IPAddress LocalAddr   = 2 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX"}];
+  types.IPAddress LocalAddr   = 2 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX", GetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX"}];
   // BGP peer IP address
-  types.IPAddress PeerAddr    = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX"}];
+  types.IPAddress PeerAddr    = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX", GetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX"}];
   // BGP address family
-  BGPAfi          Afi         = 4 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
+  BGPAfi          Afi         = 4 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX"}];
   // BGP sub-address family
-  BGPSafi         Safi        = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
+  BGPSafi         Safi        = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX"}];
   // enforce this router to set self as next-hop for advertised routes
   bool            NexthopSelf = 6 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // originate a default route to this peer
@@ -259,17 +320,17 @@ message BGPPeerAfSpec {
 
   // internal only
   // enable/disable address families. this field is internally mapped with create/delete request
-  bool            Disable     = 1000 [(venice.pdsaFields) = {Field: "disable_afi_safi"}, (gogoproto.moretags) = "msinternal:\"true\""];
+  bool            Disable     = 1000 [(venice.pdsaFields) = {Field: "disable_afi_safi", IsInternalField: true}];
 }
 
-// BGP peer AF status and stats, if any
+// BGP peer AF status
 message BGPPeerAfStatus {
 }
 
 // BGP peer AF object
 message BGPPeerAf {
-  BGPPeerAfSpec   Spec   = 1;
-  BGPPeerAfStatus Status = 2;
+  BGPPeerAfSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  BGPPeerAfStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
 }
 
 // BGP peer AF create and update response
@@ -279,8 +340,49 @@ message BGPPeerAfResponse {
 
 // BGP peer AF create and update request
 message BGPPeerAfRequest {
-  // requests
   repeated BGPPeerAfSpec Request = 1;
+}
+
+// BGP peer key parameters
+message BGPPeerAfKey {
+  // BGP local IP address
+  types.IPAddress LocalAddr = 1;
+  // BGP peer IP address
+  types.IPAddress PeerAddr  = 2;
+  // BGP address family
+  BGPAfi          Afi       = 3;
+  // BGP sub-address family
+  BGPSafi         Safi      = 4;
+}
+
+// BGP peer delete spec
+message BGPPeerAfKeyHandle {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:          "AMB_BGP_PAS_OID_LEN",
+    Mib:             "bgpPeerAfiSafiTable",
+    SpecMsg:         "BGPPeerAfSpec"
+    UpdateForDelete: true
+  };
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes        Id  = 1;
+    BGPPeerAfKey Key = 2;
+  }
+}
+
+// BGP peer af delete request
+message BGPPeerAfDeleteRequest {
+  repeated BGPPeerAfKeyHandle Request = 1;
+}
+
+// BGP peer delete response
+message BGPPeerAfDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// BGP peer af get request
+message BGPPeerAfGetRequest {
+  repeated BGPPeerAfKeyHandle Request = 1;
 }
 
 // BGP peer AF get response
@@ -295,7 +397,6 @@ enum NLRISrc {
   NLRI_PEER = 1; // learned from peer
   NLRI_AFM  = 2; // learned from AFM
   NLRI_SELF = 3; // created by itself
-
 }
 
 // BGP NLRI prefix table
@@ -306,42 +407,69 @@ message BGPNLRIPrefixStatus {
   };
 
   // BGP address family
-  BGPAfi     Afi              = 1 [(venice.pdsaFields) = {Field: "afi", GetKeyOidIndex: "AMB_BGP_NLPF_AFI_INDEX"}];
+  BGPAfi  Afi              = 1 [(venice.pdsaFields) = {Field: "afi", GetKeyOidIndex: "AMB_BGP_NLPF_AFI_INDEX"}];
   // BGP sub-address family
-  BGPSafi    Safi             = 2 [(venice.pdsaFields) = {Field: "safi", GetKeyOidIndex: "AMB_BGP_NLPF_SAFI_INDEX"}];
+  BGPSafi Safi             = 2 [(venice.pdsaFields) = {Field: "safi", GetKeyOidIndex: "AMB_BGP_NLPF_SAFI_INDEX"}];
   // prefix in NLRI
-  bytes      Prefix           = 3 [(venice.pdsaFields) = {Field: "prfx", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_INDEX" GetKeyOidLenIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
+  bytes   Prefix           = 3 [(venice.pdsaFields) = {Field: "prfx", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_INDEX" GetKeyOidLenIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
   // prefix length
-  uint32     PrefixLen        = 4 [(venice.pdsaFields) = {Field: "prfxlen", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
+  uint32  PrefixLen        = 4 [(venice.pdsaFields) = {Field: "prfxlen", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
   // route source (learned from BGP peer or AFM)
-  NLRISrc    RouteSource      = 5 [(venice.pdsaFields) = {Field: "peer_or_afm", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_OR_AFM_INDEX"}];
+  NLRISrc RouteSource      = 5 [(venice.pdsaFields) = {Field: "peer_or_afm", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_OR_AFM_INDEX"}];
   // route source index
-  uint32     RouteSourceIndex = 6 [(venice.pdsaFields) = {Field: "peer_afm_index", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_AFM_IX_INDEX"}];
+  uint32  RouteSourceIndex = 6 [(venice.pdsaFields) = {Field: "peer_afm_index", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_AFM_IX_INDEX"}];
   // path ID
-  uint32     PathID           = 7 [(venice.pdsaFields) = {Field: "path_id", GetKeyOidIndex: "AMB_BGP_NLPF_PATH_ID_INDEX"}];
+  uint32  PathID           = 7 [(venice.pdsaFields) = {Field: "path_id", GetKeyOidIndex: "AMB_BGP_NLPF_PATH_ID_INDEX"}];
   // chosen as BGP best route or not
-  bool       BestRoute        = 8 [(venice.pdsaFields) = {Field: "best"}];
+  bool    BestRoute        = 8 [(venice.pdsaFields) = {Field: "best"}];
   // AS path string
-  bytes      ASPathStr        = 9 [(venice.pdsaFields) = {Field: "aspath_str"}];
+  bytes   ASPathStr        = 9 [(venice.pdsaFields) = {Field: "aspath_str"}];
   // originator ID
-  bytes      PathOrigId       = 10 [(venice.pdsaFields) = {Field: "path_attr_orig_id"}];
+  bytes   PathOrigId       = 10 [(venice.pdsaFields) = {Field: "path_attr_orig_id"}];
   // next-hop address
-  bytes      NextHopAddr      = 11 [(venice.pdsaFields) = {Field: "path_attr_next_hop"}];
+  bytes   NextHopAddr      = 11 [(venice.pdsaFields) = {Field: "path_attr_next_hop"}];
 }
 
-// BGP NLRI prefix object
+// BGP NLRI prefix key object
+message BGPNLRIPrefixKey {
+  // BGP address family
+  BGPAfi   Afi              = 1;
+  // BGP sub-address family
+  BGPSafi  Safi             = 2;
+  // prefix in NLRI
+  bytes    Prefix           = 3;
+  // prefix length
+  uint32   PrefixLen        = 4;
+  // route source (learned from BGP peer or AFM)
+  NLRISrc  RouteSource      = 5;
+  // route source index
+  uint32   RouteSourceIndex = 6;
+  // path ID
+  uint32   PathID           = 7;
+}
+
+//BGP NLRI prefix object
 message BGPNLRIPrefix {
   BGPNLRIPrefixStatus Status = 1;
-}
-
-// BGP NLRI prefix request
-message BGPNLRIPrefixRequest {
-  // request
-  BGPNLRIPrefixStatus Request = 1;
 }
 
 // BGP NLRI prefix get response
 message BGPNLRIPrefixGetResponse {
   types.ApiStatus        ApiStatus = 1;
   repeated BGPNLRIPrefix Response  = 2;
+}
+
+// BGP NLRI key handle
+message BGPNLRIPrefixKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_BGP_NL_PF_OID_LEN",
+    Mib:     "bgpNlriPrefixTable"
+    SpecMsg: "BGPNLRIPrefixStatus"
+  };
+  BGPNLRIPrefixKey Key = 1;
+}
+
+// BGP NLRI prefix get request
+message BGPNLRIPrefixGetRequest {
+  repeated BGPNLRIPrefixKeyHandle Request = 1;
 }

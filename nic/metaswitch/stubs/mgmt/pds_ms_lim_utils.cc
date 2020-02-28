@@ -14,7 +14,7 @@ namespace pds {
 
 NBB_VOID
 lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
-                       NBB_ULONG correlator, bool op_update)
+                       NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_ms::pds_ms_config_t  conf = {0};
     conf.correlator  = correlator;

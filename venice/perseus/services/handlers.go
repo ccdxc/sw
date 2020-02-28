@@ -105,7 +105,13 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		}
 		nic.pushed = true
 	} else {
-		presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerReq)
+		peerDReq := pegasusClient.BGPPeerDeleteRequest{}
+		peer := pegasusClient.BGPPeerKeyHandle{
+			IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
+		}
+		log.Infof("Add create peer [%+v]", peer)
+		peerDReq.Request = append(peerDReq.Request, &peer)
+		presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerDReq)
 		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
 			log.Errorf("Peer delete Request returned (%v)[%+v]", err, presp)
 		}

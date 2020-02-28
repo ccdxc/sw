@@ -142,7 +142,7 @@ static void create_bgp_global_proto_grpc () {
 
 static void create_evpn_evi_proto_grpc () {
     EvpnEviRequest  request;
-    EvpnResponse    response;
+    EvpnEviResponse    response;
     ClientContext   context;
     Status          ret_status;
 
@@ -164,7 +164,7 @@ static void create_evpn_evi_proto_grpc () {
     proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
 
     printf ("Pushing EVPN Evi proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -175,7 +175,7 @@ static void create_evpn_evi_proto_grpc () {
 
 static void create_evpn_evi_rt_proto_grpc () {
     EvpnEviRtRequest    request;
-    EvpnResponse        response;
+    EvpnEviRtResponse   response;
     ClientContext       context;
     Status              ret_status;
 
@@ -186,7 +186,7 @@ static void create_evpn_evi_rt_proto_grpc () {
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN Evi RT proto...\n");
-    ret_status = g_evpn_stub_->EvpnEviRtSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnEviRtCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -251,6 +251,8 @@ static void create_route_proto_grpc () {
 static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerRequest  request;
     BGPPeerResponse response;
+    BGPPeerDeleteRequest  drequest;
+    BGPPeerDeleteResponse dresponse;
     ClientContext   context;
     Status          ret_status;
 
@@ -284,22 +286,49 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     proto_spec->set_holdtime(9);
     }
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
+
+    /* Delete */
+    auto dproto_spec = drequest.add_request();
+    auto dPeerKey = dproto_spec->mutable_key();
+    auto dpeeraddr = dPeerKey->mutable_peeraddr();
+    dpeeraddr->set_af(types::IP_AF_INET);
+    if (lo) {
+        dpeeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+    } else {
+        dpeeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
+    }
+    auto dlocaladdr = dPeerKey->mutable_localaddr();
+    dlocaladdr->set_af(types::IP_AF_INET);
+    if (lo) {
+        dlocaladdr->set_v4addr(g_test_conf_.local_lo_ip_addr);
+    } else {
+        dlocaladdr->set_v4addr(0);
+    }
+
     if (op_del) {
-        ret_status = g_bgp_stub_->BGPPeerDelete(&context, request, &response);
+        ret_status = g_bgp_stub_->BGPPeerDelete(&context, drequest, &dresponse);
+        if (!ret_status.ok() || (dresponse.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed! ret_status=%d (%s) dresponse.status=%d\n",
+                    __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                    dresponse.apistatus());
+            exit(1);
+        }
     } else {
         ret_status = g_bgp_stub_->BGPPeerCreate(&context, request, &response);
-    }
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
-                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
-                response.apistatus());
-        exit(1);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                    __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                    response.apistatus());
+            exit(1);
+        }
     }
 }
 
 static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerAfRequest  request;
     BGPPeerAfResponse response;
+    BGPPeerAfDeleteRequest  drequest;
+    BGPPeerAfDeleteResponse dresponse;
     ClientContext   context;
     Status          ret_status;
 
@@ -334,9 +363,37 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
     proto_spec->set_nexthopself(false);
     proto_spec->set_defaultorig(false);
 
+    auto dkey = drequest.add_request();
+    auto dproto_spec = dkey->mutable_key();
+    auto dpeeraddr = dproto_spec->mutable_peeraddr();
+    dpeeraddr->set_af(types::IP_AF_INET);
+
+    if (lo) {
+        dpeeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+    } else {
+        dpeeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
+    }
+    auto dlocaladdr = dproto_spec->mutable_localaddr();
+    dlocaladdr->set_af(types::IP_AF_INET);
+    if (lo) {
+        dlocaladdr->set_v4addr(g_test_conf_.local_lo_ip_addr);
+    } else {
+        dlocaladdr->set_v4addr(0);
+    }
+
+    if (!lo) {
+        // Enable IP
+        dproto_spec->set_afi(pds::BGP_AFI_IPV4);
+        dproto_spec->set_safi(pds::BGP_SAFI_UNICAST);
+    } else {
+        // Enable EVPN
+        dproto_spec->set_afi(pds::BGP_AFI_L2VPN);
+        dproto_spec->set_safi(pds::BGP_SAFI_EVPN);
+    }
+
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
     if (op_del ) {
-        ret_status = g_bgp_stub_->BGPPeerAfDelete(&context, request, &response);
+        ret_status = g_bgp_stub_->BGPPeerAfDelete(&context, drequest, &dresponse);
     } else {
         ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
     }
@@ -435,7 +492,7 @@ static void create_vpc_proto_grpc () {
 
 static void create_evpn_ip_vrf_proto_grpc () {
     EvpnIpVrfRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -445,7 +502,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
     proto_spec->set_vni(200);
 
     printf ("Pushing EVPN IP VRF proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -456,7 +513,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
 
 static void create_evpn_ip_vrf_rt_proto_grpc () {
     EvpnIpVrfRtRequest request;
-    EvpnResponse     response;
+    EvpnIpVrfRtResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -468,7 +525,7 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN IP VRF RT proto...\n");
-    ret_status = g_evpn_stub_->EvpnIpVrfRtSpecCreate(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnIpVrfRtCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -478,7 +535,7 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
 }
 
 static void get_peer_status_all() {
-    BGPPeerRequest       request;
+    BGPPeerGetRequest    request;
     BGPPeerGetResponse   response;
     ClientContext        context;
     Status               ret_status;
@@ -491,13 +548,6 @@ static void get_peer_status_all() {
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  VRF Id               : %d\n", 1); // TODO: how to convert UUID to VrfID.. auto-gen wont support fillFn in get
-            auto paddr = resp.localaddr().v4addr();
-            struct in_addr ip_addr;
-            ip_addr.s_addr = paddr;
-            printf ("  Local Address        : %s\n", inet_ntoa(ip_addr));
-            paddr = resp.peeraddr().v4addr();
-            ip_addr.s_addr = paddr;
-            printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());
             uint8_t ler[2];
@@ -517,16 +567,16 @@ static void get_peer_status_all() {
 }
 
 static void get_evpn_mac_ip_all () {
-    EvpnMacIpSpecRequest    request;
+    EvpnMacIpGetRequest     request;
     EvpnMacIpGetResponse    response;
     ClientContext           context;
     Status                  ret_status;
 
-    ret_status = g_evpn_stub_->EvpnMacIpSpecGet(&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnMacIpGet(&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of EVPN MAC IP Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
-            auto resp = response.response(i).spec();
+            auto resp = response.response(i).status();
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  Source       : %s\n", (resp.source() == 2) ? "Remote" : "Local");

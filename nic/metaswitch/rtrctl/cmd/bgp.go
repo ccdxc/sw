@@ -122,7 +122,7 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 	defer c.Close()
 	client := pegasusClient.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPRequest{}
+	req := &pegasusClient.BGPGetRequest{}
 	respMsg, err := client.BGPGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting global config failed (%s)", err)
@@ -150,7 +150,7 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	defer c.Close()
 	client := pegasusClient.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPPeerRequest{}
+	req := &pegasusClient.BGPPeerGetRequest{}
 	respMsg, err := client.BGPPeerGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting Peers failed (%s)", err)
@@ -190,7 +190,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 	defer c.Close()
 	client := pegasusClient.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPPeerAfRequest{}
+	req := &pegasusClient.BGPPeerAfGetRequest{}
 	respMsg, err := client.BGPPeerAfGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting PeerAfs failed (%s)", err)
@@ -217,7 +217,7 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	defer c.Close()
 	client := pegasusClient.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPNLRIPrefixRequest{}
+	req := &pegasusClient.BGPNLRIPrefixGetRequest{}
 	respMsg, err := client.BGPNLRIPrefixGet(context.Background(), req)
 	if err != nil {
 		return errors.New("Getting NLRIPrefix failed")

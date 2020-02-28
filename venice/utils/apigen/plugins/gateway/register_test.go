@@ -4348,6 +4348,25 @@ func TestGenParamPrefix(t *testing.T) {
 	}
 }
 
+func TestGenParamPath(t *testing.T) {
+	flag.Parse()
+	_, err := getGenParamsPath()
+	if err == nil {
+		t.Fatalf("should have returned error, but succeeded")
+	}
+	err = flag.CommandLine.Set("S_path", "testValue")
+	if err != nil {
+		t.Fatalf("could not set flag (%s)", err)
+	}
+	v, err := getGenParamsPath()
+	if err != nil {
+		t.Fatalf("should have suceeded, but failed with error (%s)", err)
+	}
+	if v != "testValue" {
+		t.Fatalf("unexpected value [%v]", v)
+	}
+}
+
 func TestGenMetricsManifest(t *testing.T) {
 	var req gogoplugin.CodeGeneratorRequest
 	for _, src := range []string{

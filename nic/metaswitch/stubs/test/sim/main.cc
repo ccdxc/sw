@@ -88,7 +88,7 @@ pds_ms_sim_test_bgp_update ()
     bgp_global_spec.set_id (msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
-    pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
@@ -108,8 +108,8 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_spec.set_sendcomm(true);
     bgp_peer_spec.set_sendextcomm(true);
     bgp_peer_spec.set_password ("test");
-    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
+    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     pds::BGPPeerAfSpec bgp_peer_af;
     bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
@@ -127,8 +127,8 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_af.set_nexthopself(false);
     bgp_peer_af.set_defaultorig(false);
 
-    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
+    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -161,8 +161,8 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_spec.set_sendcomm(true);
     bgp_peer_spec.set_sendextcomm(true);
     bgp_peer_spec.set_password ("test");
-    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
+    pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     pds::BGPPeerAfSpec bgp_peer_af;
     bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
@@ -180,8 +180,8 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_af.set_nexthopself(false);
     bgp_peer_af.set_defaultorig(false);
 
-    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
+    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -204,8 +204,8 @@ pds_ms_sim_test_evpn_evi_update ()
     evpn_evi_spec.set_autort(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
     evpn_evi_spec.set_encap(pds::EVPN_ENCAP_VXLAN);
-    pds_ms_pre_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
+    pds_ms_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -275,7 +275,7 @@ pds_ms_sim_test_config ()
     evpn_ip_vrf_spec.set_vni(200);
     NBB_BYTE rd[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     evpn_ip_vrf_spec.set_rd((char*)rd,8);
-    pds_ms_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     pds::EvpnIpVrfRtSpec evpn_ip_vrf_rt_spec;
     evpn_ip_vrf_rt_spec.set_id (msidx2pdsobjkey(g_vpc_uuid).id, PDS_MAX_KEY_LEN);
@@ -283,7 +283,7 @@ pds_ms_sim_test_config ()
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     evpn_ip_vrf_rt_spec.set_rt(rt,8);
     evpn_ip_vrf_rt_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
-    pds_ms_set_amb_evpn_ip_vrf_rt (evpn_ip_vrf_rt_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_evpn_ip_vrf_rt (evpn_ip_vrf_rt_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR, NULL);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);

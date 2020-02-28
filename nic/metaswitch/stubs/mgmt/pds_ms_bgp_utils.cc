@@ -55,7 +55,7 @@ update_bgp_route_map_table (NBB_ULONG correlator)
     spec.set_safidefined (true);
     spec.set_orfassociation (AMB_BGP_ORF_ASSOC_LOCAL);
     spec.set_matchextcomm (str.c_str(), len);
-    pds_ms_set_amb_bgp_route_map (spec, AMB_ROW_ACTIVE, correlator);
+    pds_ms_set_amb_bgp_route_map (spec, AMB_ROW_ACTIVE, correlator, FALSE);
 }
 
 static NBB_VOID 
@@ -110,81 +110,114 @@ populate_disable_peer_af_spec (BGPPeerSpec &peer, BGPPeerAfSpec *peer_af,
 }
 
 NBB_VOID
-bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp)
+bgp_rm_ent_pre_get(pds::BGPSpec &req, pds::BGPGetResponse* resp, NBB_VOID* kh)
+{
+    BGPKeyHandle *key_spec = (BGPKeyHandle *)kh;
+
+    // set UUID from key handle to req
+    req.set_id(key_spec->id());
+}
+
+NBB_VOID
+bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp, NBB_VOID* kh)
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.id());
+    BGPPeerKeyHandle *key_handle = (BGPPeerKeyHandle *)kh;
 
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+    if (key_handle->id_or_key_case() == key_handle->kIdFieldNumber) {
+        pds_ms_get_uuid(&uuid, req.id());
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
 
-    if (uuid_obj == nullptr) {
-        // Invalid UUID in get request
-        throw Error (std::string("BGP Peer get with invalid key ").
-                     append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
-        // BGP Peer Update - Fill keys
-        bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+        if (uuid_obj == nullptr) {
+            // Invalid UUID in get request
+            throw Error (std::string("BGP Peer get with invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+            // Fill keys
+            bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+        } else if (uuid_obj->obj_type() != uuid_obj_type_t::BGP) {
+            // non-matching UUID in get request
+            throw Error (std::string("BGP Peer get with non-matching UUID type ").
+                         append(uuid.str()).append(" of type ").
+                         append(uuid_obj_type_str(uuid_obj->obj_type())), 
+                         SDK_RET_INVALID_ARG);
+        }
     } else {
-        // Venice may use the same UUID for multiple protos
-        // BGP Global, Peer and PeerAF
-        // in which case it will fill the appropriate keys
-        // and the UUID need not be created or deleted
-        PDS_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
-                          uuid_obj_type_str(uuid_obj->obj_type()));
+        // key is passed in the request. it should have required key parameters
+        PDS_TRACE_VERBOSE("Received BGP Peer request with Key");
     }
 }
 
 NBB_VOID
 bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
-                 NBB_ULONG correlator, bool op_update)
+                 NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.id());
 
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+    if (row_status == AMB_ROW_DESTROY) {
+        BGPPeerKeyHandle *key_handle = (BGPPeerKeyHandle *)kh;
+        if (key_handle->id_or_key_case() == key_handle->kIdFieldNumber) {
+            pds_ms_get_uuid(&uuid, req.id());
+        } 
+    } else {
+        // create/update should have valid UUID
+        pds_ms_get_uuid(&uuid, req.id());
+    }
 
-    if (uuid_obj == nullptr) {
-        if (row_status == AMB_ROW_DESTROY) {
-            // Should throw an error instead of return.
-            // MS might delete entry if key params match
-            throw Error (std::string("BGP Peer delete with Invalid key ").
-                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-        }
-        if (op_update) {
-            // Update without an existing entry
-            throw Error (std::string("BGP Peer update with Invalid key ").
-                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-        }
-        // BGP Peer Create - store UUID to key mapping pending confirmation
-        ip_addr_t local_ipaddr, peer_ipaddr;
-        ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
-        ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
-        bgp_peer_uuid_obj_uptr_t bgp_peer_uuid_obj 
-            (new bgp_peer_uuid_obj_t (uuid,
+    if (!is_pds_obj_key_invalid (uuid)) {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            if (row_status == AMB_ROW_DESTROY) {
+                // Should throw an error instead of return.
+                // MS might delete entry if key params match
+                throw Error (std::string("BGP Peer delete with Invalid key ").
+                             append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+            }
+            if (op_update) {
+                // Update without an existing entry
+                throw Error (std::string("BGP Peer update with Invalid key ").
+                             append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+            }
+            // BGP Peer Create - store UUID to key mapping pending confirmation
+            ip_addr_t local_ipaddr, peer_ipaddr;
+            ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
+            ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+            bgp_peer_uuid_obj_uptr_t bgp_peer_uuid_obj 
+                                     (new bgp_peer_uuid_obj_t (uuid,
                                       local_ipaddr,
                                       peer_ipaddr));
-        {
-            mgmt_ctxt.state()->set_pending_uuid_create(uuid,
-                                                       std::move(bgp_peer_uuid_obj));
+            {
+                mgmt_ctxt.state()->set_pending_uuid_create(uuid,
+                                   std::move(bgp_peer_uuid_obj));
+            }
+            PDS_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
+                               uuid.str(), ipaddr2str(&local_ipaddr),
+                               ipaddr2str(&peer_ipaddr));
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+            // BGP Peer Update - Fill keys
+            bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+            if (row_status == AMB_ROW_DESTROY) {
+                mgmt_ctxt.state()->set_pending_uuid_delete(uuid);
+            }
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
+            // venice may send peer config with BGP UUID. accept if the UUID
+            // is of type BGP else return error
+            PDS_TRACE_VERBOSE("BGP Peer request with BGP UUID %s",
+                              uuid.str());
+        } else {
+            // non-matching UUID in get request
+            throw Error (std::string("BGP Peer with non-matching UUID type ").
+                         append(uuid.str()).append(" of type ").
+                         append(uuid_obj_type_str(uuid_obj->obj_type())), 
+                         SDK_RET_INVALID_ARG);
         }
-        PDS_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
-                          uuid.str(), ipaddr2str(&local_ipaddr),
-                          ipaddr2str(&peer_ipaddr));
-    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
-        // BGP Peer Update - Fill keys
-        bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
-        if (row_status == AMB_ROW_DESTROY) {
-            mgmt_ctxt.state()->set_pending_uuid_delete(uuid);
-        }
-    } else {
-        // Venice may use the same UUID for multiple protos
-        // BGP Global, Peer and PeerAF
-        // in which case it will fill the appropriate keys
-        // and the UUID need not be created or deleted
-        PDS_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
-                          uuid_obj_type_str(uuid_obj->obj_type()));
+    } else if (row_status != AMB_ROW_DESTROY) {
+        // non-matching UUID in get request
+        throw Error (std::string("BGP Peer create/update reruest with "
+                     "invalid UUID ").append(uuid.str()));
     }
 
     if (row_status == AMB_ROW_ACTIVE && !op_update) {
@@ -193,10 +226,10 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
         BGPPeerAfSpec peer_af_spec;
         populate_disable_peer_af_spec (req, &peer_af_spec,
                                        BGP_AFI_IPV4, BGP_SAFI_UNICAST);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator, FALSE);
         populate_disable_peer_af_spec (req, &peer_af_spec,
                                        BGP_AFI_L2VPN, BGP_SAFI_EVPN);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator, FALSE);
     }
 
 }
@@ -216,80 +249,108 @@ bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data)
 
 NBB_VOID
 bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
-                          pds::BGPPeerAfGetResponse* resp)
+                          pds::BGPPeerAfGetResponse* resp,
+                          NBB_VOID* kh)
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.id());
+    BGPPeerAfKeyHandle *key_handle = (BGPPeerAfKeyHandle *)kh;
 
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+    if (key_handle->id_or_key_case() == key_handle->kIdFieldNumber) {
+        pds_ms_get_uuid(&uuid, req.id());
 
-    if (uuid_obj == nullptr) {
-        // Invalid UUID in get request
-        throw Error (std::string("BGP PeerAF get with invalid key ").
-                     append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER_AF) {
-        // BGP Peer Update - Fill keys
-        bgp_peer_af_fill_keys_(req, (bgp_peer_af_uuid_obj_t*)uuid_obj);
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            // Invalid UUID in get request
+            throw Error (std::string("BGP PeerAF get with invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER_AF) {
+            // Fill keys
+            bgp_peer_af_fill_keys_(req, (bgp_peer_af_uuid_obj_t*)uuid_obj);
+        } else {
+            // non-matching UUID in get request
+            throw Error (std::string("BGP PeerAf get with non-matching UUID type ").
+                         append(uuid.str()).append(" of type ").
+                         append(uuid_obj_type_str(uuid_obj->obj_type())), 
+                         SDK_RET_INVALID_ARG);
+        }
     } else {
-        // Venice may use the same UUID for multiple protos
-        // BGP Global, Peer and PeerAF
-        // in which case it will fill the appropriate keys
-        // and the UUID need not be created or deleted
-        PDS_TRACE_VERBOSE("Received BGP PeerAF get request with UUID type %s",
-                          uuid_obj_type_str(uuid_obj->obj_type()));
+        // venice use case
+        // key is passed in the request. it should have required key parameters
+        PDS_TRACE_VERBOSE("Received BGP PeerAf request with Key");
     }
 }
+
 NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator, bool op_update)
+                          NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.id());
 
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
-
-    if (uuid_obj == nullptr) {
-        if (row_status == AMB_ROW_DESTROY) {
-            // Should throw an error instead of return.
-            // MS might delete entry if key params match
-            throw Error (std::string("BGP PeerAF delete with Invalid key ").
-                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-        }
-        if (op_update) {
-            // Update without an existing entry
-            throw Error (std::string("BGP PeerAF update with Invalid key ").
-                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
-        }
-        // BGP PeerAF Create - store UUID to key mapping pending confirmation
-        ip_addr_t local_ipaddr, peer_ipaddr;
-        ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
-        ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
-        bgp_peer_af_uuid_obj_uptr_t bgp_peer_af_uuid_obj 
-            (new bgp_peer_af_uuid_obj_t (uuid, local_ipaddr, peer_ipaddr,
-                                         req.afi(), req.safi()));
-        {
-            mgmt_ctxt.state()->set_pending_uuid_create(uuid,
-                                                       std::move(bgp_peer_af_uuid_obj));
-        }
-        PDS_TRACE_VERBOSE("BGP PeerAF Pre-set Create UUID %s Local IP %s "
-                          "Peer IP %s AFI %d SAFI %d",
-                          uuid.str(), ipaddr2str(&local_ipaddr),
-                          ipaddr2str(&peer_ipaddr), req.afi(), req.safi());
-    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER_AF) {
-        // BGP Peer Update - Fill keys
-        bgp_peer_af_fill_keys_(req, (bgp_peer_af_uuid_obj_t*)uuid_obj);
-        if (row_status == AMB_ROW_DESTROY) {
-            mgmt_ctxt.state()->set_pending_uuid_delete(uuid);
-        }
+    if (row_status == AMB_ROW_DESTROY) {
+        BGPPeerAfKeyHandle *key_handle = (BGPPeerAfKeyHandle *)kh;
+        if (key_handle->id_or_key_case() == key_handle->kIdFieldNumber) {
+            pds_ms_get_uuid(&uuid, req.id());
+        } 
     } else {
-        // Venice may use the same UUID for multiple protos
-        // BGP Global, Peer and PeerAF
-        // in which case it will fill the appropriate keys
-        // and the UUID need not be created or deleted
-        PDS_TRACE_VERBOSE("Received BGP PeerAF request with UUID type %s",
-                          uuid_obj_type_str(uuid_obj->obj_type()));
+        // create/update should have valid UUID
+        pds_ms_get_uuid(&uuid, req.id());
+    }
+
+    if (!is_pds_obj_key_invalid (uuid)) {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            if (row_status == AMB_ROW_DESTROY) {
+                // Should throw an error instead of return.
+                // MS might delete entry if key params match
+                throw Error (std::string("BGP PeerAF delete with Invalid key ").
+                             append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+            }
+            if (op_update) {
+                // Update without an existing entry
+                throw Error (std::string("BGP PeerAF update with Invalid key ").
+                             append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+            }
+            // BGP PeerAF Create - store UUID to key mapping pending confirmation
+            ip_addr_t local_ipaddr, peer_ipaddr;
+            ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
+            ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+            bgp_peer_af_uuid_obj_uptr_t bgp_peer_af_uuid_obj 
+                (new bgp_peer_af_uuid_obj_t (uuid, local_ipaddr, peer_ipaddr,
+                                             req.afi(), req.safi()));
+            {
+                mgmt_ctxt.state()->set_pending_uuid_create(uuid,
+                                                           std::move(bgp_peer_af_uuid_obj));
+            }
+            PDS_TRACE_VERBOSE("BGP PeerAF Pre-set Create UUID %s Local IP %s "
+                              "Peer IP %s AFI %d SAFI %d",
+                              uuid.str(), ipaddr2str(&local_ipaddr),
+                              ipaddr2str(&peer_ipaddr), req.afi(), req.safi());
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER_AF) {
+            // BGP Peer Update - Fill keys
+            bgp_peer_af_fill_keys_(req, (bgp_peer_af_uuid_obj_t*)uuid_obj);
+            if (row_status == AMB_ROW_DESTROY) {
+                mgmt_ctxt.state()->set_pending_uuid_delete(uuid);
+            }
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
+            // venice may send peer-af config with BGP UUID. accept if the UUID
+            // is of type BGP else return error
+            PDS_TRACE_VERBOSE("BGP PeerAF request with BGP UUID %s",
+                              uuid.str());
+        } else {
+            // non-matching UUID in get request
+            throw Error (std::string("BGP PeerAF with non-matching UUID type ").
+                         append(uuid.str()).append(" of type ").
+                         append(uuid_obj_type_str(uuid_obj->obj_type())), 
+                         SDK_RET_INVALID_ARG);
+        }
+    } else if (row_status != AMB_ROW_DESTROY) {
+        // non-matching UUID in get request
+        throw Error (std::string("BGP PeerAF with invalid UUID ").
+                     append(uuid.str()));
     }
 
     // Address Family enable/disable should be set internally as per
@@ -309,9 +370,13 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
 
 NBB_VOID
 bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
-                    NBB_ULONG correlator, bool op_update)
+                    NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     AdminState state = ADMIN_STATE_ENABLE;
+    BGPKeyHandle *key_spec = (BGPKeyHandle *)kh;
+
+    // set UUID from key handle to req
+    req.set_id(key_spec->id());
 
     // BGP global spec deletion should be sent down as
     // update with admin_status_down in order to keep all
@@ -335,7 +400,7 @@ bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
 }
 
 NBB_VOID
-bgp_peer_status_get_fill_func (pds::BGPPeerStatus&   req,
+bgp_peer_status_get_fill_func (pds::BGPPeerSpec&   req,
                                NBB_ULONG*            oid)
 {
     oid[AMB_BGP_PRST_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
@@ -463,6 +528,9 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
 #endif
         v_amb_bgp_rm_ent->agg_split_horizon = AMB_FALSE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_AGG_SPLT_HORIZON);
+
+        v_amb_bgp_rm_ent->admin_status = req.state();
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ADMIN_STATUS);
     }
 }
 
@@ -498,6 +566,10 @@ bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec    &req,
             AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_IMP_MAP);
         }
     }
+    
+    v_amb_bgp_peer_af->disable_afi_safi = (req.disable()) ? AMB_TRUE : AMB_FALSE;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_DISABLE);
+    
 }
 } // end namespace pds
 

@@ -339,72 +339,71 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Errorf("failed to parse UUID (%v)", err)
 		return err
 	}
-	peerReq := msTypes.BGPPeerRequest{}
-	peerAFReq := msTypes.BGPPeerAfRequest{}
+	peerDelReq := msTypes.BGPPeerDeleteRequest{}
+	peerAFDelReq := msTypes.BGPPeerAfDeleteRequest{}
 	for _, o := range delPeers {
-		peer := msTypes.BGPPeerSpec{
-			Id:           uid.Bytes(),
-			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
-			PeerAddr:     ip2PDSType(o.IPAddress),
-			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     true,
-			SendExtComm:  true,
-			ConnectRetry: 5,
-			KeepAlive:    60,
-			HoldTime:     180,
+		key := &msTypes.BGPPeerKey{
+			PeerAddr: ip2PDSType(o.IPAddress),
+		}
+		peer := msTypes.BGPPeerKeyHandle{
+			IdOrKey: &msTypes.BGPPeerKeyHandle_Key{key},
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
-		peerReq.Request = append(peerReq.Request, &peer)
+		peerDelReq.Request = append(peerDelReq.Request, &peer)
 
 		for _, af := range o.EnableAddressFamilies {
 			switch af {
 			case "evpn":
-				peerAf := msTypes.BGPPeerAfSpec{
-					Id:       uid.Bytes(),
+				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
 					Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
 				}
+				peerAf := msTypes.BGPPeerAfKeyHandle{
+					IdOrKey: &msTypes.BGPPeerAfKeyHandle_Key{key},
+				}
 				log.Infof("Add Delete peer AF [%+v]", peerAf)
-				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+				peerAFDelReq.Request = append(peerAFDelReq.Request, &peerAf)
 			case "ipv4-unicast":
-				peerAf := msTypes.BGPPeerAfSpec{
-					Id:       uid.Bytes(),
+				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_IPV4,
 					Safi:     msTypes.BGPSafi_BGP_SAFI_UNICAST,
 				}
+				peerAf := msTypes.BGPPeerAfKeyHandle{
+					IdOrKey: &msTypes.BGPPeerAfKeyHandle_Key{key},
+				}
 				log.Infof("Add Delete peer AF [%+v]", peerAf)
-				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+				peerAFDelReq.Request = append(peerAFDelReq.Request, &peerAf)
 			}
 		}
 	}
 	ctx := context.TODO()
 
-	presp, err := client.BGPPeerDelete(ctx, &peerReq)
+	pdresp, err := client.BGPPeerDelete(ctx, &peerDelReq)
 	if err != nil {
-		log.Infof("Peer delete Request returned (%v)[%v]", err, presp)
+		log.Infof("Peer delete Request returned (%v)[%v]", err, pdresp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
-	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer delete Request returned (%v)[%v]", err, presp.ApiStatus)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
+	if pdresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+		log.Infof("Peer delete Request returned (%v)[%v]", err, pdresp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), pdresp.ApiStatus)
 	}
-	log.Infof("Peer delete returned [%v]", presp.ApiStatus)
+	log.Infof("Peer delete returned [%v]", pdresp.ApiStatus)
 
-	afresp, err := client.BGPPeerAfDelete(ctx, &peerAFReq)
+	afdresp, err := client.BGPPeerAfDelete(ctx, &peerAFDelReq)
 	if err != nil {
-		log.Infof("PeerAF delete request returned (%v)[%v]", err, afresp)
+		log.Infof("PeerAF delete request returned (%v)[%v]", err, afdresp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config (%s)", rtCfg.GetKey(), err)
 	}
-	if afresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("PeerAF delete request returned (%v)[%v]", err, afresp.ApiStatus)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
+	if afdresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+		log.Infof("PeerAF delete request returned (%v)[%v]", err, afdresp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config Status(%v)", rtCfg.GetKey(), afdresp.ApiStatus)
 	}
-	log.Infof("Peer AF delete returned [%v]", afresp.ApiStatus)
+	log.Infof("Peer AF delete returned [%v]", afdresp.ApiStatus)
 
-	peerReq = msTypes.BGPPeerRequest{}
-	peerAFReq = msTypes.BGPPeerAfRequest{}
+	peerReq := msTypes.BGPPeerRequest{}
+	peerAFReq := msTypes.BGPPeerAfRequest{}
 
 	// use the UUID from the new config
 	uid, err = uuid.FromString(rtCfg.UUID)
@@ -460,7 +459,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			}
 		}
 	}
-	presp, err = client.BGPPeerCreate(ctx, &peerReq)
+	presp, err := client.BGPPeerCreate(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config (%s)", rtCfg.GetKey(), err)
@@ -470,7 +469,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
 
-	afresp, err = client.BGPPeerAfCreate(ctx, &peerAFReq)
+	afresp, err := client.BGPPeerAfCreate(ctx, &peerAFReq)
 	if err != nil {
 		log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config (%s)", rtCfg.GetKey(), err)
@@ -495,63 +494,57 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
 		return nil
 	}
-	// Delte configured peers
-	uid, err := uuid.FromString(currentRoutingConfig.UUID)
-	if err != nil {
-		log.Errorf("failed to parse UUID (%v)", err)
-		return err
-	}
-	peerReq := msTypes.BGPPeerRequest{}
-	peerAFReq := msTypes.BGPPeerAfRequest{}
+	// Delete configured peers
+	peerDelReq := msTypes.BGPPeerDeleteRequest{}
+	peerAFDelReq := msTypes.BGPPeerAfDeleteRequest{}
 	for _, o := range currentRoutingConfig.Spec.BGPConfig.Neighbors {
-		peer := msTypes.BGPPeerSpec{
-			Id:           uid.Bytes(),
-			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
-			PeerAddr:     ip2PDSType(o.IPAddress),
-			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     true,
-			SendExtComm:  true,
-			ConnectRetry: 5,
-			KeepAlive:    60,
-			HoldTime:     180,
+		key := &msTypes.BGPPeerKey{
+			PeerAddr: ip2PDSType(o.IPAddress),
+		}
+		peer := msTypes.BGPPeerKeyHandle{
+			IdOrKey: &msTypes.BGPPeerKeyHandle_Key{key},
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
-		peerReq.Request = append(peerReq.Request, &peer)
+		peerDelReq.Request = append(peerDelReq.Request, &peer)
 
 		for _, af := range o.EnableAddressFamilies {
 			switch af {
 			case "evpn":
-				peerAf := msTypes.BGPPeerAfSpec{
-					Id:       uid.Bytes(),
+				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
 					Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
 				}
+				peerAf := msTypes.BGPPeerAfKeyHandle{
+					IdOrKey: &msTypes.BGPPeerAfKeyHandle_Key{key},
+				}
 				log.Infof("Add Delete peer AF [%+v]", peerAf)
-				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+				peerAFDelReq.Request = append(peerAFDelReq.Request, &peerAf)
 
 			case "ipv4-unicast":
-				peerAf := msTypes.BGPPeerAfSpec{
-					Id:       uid.Bytes(),
+				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_IPV4,
 					Safi:     msTypes.BGPSafi_BGP_SAFI_UNICAST,
 				}
+				peerAf := msTypes.BGPPeerAfKeyHandle{
+					IdOrKey: &msTypes.BGPPeerAfKeyHandle_Key{key},
+				}
 				log.Infof("Add Delete peer AF [%+v]", peerAf)
-				peerAFReq.Request = append(peerAFReq.Request, &peerAf)
+				peerAFDelReq.Request = append(peerAFDelReq.Request, &peerAf)
 			}
 		}
 	}
 	ctx := context.TODO()
 
-	presp, err := client.BGPPeerDelete(ctx, &peerReq)
+	pdresp, err := client.BGPPeerDelete(ctx, &peerDelReq)
 	if err != nil {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
+		log.Infof("Peer create Request returned (%v)[%v]", err, pdresp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
-	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
+	if pdresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+		log.Infof("Peer create Request returned (%v)[%v]", err, pdresp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), pdresp.ApiStatus)
 	}
 	currentRoutingConfig = nil
 

@@ -43,7 +43,7 @@ type rtImpExp struct {
 }
 
 func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
-	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) (err error) {
+	msc msTypes.EvpnSvcClient, nw netproto.Network, vpcID uint64, uplinkIDs []uint64) error {
 
 	subnetReq, err := convertNetworkToSubnet(infraAPI, nw, uplinkIDs)
 	if err != nil {
@@ -100,7 +100,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		},
 	}
 	log.Infof("Evpn EVI request [%+v]", eviReq)
-	evresp, err := msc.EvpnEviSpecCreate(ctx, &eviReq)
+	evresp, err := msc.EvpnEviCreate(ctx, &eviReq)
 	if err != nil {
 		log.Errorf("failed to create EVI for subnet [%v/%v]", nw.Tenant, nw.Name)
 		return err
@@ -109,10 +109,21 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to create EVI for subnet [%v/%v](%v)", nw.Tenant, nw.Name, evresp.ApiStatus)
 		return err
 	}
+
 	log.Infof("got EVPN EVI create response [%v/%v]", evresp.ApiStatus, evresp.Response)
 	defer func() {
 		if !success {
-			delresp, err := msc.EvpnEviSpecDelete(ctx, &eviReq)
+			key := &msTypes.EvpnEviKey{
+				SubnetId: uid.Bytes(),
+			}
+			evidreq := msTypes.EvpnEviDeleteRequest{
+				Request: []*msTypes.EvpnEviKeyHandle{
+					{
+						IdOrKey: &msTypes.EvpnEviKeyHandle_Key{key},
+					},
+				},
+			}
+			delresp, err := msc.EvpnEviDelete(ctx, &evidreq)
 			if err != nil {
 				log.Errorf("EVI: %s Cleanup failed | Err: %v", nw.GetKey(), err)
 			}
@@ -121,7 +132,6 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			}
 		}
 	}()
-
 	// Create the RT import and export
 	if nw.Spec.RouteImportExport != nil {
 		var rts []*rtImpExp
@@ -170,7 +180,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			log.Infof("add Evi RT [%+v]", evirt)
 			eviRtReq.Request = append(eviRtReq.Request, &evirt)
 		}
-		evrtresp, err := msc.EvpnEviRtSpecCreate(ctx, eviRtReq)
+		evrtresp, err := msc.EvpnEviRtCreate(ctx, eviRtReq)
 		if err != nil {
 			log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
 		}
@@ -181,7 +191,17 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Infof("subnet EVI RT create [%v/%v] got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
 		defer func() {
 			if !success {
-				delresp, err := msc.EvpnEviRtSpecDelete(ctx, eviRtReq)
+				key := &msTypes.EvpnEviRtKey{
+					SubnetId: uid.Bytes(),
+				}
+				evidRtReq := &msTypes.EvpnEviRtDeleteRequest{
+					Request: []*msTypes.EvpnEviRtKeyHandle{
+						{
+							IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
+						},
+					},
+				}
+				delresp, err := msc.EvpnEviRtDelete(ctx, evidRtReq)
 				if err != nil {
 					log.Errorf("EVI RT: %s Cleanup failed | Err: %v", nw.GetKey(), err)
 				}
@@ -245,7 +265,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		},
 	}
 
-	evresp, err := msc.EvpnEviSpecUpdate(ctx, &eviReq)
+	evresp, err := msc.EvpnEviUpdate(ctx, &eviReq)
 	if err != nil {
 		log.Errorf("failed to update EVI for subnet [%v/%v]", nw.Tenant, nw.Name)
 		return err
@@ -338,7 +358,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		}
 	}
 
-	evrtresp, err := msc.EvpnEviRtSpecCreate(ctx, &rtAddReq)
+	evrtresp, err := msc.EvpnEviRtCreate(ctx, &rtAddReq)
 	if err != nil {
 		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
 	}
@@ -348,7 +368,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	}
 	log.Infof("subnet update [%v/%v] RT create  got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
 
-	evrtresp, err = msc.EvpnEviRtSpecCreate(ctx, &rtDelReq)
+	evrtresp, err = msc.EvpnEviRtCreate(ctx, &rtDelReq)
 	if err != nil {
 		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
 	}
@@ -384,28 +404,28 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	}
 
 	if curNw.Spec.RouteImportExport != nil {
-		eviRtReq := &msTypes.EvpnEviRtRequest{}
+		eviRtReq := &msTypes.EvpnEviRtDeleteRequest{}
 		for _, rt := range curNw.Spec.RouteImportExport.ExportRTs {
-			evirt := msTypes.EvpnEviRtSpec{
-				Id:       uid.Bytes(),
-				SubnetId: uid.Bytes(),
-				RT:       utils.RTToBytes(rt),
-				RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
+			key := &msTypes.EvpnEviRtKey{
+				RT: utils.RTToBytes(rt),
+			}
+			evirt := msTypes.EvpnEviRtKeyHandle{
+				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
 			}
 			eviRtReq.Request = append(eviRtReq.Request, &evirt)
 			log.Infof("del EVI RT export [%v]", evirt)
 		}
 		for _, rt := range curNw.Spec.RouteImportExport.ImportRTs {
-			evirt := msTypes.EvpnEviRtSpec{
-				Id:       uid.Bytes(),
-				SubnetId: uid.Bytes(),
-				RT:       utils.RTToBytes(rt),
-				RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
+			key := &msTypes.EvpnEviRtKey{
+				RT: utils.RTToBytes(rt),
+			}
+			evirt := msTypes.EvpnEviRtKeyHandle{
+				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
 			}
 			eviRtReq.Request = append(eviRtReq.Request, &evirt)
 			log.Infof("del EVI RT import [%v]", evirt)
 		}
-		evrtresp, err := msc.EvpnEviRtSpecDelete(ctx, eviRtReq)
+		evrtresp, err := msc.EvpnEviRtDelete(ctx, eviRtReq)
 		if err != nil {
 			log.Errorf("failed to delete EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
 		}
@@ -413,26 +433,24 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 			return err
 		}
-		log.Infof("subnet delete RT [%v/%v] got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
+		log.Infof("subnet delete RT [%v/%v] got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 	}
-
-	evireq := msTypes.EvpnEviRequest{
-		Request: []*msTypes.EvpnEviSpec{
+	key := &msTypes.EvpnEviKey{
+		SubnetId: uid.Bytes(),
+	}
+	evireq := msTypes.EvpnEviDeleteRequest{
+		Request: []*msTypes.EvpnEviKeyHandle{
 			{
-				Id:       uid.Bytes(),
-				SubnetId: uid.Bytes(),
-				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
-				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
-				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
+				IdOrKey: &msTypes.EvpnEviKeyHandle_Key{key},
 			},
 		},
 	}
-	evresp, err := msc.EvpnEviSpecDelete(ctx, &evireq)
+	evresp, err := msc.EvpnEviDelete(ctx, &evireq)
 	if err != nil {
 		log.Errorf("failed to delete EVI for subnet [%v/%v]", nw.Tenant, nw.Name)
 		return err
 	}
-	log.Infof("got EVPN EVI delete response [%v/%v]", evresp.ApiStatus, evresp.Response)
+	log.Infof("got EVPN EVI delete response [%v]", evresp.ApiStatus)
 
 	if evresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Errorf("failed to delete EVI for subnet [%v/%v](%v)", nw.Tenant, nw.Name, evresp.ApiStatus)

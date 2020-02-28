@@ -114,7 +114,7 @@ process_interface_update (pds_if_spec_t *if_spec,
         pds::LimInterfaceCfgSpec lim_if_spec;
         populate_lim_l3_intf_cfg_spec (lim_if_spec, ms_ifindex);
         pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, 
-                                   PDS_MS_CTM_GRPC_CORRELATOR);
+                                   PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         intf_ip_prfx = &if_spec->l3_if_info.ip_prefix;
         if (!ip_addr_is_zero(&if_spec->l3_if_info.ip_prefix.addr)) {
             has_ip_addr = true;
@@ -127,13 +127,15 @@ process_interface_update (pds_if_spec_t *if_spec,
         pds::LimInterfaceSpec lim_swif_spec;
         lim_swif_spec.set_ifid(LOOPBACK_IF_ID); lim_swif_spec.set_iftype(pds::LIM_IF_TYPE_LOOPBACK);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status,
-                                        PDS_MS_CTM_GRPC_CORRELATOR);
+                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         intf_ip_prfx = &if_spec->loopback_if_info.ip_prefix;
         if (!ip_addr_is_zero(&if_spec->loopback_if_info.ip_prefix.addr)) {
             has_ip_addr = true;
             populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
                                     lim_addr_spec, pds::LIM_IF_TYPE_LOOPBACK,
                                     LOOPBACK_IF_ID);
+            pds::lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
+                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         }
     }
 
@@ -155,17 +157,20 @@ process_interface_update (pds_if_spec_t *if_spec,
             PDS_TRACE_INFO("Deleting IP address for interface update");
             populate_lim_addr_spec (&ifinfo.ip_prfx, lim_del_addr_spec,
                                     iftype, ifid);
+            pds_ms_set_amb_lim_l3_if_addr (lim_del_addr_spec, AMB_ROW_DESTROY,
+                                           PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+
             if (iftype == pds::LIM_IF_TYPE_LOOPBACK) {
                 // remove redistribute connected rule
                 pds::lim_l3_if_addr_pre_set(lim_del_addr_spec, AMB_ROW_DESTROY,
-                                            PDS_MS_CTM_GRPC_CORRELATOR);
+                                            PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
             }
             if (!has_ip_addr) {
                 // no ip address for interface. reset the cached ip.
                 interface_uuid_ip_prefix (if_spec->key, ifinfo.ip_prfx, true);
             }
             pds_ms_set_amb_lim_l3_if_addr (lim_del_addr_spec, AMB_ROW_DESTROY,
-                                           PDS_MS_CTM_GRPC_CORRELATOR);
+                                           PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         }
     }
 
@@ -175,11 +180,11 @@ process_interface_update (pds_if_spec_t *if_spec,
             // we are maintaining only one entry for redistribute connected rule
             // so delete should be completed before adding the rule for update case
             pds::lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
-                                        PDS_MS_CTM_GRPC_CORRELATOR);
+                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         }
         // Configure IP Address
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status,
-                                       PDS_MS_CTM_GRPC_CORRELATOR);
+                                       PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
         if (ip_update) {
             // ip address is modified. update cached ip
             interface_uuid_ip_prefix (if_spec->key, *intf_ip_prfx, false);

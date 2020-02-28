@@ -13,6 +13,8 @@
 {{$file := .}}
 {{$fileName := .GetName}}
 {{$pkgName := .Package}}
+{{$pkg := addStr "." $pkgName}}
+{{$pkg := addStr $pkg "."}}
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_get_utils.hpp"
@@ -25,7 +27,7 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if hasExtension "venice.pdsaSetGlobOpts" . }}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
     {{$param  := (getPdsaSetGlobalOpts . $cam)}}
     {{$oidLen := $param.OidLen}}
     {{$oidFam := $param.OidFam}}
@@ -43,13 +45,13 @@
         google::protobuf::util::MessageToJsonString(req, &cfg, options);
         PDS_TRACE_DEBUG("{{$msgName}} configuration:");
         PDS_TRACE_DEBUG("%s", cfg.c_str());
-        {{$fields := .Fields}}
-        {{range $fields}}
-          {{$castFn := getPdsaCastPrintFunc .Type}}
-          {{if (eq $castFn "pds_ms_print_byte_array")}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{$castFn := getPdsaCastPrintFunc .Type}}
+        {{if (eq $castFn "pds_ms_print_byte_array")}}
         {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}");
-          {{end}}
         {{end}}
+      {{end}}
     }
 
     /*===== Set MS Table: {{$struct}} =====*/
@@ -67,19 +69,19 @@
         oid[0] = {{$oidLen}};
         oid[1] = {{$oidFam}};
 
-        {{$fields := .Fields}}
-        {{range $fields}}
-          {{if hasExtension "venice.pdsaFields" .}}
-            {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
-            {{if not (eq $isFldInTbl true)}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if hasExtension "venice.pdsaFields" .}}
+          {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
         // !!! {{.Name}} field is not in table {{$mib}} !!!
-            {{else}}
-              {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-              {{if (eq $fieldOpt.IsKey true) }}
+          {{else}}
+            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+            {{if (eq $fieldOpt.IsKey true) }}
         // ProtoFieldType: {{.Type}} ProtoFieldName: {{$fieldOpt.Name}}
         // MSFieldType: {{$fieldOpt.CppDataType}} ProtoFieldTypeName: {{.GetTypeName}}
-                {{if (eq $fieldOpt.SetKeyOidFn "")}}
-                  {{if (eq .GetTypeName ".types.IPAddress")}}
+              {{if (eq $fieldOpt.SetKeyOidFn "")}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
         NBB_LONG        ambAddrType_{{$fieldOpt.Name | ToLower}};
         NBB_ULONG       ambAddrLen_{{$fieldOpt.Name | ToLower}};
         NBB_BYTE        ambAddr_{{$fieldOpt.Name | ToLower}}[AMB_BGP_MAX_IP_PREFIX_LEN];
@@ -97,25 +99,25 @@
         {
             oid[{{$fieldOpt.SetKeyOidAddrIndex}} + 1 + ii_{{$fieldOpt.Name | ToLower}}] = (NBB_ULONG) ambAddr_{{$fieldOpt.Name | ToLower}}[ii_{{$fieldOpt.Name | ToLower}}];
         }
-                  {{else}}
-                    {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
-                    {{if (eq $castFn "")}}
+                {{else}}
+                  {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                  {{if (eq $castFn "")}}
         oid[{{$fieldOpt.SetKeyOidIndex}}] = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
-                    {{else}}
-                      {{if (eq $fieldOpt.FieldHasLen false)}}
+                  {{else}}
+                    {{if (eq $fieldOpt.FieldHasLen false)}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}});
-                      {{else}}
+                    {{else}}
         {{$castFn}}_oid(oid, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.SetKeyOidIndex}}, {{$fieldOpt.SetKeyOidLenIndex}});
-                      {{end}}
                     {{end}}
                   {{end}}
-                {{else}}
-        {{$fieldOpt.SetKeyOidFn}}(req, oid);
                 {{end}}
+              {{else}}
+        {{$fieldOpt.SetKeyOidFn}}(req, oid);
               {{end}}
             {{end}}
           {{end}}
         {{end}}
+      {{end}}
         NBB_TRC_EXIT();
     } /* pds_ms_set_{{$struct | ToLower}}_oid */
 
@@ -133,113 +135,114 @@
         /***************************************************************************/
         AMB_SET_ALL_FIELDS_NOT_PRESENT(mib_msg);
 
-        {{$rowStOid := (getRowStatusOid $cam $struct)}}
-        {{if not (eq $rowStOid "") }}
+      {{$rowStOid := (getRowStatusOid $cam $struct)}}
+      {{if not (eq $rowStOid "") }}
         /***************************************************************************/
         /* We always want to set the row status.                                   */
         /***************************************************************************/
         v_{{$struct | ToLower}}->row_status = row_status;
         AMB_SET_FIELD_PRESENT(mib_msg, {{$rowStOid}});
-        {{end}}
+      {{end}}
 
-        {{$fields := .Fields}}
-        {{range $fields}}
-          {{if hasExtension "venice.pdsaFields" .}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if hasExtension "venice.pdsaFields" .}}
           {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-            {{if (eq $fieldOpt.IsReadOnly true)}}
+          {{if (eq $fieldOpt.IsReadOnly true)}}
             // {{$fieldOpt.Name}} is read-only. So not setting it.
-            {{else}}
-              {{if (eq $fieldOpt.IsKey false) }}
+          {{else}}
+            {{if (eq $fieldOpt.IsKey false) }}
         if (row_status != AMB_ROW_DESTROY) {
             NBB_TRC_FLOW ((NBB_FORMAT "Not destroying RM: fill in field {{$fieldOpt.Field}} in {{$struct}}"));
-              {{end}}
-              {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
+            {{end}}
+            {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
             if (req.{{$fieldOpt.Name | ToLower}}() != "") {
-              {{end}}
-              {{if not (eq $fieldOpt.Field "")}}
+            {{end}}
+            {{if not (eq $fieldOpt.Field "")}}
                 // {{.Type}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}}
-                {{if (eq $fieldOpt.SetFieldFn "")}}
-                  {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
-                  {{if (eq $castFn "")}}
-                    {{if (eq .GetTypeName ".types.IPAddress")}}
+              {{if (eq $fieldOpt.SetFieldFn "")}}
+                {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                {{if (eq $castFn "")}}
+                  {{if (eq .GetTypeName ".types.IPAddress")}}
                 ip_addr_t       outAddr_{{$fieldOpt.Field}};
 
                 ip_addr_spec_to_ip_addr(req.{{$fieldOpt.Name | ToLower}}(), &outAddr_{{$fieldOpt.Field}});
-                      {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
+                    {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
                 pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Field}},
                                                       &(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type),
                                                       &(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len),
                                                       v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
                                                       {{$fieldOpt.IsZeroIPValid}});
-                      {{else}}
+                    {{else}}
                 pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Field}},
                                                       &(v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}}),
                                                       &(v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}}),
                                                       v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
                                                       {{$fieldOpt.IsZeroIPValid}});
-                      {{end}}
-                AMB_SET_FIELD_PRESENT (mib_msg, {{$fieldOpt.SetFieldIdx}}-1);
-                    {{else}}
-                v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
+                AMB_SET_FIELD_PRESENT (mib_msg, {{$fieldOpt.SetFieldIdx}}-1);
                   {{else}}
-                    {{if (eq $castFn "pds_ms_set_amb_bool")}}
+                v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                  {{end}}
+                {{else}}
+                  {{if (eq $castFn "pds_ms_set_amb_bool")}}
                   {{$castFn}}((NBB_LONG*)&v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                  {{else}}
+                    {{if (eq $fieldOpt.FieldHasLen false)}}
+                  {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
-                      {{if (eq $fieldOpt.FieldHasLen false)}}
-                    {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
-                      {{else}}
-                    {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, (NBB_ULONG*)&(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len), req.{{$fieldOpt.Name | ToLower}}());
-                      {{end}}
+                  {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, (NBB_ULONG*)&(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len), req.{{$fieldOpt.Name | ToLower}}());
                     {{end}}
                   {{end}}
-                AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
-                {{else}}
-                {{$fieldOpt.SetFieldFn}}(req, mib_msg);
                 {{end}}
+                AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
               {{else}}
-                {{if TypeIsMessage .}}
-                  {{if (eq $fieldOpt.Field "")}}
-                    {{$myvar := (joinFields $pkgName "." ".")}}
-                    {{$parentFieldName := .GetName}}
-                    {{$parentFieldTypeName := (TrimPrefix .GetTypeName $myvar)}}
-                    {{$parentFieldName := $fieldOpt.Name}}
-                    {{range $msgs}}
-                      {{$myMsgName := .GetName}}
-                      {{if (eq $myMsgName $parentFieldTypeName)}}
-                        {{$fields := .Fields}}
-                        {{range $fields}}
-                          {{if hasExtension "venice.pdsaFields" .}}
-                            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+                {{$fieldOpt.SetFieldFn}}(req, mib_msg);
+              {{end}}
+            {{else}}
+              {{if TypeIsMessage .}}
+                {{if (eq $fieldOpt.Field "")}}
+                  {{$myvar := (joinFields $pkgName "." ".")}}
+                  {{$parentFieldName := .GetName}}
+                  {{$parentFieldTypeName := (TrimPrefix .GetTypeName $myvar)}}
+                  {{$parentFieldName := $fieldOpt.Name}}
+                  {{range $msgs}}
+                    {{$myMsgName := .GetName}}
+                    {{if (eq $myMsgName $parentFieldTypeName)}}
+                      {{$fields := .Fields}}
+                      {{range $fields}}
+                        {{if hasExtension "venice.pdsaFields" .}}
+                          {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
         // {{$fieldOpt.Name}}
-                            {{if (eq $fieldOpt.SetFieldFn "")}}
+                          {{if (eq $fieldOpt.SetFieldFn "")}}
         v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$parentFieldName}}().{{$fieldOpt.Name | ToLower}}();
-                            {{else}}
+                          {{else}}
         {{$fieldOpt.SetFieldFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$parentFieldName}}().{{$fieldOpt.Name | ToLower}}());
-                            {{end}}
-        AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
                           {{end}}
+        AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
                         {{end}}
                       {{end}}
                     {{end}}
                   {{end}}
                 {{end}}
               {{end}}
-              {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
+            {{end}}
+            {{if (eq $fieldOpt.IgnoreIfEmpty true) }}
             }
-              {{end}}
-              {{if (eq $fieldOpt.IsKey false) }}
+            {{end}}
+            {{if (eq $fieldOpt.IsKey false) }}
         }
-              {{end}}
             {{end}}
           {{end}}
         {{end}}
+      {{end}}
         NBB_TRC_EXIT();
     } /* pds_ms_fill_{{$struct | ToLower}}_fields */
 
     NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
+                                            bool skip_fill,
                                             bool op_update) {
         ATG_CPI_ROW_UPDATE  *row_update = NULL;
         AMB_GEN_IPS         *mib_msg = NULL;
@@ -266,10 +269,14 @@
         /* Build {{$struct}}.                                                     */
         /***************************************************************************/
         {{$struct}} *data = ({{$struct}}*)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
-        pds_ms_fill_{{$struct | ToLower}}_fields(req, mib_msg, data, row_status);
-        {{if not (eq $fillFn "")}}
+        if (!skip_fill) {
+            pds_ms_fill_{{$struct | ToLower}}_fields(req, mib_msg, data, row_status);
+        } else {
+            AMB_SET_ALL_FIELDS_NOT_PRESENT(mib_msg);
+        }
+      {{if not (eq $fillFn "")}}
         {{$fillFn}}(req, mib_msg, data, row_status);
-        {{end}}
+      {{end}}
 
         // Send the Row Update request to CSS
         NBB_SEND_IPS (SHARED.css_pid, USER_TO_CPI_Q, row_update);
@@ -287,9 +294,10 @@
     NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
+                                            NBB_VOID* kh,
                                             bool op_update) {
         if (pre_set_{{$struct | ToLower}}_func != NULL) {
-            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, op_update);
+            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
         }
         return;
     } /* pds_ms_pre_set_{{$struct | ToLower}} */
@@ -303,9 +311,10 @@
     NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
+                                            NBB_VOID* kh,
                                             bool op_update) {
         if (post_set_{{$struct | ToLower}}_func != NULL) {
-            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, op_update);
+            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
         }
         return;
     } /* pds_ms_post_set_{{$struct | ToLower}} */
@@ -317,13 +326,17 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if hasExtension "venice.pdsaGetGlobOpts" . }}
+  {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
     {{$param := (getPdsaGetGlobalOpts . $cam)}}
     {{$oidLen := $param.OidLen}}
     {{$oidFam := $param.OidFam}}
     {{$struct := $param.Struct}}
     {{$mib    := $param.Mib}}
     {{$fillFn := $param.FillFn}}
+    {{$specMsgName := $param.SpecMsg}}
+    {{if (eq $specMsgName "")}}
+      {{$specMsgName = (TrimPrefix .GetName $pkg)}}
+    {{end}}
     {{if not (eq $oidLen "")}}
     /*===== Get Dump Spec: {{$msgName}} =====*/
     NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
@@ -337,13 +350,13 @@
         PDS_TRACE_DEBUG("%s", cfg.c_str());
     }
     /*===== Get MS Table: {{$struct}} =====*/
-    {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
-    {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
+      {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
+      {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
     NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_spec_response_count;
-    {{end}}
-    {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+      {{end}}
+      {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
     NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_status_response_count;
-    {{end}}
+      {{end}}
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
     {
         /***************************************************************************/
@@ -388,104 +401,107 @@
                 if (pds_ms_pre_fill_get_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
                     num_entries++;
 
-        {{$reqfields := $rootMsg.Fields}}
-        {{range $reqfields}}
-          {{if (eq .GetName "Response")}}
-            {{if HasSuffix $msg.GetName "Status"}}
-              {{$specPresent := false}}
-              {{$fieldMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
-              {{$fields := $fieldMsg.Fields}}
-                {{range $fields}}
-                  {{if or (HasSuffix .GetName "Spec") (HasSuffix .GetName "spec")}}
-                    {{$specPresent = true}}
-                  {{end}}
-                {{end}}
-                {{if $specPresent}}
-                  {{if (isRepeatedField .)}}
-                    auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
-                  {{else}}
-                    auto res = resp->response();
-                  {{end}}
-                    auto ent = res->mutable_status();
-                {{else}}
-                  {{if (isRepeatedField .)}}
-                    auto res = resp->add_response();
-                  {{else}}
-                    auto res = resp->mutable_response();
-                  {{end}}
-                    auto ent = res->mutable_status();
-                {{end}}
-              {{end}}
-              {{if HasSuffix $msg.GetName "Spec"}}
-                {{if (isRepeatedField .)}}
-                    auto res = resp->add_response();
-                {{else}}
-                    auto res = resp->mutable_response();
-                {{end}}
-                    auto ent = res->mutable_spec();
+      {{$reqfields := $rootMsg.Fields}}
+      {{range $reqfields}}
+        {{if (eq .GetName "Response")}}
+          {{if HasSuffix $msg.GetName "Status"}}
+            {{$specPresent := false}}
+            {{$fieldMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+            {{$fields := $fieldMsg.Fields}}
+            {{range $fields}}
+              {{if or (HasSuffix .GetName "Spec") (HasSuffix .GetName "spec")}}
+                {{$specPresent = true}}
               {{end}}
             {{end}}
+            {{if $specPresent}}
+              {{if (isRepeatedField .)}}
+                    auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
+              {{else}}
+                    auto res = resp->response();
+              {{end}}
+                    auto ent = res->mutable_status();
+            {{else}}
+              {{if (isRepeatedField .)}}
+                    auto res = resp->add_response();
+              {{else}}
+                    auto res = resp->mutable_response();
+              {{end}}
+                    auto ent = res->mutable_status();
+            {{end}}
           {{end}}
+          {{if HasSuffix $msg.GetName "Spec"}}
+            {{if (isRepeatedField .)}}
+                    auto res = resp->add_response();
+            {{else}}
+                    auto res = resp->mutable_response();
+            {{end}}
+                    auto ent = res->mutable_spec();
+          {{end}}
+        {{end}}
+      {{end}}
                     /*************************************************************************/
                     /* TODO: Extract the fields.                                             */
                     /*************************************************************************/
-            {{$fields := .Fields}}
-            {{range $fields}}
-              {{if hasExtension "venice.pdsaFields" .}}
-                {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
-                {{if not (eq $isFldInTbl true)}}
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if hasExtension "venice.pdsaFields" .}}
+          {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
                     // !!! {{.Name}} field is not in table {{$mib}} !!!
-                {{else}}
-                  {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-                    {{if not (eq $fieldOpt.Name "")}}
+          {{else}}
+            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+            {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
                     // {{.Type}} {{.GetTypeName}} {{$fieldOpt.Name}} {{$fieldOpt.CppDataType}} {{.GetLabel}}
-                      {{if (eq $fieldOpt.GetFieldFn "")}}
-                        {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
-                        {{if (eq $castFn "")}}
-                          {{if (eq .GetTypeName ".types.IPAddress")}}
+              {{if (eq $fieldOpt.GetFieldFn "")}}
+                {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
+                  {{if (eq $castFn "")}}
+                    {{if (eq .GetTypeName ".types.IPAddress")}}
                     auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
                     types::IPAddress   res_{{$fieldOpt.Field}};
                     ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}};
-                            {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
+                      {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
                     pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
                                                           v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type,
                                                           v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len,
                                                           &pds_ms_ip_addr_{{$fieldOpt.Field}});
-                            {{else}}
+                      {{else}}
                     pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
                                                           v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}},
                                                           v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}},
                                                           &pds_ms_ip_addr_{{$fieldOpt.Field}});
-                            {{end}}
+                      {{end}}
                     ip_addr_to_spec(&pds_ms_ip_addr_{{$fieldOpt.Field}}, &res_{{$fieldOpt.Field}});
                     {{$fieldOpt.Name | ToLower}}_addr->set_af(res_{{$fieldOpt.Field}}.af());
                     {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(res_{{$fieldOpt.Field}}.v4addr());
-                          {{else}}
-                            {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
-                            {{if (eq $typeCastFn "")}}
+                    {{else}}
+                      {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
+                      {{if (eq $typeCastFn "")}}
                     ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
-                            {{else}}
-                    ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
-                            {{end}}
-                          {{end}}
-                        {{else}}
-                          {{if or (eq $castFn "pds_ms_nbb_get_long") (eq $castFn "pds_ms_get_amb_bool")}}
-                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
-                          {{else}}
-                            {{if (eq $fieldOpt.FieldHasLen false)}}
-                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
-                            {{else}}
-                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
-                            {{end}}
-                          {{end}}
-                        {{end}}
                       {{else}}
-                    {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
+                    ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                      {{end}}
+                    {{end}}
+                  {{else}}
+                    {{if or (eq $castFn "pds_ms_nbb_get_long") (eq $castFn "pds_ms_get_amb_bool")}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
+                    {{else}}
+                      {{if (eq $fieldOpt.FieldHasLen false)}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
+                      {{else}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
                       {{end}}
                     {{end}}
                   {{end}}
+                {{else}}
+                    {{$fieldOpt.GetFieldFn}}(ent, v_{{$struct | ToLower}});
                 {{end}}
               {{end}}
+              {{if ($fieldOpt.IsInternalField)}}
+                    // skipping internal field {{$fieldOpt.Field}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
               }
 
                 /***********************************************************************/
@@ -495,11 +511,11 @@
                                         NBB_ALIGN_OFFSET(v_amb_get->data_len));
             }
 
-            {{if HasSuffix $msg.GetName "Status"}}
+        {{if HasSuffix $msg.GetName "Status"}}
             pds_ms_check_get_{{$struct | ToLower}}_status_response_count += num_entries;
-            {{else}}
+        {{else}}
             pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += num_entries;
-            {{end}}
+        {{end}}
 
             if (specific_get) {
                 /*************************************************************************/
@@ -515,9 +531,9 @@
                 /* the callback.                                                         */
                 /*************************************************************************/
                 SHARED.wait_check_get = NULL;
-                {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
                 pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
-                {{end}}
+        {{end}}
                 /*************************************************************************/
                 /* Send response back to the caller.                                     */
                 /*************************************************************************/
@@ -571,9 +587,9 @@
             /* We are no longer responsible for incoming GETs.                       */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
-            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
             pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
-            {{end}}
+        {{end}}
 
             /*************************************************************************/
             /* Send response back to the caller.                                     */
@@ -600,9 +616,9 @@
             /* We are no longer responsible for incoming GETs.                       */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
-            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
             pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
-            {{end}}
+        {{end}}
 
             /*************************************************************************/
             /* Send response back to the caller.                                     */
@@ -631,9 +647,9 @@
             /* the callback.                                                         */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
-            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
             pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
-            {{end}}
+        {{end}}
             /*************************************************************************/
             /* Send response back to the caller.                                     */
             /*************************************************************************/
@@ -646,7 +662,7 @@
 
     } /* pds_ms_check_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$specMsgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
         /***************************************************************************/
         /* Local Variables                                                         */
@@ -659,8 +675,9 @@
         NBB_MEMSET(oid, 0, sizeof(NBB_ULONG) * {{$oidLen}});
         oid[0] = {{$oidLen}};
         oid[1] = {{$oidFam}};
-
-        {{$fields := .Fields}}
+        {{if not (eq $specMsgName "")}}
+        {{$specMsg := (getMsg $file $pkg $specMsgName)}}
+        {{$fields := $specMsg.Fields}}
         {{range $fields}}
           {{if hasExtension "venice.pdsaFields" .}}
             {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
@@ -684,11 +701,11 @@
                                           &ambAddrLen_{{$fieldOpt.Name | ToLower}}, ambAddr_{{$fieldOpt.Name | ToLower}},
                                           {{$fieldOpt.IsZeroIPValid}});
         // Fill oid now
-        oid[{{$fieldOpt.SetKeyOidAddrTypeIndex}}]   = ambAddrType_{{$fieldOpt.Name | ToLower}};
-        oid[{{$fieldOpt.SetKeyOidAddrIndex}}]       = ambAddrLen_{{$fieldOpt.Name | ToLower}};
+        oid[{{$fieldOpt.GetKeyOidAddrTypeIndex}}]   = ambAddrType_{{$fieldOpt.Name | ToLower}};
+        oid[{{$fieldOpt.GetKeyOidAddrIndex}}]       = ambAddrLen_{{$fieldOpt.Name | ToLower}};
         for (ii_{{$fieldOpt.Name | ToLower}} = 0; ii_{{$fieldOpt.Name | ToLower}} < ambAddrLen_{{$fieldOpt.Name | ToLower}}; ii_{{$fieldOpt.Name | ToLower}}++)
         {
-            oid[{{$fieldOpt.SetKeyOidAddrIndex}} + 1 + ii_{{$fieldOpt.Name | ToLower}}] = (NBB_ULONG) ambAddr_{{$fieldOpt.Name | ToLower}}[ii_{{$fieldOpt.Name | ToLower}}];
+            oid[{{$fieldOpt.GetKeyOidAddrIndex}} + 1 + ii_{{$fieldOpt.Name | ToLower}}] = (NBB_ULONG) ambAddr_{{$fieldOpt.Name | ToLower}}[ii_{{$fieldOpt.Name | ToLower}}];
         }
                   {{else}}
                     {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
@@ -709,10 +726,11 @@
             {{end}}
           {{end}}
         {{end}}
+        {{end}}
         NBB_TRC_EXIT();
     } /* pds_ms_get_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -877,9 +895,9 @@
         pre_get_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_pre_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
         if (pre_get_{{$struct | ToLower}}_func != NULL) {
-            pre_get_{{$struct | ToLower}}_func(req, resp);
+            pre_get_{{$struct | ToLower}}_func(req, resp, kh);
         }
         return;
     } /* pds_ms_pre_get_{{$struct | ToLower}} */
@@ -890,9 +908,9 @@
         post_get_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_post_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
         if (post_get_{{$struct | ToLower}}_func != NULL) {
-            post_get_{{$struct | ToLower}}_func(req, resp);
+            post_get_{{$struct | ToLower}}_func(req, resp, kh);
         }
         return;
     } /* pds_ms_post_get_{{$struct | ToLower}} */
@@ -923,6 +941,111 @@
         return;
     } /* pds_ms_post_getall_{{$struct | ToLower}} */
 
+    {{end}}
+  {{end}}
+{{end}}
+
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if (HasSuffix .GetName "KeyHandle")}} 
+    {{if (hasExtension "venice.pdsaSetGlobOpts" . )}}
+      {{$param := (getPdsaSetGlobalOpts . $cam)}}
+      {{$struct := $param.Struct}}
+      {{$specMsgName := $param.SpecMsg}}
+      {{$mib    := $param.Mib}}
+    // Helper to convert {{.GetName}} to {{$specMsgName}}
+    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsgName}} &out) {
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{if and (eq .GetName "Key") (not (eq $specMsgName ""))}}
+        if (in.has_key()) {
+          {{$specMsg := (getMsg $file $pkg $specMsgName)}}
+          {{$keyMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+          {{$fields := $keyMsg.Fields}}
+          {{range $fields}}
+            {{$keyField := .}}
+            {{$fieldProcessed := false}}
+            {{range $specMsg.Fields}}
+              {{if (eq .GetName $keyField.GetName)}}
+                {{if hasExtension "venice.pdsaFields" .}}
+                  {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+                  {{if not (eq $isFldInTbl true)}}
+            // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+                  {{else}}
+                    {{if hasExtension "venice.pdsaFields" .}}
+                      {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+                      {{if (eq $fieldOpt.IsKey true) }}
+                        {{$fieldProcessed = true}}
+                        {{if (eq .GetTypeName ".types.IPAddress")}}
+            out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.key().{{$fieldOpt.Name | ToLower}}()));
+                        {{else}}
+            out.set_{{$fieldOpt.Name | ToLower}}(in.key().{{$fieldOpt.Name | ToLower}}());
+                        {{end}}
+                      {{end}}
+                    {{end}}
+                  {{end}}
+                {{end}}
+              {{end}}
+            {{end}}
+            {{if not $fieldProcessed}}
+            out.set_{{.GetName | ToLower}}(in.key().{{.GetName | ToLower}}());
+            {{end}}
+          {{end}}
+        }
+        {{end}}
+      {{end}}
+    } /* pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}} */
+    {{else}}
+      {{if (hasExtension "venice.pdsaGetGlobOpts" . )}}
+        {{$param := (getPdsaGetGlobalOpts . $cam)}}
+        {{$struct := $param.Struct}}
+        {{$specMsgName := $param.SpecMsg}}
+        {{$mib    := $param.Mib}}
+    // Helper to convert {{.GetName}} to {{$specMsgName}}
+    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsgName}} &out) {
+        {{$fields := .Fields}}
+        {{range $fields}}
+          {{if and (eq .GetName "Key") (not (eq $specMsgName ""))}}
+        if (in.has_key()) {
+            {{$specMsg := (getMsg $file $pkg $specMsgName)}}
+            {{$keyMsg := (getMsg $file $pkg (TrimPrefix .GetTypeName $pkg))}}
+            {{$fields := $keyMsg.Fields}}
+            {{range $fields}}
+              {{$keyField := .}}
+              {{$fieldProcessed := false}}
+              {{range $specMsg.Fields}}
+                {{if (eq .GetName $keyField.GetName)}}
+                  {{if hasExtension "venice.pdsaFields" .}}
+                    {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+                    {{if not (eq $isFldInTbl true)}}
+            // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+                    {{else}}
+                      {{if hasExtension "venice.pdsaFields" .}}
+                        {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+                        {{if (eq $fieldOpt.IsKey true) }}
+                          {{$fieldProcessed = true}}
+                          {{if (eq .GetTypeName ".types.IPAddress")}}
+            out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.key().{{$fieldOpt.Name | ToLower}}()));
+                          {{else}}
+            out.set_{{$fieldOpt.Name | ToLower}}(in.key().{{$fieldOpt.Name | ToLower}}());
+                          {{end}}
+                        {{end}}
+                      {{end}}
+                    {{end}}
+                  {{end}}
+                {{end}}
+              {{end}}
+              {{if not $fieldProcessed}}
+            out.set_{{.GetName | ToLower}}(in.key().{{.GetName | ToLower}}());
+              {{end}}
+            {{end}}
+        }
+          {{end}}
+        {{end}}
+    } /* pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}} */
+      {{end}}
     {{end}}
   {{end}}
 {{end}}

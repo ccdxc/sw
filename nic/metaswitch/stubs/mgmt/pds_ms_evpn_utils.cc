@@ -11,10 +11,167 @@ using namespace pds_ms;
 
 namespace pds {
 NBB_VOID
+evpn_evi_pre_get (EvpnEviSpec &req, EvpnEviGetResponse* resp, NBB_VOID* kh)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    EvpnEviKeyHandle *key_handle = (EvpnEviKeyHandle *)kh;
+
+    if (key_handle->has_key()) {
+        // get uuid
+        pds_ms_get_uuid (&uuid, req.subnetid());
+
+        // spec uuid is same as subnet uuid
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            throw Error (std::string("EVPN EVI get request with unknown "
+                         "Subnet reference").append(uuid.str()),
+                         SDK_RET_ENTRY_NOT_FOUND);
+        } 
+        if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
+           auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
+           req.set_eviid(subnet_uuid_obj->ms_id()); 
+           PDS_TRACE_DEBUG("EVPN EVI get request: %s evi-index: %d",
+                            uuid.str(), subnet_uuid_obj->ms_id());
+        } else {
+            throw Error (std::string("EVPN EVI get request with non-matching "
+                         "Subnet reference").  append(uuid.str()),
+                         SDK_RET_INVALID_ARG);
+        }
+    } else {
+        // Non Venice case
+        // TODO: Id based get request. not supported yet
+        throw Error (std::string("EVPN EVI get request with Id ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+}
+NBB_VOID
+evpn_evi_rt_pre_get (EvpnEviRtSpec &req, EvpnEviRtGetResponse* resp,
+                     NBB_VOID* kh)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    EvpnEviRtKeyHandle *key_handle = (EvpnEviRtKeyHandle *)kh;
+
+    if (key_handle->has_key()) {
+        // get uuid
+        pds_ms_get_uuid (&uuid, req.subnetid());
+    
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            throw Error (std::string("EVPN EVI RT request with unknown "
+                         "Subnet reference ").append(uuid.str()),
+                         SDK_RET_ENTRY_NOT_FOUND);
+        }
+        if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
+            auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
+           req.set_eviid(subnet_uuid_obj->ms_id()); 
+            PDS_TRACE_DEBUG("EVPN EVI RT get request: %s evi-index: %d",
+                            uuid.str(), subnet_uuid_obj->ms_id());
+        } else {
+            throw Error (std::string("EVPN EVI RT get request with non-matching "
+                         "Subnet reference ").  append(uuid.str()),
+                         SDK_RET_INVALID_ARG);
+        }
+    } else {
+        // Non Venice case
+        // TODO: Id based get request. not supported yet
+        throw Error (std::string("EVPN EVI RT get request with Id ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+}
+
+NBB_VOID 
+evpn_ip_vrf_pre_get (EvpnIpVrfSpec &req, EvpnIpVrfGetResponse *resp,
+                     NBB_VOID* kh)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    EvpnIpVrfKeyHandle *key_handle = (EvpnIpVrfKeyHandle *)kh;
+
+    if (key_handle->has_key()) {
+        // venice case, key with all required data is provided
+        // get uuid
+        pds_ms_get_uuid (&uuid, req.vpcid());
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            throw Error (std::string("EVPN IP VRF request with unknown "
+                         "VPC reference").append(uuid.str()),
+                         SDK_RET_ENTRY_NOT_FOUND);
+            return;
+        } 
+        if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
+            auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
+            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
+            req.set_vrfname(vrf_name);
+            PDS_TRACE_DEBUG("EVPN IP VRF get request: %s vrf-id: %d, vrf-name:%s",
+                            uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
+        } else {
+            throw Error (std::string("EVPN IP VRF request with non-matching "
+                         "VPC reference").  append(uuid.str()),
+                         SDK_RET_INVALID_ARG);
+        }
+    } else {
+        // Non Venice case
+        // TODO: Id based get request. not supported yet
+        throw Error (std::string("EVPN IP VRF get request with Id ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+}
+
+NBB_VOID 
+evpn_ip_vrf_rt_pre_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *resp,
+                        NBB_VOID *kh)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    EvpnIpVrfRtKeyHandle *key_handle = (EvpnIpVrfRtKeyHandle *)kh;
+
+    if (key_handle->has_key()) {
+        // venice case, key with all required data is provided
+        // get uuid
+        pds_ms_get_uuid (&uuid, req.vpcid());
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+        if (uuid_obj == nullptr) {
+            throw Error (std::string("EVPN IP VRF RT get request with unknown "
+                         "VPC reference").append(uuid.str()),
+                         SDK_RET_ENTRY_NOT_FOUND);
+        }
+        if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
+            auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
+            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
+            req.set_vrfname(vrf_name);
+
+            PDS_TRACE_DEBUG
+                ("EVPN IP RT VRF get request: %s vrf-id: %d, vrf-name:%s",
+                 uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
+        } else {
+            throw Error (std::string("EVPN IP VRF RT get request with non-matching "
+                         "VPC reference").  append(uuid.str()),
+                         SDK_RET_INVALID_ARG);
+        }
+    } else {
+        // Non-Venice case
+        // TODO: Id based get request. not supported yet
+        throw Error (std::string("EVPN IP VRF RT get request with Id ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
+    }
+}
+
+NBB_VOID
 evpn_evi_pre_set (EvpnEviSpec  &req,
                   NBB_LONG     row_status,
                   NBB_ULONG    test_correlator,
-                  bool          op_update)
+                  NBB_VOID*    kh,
+                  bool         op_update)
 {
     // Local variables
     pds_obj_key_t uuid = {0};
@@ -23,6 +180,16 @@ evpn_evi_pre_set (EvpnEviSpec  &req,
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
+
+    if (row_status == AMB_ROW_DESTROY) {
+        EvpnEviKeyHandle *key_handle = (EvpnEviKeyHandle *)kh;
+
+        // if user provides key, its venice case. all data is coming
+        // from top. just set uuid same as subnet_uuid.
+        if (key_handle->has_key()) {
+            uuid = subnet_uuid;
+        }
+    }
 
     if (uuid ==  subnet_uuid) {
         // spec uuid is same as subnet uuid
@@ -45,7 +212,10 @@ evpn_evi_pre_set (EvpnEviSpec  &req,
                          SDK_RET_INVALID_ARG);
         }
     } else {
+        // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map
+        throw Error (std::string("EVPN EVI request with invalid Subnet UUID ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
     }
 }
 
@@ -53,6 +223,7 @@ NBB_VOID
 evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                      NBB_LONG       row_status,
                      NBB_ULONG      test_correlator,
+                     NBB_VOID*      kh,
                      bool           op_update)
 {
     // Local variables
@@ -62,6 +233,16 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
+
+    if (row_status == AMB_ROW_DESTROY) {
+        EvpnEviRtKeyHandle *key_handle = (EvpnEviRtKeyHandle *)kh;
+
+        // if user provides key, its venice case. all data is coming
+        // from top. just set uuid same as subnet_uuid.
+        if (key_handle->has_key()) {
+            uuid = subnet_uuid;
+        }
+    }
 
     ms_bd_id_t  ms_bd_id = 0;
 
@@ -89,7 +270,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     } else {
         // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map
-        throw Error (std::string("EVPN EVI RT request with invalid EVI UUID ")
+        throw Error (std::string("EVPN EVI RT request with invalid Subnet UUID ")
                      .append(uuid.str()), SDK_RET_INVALID_ARG);
     }
 
@@ -141,6 +322,7 @@ NBB_VOID
 evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
                      NBB_LONG      row_status,
                      NBB_ULONG     test_correlator,
+                     NBB_VOID*     kh,
                      bool          op_update)
 {
     // Local variables
@@ -151,6 +333,16 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
+
+    if (row_status == AMB_ROW_DESTROY) {
+        EvpnIpVrfKeyHandle *key_handle = (EvpnIpVrfKeyHandle *)kh;
+
+        // if user provides key, its venice case. all data is coming
+        // from top. just set uuid same as vpc_uuid.
+        if (key_handle->has_key()) {
+            uuid = vpc_uuid;
+        }
+    }
 
     if (uuid == vpc_uuid) {
         // Venice case
@@ -176,8 +368,10 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
                          SDK_RET_INVALID_ARG);
         }
     } else {
-        // Non-Venice case
-        // TODO: spec uuid doesnt match with VPC uuid. need to key-map
+        // Non Venice case
+        // TODO: spec uuid doesnt match with subnet uuid. need to key-map
+        throw Error (std::string("EVPN IP VRF request with invalid VPC UUID ")
+                     .append(uuid.str()), SDK_RET_INVALID_ARG);
     }
 }
 
@@ -185,6 +379,7 @@ NBB_VOID
 evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
                         NBB_LONG        row_status,
                         NBB_ULONG       test_correlator,
+                        NBB_VOID*       kh,
                         bool            op_update)
 {
     // Local variables
@@ -194,6 +389,16 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
+
+    if (row_status == AMB_ROW_DESTROY) {
+        EvpnIpVrfRtKeyHandle *key_handle = (EvpnIpVrfRtKeyHandle *)kh;
+
+        // if user provides key, its venice case. all data is coming
+        // from top. just set uuid same as vpc_uuid.
+        if (key_handle->has_key()) {
+            uuid = vpc_uuid;
+        }
+    }
 
     ms_vrf_id_t ms_vrf_id = 0;
     std::string vrf_name;
@@ -359,7 +564,7 @@ evpn_ip_vrf_rt_set_fill_func (EvpnIpVrfRtSpec&      req,
 
 
 NBB_VOID
-evpn_mac_ip_get_fill_func (EvpnMacIpSpec& req, NBB_ULONG *oid)
+evpn_mac_ip_get_fill_func (EvpnMacIpStatus& req, NBB_ULONG *oid)
 {
     oid[AMB_EVPN_MAC_IP_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
 }
