@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
@@ -396,7 +397,7 @@ func (n *NMD) UpdateNaplesHealth() []cmd.DSCCondition {
 	status := cmd.ConditionStatus_TRUE.String()
 	reason := ""
 
-	if n.Pipeline != nil {
+	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineIris {
 		status, reason = n.Pipeline.GetSysmgrSystemStatus()
 	}
 	Conditions := []cmd.DSCCondition{
