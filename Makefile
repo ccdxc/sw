@@ -839,11 +839,11 @@ venice-image:
 	$(MAKE) install
 	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
 	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
-	@if [ -z ${APULU_PIPELINE} ]; then \
-	        cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
-	else \
-	        cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
-	fi
+	if [ -a nic/pegasus.tgz ]; then \
+		cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
+        else \
+		cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
+        fi
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
 venice-upgrade-image:
@@ -861,6 +861,7 @@ venice-upgrade-image:
 	printf "\n+++++++++++++++++ complete venice-upgrade-image $$(date) +++++++++++++++++\n"
 
 ci-venice-apulu-image:
+	ls -al nic/pegasus.tgz
 	$(MAKE) venice-image APULU_PIPELINE=1
 ci-venice-image:
 	$(MAKE) venice-image

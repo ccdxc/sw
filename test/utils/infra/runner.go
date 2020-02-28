@@ -100,6 +100,58 @@ func RunCmd(cmd string) error {
 	return err
 }
 
+// CopyRemoteLogs copies logs
+func CopyRemoteLogs(logs []string, destFolder string) error {
+	ip := getVMIP()
+	sshC, err := getSSHClient(ip)
+	if err != nil {
+		return err
+	}
+	return copyRemoteLogsWithSSHClient(sshC, logs, destFolder)
+}
+func copyRemoteLogsWithSSHClient(sshC *ssh.Client, logs []string, destFolder string) error {
+	sftpC, err := sftp.NewClient(sshC)
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+	defer sftpC.Close()
+
+	for _, log := range logs {
+		dest, err := sftpC.Create(destFolder)
+		if err != nil {
+			logrus.Errorf("Skipping %s - %v", log, err)
+			continue
+		}
+
+		//path := filepath.Join(destFolder, filepath.Base(log))
+		logrus.Infof("Downloading %s to %s", log, destFolder)
+		src, err := os.Open(log)
+		if err != nil {
+			return err
+		}
+
+		size, err := io.Copy(dest, src)
+		if err != nil {
+			return err
+		}
+		src.Close()
+		dest.Close()
+
+		statInfo, err := sftpC.Stat(destFolder)
+		if err != nil {
+			return err
+		}
+		if size != statInfo.Size() {
+			return fmt.Errorf("Downloaded size %d is not equal to file size %d", size, statInfo.Size())
+		}
+
+		logrus.Infof("Wrote %s to (size %d)", log, size)
+	}
+
+	return nil
+}
+
 // CopyLogs copies logs
 func CopyLogs(logs []string, destFolder string) error {
 	ip := getVMIP()
