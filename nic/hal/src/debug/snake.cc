@@ -247,7 +247,8 @@ validate_snake_test_delete_req(SnakeTestDeleteRequest& req,
     hal_ret_t   ret = HAL_RET_OK;
 
     if (req.type() != types::SNAKE_TEST_TYPE_ARM_TO_ARM &&
-        req.type() != types::SNAKE_TEST_TYPE_LOOP) {
+        req.type() != types::SNAKE_TEST_TYPE_LOOP &&
+        req.type() != types::SNAKE_TEST_TYPE_UP2UP) {
         ret =  HAL_RET_INVALID_ARG;
     }
     return ret;

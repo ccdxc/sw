@@ -77,6 +77,7 @@ snake_test_pd_free (pd_snake_test_t *snake_test)
 
 hal_ret_t pd_snake_test_program_hw(pd_snake_test_t *snake_pd);
 hal_ret_t pd_snake_test_program_loop(pd_snake_test_t *snake_pd);
+hal_ret_t pd_snake_test_program_up2up(pd_snake_test_t *snake_pd);
 hal_ret_t pd_snake_test_allocate_lport(uint32_t *lport);
 hal_ret_t pd_snake_test_loop_form_int_mgmt_lif(pd_snake_test_t *snake_pd);
 hal_ret_t pd_snake_test_loop_pgm_ifs (pd_snake_test_t *snake_pd);

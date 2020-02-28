@@ -131,6 +131,8 @@ pd_snake_test_program_hw(pd_snake_test_t *snake_pd)
     snake_test_t *snake = snake_pd->snake;
     if (snake->type == types::SNAKE_TEST_TYPE_LOOP) {
         pd_snake_test_program_loop(snake_pd);
+    } else if (snake->type == types::SNAKE_TEST_TYPE_UP2UP) {
+        pd_snake_test_program_up2up(snake_pd);
     } else if (snake->type == types::SNAKE_TEST_TYPE_ARM_TO_ARM) {
     } else {
         HAL_TRACE_ERR("Unknown snake test type: {}", snake->type);
@@ -171,6 +173,38 @@ pd_snake_test_program_loop (pd_snake_test_t *snake_pd)
         HAL_TRACE_ERR("Unable to form int mgmt lif. err: {}", ret);
         goto end;
     }
+    // - For Uplinks
+    ret = pd_snake_test_loop_form_upifs(snake_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to form uplinks. err: {}", ret);
+        goto end;
+    }
+
+    // Populate dlport
+    ret = pd_snake_test_loop_set_dlports(snake_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to populate dlport. err: {}", ret);
+        goto end;
+    }
+
+    // Program if list
+    ret = pd_snake_test_loop_pgm_ifs(snake_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to pgm ifs. err: {}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+pd_snake_test_program_up2up (pd_snake_test_t *snake_pd)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+
+    // Populate hw_lif_id & slport
     // - For Uplinks
     ret = pd_snake_test_loop_form_upifs(snake_pd);
     if (ret != HAL_RET_OK) {
@@ -422,24 +456,42 @@ end:
 hal_ret_t
 pd_snake_test_loop_set_dlports (pd_snake_test_t *snake_pd)
 {
+    snake_test_t *snake = snake_pd->snake;
     pd_snake_test_if_t *snake_if = NULL,
                        *prev_snake_if = NULL,
                        *first_up_snake_if = NULL;
 
-    for (const void *ptr : *snake_pd->snake_if_list) {
-        snake_if = (pd_snake_test_if_t *)ptr;
-        if (prev_snake_if) {
+
+    if (snake->type == types::SNAKE_TEST_TYPE_UP2UP) {
+        // Update first uplink if
+        for (const void *ptr : *snake_pd->snake_if_list) {
+            snake_if = (pd_snake_test_if_t *)ptr;
             // Enters for the first uplink
             if (!first_up_snake_if) {
                 first_up_snake_if = snake_if;
             }
-            prev_snake_if->dlport = snake_if->slport;
+            if (prev_snake_if) {
+                prev_snake_if->dlport = snake_if->slport;
+            }
+            prev_snake_if = snake_if;
         }
-        prev_snake_if = snake_if;
+        // Update last uplink if
+        snake_if->dlport = first_up_snake_if->slport;
+    } else {
+        for (const void *ptr : *snake_pd->snake_if_list) {
+            snake_if = (pd_snake_test_if_t *)ptr;
+            if (prev_snake_if) {
+                // Enters for the first uplink
+                if (!first_up_snake_if) {
+                    first_up_snake_if = snake_if;
+                }
+                prev_snake_if->dlport = snake_if->slport;
+            }
+            prev_snake_if = snake_if;
+        }
+        // Update last uplink if
+        snake_if->dlport = first_up_snake_if->slport;
     }
-
-    // Update last uplink if
-    snake_if->dlport = first_up_snake_if->slport;
 
     return HAL_RET_OK;
 }
@@ -457,6 +509,12 @@ pd_snake_test_loop_form_upif (void *ht_entry, void *ctxt)
     hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
 
     if (hal_if->if_type != intf::IF_TYPE_UPLINK) {
+        goto end;
+    }
+
+    if (snake_pd->snake->type == types::SNAKE_TEST_TYPE_UP2UP &&
+        hal_if->is_oob_management == true) {
+        // Skip oob for up2up
         goto end;
     }
 

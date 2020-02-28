@@ -41,6 +41,13 @@ var snakeTestLoopCmd = &cobra.Command{
 	Run:   snakeTestLoopCmdHandler,
 }
 
+var snakeTestUp2UpCmd = &cobra.Command{
+	Use:   "up2up",
+	Short: "Enable snake test up2up",
+	Long:  "Enable snake test up2up",
+	Run:   snakeTestUp2UpCmdHandler,
+}
+
 var snakeTestArmCmd = &cobra.Command{
 	Use:   "arm",
 	Short: "Enable snake test arm",
@@ -62,6 +69,13 @@ var snakeTestArmDisableCmd = &cobra.Command{
 	Run:   snakeTestArmDisableCmdHandler,
 }
 
+var snakeTestUp2UpDisableCmd = &cobra.Command{
+	Use:   "disable",
+	Short: "Disable snake test",
+	Long:  "Disable snake test",
+	Run:   snakeTestUp2UpDisableCmdHandler,
+}
+
 func init() {
 	// Show cmd
 	showCmd.AddCommand(snakeTestShowCmd)
@@ -70,11 +84,14 @@ func init() {
 	debugCmd.AddCommand(snakeTestCmd)
 	snakeTestCmd.AddCommand(snakeTestLoopCmd)
 	snakeTestCmd.AddCommand(snakeTestArmCmd)
+	snakeTestCmd.AddCommand(snakeTestUp2UpCmd)
 	snakeTestLoopCmd.AddCommand(snakeTestLoopDisableCmd)
 	snakeTestArmCmd.AddCommand(snakeTestArmDisableCmd)
+	snakeTestUp2UpCmd.AddCommand(snakeTestUp2UpDisableCmd)
 
 	snakeTestLoopCmd.Flags().Uint32Var(&snakeTestVlan, "vlan", 0, "Specify vlan")
 	snakeTestArmCmd.Flags().Uint32Var(&snakeTestVlan, "vlan", 0, "Specify vlan")
+	snakeTestUp2UpCmd.Flags().Uint32Var(&snakeTestVlan, "vlan", 0, "Specify vlan")
 }
 
 func snakeTestLoopCmdHandler(cmd *cobra.Command, args []string) {
@@ -111,6 +128,77 @@ func snakeTestLoopCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("Success: Snake Test for Loop Installed.")
+}
+
+func snakeTestUp2UpCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewDebugClient(c)
+
+	req := &halproto.SnakeTestRequest{
+		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_UP2UP,
+		Vlan: snakeTestVlan,
+	}
+	snakeTestReqMsg := &halproto.SnakeTestRequestMsg{
+		Request: []*halproto.SnakeTestRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.SnakeTestCreate(context.Background(), snakeTestReqMsg)
+	if err != nil {
+		fmt.Printf("Snake Test install failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+	}
+
+	fmt.Println("Success: Snake Test for Loop Installed.")
+}
+
+func snakeTestUp2UpDisableCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewDebugClient(c)
+
+	req := &halproto.SnakeTestDeleteRequest{
+		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_UP2UP,
+	}
+	snakeTestDelReqMsg := &halproto.SnakeTestDeleteRequestMsg{
+		Request: []*halproto.SnakeTestDeleteRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.SnakeTestDelete(context.Background(), snakeTestDelReqMsg)
+	if err != nil {
+		fmt.Printf("Snake Test uninstall failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+	}
+
+	fmt.Println("Success: Snake Test for Loop Uninstalled.")
 }
 
 func snakeTestLoopDisableCmdHandler(cmd *cobra.Command, args []string) {

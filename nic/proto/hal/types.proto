@@ -153,6 +153,7 @@ enum SnakeTestType {
     SNAKE_TEST_TYPE_NONE        = 0;
     SNAKE_TEST_TYPE_ARM_TO_ARM  = 1;
     SNAKE_TEST_TYPE_LOOP        = 2;
+    SNAKE_TEST_TYPE_UP2UP       = 3;
 }
 
 // IP address families
