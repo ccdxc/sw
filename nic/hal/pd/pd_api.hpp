@@ -3680,7 +3680,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_ENABLE,       340, "PD_FUNC_ID_UPLINK_ERSPAN_ENABLE")\
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
     ENTRY(PD_FUNC_ID_TEL_L2SEG_UPDATE,           342, "PD_FUNC_ID_TEL_L2SEG_UPDATE")\
-    ENTRY(PD_FUNC_ID_MAX,                        343, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP, 343, "PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP")  \
+    ENTRY(PD_FUNC_ID_MAX,                        344, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -4364,6 +4365,7 @@ PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 PD_FUNCP_TYPEDEF(pd_qos_class_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_set_global_pause_type);
+PD_FUNCP_TYPEDEF(pd_qos_class_init_tc_to_iq_map);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);

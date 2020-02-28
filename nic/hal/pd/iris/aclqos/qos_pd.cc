@@ -690,6 +690,146 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
 }
 
 static hal_ret_t
+qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
+{
+    hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sdk_ret;
+    tm_port_t             port;
+    bool                  reset_pfc_xoff = false;    // reset current PFC xoff
+    bool                  reset_all_xoff = false;    // reset all xoff
+    bool                  set_pfc_xoff = false;      // set xoff for PFC
+    bool                  set_all_xoff = false;      // set all xoff
+    qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
+    uint32_t              xoff_cos_bitmap;
+
+    bool                  has_pcp = false;
+    uint32_t              dot1q_pcp = 0;
+    bool                  update_default_class_pfc = false;
+    uint32_t              xoff_value=0;
+
+    if (!capri_tm_q_valid(pd_qos_class->dest_oq) ||
+        (pd_qos_class->dest_oq_type != HAL_PD_QOS_OQ_COMMON)) {
+        return HAL_RET_OK;
+    }
+
+    if (qos_class->no_drop == true) {
+        if (qos_class->pause.pfc_enable == true) {
+            reset_pfc_xoff = true;
+        }
+    }
+
+    if ( (reset_pfc_xoff == true) && (qos_class->pause.pfc_cos == 0) ) {
+        /*
+         * By default, in PFC mode, PCP0/PFC-COS0 is mapped to default-class (TC0).
+         * Since, user has mapped PCP0/PFC-COS0 to a different user-defined class,
+         * default class was remapped to first free PFC-COS value.
+         * Now that the user-defined class is being deleted, map default class 
+         * back to its original value - PCP0/PFC-COS0.
+         */
+        has_pcp = cmap_type_pcp(qos_class->cmap.type);
+        if (has_pcp) {
+            dot1q_pcp = qos_class->cmap.dot1q_pcp;
+        } else {
+            dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
+        }
+
+        if (dot1q_pcp == qos_class->pause.pfc_cos) {
+            update_default_class_pfc = true;
+            // get what is currently programmed
+            sdk_ret = capri_tm_get_uplink_oq_xoff_map(0, // port
+                                                      0, // oq
+                                                      &xoff_value);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
+                              "port 0 oq 0 ret {}", ret);
+            }
+
+            HAL_TRACE_DEBUG("resetting PFC COS {} and set 0 for default class", xoff_value);
+        }
+    }
+
+    HAL_TRACE_DEBUG("reset xoff2oq and mac_xoff mapping for dest_oq {} "
+        "no_drop {} pfc_enable {} pfc_cos {} reset_pfc_xoff {}",
+        pd_qos_class->dest_oq, qos_class->no_drop, qos_class->pause.pfc_enable, 
+        qos_class->pause.pfc_cos, reset_pfc_xoff);
+
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        // deprogrm xoff2oq mapping - 1-to-1 by default for oqs 2 through 7
+        sdk_ret = capri_tm_uplink_oq_update(port,
+                                            pd_qos_class->dest_oq,
+                                            pd_qos_class->dest_oq);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming xoff2oq map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+
+        if(reset_pfc_xoff) {
+            xoff_cos_bitmap = 0;
+            // get what is currently programmed
+            sdk_ret = capri_tm_get_uplink_mac_xoff(port, &xoff_cos_bitmap);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error getting mac xoff for port {} ret {}",
+                              port, ret);
+            } else {
+                HAL_TRACE_DEBUG("mac xoff bitmap {} port {}",
+                                xoff_cos_bitmap, port);
+                if((xoff_cos_bitmap == 0xFF) || (qos_class->pause.pfc_cos == 0)) {
+                    // if link-pause is set or if pfc-cos is 0 
+                    // (intended for default-class); do not reset PFC-COS.
+                    reset_pfc_xoff = false;
+                }
+            }
+        }
+
+        sdk_ret = capri_tm_set_uplink_mac_xoff(port,
+                                               reset_all_xoff,
+                                               set_all_xoff,
+                                               reset_pfc_xoff,
+                                               set_pfc_xoff,
+                                               (1 << qos_class->pause.pfc_cos));
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming mac xoff for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+
+        if(update_default_class_pfc) {
+            sdk_ret = capri_tm_uplink_oq_update(port,
+                                                0,  // dest_oq of 0 for default class
+                                                0); // pfc-cos
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming xoff2oq map for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+            }
+
+            sdk_ret = capri_tm_set_uplink_mac_xoff(port,
+                                                   reset_all_xoff,
+                                                   set_all_xoff,
+                                                   true,    // reset pfc-xoff
+                                                   set_pfc_xoff,
+                                                   (1 << xoff_value));
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming mac xoff for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+            }
+        }  // if update_default_class_pfc
+
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
 qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t             ret = HAL_RET_OK;
@@ -700,6 +840,14 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     bool                  set_pfc_xoff = false;      // set xoff for PFC
     bool                  set_all_xoff = false;      // set all xoff
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
+    uint32_t              xoff_cos_bitmap;
+
+    bool                  has_pcp = false;
+    uint32_t              dot1q_pcp = 0;
+    bool                  update_default_class_pfc = false;
+    int                   xoff_val=0; 
+    uint32_t              xoff_val_pgm=0;
+    uint32_t              xoff_cos_bitmap0;
 
     if (!capri_tm_q_valid(pd_qos_class->dest_oq) ||
         (pd_qos_class->dest_oq_type != HAL_PD_QOS_OQ_COMMON)) {
@@ -722,6 +870,67 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         reset_pfc_xoff = true;
     }
 
+    if ( set_pfc_xoff == true) {
+        /*
+         * By default, in PFC mode, PCP0/PFC-COS0 is mapped to default-class (TC0).
+         * Now, if user has mapped PCP0/PFC-COS0 to a different user-defined class,
+         * re-map the default class to first free PFC-COS value. Actually, 
+         * default-class maps to all others PCPs/PFC-COS alues, but since we cannot
+         * programme a bitmap and need to pick only 1 value - choosing the first one.
+         */
+        if (qos_class->pause.pfc_cos == 0) {
+            has_pcp = cmap_type_pcp(qos_class->cmap.type);
+            if (has_pcp) {
+                dot1q_pcp = qos_class->cmap.dot1q_pcp;
+            } else {
+                dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
+            }
+
+            if (dot1q_pcp == qos_class->pause.pfc_cos) {
+                update_default_class_pfc = true;
+            }
+        } else {
+            /*
+             * oq0 would have been mapped to some then unused PFC-COS;
+             * Now if that PFC-COS value is used by some other user-defined class, 
+             * remap oq0 to a new unused PFC-COS value
+             */
+            sdk_ret = capri_tm_get_uplink_oq_xoff_map(0, // port
+                                                      0, // oq
+                                                      &xoff_val_pgm);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
+                              "port 0 oq 0 ret {}", ret);
+            }
+
+            if(xoff_val_pgm == qos_class->pause.pfc_cos) {
+                update_default_class_pfc = true;
+            }
+        }
+
+        if (update_default_class_pfc) {
+            // get what is currently programmed
+            sdk_ret = capri_tm_get_uplink_mac_xoff(0, &xoff_cos_bitmap0);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error getting mac xoff for port 0 ret {}", ret);
+            }
+            HAL_TRACE_DEBUG("mac xoff bitmap {} for port 0", xoff_cos_bitmap0);
+            // get the first free xoff cos value
+            for(xoff_val = 0; xoff_val < 8; xoff_val++) {
+                if(!(xoff_cos_bitmap0 & (1 << xoff_val))) {
+                    HAL_TRACE_DEBUG("setting PFC COS {} for default class", xoff_val);
+                    break;
+                }
+            }  // for xoff_val
+            if(xoff_val == 8) {
+                HAL_TRACE_DEBUG("couldnt find free PFC COS value {} for default class", xoff_cos_bitmap0);
+                xoff_val = 0;
+            }
+        }
+    }
+
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_oq_update(port,
                                             pd_qos_class->dest_oq,
@@ -733,6 +942,26 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
                           qos_class->key, port, ret);
             return ret;
         }
+
+        if(reset_pfc_xoff) {
+            xoff_cos_bitmap = 0;
+            // get what is currently programmed
+            sdk_ret = capri_tm_get_uplink_mac_xoff(port, &xoff_cos_bitmap);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error getting mac xoff for port {} ret {}",
+                              port, ret);
+            } else {
+                HAL_TRACE_DEBUG("mac xoff bitmap {} port {}",
+                                xoff_cos_bitmap, port);
+                if((xoff_cos_bitmap == 0xFF) || (qos_class->pause.pfc_cos == 0)) {
+                    // if link-pause is set or if pfc-cos is 0 
+                    // (intended for default-class); do not reset PFC-COS.
+                    reset_pfc_xoff = false;
+                }
+            }
+        }
+
         sdk_ret = capri_tm_set_uplink_mac_xoff(port,
                                                reset_all_xoff,
                                                set_all_xoff,
@@ -746,6 +975,29 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
                           qos_class->key, port, ret);
             return ret;
         }
+
+        if(update_default_class_pfc) {
+            sdk_ret = capri_tm_uplink_oq_update(port,
+                                                0,  // dest_oq of 0 for default class
+                                                xoff_val); // pfc-cos
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming xoff2oq map for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+            }
+            sdk_ret = capri_tm_set_uplink_mac_xoff(port,
+                                                   reset_all_xoff,
+                                                   set_all_xoff,
+                                                   reset_pfc_xoff,
+                                                   set_pfc_xoff,
+                                                   (1 << xoff_val));
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming mac xoff for port {} ret {}",
+                              port, ret);
+            }
+        }  // if update_default_class_pfc
     }
     return HAL_RET_OK;
 }
@@ -1038,12 +1290,6 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     uint32_t                   dot1q_pcp = 0;
     tm_uplink_input_dscp_map_t dscp_map = {0};
 
-    // reset the default Q to 0
-    iq = QOS_QUEUE_DEFAULT;
-    if (!capri_tm_q_valid(iq)) {
-        return HAL_RET_OK;
-    }
-
     has_pcp = cmap_type_pcp(qos_class->cmap.type);
     has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
@@ -1056,6 +1302,21 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
         dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
+    }
+
+    /*
+     * Setting the PCP-to-Q mapping one-to-one may cause packets to get 
+     * classified to an IQ matching the packet's PCP, even though it was not 
+     * configured to do so. In case of congestion, PFC/Link pause behavior could be broken.
+     * Setting it to 0 maps all PCPs to Q0. In PFC mode, in case Q0 is congested, 
+     * PFCs could be TXed out of all priorities.
+     */
+    // reset the PCP to default Q
+    iq = QOS_QUEUE_DEFAULT;
+    // reset PCP to IQ map to one-to-one
+    //iq = dot1q_pcp;
+    if (!capri_tm_q_valid(iq)) {
+        return HAL_RET_OK;
     }
 
     // program the default COS for dscp map
@@ -1157,8 +1418,7 @@ qos_class_pd_deprogram_hw (pd_qos_class_t *pd_qos_class)
         return ret;
     }
 
-#if 0
-    ret = qos_class_pd_program_uplink_xoff(pd_qos_class);
+    ret = qos_class_pd_deprogram_uplink_xoff(pd_qos_class);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error deprogramming uplink oq xoff for "
                       "Qos-class {} ret {}",
@@ -1166,6 +1426,7 @@ qos_class_pd_deprogram_hw (pd_qos_class_t *pd_qos_class)
         return ret;
     }
 
+#if 0
     ret = qos_class_pd_program_scheduler(pd_qos_class);
     if (ret != HAL_RET_OK) {
         // TODO: What to do in case of hw programming error ?
@@ -1293,6 +1554,42 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
     }
 }
 
+// ----------------------------------------------------------------------------
+// Qos-class init TC to IQ mapping
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_init_tc_to_iq_map (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+    tm_port_t tm_port = TM_UPLINK_PORT_BEGIN;
+    tm_q_t    iq;
+    uint32_t  dot1q_pcp;
+
+    HAL_TRACE_DEBUG("Initing TC to IQ map 1-to-1");
+
+    for(iq = QOS_UPLINK_IQ_START_INDEX; iq <= QOS_UPLINK_IQ_END_INDEX; iq ++) {
+
+        dot1q_pcp = iq;     // map PCP to iq one-to-one by default
+
+        for (tm_port = TM_UPLINK_PORT_BEGIN;
+                            tm_port <= TM_UPLINK_PORT_END; tm_port++) {
+            sdk_ret = capri_tm_uplink_input_map_update(tm_port,
+                                                       dot1q_pcp,
+                                                       iq);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error initing TC to IQ map 1-to-1 for "
+                              "tm_port {} ret {}",
+                              tm_port, ret);
+                break;
+            }
+        }
+    }   // for iq
+
+    return ret;
+}
+
 // walk through all the user-defined no-drop classes and form 
 // the bitmap of all the pfc-cos values
 uint32_t
@@ -1300,7 +1597,13 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
 {
     qos_class_t *qos_class = NULL;
     qos_group_t qos_group;
-    uint32_t    pfc_cos_bitmap = 0;
+    uint32_t    pfc_cos_bitmap = 0x1;   // default class should be no-drop with PFC-COS 0
+    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   sdk_ret = SDK_RET_OK;
+    tm_port_t   port;
+    uint32_t    xoff_val=0;
+    uint32_t    dot1q_pcp = 0;
+    bool        update_default_class_pfc = false;
 
     for (qos_group = QOS_GROUP_USER_DEFINED_1; 
          qos_group <= QOS_GROUP_USER_DEFINED_6; 
@@ -1313,6 +1616,72 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
 
         if(qos_class->no_drop) {
             pfc_cos_bitmap |= (1 << qos_class->pause.pfc_cos);
+        }
+
+        if ( qos_class->no_drop && (qos_class->pause.pfc_cos == 0) ) {
+            if (cmap_type_pcp(qos_class->cmap.type)) {
+                dot1q_pcp = qos_class->cmap.dot1q_pcp;
+            } else {
+                dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
+            }
+
+            if (dot1q_pcp == qos_class->pause.pfc_cos) {
+                // if user-defined class has PCP/PFC-COS 0, then update 
+                // default-class to first available PCP
+                update_default_class_pfc = true;
+            }
+        }
+    }
+
+    if(update_default_class_pfc) {
+        /*
+         * class-default could have been set a different PFC-COS value, 
+         * read xoff2oq for oq0 and get the PFC-COS value
+         */
+
+        sdk_ret = capri_tm_get_uplink_oq_xoff_map(0, // port
+                                                  0, // oq
+                                                  &xoff_val);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
+                          "port 0 oq 0 ret {}", ret);
+        }
+
+        if(xoff_val == 0) {
+            /*
+             * default class not set to a different PCP/PFC-COS value yet
+             * because xoff_val for default class is 0 and a user-defined
+             * class seems to be having PFC-COS of 0
+             */
+
+            HAL_TRACE_DEBUG("getting first free value from pfc_cos_bitmap {}", pfc_cos_bitmap);
+
+            // get the first free xoff cos value from pfc_cos_bitmap
+            for(xoff_val = 0; xoff_val < 8; xoff_val++) {
+                if(!(pfc_cos_bitmap & (1 << xoff_val))) {
+                    break;
+                }
+            }  // for xoff_val
+            if(xoff_val == 8) {
+                HAL_TRACE_DEBUG("couldnt find free PFC COS value {} for default class", pfc_cos_bitmap);
+                xoff_val = 0;
+            }
+        }
+        pfc_cos_bitmap |= (1 << xoff_val);
+        HAL_TRACE_DEBUG("setting PFC COS bit {} for default class", xoff_val);
+
+        // program the xoff2oq map as well
+        for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+            sdk_ret = capri_tm_uplink_oq_update(port,
+                                                0,  // dest_oq of 0 for default class
+                                                xoff_val); // pfc-cos
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error programming xoff2oq map for "
+                              "oq 0 on port {} ret {}",
+                              port, ret);
+            }
         }
     }
 
@@ -1356,6 +1725,8 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
         if((pfc_cos_bitmap != 0) && (args->pause_type != hal::QOS_PAUSE_TYPE_NONE)) {
             // pause-type = PFC; other no-drop TCs present with pfc-cos
             set_pfc_xoff = true;
+
+            HAL_TRACE_DEBUG("programming pfc_cos_bitmap to {}", pfc_cos_bitmap);
         }
     }
 

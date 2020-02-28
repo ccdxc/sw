@@ -313,6 +313,7 @@ hal_ret_t qos_class_thresholds_get(qos::QosClassThresholdsGetRequest& req,
 hal_ret_t qos_class_set_global_pause_type(
                         qos::QosClassSetGlobalPauseTypeRequest& req,
                         qos::QosClassSetGlobalPauseTypeResponseMsg *rsp);
+hal_ret_t qos_class_init_tc_to_iq_map(void);
 hal_ret_t qos_class_store_cb(void *obj, uint8_t *mem,
                              uint32_t len, uint32_t *mlen);
 uint32_t qos_class_restore_cb(void *obj, uint32_t len);

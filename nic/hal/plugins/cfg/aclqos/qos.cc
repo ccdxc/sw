@@ -237,6 +237,23 @@ validate_marking_spec (const QosClassSpec &spec)
 }
 
 hal_ret_t
+qos_class_init_tc_to_iq_map(void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("invoked to init TC to IQ mapping");
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP,
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed to init TC to IQ mapping, err {}",
+                      ret);
+    }
+    return ret;
+}
+
+hal_ret_t
 qos_class_set_global_pause_type (
                         qos::QosClassSetGlobalPauseTypeRequest& req,
                         qos::QosClassSetGlobalPauseTypeResponseMsg *rsp)

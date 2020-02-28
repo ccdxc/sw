@@ -77,6 +77,9 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
         goto end;
     }
 
+    // init TC to IQ mapping
+    //qos_class_init_tc_to_iq_map();
+
     // set the global pause mode to link-level
     global_pause_type_req.set_pause_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
     qos_class_set_global_pause_type(global_pause_type_req,

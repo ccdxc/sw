@@ -676,6 +676,12 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
+pd_qos_class_init_tc_to_iq_map (pd_func_args_t *pd_func_args)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
 pd_qos_class_create (pd_func_args_t *pd_func_args)
 {
     return HAL_RET_OK;

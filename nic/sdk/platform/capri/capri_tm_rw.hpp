@@ -98,6 +98,8 @@ using sdk::lib::indexer;
 
 #define QOS_QUEUE_DEFAULT 0
 #define QOS_COS_DEFAULT   0
+#define QOS_UPLINK_IQ_START_INDEX   0
+#define QOS_UPLINK_IQ_END_INDEX     7
 
 typedef uint32_t tm_port_t;
 typedef int32_t tm_q_t;
@@ -165,6 +167,9 @@ sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port,
                                        bool reset_pfc_xoff,
                                        bool set_pfc_xoff,
                                        uint32_t xoff_cos_bitmap);
+sdk_ret_t capri_tm_get_uplink_mac_xoff (tm_port_t port,
+                                        uint32_t *xoff_cos_bitmap);
+sdk_ret_t capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \

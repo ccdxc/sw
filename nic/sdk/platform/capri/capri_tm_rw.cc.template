@@ -889,6 +889,41 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
 }
 
 /**
+ * @brief  get the PFC-COS mask for incoming pause frames
+ */
+sdk_ret_t
+capri_tm_get_uplink_mac_xoff (tm_port_t port,
+                              uint32_t *xoff_cos_bitmap)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_mac_xoff.read();
+                *xoff_cos_bitmap = pbc_csr.port_${p}.cfg_mac_xoff.enable().
+                                                    convert_to<uint32_t>();
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
  * @brief  Enable/Disable reacting to incoming pause frames
  * @param[in] port           PB port
  * @param[in] reset_all_xoff reset for all cos values
@@ -941,6 +976,43 @@ capri_tm_set_uplink_mac_xoff (tm_port_t port,
                 if (tm_sw_cfg_write_enabled()) {
                     pbc_csr.port_${p}.cfg_mac_xoff.write();
                 }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+/**
+ * @brief get OQ to xoff_cos map
+ */
+sdk_ret_t
+capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int xoff2oq_map_val;
+    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    xoff2oq_map_decoder.init();
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                *xoff_cos = cpp_helper.get_slc(pbc_csr.port_${p}.cfg_oq_xoff2oq.map(),
+                                               oq*3,
+                                               (((oq+1)*3)-1)).convert_to<uint32_t>();
                 break;
             }
 //::    #endif
