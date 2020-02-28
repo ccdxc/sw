@@ -6545,6 +6545,617 @@ func TestM(t *testing.T) {
 	}
 
 }
+
+// TestWorkloadMigration tests for successful workload migration
+// All workload migration requests are received by NPM as a workload update
+// which is translated into endpoint update
+func TestWorkloadMigration(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// smartNic params
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0405",
+			Host:           "dsc-source",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.11/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0405",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// smartNic params
+	snicDest := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard2",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0406",
+			Host:           "dsc-destintion",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.12/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snicDest)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	hostDest := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost-2",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0406",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&hostDest)
+	AssertOk(t, err, "Could not create the destination host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "1001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+	start := time.Now()
+
+	done := false
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
+		if err == nil {
+			if !done {
+				timeTrack(start, "Network create took")
+				done = true
+			}
+			return true, nil
+		}
+		return false, nil
+	}, "Network not foud", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "5s")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// update workload external vlan
+	nwr := ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.HostName = "testHost-2"
+	nwr.Spec.Interfaces[0].MicroSegVlan = 200
+	nwr.Status.HostName = "testHost"
+	nwr.Status.MigrationStatus = &workload.WorkloadMigrationStatus{
+		Stage: "migration-start",
+	}
+	nwr.Status.Interfaces = []workload.WorkloadIntfStatus{
+		{
+			MACAddress:   "1001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_START.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	// Finish Migration
+	// update workload external vlan
+	nwr = ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.HostName = "testHost-2"
+	nwr.Spec.Interfaces[0].MicroSegVlan = 200
+	nwr.Status.HostName = "testHost"
+	nwr.Status.MigrationStatus = &workload.WorkloadMigrationStatus{
+		Stage: "migration-done",
+	}
+	nwr.Status.Interfaces = []workload.WorkloadIntfStatus{
+		{
+			MACAddress:   "1001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wrk, err := stateMgr.FindWorkload("default", "testWorkload")
+		if err == nil && wrk.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_DONE.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Workload not found", "1ms", "1s")
+}
+
+// TestWorkloadMigrationAbort starts migration and later aborts it.
+// We check if the status in workload object is correctly set
+func TestWorkloadMigrationAbort(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// smartNic params
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0405",
+			Host:           "dsc-source",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.11/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0405",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// smartNic params
+	snicDest := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard2",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0406",
+			Host:           "dsc-destintion",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.12/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snicDest)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	hostDest := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost-2",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0406",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&hostDest)
+	AssertOk(t, err, "Could not create the destination host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "1001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+	start := time.Now()
+
+	done := false
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
+		if err == nil {
+			if !done {
+				timeTrack(start, "Network create took")
+				done = true
+			}
+			return true, nil
+		}
+		return false, nil
+	}, "Network not foud", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "5s")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// update workload external vlan
+	nwr := ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.HostName = "testHost-2"
+	nwr.Spec.Interfaces[0].MicroSegVlan = 200
+	nwr.Status.HostName = "testHost"
+	nwr.Status.MigrationStatus = &workload.WorkloadMigrationStatus{
+		Stage: "migration-start",
+	}
+	nwr.Status.Interfaces = []workload.WorkloadIntfStatus{
+		{
+			MACAddress:   "1001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_START.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	// Abort Migration
+	nwr = ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.HostName = "testHost"
+	nwr.Spec.Interfaces[0].MicroSegVlan = 100
+	nwr.Status.HostName = "testHost"
+	nwr.Status.MigrationStatus = &workload.WorkloadMigrationStatus{
+		Stage: workload.WorkloadMigrationStatus_MIGRATION_ABORT.String(),
+	}
+	nwr.Status.Interfaces = []workload.WorkloadIntfStatus{
+		{
+			MACAddress:   "1001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_FAILED.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wrk, err := stateMgr.FindWorkload("default", "testWorkload")
+		if err == nil && wrk.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_FAILED.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Workload not found", "1ms", "1s")
+}
+
+// TestWorkloadMigrationTimeout sets a low timeout value for migration, and checks if the status in workload object is correctly set
+func TestWorkloadMigrationTimeout(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	// smartNic params
+	snic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0405",
+			Host:           "dsc-source",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.11/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0405",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// smartNic params
+	snicDest := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testDistributedServiceCard2",
+		},
+		Spec: cluster.DistributedServiceCardSpec{},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "0001.0203.0406",
+			Host:           "dsc-destintion",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "10.20.30.12/16",
+			},
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.DistributedServiceCard().Create(&snicDest)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	hostDest := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testHost-2",
+			Tenant: "default",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: "0001.0203.0406",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&hostDest)
+	AssertOk(t, err, "Could not create the destination host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "1001.0203.0405",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+			// Set a low migration timeout
+			MigrationTimeout: "3s",
+		},
+	}
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+	start := time.Now()
+
+	done := false
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
+		if err == nil {
+			if !done {
+				timeTrack(start, "Network create took")
+				done = true
+			}
+			return true, nil
+		}
+		return false, nil
+	}, "Network not foud", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "5s")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// update workload external vlan
+	nwr := ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.HostName = "testHost-2"
+	nwr.Spec.Interfaces[0].MicroSegVlan = 200
+	nwr.Status.HostName = "testHost"
+	nwr.Status.MigrationStatus = &workload.WorkloadMigrationStatus{
+		Stage: "migration-start",
+	}
+	nwr.Status.Interfaces = []workload.WorkloadIntfStatus{
+		{
+			MACAddress:   "1001.0203.0405",
+			MicroSegVlan: 100,
+			ExternalVlan: 1,
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_START.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	time.Sleep(5 * time.Second)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wrk, err := stateMgr.FindWorkload("default", "testWorkload")
+		if err == nil && wrk.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_TIMED_OUT.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Workload not found", "1ms", "1s")
+}
+
 func TestMain(m *testing.M) {
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{

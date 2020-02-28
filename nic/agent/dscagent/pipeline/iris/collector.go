@@ -56,7 +56,11 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	col.Status.Collector = mirrorSessionID
 
 	if !foundCollector {
-		mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+		mgmtIP, _, err := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+		if err != nil {
+			log.Errorf("Failed to parse management IP passed. Err : %v", err)
+			return err
+		}
 		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())
 		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))

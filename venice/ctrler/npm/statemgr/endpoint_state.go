@@ -3,6 +3,10 @@
 package statemgr
 
 import (
+	"context"
+	//"fmt"
+	//"net"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -19,9 +23,12 @@ import (
 
 // EndpointState is a wrapper for endpoint object
 type EndpointState struct {
-	Endpoint *ctkit.Endpoint                `json:"-"` // embedding endpoint object
-	groups   map[string]*SecurityGroupState // list of security groups
-	stateMgr *Statemgr                      // state manager
+	Endpoint   *ctkit.Endpoint                `json:"-"` // embedding endpoint object
+	groups     map[string]*SecurityGroupState // list of security groups
+	stateMgr   *Statemgr                      // state manager
+	moveCtx    context.Context
+	moveCancel context.CancelFunc
+	moveWg     sync.WaitGroup
 }
 
 // endpointKey returns endpoint key
@@ -58,7 +65,7 @@ func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 			IPv6Addresses: []string{eps.Status.IPv6Address},
 			MacAddress:    eps.Status.MacAddress,
 			UsegVlan:      eps.Status.MicroSegmentVlan,
-			NodeUUID:      eps.Status.NodeUUID,
+			NodeUUID:      eps.Spec.NodeUUID,
 		},
 	}
 	nep.CreationTime = api.Timestamp{Timestamp: *creationTime}
@@ -184,7 +191,7 @@ func NewEndpointState(epinfo *ctkit.Endpoint, stateMgr *Statemgr) (*EndpointStat
 //GetEndpointWatchOptions gets options
 func (sm *Statemgr) GetEndpointWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
-	opts.FieldChangeSelector = []string{"Spec"}
+	opts.FieldChangeSelector = []string{"Spec", "Status.Migration"}
 	return &opts
 }
 
@@ -265,45 +272,6 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 		}
 	}
 
-	if ns.Network.Spec.IPv4Subnet != "" {
-		/* //Commenting out IP allocation
-		// allocate an IP address
-		ns.Lock()
-		ipv4Addr, err := ns.allocIPv4Addr(epinfo.Status.IPv4Address)
-		ns.Unlock()
-		if err != nil {
-			log.Errorf("Error allocating IP address from network {%+v}. Err: %v", ns, err)
-			return err
-		}
-
-		// allocate a mac address based on IP address
-		macAddr := ipv4toMac([]byte{0x01, 0x01}, net.ParseIP(ipv4Addr))
-
-		// convert address to CIDR
-		_, ipNet, _ := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
-		subnetMaskLen, _ := ipNet.Mask.Size()
-		ipv4Addr = fmt.Sprintf("%s/%d", ipv4Addr, subnetMaskLen)
-
-		// populate allocated values
-		epinfo.Status.IPv4Address = ipv4Addr
-		epinfo.Status.IPv4Gateway = ns.Network.Spec.IPv4Gateway
-
-		// assign new mac address if we dont have one
-		if epinfo.Status.MacAddress == "" {
-			epinfo.Status.MacAddress = macAddr.String()
-		}
-
-		// write the modified network state to api server
-		ns.Lock()
-		err = ns.Network.Write()
-		ns.Unlock()
-		if err != nil {
-			log.Errorf("Error writing the network object. Err: %v", err)
-			return err
-		}
-		*/
-	}
-
 	// create a new endpoint instance
 	eps, err := NewEndpointState(epinfo, sm)
 	if err != nil {
@@ -321,6 +289,69 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 // OnEndpointUpdate handles update event
 func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpoint) error {
 	epinfo.ObjectMeta = nep.ObjectMeta
+	if nep.Status.Migration == nil {
+		return nil
+	}
+
+	eps, err := EndpointStateFromObj(epinfo)
+	if err != nil {
+		log.Errorf("failed to find the endpoint %v. Err : %v", epinfo.ObjectMeta, err)
+		return ErrEndpointNotFound
+	}
+
+	if nep.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
+		log.Infof("EP move was declared to be successful by vCenter")
+		eps.Endpoint.Status = nep.Status
+
+		// Send DONE to the new host, so that DSC can start its terminal synch
+		newEP := convertEndpoint(&epinfo.Endpoint)
+		newEP.Status.Migration = netproto.MigrationState_DONE.String()
+		sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), newEP, references(epinfo))
+
+		return nil
+	}
+
+	// If it's an EP update operation with Spec and Status NodeUUID same, it would mean that the migration was aborted or failed
+	if nep.Spec.NodeUUID == nep.Status.NodeUUID && nep.Status.Migration.Status == workload.EndpointMigrationStatus_FAILED.String() {
+		log.Infof("Endpoint %v migration was aborted.", nep.Name)
+		// Set appropriate state of the endpoint object and call cancel of move
+		eps.Endpoint.Spec = nep.Spec
+		eps.Endpoint.Status.Migration.Status = nep.Status.Migration.Status
+
+		eps.moveCancel()
+		eps.moveWg.Wait()
+		eps.moveCancel = nil
+
+		// Reset endpoint migration to reflect the abort success
+		eps.Endpoint.Status.Migration = nil
+		eps.Endpoint.Write()
+
+		return nil
+	}
+
+	// If we reached here, it would mean it is start of new migration. Ensure we stop (or wait?) any past running migration
+	if eps.moveCancel != nil {
+		log.Infof("EP %v migration is in progress. Stopping it.", nep.Name)
+		eps.moveCancel()
+		eps.moveWg.Wait()
+		eps.moveCancel = nil
+	}
+
+	var t time.Duration
+	ws, err := sm.FindWorkload(eps.Endpoint.Tenant, getWorkloadNameFromEPName(eps.Endpoint.Name))
+	if err == nil {
+		t, err = time.ParseDuration(ws.Workload.Spec.MigrationTimeout)
+	}
+
+	if err != nil {
+		log.Errorf("Failed to parse migration timeout from the workload spec. Setting default timeout of 3m. Err : %v", err)
+		t, _ = time.ParseDuration("3m")
+	}
+	deadline := time.Now().Add(t)
+	eps.moveCtx, eps.moveCancel = context.WithDeadline(context.Background(), deadline)
+	eps.moveWg.Add(1)
+	go sm.moveEndpoint(epinfo, nep)
+
 	return nil
 }
 
@@ -334,6 +365,13 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 		log.Errorf("could not find the endpoint %+v", epinfo.ObjectMeta)
 		return ErrEndpointNotFound
 	}
+
+	if eps.moveCancel != nil {
+		eps.moveCancel()
+		eps.moveWg.Wait()
+		eps.moveCancel = nil
+	}
+
 	// find network
 	ns, err := sm.FindNetwork(epinfo.Tenant, eps.Endpoint.Status.Network)
 	if err != nil {
@@ -372,4 +410,107 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	log.Infof("Deleted endpoint: %+v", eps)
 
 	return nil
+}
+
+func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint) {
+	log.Infof("Moving Endpoint. %v from DSC %v to DSC %v", nep.Name, nep.Spec.NodeUUID, nep.Status.NodeUUID)
+	eps, _ := EndpointStateFromObj(epinfo)
+	defer eps.moveWg.Done()
+	newEP := netproto.Endpoint{
+		TypeMeta:   nep.TypeMeta,
+		ObjectMeta: agentObjectMeta(nep.ObjectMeta),
+		Spec: netproto.EndpointSpec{
+			NetworkName: nep.Status.Network,
+			MacAddress:  nep.Status.MacAddress,
+			UsegVlan:    nep.Spec.MicroSegmentVlan,
+			NodeUUID:    nep.Spec.NodeUUID,
+
+			// For netproto, the homing host address is the host where the EP currently is.
+			// We send the source homing host IP as part of the spec
+			HomingHostAddr: nep.Status.HomingHostAddr,
+			Migration:      netproto.MigrationState_START.String(),
+		},
+		Status: netproto.EndpointStatus{
+			NodeUUID: nep.Status.NodeUUID,
+		},
+	}
+
+	oldEP := netproto.Endpoint{
+		TypeMeta:   nep.TypeMeta,
+		ObjectMeta: agentObjectMeta(nep.ObjectMeta),
+		Spec: netproto.EndpointSpec{
+			NetworkName: nep.Status.Network,
+			MacAddress:  nep.Status.MacAddress,
+			UsegVlan:    nep.Status.MicroSegmentVlan,
+			NodeUUID:    nep.Status.NodeUUID,
+		},
+		Status: netproto.EndpointStatus{
+			NodeUUID: nep.Status.NodeUUID,
+		},
+	}
+
+	sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), &newEP, references(epinfo))
+	ticker := time.NewTicker(1 * time.Second)
+
+	for {
+		select {
+		case <-eps.moveCtx.Done():
+			eps, err := EndpointStateFromObj(epinfo)
+			if err != nil {
+				log.Errorf("Failed to get endpoint state. Err : %v", err)
+				return
+			}
+
+			// If the migration status is not set to DONE, it would mean the migration has failed or aborted or timedout
+			if eps.Endpoint.Status.Migration.Status != workload.EndpointMigrationStatus_DONE.String() {
+				log.Errorf("Error while moving Endpoint %v. Expected done state, got %v.", eps.Endpoint.Name, eps.Endpoint.Status.Migration.Status)
+				newEP.Spec.Migration = netproto.MigrationState_ABORT.String()
+				newEP.Spec.HomingHostAddr = ""
+
+				// There can only be one object reference in the memdb for a particular object name, kind
+				// To use nimbus channel, update the existingObj in memdb to point to the desired object
+				sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), &newEP, references(epinfo))
+
+				// Send delete to the appropriate host
+				sm.mbus.DeleteObjectWithReferences(epinfo.MakeKey("cluster"), &newEP, references(epinfo))
+
+				// Clean up all the migration state in the netproto object
+				oldEP.Spec.Migration = netproto.MigrationState_NONE.String()
+				oldEP.Spec.HomingHostAddr = ""
+
+				// Update the in-memory reference for a particular object name, kind
+				sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), &oldEP, references(epinfo))
+				if eps.Endpoint.Status.Migration.Status != workload.EndpointMigrationStatus_FAILED.String() && eps.Endpoint.Status.Migration.Status != workload.EndpointMigrationStatus_ABORTED.String() {
+					ws, err := sm.FindWorkload(eps.Endpoint.Tenant, getWorkloadNameFromEPName(eps.Endpoint.Name))
+					if err != nil {
+						log.Errorf("Failed to get workload for EP %v from state manager. Err : %v", eps.Endpoint.Name, err)
+					} else {
+						log.Errorf("Endpoint %v move timed out.", eps.Endpoint.Name)
+						ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_TIMED_OUT.String()
+						ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
+						ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
+						ws.Workload.Write()
+					}
+				}
+			} else {
+				log.Infof("Move was successful. Sending delete EP to old DSC. %v", oldEP.Spec.NodeUUID)
+				// We will be here if the migration was successful from vcenter side. Send a delete for the old location
+				oldEP.Spec.Migration = netproto.MigrationState_NONE.String()
+				oldEP.Spec.HomingHostAddr = ""
+				sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), &oldEP, references(epinfo))
+				sm.mbus.DeleteObjectWithReferences(epinfo.MakeKey("cluster"), &oldEP, references(epinfo))
+				newEP.Spec.Migration = netproto.MigrationState_NONE.String()
+				newEP.Spec.HomingHostAddr = ""
+				sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), &newEP, references(epinfo))
+			}
+
+			// Reset to None after deleting any migration state
+			eps.Endpoint.Status.Migration = nil
+			eps.Endpoint.Write()
+			return
+		case <-ticker.C:
+			// TODO add code to query netagent for the endpoint move status
+			log.Infof("moving EP")
+		}
+	}
 }

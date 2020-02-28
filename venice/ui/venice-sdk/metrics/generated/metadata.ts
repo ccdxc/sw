@@ -1993,6 +1993,17 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "MaxSessionThresholdDrops",
+      "displayName": "Max Session Threshold Drops",
+      "description": "Number of flowmiss packets dropped due to max session limit being hit",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",

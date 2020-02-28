@@ -11,6 +11,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IWorkloadEndpointSpec {
     'node-uuid'?: string;
     'homing-host-addr'?: string;
+    'micro-segment-vlan'?: number;
     '_ui'?: any;
 }
 
@@ -22,6 +23,8 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
     'node-uuid': string = null;
     /** IP of the DSC where this endpoint exists. */
     'homing-host-addr': string = null;
+    /** MicroSegmentVlan to be assigned to the endpoint. */
+    'micro-segment-vlan': number = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointSpec]: PropInfoItem } = {
         'node-uuid': {
             description:  `The DSC Name or MAC where the endpoint should reside.`,
@@ -32,6 +35,11 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
             description:  `IP of the DSC where this endpoint exists.`,
             required: false,
             type: 'string'
+        },
+        'micro-segment-vlan': {
+            description:  `MicroSegmentVlan to be assigned to the endpoint.`,
+            required: false,
+            type: 'number'
         },
     }
 
@@ -83,6 +91,13 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
         } else {
             this['homing-host-addr'] = null
         }
+        if (values && values['micro-segment-vlan'] != null) {
+            this['micro-segment-vlan'] = values['micro-segment-vlan'];
+        } else if (fillDefaults && WorkloadEndpointSpec.hasDefaultValue('micro-segment-vlan')) {
+            this['micro-segment-vlan'] = WorkloadEndpointSpec.propInfo['micro-segment-vlan'].default;
+        } else {
+            this['micro-segment-vlan'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -92,6 +107,7 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
             this._formGroup = new FormGroup({
                 'node-uuid': CustomFormControl(new FormControl(this['node-uuid']), WorkloadEndpointSpec.propInfo['node-uuid']),
                 'homing-host-addr': CustomFormControl(new FormControl(this['homing-host-addr']), WorkloadEndpointSpec.propInfo['homing-host-addr']),
+                'micro-segment-vlan': CustomFormControl(new FormControl(this['micro-segment-vlan']), WorkloadEndpointSpec.propInfo['micro-segment-vlan']),
             });
         }
         return this._formGroup;
@@ -105,6 +121,7 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
         if (this._formGroup) {
             this._formGroup.controls['node-uuid'].setValue(this['node-uuid']);
             this._formGroup.controls['homing-host-addr'].setValue(this['homing-host-addr']);
+            this._formGroup.controls['micro-segment-vlan'].setValue(this['micro-segment-vlan']);
         }
     }
 }

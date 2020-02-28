@@ -1692,7 +1692,8 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                             app_ctxt->new_useg_vlan);
         }
 
-        if (ep->vmotion_state != req.endpoint_attrs().vmotion_state()) {
+	if ((req.endpoint_attrs().vmotion_state() != MigrationState::NONE) &&
+	   (ep->vmotion_state != req.endpoint_attrs().vmotion_state())) {
             app_ctxt->vmotion_state_change = true;
             app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
             HAL_TRACE_DEBUG("vmotion state change {} => {}", ep->vmotion_state,

@@ -22,6 +22,13 @@ var CreateEndpointFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "micro-segment-vlan",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "node-uuid",
 		Type:   "String",
 		Help:   "",

@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/strconv"
 )
@@ -47,7 +46,7 @@ func WorkloadStateFromObj(obj runtime.Object) (*WorkloadState, error) {
 //GetWorkloadWatchOptions gets options
 func (sm *Statemgr) GetWorkloadWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
-	opts.FieldChangeSelector = []string{"Spec"}
+	opts.FieldChangeSelector = []string{"Spec", "Status.MigrationStatus.Stage"}
 	return &opts
 }
 
@@ -108,21 +107,28 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 
 // OnWorkloadUpdate handles workload update event
 func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload) error {
-	// see if anything changed
-	_, ok := ref.ObjDiff(w.Spec, nwrk.Spec)
-	if (nwrk.GenerationID == w.GenerationID) && !ok {
-		w.ObjectMeta = nwrk.ObjectMeta
-		return nil
-	}
 	w.ObjectMeta = nwrk.ObjectMeta
 
 	log.Infof("Updating workload: %+v", nwrk)
 
 	recreate := false
 
-	// check if host parameter has changed
+	// check if host parameter has changed or migration has been initiated
 	if nwrk.Spec.HostName != w.Spec.HostName {
+		log.Infof("Workload %v host changed from %v to %v.", nwrk.Name, w.Spec.HostName, nwrk.Spec.HostName)
 		recreate = true
+	}
+
+	if nwrk.Status.MigrationStatus != nil && nwrk.Status.MigrationStatus.Stage != workload.WorkloadMigrationStatus_MIGRATION_NONE.String() {
+		log.Infof("Hot migration of workload %v stage %v", nwrk.Name, nwrk.Status.MigrationStatus.Stage)
+		ws, err := sm.FindWorkload(w.Tenant, w.Name)
+		if err != nil {
+			log.Errorf("Could not find workload. Err : %v", err)
+			return nil
+		}
+		ws.Workload.Spec = nwrk.Spec
+		ws.Workload.Status = nwrk.Status
+		return ws.updateEndpoints()
 	}
 
 	sliceEqual := func(X, Y []string) bool {
@@ -323,6 +329,8 @@ func (ws *WorkloadState) createEndpoints() error {
 			netName = ws.Workload.Spec.Interfaces[ii].Network
 		}
 
+		ns, _ = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+
 		// check if we already have the endpoint for this workload
 		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
 		epName := ws.Workload.Name + "-" + name
@@ -386,7 +394,11 @@ func (ws *WorkloadState) createEndpoints() error {
 				Tenant:    ws.Workload.Tenant,
 				Namespace: ws.Workload.Namespace,
 			},
-			Spec: workload.EndpointSpec{},
+			Spec: workload.EndpointSpec{
+				NodeUUID:         nodeUUID,
+				HomingHostAddr:   "",
+				MicroSegmentVlan: ws.Workload.Spec.Interfaces[ii].MicroSegVlan,
+			},
 			Status: workload.EndpointStatus{
 				Network:            netName,
 				NodeUUID:           nodeUUID,
@@ -529,4 +541,188 @@ func (sm *Statemgr) RemoveStaleEndpoints() error {
 	}
 
 	return nil
+}
+
+// updateEndpoints tries to update all endpoints for a workload
+func (ws *WorkloadState) updateEndpoints() error {
+	var ns *NetworkState
+	// find the host for the workload
+	destHost, err := ws.stateMgr.FindHost("", ws.Workload.Spec.HostName)
+	if err != nil {
+		log.Errorf("Error finding the host %s for workload %v. Err: %v", ws.Workload.Spec.HostName, ws.Workload.Name, err)
+		return kvstore.NewKeyNotFoundError(ws.Workload.Spec.HostName, 0)
+	}
+
+	sourceHost, err := ws.stateMgr.FindHost("", ws.Workload.Status.HostName)
+	if err != nil {
+		log.Errorf("Error finding the host %s for workload %v. Err: %v", ws.Workload.Status.HostName, ws.Workload.Name, err)
+		return kvstore.NewKeyNotFoundError(ws.Workload.Status.HostName, 0)
+	}
+
+	// loop over each interface of the workload
+	ws.stateMgr.Lock()
+	defer ws.stateMgr.Unlock()
+	for ii := range ws.Workload.Spec.Interfaces {
+		// check if we have a network for this workload
+		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
+		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		if err != nil {
+			log.Errorf("Error finding network. Err: %v", err)
+			return err
+		}
+
+		// check if we already have the endpoint for this workload
+		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
+		epName := ws.Workload.Name + "-" + name
+		sourceNodeUUID := ""
+		sourceHostAddress := ""
+		// find the smart nic by name or mac addr
+		for jj := range sourceHost.Host.Spec.DSCs {
+			if sourceHost.Host.Spec.DSCs[jj].ID != "" {
+				snic, err := ws.stateMgr.FindDistributedServiceCardByHname(sourceHost.Host.Spec.DSCs[jj].ID)
+				if err == nil {
+					sourceNodeUUID = snic.DistributedServiceCard.Name
+					sourceHostAddress = snic.DistributedServiceCard.Status.IPConfig.IPAddress
+					continue
+				}
+
+				log.Warnf("Error finding DSC for name %v", sourceHost.Host.Spec.DSCs[jj].ID)
+			}
+
+			if sourceHost.Host.Spec.DSCs[jj].MACAddress != "" {
+				snicMac := sourceHost.Host.Spec.DSCs[jj].MACAddress
+				log.Infof("Finding source mac : %v", snicMac)
+				snic, err := ws.stateMgr.FindDistributedServiceCardByMacAddr(snicMac)
+				if err == nil {
+					sourceNodeUUID = snic.DistributedServiceCard.Name
+					sourceHostAddress = snic.DistributedServiceCard.Status.IPConfig.IPAddress
+					continue
+				}
+
+				log.Warnf("Error finding DSC for mac add %v", snicMac)
+				return fmt.Errorf("could not find DSC for mac %v", snicMac)
+			}
+		}
+
+		destNodeUUID := ""
+		destHostAddress := ""
+		// find the smart nic by name or mac addr
+		for jj := range destHost.Host.Spec.DSCs {
+			if destHost.Host.Spec.DSCs[jj].ID != "" {
+				snic, err := ws.stateMgr.FindDistributedServiceCardByHname(destHost.Host.Spec.DSCs[jj].ID)
+				if err == nil {
+					destNodeUUID = snic.DistributedServiceCard.Name
+					destHostAddress = snic.DistributedServiceCard.Status.IPConfig.IPAddress
+					continue
+				}
+
+				log.Warnf("Error finding DSC for name %v", destHost.Host.Spec.DSCs[jj].ID)
+			}
+
+			if destHost.Host.Spec.DSCs[jj].MACAddress != "" {
+				snicMac := destHost.Host.Spec.DSCs[jj].MACAddress
+				log.Infof("Finding destination mac : %v", snicMac)
+				snic, err := ws.stateMgr.FindDistributedServiceCardByMacAddr(snicMac)
+				if err == nil {
+					destNodeUUID = snic.DistributedServiceCard.Name
+					destHostAddress = snic.DistributedServiceCard.Status.IPConfig.IPAddress
+					continue
+				}
+
+				log.Warnf("Error finding DSC for mac add %v", snicMac)
+				return fmt.Errorf("could not find DSC for mac %v", snicMac)
+			}
+		}
+
+		if ws.Workload.Status.MigrationStatus == nil {
+			log.Errorf("migration status is nil. cannot proceed")
+			return fmt.Errorf("migration status is nil")
+		}
+
+		// check if an endpoint with this mac address already exists in this network
+		epMac := ws.Workload.Spec.Interfaces[ii].MACAddress
+		if ns != nil {
+			_, err := ns.FindEndpointByMacAddr(epMac)
+			if err != nil {
+				log.Errorf("Failed to find endpoint with ep mac - %v", epMac)
+				return fmt.Errorf("failed to find ep %v", epMac)
+			}
+
+			epInfo := workload.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      epName,
+					Tenant:    ws.Workload.Tenant,
+					Namespace: ws.Workload.Namespace,
+				},
+				Spec: workload.EndpointSpec{
+					NodeUUID:         destNodeUUID,
+					HomingHostAddr:   destHostAddress,
+					MicroSegmentVlan: ws.Workload.Spec.Interfaces[ii].MicroSegVlan,
+				},
+				Status: workload.EndpointStatus{
+					Network:            netName,
+					NodeUUID:           sourceNodeUUID,
+					WorkloadName:       ws.Workload.Name,
+					WorkloadAttributes: ws.Workload.Labels,
+					MacAddress:         epMac,
+					HomingHostAddr:     sourceHostAddress,
+					HomingHostName:     ws.Workload.Status.HostName,
+					MicroSegmentVlan:   ws.Workload.Status.Interfaces[ii].MicroSegVlan,
+					Migration:          &workload.EndpointMigrationStatus{},
+				},
+			}
+
+			switch ws.Workload.Status.MigrationStatus.Stage {
+			case workload.WorkloadMigrationStatus_MIGRATION_START.String():
+				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_START.String()
+			case workload.WorkloadMigrationStatus_MIGRATION_DONE.String():
+				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_DONE.String()
+			case workload.WorkloadMigrationStatus_MIGRATION_ABORT.String():
+				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FAILED.String()
+			}
+
+			if len(ws.Workload.Spec.Interfaces[ii].IpAddresses) > 0 {
+				epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
+			}
+
+			// create new endpoint
+			err = ws.stateMgr.ctrler.Endpoint().Update(&epInfo)
+			if err != nil {
+				log.Errorf("Error updating endpoint. Err: %v", err)
+				return kvstore.NewTxnFailedError()
+			}
+
+			// TODO ensure we update the status only after a feedback from the dataplane - only set Migration status for DONE and ABORT stages
+			if ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_DONE.String() {
+				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_DONE.String()
+				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
+				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
+				ws.Workload.Status.Interfaces = []workload.WorkloadIntfStatus{}
+				for _, in := range ws.Workload.Spec.Interfaces {
+					ws.Workload.Status.Interfaces = append(ws.Workload.Status.Interfaces, workload.WorkloadIntfStatus{MicroSegVlan: in.MicroSegVlan,
+						MACAddress:   in.MACAddress,
+						IpAddresses:  in.IpAddresses,
+						ExternalVlan: in.ExternalVlan})
+				}
+				ws.Workload.Status.HostName = ws.Workload.Spec.HostName
+				ws.Workload.Write()
+			} else if ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_ABORT.String() {
+				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
+				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
+				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
+				ws.Workload.Spec.HostName = ws.Workload.Status.HostName
+				ws.Workload.Write()
+			}
+		}
+	}
+
+	return nil
+}
+
+func getWorkloadNameFromEPName(epName string) string {
+	idx := strings.LastIndex(epName, "-")
+	wrkName := epName[:idx]
+	log.Infof("Got workload name %v for ep %v", wrkName, epName)
+	return wrkName
 }

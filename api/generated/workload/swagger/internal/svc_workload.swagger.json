@@ -325,6 +325,14 @@
             "type": "string"
           },
           {
+            "name": "spec.micro-segment-vlan",
+            "description": "MicroSegmentVlan to be assigned to the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "status.workload-name",
             "description": "VM or container name.",
             "in": "query",
@@ -422,6 +430,21 @@
           {
             "name": "migration.status",
             "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.started-at",
+            "description": "When the EP move was initiated.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.migration-timeout",
+            "description": "The timeout for migration. Should be a valid time duration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -739,6 +762,14 @@
             "type": "string"
           },
           {
+            "name": "spec.micro-segment-vlan",
+            "description": "MicroSegmentVlan to be assigned to the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "status.workload-name",
             "description": "VM or container name.",
             "in": "query",
@@ -836,6 +867,21 @@
           {
             "name": "migration.status",
             "description": "Status of migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration.started-at",
+            "description": "When the EP move was initiated.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration.migration-timeout",
+            "description": "The timeout for migration. Should be a valid time duration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3651,16 +3697,29 @@
           "enum": [
             "none",
             "start",
+            "done",
             "failed",
             "aborted"
           ],
           "default": "none",
           "x-ui-hints": {
+            "done": "Done",
             "failed": "Failed",
             "none": "None",
             "start": "Start"
           },
           "description": "Status of migration."
+        },
+        "started-at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the EP move was initiated."
+        },
+        "migration-timeout": {
+          "type": "string",
+          "default": "3m",
+          "example": "2h",
+          "description": "The timeout for migration. Should be a valid time duration."
         }
       }
     },
@@ -3674,6 +3733,11 @@
         "homing-host-addr": {
           "type": "string",
           "description": "IP of the DSC where this endpoint exists."
+        },
+        "micro-segment-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "description": "MicroSegmentVlan to be assigned to the endpoint."
         }
       },
       "description": "spec part of Endpoint object."

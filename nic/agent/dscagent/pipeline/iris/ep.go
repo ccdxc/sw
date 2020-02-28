@@ -195,7 +195,7 @@ func convertEndpoint(endpoint netproto.Endpoint, mgmtIntf string, vrfID, network
 		}
 
 		ret.Request[0].EndpointAttrs.VmotionState = getHalAPIMigration(endpoint.Spec.Migration)
-		ret.Request[0].EndpointAttrs.OldHomingHostIp = utils.ConvertIPAddresses(endpoint.Spec.HomingHostAddr)[0]
+		ret.Request[0].EndpointAttrs.OldHomingHostIp = utils.ConvertIPAddresses([]string{endpoint.Spec.HomingHostAddr}...)[0]
 	}
 
 	return ret

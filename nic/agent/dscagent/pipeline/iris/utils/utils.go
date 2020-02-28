@@ -58,8 +58,19 @@ func ConvertMacAddress(mac string) (macAddress uint64) {
 
 // ConvertIPAddresses converts IP Address string to hal ip address. TODO v6
 func ConvertIPAddresses(addresses ...string) (ipAddresses []*halapi.IPAddress) {
+	log.Infof("Got addresses : %v", addresses)
 	for _, a := range addresses {
 		addr := net.ParseIP(a)
+		var err error
+		if addr == nil {
+			addr, _, err = net.ParseCIDR(a)
+			if err != nil {
+				log.Errorf("failed to convert IP address %v. Err: %v", a, err)
+				return
+			}
+		}
+
+		log.Infof("Addr : %v converted to %v", a, addr)
 		v4Addr := &halapi.IPAddress{
 			IpAf: halapi.IPAddressFamily_IP_AF_INET,
 			V4OrV6: &halapi.IPAddress_V4Addr{
