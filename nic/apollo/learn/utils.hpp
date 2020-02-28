@@ -81,6 +81,16 @@ learn_lif_send_pkt (void *mbuf)
     PDS_TRACE_VERBOSE("Tx count %u", LEARN_COUNTER_GET(tx_pkts));
 }
 
+/// \brief add data to mbuf
+/// increment pkt data length and return pointer to pkt data
+static inline char *
+learn_lif_mbuf_append_data (void *mbuf, uint16_t len)
+{
+    dpdk_mbuf *pkt = (dpdk_mbuf *)mbuf;
+
+    return dpdk_device::append_data(pkt, len);
+}
+
 }    // namespace learn
 
 #endif    // __LEARN_UTILS_HPP__

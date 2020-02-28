@@ -63,7 +63,8 @@ learn_state::lif_init_(void) {
     params.log_name = "learn_dpdk";
     params.mbuf_pool_name = "learn_dpdk";
     params.mbuf_size = 2048;
-    params.num_mbuf = 1024;
+    // 1024 mbufs for rx descriptors, 32 additional for local allocation
+    params.num_mbuf = 1024 + 32;
     params.vdev_list.push_back(string(lif_name));
     ret = dpdk_init(&params);
     if (unlikely(ret != SDK_RET_OK)) {

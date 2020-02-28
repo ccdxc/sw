@@ -8,13 +8,18 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/l2.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
+#include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
+#include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
+#include "nic/apollo/learn/utils.hpp"
 
 namespace event = sdk::event_thread;
 
@@ -164,12 +169,61 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
 void
 send_arp_probe (ep_ip_entry *ip_entry)
 {
-    //TODO: construct ARP probe packet
-    // allocate mbuf on learn lif
-    // get nexthop from vnic associated with this IP
-    // add VLAN header if vnic has encap
-    // create ARP request header
-    // add arm to p4 tx header with nh_type = LEARN_NH_TYPE_VNIC
+    void *mbuf;
+    char *tx_hdr;
+    eth_hdr_t *eth_hdr;
+    arp_hdr_t *arp_hdr;
+    arp_data_ipv4_t *arp_data;
+    impl::p4_tx_info_t tx_info = { 0 };
+    pds_obj_key_t vnic_key;
+    vnic_entry *vnic;
+    pds_obj_key_t subnet_key;
+    subnet_entry *subnet;
+
+    vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
+    vnic = vnic_db()->find(&vnic_key);
+    subnet_key = vnic->subnet();
+    subnet = subnet_db()->find(&subnet_key);
+
+    mbuf = learn_lif_alloc_mbuf();
+    if (unlikely(mbuf == nullptr)) {
+        PDS_TRACE_ERR("Failed to allocate pkt buffer for ARP probe, EP %s, "
+                      "%s, %s", ip_entry->key2str().c_str(),
+                      subnet->key2str().c_str(), vnic->key2str().c_str());
+        return;
+    }
+    tx_hdr = learn_lif_mbuf_append_data(mbuf, ARP_PKT_ETH_FRAME_LEN +
+                                        impl::arm_to_p4_hdr_sz());
+
+    // fill Ethernet header, P4 adds encap header if required
+    eth_hdr = (eth_hdr_t *)(tx_hdr + impl::arm_to_p4_hdr_sz());
+    MAC_ADDR_COPY(eth_hdr->dmac, vnic->mac());
+    MAC_ADDR_COPY(eth_hdr->smac, subnet->vr_mac());
+    eth_hdr->eth_type = htons(ETH_TYPE_ARP);
+
+    // fill ARP header
+    arp_hdr = (arp_hdr_t *)(eth_hdr + 1);
+    arp_hdr->htype = htons(ARP_HRD_TYPE_ETHER);
+    arp_hdr->ptype = htons(ETH_TYPE_IPV4);
+    arp_hdr->hlen = ETH_ADDR_LEN;
+    arp_hdr->plen = IP4_ADDR8_LEN;
+    arp_hdr->op = htons(ARP_OP_REQUEST);
+
+    // fill ARP data
+    arp_data = (arp_data_ipv4_t *)(arp_hdr + 1);
+    MAC_ADDR_COPY(arp_data->smac, subnet->vr_mac());
+    arp_data->sip = 0;
+    memset(arp_data->tmac, 0, ETH_ADDR_LEN);
+    arp_data->tip = htonl(ip_entry->key()->ip_addr.addr.v4_addr);
+
+    // padding
+    memset((arp_data + 1), 0, ARP_PKT_ETH_FRAME_LEN - ARP_PKT_LEN);
+
+    // add ARM to P4 tx header and send the pkt
+    tx_info.nh_type = impl::LEARN_NH_TYPE_VNIC;
+    tx_info.vnic_key = vnic_key;
+    impl::arm_to_p4_tx_hdr_fill(tx_hdr, &tx_info);
+    learn_lif_send_pkt(mbuf);
 }
 
 static void

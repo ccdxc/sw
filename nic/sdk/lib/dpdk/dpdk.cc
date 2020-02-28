@@ -294,6 +294,11 @@ dpdk_device::get_data_ptr(dpdk_mbuf *packet) {
     return rte_pktmbuf_mtod((struct rte_mbuf *)packet, char *);
 }
 
+char *
+dpdk_device::append_data(dpdk_mbuf *packet, uint16_t len) {
+    return rte_pktmbuf_append((struct rte_mbuf *)packet, len);
+}
+
 dpdk_mbuf **
 dpdk_device::receive_packets(uint16_t rx_queue_id, uint16_t max_packets,
                              uint16_t *recv_count) {

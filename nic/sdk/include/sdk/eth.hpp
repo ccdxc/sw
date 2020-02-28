@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <cinttypes>
 #include <ostream>
+#include "include/sdk/base.hpp"
+
+#define ETH_MIN_FRAME_LEN                              64
 
 #define L2_MIN_HDR_LEN                                 14
 #define L2_ETH_HDR_LEN                                 14
@@ -28,6 +31,13 @@
 // MAC address
 #define ETH_ADDR_LEN                                 6
 typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
+
+// Ethernet header
+typedef struct eth_hdr_s {
+    mac_addr_t dmac;
+    mac_addr_t smac;
+    uint16_t eth_type;
+} __PACK__ eth_hdr_t;
 
 #define MAC_TO_UINT64(mac_addr)                                         \
     (((mac_addr)[5] & 0xFF)                      |                      \

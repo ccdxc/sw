@@ -33,4 +33,10 @@ typedef struct arp_data_ipv4_s {
     ipv4_addr_t tip;
 } __PACK__ arp_data_ipv4_t;
 
+#define ARP_PKT_LEN                 (sizeof(eth_hdr_t) + sizeof(arp_hdr_t) + \
+                                     sizeof(arp_data_ipv4_t))
+
+// ARP pkt length is 42 bytes, so use min Ethernet frame len - FCS
+#define ARP_PKT_ETH_FRAME_LEN       (ETH_MIN_FRAME_LEN - 4)
+
 #endif    // __L2_HPP__
