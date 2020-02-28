@@ -58,7 +58,11 @@ dhcp_relay::clone(api_ctxt_t *api_ctxt) {
     cloned_relay = dhcp_db()->alloc_relay();
     if (cloned_relay) {
         new (cloned_relay) dhcp_relay();
-        cloned_relay->init_config(api_ctxt);
+        if (cloned_relay->init_config(api_ctxt) != SDK_RET_OK) {
+            cloned_relay->~dhcp_relay();
+            dhcp_db()->free(cloned_relay);
+            return NULL;
+        }
     }
     return cloned_relay;
 }
@@ -91,7 +95,30 @@ dhcp_relay::soft_delete(dhcp_relay *relay) {
 
 sdk_ret_t
 dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
+    ip_addr_t mytep_ip;
+    device_entry *device;
+    pds_dhcp_relay_spec_t *spec;
+
+    spec = &api_ctxt->api_params->dhcp_relay_spec;
+    if (spec->agent_ip.af == IP_AF_NIL) {
+        // not (local) DHCP relay agent IP provided, use mytep IP
+        device = device_db()->find();
+        if (likely(device)) {
+            mytep_ip = device->ip_addr();
+            if (mytep_ip.af == IP_AF_NIL) {
+                PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay agent "
+                              "IP & device TEP IP are not configured");
+                return SDK_RET_INVALID_ARG;
+            }
+            memcpy(&spec->agent_ip, &mytep_ip, sizeof(ip_addr_t));
+        } else {
+            PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay agent "
+                          "IP and device object are not configured");
+            return SDK_RET_INVALID_ARG;
+        }
+    }
     key_ = api_ctxt->api_params->dhcp_relay_spec.key;
+
     return SDK_RET_OK;
 }
 
