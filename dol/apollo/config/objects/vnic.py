@@ -28,6 +28,7 @@ class VnicStatus(base.StatusObjectBase):
 class VnicObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC, node)
+        super().SetOrigin(spec)
         parent.AddChild(self)
         if (EzAccessStoreClient[node].IsDeviceLearningEnabled()) or \
                 (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):

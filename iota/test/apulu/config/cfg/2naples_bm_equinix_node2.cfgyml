@@ -13,7 +13,7 @@ device:
     gateway     : '1.0.0.1'
     macaddress  : macaddr/0000.bbbb.bbb1
     encap       : vxlan
-    origin      : implicity-created
+    origin      : implicitly-created
 
 uplink:
     - entry:
@@ -21,20 +21,20 @@ uplink:
         port    : 1
         mode    : switch
         status  : UP
-        origin  : implicity-created
+        origin  : implicitly-created
     - entry:
         id      : uplink1
         port    : 2
         mode    : switch
         status  : UP
-        origin  : implicity-created
+        origin  : implicitly-created
 
 vpc:
     - id         : 100
       stack      : ipv4
       count      : 1
       type       : underlay
-      origin     : implicity-created
+      origin     : implicitly-created
 
       interface:
         - iid           : 1
@@ -44,7 +44,7 @@ vpc:
           macaddress    : macaddr/00ae.cd00.14ce
           portid        : 1
           encap         : none
-          origin        : implicity-created
+          origin        : implicitly-created
         - iid           : 2
           iftype        : l3
           ifadminstatus : UP
@@ -52,7 +52,7 @@ vpc:
           macaddress    : macaddr/00ae.cd00.14cd
           portid        : 2
           encap         : none
-          origin        : implicity-created
+          origin        : implicitly-created
         - iid           : 3
           iftype        : loopback
           ifadminstatus : UP
@@ -60,7 +60,7 @@ vpc:
           macaddress    : macaddr/0000.0000.0000
           portid        : 0
           encap         : none
-          origin        : implicity-created
+          origin        : implicitly-created
           updateneeded  : true
 
       nexthop:
@@ -69,13 +69,13 @@ vpc:
           type       : underlay
           l3intfid   : 1
           macaddress : macaddr/00ae.cd00.4fde
-          origin     : implicity-created
+          origin     : implicitly-created
         - id         : 2
           count      : 1
           type       : underlay
           l3intfid   : 2
           macaddress : macaddr/00ae.cd00.4fdd
-          origin     : implicity-created
+          origin     : implicitly-created
 
       bgpglobal:
         - localasn      : 100

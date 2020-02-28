@@ -68,6 +68,7 @@ class RouteObject():
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
         super().__init__(api.ObjectTypes.ROUTE, node)
+        super().SetOrigin(spec)
         if GlobalOptions.netagent:
             # HACK : fix correctly
             # FIXME : no idea what this means, fix properly so route table gets created

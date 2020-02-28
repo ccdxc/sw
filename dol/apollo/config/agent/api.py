@@ -126,12 +126,8 @@ class ClientModule:
 
 class ClientRESTModule:
     def __init__(self, ip, uri):
-        self.ip = ip
         self.url = "http://" + ip + ":8888" + uri
         return
-
-    def GetPutUrl(self, path):
-        return "http://" + self.ip + ":8888" + path
 
     def Create(self, objs):
         resps = []
@@ -152,7 +148,7 @@ class ClientRESTModule:
     def Update(self, objs):
         resps = []
         for obj in objs:
-            url = self.GetPutUrl(obj.GetPutPath())
+            url = "%s%s"%(self.url, obj.GetRESTPath())
             pdata = obj.PopulateAgentJson()
             logger.info("Obj:%s Put to URL %s"%(obj.GID(), url))
             if not pdata:
@@ -161,7 +157,7 @@ class ClientRESTModule:
             logger.info("PutData: %s"%pdata)
             rdata = requests.put(url, pdata)
             if rdata.status_code != 200:
-                logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
+                logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, url))
             else:
                 resps.append(rdata)
         return resps
@@ -172,6 +168,18 @@ class ClientRESTModule:
             logger.error("GET FAILED [%d] to URL %s"%(rdata.status_code, self.url))
             return
         return rdata.json()
+
+    def Delete(self):
+        resps = []
+        for obj in objs:
+            url = "%s%s"%(self.url, obj.GetRESTPath())
+            logger.info("Obj:%s Delete URL %s"%(obj.GID(), url))
+            rdata = requests.delete(url)
+            if rdata.status_code != 200:
+                logger.error("Obj:%s DELETE FAILED [%d] URL %s"%(obj.GID(), rdata.status_code, url))
+            else:
+                resps.append(rdata)
+        return resps
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -368,6 +376,10 @@ class ApolloAgentClient:
         return self.__stubs[objtype].Rpc(ApiOps.CREATE, objs)
 
     def Delete(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.__restreqs[objtype]:
+                return # unsupported object
+            return self.__restreqs[objtype].Delete(objs)
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.DELETE, objs)
 
@@ -383,12 +395,14 @@ class ApolloAgentClient:
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
 
-    def GetHttp(self, objtype, objs):
+    def GetHttp(self, objtype):
         if not self.__restreqs[objtype]:
-            return # unsupported object
+            return None # unsupported object
         return self.__restreqs[objtype].Get()
 
     def Get(self, objtype, objs):
+        #if GlobalOptions.netagent:
+            #return self.GetHttp(objtype)
         # default to grpc for now
         return self.GetGrpc(objtype, objs)
 

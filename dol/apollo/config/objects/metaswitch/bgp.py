@@ -69,7 +69,7 @@ class BgpObject(base.ConfigObjectBase):
             peerjson = {
                     "ip-address": obj.PeerAddr.exploded,
                     "remote-as": obj.RemoteASN,
-                    "enable-address-families": [obj.PeerAf.Afi, obj.PeerAf.Safi]
+                    "enable-address-families": [f"{obj.PeerAf.Afi}-{obj.PeerAf.Safi}"]
                 }
             peers.append(peerjson)
 

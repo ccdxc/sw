@@ -5,6 +5,7 @@ import requests
 
 from infra.common.logging import logger
 from infra.common.glopts  import GlobalOptions
+import infra.common.objects as objects
 
 from apollo.config.store import client as EzAccessStoreClient
 
@@ -44,6 +45,7 @@ class VpcStatus(base.StatusObjectBase):
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, node, spec, index, maxcount):
         super().__init__(api.ObjectTypes.VPC, node)
+        super().SetOrigin(spec)
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
         if (hasattr(spec, 'id')):
             self.VPCId = spec.id
@@ -86,6 +88,7 @@ class VpcObject(base.ConfigObjectBase):
         self.Tos = 0 # to start with
         self.Mutable = utils.IsUpdateSupported()
         self.Status = VpcStatus()
+        self.ReadImplicit()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
@@ -179,6 +182,27 @@ class VpcObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
+    def ReadImplicit(self):
+        if (GlobalOptions.dryrun):
+            return
+        if (not self.IsOriginImplicitlyCreated()):
+            return
+        # We need to read info from naples and update the DS
+        resp = api.client[self.Node].GetHttp(self.ObjType)
+        for vpcinst in resp:
+            if (not (vpcinst['spec']['vrf-type'] == 'INFRA')):
+                continue
+            uuid_str = vpcinst['meta']['uuid']
+            self.UUID = utils.PdsUuid(bytes.fromhex(uuid_str.replace('-','')),\
+                    self.ObjType)
+            ms = getattr(vpcinst['spec'], 'router-mac', '00:00:00:00:00:00')
+            self.VirtualRouterMACAddr = objects.MacAddressBase(string=ms)
+            self.Vnid = int(getattr(vpcinst['spec'], 'vxlan-vni', '0'))
+            self.Tenant = vpcinst['meta']['tenant']
+            self.Namespace = vpcinst['meta']['namespace']
+            self.GID(vpcinst['meta']['name'])
+        return
+
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
         if v6pfxlen:
             self.__ip_subnet_prefix_pool[0][poolid] =  Resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
@@ -263,7 +287,7 @@ class VpcObject(base.ConfigObjectBase):
                 "vrf-type": "CUSTOMER",
                 "v4-route-table": self.V4RouteTableName,
                 "router-mac": str(self.VirtualRouterMACAddr),
-                "vxlan-vni": self.Vnid,
+                "vxlan-vni": self.Vnid
             }
         }
         return json.dumps(spec)

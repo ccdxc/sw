@@ -16,6 +16,7 @@ import policer_pb2 as policer_pb2
 class PolicerObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
         super().__init__(api.ObjectTypes.POLICER, node)
+        super().SetOrigin(spec)
         ############### PUBLIC ATTRIBUTES OF POLICER OBJECT ###################
         if hasattr(spec, 'id'):
             self.PolicerId = spec.id

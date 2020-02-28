@@ -55,6 +55,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Node = node
         self.Duplicate = None
         self.Interim = False
+        self.Tenant = 'default'
+        self.Namespace = 'default'
         return
 
     def __get_GrpcMsg(self, op):
@@ -126,8 +128,15 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def IsDirty(self):
         return self.Dirty
 
-    def SetOrigin(self, origintype):
-        self.Origin = origintype
+    def SetOrigin(self, spec):
+        if not hasattr(spec, 'origin'):
+            return # default to FIXED
+        if spec.origin == 'discovered':
+            self.Origin = topo.OriginTypes.DISCOVERED
+        elif spec.origin == 'implicitly-created':
+            self.Origin = topo.OriginTypes.IMPLICITLY_CREATED
+        # anything else is FIXED
+        return
 
     def IsOriginFixed(self):
         return True if (self.Origin == topo.OriginTypes.FIXED) else False
@@ -268,6 +277,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
         logger.error("Method not implemented by class: %s" % self.__class__)
         assert(0)
         return
+
+    def GetRESTPath(self):
+        return "%s/%s/%s" % (self.Tenant, self.Namespace, self.GID())
 
     def GetGrpcCreateMessage(self, cookie=0):
         grpcmsg = self.__get_GrpcMsg(api.ApiOps.CREATE)
@@ -428,13 +440,10 @@ class ConfigClientBase(base.ConfigClientBase):
 
     #TODO: cleanup APIs & deprecate
     def CreateObjects(self, node):
-        fixed, discovered, implicity_created = [], [], []
+        fixed, discovered, implicitly_created = [], [], []
         for obj in self.Objects(node):
             if obj.IsOriginImplicitlyCreated():
-                implicity_created.append()
-                logger.info("Skip underlay VPC create")
-                obj.Show()
-                continue
+                implicitly_created.append(obj)
             elif obj.IsOriginFixed():
                 fixed.append(obj)
             elif obj.IsOriginDiscovered():
@@ -443,9 +452,10 @@ class ConfigClientBase(base.ConfigClientBase):
                 assert(0)
 
         logger.info("%s objects: fixed: %d discovered %d implicity_created %d" \
-                %(self.ObjType.name, len(fixed), len(discovered), len(implicity_created)))
+                %(self.ObjType.name, len(fixed), len(discovered),\
+                len(implicitly_created)))
         # return if there is no fixed object
-        if len(fixed) == 0:
+        if len(fixed) == 0 and len(implicitly_created) == 0:
             logger.info(f"Skip Creating {self.ObjType.name} Objects in {node}")
             return
 
@@ -453,6 +463,7 @@ class ConfigClientBase(base.ConfigClientBase):
         logger.info(f"Creating {len(fixed)} {self.ObjType.name} Objects in {node}")
         if GlobalOptions.netagent:
             api.client[node].Create(self.ObjType, fixed)
+            #api.client[node].Update(self.ObjType, implicitly_created)
         else:
             cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))

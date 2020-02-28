@@ -89,9 +89,10 @@ class InterfaceInfoObject(base.ConfigObjectBase):
 class InterfaceObject(base.ConfigObjectBase):
     def __init__(self, spec, ifspec, node, spec_json=None):
         super().__init__(api.ObjectTypes.INTERFACE, node)
+        super().SetOrigin(ifspec)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         if (hasattr(ifspec, 'iid')):
-            self.InterfaceId = ifspec.iid
+            self.InterfaceId = int(ifspec.iid)
         else:
             self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
         self.SpecJson = spec_json
@@ -106,9 +107,10 @@ class InterfaceObject(base.ConfigObjectBase):
         info = InterfaceInfoObject(node, self.Type, spec, ifspec)
         self.IfInfo = info
         self.Status = InterfaceStatus()
-        self.GID("Interface ID:%s"%self.InterfaceId)
+        self.GID("Interface ID:%d"%self.InterfaceId)
         self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
         self.Mutable = utils.IsUpdateSupported()
+        self.ReadImplicit()
 
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
         self.DeriveOperInfo()
@@ -116,14 +118,49 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Interface: %s |Ifname:%s|Type:%d|AdminState:%s" % \
-                (self.UUID, self.Ifname, self.Type, self.AdminState)
+        return "Interface: %s|Origin:%d|Ifname:%s|Type:%d|AdminState:%s" % \
+                (self.UUID, self.Origin, self.Ifname, self.Type, self.AdminState)
 
     def Show(self):
         logger.info("InterfaceObject:")
         logger.info("- %s" % repr(self))
         if self.IfInfo:
             self.IfInfo.Show()
+        return
+
+    def ReadImplicit(self):
+        if (GlobalOptions.dryrun):
+            return
+        if (not self.IsOriginImplicitlyCreated()):
+            return
+        # We need to read info from naples and update the DS
+        resp = api.client[self.Node].GetHttp(self.ObjType)
+        for ifinst in resp:
+            if self.Type == topo.InterfaceTypes.L3:
+                if (not ifinst['spec']['type'] == 'L3'):
+                    continue
+                riid = ifinst['meta']['name']
+                if (self.InterfaceId != int(riid[len(riid)-1])):
+                    continue
+            elif self.Type == topo.InterfaceTypes.LOOPBACK:
+                if (not ifinst['spec']['type'] == 'LOOPBACK'):
+                    continue
+            else:
+                continue
+            # Found matching interface, get basic info
+            uuid_str = ifinst['meta']['uuid']
+            self.UUID = utils.PdsUuid(bytes.fromhex(uuid_str.replace('-','')),\
+                    self.ObjType)
+            self.Tenant = ifinst['meta']['tenant']
+            self.Namespace = ifinst['meta']['namespace']
+            self.GID(ifinst['meta']['name'])
+
+            # get ifinfo
+            if hasattr(ifinst['spec'], 'ip-address'):
+                self.IfInfo.ip_prefix = ipaddress.ip_network(ifinst['spec']['ip-address'],\
+                        False)
+            if hasattr(ifinst['spec'], 'vrf-name'):
+                self.IfInfo.VpcId = ifinst['spec']['vrf-name']
         return
 
     def Dup(self):
@@ -168,31 +205,28 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def PopulateAgentJson(self):
-        if self.Type != topo.InterfaceTypes.LOOPBACK:
-            return
+        if self.Type == topo.InterfaceTypes.LOOPBACK:
+            iftype = 'LOOPBACK'
+        elif self.Type == topo.InterfaceTypes.L3:
+            iftype = 'L3'
+        else:
+            return None
         spec = {
             "kind": "Interface",
             "meta": {
-                "name": self.SpecJson['meta']['name'],
-                "namespace": self.SpecJson['meta']['namespace'],
-                "tenant": self.SpecJson['meta']['tenant'],
-                "uuid" : self.SpecJson['meta']['uuid'],
+                "name": self.GID(),
+                "namespace": self.Namespace,
+                "tenant": self.Tenant,
+                "uuid" : self.UUID.UuidStr
             },
             "spec": {
-                "type": self.SpecJson['spec']['type'],
-                "admin-status": self.SpecJson['spec']['admin-status'],
+                "type": iftype,
+                "admin-status": 'UP',
                 "vrf-name": self.SpecJson['spec']['vrf-name'],
                 "ip-address": (self.IfInfo.ip_prefix.exploded),
             }
         }
         return json.dumps(spec)
-
-    def GetPutPath(self):
-        tenant = self.SpecJson['meta']['tenant']
-        namespace = self.SpecJson['meta']['namespace']
-        name = self.SpecJson['meta']['name']
-        url = "/api/interfaces/" + tenant + "/" + namespace + "/" + name
-        return url
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
@@ -402,7 +436,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         #if utils.IsDryRun(): return
         if not GlobalOptions.netagent:
             return
-        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE, None)
+        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         return resp
 
     def ReadObjects(self, node):

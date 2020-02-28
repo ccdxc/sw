@@ -24,6 +24,7 @@ class TunnelStatus(base.StatusObjectBase):
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
         super().__init__(ObjectTypes.TUNNEL, node)
+        super().SetOrigin(spec)
         self.__spec = spec
         if (hasattr(spec, 'id')):
             self.Id = spec.id

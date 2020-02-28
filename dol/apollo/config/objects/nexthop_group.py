@@ -23,6 +23,7 @@ class NexthopGroupStatus(base.StatusObjectBase):
 class NexthopGroupObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec):
         super().__init__(api.ObjectTypes.NEXTHOPGROUP, node)
+        super().SetOrigin(spec)
         if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF NEXTHOPGROUP OBJECT ############
