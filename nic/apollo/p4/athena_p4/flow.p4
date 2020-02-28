@@ -3,9 +3,10 @@
 /*****************************************************************************/
 @pragma capi appdatafields index index_type
 @pragma capi hwfields_access_api
-action flow_hash(entry_valid, index, index_type,
-                 hash1, hint1, hash2, hint2,
-                 more_hashes, more_hints) {
+action flow_hash(entry_valid, index, index_type, pad,
+                hash1, hint1, hash2, hint2, hash3, hint3,
+                hash4, hint4, hash5, hint5,
+                more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);
@@ -27,6 +28,21 @@ action flow_hash(entry_valid, index, index_type,
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flow_hash == hash2)) {
             modify_field(scratch_metadata.flow_hint, hint2);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash3)) {
+            modify_field(scratch_metadata.flow_hint, hint3);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash4)) {
+            modify_field(scratch_metadata.flow_hint, hint4);
+            modify_field(scratch_metadata.hint_valid, TRUE);
+        }
+        if ((scratch_metadata.hint_valid == FALSE) and
+            (scratch_metadata.flow_hash == hash5)) {
+            modify_field(scratch_metadata.flow_hint, hint5);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         modify_field(scratch_metadata.flag, more_hashes);
@@ -52,8 +68,12 @@ action flow_hash(entry_valid, index, index_type,
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
+    modify_field(scratch_metadata.flow_data_pad, pad);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
+    modify_field(scratch_metadata.flow_hash, hash3);
+    modify_field(scratch_metadata.flow_hash, hash4);
+    modify_field(scratch_metadata.flow_hash, hash5);
 }
 
 @pragma stage 3
@@ -62,8 +82,6 @@ action flow_hash(entry_valid, index, index_type,
 table flow {
     reads {
         key_metadata.vnic_id            : exact;
-        key_metadata.smac               : exact;
-        key_metadata.dmac               : exact;
         key_metadata.src                : exact;
         key_metadata.dst                : exact;
         key_metadata.proto              : exact;

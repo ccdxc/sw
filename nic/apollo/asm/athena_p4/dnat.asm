@@ -25,16 +25,9 @@ dnat_hash:
     nop
     bcf         [c1], label_flow_hit
 
-#if 0
-    // Check hash1 and hint1
-    seq         c1, r1[FLOW_HASH_MSB], d.dnat_hash_d.hash1
-    sne         c2, d.dnat_hash_d.hint1, r0
-    bcf         [c1&c2], label_flow_hash_hit
-    add         r2, r0, d.dnat_hash_d.hint1
-#else
+
     // Check hash1 and hint1
     CHECK_HASH(hash1, hint1);
-#endif
 
     // Check hash2 and hint2
     CHECK_HASH(hash2, hint2);

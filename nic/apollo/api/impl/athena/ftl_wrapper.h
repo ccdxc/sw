@@ -77,18 +77,6 @@ ftlv6_set_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
     return entry->set_key_metadata_dst(dst);
 }
 
-static inline void
-ftlv6_set_key_src_mac (flow_hash_entry_t *entry, uint64_t smac)
-{
-    return entry->set_key_metadata_smac(smac);
-}
-
-static inline void
-ftlv6_set_key_dest_mac (flow_hash_entry_t *entry, uint64_t dmac)
-{
-    return entry->set_key_metadata_dmac(dmac);
-}
-
 static inline uint32_t
 ftlv6_get_index (flow_hash_entry_t *entry)
 {

@@ -1,7 +1,7 @@
 #define KEY_MAPPING_TABLE_SIZE                              64
 
-#define FLOW_TABLE_SIZE                                     4194304     // 4M
-#define FLOW_OHASH_TABLE_SIZE                               1048576     // 4M/4 
+#define FLOW_TABLE_SIZE                                     2097152     // 2M
+#define FLOW_OHASH_TABLE_SIZE                               524288      // 2M/4 
 
 #define DNAT_TABLE_SIZE                                     16384       // 16K
 #define DNAT_OHASH_TABLE_SIZE                               4096        // 16K/4

@@ -106,8 +106,8 @@ header_type scratch_metadata_t {
     fields {
         flag                : 1;
         ipv4_src            : 32;
-        flow_hash           : 10;
-        flow_hint           : 20;
+        flow_hash           : 11;
+        flow_hint           : 19;
         class_id            : 8;
         addr                : 32;
         local_vnic_tag      : 10;
@@ -136,7 +136,7 @@ header_type scratch_metadata_t {
         mac                 : 48;
         ipv4                : 32;
 
-        flow_data_pad       : 4;
+        flow_data_pad       : 5;
 
         // Session info
         timestamp           : 16;

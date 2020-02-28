@@ -54,11 +54,9 @@ pds_flow6_key2str (void *key)
         inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
     }
-    sprintf(str, "SMAC:%lu DMAC:%lu "
+    sprintf(str,
             "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u "
             "Ktype:%u VNICID:%hu",
-            (*(uint64_t *)k->key_metadata_smac) & 0xFFFFFFFFFFFF,
-            (*(uint64_t *)k->key_metadata_dmac) & 0xFFFFFFFFFFFF,
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
             k->key_metadata_proto, k->key_metadata_ktype,
@@ -95,8 +93,6 @@ flow_cache_entry_setup_key (flow_hash_entry_t *entry,
     ftlv6_set_key_proto(entry, key->ip_proto);
     ftlv6_set_key_sport(entry, key->l4.tcp_udp.sport);
     ftlv6_set_key_dport(entry, key->l4.tcp_udp.dport);
-    ftlv6_set_key_dest_mac(entry, key->dmac);
-    ftlv6_set_key_src_mac(entry, key->smac);
 
     return SDK_RET_OK;
 }
@@ -107,7 +103,7 @@ pds_flow_cache_create ()
     sdk_table_factory_params_t factory_params = { 0 };
 
     factory_params.table_id = P4TBL_ID_FLOW;
-    factory_params.num_hints = 4;
+    factory_params.num_hints = 5;
     factory_params.max_recircs = 8;
     factory_params.key2str = pds_flow6_key2str;
     factory_params.appdata2str = pds_flow6_appdata2str;
@@ -181,9 +177,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
             (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&
             (hwentry->key_metadata_proto == cbdata->key->ip_proto) &&
             (hwentry->key_metadata_sport == cbdata->key->l4.tcp_udp.sport) &&
-            (hwentry->key_metadata_dport == cbdata->key->l4.tcp_udp.dport) &&
-            (hwentry->key_metadata_dmac == cbdata->key->dmac) &&
-            (hwentry->key_metadata_smac == cbdata->key->smac)) {
+            (hwentry->key_metadata_dport == cbdata->key->l4.tcp_udp.dport)) {
             // Key matching with index, so fill data
             cbdata->info->spec.data.index = hwentry->index;
             cbdata->info->spec.data.index_type =

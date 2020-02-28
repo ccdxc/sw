@@ -9,6 +9,12 @@ struct phv_     p;
 
 #define FLOW_HASH_MSB 31:21
 
+#define CHECK_FLOW_HASH(_hash, _hint)                       \
+    seq         c1, r1[FLOW_HASH_MSB], d.flow_hash_d._hash; \
+    sne         c2, d.flow_hash_d._hint, r0;                \
+    bcf         [c1&c2], label_flow_hash_hit;               \
+    add         r2, r0, d.flow_hash_d._hint;
+
 %%
 
 flow_hash:
@@ -16,25 +22,17 @@ flow_hash:
     nop
     bcf         [c1], label_flow_hit
     // Check hash1 and hint1
-    seq         c1, r1[FLOW_HASH_MSB], d.flow_hash_d.hash1
-#if 0
-    sne         c2, d.flow_hash_d.hint1, r0
-#else
-    add         r3, d.flow_hash_d.hint1_sbit6_ebit19, \
-                    d.flow_hash_d.hint1_sbit0_ebit5, 14
-    sne         c2, r1, r0
-#endif
-    bcf         [c1&c2], label_flow_hash_hit
-#if 0
-    add         r2, r0, d.flow_hash_d.hint1
-#else
-    add         r2, r0, r3
-#endif
+    CHECK_FLOW_HASH(hash1, hint1);
     // Check hash2 and hint2
-    seq         c1, r1[FLOW_HASH_MSB], d.flow_hash_d.hash2
-    sne         c2, d.flow_hash_d.hint2, r0
-    bcf         [c1&c2], label_flow_hash_hit
-    add         r2, r0, d.flow_hash_d.hint2
+    CHECK_FLOW_HASH(hash2, hint2);
+    // Check hash3 and hint3
+    CHECK_FLOW_HASH(hash3, hint3);
+    // Check hash3 and hint3
+    CHECK_FLOW_HASH(hash3, hint3);
+    // Check hash4 and hint4
+    CHECK_FLOW_HASH(hash4, hint4);
+    // Check hash5 and hint5
+    CHECK_FLOW_HASH(hash5, hint5);
     // Check for more hashes
     seq         c1, d.flow_hash_d.more_hashes, TRUE
     sne         c2, d.flow_hash_d.more_hints, r0
