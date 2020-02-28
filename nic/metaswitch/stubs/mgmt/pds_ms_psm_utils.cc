@@ -32,6 +32,11 @@ pds_ms_fill_amb_psm_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     data->entity_index  = conf->entity_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_PSM_ENT_ENTITY_INDEX);
 
+    if (conf->row_status != AMB_ROW_DESTROY) {
+        data->bfd_protect_ecmp = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_PSM_ENT_BFD_PROT_ECMP);
+    }
+
     data->row_status    = conf->row_status;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_PSM_ENT_ROW_STATUS);
 

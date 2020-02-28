@@ -28,6 +28,9 @@ class li_vxlan_tnl {
 public:    
    NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
    void handle_delete(NBB_ULONG vxlan_tnl_ifindex);
+   NBB_BYTE handle_uecmp_update(tep_obj_t* tep_obj, ms_ps_id_t pathset_id,
+                                ms_ps_id_t ll_dp_corr_id,
+                                cookie_uptr_t&& cookie_uptr);
 
 private:
     struct ips_info_t {
@@ -36,6 +39,7 @@ private:
         ip_addr_t    src_ip;
         ms_hw_tbl_id_t hal_uecmp_idx; 
         std::string  tep_ip_str;
+        ms_ps_id_t   uecmp_ps;
     };
 
     struct store_info_t {
@@ -56,6 +60,7 @@ private:
     void cache_obj_in_cookie_for_delete_op_(void); 
     pds_batch_ctxt_guard_t make_batch_pds_spec_ (state_t::context_t& state_ctxt);
     void fetch_store_info_(pds_ms::state_t* state);
+    NBB_BYTE handle_add_upd_();
 
     void parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
     pds_tep_spec_t make_pds_tep_spec_(void);

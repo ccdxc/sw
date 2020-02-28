@@ -46,6 +46,7 @@ private:
         uint32_t       num_added_nh = 0; 
         uint32_t       num_deleted_nh = 0; 
         pds_nexthop_group_type_t  pds_nhgroup_type = PDS_NHGROUP_TYPE_NONE;
+        uint32_t       ll_dp_corr_id = 0;
     };
     struct store_info_t {
         pathset_obj_t*   pathset_obj = nullptr;

@@ -27,9 +27,10 @@ tep_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
     tep_obj_t::set_slab(slabs_[slab_id].get());
 }
 
-tep_obj_t::tep_obj_t(ip_addr_t tep_ip_, ms_hw_tbl_id_t hal_uecmp_idx_,
+tep_obj_t::tep_obj_t(const ip_addr_t& tep_ip_, const ip_addr_t& src_ip_,
+                     ms_hw_tbl_id_t hal_uecmp_idx_,
                      ms_hw_tbl_id_t hal_tep_idx_) 
-        : prop_(tep_ip_, hal_uecmp_idx_, hal_tep_idx_) 
+        : prop_(tep_ip_, src_ip_, hal_uecmp_idx_, hal_tep_idx_) 
 {
     hal_oecmp_idx_guard = std::make_shared<ecmp_idx_guard_t>();
     PDS_TRACE_DEBUG("Allocated HAL Overlay ECMP Index %d for TEP %s",

@@ -19,6 +19,7 @@ public:
        // for the IPS feeder case
        tnl_ifindex = 1000;
        unh_dp_idx = 100;
+       indirect_pathset = 1;
     }
 
     ATG_LIPI_VXLAN_ADD_UPDATE generate_add_upd_ips(void) {
@@ -28,6 +29,7 @@ public:
         pds_ms::pds_to_ms_ipaddr(source_ip, 
                                     &(add_upd.vxlan_settings.source_ip));
         pds_ms::pds_to_ms_ipaddr(dest_ip, &(add_upd.vxlan_settings.dest_ip));
+        NBB_CORR_PUT_VALUE(add_upd.vxlan_settings.pathset_id, indirect_pathset);
         NBB_CORR_PUT_VALUE(add_upd.vxlan_settings.dp_pathset_correlator, unh_dp_idx);
         return add_upd;
     }
@@ -50,6 +52,7 @@ public:
     }
     void next(void) override {
         tnl_ifindex += 1;
+        indirect_pathset += 1;
         test::increment_ip_addr (&dest_ip);
     }
     bool ips_mock() override {return true;}

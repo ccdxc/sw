@@ -35,15 +35,17 @@ void vxlan_pds_mock_t::generate_addupd_specs(const vxlan_input_params_t& input,
     auto& tep_spec = pds_batch.back().tep;
     tep_spec = tep_feeder.spec; 
 
-    test::api::nexthop_group_feeder nhgroup_feeder;
-    nhgroup_feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP,
-                        1, //Num Nexthops
-                        pds_ms::msidx2pdsobjkey(hal_oecmp_idx_),    // ID
-                        PDS_MAX_NEXTHOP_GROUP);
-    nhgroup_feeder.spec.nexthops[0].tep = pds_ms::msidx2pdsobjkey(input.tnl_ifindex);
-    pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, op);
-    auto& nhgroup_spec = pds_batch.back().nhgroup;
-    nhgroup_spec = nhgroup_feeder.spec; 
+    if (op_create_) {
+        test::api::nexthop_group_feeder nhgroup_feeder;
+        nhgroup_feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP,
+                            1, //Num Nexthops
+                            pds_ms::msidx2pdsobjkey(hal_oecmp_idx_),    // ID
+                            PDS_MAX_NEXTHOP_GROUP);
+        nhgroup_feeder.spec.nexthops[0].tep = pds_ms::msidx2pdsobjkey(input.tnl_ifindex);
+        pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, op);
+        auto& nhgroup_spec = pds_batch.back().nhgroup;
+        nhgroup_spec = nhgroup_feeder.spec;
+    }
 }
 
 void vxlan_pds_mock_t::generate_del_specs(const vxlan_input_params_t& input,

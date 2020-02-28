@@ -14,6 +14,7 @@ public:
     ip_addr_t     source_ip;
     ip_addr_t     dest_ip;
     uint32_t      unh_dp_idx; // Underlay NH index
+    uint32_t      indirect_pathset;
 
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 

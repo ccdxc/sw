@@ -65,4 +65,15 @@ state_destroy (void)
     state_t::destroy();
 }
 
+void state_t::set_indirect_nh_2_tep_ip(ms_ps_id_t indirect_pathset, const ip_addr_t& tep_ip) {
+    // Assert there is only 1 TEP referring to each indirect Pathset
+    auto it = indirect_nh_2_tep_tbl_.find(indirect_pathset);
+    if (it != indirect_nh_2_tep_tbl_.end()) {
+        SDK_ASSERT(ip_addr_is_equal (&(it->second), &tep_ip)); 
+        return;
+    }
+    SDK_TRACE_DEBUG("Mapping indirect underlay pathset %d to TEP %s",
+                    indirect_pathset, ipaddr2str(&tep_ip));
+    indirect_nh_2_tep_tbl_[indirect_pathset] = tep_ip;
+}
 }

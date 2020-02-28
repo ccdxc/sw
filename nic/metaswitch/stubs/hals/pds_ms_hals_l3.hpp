@@ -30,7 +30,7 @@ public:
     // Enable ECMP even for 1 NextHop
     NBB_BYTE nhpi_ignore_num_next_hops() { return ATG_YES; }
 
-    NBB_BYTE nhpi_squash_cascaded_hops() { return ATG_YES;}
+    NBB_BYTE nhpi_squash_cascaded_hops() { return ATG_NO;}
 
     NBB_BYTE nhpi_disable_ecmp_extension() { return ATG_YES;}
 

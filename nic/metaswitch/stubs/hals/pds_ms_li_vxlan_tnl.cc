@@ -48,7 +48,7 @@ pds_tep_spec_t li_vxlan_tnl::make_pds_tep_spec_(void) {
     auto& tep_prop = store_info_.tep_obj->properties();
     spec.key = make_pds_tep_key_();
     spec.remote_ip = tep_prop.tep_ip;
-    spec.ip_addr = ips_info_.src_ip;
+    spec.ip_addr = tep_prop.src_ip;
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
     spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
     spec.type = PDS_TEP_TYPE_WORKLOAD;
@@ -75,8 +75,9 @@ void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_
     ATG_INET_ADDRESS& ms_src_ip = vxlan_tnl_add_upd_ips->vxlan_settings.source_ip;
     ms_to_pds_ipaddr(ms_src_ip, &ips_info_.src_ip);
     NBB_CORR_GET_VALUE(ips_info_.hal_uecmp_idx,
-                   vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
+                       vxlan_tnl_add_upd_ips->vxlan_settings.dp_pathset_correlator);
     ips_info_.tep_ip_str = ipaddr2str(&ips_info_.tep_ip);
+    NBB_CORR_GET_VALUE(ips_info_.uecmp_ps, vxlan_tnl_add_upd_ips->vxlan_settings.pathset_id);
 }
 
 void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
@@ -103,8 +104,8 @@ void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     // Use the MS Tunnel IfIndex as the HAL index for TEP table
     // ECMP Table index is allocated in constructor for every new TEP object
     std::unique_ptr<tep_obj_t> new_tep_obj 
-        (new tep_obj_t(ips_info_.tep_ip, ips_info_.hal_uecmp_idx, 
-                       ips_info_.if_index));
+        (new tep_obj_t(ips_info_.tep_ip, ips_info_.src_ip,
+                       ips_info_.hal_uecmp_idx, ips_info_.if_index));
     // Update the local store info context so that the make_pds_spec 
     // refers to the latest fields
     store_info_.tep_obj = new_tep_obj.get(); 
@@ -232,37 +233,35 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
     return bctxt_guard_;
 }
 
-NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
-    pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    NBB_BYTE rc = ATG_OK;
+NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
 
-    parse_ips_info_(vxlan_tnl_add_upd_ips);
-    // Alloc new cookie and cache IPS
-    cookie_uptr_.reset (new cookie_t);
+    NBB_BYTE rc = ATG_OK;
+    pds_batch_ctxt_guard_t pds_bctxt_guard;
 
     { // Enter thread-safe context to access/modify global state
     auto state_ctxt = pds_ms::state_t::thread_context();
 
     fetch_store_info_(state_ctxt.state());
 
-    ms_ps_id_t uecmp_ps;
-    NBB_CORR_GET_VALUE(uecmp_ps, vxlan_tnl_add_upd_ips->vxlan_settings.pathset_id);
-
     if (store_info_.tep_obj != nullptr) {
         // Update Tunnel
         PDS_TRACE_INFO ("TEP %s Update IPS Underlay ECMP Pathset %d DP Corr %d",
-                        ips_info_.tep_ip_str.c_str(), uecmp_ps, ips_info_.hal_uecmp_idx);
+                        ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps,
+                        ips_info_.hal_uecmp_idx);
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
             return rc;
         } 
+        state_ctxt.state()->set_indirect_nh_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
     } else {
         // Create Tunnel
         PDS_TRACE_INFO ("TEP %s Create IPS Underlay ECMP Pathset %d DP Corr %d",
-                        ips_info_.tep_ip_str.c_str(), uecmp_ps, ips_info_.hal_uecmp_idx);
+                        ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps, ips_info_.hal_uecmp_idx);
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
+        state_ctxt.state()->set_indirect_nh_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
     }
+
     pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
 
     // If we have batched multiple IPS earlier flush it now
@@ -271,6 +270,50 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
 
     } // End of state thread_context
       // Do Not access/modify global state after this
+
+    // All processing complete, only batch commit remains - 
+    // safe to release the cookie_uptr_ unique_ptr
+    rc = ATG_ASYNC_COMPLETION;
+    auto cookie = cookie_uptr_.release();
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
+        delete cookie;
+        throw Error(std::string("Batch commit failed for Add-Update TEP ")
+                    .append(ips_info_.tep_ip_str)
+                    .append(" err=").append(std::to_string(ret)));
+    }
+    PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
+                     ips_info_.tep_ip_str.c_str());
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
+    return rc;
+}
+
+// Underlying Indirect Pathset for the tunnel has been updated with a new
+// DP correlator (ECMP 1 to 2 case)
+NBB_BYTE li_vxlan_tnl::handle_uecmp_update(tep_obj_t* tep_obj, ms_ps_id_t pathset_id,
+                                           ms_ps_id_t ll_dp_corr_id,
+                                           cookie_uptr_t&& cookie_uptr) {
+    // Mock as if VXLAN Tunnel update IPS is received 
+    ips_info_.src_ip = tep_obj->properties().src_ip;
+    ips_info_.tep_ip = tep_obj->properties().tep_ip;
+    // MS LIM IfIndex for the VXLAN Tunnel is used as the HAL TEP Index 
+    ips_info_.if_index = tep_obj->properties().hal_tep_idx;
+    ips_info_.hal_uecmp_idx = ll_dp_corr_id;
+    NBB_CORR_GET_VALUE(ips_info_.uecmp_ps, pathset_id);
+
+    cookie_uptr_ = std::move(cookie_uptr);
+    return handle_add_upd_();
+}
+
+NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {
+
+    parse_ips_info_(vxlan_tnl_add_upd_ips);
+    // Alloc new cookie and cache IPS
+    cookie_uptr_.reset (new cookie_t);
 
     cookie_uptr_->send_ips_reply = 
         [vxlan_tnl_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
@@ -311,25 +354,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
             NBB_DESTROY_THREAD_CONTEXT    
         };
 
-    // All processing complete, only batch commit remains - 
-    // safe to release the cookie_uptr_ unique_ptr
-    rc = ATG_ASYNC_COMPLETION;
-    auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for Add-Update TEP ")
-                    .append(ips_info_.tep_ip_str)
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
-                     ips_info_.tep_ip_str.c_str());
-    if (PDS_MOCK_MODE()) {
-        // Call the HAL callback in PDS mock mode
-        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
-        cb.detach();
-    }
-    return rc;
+    return handle_add_upd_();
 }
 
 void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {

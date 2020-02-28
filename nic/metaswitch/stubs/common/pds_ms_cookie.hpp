@@ -35,6 +35,6 @@ inline void cookie_t::print_debug_str(void) {
         obj_uptr->print_debug_str();
     }
 }
-
+using cookie_uptr_t = std::unique_ptr<cookie_t>;
 }
 #endif

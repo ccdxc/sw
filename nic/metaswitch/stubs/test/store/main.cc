@@ -47,15 +47,18 @@ public:
     state_t::context_t state_thr_ctxt;
 };
 const char* g_pds_ms_store_ip_str = "172.17.0.6";
+const char* g_pds_ms_store_src_ip_str = "192.17.0.6";
 
 TEST_F(tep_store_test, create) {
     auto state = state_thr_ctxt.state();
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 0);
-    ip_addr_t tep_ip;
+    ip_addr_t tep_ip, src_ip;
     str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
+    str2ipaddr((char*) g_pds_ms_store_src_ip_str, &src_ip);
     state->tep_store().add_upd (tep_ip,   // TEP IP
                                 tep_obj_uptr_t (new tep_obj_t (
                                         tep_ip, // TEP IP
+                                        src_ip,
                                         11,     // Underlay ECMP Idx
                                         501009 // PDS TEP Idx
                                         )));
@@ -65,11 +68,13 @@ TEST_F(tep_store_test, create) {
 TEST_F(tep_store_test, get) {
     // Test the BD store
     auto state = state_thr_ctxt.state();
-    ip_addr_t tep_ip;
+    ip_addr_t tep_ip, src_ip;
     str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
+    str2ipaddr((char*) g_pds_ms_store_src_ip_str, &src_ip);
     auto tep_obj = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj != nullptr);
     ASSERT_TRUE (tep_obj->properties().tep_ip == tep_ip);
+    ASSERT_TRUE (tep_obj->properties().src_ip == src_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 11);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
@@ -78,8 +83,9 @@ TEST_F(tep_store_test, get) {
 TEST_F(tep_store_test, update) {
     // Update existing entry
     auto state = state_thr_ctxt.state();
-    ip_addr_t tep_ip;
+    ip_addr_t tep_ip, src_ip;
     str2ipaddr((char*) g_pds_ms_store_ip_str, &tep_ip);
+    str2ipaddr((char*) g_pds_ms_store_src_ip_str, &src_ip);
     auto tep_old = state->tep_store().get (tep_ip);
 
     // Make a new copy of the old object and update a field
@@ -95,6 +101,7 @@ TEST_F(tep_store_test, update) {
     auto tep_obj_test = state->tep_store().get (tep_ip);
     ASSERT_TRUE (tep_obj_test != nullptr);
     ASSERT_TRUE (tep_obj_test->properties().tep_ip == tep_ip);
+    ASSERT_TRUE (tep_obj_test->properties().src_ip == src_ip);
     ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 12);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
