@@ -710,10 +710,14 @@ func (api *bucketAPI) SyncCreate(obj *objstore.Bucket) error {
 		}
 
 		newObj, writeErr = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1528,10 +1532,14 @@ func (api *objectAPI) SyncCreate(obj *objstore.Object) error {
 		}
 
 		newObj, writeErr = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

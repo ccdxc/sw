@@ -710,10 +710,14 @@ func (api *orchestratorAPI) SyncCreate(obj *orchestration.Orchestrator) error {
 		}
 
 		newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

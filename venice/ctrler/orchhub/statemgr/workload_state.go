@@ -43,7 +43,7 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	return err
 }
 
-// WorkloadStateFromObj conerts from memdb object to workload state
+// WorkloadStateFromObj converts from memdb object to workload state
 func WorkloadStateFromObj(obj runtime.Object) (*WorkloadState, error) {
 	switch obj.(type) {
 	case *ctkit.Workload:

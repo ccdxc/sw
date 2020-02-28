@@ -714,10 +714,14 @@ func (api *bufferAPI) SyncCreate(obj *staging.Buffer) error {
 		}
 
 		newObj, writeErr = apicl.StagingV1().Buffer().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.StagingV1().Buffer().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

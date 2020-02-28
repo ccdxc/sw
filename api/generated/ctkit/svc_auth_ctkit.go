@@ -716,10 +716,14 @@ func (api *userAPI) SyncCreate(obj *auth.User) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().User().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().User().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1651,10 +1655,14 @@ func (api *authenticationpolicyAPI) SyncCreate(obj *auth.AuthenticationPolicy) e
 		}
 
 		newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2580,10 +2588,14 @@ func (api *roleAPI) SyncCreate(obj *auth.Role) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().Role().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().Role().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3398,10 +3410,14 @@ func (api *rolebindingAPI) SyncCreate(obj *auth.RoleBinding) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4216,10 +4232,14 @@ func (api *userpreferenceAPI) SyncCreate(obj *auth.UserPreference) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

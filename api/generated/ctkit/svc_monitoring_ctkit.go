@@ -710,10 +710,14 @@ func (api *eventpolicyAPI) SyncCreate(obj *monitoring.EventPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1528,10 +1532,14 @@ func (api *fwlogpolicyAPI) SyncCreate(obj *monitoring.FwlogPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2346,10 +2354,14 @@ func (api *flowexportpolicyAPI) SyncCreate(obj *monitoring.FlowExportPolicy) err
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3164,10 +3176,14 @@ func (api *alertAPI) SyncCreate(obj *monitoring.Alert) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3982,10 +3998,14 @@ func (api *alertpolicyAPI) SyncCreate(obj *monitoring.AlertPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4800,10 +4820,14 @@ func (api *alertdestinationAPI) SyncCreate(obj *monitoring.AlertDestination) err
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -5618,10 +5642,14 @@ func (api *mirrorsessionAPI) SyncCreate(obj *monitoring.MirrorSession) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -6436,10 +6464,14 @@ func (api *troubleshootingsessionAPI) SyncCreate(obj *monitoring.Troubleshooting
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -7254,10 +7286,14 @@ func (api *techsupportrequestAPI) SyncCreate(obj *monitoring.TechSupportRequest)
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -8074,10 +8110,14 @@ func (api *archiverequestAPI) SyncCreate(obj *monitoring.ArchiveRequest) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().ArchiveRequest().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().ArchiveRequest().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleArchiveRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

@@ -718,10 +718,14 @@ func (api *rolloutAPI) SyncCreate(obj *rollout.Rollout) error {
 		}
 
 		newObj, writeErr = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1684,10 +1688,14 @@ func (api *rolloutactionAPI) SyncCreate(obj *rollout.RolloutAction) error {
 		}
 
 		newObj, writeErr = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

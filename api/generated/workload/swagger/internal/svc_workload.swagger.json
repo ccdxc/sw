@@ -3948,7 +3948,8 @@
             "migration-none",
             "migration-start",
             "migration-done",
-            "migration-abort"
+            "migration-abort",
+            "migration-from-non-pen-host"
           ],
           "default": "migration-none",
           "description": "Controller's migration stage."

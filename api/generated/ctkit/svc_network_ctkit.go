@@ -710,10 +710,14 @@ func (api *networkAPI) SyncCreate(obj *network.Network) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().Network().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().Network().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1528,10 +1532,14 @@ func (api *serviceAPI) SyncCreate(obj *network.Service) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().Service().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().Service().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2346,10 +2354,14 @@ func (api *lbpolicyAPI) SyncCreate(obj *network.LbPolicy) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3164,10 +3176,14 @@ func (api *virtualrouterAPI) SyncCreate(obj *network.VirtualRouter) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3982,10 +3998,14 @@ func (api *networkinterfaceAPI) SyncCreate(obj *network.NetworkInterface) error 
 		}
 
 		newObj, writeErr = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4800,10 +4820,14 @@ func (api *ipampolicyAPI) SyncCreate(obj *network.IPAMPolicy) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -5618,10 +5642,14 @@ func (api *routingconfigAPI) SyncCreate(obj *network.RoutingConfig) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -6436,10 +6464,14 @@ func (api *routetableAPI) SyncCreate(obj *network.RouteTable) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

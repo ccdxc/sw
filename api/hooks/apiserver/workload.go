@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -125,6 +126,7 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 			wlObj.Status.MigrationStatus.StartedAt = &api.Timestamp{}
 		}
 		wlObj.Status.MigrationStatus.StartedAt.SetTime(time.Now())
+		wlObj.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 		wlObj.Status.MigrationStatus.Status = statusNone
 		wlObj.Status.HostName = wlObj.Spec.HostName
 		// record exsting interfaces
@@ -163,6 +165,13 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 			return wl.Spec.Interfaces[i].MACAddress < wl.Spec.Interfaces[j].MACAddress
 		})
 		wlObj.Spec.Interfaces = wl.Spec.Interfaces
+
+		genID, err := strconv.ParseInt(wlObj.GenerationID, 10, 64)
+		if err != nil {
+			s.logger.Errorf("error parsing generation ID: %v", err)
+			genID = 2
+		}
+		wlObj.GenerationID = fmt.Sprintf("%d", genID+1)
 
 		return oldObj, nil
 	}); err != nil {
@@ -220,6 +229,14 @@ func (s *workloadHooks) processAbortMigration(ctx context.Context, kvs kvstore.I
 		sort.Slice(wlObj.Spec.Interfaces, func(i, j int) bool {
 			return wlObj.Spec.Interfaces[i].MACAddress < wlObj.Spec.Interfaces[j].MACAddress
 		})
+
+		genID, err := strconv.ParseInt(wlObj.GenerationID, 10, 64)
+		if err != nil {
+			s.logger.Errorf("error parsing generation ID: %v", err)
+			genID = 2
+		}
+		wlObj.GenerationID = fmt.Sprintf("%d", genID+1)
+
 		return oldObj, nil
 	}); err != nil {
 		s.logger.Errorf("Error Aborting Migration on workload %s : %v", wl.Name, err)

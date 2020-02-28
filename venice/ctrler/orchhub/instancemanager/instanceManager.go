@@ -192,8 +192,7 @@ func (w *InstanceManager) periodicSync() {
 			if !inProgress {
 				w.logger.Info("periodic sync running")
 				inProgress = true
-				for k, v := range w.orchestratorMap {
-					w.logger.Info("periodic sync running for %s", k)
+				for _, v := range w.orchestratorMap {
 					v.Sync()
 				}
 				inProgress = false

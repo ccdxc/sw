@@ -710,10 +710,14 @@ func (api *endpointAPI) SyncCreate(obj *workload.Endpoint) error {
 		}
 
 		newObj, writeErr = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1534,10 +1538,14 @@ func (api *workloadAPI) SyncCreate(obj *workload.Workload) error {
 		}
 
 		newObj, writeErr = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

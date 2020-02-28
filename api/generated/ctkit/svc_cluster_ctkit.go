@@ -714,10 +714,14 @@ func (api *clusterAPI) SyncCreate(obj *cluster.Cluster) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1606,10 +1610,14 @@ func (api *nodeAPI) SyncCreate(obj *cluster.Node) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Node().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Node().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2424,10 +2432,14 @@ func (api *hostAPI) SyncCreate(obj *cluster.Host) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Host().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Host().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleHostEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3242,10 +3254,14 @@ func (api *distributedservicecardAPI) SyncCreate(obj *cluster.DistributedService
 		}
 
 		newObj, writeErr = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4060,10 +4076,14 @@ func (api *tenantAPI) SyncCreate(obj *cluster.Tenant) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4878,10 +4898,14 @@ func (api *versionAPI) SyncCreate(obj *cluster.Version) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Version().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Version().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleVersionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -5698,10 +5722,14 @@ func (api *configurationsnapshotAPI) SyncCreate(obj *cluster.ConfigurationSnapsh
 		}
 
 		newObj, writeErr = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -6555,10 +6583,14 @@ func (api *snapshotrestoreAPI) SyncCreate(obj *cluster.SnapshotRestore) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -7410,10 +7442,14 @@ func (api *licenseAPI) SyncCreate(obj *cluster.License) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().License().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().License().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleLicenseEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -8228,10 +8264,14 @@ func (api *dscprofileAPI) SyncCreate(obj *cluster.DSCProfile) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().DSCProfile().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().DSCProfile().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleDSCProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

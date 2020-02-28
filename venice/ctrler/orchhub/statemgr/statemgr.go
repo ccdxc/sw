@@ -192,11 +192,6 @@ func (s *Statemgr) startWatchers() error {
 		return fmt.Errorf("Error establishing watch on host. Err: %v", err)
 	}
 
-	err = s.ctrler.Endpoint().Watch(s)
-	if err != nil {
-		return fmt.Errorf("Error establishing watch on endpoint. Err: %v", err)
-	}
-
 	err = s.ctrler.Workload().Watch(s)
 	if err != nil {
 		return fmt.Errorf("Error establishing watch on workload. Err: %v", err)

@@ -710,10 +710,14 @@ func (api *securitygroupAPI) SyncCreate(obj *security.SecurityGroup) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1528,10 +1532,14 @@ func (api *networksecuritypolicyAPI) SyncCreate(obj *security.NetworkSecurityPol
 		}
 
 		newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2346,10 +2354,14 @@ func (api *appAPI) SyncCreate(obj *security.App) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().App().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().App().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleAppEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3164,10 +3176,14 @@ func (api *firewallprofileAPI) SyncCreate(obj *security.FirewallProfile) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3982,10 +3998,14 @@ func (api *certificateAPI) SyncCreate(obj *security.Certificate) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4800,10 +4820,14 @@ func (api *trafficencryptionpolicyAPI) SyncCreate(obj *security.TrafficEncryptio
 		}
 
 		newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

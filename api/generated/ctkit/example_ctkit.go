@@ -714,10 +714,14 @@ func (api *orderAPI) SyncCreate(obj *bookstore.Order) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Order().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Order().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -1608,10 +1612,14 @@ func (api *bookAPI) SyncCreate(obj *bookstore.Book) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Book().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Book().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -2463,10 +2471,14 @@ func (api *publisherAPI) SyncCreate(obj *bookstore.Publisher) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -3283,10 +3295,14 @@ func (api *storeAPI) SyncCreate(obj *bookstore.Store) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Store().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Store().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4138,10 +4154,14 @@ func (api *couponAPI) SyncCreate(obj *bookstore.Coupon) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
@@ -4956,10 +4976,14 @@ func (api *customerAPI) SyncCreate(obj *bookstore.Customer) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {

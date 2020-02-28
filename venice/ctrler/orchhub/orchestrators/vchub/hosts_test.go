@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -25,6 +26,25 @@ func TestHosts(t *testing.T) {
 		{
 			name: "host create",
 			events: []defs.Probe2StoreMsg{
+				// use multiple events to create host
+				// send name property before config property
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "hostsystem-44",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "name",
+								Val:  "Host_Named_Foo",
+							},
+						},
+					},
+				},
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
@@ -89,6 +109,13 @@ func TestHosts(t *testing.T) {
 				h, err := hostAPI.Find(expMeta)
 				Assert(t, err == nil, "Failed to get host: err %v", err)
 				Assert(t, h.ObjectMeta.Name == expHost.ObjectMeta.Name, "hosts are not same")
+				Assert(t, h.Labels != nil, "No Labels found on the host")
+				orchName, ok := h.Labels[utils.OrchNameKey]
+				Assert(t, ok, "Failed to get Orch Name Label")
+				AssertEquals(t, orchName, v.VcID, "Orch Name does not match")
+				dispName, ok := h.Labels[NameKey]
+				Assert(t, ok, "Failed to get Orch Name Label")
+				AssertEquals(t, dispName, "Host_Named_Foo", "Orch Name does not match")
 			},
 		},
 		{

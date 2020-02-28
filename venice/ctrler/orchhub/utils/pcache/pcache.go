@@ -271,11 +271,11 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			// Object exists and is changed
 			if !reflect.DeepEqual(&currObj.Workload, obj) {
 				p.Log.Debugf("%s %s statemgr update called", "Workload", meta.GetKey())
-				writeErr = ctrler.Workload().Update(obj)
+				writeErr = ctrler.Workload().SyncUpdate(obj)
 			}
 		} else {
 			p.Log.Debugf("%s %s statemgr create called", "Workload", meta.GetKey())
-			writeErr = ctrler.Workload().Create(obj)
+			writeErr = ctrler.Workload().SyncCreate(obj)
 		}
 		p.Log.Debugf("%s %s write to statemgr returned %v", "Workload", meta.GetKey(), writeErr)
 		return writeErr

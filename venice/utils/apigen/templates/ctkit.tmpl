@@ -177,11 +177,11 @@ func (ct *ctrlerCtx) handle{{.}}EventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
-					// Event already processed.
-					ct.logger.Infof("Skipping update due to old resource version")
-					return nil
-				}
+                if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+                    // Event already processed.
+                    ct.logger.Infof("Skipping update due to old resource version")
+                    return nil
+                }
 				ctrlCtx := fobj.(*{{ToLower .}}Ctx)
 				ct.stats.Counter("{{.}}_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -720,7 +720,7 @@ func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
 		}
 
 		newObj, writeErr = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -728,6 +728,10 @@ func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
 	
 	if writeErr == nil {
 		api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: evtType})
+	}
+    
+    if writeErr == nil {
+        api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	return writeErr

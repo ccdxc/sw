@@ -31,6 +31,7 @@ export enum WorkloadWorkloadMigrationStatus_stage {
     'migration-start' = "migration-start",
     'migration-done' = "migration-done",
     'migration-abort' = "migration-abort",
+    'migration-from-non-pen-host' = "migration-from-non-pen-host",
 }
 
 export enum WorkloadWorkloadMigrationStatus_status {

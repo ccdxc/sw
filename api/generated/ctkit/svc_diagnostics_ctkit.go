@@ -712,10 +712,14 @@ func (api *moduleAPI) SyncCreate(obj *diagnostics.Module) error {
 		}
 
 		newObj, writeErr = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
+	}
+
+	if writeErr == nil {
+		api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
 
 	if writeErr == nil {
