@@ -132,6 +132,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def IsOriginFixed(self):
         return True if (self.Origin == topo.OriginTypes.FIXED) else False
 
+    def IsOriginDiscovered(self):
+        return True if (self.Origin == topo.OriginTypes.DISCOVERED) else False
+
+    def IsOriginImplicitlyCreated(self):
+        return True if (self.Origin == topo.OriginTypes.IMPLICITLY_CREATED) else False
+
     def HasPrecedent(self):
          return False if (self.Precedent == None) else True
 
@@ -422,11 +428,22 @@ class ConfigClientBase(base.ConfigClientBase):
 
     #TODO: cleanup APIs & deprecate
     def CreateObjects(self, node):
-        fixed, discovered = [], []
+        fixed, discovered, implicity_created = [], [], []
         for obj in self.Objects(node):
-            (fixed if obj.IsOriginFixed() else discovered).append(obj)
+            if obj.IsOriginImplicitlyCreated():
+                implicity_created.append()
+                logger.info("Skip underlay VPC create")
+                obj.Show()
+                continue
+            elif obj.IsOriginFixed():
+                fixed.append(obj)
+            elif obj.IsOriginDiscovered():
+                discovered.append(obj)
+            else:
+                assert(0)
 
-        logger.info("%s objects: fixed: %d discovered %d" %(self.ObjType.name, len(fixed), len(discovered)))
+        logger.info("%s objects: fixed: %d discovered %d implicity_created %d" \
+                %(self.ObjType.name, len(fixed), len(discovered), len(implicity_created)))
         # return if there is no fixed object
         if len(fixed) == 0:
             logger.info(f"Skip Creating {self.ObjType.name} Objects in {node}")
@@ -439,7 +456,11 @@ class ConfigClientBase(base.ConfigClientBase):
         else:
             cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
-            api.client[node].Create(self.ObjType, msgs)
+            if GlobalOptions.netagent and self.ObjType == api.ObjectTypes.DEVICE:
+                logger.info("Skip device create. Do device update instead")
+                api.client[node].Update(self.ObjType, msgs)
+            else:
+                api.client[node].Create(self.ObjType, msgs)
             #TODO: Add validation for create & based on that set HW habitant
             list(map(lambda x: x.SetHwHabitant(True), fixed))
         return True

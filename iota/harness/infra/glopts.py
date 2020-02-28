@@ -75,6 +75,7 @@ parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Use gold firmware for testing')
 parser.add_argument('--fast-upgrade', dest='fast_upgrade',
                     action='store_true', help='install firmware only')
+#netagent - iota posts the config to netagent on naples
 parser.add_argument('--netagent', dest='netagent', action='store_true',
                     help='Use REST queries to netagent instead of GRPC',
                     default=False)
@@ -114,12 +115,11 @@ if GlobalOptions.uid == None:
             raise("Please run as no sudo user")
         else:
             GlobalOptions.uid = "SUPER_USER"
-    
+
 
 GlobalOptions.dc_name = GlobalOptions.uid + "-iota-dc"
 GlobalOptions.cluster_name = GlobalOptions.uid + "-iota-cluster"
-GlobalOptions.distributed_switch = "Pen-DVS-" + GlobalOptions.dc_name 
-
+GlobalOptions.distributed_switch = "Pen-DVS-" + GlobalOptions.dc_name
 
 def __validate():
     if GlobalOptions.debug:

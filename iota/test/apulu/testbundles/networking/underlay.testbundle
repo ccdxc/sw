@@ -8,8 +8,16 @@ testcases:
     -   name    : Ping_Underlay_Workloads
         testcase: testcases.underlay.ping
         stress  : True
-        args    :
-            type: bgp_peer
+        iterators :
+            type    : nested
+            #ipaf    : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+            pktsize : [ 64, 128, 256, 512, 1024 ]
+
+    -   name    : Ping_loopback
+        testcase: testcases.underlay.loopback_ping
+        stress  : True
         iterators :
             type    : nested
             #ipaf    : [ ipv4, ipv6 ]

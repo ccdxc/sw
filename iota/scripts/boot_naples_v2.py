@@ -113,6 +113,8 @@ parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Only use gold firmware')
 parser.add_argument('--fast-upgrade', dest='fast_upgrade',
                     action='store_true', help='update firmware only')
+parser.add_argument('--skip-dhcp', dest='skip_dhcp', action='store_true',
+                    help='Skip dhclient step', default=False)
 
 
 GlobalOptions = parser.parse_args()
@@ -613,7 +615,8 @@ class NaplesManagement(EntityManagement):
 
 
     def ReadExternalIP(self):
-        self.__run_dhclient()
+        if not GlobalOptions.skip_dhcp:
+            self.__run_dhclient()
         output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         x = re.findall(ifconfig_regexp, output)

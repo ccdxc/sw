@@ -377,6 +377,8 @@ class _Testbed:
                 else:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
+                if GlobalOptions.netagent: 
+                    cmd.extend(["--skip-dhcp"]) 
             else:
                 if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm":
                     continue

@@ -36,7 +36,7 @@ class NicmgrInterface:
 class Resmgr(base.ConfigObjectBase):
     #TODO: read from PDS header files & init
     MAX_DEVICE = 1
-    MAX_INTERFACE = 2
+    MAX_INTERFACE = 3
     MAX_TUNNEL = 2048 if utils.IsPipelineApulu() else 1023
     MAX_NEXTHOP = 4095
     MAX_NEXTHOPGROUP = 2048
@@ -193,6 +193,7 @@ class Resmgr(base.ConfigObjectBase):
         self.HostIfs = dict()
         # Host interface index allocator for IOTA
         self.HostIfIdxAllocator = iter(irange(0x80000048, 0x8000004F))
+        self.LoopbackIfIdAllocator = iter(irange(1, 16))
 
         # Metaswitch
         self.BgpIdAllocator = iter(irange(1, 10))

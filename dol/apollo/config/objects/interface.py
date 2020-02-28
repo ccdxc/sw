@@ -1,11 +1,13 @@
 #! /usr/bin/python3
 import pdb
+import json
 import copy
 from collections import defaultdict
 import ipaddress
 
 from infra.common.logging import logger
 import infra.common.objects as objects
+from infra.common.glopts  import GlobalOptions
 
 from apollo.config.store import client as EzAccessStoreClient
 
@@ -63,6 +65,11 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
+        elif (iftype == topo.InterfaceTypes.LOOPBACK):
+            if (hasattr(ifspec, 'ipprefix')):
+                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
+            else:
+                logger.info("ipprefix not specified for interface", ifspec.iid)
 
     def Show(self):
         if (self.__type == topo.InterfaceTypes.UPLINK):
@@ -73,18 +80,21 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             res = str("VPC:%d|ip:%s|port: %s|encap:%s|mac:%s"% \
                     (self.VpcId, self.ip_prefix, self.Port, self.encap, \
                     self.macaddr.get()))
+        elif (self.__type == topo.InterfaceTypes.LOOPBACK):
+            res = str("ip:%s" % self.ip_prefix)
         else:
             return
         logger.info("- %s" % res)
 
 class InterfaceObject(base.ConfigObjectBase):
-    def __init__(self, spec, ifspec, node):
+    def __init__(self, spec, ifspec, node, spec_json=None):
         super().__init__(api.ObjectTypes.INTERFACE, node)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         if (hasattr(ifspec, 'iid')):
             self.InterfaceId = ifspec.iid
         else:
             self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
+        self.SpecJson = spec_json
         self.Ifname = spec.id
         self.Type = topo.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
@@ -152,7 +162,37 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
+        if self.Type == topo.InterfaceTypes.LOOPBACK:
+            spec.Type = interface_pb2.IF_TYPE_LOOPBACK
+            utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.LoopbackIfSpec.Prefix)
         return
+
+    def PopulateAgentJson(self):
+        if self.Type != topo.InterfaceTypes.LOOPBACK:
+            return
+        spec = {
+            "kind": "Interface",
+            "meta": {
+                "name": self.SpecJson['meta']['name'],
+                "namespace": self.SpecJson['meta']['namespace'],
+                "tenant": self.SpecJson['meta']['tenant'],
+                "uuid" : self.SpecJson['meta']['uuid'],
+            },
+            "spec": {
+                "type": self.SpecJson['spec']['type'],
+                "admin-status": self.SpecJson['spec']['admin-status'],
+                "vrf-name": self.SpecJson['spec']['vrf-name'],
+                "ip-address": (self.IfInfo.ip_prefix.exploded),
+            }
+        }
+        return json.dumps(spec)
+
+    def GetPutPath(self):
+        tenant = self.SpecJson['meta']['tenant']
+        namespace = self.SpecJson['meta']['namespace']
+        name = self.SpecJson['meta']['name']
+        url = "/api/interfaces/" + tenant + "/" + namespace + "/" + name
+        return url
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
@@ -181,6 +221,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.INTERFACE, Resmgr.MAX_INTERFACE)
         self.__uplinkl3ifs = defaultdict(dict)
+        self.__loopback_if = defaultdict(dict)
         self.__uplinkl3ifs_iter = defaultdict(dict)
         self.__hostifs = defaultdict(dict)
         self.__hostifs_iter = defaultdict(dict)
@@ -285,11 +326,39 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__generate_host_interfaces(node, hostifspec)
         return
 
+    def __read_agent_loopback(self, node):
+        resp = self.ReadAgentInterfaces(node)
+        #if utils.IsDryRun():
+            #return
+        for r in resp:
+            if r['spec']['type'] == 'LOOPBACK':
+                return r
+        return
+
+    def __generate_loopback_interfaces(self, node, parent, iflist):
+        spec = InterfaceSpec_()
+        spec.mode = 'loopback'
+        for ifspec in iflist:
+            if ifspec.iftype != 'loopback':
+                continue
+            if GlobalOptions.netagent:
+                rdata = self.__read_agent_loopback(node)
+                spec.id = rdata['meta']['name']
+            else:
+                rdata = None
+                spec.id = 'Loopback%d' % next(ResmgrClient[node].LoopbackIfIdAllocator)
+
+            spec.status = ifspec.ifadminstatus
+            ifobj = InterfaceObject(spec, ifspec, node=node, spec_json=rdata)
+            self.Objs[node].update({ifobj.InterfaceId: ifobj})
+            self.__loopback_if[node] = ifobj
+
     def GenerateObjects(self, node, parent, topospec):
         if not utils.IsL3InterfaceSupported():
             return
         iflist = getattr(topospec, 'interface', [])
         self.__generate_l3_uplink_interfaces(node, parent, iflist)
+        self.__generate_loopback_interfaces(node, parent, iflist)
         return
 
     def AddObjToDict(self, obj, node):
@@ -301,14 +370,21 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self, node):
-        cookie = utils.GetBatchCookie(node)
-        if utils.IsL3InterfaceSupported():
-            cfgObjects = self.__uplinkl3ifs[node].values()
-            # create l3 if for uplink interface
-            logger.info(f"Creating {len(cfgObjects)} L3 {self.ObjType.name} Objects in {node}")
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), cfgObjects))
-            api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
-            list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
+        if not GlobalOptions.netagent:
+            cookie = utils.GetBatchCookie(node)
+            if utils.IsL3InterfaceSupported():
+                cfgObjects = self.__uplinkl3ifs[node].values()
+                # create l3 if for uplink interface
+                logger.info(f"Creating {len(cfgObjects)} L3 {self.ObjType.name} Objects in {node}")
+                msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), cfgObjects))
+                api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+                list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
+        else:
+            obj = self.__loopback_if[node]
+            api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
+            #api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+            #list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
+            # create loopback interface
         return
 
 
@@ -320,6 +396,13 @@ class InterfaceObjectClient(base.ConfigClientBase):
         if utils.IsDryRun(): return
         msg = self.GetGrpcReadAllLifMessage()
         resp = api.client[node].Request(api.ObjectTypes.INTERFACE, 'LifGet', [msg])
+        return resp
+
+    def ReadAgentInterfaces(self, node):
+        #if utils.IsDryRun(): return
+        if not GlobalOptions.netagent:
+            return
+        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE, None)
         return resp
 
     def ReadObjects(self, node):

@@ -82,7 +82,6 @@ class TunnelObject(base.ConfigObjectBase):
                 else:
                     self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
-                print("type: ", spec.type)
                 if spec.type == 'underlay':
                     self.__nhtype = topo.NhType.UNDERLAY
                     self.NEXTHOP = None
@@ -360,7 +359,6 @@ class TunnelObjectClient(base.ConfigClientBase):
             if not __isTunFeatureSupported(t.type):
                 continue
             for c in range(t.count):
-                print("creating tunnel")
                 obj = TunnelObject(node, parent, t, False)
                 self.Objs[node].update({obj.Id: obj})
         EzAccessStoreClient[node].SetTunnels(self.Objects(node))

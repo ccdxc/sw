@@ -114,7 +114,11 @@ class ClientModule:
         self.__set_one_msg_req(ApiOps.CREATE, "%sRequest"%p)
         self.__set_one_msg_req(ApiOps.DELETE, "%sDeleteRequest"%p)
         self.__set_one_msg_req(ApiOps.UPDATE, "%sRequest"%p)
-        self.__set_one_msg_req(ApiOps.GET, "%sGetRequest"%p)
+        # TODO this will change if metaswitch protos change
+        if "BGP" in p or "Evpn" in p or "CPStatic" in p:
+            self.__set_one_msg_req(ApiOps.GET, "%sRequest"%p)
+        else:
+            self.__set_one_msg_req(ApiOps.GET, "%sGetRequest"%p)
         return
 
     def MsgReq(self, op):
@@ -122,20 +126,22 @@ class ClientModule:
 
 class ClientRESTModule:
     def __init__(self, ip, uri):
+        self.ip = ip
         self.url = "http://" + ip + ":8888" + uri
         return
+
+    def GetPutUrl(self, path):
+        return "http://" + self.ip + ":8888" + path
 
     def Create(self, objs):
         resps = []
         for obj in objs:
             pdata = obj.PopulateAgentJson()
+            logger.info("Obj:%s Posting to URL %s"%(obj.GID(), self.url))
             if not pdata:
                 logger.info("Invalid Post Data from object %s"%obj.GID())
                 continue
-            logger.info("Obj:%s Posting to URL %s"%(obj.GID(), self.url))
             logger.info("PostData: %s"%pdata)
-            if GlobalOptions.dryrun:
-                return
             rdata = requests.post(self.url, pdata)
             if rdata.status_code != 200:
                 logger.error("Obj:%s POST FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
@@ -143,6 +149,29 @@ class ClientRESTModule:
                 resps.append(rdata)
         return resps
 
+    def Update(self, objs):
+        resps = []
+        for obj in objs:
+            url = self.GetPutUrl(obj.GetPutPath())
+            pdata = obj.PopulateAgentJson()
+            logger.info("Obj:%s Put to URL %s"%(obj.GID(), url))
+            if not pdata:
+                logger.info("Invalid Put Data from object %s"%obj.GID())
+                continue
+            logger.info("PutData: %s"%pdata)
+            rdata = requests.put(url, pdata)
+            if rdata.status_code != 200:
+                logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
+            else:
+                resps.append(rdata)
+        return resps
+
+    def Get(self):
+        rdata = requests.get(self.url)
+        if rdata.status_code != 200:
+            logger.error("GET FAILED [%d] to URL %s"%(rdata.status_code, self.url))
+            return
+        return rdata.json()
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -324,6 +353,7 @@ class ApolloAgentClient:
         self.__restreqs[ObjectTypes.ROUTE] = ClientRESTModule(self.agentip, "/api/route-tables/")
         self.__restreqs[ObjectTypes.SUBNET] = ClientRESTModule(self.agentip, "/api/networks/")
         self.__restreqs[ObjectTypes.BGP] = ClientRESTModule(self.agentip, "/api/routingconfigs/")
+        self.__restreqs[ObjectTypes.INTERFACE] = ClientRESTModule(self.agentip, "/api/interfaces/")
         return
 
     def GetGRPCMsgReq(self, objtype, op):
@@ -342,12 +372,25 @@ class ApolloAgentClient:
         return self.__stubs[objtype].Rpc(ApiOps.DELETE, objs)
 
     def Update(self, objtype, objs):
+        if GlobalOptions.netagent:
+            if not self.__restreqs[objtype]:
+                return # unsupported object
+            return self.__restreqs[objtype].Update(objs)
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.UPDATE, objs)
 
-    def Get(self, objtype, objs):
+    def GetGrpc(self, objtype, objs):
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
+
+    def GetHttp(self, objtype, objs):
+        if not self.__restreqs[objtype]:
+            return # unsupported object
+        return self.__restreqs[objtype].Get()
+
+    def Get(self, objtype, objs):
+        # default to grpc for now
+        return self.GetGrpc(objtype, objs)
 
     def Request(self, objtype, rpcname, objs):
         if GlobalOptions.dryrun: return

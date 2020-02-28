@@ -4,7 +4,7 @@ import time
 import ipaddress
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
-import apollo.config.objects.metaswitch.bgp_peer as bgp_peer
+import apollo.config.objects.device as device
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
 
@@ -19,15 +19,22 @@ def Trigger(tc):
     interval = "0.2"
 
     naplesHosts = api.GetNaplesHostnames()
-    for node in naplesHosts:
-        for bgppeer in bgp_peer.client.Objects(node):
+    for node1 in naplesHosts:
+        for node2 in naplesHosts:
+            if node1 == node2:
+                continue
+
+            objs = device.client.Objects(node1)
+            device1 = next(iter(objs))
+            objs = device.client.Objects(node2)
+            device2 = next(iter(objs))
             cmd_cookie = "%s --> %s" %\
-                         (str(bgppeer.LocalAddr), str(bgppeer.PeerAddr))
-            api.Trigger_AddNaplesCommand(req, node, \
+                         (device1.IP, device2.IP)
+            api.Trigger_AddNaplesCommand(req, node1, \
                                          "ping -i %s -c 20 -s %d %s" % \
                                          (interval, tc.iterators.pktsize, \
-                                         str(bgppeer.PeerAddr)))
-            api.Logger.info("Ping test from %s" % (cmd_cookie))
+                                          device2.IP))
+            api.Logger.info("Loopback ping test from %s" % (cmd_cookie))
             tc.cmd_cookies.append(cmd_cookie)
 
         tc.resp = api.Trigger(req)

@@ -94,15 +94,15 @@ class VpcObject(base.ConfigObjectBase):
 
         ############### CHILDREN OBJECT GENERATION
 
-        if utils.IsPipelineApollo() and self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
-            # Nothing to be done for underlay vpc
-            return
-
         # Generate Port Configuration
         #PortClient.GenerateObjects(node, self, spec)
 
         # Generate Interface Configuration
         InterfaceClient.GenerateObjects(node, self, spec)
+
+        if utils.IsPipelineApollo() and self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
+            # Nothing to be done for underlay vpc
+            return
 
         # Generate NextHop configuration
         NhClient.GenerateObjects(node, self, spec)

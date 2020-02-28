@@ -11,6 +11,7 @@ class InterfaceTypes(enum.IntEnum):
     UPLINKPC = 6
     L3 = 7
     LIF = 8
+    LOOPBACK = 9
 
 class PortTypes(enum.IntEnum):
     NONE = 0
@@ -21,9 +22,13 @@ class PortTypes(enum.IntEnum):
     # Eth1/1 0x11010001 ==> 1 Hostport
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
-INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH }
-MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH, 'switch': InterfaceTypes.UPLINK,
-        'uplink': InterfaceTypes.UPLINK, 'l3': InterfaceTypes.L3 }
+INTF2PORT_TBL = { 0x11010001: PortTypes.HOST,
+                  0x11020001: PortTypes.SWITCH }
+MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH,
+                  'switch': InterfaceTypes.UPLINK,
+                  'uplink': InterfaceTypes.UPLINK,
+                  'l3': InterfaceTypes.L3,
+                  'loopback': InterfaceTypes.LOOPBACK }
 
 ETH_IF_PARENT_PORT_SHIFT = 16
 ETH_IF_PARENT_PORT_MASK = 0xFF
@@ -62,6 +67,7 @@ class L3MatchType(enum.IntEnum):
 class OriginTypes(enum.IntEnum):
      FIXED = 0
      DISCOVERED = 1
+     IMPLICITLY_CREATED = 2
 
 class ChosenFlowObjs:
     def __init__(self):
@@ -87,6 +93,6 @@ class ChosenFlowObjs:
             if obj.IsFilterMatch(selectors):
                 matching_objs.append(obj)
         return matching_objs
-        
+
 
 ChosenFlowObjs = ChosenFlowObjs()
