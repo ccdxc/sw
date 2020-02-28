@@ -995,6 +995,12 @@ class Topology(object):
             node = self.__nodes[node_resp.name]
             node.ProcessResponse(node_resp)
 
+        if resp.allocated_vlans:
+            tbvlans = []
+            for vlan in resp.allocated_vlans:
+                tbvlans.append(vlan)
+            store.GetTestbed().SetVlans(tbvlans)
+
         return types.status.SUCCESS
 
     def __convert_to_roles(self, nics, mode=None):

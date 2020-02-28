@@ -99,6 +99,8 @@ message NodeMsg {
     // Cluster is complete or not (Could by used by other nodes to check their admission status for health check)
     bool cluster_done               = 5;
 
+    //return allocated vlans when doing skip setup
+    repeated uint32 allocated_vlans = 6;
 }
 
 // Reload msg

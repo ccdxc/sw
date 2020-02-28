@@ -454,7 +454,7 @@ func getMgmtNetwork(inst int) string {
 }
 
 func (node *esxHwNode) ctrlVMName() string {
-	return Common.EsxControlVMNamePrefix + node.name
+	return Common.EsxControlVMNamePrefix + node.hostIP
 }
 
 func (node *esxHwNode) setUpNaplesMgmtNetwork(inst int, hint string) error {

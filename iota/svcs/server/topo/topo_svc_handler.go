@@ -714,6 +714,7 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	log.Infof("TOPO SVC | DEBUG | GetNodes. Received Request Msg: %v", req)
 
 	resp := iota.NodeMsg{
+		AllocatedVlans: ts.tbInfo.allocatedVlans,
 		ApiResponse: &iota.IotaAPIResponse{
 			ApiStatus: iota.APIResponseType_API_STATUS_OK,
 		},

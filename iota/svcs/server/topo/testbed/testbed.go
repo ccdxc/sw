@@ -46,7 +46,7 @@ func (n *TestNode) removeHostFromVcenter(host *vmware.Host) error {
 }
 
 func (n *TestNode) ctrlVMName() string {
-	return constants.EsxControlVMNamePrefix + n.info.Name
+	return constants.EsxControlVMNamePrefix + n.info.IPAddress
 }
 
 func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {

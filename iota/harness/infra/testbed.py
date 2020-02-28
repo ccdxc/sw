@@ -517,6 +517,9 @@ class _Testbed:
     def GetVlans(self):
         return self.__vlan_allocator.Vlans()
 
+    def SetVlans(self, vlans):
+        self.__vlan_allocator = resmgr.TestbedVlanManager(vlans)
+
     def AllocateVlan(self):
         return self.__vlan_allocator.Alloc()
 
