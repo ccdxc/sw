@@ -38,27 +38,27 @@
           <span class="app-shell-cluster-name"> {{ cluster?.meta.name}}</span>
           <span class="app-shell-spacer"></span>
           <div class="app-shell-toolbar-icon-div">
-            <a mat-icon-button class="app-shell-doclink" [href]="docLink" target="_blank"
-               matTooltip="Getting started and API documents">
-              <mat-icon style="font-size: 28px;">library_books</mat-icon>
-            </a>
             <ng-container *ngIf="!isUINavigationBlocked">
-              <button *featureGuard="'help'" mat-icon-button matTooltip="Online help"
+              <app-alert-indication-bar *ngIf="alerts"
+                                        (alertType)="onToolbarIconClick($event,'notifications')"
+                                        [data]="alerts"></app-alert-indication-bar>
+            </ng-container>
+            <a class="app-shell-doclink" [href]="docLink" target="_blank">
+              <button [disableRipple]="true" mat-icon-button>
+                <mat-icon class="app-library-books">
+                  library_books
+                </mat-icon>
+              </button>
+            </a>
+
+            <ng-container>
+              <button *featureGuard="'help'" mat-icon-button
                       (click)="onToolbarIconClick($event, 'help')">
                 <mat-icon>help_outline</mat-icon>
               </button>
-              <!-- Commenting out for August release -->
-              <!-- <button mat-button>Save</button> -->
-              <button *roleGuard="'monitoringAlert_read'" mat-icon-button
-                      matTooltip="Alert Notifications"
-                      (click)="onToolbarIconClick($event, 'notifications')">
-                <mat-icon>notifications </mat-icon>
-                <span class="app-notification-number" [ngClass]=getAlertNotificationClass()
-                      *ngIf="alertNumbers>0">{{alertNumbers}}</span>
-              </button>
             </ng-container>
-            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu"
-                    matTooltip="Login user">
+
+            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
               <mat-icon>person</mat-icon>
             </button>
             <mat-menu class="app-shell-toolbar-user-menu" #toolbarUserMenu="matMenu">
@@ -259,7 +259,8 @@
 
 <ng-template #sideNavNotification let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
-    <app-alertlist *ngIf="alerts" [data]="alerts" (alertsClose)="onRightSideNavClose()"
+    <app-alertlist *ngIf="alerts" alertEvent="alertEvent" alertType="alertType" [data]="alerts"
+                   (alertsClose)="onRightSideNavClose()"
                    (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
   </div>
 </ng-template>

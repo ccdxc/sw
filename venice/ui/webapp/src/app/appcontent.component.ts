@@ -860,4 +860,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     component.instance.updateData();
   }
 
+  alertType(event) {
+   this.onToolbarIconClick(event.event, this._rightSideNavIndicator);
+  }
 }

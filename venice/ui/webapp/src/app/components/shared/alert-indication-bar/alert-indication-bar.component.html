@@ -1,0 +1,33 @@
+<div class="alert-indication-widget" *ngIf="alertNumber.total>0">
+  <div fxLayout="row" class="alert-indication-main-menu-number-back-group-div popup-alert">
+    <div (click)="onAlertNumber($event, 'critical')" *ngIf="alertNumber.critical>0">
+      <span
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-critical"></span>
+      <span
+            class="alert-indication-severity-number">{{alertNumber.critical>999?alertNumber.critical+ '+':alertNumber.critical}}</span>
+    </div>
+    <div (click)="onAlertNumber($event, 'warn')" class="alert-indication-warning"
+         *ngIf="alertNumber.warn>0">
+      <span
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-warning"></span>
+      <span
+            class="alert-indication-severity-number">{{alertNumber.warn>999?alertNumber.warn+ '+':alertNumber.warn}}</span>
+    </div>
+    <div (click)="onAlertNumber($event, 'info')" *ngIf="alertNumber.info>0">
+      <span class="alert-indication-main-menu-number alert-indication-main-menu-number-info"></span>
+      <span
+            class="alert-indication-severity-number">{{alertNumber.info>999?alertNumber.info+'+':alertNumber.info}}</span>
+    </div>
+  </div>
+</div>
+
+<!-- <div class="alert-indication-widget" *ngIf="alertnumber.total===0">
+  <div fxLayout="row" class="alert-indication-main-menu-number-back-group-div popup-alert">
+    <div *ngIf="alertnumber.total===0">
+      <span
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-total"></span>
+      <span class="alert-indication-serverity-number">
+        {{alertnumber.total| number}}
+      </span>
+    </div>
+  </div> -->

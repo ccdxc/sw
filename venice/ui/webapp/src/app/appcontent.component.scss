@@ -33,7 +33,7 @@
 }
 
 .app-shell-cluster-name {
-  margin-left: 20px;
+  margin-left: 12px;
   font-family: "Fira Sans Condensed";
   font-size: 20px;
   font-weight: normal;
@@ -81,6 +81,7 @@
 
 .app-shell-toolbar-icon-div {
   margin-right: 10px;
+  margin-top: 5px;
 }
 
 .app-shell-icon {
@@ -366,7 +367,7 @@
   margin-left: 10px;
   background: #bfd2eb;
   border-radius: 2px;
-  width: 920px;
+  width: 50%
 }
 
 .app-search-button {
@@ -414,4 +415,8 @@
   color: #676763;
   padding-left: 16px;
   padding-top: 8px;
+}
+
+.mat-icon.app-library-books.mat-icon.material-icons.mat-icon-no-color {
+  font-size: 30px;
 }

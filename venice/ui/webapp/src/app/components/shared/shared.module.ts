@@ -45,7 +45,7 @@ import { SyslogComponent } from './syslog/syslog.component';
 import { TelemetrychartComponent } from './telemetry/telemetrychart/telemetrychart.component';
 import { TelemetrycharteditComponent } from './telemetry/telemetrychart-edit/telemetrychartedit.component';
 import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/telemetrychartview.component';
-
+import {AlertIndicationBarComponent} from './alert-indication-bar/alert-indication-bar.component';
 @NgModule({
   imports: [
     CommonModule,
@@ -94,7 +94,8 @@ import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/tel
     SyslogComponent,
     TelemetrychartComponent,
     TelemetrycharteditComponent,
-    TelemetrychartviewComponent
+    TelemetrychartviewComponent,
+    AlertIndicationBarComponent
   ],
   exports: [
     PagebodyComponent,
@@ -133,7 +134,8 @@ import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/tel
     SyslogComponent,
     TelemetrychartComponent,
     TelemetrycharteditComponent,
-    TelemetrychartviewComponent
+    TelemetrychartviewComponent,
+    AlertIndicationBarComponent
   ],
   providers: [
     DomHandler
