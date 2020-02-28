@@ -382,24 +382,6 @@ func (h Hal) APIStatsGet(ctx context.Context, req *irisproto.Empty) (*irisproto.
 	return nil, nil
 }
 
-// SystemGet Stubbed out
-func (h Hal) SystemGet(ctx context.Context, req *irisproto.SystemGetRequest) (*irisproto.SystemResponse, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got SystemGet Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
-// SystemUUIDGet Stubbed out
-func (h Hal) SystemUUIDGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SystemResponse, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got SystemUUIDGet Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
 // ClearIngressDropStats Stubbed out
 func (h Hal) ClearIngressDropStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

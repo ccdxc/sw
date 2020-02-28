@@ -575,6 +575,28 @@ func (h Hal) SysSpecGet(ctx context.Context, req *irisproto.SysSpecGetRequest) (
 	}, nil
 }
 
+// SystemGet Stubbed out
+func (h Hal) SystemGet(ctx context.Context, req *irisproto.SystemGetRequest) (*irisproto.SystemResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SystemGet Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.SystemResponse{
+		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SystemUUIDGet Stubbed out
+func (h Hal) SystemUUIDGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SystemResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SystemUUIDGet Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.SystemResponse{
+		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
 // Stop stops the Fake HAL
 func (h Hal) Stop() {
 	log.Infof("Stopping HAL at: %s", h.ListenURL)
