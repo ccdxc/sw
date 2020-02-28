@@ -513,7 +513,7 @@ key_mask_to_l4port_range(uint16_t key, uint16_t mask,
     if (!mask) {
         port_start = 0;
         port_end = 0xffff;
-    } else if (~mask & (~mask+1)) {
+    } else if ((uint16_t)(~mask & (~mask+1))) {
         // Mask should have all bits together in the MSB
         HAL_TRACE_ERR("Not a valid port mask {:#x}",
                       mask);

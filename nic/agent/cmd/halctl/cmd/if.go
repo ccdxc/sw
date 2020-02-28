@@ -1203,7 +1203,8 @@ func ifGetStrFromID(ifID []uint64) (int, []string) {
 	// HAL call
 	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
 	if err != nil {
-		fmt.Printf("Getting if failed. %v\n", err)
+		// Avoid unconditional print in utilities
+		//fmt.Printf("Getting if failed. %v\n", err)
 		return -1, nil
 	}
 
