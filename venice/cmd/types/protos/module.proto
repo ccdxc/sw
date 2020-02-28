@@ -33,8 +33,8 @@ message ModuleSpec {
         // ReplicaSet are created for each deployment with the desired number of replicas requested.
         ReplicaSet = 3;
 
-        // CronJob(s) are created for each CrobJob deployment.
-        CronJob    = 4;
+        // Job(s) are created for each CrobJob deployment.
+        Job        = 4;
     }
 
     // Type contains the type of the module.

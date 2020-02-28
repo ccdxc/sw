@@ -80,6 +80,10 @@ func (r *resolverService) Stop() {
 
 // OnNotifyK8sPodEvent satisifies the K8s notifier interface.
 func (r *resolverService) OnNotifyK8sPodEvent(e types.K8sPodEvent) error {
+	if isCronJob(e.Pod) {
+		log.Infof("ignoring pod event, pod(%s) belongs to a cron job", e.Pod.Name)
+		return nil
+	}
 	sInsts := make([]protos.ServiceInstance, 0)
 	for _, container := range e.Pod.Spec.Containers {
 		if len(container.Ports) > 0 {

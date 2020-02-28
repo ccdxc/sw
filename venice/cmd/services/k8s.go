@@ -318,7 +318,7 @@ func getModules(client k8sclient.Interface) (map[string]protos.Module, error) {
 				Kind: "Module",
 			},
 			Spec: protos.ModuleSpec{
-				Type: protos.ModuleSpec_CronJob,
+				Type: protos.ModuleSpec_Job,
 			},
 		}
 	}
@@ -332,7 +332,7 @@ func (k *k8sService) deployModule(module *protos.Module) {
 		createDaemonSet(k.client, module)
 	case protos.ModuleSpec_Deployment:
 		createDeployment(k.client, module)
-	case protos.ModuleSpec_CronJob:
+	case protos.ModuleSpec_Job:
 		createCronjob(k.client, module)
 	}
 }
@@ -671,7 +671,7 @@ func (k *k8sService) deleteModules(modules map[string]protos.Module) {
 			k.deleteDaemonSet(name)
 		case protos.ModuleSpec_Deployment:
 			k.deleteDeployment(name)
-		case protos.ModuleSpec_CronJob:
+		case protos.ModuleSpec_Job:
 			k.deleteCronJob(name)
 		}
 	}
@@ -1002,5 +1002,16 @@ func isPodRunning(pod *v1.Pod) bool {
 		}
 		return true
 	}
+	return false
+}
+
+// isCronJob returns true if the pod belongs to a cron job, otherwise false
+func isCronJob(pod *v1.Pod) bool {
+	for _, ref := range pod.GetOwnerReferences() {
+		if *ref.Controller {
+			return ref.Kind == protos.ModuleSpec_Job.String()
+		}
+	}
+
 	return false
 }

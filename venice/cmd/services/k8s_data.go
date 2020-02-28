@@ -731,7 +731,7 @@ var k8sModules = map[string]protos.Module{
 			Name: globals.ElasticSearchCurator,
 		},
 		Spec: protos.ModuleSpec{
-			Type:     protos.ModuleSpec_CronJob,
+			Type:     protos.ModuleSpec_Job,
 			Schedule: "*/30 * * * *", // run every 30 mins
 			Submodules: []protos.ModuleSpec_Submodule{
 				{

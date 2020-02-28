@@ -526,7 +526,7 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 			continue
 		}
 
-		if config.Spec.Type == protos.ModuleSpec_CronJob {
+		if config.Spec.Type == protos.ModuleSpec_Job {
 			continue
 		}
 

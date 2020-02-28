@@ -1,4 +1,4 @@
-FROM alpine:3.4
+from python:3.7-alpine3.7
 
 ENV CURATOR_VERSION 5.8
 
