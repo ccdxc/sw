@@ -2,7 +2,7 @@
 version: 2.0
 targets:
   mock-iota:
-    commands: ["make ws-tools && make pull-assets && make fixtures && make palazzo && make -C iota && make -C iota/test/venice/sim mock-iota-test"]
+    commands: ["make ws-tools && make pull-assets && make fixtures && make -C nic/upgrade_manager/export/upggosdk && make -C nic/agent/nmd/protos/delphi && make -C nic/sysmgr/proto && make palazzo && make -C iota && make -C iota/test/venice/sim mock-iota-test"]
     owners: ["email:enrico@pensando.io"]
     area:
     sub-area:
