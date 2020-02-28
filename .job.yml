@@ -234,6 +234,9 @@ dependencies:
   dol/test/networking:
     - reference: nic
   events:
+    - reference: api
+    - reference: test/ci_targets/e2e
+    - reference: iota/test/venice
     - reference: venice/ui
   iota:
     - reference: iota/test/venice
@@ -249,6 +252,9 @@ dependencies:
     - reference: iota/test/standalone/sanity/apulu-networking-scale
       exclude_dirs: ["test/venice", "test/iris"]
   metrics:
+    - reference: api
+    - reference: test/ci_targets/e2e
+    - reference: iota/test/venice
     - reference: venice/ui
   minio:
     - reference: test/verify-build
