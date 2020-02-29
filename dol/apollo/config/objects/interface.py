@@ -217,7 +217,10 @@ class InterfaceObject(base.ConfigObjectBase):
                 "name": self.GID(),
                 "namespace": self.Namespace,
                 "tenant": self.Tenant,
-                "uuid" : self.UUID.UuidStr
+                "uuid": self.UUID.UuidStr,
+                "labels": {
+                    "CreatedBy": "Venice"
+                },
             },
             "spec": {
                 "type": iftype,

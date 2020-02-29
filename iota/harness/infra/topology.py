@@ -804,6 +804,9 @@ class Topology(object):
         return types.status.SUCCESS
 
     def RestartNodes(self, node_names, restartMethod=RestartMethodAuto, useNcsi=False):
+        if GlobalOptions.dryrun:
+            return types.status.SUCCESS
+
         if restartMethod not in self.RestartMethods:
             raise ValueError('restartMethod must be one of {0}'.format(self.RestartMethods))
         req = topo_pb2.ReloadMsg()

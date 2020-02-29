@@ -24,3 +24,49 @@ testcases:
             ipaf    : [ ipv4 ]
             #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
             pktsize : [ 64, 128, 256, 512, 1024 ]
+
+    -   name    : flap_switch_ports
+        testcase: testcases.triggers.switch_flap
+        args    :
+            flap_count : 1
+            num_ports : 1
+            interval : 5
+            down_time : 5
+
+    -   name    : Ping_loopback
+        testcase: testcases.underlay.loopback_ping
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]
+
+    -   name    : flap_switch_ports
+        testcase: testcases.triggers.switch_flap
+        args    :
+            flap_count : 1
+            num_ports : 2
+            interval : 5
+            down_time : 5
+
+    -   name    : Ping_loopback
+        testcase: testcases.underlay.loopback_ping
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]
+
+    -   name    : RebootOS
+        testcase: testcases.reboot.reboot
+        args    :
+            reboot_count: 1
+            restart_mode: 'reboot'
+
+    -   name    : Ping_loopback
+        testcase: testcases.underlay.loopback_ping
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]

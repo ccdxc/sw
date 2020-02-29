@@ -79,7 +79,10 @@ class BgpObject(base.ConfigObjectBase):
                 "name": self.GID(),
                 "tenant": "default",
                 "namespace": "default",
-                "uuid": self.UUID.UuidStr
+                "uuid": self.UUID.UuidStr,
+                "labels": {
+                    "CreatedBy": "Venice"
+                },
               },
               "spec": {
                   "bgp-config": {

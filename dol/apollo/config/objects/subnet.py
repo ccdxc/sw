@@ -234,8 +234,11 @@ class SubnetObject(base.ConfigObjectBase):
                     "name": self.GID(),
                     "namespace": "default",
                     "tenant": self.VPC.GID(),
-                    "uuid" : self.VPC.UUID.UuidStr
+                    "uuid" : self.VPC.UUID.UuidStr,
+                    "labels": {
+                        "CreatedBy": "Venice"
                     },
+                },
                 "spec": {
                     "vrf-name": self.VPC.GID(),
                     "v4-address": [

@@ -201,7 +201,10 @@ class RouteTableObject(base.ConfigObjectBase):
                 "name": self.GID(),
                 "namespace": "default",
                 "tenant": self.VPC.GID(),
-                "uuid" : self.UUID.UuidStr
+                "uuid" : self.UUID.UuidStr,
+                "labels": {
+                    "CreatedBy": "Venice"
+                },
             },
             "spec": {
             }

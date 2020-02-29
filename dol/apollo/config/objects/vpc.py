@@ -281,7 +281,10 @@ class VpcObject(base.ConfigObjectBase):
                 "name": self.GID(),
                 "namespace": "default",
                 "tenant": self.GID(),
-                "uuid" : self.UUID.UuidStr
+                "uuid" : self.UUID.UuidStr,
+                "labels": {
+                    "CreatedBy": "Venice"
+                },
             },
             "spec": {
                 "vrf-type": "CUSTOMER",

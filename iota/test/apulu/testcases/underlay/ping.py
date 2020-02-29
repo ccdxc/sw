@@ -16,7 +16,7 @@ def Trigger(tc):
     req = None
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     tc.cmd_cookies = []
-    interval = "0.2"
+    interval = "0.01"
 
     naplesHosts = api.GetNaplesHostnames()
     for node in naplesHosts:
