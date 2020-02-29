@@ -230,7 +230,7 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	var req *halproto.MirrorSessionGetRequest
-	if cmd != nil && cmd.Flags().Changed("mirror-id") {
+	if cmd != nil && cmd.Flags().Changed("mirror-session-id") {
 		req = &halproto.MirrorSessionGetRequest{
 			KeyOrHandle: &halproto.MirrorSessionKeyHandle{
 				KeyOrHandle: &halproto.MirrorSessionKeyHandle_MirrorsessionId{
@@ -253,16 +253,23 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if len(respMsg.Response) == 0 {
+		if cmd.Flags().Changed("mirror-session-id") {
+			fmt.Printf("Mirror Session ID %d not found.\n", mirrorID)
+		}
+		return
+	}
+
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
 		spec := resp.GetSpec()
-		fmt.Println("\nMirror Session Id:                    ", spec.GetKeyOrHandle().GetMirrorsessionId())
-		fmt.Println("Mirror Session SnapLen:                 ", spec.GetSnaplen())
-		fmt.Println("Mirror Session Tunnel Source	     ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
-		fmt.Println("Mirror Session Tunnel Destination       ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))
+		fmt.Println("\nMirror Session ID:                ", spec.GetKeyOrHandle().GetMirrorsessionId())
+		fmt.Println("Mirror Session SnapLen:             ", spec.GetSnaplen())
+		fmt.Println("Mirror Session Tunnel Source        ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
+		fmt.Println("Mirror Session Tunnel Destination   ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))
 	}
 
 }

@@ -446,7 +446,10 @@ mirror_session_fill_rsp (void *entry, void *ctxt)
         response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
             set_ip_af(types::IPAddressFamily::IP_AF_INET);
         break;
+    default:
+        break;
     }
+
     HAL_TRACE_VERBOSE("Added Mirror Session ID {} in get response",
                     session->sw_id);
     return false;
@@ -462,16 +465,12 @@ mirror_session_get (MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *r
     if (!req.has_key_or_handle()) {
         HAL_TRACE_INFO("Getting all Mirror Sessions");
         if (ms_ht->num_entries() == 0) {
-            auto response = rsp->add_response();
-            response->set_api_status(types::API_STATUS_OK);
             return HAL_RET_OK;
         }
         auto sdk_ret = ms_ht->walk_safe(mirror_session_fill_rsp, rsp);
         if (sdk_ret != SDK_RET_OK) {
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             HAL_TRACE_ERR("Mirror session walk failed {}", ret);
-            auto response = rsp->add_response();
-            response->set_api_status(hal_prepare_rsp(ret));
             return ret;
         }
     } else {
@@ -480,8 +479,6 @@ mirror_session_get (MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *r
         session = (mirror_session_t*)ms_ht->lookup(&sw_id);
         if (session == NULL) {
             HAL_TRACE_ERR("Mirror Session ID {} does not exists", sw_id);
-            auto response = rsp->add_response();
-            response->set_api_status(types::API_STATUS_NOT_FOUND);
             return HAL_RET_ENTRY_NOT_FOUND;
         }
         mirror_session_fill_rsp(session, rsp);
