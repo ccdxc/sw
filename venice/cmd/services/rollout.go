@@ -243,7 +243,9 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 	needtoUpdateStatus := false
 
 	versionIf := env.CfgWatcherService.APIClient().Version()
-	clusterVersion, err := versionIf.Get(context.Background(), &api.ObjectMeta{Name: globals.DefaultVersionName})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	clusterVersion, err := versionIf.Get(ctx, &api.ObjectMeta{Name: globals.DefaultVersionName})
 	if err != nil {
 		log.Infof("Failed to get ClusterVersion from apiserver %+v. continuing..", err)
 		clusterVersion = &cluster.Version{}
@@ -312,7 +314,9 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 		}
 
 		versionIf := env.CfgWatcherService.APIClient().Version()
-		_, err := versionIf.UpdateStatus(context.Background(), clusterVersion)
+		updateCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancelFunc()
+		_, err := versionIf.UpdateStatus(updateCtx, clusterVersion)
 		if err != nil {
 			log.Errorf("Failed to update ClusterVersion to objectStore %+v", err)
 		}

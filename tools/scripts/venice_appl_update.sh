@@ -43,13 +43,13 @@ SCP="scp -oUserKnownHostsFile=/dev/null -o StrictHostKeyChecking=false"
 if [ ! -z "$CLEAN" ]
 then
 sshpass -p${PASS} ${SSH} root@${IP} "cd /tmp; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/tools/scripts/INSTALL.sh ;
+curl -O http://pxe/builds/hourly/${VER}/sw-iris/sw/tools/scripts/INSTALL.sh ;
 chmod +x ./INSTALL.sh ; \
 ./INSTALL.sh --clean-only; "
 fi
 
 sshpass -p${PASS} ${SSH} root@${IP} "rm -fr /data/installtmp ; mkdir -p /data/installtmp && cd /data/installtmp; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/bundle/bundle.tar; \
+curl -O http://pxe/builds/hourly/${VER}/bundle/bundle.tar; \
 tar xvf bundle.tar ; \
 echo rm bundle.tar ; \
 curl -o /tmp/venice_appl_GrubEntry.sh http://pxe/kickstart/veniceTempInstall/venice_appl_GrubEntry.sh ; \
