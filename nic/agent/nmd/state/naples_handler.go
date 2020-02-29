@@ -227,25 +227,30 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 			return errBadRequest(err)
 		}
 
-		// Check if reboot is needed after the completion of the mode switch
-		// Reboot is required for -
-		// 1. When the dataplane is in Classic mode and the intention received from the user is to move to Network Mode
-		// 2. When a user initiates a transition to NetworkMode - a user initiated action will have different timestamp than what is currently saved
-		//    This is required, as many clients/libraries of other processes have the keys in-memory. A process restart, achieved through Naples Reboot,
-		//    is necessary to ensure that these in-memory keys are flushed out.
-		if isDataplaneClassic() || types.TimestampString(&n.config.CreationTime.Timestamp) != types.TimestampString(&cfg.CreationTime.Timestamp) {
-			log.Info("Setting reboot needed flag")
-			n.rebootNeeded = true
-
-			// When moving from HOST->NETWORK, there are no Trust bundles saved
-			// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
-			err := utils.ClearNaplesTrustRoots()
-			if err != nil {
-				log.Errorf("Failed to clear trust certs. Err : %v", err)
-			}
-		} else {
-			// A reboot is not required only in case when at init time, the saved configs are replayed
+		if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+			// There is no mode change in apulu pipeline
 			n.rebootNeeded = false
+		} else {
+			// Check if reboot is needed after the completion of the mode switch
+			// Reboot is required for -
+			// 1. When the dataplane is in Classic mode and the intention received from the user is to move to Network Mode
+			// 2. When a user initiates a transition to NetworkMode - a user initiated action will have different timestamp than what is currently saved
+			//    This is required, as many clients/libraries of other processes have the keys in-memory. A process restart, achieved through Naples Reboot,
+			//    is necessary to ensure that these in-memory keys are flushed out.
+			if isDataplaneClassic() || types.TimestampString(&n.config.CreationTime.Timestamp) != types.TimestampString(&cfg.CreationTime.Timestamp) {
+				log.Info("Setting reboot needed flag")
+				n.rebootNeeded = true
+
+				// When moving from HOST->NETWORK, there are no Trust bundles saved
+				// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
+				err := utils.ClearNaplesTrustRoots()
+				if err != nil {
+					log.Errorf("Failed to clear trust certs. Err : %v", err)
+				}
+			} else {
+				// A reboot is not required only in case when at init time, the saved configs are replayed
+				n.rebootNeeded = false
+			}
 		}
 
 		// Update Spec
