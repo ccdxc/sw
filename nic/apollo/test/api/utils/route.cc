@@ -128,7 +128,7 @@ route_table_feeder::spec_fill(pds_nh_type_t type,
         spec->routes[index].tep = int2pdsobjkey(base_tep_id + num);
         break;
     case PDS_NH_TYPE_OVERLAY_ECMP:
-        num = (index % PDS_MAX_NEXTHOP_GROUP);
+        num = (index % (PDS_MAX_NEXTHOP_GROUP-1));
         spec->routes[index].nh_group = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_PEER_VPC:

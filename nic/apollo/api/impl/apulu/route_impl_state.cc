@@ -23,9 +23,11 @@ route_table_impl_state::route_table_impl_state(pds_state *state) {
     // we need max + 1 blocks, extra 1 block for processing updates for
     // routing table (with the assumption that more than one routing table
     // is not updated in any given batch
-    v4_idxr_ = indexer::factory(PDS_MAX_ROUTE_TABLE + 1);
+    v4_idxr_ = indexer::factory((state->mempartition()->size("lpm_v4") /
+                                 state->mempartition()->block_size("lpm_v4")));
     SDK_ASSERT(v4_idxr_ != NULL);
-    v6_idxr_ = indexer::factory(PDS_MAX_ROUTE_TABLE + 1);
+    v6_idxr_ = indexer::factory((state->mempartition()->size("lpm_v6") /
+                                 state->mempartition()->block_size("lpm_v6")));
     SDK_ASSERT(v6_idxr_ != NULL);
     v4_region_addr_ = state->mempartition()->start_addr("lpm_v4");
     SDK_ASSERT(v4_region_addr_ != INVALID_MEM_ADDRESS);

@@ -8,7 +8,7 @@ meta:
 # 120 VNICs
 # 3840 Local mappings (32 per VNIC. So 32*120)
 # 1638400 Remote mappings
-# 32 V4 Route table (each with 1023 routes)
+# 8 V4 Route table (each with 16383 routes)
 # 32 V4 Security Policy (each with 4 rules)
 # 2047 Tunnels
 # 1602 Nexthops (1600 overlay + 2 underlay)
@@ -105,7 +105,7 @@ vpc:
                count : 1
                v4base: '64.0.0.0\8'
                v4prefixlen : 24
-               nv4routes   : 1023
+               nv4routes   : 16383
                v6base: '2000::\65'
                v6prefixlen : 96
                nv6routes   : 10
@@ -115,46 +115,6 @@ vpc:
                nat:
                  level : route # all routes will have static nat enabled
                  type  : static
-
-             - type: base
-               routetype: adjacent
-               count : 1
-               v4base: '65.0.0.0\8'
-               v4prefixlen : 24
-               nv4routes   : 1023
-               v6base: '2001::\65'
-               v6prefixlen : 96
-               nv6routes   : 10
-               v4routes:
-               v6routes:
-               teptype : underlay-ecmp
-
-             - type: base
-               routetype: overlap
-               count : 1
-               v4base: '66.77.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 1023
-               v6base: '2002::\65'
-               v6prefixlen: 120
-               nv6routes   : 10
-               v4routes:
-               v6routes:
-               teptype : overlay-ecmp
-
-             - type: base
-               routetype: overlap
-               count : 1
-               v4base: '67.99.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 1023
-               v6base: '2003::\65'
-               v6prefixlen: 120
-               nv6routes   : 10
-               v4routes:
-               v6routes:
-               teptype : overlay-ecmp
-               dual-ecmp : true
 
       policy:
               - type : specific

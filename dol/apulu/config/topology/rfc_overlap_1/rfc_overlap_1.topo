@@ -38,14 +38,6 @@ node:
         - stack  : dual # dual, ipv4 , ipv6
           count : 1
           type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
-          routetbl:
-             - type: specific # route table with only default routes
-               routetype: only_default
-               v4routes:
-                  - '0.0.0.0\0'
-               v6routes:
-                  - '0::\0'
-               teptype : underlay
           nexthop:
             - type : underlay
               count : 2

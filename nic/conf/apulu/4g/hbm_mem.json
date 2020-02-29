@@ -153,16 +153,16 @@
         {
             "name": "lpm_v4",
             "kind": "cfgtbl",
-            "_comment": "(32+1) * (64 + 16 * 64 + 16 * 16 * 64)",
-            "size": "564K",
-            "block_size": "17472B",
-            "max_elements": "1K",
+            "_comment": "(8+1) * (64 + 16 * 64 + 16 * 16 * 64 + 16 * 16 * 16 * 64)",
+            "size": "2458K",
+            "block_size": "279616B",
+            "max_elements": "16K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v6",
             "kind": "cfgtbl",
-            "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
+            "_comment": "(8+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
             "size": "1K",
             "block_size": "1B",
             "max_elements": "1K",

@@ -5,27 +5,11 @@ meta:
 dutnode : 1
 node:
   - id : 1
-    uplink:
-        - entry:
-            id      : uplink0
-            port    : 1
-            mode    : switch
-            status  : UP
-
-        - entry:
-            id      : uplink1
-            port    : 2
-            mode    : switch
-            status  : UP
-
-    hostinterface:
-        lif         : ref://store/specs/id=LIF_ETH
-
     device:
         mode        : host # bitw (default), host
         stack       : ipv4 # ipv4 (default), ipv6
-        bridging    : true # false (default), true
-        learning    : true # false (default), true
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
         ipaddress   : None # Taken from resmgr
         gateway     : None # Taken from resmgr
         encap       : vxlan # vxlan or mplsodup
@@ -34,17 +18,33 @@ node:
               type  : underlay
             - count : 16
               type  : underlay-ecmp
+    uplink:
+       - entry:
+           id      : uplink0
+           port    : 1
+           mode    : switch
+           status  : UP
 
+       - entry:
+           id      : uplink1
+           port    : 2
+           mode    : switch
+           status  : UP
+    hostinterface:
+        lif         : ref://store/specs/id=LIF_ETH
     dhcprelay:
         - vpcid : 10
           serverip : '100.1.1.1'
           agentip : '1.1.1.1'
-
     vpc:
         # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
         - stack  : dual # dual, ipv4 , ipv6
           count : 1
           type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          subnet :
+             - count : 1
+               v4prefixlen : 24
+               v6prefixlen : 64
           routetbl:
              - type: specific # route table with only default routes
                routetype: only_default
@@ -52,7 +52,7 @@ node:
                   - '0.0.0.0\0'
                v6routes:
                   - '0::\0'
-               teptype: underlay
+               teptype : underlay
           nexthop:
             - type : underlay
               count : 2
@@ -71,6 +71,10 @@ node:
               macaddress    : macaddr/00ae.cd00.4fdd
               portid        : 2
               encap         : none
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
         # artemis - this vpc is only for artemis for nat46 functionality
         - stack  : dual # dual, ipv4 , ipv6
           count : 1
@@ -84,11 +88,11 @@ node:
                   ipcount : 4             # Local IP mapping per vnic
                   srcguard : false        # true or false (default false)
                   public  : true
+                  rxpolicer: 1
+                  txpolicer: 2
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
           nexthop:
-            - type : underlay
-              count : 2
             - type : overlay
               count : 2
             - type : overlay
@@ -135,7 +139,7 @@ node:
             - type : specific
               policytype : default
               direction : bidir
-          nat46 : true
+          nat46: true
         - stack  : dual # dual, ipv4 , ipv6
           count : 1
           type  : tenant
@@ -149,6 +153,8 @@ node:
                   srcguard: false         # true or false (default false)
                   public  : false
                   tagged  : false         # true or false (default true)
+                  rxpolicer: 3
+                  txpolicer: 4
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
             - count     : 1
@@ -160,11 +166,15 @@ node:
                   srcguard: false
                   public  : true
                   tagged  : false
+                  rxpolicer: 5
+                  txpolicer: 6
               rmap:
                 - count : 4
+          nat:
+            count : 2
+            addrtype : PUBLIC_AND_SERVICE
+            protocol : tcp,udp,icmp
           nexthop:
-            - type : underlay
-              count : 8
             - type : overlay
               count : 8
             - type : overlay
@@ -257,25 +267,56 @@ node:
                   - type : specific
                     policytype : default
                     direction : bidir
+    policer:
+      - id: 1
+        direction: ingress
+        type: pps
+        rate: 750000
+        burst: 7500000
+      - id: 2
+        direction: egress
+        type: bps
+        rate: 850000
+        burst: 8500000
+      - id: 3
+        direction: ingress
+        type: pps
+        rate: 950000
+        burst: 9500000
+      - id: 4
+        direction: egress
+        type: pps
+        rate: 400000
+        burst: 1400000
+      - id: 5
+        direction: ingress
+        type: bps
+        rate: 500000
+        burst: 1500000
+      - id: 6
+        direction: egress
+        type: pps
+        rate: 600000
+        burst: 1600000
 
-    # ECMP:
-    # Object types and order of creation of objects for different kinds of ECMP.
-    # In dol, DualEcmp flag is maintained in route, nexthop group and nexthop objs.
-    # For route table with DualEcmp set to True, only a nexthopgroup with DualEcmp
-    # set to True is selected.
-    #
-    # 1. no-ecmp
-    #     route       -->     tep         -->     nexthop
-    #     [OVERLAY]         [UNDERLAY]           [UNDERLAY]
-    #
-    # 2. underlay ecmp
-    #     route       -->     tep         -->     nhgroup      -->     {nexthops}
-    #   [OVERLAY]           [UNDERLAY-ECMP]      [UNDERLAY ECMP]       [UNDERLAY]
-    #
-    # 3. overlay ecmp
-    #     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nexthops}
-    #    [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY]        [UNDERLAY]
-    #
-    # 4. dual ecmp
-    #     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nhgroup}    -->   {{nexthops}}
-    #     [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY ECMP]  [UNDERLAY ECMP]       [UNDERLAY]
+# ECMP:
+# Object types and order of creation of objects for different kinds of ECMP.
+# In dol, DualEcmp flag is maintained in route, nexthop group and nexthop objs.
+# For route table with DualEcmp set to True, only a nexthopgroup with DualEcmp
+# set to True is selected.
+#
+# 1. no-ecmp
+#     route       -->     tep         -->     nexthop
+#     [OVERLAY]         [UNDERLAY]           [UNDERLAY]
+#
+# 2. underlay ecmp
+#     route       -->     tep         -->     nhgroup      -->     {nexthops}
+#   [OVERLAY]           [UNDERLAY-ECMP]      [UNDERLAY ECMP]       [UNDERLAY]
+#
+# 3. overlay ecmp
+#     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nexthops}
+#    [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY]        [UNDERLAY]
+#
+# 4. dual ecmp
+#     route       -->     nhgroup     -->     {nexthops}   -->     {teps}  -->     {nhgroup}    -->   {{nexthops}}
+#     [OVERLAY ECMP]      [OVERLAY ECMP]      [OVERLAY]          [UNDERLAY ECMP]  [UNDERLAY ECMP]       [UNDERLAY]

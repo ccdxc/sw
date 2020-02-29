@@ -34,7 +34,7 @@ class NicmgrInterface:
         self.DevcmdMemAddr = devcmd_mem_addr
 
 class Resmgr(base.ConfigObjectBase):
-    #TODO: read from PDS header files & init
+    #TODO: read from PDS header files / naples mem & init
     MAX_DEVICE = 1
     MAX_INTERFACE = 3
     MAX_TUNNEL = 2048 if utils.IsPipelineApulu() else 1023
@@ -47,8 +47,15 @@ class Resmgr(base.ConfigObjectBase):
     MAX_HOST_INTERFACES = 8 if utils.IsPipelineApulu() else 2
     # Apulu supports 8 lif for now and therefore cfg cannot have more than 8 subnets
     MAX_SUBNET = MAX_HOST_INTERFACES if utils.IsPipelineApulu() else 64
-    MAX_ROUTE_TABLE = 128 if utils.IsPipelineArtemis() else 1024
-    MAX_ROUTES_PER_ROUTE_TBL = 63 if utils.IsPipelineArtemis() else 1023
+    if utils.IsPipelineArtemis():
+        MAX_ROUTE_TABLE = 128
+        MAX_ROUTES_PER_ROUTE_TBL = 63
+    elif utils.IsPipelineApulu():
+        MAX_ROUTE_TABLE = 8
+        MAX_ROUTES_PER_ROUTE_TBL = 16383
+    else:
+        MAX_ROUTE_TABLE = 1024
+        MAX_ROUTES_PER_ROUTE_TBL = 1023
     MAX_POLICY = 1023
     MAX_POLICY_PER_VNIC = 5
     MAX_POLICER_PER_DIRECTION = 1024
