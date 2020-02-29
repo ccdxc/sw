@@ -288,8 +288,72 @@ func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Oper
 }
 
 // ValidateMirrorSession performs named reference validation on vrf and max mirror session check
-func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation) (vrf netproto.Vrf, err error) {
+func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation, mirrorDestToKeys map[string]int) (vrf netproto.Vrf, err error) {
 	// Named reference validations
+	uniqueCreates := 0
+
+	switch oper {
+	case types.Create:
+		// Get the count of unique creates
+		for _, c := range mirror.Spec.Collectors {
+			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
+			if _, ok := mirrorDestToKeys[destKey]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Update:
+		// Get the existing mirror session object and consider valid deletes i.e
+		// objects that would get deleted (ones having single reference). Add the unique
+		// creates to the get the actual increase in collector number if any.
+		var existingMirror netproto.MirrorSession
+		dat, errr := i.Read(mirror.Kind, mirror.GetKey())
+		if errr != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			err = errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+			return
+		}
+		err = existingMirror.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			err = errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+			return
+		}
+
+		// Track if the collector needs to deleted
+		deleteKey := map[string]bool{}
+		for _, c := range existingMirror.Spec.Collectors {
+			destKey := utils.BuildDestKey(existingMirror.Spec.VrfName, c.ExportCfg.Destination)
+			deleteKey[destKey] = false
+			// If referenced by a singular key then could be removed
+			if size, ok := mirrorDestToKeys[destKey]; ok && size == 1 {
+				deleteKey[destKey] = true
+			}
+		}
+
+		for _, c := range mirror.Spec.Collectors {
+			destKey := utils.BuildDestKey(mirror.Spec.VrfName, c.ExportCfg.Destination)
+			deleteKey[destKey] = false
+		}
+
+		for k, del := range deleteKey {
+			if del {
+				uniqueCreates--
+				continue
+			}
+			// For keys that are not to be deleted, check if they are new entries
+			if _, ok := mirrorDestToKeys[k]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Delete:
+	}
+
+	if len(mirrorDestToKeys)+uniqueCreates > types.MaxMirrorSessions {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded))
+		err = errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsExceeded)
+		return
+	}
+
 	vrf, err = ValidateVrf(i, mirror.Tenant, mirror.Namespace, mirror.Spec.VrfName)
 	return
 }

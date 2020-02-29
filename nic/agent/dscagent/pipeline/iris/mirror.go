@@ -45,7 +45,7 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		_, ok := mirrorDestToIDMapping[destKey]
+		_, ok := MirrorDestToIDMapping[destKey]
 		if !ok {
 			// Create collector
 			col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
@@ -59,10 +59,10 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 			}
 		}
 
-		mirrorDestToIDMapping[destKey].mirrorKeys = append(mirrorDestToIDMapping[destKey].mirrorKeys, mirror.GetKey())
+		MirrorDestToIDMapping[destKey].MirrorKeys = append(MirrorDestToIDMapping[destKey].MirrorKeys, mirror.GetKey())
 
 		// Create MirrorSession handles
-		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(mirrorDestToIDMapping[destKey].sessionID))
+		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(MirrorDestToIDMapping[destKey].sessionID))
 	}
 
 	flowMonitorReqMsg, flowMonitorIDs := convertFlowMonitor(actionMirror, infraAPI, mirror.Spec.MatchRules, mirrorKeys, nil, vrfID)
@@ -131,24 +131,24 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		sessionKeys, ok := mirrorDestToIDMapping[destKey]
+		sessionKeys, ok := MirrorDestToIDMapping[destKey]
 
 		if !ok {
 			log.Error(errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey))
 			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
 		}
 		// Remove the mirror key from the map
-		length := len(sessionKeys.mirrorKeys)
+		length := len(sessionKeys.MirrorKeys)
 		index := -1
-		for idx, m := range sessionKeys.mirrorKeys {
+		for idx, m := range sessionKeys.MirrorKeys {
 			if m == mirror.GetKey() {
 				index = idx
 				break
 			}
 		}
 		if index != -1 {
-			sessionKeys.mirrorKeys[index] = sessionKeys.mirrorKeys[length-1]
-			sessionKeys.mirrorKeys = sessionKeys.mirrorKeys[:length-1]
+			sessionKeys.MirrorKeys[index] = sessionKeys.MirrorKeys[length-1]
+			sessionKeys.MirrorKeys = sessionKeys.MirrorKeys[:length-1]
 		}
 		// Try to delete collector if ref count is 0
 		col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)

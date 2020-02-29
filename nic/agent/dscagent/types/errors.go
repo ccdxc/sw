@@ -125,6 +125,7 @@ const (
 	ErrCollectorDelete                       = Error("ErrCollectorDelete")
 	ErrCollectorAlreadyDeleted               = Error("ErrCollectorAlreadyDeleted")
 	ErrUnsupportedApp                        = Error("ErrUnsupportedApp")
+	ErrMaxMirrorSessionsExceeded             = Error("ErrMaxMirrorSessionsExceeded")
 )
 
 // Const Info

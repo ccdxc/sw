@@ -1068,7 +1068,8 @@ func (a *ApuluAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mir
 	defer log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	vrf, err := validator.ValidateMirrorSession(a.InfraAPI, mirror, oper)
+	mirrorDestToKeys := map[string]int{}
+	vrf, err := validator.ValidateMirrorSession(a.InfraAPI, mirror, oper, mirrorDestToKeys)
 	if err != nil {
 		log.Error(err)
 		return nil, err

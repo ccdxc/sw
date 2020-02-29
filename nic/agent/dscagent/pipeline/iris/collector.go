@@ -20,10 +20,11 @@ import (
 
 type mirrorIDs struct {
 	sessionID  uint64
-	mirrorKeys []string
+	MirrorKeys []string
 }
 
-var mirrorDestToIDMapping = map[string]*mirrorIDs{}
+// MirrorDestToIDMapping maps the unique tuple of vrfname-destinationIP to mirror session IDs for hal and referenced objects.
+var MirrorDestToIDMapping = map[string]*mirrorIDs{}
 
 // HandleCollector handles crud operations on collector
 func HandleCollector(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, oper types.Operation, col netproto.Collector, vrfID uint64) error {
@@ -45,9 +46,9 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	dstIP := col.Spec.Destination
 	// Create the unique key for collector dest IP
 	destKey := commonUtils.BuildDestKey(col.Spec.VrfName, dstIP)
-	_, ok := mirrorDestToIDMapping[destKey]
+	_, ok := MirrorDestToIDMapping[destKey]
 	if ok {
-		mirrorSessionID = mirrorDestToIDMapping[destKey].sessionID
+		mirrorSessionID = MirrorDestToIDMapping[destKey].sessionID
 		foundCollector = true
 	} else {
 		// Update Mirror session ID to be under 8. TODO remove this once HAL doesn't rely on agents to provide its hardware ID
@@ -77,7 +78,7 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 		}
 
 		// Add to mappings
-		mirrorDestToIDMapping[destKey] = &mirrorIDs{
+		MirrorDestToIDMapping[destKey] = &mirrorIDs{
 			sessionID: mirrorSessionID,
 		}
 	}
@@ -116,15 +117,15 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	dstIP := col.Spec.Destination
 	// Create the unique key for collector dest IP
 	destKey := commonUtils.BuildDestKey(col.Spec.VrfName, dstIP)
-	sessionKeys, ok := mirrorDestToIDMapping[destKey]
+	sessionKeys, ok := MirrorDestToIDMapping[destKey]
 	if !ok {
 		log.Error(errors.Wrapf(types.ErrCollectorAlreadyDeleted, "Collector: %s | DestKey: %s", col.GetKey(), destKey))
 		return errors.Wrapf(types.ErrCollectorAlreadyDeleted, "Collector: %s | DestKey: %s", col.GetKey(), destKey)
 	}
 
-	if len(sessionKeys.mirrorKeys) > 0 {
-		log.Error(errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.mirrorKeys, " ")))
-		return errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.mirrorKeys, " "))
+	if len(sessionKeys.MirrorKeys) > 0 {
+		log.Error(errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.MirrorKeys, " ")))
+		return errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.MirrorKeys, " "))
 	}
 
 	col.Status.Collector = sessionKeys.sessionID
@@ -142,7 +143,7 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 			return err
 		}
 	}
-	delete(mirrorDestToIDMapping, destKey)
+	delete(MirrorDestToIDMapping, destKey)
 
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())

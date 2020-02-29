@@ -172,8 +172,8 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if len(mirrorDestToIDMapping) != 3 {
-		t.Fatalf("Must have 3 items in the map, %v", mirrorDestToIDMapping)
+	if len(MirrorDestToIDMapping) != 3 {
+		t.Fatalf("Must have 3 items in the map, %v", MirrorDestToIDMapping)
 	}
 	// Verify that first collector delete is erred out
 	if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[0], 65); err == nil {
@@ -184,31 +184,31 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 	// Verify the mappings
-	mirrorIDs, ok := mirrorDestToIDMapping["default-192.168.100.101"]
+	mirrorIDs, ok := MirrorDestToIDMapping["default-192.168.100.101"]
 	if !ok {
-		t.Fatalf("Expected default-192.168.100.101 to be a key in mirrorDestToIDMapping, %v", mirrorDestToIDMapping)
+		t.Fatalf("Expected default-192.168.100.101 to be a key in MirrorDestToIDMapping, %v", MirrorDestToIDMapping)
 	}
-	if len(mirrorIDs.mirrorKeys) != 2 {
-		t.Fatalf("Expected 2 entries in mirrorKeys %v", mirrorIDs.mirrorKeys)
+	if len(mirrorIDs.MirrorKeys) != 2 {
+		t.Fatalf("Expected 2 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.mirrorKeys, []string{"default/default/testMirror1", "default/default/testMirror2"}) {
-		t.Fatalf("Unexpected mirror %v", mirrorIDs.mirrorKeys)
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror1", "default/default/testMirror2"}) {
+		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
-	mirrorIDs, ok = mirrorDestToIDMapping["default-192.168.100.103"]
+	mirrorIDs, ok = MirrorDestToIDMapping["default-192.168.100.103"]
 	if !ok {
-		t.Fatalf("Expected default-192.168.100.103 to be a key in mirrorDestToIDMapping, %v", mirrorDestToIDMapping)
+		t.Fatalf("Expected default-192.168.100.103 to be a key in MirrorDestToIDMapping, %v", MirrorDestToIDMapping)
 	}
-	if len(mirrorIDs.mirrorKeys) != 1 {
-		t.Fatalf("Expected 1 entry in mirrorKeys %v", mirrorIDs.mirrorKeys)
+	if len(mirrorIDs.MirrorKeys) != 1 {
+		t.Fatalf("Expected 1 entry in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.mirrorKeys, []string{"default/default/testMirror3"}) {
-		t.Fatalf("Unexpected mirror %v", mirrorIDs.mirrorKeys)
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror3"}) {
+		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
-	_, ok = mirrorDestToIDMapping["default-192.168.100.102"]
+	_, ok = MirrorDestToIDMapping["default-192.168.100.102"]
 	if ok {
-		t.Fatalf("Expected default-192.168.100.102 to not be in mirrorDestToIDMapping, %v", mirrorDestToIDMapping)
+		t.Fatalf("Expected default-192.168.100.102 to not be in MirrorDestToIDMapping, %v", MirrorDestToIDMapping)
 	}
 
 	// Remove one mirror sessions and verify the mappings
@@ -217,15 +217,15 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	mirrorIDs, ok = mirrorDestToIDMapping["default-192.168.100.101"]
+	mirrorIDs, ok = MirrorDestToIDMapping["default-192.168.100.101"]
 	if !ok {
-		t.Fatalf("Expected default-192.168.100.101 to be a key in mirrorDestToIDMapping, %v", mirrorDestToIDMapping)
+		t.Fatalf("Expected default-192.168.100.101 to be a key in MirrorDestToIDMapping, %v", MirrorDestToIDMapping)
 	}
-	if len(mirrorIDs.mirrorKeys) != 1 {
-		t.Fatalf("Expected 1 entries in mirrorKeys %v", mirrorIDs.mirrorKeys)
+	if len(mirrorIDs.MirrorKeys) != 1 {
+		t.Fatalf("Expected 1 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.mirrorKeys, []string{"default/default/testMirror2"}) {
-		t.Fatalf("Unexpected mirror %v", mirrorIDs.mirrorKeys)
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2"}) {
+		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
 	// Remove the second mirror session and verify that no mappings are present for default-192.168.100.101
@@ -239,8 +239,8 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, ok = mirrorDestToIDMapping["default-192.168.100.101"]; ok {
-		t.Fatalf("Expected mirrorDestToIDMapping to not have default-192.168.100.101 %v", mirrorDestToIDMapping["default-192.168.100.101"])
+	if _, ok = MirrorDestToIDMapping["default-192.168.100.101"]; ok {
+		t.Fatalf("Expected MirrorDestToIDMapping to not have default-192.168.100.101 %v", MirrorDestToIDMapping["default-192.168.100.101"])
 	}
 	// Remove the last mirror session and verify that no mappings are present
 	err = HandleMirrorSession(infraAPI, telemetryClient, intfClient, epClient, types.Delete, mirrors[2], 65)
@@ -248,8 +248,8 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, ok = mirrorDestToIDMapping["default-192.168.100.103"]; ok {
-		t.Fatalf("Expected mirrorDestToIDMapping to not have default-192.168.100.103 %v", mirrorDestToIDMapping["default-192.168.100.103"])
+	if _, ok = MirrorDestToIDMapping["default-192.168.100.103"]; ok {
+		t.Fatalf("Expected MirrorDestToIDMapping to not have default-192.168.100.103 %v", MirrorDestToIDMapping["default-192.168.100.103"])
 	}
 }
 
