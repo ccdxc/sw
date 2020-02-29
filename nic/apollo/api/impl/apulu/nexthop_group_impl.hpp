@@ -204,12 +204,21 @@ private:
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification
+    /// \param[in]  ecmp_data ecmp data
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t fill_spec_(pds_nexthop_group_spec_t *spec);
+    sdk_ret_t fill_spec_(pds_nexthop_group_spec_t *spec,
+                         ecmp_actiondata_t *ecmp_data);
 
     /// \brief      populate status with hardware information
     /// \param[out] status status
-    void fill_status_(pds_nexthop_group_status_t *status);
+    /// \param[in]  ecmp_data ecmp data
+    void fill_status_(pds_nexthop_group_status_t *status,
+                      ecmp_actiondata_t *ecmp_data);
+
+    /// \brief      populate info with hardware information
+    /// \param[out] info information
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_info_(pds_nexthop_group_info_t *info);
 
 private:
     ///< hardware id of this nexthop group

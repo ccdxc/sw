@@ -15,7 +15,6 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
-#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 using std::unordered_map;
 using std::make_pair;
@@ -30,8 +29,6 @@ typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*nh_group_walk_cb_t)(pds_nexthop_group_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
                                                    void *ctxt);
 
@@ -46,8 +43,6 @@ typedef enum slab_id_e {
     SLAB_ID_TEP,
     SLAB_ID_ROUTE,
     SLAB_ID_MIRROR,
-    SLAB_ID_NEXTHOP,
-    SLAB_ID_NEXTHOP_GROUP,
     SLAB_ID_IF,
     SLAB_ID_MAX
 } slab_id_t;
@@ -59,8 +54,6 @@ typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_m
 typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
 typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
-typedef unordered_map<pds_obj_key_t, pds_nexthop_spec_t *, pds_obj_key_hash> nh_db_t;
-typedef unordered_map<pds_obj_key_t, pds_nexthop_group_spec_t *, pds_obj_key_hash> nh_group_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
 
@@ -76,8 +69,6 @@ public:
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     service_db_t *service_map(void) { return service_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
-    nh_db_t *nh_map(void) { return nh_map_; }
-    nh_group_db_t *nh_group_map(void) { return nh_group_map_; }
     const pds_obj_key_t& underlay_vpc(void) const { return underlay_vpc_; }
     void set_underlay_vpc(pds_obj_key_t key) { underlay_vpc_ = key; }
     void reset_underlay_vpc(void) { underlay_vpc_.reset(); }
@@ -111,12 +102,6 @@ public:
     slab_ptr_t mirror_session_slab(void) const {
         return slabs_[SLAB_ID_MIRROR];
     }
-    slab_ptr_t nh_slab(void) const {
-        return slabs_[SLAB_ID_NEXTHOP];
-    }
-    slab_ptr_t nh_group_slab(void) const {
-        return slabs_[SLAB_ID_NEXTHOP_GROUP];
-    }
 
 private:
     cfg_db();
@@ -124,8 +109,6 @@ private:
     bool init(void);
 
 private:
-    nh_db_t *nh_map_;
-    nh_group_db_t *nh_group_map_;
     tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
     vpc_peer_db_t *vpc_peer_map_;
@@ -160,20 +143,6 @@ public:
     sdk_ret_t vpc_db_walk(vpc_walk_cb_t cb, void *ctxt);
     bool del_from_vpc_db(pds_obj_key_t *key);
     slab_ptr_t vpc_slab(void) const { return cfg_db_->vpc_slab(); }
-
-    pds_nexthop_spec_t *find_in_nh_db(pds_obj_key_t *key);
-    sdk_ret_t add_to_nh_db(pds_obj_key_t *key,
-                           pds_nexthop_spec_t *spec);
-    sdk_ret_t nh_db_walk(nh_walk_cb_t cb, void *ctxt);
-    bool del_from_nh_db(pds_obj_key_t *key);
-    slab_ptr_t nh_slab(void) const { return cfg_db_->nh_slab(); }
-
-    pds_nexthop_group_spec_t *find_in_nh_group_db(pds_obj_key_t *key);
-    sdk_ret_t add_to_nh_group_db(pds_obj_key_t *key,
-                                 pds_nexthop_group_spec_t *spec);
-    sdk_ret_t nh_group_db_walk(nh_group_walk_cb_t cb, void *ctxt);
-    bool del_from_nh_group_db(pds_obj_key_t *key);
-    slab_ptr_t nh_group_slab(void) const { return cfg_db_->nh_group_slab(); }
 
     pds_vpc_peer_spec_t *find_in_vpc_peer_db(pds_obj_key_t *key);
     sdk_ret_t add_to_vpc_peer_db(pds_obj_key_t *key,
@@ -238,8 +207,6 @@ public:
 
 private:
     void cleanup(void);
-    nh_db_t *nh_map(void) const { return cfg_db_->nh_map();  }
-    nh_group_db_t *nh_group_map(void) const { return cfg_db_->nh_group_map();  }
     tep_db_t *tep_map(void) const { return cfg_db_->tep_map();  }
     vpc_db_t *vpc_map(void) const { return cfg_db_->vpc_map();  }
     vpc_peer_db_t *vpc_peer_map(void) const { return cfg_db_->vpc_peer_map();  }

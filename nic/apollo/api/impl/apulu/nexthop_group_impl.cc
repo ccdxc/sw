@@ -318,14 +318,40 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 }
 
 void
-nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status) {
+nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status,
+                                 ecmp_actiondata_t *ecmp_data) {
+    uint16_t nh_base_hw_id = ecmp_data->ecmp_info.nexthop_base;
     status->hw_id = hw_id_;
     status->nh_base_idx = nh_base_hw_id_;
+
+    if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
+        for (uint8_t i = 0; i < ecmp_data->ecmp_info.num_nexthops; i++) {
+            fill_nh_status_(&status->nexthops[i], nh_base_hw_id + i);
+        }
+    }
 }
 
 sdk_ret_t
-nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
+nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec,
+                               ecmp_actiondata_t *ecmp_data) {
     uint16_t nh_base_hw_id;
+
+    spec->num_nexthops = ecmp_data->ecmp_info.num_nexthops;
+    if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+        spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+    } else if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
+        spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+        nh_base_hw_id = ecmp_data->ecmp_info.nexthop_base;
+        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+            fill_nh_spec_(&spec->nexthops[i], nh_base_hw_id + i);
+        }
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+nexthop_group_impl::fill_info_(pds_nexthop_group_info_t *info) {
     p4pd_error_t p4pd_ret;
     ecmp_actiondata_t ecmp_data;
 
@@ -336,22 +362,9 @@ nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec) {
                       hw_id_, p4pd_ret);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    if (spec->num_nexthops != ecmp_data.ecmp_info.num_nexthops) {
-        spec->num_nexthops = ecmp_data.ecmp_info.num_nexthops;
-        PDS_TRACE_ERR("Mismatch in number of nexthops in sw (%u) and hw (%u)"
-                      " at index %u key %s", spec->num_nexthops,
-                      ecmp_data.ecmp_info.num_nexthops, hw_id_,
-                      spec->key.str());
-    }
-    if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
-        spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
-    } else if (ecmp_data.ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
-        spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
-        nh_base_hw_id = ecmp_data.ecmp_info.nexthop_base;
-        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
-            fill_nh_spec_(&spec->nexthops[i], nh_base_hw_id + i);
-        }
-    }
+
+    fill_spec_(&info->spec, &ecmp_data);
+    fill_status_(&info->status, &ecmp_data);
 
     return SDK_RET_OK;
 }
@@ -362,11 +375,10 @@ nexthop_group_impl::read_hw(api_base *api_obj, obj_key_t *key,
     sdk_ret_t ret;
     pds_nexthop_group_info_t *dinfo = (pds_nexthop_group_info_t *)info;
 
-    ret = fill_spec_(&dinfo->spec);
+    ret = fill_info_(dinfo);
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
-    fill_status_(&dinfo->status);
     return SDK_RET_OK;
 }
 

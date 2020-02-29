@@ -65,6 +65,13 @@ typedef struct pds_nexthop_spec_s {
 /// \brief nexthop status
 typedef struct pds_nexthop_status_s {
     uint16_t hw_id;    ///< hardware id
+    union {
+        // info specific to PDS_NH_TYPE_UNDERLAY
+        struct {
+            uint8_t  port;     ///< physical port
+            uint16_t vlan;     ///< VLAN
+        };
+    };
 } __PACK__ pds_nexthop_status_t;
 
 /// \brief nexthop statistics
@@ -90,6 +97,14 @@ sdk_ret_t pds_nexthop_create(pds_nexthop_spec_t *spec,
 /// \param[out] info nexthop information
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_nexthop_read(pds_obj_key_t *key, pds_nexthop_info_t *info);
+
+typedef void (*nexthop_read_cb_t)(pds_nexthop_info_t *info, void *ctxt);
+
+/// \brief Read all nexthop information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_nexthop_read_all(nexthop_read_cb_t nexthop_read_cb, void *ctxt);
 
 /// \brief     update nexthop
 /// \param[in] spec nexthop specification
@@ -138,6 +153,7 @@ typedef struct pds_nexthop_group_status_s {
             uint16_t nh_base_idx;
         };
     };
+    pds_nexthop_status_t nexthops[PDS_MAX_ECMP_NEXTHOP];
 } __PACK__ pds_nexthop_group_status_t;
 
 /// \brief nexthop group statistics
@@ -173,6 +189,14 @@ sdk_ret_t pds_nexthop_group_read(pds_obj_key_t *key,
 sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_t *spec,
                                    pds_batch_ctxt_t bctxt =
                                                      PDS_BATCH_CTXT_INVALID);
+
+typedef void (*nexthop_group_read_cb_t)(pds_nexthop_group_info_t *info, void *ctxt);
+
+/// \brief Read all nexthop group information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_nexthop_group_read_all(nexthop_group_read_cb_t nexthop_group_read_cb, void *ctxt);
 
 /// \brief     delete a given nexthop group
 /// \param[in] key key of the nexthop group

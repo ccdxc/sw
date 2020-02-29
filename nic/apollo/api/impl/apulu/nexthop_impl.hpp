@@ -179,12 +179,19 @@ private:
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification
+    /// \param[in]  nh_data nexthop data
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t fill_spec_(pds_nexthop_spec_t *spec);
+    sdk_ret_t fill_spec_(pds_nexthop_spec_t *spec, nexthop_actiondata_t *nh_data);
 
     /// \brief      populate status with hardware information
     /// \param[out] status status
-    void fill_status_(pds_nexthop_status_t *status);
+    /// \param[in]  nh_data nexthop data
+    void fill_status_(pds_nexthop_status_t *status, nexthop_actiondata_t *nh_data);
+
+    /// \brief      populate nh info with hardware information
+    /// \param[out] info nexthop info
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_info_(pds_nexthop_info_t *info);
 
 private:
     uint32_t    hw_id_;    ///< hardware id
@@ -257,6 +264,26 @@ fill_nh_spec_ (pds_nexthop_spec_t *spec, uint16_t hw_id) {
     sdk::lib::memrev(spec->underlay_mac,
                      nh_data.nexthop_info.dmaco, ETH_ADDR_LEN);
     // TODO walk if db and identify the l3_if
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+fill_nh_status_ (pds_nexthop_status_t *status, uint16_t hw_id) {
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data;
+
+    if ((unlikely(hw_id == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
+        return SDK_RET_OK;
+    }
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
+                                      hw_id,
+                                      NULL, NULL, &nh_data);
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    status->port = nh_data.nexthop_info.port;
+    status->vlan = nh_data.nexthop_info.vlan;
     return SDK_RET_OK;
 }
 

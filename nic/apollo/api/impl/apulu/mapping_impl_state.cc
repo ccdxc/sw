@@ -117,12 +117,11 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
 static void
 local_mapping_print_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(143, '-').c_str());
-    dprintf(fd, "%-7s%-40s%-40s%-7s%-8s%-7s%-16s%-18s\n",
-            "VpcID", "PrivateIP", "PublicIP",
-            "VnicID", "NhType", "Tunnel",
-            "FabricEncap", "MAC");
-    dprintf(fd, "%s\n", std::string(143, '-').c_str());
+    dprintf(fd, "%s\n", std::string(148, '-').c_str());
+    dprintf(fd, "%-7s%-40s%-18s%-40s%-7s%-10s%-10s%-16s\n",
+            "VpcID", "OverlayIP", "OverlayMAC", "PublicIP",
+            "VnicID", "NhType", "Tunnel", "FabricEncap");
+    dprintf(fd, "%s\n", std::string(148, '-').c_str());
 }
 
 /// \brief     callback function to dump local mapping entries
@@ -190,11 +189,12 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data.nexthop_type);
 
-    dprintf(fd, "%-7u%-40s%-40s%-7u%-8s%-7u%-16s%-18s\n",
-            vpc_id, ipaddr2str(&private_ip), ipaddr2str(&public_ip),
+    dprintf(fd, "%-7u%-40s%-18s%-40s%-7u%-10s%-10u%-16s\n",
+            vpc_id, ipaddr2str(&private_ip), macaddr2str(overlay_mac),
+            ipaddr2str(&public_ip),
             data->vnic_id, nexthop_type.c_str(),
             mapping_data.nexthop_id,
-            pds_encap2str(&encap), macaddr2str(overlay_mac));
+            pds_encap2str(&encap));
 }
 
 /// \brief     function to print l3 mapping header
@@ -202,10 +202,11 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
 static void
 remote_mapping_print_l3_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(80, '-').c_str());
-    dprintf(fd, "%-7s%-40s%-8s%-7s%-18s\n",
-            "VpcID", "PrivateIP", "NhType", "Tunnel", "MAC");
-    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+    dprintf(fd, "%s\n", std::string(82, '-').c_str());
+    dprintf(fd, "%-7s%-40s%-18s%-10s%-7s\n",
+            "VpcID", "OverlayIP", "OverlayMAC",
+            "NhType", "Tunnel");
+    dprintf(fd, "%s\n", std::string(82, '-').c_str());
 }
 
 /// \brief     callback function to dump remote l3 mapping entries
@@ -259,11 +260,11 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
 
-    dprintf(fd, "%-7u%-40s%-8s%-7u%-18s\n",
+    dprintf(fd, "%-7u%-40s%-18s%-10s%-7u\n",
             vpc_id,  ipaddr2str(&private_ip),
+            macaddr2str(overlay_mac),
             nexthop_type.c_str(),
-            mapping_data->nexthop_id,
-            macaddr2str(overlay_mac));
+            mapping_data->nexthop_id);
 }
 
 /// \brief     function to print l2 mapping header
@@ -271,10 +272,10 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
 static void
 remote_mapping_print_l2_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(42, '-').c_str());
-    dprintf(fd, "%-9s%-18s%-8s%-7s\n",
-            "SubnetID", "MAC", "NhType", "Tunnel");
-    dprintf(fd, "%s\n", std::string(42, '-').c_str());
+    dprintf(fd, "%s\n", std::string(44, '-').c_str());
+    dprintf(fd, "%-9s%-18s%-10s%-7s\n",
+            "SubnetID", "OverlayMAC", "NhType", "Tunnel");
+    dprintf(fd, "%s\n", std::string(44, '-').c_str());
 }
 
 /// \brief     callback function to dump remote l2 mapping entries
@@ -305,7 +306,7 @@ remote_l2_mapping_dump_cb (sdk_table_api_params_t *params)
 
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
 
-    dprintf(fd, "%-9u%-18s%-8s%-7u\n",
+    dprintf(fd, "%-9u%-18s%-10s%-7u\n",
             subnet_id, macaddr2str(mac),
             nexthop_type.c_str(),
             mapping_data->nexthop_id);

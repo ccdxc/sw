@@ -96,6 +96,40 @@ pds_nexthop_group_read (_In_ pds_obj_key_t *key,
     return entry->read(info);
 }
 
+typedef struct pds_nexthop_group_read_args_s {
+    nexthop_group_read_cb_t cb;
+    void *ctxt;
+} pds_nexthop_group_read_args_t;
+
+bool
+pds_nexthop_group_info_from_entry (void *entry, void *ctxt)
+{
+    nexthop_group *nh = (nexthop_group *)entry;
+    pds_nexthop_group_read_args_t *args = (pds_nexthop_group_read_args_t *)ctxt;
+    pds_nexthop_group_info_t info;
+
+    memset(&info, 0, sizeof(pds_nexthop_group_info_t));
+
+    // call entry read
+    nh->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_nexthop_group_read_all (nexthop_group_read_cb_t nexthop_group_read_cb, void *ctxt)
+{
+    pds_nexthop_group_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = nexthop_group_read_cb;
+
+    return nexthop_group_db()->walk(pds_nexthop_group_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_nexthop_group_update (_In_ pds_nexthop_group_spec_t *spec,
                           _In_ pds_batch_ctxt_t bctxt)

@@ -18,7 +18,7 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_nexthop_spec_t *api_spec;
+    pds_nexthop_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -43,16 +43,11 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_nexthop_spec_t *)
-                    core::agent_state::state()->nh_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_nexthop_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
-        pds_nh_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::nh_create(&key, api_spec, bctxt);
+        pds_nh_proto_to_api_spec(&api_spec, proto_spec);
+        ret = core::nh_create(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -82,7 +77,7 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_nexthop_spec_t *api_spec;
+    pds_nexthop_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -107,16 +102,11 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_nexthop_spec_t *)
-                    core::agent_state::state()->nh_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_nexthop_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
-        pds_nh_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::nh_update(&key, api_spec, bctxt);
+        pds_nh_proto_to_api_spec(&api_spec, proto_spec);
+        ret = core::nh_update(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -211,8 +201,10 @@ NhSvcImpl::NexthopGet(ServerContext *context,
     switch (proto_req->gettype_case()) {
     case pds::NexthopGetRequest::kType:
         {
-            pds_nh_type_t type = proto_nh_type_to_pds_nh_type(proto_req->type());
-            ret = core::nh_get_all(pds_nh_api_info_to_proto, proto_rsp, type);
+            nh_get_all_args_t args;
+            args.type = proto_nh_type_to_pds_nh_type(proto_req->type());
+            args.ctxt = proto_rsp;
+            ret = core::nh_get_all(pds_nh_api_info_to_proto, &args);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
         break;
@@ -241,7 +233,7 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_nexthop_group_spec_t *api_spec = { 0 };
+    pds_nexthop_group_spec_t api_spec = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -266,16 +258,11 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_nexthop_group_spec_t *)
-                    core::agent_state::state()->nh_group_slab()->alloc();
-        if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_nexthop_group_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
-        pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
-        ret = core::nh_group_create(&key, api_spec, bctxt);
+        pds_nh_group_proto_to_api_spec(&api_spec, proto_spec);
+        ret = core::nh_group_create(&key, &api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;
@@ -306,7 +293,7 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_nexthop_group_spec_t *api_spec = { 0 };
+    pds_nexthop_group_spec_t api_spec = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -331,19 +318,14 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_nexthop_group_spec_t *)
-                    core::agent_state::state()->nh_group_slab()->alloc();
-        if (api_spec == NULL) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_nexthop_group_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
-        ret = pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
+        ret = pds_nh_group_proto_to_api_spec(&api_spec, proto_spec);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::nh_group_update(&key, api_spec, bctxt);
+        ret = core::nh_group_update(&key, &api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             goto end;

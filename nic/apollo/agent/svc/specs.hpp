@@ -2333,9 +2333,21 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
 // populate proto buf status from nh API status
 static inline void
 pds_nh_api_status_to_proto (pds::NexthopStatus *proto_status,
-                            const pds_nexthop_status_t *api_status)
+                            const pds_nexthop_status_t *api_status,
+                            const pds_nexthop_spec_t *api_spec)
 {
     proto_status->set_hwid(api_status->hw_id);
+    switch (api_spec->type) {
+    case PDS_NH_TYPE_UNDERLAY:
+        {
+            auto status = proto_status->mutable_underlaynhinfo();
+            status->set_port(api_status->port);
+            status->set_vlan(api_status->vlan);
+        }
+        break;
+    default:
+        break;
+    }
 }
 
 // populate proto buf stats from nh API stats
@@ -2347,16 +2359,22 @@ pds_nh_api_stats_to_proto (pds::NexthopStats *proto_stats,
 
 // populate proto buf from nh API info
 static inline void
-pds_nh_api_info_to_proto (const pds_nexthop_info_t *api_info, void *ctxt)
+pds_nh_api_info_to_proto (pds_nexthop_info_t *api_info, void *ctxt)
 {
-    pds::NexthopGetResponse *proto_rsp = (pds::NexthopGetResponse *)ctxt;
+    nh_get_all_args_t *args = (nh_get_all_args_t *)ctxt;
+    pds::NexthopGetResponse *proto_rsp = (pds::NexthopGetResponse *)(args->ctxt);
+
+    if (api_info->spec.type != args->type) {
+        return;
+    }
+
     auto nh = proto_rsp->add_response();
     pds::NexthopSpec *proto_spec = nh->mutable_spec();
     pds::NexthopStatus *proto_status = nh->mutable_status();
     pds::NexthopStats *proto_stats = nh->mutable_stats();
 
     pds_nh_api_spec_to_proto(proto_spec, &api_info->spec);
-    pds_nh_api_status_to_proto(proto_status, &api_info->status);
+    pds_nh_api_status_to_proto(proto_status, &api_info->status, &api_info->spec);
     pds_nh_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
@@ -2421,9 +2439,16 @@ pds_nh_group_api_spec_to_proto (pds::NhGroupSpec *proto_spec,
 // populate proto buf status from nh group API status
 static inline void
 pds_nh_group_api_status_to_proto (pds::NhGroupStatus *proto_status,
-                                  const pds_nexthop_group_status_t *api_status)
+                                  const pds_nexthop_group_status_t *api_status,
+                                  const pds_nexthop_group_spec_t *api_spec)
 {
     proto_status->set_hwid(api_status->hw_id);
+
+    for (uint32_t i = 0; i < api_spec->num_nexthops; i++) {
+        pds_nh_api_status_to_proto(proto_status->add_members(),
+                                   &api_status->nexthops[i],
+                                   &api_spec->nexthops[i]);
+    }
 }
 
 // populate proto buf stats from nh group API stats
@@ -2435,7 +2460,7 @@ pds_nh_group_api_stats_to_proto (pds::NhGroupStats *proto_stats,
 
 // populate proto buf from nh API info
 static inline void
-pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
+pds_nh_group_api_info_to_proto (pds_nexthop_group_info_t *api_info,
                                 void *ctxt)
 {
     pds::NhGroupGetResponse *proto_rsp = (pds::NhGroupGetResponse *)ctxt;
@@ -2445,7 +2470,7 @@ pds_nh_group_api_info_to_proto (const pds_nexthop_group_info_t *api_info,
     pds::NhGroupStats *proto_stats = nh->mutable_stats();
 
     pds_nh_group_api_spec_to_proto(proto_spec, &api_info->spec);
-    pds_nh_group_api_status_to_proto(proto_status, &api_info->status);
+    pds_nh_group_api_status_to_proto(proto_status, &api_info->status, &api_info->spec);
     pds_nh_group_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 

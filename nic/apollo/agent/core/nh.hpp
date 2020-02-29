@@ -9,21 +9,13 @@
 
 namespace core {
 
-typedef void (*nh_get_cb_t)(const pds_nexthop_info_t *spec, void *ctxt);
-
-typedef struct nh_db_cb_ctxt_s {
-    nh_get_cb_t cb;
-    pds_nh_type_t type;
-    void       *ctxt;
-} nh_db_cb_ctxt_t;
-
 sdk_ret_t nh_create(pds_obj_key_t *key, pds_nexthop_spec_t *spec,
                     pds_batch_ctxt_t bctxt);
 sdk_ret_t nh_update(pds_obj_key_t *key, pds_nexthop_spec_t *spec,
                     pds_batch_ctxt_t bctxt);
 sdk_ret_t nh_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
 sdk_ret_t nh_get(pds_obj_key_t *key, pds_nexthop_info_t *info);
-sdk_ret_t nh_get_all(nh_get_cb_t nexthop_get_cb, void *ctxt, pds_nh_type_t type);
+sdk_ret_t nh_get_all(nexthop_read_cb_t nexthop_read_cb, void *ctxt);
 
 }    // namespace core
 

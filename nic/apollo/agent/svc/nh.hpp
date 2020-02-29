@@ -7,11 +7,17 @@
 #include "gen/proto/types.pb.h"
 #include "gen/proto/meta/meta.pb.h"
 #include "gen/proto/nh.grpc.pb.h"
+#include "nic/apollo/api/include/pds_nexthop.hpp"
 
 using grpc::Status;
 using grpc::ServerContext;
 
 using pds::NhSvc;
+
+typedef struct nh_get_all_args_s {
+    pds_nh_type_t type;
+    void *ctxt;
+} nh_get_all_args_t;
 
 class NhSvcImpl final : public NhSvc::Service {
 public:

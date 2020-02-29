@@ -203,29 +203,42 @@ nexthop_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     return SDK_RET_OK;
 }
 void
-nexthop_impl::fill_status_(pds_nexthop_status_t *status) {
+nexthop_impl::fill_status_(pds_nexthop_status_t *status,
+                           nexthop_actiondata_t *nh_data) {
     status->hw_id = hw_id_;
+    status->port = nh_data->nexthop_info.port;
+    status->vlan = nh_data->nexthop_info.vlan;
 }
 
 sdk_ret_t
-nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec) {
+nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec,
+                         nexthop_actiondata_t *nh_data) {
+    if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
+        spec->type = PDS_NH_TYPE_BLACKHOLE;
+    } else {
+        spec->type = PDS_NH_TYPE_UNDERLAY;
+        sdk::lib::memrev(spec->underlay_mac,
+                         nh_data->nexthop_info.dmaco, ETH_ADDR_LEN);
+        // TODO walk if db and identify the l3_if
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+nexthop_impl::fill_info_(pds_nexthop_info_t *info) {
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data;
 
-    if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
-        spec->type = PDS_NH_TYPE_BLACKHOLE;
-        return SDK_RET_OK;
-    }
-    spec->type = PDS_NH_TYPE_UNDERLAY;
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
                                       NULL, NULL, &nh_data);
     if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    sdk::lib::memrev(spec->underlay_mac,
-                     nh_data.nexthop_info.dmaco, ETH_ADDR_LEN);
-    // TODO walk if db and identify the l3_if
+
+    fill_spec_(&info->spec, &nh_data);
+    fill_status_(&info->status, &nh_data);
+
     return SDK_RET_OK;
 }
 
@@ -234,13 +247,12 @@ nexthop_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t rv;
     pds_nexthop_info_t *nh_info = (pds_nexthop_info_t *)info;
 
-    rv = fill_spec_(&nh_info->spec);
+    rv = fill_info_(nh_info);
     if (unlikely(rv != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read NEXTHOP %s table entry",
                       api_obj->key2str().c_str());
         return rv;
     }
-    fill_status_(&nh_info->status);
     return SDK_RET_OK;
 }
 

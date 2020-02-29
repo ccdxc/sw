@@ -89,9 +89,9 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printIfHeader() {
-	hdrLine := strings.Repeat("-", 177)
+	hdrLine := strings.Repeat("-", 188)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-14s%-11s%-11s%-40s%-6s%-40s%-18s%-14s%-20s\n",
+	fmt.Printf("%-14s%-14s%-11s%-11s%-40s%-6s%-40s%-18s%-14s%-20s\n",
 		"IfIndex", "Interface", "AdminState", "OperState", "Port", "LifID",
 		"VPC", "IPPrefix", "Encap", "MACAddress")
 	fmt.Println(hdrLine)
@@ -125,7 +125,7 @@ func printIf(intf *pds.Interface) {
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())
 		encap = utils.EncapToString(spec.GetL3IfSpec().GetEncap())
 	}
-	fmt.Printf("0x%-12x%-14s%-11s%-11s%-40s%-6s%-6s%-18s%-14s%-20s\n",
+	fmt.Printf("0x%-12x%-14s%-11s%-11s%-40s%-6s%-40s%-18s%-14s%-20s\n",
 		ifIndex, ifStr, adminState, operState, portNum, lifId,
 		vpc, ipPrefix, encap, mac)
 }

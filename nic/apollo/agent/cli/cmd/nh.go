@@ -106,9 +106,11 @@ func nhGroupShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printNhGroupHeader() {
-	hdrLine := strings.Repeat("-", 106)
+	hdrLine := strings.Repeat("-", 118)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-16s%-40s\n", "Id", "HwID", "Type", "Members")
+	fmt.Printf("%-40s%-10s%-16s%-10s%-12s%-12s%-18s\n",
+		"Id", "HwID", "Type", "#Members",
+		"MemberPort", "MemberVLAN", "MemberMAC")
 	fmt.Println(hdrLine)
 }
 
@@ -117,19 +119,30 @@ func printNhGroup(resp *pds.NhGroup) {
 	status := resp.GetStatus()
 	typeStr := strings.Replace(spec.GetType().String(), "NEXTHOP_GROUP_TYPE_", "", -1)
 	typeStr = strings.Replace(typeStr, "_", "-", -1)
-	members := spec.GetMembers()
+	memberSpec := spec.GetMembers()
+	memberStatus := status.GetMembers()
 	first := true
-	for _, member := range members {
+	numMembers := len(memberSpec)
+
+	if typeStr != "UNDERLAY-ECMP" {
+		return
+	}
+
+	for i := 0; i < numMembers; i++ {
 		if first {
-			fmt.Printf("%-40s%-10d%-16s%-40s\n",
+			fmt.Printf("%-40s%-10d%-16s%-10d%-12d%-12d%-18s\n",
 				uuid.FromBytesOrNil(spec.GetId()).String(),
-				status.GetHwId(), typeStr,
-				uuid.FromBytesOrNil(member.GetId()).String())
+				status.GetHwId(), typeStr, numMembers,
+				memberStatus[i].GetUnderlayNhInfo().GetPort(),
+				memberStatus[i].GetUnderlayNhInfo().GetVlan(),
+				utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
 			first = false
 		} else {
-			fmt.Printf("%-66s%-40s\n",
+			fmt.Printf("%-76s%-12d%-12d%-18s\n",
 				"",
-				uuid.FromBytesOrNil(member.GetId()).String())
+				memberStatus[i].GetUnderlayNhInfo().GetPort(),
+				memberStatus[i].GetUnderlayNhInfo().GetVlan(),
+				utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
 		}
 	}
 }
@@ -247,9 +260,9 @@ func printNexthopOverlayHeader() {
 }
 
 func printNexthopUnderlayHeader() {
-	hdrLine := strings.Repeat("-", 100)
+	hdrLine := strings.Repeat("-", 82)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-40s%-20s\n", "Id", "L3Intf", "UnderlayMAC")
+	fmt.Printf("%-40s%-12s%-12s%-18s\n", "Id", "Port", "Vlan", "UnderlayMAC")
 	fmt.Println(hdrLine)
 }
 
@@ -267,6 +280,7 @@ func printNexthopHeader(nh *pds.Nexthop) {
 
 func printNexthop(nh *pds.Nexthop) {
 	spec := nh.GetSpec()
+	status := nh.GetStatus()
 	switch spec.GetNhinfo().(type) {
 	case *pds.NexthopSpec_IPNhInfo:
 		{
@@ -286,9 +300,10 @@ func printNexthop(nh *pds.Nexthop) {
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{
 			info := spec.GetUnderlayNhInfo()
-			fmt.Printf("%-40s%-40s%-20s\n",
+			fmt.Printf("%-40s%-12d%-12d%-18s\n",
 				uuid.FromBytesOrNil(spec.GetId()).String(),
-				uuid.FromBytesOrNil(info.GetL3Interface()).String(),
+				status.GetUnderlayNhInfo().GetPort(),
+				status.GetUnderlayNhInfo().GetVlan(),
 				utils.MactoStr(info.GetUnderlayMAC()))
 		}
 	}

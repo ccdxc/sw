@@ -13,15 +13,7 @@ route_table_create_validate (pds_obj_key_t *key,
                              pds_route_table_spec_t *spec)
 {
     for (uint32_t i = 0; i < spec->num_routes; i ++) {
-        if (spec->routes[i].nh_type == PDS_NH_TYPE_IP) {
-            if (agent_state::state()->find_in_nh_db(&spec->routes[i].nh) ==
-                    NULL) {
-                PDS_TRACE_ERR("Failed to create route table {}, nexthop {} "
-                              "not found", spec->key.str(),
-                              spec->routes[i].nh.str());
-                return SDK_RET_INVALID_ARG;
-            }
-        } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+        if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to create route table {}, vpc {} "
@@ -63,15 +55,7 @@ static inline sdk_ret_t
 route_table_update_validate (pds_obj_key_t *key, pds_route_table_spec_t *spec)
 {
     for (uint32_t i = 0; i < spec->num_routes; i ++) {
-        if (spec->routes[i].nh_type == PDS_NH_TYPE_IP) {
-            if (agent_state::state()->find_in_nh_db(&spec->routes[i].nh) ==
-                    NULL) {
-                PDS_TRACE_ERR("Failed to update route table {}, nexthop {} "
-                              "not found", spec->key.str(),
-                              spec->routes[i].nh.str());
-                return SDK_RET_INVALID_ARG;
-            }
-        } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+        if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to update route table {}, vpc {} "
