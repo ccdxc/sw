@@ -53,6 +53,22 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/cluster/', 'dscs']
       },
       {
+        label: 'DSC Profiles',
+        icon: {
+          cssClass: 'app-l-side-nav-cluster-dscprofiles'
+        },
+        roleGuard: UIRolePermissions.clusterdscprofile_read,
+        link: ['/cluster/', 'dscprofiles']
+      },
+      {
+        label: 'Network Interfaces',
+        icon: {
+          cssClass: 'app-l-side-nav-cluster-networkinterfaces'
+        },
+        roleGuard: UIRolePermissions.networknetworkinterface_read,
+        link: ['/cluster/', 'networkinterfaces']
+      },
+      {
         label: 'Hosts',
         icon: {
           cssClass: 'app-l-side-nav-cluster-host'

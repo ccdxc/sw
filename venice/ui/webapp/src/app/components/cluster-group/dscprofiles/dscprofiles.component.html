@@ -1,0 +1,89 @@
+<app-pagebody [icon]="bodyicon" header="DSC Profiles Overview" class="dscprofiles">
+  <div fxFlex class="dscprofiles-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+</app-pagebody>
+<ng-template #DataTable>
+  <app-tableviewedit fxLayout="column" style="height: 100%;"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [createTemplate]="createTemplate"
+                     [enableCheckbox]="true"
+                     [tableLoading]="tableLoading"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div fxFlex="none" fxLayoutAlign="start center">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="areSelectedRowsDeletable()"
+              [matTooltip]="'Delete selected dscprofiles'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
+
+</ng-template>
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row">
+      <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
+                       title="DSC Profiles"
+                       [total]="dataObjects.length" [icon]="headerIcon"
+                       [enableColumnSelect]="true"
+                       [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+      </app-tableheader>
+    </div>
+  </div>
+
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newdscprofile (formClose)="creationFormClose()"
+                     fxFlex="grow" [existingObjects]='dataObjects'>
+  </app-newdscprofile>
+</ng-template>
+
+<!-- TABLE BODY -->
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.dscs'">
+
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<!-- TABLE ACTION -->
+<ng-template #actionTemplate let-rowData>
+
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Delete DSC Profile" *roleGuard="'clusterdscprofile_delete'"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete
+    </mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                     (formClose)="closeRowExpand()" fxFlex="none"></app-newdscprofile>
+</ng-template>

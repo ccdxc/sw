@@ -1,7 +1,8 @@
 {
   "enabled-features" : [
     "help",
-    "dataCache"
+    "dataCache",
+    "fwLogs"
   ],
   "condition-thresholds": {
     "critical": 95,

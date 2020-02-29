@@ -28,6 +28,24 @@ const routes: Routes = [
     ]
   },
   {
+    path: 'dscprofiles',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/cluster-group/dscprofiles/dscprofiles.module#DscprofilesModule'
+      }
+    ]
+  },
+  {
+    path: 'networkinterfaces',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/cluster-group/networkinterfaces/networkinterfaces.module#NetworkinterfacesModule'
+      }
+    ]
+  },
+  {
     path: 'hosts',
     children: [
       {

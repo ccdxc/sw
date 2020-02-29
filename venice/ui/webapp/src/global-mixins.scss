@@ -204,12 +204,17 @@
   }
 
   .ui-state-highlight {
-    background: none !important;
-    color: currentColor !important;
+    background: none;
+    color: currentColor;
   }
 
   .ui-picklist {
     @include primary-font(16px);
+  }
+
+  .ui-listbox .ui-listbox-list .ui-listbox-item.ui-state-highlight {
+    color: #ffffff;
+    background-color: #86a8d7;
   }
 
   .ui-picklist .ui-picklist-item.ui-state-highlight {

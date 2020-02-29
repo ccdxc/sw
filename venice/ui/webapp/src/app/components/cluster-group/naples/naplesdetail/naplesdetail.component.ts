@@ -25,7 +25,7 @@ import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsR
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkService } from '@app/services/generated/network.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
+import { NetworkNetworkInterface, INetworkNetworkInterfaceList } from '@sdk/v1/models/generated/network';
 import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
 import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
 import { SearchService } from '@app/services/generated/search.service';
@@ -123,20 +123,21 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   dscsWorkloadsTuple: { [dscKey: string]: DSCWorkloadsTuple; };
 
   networkInterfacesEventUtility: HttpEventUtility<NetworkNetworkInterface>;
-  networkInterfaces: ReadonlyArray<NetworkNetworkInterface> = [];
+  networkInterfaces: NetworkNetworkInterface[] = [];
+  allNetworkInterfaces: NetworkNetworkInterface[] = [];
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
     private _router: Router,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
-    protected UIConfigService: UIConfigsService,
+    protected uionfigService: UIConfigsService,
     protected workloadService: WorkloadService,
     protected networkService: NetworkService,
     protected searchService: SearchService,
     protected browserService: BrowserService
   ) {
-    super(_controllerService, UIConfigService);
+    super(_controllerService, uionfigService);
   }
 
   /**
@@ -207,6 +208,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     );
   }
 
+  getDSCNetworkInterfaces() {
+    const list: NetworkNetworkInterface[] = [];
+    this.allNetworkInterfaces.forEach( ( networkNetworkInterface: NetworkNetworkInterface) => {
+      if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
+        list.push(networkNetworkInterface);
+      }
+    });
+    this.networkInterfaces = list;
+  }
+
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
        // /*  This block is for test only
@@ -216,6 +227,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
        this.networkService.ListNetworkInterface().subscribe(
         (response) => {
             console.log('get NetworkNetworkInterface list', response);
+            const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
+            this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
+            this.getDSCNetworkInterfaces();
         }
       );
       /*
@@ -386,6 +400,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           if ( !this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
             this.browseDSCWorkload();
           }
+          this.getDSCNetworkInterfaces();
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')

@@ -475,15 +475,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
 
-  formatLabels(labelObj) {
-    const labels = [];
-    if (labelObj != null) {
-      Object.keys(labelObj).forEach((key) => {
-        labels.push(key + ': ' + labelObj[key]);
-      });
-    }
-    return labels.join(', ');
-  }
 
   provideCustomOptions() {
     this.customQueryOptions = [
@@ -937,7 +928,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   editLabels() {
     this.labelEditorMetaData = {
-      title: 'Editing naples objects',
+      title: 'Editing DSC objects',
       keysEditable: true,
       valuesEditable: true,
       propsDeletable: true,
@@ -966,7 +957,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
 
     const summary = 'Distributed Services Card update';
-    const objectType = 'naples';
+    const objectType = 'DSC';
     this.handleForkJoin(observables, summary, objectType);
   }
 

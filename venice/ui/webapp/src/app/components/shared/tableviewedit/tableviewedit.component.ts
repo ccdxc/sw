@@ -724,6 +724,16 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       return [];
     }
   }
+
+  formatLabels(labelObj) {
+    const labels = [];
+    if (labelObj != null) {
+      Object.keys(labelObj).forEach((key) => {
+        labels.push(key + ': ' + labelObj[key]);
+      });
+    }
+    return labels.join(', ');
+  }
 }
 
 export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {

@@ -1,0 +1,58 @@
+<div [style.width]="'100%'" fxLayout="column">
+  <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-container">
+    <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-content">
+      <div fxFlex="nogrow" fxLayout="column">
+        <ng-container *ngTemplateOutlet="metaName"></ng-container>
+        <div fxFlex="10px"></div>
+        <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #metaName>
+  <div fxFlex="nogrow" fxLayout="row" class="new-dsc-profile-row"
+       [formGroup]="newObject.$formGroup">
+    <div formGroupName="meta">
+      <span [ngClass]="{
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+      }">
+        <input fxFlex="342px" formControlName="name" class="new-dsc-profile-name" appErrorTooltip
+               spellcheck="false"
+               type="text" pInputText appFloatLabel="Unique DSP Profile Name...">
+      </span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #FWPolicyMode>
+  <div fxFlex="100" fxLayout="row">
+    <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
+      <div fxFlex="nogrow" class="">FW:</div>
+      <div class="newdscprofile-plist-div">
+        <p-listbox #nodesListbox [options]="fwdModeOptions"
+                   *ngIf="fwdModeOptions && fwdModeOptions.length>0"
+                   [(ngModel)]="selectedFwdMode" checkbox="true" optionLabel="label"
+                   [listStyle]="{'height':'100px'}">
+        </p-listbox>
+      </div>
+    </div>
+    <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
+      <div fxFlex="nogrow" class="">Policy:</div>
+      <div class="newdscprofile-plist-div">
+        <p-listbox #nodesListbox [options]="policyModeOptions"
+                   *ngIf="policyModeOptions && policyModeOptions.length>0"
+                   [(ngModel)]="selectedPolicyMode" checkbox="true" optionLabel="label"
+                   [listStyle]="{'height':'100px'}">
+        </p-listbox>
+      </div>
+    </div>
+  </div>
+</ng-template>
+<ng-template #divider>
+  <div fxFlex="20px" fxLayout="row">
+    <div fxFlex="30px"></div>
+    <div fxFlex="auto" class="new-dsc-profile-divider"></div>
+    <div fxFlex="30px"></div>
+  </div>
+</ng-template>

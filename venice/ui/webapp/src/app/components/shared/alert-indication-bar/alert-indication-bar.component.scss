@@ -3,6 +3,7 @@
 .alert-indication-widget {
   @include primary-font(12);
   display: inline-flex;
+  cursor: pointer;
 }
 
 .alert-indication-severity-number {

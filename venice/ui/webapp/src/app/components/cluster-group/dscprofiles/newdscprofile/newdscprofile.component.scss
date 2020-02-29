@@ -1,0 +1,14 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.new-dsc-profile-content {
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+
+  .new-dsc-profile-row {
+    justify-content: flex-end;
+  }
+}

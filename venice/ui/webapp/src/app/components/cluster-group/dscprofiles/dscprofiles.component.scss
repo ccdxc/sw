@@ -1,0 +1,13 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.dscprofiles {
+  @include primary-font();
+}
+
+.dscprofiles-button {
+  padding-left: $horizontal-gutter;
+  padding-right: $horizontal-gutter;
+}

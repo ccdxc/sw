@@ -10,10 +10,10 @@
       <div fxFlex="20px"></div>
       <ng-container *ngTemplateOutlet="collectors"></ng-container>
       <div fxFlex="20px"></div>
-      <!-- hide this for release a
+      <!-- hide this for release a. Re-open in 2020-02-28  -->
       <ng-container *ngTemplateOutlet="interface_selector"></ng-container>
       <div fxFlex="20px"></div>
-      -->
+
     </div>
     <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
          class="newmirrorsession-row">
@@ -122,7 +122,8 @@
 
 <ng-template #interface_selector>
   <fieldset class="newmirrorsession-selectors">
-    <legend>Interface Selectors</legend>
+    <legend>Network Interfaces <span class="newmirrorsession-subtext">(select from labels)</span>
+    </legend>
     <div fxFlex="auto"
          class="newmirrorsession-section-div newmirrorsession-section-workloadlabels-div">
       <app-repeater #interFaceSelectorRepeater [data]="labelData" [formArray]="labelFormArray"

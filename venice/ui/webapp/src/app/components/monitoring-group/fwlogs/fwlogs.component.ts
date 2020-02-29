@@ -151,6 +151,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   setDefaultToolbar() {
       const buttons = [];
+      // TODO: 2020-02-28, we enable fwLog page. But backend has issue in /telemetry/v1/fwlogs API.
       if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_read)) {
         buttons.push({
           cssClass: 'global-button-primary fwlogs-button',

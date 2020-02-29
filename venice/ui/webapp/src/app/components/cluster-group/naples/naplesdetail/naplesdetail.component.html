@@ -262,6 +262,26 @@
               </div>
             </div>
           </div>
+
+          <div fxFlex="none" fxLayout="row">
+            <!-- Field titles -->
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>Network Interfaces:</div>
+              </div>
+            </div>
+            <div fxFlex="40px"></div>
+            <!-- Values -->
+            <div class="naplesdetail-workloads-container" fxFlex="200px" *ngIf="selectedObj">
+              <div *ngFor="let n of networkInterfaces let i=index"
+                   class="naplesdetail-workloads-div">
+                <ng-container>
+                  {{n?.meta.name}} ({{n?.status.type}})
+                </ng-container>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div fxFlex="none" fxLayout="row" fxLayoutAlign="start start"
