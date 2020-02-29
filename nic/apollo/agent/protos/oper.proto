@@ -21,6 +21,9 @@ service OperSvc {
   // NOTE: This API will fail, if there is already one pending request in
   //       progress
   rpc TechSupportCollect (TechSupportRequest) returns (TechSupportResponse) {}
+
+  // Metrics exposes the metric counters kept by components
+  rpc MetricsGet(stream MetricsGetRequest) returns (stream MetricsGetResponse) {}
 }
 
 // TechSupportSpec defines the confiugration of the techsupport objet
@@ -71,29 +74,44 @@ message TechSupportResponse {
   TechSupportStatus Response  = 2;
 }
 
-// MetricSpec defines each individual metric that consists of
+message MetricsGetRequest {
+  string Name = 1;
+  bytes  Key  = 2;
+}
+
+message MetricsGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  MetricsStatus    Response = 2;
+}
+
+// CounterSpec defines each individual counter that consists of
 // name and value
-message MetricSpec {
+message CounterStatus {
   // (user visible) name of the metric
   string Name  = 1;
-  // value of the metric (aka. counter)
+  // value of the counter
   uint64 Value = 2;
 }
 
-// MetricsSpec defines generic metrics object that can be used for any set
+// CounterssSpec defines generic metrics object that can be used for any set
 // of counters per object (e.g., port counters, lif/pf counters, vpp counters,
 // s/w counters etc.)
-message MetricsSpec {
+message CountersStatus {
   // Id is uuid or unique key of the object
-  bytes               Id     = 1;
+  bytes                  Key      = 1;
   // collection of metrics
-  repeated MetricSpec Metric = 2;
+  repeated CounterStatus Counters = 2;
 }
 
-message Metrics {
-  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  MetricsSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty", (gogoproto.moretags) = "meta:mandatory,immutable"];
+message MetricsStatus {
+  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  CountersStatus Status    = 3 [(gogoproto.jsontag) = "spec,omitempty", (gogoproto.moretags) = "meta:mandatory,immutable"];
+}
+
+message MetricsSpec {
+  string Name = 1;
+  bytes  Key = 2;
 }
 
 // flow log type indicates whether log is generated when flow is

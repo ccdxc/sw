@@ -10,17 +10,24 @@
 
 using grpc::Status;
 using grpc::ServerContext;
+using grpc::ServerReaderWriter;
 using types::Empty;
 
 using pds::OperSvc;
 using pds::TechSupportRequest;
 using pds::TechSupportResponse;
+using pds::MetricsGetRequest;
+using pds::MetricsGetResponse;
 
 class OperSvcImpl final : public OperSvc::Service {
 public:
     Status TechSupportCollect(ServerContext* context,
                               const TechSupportRequest *req,
                               TechSupportResponse* rsp) override;
+    Status MetricsGet(
+        ServerContext* context,
+        ServerReaderWriter<MetricsGetResponse, MetricsGetRequest>* stream)
+        override;
 };
 
 #endif // __AGENT_SVC_OPER_HPP__

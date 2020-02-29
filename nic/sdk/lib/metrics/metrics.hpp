@@ -1,49 +1,52 @@
-//
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
-//
-//----------------------------------------------------------------------------
-///
-/// \file
-/// This file defines generic metrics interface
-///
-//----------------------------------------------------------------------------
-
-#ifndef __METRICS_HPP__
-#define __METRICS_HPP__
+#ifndef __METRICS_H__
+#define __METRICS_H__
 
 #include <stdint.h>
+#include <vector>
 
-typedef enum metrics_column_type_ {
-    METRICS_COLUMN_COUNTER64 = 1, ///< a 64bit value
-    METRICS_COLUMN_POINTER64 = 2, ///< a pointer to a 64bit value
-    METRICS_COLUMN_RSVD      = 3, ///< placeholder for unused metrics
-} metrics_column_type_t;
+#include "shm.hpp"
+#include "kvstore.hpp"
+#include "htable.hpp"
 
-/// metrics_column_t defines single metric
-typedef struct metrics_column_ {
-    /// name of the metric
-    const char *name;
-    /// type of the metric
-    metrics_column_type_t type;
-} metrics_column_t;
+namespace sdk {
+namespace metrics {
 
-/// metrics_schema_t defines the schema for metrics table
+typedef unsigned __int128 key_t;
+
+typedef enum metrics_counter_type_ {
+    METRICS_COUNTER_VALUE64   = 1, // A 64bit value
+    METRICS_COUNTER_POINTER64 = 2, // A pointer to a 64bit value
+} metrics_counter_type_t;
+
+typedef struct metrics_counter_ {
+    const char *name; // Name of the metric. e.g. InboundPackets
+    metrics_counter_type_t type;
+} metrics_counter_t;
+
 typedef struct metrics_schema_ {
-    /// name of the object (e.g. eth-1/1/1 or uuid)
     const char *name; // e.g. Port
-    /// list of metrics/counters
-    /// NOTE: the last column should have NULL name
-    metrics_column_t columns[];
+    metrics_counter_t counters[]; // to finish the last counter should have NULL name
 } metrics_schema_t;
 
-// Returns a handle. Null in case of failure
-/// \brief register schema of the metrics
-/// \param[in] schema    schema for a given metrics object
-/// \return  handle to the metrics object or NULL in case of failure
-static inline void *
-metrics_register (metrics_schema_t *schema)
-{
-    return NULL;
-}
+typedef std::pair<std::string, uint64_t> metrics_counter_pair_t;
+typedef std::vector<metrics_counter_pair_t> metrics_counters_t;
 
-#endif    // __METRICS_HPP__
+// Returns a handle. NULL in case of failure 
+extern void *metrics_register(metrics_schema_t *schema);
+
+extern void metrics_set_address(void *handler, key_t key, unsigned int counter,
+                                void *address);
+
+extern void metrics_update(void *handler, key_t key, unsigned int counter,
+                           uint64_t value);
+
+// For reader
+extern void *metrics_open(const char *name);
+extern metrics_counters_t metrics_read(void *handler, key_t key);
+extern uint64_t metrics_read(void *handler, key_t key, unsigned int counter);
+
+} // namespace metrics
+} // namespace sdk
+
+#endif

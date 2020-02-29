@@ -1,11 +1,14 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved.
+// This file was forked from delphi
 
-#ifndef _DELPHI_UTILS_ERROR_H_
-#define _DELPHI_UTILS_ERROR_H_
+#ifndef _SDK_METRICS_ERROR_H_
+#define _SDK_METRICS_ERROR_H_
 
+#include <assert.h>
 #include <string>
 
-namespace delphi {
+namespace sdk {
+namespace metrics {
 
 // error: base class for all error return values
 class error {
@@ -81,7 +84,7 @@ private:
     const char *errstr_;
 };
 
+} // namespace metrics
+} // namespace sdk
 
-} // namespace delphi
-
-#endif // _DELPHI_UTILS_ERROR_H_
+#endif // _SDK_METRICS_ERROR_H_
