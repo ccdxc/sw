@@ -61,4 +61,32 @@ typedef enum {
 
 }    // namespace learn
 
+using namespace learn;
+
+typedef enum {
+    LEARN_CLEAR_MSG_ID_NONE = 0,
+    LEARN_CLEAR_MAC,
+    LEARN_CLEAR_IP,
+    LEARN_CLEAR_MAC_ALL,
+    LEARN_CLEAR_IP_ALL,
+    LEARN_CLEAR_MSG_ID_MAX = LEARN_CLEAR_IP_ALL,
+} learn_clear_msg_id;
+
+typedef struct learn_clear_msg_s {
+    learn_clear_msg_id   id;       ///< unique id of the msg
+    union {
+        ep_ip_key_t ip_key;    ///< ip key
+        ep_mac_key_t mac_key;  ///< mac key
+    };
+} learn_clear_msg_t;
+
+typedef enum learn_msg_id_e {
+    LEARN_MSG_ID_NONE,
+    LEARN_MSG_ID_MAPPING_API,
+    LEARN_MSG_ID_CLEAR_CMD,
+} learn_msg_id_t;
+
+sdk_ret_t learn_mac_clear(ep_mac_key_t *key);
+sdk_ret_t learn_ip_clear(ep_ip_key_t *key);
+
 #endif    // __LEARN__LEARN_HPP__

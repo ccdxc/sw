@@ -17,6 +17,8 @@
 #include "nic/apollo/learn/ep_learn_local.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_thread.hpp"
+#include "nic/apollo/learn/learn.hpp"
+#include "nic/apollo/learn/ep_utils.hpp"
 
 namespace learn {
 
@@ -88,6 +90,87 @@ learn_thread_ipc_cp_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     return;
 }
 
+static bool
+ep_ip_entry_clear_cb (void *entry, void *retcode)
+{
+    ep_ip_entry *ip_entry = (ep_ip_entry *)entry;
+    sdk_ret_t *ret = (sdk_ret_t *)retcode;
+
+    *ret = ip_ageout(ip_entry);
+    if (*ret != SDK_RET_OK) {
+        return true; //stop iterating
+    }
+    return false;
+}
+
+static bool
+ep_mac_entry_clear_cb (void *entry, void *retcode)
+{
+    ep_mac_entry *mac_entry = (ep_mac_entry *)entry;
+    sdk_ret_t *ret = (sdk_ret_t *)retcode;
+
+    mac_entry->walk_ip_list(ep_ip_entry_clear_cb, ret);
+    if (*ret == SDK_RET_OK) {
+        *ret = mac_ageout(mac_entry);
+    }
+    if (*ret != SDK_RET_OK) {
+        return true; //stop iterating
+    }
+    return false;
+}
+
+void
+learn_thread_ipc_clear_cmd_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
+{
+    sdk_ret_t         ret = SDK_RET_OK;
+    ep_mac_entry      *mac_entry;
+    ep_ip_entry       *ip_entry;
+    learn_clear_msg_t *req = (learn_clear_msg_t *)msg->data();
+    ep_mac_key_t      *mac_key = &req->mac_key;
+    ep_ip_key_t       *ip_key = &req->ip_key;
+
+    switch(req->id) {
+    case LEARN_CLEAR_MAC:
+        PDS_TRACE_INFO("received clear request for MAC %s/%s",
+                       macaddr2str(mac_key->mac_addr),
+                       mac_key->subnet.str());
+        mac_entry = (ep_mac_entry *) learn_db()->ep_mac_db()->find(mac_key);
+        if (mac_entry) {
+            // clear all IPs linked to this MAC first
+            mac_entry->walk_ip_list(ep_ip_entry_clear_cb, &ret);
+            if (ret == SDK_RET_OK) {
+                ret = mac_ageout(mac_entry);
+            }
+        } else {
+            ret = SDK_RET_ENTRY_NOT_FOUND;
+        }
+        break;
+    case LEARN_CLEAR_MAC_ALL:
+        PDS_TRACE_INFO("received request to clear all MAC");
+        learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &ret);
+        break;
+    case LEARN_CLEAR_IP:
+        PDS_TRACE_INFO("received clear request for IP %s/%s",
+                       ipaddr2str(&ip_key->ip_addr), ip_key->vpc.str());
+        ip_entry = (ep_ip_entry *)
+                    learn_db()->ep_ip_db()->find(ip_key);
+        if (ip_entry) {
+            ret = ip_ageout(ip_entry);
+        } else {
+            ret = SDK_RET_ENTRY_NOT_FOUND;
+        }
+        break;
+    case LEARN_CLEAR_IP_ALL:
+        PDS_TRACE_INFO("received request to clear all IP");
+        learn_db()->ep_ip_db()->walk(ep_ip_entry_clear_cb, &ret);
+        break;
+    default:
+        ret = SDK_RET_INVALID_OP;
+        break;
+    }
+    sdk::ipc::respond(msg, &ret, sizeof(ret));
+}
+
 void
 learn_thread_init_fn (void *ctxt)
 {
@@ -104,6 +187,9 @@ learn_thread_init_fn (void *ctxt)
     // control plane message handler
     sdk::ipc::reg_request_handler(LEARN_MSG_ID_MAPPING_API,
                                   learn_thread_ipc_cp_cb,
+                                  NULL);
+    sdk::ipc::reg_request_handler(LEARN_MSG_ID_CLEAR_CMD,
+                                  learn_thread_ipc_clear_cmd_cb,
                                   NULL);
 
     // pkt poll timer handler

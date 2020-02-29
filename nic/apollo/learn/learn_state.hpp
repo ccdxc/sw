@@ -104,6 +104,11 @@ public:
     /// \return     pointer to learn counter struct
     learn_counters_t *counters(void) { return &counters_; }
 
+    /// \brief      reset learn counters
+    void reset_counters(void) {
+        memset(&counters_, 0, sizeof(learn_counters_t));
+    }
+
     /// \brief      return configured endpoint age
     /// \return     age in seconds
     uint16_t ep_timeout(void) const { return ep_timeout_secs_; }

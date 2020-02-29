@@ -92,11 +92,10 @@ ep_mac_entry::walk_ip_list(state_walk_cb_t walk_cb, void *ctxt) {
 
     it = this->ip_list_.begin();
     while(it != this->ip_list_.end()) {
-        stop_iter = walk_cb(*it, ctxt);
+        stop_iter = walk_cb(*(it++), ctxt);
         if(stop_iter) {
             break;
         }
-        it++;
     }
 }
 

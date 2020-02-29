@@ -18,6 +18,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
+#include "nic/apollo/learn/ep_aging.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 #include "nic/apollo/learn/utils.hpp"
 
@@ -25,8 +26,58 @@ namespace event = sdk::event_thread;
 
 namespace learn {
 
+sdk_ret_t
+mac_ageout (ep_mac_entry *mac_entry)
+{
+    sdk_ret_t ret;
+    event_t event;
+
+    if (mac_entry->state() != EP_STATE_CREATED) {
+        return SDK_RET_INVALID_OP;
+    }
+    // before MAC entry ages out, all the IP entries must have aged out
+    if (unlikely(mac_entry->ip_count() != 0)) {
+        PDS_TRACE_ERR("Failed to ageout EP %s, IP count %u",
+                      mac_entry->key2str().c_str(), mac_entry->ip_count());
+        return SDK_RET_INVALID_OP;
+    }
+    fill_mac_event(&event, EVENT_ID_MAC_AGE, mac_entry);
+    ret = delete_ep(mac_entry);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
+                      mac_entry->key2str().c_str(), ret);
+        return ret;
+    }
+    broadcast_learn_event(&event);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+ip_ageout (ep_ip_entry *ip_entry)
+{
+    sdk_ret_t    ret;
+    event_t      event;
+    ep_mac_entry *mac_entry = ip_entry->mac_entry();
+
+    if ((ip_entry->state() != EP_STATE_CREATED) &&
+        (ip_entry->state() != EP_STATE_PROBING)) {
+        return SDK_RET_INVALID_OP;
+    }
+    fill_ip_event(&event, EVENT_ID_IP_AGE, ip_entry);
+    ret = delete_ip_from_ep(ip_entry, mac_entry);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    // if this was the last IP on this EP, start MAC aging timer
+    if (mac_entry->ip_count() == 0) {
+        aging_timer_restart(mac_entry->timer());
+    }
+    broadcast_learn_event(&event);
+    return SDK_RET_OK;
+}
+
 static sdk_ret_t
-delete_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
+delete_ip_mapping (ep_ip_entry *ip_entry)
 {
     pds_mapping_key_t mapping_key;
     const ep_ip_key_t *ep_ip_key = ip_entry->key();
@@ -34,7 +85,7 @@ delete_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
     mapping_key.type = PDS_MAPPING_TYPE_L3;
     mapping_key.vpc = ep_ip_key->vpc;
     mapping_key.ip_addr = ep_ip_key->ip_addr ;
-    return api::pds_local_mapping_delete(&mapping_key, bctxt);
+    return api::pds_local_mapping_delete(&mapping_key, PDS_BATCH_CTXT_INVALID);
 }
 
 static sdk_ret_t
@@ -56,11 +107,11 @@ delete_ip_entry (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
 }
 
 sdk_ret_t
-delete_ip_from_ep (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
+delete_ip_from_ep (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
 {
     sdk_ret_t ret;
 
-    ret = delete_ip_mapping(ip_entry, bctxt);
+    ret = delete_ip_mapping(ip_entry);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
                       ip_entry->key2str().c_str(), ret);
@@ -68,37 +119,16 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
     }
 
     PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
-    return delete_ip_entry(ip_entry, ip_entry->mac_entry());
-}
-
-static bool
-delete_ip_mapping_cb (void *obj, void *ctxt)
-{
-    ep_ip_entry *ip_entry = (ep_ip_entry *)obj;
-    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID;
-
-    if (ctxt) {
-        bctxt = *((pds_batch_ctxt_t *)ctxt);
-    }
-    return (delete_ip_mapping(ip_entry, bctxt) == SDK_RET_OK);
-}
-
-static bool
-delete_ip_entry_cb (void *obj, void *ctxt)
-{
-    ep_ip_entry *ip_entry = (ep_ip_entry *)obj;
-    ep_mac_entry *mac_entry = (ep_mac_entry *)ctxt;
-
-    return (delete_ip_entry(ip_entry, mac_entry) == SDK_RET_OK);
+    return delete_ip_entry(ip_entry, mac_entry);
 }
 
 static sdk_ret_t
-delete_vnic (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
+delete_vnic (ep_mac_entry *mac_entry)
 {
     pds_obj_key_t vnic_key;
 
     vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
-    return pds_vnic_delete(&vnic_key, bctxt);
+    return pds_vnic_delete(&vnic_key, PDS_BATCH_CTXT_INVALID);
 }
 
 static sdk_ret_t
@@ -119,40 +149,20 @@ delete_mac_entry (ep_mac_entry *mac_entry)
     return mac_entry->delay_delete();
 }
 
-// note: caller needs to check if it is expected that there be no IPs associated
-// with the EP before deleting it
-// note: if caller provides batch, we commit it here TODO: split delete api into
-// hardware state delete and software state delete, this would help us batch all
-// deletes into a single batch when deleting all endpoints under a subnet
+// note: caller should clear all IPs linked to this MAC
+// before invoking this function.
 sdk_ret_t
-delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
+delete_ep (ep_mac_entry *mac_entry)
 {
     sdk_ret_t ret;
 
-    // delete all IP mappings and then MAC mapping
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        // start a batch so that all IP mappings and vnic can be deleted
-        // together, if successful, then only we will delete sw state
-        // this way, we do not end up with inconsistent hw and sw states
-        pds_batch_params_t batch_params {learn_db()->epoch_next(), false,
-                                         nullptr, nullptr};
-        bctxt = pds_batch_start(&batch_params);
-        if (unlikely(bctxt == PDS_BATCH_CTXT_INVALID)) {
-            PDS_TRACE_ERR("Failed to create api batch");
-            return SDK_RET_ERR;
-        }
-    }
-
-    mac_entry->walk_ip_list(delete_ip_mapping_cb, (void *)&bctxt);
-    ret = delete_vnic(mac_entry, bctxt);
+    ret = delete_vnic(mac_entry);
     if (ret != SDK_RET_OK) {
-        pds_batch_destroy(bctxt);
         PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
 
-    ret = pds_batch_commit(bctxt);
     LEARN_COUNTER_INCR(api_calls);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to commit API batch, error code %u", ret);
@@ -160,9 +170,6 @@ delete_ep (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
         return SDK_RET_ERR;
     }
     PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
-
-    // delete sw state for all IP entries
-    mac_entry->walk_ip_list(delete_ip_entry_cb, mac_entry);
     return delete_mac_entry(mac_entry);
 }
 

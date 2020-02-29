@@ -27,8 +27,6 @@ using namespace sdk::types;
 static void
 mac_aging_cb (event::timer_t *timer)
 {
-    sdk_ret_t ret;
-    event_t event;
     ep_mac_entry *mac_entry = (ep_mac_entry *) timer->ctx;
 
     if (unlikely(mac_entry->state() != EP_STATE_CREATED)) {
@@ -37,30 +35,16 @@ mac_aging_cb (event::timer_t *timer)
                       mac_entry->key2str().c_str(), mac_entry->state());
         return;
     }
-
-    // before MAC entry ages out, all the IP entries must have aged out
-    if (unlikely(mac_entry->ip_count() != 0)) {
-        PDS_TRACE_ERR("Failed to ageout EP %s, IP count %u",
-                      mac_entry->key2str().c_str(), mac_entry->ip_count());
-        return;
+    if (mac_ageout(mac_entry) == SDK_RET_OK) {
+        PDS_TRACE_INFO("MAC aged out successfully for EP %s",
+                       mac_entry->key2str().c_str());
     }
-    PDS_TRACE_INFO("MAC aged out for EP %s", mac_entry->key2str().c_str());
-    fill_mac_event(&event, EVENT_ID_MAC_AGE, mac_entry);
-    ret = delete_ep(mac_entry);
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
-                      mac_entry->key2str().c_str(), ret);
-        return;
-    }
-     broadcast_learn_event(&event);
 }
 
 static void
 ip_aging_cb (event::timer_t *timer)
 {
-    event_t event;
     ep_ip_entry *ip_entry = (ep_ip_entry *) timer->ctx;
-    ep_mac_entry *mac_entry = ip_entry->mac_entry();
 
     if ((ip_entry->state() != EP_STATE_CREATED) &&
         (ip_entry->state() != EP_STATE_PROBING)) {
@@ -74,14 +58,7 @@ ip_aging_cb (event::timer_t *timer)
             // we did not receive reply to ARP probe, despite retries,
             // delete IP mapping
             PDS_TRACE_INFO("IP aged out %s", ip_entry->key2str().c_str());
-            fill_ip_event(&event, EVENT_ID_IP_AGE, ip_entry);
-            if (delete_ip_from_ep(ip_entry) == SDK_RET_OK) {
-                // if this was the last IP on this EP, start MAC aging timer
-                if (mac_entry->ip_count() == 0) {
-                    aging_timer_restart(mac_entry->timer());
-                }
-                broadcast_learn_event(&event);
-            }
+            (void)ip_ageout(ip_entry);
             return;
         }
     } else {

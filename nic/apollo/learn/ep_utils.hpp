@@ -23,13 +23,11 @@ using core::event_t;
 namespace learn {
 
 /// \brief delete IP entry from endpoint
-sdk_ret_t delete_ip_from_ep(ep_ip_entry *ip_entry,
-                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+sdk_ret_t delete_ip_from_ep(ep_ip_entry *ip_entry, ep_mac_entry *mac_entry);
 
 /// \brief delete endpoint
 /// this deletes MAC entry and all associated IP entries of the endpoint
-sdk_ret_t delete_ep(ep_mac_entry *mac_entry,
-                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+sdk_ret_t delete_ep(ep_mac_entry *mac_entry);
 
 /// \brief send ARP probe for associated IP
 void send_arp_probe(ep_ip_entry *ip_entry);
@@ -73,6 +71,9 @@ broadcast_ip_event (event_id_t learn_event, ep_ip_entry *ip_entry)
     fill_ip_event(&event, learn_event, ip_entry);
     broadcast_learn_event(&event);
 }
+
+sdk_ret_t mac_ageout(ep_mac_entry *mac_entry);
+sdk_ret_t ip_ageout(ep_ip_entry *ip_entry);
 
 }    // namespace learn
 

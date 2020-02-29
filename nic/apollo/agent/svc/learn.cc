@@ -15,6 +15,7 @@
 #include "nic/apollo/learn/ep_mac_state.hpp"
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
+#include "nic/apollo/learn/learn.hpp"
 
 using learn::ep_mac_key_t;
 using learn::ep_ip_key_t;
@@ -151,7 +152,7 @@ ep_learn_stats_fill (pds::LearnStatsGetResponse *proto_rsp)
 
 Status
 LearnSvcImpl::LearnMACGet(ServerContext *context,
-                          const ::pds::LearnMACGetRequest* proto_req,
+                          const ::pds::LearnMACRequest* proto_req,
                           pds::LearnMACGetResponse *proto_rsp) {
     sdk_ret_t ret;
     ep_mac_key_t mac_key;
@@ -180,7 +181,7 @@ LearnSvcImpl::LearnMACGet(ServerContext *context,
 
 Status
 LearnSvcImpl::LearnIPGet(ServerContext* context,
-                         const ::pds::LearnIPGetRequest* proto_req,
+                         const ::pds::LearnIPRequest* proto_req,
                          pds::LearnIPGetResponse* proto_rsp) {
     sdk_ret_t ret;
     ep_ip_key_t ip_key;
@@ -215,5 +216,71 @@ LearnSvcImpl::LearnStatsGet(ServerContext* context,
 
     ret = ep_learn_stats_fill(proto_rsp);
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}
+
+Status
+LearnSvcImpl::LearnMACClear(ServerContext *context,
+                            const ::pds::LearnMACRequest* proto_req,
+                            pds::LearnClearResponse *proto_rsp) {
+    sdk_ret_t ret;
+    ep_mac_key_t mac_key;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+
+    if (proto_req->key_size() == 0) {
+        // clear all MACs learnt
+        learn_mac_clear(NULL);
+    } else {
+        for (int i = 0; i < proto_req->key_size(); i++) {
+            pds_learn_mackey_proto_to_api(&mac_key, proto_req->key(i));
+            ret = learn_mac_clear(&mac_key);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            if (ret != SDK_RET_OK) {
+                break;
+            }
+        }
+    }
+    return Status::OK;
+}
+
+Status
+LearnSvcImpl::LearnIPClear(ServerContext* context,
+                           const ::pds::LearnIPRequest* proto_req,
+                           pds::LearnClearResponse* proto_rsp) {
+    sdk_ret_t ret;
+    ep_ip_key_t ip_key;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+
+    if (proto_req->key_size() == 0) {
+        // clear all IPs learnt
+        learn_ip_clear(NULL);
+    } else {
+        for (int i = 0; i < proto_req->key_size(); i++) {
+            pds_learn_ipkey_proto_to_api(&ip_key, proto_req->key(i));
+            ret = learn_ip_clear(&ip_key);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            if (ret != SDK_RET_OK) {
+                break;
+            }
+        }
+    }
+    return Status::OK;
+}
+
+Status
+LearnSvcImpl::LearnStatsClear(ServerContext* context,
+                              const types::Empty* proto_req,
+                              types::Empty* proto_rsp) {
+    //TODO: make it an ipc later, since it is just about counters,
+    // leaving it as a direct function call
+    learn_db()->reset_counters();
     return Status::OK;
 }

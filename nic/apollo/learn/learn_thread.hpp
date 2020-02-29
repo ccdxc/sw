@@ -15,11 +15,6 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/dpdk/dpdk.hpp"
 
-typedef enum learn_msg_id_e {
-    LEARN_MSG_ID_NONE,
-    LEARN_MSG_ID_MAPPING_API,
-} learn_msg_id_t;
-
 namespace event = sdk::event_thread;
 
 namespace learn {

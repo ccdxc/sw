@@ -12,9 +12,12 @@ import "meta/meta.proto";
 import "types.proto";
 
 service LearnSvc {
-  rpc LearnMACGet (LearnMACGetRequest) returns (LearnMACGetResponse) {}
-  rpc LearnIPGet (LearnIPGetRequest) returns (LearnIPGetResponse) {}
+  rpc LearnMACGet (LearnMACRequest) returns (LearnMACGetResponse) {}
+  rpc LearnIPGet (LearnIPRequest) returns (LearnIPGetResponse) {}
   rpc LearnStatsGet (types.Empty) returns (LearnStatsGetResponse) {}
+  rpc LearnMACClear (LearnMACRequest) returns (LearnClearResponse) {}
+  rpc LearnIPClear (LearnIPRequest) returns (LearnClearResponse) {}
+  rpc LearnStatsClear (types.Empty) returns (types.Empty) {}
 }
 
 message LearnIPKey {
@@ -73,11 +76,11 @@ message LearnStats {
   repeated LearnPktDropStats DropStats     = 7;
 }
 
-message LearnMACGetRequest {
+message LearnMACRequest {
   repeated LearnMACKey Key = 1;
 }
 
-message LearnIPGetRequest {
+message LearnIPRequest {
   repeated LearnIPKey Key = 1;
 }
 
@@ -94,4 +97,8 @@ message LearnIPGetResponse {
 message LearnStatsGetResponse {
   types.ApiStatus ApiStatus = 1;
   LearnStats      Stats     = 2;
+}
+
+message LearnClearResponse {
+  types.ApiStatus ApiStatus = 1;
 }

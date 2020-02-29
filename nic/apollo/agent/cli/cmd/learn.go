@@ -8,8 +8,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"reflect"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -26,6 +28,12 @@ var learnShowCmd = &cobra.Command{
 	Use:   "learn",
 	Short: "show learnt endpoint information",
 	Long:  "show learnt endpoint information",
+}
+
+var learnClearCmd = &cobra.Command{
+	Use:   "learn",
+	Short: "clear learnt endpoint information",
+	Long:  "clear learnt endpoint information",
 }
 
 var learnMACShowCmd = &cobra.Command{
@@ -49,15 +57,48 @@ var learnStatsShowCmd = &cobra.Command{
 	Run:   learnStatsShowCmdHandler,
 }
 
+var learnMACClearCmd = &cobra.Command{
+	Use:   "mac",
+	Short: "clear learnt endpoint MAC information",
+	Long:  "clear learnt endpoint MAC information",
+	Run:   learnMACClearCmdHandler,
+}
+
+var learnIPClearCmd = &cobra.Command{
+	Use:   "ip",
+	Short: "clear learnt endpoint IP information",
+	Long:  "clear learnt endpoint IP information",
+	Run:   learnIPClearCmdHandler,
+}
+
+var learnStatsClearCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "clear endpoint learning statistics",
+	Long:  "clear endpoint learning statistics",
+	Run:   learnStatsClearCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(learnShowCmd)
 	learnShowCmd.AddCommand(learnMACShowCmd)
 	learnMACShowCmd.Flags().StringVar(&subnetId, "subnet", "0", "Specify Subnet ID")
 	learnMACShowCmd.Flags().StringVar(&epMAC, "mac", "0", "Specify MAC address")
+	learnMACShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	learnShowCmd.AddCommand(learnIPShowCmd)
 	learnIPShowCmd.Flags().StringVar(&vpcId, "vpc", "0", "Specify VPC ID")
 	learnIPShowCmd.Flags().StringVar(&epIP, "ip", "0", "Specify IP address")
+	learnIPShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	learnShowCmd.AddCommand(learnStatsShowCmd)
+	learnStatsShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	// Clear commands
+	clearCmd.AddCommand(learnClearCmd)
+	learnClearCmd.AddCommand(learnMACClearCmd)
+	learnMACClearCmd.Flags().StringVar(&subnetId, "subnet", "0", "Specify Subnet ID")
+	learnMACClearCmd.Flags().StringVar(&epMAC, "mac", "0", "Specify MAC address")
+	learnClearCmd.AddCommand(learnIPClearCmd)
+	learnIPClearCmd.Flags().StringVar(&vpcId, "vpc", "0", "Specify VPC ID")
+	learnIPClearCmd.Flags().StringVar(&epIP, "ip", "0", "Specify IP address")
+	learnClearCmd.AddCommand(learnStatsClearCmd)
 }
 
 func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -80,10 +121,10 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnMACGetRequest
+	var req	*pds.LearnMACRequest
 	if cmd != nil && cmd.Flags().Changed("mac") && cmd.Flags().Changed("subnet") {
 		// Get specific entry
-		req = &pds.LearnMACGetRequest{
+		req = &pds.LearnMACRequest{
 			Key: []*pds.LearnMACKey{
 				&pds.LearnMACKey{
 					SubnetId: uuid.FromStringOrNil(subnetId).Bytes(),
@@ -94,7 +135,7 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 		detail = true
 	} else {
 		// Get all entries
-		req = &pds.LearnMACGetRequest{
+		req = &pds.LearnMACRequest{
 			Key: []*pds.LearnMACKey{},
 		}
 		detail = false
@@ -114,7 +155,16 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printLearnMAC(resp, detail)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, respData := range resp.Response {
+			respType := reflect.ValueOf(respData)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printLearnMAC(resp, detail)
+	}
 }
 
 func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -136,10 +186,10 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnIPGetRequest
+	var req	*pds.LearnIPRequest
 	if cmd != nil && cmd.Flags().Changed("ip") && cmd.Flags().Changed("vpc") {
 		// Get specific entry
-		req = &pds.LearnIPGetRequest{
+		req = &pds.LearnIPRequest{
 			Key: []*pds.LearnIPKey{
 				&pds.LearnIPKey{
 					VPCId: uuid.FromStringOrNil(vpcId).Bytes(),
@@ -149,7 +199,7 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		// Get all entries
-		req = &pds.LearnIPGetRequest{
+		req = &pds.LearnIPRequest{
 			Key: []*pds.LearnIPKey{},
 		}
 	}
@@ -168,7 +218,16 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printLearnIP(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, respData := range resp.Response {
+			respType := reflect.ValueOf(respData)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printLearnIP(resp)
+	}
 }
 
 func learnStatsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -200,7 +259,146 @@ func learnStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printLearnStats(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp.Stats)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		printLearnStats(resp)
+	}
+}
+
+func learnMACClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd != nil && (cmd.Flags().Changed("subnet") != cmd.Flags().Changed("mac")) {
+		fmt.Printf("Cannot specify only one of Subnet ID and endpoint MAC address\n")
+		return
+	}
+
+	var req	*pds.LearnMACRequest
+	if cmd != nil && cmd.Flags().Changed("mac") && cmd.Flags().Changed("subnet") {
+		// Get specific entry
+		req = &pds.LearnMACRequest{
+			Key: []*pds.LearnMACKey{
+				&pds.LearnMACKey{
+					SubnetId: uuid.FromStringOrNil(subnetId).Bytes(),
+					MACAddr: utils.MACAddrStrToUint64(epMAC),
+				},
+			},
+		}
+	} else {
+		// Clear all entries
+		req = &pds.LearnMACRequest{
+			Key: []*pds.LearnMACKey{},
+		}
+	}
+
+	client := pds.NewLearnSvcClient(c)
+
+	// PDS call
+	resp, err := client.LearnMACClear(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clear learnt MAC(s) failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+	fmt.Printf("Clearing MAC(s) succeeded\n")
+}
+
+func learnIPClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd != nil && (cmd.Flags().Changed("vpc") != cmd.Flags().Changed("ip")) {
+		fmt.Printf("Cannot specify only one of VPC ID and endpoint IP address\n")
+		return
+	}
+
+	var req	*pds.LearnIPRequest
+	if cmd != nil && cmd.Flags().Changed("ip") && cmd.Flags().Changed("vpc") {
+		// Get specific entry
+		req = &pds.LearnIPRequest{
+			Key: []*pds.LearnIPKey{
+				&pds.LearnIPKey{
+					VPCId: uuid.FromStringOrNil(vpcId).Bytes(),
+					IPAddr: utils.IPAddrStrToPDSIPAddr(epIP),
+				},
+			},
+		}
+	} else {
+		// Clear all entries
+		req = &pds.LearnIPRequest{
+			Key: []*pds.LearnIPKey{},
+		}
+	}
+
+	client := pds.NewLearnSvcClient(c)
+
+	// PDS call
+	resp, err := client.LearnIPClear(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Clearing learnt IP(s) failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+	fmt.Printf("Clearing IP(s) succeeded\n")
+}
+
+func learnStatsClearCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	var empty *pds.Empty
+	client := pds.NewLearnSvcClient(c)
+
+	// PDS call
+	_, err = client.LearnStatsClear(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Clearing statistics failed. %v\n", err)
+		return
+	}
+	fmt.Printf("Clearing statistics succeeded\n")
 }
 
 func LearnStateToStr(state pds.EpState) string {
