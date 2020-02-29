@@ -484,9 +484,9 @@ jobd/dol/apulu/lpm: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap --feature lpm --sub v4_overlap
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap --feature lpm --sub v4_full_overlap
 	#priority based jobs
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_adjacent_priority --feature lpm --sub v4_adjacent
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap_priority --feature lpm --sub v4_overlap
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap_priority --feature lpm --sub v4_full_overlap
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_adjacent_priority --feature lpm --sub v4_adjacent
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_overlap_priority --feature lpm --sub v4_overlap
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo lpm_full_overlap_priority --feature lpm --sub v4_full_overlap
 
 .PHONY: jobd/dol/apulu/learn
 jobd/dol/apulu/learn: ${JOBD_PREREQS}
