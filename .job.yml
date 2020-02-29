@@ -329,6 +329,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
   nic/proto:
+    - reference: api
+    - reference: venice/ui
     - reference: iota/test/standalone/sanity/esx
   nic/sdk:
     - reference: iota/test/standalone/sanity/linux
