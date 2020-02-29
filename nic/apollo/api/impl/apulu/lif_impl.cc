@@ -125,7 +125,6 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     nacl_actiondata_t data;
     uint32_t idx, nacl_idx;
     static uint32_t oob_lif = 0;
-    nexthop_actiondata_t nh_data = { 0 };
     nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
@@ -144,7 +143,13 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
     nexthop_info_entry.port =
             g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
-    nexthop_info_entry.write(nh_idx_);
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
+                      "at idx %u", key_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
 
     // cap ARP packets from oob lif(s) to 256 pps
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
@@ -206,13 +211,13 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "lif %u, err %u", id_, ret);
         return ret;
     }
+
     // program the nexthop for uplink to ARM traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = id_;
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.lif = id_;
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
                       "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -240,9 +245,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
-                    nh_idx_, nh_data.nexthop_info.lif,
-                    //nh_idx_ + 1, nh_data.nexthop_info.lif,
-                    nh_data.nexthop_info.port);
+                    nh_idx_, nexthop_info_entry.lif,
+                    //nh_idx_ + 1, nexthop_info_entry.lif,
+                    nexthop_info_entry.port);
 
     // allocate vnic h/w id for this lif
     if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
@@ -279,8 +284,8 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     static uint32_t inb_lif = 0;
     uint32_t idx, nacl_idx, tm_port;
     lif_actiondata_t lif_data = { 0 };
-    nexthop_actiondata_t nh_data = { 0 };
     p4i_device_info_actiondata_t p4i_device_info_data;
+    nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating inband lif %s", name_);
@@ -294,12 +299,11 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for ARM to uplink traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    tm_port = nh_data.nexthop_info.port =
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    tm_port = nexthop_info_entry.port =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for inb lif %u at "
                       "idx %u", key_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -359,8 +363,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
-                    nh_data.nexthop_info.lif, nh_data.nexthop_info.port);
-
+                    nexthop_info_entry.lif, nexthop_info_entry.port);
 
     // TODO: clean this up once block indexer is fixed
     // allocate required nexthops
@@ -372,14 +375,13 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for uplink to ARM traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = id_;
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.lif = id_;
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for oob lif %u "
-                      "at idx %u", id_, nh_idx_); //nh_idx_ + 1);
+                      "at idx %u", key_, nh_idx_); //nh_idx_ + 1);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     }
@@ -407,9 +409,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
-                    nh_idx_, nh_data.nexthop_info.lif,
-                    //nh_idx_ + 1, nh_data.nexthop_info.lif,
-                    nh_data.nexthop_info.port);
+                    nh_idx_, nexthop_info_entry.lif,
+                    //nh_idx_ + 1, nexthop_info_entry.lif,
+                    nexthop_info_entry.port);
 
     // program the device info table with the MAC of this lif by
     // doing read-modify-write
@@ -467,7 +469,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t dplif = 0;
-    nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating s/w datapath lif %s", name_);
@@ -480,12 +482,11 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = id_;
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.lif = id_;
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for datapath lif %u "
                       "at idx %u", id_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -764,9 +765,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask = { 0 };
     nacl_actiondata_t data =  { 0 };
     static uint32_t hmlif = 0, imlif = 0;
-    nexthop_actiondata_t nh_data = { 0 };
     lif_internal_mgmt_ctx_t cb_ctx = { 0 };
     lif_impl *host_mgmt_lif = NULL, *int_mgmt_lif = NULL;
+    nexthop_info_entry_t nexthop_info_entry;
 
     if (spec->type == sdk::platform::LIF_TYPE_HOST_MGMT) {
         strncpy(name_, spec->name, sizeof(name_));
@@ -798,12 +799,11 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for host mgmt. lif to internal mgmt. lif traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = int_mgmt_lif->id();
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.lif = int_mgmt_lif->id();
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for host mgmt. lif %u "
                       "to internal mgmt. lif %u traffic at idx %u",
                       host_mgmt_lif->id(), int_mgmt_lif->id(), nh_idx_);
@@ -838,12 +838,10 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for internal mgmt. lif to host mgmt. lif traffic
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = host_mgmt_lif->id();
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_, //nh_idx_ + 1,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    nexthop_info_entry.lif = host_mgmt_lif->id();
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for internal mgmt. "
                       "lif %u to host mgmt. lif %u traffic at idx %u",
                       int_mgmt_lif->id(), host_mgmt_lif->id(),
@@ -949,8 +947,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
-    nexthop_actiondata_t nh_data = { 0 };
     uint32_t idx, nacl_idx = PDS_IMPL_NACL_BLOCK_LEARN_MIN;
+    nexthop_info_entry_t nexthop_info_entry;
 
     strncpy(name_, spec->name, sizeof(name_));
     PDS_TRACE_DEBUG("Creating learn lif %s", name_);
@@ -963,12 +961,11 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-    nh_data.nexthop_info.lif = id_;
-    nh_data.nexthop_info.port = TM_PORT_DMA;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    nexthop_info_entry.lif = id_;
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for learn lif %u "
                       "at idx %u", id_, nh_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;

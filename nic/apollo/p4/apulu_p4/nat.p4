@@ -96,6 +96,7 @@ action nat2_rewrite(ip, port) {
 @pragma stage 1
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table nat {
     reads {
         rewrite_metadata.xlate_id   : exact;

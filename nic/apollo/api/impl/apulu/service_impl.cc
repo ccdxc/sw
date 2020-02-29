@@ -22,6 +22,7 @@
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -223,16 +224,16 @@ sdk_ret_t
 svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
-    nat_actiondata_t nat_data = { 0 };
+    nat_rewrite_entry_t nat_data;
+    sdk_ret_t ret;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
     // add an entry for (PIP, PIP port) -> (VIP, VIP port) xlation
     PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->vip,
                            spec->svc_port ?
                                spec->svc_port : spec->key.backend_port);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT, to_vip_nat_idx_,
-                                       NULL, NULL, &nat_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nat_data.write(to_vip_nat_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for "
                       "(PIP %s, PIP port %u) -> (VIP %s, svc port %u) xlation",
                       to_vip_nat_idx_, ipaddr2str(&spec->key.backend_ip),
@@ -247,12 +248,13 @@ sdk_ret_t
 svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
-    nat_actiondata_t nat_data = { 0 };
+    nat_rewrite_entry_t nat_data;
+    sdk_ret_t ret;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT, to_vip_nat_idx_,
-                                       NULL, NULL, &nat_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+    ret = nat_data.write(to_vip_nat_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to cleanup NAT table entry %u for "
                       "(PIP %s, PIP port %u) -> (VIP %s, svc port %u) xlation",
                       to_vip_nat_idx_, ipaddr2str(&spec->key.backend_ip),
@@ -311,7 +313,7 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
     p4pd_error_t p4pd_ret;
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
-    nat_actiondata_t nat_data = { 0 };
+    nat_rewrite_entry_t nat_data;
 
     // update the service mapping xlation idx to PDS_IMPL_RSVD_NAT_HW_ID to
     // disable NAT
@@ -381,7 +383,7 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
     sdk_table_api_params_t tparams;
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
-    nat_actiondata_t nat_data;
+    nat_rewrite_entry_t nat_data = { 0 };
     pds_svc_mapping_key_t *key = &spec->key;
 
     vpc = vpc_db()->find(&key->vpc);
@@ -410,9 +412,8 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT, xlate_idx, NULL, NULL,
-                                      &nat_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nat_data.read(xlate_idx);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read NAT table entry %u for "
                       "svc-(%s, %s:%u) xlation",
                       xlate_idx, vpc->key().str(), ipaddr2str(&key->backend_ip),
@@ -421,8 +422,8 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
     }
 
     // copy out the data to the spec
-    P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, spec->vip, key->backend_ip.af);
-    spec->svc_port = nat_data.nat_action.port;
+    P4_IPADDR_TO_IPADDR(nat_data.ip, spec->vip, key->backend_ip.af);
+    spec->svc_port = nat_data.port;
     memcpy(&spec->backend_provider_ip, &key->backend_ip, sizeof(ip_addr_t));
 
     return SDK_RET_OK;

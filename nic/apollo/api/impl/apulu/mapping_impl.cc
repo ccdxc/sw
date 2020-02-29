@@ -27,6 +27,7 @@
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -88,7 +89,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     device_entry *device;
     pds_obj_key_t vpc_key;
     p4pd_error_t p4pd_ret;
-    nat_actiondata_t nat_data;
+    nat_rewrite_entry_t nat_data;
     mapping_swkey_t mapping_key;
     bool public_ip_valid = false;
     sdk_table_api_params_t tparams;
@@ -153,15 +154,14 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
 
     // if public mapping exists, NAT table provides the public IP
     if (public_ip_valid) {
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT,
-                                          local_mapping_data.xlate_id,
-                                          NULL, NULL, &nat_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+        ret = nat_data.read(local_mapping_data.xlate_id);
+        if (ret != SDK_RET_OK) {
             return NULL;
         }
 
         // read public ip from NAT data
-        P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, public_ip, key->ip_addr.af);
+        P4_IPADDR_TO_IPADDR(nat_data.ip, public_ip, key->ip_addr.af);
 
         // read local mapping for pub ip to get it's xlate index
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
@@ -534,13 +534,12 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
                                pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
-    nat_actiondata_t nat_data = { 0 };
+    nat_rewrite_entry_t nat_data;
 
     // add private to public IP xlation NAT entry
     PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->public_ip, 0);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT, to_public_ip_nat_idx_,
-                                       NULL, NULL, &nat_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nat_data.write(to_public_ip_nat_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for overlay IP "
                       "to public IP xlation for mapping %s)",
                       to_public_ip_nat_idx_, mapping->key2str().c_str());
@@ -549,9 +548,8 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
 
     // add public to private/overlay IP xlation NAT entry
     PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->skey.ip_addr, 0);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT, to_overlay_ip_nat_idx_,
-                                       NULL, NULL, &nat_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nat_data.write(to_overlay_ip_nat_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for public IP "
                       "to overlay IP xlation for mapping (vpc %u, ip %s)",
                       to_overlay_ip_nat_idx_, mapping->key2str().c_str());
@@ -975,7 +973,7 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     local_mapping_swkey_t   local_mapping_key;
     local_mapping_appdata_t local_mapping_data;
     sdk_table_api_params_t  tparams;
-    nat_actiondata_t        nat_data;
+    nat_rewrite_entry_t     nat_data;
     pds_mapping_spec_t      *spec = &info->spec;
     pds_mapping_status_t    *status = &info->status;
     p4pd_error_t            p4pd_ret;
@@ -1000,14 +998,13 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     status->vnic_hw_id = local_mapping_data.vnic_id;
 
     if (local_mapping_data.xlate_id != PDS_IMPL_RSVD_NAT_HW_ID) {
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NAT,
-                                          local_mapping_data.xlate_id, NULL,
-                                          NULL, &nat_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+        ret = nat_data.read(local_mapping_data.xlate_id);
+        if (ret != SDK_RET_OK) {
             return sdk::SDK_RET_HW_READ_ERR;
         }
         spec->public_ip_valid = true;
-        P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, spec->public_ip,
+        P4_IPADDR_TO_IPADDR(nat_data.ip, spec->public_ip,
                             spec->skey.ip_addr.af);
     }
     // TODO: tag support
@@ -1022,7 +1019,7 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     vpc_entry *vpc;
     subnet_entry *subnet;
     pds_obj_key_t vpc_key;
-    nat_actiondata_t nat_data = { 0 };
+    nat_rewrite_entry_t nat_data;
     pds_mapping_key_t *mkey = (pds_mapping_key_t *)key;
     pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;
     mapping_entry *mapping = (mapping_entry *)api_obj;

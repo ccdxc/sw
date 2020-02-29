@@ -124,6 +124,7 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#include "nic/sdk/lib/p4/p4_utils.hpp"
 //::
 //::     k_d_action_data_json = {}
 //::     k_d_action_data_json['INGRESS_KD'] = {}
@@ -221,6 +222,13 @@
 //::                _start_kd_bit = 8
 //::            #endif
 //::        #endif
+//::
+//::        # generate action as part of struct if there is more than 1 action
+//::        gen_actionid = False
+//::        if (len(pddict['tables'][table]['actions']) > 1):
+//::            gen_actionid = True
+//::        #endif
+//::
 //::        for action in pddict['tables'][table]['actions']:
 //::            data_fields_list = []
 //::            data_fields_dict = {}
@@ -531,8 +539,10 @@
 //::                if is_table_gen_key(table, pddict):
 struct __attribute__((__packed__)) ${struct_name}_key_entry_t {
 //::                    for key_field in reversed(key_fields_list):
-//::                        ftl_field_str = ftl_process_field(key_field)
+//::                        ftl_field_str_list = ftl_process_field(key_field)
+//::                        for ftl_field_str in ftl_field_str_list:
     ${ftl_field_str}
+//::                        #endfor
 //::                    #endfor
 };
 //::                #endif
@@ -546,16 +556,24 @@ struct __attribute__((__packed__)) ${struct_full_name} {
 //::                else:
 struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
 //::                #endif
+//::                if gen_actionid == True:
+//::                #TODO use define for actionid type
+    uint8_t actionid:P4PD_ACTIONPC_BITS;
+//::                #endif
 //::                for data_field in reversed(data_fields_list):
 //::                    # TODO remove once key is expanded for Apollo
 //::                    if data_field.name() == '__pad_key_bits':
 //::                        for key_field in reversed(key_fields_list):
-//::                            ftl_field_str = ftl_process_field(key_field)
+//::                            ftl_field_str_list = ftl_process_field(key_field)
+//::                            for ftl_field_str in ftl_field_str_list:
     ${ftl_field_str}
+//::                            #endfor
 //::                        #endfor
 //::                    else:
-//::                        ftl_field_str = ftl_process_field(data_field)
+//::                        ftl_field_str_list = ftl_process_field(data_field)
+//::                        for ftl_field_str in ftl_field_str_list:
     ${ftl_field_str}
+//::                        #endfor
 //::                    #endif
 //::                #endfor
 
@@ -645,6 +663,19 @@ public:
         sdk::asic::pd::asicpd_hbm_table_entry_write(
                     ${tableid}, index, (uint8_t *)this, entry_size_bits());
 //::                #endif
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t read(uint32_t index) {
+        uint16_t entry_size_;
+
+//::                # hbm table writes
+//::                if is_table_hbm_table(table, pddict):
+        sdk::asic::pd::asicpd_hbm_table_entry_read(
+                    ${tableid}, index, (uint8_t *)this, &entry_size_);
+//::                #endif
+        // swizzle the hwentry
+        sdk::lib::swizzle(this, entry_size());
         return SDK_RET_OK;
     }
 //::                else:
@@ -976,6 +1007,12 @@ public:
 //::                # SETTER METHODS
 //::                ######################################
 //::
+//::                if gen_actionid == True:
+    void set_actionid(uint8_t actionid_) {
+        actionid = actionid_;
+    }
+//::                #endif
+//::
 //::                # To set fields if they are split
 //::                split_field_dict = {}
 //::                if is_table_gen_key(table, pddict) and pipeline != 'iris':
@@ -1017,6 +1054,12 @@ public:
 //::                ######################################
 //::                # GETTER METHODS
 //::                ######################################
+//::
+//::                if gen_actionid == True:
+    uint8_t get_actionid(void) {
+        return actionid;
+    }
+//::                #endif
 //::
 //::                # To get fields if they are split
 //::                split_field_dict = {}

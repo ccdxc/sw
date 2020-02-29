@@ -119,15 +119,14 @@ namespace impl {
 #define PDS_IMPL_FILL_NAT_DATA(data, xlate_ip, xlate_port)                   \
 {                                                                            \
     memset((data), 0, sizeof(*(data)));                                      \
-    (data)->action_id = NAT_NAT_REWRITE_ID;                                  \
     if ((xlate_ip)->af == IP_AF_IPV6) {                                      \
-        sdk::lib::memrev((data)->nat_action.ip,                              \
+        sdk::lib::memrev((data)->ip,                                         \
                          (xlate_ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);     \
     } else {                                                                 \
-        memcpy((data)->nat_action.ip, &(xlate_ip)->addr.v4_addr,             \
+        memcpy((data)->ip, &(xlate_ip)->addr.v4_addr,                        \
                IP4_ADDR8_LEN);                                               \
     }                                                                        \
-    (data)->nat_action.port = (xlate_port);                                  \
+    (data)->port = (xlate_port);                                             \
 }
 
 static inline void

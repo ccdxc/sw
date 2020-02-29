@@ -78,7 +78,7 @@ def is_table_pad_256(table, pipeline):
         return True
 
     # TODO nexthop and session_track is 256 bits in Apulu
-    if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table)):
+    if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table) or 'nat' in str(table)):
         return True
 
     return False
@@ -201,6 +201,12 @@ def next_pow_2(num):
         i += 1
     return (1 << i)
 
+def validate_field_width_arr(field_name, field_width):
+    # if the field width (in bits) is not a multiple of 8 (bits),
+    # then creating uint8_t array needs special handling
+    if field_width % get_field_bit_arr_unit() != 0:
+        raise Exception('field ' + field_name + ' width ' + str(field_width) + ' not multiple of '+ str(get_field_bit_arr_unit()))
+
 set_field_template_1 = Template(
 """\
 ${field_name} = (${field_arg} >> ${shift}) & ${mask_str};\
@@ -294,6 +300,7 @@ class Field:
                 field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
+                validate_field_width_arr(field_name, field_width)
                 arr_len = get_bit_arr_length(field_width)
                 if field_arg != '0':
                     field_str_list.append(set_field_template_2.substitute(field_name=field_name, field_arg=field_arg, arr_len=arr_len))
@@ -325,6 +332,7 @@ class Field:
                 field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
+                validate_field_width_arr(field_name, field_width)
                 arr_len = get_bit_arr_length(field_width)
                 field_str_list.append(get_field_template_2.substitute(field_name=field_name, field_arg=field_arg, arr_len=arr_len))
             else:
@@ -373,6 +381,7 @@ def ftl_field_print_str(field_obj):
     field_width = field_obj.width()
     if field_width > get_field_bit_unit():
         args_list = []
+        validate_field_width_arr(field_name, field_width)
         arr_len = get_bit_arr_length(field_width)
         for i in range(0, arr_len):
             args_list.append(field_name + '[' + str(i) + ']')
@@ -423,12 +432,22 @@ def ftl_process_field(field_obj):
     field_name = field_obj.name()
     field_width = field_obj.width()
     little_str = field_obj.little_str()
+    field_bit_arr_unit = get_field_bit_arr_unit()
+    field_str_list = []
     if field_width > get_field_bit_unit():
-        field_str  = "uint" + str(get_field_bit_arr_unit()) + "_t " + field_name + "[" + str(get_bit_arr_length(field_width)) + "];"
+        # if the width is not aligned to array unit, align it to previous
+        # boundary and generate new field with the remaining bits
+        if field_width % field_bit_arr_unit != 0:
+            field_width_aligned = (field_width/field_bit_arr_unit) * field_bit_arr_unit
+            remaining_bits = field_width - field_width_aligned
+            field_str_list.append("uint" + str(field_bit_arr_unit) + "_t " + field_name + "[" + str(get_bit_arr_length(field_width_aligned)) + "];")
+            field_str_list.append("uint" + str(get_field_bit_arr_unit()) + "_t " + field_name + "_align" + " : " + str(remaining_bits) + ";")
+        else:
+            field_str_list.append("uint" + str(field_bit_arr_unit) + "_t " + field_name + "[" + str(get_bit_arr_length(field_width)) + "];")
     else:
         width = str(field_width) + little_str
-        field_str = "uint" + str(get_field_bit_unit()) + "_t " + field_name + " : " + width + ";"
-    return field_str
+        field_str_list.append("uint" + str(get_field_bit_unit()) + "_t " + field_name + " : " + width + ";")
+    return field_str_list
 
 ftl_table_template_hpp = Template(
 """\
