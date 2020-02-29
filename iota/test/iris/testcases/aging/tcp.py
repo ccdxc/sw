@@ -9,23 +9,66 @@ TCP_TICKLE_GAP = 15
 NUM_TICKLES = 4 
 GRACE_TIME = 70 
 
-def Setup(tc):
-    return api.types.status.SUCCESS
+def addPktFltrRuleOnEp(tc, enable=True):
+    '''
+    On endpoint, DROP rule is installed to prevent TCP RST
+    response to TCP SYN packets.
+    '''
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    for w in [tc.client, tc.server]:
+        if w == None:
+            continue
+        api.Trigger_AddCommand(req, w.node_name, w.workload_name,
+                               "iptables -%s INPUT -p tcp -i eth1 -j DROP"%
+                               ("A" if enable else "D"))
 
-def Trigger(tc):
-    if tc.args.type == 'local_only':
-        pairs = api.GetLocalWorkloadPairs()
-    else:
-        pairs = api.GetRemoteWorkloadPairs()
-    tc.cmd_cookies = []
-    server,client  = pairs[0]
+    trig_resp = api.Trigger(req)
+    result = 0
+    for cmd in trig_resp.commands:
+        api.PrintCommandResults(cmd)
+        result |= cmd.exit_code
+
+    return False if result else True
+
+def chooseNaples(tc, pair):
+    server,client  = pair
     naples = server
     if not server.IsNaples():
        naples = client
        if not client.IsNaples():
-          return api.types.status.SUCCESS
+           api.Logger.error("Neither server not client is behind Naples")
+           return api.types.status.FAIL
        else:
-          client, server = pairs[0]
+           client, server = pairs[0]
+
+    tc.client, tc.server, tc.naples = client, server, naples
+    return api.types.status.SUCCESS
+
+def Setup(tc):
+    tc.client, tc.server, tc.naples = None, None, None
+
+    if tc.args.type == 'local_only':
+        pairs = api.GetLocalWorkloadPairs(naples=True)
+    else:
+        pairs = api.GetRemoteWorkloadPairs()
+
+    if len(pairs) == 0:
+        api.Logger.error("Failed to get client server pair")
+        return api.types.status.FAIL
+
+    ret = chooseNaples(tc, pairs[0])
+    if ret != api.types.status.SUCCESS:
+        return ret
+
+    if not addPktFltrRuleOnEp(tc):
+        api.Logger.error("Failed to add packet filter on EP")
+        return api.types.status.FAIL
+
+    return api.types.status.SUCCESS
+
+def Trigger(tc):
+    tc.cmd_cookies = []
+    client, server, naples = tc.client, tc.server, tc.naples
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd_cookie = "%s(%s) --> %s(%s)" %\
@@ -56,14 +99,15 @@ def Trigger(tc):
 
     server_port = api.AllocateTcpPort() 
     client_port = api.AllocateTcpPort()
-    cmd_cookie = "start server"
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "nc -l %s" % (server_port), background = True)
-    tc.cmd_cookies.append(cmd_cookie)
 
-    cmd_cookie = "Send SYN"
+    cmd_cookie = "Send SYN from client"
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "hping3 -c 1 -s %s -p %s -M 0 -L 0 -S %s" % (client_port, server_port, server.ip_address))
+    tc.cmd_cookies.append(cmd_cookie)
+
+    cmd_cookie = "Send SYN, ACK and SEQ from server"
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "hping3 -c 1 -s %s -p %s -M 0 -A -L 1 -S %s" % (server_port, client_port, client.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
     #Get Seq + Ack
@@ -94,6 +138,8 @@ def Trigger(tc):
         timeout += get_timeout('tcp-close') + (TCP_TICKLE_GAP * NUM_TICKLES) + GRACE_TIME
     else:
         timeout += GRACE_TIME
+
+    api.Logger.info("Sleeping for %s sec... "%timeout)
     cmd_cookie = "sleep"
     api.Trigger_AddNaplesCommand(req2, naples.node_name, "sleep %s" % timeout, timeout=300)
     tc.cmd_cookies.append(cmd_cookie)
@@ -159,4 +205,5 @@ def Verify(tc):
     return result
 
 def Teardown(tc):
+    addPktFltrRuleOnEp(tc,False)
     return api.types.status.SUCCESS
