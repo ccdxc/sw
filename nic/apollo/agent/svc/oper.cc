@@ -29,7 +29,6 @@ get_command (std::string base)
     time_t current_time = time(NULL);
 
     strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", gmtime(&current_time));
-    
     snprintf(filename, PATH_MAX, "/nic/bin/techsupport "
              "-c /sw/nic/conf/apulu/techsupport.json "
              "-d /%s/ -o tech-support-%s.gz", base.c_str(), timestring);
@@ -38,47 +37,19 @@ get_command (std::string base)
 }
 
 Status
-OperSvcImpl::TechSupportStart(ServerContext *context,
-                              const TechSupportRequest *req,
-                              TechSupportResponse *rsp) {
+OperSvcImpl::TechSupportCollect(ServerContext *context,
+                                const TechSupportRequest *req,
+                                TechSupportResponse *rsp) {
     int rc;
     auto tsrsp = rsp->mutable_response();
 
-    if (!req->request().has_dst() ||
-        req->request().dst().path() == "") {
-
-        rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
-    }
-    rc = system(get_command(req->request().dst().path()).c_str());
+    auto filename = get_command("/data/techsupport");
+    rc = system(filename.c_str());
     if (rc == -1) {
-        tsrsp->set_jobstatus(
-            pds::TechSupportStatus::TECHSUPPORT_STATUS_UNKNOWN);
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
     } else {
-        tsrsp->set_jobstatus(
-            pds::TechSupportStatus::TECHSUPPORT_STATUS_COMPLETED);
+        tsrsp->set_filepath(filename);
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     }
-
-    rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-    return Status::OK;
-}
-
-Status
-OperSvcImpl::TechSupportStop(ServerContext *context,
-                             const Empty *req,
-                             TechSupportResponse *rsp) {
-    rsp->mutable_response()->set_jobstatus(
-        pds::TechSupportStatus::TECHSUPPORT_STATUS_UNKNOWN);
-    rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-    return Status::OK;
-}
-
-Status
-OperSvcImpl::TechSupportGet(ServerContext *context,
-                            const Empty *req,
-                            TechSupportResponse *rsp) {
-    rsp->mutable_response()->set_jobstatus(
-        pds::TechSupportStatus::TECHSUPPORT_STATUS_UNKNOWN);
-    rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
     return Status::OK;
 }

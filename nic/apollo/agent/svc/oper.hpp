@@ -18,15 +18,9 @@ using pds::TechSupportResponse;
 
 class OperSvcImpl final : public OperSvc::Service {
 public:
-    Status TechSupportStart(ServerContext* context,
-                            const TechSupportRequest *req,
-                            TechSupportResponse* rsp) override;
-    Status TechSupportStop(ServerContext *context,
-                           const Empty *req,
-                           TechSupportResponse *rsp) override;
-    Status TechSupportGet(ServerContext *context,
-                          const Empty *req,
-                          TechSupportResponse *rsp) override;
+    Status TechSupportCollect(ServerContext* context,
+                              const TechSupportRequest *req,
+                              TechSupportResponse* rsp) override;
 };
-    
+
 #endif // __AGENT_SVC_OPER_HPP__

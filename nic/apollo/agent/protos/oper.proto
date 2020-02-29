@@ -17,15 +17,10 @@ service OperSvc {
   // information includes trace files from various components, syslogs, core
   // files, output of various debug commands etc.
 
-  // TechSupportStart initiates a new techsupport information collection
+  // TechSupportCollect initiates a new techsupport information collection
   // NOTE: This API will fail, if there is already one pending request in
   //       progress
-  rpc TechSupportStart (TechSupportRequest) returns (TechSupportResponse) {}
-  // TechSupportStop aborts the ongoing TechSupportRequest, if any
-  rpc TechSupportStop (types.Empty) returns (TechSupportResponse) {}
-  // TechSupportGet returns the status of the previously issued
-  // TechSupportRequest, if any
-  rpc TechSupportGet (types.Empty) returns (TechSupportResponse) {}
+  rpc TechSupportCollect (TechSupportRequest) returns (TechSupportResponse) {}
 }
 
 // TechSupportSpec defines the confiugration of the techsupport objet
@@ -36,8 +31,6 @@ message TechSupportSpec {
       DST_PROTOCOL_NONE  = 0;
       DST_PROTOCOL_LOCAL = 1;
     }
-    // destination directory to place the gzipped techsupport file
-    string Path = 1;
   }
   // techsupport result file destination
   DestinationSpec Dst       = 1;
@@ -48,15 +41,8 @@ message TechSupportSpec {
 
 // TechSupportStatus captures the current status of the techsupport job
 message TechSupportStatus {
-  enum Status {
-    TECHSUPPORT_STATUS_NONE        = 0;  // error condition
-    TECHSUPPORT_STATUS_IN_PROGRESS = 1;  // indicates that job is in progress
-    TECHSUPPORT_STATUS_FAILED      = 2;  // indicates that job has failed
-    TECHSUPPORT_STATUS_COMPLETED   = 3;  // indicates that job has completed
-    TECHSUPPORT_STATUS_UNKNOWN     = 4;  // used when abort/get request is
-                                         // without starting the job 1st
-  }
-  Status JobStatus = 1;
+  // full path of the gzipped techsupport file created, if successful
+  string FilePath  = 1;
 }
 
 // TechSupportStats contains stats related to techsupport
@@ -80,6 +66,7 @@ message TechSupportRequest {
 
 // TechSupport create response
 message TechSupportResponse {
+  // success or failure status
   types.ApiStatus   ApiStatus = 1;
   TechSupportStatus Response  = 2;
 }
