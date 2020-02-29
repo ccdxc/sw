@@ -97,8 +97,6 @@ parser.add_argument('--no-mgmt', dest='no_mgmt',
                     action='store_true', help='Do not ping test mgmt interface on host')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
                     default="", help='Mnic IP.')
-parser.add_argument('--oob-ip', dest='oob_ip',
-                    default=None, help='Oob IP.')
 parser.add_argument('--mgmt-intf', dest='mgmt_intf',
                     default="oob_mnic0", help='Management Interface (oob_mnic0 or bond0).')
 parser.add_argument('--naples-mem-size', dest='mem_size',
@@ -113,8 +111,8 @@ parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Only use gold firmware')
 parser.add_argument('--fast-upgrade', dest='fast_upgrade',
                     action='store_true', help='update firmware only')
-parser.add_argument('--skip-dhcp', dest='skip_dhcp', action='store_true',
-                    help='Skip dhclient step', default=False)
+parser.add_argument('--auto-discover-on-install', dest='auto_discover',
+                    action='store_true', help='On install do auto discovery')
 
 
 GlobalOptions = parser.parse_args()
@@ -546,10 +544,12 @@ class NaplesManagement(EntityManagement):
 
     def InstallPrep(self):
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0", "#")
+        self.SendlineExpect("mount -t ext4 /dev/mmcblk0p7 /sysconfig/config1", "#")
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p10 /data", "#")
         self.CleanUpOldFiles()
         self.SetUpInitFiles()
         self.SendlineExpect("umount /sysconfig/config0", "#")
+        self.SendlineExpect("umount /sysconfig/config1", "#")
         self.SendlineExpect("umount /data", "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
@@ -615,8 +615,7 @@ class NaplesManagement(EntityManagement):
 
 
     def ReadExternalIP(self):
-        if not GlobalOptions.skip_dhcp:
-            self.__run_dhclient()
+        self.__run_dhclient()
         output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         x = re.findall(ifconfig_regexp, output)
@@ -627,13 +626,19 @@ class NaplesManagement(EntityManagement):
 
     #if oob is not available read internal IP
     def ReadInternalIP(self):
-        output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
-        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-        x = re.findall(ifconfig_regexp, output)
-        if len(x) > 0:
-            self.ipaddr = x[0]
-            print("Read internal IP {0}".format(self.ipaddr))
-            self.SSHPassInit()
+        for _ in range(3):
+            output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
+            ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+            x = re.findall(ifconfig_regexp, output)
+            if len(x) > 0:
+                self.ipaddr = x[0]
+                print("Read internal IP {0}".format(self.ipaddr))
+                self.SSHPassInit()
+                return
+            else:
+                print("Did not Read Internal IP  {0}".format(self.ipaddr))
+        raise Exception("Not able read internal IP")
+
 
     def __read_mac(self):
         if self.mac_addr != None:
@@ -715,6 +720,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config1/*.conf", "#")
         self.SendlineExpect("rm -f /sysconfig/config0/clusterTrustRoots.pem", "#")
+        self.SendlineExpect("rm -f /sysconfig/config1/clusterTrustRoots.pem", "#")
         self.SendlineExpect("rm -f /sysconfig/config0/frequency.json", "#")
 
         self.SendlineExpect("rm -rf /data/log && sync", "#")
@@ -866,11 +872,13 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
         self.RunNaplesCmd("mkdir -p /data && sync")
         self.RunNaplesCmd("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0")
+        self.RunNaplesCmd("mount -t ext4 /dev/mmcblk0p7 /sysconfig/config1")
         #Clean up old files as we are starting fresh.
         self.CleanUpOldFiles()
         self.SetUpInitFiles()
         #unmount
         self.RunNaplesCmd("umount /sysconfig/config0")
+        self.RunNaplesCmd("umount /sysconfig/config1")
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
@@ -910,6 +918,7 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("rm -rf /sysconfig/config1/*.db")
         self.RunNaplesCmd("rm -rf /sysconfig/config1/*.conf")
         self.RunNaplesCmd("rm -f /sysconfig/config0/clusterTrustRoots.pem")
+        self.RunNaplesCmd("rm -f /sysconfig/config1/clusterTrustRoots.pem")
         self.RunNaplesCmd("rm -f /sysconfig/config0/frequency.json")
 
         self.RunNaplesCmd("rm -rf /data/log && sync")
@@ -1236,6 +1245,11 @@ def Main():
             #need to unload driver as host might crash in ESX case.
             #unloading of driver should not fail, else reset to goldfw
             host.UnloadDriver()
+
+            #If Interal IP read fails, force switch
+            naples.ReadInternalIP()
+            #Read External IP to try oob path first
+            naples.ReadExternalIP()
         except:
             #Do force reset to switch to gold fw
             naples.ForceSwitchToGoldFW()
@@ -1278,9 +1292,14 @@ def Main():
         naples.Reboot()
     else:
         naples.ReadInternalIP()
-        naples.InitForUpgrade(goldfw = True)
-        host.InitForUpgrade()
-        host.Reboot()
+        if fwType != FIRMWARE_TYPE_GOLD:
+            naples.InitForUpgrade(goldfw = True)
+            host.InitForUpgrade()
+            if GlobalOptions.no_mgmt:
+                #If non mgmt, do ipmi reset to make sure we reboot
+                naples.IpmiResetAndWait()
+            else:
+                host.Reboot()
         naples.Close()
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
         host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
@@ -1305,7 +1324,7 @@ def Main():
 
     #Naples would have rebooted to, login again.
     time.sleep(60)
-    naples.Connect()
+    naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
 
     # Common to Case 2 and Case 1.
     # Initialize the Node, this is needed in all cases.

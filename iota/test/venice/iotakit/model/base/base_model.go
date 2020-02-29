@@ -38,10 +38,12 @@ type SysModel struct {
 	ThirdPartyNodes            map[string]*objects.ThirdPartyNode // Naples instances
 	VeniceNodeMap              map[string]*objects.VeniceNode     // Venice nodes
 	VeniceNodesMapDisconnected map[string]*objects.VeniceNode     // Venice which are not part of cluster
-	AuthToken                  string                             // authToken obtained after logging in
-	Licenses                   []string                           //enabled licenses
-	NoModeSwitchReboot         bool                               // no reboot on mode switch
-	NoSetupDataPathAfterSwitch bool                               // temp flag to set up datapath post naples
+	InbandNaplesIPAddress      map[string][]string
+	AuthToken                  string   // authToken obtained after logging in
+	Licenses                   []string //enabled licenses
+	NoModeSwitchReboot         bool     // no reboot on mode switch
+	NoSetupDataPathAfterSwitch bool     // temp flag to set up datapath post naples
+	AutoDiscovery              bool     //whether discovery of venice from naples is auto
 
 	Tb *testbed.TestBed // testbed
 
@@ -76,11 +78,13 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 			// create
 			sm.VeniceNodeMap[nr.NodeName] = objects.NewVeniceNode(nr)
 		}
+
 	}
 
+	//ReadNaples IP address from the json
 	skipSetup := os.Getenv("SKIP_SETUP")
 	if skipSetup != "" {
-		return nil
+		return sm.readNodeUUIDs(sm.Tb.Nodes)
 	}
 
 	// make venice cluster
@@ -111,12 +115,22 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 	}
 
 	doModeSwitch := func(done chan error) {
-		// move naples to managed mode
-		err := sm.DoModeSwitchOfNaples(sm.Tb.Nodes, sm.NoModeSwitchReboot)
-		if err != nil {
-			log.Errorf("Setting up naples failed. Err: %v", err)
-			done <- err
-			return
+		if !sm.AutoDiscovery {
+			// move naples to managed mode
+			err := sm.DoModeSwitchOfNaples(sm.Tb.Nodes, sm.NoModeSwitchReboot)
+			if err != nil {
+				log.Errorf("Setting up naples failed. Err: %v", err)
+				done <- err
+				return
+			}
+		} else {
+			log.Infof("Skipping mode switch for naples")
+			err := sm.SetupPenctl(sm.Tb.Nodes)
+			if err != nil {
+				log.Errorf("Setting up of penctl failed Err: %v", err)
+				done <- err
+				return
+			}
 		}
 
 		done <- nil
@@ -132,7 +146,12 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		}
 	}
 
-	return sm.SetUpNaplesPostCluster(sm.Tb.Nodes)
+	err := sm.SetUpNaplesPostCluster(sm.Tb.Nodes)
+	if err != nil {
+		return err
+	}
+
+	return sm.readNodeUUIDs(sm.Tb.Nodes)
 
 }
 
@@ -147,6 +166,20 @@ func (sm *SysModel) InitCfgModel() error {
 	sm.InitClient(veniceCtx, veniceUrls)
 	return nil
 
+}
+
+func convertToVeniceFormatMac(s string) string {
+	mac := strings.Replace(s, ":", "", -1)
+	var buffer bytes.Buffer
+	i := 1
+	for _, rune := range mac {
+		buffer.WriteRune(rune)
+		if i != 0 && i%4 == 0 && i != len(mac) {
+			buffer.WriteRune('.')
+		}
+		i++
+	}
+	return buffer.String()
 }
 
 // createNaples creates a naples instance
@@ -172,12 +205,17 @@ func (sm *SysModel) CreateNaples(node *testbed.TestNode) error {
 		return nil, fmt.Errorf("Could not find smartnic with mac addr %s", macAddr)
 	}
 	for _, naplesConfig := range node.NaplesConfigs.Configs {
+		vmac := convertToVeniceFormatMac(naplesConfig.NodeUuid)
 		snic, err := sm.GetSmartNICByName(naplesConfig.Name)
 		if sm.Tb.IsMockMode() {
 			snic, err = snicInRange(naplesConfig.NodeUuid)
 		}
 		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
+			//Try to find by mac at least
+			snic, err = sm.GetSmartNICByName(vmac)
+		}
+		if err != nil {
+			err := fmt.Errorf("Failed to get smartnc object for name %v(%v). Err: %+v", node.NodeName, vmac, err)
 			log.Errorf("%v", err)
 			snic = &cluster.DistributedServiceCard{
 				TypeMeta: api.TypeMeta{
@@ -314,7 +352,7 @@ func (sm *SysModel) SetupNodes() error {
 			}
 		} else if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			for _, cnode := range clusterNodes {
-				if cnode.Name == nr.NodeMgmtIP {
+				if cnode.Name == nr.NodeMgmtIP || nr.SecondaryIP == cnode.Name {
 					log.Infof("Setting up cluster node : %v", cnode.Name)
 					vnode := sm.VeniceNodeMap[nr.NodeName]
 					vnode.ClusterNode = cnode
@@ -479,8 +517,13 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 		Regenerate: skipSetup == "",
 		Vlans:      sm.Tb.AllocatedVlans(),
 	}
+	cfgParams.NaplesLoopBackIPs = make(map[string]string)
 	for _, naples := range sm.NaplesNodes {
 		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		for index, ncfg := range naples.GetTestNode().NaplesConfigs.Configs {
+			naples.LoopbackIP = sm.Tb.GetLoopBackIP(naples.GetIotaNode().Name, index+1)
+			cfgParams.NaplesLoopBackIPs[convertToVeniceFormatMac(ncfg.NodeUuid)] = naples.LoopbackIP
+		}
 	}
 
 	index := 0

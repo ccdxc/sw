@@ -3,11 +3,14 @@ package cloud
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/cfgen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
@@ -131,6 +134,14 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 
 	rClient := cl.Client
 	// get all venice configs
+
+	// get all venice configs
+	veniceHosts, err := rClient.ListHost()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
 	nodes, err := rClient.ListClusterNodes()
 	if err != nil {
 		log.Errorf("err: %s", err)
@@ -207,7 +218,6 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 		}
 
 		for _, vpc := range vpcs {
-			log.Infof("Deleting VPC %v", vpc)
 			err := rClient.DeleteVPC(vpc)
 			if err != nil {
 				log.Errorf("err: %s", err)
@@ -222,13 +232,90 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 		}
 	}
 
+	for _, obj := range veniceHosts {
+		if err := rClient.DeleteHost(obj); err != nil {
+			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
+			log.Errorf("%s", err)
+			return err
+		}
+	}
+
 	return nil
 
+}
+
+func (cl *CloudCfg) setupLoopbacks() error {
+
+	var loppbackIntfs []*network.NetworkInterface
+	var err error
+	rClient := cl.Client
+
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+
+L:
+	for true {
+		select {
+		case <-bkCtx.Done():
+			return fmt.Errorf("Error finding all loopback interfaces : %s", err)
+		default:
+			loppbackIntfs, err = rClient.ListNetworkLoopbackInterfaces()
+			if err != nil {
+				log.Errorf("Error querying loopback interfaces: Err: %v", err)
+				return err
+			}
+			if len(cl.Cfg.ConfigItems.Hosts) == len(loppbackIntfs) {
+				break L
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	for _, intf := range loppbackIntfs {
+
+		uuid := strings.Split(intf.Name, "-")[0]
+
+		loopbackIP, ok := cl.params.NaplesLoopBackIPs[uuid]
+		if !ok {
+			log.Errorf("Error finding loopback IP for %v %v Err: %v", intf.Name, uuid, err)
+			return err
+		}
+		intf.Spec.IPAllocType = "static"
+		intf.Spec.IPConfig = &cluster.IPConfig{
+			IPAddress: loopbackIP + "/32",
+		}
+		err = rClient.UpdateNetworkInterface(intf)
+		if err != nil {
+			log.Errorf("Error updating loopback interface: %v , Err: %v", intf, err)
+			return err
+		}
+	}
+	return err
 }
 
 func (cl *CloudCfg) pushConfigViaRest() error {
 
 	rClient := cl.Client
+
+	createHosts := func() error {
+		for _, o := range cl.Cfg.ConfigItems.Hosts {
+			err := rClient.CreateHost(o)
+			if err != nil {
+				log.Errorf("Error creating host: %+v. Err: %v", o, err)
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := createHosts(); err != nil {
+		return err
+	}
+
+	//First setup loopback IP
+	if err := cl.setupLoopbacks(); err != nil {
+		return err
+	}
 
 	//Create underlay config
 	for _, r := range cl.Cfg.ConfigItems.UnderlayRouteConfig {
@@ -276,7 +363,6 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 	}
 
 	for _, vrf := range cl.Cfg.ConfigItems.VRFs {
-		log.Infof("Creating vrf %v", vrf)
 		err := rClient.CreateVPC(vrf)
 		if err != nil {
 			log.Errorf("Error creating vpc %+v. Err: %v", vrf, err)

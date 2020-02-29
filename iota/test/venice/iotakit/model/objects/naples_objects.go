@@ -20,7 +20,8 @@ type Node struct {
 // Naples represents a smart-nic
 type Naples struct {
 	Node
-	SmartNic *cluster.DistributedServiceCard
+	SmartNic   *cluster.DistributedServiceCard
+	LoopbackIP string
 }
 
 // ThirdPartyNode represents non-naples

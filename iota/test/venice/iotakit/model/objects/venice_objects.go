@@ -28,6 +28,9 @@ func (v *VeniceNode) Name() string {
 
 //IP return IP
 func (v *VeniceNode) IP() string {
+	if v.testNode.SecondaryIP != "" {
+		return v.testNode.SecondaryIP
+	}
 	return v.iotaNode.IpAddress
 }
 
@@ -40,6 +43,19 @@ func (v *VeniceNode) GetTestNode() *testbed.TestNode {
 type VeniceNodeCollection struct {
 	CollectionCommon
 	Nodes []*VeniceNode
+}
+
+// VeniceContainer represents a venice container
+type VeniceContainer struct {
+	Name        string
+	ContainerID string
+	Node        *VeniceNode
+}
+
+// VeniceContainerCollection is collection venice container a service
+type VeniceContainerCollection struct {
+	CollectionCommon
+	Containers []*VeniceContainer
 }
 
 func NewVeniceNodeCollection(client objClient.ObjClient, testbed *testbed.TestBed) *VeniceNodeCollection {
@@ -89,7 +105,7 @@ func (vnc *VeniceNodeCollection) Leader() *VeniceNodeCollection {
 		if cl.Status.Leader == node.iotaNode.Name {
 			nvnc.Nodes = []*VeniceNode{node}
 			return nvnc
-		} else if cl.Status.Leader == node.iotaNode.IpAddress {
+		} else if cl.Status.Leader == node.iotaNode.IpAddress || cl.Status.Leader == node.testNode.SecondaryIP {
 			nvnc.Nodes = []*VeniceNode{node}
 			return nvnc
 		}
@@ -287,8 +303,8 @@ func (vnc *VeniceNodeCollection) GetVeniceNodeWithService(service string) (*Veni
 
 	entity := leader.Nodes[0].iotaNode.Name + "_venice"
 
-	cmd := `/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == ` + fmt.Sprintf("%q", service) +
-		` ) | .status.hostIP'`
+	cmd := fmt.Sprintf(`/pensando/iota/bin/kubectl get pods -a --server=https://%s:6443 --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == `+fmt.Sprintf("%q", service)+
+		` ) | .status.hostIP'`, leader.Nodes[0].IP())
 	trig.AddCommand(cmd, entity, leader.Nodes[0].iotaNode.Name)
 
 	// trigger commands
@@ -322,4 +338,117 @@ func (vnc *VeniceNodeCollection) GetVeniceNodeWithService(service string) (*Veni
 		return nil, srvVnc.err
 	}
 	return &srvVnc, nil
+}
+
+//GetVeniceContainersWithService  Get nodes running service
+func (vnc *VeniceNodeCollection) GetVeniceContainersWithService(service string, sideCar bool) (*VeniceContainerCollection, error) {
+	if vnc.err != nil {
+		return nil, vnc.err
+	}
+
+	vContCollection := VeniceContainerCollection{CollectionCommon: vnc.CollectionCommon}
+	veniceNodes := []*VeniceNode{}
+
+	leader := vnc.Leader()
+
+	//There is any error
+	if leader.err != nil {
+		return nil, leader.err
+	}
+
+	trig := vnc.Testbed.NewTrigger()
+
+	entity := leader.Nodes[0].iotaNode.Name + "_venice"
+
+	cmd := fmt.Sprintf(`/pensando/iota/bin/kubectl  get pods -a  --server=https://%s:6443 --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == `+fmt.Sprintf("%q", service)+
+		` ) | .status.hostIP'`, leader.Nodes[0].IP())
+	trig.AddCommand(cmd, entity, leader.Nodes[0].iotaNode.Name)
+
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to run command to get service node Err: %v", err)
+		vContCollection.err = fmt.Errorf("Failed to run command to get service node")
+		return nil, vContCollection.err
+	}
+
+	if triggerResp[0].ExitCode != 0 {
+		vContCollection.err = fmt.Errorf("Failed to run command to get service node : %v",
+			triggerResp[0].Stderr)
+		return nil, vContCollection.err
+	}
+
+	ret := triggerResp[0].Stdout
+	hostIP := strings.Split(ret, "\n")
+
+	for _, vn := range vnc.Nodes {
+		for _, ip := range hostIP {
+			if vn.iotaNode.IpAddress == ip || vn.testNode.SecondaryIP == ip {
+				veniceNodes = append(veniceNodes, vn)
+			}
+		}
+	}
+
+	if len(veniceNodes) == 0 {
+		log.Errorf("Did not find node running %v", service)
+		vContCollection.err = fmt.Errorf("Did not find node running %v", service)
+		return nil, vContCollection.err
+	}
+
+	item := "first"
+	if sideCar {
+		item = "last"
+	}
+
+	for _, vn := range veniceNodes {
+		vContainer := &VeniceContainer{Node: vn, Name: service}
+
+		//Derivce the container ID
+		trig := vnc.Testbed.NewTrigger()
+
+		entity := leader.Nodes[0].iotaNode.Name + "_venice"
+
+		ip := vn.iotaNode.IpAddress
+		if vn.testNode.SecondaryIP != "" {
+			ip = vn.testNode.SecondaryIP
+		}
+		cmd := fmt.Sprintf(`/pensando/iota/bin/kubectl get pods -a --server=https://%s:6443  --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == `+fmt.Sprintf("%q", service)+
+			` ) | select(.status.hostIP == `+fmt.Sprintf("%q", ip)+` ) | .status.containerStatuses | `+item+` | .containerID ' | cut -d "/" -f 3`, leader.Nodes[0].IP())
+		trig.AddCommand(cmd, entity, leader.Nodes[0].iotaNode.Name)
+
+		// trigger commands
+		triggerResp, err := trig.Run()
+		if err != nil {
+			log.Errorf("Failed to run command to get service node Err: %v", err)
+			vContCollection.err = fmt.Errorf("Failed to run command to get service node")
+			return nil, vContCollection.err
+		}
+
+		ret := triggerResp[0].Stdout
+		vContainer.ContainerID = strings.Split(ret, "\n")[0]
+		vContCollection.Containers = append(vContCollection.Containers, vContainer)
+	}
+	return &vContCollection, nil
+}
+
+//RunCommand runs command int the container
+func (vnc *VeniceContainerCollection) RunCommand(cont *VeniceContainer, cmd string) (string, string, int32, error) {
+
+	//Derivce the container ID
+	trig := vnc.Testbed.NewTrigger()
+
+	entity := cont.Node.iotaNode.Name + "_venice"
+
+	fullCommand := "docker exec  " + cont.ContainerID + " " + cmd
+
+	trig.AddCommand(fullCommand, entity, cont.Node.iotaNode.Name)
+
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to run command to get service node Err: %v", err)
+		return "", "", -1, err
+	}
+
+	return triggerResp[0].Stdout, triggerResp[0].Stderr, triggerResp[0].ExitCode, nil
 }

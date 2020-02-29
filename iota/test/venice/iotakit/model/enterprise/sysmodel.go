@@ -147,7 +147,7 @@ func (sm *SysModel) GetVeniceURL() []string {
 
 	// walk all venice nodes
 	for _, node := range sm.VeniceNodeMap {
-		veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.IP(), globals.APIGwRESTPort))
+		veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.GetTestNode().NodeMgmtIP, globals.APIGwRESTPort))
 	}
 
 	return veniceURL

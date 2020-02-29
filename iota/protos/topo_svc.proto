@@ -995,6 +995,9 @@ message TestBedNode {
     bool no_mgmt                    = 28;                   
 
     string cimc_ncsi_ip             = 29;
+
+    //auto discover on install
+    bool auto_discover_on_install   = 30;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

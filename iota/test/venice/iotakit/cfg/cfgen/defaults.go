@@ -159,7 +159,7 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.RoutingConfigSpec{
 				BGPConfig: &network.BGPConfig{
-					ASNumber:  64001,
+					ASNumber:  100,
 					RouterId:  "{{ipv4:10.1.1.0}}",
 					Neighbors: []*network.BGPNeighbor{},
 				},
@@ -167,7 +167,7 @@ var scaleCfgenParams = &Cfgen{
 		},
 		BgpNeihbourTemplate: &network.BGPNeighbor{
 			EnableAddressFamilies: []string{"evpn"},
-			RemoteAS:              64001,
+			RemoteAS:              100,
 			MultiHop:              10,
 			IPAddress:             "{{ipv4:22.1.1.0}}",
 		},
@@ -182,14 +182,14 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.RoutingConfigSpec{
 				BGPConfig: &network.BGPConfig{
-					ASNumber:  64001,
+					ASNumber:  100, //Static testbeds had this AS number
 					RouterId:  "0.0.0.0",
 					Neighbors: []*network.BGPNeighbor{},
 				},
 			},
 		},
 		UnderlayBgpNeihbourTemplate: &network.BGPNeighbor{
-			RemoteAS:              65001,
+			RemoteAS:              600, //Static testbed has this AS number
 			MultiHop:              10,
 			IPAddress:             "0.0.0.0",
 			EnableAddressFamilies: []string{"ipv4-unicast"},

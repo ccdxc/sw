@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 
+	expect "github.com/pensando/goexpect"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/globals"
@@ -73,6 +75,7 @@ type InstanceParams struct {
 	NodeCimcNcsiIP string // CIMC NCSI ip address of the server
 	NodeServer     string // NodeServer whether server is ucs/hpe
 	Tag            string // Tag to have some clue of the instance
+	SecondaryIP    string //Secondary IP
 	Resource       struct {
 		NICType    string // NIC type (naples, intel, mellanox etc)
 		NICUuid    string // NIC's mac address
@@ -99,7 +102,8 @@ type Params struct {
 	}
 	Instances []InstanceParams // nodes in the testbed
 	Network   struct {
-		VlanID int
+		VlanID             int
+		InbandDefaultRoute string //default route use
 	}
 }
 
@@ -142,6 +146,22 @@ func (inst *InstanceParams) getNicMgmtIP() (string, error) {
 	return inst.NicMgmtIP, nil
 }
 
+func (inst *InstanceParams) getInbandIPs() []string {
+
+	ips := []string{}
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			for _, port := range nic.Ports {
+				if port.Name != naplesOutband {
+					ips = append(ips, port.IP)
+				}
+			}
+		}
+	}
+
+	return ips
+}
+
 // TestNode contains state of a node in the testbed
 type TestNode struct {
 	NodeName            string               // node name specific to this topology
@@ -150,6 +170,7 @@ type TestNode struct {
 	Type                iota.TestBedNodeType // node type
 	Personality         iota.PersonalityType // node topology
 	NodeMgmtIP          string
+	SecondaryIP         string
 	VeniceConfig        iota.VeniceConfig         // venice specific configuration
 	NaplesConfigs       iota.NaplesConfigs        // naples specific config
 	NaplesMultSimConfig iota.NaplesMultiSimConfig // naples multiple sim specific config
@@ -501,6 +522,36 @@ func (tb *TestBed) addAvailableInstance(instance *InstanceParams) error {
 	return nil
 }
 
+//sendCommandToNaples utility to send command to naples
+func sendCommandToNaples(consoleIP, consolePort, cmd string) error {
+
+	timeout := 10 * time.Second
+	prompt := regexp.MustCompile("#")
+
+	cmdStr := fmt.Sprintf("PYTHONPATH=%s/src/github.com/pensando/sw/iota  %s/src/github.com/pensando/sw/iota/scripts/lab_tools/console_clear.py --console-ip %s --console-port %s",
+		os.Getenv("GOPATH"), os.Getenv("GOPATH"), consoleIP, consolePort)
+	command := exec.Command("sh", "-c", cmdStr)
+	err := command.Start()
+	if err != nil {
+		log.Errorf("Error running command %s. Err: %v", cmdStr, err)
+		return err
+	}
+	command.Wait()
+
+	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s %s", consoleIP, consolePort), -1)
+	if err != nil {
+		return err
+	}
+	defer e.Close()
+
+	e.Expect(prompt, timeout)
+	e.Send(cmd + "\n")
+	e.Expect(prompt, timeout)
+	e.Send("exit\n")
+
+	return nil
+}
+
 func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality iota.PersonalityType, node *TestNode) error {
 
 	// check if testbed node can take this personality
@@ -550,8 +601,8 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			}
 
 			node.VeniceConfig = iota.VeniceConfig{
-				ControlIntf: "eth1",
-				ControlIp:   fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+				//ControlIntf: "eth1",
+				//ControlIp:   fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
 				VenicePeers: []*iota.VenicePeer{},
 			}
 		default:
@@ -595,7 +646,6 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			node.NaplesConfigs = iota.NaplesConfigs{Configs: []*iota.NaplesConfig{}}
 			for nicID, nic := range node.instParams.Nics {
 				for _, port := range nic.Ports {
-
 					config := &iota.NaplesConfig{
 						ControlIntf:    "eth1",
 						ControlIp:      fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
@@ -607,7 +657,8 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 						NicHint:        port.MAC,
 					}
 					if tb.useNaplesMgmt {
-						config.NaplesIpAddress = nic.MgmtIP
+						//FIXME : First one is oob, so should be good for now
+						config.NaplesIpAddress = port.IP
 					}
 					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
 					break
@@ -642,6 +693,46 @@ func (tb *TestBed) Cleanup() {
 		client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 		client.CleanUpTestBed(context.Background(), tb.tbMsg)
 	}
+}
+
+//GetInbandIPs get all the inband IPs
+func (tb *TestBed) GetInbandIPs(nodeName string) []string {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return node.InstanceParams().getInbandIPs()
+		}
+	}
+	return []string{}
+}
+
+//GetLoopBackIP get loopback IP
+func (tb *TestBed) GetLoopBackIP(nodeName string, index int) string {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return fmt.Sprintf("13.13.%v.%v", node.InstanceParams().ID, index)
+		}
+	}
+	return ""
+}
+
+//GetSecondaryIP get secondary IP
+func (tb *TestBed) GetSecondaryIP(nodeName string) string {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return node.InstanceParams().SecondaryIP
+		}
+	}
+	return ""
+}
+
+//GetNaplesID get all naples ID
+func (tb *TestBed) GetNaplesID(nodeName string) (int, error) {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return node.InstanceParams().ID, nil
+		}
+	}
+	return 0, errors.New("ID not found")
 }
 
 //GetHostIntfs get host ints of node
@@ -741,6 +832,10 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 					peer := iota.VenicePeer{
 						HostName:  vn.NodeName,
 						IpAddress: vn.NodeMgmtIP, // HACK: in HW setups, Venice-Naples use mgmt network
+					}
+
+					if vn.InstanceParams().SecondaryIP != "" {
+						peer.IpAddress = vn.InstanceParams().SecondaryIP
 					}
 					node.VeniceConfig.VenicePeers = append(node.VeniceConfig.VenicePeers, &peer)
 				}
@@ -958,6 +1053,7 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 			Type:        nodeType,
 			Personality: personality,
 			NodeMgmtIP:  pinst.NodeMgmtIP,
+			SecondaryIP: pinst.SecondaryIP,
 			instParams:  pinst,
 			topoNode: &TopoNode{NodeName: name,
 				Personality: personality,
@@ -1055,6 +1151,7 @@ func (tb *TestBed) initNodeState() error {
 			Type:        tnode.Type,
 			Personality: tnode.Personality,
 			NodeMgmtIP:  pinst.NodeMgmtIP,
+			SecondaryIP: pinst.SecondaryIP,
 			instParams:  pinst,
 			topoNode:    tnode,
 		}
@@ -1132,18 +1229,36 @@ func (tb *TestBed) StartNaplesConsoleLogging() error {
 			}()
 		}
 
+		/*addRouteCommand := func(consoleIP, consolePort string) {
+			cmd := "ip route add 192.168.0.0/16 via 172.16.0.1"
+			for true {
+				sendCommandToNaples(consoleIP, consolePort, cmd)
+				time.Sleep(30 * time.Second)
+			}
+		}*/
+
 		for _, node := range tb.Nodes {
 			if IsNaplesHW(node.Personality) {
+				//if tb.useNaplesMgmt {
+				//FIXME, REMOVE once DHCP issues is fixed
+				//	go addRouteCommand(node.instParams.NicConsoleIP, node.instParams.NicConsolePort)
+				//} else {
 				go startNaplesLogging(node.NodeName, node.instParams.NicConsoleIP, node.instParams.NicConsolePort)
+
+				//			}
 			}
 		}
 
+		//if !tb.useNaplesMgmt {
+		//FIXME, REMOVE once DHCP issues is fixed
 		for i := 0; i < naplesNodes; i++ {
 			err := <-waitCh
 			if err != nil {
 				return err
 			}
 		}
+		//	}
+
 	}
 
 	return nil
@@ -1308,6 +1423,7 @@ func (tb *TestBed) setupTestBed() error {
 	}
 
 	dsmap := make(map[string]*iota.DataSwitch)
+	skipSwitch := os.Getenv("SKIP_SWITCH") != ""
 	for _, node := range tb.Nodes {
 		tbn := iota.TestBedNode{
 			Type:                node.Type,
@@ -1332,6 +1448,7 @@ func (tb *TestBed) setupTestBed() error {
 		//Naples management should be used, no int mgmt present
 		if tb.useNaplesMgmt {
 			tbn.NoMgmt = true
+			tbn.AutoDiscoverOnInstall = true
 		}
 		//For now hack up until we get the vendor information
 		if node.instParams.Resource.ServerType == "hpe" {
@@ -1362,7 +1479,7 @@ func (tb *TestBed) setupTestBed() error {
 		testBedMsg.Nodes = append(testBedMsg.Nodes, &tbn)
 
 		// set testbed id if available
-		if IsNaplesHW(node.Personality) && node.instParams.ID != 0 && testBedMsg.TestbedId == 0 {
+		if !skipSwitch && IsNaplesHW(node.Personality) && node.instParams.ID != 0 && testBedMsg.TestbedId == 0 {
 			testBedMsg.TestbedId = uint32(node.instParams.ID)
 		}
 
@@ -1616,6 +1733,7 @@ func (tb *TestBed) setupTestBed() error {
 			if node.NodeName == nr.Name {
 				log.Debugf("Adding node %v as used", node.topoNode.NodeName)
 				node.iotaNode = nr
+				node.SecondaryIP = tb.Nodes[i].SecondaryIP
 				nodeAdded = true
 				addedNodes = append(addedNodes, node)
 				//Update Instance to be used.

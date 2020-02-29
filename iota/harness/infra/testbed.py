@@ -324,7 +324,6 @@ class _Testbed:
 
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
-                cmd.extend(["--oob-ip", instance.NicMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
@@ -378,7 +377,7 @@ class _Testbed:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
                 if GlobalOptions.netagent: 
-                    cmd.extend(["--skip-dhcp"]) 
+                    cmd.extend(["--auto-discover-on-install"]) 
             else:
                 if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm":
                     continue

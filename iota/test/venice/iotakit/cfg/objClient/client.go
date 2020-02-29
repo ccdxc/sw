@@ -444,6 +444,21 @@ func (r *Client) ListNetworkInterfaces() (objs []*network.NetworkInterface, err 
 	return objs, err
 }
 
+// ListNetworkLoopbackInterfaces lists all loopback network interfaces
+func (r *Client) ListNetworkLoopbackInterfaces() (objs []*network.NetworkInterface, err error) {
+
+	opts := api.ListWatchOptions{FieldSelector: fmt.Sprintf("spec.type=loopback-tep")}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().NetworkInterface().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
 // UpdateNetworkInterface updates network interface
 func (r *Client) UpdateNetworkInterface(nw *network.NetworkInterface) error {
 	var err error

@@ -51,5 +51,11 @@ venice-e2e-basenet:
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Basenet -ginkgo.focus "Lif mirror tests"
 
+venice-e2e-cloud:
+	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all_apulu.tgz -C .
+	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
+	cd ../../ && make
+	./start_iota.sh
+	VENICE_DEV=1 USE_MGMT=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 3h -v -ginkgo.v  -topo 3Venice_1Naples_Cloud
 
 all: venice-e2e upgrade

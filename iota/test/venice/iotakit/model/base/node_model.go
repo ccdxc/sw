@@ -319,8 +319,8 @@ func (sm *SysModel) GetVeniceNodeWithService(vnc *objects.VeniceNodeCollection, 
 
 	entity := leader.Nodes[0].Name() + "_venice"
 
-	cmd := `/pensando/iota/bin/kubectl get pods -a --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == ` + fmt.Sprintf("%q", service) +
-		` ) | .status.hostIP'`
+	cmd := fmt.Sprintf(`/pensando/iota/bin/kubectl get pods -a --server=https://%s:6443  --all-namespaces -o json  | /usr/local/bin/jq-linux64 -r '.items[] | select(.metadata.labels.name == `+fmt.Sprintf("%q", service)+
+		` ) | .status.hostIP'`, leader.Nodes[0].IP())
 	trig.AddCommand(cmd, entity, leader.Nodes[0].Name())
 
 	// trigger commands

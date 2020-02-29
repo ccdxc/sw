@@ -67,9 +67,11 @@ var Topologies = map[string]*Topology{
 	"1Venice_1SimScale200Naples":          &topo1Venice1NaplesSim200Scale,
 	"1Venice_3SimScale200Naples":          &topo1Venice3NaplesSim200Scale,
 	"3VMVenice_5SimScale1000Naples":       &topo3VMVenice5NaplesSim1000Scale,
+	"3VMVenice_5SimScale1000CloudNaples":  &topo3VMVenice5NaplesSim1000CloudScale,
 	"3Venice_2Naples_Vcenter":             &topo3Venice2NaplesVcenter,
 	"3Venice_1Naples_Vcenter":             &topo3Venice1Naples1ThirdPartyVcenter,
 	"3Venice_1Naples_Cloud":               &topo3Venice1NaplesCloud,
+	"3Venice_2Naples_Cloud":               &topo3Venice2NaplesCloud,
 	"3Venice_2Naples_Basenet":             &topo3Venice2NaplesBasenet,
 }
 
@@ -1182,7 +1184,7 @@ var topo3Venice1Naples1ThirdPartyVcenter = Topology{
 
 var topo3Venice1NaplesCloud = Topology{
 	NaplesImage:   "../nic/naples_fw_venice.tar",
-	VeniceImage:   "../bin/venice.tgz",
+	VeniceImage:   "../bin/venice.apulu.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
 	WorkloadImage: "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
 	NumVlans:      10, // FIXME: what should this be??
@@ -1191,6 +1193,47 @@ var topo3Venice1NaplesCloud = Topology{
 	Nodes: []TopoNode{
 		{
 			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+var topo3Venice2NaplesCloud = Topology{
+	NaplesImage:   "../nic/naples_fw_venice.tar",
+	VeniceImage:   "../bin/venice.apulu.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
+	WorkloadImage: "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         CloudModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "naples2",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
 			HostOS:      "linux",
@@ -1499,6 +1542,77 @@ var topo3VMVenice5NaplesSim1000Scale = Topology{
 			//This should be linux
 			HostOS:       "linux",
 			NumInstances: 200,
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+// three VM venice node and naples sim scale with 1000 instances
+var topo3VMVenice5NaplesSim1000CloudScale = Topology{
+	NaplesImage:    "../nic/naples_fw_venice.tar",
+	VeniceImage:    "../bin/venice.apulu.tgz",
+	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
+	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage:  "build-160",
+	NumVlans:       10,
+	Model:          CloudModel,
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naplesSimScale1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 20,
+		},
+		{
+			NodeName:    "naplesSimScale2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 20,
+		},
+		{
+			NodeName:    "naplesSimScale3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 20,
+		},
+		{
+			NodeName:    "naplesSimScale4",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 20,
+		},
+		{
+			NodeName:    "naplesSimScale5",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM,
+			//This should be linux
+			HostOS:       "linux",
+			NumInstances: 20,
 		},
 		{
 			NodeName:    "venice1",

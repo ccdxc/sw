@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -27,6 +28,11 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	err := sm.SysModel.Init(tb, cfgType)
 	if err != nil {
 		return err
+	}
+
+	sm.AutoDiscovery = true
+	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
+		sm.AutoDiscovery = false
 	}
 
 	sm.NoModeSwitchReboot = true
@@ -67,6 +73,7 @@ func (sm *SysModel) SetupVeniceNaples() error {
 		}
 	}
 
+	//First Read Naples
 	// make cluster & setup auth
 	err := sm.SetupConfig(ctx)
 	if err != nil {
@@ -74,6 +81,13 @@ func (sm *SysModel) SetupVeniceNaples() error {
 		return err
 	}
 
+	return nil
+}
+
+//Do cleanup
+func (sm *SysModel) Cleanup() error {
+	// collect all log files
+	sm.CollectLogs()
 	return nil
 }
 

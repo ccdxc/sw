@@ -9,6 +9,7 @@ import (
 type HostIteratorFn func(*HostCollection) error
 type VeniceNodeIteratorFn func(*VeniceNodeCollection) error
 type NaplesIteratorFn func(*NaplesCollection) error
+type VeniceContainerRunCommandFn func(string) (string, string, int)
 
 type CollectionCommon struct {
 	Client  objClient.ObjClient

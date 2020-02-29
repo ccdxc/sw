@@ -124,9 +124,8 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				cmd += fmt.Sprintf(" --console-port %s", node.NicConsolePort)
 				cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
 				cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
-				cmd += fmt.Sprintf(" --oob-ip %s", node.NicIpAddress)
 				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
-				cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
+				cmd += fmt.Sprintf(" --image %s/nic/%s", wsdir, filepath.Base(req.NaplesImage))
 				cmd += fmt.Sprintf(" --mode hostpin")
 				if node.MgmtIntf != "" {
 					cmd += fmt.Sprintf(" --mgmt-intf %v", node.MgmtIntf)
@@ -161,6 +160,9 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 
 				if node.NoMgmt {
 					cmd += fmt.Sprintf(" --no-mgmt")
+				}
+				if node.AutoDiscoverOnInstall {
+					cmd += fmt.Sprintf(" --auto-discover-on-install")
 				}
 				nodeName := node.NodeName
 
@@ -207,6 +209,9 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 
 func (ts *TopologyService) switchProgrammingRequired(req *iota.TestBedMsg) bool {
 
+	if req.TestbedId == 0 {
+		return false
+	}
 	if ts.tbInfo.id != req.TestbedId || len(ts.tbInfo.allocatedVlans) == 0 {
 		return true
 	}
@@ -280,6 +285,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				return req, nil
 			}
 			ts.tbInfo.allocatedVlans = vlans
+		} else {
+			log.Infof("Skipping switch programming")
 		}
 		ts.tbInfo.resp.AllocatedVlans = ts.tbInfo.allocatedVlans
 		ts.tbInfo.id = req.TestbedId

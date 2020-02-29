@@ -730,6 +730,7 @@ naples-firmware-elba:
 naples-firmware-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
 	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+
 naples-firmware-apulu-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
 	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_venice.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz

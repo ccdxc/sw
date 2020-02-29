@@ -120,13 +120,14 @@ type CfgObjects struct {
 
 //ConfigParams contoller
 type ConfigParams struct {
-	Dscs           []*cluster.DistributedServiceCard
-	VeniceNodes    []*cluster.Node
-	FakeDscs       []*cluster.DistributedServiceCard
-	ThirdPartyDscs []*cluster.DistributedServiceCard
-	Vlans          []uint32
-	Scale          bool
-	Regenerate     bool
+	Dscs              []*cluster.DistributedServiceCard
+	VeniceNodes       []*cluster.Node
+	FakeDscs          []*cluster.DistributedServiceCard
+	ThirdPartyDscs    []*cluster.DistributedServiceCard
+	NaplesLoopBackIPs map[string]string
+	Vlans             []uint32
+	Scale             bool
+	Regenerate        bool
 }
 
 // WorkloadPair is a pair of workloads

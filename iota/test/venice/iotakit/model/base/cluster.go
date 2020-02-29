@@ -65,7 +65,12 @@ func (sm *SysModel) getVeniceIPAddrs() []string {
 	// walk all venice nodes
 	for _, node := range sm.Tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
-			veniceIPs = append(veniceIPs, node.NodeMgmtIP)
+			sIP := sm.Tb.GetSecondaryIP(node.NodeName)
+			if sIP != "" {
+				veniceIPs = append(veniceIPs, sIP)
+			} else {
+				veniceIPs = append(veniceIPs, node.NodeMgmtIP)
+			}
 		}
 	}
 
@@ -111,7 +116,7 @@ func (sm *SysModel) GetVeniceURL() []string {
 
 	// walk all venice nodes
 	for _, node := range sm.VeniceNodeMap {
-		veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.IP(), globals.APIGwRESTPort))
+		veniceURL = append(veniceURL, fmt.Sprintf("%s:%s", node.GetTestNode().NodeMgmtIP, globals.APIGwRESTPort))
 	}
 
 	return veniceURL
@@ -487,6 +492,31 @@ func (sm *SysModel) SetupVeniceNodes() error {
 
 	// walk all venice nodes
 	trig := sm.Tb.NewTrigger()
+
+	naplesInbandIPs := []string{}
+	for _, node := range sm.Tb.Nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			ips := sm.Tb.GetInbandIPs(node.NodeName)
+			naplesInbandIPs = append(naplesInbandIPs, ips...)
+			for index := range node.NaplesConfigs.Configs {
+				loopackIP := sm.Tb.GetLoopBackIP(node.NodeName, index+1)
+				naplesInbandIPs = append(naplesInbandIPs, loopackIP)
+			}
+		}
+	}
+	//Clean up old routes
+	for _, node := range sm.Tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			entity := node.NodeName + "_venice"
+			for _, ip := range naplesInbandIPs {
+				//for now using eth1 has default route
+				trig.AddCommand(fmt.Sprintf("ip route  delete %s", ip), entity, node.NodeName)
+			}
+		}
+	}
+	trig.Run()
+
+	trig = sm.Tb.NewTrigger()
 	for _, node := range sm.Tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			entity := node.NodeName + "_venice"
@@ -522,6 +552,12 @@ func (sm *SysModel) SetupVeniceNodes() error {
 			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("docker run -d --name=grafana --net=host -e \"GF_SECURITY_ADMIN_PASSWORD=password\" registry.test.pensando.io:5000/pensando/grafana:0.1"), entity, node.NodeName)
 
+			for _, ip := range naplesInbandIPs {
+				if sm.Tb.Params.Network.InbandDefaultRoute != "" {
+					//for now using eth1 has default route
+					trig.AddCommand(fmt.Sprintf("ip route add %s/32 via %s dev eth1", ip, sm.Tb.Params.Network.InbandDefaultRoute), entity, node.NodeName)
+				}
+			}
 		}
 	}
 
@@ -601,7 +637,7 @@ func (sm *SysModel) CheckVeniceServiceStatus(leaderNode string) (string, error) 
 		if node.IP() == leaderNode {
 			trig = sm.Tb.NewTrigger()
 			entity := node.Name() + "_venice"
-			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl get pods -owide --no-headers"), entity, node.Name())
+			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl  get pods -owide --server=https://%s:6443  --no-headers", leaderNode), entity, node.Name())
 
 			// trigger commands
 			triggerResp, err = trig.Run()
@@ -794,6 +830,45 @@ func CreateConfigConsoleNoAuth() {
 	ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
 }
 
+//SetupPenctl setting up penctl
+func (sm *SysModel) SetupPenctl(nodes []*testbed.TestNode) error {
+
+	log.Infof("Setting up penctl")
+
+	// set date, untar penctl and trigger mode switch
+	trig := sm.Tb.NewTrigger()
+	for _, node := range nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			err := sm.Tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
+			if err != nil {
+				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
+			}
+			// untar the package
+			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
+			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+		}
+	}
+
+	resp, err := trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error untaring penctl package. Err: %v", err)
+	}
+	log.Debugf("Got trigger resp: %+v", resp)
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Changing naples mode failed. %+v", cmdResp)
+			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
+	}
+
+	return nil
+
+}
+
+//DoModeSwitchOfNaples do mode switch of naples
 func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot bool) error {
 
 	if os.Getenv("REBOOT_ONLY") != "" {
@@ -801,6 +876,10 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 		return nil
 	}
 
+	if err := sm.SetupPenctl(nodes); err != nil {
+		log.Infof("Setting up of penctl failed")
+		return err
+	}
 	log.Infof("Setting up Naples in network managed mode")
 
 	// set date, untar penctl and trigger mode switch
@@ -814,13 +893,6 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 			for _, naplesConfig := range node.NaplesConfigs.Configs {
 
 				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
-				err := sm.Tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
-				if err != nil {
-					return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
-				}
-				// untar the package
-				cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
-				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 
 				// clean up roots of trust, if any
 				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naplesConfig.Name, node.NodeName)
@@ -831,7 +903,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 				// Set up config file to enable console unconditionally (i.e.
 				// with out triggering authentication).
 				CreateConfigConsoleNoAuth()
-				err = sm.Tb.CopyToNaples(node.NodeName, []string{NaplesConfigSpecLocal}, globals.NaplesConfig)
+				err := sm.Tb.CopyToNaples(node.NodeName, []string{NaplesConfigSpecLocal}, globals.NaplesConfig)
 				if err != nil {
 					return fmt.Errorf("Error copying config spec file to Naples. Err: %v", err)
 				}
@@ -839,7 +911,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 				// trigger mode switch
 				for _, naples := range node.NaplesConfigs.Configs {
 					penctlNaplesURL := "http://" + naples.NaplesIpAddress
-					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network %s --controllers %s --id %s --primary-mac %s",
+					cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network %s --controllers %s --id %s --primary-mac %s",
 						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, modeNW, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
 					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 				}
@@ -896,6 +968,55 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
 	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	return nil
+}
+
+func (sm *SysModel) readNodeUUIDs(nodes []*testbed.TestNode) error {
+
+	naplesHwUUIDFile := "/tmp/fru.json"
+
+	readUUID := func(nodeName, name string) (uuid string, err error) {
+
+		trig := sm.Tb.NewTrigger()
+
+		cmd := fmt.Sprintf("cat " + naplesHwUUIDFile)
+		trig.AddCommand(cmd, name, nodeName)
+
+		resp, err := trig.Run()
+		if err != nil {
+			return "", fmt.Errorf("Error reading fru.json. Err: %v", err)
+		}
+
+		if resp[0].ExitCode != 0 {
+			return "", fmt.Errorf("Error reading fru.json. Err: %v", resp[0].Stderr)
+		}
+
+		var deviceJSON map[string]interface{}
+		if err := json.Unmarshal([]byte(resp[0].Stdout), &deviceJSON); err != nil {
+			return "", fmt.Errorf("Error reading %s file", naplesHwUUIDFile)
+		}
+
+		if val, ok := deviceJSON["mac-address"]; ok {
+			return val.(string), nil
+		}
+
+		return "", fmt.Errorf("Mac address not present in %s file", naplesHwUUIDFile)
+
+	}
+
+	//Read NODE UUID as ssh is now up and we can do it now.
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			for _, naples := range node.NaplesConfigs.Configs {
+				uuid, err := readUUID(node.NodeName, naples.Name)
+				if err != nil {
+					return err
+				}
+				naples.NodeUuid = uuid
+			}
+		}
 	}
 
 	return nil

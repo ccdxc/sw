@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -83,6 +84,11 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 	return nil
 
 }
+func (sm *SysModel) CollectLogs() error {
+	//sm.SysModel.CollectLogs()
+	log.Infof("Collecting logs disabled until penctl issue is fixed.")
+	return nil
+}
 
 // VerifySystemHealth checks all aspects of system, like cluster, workload, policies etc
 func (sm *SysModel) VerifySystemHealth(collectLogOnErr bool) error {
@@ -127,6 +133,71 @@ func (sm *SysModel) VerifySystemHealth(collectLogOnErr bool) error {
 	return nil
 }
 
+type RtrCtlStruct []struct {
+	Spec struct {
+		ID           string `json:"Id"`
+		LocalAddr    string `json:"LocalAddr"`
+		PeerAddr     string `json:"PeerAddr"`
+		Password     bool   `json:"Password"`
+		State        int    `json:"State"`
+		RemoteASN    int    `json:"RemoteASN"`
+		SendComm     bool   `json:"SendComm"`
+		SendExtComm  bool   `json:"SendExtComm"`
+		ConnectRetry int    `json:"ConnectRetry"`
+	} `json:"Spec"`
+	Status struct {
+		ID            string `json:"Id"`
+		LastErrorRcvd string `json:"LastErrorRcvd"`
+		LastErrorSent string `json:"LastErrorSent"`
+		LocalAddr     string `json:"LocalAddr"`
+		PeerAddr      string `json:"PeerAddr"`
+		Status        string `json:"Status"`
+		PrevStatus    string `json:"PrevStatus"`
+	} `json:"Status"`
+}
+
+//VerifyBGPCluster verifies BGP cluster
+func (sm *SysModel) VerifyBGPCluster() error {
+
+	pegContainerCollection, err := sm.VeniceNodes().GetVeniceContainersWithService("pen-pegasus", true)
+
+	if err != nil {
+		return err
+	}
+
+	for _, pegContainer := range pegContainerCollection.Containers {
+		output, stderr, exitCode, err := pegContainerCollection.RunCommand(pegContainer, "rtrctl show bgp peers --json")
+		if exitCode != 0 || err != nil {
+			log.Errorf("Error running command %v", stderr)
+			return fmt.Errorf("Error runnig rtrctl command %v", stderr)
+		}
+
+		data := RtrCtlStruct{}
+		err = json.Unmarshal([]byte(output), &data)
+		if err != nil {
+			return err
+		}
+
+		for _, np := range sm.NaplesNodes {
+			verfied := false
+			for _, item := range data {
+				if np.LoopbackIP == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+					verfied = true
+					break
+				}
+			}
+			if !verfied {
+				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), np.LoopbackIP)
+				log.Errorf(msg)
+				return errors.New(msg)
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // VerifyClusterStatus verifies venice cluster status
 func (sm *SysModel) VerifyClusterStatus() error {
 	log.Infof("Verifying cluster health..")
@@ -139,10 +210,17 @@ func (sm *SysModel) VerifyClusterStatus() error {
 	}
 
 	if err := sm.VerifyVeniceStatus(); err != nil {
+		log.Errorf("Venice status verification failed : %v", err)
 		return err
 	}
 
 	if err := sm.VerifyNaplesStatus(); err != nil {
+		log.Errorf("Naples status verification failed : %v", err)
+		return err
+	}
+
+	if err := sm.VerifyBGPCluster(); err != nil {
+		log.Errorf("BGP status verification failed : %v", err)
 		return err
 	}
 
