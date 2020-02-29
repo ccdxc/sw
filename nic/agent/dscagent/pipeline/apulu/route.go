@@ -202,7 +202,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 				DefaultOrig: false,
 			}
 			switch af {
-			case "evpn":
+			case "evpn", "l2vpn-evpn":
 				peerAf.Afi = msTypes.BGPAfi_BGP_AFI_L2VPN
 				peerAf.Safi = msTypes.BGPSafi_BGP_SAFI_EVPN
 			case "ipv4-unicast":
@@ -353,7 +353,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 		for _, af := range o.EnableAddressFamilies {
 			switch af {
-			case "evpn":
+			case "evpn", "l2vpn-evpn":
 				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
@@ -430,7 +430,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 		for _, af := range o.EnableAddressFamilies {
 			switch af {
-			case "evpn":
+			case "evpn", "l2vpn-evpn":
 				peerAf := msTypes.BGPPeerAfSpec{
 					Id:          uid.Bytes(),
 					PeerAddr:    ip2PDSType(o.IPAddress),
@@ -509,7 +509,7 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 		for _, af := range o.EnableAddressFamilies {
 			switch af {
-			case "evpn":
+			case "evpn", "l2vpn-evpn":
 				key := &msTypes.BGPPeerAfKey{
 					PeerAddr: ip2PDSType(o.IPAddress),
 					Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
