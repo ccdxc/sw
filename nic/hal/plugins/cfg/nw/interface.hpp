@@ -229,19 +229,18 @@ typedef struct if_s {
     void                *pd_if;
 
     // MirrorSessions related fields
-    if_mirror_info_t    mirror_spec;
     if_mirror_info_t    mirror_cfg;
     uint8_t             tx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
     uint8_t             rx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
+    uint8_t             programmed_tx_session_id_bitmap;
+    uint8_t             programmed_rx_session_id_bitmap;
     uplink_erspan_direction_t direction;
-
-    uint32_t                  hw_lif_id;
-    uint32_t                  lport_id;
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {
     // l2seg_t    *l2seg;                                 // valid for enic if
     // lif_t      *lif;                                   // valid for enic if
+    if_mirror_info_t    *mirror_spec;
 } __PACK__ if_create_app_ctxt_t;
 
 typedef struct if_update_app_ctxt_s {
@@ -292,6 +291,8 @@ typedef struct if_update_app_ctxt_s {
             vlan_id_t       new_encap_vlan;
         } __PACK__;
     } __PACK__;
+
+    if_mirror_info_t    *mirror_spec;
 
 } __PACK__ if_update_app_ctxt_t;
 

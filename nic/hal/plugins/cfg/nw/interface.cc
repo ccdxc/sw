@@ -913,27 +913,27 @@ end:
 }
 
 static bool
-has_if_mirror_sessions_changed (if_t *hal_if)
+has_if_mirror_sessions_changed (if_t *hal_if, if_mirror_info_t *mirror_spec)
 {
     if (hal_if->direction == UPLINK_ERSPAN_DIRECTION_EGRESS) {
-        if (hal_if->mirror_cfg.tx_sessions_count != hal_if->mirror_spec.
+        if (hal_if->mirror_cfg.tx_sessions_count != mirror_spec->
                                                     tx_sessions_count)
             return true;
 
-        for (int i = 0; i < hal_if->mirror_spec.tx_sessions_count; i++) {
-            if (hal_if->mirror_cfg.tx_session_id[i] != hal_if->mirror_spec.
+        for (int i = 0; i < mirror_spec->tx_sessions_count; i++) {
+            if (hal_if->mirror_cfg.tx_session_id[i] != mirror_spec->
                                                        tx_session_id[i])
                 return true;
         }
     }
 
     if (hal_if->direction == UPLINK_ERSPAN_DIRECTION_INGRESS) {
-        if (hal_if->mirror_cfg.rx_sessions_count != hal_if->mirror_spec.
+        if (hal_if->mirror_cfg.rx_sessions_count != mirror_spec->
                                                     rx_sessions_count)
             return true;
 
-        for (int i = 0; i < hal_if->mirror_spec.rx_sessions_count; i++) {
-            if (hal_if->mirror_cfg.rx_session_id[i] != hal_if->mirror_spec.
+        for (int i = 0; i < mirror_spec->rx_sessions_count; i++) {
+            if (hal_if->mirror_cfg.rx_session_id[i] != mirror_spec->
                                                        rx_session_id[i])
                 return true;
         }
@@ -951,14 +951,22 @@ program_lif_omap_table_in_hw (if_t *hal_if)
     hal_ret_t                          ret;
 
     for (int i = 0; i < hal_if->mirror_cfg.tx_sessions_count; i++) {
-        mirror_session_get_hw_id(hal_if->mirror_cfg.tx_session_id[i],
-                                 &mirror_session_id);
+        ret = mirror_session_get_hw_id(hal_if->mirror_cfg.tx_session_id[i],
+                                       &mirror_session_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Tx-Mirror-session-hw-id retrieval failed {}", ret);
+            goto end;
+        }
         hal_if->tx_mirror_session_id[i] = mirror_session_id;
     }
 
     for (int i = 0; i < hal_if->mirror_cfg.rx_sessions_count; i++) {
-        mirror_session_get_hw_id(hal_if->mirror_cfg.rx_session_id[i],
-                                 &mirror_session_id);
+        ret = mirror_session_get_hw_id(hal_if->mirror_cfg.rx_session_id[i],
+                                       &mirror_session_id);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Rx-Mirror-session-hw-id retrieval failed {}", ret);
+            goto end;
+        }
         hal_if->rx_mirror_session_id[i] = mirror_session_id;
     }
 
@@ -972,6 +980,7 @@ program_lif_omap_table_in_hw (if_t *hal_if)
         HAL_TRACE_DEBUG("HW-Table Programming succeeded for UPLINK-ERSPAN");
     }
 
+end:
     return ret;
 }
 
@@ -997,51 +1006,29 @@ deprogram_lif_omap_table_in_hw (if_t *hal_if)
 }
 
 static hal_ret_t
-if_update_mirror_sessions (if_t *hal_if)
+if_update_mirror_sessions (if_t *hal_if, if_mirror_info_t *mirror_spec)
 {
-    pd::pd_func_args_t             pd_func_args;
-    pd::pd_if_get_hw_lif_id_args_t hw_lif_id_args = {0};
-    pd::pd_if_get_lport_id_args_t  lport_id_args = {0};
-    hal_ret_t                      ret;
-    bool                           tx_mirror_sessions_update = false;
-    bool                           rx_mirror_sessions_update = false;
-    if_mirror_info_t               saved_mirror_cfg;
+    hal_ret_t        ret;
+    bool             tx_mirror_sessions_update = false;
+    bool             rx_mirror_sessions_update = false;
+    if_mirror_info_t saved_mirror_cfg;
 
-    //
     // For now, handle only UPLINK ERSPAN
-    //
     if (hal_if->if_type != intf::IF_TYPE_UPLINK)
         return HAL_RET_OK;
 
-    //
     // Preserve current sessions for roll-back due to error conditions
-    //
     saved_mirror_cfg = hal_if->mirror_cfg;
 
-    //
     // Handle TX-Mirror-Sessions
-    //
-    if (hal_if->mirror_cfg.tx_sessions_count != hal_if->mirror_spec.
+    if (hal_if->mirror_cfg.tx_sessions_count != mirror_spec->
                                                 tx_sessions_count) {
-        //
-        // Check to see if Tx-Mirror-Delete has to happen first
-        // This is the case when the existing programmed Tx-Mirror-Sessions are
-        // different from Config-push Tx-Mirror-Sessions
-        //
-        if (hal_if->mirror_cfg.tx_sessions_count != 0 &&
-            hal_if->mirror_spec.tx_sessions_count != 0) {
-            hal_if->direction = UPLINK_ERSPAN_DIRECTION_EGRESS;
-            ret = deprogram_lif_omap_table_in_hw(hal_if); 
-            if (ret != HAL_RET_OK)
-                goto error;
-        }
-
-        hal_if->mirror_cfg.tx_sessions_count = hal_if->mirror_spec.
+        hal_if->mirror_cfg.tx_sessions_count = mirror_spec->
                                                tx_sessions_count;
         tx_mirror_sessions_update = true;
     }
-    for (int i = 0; i < hal_if->mirror_spec.tx_sessions_count; i++) {
-        uint32_t tx_mirror_session_id = hal_if->mirror_spec.tx_session_id[i];
+    for (int i = 0; i < mirror_spec->tx_sessions_count; i++) {
+        uint32_t tx_mirror_session_id = mirror_spec->tx_session_id[i];
 
         if (hal_if->mirror_cfg.tx_session_id[i] != tx_mirror_session_id) {
             hal_if->mirror_cfg.tx_session_id[i] = tx_mirror_session_id;
@@ -1049,30 +1036,15 @@ if_update_mirror_sessions (if_t *hal_if)
         }
     }
 
-    //
     // Handle RX-Mirror-Sessions
-    //
-    if (hal_if->mirror_cfg.rx_sessions_count != hal_if->mirror_spec.
+    if (hal_if->mirror_cfg.rx_sessions_count != mirror_spec->
                                                 rx_sessions_count) {
-        //
-        // Check to see if Rx-Mirror-Delete has to happen first
-        // This is the case when the existing programmed Rx-Mirror-Sessions are
-        // different from Config-push Rx-Mirror-Sessions
-        //
-        if (hal_if->mirror_cfg.rx_sessions_count != 0 &&
-            hal_if->mirror_spec.rx_sessions_count != 0) {
-            hal_if->direction = UPLINK_ERSPAN_DIRECTION_INGRESS;
-            ret = deprogram_lif_omap_table_in_hw(hal_if); 
-            if (ret != HAL_RET_OK)
-                goto error;
-        }
-
-        hal_if->mirror_cfg.rx_sessions_count = hal_if->mirror_spec.
+        hal_if->mirror_cfg.rx_sessions_count = mirror_spec->
                                                rx_sessions_count;
         rx_mirror_sessions_update = true;
     }
-    for (int i = 0; i < hal_if->mirror_spec.rx_sessions_count; i++) {
-        uint32_t rx_mirror_session_id = hal_if->mirror_spec.rx_session_id[i];
+    for (int i = 0; i < mirror_spec->rx_sessions_count; i++) {
+        uint32_t rx_mirror_session_id = mirror_spec->rx_session_id[i];
 
         if (hal_if->mirror_cfg.rx_session_id[i] != rx_mirror_session_id) {
             hal_if->mirror_cfg.rx_session_id[i] = rx_mirror_session_id;
@@ -1083,34 +1055,10 @@ if_update_mirror_sessions (if_t *hal_if)
     if (!tx_mirror_sessions_update && !rx_mirror_sessions_update)
         return HAL_RET_OK;
 
-    pd_func_args = {0};
-    hw_lif_id_args.pi_if = hal_if;
-    pd_func_args.pd_if_get_hw_lif_id = &hw_lif_id_args;
-    ret = pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get_HW_LIF_ID FAILED: Invalid IF-Key-Handle {}",
-                      hal_if->if_id);
-        goto error;
-    }
-    hal_if->hw_lif_id = hw_lif_id_args.hw_lif_id;
-
-    pd_func_args = {0};
-    lport_id_args.pi_if = hal_if;
-    pd_func_args.pd_if_get_lport_id = &lport_id_args;
-    ret = pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Get_LPORT_ID FAILED: Invalid IF-Key-Handle {}",
-                      hal_if->if_id);
-        goto error;
-    }
-    hal_if->lport_id = lport_id_args.lport_id;
-
-    //
     // Program / De-program Tx-Mirror-Sessions, as needed
-    //
     if (tx_mirror_sessions_update) {
         hal_if->direction = UPLINK_ERSPAN_DIRECTION_EGRESS;
-        if (hal_if->mirror_spec.tx_sessions_count) {
+        if (mirror_spec->tx_sessions_count) {
             ret = program_lif_omap_table_in_hw(hal_if);
             if (ret != HAL_RET_OK)
                 goto error;
@@ -1122,12 +1070,10 @@ if_update_mirror_sessions (if_t *hal_if)
         }
     }
 
-    //
     // Program / De-program Rx-Mirror-Sessions, as needed
-    //
     if (rx_mirror_sessions_update) {
         hal_if->direction = UPLINK_ERSPAN_DIRECTION_INGRESS;
-        if (hal_if->mirror_spec.rx_sessions_count) {
+        if (mirror_spec->rx_sessions_count) {
             ret = program_lif_omap_table_in_hw(hal_if); 
             if (ret != HAL_RET_OK)
                 goto error;
@@ -1141,9 +1087,7 @@ if_update_mirror_sessions (if_t *hal_if)
     return ret;
 
 error:
-    //
     // Roll-back current sessions due to error conditions
-    //
     hal_if->mirror_cfg = saved_mirror_cfg;
 
     return ret;
@@ -1159,6 +1103,7 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if = NULL;
+    if_create_app_ctxt_t        *app_ctxt;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -1181,9 +1126,10 @@ if_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
+    app_ctxt = (if_create_app_ctxt_t *) cfg_ctxt->app_ctxt;
     if (ret == HAL_RET_OK) {
         // Install mirror for interface
-        ret = if_update_mirror_sessions(hal_if);
+        ret = if_update_mirror_sessions(hal_if, app_ctxt->mirror_spec);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("if-mirror update failed, ret : {}", ret);
             goto end;
@@ -1434,6 +1380,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
     if_create_app_ctxt_t        app_ctxt;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
+    if_mirror_info_t            mirror_spec;
     hal_handle_t                pinned_uplink_handle = HAL_HANDLE_INVALID;
 
     hal_api_trace(" API Begin: Interface create ");
@@ -1514,20 +1461,19 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                 spec.key_or_handle().interface_id(), hal_if->tid);
     }
 
-    //
     // Extract Mirror-info from ifSpec
-    //
-    hal_if->mirror_spec.tx_sessions_count = spec.txmirrorsessions_size();
-    for (int i = 0; i < hal_if->mirror_spec.tx_sessions_count; i++) {
-        hal_if->mirror_spec.tx_session_id[i] = spec.txmirrorsessions(i).
-                                               mirrorsession_id();
+    mirror_spec.tx_sessions_count = spec.txmirrorsessions_size();
+    for (int i = 0; i < mirror_spec.tx_sessions_count; i++) {
+        mirror_spec.tx_session_id[i] = spec.txmirrorsessions(i).
+                                       mirrorsession_id();
     }
 
-    hal_if->mirror_spec.rx_sessions_count = spec.rxmirrorsessions_size();
-    for (int i = 0; i < hal_if->mirror_spec.rx_sessions_count; i++) {
-        hal_if->mirror_spec.rx_session_id[i] = spec.rxmirrorsessions(i).
-                                               mirrorsession_id();
+    mirror_spec.rx_sessions_count = spec.rxmirrorsessions_size();
+    for (int i = 0; i < mirror_spec.rx_sessions_count; i++) {
+        mirror_spec.rx_session_id[i] = spec.rxmirrorsessions(i).
+                                       mirrorsession_id();
     }
+    app_ctxt.mirror_spec = &mirror_spec;
 
     // form ctxt and call infra add
     // app_ctxt.l2seg = l2seg;
@@ -1957,11 +1903,11 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     }
 
     hal_if->direction = UPLINK_ERSPAN_DIRECTION_INGRESS;
-    if (has_if_mirror_sessions_changed(hal_if))
+    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec))
         *has_changed = true;
 
     hal_if->direction = UPLINK_ERSPAN_DIRECTION_EGRESS;
-    if (has_if_mirror_sessions_changed(hal_if))
+    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec))
         *has_changed = true;
 
     return ret;
@@ -2003,10 +1949,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("update upd cb {}", hal_if->if_id);
 
-    //
     // Update MirrorSessions info, as needed
-    //
-    ret = if_update_mirror_sessions(hal_if_clone);
+    ret = if_update_mirror_sessions(hal_if_clone, app_ctxt->mirror_spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("if-mirror update failed, ret : {}", ret);
         goto end;
@@ -2698,6 +2642,7 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
     dhl_entry_t                 dhl_entry = { 0 };
     if_update_app_ctxt_t        app_ctxt = { 0 };
+    if_mirror_info_t            mirror_spec;
     bool                        has_changed = false;
 
     hal_api_trace(" API Begin: Interface update ");
@@ -2730,20 +2675,19 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
                     (hal_if->if_type == intf::IF_TYPE_ENIC) ?
                     IfEnicType_Name(hal_if->enic_type) : "IF_ENIC_TYPE_NONE");
 
-    //
     // Extract Mirror-info from ifSpec
-    //
-    hal_if->mirror_spec.tx_sessions_count = spec.txmirrorsessions_size();
-    for (int i = 0; i < hal_if->mirror_spec.tx_sessions_count; i++) {
-        hal_if->mirror_spec.tx_session_id[i] = spec.txmirrorsessions(i).
-                                               mirrorsession_id();
+    mirror_spec.tx_sessions_count = spec.txmirrorsessions_size();
+    for (int i = 0; i < mirror_spec.tx_sessions_count; i++) {
+        mirror_spec.tx_session_id[i] = spec.txmirrorsessions(i).
+                                       mirrorsession_id();
     }
 
-    hal_if->mirror_spec.rx_sessions_count = spec.rxmirrorsessions_size();
-    for (int i = 0; i < hal_if->mirror_spec.rx_sessions_count; i++) {
-        hal_if->mirror_spec.rx_session_id[i] = spec.rxmirrorsessions(i).
-                                               mirrorsession_id();
+    mirror_spec.rx_sessions_count = spec.rxmirrorsessions_size();
+    for (int i = 0; i < mirror_spec.rx_sessions_count; i++) {
+        mirror_spec.rx_session_id[i] = spec.rxmirrorsessions(i).
+                                       mirrorsession_id();
     }
+    app_ctxt.mirror_spec = &mirror_spec;
 
     // Check for changes
     ret = if_update_check_for_change(spec, hal_if, &app_ctxt, &has_changed);
@@ -4467,12 +4411,14 @@ interface_delete (InterfaceDeleteRequest& req, InterfaceDeleteResponse *rsp)
                              if_delete_abort_cb,
                              if_delete_cleanup_cb);
 
-    //
-    // Update MirrorSessions info, as needed
-    //
+    // Delete MirrorSessions config, as needed
     if (ret == HAL_RET_OK && (hal_if->mirror_cfg.tx_sessions_count || 
                               hal_if->mirror_cfg.rx_sessions_count)) {
-        ret = if_update_mirror_sessions(hal_if);
+        if_mirror_info_t mirror_spec;
+
+        mirror_spec.tx_sessions_count = 0;
+        mirror_spec.rx_sessions_count = 0;
+        ret = if_update_mirror_sessions(hal_if, &mirror_spec);
     }
 
 end:
