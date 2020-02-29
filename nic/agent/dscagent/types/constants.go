@@ -105,8 +105,14 @@ const (
 	// DefaultVrf is the name of the default vrf
 	DefaultVrf = "default"
 
+	// DefaulUnderlaytVrf is the name of the default underlay vrf
+	DefaulUnderlaytVrf = "underlay-vpc"
+
 	// DefaultNamespace is the name of the default namespace
 	DefaultNamespace = "default"
+
+	// DefaultTenant is the name of the default tenant
+	DefaultTenant = "default"
 
 	// HalGRPCDefaultBaseURL is the default endpoint for HAL Svc
 	HalGRPCDefaultBaseURL = "127.0.0.1"

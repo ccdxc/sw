@@ -482,6 +482,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 	var v4Prefix *halapi.IPv4Prefix
 	var v4VrIP uint32
 	var v6VrIP []byte
+	ipamName := ""
 
 	v6Prefix = nil
 	v4Prefix = nil
@@ -518,6 +519,25 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Network: Parsing UUID %s | %s Err: %v", nw.GetKey(), nw.UUID, err))
 		return nil, err
 	}
+
+	if nw.Spec.IPAMPolicy == "" {
+		ipamName = nw.Spec.IPAMPolicy
+	} else {
+		// pick the ipam policy from the vpc
+		ipamName = vrf.Spec.IPAMPolicy
+	}
+
+	policy, err := validator.ValidateIPAMPolicy(infraAPI, nw.Tenant, nw.Namespace, ipamName)
+	if err != nil {
+		log.Errorf("Get IPAMPolicy failed for %s | %s", nw.GetKind(), nw.GetKey())
+		return nil, err
+	}
+	ipamuuid, _ := uuid.FromString(policy.UUID)
+	if err != nil {
+		log.Errorf("Parse IPAMPolicy UUID failed for %s | %s", nw.GetKind(), nw.GetKey())
+		return nil, err
+	}
+
 	return &halapi.SubnetRequest{
 		BatchCtxt: nil,
 		Request: []*halapi.SubnetSpec{
@@ -535,8 +555,9 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 						},
 					},
 				},
-				V4Prefix: v4Prefix,
-				V6Prefix: v6Prefix,
+				V4Prefix:     v4Prefix,
+				V6Prefix:     v6Prefix,
+				DHCPPolicyId: ipamuuid.Bytes(),
 				// IngV4SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV4SecurityPolicyID...),
 				// EgV4SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV4SecurityPolicyID...),
 				// IngV6SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV6SecurityPolicyID...),

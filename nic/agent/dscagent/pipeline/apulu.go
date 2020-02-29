@@ -116,9 +116,9 @@ func (a *ApuluAPI) PipelineInit() error {
 	defaultVrf := netproto.Vrf{
 		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "underlay-vpc",
+			Tenant:    types.DefaultTenant,
+			Namespace: types.DefaultNamespace,
+			Name:      types.DefaulUnderlaytVrf,
 			CreationTime: api.Timestamp{
 				Timestamp: *c,
 			},

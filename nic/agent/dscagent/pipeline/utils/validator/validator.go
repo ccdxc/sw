@@ -320,7 +320,7 @@ func ValidateFlowExportPolicy(i types.InfraAPI, netflow netproto.FlowExportPolic
 func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto.Vrf, err error) {
 	// Pick default vrf is unspecified or specified default
 	if len(name) == 0 || name == types.DefaultVrf {
-		tenant = types.DefaultVrf
+		tenant = types.DefaultTenant
 		namespace = types.DefaultNamespace
 		name = types.DefaultVrf
 	}
@@ -391,6 +391,31 @@ func ValidateProfile(profile netproto.Profile) error {
 		return errors.Wrapf(types.ErrInvalidProfilePolicyMode, "Type: %s | Err: %v", strings.ToUpper(profile.Spec.PolicyMode), types.ErrBadRequest)
 	}
 	return nil
+}
+
+// ValidateIPAMPolicy validates IPAMPolicy
+func ValidateIPAMPolicy(i types.InfraAPI, tenant, namespace, name string) (ipam netproto.IPAMPolicy, err error) {
+	policy := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+	dat, err := i.Read(policy.Kind, policy.GetKey())
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrObjNotFound))
+		err = errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrObjNotFound)
+		return
+	}
+	err = ipam.Unmarshal(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "IPAMPolicy: %s | Err: %v", policy.GetKey(), err))
+		err = errors.Wrapf(types.ErrUnmarshal, "IPAMPolicy: %s | Err: %v", policy.GetKey(), err)
+		return
+	}
+	return
 }
 
 func validateSingletonALG(alg *netproto.ALG) (err error) {
