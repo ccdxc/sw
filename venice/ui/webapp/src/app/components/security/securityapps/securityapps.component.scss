@@ -46,3 +46,25 @@
 .pointer {
   cursor: pointer;
 }
+
+.securityapps-detail-container {
+  border-bottom: 1px solid #676763;
+  padding-bottom: 5px;
+  @include primary-font(14px, #676763);
+}
+
+.securityapps-detail-key {
+  @include primary-font(14px, #676763, bold);
+}
+
+.securityapps-detail-value {
+  @include primary-font();
+}
+
+.securityapps-detail-close {
+  cursor: pointer;
+}
+
+.securityapps-detail-header {
+  @include primary-font(18px, #676763, bold);
+}

@@ -19,6 +19,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 import { Subscription } from 'rxjs';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-securityapps',
@@ -46,6 +47,8 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
       return opts.data.spec;
     }
   };
+
+  selectedApp: SecurityApp = null;
 
   selectedSecurityApp: SecurityApp = null;
 
@@ -76,12 +79,20 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
-    protected securityService: SecurityService
+    protected securityService: SecurityService,
+    private _route: ActivatedRoute
   ) {
     super(_controllerService, cdr, uiconfigsService);
   }
 
   ngOnInit() {
+    this._route.queryParams.subscribe(params => {
+      if (params.hasOwnProperty('app')) {
+        // alerttab selected
+        this.getSearchedSecurityApp(params['app']);
+      }
+    });
+
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'SecurityappsComponent', 'state': Eventtypes.COMPONENT_INIT });
     this.getSecurityApps();
     this.setDefaultToolbar();
@@ -135,6 +146,16 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   refresh() {
     this.selectedSecurityApp = null;
     this.getSecurityApps();
+  }
+
+  getSearchedSecurityApp(appname) {
+    const subscription = this.securityService.GetApp(appname).subscribe(
+      response => {
+        this.selectedApp = response.body as SecurityApp;
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Apps')
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
   /**
@@ -225,6 +246,23 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
       default:
         return Array.isArray(value) ? value.join(', ') : value;
     }
+  }
+
+  selectApp(event) {
+    if ( this.selectedApp && event.rowData === this.selectedApp ) {
+      this.selectedApp = null;
+    } else {
+      this.selectedApp = event.rowData;
+    }
+  }
+
+  closeDetails() {
+    this.selectedApp = null;
+  }
+
+  dateToString(date) {
+    const prettyDate = new PrettyDatePipe('en-US');
+    return prettyDate.transform(date);
   }
 
 }
