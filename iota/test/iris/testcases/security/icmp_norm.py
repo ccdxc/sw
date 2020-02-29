@@ -36,6 +36,12 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, w1.node_name, naples_cmd)
         tc.cmd_cookies.append("ICMP Fragment Drops at start of test")
 
+        cmd_cookie = "Checking connectivity, sending ping from %s(%s) --> %s(%s)" % \
+                (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
+        tc.cmd_cookies.append(cmd_cookie)
+        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
+                               "ping -c 1 -s 128 %s" %(w2.ip_address))
+
         cmd_cookie = "%s(%s) --> %s(%s)" % \
                 (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
         api.Logger.info("Injecting ICMP fragment pkt from %s" % (cmd_cookie))
@@ -72,8 +78,8 @@ def Verify(tc):
                     for s in line.split():
                         if s.isdigit():
                             icmp_frag_drop_start = int(s)
-        if "Fragment Drops at end of test" in tc.cmd_cookies[cookie_idx+2]:
-            cmd = tc.resp.commands[cookie_idx+2]
+        if "Fragment Drops at end of test" in tc.cmd_cookies[cookie_idx+3]:
+            cmd = tc.resp.commands[cookie_idx+3]
             for line in cmd.stdout.split('\n'):
                 if "Fragment" in line:
                     for s in line.split():
@@ -81,8 +87,10 @@ def Verify(tc):
                             icmp_frag_drop_end = int(s)
 
         api.PrintCommandResults(tc.resp.commands[cookie_idx])
+        api.Logger.info(tc.cmd_cookies[cookie_idx+1])
         api.PrintCommandResults(tc.resp.commands[cookie_idx+1])
         api.PrintCommandResults(tc.resp.commands[cookie_idx+2])
+        api.PrintCommandResults(tc.resp.commands[cookie_idx+3])
 
         # drop is 2 times the number of packets sent
         if (icmp_frag_drop_start == icmp_frag_drop_end):
@@ -90,7 +98,7 @@ def Verify(tc):
         if (icmp_frag_drop_start + (2 * icmp_pkt_count)) != icmp_frag_drop_end:
             result = api.types.status.FAILURE
             api.Logger.info("Test Failed, ICMP frag drop before: %s, after: %s" %(icmp_frag_drop_start,icmp_frag_drop_end))
-        cookie_idx += 3
+        cookie_idx += 4
 
     if result != api.types.status.FAILURE:
         api.Logger.info("Test Passed")

@@ -45,16 +45,8 @@ typedef enum hal_feature_set_s {
  DEFINE_ENUM(hal_uplink_flood_mode_t, UPLINK_FLOOD_MODES)
  #undef UPLINK_FLOOD_MODES
 
-#define FORWARDING_MODES(ENTRY)                                                                     \
-     ENTRY(HAL_FORWARDING_MODE_NONE,                0, "HAL_FORWARDING_MODE_NONE")                  \
-     ENTRY(HAL_FORWARDING_MODE_CLASSIC,             1, "HAL_FORWARDING_MODE_CLASSIC")               \
-     ENTRY(HAL_FORWARDING_MODE_SMART_HOST_PINNED,   2, "HAL_FORWARDING_MODE_SMART_HOST_PINNED")     \
-     ENTRY(HAL_FORWARDING_MODE_SMART_SWITCH,        3, "HAL_FORWARDING_MODE_SMART_SWITCH")
- DEFINE_ENUM(hal_forwarding_mode_t, FORWARDING_MODES)
- DEFINE_ENUM_TO_STR(hal_forwarding_mode_t, FORWARDING_MODES)
-
 typedef struct device_cfg_s {
-    hal_forwarding_mode_t forwarding_mode;
+    sdk::lib::dev_forwarding_mode_t forwarding_mode;
     sdk::lib::dev_feature_profile_t feature_profile;
     port_admin_state_t admin_state; // default port admin state
     sdk::lib::device_profile_t *device_profile;
@@ -69,7 +61,6 @@ typedef struct hal_cfg_s {
     std::string              vmotion_port;
     char                     feature_set[HAL_MAX_NAME_STR];
     hal_feature_set_t        features;
-    // hal_forwarding_mode_t    forwarding_mode;
     bool                     sync_mode_logging;
     std::string              cfg_path;                  // full HAL config path
     std::string              catalog_file;              // full path of catalog file

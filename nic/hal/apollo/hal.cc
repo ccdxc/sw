@@ -123,7 +123,7 @@ hal_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Platform initialization done");
 
     if (!getenv("DISABLE_FTE") &&
-        (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
+        (hal_cfg->forwarding_mode != sdk::lib::FORWARDING_MODE_CLASSIC) &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // start fte threads
         for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {

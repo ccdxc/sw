@@ -672,7 +672,7 @@ TEST_F(enicif_test, test4)
     // slab_stats_t                *pre = NULL, *post = NULL;
     // bool                        is_leak = false;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(6);
@@ -825,7 +825,7 @@ TEST_F(enicif_test, test5)
     L2SegmentSpec            l2seg_spec;
     L2SegmentResponse        l2seg_rsp;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
 #if 0
     // Create vrf
@@ -1002,7 +1002,7 @@ TEST_F(enicif_test, test6)
     L2SegmentSpec            l2seg_spec;
     L2SegmentResponse        l2seg_rsp;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_HOSTPIN);
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(6);
@@ -1160,7 +1160,7 @@ TEST_F(enicif_test, test7)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
-    // hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    // hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_HOSTPIN);
 
 #if 0
     // Create vrf
@@ -1329,7 +1329,7 @@ TEST_F(enicif_test, test8)
     ::google::protobuf::uint32  ip1 = 0x0a000003;
     ::google::protobuf::uint32  ip2 = 0x0a000004;
 
-    // hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    // hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_HOSTPIN);
 
 #if 0
     // Create vrf

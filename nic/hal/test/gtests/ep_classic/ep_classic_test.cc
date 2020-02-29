@@ -226,7 +226,7 @@ TEST_F(endpoint_test, test1)
     uint64_t       mac = 0x0001DEADBEEF;
     uint32_t       seed = time(NULL);
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     seed = 1577395672;
     fill_registered_mac(seed);

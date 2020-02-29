@@ -17,6 +17,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "lib/periodic/periodic.hpp"
 #include "nic/fte/acl/acl.hpp"
@@ -326,10 +327,10 @@ public:
         mnic_internal_mgmt_lif_id_ = id;
     }
 
-    void set_forwarding_mode(hal_forwarding_mode_t mode) {
+    void set_forwarding_mode(sdk::lib::dev_forwarding_mode_t mode) {
         forwarding_mode_ = mode;
     }
-    hal_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
+    sdk::lib::dev_forwarding_mode_t forwarding_mode(void) const { return forwarding_mode_; }
 
     void set_mgmt_vlan(uint32_t vlan) {
         mgmt_vlan_ = vlan;
@@ -477,7 +478,7 @@ private:
     hal_handle_t            infra_vrf_handle_;                      // infra vrf handle
     eventmgr                *event_mgr_;
     ip_addr_t               mytep_ip_;
-    hal_forwarding_mode_t   forwarding_mode_;
+    sdk::lib::dev_forwarding_mode_t forwarding_mode_;
     uint32_t                mgmt_vlan_;
     uint64_t                mgmt_if_mac_ = 0;
     uint32_t                swm_vlan_;
@@ -793,10 +794,10 @@ public:
     slab *vmotion_thread_ctx_slab(void) const { return cfg_db_->vmotion_thread_ctx_slab(); }
 
     // forwarding mode APIs
-    void set_forwarding_mode(hal_forwarding_mode_t mode) {
+    void set_forwarding_mode(sdk::lib::dev_forwarding_mode_t mode) {
         oper_db_->set_forwarding_mode(mode);
     }
-    hal_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
+    sdk::lib::dev_forwarding_mode_t forwarding_mode(void) const { return oper_db_->forwarding_mode(); }
 
     // mgmt vlan APIs
     void set_mgmt_vlan(uint32_t vlan) {

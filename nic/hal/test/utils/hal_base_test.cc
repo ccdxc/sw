@@ -170,7 +170,7 @@ hal_initialize (bool disable_fte, const char c_file[], string vmotion_port, bool
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         exit(1);
     }
-    hal::g_hal_cfg.device_cfg.forwarding_mode = hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED;
+    hal::g_hal_cfg.device_cfg.forwarding_mode = sdk::lib::FORWARDING_MODE_HOSTPIN;
 
     if (grpc) {
         sdk::lib::thread *grpc_thread =

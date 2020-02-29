@@ -2040,8 +2040,8 @@ uint8_t
 get_nic_mode (l2seg_t *l2seg)
 {
 #if 0
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
+    if (g_hal_state->forwarding_mode() == sdk::lib::FORWARDING_MODE_CLASSIC ||
+        (g_hal_state->forwarding_mode() == sdk::lib::FORWARDING_MODE_HOSTPIN &&
         l2seg_is_mgmt(l2seg))) {
 #endif
     if (l2seg_is_mgmt(l2seg)) {

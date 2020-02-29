@@ -318,7 +318,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     sdk::lib::thread    *hal_thread;
 
     if (!getenv("DISABLE_FTE")) {
-        if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+        if (hal_cfg->device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
             // 1 FTE thread for fte-span
             tid = HAL_THREAD_ID_FTE_MIN;
             HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
@@ -678,18 +678,6 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
     return ret;
 }
 
-static inline hal_forwarding_mode_t
-parse_forwarding_mode (std::string forwarding_mode)
-{
-    if (forwarding_mode == "FORWARDING_MODE_CLASSIC") {
-        return HAL_FORWARDING_MODE_CLASSIC;
-    } else if (forwarding_mode == "FORWARDING_MODE_SWITCH") {
-        return HAL_FORWARDING_MODE_SMART_SWITCH;
-    } else if (forwarding_mode == "FORWARDING_MODE_HOSTPIN") {
-        return HAL_FORWARDING_MODE_SMART_HOST_PINNED;
-    }
-    return HAL_FORWARDING_MODE_CLASSIC;
-}
 
 //------------------------------------------------------------------------------
 // initialize port control operations
@@ -710,15 +698,15 @@ hal_device_cfg_init (hal_cfg_t *hal_cfg)
     device = sdk::lib::device::factory(device_cfg_path + "/" + DEVICE_CFG_FNAME);
     SDK_ASSERT_TRACE_RETURN(device != NULL, HAL_RET_ERR, "Device conf file error");
 
-    device_cfg->forwarding_mode = (hal::hal_forwarding_mode_t)device->get_forwarding_mode();
+    device_cfg->forwarding_mode = device->get_forwarding_mode();
     device_cfg->feature_profile = device->get_feature_profile();
     device_cfg->admin_state = device->get_port_admin_state() ?
         port_admin_state_t::PORT_ADMIN_STATE_DOWN : port_admin_state_t::PORT_ADMIN_STATE_UP;
     device_cfg->device_profile = device->device_profile();
     device_cfg->mgmt_vlan = device->get_mgmt_vlan() ? device->get_mgmt_vlan() : NATIVE_VLAN_ID;
 
-    printf("Hal forwarding mode: %s, feature_profile: %d, port_admin_state: %d, mgmt_vlan: %d\n",
-           FORWARDING_MODES_str(device_cfg->forwarding_mode),
+    printf("Hal forwarding mode: %d, feature_profile: %d, port_admin_state: %d, mgmt_vlan: %d\n",
+           device_cfg->forwarding_mode,
            device_cfg->feature_profile,
            (int)device_cfg->admin_state,
            device_cfg->mgmt_vlan);

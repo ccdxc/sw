@@ -169,7 +169,7 @@ TEST_F(unify_test, test1)
     uint32_t       enic_inb1 = 257, enic_inb2 = 258, enic_oob = 259, enic_wl1 = 200;
     uint32_t       wl_encap1 = 100;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     // Create uplinks
     ASSERT_EQ(create_uplink(uplinkif_id1, up_port1), HAL_RET_OK);

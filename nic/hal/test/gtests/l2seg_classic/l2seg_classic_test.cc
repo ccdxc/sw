@@ -149,7 +149,7 @@ TEST_F(l2seg_test, test1)
     bool           is_leak = false;
     // uint32_t       seed = time(NULL);
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     // fill_inp_prop(seed);
     fill_inp_prop(1549822106);
@@ -183,7 +183,7 @@ TEST_F(l2seg_test, test2)
     input_properties_otcam_swkey_mask_t key_mask = {0};
     uint32_t idx = 0;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     key.capri_intrinsic_lif = 0x21;
     key.vlan_tag_valid = 1;
@@ -218,7 +218,7 @@ TEST_F(l2seg_test, test3)
     L2SegmentDeleteResponse del_rsp;
 
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     // Create uplink
     create_uplink(UPLINK_IF_ID_OFFSET + 1, 1, 0);

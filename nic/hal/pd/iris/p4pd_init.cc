@@ -1463,7 +1463,7 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
 
     val = be64toh(val);
 
-    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
         nic_mode = NIC_MODE_CLASSIC;
     } else {
         // host-pinned & default

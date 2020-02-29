@@ -81,7 +81,7 @@ TEST_F(mgmt_test, test1)
     EndpointResponse    ep_rsp;
     hal_ret_t           ret = HAL_RET_OK;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_CLASSIC);
 
     // Create 2 MNIC LIFs, Management LIFs
     // Create OOB MNIC LIF
@@ -385,7 +385,7 @@ TEST_F(mgmt_test, test2)
     EndpointResponse    ep_rsp;
     hal_ret_t           ret = HAL_RET_OK;
 
-    hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED);
+    hal::g_hal_state->set_forwarding_mode(sdk::lib::FORWARDING_MODE_HOSTPIN);
 
     // Create 2 MNIC LIFs, Management LIFs
     // Create OOB MNIC LIF
