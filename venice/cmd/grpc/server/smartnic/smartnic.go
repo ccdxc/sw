@@ -13,12 +13,14 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
+	utils2 "github.com/pensando/sw/venice/ctrler/rollout/utils"
+
 	"github.com/pensando/sw/api"
 	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
-	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
@@ -512,6 +514,15 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		// If NIC was decommissioned from Venice, override previous Spec.MgmtMode
 		nicObj.Spec.MgmtMode = cluster.DistributedServiceCardSpec_NETWORK.String()
+		nicObj.Status.VersionMismatch = false
+
+		log.Infof("NIC %s with SKU %s and version %s AdmissionPhase %v", name, nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion(), nicObj.Status.AdmissionPhase)
+		status, veniceVersion := s.versionChecker.CheckNICVersionForAdmission(nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion())
+		if status == utils2.RequestRolloutNaples && nicObj.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
+			log.Infof("ForceRollout: NIC %s with SKU %s and version %s is requested to rollout to version %s ", name, nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion(), veniceVersion)
+			nicObj.Status.VersionMismatch = true
+			nicObj.Status.AdmissionPhaseReason = "Incompatible NIC Version. Force Rollout Requested."
+		}
 
 		// Create or update SmartNIC object in ApiServer
 		if smartNICObjExists {
@@ -556,11 +567,10 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			}
 			okResp.AdmissionResponse.CaTrustChain = cmdcertutils.GetCaTrustChain(env.CertMgr)
 			okResp.AdmissionResponse.TrustRoots = cmdcertutils.GetTrustRoots(env.CertMgr)
-		}
-
-		status, version := s.versionChecker.CheckNICVersionForAdmission(nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion())
-		if status != "" {
-			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nicObj.Status.GetDSCSku(), nicObj.Status.GetDSCVersion(), version, status)
+			if nicObj.Status.VersionMismatch {
+				okResp.AdmissionResponse.Reason = "Incompatible NIC Version. Force Rollout Requested."
+				okResp.AdmissionResponse.RolloutVersion = veniceVersion
+			}
 		}
 		return okResp, nil
 	}

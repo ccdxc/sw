@@ -150,6 +150,16 @@ func (sm *Statemgr) ListDSCRollouts() ([]*DSCRolloutState, error) {
 func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRolloutStatus) {
 
 	log.Infof("Updating status %+v of DSCRollout %v", newStatus, snicState.DSCRollout.Name)
+	if snicState.ros == nil {
+		log.Infof("ROS State is null")
+		for _, s := range newStatus.OpStatus {
+			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
+				log.Infof("Received status disruptive upgrade. Delete DSCRollout Object")
+				snicState.Statemgr.DeleteDSCRolloutState(snicState.DSCRollout)
+			}
+		}
+		return
+	}
 	version := snicState.ros.Rollout.Spec.Version
 
 	var phase roproto.RolloutPhase_Phases

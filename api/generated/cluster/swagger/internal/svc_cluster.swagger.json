@@ -1587,6 +1587,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.version-mismatch",
+            "description": "Set to true if venice and dsc versions are incompatible.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -6751,6 +6759,11 @@
         "adm-phase-reason": {
           "type": "string",
           "description": "The reason why the DistributedServiceCard is not in ADMITTED state."
+        },
+        "version-mismatch": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Set to true if venice and dsc versions are incompatible."
         }
       },
       "description": "DistributedServiceCardStatus contains current status of a DistributedServiceCard."

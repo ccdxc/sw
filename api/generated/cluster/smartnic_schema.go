@@ -130,6 +130,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"vendor":               api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.Vendor", Skip: false, Insert: "", Help: ""},
 			"version":              api.CLIInfo{Path: "Status.SystemInfo.BiosInfo.Version", Skip: false, Insert: "", Help: ""},
+			"version-mismatch":     api.CLIInfo{Path: "Status.VersionMismatch", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"cluster.DistributedServiceCardSpec": &api.Struct{
@@ -178,6 +179,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AdmissionPhaseReason": api.Field{Name: "AdmissionPhaseReason", CLITag: api.CLIInfo{ID: "adm-phase-reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "adm-phase-reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"VersionMismatch": api.Field{Name: "VersionMismatch", CLITag: api.CLIInfo{ID: "version-mismatch", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "version-mismatch", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"cluster.IPConfig": &api.Struct{

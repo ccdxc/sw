@@ -17,12 +17,12 @@ import "github.com/pensando/sw/api/common.proto";
 //============================ smartnic update ==========================================================
 
 enum DSCOp {
-    DSCNoOp			    = 0;
-    DSCPreCheckForUpgOnNextHostReboot  = 1;
-    DSCPreCheckForDisruptive           = 2;
-    DSCUpgOnNextHostReboot             = 3;
-    DSCDisruptiveUpgrade               = 4;
-    DSCImageDownload                   = 5;
+    DSCNoOp = 0;
+    DSCPreCheckForUpgOnNextHostReboot = 1;
+    DSCPreCheckForDisruptive = 2;
+    DSCUpgOnNextHostReboot = 3;
+    DSCDisruptiveUpgrade = 4;
+    DSCImageDownload = 5;
 }
 
 message DSCOpSpec {

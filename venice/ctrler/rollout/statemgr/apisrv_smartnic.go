@@ -7,6 +7,9 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -22,14 +25,68 @@ type SmartNICState struct {
 	// Local information
 }
 
+func (sm *Statemgr) performForceRollout(smartNIC *cluster.DistributedServiceCard) {
+	buildVersion := sm.writer.GetClusterVersion()
+	log.Infof("ForceRollout: Build Version %s", buildVersion)
+
+	// smartNICRollout Object does not exist. Create it
+	snicRollout := protos.DSCRollout{
+		TypeMeta: api.TypeMeta{
+			Kind: kindDSCRollout,
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   smartNIC.Name,
+			Tenant: smartNIC.Tenant,
+		},
+		Spec: protos.DSCRolloutSpec{
+			Ops: []protos.DSCOpSpec{
+				{
+					Op:      protos.DSCOp_DSCPreCheckForDisruptive,
+					Version: buildVersion,
+				},
+				{
+					Op:      protos.DSCOp_DSCDisruptiveUpgrade,
+					Version: buildVersion,
+				},
+			},
+		},
+	}
+
+	sros := DSCRolloutState{
+		DSCRollout: &snicRollout,
+		Statemgr:   sm,
+		ros:        nil,
+		status:     make(map[protos.DSCOp]protos.DSCOpStatus),
+	}
+	sm.memDB.AddObject(&sros)
+	log.Infof("ForceRollout: Created smartNICRollout %#v", snicRollout.Name)
+}
+
 func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *cluster.DistributedServiceCard) {
 	switch et {
-	case kvstore.Created, kvstore.Updated:
-		log.Infof("SetSmartNICState - {%+v}\n", smartNIC)
+	case kvstore.Created:
+		log.Infof("(Create) SetSmartNICState - {%+v}\n", smartNIC)
+
 		err := sm.SetSmartNICState(smartNIC)
 		if err != nil {
 			log.Errorf("Error SetSmartNICState SmartNIC {%+v}. Err: %v", smartNIC, err)
 			return
+		}
+		if smartNIC.Status.VersionMismatch == true {
+			log.Infof("ForceRollout: DSC Version incompatible.")
+			sm.performForceRollout(smartNIC)
+			return
+		}
+	case kvstore.Updated:
+		log.Infof("(Update)SetSmartNICState - {%+v}\n", smartNIC)
+		err := sm.SetSmartNICState(smartNIC)
+		if err != nil {
+			log.Errorf("Error SetSmartNICState SmartNIC {%+v}. Err: %v", smartNIC, err)
+			return
+		}
+		if sm.rollout && smartNIC.Status.VersionMismatch == true {
+			log.Infof("ForceRollout: DSC moved from decommissioned to admitted AND version Mismatch")
+			sm.performForceRollout(smartNIC)
 		}
 	case kvstore.Deleted:
 		log.Infof("DeleteSmartNICState - %s\n", smartNIC.Name)
@@ -52,6 +109,12 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.DistributedServiceCard) e
 	obj, err := sm.FindObject(kindSmartNIC, smartNIC.Tenant, smartNIC.Name)
 	if err == nil {
 		smartNICState, err = SmartNICStateFromObj(obj)
+		sm.rollout = false
+		if smartNICState.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_DECOMMISSIONED.String() &&
+			smartNIC.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
+			log.Infof("Forcerollout: DSC moving from decommissioned to admitted. do force rollout")
+			sm.rollout = true
+		}
 		if err != nil {
 			return err
 		}
@@ -82,7 +145,6 @@ func (sm *Statemgr) SetSmartNICState(smartNIC *cluster.DistributedServiceCard) e
 			log.Infof("SetSmartNICState - %s Labels:%s Nil Conditions\n", smartNIC.Name, smartNIC.Labels)
 		}
 	}
-
 	smartNICState.DistributedServiceCard = smartNIC
 	smartNICState.Mutex.Unlock()
 

@@ -23,7 +23,6 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
-	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/certsproxy"
@@ -673,41 +672,6 @@ func (n *NMD) AdmitNaples() {
 						n.nicRegInterval = 2 * n.nicRegInterval
 					} else {
 						n.nicRegInterval = nicRegMaxInterval
-					}
-					if len(resp.RolloutVersion) > 0 {
-						log.Infof("NIC (mac %s) running version is incompatible. Request rollout to version %s", mac, resp.RolloutVersion)
-						// Create rollout object for version
-						snicRollout := protos.DSCRollout{
-							TypeMeta: api.TypeMeta{
-								Kind: "DSCRollout"},
-							ObjectMeta: api.ObjectMeta{
-								Name:   n.config.Status.Fru.MacStr,
-								Tenant: n.config.Tenant,
-							},
-							Spec: protos.DSCRolloutSpec{
-								Ops: []protos.DSCOpSpec{
-									{
-										Op:      protos.DSCOp_DSCImageDownload,
-										Version: resp.RolloutVersion,
-									},
-									{
-										Op:      protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot,
-										Version: resp.RolloutVersion,
-									},
-									{
-										Op:      protos.DSCOp_DSCUpgOnNextHostReboot,
-										Version: resp.RolloutVersion,
-									},
-								},
-							}}
-
-						err := n.CreateUpdateDSCRollout(&snicRollout)
-						if err != nil {
-							log.Errorf("Error creating smartNICRollout during NIC Version check {%+v}", err)
-						}
-					} else {
-						log.Infof("NIC waiting for manual approval of admission into cluster, mac: %s reason: %s",
-							mac, resp.Reason)
 					}
 
 				case cmd.DistributedServiceCardStatus_ADMITTED.String():

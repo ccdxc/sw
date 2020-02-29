@@ -34,6 +34,7 @@ type Statemgr struct {
 	SmartNICWatcher chan kvstore.WatchEvent // smartNIC object watcher
 
 	stopFlag syncFlag
+	rollout  bool
 
 	smartNICWG sync.WaitGroup //  Wait group to wait on all go routines dealing with smartNICs for the current rollout
 }
@@ -147,6 +148,7 @@ func NewStatemgr(wr writer.Writer, er events.Recorder) (*Statemgr, error) {
 		stopFlag: syncFlag{
 			flag: false,
 		},
+		rollout: false,
 	}
 	stateMgr.waitGrp.Add(1)
 	go stateMgr.runWatcher()

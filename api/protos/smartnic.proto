@@ -132,7 +132,7 @@ message DistributedServiceCardStatus {
         ADMITTED       = 4; // NIC is validated and admitted
         // ui-hint: Decommissioned
         DECOMMISSIONED = 5; // NIC has been removed from the cluster
-    }
+   }
     
     // Current admission phase of the DistributedServiceCard.
     // When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED
@@ -175,6 +175,9 @@ message DistributedServiceCardStatus {
 
     // The reason why the DistributedServiceCard is not in ADMITTED state
     string AdmissionPhaseReason             = 11 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
+
+    // Set to true if venice and dsc versions are incompatible
+    bool VersionMismatch             = 12 [(gogoproto.jsontag) = "version-mismatch,omitempty"];
 }
 
 // DSCCondition describes the state of a DistributedServiceCard at a certain point.

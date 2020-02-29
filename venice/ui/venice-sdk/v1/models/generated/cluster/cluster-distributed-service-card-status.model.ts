@@ -24,6 +24,7 @@ export interface IClusterDistributedServiceCardStatus {
     'DSCSku'?: string;
     'host'?: string;
     'adm-phase-reason'?: string;
+    'version-mismatch'?: boolean;
     '_ui'?: any;
 }
 
@@ -53,6 +54,8 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
     'host': string = null;
     /** The reason why the DistributedServiceCard is not in ADMITTED state. */
     'adm-phase-reason': string = null;
+    /** Set to true if venice and dsc versions are incompatible. */
+    'version-mismatch': boolean = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardStatus]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterDistributedServiceCardStatus_admission_phase_uihint,
@@ -111,6 +114,11 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
             description:  `The reason why the DistributedServiceCard is not in ADMITTED state.`,
             required: false,
             type: 'string'
+        },
+        'version-mismatch': {
+            description:  `Set to true if venice and dsc versions are incompatible.`,
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -223,6 +231,13 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
         } else {
             this['adm-phase-reason'] = null
         }
+        if (values && values['version-mismatch'] != null) {
+            this['version-mismatch'] = values['version-mismatch'];
+        } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('version-mismatch')) {
+            this['version-mismatch'] = ClusterDistributedServiceCardStatus.propInfo['version-mismatch'].default;
+        } else {
+            this['version-mismatch'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -241,6 +256,7 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
                 'DSCSku': CustomFormControl(new FormControl(this['DSCSku']), ClusterDistributedServiceCardStatus.propInfo['DSCSku']),
                 'host': CustomFormControl(new FormControl(this['host']), ClusterDistributedServiceCardStatus.propInfo['host']),
                 'adm-phase-reason': CustomFormControl(new FormControl(this['adm-phase-reason']), ClusterDistributedServiceCardStatus.propInfo['adm-phase-reason']),
+                'version-mismatch': CustomFormControl(new FormControl(this['version-mismatch']), ClusterDistributedServiceCardStatus.propInfo['version-mismatch']),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterDSCCondition>('conditions', this['conditions'], ClusterDSCCondition);
@@ -280,6 +296,7 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
             this._formGroup.controls['DSCSku'].setValue(this['DSCSku']);
             this._formGroup.controls['host'].setValue(this['host']);
             this._formGroup.controls['adm-phase-reason'].setValue(this['adm-phase-reason']);
+            this._formGroup.controls['version-mismatch'].setValue(this['version-mismatch']);
         }
     }
 }
