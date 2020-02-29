@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
-
 from infra.common.logging import logger
 
 from apollo.config.resmgr import client as ResmgrClient
@@ -21,7 +20,7 @@ class BgpPeerObject(base.ConfigObjectBase):
         self.Id = next(ResmgrClient[node].BgpPeerIdAllocator)
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER)
         self.GID("BGPPeer%d"%self.Id)
-        self.State = getattr(spec, "adminstate", None)
+        self.State = getattr(spec, "adminstate", 0)
         self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", None))
         self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", None))
         self.RemoteASN = getattr(spec, "remoteasn", 0)
@@ -73,6 +72,7 @@ class BgpPeerObject(base.ConfigObjectBase):
         spec.ConnectRetry = self.ConnectRetry
         spec.HoldTime = self.HoldTime
         spec.KeepAlive = self.KeepAlive
+        spec.State = self.State
         #spec.Password = self.Password
         spec.Id = self.GetKey()
         return
@@ -99,6 +99,8 @@ class BgpPeerObject(base.ConfigObjectBase):
         if spec.KeepAlive != self.KeepAlive:
             return False
         if spec.Password != self.Password:
+            return False
+        if spec.State != self.State:
             return False
         return True
 

@@ -2,20 +2,24 @@
 
 DRYRUN=0
 START_VPP=0
+NO_STOP=0
 
 # set file size limit to 30GB so that model logs will not exceed that.
 ulimit -f $((30*1024*1024))
 
-CMDARGS=$*
+CMDARGS=""
 argc=$#
 argv=($@)
 for (( j=0; j<argc; j++ )); do
+    [ "${argv[j]}" != '--nostop' ] && CMDARGS+="${argv[j]} "
     if [ ${argv[j]} == '--pipeline' ];then
         PIPELINE=${argv[j+1]}
     elif [ ${argv[j]} == '--feature' ];then
         FEATURE=${argv[j+1]}
     elif [[ ${argv[j]} =~ .*'--dry'.* ]];then
         DRYRUN=1
+    elif [[ ${argv[j]} == '--nostop' ]];then
+        NO_STOP=1
     fi
 done
 
@@ -76,6 +80,10 @@ function collect_logs () {
 }
 
 function finish () {
+    if [ $NO_STOP == 1 ]; then
+         return
+    fi
+    echo "===== Finishing ====="
     if [ $DRYRUN == 0 ]; then
         stop_process
     fi
@@ -85,6 +93,9 @@ function finish () {
 trap finish EXIT
 
 function setup () {
+    # Cleanup of previous run if required
+    stop_process
+
     # remove stale files from older runs
     remove_stale_files
     remove_logs
@@ -106,7 +117,7 @@ mkdir -p "/sysconfig/config0/"
 touch "/sysconfig/config0/device.conf"
 
 # start DOL now
-$DOLDIR/main.py $* 2>&1 | tee dol.log
+$DOLDIR/main.py $CMDARGS 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
 # end of script

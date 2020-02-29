@@ -643,6 +643,8 @@ void l2f_mai_t::batch_pds_mapping_del_spec(bd_obj_t* bd_obj,
     ips_info_.bd_id = bd_obj->properties().bd_id;
     MAC_ADDR_COPY(ips_info_.mac_address, mac);
     store_info_.bd_obj = bd_obj;
+    PDS_TRACE_DEBUG("Append MS BD %d MAC %s Del to PDS Batch",
+                    bd_obj->properties().bd_id, macaddr2str(mac));
     auto key = make_pds_mapping_key_();
     if (!PDS_MOCK_MODE()) {
         api::pds_remote_mapping_delete(&key, bctxt);

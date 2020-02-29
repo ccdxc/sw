@@ -11,6 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
+import apollo.config.objects.metaswitch.cp_utils as cp_utils
 import evpn_pb2 as evpn_pb2
 
 class EvpnEviObject(base.ConfigObjectBase):
@@ -22,9 +23,10 @@ class EvpnEviObject(base.ConfigObjectBase):
         #self.UUID = utils.PdsUuid(self.Id)
         self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
-        self.SubnetId = getattr(evpnevispec, 'subnetid', None)
+        self.SubnetId = parent.UUID
         self.AutoRD = getattr(evpnevispec, 'autord', None)
         self.RD = getattr(evpnevispec, 'rd', None)
+        self.RTType = getattr(evpnevispec, 'rttype', None)
         self.AutoRT = getattr(evpnevispec, 'autort', None)
         self.RTType = getattr(evpnevispec, 'rttype', None)
         self.Encap = getattr(evpnevispec, 'encap', None)
@@ -36,7 +38,7 @@ class EvpnEviObject(base.ConfigObjectBase):
     def __repr__(self):
         return f"EvpnEvi:{self.UUID} SubnetId: {self.SubnetId} AutoRd:\
                 {self.AutoRD} RD:{self.RD} AutoRt:{self.AutoRT} RTType:\
-                {self.RTType} Encap:{self.Encap} EVIId:{self.EVIId}"
+                {self.RTType} Encap:{self.Encap}"
 
     def Show(self):
         logger.info("EvpnEvi config Object: %s" % self)
@@ -50,36 +52,13 @@ class EvpnEviObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        if self.SubnetId:
-            spec.SubnetId = utils.PdsUuid.GetUUIDfromId(self.SubnetId)
-        if self.AutoRD:
-            if self.AutoRD == 'auto':
-                spec.AutoRD == evpn_pb2.EVPN_CFG_AUTO
-            elif self.AutoRD == 'manual':
-                spec.AutoRD == evpn_pb2.EVPN_CFG_MANUAL
-            else:
-                spec.AutoRD == evpn_pb2.EVPN_CFG_INVALID
+        spec.SubnetId = spec.Id
+        spec.AutoRD = cp_utils.GetEVPNCfg(self.AutoRD)
         if spec.AutoRD != evpn_pb2.EVPN_CFG_AUTO:
             if self.RD:
                 spec.RD = self.RD
-        if self.AutoRT:
-            if self.AutoRT == 'auto':
-                spec.AutoRT == evpn_pb2.EVPN_CFG_AUTO
-            elif self.AutoRT == 'manual':
-                spec.AutoRT == evpn_pb2.EVPN_CFG_MANUAL
-            else:
-                spec.AutoRT == evpn_pb2.EVPN_CFG_INVALID
-        if self.RTType:
-            if self.RTType == 'import':
-                spec.RTType = evpn_pb2.EVPN_RT_IMPORT
-            elif self.RTType == 'export':
-                spec.RTType = evpn_pb2.EVPN_RT_EXPORT
-            elif self.RTType == 'import_export':
-                spec.RTType = evpn_pb2.EVPN_RT_IMPORT_EXPORT
-            elif self.RTType == 'none':
-                spec.RTType = evpn_pb2.EVPN_RT_NONE
-            else:
-                spec.RTType = evpn_pb2.EVPN_RT_INVALID
+        spec.RTType = cp_utils.GetRTType(self.RTType) 
+        spec.AutoRT = cp_utils.GetEVPNCfg(self.AutoRT)
         if self.Encap:
             if self.Encap == 'mpls':
                 spec.Encap = evpn_pb2.EVPN_ENCAP_MPLS
@@ -87,9 +66,6 @@ class EvpnEviObject(base.ConfigObjectBase):
                 spec.Encap = evpn_pb2.EVPN_ENCAP_VXLAN
             else:
                 spec.Encap = evpn_pb2.EVPN_ENCAP_INVALID
-        if self.EVIId:
-            spec.EVIId = self.EVIId
-
         return
 
     def ValidateSpec(self, spec):

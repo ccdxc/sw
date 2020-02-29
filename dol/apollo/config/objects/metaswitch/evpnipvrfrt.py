@@ -11,6 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
+import apollo.config.objects.metaswitch.cp_utils as cp_utils
 import evpn_pb2 as evpn_pb2
 
 class EvpnIpVrfRtObject(base.ConfigObjectBase):
@@ -21,7 +22,7 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
         self.GID("EvpnIPVrfRt%d"%self.Id)
         self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
-        self.VPCId = getattr(evpnipvrfrtspec, 'vpcid', parent.VPCId)
+        self.VPCId = parent.UUID
         self.RT = getattr(evpnipvrfrtspec, 'rt', None)
         self.RTType = getattr(evpnipvrfrtspec, 'rttype', 0)
         self.VRFName = getattr(evpnipvrfrtspec, 'vrfname', None)
@@ -45,21 +46,10 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        if self.VPCId:
-            spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId)
+        spec.VPCId = spec.Id
         if self.RT:
-            spec.RT = bytes(self.RT, 'utf-8')
-        if self.RTType:
-            if self.RTType == 'import':
-                spec.RTType = evpn_pb2.EVPN_RT_IMPORT
-            elif self.RTType == 'export':
-                spec.RTType = evpn_pb2.EVPN_RT_EXPORT
-            elif self.RTType == 'import_export':
-                spec.RTType = evpn_pb2.EVPN_RT_IMPORT_EXPORT
-            elif self.RTType == 'none':
-                spec.RTType = evpn_pb2.EVPN_RT_NONE
-            else:
-                spec.RTType = evpn_pb2.EVPN_RT_INVALID
+            spec.RT = cp_utils.GetRT(self.RT)
+        spec.RTType = cp_utils.GetRTType(self.RTType) 
         if self.VRFName:
             spec.VRFName = self.VRFName
         return

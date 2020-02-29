@@ -11,6 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
+import apollo.config.objects.metaswitch.cp_utils as cp_utils
 import evpn_pb2 as evpn_pb2
 
 class EvpnIpVrfObject(base.ConfigObjectBase):
@@ -21,7 +22,7 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
         self.GID("EvpnIPVrf%d"%self.Id)
         self.UUID = parent.UUID
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
-        self.VPCId = getattr(evpnipvrfspec, 'vpcid', parent.VPCId)
+        self.VPCId = parent.UUID
         self.VNI = getattr(evpnipvrfspec, 'vni', 0)
         self.AutoRD = getattr(evpnipvrfspec, 'autord', 0)
         self.RD = getattr(evpnipvrfspec, 'rd', None)
@@ -46,17 +47,10 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        if spec.VPCId:
-            spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId)
+        spec.VPCId = spec.Id
         if spec.VNI:
             spec.VNI = self.VNI
-        if self.AutoRD:
-            if self.AutoRD == 'auto':
-                spec.AutoRD == evpn_pb2.EVPN_CFG_AUTO
-            elif self.AutoRD == 'manual':
-                spec.AutoRD == evpn_pb2.EVPN_CFG_MANUAL
-            else:
-                spec.AutoRD == evpn_pb2.EVPN_CFG_INVALID
+        spec.AutoRD = cp_utils.GetEVPNCfg(self.AutoRD)
         if self.RD:
             spec.RD = self.RD
         if self.VRFName:

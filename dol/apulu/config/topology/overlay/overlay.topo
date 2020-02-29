@@ -86,26 +86,63 @@ node:
           bgppeer:
             - peeraddr      : 10.1.1.2
               localaddr     : 0.0.0.0
+              adminstate    : 1
+              remoteasn     : 100
+              sendcomm      : true
+              sendextcomm   : true
+              connectretry  : 5
+              rrclient      : false
+              holdtime      : 90
+              keepalive     : 30
               bgppeeraf:
-                - afi       : ipv4
+                - peeraddr  : 10.1.1.2
+                  localaddr : 0.0.0.0
+                  afi       : ipv4
                   safi      : unicast
             # underlay bgp peer 2
             - peeraddr      : 11.1.1.2
               localaddr     : 0.0.0.0
+              adminstate    : 1
+              sendcomm      : true
+              sendextcomm   : true
+              connectretry  : 5
+              rrclient      : false
+              holdtime      : 90
+              keepalive     : 30
               bgppeeraf:
-                - afi       : ipv4
+                - peeraddr  : 11.1.1.2
+                  localaddr : 0.0.0.0
+                  afi       : ipv4
                   safi      : unicast
             # bgp evpn peer 3
             - peeraddr      : 2.2.2.2
               localaddr     : 1.1.1.1
+              adminstate    : 1
+              sendcomm      : true
+              sendextcomm   : true
+              connectretry  : 5
+              rrclient      : false
+              holdtime      : 90
+              keepalive     : 30
               bgppeeraf:
-                - afi       : l2vpn
+                - peeraddr  : 2.2.2.2
+                  localaddr : 1.1.1.1
+                  afi       : l2vpn
                   safi      : evpn
             # bgp evpn peer 4
             - peeraddr      : 10.1.1.3
               localaddr     : 1.1.1.1
+              adminstate    : 1
+              sendcomm      : true
+              sendextcomm   : true
+              connectretry  : 5
+              rrclient      : false
+              holdtime      : 90
+              keepalive     : 30
               bgppeeraf:
-                - afi       : l2vpn
+                - peeraddr  : 10.1.1.3
+                  localaddr : 1.1.1.1
+                  afi       : l2vpn
                   safi      : evpn
         # tenant vpc
         - stack : ipv4 # dual, ipv4 , ipv6
@@ -123,13 +160,18 @@ node:
               rmap:                       # Only for read op
                 - count : 4
               evpnevi:
-                - id    : 1
-                - id    : 2
+                - id     : 1
+                  rttype : import_export
+                  autort : manual
+                  autord : auto
+                  encap  : vxlan
               evpnevirt:
-                - id    : 1
-                  rt    : 0:1000
-                - id    : 2
-                  rt    : 0:1001
+                - id     : 1
+                  rttype : import_export
+                  rt     : 00:02:00:01:10:00:00:64
+                - id     : 2
+                  rttype : import_export
+                  rt     : 00:02:00:01:10:00:00:65
           nexthop: # Only for read op
             - type : overlay
               count : 2
@@ -178,9 +220,11 @@ node:
           nat46 : false
           evpnipvrf:
             - id    : 1
-              vni   : 10000
+              vni   : 200
+              autord : auto
           evpnipvrfrt:
-            - id    : 1
-              rt    : 0:20000
+            - id     : 1
+              rttype : import_export
+              rt     : 00:02:00:00:00:00:00:c8
 
 
