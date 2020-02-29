@@ -1967,6 +1967,7 @@ do_set_startup_image()
     if [ "$s" != "null" ]; then
         log_info "New startup image version $s"
     fi
+    touch /tmp/fwupdate_complete
     echo "OK"
     set -e
 }

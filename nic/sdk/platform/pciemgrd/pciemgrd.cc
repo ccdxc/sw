@@ -47,6 +47,16 @@ reboot_the_system(void)
     if (r) pciesys_logerror("failed to reboot %d\n", r);
 }
 
+static void
+reboot_the_system_swm(void)
+{
+    int r = system("/nic/tools/pcie_hostdn_swm.sh");
+    if (r < 0)
+        pciesys_loginfo("pcie_hostdn_swm.sh error (%d)\n", r);
+    else
+        pciesys_loginfo("pcie_hostdn_swm.sh called\n");
+}
+
 /*
  * To make the IP address of the "int_mnic0" internal management
  * interface unique we make a component of the IP address based
@@ -110,13 +120,22 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     }
     case PCIEPORT_EVENT_HOSTDN: {
         if (pme->reboot_on_hostdn) {
-            reboot_the_system();
+            if (pme->params.long_lived)
+                reboot_the_system_swm();
+            else
+                reboot_the_system();
         }
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
 #ifdef IRIS
         update_pcie_port_status(ev->port, PCIEMGR_DOWN);
 #endif
+        break;
+    }
+    case PCIEPORT_EVENT_MACUP: {
+        pciesys_loginfo("port%d: macup event\n", ev->port);
+        if (pme->params.long_lived)
+            reboot_the_system_swm();
         break;
     }
     case PCIEPORT_EVENT_BUSCHG: {
@@ -696,6 +715,7 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
     }
 
     pme->params.subdeviceid = catalog->pcie_subdeviceid();
+    pme->params.long_lived = catalog->pcie_long_lived();
 
     int nportspecs = catalog->pcie_nportspecs();
     for (int i = 0; i < nportspecs; i++) {
@@ -753,6 +773,7 @@ pciemgrd_logconfig(pciemgrenv_t *pme)
     pciesys_loginfo("subdeviceid: %04x\n", pme->params.subdeviceid);
     pciesys_loginfo("initmode: %d\n", pme->params.initmode);
     pciesys_loginfo("restart: %d\n", pme->params.restart);
+    pciesys_loginfo("long_lived: %d\n", pme->params.long_lived);
     pciesys_loginfo("---------------- config ----------------\n");
 }
 

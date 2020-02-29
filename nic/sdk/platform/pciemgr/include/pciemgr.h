@@ -20,6 +20,7 @@ typedef struct pciemgr_params_s {
     u_int16_t vendorid;         /* default vendorid */
     u_int16_t subvendorid;      /* default subvendorid */
     u_int16_t subdeviceid;      /* default subdeviceid */
+    u_int8_t long_lived;        /* aux powered swm card */
     u_int8_t first_bus;         /* first bus number for virtual devices bdf */
     pciemgr_initmode_t initmode;/* how to initialize hw,mem/shmem */
     u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */

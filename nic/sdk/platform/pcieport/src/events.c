@@ -107,6 +107,20 @@ pcieport_event_hostdn(pcieport_t *p, const int genid)
 }
 
 void
+pcieport_event_macup(pcieport_t *p, const int genid)
+{
+    pcieport_event_t ev;
+    pcieport_event_macup_t *macup;
+
+    memset(&ev, 0, sizeof(ev));
+    ev.type = PCIEPORT_EVENT_MACUP;
+    ev.port = p->port;
+    macup = &ev.macup;
+    macup->genid = genid;
+    send_event(&ev);
+}
+
+void
 pcieport_event_buschg(pcieport_t *p)
 {
     pcieport_event_t ev;

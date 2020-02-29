@@ -155,6 +155,7 @@ typedef struct catalog_s {
 
     // pcie parameters
     uint16_t                   pcie_subdeviceid;                      // pcie subdevice id
+    uint8_t                    pcie_long_lived;                       // aux powered swm card
     uint32_t                   pcie_nportspecs;                       // pcie number of portspecs[]
     catalog_pcie_portspec_t    pcie_portspecs[MAX_PCIE_PORTSPECS];    // pcie port info
 
@@ -278,6 +279,7 @@ public:
 
     // pcie configs
     uint16_t     pcie_subdeviceid(void) { return catalog_db_.pcie_subdeviceid;}
+    uint8_t      pcie_long_lived(void) { return catalog_db_.pcie_long_lived;}
     uint32_t     pcie_nportspecs(void) { return catalog_db_.pcie_nportspecs; }
     uint8_t      pcie_host(uint32_t idx)
                         { return catalog_db_.pcie_portspecs[idx].host; }

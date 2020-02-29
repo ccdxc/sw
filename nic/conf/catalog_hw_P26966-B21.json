@@ -37,6 +37,7 @@
 
     "pcie" : {
 	"subdeviceid"   : "4008",
+	"long_lived"    : "1",
 	"portspecs"	:
 	[
 	    { "host":"0", "port":"0", "gen":"3", "width":"8" }

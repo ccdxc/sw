@@ -520,6 +520,9 @@ catalog::populate_pcie(ptree &pt)
         std::string s = pciept.get<std::string>("subdeviceid", "");
         catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
 
+        std::string s2 = pciept.get<std::string>("long_lived", "");
+        catalog_db_.pcie_long_lived = strtoul(s2.c_str(), NULL, 16);
+
         for (ptree::value_type &v : pciept.get_child("portspecs")) {
             if (nportspecs < MAX_PCIE_PORTSPECS) {
                 catalog_pcie_portspec_t *hp;
