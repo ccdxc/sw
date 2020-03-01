@@ -111,6 +111,7 @@ func (m *SecurityGroup) References(tenant string, path string, resp map[string]a
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

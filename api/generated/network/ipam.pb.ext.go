@@ -192,6 +192,7 @@ func (m *IPAMPolicyStatus) Defaults(ver string) bool {
 func (m *DHCPRelayPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -235,6 +236,7 @@ func (m *DHCPRelayPolicy) Normalize() {
 func (m *DHCPServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -285,6 +287,7 @@ func (m *IPAMPolicy) References(tenant string, path string, resp map[string]apii
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -295,6 +298,7 @@ func (m *IPAMPolicy) References(tenant string, path string, resp map[string]apii
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -372,6 +376,7 @@ func (m *IPAMPolicy) Normalize() {
 func (m *IPAMPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

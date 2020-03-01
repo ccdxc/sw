@@ -155,6 +155,7 @@ func (m *{{$msgname}}) References(tenant string, path string, resp map[string]ap
     tenant = m.Tenant{{end}}{{end}}{{with (index $requirements.Map $msgname)}}
         {{range $fldk, $fldv := .Fields}}
         {
+            {{if $fldv.OverrideTenant}}tenant = m.{{$fldv.TenantFld}}{{end}}
             dlmtr := "."
             if path == "" {
                 dlmtr = ""

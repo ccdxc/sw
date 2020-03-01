@@ -203,29 +203,6 @@ func (h *networkHooks) validateNetworkIntfConfig(i interface{}, ver string, ignS
 	return ret
 }
 
-func (h *networkHooks) networkIntfPrecommitHook(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-	in, ok := i.(network.NetworkInterface)
-	if !ok {
-		h.logger.ErrorLog("method", "networkIntfPrecommitHook", "msg", fmt.Sprintf("API server hook to create RouteTable called for invalid object type [%#v]", i))
-		return i, true, errors.New("invalid input type")
-	}
-
-	if in.Spec.AttachNetwork != "" {
-		// Make sure the Network exists.
-		netw := network.Network{
-			ObjectMeta: api.ObjectMeta{
-				Name:   in.Spec.AttachNetwork,
-				Tenant: in.Spec.AttachTenant,
-			},
-		}
-		nk := netw.MakeKey(string(apiclient.GroupNetwork))
-		log.Infof("adding requirement to have [%v]", nk)
-		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(nk), ">", 0))
-	}
-	log.Infof("NetworkIF Object is [%+v]", i)
-	return i, true, nil
-}
-
 // createDefaultRoutingTable is a pre-commit hook to creates default RouteTable when a tenant is created
 func (h *networkHooks) createDefaultVRFRouteTable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(network.VirtualRouter)
@@ -291,8 +268,6 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)
 	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
-	svc.GetCrudService("NetworkInterface", apiintf.CreateOper).WithPreCommitHook(hooks.networkIntfPrecommitHook)
-	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.networkIntfPrecommitHook)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 }
 

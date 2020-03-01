@@ -9,6 +9,8 @@ message ObjectRln {
   string Type = 1;
   // Object being referred to.
   string To = 2;
+  // Use this field in the message to derive tenant
+  string UseTenant = 3;
 }
 
 // RestEndpoint is used by the venice.apiRestservice option to specify REST resources to be exposed.

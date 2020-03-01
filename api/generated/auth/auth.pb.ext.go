@@ -1818,6 +1818,7 @@ func (m *Role) References(tenant string, path string, resp map[string]apiintf.Re
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1897,6 +1898,7 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1907,6 +1909,7 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1959,6 +1962,7 @@ func (m *RoleBinding) Normalize() {
 func (m *RoleBindingSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1981,6 +1985,7 @@ func (m *RoleBindingSpec) References(tenant string, path string, resp map[string
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2136,6 +2141,7 @@ func (m *User) References(tenant string, path string, resp map[string]apiintf.Re
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2229,6 +2235,7 @@ func (m *UserPreference) References(tenant string, path string, resp map[string]
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

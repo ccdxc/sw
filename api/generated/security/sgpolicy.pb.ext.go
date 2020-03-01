@@ -236,6 +236,7 @@ func (m *NetworkSecurityPolicy) References(tenant string, path string, resp map[
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -246,6 +247,7 @@ func (m *NetworkSecurityPolicy) References(tenant string, path string, resp map[
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -323,6 +325,7 @@ func (m *NetworkSecurityPolicy) Normalize() {
 func (m *NetworkSecurityPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -346,6 +349,7 @@ func (m *NetworkSecurityPolicySpec) References(tenant string, path string, resp 
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -427,6 +431,7 @@ func (m *ProtoPort) Normalize() {
 func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -450,6 +455,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -473,6 +479,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

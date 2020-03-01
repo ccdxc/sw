@@ -92,6 +92,7 @@ func convertIPAMPolicy(ipam *IPAMState) *netproto.IPAMPolicy {
 		Name:            ipam.IPAMPolicy.Name,
 		GenerationID:    ipam.IPAMPolicy.GenerationID,
 		ResourceVersion: ipam.IPAMPolicy.ResourceVersion,
+		UUID:            ipam.IPAMPolicy.UUID,
 	}
 
 	obj := &netproto.IPAMPolicy{

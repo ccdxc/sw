@@ -193,6 +193,7 @@ func (m *Service) References(tenant string, path string, resp map[string]apiintf
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

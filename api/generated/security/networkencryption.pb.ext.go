@@ -179,6 +179,7 @@ func (m *TrafficEncryptionPolicy) References(tenant string, path string, resp ma
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

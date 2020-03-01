@@ -179,6 +179,7 @@ func (m *Endpoint) References(tenant string, path string, resp map[string]apiint
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -189,6 +190,7 @@ func (m *Endpoint) References(tenant string, path string, resp map[string]apiint
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -296,6 +298,7 @@ func (m *EndpointSpec) Normalize() {
 func (m *EndpointStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

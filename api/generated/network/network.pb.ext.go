@@ -172,6 +172,7 @@ func (m *Network) References(tenant string, path string, resp map[string]apiintf
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -182,6 +183,7 @@ func (m *Network) References(tenant string, path string, resp map[string]apiintf
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -259,6 +261,7 @@ func (m *Network) Normalize() {
 func (m *NetworkSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -282,6 +285,7 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -304,6 +308,7 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -327,6 +332,7 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -340,6 +346,7 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -437,6 +444,7 @@ func (m *NetworkStatus) Normalize() {
 func (m *OrchestratorInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

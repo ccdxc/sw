@@ -264,6 +264,7 @@ func (m *FlowExportPolicy) References(tenant string, path string, resp map[strin
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -417,6 +418,7 @@ func (m *FwlogPolicy) References(tenant string, path string, resp map[string]api
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

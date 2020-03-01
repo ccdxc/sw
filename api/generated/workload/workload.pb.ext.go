@@ -262,6 +262,7 @@ func (m *Workload) References(tenant string, path string, resp map[string]apiint
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -272,6 +273,7 @@ func (m *Workload) References(tenant string, path string, resp map[string]apiint
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -363,6 +365,7 @@ func (m *Workload) Normalize() {
 func (m *WorkloadIntfSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -454,6 +457,7 @@ func (m *WorkloadMigrationStatus) Normalize() {
 func (m *WorkloadSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -476,6 +480,7 @@ func (m *WorkloadSpec) References(tenant string, path string, resp map[string]ap
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

@@ -105,11 +105,11 @@ message NetworkInterfaceSpec {
     string Type             = 5 [(venice.check) = "StrEnum(IFType)",
                                 (gogoproto.jsontag) = "type,omitempty"];
 
-    string AttachTenant     = 6 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/Tenant"},
-                                 (gogoproto.jsontag) = "attach-tenant,omitempty"];
+    string AttachTenant     = 6 [(gogoproto.jsontag) = "attach-tenant,omitempty"];
 
     // AttachNetwork associates the interface with a Network. This is only valid for HOST_PF type.
-    string AttachNetwork    = 7 [(gogoproto.jsontag) = "attach-network,omitempty"];
+    string AttachNetwork    = 7 [(venice.objRelation) = {Type: "NamedRef", To: "network/Network", UseTenant: "AttachTenant"},
+                                (gogoproto.jsontag) = "attach-network,omitempty"];
 
     string IPAllocType      = 8 [(venice.check) = "StrEnum(IPAllocTypes)",
                             (gogoproto.jsontag) = "ip-alloc-type,omitempty"];

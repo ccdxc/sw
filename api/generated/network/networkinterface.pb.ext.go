@@ -517,6 +517,7 @@ func (m *TransceiverStatus) Defaults(ver string) bool {
 func (m *NetworkInterface) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -612,21 +613,22 @@ func (m *NetworkInterfaceHostStatus) Normalize() {
 func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+		tenant = m.AttachTenant
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		tag := path + dlmtr + "attach-tenant"
+		tag := path + dlmtr + "attach-network"
 		uref, ok := resp[tag]
 		if !ok {
 			uref = apiintf.ReferenceObj{
 				RefType: apiintf.ReferenceType("NamedRef"),
-				RefKind: "Tenant",
+				RefKind: "Network",
 			}
 		}
 
-		if m.AttachTenant != "" {
-			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.AttachTenant)
+		if m.AttachNetwork != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"networks/"+tenant+"/"+m.AttachNetwork)
 		}
 
 		if len(uref.Refs) > 0 {

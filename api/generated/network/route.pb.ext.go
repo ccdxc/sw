@@ -588,6 +588,7 @@ func (m *RDSpec) Normalize() {
 func (m *Route) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -666,6 +667,7 @@ func (m *RouteTable) References(tenant string, path string, resp map[string]apii
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -676,6 +678,7 @@ func (m *RouteTable) References(tenant string, path string, resp map[string]apii
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -755,6 +758,7 @@ func (m *RouteTableSpec) Normalize() {
 func (m *RouteTableStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

@@ -137,6 +137,7 @@ func (m *FirewallProfile) References(tenant string, path string, resp map[string
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

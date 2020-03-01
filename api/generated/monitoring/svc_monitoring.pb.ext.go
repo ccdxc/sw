@@ -879,6 +879,7 @@ func (m *AlertList) Normalize() {
 func (m *AlertPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1012,6 +1013,7 @@ func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgAlertPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1055,6 +1057,7 @@ func (m *AutoMsgAlertPolicyWatchHelper) Normalize() {
 func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

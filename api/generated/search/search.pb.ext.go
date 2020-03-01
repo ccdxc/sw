@@ -612,6 +612,7 @@ func (m *KindPreview) Normalize() {
 func (m *PolicyMatchEntries) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -655,6 +656,7 @@ func (m *PolicyMatchEntries) Normalize() {
 func (m *PolicyMatchEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -710,6 +712,7 @@ func (m *PolicySearchRequest) Normalize() {
 func (m *PolicySearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

@@ -662,6 +662,7 @@ func (m *VirtualRouterList) Defaults(ver string) bool {
 func (m *AutoMsgIPAMPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -705,6 +706,7 @@ func (m *AutoMsgIPAMPolicyWatchHelper) Normalize() {
 func (m *AutoMsgIPAMPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -807,6 +809,7 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgNetworkInterfaceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -850,6 +853,7 @@ func (m *AutoMsgNetworkInterfaceWatchHelper) Normalize() {
 func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -892,6 +896,7 @@ func (m *AutoMsgNetworkInterfaceWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgNetworkWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -935,6 +940,7 @@ func (m *AutoMsgNetworkWatchHelper) Normalize() {
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -977,6 +983,7 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgRouteTableWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1020,6 +1027,7 @@ func (m *AutoMsgRouteTableWatchHelper) Normalize() {
 func (m *AutoMsgRouteTableWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1182,6 +1190,7 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgVirtualRouterWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1225,6 +1234,7 @@ func (m *AutoMsgVirtualRouterWatchHelper) Normalize() {
 func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1267,6 +1277,7 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Normalize() {
 func (m *IPAMPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1340,6 +1351,7 @@ func (m *LbPolicyList) Normalize() {
 func (m *NetworkInterfaceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1383,6 +1395,7 @@ func (m *NetworkInterfaceList) Normalize() {
 func (m *NetworkList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1426,6 +1439,7 @@ func (m *NetworkList) Normalize() {
 func (m *RouteTableList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1529,6 +1543,7 @@ func (m *ServiceList) Normalize() {
 func (m *VirtualRouterList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

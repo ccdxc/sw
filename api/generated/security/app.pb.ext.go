@@ -391,6 +391,7 @@ func (m *App) References(tenant string, path string, resp map[string]apiintf.Ref
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

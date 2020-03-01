@@ -422,6 +422,7 @@ func (m *DSCInfo) Normalize() {
 func (m *DistributedServiceCard) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -504,6 +505,7 @@ func (m *DistributedServiceCard) Normalize() {
 func (m *DistributedServiceCardSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

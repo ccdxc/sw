@@ -713,6 +713,7 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgNetworkSecurityPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -756,6 +757,7 @@ func (m *AutoMsgNetworkSecurityPolicyWatchHelper) Normalize() {
 func (m *AutoMsgNetworkSecurityPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -978,6 +980,7 @@ func (m *FirewallProfileList) Normalize() {
 func (m *NetworkSecurityPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

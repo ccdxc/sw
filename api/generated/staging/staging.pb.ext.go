@@ -419,6 +419,7 @@ func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -528,6 +529,7 @@ func (m *ClearAction) References(tenant string, path string, resp map[string]api
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -637,6 +639,7 @@ func (m *CommitAction) References(tenant string, path string, resp map[string]ap
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

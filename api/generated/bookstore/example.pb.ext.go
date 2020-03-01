@@ -1400,6 +1400,7 @@ func (m *ApplyDiscountReq) Normalize() {
 func (m *AutoMsgBookWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1443,6 +1444,7 @@ func (m *AutoMsgBookWatchHelper) Normalize() {
 func (m *AutoMsgBookWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1545,6 +1547,7 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgCustomerWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1588,6 +1591,7 @@ func (m *AutoMsgCustomerWatchHelper) Normalize() {
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1630,6 +1634,7 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgOrderWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1673,6 +1678,7 @@ func (m *AutoMsgOrderWatchHelper) Normalize() {
 func (m *AutoMsgOrderWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1835,6 +1841,7 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) Normalize() {
 func (m *Book) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1929,6 +1936,7 @@ func (m *BookEdition) Normalize() {
 func (m *BookList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1985,6 +1993,7 @@ func (m *BookReview) Normalize() {
 func (m *BookSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2154,6 +2163,7 @@ func (m *CouponStatus) Normalize() {
 func (m *Customer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2222,6 +2232,7 @@ func (m *Customer) Normalize() {
 func (m *CustomerList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2304,6 +2315,7 @@ func (m *CustomerSpec) Normalize() {
 func (m *CustomerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2339,6 +2351,7 @@ func (m *CustomerStatus) Normalize() {
 func (m *Order) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2349,6 +2362,7 @@ func (m *Order) References(tenant string, path string, resp map[string]apiintf.R
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2431,6 +2445,7 @@ func (m *Order) Normalize() {
 func (m *OrderItem) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2479,6 +2494,7 @@ func (m *OrderItem) Normalize() {
 func (m *OrderList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2522,6 +2538,7 @@ func (m *OrderList) Normalize() {
 func (m *OrderSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -2565,6 +2582,7 @@ func (m *OrderSpec) Normalize() {
 func (m *OrderStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

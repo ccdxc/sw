@@ -204,29 +204,6 @@ func TestPrecommitHooks(t *testing.T) {
 		logger: l,
 	}
 
-	nwif := network.NetworkInterface{
-		Spec: network.NetworkInterfaceSpec{
-			Type:          network.IFType_HOST_PF.String(),
-			AttachTenant:  "tenant",
-			AttachNetwork: "network1",
-		},
-	}
-
-	_, kvw, err := nh.networkIntfPrecommitHook(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, nwif)
-	AssertOk(t, err, "expecting to succeed")
-	Assert(t, kvw, "Expecting kv write to be true")
-	Assert(t, len(txn.Cmps) == 1, "expecting one comparator to be added to txn")
-
-	txn.Cmps = nil
-	txn.Ops = nil
-
-	nwif.Spec.AttachTenant = ""
-	nwif.Spec.AttachNetwork = ""
-	_, kvw, err = nh.networkIntfPrecommitHook(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, nwif)
-	AssertOk(t, err, "expecting to succeed")
-	Assert(t, kvw, "Expecting kv write to be true")
-	Assert(t, len(txn.Cmps) == 0, "expecting no comparator to be added to txn")
-
 	txn.Cmps = nil
 	txn.Ops = nil
 
@@ -236,7 +213,7 @@ func TestPrecommitHooks(t *testing.T) {
 		},
 	}
 
-	_, kvw, err = nh.createDefaultVRFRouteTable(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, vrf)
+	_, kvw, err := nh.createDefaultVRFRouteTable(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, vrf)
 	AssertOk(t, err, "expecting to succeed")
 	Assert(t, kvw, "Expecting kv write to be true")
 	Assert(t, len(txn.Cmps) == 0, "expecting no comparator to be added to txn")

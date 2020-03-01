@@ -147,6 +147,7 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -157,6 +158,7 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -167,6 +169,7 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -258,6 +261,7 @@ func (m *VirtualRouter) Normalize() {
 func (m *VirtualRouterSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -325,6 +329,7 @@ func (m *VirtualRouterSpec) Normalize() {
 func (m *VirtualRouterStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

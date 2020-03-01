@@ -501,6 +501,7 @@ func (m *Alert) References(tenant string, path string, resp map[string]apiintf.R
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -594,6 +595,7 @@ func (m *AlertDestination) References(tenant string, path string, resp map[strin
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -750,6 +752,7 @@ func (m *AlertPolicy) References(tenant string, path string, resp map[string]api
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -760,6 +763,7 @@ func (m *AlertPolicy) References(tenant string, path string, resp map[string]api
 
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -837,6 +841,7 @@ func (m *AlertPolicy) Normalize() {
 func (m *AlertPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

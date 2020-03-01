@@ -2204,13 +2204,15 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 // --- End Storage Transformers ---
 
 type reqsField struct {
-	RefType  string
-	Repeated bool
-	Pointer  bool
-	Scalar   bool
-	Tag      string
-	Service  string
-	Kind     string
+	RefType        string
+	Repeated       bool
+	Pointer        bool
+	Scalar         bool
+	Tag            string
+	Service        string
+	Kind           string
+	OverrideTenant bool
+	TenantFld      string
 }
 
 type reqsMsg struct {
@@ -2242,6 +2244,10 @@ func parseRequirement(ref venice.ObjectRln) *reqsField {
 		ret.Service = parts[0]
 		ret.Kind = parts[1]
 		ret.Scalar = true
+		if ref.UseTenant != "" {
+			ret.OverrideTenant = true
+			ret.TenantFld = ref.UseTenant
+		}
 	default:
 		glog.Fatalf("unknown reference type %v", ref.Type)
 	}

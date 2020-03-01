@@ -1000,6 +1000,7 @@ func (m *AutoMsgDSCProfileWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgDistributedServiceCardWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1043,6 +1044,7 @@ func (m *AutoMsgDistributedServiceCardWatchHelper) Normalize() {
 func (m *AutoMsgDistributedServiceCardWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -1535,6 +1537,7 @@ func (m *DSCProfileList) Normalize() {
 func (m *DistributedServiceCardList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

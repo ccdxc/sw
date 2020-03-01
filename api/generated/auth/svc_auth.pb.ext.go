@@ -515,6 +515,7 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgRoleBindingWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -558,6 +559,7 @@ func (m *AutoMsgRoleBindingWatchHelper) Normalize() {
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -780,6 +782,7 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) Normalize() {
 func (m *RoleBindingList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

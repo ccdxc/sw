@@ -187,6 +187,7 @@ func (m *WorkloadList) Defaults(ver string) bool {
 func (m *AutoMsgEndpointWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -230,6 +231,7 @@ func (m *AutoMsgEndpointWatchHelper) Normalize() {
 func (m *AutoMsgEndpointWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -272,6 +274,7 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Normalize() {
 func (m *AutoMsgWorkloadWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -315,6 +318,7 @@ func (m *AutoMsgWorkloadWatchHelper) Normalize() {
 func (m *AutoMsgWorkloadWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -357,6 +361,7 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Normalize() {
 func (m *EndpointList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -400,6 +405,7 @@ func (m *EndpointList) Normalize() {
 func (m *WorkloadList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

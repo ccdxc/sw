@@ -56,8 +56,8 @@
   "network.NetworkInterfaceSpec": [
     {
       "Type": "NamedRef",
-      "To": "cluster/Tenant",
-      "Field": "AttachTenant"
+      "To": "network/Network",
+      "Field": "AttachNetwork"
     }
   ],
   "network.NetworkSpec": [

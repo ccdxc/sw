@@ -32,7 +32,7 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
 	},
 	"network.NetworkInterfaceSpec": []apiintf.ObjRelation{
-		{Type: "NamedRef", To: "cluster/Tenant", Field: "AttachTenant"},
+		{Type: "NamedRef", To: "network/Network", Field: "AttachNetwork"},
 	},
 	"network.NetworkSpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},

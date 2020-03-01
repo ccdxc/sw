@@ -430,6 +430,7 @@ func (m *TroubleshootingSession) References(tenant string, path string, resp map
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -614,6 +615,7 @@ func (m *TsFlowLogs) Normalize() {
 func (m *TsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -627,6 +629,7 @@ func (m *TsPolicy) References(tenant string, path string, resp map[string]apiint
 		}
 	}
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
@@ -687,6 +690,7 @@ func (m *TsPolicy) Normalize() {
 func (m *TsReport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""

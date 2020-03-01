@@ -144,6 +144,7 @@ func (m *EventPolicy) References(tenant string, path string, resp map[string]api
 	tenant = m.Tenant
 
 	{
+
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
