@@ -47,13 +47,14 @@ techsupport::process_command_file_(void) {
 }
 
 static inline gzFile
-techsupport_get_fsink (const string& dst_file)
+techsupport_get_fsink (const string& dst_dir)
 {
     gzFile file_sink;
+    string file_name = dst_dir + "/tasks.txt.gz";
 
-    file_sink = gzopen(dst_file.c_str(), "w9b");
+    file_sink = gzopen(file_name.c_str(), "w9b");
     if (file_sink == NULL) {
-        cerr << "could not open " << dst_file << endl ;
+        cerr << "could not open " << file_name << endl ;
         exit(EXIT_FAILURE);
     }
 
@@ -62,7 +63,7 @@ techsupport_get_fsink (const string& dst_file)
 
 void
 techsupport::process_config_(void) {
-    fsink_ = techsupport_get_fsink(dst_file_);
+    fsink_ = techsupport_get_fsink(dst_dir_);
     process_command_file_();
 }
 
@@ -88,13 +89,16 @@ techsupport::execute_task_(const string& task) {
 
     // record the task's exit code
     auto ret = pclose(pipefp);
+    if (WIFEXITED(ret)){
+        ret = WEXITSTATUS(ret);
+    }
     gzprintf(fsink_, "exit_status : %d\n", ret);
 
     return ret;
 }
 
 int
-techsupport::run_tasks(void) {
+techsupport::run_tasks_(void) {
     int ret, rc = 0;
     vector<string>::iterator it;
 
@@ -110,6 +114,67 @@ techsupport::run_tasks(void) {
     gzclose(fsink_);
 
     return rc;
+}
+
+static void
+techsupport_run_sys_cmds (vector<string> &cmds)
+{
+    int ret;
+    vector<string>::iterator it;
+
+    for (it = cmds.begin(); it < cmds.end(); it++) {
+        cout << "Processing : " << *it << endl;
+        ret = system(it->c_str());
+        if (ret != EXIT_SUCCESS) {
+            cerr << "Processing : " << *it << " failed, err: " << ret << endl;
+            exit(1);
+        }
+    }
+}
+
+static inline string
+techsupport_get_tar_cmd (const string& dst_dir, const string& dst_file,
+                         const string& ts_file, bool skip_core)
+{
+    string tar_cmd, tar_dir, tar_excludes;
+    string tar_exclude_option = " --exclude=";
+
+    // exclude final tar ball as it gets written to same directory
+    tar_excludes = tar_exclude_option + dst_file;
+    if (skip_core) {
+        // exclude core dir if skip_core is set
+        tar_excludes += tar_exclude_option + "core";
+    }
+    // set working dir to <dst_dir>/../
+    tar_dir = " -C " + dst_dir + "/../";
+    tar_cmd = "tar " + tar_excludes + " -zcvf " + ts_file + tar_dir + " ./";
+    return tar_cmd;
+}
+
+void
+techsupport::bundle_techsupport_(void) {
+    string ts_file, tar_cmd, tar_list_cmd;
+    vector<string> cmds;
+
+    ts_file = dst_dir_ + "/" + dst_file_;
+    tar_cmd = techsupport_get_tar_cmd(dst_dir_, dst_file_, ts_file, skip_core_);
+    cmds.push_back(tar_cmd);
+    // validate the tar file created
+    tar_list_cmd = "tar -tf " + ts_file;
+    cmds.push_back(tar_list_cmd);
+    techsupport_run_sys_cmds(cmds);
+}
+
+int
+techsupport::collect_techsupport(void) {
+    int ret;
+
+    ret = run_tasks_();
+    if (ret) {
+        fprintf(stderr, "Errors while running some of the tasks\n");
+    }
+    bundle_techsupport_();
+    return ret;
 }
 
 }    // namespace ts

@@ -4,7 +4,6 @@
 //----------------------------------------------------------------------------
 
 #include <getopt.h>
-#include <sys/stat.h>
 
 #include "ts.hpp"
 
@@ -12,28 +11,44 @@ using namespace sdk::ts;
 
 techsupport_spec_t g_ts_spec;
 
+static void
+ts_create_output_dir (std::string output_dir)
+{
+    std::string cmd;
+    std::string base_cmd = "mkdir -p ";
+
+    cmd = base_cmd + output_dir;
+    auto rc = system(cmd.c_str());
+    if (rc) {
+        fprintf(stderr, "Failed to run cmd %s, err %d\n",
+                cmd.c_str(), rc);
+        exit(1);
+    }
+}
+
 static void inline
 ts_print_usage (char **argv)
 {
     fprintf(stdout, "Usage : %s -c|--cmdfile <techsupport.json> "
             "-d|--destdir <absolute_path_for_output_directory> "
-            "-o|--outfile <techsupport_file_name.gz>\n", argv[0]);
+            "-o|--outfile <techsupport_file_name.gz> "
+            "-s|--skipcore\n", argv[0]);
 }
 
 void
 ts_process_cmd_line_args (int argc, char **argv)
 {
     int oc;
-    std::string output_dir;
-    struct stat stat_buffer;
-    struct option longopts[] = {{"cmdfile", required_argument, NULL, 'c'},
-                                {"destdir", required_argument, NULL, 'd'},
-                                {"outfile", required_argument, NULL, 'f'},
-                                {"help",    no_argument,       NULL, 'h'},
-                                {0,         0,                 0,     0 }};
+    std::string ts_file;
+    struct option longopts[] = {{"cmdfile",  required_argument, NULL, 'c'},
+                                {"destdir",  required_argument, NULL, 'd'},
+                                {"outfile",  required_argument, NULL, 'f'},
+                                {"skipcore", no_argument,       NULL, 's'},
+                                {"help",     no_argument,       NULL, 'h'},
+                                {0,          0,                 0,     0 }};
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:d:o:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hsc:d:o:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             if (optarg) {
@@ -52,12 +67,8 @@ ts_process_cmd_line_args (int argc, char **argv)
 
         case 'd':
             if (optarg) {
-                output_dir = std::string(optarg);
-                if (stat(output_dir.c_str(), &stat_buffer) != 0) {
-                    fprintf(stderr, "%s does NOT exist\n",
-                            output_dir.c_str());
-                    exit(1);
-                }
+                g_ts_spec.dst_dir = std::string(optarg);
+                ts_create_output_dir(g_ts_spec.dst_dir);
             } else {
                 fprintf(stderr, "destination directory is not specified\n");
                 ts_print_usage(argv);
@@ -73,6 +84,10 @@ ts_process_cmd_line_args (int argc, char **argv)
                 ts_print_usage(argv);
                 exit(1);
             }
+            break;
+
+        case 's':
+            g_ts_spec.skip_core = true;
             break;
 
         case 'h':
@@ -104,9 +119,9 @@ ts_process_cmd_line_args (int argc, char **argv)
     }
 
     // check if file already exists
-    g_ts_spec.ts_file = output_dir + "/" + g_ts_spec.ts_file;
-    if (access(g_ts_spec.ts_file.c_str(), R_OK) == 0) {
-        fprintf(stderr, "%s already exists\n", g_ts_spec.ts_file.c_str());
+    ts_file = g_ts_spec.dst_dir + "/" + g_ts_spec.ts_file;
+    if (access(ts_file.c_str(), R_OK) == 0) {
+        fprintf(stderr, "%s already exists\n", ts_file.c_str());
         exit(1);
     }
 }
@@ -119,7 +134,7 @@ main (int argc, char **argv)
 
     ts_process_cmd_line_args(argc, argv);
     ts_inst = techsupport::factory(g_ts_spec);
-    ret = ts_inst->run_tasks();
+    ret = ts_inst->collect_techsupport();
     if (ret) {
         fprintf(stderr, "Errors while running some of the tasks in %s\n",
                 g_ts_spec.cmd_file.c_str());
