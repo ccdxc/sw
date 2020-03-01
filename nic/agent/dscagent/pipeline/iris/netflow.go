@@ -416,6 +416,7 @@ func getL2SegByCollectorIP(i types.InfraAPI, destIP string) (l2SegID uint64) {
 		return
 	}
 
+	pip := net.ParseIP(destIP).String()
 	for _, o := range eDat {
 		var endpoint netproto.Endpoint
 		err := endpoint.Unmarshal(o)
@@ -424,7 +425,8 @@ func getL2SegByCollectorIP(i types.InfraAPI, destIP string) (l2SegID uint64) {
 			continue
 		}
 		for _, address := range endpoint.Spec.IPv4Addresses {
-			if address == destIP {
+			epIP, _, _ := net.ParseCIDR(address)
+			if epIP.String() == pip {
 				var linkedNetwork netproto.Network
 				obj := netproto.Network{
 					TypeMeta: api.TypeMeta{

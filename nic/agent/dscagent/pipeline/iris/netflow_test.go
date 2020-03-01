@@ -31,8 +31,8 @@ func TestHandleNetflowUpdates(t *testing.T) {
 			},
 		},
 	}
-	internalCol := "collector|_internal-192.168.100.101"
-	internalCol1 := "collector|_internal-192.168.100.103"
+	internalCol := "192.168.100.101"
+	internalCol1 := "192.168.100.103"
 	var col1Count, col2Count int
 	if _, ok := lateralDB[internalCol]; ok {
 		col1Count = len(lateralDB[internalCol])

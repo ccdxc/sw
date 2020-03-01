@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
@@ -376,4 +377,24 @@ func GetLifIndex(hwLifID uint64) uint32 {
 // BuildDestKey builds the destination key with vrf name
 func BuildDestKey(vrfName, dstIP string) string {
 	return vrfName + "-" + dstIP
+}
+
+// GetMgmtLink return the management link for an management IP
+func GetMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
+	links, err := netlink.LinkList()
+	if err != nil {
+		log.Errorf("Failed to list the available links. Err: %v", err)
+		return
+	}
+
+	for _, l := range links {
+		addrs, _ := netlink.AddrList(l, netlink.FAMILY_V4)
+		for _, a := range addrs {
+			if a.IP.String() == mgmtIP {
+				mgmtLink = l
+				return
+			}
+		}
+	}
+	return
 }

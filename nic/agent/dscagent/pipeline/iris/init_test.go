@@ -4,8 +4,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"math"
+	"net"
 	"os"
 	"testing"
+
+	"github.com/mdlayher/arp"
+	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/venice/utils/emstore"
 
@@ -36,6 +40,22 @@ var (
 
 // Implements InfraAPI that return errors for testing
 type badInfraAPI struct{}
+
+func findMgmtIP(destIP string) (mgmtIP string, mgmtLink netlink.Link, mgmtIntf *net.Interface, err error) {
+	rts, err := netlink.RouteGet(net.ParseIP(destIP))
+	if err != nil {
+		return
+	}
+	// Associate mgmt intf to the default route
+	mgmtLink, err = netlink.LinkByIndex(rts[0].LinkIndex)
+	addrs, err := netlink.AddrList(mgmtLink, netlink.FAMILY_V4)
+	if err != nil {
+		return
+	}
+	mgmtIP = addrs[0].IP.String()
+	mgmtIntf, err = net.InterfaceByName(mgmtLink.Attrs().Name)
+	return
+}
 
 // Sets up the grpc client handlers for the package
 func TestMain(m *testing.M) {
@@ -74,6 +94,23 @@ func TestMain(m *testing.M) {
 		mockHal.Stop()
 		os.Exit(1)
 	}
+
+	_, mgmtLink, mgmtIntf, err := findMgmtIP("42.42.42.42")
+	if err != nil {
+		log.Errorf("Failed to find Mgmt IP %v", err)
+		mockHal.Stop()
+		os.Exit(1)
+	}
+
+	client, err := arp.Dial(mgmtIntf)
+	if err != nil {
+		log.Error("Failed to initiate an ARP client")
+		mockHal.Stop()
+		os.Exit(1)
+	}
+	ArpClient = client
+	MgmtLink = mgmtLink
+
 	epClient = halapi.NewEndpointClient(conn)
 	intfClient = halapi.NewInterfaceClient(conn)
 	l2SegClient = halapi.NewL2SegmentClient(conn)

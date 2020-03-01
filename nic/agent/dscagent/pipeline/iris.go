@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mdlayher/arp"
+
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 
@@ -210,6 +212,31 @@ func (i *IrisAPI) PipelineInit() error {
 // HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
 func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
 	log.Infof("Iris API: received venice co-ordinates [%v]", dsc)
+	ip, _, _ := net.ParseCIDR(i.InfraAPI.GetConfig().MgmtIP)
+	mgmtIP := ip.String()
+	mgmtLink := utils.GetMgmtLink(mgmtIP)
+	if mgmtLink == nil {
+		log.Errorf("Failed to get the mgmt interface. MgmtIP: %s", mgmtIP)
+		return
+	}
+	log.Infof("Management Link: %v", mgmtLink.Attrs().Name)
+	mgmtIntf, _ := net.InterfaceByName(mgmtLink.Attrs().Name)
+	log.Infof("Management Inft: %v", mgmtIntf.Name)
+
+	// Init Agent's ARP Client
+	i.Lock()
+	defer i.Unlock()
+	// Check for idempotency and close older ARP clients
+	if iris.ArpClient != nil {
+		iris.ArpClient.Close()
+	}
+	client, err := arp.Dial(mgmtIntf)
+	if err != nil {
+		log.Errorf("Failed to initiate an ARP client. Err: %v", err)
+		return
+	}
+	iris.ArpClient = client
+	iris.MgmtLink = mgmtLink
 }
 
 // HandleVrf handles CRUD Methods for Vrf Object

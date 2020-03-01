@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sort"
 	"sync"
 	"time"
 
@@ -22,14 +23,16 @@ import (
 )
 
 const (
-	refreshDuration      = time.Duration(time.Minute * 1)
+	refreshDuration      = time.Duration(time.Minute * 15)
 	arpResolutionTimeout = time.Duration(time.Second * 3)
 )
 
 var lateralDB = map[string][]string{}
 var doneCache = map[string]context.CancelFunc{}
 var arpCache sync.Map
-var arpClient *arp.Client
+var ArpClient *arp.Client
+var MgmtLink netlink.Link
+var GwCache = map[string]string{}
 
 // CreateLateralNetAgentObjects creates lateral objects for telmetry objects and does refcounting. This is temporary code till HAL subsumes ARP'ing for dest IPs
 func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP string, tunnelOp bool) error {
@@ -37,12 +40,39 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	var (
 		ep                    *netproto.Endpoint
 		err                   error
-		objectName            = fmt.Sprintf("_internal-%s", destIP)
-		tunnelCompositeKey    = fmt.Sprintf("tunnel|%s", objectName)
-		collectorCompositeKey = fmt.Sprintf("collector|%s", objectName)
+		objectName            string
+		tunnelName            = fmt.Sprintf("_internal-%s", destIP)
+		tunnelCompositeKey    = fmt.Sprintf("tunnel|%s", tunnelName)
+		collectorCompositeKey string
 	)
 
-	collectorKnown, tunnelKnown := reconcileLateralObjects(infraAPI, owner, objectName, mgmtIP, destIP, tunnelOp)
+	collectorKnown, tunnelKnown := reconcileLateralObjects(infraAPI, owner, destIP, tunnelOp)
+	if collectorKnown {
+		var knownCollector *netproto.Endpoint
+		pip := net.ParseIP(destIP).String()
+		eDat, err := infraAPI.List("Endpoint")
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
+		}
+		for _, o := range eDat {
+			var endpoint netproto.Endpoint
+			err := endpoint.Unmarshal(o)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Endpoint: %s | Err: %v", endpoint.GetKey(), err))
+				continue
+			}
+			for _, address := range endpoint.Spec.IPv4Addresses {
+				epIP, _, _ := net.ParseCIDR(address)
+				if epIP.String() == pip {
+					knownCollector = &endpoint
+					break
+				}
+			}
+		}
+
+		objectName = fmt.Sprintf("_internal-%s", knownCollector.Spec.MacAddress)
+		collectorCompositeKey = fmt.Sprintf("collector|%s", objectName)
+	}
 	if collectorKnown && tunnelKnown {
 		log.Info("Collector and Tunnel already known. Nothing to do here.")
 		log.Infof("Lateral object DB pre refcount increment: %v", lateralDB)
@@ -53,10 +83,12 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 		}
 
 		lateralDB[collectorCompositeKey] = append(lateralDB[collectorCompositeKey], owner)
+		lateralDB[destIP] = append(lateralDB[destIP], owner)
 
 		// Dedup here to handle idempotent calls to lateral methods.
 		dedupReferences(collectorCompositeKey)
 		dedupReferences(tunnelCompositeKey)
+		dedupReferences(destIP)
 
 		log.Infof("Lateral object DB post refcount increment: %v", lateralDB)
 		return nil
@@ -65,31 +97,77 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	log.Infof("One or more lateral object creation needed. CreateEP: %v, CreateTunnel: %v", !collectorKnown, !tunnelKnown)
 
 	if !collectorKnown {
-		ep, err = generateLateralEP(objectName, destIP, mgmtIP)
+		ep, err = generateLateralEP(destIP)
 		if err != nil {
 			return err
+		}
+		gwIP := GwCache[destIP]
+		dmac, ok := arpCache.Load(gwIP)
+		if ok {
+			log.Infof("Set the composite key name with dmac: %s", dmac)
+			objectName = fmt.Sprintf("_internal-%s", dmac)
+			collectorCompositeKey = fmt.Sprintf("collector|%s", objectName)
 		}
 	}
 
 	log.Infof("Lateral object DB pre refcount increment: %v", lateralDB)
 
-	// Add refcount here
+	// Add refcount here -- using this to keep the same ip ref count
 	if tunnelOp {
 		lateralDB[tunnelCompositeKey] = append(lateralDB[tunnelCompositeKey], owner)
 	}
 
 	lateralDB[collectorCompositeKey] = append(lateralDB[collectorCompositeKey], owner)
+	lateralDB[destIP] = append(lateralDB[destIP], owner)
 
 	// Dedup here to handle idempotent calls to lateral methods.
 	dedupReferences(collectorCompositeKey)
 	dedupReferences(tunnelCompositeKey)
+	dedupReferences(destIP)
 
 	log.Infof("Lateral object DB post refcount increment: %v", lateralDB)
 
 	if !collectorKnown && ep != nil {
 		// Test for already existing collector EP
-		if _, ok := isCollectorEPKnown(infraAPI, *ep); ok {
-			log.Infof("Lateral EP: %v already present. Skipping...", ep.Name)
+		// FindEndpoint with matching Mac if found update else create
+		var knownEp *netproto.Endpoint
+		eDat, err := infraAPI.List("Endpoint")
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
+		}
+		for _, o := range eDat {
+			var endpoint netproto.Endpoint
+			err := endpoint.Unmarshal(o)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Endpoint: %s | Err: %v", endpoint.GetKey(), err))
+				continue
+			}
+			if endpoint.Spec.MacAddress == ep.Spec.MacAddress {
+				knownEp = &endpoint
+				break
+			}
+		}
+		if knownEp != nil {
+			log.Infof("Updating internal endpoint %v", ep.ObjectMeta)
+			ep := &netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    knownEp.ObjectMeta.Tenant,
+					Namespace: knownEp.ObjectMeta.Namespace,
+					Name:      knownEp.ObjectMeta.Name,
+				},
+				Spec: netproto.EndpointSpec{
+					NetworkName:   knownEp.Spec.NetworkName,
+					NodeUUID:      knownEp.Spec.NodeUUID,
+					IPv4Addresses: knownEp.Spec.IPv4Addresses,
+					MacAddress:    knownEp.Spec.MacAddress,
+				},
+			}
+			ep.Spec.IPv4Addresses = append(ep.Spec.IPv4Addresses, fmt.Sprintf("%s/32", destIP))
+			if err = updateEndpointHandler(infraAPI, epClient, intfClient, *ep, vrfID, types.UntaggedCollVLAN); err != nil {
+				log.Error(errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err))
+				return errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err)
+			}
 		} else {
 			log.Infof("Creating internal endpoint %v", ep.ObjectMeta)
 			err := createEndpointHandler(infraAPI, epClient, intfClient, *ep, vrfID, types.UntaggedCollVLAN)
@@ -106,7 +184,7 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
 				Namespace: "default",
-				Name:      objectName,
+				Name:      tunnelName,
 			},
 			Spec: netproto.TunnelSpec{
 				Type:        "GRE",
@@ -137,28 +215,51 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP string, tunnelOp bool) error {
 	log.Infof("Deleting Lateral NetAgent objects. Owner: %v MgmtIP: %v DestIP: %v TunnelOp: %v", owner, mgmtIP, destIP, tunnelOp)
 
-	lateralObjMeta := api.ObjectMeta{
-		Tenant:    "default",
-		Namespace: "default",
-		Name:      fmt.Sprintf("_internal-%s", destIP),
+	var lateralEP *netproto.Endpoint
+	pip := net.ParseIP(destIP).String()
+	eDat, err := infraAPI.List("Endpoint")
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
+	}
+	for _, o := range eDat {
+		var endpoint netproto.Endpoint
+		err := endpoint.Unmarshal(o)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Endpoint: %s | Err: %v", endpoint.GetKey(), err))
+			continue
+		}
+		for _, address := range endpoint.Spec.IPv4Addresses {
+			epIP, _, _ := net.ParseCIDR(address)
+			if epIP.String() == pip {
+				lateralEP = &endpoint
+				break
+			}
+		}
 	}
 
-	tunnelCompositeKey := fmt.Sprintf("tunnel|%s", lateralObjMeta.Name)
-	collectorCompositeKey := fmt.Sprintf("collector|%s", lateralObjMeta.Name)
+	if lateralEP == nil {
+		log.Errorf("Lateral EP not found for destIP: %s", destIP)
+		//Todo check with abhi if we have to handle idemopotncy. for idempotency case to pass retun nil
+		return nil
+		//return fmt.Errorf("endpoint not found Owner: %v Obj: %v", owner, destIP)
+	}
+
+	objName := fmt.Sprintf("_internal-%s", lateralEP.Spec.MacAddress)
+	tunnelName := fmt.Sprintf("_internal-%s", destIP)
+	tunnelCompositeKey := fmt.Sprintf("tunnel|%s", tunnelName)
+	collectorCompositeKey := fmt.Sprintf("collector|%s", objName)
 
 	log.Infof("Lateral object DB pre refcount decrement: %v", lateralDB)
 
 	// Remove Dependency
 	counter := 0
-	if tunnelOp {
-		for _, dep := range lateralDB[tunnelCompositeKey] {
-			if dep != owner {
-				lateralDB[tunnelCompositeKey][counter] = dep
-				counter++
-			}
+	for _, dep := range lateralDB[tunnelCompositeKey] {
+		if dep != owner {
+			lateralDB[tunnelCompositeKey][counter] = dep
+			counter++
 		}
-		lateralDB[tunnelCompositeKey] = lateralDB[tunnelCompositeKey][:counter]
 	}
+	lateralDB[tunnelCompositeKey] = lateralDB[tunnelCompositeKey][:counter]
 
 	counter = 0
 	for _, dep := range lateralDB[collectorCompositeKey] {
@@ -169,6 +270,15 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	}
 	lateralDB[collectorCompositeKey] = lateralDB[collectorCompositeKey][:counter]
 
+	counter = 0
+	for _, dep := range lateralDB[destIP] {
+		if dep != owner {
+			lateralDB[destIP][counter] = dep
+			counter++
+		}
+	}
+	lateralDB[destIP] = lateralDB[destIP][:counter]
+
 	log.Infof("Lateral object DB post refcount decrement: %v", lateralDB)
 
 	// Check for pending dependencies
@@ -176,11 +286,15 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 		if len(lateralDB[tunnelCompositeKey]) == 0 {
 			// Find Tunnel
 			t := netproto.Tunnel{
-				TypeMeta:   api.TypeMeta{Kind: "Tunnel"},
-				ObjectMeta: lateralObjMeta,
+				TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      fmt.Sprintf("_internal-%s", destIP),
+				},
 			}
 			if tun, ok := isCollectorTunnelKnown(infraAPI, t); ok {
-				log.Infof("Deleting lateral tunnel %v", lateralObjMeta.Name)
+				log.Infof("Deleting lateral tunnel %v", t.Name)
 				err := deleteTunnelHandler(infraAPI, intfClient, *tun)
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrCollectorTunnelDeleteFailure, "MirrorSession: %s |  Err: %v", owner, err))
@@ -193,45 +307,73 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 		}
 	}
 
-	// Check for pending dependencies
-	if len(lateralDB[collectorCompositeKey]) == 0 {
-		// Find EP and delete only if found
-		e := netproto.Endpoint{
-			TypeMeta:   api.TypeMeta{Kind: "Endpoint"},
-			ObjectMeta: lateralObjMeta,
-		}
-		if lateralEP, ok := isCollectorEPKnown(infraAPI, e); ok {
-			log.Infof("Deleting lateral endpoint %v", lateralObjMeta.Name)
-			err := deleteEndpointHandler(infraAPI, epClient, intfClient, lateralEP, vrfID, types.UntaggedCollVLAN)
+	gwIP, ok := GwCache[destIP]
+	var internalEP bool
+	if ok {
+		internalEP = true
+	}
+	if internalEP && len(lateralDB[destIP]) == 0 {
+		// Check for pending dependencies
+		if len(lateralDB[collectorCompositeKey]) == 0 {
+			log.Infof("Deleting lateral endpoint %v", lateralEP.ObjectMeta.Name)
+			err := deleteEndpointHandler(infraAPI, epClient, intfClient, *lateralEP, vrfID, types.UntaggedCollVLAN)
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrCollectorEPDeleteFailure, "MirrorSession: %s |  Err: %v", owner, err))
 				return errors.Wrapf(types.ErrCollectorEPDeleteFailure, "MirrorSession: %s |  Err: %v", owner, err)
 			}
 
-			log.Infof("Cancelling ARP Refresh loop for destIP: %v", destIP)
-			cancel, ok := doneCache[destIP]
+			cancel, ok := doneCache[gwIP]
 			if ok {
+				log.Infof("Calling cancel for IP: %v", destIP)
 				cancel()
 			}
 			delete(lateralDB, collectorCompositeKey)
+		} else {
+			pip := net.ParseIP(destIP).String()
+			for idx, dep := range lateralEP.Spec.IPv4Addresses {
+				epIP, _, _ := net.ParseCIDR(dep)
+				if epIP.String() == pip {
+					log.Infof("Updating endpoint: %s", lateralEP.GetKey())
+					ep := &netproto.Endpoint{
+						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+						ObjectMeta: api.ObjectMeta{
+							Tenant:    "default",
+							Namespace: "default",
+							Name:      lateralEP.Name,
+						},
+						Spec: netproto.EndpointSpec{
+							NetworkName: lateralEP.Spec.NetworkName,
+							NodeUUID:    lateralEP.Spec.NodeUUID,
+							MacAddress:  lateralEP.Spec.MacAddress,
+						},
+					}
+					ep.Spec.IPv4Addresses = append(ep.Spec.IPv4Addresses, lateralEP.Spec.IPv4Addresses[:idx]...)
+					ep.Spec.IPv4Addresses = append(ep.Spec.IPv4Addresses, lateralEP.Spec.IPv4Addresses[idx+1:]...)
+					if err = updateEndpointHandler(infraAPI, epClient, intfClient, *ep, vrfID, types.UntaggedCollVLAN); err != nil {
+						log.Error(errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err))
+						return errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err)
+					}
+					break
+				}
+			}
 		}
+		delete(lateralDB, destIP)
 		return nil
 	}
 
-	log.Infof("Disallowing deletion of lateral endpoints. Pending refs: %v", lateralDB[lateralObjMeta.Name])
+	// if not internal ep and created by venice
+	if len(lateralDB[destIP]) == 0 {
+		delete(lateralDB, destIP)
+	}
+	if len(lateralDB[collectorCompositeKey]) == 0 {
+		delete(lateralDB, collectorCompositeKey)
+	}
+	log.Infof("Disallowing deletion of lateral endpoints. Pending refs: %v", lateralDB[lateralEP.Name])
 	return nil
 }
 
 func startRefreshLoop(refreshCtx context.Context, IP net.IP) {
 	log.Infof("Starting ARP refresh loop for %v", IP)
-
-	defer func() {
-		if err := recover(); err != nil {
-			log.Errorf("Refresh control loop exited. Err: %v", err)
-			log.Infof("Restarting refresh loop...")
-			go startRefreshLoop(refreshCtx, IP)
-		}
-	}()
 
 	ticker := time.NewTicker(refreshDuration)
 	go func(refreshCtx context.Context, IP net.IP) {
@@ -255,7 +397,7 @@ func resolveWithDeadline(ctx context.Context, IP net.IP) string {
 	arpChan := make(chan string, 1)
 
 	go func(arpChan chan string, IP net.IP) {
-		mac, err := arpClient.Resolve(IP)
+		mac, err := ArpClient.Resolve(IP)
 		if err != nil {
 			log.Errorf("Failed to resolve MAC for %v", err)
 		}
@@ -273,9 +415,9 @@ func resolveWithDeadline(ctx context.Context, IP net.IP) string {
 	}
 }
 
-func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjName, mgmtIP, destIP string, createTunnel bool) (epKnown, tunnelKnown bool) {
+func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, destIP string, createTunnel bool) (epKnown, tunnelKnown bool) {
 	// Find EP
-	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v, TunnelOp: %v", lateralObjName, mgmtIP, destIP, createTunnel)
+	log.Infof("Testing for known collector with DestIP: %v, TunnelOp: %v", destIP, createTunnel)
 	var (
 		tDat [][]byte
 		eDat [][]byte
@@ -308,6 +450,7 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjNa
 			}
 		}
 
+		pip := net.ParseIP(destIP).String()
 		for _, o := range eDat {
 			var endpoint netproto.Endpoint
 			err := endpoint.Unmarshal(o)
@@ -316,7 +459,8 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjNa
 				continue
 			}
 			for _, address := range endpoint.Spec.IPv4Addresses {
-				if address == destIP {
+				epIP, _, _ := net.ParseCIDR(address)
+				if epIP.String() == pip {
 					knownCollector = &endpoint
 					break
 				}
@@ -337,6 +481,7 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjNa
 
 	var knownCollector *netproto.Endpoint
 
+	pip := net.ParseIP(destIP).String()
 	// Find EP and add refcount
 	for _, o := range eDat {
 		var endpoint netproto.Endpoint
@@ -346,7 +491,8 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjNa
 			continue
 		}
 		for _, address := range endpoint.Spec.IPv4Addresses {
-			if address == destIP {
+			epIP, _, _ := net.ParseCIDR(address)
+			if epIP.String() == pip {
 				knownCollector = &endpoint
 				break
 			}
@@ -364,6 +510,7 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, lateralObjNa
 // dedupReferences does inplace dedup of reference slices
 func dedupReferences(compositeKey string) {
 	log.Infof("Lateral DB: %v pre dedup: %v", compositeKey, lateralDB[compositeKey])
+	sort.Strings(lateralDB[compositeKey])
 	if len(lateralDB[compositeKey]) < 2 {
 		return
 	}
@@ -378,32 +525,20 @@ func dedupReferences(compositeKey string) {
 	lateralDB[compositeKey] = lateralDB[compositeKey][:marker+1]
 }
 
-func generateLateralEP(objectName, destIP, mgmtIP string) (*netproto.Endpoint, error) {
+func generateLateralEP(destIP string) (*netproto.Endpoint, error) {
 	var dMAC string
 	epIP := destIP
-	mgmtLink := getMgmtLink(mgmtIP)
-	if mgmtLink == nil {
-		log.Errorf("Failed to get the mgmt interface")
-		return nil, nil
-	}
-	log.Infof("Management Link: %v", mgmtLink.Attrs().Name)
-	mgmtIntf, _ := net.InterfaceByName(mgmtLink.Attrs().Name)
-	log.Infof("Management Inft: %v", mgmtIntf.Name)
-
-	client, err := arp.Dial(mgmtIntf)
-	if err != nil {
-		log.Errorf("Failed to initiate an ARP client. Err: %v", err)
-		return nil, err
-	}
-	arpClient = client
-
-	//// Cache the handler for outer done. This needs to be called during the object deletes
-	refreshCtx, done := context.WithCancel(context.Background())
-	doneCache[destIP] = done
 
 	log.Infof("Resolving for: %s", destIP)
-	addrs, err := netlink.AddrList(mgmtLink, netlink.FAMILY_V4)
+	addrs, err := netlink.AddrList(MgmtLink, netlink.FAMILY_V4)
+	if err != nil {
+		log.Errorf("Failed to list management interface addresses. Err: %v", err)
+		// Temporary hack in Release A. generateLateralEP is expected to return errors only on ARP resolution failures.
+		// Hence masking just logging the err
+		return nil, nil
+	}
 	mgmtSubnet := addrs[0].IPNet
+	GwCache[destIP] = destIP
 
 	// Check if in the same subnet
 	if !mgmtSubnet.Contains(net.ParseIP(destIP)) {
@@ -421,15 +556,23 @@ func generateLateralEP(objectName, destIP, mgmtIP string) (*netproto.Endpoint, e
 		gwIP := routes[0].Gw.String()
 		log.Infof("Dest IP %s not in management subnet %v. Using Gateway IP: %v  as destIP for ARPing...", destIP, mgmtSubnet, gwIP)
 		// Update destIP to be GwIP
+		GwCache[destIP] = gwIP
 		destIP = gwIP
 	}
 
 	// Set the correct dIP
 	dIP := net.ParseIP(destIP)
 
+	//// Cache the handler for outer done. This needs to be called during the object deletes
+	refreshCtx, done := context.WithCancel(context.Background())
+	doneCache[destIP] = done
+
 	log.Infof("Starting refresh loop for %s", dIP.String())
 
-	go startRefreshLoop(refreshCtx, dIP)
+	// Check if the dIP is already resolved. This makes the refresh loop a singleton for a given IP
+	if _, ok := arpCache.Load(destIP); !ok {
+		go startRefreshLoop(refreshCtx, dIP)
+	}
 
 	time.Sleep(time.Second * 3)
 
@@ -463,6 +606,8 @@ func generateLateralEP(objectName, destIP, mgmtIP string) (*netproto.Endpoint, e
 		return nil, fmt.Errorf("failed to resolve mac address for %s", destIP)
 	}
 
+	objectName := fmt.Sprintf("_internal-%s", dMAC)
+
 	ep := &netproto.Endpoint{
 		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
 		ObjectMeta: api.ObjectMeta{
@@ -473,31 +618,12 @@ func generateLateralEP(objectName, destIP, mgmtIP string) (*netproto.Endpoint, e
 		Spec: netproto.EndpointSpec{
 			NetworkName:   types.InternalDefaultUntaggedNetwork,
 			NodeUUID:      "REMOTE",
-			IPv4Addresses: []string{epIP},
+			IPv4Addresses: []string{fmt.Sprintf("%s/32", epIP)},
 			MacAddress:    dMAC,
 		},
 	}
 
 	return ep, nil
-}
-
-func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
-	links, err := netlink.LinkList()
-	if err != nil {
-		log.Errorf("Failed to list the available links. Err: %v", err)
-		return
-	}
-
-	for _, l := range links {
-		addrs, _ := netlink.AddrList(l, netlink.FAMILY_V4)
-		for _, a := range addrs {
-			if a.IP.String() == mgmtIP {
-				mgmtLink = l
-				return
-			}
-		}
-	}
-	return
 }
 
 func isCollectorEPKnown(infraAPI types.InfraAPI, collectorEP netproto.Endpoint) (ep netproto.Endpoint, known bool) {

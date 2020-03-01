@@ -45,21 +45,16 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		_, ok := MirrorDestToIDMapping[destKey]
-		if !ok {
-			// Create collector
-			col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
-			if _, err := validator.ValidateCollector(infraAPI, col, types.Create); err != nil {
-				log.Error(err)
-				return err
-			}
-			if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
-				log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
-				return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
-			}
+		// Create collector
+		col := buildCollector(mirror.Name, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
+		if _, err := validator.ValidateCollector(infraAPI, col, types.Create); err != nil {
+			log.Error(err)
+			return err
 		}
-
-		MirrorDestToIDMapping[destKey].MirrorKeys = append(MirrorDestToIDMapping[destKey].MirrorKeys, mirror.GetKey())
+		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
+			log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
 
 		// Create MirrorSession handles
 		mirrorKeys = append(mirrorKeys, convertMirrorSessionKeyHandle(MirrorDestToIDMapping[destKey].sessionID))
@@ -131,27 +126,14 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		dstIP := c.ExportCfg.Destination
 		// Create the unique key for collector dest IP
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
-		sessionKeys, ok := MirrorDestToIDMapping[destKey]
+		_, ok := MirrorDestToIDMapping[destKey]
 
 		if !ok {
 			log.Error(errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey))
 			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
 		}
-		// Remove the mirror key from the map
-		length := len(sessionKeys.MirrorKeys)
-		index := -1
-		for idx, m := range sessionKeys.MirrorKeys {
-			if m == mirror.GetKey() {
-				index = idx
-				break
-			}
-		}
-		if index != -1 {
-			sessionKeys.MirrorKeys[index] = sessionKeys.MirrorKeys[length-1]
-			sessionKeys.MirrorKeys = sessionKeys.MirrorKeys[:length-1]
-		}
 		// Try to delete collector if ref count is 0
-		col := buildCollector(destKey, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
+		col := buildCollector(mirror.Name, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
 		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}

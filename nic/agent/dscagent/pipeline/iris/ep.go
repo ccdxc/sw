@@ -46,6 +46,23 @@ func createEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClie
 		}
 	}
 
+	// Validate EP IP.
+	for idx, address := range endpoint.Spec.IPv4Addresses {
+		if len(address) == 0 {
+			continue
+		}
+
+		if _, _, err := net.ParseCIDR(address); err != nil {
+			// Try parsing as IP
+			if len(net.ParseIP(address)) == 0 {
+				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
+				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", address)
+			}
+			// Slap a /32 if not specified
+			endpoint.Spec.IPv4Addresses[idx] = fmt.Sprintf("%s/32", address)
+		}
+	}
+
 	endpointReqMsg := convertEndpoint(endpoint, infraAPI.GetConfig().MgmtIntf, vrfID, networkID)
 	if endpointReqMsg == nil {
 		log.Errorf("Converting EP failed. ")

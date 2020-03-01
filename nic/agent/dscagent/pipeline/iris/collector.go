@@ -49,6 +49,7 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	_, ok := MirrorDestToIDMapping[destKey]
 	if ok {
 		mirrorSessionID = MirrorDestToIDMapping[destKey].sessionID
+		MirrorDestToIDMapping[destKey].MirrorKeys = append(MirrorDestToIDMapping[destKey].MirrorKeys, col.GetKey())
 		foundCollector = true
 	} else {
 		// Update Mirror session ID to be under 8. TODO remove this once HAL doesn't rely on agents to provide its hardware ID
@@ -62,7 +63,7 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 			log.Errorf("Failed to parse management IP passed. Err : %v", err)
 			return err
 		}
-		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())
+		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), destKey)
 		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
@@ -79,7 +80,8 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 
 		// Add to mappings
 		MirrorDestToIDMapping[destKey] = &mirrorIDs{
-			sessionID: mirrorSessionID,
+			sessionID:  mirrorSessionID,
+			MirrorKeys: []string{col.GetKey()},
 		}
 	}
 
@@ -122,34 +124,45 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 		log.Error(errors.Wrapf(types.ErrCollectorAlreadyDeleted, "Collector: %s | DestKey: %s", col.GetKey(), destKey))
 		return errors.Wrapf(types.ErrCollectorAlreadyDeleted, "Collector: %s | DestKey: %s", col.GetKey(), destKey)
 	}
-
-	if len(sessionKeys.MirrorKeys) > 0 {
-		log.Error(errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.MirrorKeys, " ")))
-		return errors.Wrapf(types.ErrCollectorStillReferenced, "Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.MirrorKeys, " "))
-	}
-
-	col.Status.Collector = sessionKeys.sessionID
-	mirrorSessionDeleteReq := &halapi.MirrorSessionDeleteRequestMsg{
-		Request: []*halapi.MirrorSessionDeleteRequest{
-			{
-				KeyOrHandle: convertMirrorSessionKeyHandle(col.Status.Collector),
-			},
-		},
-	}
-
-	mResp, err := telemetryClient.MirrorSessionDelete(context.Background(), mirrorSessionDeleteReq)
-	if mResp != nil {
-		if err := utils.HandleErr(types.Delete, mResp.Response[0].ApiStatus, err, fmt.Sprintf("Delete Failed for %s | %s", col.GetKind(), col.GetKey())); err != nil {
-			return err
+	// Remove the mirror key from the map
+	length := len(sessionKeys.MirrorKeys)
+	index := -1
+	for idx, m := range sessionKeys.MirrorKeys {
+		if m == col.GetKey() {
+			index = idx
+			break
 		}
 	}
-	delete(MirrorDestToIDMapping, destKey)
+	if index != -1 {
+		sessionKeys.MirrorKeys[index] = sessionKeys.MirrorKeys[length-1]
+		sessionKeys.MirrorKeys = sessionKeys.MirrorKeys[:length-1]
+	}
 
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-	compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), col.GetKey())
-	if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
-		log.Error(errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
-		return errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
+	if len(sessionKeys.MirrorKeys) == 0 {
+		col.Status.Collector = sessionKeys.sessionID
+		mirrorSessionDeleteReq := &halapi.MirrorSessionDeleteRequestMsg{
+			Request: []*halapi.MirrorSessionDeleteRequest{
+				{
+					KeyOrHandle: convertMirrorSessionKeyHandle(col.Status.Collector),
+				},
+			},
+		}
+
+		mResp, err := telemetryClient.MirrorSessionDelete(context.Background(), mirrorSessionDeleteReq)
+		if mResp != nil {
+			if err := utils.HandleErr(types.Delete, mResp.Response[0].ApiStatus, err, fmt.Sprintf("Delete Failed for %s | %s", col.GetKind(), col.GetKey())); err != nil {
+				return err
+			}
+		}
+		delete(MirrorDestToIDMapping, destKey)
+		mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), destKey)
+		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
+			log.Error(errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
+			return errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
+		}
+	} else {
+		log.Infof("Collector: %s | DstIP: %s | VrfName: %s still referenced by %s", col.GetKey(), dstIP, col.Spec.VrfName, strings.Join(sessionKeys.MirrorKeys, " "))
 	}
 
 	if err := infraAPI.Delete(col.Kind, col.GetKey()); err != nil {
