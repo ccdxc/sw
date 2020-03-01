@@ -2639,7 +2639,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	}, "Did not find DSCProfile", "1ms", "2s")
 
 	// change update
-	dscprof.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOW_AWARE.String()
+	dscprof.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOWAWARE.String()
 	err = stateMgr.ctrler.DSCProfile().Update(&dscprof)
 	AssertOk(t, err, "Update the DSCProfile")
 
@@ -2647,7 +2647,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		obj, err := stateMgr.FindDSCProfile("", "testDSCProfile")
 		if err == nil {
-			if obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOW_AWARE.String() {
+			if obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
 				return true, nil
 			}
 		}

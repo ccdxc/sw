@@ -145,6 +145,8 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 			return err
 		}
 	}
+	//Wait for node to be admitted
+	time.Sleep(time.Minute)
 
 	err := sm.SetUpNaplesPostCluster(sm.Tb.Nodes)
 	if err != nil {

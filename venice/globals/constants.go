@@ -14,6 +14,8 @@ const (
 	// Default Vrf
 	DefaultVrf = "default"
 
+	DefaultDSCProfile = "default"
+
 	// System label prefix. Any label keys that begin with this can only be set by the system.
 	SystemLabelPrefix = "io.pensando."
 

@@ -27,7 +27,7 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 		},
 		Spec: cluster.DSCProfileSpec{
 			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASE_NET",
+			FlowPolicyMode: "BASENET",
 		},
 	}
 
@@ -39,7 +39,7 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
 		log.Infof("Profile found")
 		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASE_NET.String() {
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
 			log.Infof("Profile matched")
 
 			return (nerr == nil), true
@@ -48,14 +48,14 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 	}, "Profile not found")
 
 	// change conn track and session timeout
-	dscProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOW_AWARE.String()
+	dscProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOWAWARE.String()
 	_, err = it.restClient.ClusterV1().DSCProfile().Update(ctx, &dscProfile)
 	AssertOk(c, err, "Error updating dscprofile")
 
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
 		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOW_AWARE.String() {
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
 			return (nerr == nil), nil
 		}
 		return false, false
@@ -82,28 +82,29 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
+	nic := it.snics[0]
 	// DSC Profile
 	dscProfile := cluster.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "TestDSCProfile",
+			Name:      "NewProfileLNS",
 			Namespace: "",
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
 			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASE_NET",
+			FlowPolicyMode: "BASENET",
 		},
 	}
 	// create app
 	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile)
-	AssertOk(c, err, "Error Creating TestDSCProfile profile")
+	AssertOk(c, err, "Error Creating NewProfileLNS profile")
 
 	AssertEventually(c, func() (bool, interface{}) {
-		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
 		log.Infof("Profile found")
 		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASE_NET.String() {
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
 			log.Infof("Profile matched")
 
 			return (nerr == nil), true
@@ -111,67 +112,65 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 		return false, false
 	}, "Profile not found")
 
-	dscProfile1 := cluster.DSCProfile{
-		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
-		ObjectMeta: api.ObjectMeta{
-			Name:      "default",
-			Namespace: "",
-			Tenant:    "",
-		},
-		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "BASE_NET",
-		},
-	}
-
-	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile1)
-	AssertOk(c, err, "Error Creating TestDSCProfile profile")
-
-	AssertEventually(c, func() (bool, interface{}) {
-		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "default")
-		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASE_NET.String() {
-			log.Infof("Profile matched")
-
-			return (nerr == nil), true
-		}
-		return false, false
-	}, "Profile not found")
-
-	dscObj, err := it.getDistributedServiceCard(it.getNaplesMac(0))
+	dscObj, err := it.getDistributedServiceCard(nic.macAddr)
 	AssertOk(c, err, "Error DSC object not found")
-
-	dscObj.Spec.DSCProfile = "TestDSCProfile"
-
+	dscObj.Spec.DSCProfile = "NewProfileLNS"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	AssertOk(c, err, "Error DistributedServicesCard update failed")
 
 	AssertEventually(c, func() (bool, interface{}) {
-		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
-		if _, ok := obj.DscList[it.getNaplesMac(0)]; ok {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
+		if _, ok := obj.DscList[nic.macAddr]; ok {
 			return (nerr == nil), true
 		}
 		return false, false
 	}, "DSCProfile not update")
 	log.Infof("Profile Updated Successfully")
 
-	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	dscProfile1 := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced1",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile1)
+	AssertOk(c, err, "Error Creating insertion.enforced profile")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced1")
+		log.Infof("Profile found")
+		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() &&
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
+			log.Infof("Profile matched")
+
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "Profile not found")
+
+	dscObj, err = it.getDistributedServiceCard(nic.macAddr)
 	AssertOk(c, err, "Error DSC object not found")
 
-	dscObj.Spec.DSCProfile = "default"
+	dscObj.Spec.DSCProfile = "insertion.enforced1"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	AssertOk(c, err, "Error DistributedServicesCard update failed")
 
 	AssertEventually(c, func() (bool, interface{}) {
-		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
-		if _, ok := obj.DscList[it.getNaplesMac(0)]; !ok {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced1")
+		if _, ok := obj.DscList[nic.macAddr]; ok {
 			return (nerr == nil), true
 		}
 		return false, false
 	}, "DSCProfile not update")
 
-	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	dscObj, err = it.getDistributedServiceCard(nic.macAddr)
 	AssertOk(c, err, "Error DSC object not found")
 
 	log.Infof("Profile is: %v", dscObj.Spec.DSCProfile)
@@ -189,7 +188,146 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 
 }
 
-// Update profile
-//Error test case
-//     ---> delete profile when there is still reference from DSC
-//
+// TestDistributedServiceCardUpdateFail tests relationship between DistributedServiceCard->DSCProfile
+func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
+	c.Skip("Need to enable this once find a way to delete and re admit the card")
+	if it.config.DatapathKind == "hal" {
+		c.Skip("Not tested with Hal")
+	}
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
+
+	// TRANSPARENT.FLOWAWARE
+	transparentFlowaware := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "transparent.flowaware",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "FLOWAWARE",
+		},
+	}
+	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &transparentFlowaware)
+	AssertOk(c, err, "Error Creating TestDSCProfile profile")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "transparent.flowaware")
+		log.Infof("Profile found")
+		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
+			log.Infof("Profile matched")
+
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "Profile not found")
+
+	// INSERTION.ENFORCED
+	insertionEnforced := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &insertionEnforced)
+	AssertOk(c, err, "Error Creating TestDSCProfile profile")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced")
+		log.Infof("Profile found")
+		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() &&
+			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
+			log.Infof("Profile matched")
+
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "Profile not found")
+
+	// Update DSC to TRANSPARENT.BASENET
+	dscObj, err := it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "transparent.basenet"
+
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	AssertOk(c, err, "Error DistributedServicesCard update failed")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "transparent.basenet")
+		if _, ok := obj.DscList[it.getNaplesMac(0)]; ok {
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "DSCProfile not update")
+	log.Infof("Profile Updated Successfully")
+
+	// TRANSPARENT.BASENET ===> TRANSPARENT.FLOWAWARE ==> EXP:ALLOW
+	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "transparent.flowaware"
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	AssertOk(c, err, "Error DistributedServicesCard update failed")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "transparent.flowaware")
+		if _, ok := obj.DscList[it.getNaplesMac(0)]; ok {
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "DSCProfile not update")
+
+	// TRANSPARENT.FLOWAWARE ===> TRANSPARENT.BASENET ==> EXP:FAIL
+	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "transparent.basenet"
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	Assert(c, err != nil, "Error DistributedServicesCard update occurred")
+
+	// TRANSPARENT.FLOWAWARE ===> INSERTION.ENFORCED ==== > EXP: ALLOWED
+	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "insertion.enforced"
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	AssertOk(c, err, "Error DistributedServicesCard update failed")
+
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced")
+		if _, ok := obj.DscList[it.getNaplesMac(0)]; ok {
+			return (nerr == nil), true
+		}
+		return false, false
+	}, "DSCProfile not update")
+
+	// INSERTION.ENFORCED ==> TRANSPARENT.FLOWAWARE  ====> EXP: FAIL
+	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "transparent.flowaware"
+
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	Assert(c, err != nil, "Error DistributedServicesCard update occurred")
+
+	// INSERTION.ENFORCED ==> TRNASPARENT.BASENET    ====> EXP: FAIL
+	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
+	AssertOk(c, err, "Error DSC object not found")
+
+	dscObj.Spec.DSCProfile = "transparent.basenet"
+
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
+	Assert(c, err != nil, "Error DistributedServicesCard update occurred")
+
+}

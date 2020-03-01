@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apiutils "github.com/pensando/sw/api/utils"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -113,6 +113,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		}
 	case apiintf.UpdateOper:
 		updNIC, ok := i.(cluster.DistributedServiceCard)
+
 		if !ok {
 			cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
 			return i, true, errInvalidInputType
@@ -137,6 +138,39 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 				cl.logger.DebugLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("updating module: %s with IP: %s", modObj.Name, modObj.Status.Node))
 			}
 		}
+		//TODO: Once CMD can update the spec, this can be removed
+		oldprofname := curNIC.Spec.DSCProfile
+		if oldprofname == "" {
+			return nil, false, fmt.Errorf("oldprofilename is nil")
+		}
+
+		oldProfile := cluster.DSCProfile{
+			ObjectMeta: api.ObjectMeta{
+				Name: oldprofname,
+			},
+		}
+		err := kvs.Get(ctx, oldProfile.MakeKey("cluster"), &oldProfile)
+		if err != nil {
+			return nil, false, fmt.Errorf("unable to find old profile")
+		}
+
+		updprofname := updNIC.Spec.DSCProfile
+		if updprofname == "" {
+			return nil, false, fmt.Errorf("updprofile is nil")
+		}
+		updProfile := cluster.DSCProfile{
+			ObjectMeta: api.ObjectMeta{
+				Name: updprofname,
+			},
+		}
+		err = kvs.Get(ctx, updProfile.MakeKey("cluster"), &updProfile)
+		if err != nil {
+			return nil, false, fmt.Errorf("unable to find the new profile")
+		}
+		err = verifyAllowedProfile(oldProfile, updProfile)
+		if err != nil {
+			return nil, false, fmt.Errorf("error in validating profile: %v", err)
+		}
 
 		// Prevent mode change (decommissioning) if NIC is NOT admitted
 		if !admitted {
@@ -147,7 +181,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			}
 		}
 		// Reject user-initiated modifications of Spec fields like ID and NetworkMode, as NMD currently
-		// does not have code to react to the changes.
+		// doesnot have code to react to the changes.
 		if apiutils.IsUserRequestCtx(ctx) {
 			// Workaround for ...
 			// Once the SmartNIC is admitted, disallow flipping "Spec.Admit" back to false
@@ -182,4 +216,29 @@ func getFieldSelector(nic string) string {
 		moduleNames = append(moduleNames, fmt.Sprintf("%s-%s", nic, val))
 	}
 	return fmt.Sprintf("meta.name in (%s),status.category=%s", strings.Join(moduleNames, ","), diagapi.ModuleStatus_Naples.String())
+}
+
+func verifyAllowedProfile(oldProfile, newProfile cluster.DSCProfile) error {
+	if oldProfile.Spec.FwdMode == newProfile.Spec.FwdMode &&
+		oldProfile.Spec.FlowPolicyMode == newProfile.Spec.FlowPolicyMode {
+		//Same mode transistion
+		return nil
+	}
+
+	if strings.ToLower(oldProfile.Spec.FwdMode) == "insertion" {
+		return fmt.Errorf("reboot required cant move any profile")
+	}
+
+	if strings.ToLower(oldProfile.Spec.FwdMode) == "transparent" {
+		if strings.ToLower(newProfile.Spec.FwdMode) == "transparent" {
+			if strings.ToLower(newProfile.Spec.FlowPolicyMode) != "flowaware" {
+				return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FwdMode, newProfile.Spec.FwdMode, newProfile.Spec.FlowPolicyMode)
+			}
+		} else {
+			if strings.ToLower(newProfile.Spec.FlowPolicyMode) != "enforced" {
+				return fmt.Errorf("Not valid. Move allowed from Tranparent to Insertion Enforced only")
+			}
+		}
+	}
+	return nil
 }

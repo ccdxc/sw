@@ -50,21 +50,21 @@ func (x DSCProfileSpec_Fwd_Mode) String() string {
 
 // DSCProfileSpec_FlowPolicy_Mode_normal is a map of normalized values for the enum
 var DSCProfileSpec_FlowPolicy_Mode_normal = map[string]string{
-	"base_net":   "base_net",
-	"enforced":   "enforced",
-	"flow_aware": "flow_aware",
+	"basenet":   "basenet",
+	"enforced":  "enforced",
+	"flowaware": "flowaware",
 }
 
 var DSCProfileSpec_FlowPolicy_Mode_vname = map[int32]string{
-	0: "base_net",
-	1: "flow_aware",
+	0: "basenet",
+	1: "flowaware",
 	2: "enforced",
 }
 
 var DSCProfileSpec_FlowPolicy_Mode_vvalue = map[string]int32{
-	"base_net":   0,
-	"flow_aware": 1,
-	"enforced":   2,
+	"basenet":   0,
+	"flowaware": 1,
+	"enforced":  2,
 }
 
 func (x DSCProfileSpec_FlowPolicy_Mode) String() string {
@@ -134,7 +134,7 @@ func (m *DSCProfileSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.FlowPolicyMode = "base_net"
+		m.FlowPolicyMode = "basenet"
 		m.FwdMode = "transparent"
 	}
 	return ret

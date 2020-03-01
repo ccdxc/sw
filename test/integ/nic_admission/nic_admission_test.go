@@ -474,6 +474,7 @@ func TestCreateNMDs(t *testing.T) {
 									IPAddress: "127.0.0.10/16",
 								},
 								PrimaryMAC: priMac,
+								DSCProfile: "default",
 							},
 						}
 
@@ -924,6 +925,7 @@ func TestNICReadmit(t *testing.T) {
 				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
+			DSCProfile: "default",
 		},
 	}
 
@@ -1081,6 +1083,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
+			DSCProfile: "default",
 		},
 	}
 
@@ -1258,6 +1261,22 @@ func Setup(m *testing.M) {
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clRef)
 	if err != nil {
 		fmt.Printf("Error creating Cluster object, %v", err)
+		os.Exit(-1)
+	}
+
+	defaultProfile := &pencluster.DSCProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.DefaultDSCProfile,
+		},
+		Spec: pencluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "BASENET",
+		},
+	}
+
+	_, err = tInfo.apiClient.ClusterV1().DSCProfile().Create(context.Background(), defaultProfile)
+	if err != nil {
+		fmt.Printf("Error creating default DSCProfile object, %v", err)
 		os.Exit(-1)
 	}
 

@@ -1607,6 +1607,10 @@ func TestReadmitSmartNIC(t *testing.T) {
 	Assert(t, curNicObj.Spec.ID == nicID && curNicObj.Spec.ID != refNicObj.Spec.ID,
 		"New NIC parameter (hostname) not honored: %+v", curNicObj)
 	Assert(t, curNicObj.Spec.Admit == true, "Old NIC parameter (Admit) should not have been overridden: %+v", curNicObj)
+
+	// Clean up
+	err = deleteSmartNIC(*nicObjMeta)
+	AssertOk(t, err, "Error deleting smartnic object")
 }
 
 func TestHostNICPairing(t *testing.T) {
@@ -1792,6 +1796,10 @@ func TestHostNICPairingConflicts(t *testing.T) {
 	verifySmartNICObj(t, nicMAC, true, cmd.DistributedServiceCardStatus_ADMITTED.String(), host2Name)
 	ev = mr.GetEvents()
 	Assert(t, !validateNICSpecConflictEvent(&ev, nicMAC, host1Name, host2Name), "Found unexpected events: %+v", ev)
+
+	// Clean up
+	err = deleteSmartNIC(api.ObjectMeta{Name: nicMAC})
+	AssertOk(t, err, "Error deleting smartnic object")
 }
 
 func testSetup() {
@@ -1869,6 +1877,23 @@ func testSetup() {
 		fmt.Printf("Error creating Cluster object, %v", err)
 		os.Exit(-1)
 	}
+
+	defaultProfile := &cmd.DSCProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.DefaultDSCProfile,
+		},
+		Spec: cmd.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "BASENET",
+		},
+	}
+
+	_, err = tInfo.apiClient.ClusterV1().DSCProfile().Create(context.Background(), defaultProfile)
+	if err != nil {
+		fmt.Printf("Error creating default DSCProfile object, %v", err)
+		os.Exit(-1)
+	}
+
 }
 
 func testTeardown() {
@@ -1880,9 +1905,22 @@ func testTeardown() {
 			Name: "testCluster",
 		},
 	}
+
 	_, err := tInfo.apiClient.ClusterV1().Cluster().Delete(context.Background(), &clRef.ObjectMeta)
 	if err != nil {
 		log.Fatalf("Error deleting Cluster object, %v", err)
+	}
+
+	defaultProfile := &cmd.DSCProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.DefaultDSCProfile,
+		},
+	}
+
+	_, err = tInfo.apiClient.ClusterV1().DSCProfile().Delete(context.Background(), &defaultProfile.ObjectMeta)
+	if err != nil {
+		fmt.Printf("Error creating default DSCProfile object, %v", err)
+		os.Exit(-1)
 	}
 
 	// stop the rpc client and server

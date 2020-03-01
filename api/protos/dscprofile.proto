@@ -20,8 +20,8 @@ message DSCProfileSpec {
     }
     enum FlowPolicy_Mode
     {
-       BASE_NET   = 0; // Basic networking mode.
-       FLOW_AWARE = 1; // Flows are learnt in this mode
+       BASENET   = 0; // Basic networking mode.
+       FLOWAWARE = 1; // Flows are learnt in this mode
        ENFORCED  = 2; // Flows are learnt and policy enforced
     }
     string FwdMode    = 1 [(venice.check) = "StrEnum(DSCProfileSpec.Fwd_Mode)",

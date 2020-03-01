@@ -262,6 +262,40 @@ func (cl *clusterHooks) createDefaultRouteTable(ctx context.Context, kv kvstore.
 	return r, true, nil
 }
 
+// createDefaultDSCProfile is a pre-commit hook to creates default RouteTable when a tenant is created
+func (cl *clusterHooks) createDefaultDSCProfile(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "createDefaultDSCProfile", "msg", fmt.Sprintf("API server hook to create default dscProfile called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	if r.GetName() != globals.DefaultTenant {
+		return r, true, nil
+	}
+
+	rt := &cluster.DSCProfile{}
+	rt.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	rt.APIVersion = apiSrv.GetVersion()
+	rt.SelfLink = rt.MakeURI("configs", rt.APIVersion, string(apiclient.GroupCluster))
+	rt.Name = globals.DefaultDSCProfile
+	rt.Tenant = ""
+	rt.Namespace = ""
+	rt.GenerationID = "1"
+	rt.UUID = uuid.NewV4().String()
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return i, true, err
+	}
+	rt.CreationTime, rt.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
+	rtk := rt.MakeKey(string(apiclient.GroupCluster))
+	err = txn.Create(rtk, rt)
+	if err != nil {
+		return r, true, errors.New("adding create operation to transaction failed")
+	}
+	return r, true, nil
+}
+
 // deleteDefaultRoutingTable is a pre-commit hook to delete default RouteTable when a tenant is deleted
 func (cl *clusterHooks) deleteDefaultRouteTable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
@@ -1153,6 +1187,7 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultVirtualRouter)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRouteTable)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultAlertPolicy)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultDSCProfile)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)

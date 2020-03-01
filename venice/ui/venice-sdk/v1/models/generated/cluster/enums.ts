@@ -50,8 +50,8 @@ export enum ClusterDSCProfileSpec_fwd_mode {
 }
 
 export enum ClusterDSCProfileSpec_policy_mode {
-    'base_net' = "base_net",
-    'flow_aware' = "flow_aware",
+    'basenet' = "basenet",
+    'flowaware' = "flowaware",
     'enforced' = "enforced",
 }
 

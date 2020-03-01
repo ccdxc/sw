@@ -28,6 +28,7 @@ import (
 	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/cmd/types"
 	cmdutils "github.com/pensando/sw/venice/cmd/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -483,6 +484,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		// Note that even if Spec.Admit = true, the SmartNIC can end up in rejected state if it fails subsequent checks.
 		if !smartNICObjExists {
 			nicObj.Spec.Admit = clusterObj.Spec.AutoAdmitDSCs
+			nicObj.Spec.DSCProfile = globals.DefaultDSCProfile
+
 		}
 
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object

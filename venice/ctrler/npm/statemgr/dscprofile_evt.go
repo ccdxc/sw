@@ -16,12 +16,33 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+type dscProfileVersion struct {
+	profileName string
+	agentGenID  string
+}
+
 // DSCProfileState is a wrapper for dscProfile object
 type DSCProfileState struct {
-	DSCProfile   *ctkit.DSCProfile   `json:"-"` // dscProfile object
-	stateMgr     *Statemgr           // pointer to state manager
-	NodeVersions map[string]string   // Map fpr node -> version
-	DscList      map[string]struct{} // set for list of dsc
+	DSCProfile   *ctkit.DSCProfile            `json:"-"` // dscProfile object
+	stateMgr     *Statemgr                    // pointer to state manager
+	NodeVersions map[string]dscProfileVersion // Map fpr node -> version
+	DscList      map[string]dscProfileVersion // set for list of dsc
+}
+
+// initNodeVersions initializes node versions for the policy
+func (dps *DSCProfileState) initNodeVersions() error {
+	dscs, _ := dps.stateMgr.ListDistributedServiceCards()
+
+	// walk all smart nics
+	for _, dsc := range dscs {
+		if dps.stateMgr.isDscAdmitted(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			if _, ok := dps.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
+				dps.NodeVersions[dsc.DistributedServiceCard.Name] = dscProfileVersion{}
+			}
+		}
+	}
+
+	return nil
 }
 
 // DSCProfileStateFromObj converts from memdb object to dscProfile state
@@ -53,8 +74,8 @@ func NewDSCProfileState(dscProfile *ctkit.DSCProfile, stateMgr *Statemgr) (*DSCP
 	fps := DSCProfileState{
 		DSCProfile:   dscProfile,
 		stateMgr:     stateMgr,
-		NodeVersions: make(map[string]string),
-		DscList:      make(map[string]struct{}),
+		NodeVersions: make(map[string]dscProfileVersion),
+		DscList:      make(map[string]dscProfileVersion),
 	}
 	dscProfile.HandlerCtx = &fps
 
@@ -78,44 +99,19 @@ func convertDSCProfile(fps *DSCProfileState) *netproto.Profile {
 	return &fwp
 }
 
-// OnDSCProfileCreateReq gets called when agent sends create request
-func (sm *Statemgr) OnDSCProfileCreateReq(nodeID string, objinfo *netproto.Profile) error {
-	return nil
-}
-
-// OnDSCProfileUpdateReq gets called when agent sends update request
-func (sm *Statemgr) OnDSCProfileUpdateReq(nodeID string, objinfo *netproto.Profile) error {
-	return nil
-}
-
-// OnDSCProfileDeleteReq gets called when agent sends delete request
-func (sm *Statemgr) OnDSCProfileDeleteReq(nodeID string, objinfo *netproto.Profile) error {
-	return nil
-}
-
-// OnDSCProfileOperUpdate gets called when policy updates arrive from agents
-func (sm *Statemgr) OnDSCProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error {
-	return nil
-}
-
-// OnDSCProfileOperDelete gets called when policy delete arrives from agent
-func (sm *Statemgr) OnDSCProfileOperDelete(nodeID string, objinfo *netproto.Profile) error {
-	return nil
-}
-
 // OnDSCProfileCreate handles dscProfile creation
 func (sm *Statemgr) OnDSCProfileCreate(dscProfile *ctkit.DSCProfile) error {
 	log.Infof("Creating dscProfile: %+v", dscProfile)
 
 	// create new dscProfile object
-	fps, err := NewDSCProfileState(dscProfile, sm)
+	dps, err := NewDSCProfileState(dscProfile, sm)
 	if err != nil {
 		log.Errorf("Error creating dscProfile %+v. Err: %v", dscProfile, err)
 		return err
 	}
-
-	// store it in local DB
-	sm.mbus.AddObjectWithReferences(dscProfile.MakeKey("profile"), convertDSCProfile(fps), references(dscProfile))
+	//TODO: Yet to integrate with agent push in next PR
+	dps.initNodeVersions()
+	sm.PeriodicUpdaterPush(dps)
 
 	return nil
 }
@@ -144,9 +140,15 @@ func (sm *Statemgr) OnDSCProfileUpdate(dscProfile *ctkit.DSCProfile, nfwp *clust
 
 	log.Infof("Sending update received")
 	// TODO Lakshmi : Might have to send the list of DSCs based on the api provided by Sudhi
-	sm.mbus.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(fps), references(dscProfile))
+	//sm.mbus.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(fps), references(dscProfile))
 	log.Infof("Updated dscProfile: %+v", dscProfile)
 
+	dscs := fps.DscList
+	for dsc := range dscs {
+		fps.DscList[dsc] = dscProfileVersion{dscProfile.Name, nfwp.GenerationID}
+		//Get the DistributedServiceCardState and update
+		//Update the "dsc" with expected Profile
+	}
 	return nil
 }
 
@@ -159,11 +161,10 @@ func (sm *Statemgr) OnDSCProfileDelete(dscProfile *ctkit.DSCProfile) error {
 		return err
 	}
 
-	log.Infof("Deleting dscProfile: %+v", dscProfile)
+	log.Infof("Deleting dscProfile: %+v %v", dscProfile, fps)
 
-	// delete the object
-	return sm.mbus.DeleteObjectWithReferences(dscProfile.MakeKey("profile"),
-		convertDSCProfile(fps), references(dscProfile))
+	//TODO: once sudhi provides one naples send, will add that code here
+	return nil
 }
 
 // FindDSCProfile finds a dscProfile
@@ -179,8 +180,14 @@ func (sm *Statemgr) FindDSCProfile(tenant, name string) (*DSCProfileState, error
 }
 
 // GetKey returns the key of DSCProfile
-func (fps *DSCProfileState) GetKey() string {
-	return fps.DSCProfile.GetKey()
+func (dps *DSCProfileState) GetKey() string {
+	return dps.DSCProfile.GetKey()
+}
+
+// Write write the object to api server
+func (dps *DSCProfileState) Write() error {
+	var err error
+	return err
 }
 
 // ListDSCProfiles lists all apps
@@ -198,4 +205,57 @@ func (sm *Statemgr) ListDSCProfiles() ([]*DSCProfileState, error) {
 	}
 
 	return fwps, nil
+}
+
+// OnDSCProfileCreateReq gets called when agent sends create request
+func (sm *Statemgr) OnDSCProfileCreateReq(nodeID string, objinfo *netproto.Profile) error {
+	return nil
+}
+
+// OnDSCProfileUpdateReq gets called when agent sends update request
+func (sm *Statemgr) OnDSCProfileUpdateReq(nodeID string, objinfo *netproto.Profile) error {
+	return nil
+}
+
+// OnDSCProfileDeleteReq gets called when agent sends delete request
+func (sm *Statemgr) OnDSCProfileDeleteReq(nodeID string, objinfo *netproto.Profile) error {
+	return nil
+}
+
+// OnDSCProfileOperUpdate gets called when policy updates arrive from agents
+func (sm *Statemgr) OnDSCProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error {
+	sm.UpdateDSCProfileStatus(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
+	return nil
+}
+
+// OnDSCProfileOperDelete gets called when policy delete arrives from agent
+func (sm *Statemgr) OnDSCProfileOperDelete(nodeID string, objinfo *netproto.Profile) error {
+	return nil
+}
+
+// UpdateDSCProfileStatus updates the profile status
+func (sm *Statemgr) UpdateDSCProfileStatus(nodeuuid, tenant, name, generationID string) {
+	dscProfile, err := sm.FindDSCProfile(tenant, name)
+	if err != nil {
+		return
+	}
+	// find smartnic object
+	snic, err := sm.FindDistributedServiceCard(tenant, nodeuuid)
+	if err == nil {
+		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
+			log.Infof("DSC %v unhealthy but ignoring to update dscprofile status with genId %v", nodeuuid, generationID)
+		}
+	}
+
+	// lock profile for concurrent modifications
+	dscProfile.DSCProfile.Lock()
+	defer dscProfile.DSCProfile.Unlock()
+	expVersion := dscProfile.DscList[snic.DistributedServiceCard.Name]
+
+	if expVersion.profileName == name && expVersion.agentGenID == generationID {
+		// update node version
+		dscProfile.NodeVersions[nodeuuid] = dscProfileVersion{name, generationID}
+	}
+	sm.PeriodicUpdaterPush(dscProfile)
+
 }

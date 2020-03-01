@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
@@ -56,6 +57,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			},
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			DSCProfile:  "default",
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "UNKNOWN",
@@ -76,6 +78,23 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	err = kv.Create(ctx, key, &nic)
 	AssertOk(t, err, fmt.Sprintf("Error creating object in KVStore"))
 
+	defaultProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{
+			Kind: "DSCProfile",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "default",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "INSERTION",
+		},
+	}
+
+	key = defaultProfile.MakeKey(string("cluster"))
+	err = kv.Create(ctx, key, &defaultProfile)
+	AssertOk(t, err, fmt.Sprintf("Error creating object in KVStore"))
+
 	// Test delete/decommission restrictions
 	// create module for testing smartnic update/delete
 	modules := diagnostics.NewNaplesModules(nic.Name, "", "V1")
@@ -91,12 +110,12 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 		// Create and update should always go through
 		txn := kv.NewTxn()
 		_, r, err := hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
-		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: CREATE, phase: %s", phase)
+		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: CREATE, phase: %s err: %s", phase, err)
 		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
 		txn = kv.NewTxn()
 		_, r, err = hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.UpdateOper, false, nic)
-		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: UPDATE, phase: %s", phase)
+		Assert(t, r == true && err == nil, "smartNICPreCommitHook returned unexpected error, op: UPDATE, phase: %s err: %s", phase, err)
 		Assert(t, !txn.IsEmpty(), "transaction should contain module object")
 
 		// MgmtMode change only goes through if phase == ADMITTED
@@ -181,4 +200,106 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	txn := kv.NewTxn()
 	hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
 	Assert(t, !txn.IsEmpty(), "module object should be created if IP config is not present in smart nic status")
+}
+
+func TestSmartNICObjectDSCProfilePreCommitHooks(t *testing.T) {
+
+	hooks := &clusterHooks{
+		logger: log.SetConfig(log.GetDefaultConfig("SmartNIC-Hooks-Precommit-Test")),
+	}
+	_, _, err := hooks.smartNICPreCommitHook(context.TODO(), nil, nil, "", apiintf.UpdateOper, false, nil)
+	Assert(t, err != nil, "smartNICPreCommitHook did not return error with invalid parameters")
+	txns := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+
+	transparentFlowaware := cluster.DSCProfile{
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "FLOWAWARE",
+		},
+	}
+
+	transparentBasenet := cluster.DSCProfile{
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "TRANSPARENT",
+			FlowPolicyMode: "BASENET",
+		},
+	}
+
+	insertionEnforced := cluster.DSCProfile{
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	nic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{
+			Kind: "DistributedServiceCard",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:            "00ae.cd01.0001",
+			ResourceVersion: "15",
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			ID: "hostname",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "0.0.0.0/0",
+			},
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			DSCProfile:  "transparent_basenet",
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "UNKNOWN",
+			SerialNum:      "TestNIC",
+			PrimaryMAC:     "00ae.cd01.0001",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "192.168.10.3/32",
+			},
+		},
+	}
+
+	getfn := func(ctx context.Context, key string, into runtime.Object) error {
+		log.Infof("key: %s", key)
+		switch into.(type) {
+		case *cluster.DSCProfile:
+			sin := into.(*cluster.DSCProfile)
+			switch key {
+			case "/venice/config/cluster/dscprofiles/transparent_flowaware":
+				*sin = transparentFlowaware
+			case "/venice/config/cluster/dscprofiles/transparent_basenet":
+				*sin = transparentBasenet
+			case "/venice/config/cluster/dscprofiles/insertion_enforced":
+				*sin = insertionEnforced
+			}
+		case *cluster.DistributedServiceCard:
+			sin := into.(*cluster.DistributedServiceCard)
+			*sin = nic
+		}
+		return nil
+	}
+	kvs.Getfn = getfn
+
+	var updnic cluster.DistributedServiceCard
+	nic.Clone(&updnic)
+	updnic.Spec.DSCProfile = "transparent_flowaware"
+	updnic.ObjectMeta.ResourceVersion = "15"
+
+	_, _, err = hooks.smartNICPreCommitHook(context.TODO(), kvs, txns, "00ae.cd01.0001", apiintf.UpdateOper, false, updnic)
+	Assert(t, err == nil, "smartNICPreCommitHook did return error with valid parameters")
+
+	updnic.Spec.DSCProfile = "transparent_basenet"
+	updnic.ObjectMeta.ResourceVersion = "15"
+
+	_, _, err = hooks.smartNICPreCommitHook(context.TODO(), kvs, txns, "00ae.cd01.0001", apiintf.UpdateOper, false, updnic)
+	Assert(t, err == nil, "smartNICPreCommitHook did return error with valid parameters")
+
+	nic.Spec.DSCProfile = "transparent_flowaware"
+	updnic.Spec.DSCProfile = "transparent_basenet"
+	updnic.ObjectMeta.ResourceVersion = "15"
+
+	_, _, err = hooks.smartNICPreCommitHook(context.TODO(), kvs, txns, "00ae.cd01.0001", apiintf.UpdateOper, false, updnic)
+	Assert(t, err != nil, "smartNICPreCommitHook did not return error with invalid parameters")
+
 }

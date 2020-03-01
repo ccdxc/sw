@@ -6543,11 +6543,11 @@
         "policy-mode": {
           "type": "string",
           "enum": [
-            "base_net",
-            "flow_aware",
+            "basenet",
+            "flowaware",
             "enforced"
           ],
-          "default": "base_net"
+          "default": "basenet"
         }
       },
       "description": "ProfileSpec - Spec applicable to DSC."

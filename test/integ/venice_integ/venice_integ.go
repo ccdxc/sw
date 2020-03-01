@@ -1004,10 +1004,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{"localhost:" + globals.CMDResolverPort}, nil, l)
 	c.Assert(err, check.IsNil)
 
-	// start agents
-	it.logger.Infof("Creating %d agents", it.config.NumHosts)
-	it.startAgent(c, "localhost:"+globals.CMDResolverPort)
-
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient(fmt.Sprintf("localhost:%s", it.config.APIGatewayPort))
 	if err != nil {
@@ -1044,10 +1040,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		os.Exit(-1)
 	}
 
-	// start NMD
-	it.startNmd(c)
-	time.Sleep(time.Millisecond * 100)
-
 	// create tpm
 	pm, err := tpm.NewPolicyManager(integTestTPMURL, rc, "localhost:")
 	c.Assert(err, check.IsNil)
@@ -1059,8 +1051,17 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		Tenant:   testutils.TestTenant,
 	}
 	l = log.GetNewLogger(log.GetDefaultConfig("VeniceIntegTest-setupAuth"))
+	log.Infof("setup auth")
 	err = testutils.SetupAuth(integTestApisrvURL, true, nil, nil, it.userCred, l)
 	c.Assert(err, check.IsNil)
+
+	// start agents
+	it.logger.Infof("Creating %d agents", it.config.NumHosts)
+	it.startAgent(c, "localhost:"+globals.CMDResolverPort)
+
+	// start NMD
+	it.startNmd(c)
+	time.Sleep(time.Millisecond * 100)
 
 	it.vcHub.SetUp(c, it.config.NumHosts)
 

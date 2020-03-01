@@ -31,7 +31,7 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
         },
         'policy-mode': {
             enum: ClusterDSCProfileSpec_policy_mode,
-            default: 'base_net',
+            default: 'basenet',
             required: true,
             type: 'string'
         },

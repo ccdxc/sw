@@ -212,6 +212,7 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.DSCCondition) *c
 			},
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			DSCProfile:  "default",
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: phase,
