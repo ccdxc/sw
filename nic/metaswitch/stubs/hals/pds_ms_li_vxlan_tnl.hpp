@@ -28,7 +28,8 @@ class li_vxlan_tnl {
 public:    
    NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd);
    void handle_delete(NBB_ULONG vxlan_tnl_ifindex);
-   NBB_BYTE handle_uecmp_update(tep_obj_t* tep_obj, ms_ps_id_t pathset_id,
+   NBB_BYTE handle_uecmp_update(state_t::context_t&& state_ctxt,
+                                tep_obj_t* tep_obj, ms_ps_id_t pathset_id,
                                 ms_ps_id_t ll_dp_corr_id,
                                 cookie_uptr_t&& cookie_uptr);
 

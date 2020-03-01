@@ -31,6 +31,7 @@ public:
     struct properties_t {
         ip_addr_t            tep_ip;
         ip_addr_t            src_ip;
+        ms_ps_id_t           uecmp_ps;
         ms_hw_tbl_id_t       hal_uecmp_idx;
         ms_hw_tbl_id_t       hal_tep_idx;
 

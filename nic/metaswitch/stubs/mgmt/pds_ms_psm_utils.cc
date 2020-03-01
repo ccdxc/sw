@@ -33,6 +33,8 @@ pds_ms_fill_amb_psm_ent (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_PSM_ENT_ENTITY_INDEX);
 
     if (conf->row_status != AMB_ROW_DESTROY) {
+        // Required to optimize by triggering ECMP Pathset in-place update
+        // for underlay link down
         data->bfd_protect_ecmp = AMB_TRUE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_PSM_ENT_BFD_PROT_ECMP);
     }

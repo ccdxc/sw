@@ -89,55 +89,6 @@ populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
 }
 
 static void
-populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
-                       uint32_t          bd_id,
-                       pds::LimGenIrbIfSpec& req)
-{
-    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
-    req.set_bdindex (bd_id);
-    req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
-    req.set_macaddress (subnet_spec->vr_mac, ETH_ADDR_LEN);
-}
-
-static void
-populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
-                              pds::LimInterfaceCfgSpec&  req,
-                              uint32_t                   if_index)
-{
-    std::string vrf_name;
-
-    // Convert VRF ID to name
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_spec->vpc);
-
-    // TODO When there is a failure here in IRB then the BD has to be reverted
-    if (uuid_obj == nullptr) {
-        throw Error(std::string("Subnet has unknown VPC reference ")
-                    .append(subnet_spec->vpc.str()), SDK_RET_INVALID_ARG);
-    }
-    if (uuid_obj->obj_type() != uuid_obj_type_t::VPC) {
-        throw Error(std::string("Subnet has invalid VPC reference ")
-                    .append(subnet_spec->vpc.str()).append(" containing ")
-                    .append(uuid_obj->str()), SDK_RET_INVALID_ARG);
-    }
-    auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
-    vrf_name = std::to_string (vrf_id);
-
-    PDS_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
-                    vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
-
-    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
-    req.set_ifindex (if_index);
-    req.set_ifenable (AMB_TRUE);
-    req.set_ipv4enabled (AMB_TRISTATE_TRUE);
-    req.set_ipv4fwding (AMB_TRISTATE_TRUE);
-    req.set_ipv6enabled (AMB_TRISTATE_TRUE);
-    req.set_ipv6fwding (AMB_TRISTATE_TRUE);
-    req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
-    req.set_vrfname (vrf_name);
-}
-
-static void
 populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
                                 pds::EvpnIfBindCfgSpec&  req,
                                 uint32_t                 bd_id,
@@ -147,7 +98,6 @@ populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
     req.set_ifindex (if_index);
     req.set_eviindex (bd_id);
 }
-
 
 static void
 populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
@@ -188,32 +138,6 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     pds::EvpnBdSpec evpn_bd_spec;
     populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
     pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
-
-    // limGenIrbInterfaceTable Row Update
-    pds::LimGenIrbIfSpec irb_spec;
-    populate_lim_irb_spec (subnet_spec, bd_id, irb_spec);
-    pds_ms_set_amb_lim_gen_irb_if (irb_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
-
-    // Get IRB If Index
-    if_index = bd_id_to_ms_ifindex (bd_id);
-    PDS_TRACE_DEBUG("IRB Interface %s:: BD ID: %d MSIfIndex: 0x%X",
-                     (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
-                     bd_id, if_index);
-
-    // Update IRB to VRF binding
-    pds::LimInterfaceCfgSpec lim_if_spec;
-    populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
-    pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
-
-    // Configure IRB IP Address
-    ip_prefix_t ip_prefix;
-    ip_prefix.len = subnet_spec->v4_prefix.len;
-    ip_prefix.addr.af = IP_AF_IPV4;
-    ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
-    pds::LimInterfaceAddrSpec lim_addr_spec;
-    populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
-                            pds::LIM_IF_TYPE_IRB, bd_id);
-    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
     if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
         // Create Lif here for now
@@ -587,4 +511,84 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     return SDK_RET_OK;
 }
+
+#if 0 /* Enable MS L3 IRB Interface creation for each BD if needed
+         in future */
+static void
+populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
+                       uint32_t          bd_id,
+                       pds::LimGenIrbIfSpec& req)
+{
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
+    req.set_bdindex (bd_id);
+    req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
+    req.set_macaddress (subnet_spec->vr_mac, ETH_ADDR_LEN);
+}
+
+static void
+populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
+                              pds::LimInterfaceCfgSpec&  req,
+                              uint32_t                   if_index)
+{
+    std::string vrf_name;
+
+    // Convert VRF ID to name
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_spec->vpc);
+
+    // TODO When there is a failure here in IRB then the BD has to be reverted
+    if (uuid_obj == nullptr) {
+        throw Error(std::string("Subnet has unknown VPC reference ")
+                    .append(subnet_spec->vpc.str()), SDK_RET_INVALID_ARG);
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::VPC) {
+        throw Error(std::string("Subnet has invalid VPC reference ")
+                    .append(subnet_spec->vpc.str()).append(" containing ")
+                    .append(uuid_obj->str()), SDK_RET_INVALID_ARG);
+    }
+    auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
+    vrf_name = std::to_string (vrf_id);
+
+    PDS_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
+                    vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
+
+    req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
+    req.set_ifindex (if_index);
+    req.set_ifenable (AMB_TRUE);
+    req.set_ipv4enabled (AMB_TRISTATE_TRUE);
+    req.set_ipv4fwding (AMB_TRISTATE_TRUE);
+    req.set_ipv6enabled (AMB_TRISTATE_TRUE);
+    req.set_ipv6fwding (AMB_TRISTATE_TRUE);
+    req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
+    req.set_vrfname (vrf_name);
+}
+
+static void create_irb_if_() {
+    pds::LimGenIrbIfSpec irb_spec;
+    populate_lim_irb_spec (subnet_spec, bd_id, irb_spec);
+    pds_ms_set_amb_lim_gen_irb_if (irb_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+
+    // Get IRB If Index
+    auto if_index = bd_id_to_ms_ifindex (bd_id);
+    PDS_TRACE_DEBUG("IRB Interface %s:: BD ID: %d MSIfIndex: 0x%X",
+                     (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
+                     bd_id, if_index);
+
+    // Update IRB to VRF binding
+    pds::LimInterfaceCfgSpec lim_if_spec;
+    populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
+    pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+
+    // Configure IRB IP Address
+    ip_prefix_t ip_prefix;
+    ip_prefix.len = subnet_spec->v4_prefix.len;
+    ip_prefix.addr.af = IP_AF_IPV4;
+    ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
+    pds::LimInterfaceAddrSpec lim_addr_spec;
+    populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
+                            pds::LIM_IF_TYPE_IRB, bd_id);
+    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+}
+#endif
+
 };    // namespace pds_ms

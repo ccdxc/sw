@@ -7,6 +7,8 @@
 #include "nic/metaswitch/stubs/test/hals/vxlan_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
+#include <hals_c_includes.hpp>
+#include "nic/metaswitch/stubs/hals/pds_ms_hals_l3.hpp"
 #include "nic/apollo/test/base/base.hpp"
 
 namespace pds_ms_test {
@@ -41,6 +43,9 @@ public:
 
     void trigger_delete(void) override {
         pds_ms::li_is()->vxlan_delete(tnl_ifindex);
+        NBB_CORRELATOR pathset_id_corr;
+        NBB_CORR_PUT_VALUE(pathset_id_corr, indirect_pathset);
+        hal_is.nhpi_destroy_ecmp(pathset_id_corr);
     }
 
     void trigger_update(void) override {
@@ -56,6 +61,9 @@ public:
         test::increment_ip_addr (&dest_ip);
     }
     bool ips_mock() override {return true;}
+
+private:
+    pds_ms::hals_l3_integ_subcomp_t hal_is;
 };
 
 } // End Namespace

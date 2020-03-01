@@ -50,7 +50,7 @@ public:
     public:    
         context_t(std::recursive_mutex& m, state_t* s) : l_(m), state_(s)  {
             if (unlikely(mgmt_state_locked(false))) {
-                SDK_TRACE_ERR("Acquiring Stub State lock within Mgmt state lock is not allowed");
+                PDS_TRACE_ERR("Acquiring Stub State lock within Mgmt state lock is not allowed");
                 SDK_ASSERT(0);
             }
         };
@@ -131,20 +131,15 @@ public:
         return ecmp_idx_gen_->free(index);
     }
 
-    // Back-ref from Indirect NH (Cascaded) to TEP
-    void set_indirect_nh_2_tep_ip(ms_ps_id_t indirect_pathset, const ip_addr_t& tep_ip);
-    void reset_indirect_nh_2_tep_ip(ms_ps_id_t indirect_pathset) {
-        SDK_TRACE_DEBUG("Unmapping indirect underlay pathset %d",
-                        indirect_pathset);
-        indirect_nh_2_tep_tbl_.erase(indirect_pathset);
+    // Back-ref from Indirect Pathset (Cascaded) to TEP
+    void map_indirect_ps_2_tep_ip(ms_ps_id_t indirect_pathset, const ip_addr_t& tep_ip);
+    void unmap_indirect_ps_2_tep_ip(ms_ps_id_t indirect_pathset);
+    bool erase_indirect_ps(ms_ps_id_t indirect_pathset) {
+        return (indirect_ps_2_tep_tbl_.erase(indirect_pathset) > 0);
     }
-    tep_obj_t* indirect_nh_2_tep_obj(ms_ps_id_t indirect_pathset) {
-        auto it = indirect_nh_2_tep_tbl_.find(indirect_pathset);
-        if (it == indirect_nh_2_tep_tbl_.end()) {
-            return nullptr;
-        }
-        return tep_store_.get(it->second);
-    }
+    tep_obj_t* indirect_ps_2_tep_obj(ms_ps_id_t indirect_pathset,
+                                     bool mark_indirect_if_not_found = false);
+
 
 private:
     static constexpr uint32_t k_max_fp_ports = 2;
@@ -166,8 +161,8 @@ private:
     static std::recursive_mutex g_mtx_;
     pds_batch_ctxt_guard_t bg_;
     uint32_t lnx_ifindex_table_[k_max_fp_ports] = {0};
-    // Back-ref from Indirect NH (Cascaded) to TEP
-    std::unordered_map<ms_ps_id_t,ip_addr_t> indirect_nh_2_tep_tbl_;
+    // Back-ref from Indirect Pathset (Cascaded) to TEP
+    std::unordered_map<ms_ps_id_t,ip_addr_t> indirect_ps_2_tep_tbl_;
 
 private:
     state_t(void);

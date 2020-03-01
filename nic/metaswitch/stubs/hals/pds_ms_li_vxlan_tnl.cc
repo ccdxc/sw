@@ -252,15 +252,18 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
             // No change
             return rc;
         } 
-        state_ctxt.state()->set_indirect_nh_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
     } else {
         // Create Tunnel
         PDS_TRACE_INFO ("TEP %s Create IPS Underlay ECMP Pathset %d DP Corr %d",
                         ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps, ips_info_.hal_uecmp_idx);
         op_create_ = true;
         cache_obj_in_cookie_for_create_op_(); 
-        state_ctxt.state()->set_indirect_nh_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
     }
+    // Indirect ECMP Pathset <-> TEP mapping
+    // This will not be deleted even if the Tunnel create fails
+    // Entry will be erased when the Pathset is deleted from Metaswitch
+    state_ctxt.state()->map_indirect_ps_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
+    store_info_.tep_obj->properties().uecmp_ps = ips_info_.uecmp_ps;
 
     pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
 
@@ -294,16 +297,19 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
 
 // Underlying Indirect Pathset for the tunnel has been updated with a new
 // DP correlator (ECMP 1 to 2 case)
-NBB_BYTE li_vxlan_tnl::handle_uecmp_update(tep_obj_t* tep_obj, ms_ps_id_t pathset_id,
+NBB_BYTE li_vxlan_tnl::handle_uecmp_update(state_t::context_t&& state_ctxt,
+                                           tep_obj_t* tep_obj,
+                                           ms_ps_id_t pathset_id,
                                            ms_ps_id_t ll_dp_corr_id,
                                            cookie_uptr_t&& cookie_uptr) {
-    // Mock as if VXLAN Tunnel update IPS is received 
+    // Mock as if VXLAN Tunnel update IPS is received
     ips_info_.src_ip = tep_obj->properties().src_ip;
     ips_info_.tep_ip = tep_obj->properties().tep_ip;
-    // MS LIM IfIndex for the VXLAN Tunnel is used as the HAL TEP Index 
+    // MS LIM IfIndex for the VXLAN Tunnel is used as the HAL TEP Index
     ips_info_.if_index = tep_obj->properties().hal_tep_idx;
     ips_info_.hal_uecmp_idx = ll_dp_corr_id;
     NBB_CORR_GET_VALUE(ips_info_.uecmp_ps, pathset_id);
+    state_ctxt.release();
 
     cookie_uptr_ = std::move(cookie_uptr);
     return handle_add_upd_();
@@ -390,6 +396,9 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
+
+        state_ctxt.state()->unmap_indirect_ps_2_tep_ip(
+            store_info_.tep_obj->properties().uecmp_ps);
 
     } // End of state thread_context
       // Do Not access/modify global state after this

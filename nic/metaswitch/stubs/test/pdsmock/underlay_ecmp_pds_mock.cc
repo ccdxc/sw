@@ -69,7 +69,7 @@ void underlay_ecmp_pds_mock_t::validate_()
         // Verify all temporary objects and cookies are freed
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t) 0);
         return;
     }
 
@@ -78,7 +78,7 @@ void underlay_ecmp_pds_mock_t::validate_()
     { // Enter state thread context
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 1);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t) 1);
     }
 
     ASSERT_TRUE (pds_ret_status != mock_pds_batch_async_fail_);
@@ -93,13 +93,13 @@ void underlay_ecmp_pds_mock_t::validate_()
         // Verify no change to slab - all temporary objects released
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t) 0);
         return;
     }
 
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t) 0);
 }
 
 } // End namespace pds_ms_test
