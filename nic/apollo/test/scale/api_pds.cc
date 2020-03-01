@@ -70,6 +70,26 @@ create_remote_mapping (pds_remote_mapping_spec_t *pds_remote_mapping)
 }
 
 sdk_ret_t
+delete_local_mapping (pds_mapping_key_t *key)
+{
+    if (key) {
+        return api::pds_local_mapping_delete(key);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
+delete_remote_mapping (pds_mapping_key_t *key)
+{
+    if (key) {
+        return api::pds_remote_mapping_delete(key);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
 create_vnic (pds_vnic_spec_t *pds_vnic)
 {
     if (pds_vnic) {

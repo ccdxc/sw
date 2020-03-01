@@ -79,6 +79,10 @@ TEST_F(scale_test, scale_test_create)
 
     printf("DONE pushing configs!\n");
 
+    rv = delete_objects();
+    ASSERT_TRUE(rv == SDK_RET_OK);
+    printf("DONE deleting configs!\n");
+
     if (g_daemon_mode) {
         printf("Entering forever loop ...\n");
         fflush(stdout);

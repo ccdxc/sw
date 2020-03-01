@@ -94,7 +94,6 @@ mapping_state::find(pds_obj_key_t *key) const {
     return (mapping_entry *)(mapping_ht_->lookup(key));
 }
 
-// TODO: where are we using this ?
 mapping_entry *
 mapping_state::find(pds_mapping_key_t *skey) const {
     if (skey->type == PDS_MAPPING_TYPE_L2) {
@@ -102,8 +101,10 @@ mapping_state::find(pds_mapping_key_t *skey) const {
                           skey->subnet.str(), macaddr2str(skey->mac_addr));
     } else if (skey->type == PDS_MAPPING_TYPE_L3) {
         PDS_TRACE_VERBOSE("Looking for mapping (%s, %s) to db",
-                          std::string(skey->vpc.str()),
-                          ipaddr2str(&skey->ip_addr));
+                          skey->vpc.str(), ipaddr2str(&skey->ip_addr));
+    } else {
+        SDK_ASSERT(FALSE);
+        return NULL;
     }
     return (mapping_entry *)(mapping_skey_ht_->lookup(skey));
 }
@@ -126,29 +127,31 @@ sdk_ret_t
 mapping_state::persist(mapping_entry *mapping) {
     sdk_ret_t ret;
 
-    // TODO: should we check if pkey is valid here ? we may have to support only
-    //       skey based case also for internal use cases
-    ret = kvstore_->insert(&mapping->key_, sizeof(mapping->key_),
-                           &mapping->skey_, sizeof(mapping->skey_));
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to insert pkey -> skey binding in kvstore for"
-                      "mapping %s, err %u", mapping->key2str().c_str(), ret);
+    if (mapping->key_.valid()) {
+        ret = kvstore_->insert(&mapping->key_, sizeof(mapping->key_),
+                               &mapping->skey_, sizeof(mapping->skey_));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to insert pkey -> skey binding in kvstore for"
+                          "mapping %s, err %u", mapping->key2str().c_str(), ret);
+        }
+        return ret;
     }
-    return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 mapping_state::perish(mapping_entry *mapping) {
     sdk_ret_t ret;
 
-    // TODO: should we check if pkey is valid here ? we may have to support only
-    //       skey based case also for internal use cases
-    ret = kvstore_->remove(&mapping->key_, sizeof(mapping->key_));
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to remove pkey -> skey binding in kvstore for"
-                      "mapping %s, err %u", mapping->key2str().c_str(), ret);
+    if (mapping->key_.valid()) {
+        ret = kvstore_->remove(&mapping->key_, sizeof(mapping->key_));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to remove pkey -> skey binding in kvstore for"
+                          "mapping %s, err %u", mapping->key2str().c_str(), ret);
+        }
+        return ret;
     }
-    return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

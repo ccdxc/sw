@@ -26,21 +26,21 @@ pds_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt_t *api_ctxt;
     pds_obj_key_t key = { 0 };
 
-    if ((op == API_OP_DELETE) && skey) {
-        return SDK_RET_OK;
+    if ((op == API_OP_DELETE) && !skey) {
+        PDS_TRACE_ERR("Failed to delete mapping, secondary key not set");
+        return SDK_RET_INVALID_ARG;
     }
 
-    if (((op == API_OP_CREATE) || (op == API_OP_UPDATE)) && spec) {
-        return SDK_RET_OK;
+    if (((op == API_OP_CREATE) || (op == API_OP_UPDATE)) && !spec) {
+        PDS_TRACE_ERR("Failed to create|update mapping, spec not set");
+        return SDK_RET_INVALID_ARG;
     }
 
-    // TODO:
-    // 1. do 2nd-ary key to primary key lookup
-    // 2. use primary key to delete
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_MAPPING, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->mapping_key = key;
+            api_ctxt->api_params->key_type = api::API_OBJ_KEY_TYPE_SKEY;
+            api_ctxt->api_params->mapping_skey = *skey;
         } else {
             spec->key = key;
             api_ctxt->api_params->mapping_spec = *spec;
@@ -59,9 +59,6 @@ pds_mapping_entry_find (pds_mapping_key_t *skey)
     static mapping_entry *mapping;
 
     memset(&spec, 0, sizeof(spec));
-    // TODO:
-    // 1. do 2nd-ary key to primary key lookup (copy pkey to spec.key directly)
-    // 2. return SDK_RET_ENTRY_NOT_FOUND, if not found
     spec.skey = *skey;
     if (mapping == NULL) {
         mapping  = mapping_entry::factory(&spec);

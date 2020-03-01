@@ -187,6 +187,9 @@ public:
             kstr = mem_hash_utils_rawstr(_ctx.params->key, \
                                          _ctx.props->swkey_len); \
         } \
+        MEMHASH_TRACE_VERBOSE("- H:[%#x] K:[%s] Hdl:[%s]", \
+                              _ctx.params->hash_32b, kstr, \
+                              _ctx.handle->tostr()); \
         if (_ctx.params->appdata) { \
             if (_ctx.props->data2str) { \
                 dstr = _ctx.props->data2str(_ctx.params->appdata); \
@@ -195,8 +198,8 @@ public:
                                              _ctx.props->swappdata_len); \
             } \
         } \
-        MEMHASH_TRACE_VERBOSE("- H:[%#x] K:[%s] D:[%s] Hdl:[%s]", \
-                              _ctx.params->hash_32b, kstr, dstr, \
+        MEMHASH_TRACE_VERBOSE("- H:[%#x] D:[%s] Hdl:[%s]", \
+                              _ctx.params->hash_32b, dstr, \
                               _ctx.handle->tostr()); \
     } \
 }

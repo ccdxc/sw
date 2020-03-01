@@ -19,6 +19,7 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
 
 sdk_ret_t create_route_table(pds_route_table_spec_t *route_table);
@@ -47,5 +48,8 @@ sdk_ret_t create_objects_init(test_params_t *test_params);
 sdk_ret_t create_objects_end(void);
 sdk_ret_t delete_objects_end(void);
 sdk_ret_t iterate_objects_end(sdk::table::iterate_t table_entry_iterate);
+
+sdk_ret_t delete_local_mapping(pds_mapping_key_t *key);
+sdk_ret_t delete_remote_mapping(pds_mapping_key_t *key);
 
 #endif

@@ -96,7 +96,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // mapping is a stateless object, so we need to construct the object
         // from the datapath tables
         if (api_ctxt->api_op == API_OP_DELETE) {
-            if (api_ctxt->api_params->mapping_key.valid()) {
+            if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
                 // use primary key
                 return mapping_entry::build(&api_ctxt->api_params->mapping_key);
             } else {
@@ -350,7 +350,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_MAPPING:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            if (api_ctxt->api_params->mapping_key.valid()) {
+            if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
                 // use primary key
                 return mapping_db()->find(&api_ctxt->api_params->mapping_key);
             } else {

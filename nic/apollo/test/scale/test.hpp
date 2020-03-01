@@ -30,5 +30,6 @@ sdk_ret_t create_security_policy(uint32_t num_vpcs, uint32_t num_subnets,
 sdk_ret_t create_flows(uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
                        uint16_t sport_base, uint16_t dport_base);
 sdk_ret_t create_objects(void);
+sdk_ret_t delete_objects(void);
 
 #endif

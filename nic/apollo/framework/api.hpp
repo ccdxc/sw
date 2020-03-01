@@ -19,7 +19,7 @@ namespace api {
 // forward declarations
 typedef struct api_ctxt_s api_ctxt_t;
 typedef struct api_obj_ctxt_s api_obj_ctxt_t;
-typedef union api_params_u api_params_t;
+typedef struct api_params_s api_params_t;
 
 /// \brief    return current epoch value
 pds_epoch_t get_current_epoch(void);

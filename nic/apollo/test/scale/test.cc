@@ -262,6 +262,117 @@ done:
     return rv;
 }
 
+sdk_ret_t
+delete_mappings (uint32_t num_vpcs, uint32_t num_subnets,
+                 uint32_t num_vnics, uint32_t num_ip_per_vnic,
+                 uint32_t num_remote_mappings)
+{
+    sdk_ret_t rv;
+    uint16_t ip_base;
+    uint32_t ipv4_addr;
+    uint64_t mac_uint64;
+    pds_mapping_key_t key;
+
+    // delete remote mappings
+    SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            ip_base = num_vnics * num_ip_per_vnic + 1;
+            for (uint32_t k = 1; k <= num_remote_mappings; k++) {
+                memset(&key, 0, sizeof(pds_mapping_key_t));
+                key.type = PDS_MAPPING_TYPE_L3;
+                key.vpc = test::int2pdsobjkey(i);
+                key.ip_addr.af = IP_AF_IPV4;
+                ipv4_addr = (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                            ip_base++;
+                key.ip_addr.addr.v4_addr = ipv4_addr;
+                rv = delete_remote_mapping(&key);
+                SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                        "delete v4 remote mapping failed, vpc %u, ret %u",
+                                        i, rv);
+
+                if (apulu()) {
+                    // l2 mapping
+                    memset(&key, 0, sizeof(pds_mapping_key_t));
+                    key.type = PDS_MAPPING_TYPE_L2;
+                    key.subnet =
+                        test::int2pdsobjkey(PDS_SUBNET_ID((i - 1), num_subnets, j));
+                    mac_uint64 = (uint64_t)((uint64_t)1 << 33);
+                    mac_uint64 = (mac_uint64 | (((uint64_t)i & 0x7FF) << 22) |
+                                  ((j & 0x7FF) << 11) | ((num_vnics + k) & 0x7FF));
+                    MAC_UINT64_TO_ADDR(key.mac_addr, mac_uint64);
+                    rv = delete_remote_mapping(&key);
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "delete l2 remote mapping failed, subnet %u, ret %u",
+                                            i, rv);
+                }
+
+                if (g_test_params.dual_stack) {
+                    // V6 mapping
+                    memset(&key, 0, sizeof(pds_mapping_key_t));
+                    key.type = PDS_MAPPING_TYPE_L3;
+                    key.vpc = test::int2pdsobjkey(i);
+                    key.ip_addr.af = IP_AF_IPV6;
+                    key.ip_addr.addr.v6_addr =
+                          g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(key.ip_addr.addr.v6_addr,
+                                                    ipv4_addr);
+                    rv = delete_remote_mapping(&key);
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "delete v6 remote mapping failed, vpc %u, ret %u",
+                                            i, rv);
+                }
+            }
+        }
+    }
+    // push leftover objects
+    rv = delete_remote_mapping(NULL);
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "delete remote mapping failed, ret %u", rv);
+
+    // delete local mapping
+    for (uint32_t i = 1; i <= num_vpcs; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t k = 1; k <= num_vnics; k++) {
+                for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
+                    memset(&key, 0, sizeof(pds_mapping_key_t));
+                    key.type = PDS_MAPPING_TYPE_L3;
+                    key.vpc = test::int2pdsobjkey(i);
+                    key.ip_addr.af = IP_AF_IPV4;
+                    ipv4_addr =
+                        (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
+                        (((k - 1) * num_ip_per_vnic) + l);
+                    key.ip_addr.addr.v4_addr = ipv4_addr;
+                    rv = delete_local_mapping(&key);
+                    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                            "delete v4 local mapping failed, vpc %u, ret %u",
+                                            i, rv);
+                    if (g_test_params.dual_stack) {
+                        // V6 mapping
+                        memset(&key, 0, sizeof(pds_mapping_key_t));
+                        key.type = PDS_MAPPING_TYPE_L3;
+                        key.vpc = test::int2pdsobjkey(i);
+                        key.ip_addr.af = IP_AF_IPV6;
+                        key.ip_addr.addr.v6_addr =
+                               g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(key.ip_addr.addr.v6_addr,
+                                                        ipv4_addr);
+                        rv = delete_local_mapping(&key);
+                        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                                "delete v6 local mapping failed, vpc %u, ret %u",
+                                                i, rv);
+                    }
+                }
+            }
+        }
+    }
+    // push leftover objects
+    rv = delete_local_mapping(NULL);
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "delete local mapping failed, ret %u", rv);
+    return rv;
+}
+
 //----------------------------------------------------------------------------
 // 1. create 1 primary + 32 secondary IP for each of 1K local vnics
 // 2. create 1023 remote mappings per VPC
@@ -346,6 +457,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     if (g_test_params.dual_stack) {
                         // V6 mapping
                         pds_local_v6_mapping = pds_local_mapping;
+                        pds_local_v6_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                         pds_local_v6_mapping.skey.ip_addr.af = IP_AF_IPV6;
                         pds_local_v6_mapping.skey.ip_addr.addr.v6_addr =
                                g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
@@ -458,6 +570,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 if (g_test_params.dual_stack) {
                     // V6 mapping
                     pds_remote_v6_mapping = pds_remote_mapping;
+                    pds_remote_v6_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                     pds_remote_v6_mapping.skey.ip_addr.af = IP_AF_IPV6;
                     pds_remote_v6_mapping.skey.ip_addr.addr.v6_addr =
                           g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
@@ -1570,6 +1683,27 @@ static uint32_t flow_counter = 0;
 static void
 table_entry_iterate (sdk::table::sdk_table_api_params_t *params) {
     flow_counter++;
+}
+
+sdk_ret_t
+delete_objects (void)
+{
+    sdk_ret_t ret;
+
+    if (!apulu()) {
+        return SDK_RET_OK;
+    }
+
+    // delete mappings
+    ret = delete_mappings(g_test_params.num_vpcs,
+                          g_test_params.num_subnets, g_test_params.num_vnics,
+                          g_test_params.num_ip_per_vnic,
+                          g_test_params.num_remote_mappings);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    return ret;
 }
 
 sdk_ret_t

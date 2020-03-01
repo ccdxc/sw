@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
+#include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/apollo/test/base/base.hpp"
 
 #define TESTAPP_METER_NUM_PREFIXES                         16

@@ -87,7 +87,7 @@ pds_upgrade (pds_upg_spec_t *spec)
 namespace upg {
 
 void
-upg_event_cb_register(upg_event_t &upg_ev)
+upg_event_cb_register (upg_event_t &upg_ev)
 {
     PDS_TRACE_INFO("Upgrade thread event register thread_id %u", upg_ev.thread_id);
     api::g_upg_state->register_ev_thread(upg_ev);
