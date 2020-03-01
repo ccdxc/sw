@@ -31,19 +31,30 @@ typedef std::shared_ptr<MetricsGetResponse> MetricsGetResponsePtr;
 
 static std::map<std::string, void*> g_handlers;
 
-static std::string
-get_command (std::string base)
+static inline std::string
+get_techsupport_filename (void)
 {
     char timestring[PATH_MAX];
     char filename[PATH_MAX];
     time_t current_time = time(NULL);
 
     strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", gmtime(&current_time));
-    snprintf(filename, PATH_MAX, "/nic/bin/techsupport "
-             "-c /sw/nic/conf/apulu/techsupport.json "
-             "-d /%s/ -o tech-support-%s.gz", base.c_str(), timestring);
+    snprintf(filename, PATH_MAX, "tech-support-%s.gz", timestring);
 
     return std::string(filename);
+}
+
+static inline std::string
+get_techsupport_cmd (std::string ts_dir, std::string ts_file, bool skipcores)
+{
+    char ts_cmd[PATH_MAX];
+
+    snprintf(ts_cmd, PATH_MAX, "/nic/bin/techsupport "
+             "-c /nic/conf/techsupport.json "
+             "-d %s -o %s %s", ts_dir.c_str(), ts_file.c_str(),
+             skipcores ? "-s" : "");
+
+    return std::string(ts_cmd);
 }
 
 static void
@@ -76,14 +87,16 @@ OperSvcImpl::TechSupportCollect(ServerContext *context,
                                 const TechSupportRequest *req,
                                 TechSupportResponse *rsp) {
     int rc;
+    std::string tsdir = "/data/techsupport/";
     auto tsrsp = rsp->mutable_response();
+    auto tsfile = get_techsupport_filename();
+    auto tscmd = get_techsupport_cmd(tsdir, tsfile, req->request().skipcores());
 
-    auto filename = get_command("/data/techsupport");
-    rc = system(filename.c_str());
+    rc = system(tscmd.c_str());
     if (rc == -1) {
         rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
     } else {
-        tsrsp->set_filepath(filename);
+        tsrsp->set_filepath(tsdir + tsfile);
         rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     }
     return Status::OK;

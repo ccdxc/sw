@@ -12,7 +12,7 @@ import "meta/meta.proto";
 import "types.proto";
 
 service OperSvc {
-  // TechSuport helps collecting all the debug information on the
+  // TechSupport helps collecting all the debug information on the
   // Distrubuted Services Card (DSC) platform for troubleshooting. The collected
   // information includes trace files from various components, syslogs, core
   // files, output of various debug commands etc.
@@ -26,20 +26,11 @@ service OperSvc {
   rpc MetricsGet(stream MetricsGetRequest) returns (stream MetricsGetResponse) {}
 }
 
-// TechSupportSpec defines the confiugration of the techsupport objet
+// TechSupportSpec defines the configuration of the techsupport object
 message TechSupportSpec {
-  // DestinationSpec defines the techsupport's destination
-  message DestinationSpec {
-    enum Protocol {
-      DST_PROTOCOL_NONE  = 0;
-      DST_PROTOCOL_LOCAL = 1;
-    }
-  }
-  // techsupport result file destination
-  DestinationSpec Dst       = 1;
   // SkipCores can be set to true to exclude core files from techsupport
   // output
-  bool            SkipCores = 2;
+  bool SkipCores = 1;
 }
 
 // TechSupportStatus captures the current status of the techsupport job
