@@ -17,12 +17,12 @@ MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = rt dl $(MS_LD_LIBS) ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                   ${NIC_COMMON_LDLIBS} edit ncurses
 MODULE_SOLIBS   += pdsmscommon slab shmmgr rte_indexer pdscore \
-		  pal pdsframework pdscore pdsapi pdsapi_impl pdstest \
+                  pal pdsframework pdscore pdsapi pdsapi_impl pdstest \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd sdkfru pal \
-                  lpmitree_${PIPELINE} rfc_${PIPELINE} pdsrfc \
+                  lpmitree_${PIPELINE} rfc_${PIPELINE} pdsrfc penmetrics \
                   bm_allocator sdklinkmgr sdklinkmgrcsr kvstore_lmdb \
                   sltcam slhash memhash ${NIC_FTL_LIBS} \
                   ${NIC_${PIPELINE}_NICMGR_LIBS}

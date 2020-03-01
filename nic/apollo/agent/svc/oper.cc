@@ -1,4 +1,6 @@
+//------------------------------------------------------------------------------
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//------------------------------------------------------------------------------
 
 #include <map>
 #include <memory>
@@ -6,15 +8,14 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
-
-#include "oper.hpp"
+#include "grpc++/grpc++.h"
 #include "gen/proto/meta/meta.pb.h"
 #include "gen/proto/oper.grpc.pb.h"
 #include "gen/proto/oper.pb.h"
 #include "gen/proto/types.pb.h"
-#include "grpc++/grpc++.h"
+#include "nic/apollo/agent/svc/oper.hpp"
 #include "nic/sdk/lib/metrics/metrics.hpp"
-#include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Status;
 using grpc::ServerContext;
@@ -58,11 +59,12 @@ get_techsupport_cmd (std::string ts_dir, std::string ts_file, bool skipcores)
 }
 
 static void
-metrics_read (std::string name, sdk::metrics::key_t key, MetricsGetResponsePtr rsp)
+metrics_read (std::string name, sdk::metrics::key_t key,
+              MetricsGetResponsePtr rsp)
 {
     void *handler;
     sdk::metrics::metrics_counters_t counters;
-    
+
     if (g_handlers.count(name) == 0) {
         handler = sdk::metrics::metrics_open(name.c_str());
         g_handlers[name] = handler;
@@ -71,14 +73,12 @@ metrics_read (std::string name, sdk::metrics::key_t key, MetricsGetResponsePtr r
     }
 
     counters = sdk::metrics::metrics_read(handler, key);
-
     for (uint32_t i = 0; i < counters.size(); i++) {
-        ::pds::MetricsStatus *status = rsp->mutable_response();
-        ::pds::CounterStatus *counter = status->mutable_status()->add_counters();
+        ::pds::CountersStatus *status = rsp->mutable_response();
+        ::pds::CounterStatus *counter = status->add_counters();
         counter->set_name(counters[i].first);
         counter->set_value(counters[i].second);
     }
-
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
 }
 
@@ -104,14 +104,21 @@ OperSvcImpl::TechSupportCollect(ServerContext *context,
 
 Status
 OperSvcImpl::MetricsGet(ServerContext* context,
-                        ServerReaderWriter<MetricsGetResponse, MetricsGetRequest>* stream) {
+                        ServerReaderWriter<MetricsGetResponse,
+                        MetricsGetRequest>* stream) {
+    pds_obj_key_t obj_key;
     MetricsGetRequest metrics_req;
     std::shared_ptr<MetricsGetResponse> metrics_rsp = nullptr;
+
+    // TODO: will fix once metrics registration for lifs and ports is done
+    return Status::OK;
+
     do {
         while (stream->Read(&metrics_req)) {
             sdk::metrics::key_t key;
+
             if (metrics_req.key().size() != sizeof(key)) {
-                PDS_TRACE_DEBUG("Received request with invalid size of %i",
+                PDS_TRACE_DEBUG("Rcvd request with invalid size {}",
                                 metrics_req.key().size());
                 metrics_rsp->set_apistatus(
                     types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -119,8 +126,9 @@ OperSvcImpl::MetricsGet(ServerContext* context,
                 continue;
             }
             memcpy(&key, metrics_req.key().c_str(), sizeof(key));
-            PDS_TRACE_DEBUG("Rcvd metrics request: name {}, key {}",
-                            metrics_req.name(), key);
+            pds_obj_key_proto_to_api_spec(&obj_key, metrics_req.key());
+            PDS_TRACE_DEBUG("Rcvd metrics request, name {}, key {}",
+                            metrics_req.name().c_str(), obj_key.str());
             metrics_rsp = std::make_shared<MetricsGetResponse>();
             metrics_read(metrics_req.name(), key, metrics_rsp);
             stream->Write(*metrics_rsp.get());

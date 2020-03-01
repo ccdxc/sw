@@ -3,7 +3,7 @@ TOP_DIR = ../../../../..
 LD_LIBRARY_PATH=$(TOP_DIR)/nic/hal/third-party/google/x86_64/lib/
 PROTO_DIR = ${TOP_DIR}/nic/apollo/agent/protos/
 HAL_PROTO_FILES = types.proto vpc.proto device.proto policy.proto subnet.proto \
-                  dhcp.proto interface.proto port.proto event.proto
+                  dhcp.proto interface.proto port.proto event.proto oper.proto
 METASWITCH_PROTO_DIR = ${TOP_DIR}/nic/metaswitch/protos/
 METASWITCH_PROTO_FILES = common.proto cp_route.proto bgp.proto evpn.proto cp_route.proto
 PROTOSUBST = Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mmeta/meta.proto=github.com/pensando/sw/nic/apollo/agent/gen/pds/meta/pds,Mtypes.proto=github.com/pensando/sw/nic/apollo/agent/gen/pds,Mcommon.proto=ithub.com/pensando/sw/nic/metaswitch/gen/agent,Mpdsa.proto=github.com/pensando/sw/venice/utils/apigen/annotations
@@ -20,7 +20,7 @@ default: clean-proto ms-proto
 	-I${TOP_DIR}/nic/hal/third-party/google/include \
 	-I${TOP_DIR}/vendor/github.com/gogo/protobuf/gogoproto \
 	--gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,plugins=grpc:. meta.proto
-	
+
 ms-proto: create-gen-dir
 	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc \
 	--proto_path=${METASWITCH_PROTO_DIR} -I${METASWITCH_PROTO_DIR} \
@@ -33,7 +33,7 @@ ms-proto: create-gen-dir
 create-gen-dir:
 	mkdir -p ${CURDIR}/metaswitch
 	mkdir -p ${TOP_DIR}/nic/metaswitch/gen/agent
-	
+
 clean-proto:
 	# Regenerate all .pb.go. This avoids conflicts due to file renames in nic/proto/hal
 	rm -f ${GEN_DIR}/*.go

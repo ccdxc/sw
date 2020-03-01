@@ -126,6 +126,9 @@ const (
 	ErrCollectorAlreadyDeleted               = Error("ErrCollectorAlreadyDeleted")
 	ErrUnsupportedApp                        = Error("ErrUnsupportedApp")
 	ErrMaxMirrorSessionsExceeded             = Error("ErrMaxMirrorSessionsExceeded")
+	ErrMetricsGet                            = Error("ErrMetricsGet")
+	ErrMetricsSend                           = Error("ErrMetricsSend")
+	ErrMetricsRecv                           = Error("ErrMetricsRecv")
 )
 
 // Const Info

@@ -378,7 +378,7 @@ sdk::metrics::metrics_schema_t port_metrics_schema = {
 };
 
 sdk::metrics::metrics_schema_t mgmt_port_metrics_schema = {
-    .name = "Port",
+    .name = "MgmtPort",
     .counters = {
         {
             .name = "Frames Rx ok",
@@ -514,8 +514,20 @@ sdk::metrics::metrics_schema_t mgmt_port_metrics_schema = {
     }
 };
 
+sdk::metrics::metrics_schema_t host_if_metrics_schema = {
+    .name = "HostInterface",
+    .counters = {
+        {
+            .name = NULL,
+        },
+    }
+};
+
 sdk_ret_t
 register_metrics (void)
 {
-    return SDK_RET_ERR;
+    sdk::metrics::metrics_register(&port_metrics_schema);
+    sdk::metrics::metrics_register(&mgmt_port_metrics_schema);
+    sdk::metrics::metrics_register(&host_if_metrics_schema);
+    return SDK_RET_OK;
 }

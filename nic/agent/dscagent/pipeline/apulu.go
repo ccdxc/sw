@@ -38,16 +38,17 @@ type ApuluAPI struct {
 	VPCClient               halapi.VPCSvcClient
 	SubnetClient            halapi.SubnetSvcClient
 	DeviceSvcClient         halapi.DeviceSvcClient
-	RoutingClient           msapi.BGPSvcClient
-	EvpnClient              msapi.EvpnSvcClient
 	SecurityPolicySvcClient halapi.SecurityPolicySvcClient
 	DHCPRelayClient         halapi.DHCPSvcClient
 	InterfaceClient         halapi.IfSvcClient
 	EventClient             halapi.EventSvcClient
 	PortClient              halapi.PortSvcClient
-	CPRouteSvcClient        msapi.CPRouteSvcClient
 	MirrorClient            halapi.MirrorSvcClient
 	RouteSvcClient          halapi.RouteSvcClient
+	OperClient              halapi.OperSvcClient
+	RoutingClient           msapi.BGPSvcClient
+	EvpnClient              msapi.EvpnSvcClient
+	CPRouteSvcClient        msapi.CPRouteSvcClient
 	LocalInterfaces         map[string]string
 }
 
@@ -74,6 +75,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		RoutingClient:           msapi.NewBGPSvcClient(conn),
 		EvpnClient:              msapi.NewEvpnSvcClient(conn),
 		MirrorClient:            halapi.NewMirrorSvcClient(conn),
+		OperClient:              halapi.NewOperSvcClient(conn),
 		LocalInterfaces:         make(map[string]string),
 	}
 
@@ -138,6 +140,9 @@ func (a *ApuluAPI) PipelineInit() error {
 
 	// initialize stream for Lif events
 	a.initEventStream()
+
+	// handle all the metrics
+	apulu.HandleMetrics(a.InfraAPI, a.OperClient)
 	return nil
 }
 

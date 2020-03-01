@@ -5,7 +5,7 @@ MODULE_TARGET   = pdsupgcc.bin
 MODULE_PIPELINE = apulu
 MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
-                  thread pdsapi memhash sltcam operd \
+                  thread pdsapi memhash sltcam operd penmetrics \
                   event_thread slhash rfc_${PIPELINE} pdsrfc \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \

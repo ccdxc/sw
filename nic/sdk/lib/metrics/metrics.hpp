@@ -1,6 +1,7 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
-#ifndef __METRICS_H__
-#define __METRICS_H__
+
+#ifndef __METRICS_HPP__
+#define __METRICS_HPP__
 
 #include <stdint.h>
 #include <vector>
@@ -32,7 +33,7 @@ typedef struct metrics_schema_ {
 typedef std::pair<std::string, uint64_t> metrics_counter_pair_t;
 typedef std::vector<metrics_counter_pair_t> metrics_counters_t;
 
-// Returns a handle. NULL in case of failure 
+// Returns a handle. NULL in case of failure
 extern void *metrics_register(metrics_schema_t *schema);
 
 extern void metrics_set_address(void *handler, key_t key, unsigned int counter,
@@ -49,4 +50,4 @@ extern uint64_t metrics_read(void *handler, key_t key, unsigned int counter);
 } // namespace metrics
 } // namespace sdk
 
-#endif
+#endif    // __METRICS_HPP__

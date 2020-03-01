@@ -66,16 +66,13 @@ message TechSupportResponse {
 }
 
 message MetricsGetRequest {
+  // Name identifies the name of the table (e.g., Port, MgmtPort, Lif etc.)
   string Name = 1;
+  // Key identifies particular instance of the object (e.g. uuid)
   bytes  Key  = 2;
 }
 
-message MetricsGetResponse {
-  types.ApiStatus  ApiStatus = 1;
-  MetricsStatus    Response = 2;
-}
-
-// CounterSpec defines each individual counter that consists of
+// CounterStatus defines each individual counter that consists of
 // name and value
 message CounterStatus {
   // (user visible) name of the metric
@@ -84,7 +81,7 @@ message CounterStatus {
   uint64 Value = 2;
 }
 
-// CounterssSpec defines generic metrics object that can be used for any set
+// CountersStatus defines generic metrics object that can be used for any set
 // of counters per object (e.g., port counters, lif/pf counters, vpp counters,
 // s/w counters etc.)
 message CountersStatus {
@@ -94,15 +91,9 @@ message CountersStatus {
   repeated CounterStatus Counters = 2;
 }
 
-message MetricsStatus {
-  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  CountersStatus Status    = 3 [(gogoproto.jsontag) = "spec,omitempty", (gogoproto.moretags) = "meta:mandatory,immutable"];
-}
-
-message MetricsSpec {
-  string Name = 1;
-  bytes  Key = 2;
+message MetricsGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  CountersStatus  Response  = 2;
 }
 
 // flow log type indicates whether log is generated when flow is

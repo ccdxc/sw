@@ -21,7 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// HandleVPC handles crud operations on vrf TODO use VPCClient here
+// HandleVPC handles crud operations on vrf
 func HandleVPC(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, oper types.Operation, vrf netproto.Vrf) error {
 	switch oper {
 	case types.Create:

@@ -15,7 +15,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl               \
                   rfc_${PIPELINE} pdsrfc kvstore_lmdb                       \
                   bm_allocator sdklinkmgr sdklinkmgrcsr  utils              \
                   sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS}              \
-                  ${NIC_FTL_LIBS} pdsvpp_cfg pdsvpp_operd
+                  ${NIC_FTL_LIBS} pdsvpp_cfg pdsvpp_operd penmetrics
 MODULE_LDLIBS   = ${SDK_THIRDPARTY_CAPRI_LDLIBS}                            \
                   ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} dl              \
                   ${SDK_THIRD_PARTY_VPP_LIBS} AAPL lmdb

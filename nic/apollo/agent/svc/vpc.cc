@@ -195,7 +195,7 @@ VPCSvcImpl::VPCGet(ServerContext *context,
                    const pds::VPCGetRequest *proto_req,
                    pds::VPCGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_obj_key_t key = { 0 };
+    pds_obj_key_t key;
     pds_vpc_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("VPC Get Received")

@@ -2,7 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpenmetrics.so
-MODULE_PIPELINE = iris apollo apulu gft artemis
 MODULE_SOLIBS   = sdkpal logger
 MODULE_LDLIBS   = dl
 MODULE_FLAGS    = -Werror -Wall

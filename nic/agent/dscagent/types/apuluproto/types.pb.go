@@ -14,6 +14,7 @@
 		interface.proto
 		port.proto
 		event.proto
+		oper.proto
 
 	It has these top-level messages:
 		Empty
@@ -156,6 +157,17 @@
 		PortUpdateResponse
 		EventRequest
 		EventResponse
+		TechSupportSpec
+		TechSupportStatus
+		TechSupportStats
+		TechSupport
+		TechSupportRequest
+		TechSupportResponse
+		MetricsGetRequest
+		CounterStatus
+		CountersStatus
+		MetricsGetResponse
+		FlowLog
 */
 package pds
 

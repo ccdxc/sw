@@ -7,7 +7,7 @@ MODULE_INCS     = ${MODULE_GEN_DIR} ${SDKDIR}/dpdk/build/include/
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
                   thread trace logger pdsapi memhash sltcam \
-                  event_thread slhash \
+                  event_thread slhash penmetrics \
                   ${NIC_FTL_LIBS} \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \

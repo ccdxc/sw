@@ -14,7 +14,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri pdsapi_capri_impl \
                   sdkplatformutils sdkxcvrdriver sdkasicpd kvstore_lmdb \
                   bm_allocator sdklinkmgr sdklinkmgrcsr ${NIC_FTL_LIBS} memhash \
-                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS} utils
+                  sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS} utils penmetrics
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                    AAPL edit ncurses lmdb
