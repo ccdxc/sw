@@ -74,12 +74,14 @@ class EvpnIpVrfObjectClient(base.ConfigClientBase):
 
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_evpn_ip_vrf_config(evpnipvrfspec):
-            obj = EvpnIpVrfObject(node, vpc, evpnipvrfspec)
-            self.Objs[node].update({obj.Id: obj})
+            parentid = getattr(evpnipvrfspec, "parent-id", 1)
+            if vpc.VPCId == parentid:
+                obj = EvpnIpVrfObject(node, vpc, evpnipvrfspec)
+                self.Objs[node].update({obj.Id: obj})
+
         evpnIpVrfSpec = getattr(vpcspec, 'evpnipvrf', None)
         if not evpnIpVrfSpec:
             return
-
         for evpn_ip_vrf_spec_obj in evpnIpVrfSpec:
             __add_evpn_ip_vrf_config(evpn_ip_vrf_spec_obj)
         return

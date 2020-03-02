@@ -57,7 +57,7 @@ class EvpnEviObject(base.ConfigObjectBase):
         if spec.AutoRD != evpn_pb2.EVPN_CFG_AUTO:
             if self.RD:
                 spec.RD = self.RD
-        spec.RTType = cp_utils.GetRTType(self.RTType) 
+        spec.RTType = cp_utils.GetRTType(self.RTType)
         spec.AutoRT = cp_utils.GetEVPNCfg(self.AutoRT)
         if self.Encap:
             if self.Encap == 'mpls':
@@ -85,12 +85,14 @@ class EvpnEviObjectClient(base.ConfigClientBase):
 
     def GenerateObjects(self, node, subnet, subnetspec):
         def __add_evpn_evi_config(evpnevispec):
-            obj = EvpnEviObject(node, subnet, evpnevispec)
-            self.Objs[node].update({obj.Id: obj})
+            parentid = getattr(evpnevispec, "parent-id", 1)
+            if subnet.SubnetId == parentid:
+                obj = EvpnEviObject(node, subnet, evpnevispec)
+                self.Objs[node].update({obj.Id: obj})
+
         evpneviSpec = getattr(subnetspec, 'evpnevi', None)
         if not evpneviSpec:
             return
-
         for evpn_evi_spec_obj in evpneviSpec:
             __add_evpn_evi_config(evpn_evi_spec_obj)
         return

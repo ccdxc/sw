@@ -49,7 +49,7 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
         spec.VPCId = spec.Id
         if self.RT:
             spec.RT = cp_utils.GetRT(self.RT)
-        spec.RTType = cp_utils.GetRTType(self.RTType) 
+        spec.RTType = cp_utils.GetRTType(self.RTType)
         if self.VRFName:
             spec.VRFName = self.VRFName
         return
@@ -75,12 +75,14 @@ class EvpnIpVrfRtObjectClient(base.ConfigClientBase):
 
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_evpn_ip_vrf_rt_config(evpnipvrfrtspec):
-            obj = EvpnIpVrfRtObject(node, vpc, evpnipvrfrtspec)
-            self.Objs[node].update({obj.Id: obj})
+            parentid = getattr(evpnipvrfrtspec, "parent-id", 1)
+            if vpc.VPCId == parentid:
+                obj = EvpnIpVrfRtObject(node, vpc, evpnipvrfrtspec)
+                self.Objs[node].update({obj.Id: obj})
+
         evpnIpVrfRtSpec = getattr(vpcspec, 'evpnipvrfrt', None)
         if not evpnIpVrfRtSpec:
             return
-
         for evpn_ip_vrf_rt_spec_obj in evpnIpVrfRtSpec:
             __add_evpn_ip_vrf_rt_config(evpn_ip_vrf_rt_spec_obj)
         return

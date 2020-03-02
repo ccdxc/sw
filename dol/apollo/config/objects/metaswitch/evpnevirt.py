@@ -50,7 +50,7 @@ class EvpnEviRtObject(base.ConfigObjectBase):
         spec.SubnetId = spec.Id
         if self.RT:
             spec.RT = cp_utils.GetRT(self.RT)
-        spec.RTType = cp_utils.GetRTType(self.RTType) 
+        spec.RTType = cp_utils.GetRTType(self.RTType)
         if self.EVIId:
             spec.EVIId = self.EVIId
         return
@@ -72,12 +72,14 @@ class EvpnEviRtObjectClient(base.ConfigClientBase):
 
     def GenerateObjects(self, node, subnet, subnetspec):
         def __add_evpn_evi_rt_config(evpnevirtspec):
-            obj = EvpnEviRtObject(node, subnet, evpnevirtspec)
-            self.Objs[node].update({obj.Id: obj})
+            parentid = getattr(evpnevirtspec, "parent-id", 1)
+            if subnet.SubnetId == parentid:
+                obj = EvpnEviRtObject(node, subnet, evpnevirtspec)
+                self.Objs[node].update({obj.Id: obj})
+
         evpnEviRtSpec = getattr(subnetspec, 'evpnevirt', None)
         if not evpnEviRtSpec:
             return
-
         for evpn_evi_rt_spec_obj in evpnEviRtSpec:
             __add_evpn_evi_rt_config(evpn_evi_rt_spec_obj)
         return

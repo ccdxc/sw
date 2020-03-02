@@ -161,15 +161,18 @@ node:
                 - count : 4
               evpnevi:
                 - id     : 1
+                  parent-id : 1  # associate this evpnevi to the respective subnet
                   rttype : import_export
                   autort : manual
                   autord : auto
                   encap  : vxlan
               evpnevirt:
                 - id     : 1
+                  parent-id : 1
                   rttype : import_export
                   rt     : 00:02:00:01:10:00:00:64
                 - id     : 2
+                  parent-id : 2
                   rttype : import_export
                   rt     : 00:02:00:01:10:00:00:65
           nexthop: # Only for read op
@@ -220,10 +223,12 @@ node:
           nat46 : false
           evpnipvrf:
             - id    : 1
+              parent-id : 1
               vni   : 200
               autord : auto
           evpnipvrfrt:
             - id     : 1
+              parent-id : 1
               rttype : import_export
               rt     : 00:02:00:00:00:00:00:c8
 
