@@ -19,6 +19,15 @@ testcases:
             # route object excluded from local2remote tests, because no hit
             objtype : [ vpc, subnet]
             oper    : [ [delete] ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
+            flapHostIntf    :
+                trigger         : once
+                sleep_interval  : 2
+                terminate       : verify
 
     -   name    : API_CRUD_For_Update_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
@@ -33,6 +42,15 @@ testcases:
             # TODO: nh-group
             objtype : [ vpc, subnet ]
             oper    : [ [update] ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
+            flapHostIntf    :
+                trigger         : once
+                sleep_interval  : 2
+                terminate       : verify
 
     -   name    : 1_Object_Idempotency_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
@@ -46,6 +64,15 @@ testcases:
             # TODO: nh-group
             objtype : [ vpc, subnet ]
             oper    : [ [create, create], [delete, read, update, read] ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
+            flapHostIntf    :
+                trigger         : once
+                sleep_interval  : 2
+                terminate       : verify
 
     -   name    : 2_Object_Idempotency_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
@@ -58,6 +85,15 @@ testcases:
             ipaf    : [ ipv4 ]
             objtype : [ vpc, subnet ]
             oper    : [ [delete, delete] ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
+            flapHostIntf    :
+                trigger         : once
+                sleep_interval  : 2
+                terminate       : verify
 
     -   name    : 3_Object_Idempotency_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
@@ -70,4 +106,13 @@ testcases:
             ipaf    : [ ipv4 ]
             objtype : [ vpc, subnet ]
             oper    : [ [update, create] ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
+            flapHostIntf    :
+                trigger         : once
+                sleep_interval  : 2
+                terminate       : verify
 

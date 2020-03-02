@@ -7,6 +7,8 @@ import iota.test.apulu.config.api as config_api
 import apollo.config.objects.metaswitch.bgp_peer as bgp_peer
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
+from iota.test.apulu.utils.portflap import *
+from iota.test.apulu.utils.hostflap import *
 
 def __getOperations(tc_operation):
     opers = list()
@@ -45,7 +47,7 @@ def Trigger(tc):
             cmd_cookie = "%s --> %s" %\
                          (str(bgppeer.LocalAddr), str(bgppeer.PeerAddr))
             api.Trigger_AddNaplesCommand(req, node, \
-                                         "ping -i %s -c 20 %s" % \
+                                         "ping -i %s -c 5000 %s" % \
                                          (interval, str(bgppeer.PeerAddr)))
             api.Logger.info("Ping test from %s" % (cmd_cookie))
             tc.cmd_cookies.append(cmd_cookie)
