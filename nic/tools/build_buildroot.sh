@@ -125,18 +125,25 @@ echo 'Copying ssh keys into container'
 cp -a ~/.ssh $TOPDIR/
 docker_exec "cp -a /sw/.ssh ~/"
 
-echo 'Cleaning old files'
-docker_exec "rm -rf /sw/nic/buildroot/output"
-docker_exec "rm -rf /sw/nic/buildroot/.config"
+for target in capri elba
+do
+    OUT_DIR=output/$target
+    echo "Cleaning old files for $target in $OUT_DIR"
+    docker_exec "rm -rf /sw/nic/buildroot/$OUT_DIR"
+    docker_exec "rm -rf /sw/nic/buildroot/.config"
 
-echo 'Generating config'
-docker_exec "cd /sw/nic/buildroot && make capri_defconfig"
+    echo 'Generating config for $target'
+    docker_exec "cd /sw/nic/buildroot && make ${target}_defconfig"
+    docker_exec "mkdir -p /sw/nic/buildroot/$OUT_DIR"
+    docker_exec "cp /sw/nic/buildroot/.config /sw/nic/buildroot/$OUT_DIR"
+    docker_exec "ls -al /sw/nic/buildroot/$OUT_DIR"
 
-echo 'Building buildroot'
-docker_exec "cd /sw/nic/buildroot && BUILDROOT_ASSET=1 make -j 24"
+    echo 'Building buildroot for $target'
+    docker_exec "cd /sw/nic/buildroot; export BR2_DL_DIR=/sw/nic/buildroot/output/dl; BUILDROOT_ASSET=1 make O=${OUT_DIR} -j24"
 
-echo 'Preparing kernel headers for building external modules'
-docker_exec "sh /sw/nic/tools/prepare_kernel_headers.sh"
+    echo 'Preparing $target kernel headers for building external modules'
+    docker_exec "sh /sw/nic/tools/prepare_kernel_headers.sh ${OUT_DIR}"
+done
 
 echo 'Modifying VERSIONS'
 sed -i "s/buildroot.*/buildroot ${BUILDROOT_HASH}/" $TOPDIR/minio/VERSIONS

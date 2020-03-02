@@ -5,5 +5,5 @@ MODULE_TARGET   := mnic.submake
 MODULE_DEPS      = $(wildcard ${TOPDIR}/platform/drivers/linux/eth/ionic/*) \
                    $(wildcard ${TOPDIR}/platform/drivers/linux/mnet_uio_pdrv_genirq/*) \
                    $(wildcard ${TOPDIR}/platform/drivers/linux/mnet/*)
-export AARCH64_LINUX_HEADERS	?= ${NICDIR}/buildroot/output/linux-headers
+export AARCH64_LINUX_HEADERS	?= ${NICDIR}/buildroot/output/${ASIC}/linux-headers
 include ${MKDEFS}/post.mk

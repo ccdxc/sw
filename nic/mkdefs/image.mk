@@ -10,15 +10,15 @@
 # UPLOAD=1 make create-assets
 #
 
-export CONFIG_DIR=${NICDIR}/buildroot/
+export CONFIG_DIR=${NICDIR}/buildroot/${OUT_DIR}
 export TOOLS_DIR=${NICDIR}/tools/
 export BR2_CONFIG=$(CONFIG_DIR)/.config
 export BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images
 export TARGET_DIR=${NICDIR}/buildroot/${OUT_DIR}/target
 
-HOSTPATH=PATH="${NICDIR}/buildroot/${OUT_DIR}/host/bin:${NICDIR}/buildroot/${OUT_DIR}/host/sbin:/opt/coreutils/bin:/opt/rh/devtoolset-7/root/usr/bin:$(PATH)"
-LIBRARYPATH=LD_LIBRARY_PATH=${NICDIR}/buildroot/${OUT_DIR}/host/lib:$(LD_LIBRARY_PATH)
-FAKEROOTOPTS=-l ${NICDIR}/buildroot/${OUT_DIR}/host/lib/libfakeroot.so -f ${NICDIR}/buildroot/${OUT_DIR}/host/bin/faked
+HOSTPATH=PATH="${NICDIR}/buildroot/host/bin:${NICDIR}/buildroot/host/sbin:/opt/coreutils/bin:/opt/rh/devtoolset-7/root/usr/bin:$(PATH)"
+LIBRARYPATH=LD_LIBRARY_PATH=${NICDIR}/buildroot/host/lib:$(LD_LIBRARY_PATH)
+FAKEROOTOPTS=-l ${NICDIR}/buildroot/host/lib/libfakeroot.so -f ${NICDIR}/buildroot/host/bin/faked
 
 .PHONY: fetch-buildroot-binaries
 fetch-buildroot-binaries: package
@@ -33,8 +33,8 @@ copy-overlay: fetch-buildroot-binaries
 	rsync -a --ignore-times --keep-dirlinks \
 		--chmod=u=rwX,go=rX --exclude .empty --exclude '*~' \
 		${TOPDIR}/fake_root_target/aarch64/ $(TARGET_DIR)/
-	PATH=${NICDIR}/buildroot/${OUT_DIR}/host/bin:${NICDIR}/buildroot/${OUT_DIR}/host/sbin:/opt/rh/devtoolset-7/root/usr/bin:/opt/coreutils-8.30/bin:$(PATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-build.sh
-	PATH=${NICDIR}/buildroot/${OUT_DIR}/host/bin:${NICDIR}/buildroot/${OUT_DIR}/host/sbin:/opt/rh/devtoolset-7/root/usr/bin:/opt/coreutils-8.30/bin:$(PATH) ${NICDIR}/buildroot/board/pensando/scripts/post-fakeroot.sh
+	PATH=${NICDIR}/buildroot/host/bin:${NICDIR}/buildroot/host/sbin:/opt/rh/devtoolset-7/root/usr/bin:/opt/coreutils-8.30/bin:$(PATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-build.sh
+	PATH=${NICDIR}/buildroot/host/bin:${NICDIR}/buildroot/host/sbin:/opt/rh/devtoolset-7/root/usr/bin:/opt/coreutils-8.30/bin:$(PATH) ${NICDIR}/buildroot/board/pensando/scripts/post-fakeroot.sh
 
 .PHONY: build-rootfs
 build-rootfs: copy-overlay
@@ -49,10 +49,10 @@ build-rootfs: copy-overlay
 	$(HOSTPATH) ${NICDIR}/buildroot/support/scripts/mkusers ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/users_table.txt ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/target >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
 	cat ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/device_table.txt > ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/device_table.txt
 	printf '        /bin/busybox                     f 4755 0  0 - - - - -\n        /bin/ping        f 4755 0 0 - - - - -\n /bin/traceroute6 f 4755 0 0 - - - - -\n\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/device_table.txt
-	echo "${NICDIR}/buildroot/${OUT_DIR}/host/bin/makedevs -d ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/device_table.txt ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/target" >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
+	echo "${NICDIR}/buildroot/host/bin/makedevs -d ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/device_table.txt ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/target" >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
 	printf '        tar cf ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/rootfs.common.tar --numeric-owner --exclude=THIS_IS_NOT_YOUR_ROOT_FILESYSTEM -C ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/target .\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
 	chmod a+x ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
-	$(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/${OUT_DIR}/host/bin/fakeroot $(FAKEROOTOPTS) -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
+	$(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/host/bin/fakeroot $(FAKEROOTOPTS) -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/fakeroot.fs
 
 .PHONY: build-squashfs
 build-squashfs: build-rootfs
@@ -62,9 +62,9 @@ build-squashfs: build-rootfs
 	echo "set -e" >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
 	printf '        mkdir -p ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/target\n  tar xf ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/rootfs.common.tar -C ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/target\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
 	printf '   \n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
-	printf '        ${NICDIR}/buildroot/${OUT_DIR}/host/bin/mksquashfs ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/target ${NICDIR}/buildroot/${OUT_DIR}/images/rootfs.squashfs -noappend -processors 8 -comp gzip\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
+	printf '        ${NICDIR}/buildroot/host/bin/mksquashfs ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/target ${NICDIR}/buildroot/${OUT_DIR}/images/rootfs.squashfs -noappend -processors 8 -comp gzip\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
 	chmod a+x ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
-	$(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/${OUT_DIR}/host/bin/fakeroot $(FAKEROOTOPTS) -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
+	$(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/host/bin/fakeroot $(FAKEROOTOPTS) -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/squashfs/fakeroot
 
 .PHONY: build-rootfs.cpio
 build-rootfs.cpio: build-rootfs
@@ -77,7 +77,7 @@ build-rootfs.cpio: build-rootfs
 	printf '   \n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/fakeroot
 	printf '   	cd ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/target && find . | cpio --quiet -o -H newc > ${NICDIR}/buildroot/${OUT_DIR}/images/rootfs.cpio\n' >> ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/fakeroot
 	chmod a+x ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/fakeroot
-	 $(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/${OUT_DIR}/host/bin/fakeroot -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/fakeroot
+	 $(LIBRARYPATH) $(HOSTPATH) ${NICDIR}/buildroot/host/bin/fakeroot -- ${NICDIR}/buildroot/${OUT_DIR}/build/buildroot-fs/cpio/fakeroot
 
 .PHONY: build-image
 build-image: build-squashfs
@@ -87,14 +87,14 @@ build-image: build-squashfs
 .PHONY: build-gold-image
 build-gold-image: gold_env build-rootfs.cpio
 	$(eval KERNEL_DIR=linux-custom)
-	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
+	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/host/include -L${NICDIR}/buildroot/host/lib -Wl,-rpath,${NICDIR}/buildroot/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
 	/usr/bin/install -m 0644 -D ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR}/arch/arm64/boot/Image ${NICDIR}/buildroot/${OUT_DIR}/images/Image
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
 .PHONY: build-diag-image
 build-diag-image: diag_env build-rootfs.cpio
 	$(eval KERNEL_DIR=linux-custom)
-	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/${OUT_DIR}/host/include -L${NICDIR}/buildroot/${OUT_DIR}/host/lib -Wl,-rpath,${NICDIR}/buildroot/${OUT_DIR}/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/${OUT_DIR}/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/${OUT_DIR}/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
+	$(HOSTPATH) BR_BINARIES_DIR=${NICDIR}/buildroot/${OUT_DIR}/images /bin/make -j HOSTCC="/bin/gcc -O2 -I${NICDIR}/buildroot/host/include -L${NICDIR}/buildroot/host/lib -Wl,-rpath,${NICDIR}/buildroot/host/lib" ARCH=arm64 INSTALL_MOD_PATH=${NICDIR}/buildroot/${OUT_DIR}/target CROSS_COMPILE="${NICDIR}/buildroot/host/bin/aarch64-linux-gnu-" DEPMOD=${NICDIR}/buildroot/host/sbin/depmod INSTALL_MOD_STRIP=1 -C ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR} Image -j 24
 	/usr/bin/install -m 0644 -D ${NICDIR}/buildroot/${OUT_DIR}/build/${KERNEL_DIR}/arch/arm64/boot/Image ${NICDIR}/buildroot/${OUT_DIR}/images/Image
 	$(HOSTPATH) ${NICDIR}/buildroot/board/pensando/${FW_PACKAGE_DIR}/post-image.sh
 
@@ -138,15 +138,15 @@ ifeq ($(CUSTOMDOCKERCONTEXT), 1)
 	echo "Skip certain targets for custom dev_docker build"
 endif
 ifneq ($(CUSTOMDOCKERCONTEXT), 1)
-	OUT_DIR=output FLAVOR=-venice NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
+	OUT_DIR=output/${ASIC} FLAVOR=-venice NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=${ASIC} make -C . firmware-normal
 	mv naples_fw_.tar naples_fw_venice.tar
 	${MAKE} ARCH=x86_64 package-pegasus
 endif
 endif
-	OUT_DIR=output NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
+	OUT_DIR=output/${ASIC} NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=${ASIC} make -C . firmware-normal
 ifeq ($(PIPELINE),iris)
 	make penctl-version
-	OUT_DIR=output NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make firmware-upgrade
+	OUT_DIR=output/${ASIC} NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=${ASIC} make firmware-upgrade
 endif
 	${TOOLS_DIR}/relative_link.sh ${NICDIR}/build
 

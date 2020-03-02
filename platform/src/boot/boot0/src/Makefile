@@ -1,5 +1,5 @@
 
-CROSS_COMPILE=${NICDIR}/buildroot/output/host/opt/ext-toolchain/bin/aarch64-linux-gnu-
+CROSS_COMPILE=${NICDIR}/buildroot/host/opt/ext-toolchain/bin/aarch64-linux-gnu-
 CC = $(CROSS_COMPILE)gcc
 
 TEXT_ADDR = 0x400100
