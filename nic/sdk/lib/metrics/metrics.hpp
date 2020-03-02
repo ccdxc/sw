@@ -18,6 +18,7 @@ typedef unsigned __int128 key_t;
 typedef enum metrics_counter_type_ {
     METRICS_COUNTER_VALUE64   = 1, // A 64bit value
     METRICS_COUNTER_POINTER64 = 2, // A pointer to a 64bit value
+    METRICS_COUNTER_RSVD64    = 3, // A reserved counter (to be ignored)
 } metrics_counter_type_t;
 
 typedef struct metrics_counter_ {
