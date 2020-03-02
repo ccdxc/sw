@@ -102,8 +102,8 @@ class BgpObject(base.ConfigObjectBase):
                 return True
         return False
 
-    def ValidateJSONSpec(self, json):
-        if spec['Kind'] != 'RoutingConfig': return False
+    def ValidateJSONSpec(self, spec):
+        if spec['kind'] != 'RoutingConfig': return False
         if spec['meta']['name'] != self.GID(): return False
         if spec['spec']['bgp-config']['as-number'] != obj.LocalASN: return False
         if int(ipaddress.ip_address(spec['spec']['bgp-config']['router-id'])) != self.RouterId:
