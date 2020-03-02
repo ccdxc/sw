@@ -7,6 +7,7 @@ import iota.test.apulu.config.api as config_api
 import apollo.config.objects.device as device
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
+from iota.test.apulu.utils.portflap import *
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -31,7 +32,7 @@ def Trigger(tc):
             cmd_cookie = "%s --> %s" %\
                          (device1.IP, device2.IP)
             api.Trigger_AddNaplesCommand(req, node1, \
-                                         "ping -i %s -c 20 -s %d %s" % \
+                                         "ping -i %s -c 2000 -s %d %s" % \
                                          (interval, tc.iterators.pktsize, \
                                           device2.IP))
             api.Logger.info("Loopback ping test from %s" % (cmd_cookie))

@@ -21,3 +21,30 @@ testcases:
             type    : nested
             objtype : [ subnet, interface, tunnel, device, nexthop ]
             oper    : [ update ]
+
+    -   name    : API_CRUD_SCALE_DELETE_WITH_SWITCHPORT_FLAP
+        testcase: testcases.api_crud_scale.api_crud_cfg_scale
+        stress  : True
+        iterators :
+            type    : nested
+            #objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            objtype : [ policy, route, rmapping, lmapping,interface, nexthop, nexthopgroup ]
+            oper    : [ delete ]
+        background_tasks:
+            switchPortFlap   :
+                trigger         : repeat
+                sleep_interval  : 20
+                terminate       : verify
+
+    -   name    : API_CRUD_SCALE_UPDATE_WITH_SWITCHPORT_FLAP
+        testcase: testcases.api_crud_scale.api_crud_cfg_scale
+        stress  : True
+        iterators :
+            type    : nested
+            objtype : [ subnet, interface, device, nexthop ]
+            oper    : [ update ]
+        background_tasks:
+            switchPortFlap  :
+                trigger         : repeat
+                sleep_interval  : 20
+                terminate       : verify

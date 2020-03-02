@@ -14,6 +14,21 @@ testcases:
             ipaf    : [ ipv4 ]
             #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
             pktsize : [ 64, 128, 256, 512, 1024 ]
+    
+    -   name    : Ping_Underlay_Workloads_With_Flap
+        testcase: testcases.underlay.ping
+        stress  : True
+        iterators :
+            type    : nested
+            #ipaf    : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
+            pktsize : [ 64, 128 ]
+        background_tasks:
+            NaplesDataPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
 
     -   name    : Ping_loopback
         testcase: testcases.underlay.loopback_ping
@@ -40,6 +55,19 @@ testcases:
             type    : nested
             ipaf    : [ ipv4 ]
             pktsize : [ 64 ]
+
+    -   name    : Ping_loopback_with_flap
+        testcase: testcases.underlay.loopback_ping
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]
+        background_tasks:
+            NaplesDataPortFlap  :
+                trigger         : once
+                sleep_interval  : 5
+                terminate       : verify
 
     -   name    : flap_switch_ports
         testcase: testcases.triggers.switch_flap
