@@ -515,7 +515,7 @@ sdk::metrics::metrics_schema_t mgmt_port_metrics_schema = {
 };
 
 sdk::metrics::metrics_schema_t host_if_metrics_schema = {
-    .name = "HostInterface",
+    .name = "HostIf",
     .counters = {
         {
             .name = NULL,
