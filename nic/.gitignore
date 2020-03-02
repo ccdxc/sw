@@ -91,6 +91,7 @@ host.tgz
 naples.tgz
 nic_venice.tgz
 test-utils.tgz
+pegasus.tgz
 debug_cli/cli/cli.py
 debug_cli/cli/cli_wrap.cc
 debug_cli/cli/.dir

@@ -13,11 +13,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -79,6 +81,22 @@ func waitForHAL(portEnvVar string, defaultPort string) (rpcClient *grpc.ClientCo
 			return nil, errors.Wrapf(types.ErrPipelineNotAvailabe, "Agent could not connect to HAL. Err: %v | Err: %v", types.ErrPipelineTimeout, err)
 		}
 	}
+}
+
+// check if HAL is up given its URL
+func IsHalUp() bool {
+	var rpcClient *rpckit.RPCClient
+
+	rpcClient, err := rpckit.NewRPCClient(types.Netagent, types.HalGRPCDefaultURL, rpckit.WithTLSProvider(nil))
+	if err != nil || rpcClient == nil {
+		log.Errorf("Failed to connect to HAL URL %s | Err %s", types.HalGRPCDefaultURL, err)
+		return false
+	}
+	if rpcClient.ClientConn.GetState() == connectivity.Ready {
+		return true
+	}
+	log.Errorf("HAL is not up | Status %v", rpcClient.ClientConn.GetState())
+	return false
 }
 
 // ValidateMeta validates object keys based on kind.

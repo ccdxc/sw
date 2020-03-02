@@ -74,7 +74,7 @@ metrics_read (std::string name, sdk::metrics::key_t key,
 
     counters = sdk::metrics::metrics_read(handler, key);
     for (uint32_t i = 0; i < counters.size(); i++) {
-        ::pds::CountersStatus *status = rsp->mutable_response();
+        ::pds::CountersStatus *status = rsp->add_response();
         ::pds::CounterStatus *counter = status->add_counters();
         counter->set_name(counters[i].first);
         counter->set_value(counters[i].second);

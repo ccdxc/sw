@@ -66,9 +66,12 @@ message TechSupportResponse {
 }
 
 message MetricsGetRequest {
-  // Name identifies the name of the table (e.g., Port, MgmtPort, Lif etc.)
-  string Name = 1;
-  // Key identifies particular instance of the object (e.g. uuid)
+  // Name identifies the name of the statistics table
+  // NOTE: supported names are "Port", "MgmtPort", "HostIf"
+  string Name = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // Key identifies particular instance of the statistics table (e.g. uuid)
+  // NOTE: if key is not passed, counters associated with all instances of
+  //       given table name are are returned
   bytes  Key  = 2;
 }
 
@@ -85,15 +88,15 @@ message CounterStatus {
 // of counters per object (e.g., port counters, lif/pf counters, vpp counters,
 // s/w counters etc.)
 message CountersStatus {
-  // Id is uuid or unique key of the object
-  bytes                  Key      = 1;
   // collection of metrics
-  repeated CounterStatus Counters = 2;
+  repeated CounterStatus Counters = 1;
 }
 
 message MetricsGetResponse {
-  types.ApiStatus ApiStatus = 1;
-  CountersStatus  Response  = 2;
+  // ApiStatus indicates the success/failure status of the get operation
+  types.ApiStatus         ApiStatus = 1;
+  // batched response containing potentially mutiple counter objects
+  repeated CountersStatus Response  = 2;
 }
 
 // flow log type indicates whether log is generated when flow is

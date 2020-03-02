@@ -64,7 +64,6 @@ sdk_ret_t
 nh_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
-    pds_nexthop_spec_t *spec;
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_delete(key, bctxt)) != SDK_RET_OK) {

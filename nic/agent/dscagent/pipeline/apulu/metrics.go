@@ -8,15 +8,32 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
+
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
-func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient) (err error) {
+const (
+	MetricsTablePort     = "Port"
+	MetricsTableMgmtPort = "MgmtPort"
+	MetricsTableHostIf   = "HostIf"
+)
+
+var metricsTables = []string{
+	MetricsTablePort,
+	MetricsTableMgmtPort,
+	MetricsTableHostIf,
+}
+
+var tsdbObjs = map[string]tsdb.Obj{}
+
+func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient, tsdbObjs map[string]tsdb.Obj) (err error) {
 	var (
 		dat [][]byte
 	)
@@ -40,11 +57,11 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 		metricsGetRequest.Key = uid.Bytes()
 		switch intf.Spec.Type {
 		case netproto.InterfaceSpec_UPLINK_ETH.String():
-			metricsGetRequest.Name = "Port"
+			metricsGetRequest.Name = MetricsTablePort
 		case netproto.InterfaceSpec_UPLINK_MGMT.String():
-			metricsGetRequest.Name = "MgmtPort"
+			metricsGetRequest.Name = MetricsTableMgmtPort
 		case netproto.InterfaceSpec_HOST_PF.String():
-			metricsGetRequest.Name = "Lif"
+			metricsGetRequest.Name = MetricsTableHostIf
 		default:
 			// statistics on other types of interfaces are not supported
 			continue
@@ -53,7 +70,7 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 		err = stream.Send(metricsGetRequest)
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrMetricsSend,
-				"Error querying metris of intf %s | Err %v",
+				"Error querying metrics of intf %s, %s | Err %v",
 				intf.UUID, intf.Name, err))
 			continue
 		}
@@ -68,17 +85,31 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 			continue
 		}
 		if resp.GetApiStatus() != halapi.ApiStatus_API_STATUS_OK {
-			log.Infof("Rcvd metrics for %s", uuid.FromBytesOrNil(resp.Response.Key).String())
-			// TODO: export the metrics
-		} else {
 			log.Error(errors.Wrapf(types.ErrMetricsRecv,
 				"Metrics response failure, | Err %v", resp.GetApiStatus().String()))
 			continue
 		}
+		log.Infof("Rcvd metrics for intf %s, %s", intf.UUID, intf.Name)
+
+		// build the row to be added to tsdb
+		points := []*tsdb.Point{}
+		tags := map[string]string{"Key": intf.UUID, "Name": intf.Name}
+		fields := make(map[string]interface{})
+		for _, row := range resp.Response {
+			for _, counter := range row.Counters {
+				fields[counter.Name] = counter.Value
+			}
+		}
+		// TODO:
+		//fields["test"] = 1000
+		//log.Infof("tags %v, field %v", tags, fields)
+		points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		tsdbObjs[metricsGetRequest.Name].Points(points, time.Now())
 	}
 	return nil
 }
 
+// HandleMetrics handles collecting and reporting of metrics
 func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 	// create a bidir stream for metrics
 	metricsStream, err := client.MetricsGet(context.Background())
@@ -87,16 +118,36 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 		return errors.Wrapf(types.ErrMetricsGet, "MetricsGet failure | Err %v", err)
 	}
 
+	// create tsdb objects for all tables
+	tsdbObjs := map[string]tsdb.Obj{}
+	for _, table := range metricsTables {
+		obj, err := tsdb.NewObj(table, nil, nil, nil)
+		if err != nil {
+			log.Errorf("Failed to create tsdb object for table %s", table)
+			continue
+		}
+
+		if obj == nil {
+			log.Errorf("Found invalid tsdb object for table %s", table)
+			continue
+		}
+		tsdbObjs[table] = obj
+	}
+
 	// periodically query for metrics from PDS agent
-	go func(stream halapi.OperSvc_MetricsGetClient) {
-		ticker := time.NewTicker(time.Minute * 3)
+	go func(stream halapi.OperSvc_MetricsGetClient, tsdbObjs map[string]tsdb.Obj) {
+		ticker := time.NewTicker(time.Minute * 1)
 		for {
 			select {
 			case <-ticker.C:
 				log.Infof("Querying Interface metrics")
-				queryInterfaceMetrics(infraAPI, stream)
+				if utils.IsHalUp() == false {
+					// HAL is not up, skip querying
+					continue
+				}
+				queryInterfaceMetrics(infraAPI, stream, tsdbObjs)
 			}
 		}
-	}(metricsStream)
+	}(metricsStream, tsdbObjs)
 	return nil
 }
