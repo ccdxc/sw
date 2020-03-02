@@ -200,7 +200,7 @@ var _ = Describe("elastic cluster test", func() {
 				cmd = fmt.Sprintf("wget -O- --no-check-certificate --private-key=/var/lib/pensando/pki/shared/elastic"+
 					"-client-auth/key.pem  --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
 					"pem https://%s:9200/_cluster/allocation/explain?pretty", ts.tu.VeniceNodeIPs[0])
-				clusterAllocOut := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], cmd)
+				clusterAllocOut := ts.tu.CommandOutputIgnoreError(ts.tu.VeniceNodeIPs[0], cmd)
 
 				return fmt.Errorf("expected successful shards: %v, got : %v, shard status: %s, cluster allocation: %s",
 					stats.Shards.Total, stats.Shards.Successful, shardsOut, clusterAllocOut)
