@@ -221,3 +221,8 @@ func (sm *VcenterSysModel) MoveWorkloads(wc *objects.WorkloadCollection, hc *obj
 func (sm *VcenterSysModel) GetFwLogObjectCount(tenantName string, bucketName string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
+// GetExclusiveServices node on the fly
+func (sm *VcenterSysModel) GetExclusiveServices() ([]string, error) {
+	return []string{"pen-orchhub"}, nil
+}

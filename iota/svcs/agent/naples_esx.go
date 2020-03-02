@@ -22,6 +22,7 @@ import (
 	Common "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/vmware"
+	log "github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -190,6 +191,10 @@ func (node *esxHwNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, er
 	for _, wload := range in.Workloads {
 
 		if _, ok := node.imagesMap[wload.GetWorkloadImage()]; !ok {
+			if wload.GetWorkloadImage() == "" {
+				log.Infof("Ignoring bring up workload %v", wload.GetWorkloadName())
+				continue
+			}
 			dataVMDir, err := node.downloadDataVMImage(wload.GetWorkloadImage())
 			if err != nil {
 				in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}

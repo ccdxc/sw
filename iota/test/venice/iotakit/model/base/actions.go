@@ -247,6 +247,10 @@ func (sm *SysModel) GetVeniceServices() (string, error) {
 
 // VerifyPolicyStatus verifies SG policy status
 func (sm *SysModel) VerifyPolicyStatus(spc *objects.NetworkSecurityPolicyCollection) error {
+	if len(spc.Policies) == 0 {
+		return nil
+	}
+
 	if len(sm.NaplesNodes) == 0 {
 		return nil
 	}

@@ -199,6 +199,9 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 	return &newCollection
 }
 func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurityPolicyCollection, action, proto string) *WorkloadPairCollection {
+	if policyCollection == nil || len(policyCollection.Policies) == 0 {
+		return wpc
+	}
 	if wpc.err != nil {
 		return wpc
 	}

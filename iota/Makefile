@@ -10,6 +10,7 @@ export IOTA_AGENT_BIN_LINUX_DIR 		:= ${IOTA_BIN_DIR}/agent/linux
 export IOTA_AGENT_BIN_FREEBSD_DIR 		:= ${IOTA_BIN_DIR}/agent/freebsd
 export IOTA_AGENT_TEST_BIN_LINUX_DIR  	:= ${IOTA_BIN_DIR}/agent/test/linux
 export IOTA_AGENT_TEST_BIN_FREEBSD_DIR  := ${IOTA_BIN_DIR}/agent/test/freebsd
+export IOTA_PENCTL_DIR                  := ${IOTA_BIN_DIR}/penctl
 SRCS := $(shell find ./ -name *.go)
 
 
@@ -43,13 +44,21 @@ bin/agent/iota_agent.freebsd: ${SRCS}
 bin/iota-cmd:
 	go build -ldflags="-s -w" -o $(IOTA_BIN_DIR)/iota_cmd github.com/pensando/sw/iota/test/venice/iotacmd
 
+bin/penctl:
+	#Hack for now, once cleaned up, this dep should go away
+	make -C ../nic/upgrade_manager/export/upggosdk
+	mkdir -p $(IOTA_PENCTL_DIR)
+	GOOS=freebsd go build -ldflags="-s -w" -o $(IOTA_PENCTL_DIR)/penctl.freebsd github.com/pensando/sw/penctl 
+	GOOS=linux go build -ldflags="-s -w" -o $(IOTA_PENCTL_DIR)/penctl.linux github.com/pensando/sw/penctl 
+
 iota-test:
 	go test -c ./svcs/agent/ -o bin/agent.test
 
 iota-test-bins:
 	go test -c github.com/pensando/sw/iota/test/venice/testsuites/equinix -o bin/equinix.test
 
-iota: iota-proto bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test iota-test-bins
+
+iota: iota-proto bin/penctl bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test iota-test-bins
 
 iota-scale-build: iota heimdall
 

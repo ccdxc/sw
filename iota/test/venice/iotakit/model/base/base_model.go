@@ -84,7 +84,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 	//ReadNaples IP address from the json
 	skipSetup := os.Getenv("SKIP_SETUP")
 	if skipSetup != "" {
-		return sm.readNodeUUIDs(sm.Tb.Nodes)
+		return sm.RestoreClusterDefaults(sm.Tb.Nodes)
 	}
 
 	// make venice cluster
@@ -153,7 +153,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		return err
 	}
 
-	return sm.readNodeUUIDs(sm.Tb.Nodes)
+	return sm.RestoreClusterDefaults(sm.Tb.Nodes)
 
 }
 
@@ -539,6 +539,7 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 
 	for _, naples := range sm.FakeNaples {
 		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.SmartNic)
 	}
 
 	for _, node := range sm.VeniceNodeMap {

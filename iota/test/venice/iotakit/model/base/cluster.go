@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,12 +35,11 @@ import (
 )
 
 const (
-	hostToolsDir        = "/pensando/iota"
-	penctlPath          = "nic/bin"
-	penctlPkgName       = "../nic/host.tar"
-	penctlLinuxBinary   = "penctl.linux"
-	penctlFreebsdBinary = "penctl.freebsd"
-	agentAuthTokenFile  = "/tmp/auth_token"
+	hostToolsDir       = "/pensando/iota"
+	penctlPath         = "."
+	penctlLinuxBinary  = "penctl.linux"
+	penctlPkgName      = "bin/penctl/" + penctlLinuxBinary
+	agentAuthTokenFile = "/tmp/auth_token"
 )
 
 // getVeniceHostNames returns a list of venice host names
@@ -485,6 +483,78 @@ func (sm *SysModel) MakeVeniceCluster(ctx context.Context) error {
 	return nil
 }
 
+//RestoreVeniceDefaults restore some defaults for cluster
+func (sm *SysModel) RestoreVeniceDefaults(nodes []*testbed.TestNode) error {
+
+	// walk all venice nodes
+	trig := sm.Tb.NewTrigger()
+
+	naplesInbandIPs := []string{}
+	for _, node := range sm.Tb.Nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			ips := sm.Tb.GetInbandIPs(node.NodeName)
+			naplesInbandIPs = append(naplesInbandIPs, ips...)
+			for index := range node.NaplesConfigs.Configs {
+				loopackIP := sm.Tb.GetLoopBackIP(node.NodeName, index+1)
+				naplesInbandIPs = append(naplesInbandIPs, loopackIP)
+			}
+		}
+	}
+	//Clean up old routes
+	for _, node := range sm.Tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			entity := node.NodeName + "_venice"
+			for _, ip := range naplesInbandIPs {
+				//for now using eth1 has default route
+				trig.AddCommand(fmt.Sprintf("ip route delete %s", ip), entity, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("iptables -F"), entity, node.NodeName)
+			}
+		}
+	}
+	trig.Run()
+
+	trig = sm.Tb.NewTrigger()
+	for _, node := range sm.Tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			entity := node.NodeName + "_venice"
+			for _, ip := range naplesInbandIPs {
+				//for now using eth1 has default route
+				if sm.Tb.Params.Network.InbandDefaultRoute != "" {
+					trig.AddCommand(fmt.Sprintf("ip route add %s/32 via %s dev eth1", ip, sm.Tb.Params.Network.InbandDefaultRoute), entity, node.NodeName)
+				}
+			}
+		}
+	}
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to setup venice node. Err: %v", err)
+		return fmt.Errorf("Error triggering commands on venice nodes: %v", err)
+	}
+
+	for _, cmdResp := range triggerResp {
+		// 'echo' command sometimes has exit code 1. ignore it
+		if cmdResp.ExitCode != 0 && !strings.HasPrefix(cmdResp.Command, "echo") {
+			return fmt.Errorf("Venice trigger %v failed. code %v, Out: %v, StdErr: %v", cmdResp.Command, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		}
+	}
+
+	return nil
+}
+
+//RestoreClusterDefaults restore some defaults for cluster
+func (sm *SysModel) RestoreClusterDefaults(nodes []*testbed.TestNode) error {
+
+	log.Infof("Restoring cluster defaults")
+
+	err := sm.readNodeUUIDs(sm.Tb.Nodes)
+	if err != nil {
+		return err
+	}
+
+	return sm.RestoreVeniceDefaults(nodes)
+}
+
 // SetupVeniceNodes sets up some test tools on venice nodes
 func (sm *SysModel) SetupVeniceNodes() error {
 
@@ -844,8 +914,8 @@ func (sm *SysModel) SetupPenctl(nodes []*testbed.TestNode) error {
 				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
 			}
 			// untar the package
-			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			//cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
+			//trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 		}
 	}
 

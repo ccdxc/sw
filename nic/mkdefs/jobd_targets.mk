@@ -334,6 +334,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 
 .PHONY: jobd/e2e/naples-sim-image
 jobd/e2e/naples-sim-image: ${JOBD_PREREQS}
+	go build -ldflags="-s -w" -o ${NICDIR}/build/x86_64/${PIPELINE}/penctl  github.com/pensando/sw/penctl
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
 	${NICDIR}/tools/release.sh
 

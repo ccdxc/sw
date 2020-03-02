@@ -39,6 +39,9 @@ func NewNetworkSecurityPolicyCollection(policy *NetworkSecurityPolicy, client ob
 
 // Delete deletes all policies in the collection
 func (spc *NetworkSecurityPolicyCollection) Delete() error {
+	if spc == nil {
+		return nil
+	}
 	if spc.err != nil {
 		return spc.err
 	}
@@ -311,6 +314,9 @@ func (spc *NetworkSecurityPolicyCollection) Commit() error {
 
 // Restore is a very context specific function, which restores permit any any policy
 func (spc *NetworkSecurityPolicyCollection) Restore() error {
+	if spc == nil {
+		return nil
+	}
 	return spc.AddRule("any", "any", "any", "PERMIT").Commit()
 }
 

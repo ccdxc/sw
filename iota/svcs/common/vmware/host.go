@@ -682,7 +682,8 @@ func (h *Host) BootVM(name string) (*VMInfo, error) {
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(h.Ctx())
+	//Wait for only IPV4 address
+	ip, err = vm.WaitForIP(h.Ctx(), true)
 	if err != nil {
 		return nil, err
 	}

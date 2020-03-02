@@ -193,6 +193,21 @@ func (sm *SysModel) VerifyBGPCluster() error {
 			}
 		}
 
+		for _, np := range sm.FakeNaples {
+			verfied := false
+			for _, item := range data {
+				if np.IP() == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+					verfied = true
+					break
+				}
+			}
+			if !verfied {
+				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), np.Name())
+				log.Errorf(msg)
+				return errors.New(msg)
+			}
+		}
+
 	}
 
 	return nil
@@ -245,4 +260,9 @@ func (sm *SysModel) VerifyClusterStatus() error {
 			}
 	*/
 	return nil
+}
+
+// GetExclusiveServices node on the fly
+func (sm *SysModel) GetExclusiveServices() ([]string, error) {
+	return []string{"pen-pegasus"}, nil
 }

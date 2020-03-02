@@ -264,7 +264,7 @@ L:
 				log.Errorf("Error querying loopback interfaces: Err: %v", err)
 				return err
 			}
-			if len(cl.Cfg.ConfigItems.Hosts) == len(loppbackIntfs) {
+			if (len(cl.params.Dscs) - len(cl.params.FakeDscs)) == len(loppbackIntfs) {
 				break L
 			}
 			time.Sleep(2 * time.Second)

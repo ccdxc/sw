@@ -935,6 +935,12 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		if !ok {
 			continue
 		}
+		if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			req.ApiResponse.ErrorMsg = resp.ApiResponse.ErrorMsg
+			req.ApiResponse.ApiStatus = resp.ApiResponse.ApiStatus
+			log.Errorf("TOPO SVC | AddWorkloads | Workload  failed with  %v", resp.ApiResponse.ErrorMsg)
+			break
+		}
 		for _, respWload := range resp.Workloads {
 			for index, reqWload := range req.Workloads {
 				if reqWload.GetNodeName() == node.GetNodeInfo().Name && reqWload.WorkloadName == respWload.WorkloadName {

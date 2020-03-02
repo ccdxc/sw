@@ -3,18 +3,30 @@
 package cluster_test
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	linkDownTime = 60 * time.Second
+	flapInterval = 2 * time.Minute
+)
+
+var (
+	flapPortCancel context.CancelFunc
 )
 
 var _ = Describe("venice cluster tests", func() {
 	var (
 		configSnapShot string
 	)
+
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
@@ -33,12 +45,106 @@ var _ = Describe("venice cluster tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=long Basic cluster tests", func() {
 
+		startPortFlap := func() {
+			sc, err := ts.model.SwitchPorts().SelectByPercentage(100)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			ctx, cancel := context.WithCancel(context.Background())
+			flapPortCancel = cancel
+			go ts.model.FlapDataSwitchPortsPeriodically(ctx, sc,
+				linkDownTime, flapInterval, 0)
+
+		}
+
+		stopPortFlap := func() {
+			flapPortCancel()
+			flapPortCancel = nil
+
+		}
+
 		It("tags:sanity=true should be able to save and restore configuration", func() {
 			Expect(ts.model.VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
 			ss, err := ts.model.VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
 			Expect(err).To(BeNil())
 			name := string(ss[strings.LastIndex(ss, "/")+1:])
 			Expect(ts.model.VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
+		})
+
+		It("Should be able reload venice nodes and cluster should come back to normal state", func() {
+			// reload each host
+			ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
+				Expect(ts.model.ReloadVeniceNodes(vnc)).Should(Succeed())
+
+				// wait for cluster to be back in good state
+				Eventually(func() error {
+					return ts.model.VerifyClusterStatus()
+				}).Should(Succeed())
+
+				return nil
+			})
+		})
+
+		It("Should be able reload host nodes and cluster should come back to normal state", func() {
+			// reload each host
+			ts.model.ForEachHost(func(vnc *objects.HostCollection) error {
+				Expect(ts.model.ReloadHosts(vnc)).Should(Succeed())
+
+				// wait for cluster to be back in good state
+				Eventually(func() error {
+					return ts.model.VerifyClusterStatus()
+				}).Should(Succeed())
+
+				return nil
+			})
+		})
+
+		It("Should be able reload model exclusive nodes and make sure cluster is in good state", func() {
+			// reload the leader node
+			svcs, _ := ts.model.GetExclusiveServices()
+			for _, svc := range svcs {
+
+				svcNodes, err := ts.model.VeniceNodes().GetVeniceNodeWithService(svc)
+
+				svcNodes.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
+					log.Infof("Reloading node %v for service %v", svc, vnc.Nodes[0].IP())
+					err = ts.model.ReloadVeniceNodes(vnc)
+					Expect(err).ShouldNot(HaveOccurred())
+					// wait for cluster to be back in good state
+					Eventually(func() error {
+						return ts.model.VerifyClusterStatus()
+					}).Should(Succeed())
+					return nil
+				})
+
+			}
+		})
+
+		It("Flap links and Reload nodees and make good state", func() {
+			if !ts.scaleData || ts.tb.HasNaplesSim() {
+				Skip("Skipping scale connection runs")
+			}
+
+			startPortFlap()
+
+			// reload each host
+			ts.model.ForEachHost(func(vnc *objects.HostCollection) error {
+				Expect(ts.model.ReloadHosts(vnc)).Should(Succeed())
+
+				// wait for cluster to be back in good state
+				Eventually(func() error {
+					return ts.model.VerifyClusterStatus()
+				}).Should(Succeed())
+
+				return nil
+			})
+
+			stopPortFlap()
+
+			//Verify cluster in good state after that.
+			Eventually(func() error {
+				return ts.model.VerifyClusterStatus()
+			}).Should(Succeed())
+
 		})
 
 		It("tags:sanity=true Venice Leader shutdown should not affect the cluster", func() {
@@ -283,18 +389,27 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("Should be able reload venice nodes and cluster should come back to normal state", func() {
-			// reload each host
-			ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
-				Expect(ts.model.ReloadVeniceNodes(vnc)).Should(Succeed())
+		It("Should be able disconnect/reconnect model exclusive nodes and make sure cluster is in good state", func() {
+			// reload the leader node
+			naples := ts.model.Naples()
+			svcs, _ := ts.model.GetExclusiveServices()
 
-				// wait for cluster to be back in good state
-				Eventually(func() error {
-					return ts.model.VerifyClusterStatus()
-				}).Should(Succeed())
+			for _, svc := range svcs {
 
-				return nil
-			})
+				svcNodes, err := ts.model.VeniceNodes().GetVeniceNodeWithService(svc)
+
+				svcNodes.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
+					log.Infof("Disconnecting node %v for service %v", svc, vnc.Nodes[0].IP())
+					err = ts.model.DisconnectVeniceNodesFromCluster(vnc, naples)
+					Expect(err).ShouldNot(HaveOccurred())
+					// wait for cluster to be back in good state
+					Eventually(func() error {
+						return ts.model.VerifyClusterStatus()
+					}).Should(Succeed())
+					return nil
+				})
+
+			}
 		})
 
 		It("Should be able reload venice leader node and cluster should come back to normal state", func() {
@@ -309,8 +424,8 @@ var _ = Describe("venice cluster tests", func() {
 			}
 		})
 
-		/*It("Venice removed and added back to cluster as a cleanode", func() {
-			Expect(ts.model.ForEachVeniceNode(func(vnc *iotakit.VeniceNodeCollection) error {
+		It("Venice removed and added back to cluster as a cleanode", func() {
+			Expect(ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
 				Expect(ts.model.RemoveVenice(vnc)).Should(Succeed())
 				// wait for cluster to be back in good state
 				Eventually(func() error {
@@ -352,7 +467,7 @@ var _ = Describe("venice cluster tests", func() {
 				}).Should(Succeed())
 				return err
 			})).ShouldNot(HaveOccurred())
-		}) */
+		})
 
 		/*
 			//Network Partitioning test cases

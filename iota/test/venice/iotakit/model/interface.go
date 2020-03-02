@@ -137,6 +137,7 @@ type VeniceNodeActionIntf interface {
 	AddVenice(venice *objects.VeniceNodeCollection) error
 	GetVeniceServices() (string, error)
 	RunCommandOnVeniceNodes(vnc *objects.VeniceNodeCollection, cmd string) error
+	GetExclusiveServices() ([]string, error)
 }
 
 //NodeActionIntf All actions related node intf

@@ -326,7 +326,7 @@ func (vnc *VeniceNodeCollection) GetVeniceNodeWithService(service string) (*Veni
 
 	for _, vn := range vnc.Nodes {
 		for _, ip := range hostIP {
-			if vn.iotaNode.IpAddress == ip {
+			if ip == vn.IP() {
 				srvVnc.Nodes = append(srvVnc.Nodes, vn)
 			}
 		}
@@ -338,6 +338,18 @@ func (vnc *VeniceNodeCollection) GetVeniceNodeWithService(service string) (*Veni
 		return nil, srvVnc.err
 	}
 	return &srvVnc, nil
+}
+
+// ForEachVeniceNode runs an iterator function on each venice node collection
+func (vnc *VeniceNodeCollection) ForEachVeniceNode(fn VeniceNodeIteratorFn) error {
+	for _, node := range vnc.Nodes {
+		err := fn(&VeniceNodeCollection{Nodes: []*VeniceNode{node}, CollectionCommon: vnc.CollectionCommon})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 //GetVeniceContainersWithService  Get nodes running service
@@ -383,6 +395,9 @@ func (vnc *VeniceNodeCollection) GetVeniceContainersWithService(service string, 
 
 	for _, vn := range vnc.Nodes {
 		for _, ip := range hostIP {
+			if ip == "" {
+				continue
+			}
 			if vn.iotaNode.IpAddress == ip || vn.testNode.SecondaryIP == ip {
 				veniceNodes = append(veniceNodes, vn)
 			}

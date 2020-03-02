@@ -145,7 +145,11 @@ func (sm *SysModel) ReloadVeniceNodes(vnc *objects.VeniceNodeCollection) error {
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
 
-	return nil
+	nodes := []*testbed.TestNode{}
+	for _, node := range vnc.Nodes {
+		nodes = append(nodes, node.GetTestNode())
+	}
+	return sm.RestoreVeniceDefaults(nodes)
 }
 
 //DisconnectVeniceNodesFromCluster disconnect venice.Nodes from cluster.
@@ -1169,4 +1173,9 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 	}
 
 	return nil
+}
+
+// GetExclusiveServices node on the fly
+func (sm *SysModel) GetExclusiveServices() ([]string, error) {
+	return []string{}, nil
 }

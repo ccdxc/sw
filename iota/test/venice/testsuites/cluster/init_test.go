@@ -70,6 +70,10 @@ var _ = BeforeSuite(func() {
 
 // AfterSuite handles cleanup after test suite completes
 var _ = AfterSuite(func() {
+	if flapPortCancel != nil {
+		flapPortCancel()
+		flapPortCancel = nil
+	}
 	if ts != nil && ts.tb != nil {
 		ts.model.Cleanup()
 		ts.tb.PrintResult()

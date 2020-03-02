@@ -1261,7 +1261,7 @@ def Main():
             host.WaitForSsh()
             host.UnloadDriver()
     else:
-            naples.Connect()
+            naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
             host.WaitForSsh()
 
     if GlobalOptions.only_init == True:
