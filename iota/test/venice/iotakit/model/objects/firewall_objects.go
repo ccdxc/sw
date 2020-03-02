@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
-	//"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/log"
 )
 type FirewallProfile struct {
 	VeniceFirewallProfile *security.FirewallProfile
@@ -126,6 +126,7 @@ func (fwp *FirewallProfileCollection) Commit() error {
 	}
 
 	for _, profile := range fwp.Profiles {
+		log.Infof("Firewall Profile Committing : %v", profile.VeniceFirewallProfile.Spec)
 		err := fwp.Client.UpdateFirewallProfile(profile.VeniceFirewallProfile)
 		fwp.err = err
 		if err != nil {

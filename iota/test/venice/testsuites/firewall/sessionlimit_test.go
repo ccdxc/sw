@@ -74,6 +74,25 @@ func VerifyFirewallHalConfig(fwp *objects.FirewallProfileCollection, sessType st
 	})
 }
 
+func SaveSettings() *objects.FirewallProfileCollection {
+    fwp := ts.model.NewFirewallProfile("default")
+	if fwp.Commit() != nil {
+		log.Errorf("Firewall programming failed for default")
+		return nil
+	}
+	return fwp
+}
+
+func RestoreSettings(fwp *objects.FirewallProfileCollection) error {
+	if len(fwp.Profiles) < 1 {
+        return fmt.Errorf("Invalid FirwallProfile config len : %d", len(fwp.Profiles))
+    }
+	if fwp.Commit() != nil {
+        return fmt.Errorf("Firewall programming failed to restore settings")
+	}
+	return nil
+}
+
 // will be used when functionality is in naples
 /*
 func VerifyActiveSessions(fwp *objects.FirewallProfileCollection, timestr string, sessType string, limit int) error {
@@ -132,6 +151,7 @@ func VerifyActiveSessions(fwp *objects.FirewallProfileCollection, timestr string
 var _ = Describe("session limit tests", func() {
 	var (
 		fwp *objects.FirewallProfileCollection
+		defaultFwp *objects.FirewallProfileCollection
 	)
 	BeforeEach(func() {
 		// verify cluster is in good health
@@ -140,19 +160,17 @@ var _ = Describe("session limit tests", func() {
 		}).Should(Succeed())
 		// disable the session limits to start afresh
 		fwp = ts.model.NewFirewallProfile("default")
-		Expect(fwp.DisableFirewallLimit()).Should(Succeed())
-		Expect(fwp.Commit()).Should(Succeed())
+		defaultFwp = SaveSettings()
+		Expect(defaultFwp != nil).To(Equal(true))
 		Eventually(func() error {
-			return VerifyFirewallPropagation(fwp)
+			return VerifyFirewallPropagation(defaultFwp)
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
 		// disable the session limits to cleanup
-		fwp = ts.model.NewFirewallProfile("default")
-		Expect(fwp.DisableFirewallLimit()).Should(Succeed())
-		Expect(fwp.Commit()).Should(Succeed())
+		Expect(RestoreSettings(defaultFwp)).Should(Succeed())
 		Eventually(func() error {
-			return VerifyFirewallPropagation(fwp)
+			return VerifyFirewallPropagation(defaultFwp)
 		}).Should(Succeed())
 		ts.tb.AfterTestCommon()
 	})
