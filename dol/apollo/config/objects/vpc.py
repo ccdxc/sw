@@ -45,7 +45,8 @@ class VpcStatus(base.StatusObjectBase):
 class VpcObject(base.ConfigObjectBase):
     def __init__(self, node, spec, index, maxcount):
         super().__init__(api.ObjectTypes.VPC, node)
-        super().SetOrigin(spec)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
         if (hasattr(spec, 'id')):
             self.VPCId = spec.id

@@ -89,7 +89,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
 class InterfaceObject(base.ConfigObjectBase):
     def __init__(self, spec, ifspec, node, spec_json=None):
         super().__init__(api.ObjectTypes.INTERFACE, node)
-        super().SetOrigin(ifspec)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         if (hasattr(ifspec, 'iid')):
             self.InterfaceId = int(ifspec.iid)
@@ -211,7 +212,7 @@ class InterfaceObject(base.ConfigObjectBase):
             iftype = 'L3'
         else:
             return None
-        if self.IfInfo.VpcId and isinstance(self.IfInfo.VpcId, str):
+        if hasattr(self.IfInfo, 'VpcId') and isinstance(self.IfInfo.VpcId, str):
             vrfname = self.IfInfo.VpcId
         else:
             vrfname = 'underlay-vpc'

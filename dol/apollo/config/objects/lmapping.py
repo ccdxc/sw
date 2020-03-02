@@ -20,11 +20,11 @@ import types_pb2 as types_pb2
 class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, ipversion, count):
         super().__init__(api.ObjectTypes.LMAPPING, node)
-        super().SetOrigin(spec)
         parent.AddChild(self)
-        if (EzAccessStoreClient[node].IsDeviceLearningEnabled()) or \
-                (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
-            self.SetOrigin(topo.OriginTypes.DISCOVERED)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
+        elif (EzAccessStoreClient[node].IsDeviceLearningEnabled()):
+            self.SetOrigin('discovered')
 
         self.__is_public = getattr(spec, 'public', False)
         ################# PUBLIC ATTRIBUTES OF LOCAL MAPPING OBJECT ###########

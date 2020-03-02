@@ -24,7 +24,8 @@ class TunnelStatus(base.StatusObjectBase):
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
         super().__init__(ObjectTypes.TUNNEL, node)
-        super().SetOrigin(spec)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         self.__spec = spec
         if (hasattr(spec, 'id')):
             self.Id = spec.id
@@ -36,7 +37,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
         if utils.IsDol() and self.DEVICE.OverlayRoutingEn:
-            self.SetOrigin(topo.OriginTypes.DISCOVERED)
+            self.SetOrigin('discovered')
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         if (hasattr(spec, 'srcaddr')):
             self.LocalIPAddr = ipaddress.IPv4Address(spec.srcaddr)

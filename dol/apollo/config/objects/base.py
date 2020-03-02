@@ -128,12 +128,10 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def IsDirty(self):
         return self.Dirty
 
-    def SetOrigin(self, spec):
-        if not hasattr(spec, 'origin'):
-            return # default to FIXED
-        if spec.origin == 'discovered':
+    def SetOrigin(self, origin):
+        if origin == 'discovered':
             self.Origin = topo.OriginTypes.DISCOVERED
-        elif spec.origin == 'implicitly-created':
+        elif origin == 'implicitly-created':
             self.Origin = topo.OriginTypes.IMPLICITLY_CREATED
         # anything else is FIXED
         return

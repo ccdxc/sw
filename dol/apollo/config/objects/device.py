@@ -21,7 +21,8 @@ import ipaddress
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
         super().__init__(api.ObjectTypes.DEVICE, node)
-        super().SetOrigin(spec)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         self.SetSingleton(True)
         self.GID("Device1")
         self.Stack = getattr(spec, 'stack', 'ipv4')

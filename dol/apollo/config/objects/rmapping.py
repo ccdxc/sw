@@ -17,10 +17,11 @@ import ipaddress
 class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, tunobj, ipversion, count):
         super().__init__(api.ObjectTypes.RMAPPING, node)
-        super().SetOrigin(spec)
         parent.AddChild(self)
-        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
-            self.SetOrigin(topo.OriginTypes.DISCOVERED)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
+        elif (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin('discovered')
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         if (hasattr(spec, 'id')):
             self.MappingId = spec.id

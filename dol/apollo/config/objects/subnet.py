@@ -31,7 +31,8 @@ class SubnetStatus(base.StatusObjectBase):
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, poolid):
         super().__init__(api.ObjectTypes.SUBNET, node)
-        super().SetOrigin(spec)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
         if (hasattr(spec, 'id')):

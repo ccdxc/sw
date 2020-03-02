@@ -68,13 +68,10 @@ class RouteObject():
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
         super().__init__(api.ObjectTypes.ROUTE, node)
-        super().SetOrigin(spec)
-        if GlobalOptions.netagent:
-            # HACK : fix correctly
-            # FIXME : no idea what this means, fix properly so route table gets created
-            self.SetOrigin(topo.OriginTypes.FIXED)
+        if hasattr(spec, 'origin'):
+            self.SetOrigin(spec.origin)
         elif (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
-            self.SetOrigin(topo.OriginTypes.DISCOVERED)
+            self.SetOrigin('discovered')
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(ResmgrClient[node].V6RouteTableIdAllocator)
