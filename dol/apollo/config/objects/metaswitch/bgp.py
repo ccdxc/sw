@@ -94,6 +94,30 @@ class BgpObject(base.ConfigObjectBase):
             }
         return json.dumps(spec)
 
+    def CheckPeerMatch(self, cfg, operpeers):
+        for obj in operpeers:
+            if cfg.RemoteASN == obj['remote-as'] and \
+               cfg.PeerAddr == ipaddress.ip_address(obj['ip-address']) and \
+               cfg.PeerAf.AfiStr == obj['enable-address-families'][0]:
+                return True
+        return False
+
+    def ValidateJSONSpec(self, json):
+        if spec['Kind'] != 'RoutingConfig': return False
+        if spec['meta']['name'] != self.GID(): return False
+        if spec['spec']['bgp-config']['as-number'] != obj.LocalASN: return False
+        if int(ipaddress.ip_address(spec['spec']['bgp-config']['router-id'])) != self.RouterId:
+            return False
+        cfgpeers = BGPPeerClient.Objects(node)
+        operpeers = spec['spec']['bgp-config']['neighbors']
+        if (len(cfgpeers) != len(operpeers)):
+            logger.error(f"Mismatch in number of peers. cfg {len(cfgpeers)} oper {len(operpeers)}")
+            return False
+        for peer1 in cfgpeers:
+            if not self.CheckPeerMatch(peer1, operpeers):
+                return False
+        return True
+
 class BgpObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.BGP, Resmgr.MAX_BGP_SESSIONS)
@@ -114,5 +138,9 @@ class BgpObjectClient(base.ConfigClientBase):
         for bgp_spec_obj in bgpSpec:
             __add_bgp_config(bgp_spec_obj)
         return
+
+    def ValidateGrpcRead(self, node, getResp):
+        logger.error("GRPC read not supported for BGP object")
+        return True
 
 client = BgpObjectClient()

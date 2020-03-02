@@ -23,6 +23,7 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", "0.0.0.0"))
         self.Afi = getattr(spec, "afi", "ipv4")
         self.Safi = getattr(spec, "safi", "unicast")
+        self.AfiStr = f"{self.Afi}-{self.Safi}"
         self.Disable = getattr(spec, "disable", False)
         self.NexthopSelf = getattr(spec, "nexthopself", False)
         self.DefaultOrig = getattr(spec, "defaultorig", False)
@@ -31,9 +32,10 @@ class BgpPeerAfObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "BGPPeerAf: %s |Id:%d|Localaddr:%s|PeerAddr:%s|Afi:%s|Safi:%s|"\
-               "Disable:%s|Nexthopself:%d|DefaultOrig:%s" %\
+               "%s|Disable:%s|Nexthopself:%d|DefaultOrig:%s" %\
                (self.UUID, self.Id, self.LocalAddr, self.PeerAddr, self.Afi, \
-                self.Safi, self.Disable, self.NexthopSelf, self.DefaultOrig)
+                self.Safi, self.AfiStr, self.Disable, self.NexthopSelf, \
+                self.DefaultOrig)
 
     def Show(self):
         logger.info("BGP Peer Af Object: %s" % self)

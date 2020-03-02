@@ -81,7 +81,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
                     (self.VpcId, self.ip_prefix, self.Port, self.encap, \
                     self.macaddr.get()))
         elif (self.__type == topo.InterfaceTypes.LOOPBACK):
-            res = str("ip:%s" % self.ip_prefix)
+            res = f"ip:{self.ip_prefix}"
         else:
             return
         logger.info("- %s" % res)
@@ -372,6 +372,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
         resp = self.ReadAgentInterfaces(node)
         #if utils.IsDryRun():
             #return
+        if not resp:
+            return None
         for r in resp:
             if r['spec']['type'] == 'LOOPBACK':
                 return r
@@ -380,12 +382,14 @@ class InterfaceObjectClient(base.ConfigClientBase):
     def __generate_loopback_interfaces(self, node, parent, iflist):
         spec = InterfaceSpec_()
         spec.mode = 'loopback'
+        spec.id = 0
         for ifspec in iflist:
             if ifspec.iftype != 'loopback':
                 continue
             if GlobalOptions.netagent:
                 rdata = self.__read_agent_loopback(node)
-                spec.id = rdata['meta']['name']
+                if rdata:
+                    spec.id = rdata['meta']['name']
             else:
                 rdata = None
                 spec.id = 'Loopback%d' % next(ResmgrClient[node].LoopbackIfIdAllocator)

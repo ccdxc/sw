@@ -178,9 +178,9 @@ def __read(node):
     LmappingClient.ReadObjects(node)
     RmappingClient.ReadObjects(node)
     PolicerClient.ReadObjects(node)
-    #BGPClient.ReadObjects(node)
-    #BGPPeerClient.ReadObjects(node)
-    #BGPPeerAfClient.ReadObjects(node)
+    BGPClient.ReadObjects(node)
+    BGPPeerClient.ReadObjects(node)
+    BGPPeerAfClient.ReadObjects(node)
     return
 
 def Main(node, topospec, ip=None):

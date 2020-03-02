@@ -1,6 +1,6 @@
 # Equinix 2node baremetal topology specification
 meta:
-    id: TOPO_VxLAN_HOSTMODE
+    id: EQUINIX_HOST_MODE
 
 device:
     id          : 1

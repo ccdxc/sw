@@ -380,7 +380,9 @@ class ConfigClientBase(base.ConfigClientBase):
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("GRPC get request failed for ", obj)
                 continue
-            for resp in obj.Response:
+            #TODO handle singleton object
+            resps = obj.Response
+            for resp in resps:
                 numObjs += 1
                 key = self.GetKeyfromSpec(resp.Spec)
                 cfgObj = self.GetObjectByKey(node, key)
@@ -446,8 +448,10 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def ValidateJSON(self, node, resps):
         for j in resps:
-            obj = self.__getObjectByUUID(node, j['meta']['uuid'])
+            uuid = j['meta']['uuid']
+            obj = self.__getObjectByUUID(node, uuid)
             if not obj:
+                logger.error(f'Failed to find {self.ObjType} object with uuid {uuid} on node {node}')
                 return False
             if not obj.ValidateJSONSpec(j):
                 return False
