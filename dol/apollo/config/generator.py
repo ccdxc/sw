@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 from apollo.config.agent.api import ObjectTypes as APIObjTypes
 import apollo.config.agent.api as agentapi
 
+from apollo.oper.oper import client as OperClient
 from apollo.config.objects.batch import client as BatchClient
 from apollo.config.objects.device import client as DeviceClient
 from apollo.config.objects.port import client as PortClient
@@ -64,6 +65,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.BGP_EVPN_EVI_RT.name.lower()] = EvpnEviRtClient
     ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF.name.lower()] = EvpnIpVrfClient
     ObjectInfo[APIObjTypes.BGP_EVPN_IP_VRF_RT.name.lower()] = EvpnIpVrfRtClient
+    ObjectInfo[APIObjTypes.OPER.name.lower()] = OperClient
     return
 
 def __validate_object_config(node, client):
@@ -107,6 +109,9 @@ def __generate(node, topospec):
 
     # Generate DHCP configuration
     DHCPRelayClient.GenerateObjects(node, topospec)
+
+    # Generate Oper objects
+    OperClient.GenerateObjects(node)
 
     # Validate configuration
     __validate(node)

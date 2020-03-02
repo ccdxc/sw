@@ -882,10 +882,14 @@ def CopyToNaples(node_name, files, dest_dir, via_oob=False):
 def CopyFromHost(node_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name, "%s_host" % node_name, files, dest_dir)
 
-def CopyFromNaples(node_name, files, dest_dir):
+def CopyFromNaples(node_name, files, dest_dir, via_oob=False):
+    if via_oob:
+        mgmtip = GetNicMgmtIP(node_name)
+    else:
+        mgmtip = GetNicIntMgmtIP(node_name)
     req = Trigger_CreateExecuteCommandsRequest()
     for f in files:
-        copy_cmd = "sshpass -p %s scp -p -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', GetNicIntMgmtIP(node_name), f)
+        copy_cmd = f"sshpass -p {'pen123'} scp -p -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {'root'}@{mgmtip}:{f} ."
         Trigger_AddHostCommand(req, node_name, copy_cmd)
     tresp = Trigger(req)
     for cmd in tresp.commands:

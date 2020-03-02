@@ -5,6 +5,7 @@ import grpc
 import enum
 import requests
 
+import oper_pb2_grpc as oper_pb2_grpc
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
 import vpc_pb2_grpc as vpc_pb2_grpc
@@ -96,7 +97,8 @@ class ObjectTypes(enum.IntEnum):
     BGP_EVPN_IP_VRF = 27
     BGP_EVPN_IP_VRF_RT = 28
     STATIC_ROUTE = 29
-    MAX = 30
+    OPER = 30
+    MAX = 31
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -269,6 +271,8 @@ class ApolloAgentClient:
 
     def __create_stubs(self):
         if GlobalOptions.dryrun: return
+        self.__stubs[ObjectTypes.OPER] = ClientStub(oper_pb2_grpc.OperSvcStub,
+                                                    self.__channel, 'Oper')
         self.__stubs[ObjectTypes.BATCH] = ClientStub(batch_pb2_grpc.BatchSvcStub,
                                                      self.__channel, 'Batch')
         self.__stubs[ObjectTypes.DEVICE] = ClientStub(device_pb2_grpc.DeviceSvcStub,

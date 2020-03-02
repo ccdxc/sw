@@ -136,7 +136,7 @@ static inline string
 techsupport_get_tar_cmd (const string& dst_dir, const string& dst_file,
                          const string& ts_file, bool skip_core)
 {
-    string tar_cmd, tar_dir, tar_excludes;
+    string tar_cmd, tar_excludes;
     string tar_exclude_option = " --exclude=";
 
     // exclude final tar ball as it gets written to same directory
@@ -145,18 +145,19 @@ techsupport_get_tar_cmd (const string& dst_dir, const string& dst_file,
         // exclude core dir if skip_core is set
         tar_excludes += tar_exclude_option + "core";
     }
-    // set working dir to <dst_dir>/../
-    tar_dir = " -C " + dst_dir + "/../";
-    tar_cmd = "tar " + tar_excludes + " -zcvf " + ts_file + tar_dir + " ./";
+    tar_cmd = "tar " + tar_excludes + " -zcvf " + ts_file + " " + dst_dir;
     return tar_cmd;
 }
 
 void
 techsupport::bundle_techsupport_(void) {
-    string ts_file, tar_cmd, tar_list_cmd;
+    string ts_file, touch_cmd, tar_cmd, tar_list_cmd;
     vector<string> cmds;
 
     ts_file = dst_dir_ + "/" + dst_file_;
+    // touch tar file to exclude as it gets written to same dir
+    touch_cmd = "touch " + ts_file;
+    cmds.push_back(touch_cmd);
     tar_cmd = techsupport_get_tar_cmd(dst_dir_, dst_file_, ts_file, skip_core_);
     cmds.push_back(tar_cmd);
     // validate the tar file created

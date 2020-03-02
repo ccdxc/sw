@@ -246,6 +246,21 @@ class TestSuite:
         self.__setup_complete = True
         return types.status.SUCCESS
 
+    def __invoke_teardown(self):
+        teardown_spec = getattr(self.__spec, 'teardown', [])
+        if teardown_spec is None:
+            return types.status.SUCCESS
+        for s in teardown_spec:
+            Logger.info("Starting Teardown Step: ", s.step)
+            status = loader.RunCallback(s.step, 'Main', True, getattr(s, "args", None))
+            if status != types.status.SUCCESS:
+                Logger.error("ERROR: Failed to run teardown step", s.step)
+                return status
+        return types.status.SUCCESS
+
+    def __teardown(self):
+        return self.__invoke_teardown()
+
     def __update_stats(self):
         for tbun in self.__testbundles:
             p,f,i,e,t = tbun.GetStats()
@@ -379,6 +394,8 @@ class TestSuite:
         self.__update_stats()
         Logger.info("Testsuite %s FINAL STATUS = %d" % (self.Name(), self.result))
 
+        status = self.__teardown()
+        # TODO: add teardown validation
         #moved to atexit() call
         #logcollector.CollectLogs()
         self.__timer.Stop()

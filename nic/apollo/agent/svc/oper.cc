@@ -40,7 +40,7 @@ get_techsupport_filename (void)
     time_t current_time = time(NULL);
 
     strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", gmtime(&current_time));
-    snprintf(filename, PATH_MAX, "tech-support-%s.gz", timestring);
+    snprintf(filename, PATH_MAX, "tech-support-%s.tar.gz", timestring);
 
     return std::string(filename);
 }
@@ -49,10 +49,12 @@ static inline std::string
 get_techsupport_cmd (std::string ts_dir, std::string ts_file, bool skipcores)
 {
     char ts_cmd[PATH_MAX];
+    // TODO: Add x86 support
+    std::string ts_bin = "/nic/bin/techsupport";
+    std::string ts_task = "/nic/conf/techsupport.json";
 
-    snprintf(ts_cmd, PATH_MAX, "/nic/bin/techsupport "
-             "-c /nic/conf/techsupport.json "
-             "-d %s -o %s %s", ts_dir.c_str(), ts_file.c_str(),
+    snprintf(ts_cmd, PATH_MAX, "%s -c %s -d %s -o %s %s", ts_bin.c_str(),
+             ts_task.c_str(), ts_dir.c_str(), ts_file.c_str(),
              skipcores ? "-s" : "");
 
     return std::string(ts_cmd);
