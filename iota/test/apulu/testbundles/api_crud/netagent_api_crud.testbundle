@@ -1,0 +1,73 @@
+meta:
+    name    : api_crud
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : API_CRUD_For_Delete_Ping_Traffic
+        testcase: testcases.api_crud.underlay_ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            # objects tested with delete config.
+            # TODO: nh-group
+            # route object excluded from local2remote tests, because no hit
+            objtype : [ vpc, subnet]
+            oper    : [ [delete] ]
+
+    -   name    : API_CRUD_For_Update_Ping_Traffic
+        testcase: testcases.api_crud.underlay_ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            # objects tested with update config.
+            # TODO: nh-group
+            objtype : [ vpc, subnet ]
+            oper    : [ [update] ]
+
+    -   name    : 1_Object_Idempotency_Ping_Traffic
+        testcase: testcases.api_crud.underlay_ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            # TODO: nh-group
+            objtype : [ vpc, subnet ]
+            oper    : [ [create, create], [delete, read, update, read] ]
+
+    -   name    : 2_Object_Idempotency_Ping_Traffic
+        testcase: testcases.api_crud.underlay_ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            objtype : [ vpc, subnet ]
+            oper    : [ [delete, delete] ]
+
+    -   name    : 3_Object_Idempotency_Ping_Traffic
+        testcase: testcases.api_crud.underlay_ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            objtype : [ vpc, subnet ]
+            oper    : [ [update, create] ]
+

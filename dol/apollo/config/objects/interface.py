@@ -211,6 +211,10 @@ class InterfaceObject(base.ConfigObjectBase):
             iftype = 'L3'
         else:
             return None
+        if self.IfInfo.VpcId and isinstance(self.IfInfo.VpcId, str):
+            vrfname = self.IfInfo.VpcId
+        else:
+            vrfname = 'underlay-vpc'
         spec = {
             "kind": "Interface",
             "meta": {
@@ -225,7 +229,7 @@ class InterfaceObject(base.ConfigObjectBase):
             "spec": {
                 "type": iftype,
                 "admin-status": 'UP',
-                "vrf-name": self.SpecJson['spec']['vrf-name'],
+                "vrf-name": vrfname,
                 "ip-address": (self.IfInfo.ip_prefix.exploded),
             }
         }

@@ -125,7 +125,7 @@ def __getObjects(objtype):
         if objtype == 'nexthop':
             objs.extend(objClient.GetUnderlayNexthops(node))
         else:
-            objs.extend(objClient.Objects(node))
+            objs.extend(objClient.Objects(node, True))
     return objs
 
 def __getMaxLimit(objtype):

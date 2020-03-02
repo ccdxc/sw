@@ -273,27 +273,52 @@ class VpcObject(base.ConfigObjectBase):
 
     def PopulateAgentJson(self):
         if self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
-            # Nothing more to be done
-            return None
-        spec = {
-            "kind": "Vrf",
-            "meta": {
-                "name": self.GID(),
-                "namespace": "default",
-                "tenant": self.GID(),
-                "uuid" : self.UUID.UuidStr,
-                "labels": {
-                    "CreatedBy": "Venice"
+            spec = {
+                "kind": "Vrf",
+                "meta": {
+                    "name": self.GID(),
+                    "namespace": "default",
+                    "tenant": self.GID(),
+                    "uuid" : self.UUID.UuidStr,
                 },
-            },
-            "spec": {
-                "vrf-type": "CUSTOMER",
-                "v4-route-table": self.V4RouteTableName,
-                "router-mac": str(self.VirtualRouterMACAddr),
-                "vxlan-vni": self.Vnid
+                "spec": {
+                    "vrf-type": "INFRA",
+                }
             }
-        }
+        else:
+            spec = {
+                "kind": "Vrf",
+                "meta": {
+                    "name": self.GID(),
+                    "namespace": "default",
+                    "tenant": self.GID(),
+                    "uuid" : self.UUID.UuidStr,
+                    "labels": {
+                        "CreatedBy": "Venice"
+                    },
+                },
+                "spec": {
+                    "vrf-type": "CUSTOMER",
+                    "v4-route-table": self.V4RouteTableName,
+                    "router-mac": str(self.VirtualRouterMACAddr),
+                    "vxlan-vni": self.Vnid
+                }
+            }
         return json.dumps(spec)
+
+    def ValidateJSONSpec(self, spec):
+        if spec['kind'] != 'Vrf': return False
+        if spec['meta']['name'] != self.GID(): return False
+        if self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
+            if spec['spec']['vrf-type'] != 'INFRA': return False
+        else:
+            if spec['spec']['vrf-type'] != 'CUSTOMER': return False
+            if spec['spec']['vxlan-vni'] != self.Vnid: return False
+            if spec['spec']['router-mac'] != str(self.VirtualRouterMACAddr):
+                return False
+            if spec['spec']['v4-route-table'] != self.V4RouteTableName:
+                return False
+        return True
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():

@@ -273,6 +273,19 @@ class SubnetObject(base.ConfigObjectBase):
                 }
         return json.dumps(spec)
 
+    def ValidateJSONSpec(self, spec):
+        if spec['kind'] != 'Network': return False
+        if spec['meta']['name'] != self.GID(): return False
+        if spec['spec']['vrf-name'] != self.VPC.GID(): return False
+        if spec['spec']['vxlan-vni'] != self.Vnid: return False
+        addr = spec['spec']['v4-address'][0]
+        if addr['prefix-len'] != self.IPPrefix[1]._prefixlen:
+                return False
+        if addr['address']['type'] != 1: return False
+        if addr['address']['v4-address'] != int.from_bytes(self.IPPrefix[1].network_address.packed, byteorder='big'):
+            return False
+        return True
+
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False

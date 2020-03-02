@@ -220,6 +220,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.SetDirty(False)
         return utils.UpdateObject(self)
 
+    def ValidateJSONSpec(self, spec):
+        logger.error("Method not implemented by class: %s" % self.__class__)
+        assert(0)
+        return False
+
     def ValidateSpec(self, spec):
         logger.error("Method not implemented by class: %s" % self.__class__)
         assert(0)
@@ -324,10 +329,14 @@ class ConfigClientBase(base.ConfigClientBase):
         uuid = spec['id'] if yaml else spec.Id
         return utils.PdsUuid.GetIdfromUUID(uuid)
 
-    def Objects(self, node):
+    def Objects(self, node, fixed_only=False):
+        objlist = []
         if self.Objs.get(node, None):
-	        return self.Objs[node].values()
-        return []
+            objlist = self.Objs[node].values()
+        if not fixed_only:
+            return objlist
+        flist = [obj for obj in objlist if obj.IsOriginFixed()]
+        return flist
 
     def GetNumHwObjects(self, node):
         count = len(self.Objects(node))
@@ -430,11 +439,42 @@ class ConfigClientBase(base.ConfigClientBase):
             return False
         return True
 
+    def __getObjectByUUID(self, node, uuid):
+        objlist = self.Objects(node)
+        for obj in objlist:
+            if uuid == obj.UUID.UuidStr:
+                return obj
+        return None
+
+    def ValidateJSON(self, node, resps):
+        for j in resps:
+            obj = self.__getObjectByUUID(node, j['meta']['uuid'])
+            if not obj:
+                return False
+            if not obj.ValidateJSONSpec(j):
+                return False
+        return True
+
+    def ValidateHttpRead(self, node, resps):
+        return self.ValidateJSON(node, resps)
+
+    def HttpRead(self, node):
+        if not GlobalOptions.netagent:
+            return True
+        resp = api.client[node].GetHttp(self.ObjType)
+        logger.info("HTTP read:", resp)
+        if resp and not self.ValidateHttpRead(node, resp):
+            logger.error("Http Read validation failed for ", self.ObjType)
+            return False
+        return True
+
     def ReadObjects(self, node):
         logger.info(f"Reading {self.ObjType.name} Objects from {node}")
         if not self.GrpcRead(node):
             return False
         if not self.PdsctlRead(node):
+            return False
+        if not self.HttpRead(node):
             return False
         return True
 
@@ -467,11 +507,7 @@ class ConfigClientBase(base.ConfigClientBase):
         else:
             cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
-            if GlobalOptions.netagent and self.ObjType == api.ObjectTypes.DEVICE:
-                logger.info("Skip device create. Do device update instead")
-                api.client[node].Update(self.ObjType, msgs)
-            else:
-                api.client[node].Create(self.ObjType, msgs)
+            api.client[node].Create(self.ObjType, msgs)
             #TODO: Add validation for create & based on that set HW habitant
             list(map(lambda x: x.SetHwHabitant(True), fixed))
         return True

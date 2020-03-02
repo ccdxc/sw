@@ -169,7 +169,7 @@ class ClientRESTModule:
             return
         return rdata.json()
 
-    def Delete(self):
+    def Delete(self, objs):
         resps = []
         for obj in objs:
             url = "%s%s"%(self.url, obj.GetRESTPath())

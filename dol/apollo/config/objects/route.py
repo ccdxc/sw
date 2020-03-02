@@ -211,6 +211,11 @@ class RouteTableObject(base.ConfigObjectBase):
         }
         return json.dumps(spec)
 
+    def ValidateJSONSpec(self, spec):
+        if spec['kind'] != 'RouteTable': return False
+        if spec['meta']['name'] != self.GID(): return False
+        return True
+
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False

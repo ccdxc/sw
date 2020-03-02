@@ -408,15 +408,18 @@ def InformDependents(dependee, cbFn):
     return
 
 def TriggerCreate(obj, node):
-    batchClient = EzAccessStore.GetBatchClient()
-    batchClient.Start(node)
-    cookie = GetBatchCookie(node)
-    msg = obj.GetGrpcCreateMessage(cookie)
-    operStatus = api.client[node].Create(obj.ObjType, [msg])
-    batchClient.Commit(node)
-    commitStatus = GetBatchCommitStatus(node)
-    validate = ('Create', obj, operStatus, commitStatus)
-    return ValidateBatch([validate], cookie)
+    if GlobalOptions.netagent:
+        return api.client[node].Create(obj.ObjType, [obj])
+    else:
+        batchClient = EzAccessStore.GetBatchClient()
+        batchClient.Start(node)
+        cookie = GetBatchCookie(node)
+        msg = obj.GetGrpcCreateMessage(cookie)
+        operStatus = api.client[node].Create(obj.ObjType, [msg])
+        batchClient.Commit(node)
+        commitStatus = GetBatchCommitStatus(node)
+        validate = ('Create', obj, operStatus, commitStatus)
+        return ValidateBatch([validate], cookie)
 
 def CreateObject(obj):
     if IsDryRun() and obj.IsHwHabitant():
@@ -451,33 +454,62 @@ def CreateObject(obj):
     return True
 
 def ReadObject(obj, expApiStatus = types_pb2.API_STATUS_OK):
-    msg = obj.GetGrpcReadMessage()
-    resps = api.client[obj.Node].Get(obj.ObjType, [msg])
-    return ValidateRead(obj, resps, expApiStatus)
+    if GlobalOptions.netagent:
+        found = False
+        ret = False
+        resps = api.client[obj.Node].GetHttp(obj.ObjType)
+        if not resps:
+            return types_pb2.API_STATUS_NOT_FOUND
+        for j in resps:
+            if j['meta']['uuid'] == obj.UUID.UuidStr:
+                found = True
+                ret = obj.ValidateJSONSpec(j)
+        # positive case. obj found and valid
+        if expApiStatus == types_pb2.API_STATUS_OK:
+            if found and ret:
+                return expApiStatus
+            else:
+                return types_pb2.API_STATUS_NOT_FOUND
+        # negative case. either object not found, or validation fail
+        else:
+            if not found or not ret:
+                return expApiStatus
+            else:
+                return types_pb2.API_STATUS_OK
+    else:
+        msg = obj.GetGrpcReadMessage()
+        resps = api.client[obj.Node].Get(obj.ObjType, [msg])
+        return ValidateRead(obj, resps, expApiStatus)
 
 def UpdateObject(obj):
     logger.info(f"Updating object {obj} on {obj.Node}")
     node = obj.Node
-    batchClient = EzAccessStore.GetBatchClient()
-    batchClient.Start(node)
-    cookie = GetBatchCookie(node)
-    msg = obj.GetGrpcUpdateMessage(cookie)
-    operStatus = api.client[node].Update(obj.ObjType, [msg])
-    batchClient.Commit(node)
-    commitStatus = GetBatchCommitStatus(node)
-    validate = ('Update', obj, operStatus, commitStatus)
-    return ValidateBatch([validate], cookie)
+    if GlobalOptions.netagent:
+        return api.client[node].Update(obj.ObjType, [obj])
+    else:
+        batchClient = EzAccessStore.GetBatchClient()
+        batchClient.Start(node)
+        cookie = GetBatchCookie(node)
+        msg = obj.GetGrpcUpdateMessage(cookie)
+        operStatus = api.client[node].Update(obj.ObjType, [msg])
+        batchClient.Commit(node)
+        commitStatus = GetBatchCommitStatus(node)
+        validate = ('Update', obj, operStatus, commitStatus)
+        return ValidateBatch([validate], cookie)
 
 def TriggerDelete(obj, node):
-    batchClient = EzAccessStore.GetBatchClient()
-    batchClient.Start(node)
-    cookie = GetBatchCookie(node)
-    msg = obj.GetGrpcDeleteMessage(cookie)
-    operStatus = api.client[node].Delete(obj.ObjType, [msg])
-    batchClient.Commit(node)
-    commitStatus = GetBatchCommitStatus(node)
-    validate = ('Delete', obj, operStatus, commitStatus)
-    return ValidateBatch([validate], cookie)
+    if GlobalOptions.netagent:
+        return api.client[node].Delete(obj.ObjType, [obj])
+    else:
+        batchClient = EzAccessStore.GetBatchClient()
+        batchClient.Start(node)
+        cookie = GetBatchCookie(node)
+        msg = obj.GetGrpcDeleteMessage(cookie)
+        operStatus = api.client[node].Delete(obj.ObjType, [msg])
+        batchClient.Commit(node)
+        commitStatus = GetBatchCommitStatus(node)
+        validate = ('Delete', obj, operStatus, commitStatus)
+        return ValidateBatch([validate], cookie)
 
 def DeleteObject(obj):
     if IsDryRun() and not obj.IsHwHabitant():

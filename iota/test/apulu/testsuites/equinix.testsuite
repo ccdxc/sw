@@ -44,7 +44,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        #- networking/netagent_api_crud.testbundle
+        - api_crud/netagent_api_crud.testbundle
         - networking/underlay.testbundle
         #- networking/h2h_arp.testbundle
         #- networking/h2h_dhcp.testbundle
