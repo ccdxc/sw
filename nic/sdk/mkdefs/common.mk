@@ -33,6 +33,11 @@ export SDK_THIRD_PARTY_VPP_LDPATH := \
 export SDK_THIRD_PARTY_VPP_LIBS := \
        :libvnet.so.19.01 :libvlib.so.19.01 :libvppinfra.so.19.01
 
+export SDK_THIRD_PARTY_OMAPI_LIBS := dhcpctl dns omapi
+
+export SDK_THIRD_PARTY_OMAPI_INCLUDES := \
+       ${SDKDIR}/third-party/dhcp-server-pkg/${ARCH}/include
+
 export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
 
 export THIRD_PARTY_INCLUDES := ${SDK_THIRD_PARTY_INCLUDES}

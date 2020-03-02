@@ -16,6 +16,9 @@
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
+extern "C" {
+#include <dhcpctl/dhcpctl.h>
+}
 
 namespace api {
 namespace impl {
@@ -72,6 +75,9 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
+    sdk_ret_t add_dhcp_host_reservation(const pds_mapping_spec_t *spec);
+    sdk_ret_t remove_dhcp_host_reservation(const char *hostname);
+
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
@@ -84,6 +90,7 @@ private:
     mem_hash    *local_mapping_tbl_;
     mem_hash    *mapping_tbl_;
     slab        *mapping_impl_slab_;
+    dhcpctl_handle dhcp_connection_;
 };
 
 /// \@}

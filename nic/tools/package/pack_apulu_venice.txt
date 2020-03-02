@@ -11,6 +11,3 @@ nic/conf/$PIPELINE/techsupport_venice.json                        /nic/conf/tech
 
 # system level tools
 nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bringup_mgmt_ifs.sh
-
-# dhcp server
-nic/dhcp-server/S80dhcp-server-disable                            /etc/init.d/S80dhcp-server
