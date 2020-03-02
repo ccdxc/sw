@@ -185,7 +185,7 @@ struct ionic {
 	struct sx sx;
 	char sx_name[QUEUE_NAME_MAX_SZ];
 	unsigned int nnqs_per_lif;
-	unsigned int neqs_per_lif;
+	unsigned int nrdma_eqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
 	unsigned int nintrs;

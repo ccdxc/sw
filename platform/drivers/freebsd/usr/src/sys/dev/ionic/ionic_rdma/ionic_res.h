@@ -45,7 +45,7 @@
  *
  * This allocator is intended to keep the desired memory size complexity, but
  * improve the search time complexity for typical workloads.  The search time
- * complexity is expected to be closer N, for N allocations, although it
+ * complexity is expected to be closer to O(N), for N allocations, although it
  * remains bounded by O(N^2) in the worst case.
  */
 struct ionic_resid_bits {

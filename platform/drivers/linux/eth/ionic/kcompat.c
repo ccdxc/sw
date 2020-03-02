@@ -528,6 +528,7 @@ void _kc_skb_fill_page_desc(struct sk_buff *skb, int i, struct page *page,
  * @addr: The address to base the search on
  * @offset: The bitnumber to start searching at
  * @size: The maximum size to search
+ * @return: The next set bit in the memory region
  */
 unsigned long find_next_bit(const unsigned long *addr, unsigned long size,
                             unsigned long offset)

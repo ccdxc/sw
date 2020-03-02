@@ -718,8 +718,8 @@ static int ionic_netdev_event_post(struct net_device *ndev,
 	struct ionic_netdev_work *work;
 	void *handle;
 
-	handle = get_netdev_ionic_handle(ndev, IONIC_API_VERSION,
-					 IONIC_PRSN_RDMA);
+	handle = ionic_get_handle_from_netdev(ndev, IONIC_API_VERSION,
+					      IONIC_PRSN_RDMA);
 	if (!handle) {
 		pr_devel("unrecognized netdev: %s\n", netdev_name(ndev));
 		return 0;

@@ -944,6 +944,16 @@ static void ionic_reserve_cq(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	}
 }
 
+/*
+ * Note about rc: (noted here because poll is different)
+ *
+ * Functions without "poll" in the name, if they return an integer, return
+ * zero on success, or a positive error number.  Functions returning a
+ * pointer return NULL on error and set errno to a positive error number.
+ *
+ * Functions with "poll" in the name return negative error numbers, or
+ * greater or equal to zero number of completions on success.
+ */
 static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
@@ -952,22 +962,11 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 	struct ionic_v1_cqe *cqe;
 	uint32_t qtf, qid;
 	uint8_t type;
-	uint16_t old_prod;
 	bool peek;
 	int rc = 0, npolled = 0;
-
-	/* Note about rc: (noted here because poll is different)
-	 *
-	 * Functions without "poll" in the name, if they return an integer,
-	 * return zero on success, or a positive error number.  Functions
-	 * returning a pointer return NULL on error and set errno to a positive
-	 * error number.
-	 *
-	 * Functions with "poll" in the name return negative error numbers, or
-	 * greater or equal to zero number of completions on success.
-	 */
-
 #ifdef IONIC_LIB_STATS
+	uint16_t old_prod;
+
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, poll_cq);
 
@@ -977,8 +976,10 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 	ionic_spin_lock(ctx, &cq->lock);
 
+#ifdef IONIC_LIB_STATS
 	old_prod = cq->q.prod;
 
+#endif /* IONIC_LIB_STATS */
 	/* poll already indicated work completions for send queue */
 
 	list_for_each_safe(&cq->poll_sq, qp, qp_next, cq_poll_sq) {
@@ -1139,15 +1140,16 @@ cq_next:
 out:
 	ionic_reserve_cq(ctx, cq, 0);
 
-	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
 #ifdef IONIC_LIB_STATS
+	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
+
 	ionic_stat_add(ctx->stats, poll_cq_cqe, old_prod);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_ncqe, old_prod);
 	ionic_stat_add(ctx->stats, poll_cq_wc, npolled);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_nwc, npolled);
 	ionic_stat_add(ctx->stats, poll_cq_err, (npolled ?: rc) < 0);
-#endif /* IONIC_LIB_STATS */
 
+#endif /* IONIC_LIB_STATS */
 	ionic_spin_unlock(ctx, &cq->lock);
 
 #ifdef IONIC_LIB_STATS
@@ -2226,10 +2228,10 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				  struct ibv_send_wr **bad,
 				  bool send_path)
 {
-	uint16_t old_prod;
 	int spend, rc = 0;
-
 #ifdef IONIC_LIB_STATS
+	uint16_t old_prod;
+
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_send);
 
@@ -2253,9 +2255,9 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	ionic_stat_incr_idx_fls(ctx->stats, post_send_qlen,
 				ionic_queue_length(&qp->sq));
 
-#endif /* IONIC_LIB_STATS */
 	old_prod = qp->sq.prod;
 
+#endif /* IONIC_LIB_STATS */
 	while (wr) {
 		if (ionic_queue_full(&qp->sq)) {
 #ifdef NOT_UPSTREAM
@@ -2278,12 +2280,12 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 	}
 
 out:
-	old_prod = (qp->sq.prod - old_prod) & qp->sq.mask;
 #ifdef IONIC_LIB_STATS
+	old_prod = (qp->sq.prod - old_prod) & qp->sq.mask;
 	ionic_stat_incr_idx_fls(ctx->stats, post_send_nwr, old_prod);
 	ionic_stat_add(ctx->stats, post_send_wr, old_prod);
-#endif /* IONIC_LIB_STATS */
 
+#endif /* IONIC_LIB_STATS */
 	if (ionic_spin_trylock(ctx, &cq->lock)) {
 		ionic_spin_unlock(ctx, &qp->sq_lock);
 		ionic_spin_lock(ctx, &cq->lock);
@@ -2391,10 +2393,10 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 				  struct ibv_recv_wr *wr,
 				  struct ibv_recv_wr **bad)
 {
-	uint16_t old_prod;
 	int spend, rc = 0;
-
 #ifdef IONIC_LIB_STATS
+	uint16_t old_prod;
+
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_recv);
 
@@ -2418,9 +2420,9 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 	ionic_stat_incr_idx_fls(ctx->stats, post_recv_qlen,
 				ionic_queue_length(&qp->rq));
 
-#endif /* IONIC_LIB_STATS */
 	old_prod = qp->rq.prod;
 
+#endif /* IONIC_LIB_STATS */
 	while (wr) {
 		if (ionic_queue_full(&qp->rq)) {
 #ifdef NOT_UPSTREAM
@@ -2439,12 +2441,12 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 	}
 
 out:
-	old_prod = (qp->rq.prod - old_prod) & qp->rq.mask;
 #ifdef IONIC_LIB_STATS
+	old_prod = (qp->rq.prod - old_prod) & qp->rq.mask;
 	ionic_stat_incr_idx_fls(ctx->stats, post_recv_nwr, old_prod);
 	ionic_stat_add(ctx->stats, post_recv_wr, old_prod);
-#endif /* IONIC_LIB_STATS */
 
+#endif /* IONIC_LIB_STATS */
 	if (!cq) {
 		ionic_spin_unlock(ctx, &qp->rq_lock);
 		goto out_unlocked;

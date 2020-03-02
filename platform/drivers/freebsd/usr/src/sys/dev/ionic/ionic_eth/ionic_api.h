@@ -41,11 +41,6 @@
  * they are compatible only if IONIC_API_VERSION is statically the same in both
  * sources.  Drivers must have matching values of IONIC_API_VERSION at compile
  * time, to be considered compatible at run time.
- *
- * This is a more strict check than just comparing the driver name in
- * ethtool_api->get_drvinfo().  The name may match, yet drivers may still be
- * incompatible if compiled from different sources, or if some other driver
- * happens to be called "ionic".
  */
 #define IONIC_API_VERSION "7"
 
@@ -66,7 +61,7 @@ enum ionic_api_prsn {
 	IONIC_PRSN_RDMA,
 };
 
-/** get_netdev_ionic_handle - Get a handle if the netdev is ionic.
+/** ionic_get_handle_from_netdev - Get a handle if the netdev is ionic.
  * @netdev:		Net device to check.
  * @api_version:	IONIC_API_VERSION.
  * @prsn:		Personality to apply.
@@ -77,7 +72,7 @@ enum ionic_api_prsn {
  *
  * Return: Handle if the netdev is a compatible ionic device.
  */
-void *get_netdev_ionic_handle(struct net_device *netdev,
+void *ionic_get_handle_from_netdev(struct net_device *netdev,
           const char *api_version, enum ionic_api_prsn prsn);
 
 /** ionic_api_stay_registered - stay registered through net interface changes
@@ -204,7 +199,7 @@ int ionic_api_get_cmb(void *handle, uint32_t *pgid, phys_addr_t *pgaddr,
  */
 void ionic_api_put_cmb(void *handle, uint32_t pgid, int order);
 
-/** ionic_api_kernel_dbpage - Get mapped dorbell page for use in kernel space.
+/** ionic_api_kernel_dbpage - Get mapped doorbell page for use in kernel space.
  * @handle:		Handle to lif.
  * @intr_ctrl:		Interrupt control registers.
  * @dbid:		Doorbell id for use in kernel space.

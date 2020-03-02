@@ -777,6 +777,16 @@ static void ionic_reserve_cq(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	}
 }
 
+/*
+ * Note about rc: (noted here because poll is different)
+ *
+ * Functions without "poll" in the name, if they return an integer, return
+ * zero on success, or a positive error number.  Functions returning a
+ * pointer return NULL on error and set errno to a positive error number.
+ *
+ * Functions with "poll" in the name return negative error numbers, or
+ * greater or equal to zero number of completions on success.
+ */
 static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
@@ -785,20 +795,9 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 	struct ionic_v1_cqe *cqe;
 	uint32_t qtf, qid;
 	uint8_t type;
-	uint16_t old_prod;
 	bool peek;
 	int rc = 0, npolled = 0;
-
-	/* Note about rc: (noted here because poll is different)
-	 *
-	 * Functions without "poll" in the name, if they return an integer,
-	 * return zero on success, or a positive error number.  Functions
-	 * returning a pointer return NULL on error and set errno to a positive
-	 * error number.
-	 *
-	 * Functions with "poll" in the name return negative error numbers, or
-	 * greater or equal to zero number of completions on success.
-	 */
+	uint16_t old_prod;
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, poll_cq);
@@ -961,6 +960,7 @@ out:
 	ionic_reserve_cq(ctx, cq, 0);
 
 	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
+
 	ionic_stat_add(ctx->stats, poll_cq_cqe, old_prod);
 	ionic_stat_incr_idx_fls(ctx->stats, poll_cq_ncqe, old_prod);
 	ionic_stat_add(ctx->stats, poll_cq_wc, npolled);
@@ -1988,8 +1988,8 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 				  struct ibv_send_wr **bad,
 				  bool send_path)
 {
-	uint16_t old_prod;
 	int spend, rc = 0;
+	uint16_t old_prod;
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_send);
@@ -2131,8 +2131,8 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 				  struct ibv_recv_wr *wr,
 				  struct ibv_recv_wr **bad)
 {
-	uint16_t old_prod;
 	int spend, rc = 0;
+	uint16_t old_prod;
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_recv);

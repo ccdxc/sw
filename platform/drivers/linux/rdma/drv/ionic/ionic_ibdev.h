@@ -33,10 +33,12 @@
 #include "ionic_res.h"
 
 #ifdef HAVE_RDMA_DRIVER_ID
+/****************** REMOVE BEFORE UPSTREAMING ******************/
 /* Upstream: QIB, EFA, SIW, <us> */
 enum {
         RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
 };
+/****************** REMOVE BEFORE UPSTREAMING ******************/
 
 #endif
 #define DRIVER_NAME		"ionic_rdma"

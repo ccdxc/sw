@@ -900,10 +900,7 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 	struct ionic_v1_eqe eqe;
 	u32 evt, qid;
 	u8 type, code;
-	u16 old_prod;
 	u16 npolled = 0;
-
-	old_prod = eq->q.prod;
 
 	while (npolled < budget) {
 		if (!ionic_next_eqe(eq, &eqe))

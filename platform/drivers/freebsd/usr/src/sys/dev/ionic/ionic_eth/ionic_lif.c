@@ -2373,7 +2373,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	IONIC_LIF_LOCK_INIT(lif);
 	lif->ionic = ionic;
 	lif->index = index;
-	lif->neqs = ionic->neqs_per_lif;
+	lif->nrdma_eqs_avail = ionic->nrdma_eqs_per_lif;
 	lif->ntxqs = ionic->ntxqs_per_lif;
 	lif->nrxqs = ionic->nrxqs_per_lif;
 	lif->nnqs = ionic->nnqs_per_lif;
@@ -4447,7 +4447,7 @@ int
 ionic_lifs_size(struct ionic *ionic)
 {
 	struct identity *ident = &ionic->ident;
-	int neqs = ident->lif.rdma.eq_qtype.qid_count;
+	int nrdma_eqs = ident->lif.rdma.eq_qtype.qid_count;
 	int nnqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ];
 	int ntxqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ];
 	int nrxqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ];
@@ -4483,7 +4483,7 @@ try_again:
 #endif
 
 	/* Interrupt is shared by transmit and receive. */
-	nintrs = ionic->nlifs * (nnqs + neqs + nqs + 1 /* adminq */);
+	nintrs = ionic->nlifs * (nnqs + nrdma_eqs + nqs + 1 /* adminq */);
 	if (nintrs > dev_nintrs) {
 		goto try_fewer;
 	}
@@ -4503,7 +4503,7 @@ try_again:
 		}
 	}
 
-	ionic->neqs_per_lif = neqs;
+	ionic->nrdma_eqs_per_lif = nrdma_eqs;
 	ionic->nnqs_per_lif = nnqs;
 	ionic->ntxqs_per_lif = nqs;
 	ionic->nrxqs_per_lif = nqs;
@@ -4515,7 +4515,7 @@ try_again:
 		nnqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ],
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ],
 		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ],
-		neqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_EQ]);
+		nrdma_eqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_EQ]);
 
 	dev_info(ionic->dev, "ucasts: %u, mcasts: %u, intr_coal mult: %u, div: %u\n",
 		ident->lif.eth.max_ucast_filters, ident->lif.eth.max_mcast_filters,
@@ -4524,8 +4524,8 @@ try_again:
 	return (0);
 
 try_fewer:
-	if (neqs > 1) {
-		neqs /= 2;
+	if (nrdma_eqs > 1) {
+		nrdma_eqs /= 2;
 		goto try_again;
 	}
 	if (nqs > 1) {

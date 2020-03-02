@@ -336,7 +336,7 @@ struct ionic_lif {
 	struct ionic_rxque **rxqs;
 
 	unsigned int nnqs;
-	unsigned int neqs;
+	unsigned int nrdma_eqs_avail;
 	unsigned int ntxqs;
 	unsigned int nrxqs;
 

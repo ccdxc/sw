@@ -40,7 +40,7 @@
 #ifndef IONIC_IBDEV_H
 #define IONIC_IBDEV_H
 
-#ifdef NOT_UPSTREAM
+#if defined(NOT_UPSTREAM) || defined(__FreeBSD__)
 #include "ionic_kcompat.h"
 
 #endif
@@ -73,10 +73,12 @@
 #include "ionic_res.h"
 
 #ifdef HAVE_RDMA_DRIVER_ID
+/****************** REMOVE BEFORE UPSTREAMING ******************/
 /* Upstream: QIB, EFA, SIW, <us> */
 enum {
         RDMA_DRIVER_IONIC = RDMA_DRIVER_QIB + 3,
 };
+/****************** REMOVE BEFORE UPSTREAMING ******************/
 
 #endif
 #define DRIVER_NAME		"ionic_rdma"

@@ -446,7 +446,6 @@ DEFINE_SHOW_ATTRIBUTE(lif_identity);
 
 void ionic_debugfs_add_lif(struct ionic_lif *lif)
 {
-	struct dentry *identity_dentry;
 	struct dentry *netdev_dentry;
 	struct dentry *lif_dentry;
 
@@ -460,8 +459,8 @@ void ionic_debugfs_add_lif(struct ionic_lif *lif)
 	if (IS_ERR_OR_NULL(netdev_dentry))
 		return;
 
-	identity_dentry = debugfs_create_file("identity", 0400, lif->dentry,
-					      lif->identity, &lif_identity_fops);
+	debugfs_create_file("identity", 0400, lif->dentry,
+			    lif->identity, &lif_identity_fops);
 }
 
 void ionic_debugfs_del_lif(struct ionic_lif *lif)

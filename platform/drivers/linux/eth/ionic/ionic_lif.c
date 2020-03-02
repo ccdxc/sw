@@ -2617,7 +2617,7 @@ static struct ionic_lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index
 #endif /* HAVE_RHEL7_EXTENDED_MIN_MAX_MTU */
 #endif /* HAVE_NETDEVICE_MIN_MAX_MTU */
 
-		lif->nrdma_eqs = ionic->nrdma_eqs_per_lif;
+		lif->nrdma_eqs_avail = ionic->nrdma_eqs_per_lif;
 		lif->nxqs = ionic->ntxqs_per_lif;
 	} else {
 		/* slave lifs */
@@ -2628,7 +2628,7 @@ static struct ionic_lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index
 			return ERR_PTR(-ENOMEM);
 		}
 		lif->netdev = ionic->master_lif->netdev;
-		lif->nrdma_eqs = 0;
+		lif->nrdma_eqs_avail = 0;
 		lif->nxqs = 1;
 	}
 

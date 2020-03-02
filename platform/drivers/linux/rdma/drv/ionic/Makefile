@@ -1,7 +1,11 @@
-obj-$(CONFIG_INFINIBAND_IONIC_RDMA)	+= ionic_rdma.o
+# SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 
-# $(M) is abs path of drivers-linux/drivers
+# internal version: $(M) is abs path of drivers-linux/drivers
 ccflags-y := -I$(M)/rdma/drv/ionic/uapi -I$(M)/eth/ionic -I$(M)/../common
+# upstream version
+# ccflags-y :=  -I $(srctree)/drivers/net/ethernet/pensando/ionic
+
+obj-$(CONFIG_INFINIBAND_IONIC_RDMA)	+= ionic_rdma.o
 
 ionic_rdma-y :=	\
 	ionic_ibdev.o ionic_queue.o ionic_sysfs.o \

@@ -39,7 +39,7 @@
 
 #include <linux/dma-mapping.h>
 
-#ifdef NOT_UPSTREAM
+#if defined(NOT_UPSTREAM) || defined(__FreeBSD__)
 #include "ionic_kcompat.h"
 #endif
 #include "ionic_queue.h"

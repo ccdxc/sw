@@ -37,8 +37,8 @@
 #include "ionic_txrx.h"
 
 void *
-get_netdev_ionic_handle(struct net_device *netdev, const char *api_version,
-    enum ionic_api_prsn prsn)
+ionic_get_handle_from_netdev(struct net_device *netdev,
+    const char *api_version, enum ionic_api_prsn prsn)
 {
 	struct ionic_lif *lif;
 
@@ -46,8 +46,10 @@ get_netdev_ionic_handle(struct net_device *netdev, const char *api_version,
 		return (NULL);
 
 	lif = ionic_netdev_lif(netdev);
+	if (!lif)
+		return (NULL);
 
-	if (!lif || lif->ionic->is_mgmt_nic)
+	if (lif->ionic->is_mgmt_nic)
 		return (NULL);
 
 	/* TODO: Rework if supporting more than one slave */
@@ -57,7 +59,7 @@ get_netdev_ionic_handle(struct net_device *netdev, const char *api_version,
 
 	return (lif);
 }
-EXPORT_SYMBOL_GPL(get_netdev_ionic_handle);
+EXPORT_SYMBOL_GPL(ionic_get_handle_from_netdev);
 
 bool
 ionic_api_stay_registered(void *handle)
@@ -168,7 +170,7 @@ ionic_api_get_intr(void *handle, int *irq)
 	};
 	int err;
 
-	if (!lif->neqs)
+	if (!lif->nrdma_eqs_avail)
 		return (-ENOSPC);
 
 	err = ionic_dev_intr_reserve(lif, &intr_obj);
@@ -181,7 +183,7 @@ ionic_api_get_intr(void *handle, int *irq)
 		return (err);
 	}
 
-	--lif->neqs;
+	lif->nrdma_eqs_avail--;
 
 	*irq = err;
 	return (intr_obj.index);
@@ -198,7 +200,7 @@ ionic_api_put_intr(void *handle, int intr)
 
 	ionic_dev_intr_unreserve(lif, &intr_obj);
 
-	++lif->neqs;
+	lif->nrdma_eqs_avail++;
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_intr);
 

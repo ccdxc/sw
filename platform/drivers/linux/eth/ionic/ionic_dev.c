@@ -653,7 +653,7 @@ static int ionic_request_eq_irq(struct ionic *ionic, struct ionic_eq *eq)
 				0, intr->name, eq);
 }
 
-int ionic_eq_alloc(struct ionic *ionic, int index)
+static int ionic_eq_alloc(struct ionic *ionic, int index)
 {
 	const int ring_bytes = sizeof(struct ionic_eq_comp) * IONIC_EQ_DEPTH;
 	struct ionic_eq *eq;
@@ -727,7 +727,7 @@ int ionic_eqs_alloc(struct ionic *ionic)
 	return 0;
 }
 
-void ionic_eq_free(struct ionic_eq *eq)
+static void ionic_eq_free(struct ionic_eq *eq)
 {
 	const int ring_bytes = sizeof(struct ionic_eq_comp) * IONIC_EQ_DEPTH;
 	struct ionic *ionic = eq->ionic;
@@ -761,7 +761,7 @@ void ionic_eqs_free(struct ionic *ionic)
 	ionic->neth_eqs = 0;
 }
 
-void ionic_eq_deinit(struct ionic_eq *eq)
+static void ionic_eq_deinit(struct ionic_eq *eq)
 {
 	struct ionic *ionic = eq->ionic;
 	union dev_cmd cmd = {
@@ -803,7 +803,7 @@ void ionic_eqs_deinit(struct ionic *ionic)
 	}
 }
 
-int ionic_eq_init(struct ionic_eq *eq)
+static int ionic_eq_init(struct ionic_eq *eq)
 {
 	struct ionic *ionic = eq->ionic;
 	union q_identity *q_ident;
