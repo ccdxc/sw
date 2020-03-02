@@ -275,6 +275,10 @@ def GetNaplesSysctl(intf):
     # iota passes interface name "ionic0". BSD sysctl wants "ionic.0".
     return intf[:-1] + '.' + intf[-1]
 
+def GetNaplesSysClassSysctl(intf):
+    # iota passes interface name "ionic0". Sys Class on BSD needs "ionic_0"
+    return intf[:-1] + '_' + intf[-1]
+
 def GetNaplesPci(node, intf):
     if api.GetNodeOs(node) != OS_TYPE_LINUX:
         return None

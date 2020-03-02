@@ -108,6 +108,7 @@ def Trigger(tc):
     iter_opt      = ' -n 10 '
     misc_opt      = ' -F --report_gbits '
     cm_opt        = ''
+    enable_dcqcn  = False
     transport_opt = ''
     size_opt      = ' -a '
     mtu_opt       = ' -m 4096 '
@@ -189,6 +190,10 @@ def Trigger(tc):
        tc.iterators.cmp_swp == 'yes':
        atomic_opt = ' -A CMP_AND_SWAP '
 
+    if hasattr(tc.iterators, 'enable_dcqcn') and \
+       tc.iterators.enable_dcqcn == 'yes':
+        enable_dcqcn = True
+
     if hasattr(tc.iterators, 'sq_drain') and \
        tc.iterators.sq_drain == 'yes':
        sq_drain_opt = ' --sq-drain '
@@ -258,6 +263,25 @@ def Trigger(tc):
                                    background = True)
         else:
             tc.tcpdump = False
+    if enable_dcqcn == True:
+        os = api.GetNodeOs(w1.node_name)
+        if os == host.OS_TYPE_BSD:
+            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="1"'
+            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="1"'
+        elif os == host.OS_TYPE_LINUX:
+            cmd1 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
+            cmd2 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
+
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd1,
+                               timeout=120)
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
+                               w2.workload_name,
+                               cmd2,
+                               timeout=120)
 
     #==============================================================
     # cmd for server
@@ -402,7 +426,24 @@ def Trigger(tc):
                                    w2.workload_name,
                                    "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn", timeout = 60)
 
-    # TODO add code for linux
+    #if dcqcn was enabled, disable it at the end of the test
+    if enable_dcqcn == True:
+        if os == host.OS_TYPE_BSD:
+            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="0"'
+            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="0"'
+        elif os == host.OS_TYPE_LINUX:
+            cmd1 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
+            cmd2 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd1,
+                               timeout=120)
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
+                               w2.workload_name,
+                               cmd2,
+                               timeout=120)
 
     #==============================================================
     # trigger the request

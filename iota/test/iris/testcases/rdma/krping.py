@@ -87,6 +87,7 @@ def Trigger(tc):
 
     # parse different options
     tc.ping = True
+    enable_dcqcn = False
     options = "port=9999,verbose,validate,"
     if getattr(tc.iterators, 'server_inv', None) == 'yes':
         options = options + "server_inv,"
@@ -119,6 +120,9 @@ def Trigger(tc):
         if getattr(tc.iterators, 'poll', None) == 'yes':
             options = options + "poll,"
 
+    if getattr(tc.iterators, 'enable_dcqcn', None) == 'yes':
+        enable_dcqcn = True
+
     if hasattr(tc.iterators, 'count'):
         count = tc.iterators.count
     else:
@@ -134,6 +138,25 @@ def Trigger(tc):
     else:
         options = options + "count={},".format(count)
         client_options = options
+
+    if enable_dcqcn == True:
+        os = api.GetNodeOs(w1.node_name)
+        if os == host.OS_TYPE_BSD:
+            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="1"'
+            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="1"'
+        elif os == host.OS_TYPE_LINUX:
+            cmd1 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
+            cmd2 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd1,
+                               timeout=120)
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
+                               w2.workload_name,
+                               cmd2,
+                               timeout=120)
 
     # If the client fails to connect or otherwise misbehaves, IOTA
     # can get stuck with a server waiting forever. This causes
@@ -186,6 +209,26 @@ def Trigger(tc):
             api.Trigger_AddHostCommand(req, n, "rmmod rdma_krping")
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload krping")
+
+    #if dcqcn was enabled, disable it at the end of the test
+    if enable_dcqcn == True:
+        os = api.GetNodeOs(w1.node_name)
+        if os == host.OS_TYPE_BSD:
+            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="0"'
+            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="0"'
+        elif os == host.OS_TYPE_LINUX:
+            cmd1 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
+            cmd2 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd1,
+                               timeout=120)
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
+                               w2.workload_name,
+                               cmd2,
+                               timeout=120)
 
     # trigger the request
     trig_resp = api.Trigger(req)

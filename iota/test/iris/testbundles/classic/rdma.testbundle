@@ -289,6 +289,7 @@ testcases:
         iterators :
             type    : nested
             pktsize : [23, 65535]
+            enable_dcqcn : ['yes']
 
     #=======================================
     # KRping
@@ -302,6 +303,7 @@ testcases:
             type    : nested
             server_inv: ['yes', 'no']
             local_dma_lkey: ['yes', 'no']
+            enable_dcqcn : ['yes']
 
     -   name    : KRping_Sweep
         testcase: testcases.rdma.krping
@@ -373,6 +375,97 @@ testcases:
             size    : [1024]
             txdepth : [512]
             count   : [10000]
+
+    #=======================================
+    # DCQCN
+    #=======================================
+    -   name    : Rc_SendBw_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [1024, 10000]
+            count    : [110000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_SendBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [65535]
+            count    : [110000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_WriteBw_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [1024, 10000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_write_bw']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_WriteBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [65535]
+            count    : [110000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_write_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_ReadBw_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [1024, 10000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_read_bw']
+        args    :
+            type: remote_only
+
+    -   name    : Rc_ReadBw_SQ_Drain
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            size     : [65535]
+            count    : [110000]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_read_bw']
+            sq_drain : ['yes']
+            async_event_stats : ['yes']
+        args    :
+            type: remote_only
 
     #=======================================
     # Teardown
