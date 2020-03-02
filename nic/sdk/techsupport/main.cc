@@ -144,5 +144,5 @@ main (int argc, char **argv)
     }
     techsupport::destroy(ts_inst);
 
-    return ret;
+    return 0;
 }

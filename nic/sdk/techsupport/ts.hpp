@@ -56,12 +56,15 @@ private:
     /// \brief destructor
     ~techsupport() {}
 
-    /// \brief run all tasks
-    /// \return 0 on success, error code on failure
-    int run_tasks_(void);
+    /// \brief add tasks for collecting logs/cores
+    void add_log_collection_tasks_(void);
 
     /// \brief bundle the files collected for techsupport
     void bundle_techsupport_(void);
+
+    /// \brief run all tasks
+    /// \return 0 on success, error code on failure
+    int run_tasks_(void);
 
     /// \brief run single task and redirect to fsink
     /// \return 0 on success, error code on failure
@@ -73,12 +76,27 @@ private:
     /// \brief process config & initialize techsupport instance
     void process_config_(void);
 
+    /// \brief sets up a working directory
+    void setup_working_dir_(void);
+
+    /// \brief creates a file sink for on-the-fly compression
+    void setup_fsink_(void);
+
+    /// \brief sets up the pre-requisites for techsupport collection
+    void setup_(void);
+
+    /// \brief cleans up the temporary artefacts
+    void teardown_(void);
+
 private:
     string cmd_file_;         ///< json file with list of tasks
     string dst_dir_;          ///< destination directory for techsupport
     string dst_file_;         ///< gzipped techsupport file
+    string work_dir_;         ///< working dir to copy out log files
     bool skip_core_;          ///< to skip core
     vector<string> tasks_;    ///< list of tasks
+    vector<string> core_dir_; ///< core locations
+    vector<string> log_dir_;  ///< log file locations
     gzFile fsink_;            ///< destination file sink
 
 };
