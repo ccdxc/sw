@@ -793,17 +793,17 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
                     ForwardMode_Name(spec->fwd_mode()), 
                     PolicyMode_Name(spec->policy_mode()));
 
+    // (Transparent, Basenet) => ...
     if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
                 hal::g_hal_state->policy_mode(), sys::POLICY_MODE_BASE_NET)) {
 
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
                     spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
-            /*
-             * Base-Net, Flow-Aware
-             * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
-             */
+             // 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
+
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
@@ -814,26 +814,26 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
              */
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
+
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
                     spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+            // Not supported yet.
             hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
                     spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
             /*
-             * Base-Net, Enforce
              * 1. Change l4 profile to disable policy_enf_cfg_en to not pull packets to FTE
              *    To prevent shared mgmt pkts from uplink or host to not come to FTE
              */
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, false);
             
-            /*
-             * Fwd Mode: Transparent -> Micro-Seg
-             */
             // 1. Cleanup config from nicmgr.
             hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_ENABLE);
 
@@ -851,9 +851,46 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
 
             // 6. vMotion Init
             ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
-        }
 
-        hal::g_hal_state->set_policy_mode(spec->policy_mode());
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+        }
+    }
+    
+    // (Transparent, Flowaware) => ...
+    if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                hal::g_hal_state->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+
+            // 1. Make host traffic management
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, false);
+
+            // 2. Cleanup config from nicmgr.
+            hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_ENABLE);
+
+            // 3. Remove host enics from mseg prom list
+            ret = enicif_update_host_prom(false);
+
+            // 4. Make FTE to drop packets.
+
+            // 5. Clear sessions
+            
+            // 6. Change mode
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+
+            // 7. Add host enics to mgmt prom list
+            ret = enicif_update_host_prom(true);
+
+            // 8. Install ACLs for micro seg mode.
+            ret = hal_acl_micro_seg_init();
+
+            // 9. vMotion Init
+            ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
+
+            // 10. Resume FTE to proces packets
+        }
     }
 
 #if 0
