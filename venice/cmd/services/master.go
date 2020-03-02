@@ -5,8 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/featureflags"
-
 	gogotypes "github.com/gogo/protobuf/types"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
@@ -26,8 +24,8 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
-	"github.com/pensando/sw/venice/utils/elastic/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -72,7 +70,6 @@ type masterService struct {
 	resolverSvc          types.ResolverService
 	resolverSvcObserver  *resolverServiceObserver
 	cfgWatcherSvc        types.CfgWatcherService
-	esCuratorSvc         curator.Interface
 	diagModuleSvc        module.Updater
 	isLeader             bool
 	enabled              bool
@@ -154,13 +151,6 @@ func WithK8sSvcMasterOption(k8sSvc types.K8sService) MasterOption {
 func WithResolverSvcMasterOption(resolverSvc types.ResolverService) MasterOption {
 	return func(m *masterService) {
 		m.resolverSvc = resolverSvc
-	}
-}
-
-// WithElasticCuratorSvcrOption to pass a specifc types.K8sService implementation
-func WithElasticCuratorSvcrOption(curSvc curator.Interface) MasterOption {
-	return func(m *masterService) {
-		m.esCuratorSvc = curSvc
 	}
 }
 
@@ -246,21 +236,6 @@ func NewMasterService(nodeID string, options ...MasterOption) types.MasterServic
 	if m.resolverSvc == nil {
 		m.resolverSvc = NewResolverService(m.k8sSvc)
 	}
-
-	/* FIXME: remove this once elastic-curator cron stabilizes.
-	// Initialize curator service
-	if m.esCuratorSvc == nil {
-		resolverClient, ok := env.ResolverClient.(resolver.Interface)
-		if !ok {
-			panic("Current implementation of curator service needs a resolver client")
-		}
-		var err error
-		if m.esCuratorSvc, err = curator.NewCurator(nil, resolverClient,
-			env.Logger.WithContext("submodule", "curator")); err != nil {
-			log.Errorf("Error starting curator service, err: %v", err)
-		}
-	}
-	*/
 
 	if m.diagModuleSvc == nil {
 		m.diagModuleSvc = module.GetUpdater(globals.Cmd, globals.APIServer, env.ResolverClient, env.Logger.WithContext("submodule", "diagnostics"))
@@ -410,30 +385,6 @@ func (m *masterService) startLeaderServices() error {
 		go auth.RunLeaderInstanceServer(":"+env.Options.GRPCLeaderInstancePort, m.leaderInstanceRPCStopChannel)
 	}
 
-	/* FIXME: remove this once elastic-curator cron stabilizes.
-	// Start elastic curator service
-	if m.esCuratorSvc != nil {
-		m.esCuratorSvc.Start()
-		m.esCuratorSvc.Scan(&curator.Config{
-			IndexName:       elastic.LogIndexPrefix,
-			RetentionPeriod: elastic.GetLogRetention(),
-			ScanInterval:    elastic.LogIndexScanInterval,
-		})
-
-		m.esCuratorSvc.Scan(&curator.Config{
-			IndexName:       elastic.EventsIndexPrefix,
-			RetentionPeriod: elastic.GetEventRetention(),
-			ScanInterval:    elastic.IndexScanInterval,
-		})
-
-		m.esCuratorSvc.Scan(&curator.Config{
-			IndexName:       elastic.AuditLogsIndexPrefix,
-			RetentionPeriod: elastic.GetAuditRetention(),
-			ScanInterval:    elastic.IndexScanInterval,
-		})
-	}
-	*/
-
 	go performQuorumDefrag(true)
 
 	if m.clusterHealthMonitor == nil {
@@ -454,11 +405,6 @@ func (m *masterService) Stop() {
 	m.stopLeaderServices()
 	m.k8sSvc.Stop()
 	m.resolverSvc.Stop()
-
-	/* FIXME: remove this once elastic-curator cron stabilizes.
-	// Stop elastic curator service
-	m.esCuratorSvc.Stop()
-	*/
 
 	close(m.updateCh)
 	<-m.closeCh

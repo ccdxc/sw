@@ -23,7 +23,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
-	"github.com/pensando/sw/venice/utils/elastic/curator"
 	mapper "github.com/pensando/sw/venice/utils/elastic/mapper"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -182,9 +181,6 @@ func (e *elasticsearchTestSuite) TestElastic(c *C) {
 			Assert(c, len(nodesInfo.Nodes) > 0, "failed to get nodes info")
 		}
 	}
-
-	// curator test events
-	testCurator(ctx, esClient, c)
 
 	// delete index template
 	if err := esClient.DeleteIndexTemplate(ctx, eventsTemplateName); err != nil {
@@ -488,51 +484,6 @@ func indexEventsBulk(ctx context.Context, client elastic.ESClient, c *C) {
 		fmt.Sprintf("requests failed - expected: %v, got: %v", 0, len(bulkResp.Failed())))
 
 	log.Infof("total time taken for bulk indexing: %v\n", time.Since(start))
-}
-
-// testCurator tests the index retention and cleanup functionality
-func testCurator(ctx context.Context, client elastic.ESClient, c *C) {
-
-	indices := []string{"test.index.aa.1", "test.index.aa.2"}
-	log.Infof("creating indices: %v", indices)
-
-	for _, index := range indices {
-		Assert(c, client.CreateIndex(ctx, index, "") == nil,
-			"Create index operation failed")
-	}
-	// create curator service
-	curatorSvc, err := curator.NewCurator(client, nil, log.GetNewLogger(logConfig))
-	Assert(c, err == nil, "Failed to create curator service")
-	defer curatorSvc.Stop()
-	curatorSvc.Start()
-
-	curatorSvc.Scan(&curator.Config{
-		IndexName:       "test.*.aa*",
-		RetentionPeriod: 15 * time.Second,
-		ScanInterval:    2 * time.Second,
-	})
-
-	// Verify older indices are deleted
-	AssertEventually(c,
-		func() (bool, interface{}) {
-			indices := []string{"test.*.aa*"}
-			var err error
-			var resp map[string]elastic.SettingsResponse
-			if resp, err = client.GetIndexSettings(ctx, indices); err != nil {
-				log.Errorf("Failed to get index settings, err: %v", err)
-				return false, err
-			}
-
-			// Verify there are no matching older indices found
-			if len(resp) != 0 {
-				log.Errorf("Indices not deleted yet, found old indices, resp: %+v", resp)
-				return false, err
-			}
-			return true, nil
-
-		}, "failed to get indices", "100ms", "90s")
-
-	log.Infof("Indices deletion verfied: %v", indices)
 }
 
 // indexEventsSequential indexs events in a sequential manner
