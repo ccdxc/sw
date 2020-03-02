@@ -194,11 +194,11 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	}
 
 	//Mounting does not work as we are not running agent on ESXi control VM
-	/*err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
+	err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
 
 	if err != nil {
 		vm.logger.Errorf("Mounting VM directory failed")
-	}*/
+	}
 
 	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)
@@ -415,11 +415,12 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 		return errors.Wrap(err, "Remote workload bring up failed")
 	}
 
-	err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
+	//Mounting does not work as we are not running agent on ESXi control VM
+	/*err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
 
 	if err != nil {
 		vm.logger.Errorf("Mounting VM directory failed")
-	}
+	}*/
 
 	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)
