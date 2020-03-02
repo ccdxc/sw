@@ -152,6 +152,7 @@ nic/build/$ARCH/$PIPELINE/lib/liblinkmgrdelphi.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblinkmgrdelphi.so                    /nic/lib/
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                  /nic/conf/fw/
+nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom                  /nic/conf/fw/
 
 # AAPL
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                       /nic/bin/

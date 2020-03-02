@@ -121,6 +121,7 @@ nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
+nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom               /nic/conf/fw/
 
 # python table debug cli specific
 nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin

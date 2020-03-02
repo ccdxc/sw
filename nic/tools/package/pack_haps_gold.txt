@@ -195,6 +195,7 @@ nic/tools/check_stats.sh                                            /nic/tools/
 nic/tools/speed_change.sh                                           /nic/tools/
 
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom                 /nic/conf/fw/
+nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom                 /nic/conf/fw/
 nic/e2etests/go/agent/configs/golden                                /nic/conf/
 
 # CLI
