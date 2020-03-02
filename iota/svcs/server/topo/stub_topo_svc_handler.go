@@ -160,3 +160,11 @@ func (ts *StubTopologyService) DoSwitchOperation(ctx context.Context, req *iota.
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }
+
+// DownloadAssets pulls assets
+func (ts *StubTopologyService) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
+
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
+}

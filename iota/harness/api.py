@@ -89,6 +89,12 @@ def GetTestbedUsername():
 def GetTestbedPassword():
     return store.GetTestbed().GetProvisionPassword()
 
+def GetTestbedEsxUsername():
+    return store.GetTestbed().GetProvisionEsxUsername()
+
+def GetTestbedEsxPassword():
+    return store.GetTestbed().GetProvisionEsxPassword()
+
 def CleanupTestbed(req):
     global gl_topo_svc_stub
     Logger.debug("Cleaning up Testbed:")
@@ -283,6 +289,9 @@ def GetNaplesMgmtIpAddresses():
 
 def GetNaplesMgmtIpAddress(node):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIP(node)
+
+def GetEsxHostIpAddress(node):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetEsxHostIpAddress(node)
 
 def GetWorkloadNodeMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesMgmtIpAddresses()
@@ -856,26 +865,51 @@ def CopyToHostTools(node_name, files):
         req.files.append(f)
     return EntityCopy(req)
 
-def CopyToNaples(node_name, files, dest_dir, via_oob=False):
+def CopyToNaples(node_name, files, host_dir, via_oob=False, naples_dir="", nic_mgmt_ip=None):
     # Assumption is that destination directory is always / and then user should move the file by executing a command.
     # Will change this function to perform that operation as consumer test case is only 1
     copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
-                             "%s_host" % node_name, files, dest_dir)
+                             "%s_host" % node_name, files, host_dir)
     if not copy_resp:
         return None
     if via_oob:
         mgmtip = GetNicMgmtIP(node_name)
     else:
-        mgmtip = GetNicIntMgmtIP(node_name)
+        mgmtip = GetNicIntMgmtIP(node_name) if nic_mgmt_ip is None else nic_mgmt_ip
+
     if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
         req = Trigger_CreateExecuteCommandsRequest()
         for f in files:
-            copy_cmd = "sshpass -p %s scp -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', mgmtip)
+            copy_cmd = "sshpass -p %s scp -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s %s@%s:/%s" % (
+                       "pen123", os.path.join(host_dir, os.path.basename(f)), 'root', mgmtip, naples_dir)
             Trigger_AddHostCommand(req, node_name, copy_cmd)
         tresp = Trigger(req)
         for cmd in tresp.commands:
             if cmd.exit_code != 0:
                 Logger.error("Copy to failed %s" % cmd.command)
+        return tresp
+
+    return copy_resp
+
+def CopyToEsx(node_name, files, host_dir, esx_dir="/tmp"):
+    # Assumption is that destination directory is always / and then user should move the file by executing a command.
+    # Will change this function to perform that operation as consumer test case is only 1
+    copy_resp = __CopyCommon(topo_svc.DIR_IN, node_name,
+                             "%s_host" % node_name, files, host_dir)
+    if not copy_resp:
+        return None
+
+    if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
+        req = Trigger_CreateExecuteCommandsRequest()
+        for f in files:
+            copy_cmd = "sshpass -p %s scp -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s %s@%s:/%s" % (
+                       GetTestbedEsxPassword(), os.path.join(host_dir, os.path.basename(f)), GetTestbedEsxUsername(), GetEsxHostIpAddress(node_name), esx_dir)
+            Trigger_AddHostCommand(req, node_name, copy_cmd)
+        tresp = Trigger(req)
+        for cmd in tresp.commands:
+            if cmd.exit_code != 0:
+                Logger.error("Copy to failed %s" % cmd.command)
+        return tresp
 
     return copy_resp
 
@@ -930,6 +964,29 @@ def AllocateTcpPort():
 def AllocateUdpPort():
     return resmgr.UdpPortAllocator.Alloc()
 
+# ================================
+# Asset Management APIs
+# ================================
+def DownloadAssets(asset_name, parent_dir, release_version):
+    """
+    API to download assets from minio.test.pensando.io
+    """
+    global gl_topo_svc_stub
+    Logger.debug("Downloading assets:")
+    req = topo_svc.DownloadAssetsMsg()
+    req.asset_name = asset_name
+    req.release_version = release_version
+    req.parent_dir = parent_dir
+    return __rpc(req, gl_topo_svc_stub.DownloadAssets)
+
+def ReInstallImage(req_json):
+    """
+    API to re-image testbed given version & artifact.
+    req json-str: "{ "FirmwareVersion" : "latest", "DriverVersion" : "latest" }"
+    """
+    # FIXME: Eventually, this will invoke gl_topo_svc_stub.InstallImage
+    # for now, piggy-backing on existing py-harness impl
+    return store.GetTestbed().ReImageTestbed(req_json)
 
 def RunSubTestCase(tc, sub_testcase, parallel=False):
     testcase = loader.Import(sub_testcase, tc.GetPackage())

@@ -1,0 +1,31 @@
+meta:
+    name    : driver-compat
+    os      : [ esx, linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1
+
+testcases:
+    -   name    : Driver-Compatibility
+        testcase: testcases.drivers.driver_compat
+        enable  : True
+        ignore  : True
+        args:
+            asset_name : 'released-naples-sw'
+            pktsize : 64
+            ipaf : ipv4
+        iterators :
+            type : nested
+            release : ['1.1.1-E-15']
+
+    -   name    : FW-Compatibility
+        testcase: testcases.drivers.fw_compat
+        enable  : False
+        ignore  : True
+        args:
+            asset_name : 'released-naples-sw'
+            pktsize : 64
+            ipaf : ipv4
+        iterators :
+            type : nested
+            release : ['1.1.1-E-15']
+

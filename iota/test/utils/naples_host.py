@@ -7,6 +7,7 @@ OS_TYPE_ESX   = "esx"
 
 LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
 FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
+EsxiDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
 
 # Get memory slab information in a given node
 def GetMemorySlabInNaples(node_name):
@@ -232,23 +233,27 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
         api.Logger.info("Undefined parameters in Unload Driver")
         return api.types.status.FAILURE
 
-    if os_type == OS_TYPE_LINUX:
-        command = "rmmod"
-    elif os_type == OS_TYPE_BSD:
-        command = "kldunload"
-    else:
-        api.Logger.info("Unknown os_type - %s" % os_type)
-        return api.types.status.FAILURE
+    if os_type != OS_TYPE_ESX:
+        if os_type == OS_TYPE_LINUX:
+            command = "rmmod"
+        elif os_type == OS_TYPE_BSD:
+            command = "kldunload"
 
-    if whichdriver == "eth":
-        api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
-    elif whichdriver == "rdma":
-        api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
-    elif whichdriver == "ionic_fw":
-        api.Trigger_AddHostCommand(req, node, "%s ionic_fw" % command)
-    else:
-        api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
-        api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
+        if whichdriver == "eth":
+            api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
+        elif whichdriver == "rdma":
+            api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
+        elif whichdriver == "ionic_fw":
+            api.Trigger_AddHostCommand(req, node, "%s ionic_fw" % command)
+        else:
+            api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
+            api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
+    elif os_type == OS_TYPE_ESX:
+        # Or could use 
+        # api.Trigger_AddHostCommand(req, node, "vmkload_mod -u ionic_en")
+        api.Trigger_AddHostCommand(req, node,
+            "sshpass -p %s ssh -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s@%s esxcli software vib remove -n=ionic-en -f" % 
+            (api.GetTestbedEsxPassword(), api.GetTestbedEsxUsername(), api.GetEsxHostIpAddress(node)))
 
     resp = api.Trigger(req)
     if resp is None:
@@ -268,6 +273,8 @@ def UnloadDriver (os_type, node, whichdriver = "all" ):
                     return api.types.status.FAILURE
                 else:
                     api.Logger.info("Driver was NOT loaded. %s is expected to fail" % command)
+            elif os_type == OS_TYPE_ESX: 
+                api.PrintCommandResults(cmd)
 
     return api.types.status.SUCCESS
 

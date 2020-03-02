@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import copy
 import os
+import json
 import pdb
 import socket
 import subprocess
@@ -75,9 +76,13 @@ def updateMultiNicInfo():
         store.SetPrimaryIntNicMgmtIp('169.254.0.1')
 
 class _Testbed:
+
+    SUPPORTED_OS = ["linux", "freebsd", "esx"]
+
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
+        self.image_manifest_file = os.path.join(GlobalOptions.topdir, "images", "latest.json")
         self.__node_ips = []
         self.__os = set()
         self.esx_ctrl_vm_ip = None
@@ -98,6 +103,12 @@ class _Testbed:
 
     def GetProvisionPassword(self):
         return self.__tbspec.Provision.Password
+
+    def GetProvisionEsxUsername(self):
+        return self.__tbspec.Provision.Vars.EsxUsername
+
+    def GetProvisionEsxPassword(self):
+        return self.__tbspec.Provision.Vars.EsxPassword
 
     def GetOs(self):
         return self.__os
@@ -283,11 +294,15 @@ class _Testbed:
         if resource is None: return "pensando-sim"
         return getattr(resource, "NICType", "pensando-sim")
 
-    def __recover_testbed(self):
+    def __recover_testbed(self, manifest_file, **kwargs):
         if GlobalOptions.dryrun or GlobalOptions.skip_setup:
             return
         proc_hdls = []
         logfiles = []
+        naples_host_only = kwargs.get('naples_host_only', False) 
+        firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
+        driver_reimage_only = kwargs.get('driver_reimage_only', False)
+
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
 
@@ -318,10 +333,14 @@ class _Testbed:
                     if mem_size is not None:
                         cmd.extend(["--naples-mem-size", mem_size])
 
+                if firmware_reimage_only: 
+                    cmd.extend(["--naples-only-setup"])
+
                 # XXX workaround: remove when host mgmt interface works for apulu
                 if GlobalOptions.pipeline in [ "apulu" ]:
                     cmd.extend(["--no-mgmt"])
 
+                cmd.extend(["--naples", "capri"])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
@@ -335,24 +354,10 @@ class _Testbed:
                         for port in getattr(nic, "Ports", []):
                             cmd.extend(["--mac-hint", port.MAC])
                             break
-                images = self.curr_ts.GetImages()
-                nap_img = getattr(images, 'naples', None)
-                if nap_img is None:
-                    Logger.error("Naples image not specified in testsuite")
-                    sys.exit(1)
-                cmd.extend(["--image", "%s/%s" % (GlobalOptions.topdir, nap_img)])
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
                     cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
-                cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
-                cmd.extend(["--gold-firmware-image", "%s/platform/goldfw/naples/naples_fw.tar" % (GlobalOptions.topdir)])
-                latest_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
-                old_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
-                cmd.extend(["--gold-firmware-latest-version", _get_driver_version(latest_gold_driver)])
-                cmd.extend(["--gold-drivers-latest-pkg", latest_gold_driver])
-                cmd.extend(["--gold-firmware-old-version", _get_driver_version(old_gold_driver)])
-                cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
-                if GlobalOptions.skip_driver_install: 
+                if GlobalOptions.skip_driver_install:
                     cmd.extend(["--skip-driver-install"]) 
                 if GlobalOptions.use_gold_firmware: 
                     cmd.extend(["--use-gold-firmware"]) 
@@ -360,6 +365,7 @@ class _Testbed:
                     cmd.extend(["--fast-upgrade"]) 
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
+                cmd.extend(["--image-manifest", manifest_file])
                 if getattr(instance.Resource, "ServerType", "server-a") == "hpe":
                     cmd.extend(["--server", "hpe"])
                 else:
@@ -379,7 +385,7 @@ class _Testbed:
                 if GlobalOptions.netagent: 
                     cmd.extend(["--auto-discover-on-install"]) 
             else:
-                if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm":
+                if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm" or naples_host_only:
                     continue
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
@@ -441,7 +447,6 @@ class _Testbed:
         updateMultiNicInfo()
         return
 
-
     def __init_testbed(self):
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
@@ -450,7 +455,7 @@ class _Testbed:
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         if not GlobalOptions.skip_setup:
             try:
-                self.__recover_testbed()
+                self.__recover_testbed(self.image_manifest_file)
             except:
                 Logger.error("Failed to recover testbed")
                 Logger.debug(traceback.format_exc())
@@ -488,6 +493,60 @@ class _Testbed:
         self.__instpool = copy.deepcopy(self.__tbspec.Instances)
 
 
+        return types.status.SUCCESS
+
+    def ReImageTestbed(self, req_json):
+        """
+        Build a new image-manifest file for initializing Naples and Driver
+        """
+        # Generate new image manifest file
+        Logger.info("Building new image-manifest {}".format(req_json))
+
+        reimg_req = parser.ParseJsonStream(req_json)
+
+        with open(self.image_manifest_file, "r") as fh:
+            new_img_manifest = json.loads(fh.read())
+        manifest_file = self.image_manifest_file
+        self.__fw_upgrade_done = False
+        reimage_driver = False
+        reimage_firmware = False
+        # pick the non-latest versions
+        if reimg_req.DriverVersion != "latest":
+            # driver image to be changed
+            new_img_manifest["Drivers"] = None
+            dr_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+                                                "images", reimg_req.DriverVersion + ".json")
+            with open(dr_img_manifest_file, "r") as fh:
+                dr_img_manifest = json.loads(fh.read())
+            new_img_manifest["Drivers"] = dr_img_manifest["Drivers"]
+            reimage_driver = True
+
+        if reimg_req.FirmwareVersion != "latest":
+            # Firmware image to be changed
+            new_img_manifest["Firmwares"] = None
+            fw_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+                                                "images", reimg_req.FirmwareVersion + ".json")
+            with open(fw_img_manifest_file, "r") as fh:
+                fw_img_manifest = json.loads(fh.read())
+            new_img_manifest["Firmwares"] = fw_img_manifest["Firmwares"]
+            reimage_firmware = True
+
+        if reimage_driver or reimage_firmware:
+            new_img_manifest["Version"] = "NA" # TODO
+
+            # Create {GlobalOptions.topdir}/images if not exists
+            folder = os.path.join(GlobalOptions.topdir, "images")
+            if not os.path.isdir(folder):
+                os.mkdir(folder)
+            manifest_file = os.path.join(folder, reimg_req.TestCaseName + ".json")
+            with open(manifest_file, "w") as fh:
+                fh.write(json.dumps(new_img_manifest, indent=2))
+
+        # Call API to reimage testbed : restrict for naples nodes only
+        self.__recover_testbed(manifest_file, 
+                               driver_reimage_only=reimage_driver and not reimage_firmware, 
+                               firmware_reimage_only=reimage_firmware and not reimage_driver, 
+                               naples_host_only=True)
         return types.status.SUCCESS
 
     def InitForTestsuite(self, ts=None):

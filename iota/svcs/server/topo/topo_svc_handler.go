@@ -30,6 +30,7 @@ type TopologyService struct {
 	Workloads        map[string]*iota.Workload // list of workloads
 	ProvisionedNodes map[string]testbed.TestNodeInterface
 	downloadedImages bool
+	downloadedAssets bool
 }
 
 type testBedInfo struct {
@@ -37,6 +38,21 @@ type testBedInfo struct {
 	allocatedVlans []uint32
 	id             uint32
 	switches       []*iota.DataSwitch
+}
+
+type FirmwareInfo struct {
+        FwImage                         string  `json:"image"`
+        GoldFirmwareImage               string  `json:"gold_fw_img"`
+        GoldFirmwareLatestVersion       string  `json:"gold_fw_latest_ver"`
+        GoldFirmwareOldVersion          string  `json:"gold_fw_old_ver"`
+}
+
+type DriverInfo struct {
+        OS                      string          `json:"OS"`
+        DriversPackage          string          `json:"drivers_pkg"`
+        GoldDriverLatestPackage string          `json:"gold_drv_latest_pkg"`
+        GoldDriverOldPackage    string          `json:"gold_drv_old_pkg"`
+        FileType                string          `json:"pkg_file_type"`
 }
 
 // NewTopologyServiceHandler Topo service handle
@@ -125,7 +141,12 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
 				cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
 				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
-				cmd += fmt.Sprintf(" --image %s/nic/%s", wsdir, filepath.Base(req.NaplesImage))
+                                // naples_type should come from topology or testbed
+                                if filepath.Base(req.NaplesImage) == "naples_fw.tar" {
+                                    cmd += fmt.Sprintf(" --naples capri")
+                                } else {
+                                    cmd += fmt.Sprintf(" --naples equinix")
+                                }
 				cmd += fmt.Sprintf(" --mode hostpin")
 				if node.MgmtIntf != "" {
 					cmd += fmt.Sprintf(" --mgmt-intf %v", node.MgmtIntf)
@@ -133,21 +154,11 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				if node.ServerType != "" {
 					cmd += fmt.Sprintf("  --server %v", node.ServerType)
 				}
-				cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, nodeOs)
-				cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
 				cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)
 				cmd += fmt.Sprintf(" --os %s", nodeOs)
 
-				latestGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
-				oldGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
-				realPath, _ := filepath.EvalSymlinks(latestGoldDriver)
-				latestGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-				realPath, _ = filepath.EvalSymlinks(oldGoldDriver)
-				oldGoldDriverVer := filepath.Base(filepath.Dir(realPath))
-				cmd += fmt.Sprintf(" --gold-firmware-latest-version %s", latestGoldDriverVer)
-				cmd += fmt.Sprintf(" --gold-drivers-latest-pkg %s", latestGoldDriver)
-				cmd += fmt.Sprintf(" --gold-firmware-old-version %s", oldGoldDriverVer)
-				cmd += fmt.Sprintf(" --gold-drivers-old-pkg %s", oldGoldDriver)
+				cmd += fmt.Sprintf(" --wsdir %s", wsdir)
+				cmd += fmt.Sprintf(" --image-manifest %s/images/latest.json", wsdir)
 
 				if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 					cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
@@ -1277,4 +1288,57 @@ func (ts *TopologyService) MoveWorkloads(ctx context.Context, req *iota.Workload
 	}
 
 	return node.MoveWorkloads(ctx, req)
+}
+
+// DownlaodAssets pulls assets
+func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
+    defer log.Infof("TOPO SVC | DEBUG | DownloadAssets Returned: %v", req)
+
+    if ts.downloadedAssets {
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+            return req, nil
+    }
+
+    // TODO: Explore integrating with asset-build. For now invoke the cmd to asset-pull
+    mkdir := []string{"mkdir", "-p", req.ParentDir}
+    if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
+            log.Errorf("TOPO SVC | DownloadAssets | Failed to create repo-folder: %v (%v, %v)",
+                    req.ParentDir, err.Error(), string(stdout))
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create repo folder")
+            return req, nil
+    }
+
+    cwd, _ := os.Getwd()
+    os.Chdir(req.ParentDir)
+    defer os.Chdir(cwd)
+
+    destFile := req.ReleaseVersion + ".tgz"
+
+    gopath := os.Getenv("GOPATH")
+    asset_pull_bin := gopath + "/src/github.com/pensando/sw/iota/bin/asset-pull"
+
+    pullAsset := []string{asset_pull_bin, req.AssetName, req.ReleaseVersion, destFile}
+    if stdout, err := exec.Command(pullAsset[0], pullAsset[1:]...).CombinedOutput(); err != nil {
+            log.Errorf("TOPO SVC | DownloadAssets | Failed to download asset: %v %v (%v %v)",
+                    req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("asset-pull failed")
+            return req, nil
+    }
+
+    tarCmd := []string{"tar", "-zxvf", destFile}
+    if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
+            log.Errorf("TOPO SVC | DownloadAssets | Failed to extract asset: %v %v (%v %v)",
+                    req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to untar downloaded asset")
+            return req, nil
+    }
+
+    ts.downloadedAssets = true
+
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
 }

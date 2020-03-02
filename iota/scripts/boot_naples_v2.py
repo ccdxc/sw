@@ -46,6 +46,11 @@ parser.add_argument('--os', dest='os', required = True,
 parser.add_argument('--server', dest='server', default='ucs',
                     choices=["ucs", "hpe"],
                     help='Node Server type')
+parser.add_argument('--naples', dest='naples_type', required = True,
+                    default="", help='Naples type : capri/equinix')
+
+parser.add_argument('--wsdir', dest='wsdir', default='/sw',
+                    help='Workspace folder')
 
 # Optional parameters
 parser.add_argument('--mac-hint', dest='mac_hint',
@@ -60,24 +65,12 @@ parser.add_argument('--password', dest='password',
                     default="pen123", help='Naples Password.')
 parser.add_argument('--timeout', dest='timeout',
                     default=180, help='Naples Password.')
-parser.add_argument('--image', dest='image',
-                    default=None, help='Naples Image.')
-parser.add_argument('--drivers-pkg', dest='drivers_pkg',
-                    default=None, help='Driver Package.')
-parser.add_argument('--gold-firmware-image', dest='gold_fw_img',
-                    default=None, help='Gold Firmware Image.')
-parser.add_argument('--gold-firmware-latest-version', dest='gold_fw_latest_ver',
-                    default=None, help='Gold Firmware latest version.')
-parser.add_argument('--gold-firmware-old-version', dest='gold_fw_old_ver',
-                    default=None, help='Gold Firmware old version.')
-parser.add_argument('--gold-drivers-latest-pkg', dest='gold_drv_latest_pkg',
-                    default=None, help='Gold Drivers latest package.')
-parser.add_argument('--gold-drivers-old-pkg', dest='gold_drv_old_pkg',
-                    default=None, help='Gold Drivers old package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
                     default="docker", help='Host Password.')
+parser.add_argument('--image-manifest', dest='image_manifest',
+                    default='/sw/images/latest.json', help='Image manifest file')
 parser.add_argument('--mode', dest='mode', default='hostpin',
                     choices=["classic", "hostpin", "bitw", "hostpin_dvs"],
                     help='Naples mode - hostpin / classic.')
@@ -120,11 +113,13 @@ GlobalOptions.console_port = int(GlobalOptions.console_port)
 GlobalOptions.timeout = int(GlobalOptions.timeout)
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
 ws_top = os.path.abspath(ws_top)
+sys.path.insert(0, ws_top)
+import iota.harness.infra.utils.parser as jparser
 
-if GlobalOptions.image is None:
-    GlobalOptions.image = "%s/nic/naples_fw.tar" % ws_top
-if GlobalOptions.drivers_pkg is None:
-    GlobalOptions.drivers_pkg = "%s/platform/gen/drivers-%s.tar.xz" % (ws_top, GlobalOptions.os)
+# if GlobalOptions.image is None:
+#     GlobalOptions.image = "%s/nic/naples_fw.tar" % ws_top
+# if GlobalOptions.drivers_pkg is None:
+#     GlobalOptions.drivers_pkg = "%s/platform/gen/drivers-%s.tar.xz" % (ws_top, GlobalOptions.os)
 
 ROOT_EXP_PROMPT="~#"
 if GlobalOptions.os == 'freebsd':
@@ -271,13 +266,15 @@ class FlushFile(object):
 sys.stdout = FlushFile(sys.stdout)
 
 class EntityManagement:
-    def __init__(self, ipaddr = None, username = None, password = None):
+    def __init__(self, ipaddr = None, username = None, password = None, fw_images = None, driver_images = None):
         self.ipaddr = ipaddr
         self.mac_addr = None
         self.host = None
         self.hdl = None
         self.username = username
         self.password = password
+        self.fw_images = fw_images
+        self.driver_images = driver_images
         self.SSHPassInit()
         return
 
@@ -461,8 +458,8 @@ class EntityManagement:
         return self.RunSshCmd(full_command, ignore_failure)
 
 class NaplesManagement(EntityManagement):
-    def __init__(self, username = None, password = None):
-        super().__init__(ipaddr = None, username = username, password = password)
+    def __init__(self, username = None, password = None, fw_images = None, driver_images = None):
+        super().__init__(ipaddr = None, username = username, password = password, fw_images = fw_images, driver_images = driver_images)
         return
 
     def SetHost(self, host):
@@ -555,11 +552,11 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
         if copy_fw:
-            self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
+            self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.image), entity_dir = NAPLES_TMP_DIR)
         self.InstallPrep()
         self.SendlineExpect("", "#", trySync=True)
         self.SendlineExpect("", "#", trySync=True)
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image),
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(self.fw_images.image),
                             "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#", trySync=True)
         self.SyncLine()
@@ -568,8 +565,8 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
-        self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img),
+        self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.gold_fw_img), entity_dir = NAPLES_TMP_DIR)
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(self.fw_images.gold_fw_img),
                             "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
 
@@ -670,12 +667,12 @@ class NaplesManagement(EntityManagement):
         global gold_fw_latest
         gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
         try:
-            self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_latest_ver + '\r\n' + '#')
+            self.SendlineExpect(gold_fw_cmd, self.fw_images.gold_fw_latest_ver + '\r\n' + '#')
             gold_fw_latest = True
             print ("Matched gold fw latest")
         except:
             try:
-                self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_old_ver)
+                self.SendlineExpect(gold_fw_cmd, self.fw_images.gold_fw_old_ver)
                 gold_fw_latest = False
                 print ("Matched gold fw older")
             except:
@@ -784,8 +781,8 @@ class NaplesManagement(EntityManagement):
         return
 
 class HostManagement(EntityManagement):
-    def __init__(self, ipaddr, server):
-        super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password)
+    def __init__(self, ipaddr, server, fw_images, driver_images):
+        super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password, fw_images, driver_images)
         self.naples = None
         self.server = server
 
@@ -824,7 +821,7 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN("scripts/pen_nics.py",  HOST_NAPLES_DIR)
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
-            self.CopyIN(driver_pkg, HOST_NAPLES_DIR)
+            self.CopyIN(os.path.join(GlobalOptions.wsdir, driver_pkg), HOST_NAPLES_DIR)
 
             nodeinit_args = ""
             #Run with not mgmt first
@@ -889,17 +886,17 @@ class HostManagement(EntityManagement):
         self.InstallPrep()
 
         if copy_fw:
-            self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = NAPLES_TMP_DIR)
+            self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.image), entity_dir = HOST_NAPLES_DIR, naples_dir = NAPLES_TMP_DIR)
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /%s/%s"%(NAPLES_TMP_DIR, os.path.basename(GlobalOptions.image)))
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /%s/%s"%(NAPLES_TMP_DIR, os.path.basename(self.fw_images.image)))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "Gold FW install Failed")
     def InstallGoldFirmware(self):
-        self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
+        self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.gold_fw_img), entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(self.fw_images.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
 
     def InitForUpgrade(self):
@@ -932,8 +929,8 @@ class HostManagement(EntityManagement):
 
 
 class EsxHostManagement(HostManagement):
-    def __init__(self, ipaddr, server):
-        HostManagement.__init__(self, ipaddr, server)
+    def __init__(self, ipaddr, server, fw_images, driver_images):
+        HostManagement.__init__(self, ipaddr, server, fw_images, driver_images)
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_COPY_FAILED, "ESX ctrl vm copy failed")
     def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
@@ -1036,7 +1033,7 @@ class EsxHostManagement(HostManagement):
         self.RunSshCmd("rm -rf %s" % HOST_NAPLES_DIR)
         self.RunSshCmd("mkdir -p %s" % HOST_NAPLES_DIR)
 
-        self.CopyIN(pkg, HOST_NAPLES_DIR)
+        self.CopyIN(os.path.join(GlobalOptions.wsdir, pkg), HOST_NAPLES_DIR)
         assert(self.RunSshCmd("cd %s && tar xf %s" %\
                  (HOST_NAPLES_DIR, os.path.basename(pkg))) == 0)
         install_success = False
@@ -1072,31 +1069,31 @@ class EsxHostManagement(HostManagement):
         self.InstallPrep()
 
         #Ctrl VM reboot might have removed the image
-        self.ctrl_vm_copyin(GlobalOptions.image,
+        self.ctrl_vm_copyin(os.path.join(GlobalOptions.wsdir, self.fw_images.image),
                     entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
                     naples_dir = "/data")
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(GlobalOptions.image))
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(self.fw_images.image))
 
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
-        self.ctrl_vm_copyin(GlobalOptions.gold_fw_img,
+        self.ctrl_vm_copyin(os.path.join(GlobalOptions.wsdir, self.fw_images.gold_fw_img),
                     entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
                     naples_dir = "/data")
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(self.fw_images.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self):
-        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
+        gold_pkg = self.driver_images.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else self.driver_images.gold_drv_old_pkg
         self.__install_drivers(gold_pkg)
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_REBOOT_FAILED, "Init for reboot failed")
     def InitForReboot(self):
-        self.__install_drivers(GlobalOptions.drivers_pkg)
+        self.__install_drivers(self.driver_images.drivers_pkg)
 
 
     def UnloadDriver(self):
@@ -1134,232 +1131,275 @@ class EsxHostManagement(HostManagement):
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
-def AtExitCleanup():
-    global naples
-    try: naples.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
-    except: print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
-    naples.Close()
 
+class PenOrchestrator:
 
-def NaplesOnlySetup():
+    def __init__(self):
+        self.naples = None
+        self.host = None
+        self.image_manifest = None
+        self.driver_images = None
+        self.fw_images = None
 
-    global naples
-    naples = NaplesManagement(username='root', password='pen123')
+        self.__load_image_manifest()
 
-    global host
-    host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server)
-    naples.SetHost(host)
+    def __load_image_manifest(self):
+        """
+            Following parameters/args will be derived from input image manifest json
+            parser.add_argument('--image', dest='image',
+                                default=None, help='Naples Image.')
+            parser.add_argument('--drivers-pkg', dest='drivers_pkg',
+                                default=None, help='Driver Package.')
+            parser.add_argument('--gold-firmware-image', dest='gold_fw_img',
+                                default=None, help='Gold Firmware Image.')
+            parser.add_argument('--gold-firmware-latest-version', dest='gold_fw_latest_ver',
+                                default=None, help='Gold Firmware latest version.')
+            parser.add_argument('--gold-firmware-old-version', dest='gold_fw_old_ver',
+                                default=None, help='Gold Firmware old version.')
+            parser.add_argument('--gold-drivers-latest-pkg', dest='gold_drv_latest_pkg',
+                                default=None, help='Gold Drivers latest package.')
+            parser.add_argument('--gold-drivers-old-pkg', dest='gold_drv_old_pkg',
+                                default=None, help='Gold Drivers old package.')
+        """
+        self.image_manifest = jparser.JsonParse(GlobalOptions.image_manifest)
+        self.driver_images = list(filter(lambda x: x.OS == GlobalOptions.os, self.image_manifest.Drivers))[0]
+        self.fw_images = list(filter(lambda x: x.naples_type == GlobalOptions.naples_type, self.image_manifest.Firmwares))[0]
+        if self.driver_images is None or self.fw_images is None:
+            sys.stderr.write("Unable to load image manifest")
+            sys.exit(1)
 
-    def doNaplesReboot():
-        naples.Connect()
+    def AtExitCleanup(self):
+        if not self.naples:
+            return
+        try: 
+            self.naples.Connect() # Make sure it is connected
+            self.naples.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
+            self.naples.Close()
+        except: 
+            print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
 
-        naples.Reboot()
+    def __doNaplesReboot(self):
+        self.naples.Connect()
 
-        #Naples would have rebooted to, login again.
-        naples.Connect()
+        self.naples.Reboot()
+
+        # Naples would have rebooted to, login again.
+        self.naples.Connect()
 
         if GlobalOptions.mem_size:
-            naples.CheckMemorySize(GlobalOptions.mem_size)
+            self.naples.CheckMemorySize(GlobalOptions.mem_size)
 
+    def NaplesOnlySetup(self):
 
-    if GlobalOptions.only_init == True:
-        return
+        self.naples = NaplesManagement(username='root', password='pen123', fw_images = self.fw_images, driver_images = self.driver_images)
 
-    if GlobalOptions.only_mode_change == True:
-        # Case 3: Only INIT option.
-        doNaplesReboot()
-        return
+        if GlobalOptions.os == 'esx':
+            self.host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
+        else:
+            self.host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
 
+        self.naples.SetHost(self.host)
+        self.host.SetNaples(self.naples)
 
-    #First do a reset as naples may be in screwed up state.
-    try:
-        naples.Connect()
-        if not host.IsSSHUP():
-            raise Exception("Host not up.")
-    except:
-        #Do Reset only if we can't connect to naples.
-        IpmiReset()
-        time.sleep(10)
-        naples.Connect()
-        naples.InitForUpgrade(goldfw = True)
-        #Do a reset again as old fw might lock up host boot
-        IpmiReset()
-        host.WaitForSsh()
+        if GlobalOptions.only_init == True:
+            return
 
-    host.SetNaples(naples)
+        if GlobalOptions.only_mode_change == True:
+            # Case 3: Only INIT option.
+            self.__doNaplesReboot()
+            return
 
-    # Connect to Naples console.
-    naples.Connect()
-
-    if GlobalOptions.mem_size:
-        naples.CheckMemorySize(GlobalOptions.mem_size)
-
-    #Read Naples Gold FW version.
-    naples.ReadGoldFwVersion()
-
-    # Case 1: Main firmware upgrade.
-    naples.InitForUpgrade(goldfw = True)
-    #OOb is present and up install right away,
-    naples.RebootGoldFw()
-    naples.InstallMainFirmware()
-    if not IsNaplesGoldFWLatest():
-        naples.InstallGoldFirmware()
-
-    doNaplesReboot()
-
-
-# This function is used for 3 cases.
-# 1) Full firmware upgrade
-# 2) Change mode from Classic <--> Hostpin
-# 3) Only initialize the node and start tests.
-
-def Main():
-    global naples
-    naples = NaplesManagement(username='root', password='pen123')
-
-    global host
-    if GlobalOptions.os == 'esx':
-        host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server)
-    else:
-        host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server)
-
-    if GlobalOptions.only_mode_change:
-        # Case 2: Only change mode, reboot and install drivers
-        #naples.InitForUpgrade(goldfw = False)
-        host.Reboot()
-        host.WaitForSsh()
-        return
-    host.SetNaples(naples)
-    naples.SetHost(host)
-
-    # Reset the setup:
-    # If the previous run left it in bad state, we may not get ssh or console.
-    if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
         #First do a reset as naples may be in screwed up state.
         try:
-            naples.Connect(force_connect=False)
-            #Read Naples Gold FW version if system in good state.
-            #If not able to read then we will reset
-            naples.ReadGoldFwVersion()
-            host.WaitForSsh()
-            #need to unload driver as host might crash in ESX case.
-            #unloading of driver should not fail, else reset to goldfw
-            host.UnloadDriver()
-
-            #If Interal IP read fails, force switch
-            naples.ReadInternalIP()
-            #Read External IP to try oob path first
-            naples.ReadExternalIP()
+            self.naples.Connect()
+            if not self.host.IsSSHUP():
+                raise Exception("Host not up.")
         except:
-            #Do force reset to switch to gold fw
-            naples.ForceSwitchToGoldFW()
-            try:
-                #Try to do a clean up db files and conf files
-                naples.InitForUpgrade()
-            except:
-                pass
-            host.WaitForSsh()
-            host.UnloadDriver()
-    else:
-            naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
-            host.WaitForSsh()
+            #Do Reset only if we can't connect to naples.
+            IpmiReset()
+            time.sleep(10)
+            self.naples.Connect()
+            self.naples.InitForUpgrade(goldfw = True)
+            #Do a reset again as old fw might lock up host boot
+            IpmiReset()
+            self.host.WaitForSsh()
 
-    if GlobalOptions.only_init == True:
-        # Case 3: Only INIT option.
-        host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
-        return
+        self.host.SetNaples(self.naples)
 
-    naples.ReadGoldFwVersion()
-    fwType = naples.ReadRunningFirmwareType()
+        # Connect to Naples console.
+        self.naples.Connect()
 
-    # Case 1: Main firmware upgrade.
-    #naples.InitForUpgrade(goldfw = True)
-    if naples.IsSSHUP():
+        if GlobalOptions.mem_size:
+            self.naples.CheckMemorySize(GlobalOptions.mem_size)
+
+        #Read Naples Gold FW version.
+        self.naples.ReadGoldFwVersion()
+
+        # Case 1: Main firmware upgrade.
+        self.naples.InitForUpgrade(goldfw = True)
         #OOb is present and up install right away,
-        if fwType != FIRMWARE_TYPE_GOLD:
-            naples.RebootGoldFw()
-        if GlobalOptions.fast_upgrade:
-            print("installing and running tests with firmware {0} without checking goldfw".format(GlobalOptions.image))
-            try:
-                naples.InstallMainFirmware()
-            except:
-                print("failed to upgrade main firmware only. error was:")
-                print(traceback.format_exc())
-                print("attempting gold + main firmware update")
-                __fullUpdate()
-        else:
-            __fullUpdate()
-        naples.Reboot()
-    else:
-        naples.ReadInternalIP()
-        if fwType != FIRMWARE_TYPE_GOLD:
-            naples.InitForUpgrade(goldfw = True)
-            host.InitForUpgrade()
-            if GlobalOptions.no_mgmt:
-                #If non mgmt, do ipmi reset to make sure we reboot
-                naples.IpmiResetAndWait()
-            else:
-                host.Reboot()
-        naples.Close()
-        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
-        host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
-        if GlobalOptions.use_gold_firmware:
-            if fwType != FIRMWARE_TYPE_GOLD:
-                naples.InstallGoldFirmware()
-            else:
-                print('firmware already gold, skipping gold firmware installation')
-        else:
-            host.InstallMainFirmware()
-            #Install gold fw if required.
-            if not IsNaplesGoldFWLatest():
-                host.InstallGoldFirmware()
-
-    #Script that might have to run just before reboot
-    # ESX would require drivers to be installed here to avoid
-    # onr more reboot
-    host.InitForReboot()
-    #Reboot is common for both mode change and upgrade
-    # Reboot host again, this will reboot naples also
-    host.Reboot()
-
-    #Naples would have rebooted to, login again.
-    time.sleep(60)
-    naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
-
-    # Common to Case 2 and Case 1.
-    # Initialize the Node, this is needed in all cases.
-    host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
-
-    #if naples.IsSSHUP():
-        # Connect to serial console too
-        #naples.Connect()
-        #naples.InstallMainFirmware()
-    #else:
-        # Update MainFwB also to same image - TEMP CHANGE
-        # host.InstallMainFirmware(mount_data = False, copy_fw = False)
-
-def __fullUpdate():
-    fwType = naples.ReadRunningFirmwareType()
-    if fwType != FIRMWARE_TYPE_GOLD:
-        naples.RebootGoldFw()
-    if GlobalOptions.use_gold_firmware:
-        print("installing and running tests with gold firmware {0}".format(GlobalOptions.gold_fw_img))
-        naples.InstallGoldFirmware()
-    else:
-        print("installing and running tests with firmware {0}".format(GlobalOptions.image))
-        naples.InstallMainFirmware()
+        self.naples.RebootGoldFw()
+        self.naples.InstallMainFirmware()
         if not IsNaplesGoldFWLatest():
-            naples.InstallGoldFirmware()
+            self.naples.InstallGoldFirmware()
+
+        self.__doNaplesReboot()
+
+
+    # This function is used for 3 cases.
+    # 1) Full firmware upgrade
+    # 2) Change mode from Classic <--> Hostpin
+    # 3) Only initialize the node and start tests.
+
+    def Main(self):
+        self.naples = NaplesManagement(username='root', password='pen123', fw_images = self.fw_images, driver_images = self.driver_images)
+
+        if GlobalOptions.os == 'esx':
+            self.host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
+        else:
+            self.host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
+
+        self.host.SetNaples(self.naples)
+        self.naples.SetHost(self.host)
+
+        if GlobalOptions.only_mode_change:
+            # Case 2: Only change mode, reboot and install drivers
+            #naples.InitForUpgrade(goldfw = False)
+            self.host.Reboot()
+            self.host.WaitForSsh()
+            return
+
+        # Reset the setup:
+        # If the previous run left it in bad state, we may not get ssh or console.
+        if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
+            #First do a reset as naples may be in screwed up state.
+            try:
+                self.naples.Connect()
+                self.naples.Connect(force_connect=False)
+                #Read Naples Gold FW version if system in good state.
+                #If not able to read then we will reset
+                self.naples.ReadGoldFwVersion()
+                self.host.WaitForSsh()
+                #need to unload driver as host might crash in ESX case.
+                #unloading of driver should not fail, else reset to goldfw
+                self.host.UnloadDriver()
+
+                #If Interal IP read fails, force switch
+                self.naples.ReadInternalIP()
+                #Read External IP to try oob path first
+                self.naples.ReadExternalIP()
+            except:
+                #Do force reset to switch to gold fw
+                self.naples.ForceSwitchToGoldFW()
+                try:
+                    #Try to do a clean up db files and conf files
+                    self.naples.InitForUpgrade()
+                except:
+                    pass
+                self.host.WaitForSsh()
+                self.host.UnloadDriver()
+        else:
+            self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
+            self.host.WaitForSsh()
+
+        if GlobalOptions.only_init == True:
+            # Case 3: Only INIT option.
+            self.host.Init(driver_pkg = self.driver_images.drivers_pkg, cleanup = True)
+            return
+
+        self.naples.ReadGoldFwVersion()
+        fwType = self.naples.ReadRunningFirmwareType()
+
+        # Case 1: Main firmware upgrade.
+        #naples.InitForUpgrade(goldfw = True)
+        if self.naples.IsSSHUP():
+            #OOb is present and up install right away,
+            if fwType != FIRMWARE_TYPE_GOLD:
+                self.naples.RebootGoldFw()
+            if GlobalOptions.fast_upgrade:
+                print("installing and running tests with firmware {0} without checking goldfw".format(self.fw_images.image))
+                try:
+                    self.naples.InstallMainFirmware()
+                except:
+                    print("failed to upgrade main firmware only. error was:")
+                    print(traceback.format_exc())
+                    print("attempting gold + main firmware update")
+                    self.__fullUpdate()
+            else:
+                self.__fullUpdate()
+            self.naples.Reboot()
+        else:
+            self.naples.ReadInternalIP()
+            if fwType != FIRMWARE_TYPE_GOLD:
+                self.naples.InitForUpgrade(goldfw = True)
+                self.host.InitForUpgrade()
+                if GlobalOptions.no_mgmt:
+                    #If non mgmt, do ipmi reset to make sure we reboot
+                    self.naples.IpmiResetAndWait()
+                else:
+                    self.host.Reboot()
+            self.naples.Close()
+            gold_pkg = self.driver_images.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else self.driver_images.gold_drv_old_pkg
+            self.host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
+            if GlobalOptions.use_gold_firmware:
+                if fwType != FIRMWARE_TYPE_GOLD:
+                    self.naples.InstallGoldFirmware()
+                else:
+                    print('firmware already gold, skipping gold firmware installation')
+            else:
+                self.host.InstallMainFirmware()
+                #Install gold fw if required.
+                if not IsNaplesGoldFWLatest():
+                    self.host.InstallGoldFirmware()
+
+        #Script that might have to run just before reboot
+        # ESX would require drivers to be installed here to avoid
+        # onr more reboot
+        self.host.InitForReboot()
+        #Reboot is common for both mode change and upgrade
+        # Reboot host again, this will reboot naples also
+        self.host.Reboot()
+
+        #Naples would have rebooted to, login again.
+        time.sleep(60)
+        self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
+
+        # Common to Case 2 and Case 1.
+        # Initialize the Node, this is needed in all cases.
+        self.host.Init(driver_pkg = self.driver_images.drivers_pkg, cleanup = False)
+
+        #if naples.IsSSHUP():
+            # Connect to serial console too
+            #naples.Connect()
+            #naples.InstallMainFirmware()
+        #else:
+            # Update MainFwB also to same image - TEMP CHANGE
+            # host.InstallMainFirmware(mount_data = False, copy_fw = False)
+
+    def __fullUpdate(self):
+        fwType = self.naples.ReadRunningFirmwareType()
+        if fwType != FIRMWARE_TYPE_GOLD:
+            self.naples.RebootGoldFw()
+        if GlobalOptions.use_gold_firmware:
+            print("installing and running tests with gold firmware {0}".format(self.fw_images.gold_fw_img))
+            self.naples.InstallGoldFirmware()
+        else:
+            print("installing and running tests with firmware {0}".format(self.fw_images.image))
+            self.naples.InstallMainFirmware()
+            if not IsNaplesGoldFWLatest():
+                self.naples.InstallGoldFirmware()
 
 
 if __name__ == '__main__':
     start_time = time.time()
-    atexit.register(AtExitCleanup)
+
+    orch = PenOrchestrator()
+    atexit.register(orch.AtExitCleanup)
     try:
         if GlobalOptions.naples_only_setup:
-            NaplesOnlySetup()
+            orch.NaplesOnlySetup()
         else:
-            Main()
+            orch.Main()
     except bootNaplesException as ex:
         sys.stderr.write(str(ex))
         sys.exit(1)

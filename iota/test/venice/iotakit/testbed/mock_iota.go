@@ -325,6 +325,14 @@ func (ms *mockIotaServer) DoSwitchOperation(ctx context.Context, req *iota.Switc
 	return req, nil
 }
 
+// DownloadAssets pulls assets
+func (ts *mockIotaServer) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
+
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
+}
+
 func (ms *mockIotaServer) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
 	log.Debugf("EntityCopy(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK

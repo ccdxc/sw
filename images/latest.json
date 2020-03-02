@@ -1,0 +1,43 @@
+{
+  "DocTemplateVersion": "1.0",
+  "Version": "latest",
+  "Drivers": [
+    {
+      "drivers_pkg": "platform/gen/drivers-linux-eth.tar.xz",
+      "gold_drv_latest_pkg": "platform/hosttools/x86_64/linux/goldfw/latest/drivers-linux-eth.tar.xz",
+      "gold_drv_old_pkg": "platform/hosttools/x86_64/linux/goldfw/old/drivers-linux-eth.tar.xz",
+      "OS": "linux",
+      "pkg_file_type": "SrcBundle"
+    },
+    {
+      "drivers_pkg": "platform/gen/drivers-freebsd-eth.tar.xz",
+      "gold_drv_latest_pkg": "platform/hosttools/x86_64/freebsd/goldfw/latest/drivers-freebsd-eth.tar.xz",
+      "gold_drv_old_pkg": "platform/hosttools/x86_64/freebsd/goldfw/old/drivers-freebsd-eth.tar.xz",
+      "OS": "freebsd",
+      "pkg_file_type": "SrcBundle"
+    },
+    {
+      "drivers_pkg": "platform/gen/drivers-esx-eth.tar.xz",
+      "gold_drv_latest_pkg": "platform/hosttools/x86_64/esx/goldfw/latest/drivers-esx-eth.tar.xz",
+      "gold_drv_old_pkg": "platform/hosttools/x86_64/esx/goldfw/old/drivers-esx-eth.tar.xz",
+      "OS": "esx",
+      "pkg_file_type": "SrcBundle"
+    }
+  ],
+  "Firmwares": [
+      {
+        "naples_type" : "capri",
+        "image": "nic/naples_fw.tar",
+        "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+        "gold_fw_latest_ver": "1.3.1-E-8",
+        "gold_fw_old_ver": "1.3.1-E-7"
+      },
+      {
+        "naples_type" : "equinix",
+        "image": "nic/naples_fw_venice.tar",
+        "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+        "gold_fw_latest_ver": "1.3.1-E-8",
+        "gold_fw_old_ver": "1.3.1-E-7"
+      }
+  ]
+}

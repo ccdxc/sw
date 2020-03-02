@@ -531,6 +531,11 @@ class Node(object):
             return self.__esx_ctrl_vm_ip
         return self.__ip_address
 
+    def EsxHostIpAddress(self):
+        if self.__os == 'esx':
+            return self.__ip_address
+        return None
+
     def WorkloadType(self):
         return self.__workload_type
 
@@ -1120,6 +1125,9 @@ class Topology(object):
 
     def GetHostNicIntMgmtIP(self, node_name, device = None):
         return self.__nodes[node_name].GetHostNicIntMgmtIP(device)
+
+    def GetEsxHostIpAddress(self, node_name):
+        return self.__nodes[node_name].EsxHostIpAddress()
 
     def GetMaxConcurrentWorkloads(self, node_name):
         return self.__nodes[node_name].GetMaxConcurrentWorkloads()

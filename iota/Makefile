@@ -54,11 +54,14 @@ bin/penctl:
 iota-test:
 	go test -c ./svcs/agent/ -o bin/agent.test
 
+asset-tools:
+	go build -o ${IOTA_BIN_DIR}/asset-pull github.com/pensando/sw/asset-build/asset-pull
+
 iota-test-bins:
 	go test -c github.com/pensando/sw/iota/test/venice/testsuites/equinix -o bin/equinix.test
 
 
-iota: iota-proto bin/penctl bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test iota-test-bins
+iota: iota-proto bin/penctl bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test iota-test-bins asset-tools
 
 iota-scale-build: iota heimdall
 

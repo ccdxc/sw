@@ -69,6 +69,9 @@ service TopologyApi {
     // EntityCopy copies files in/out from entities
     rpc EntityCopy(EntityCopyMsg) returns  (EntityCopyMsg) {};
 
+    // DownloadAssets downloads assets from minio.test.pensando.io
+    rpc DownloadAssets (DownloadAssetsMsg) returns (DownloadAssetsMsg) {};
+
     // WorkloadMoveMsg moves workloads
     rpc MoveWorkloads(WorkloadMoveMsg) returns  (WorkloadMoveMsg) {};
 
@@ -1029,4 +1032,35 @@ message EntityCopyMsg {
 
     // destination directory
     string dest_dir                 = 6;
+}
+
+message DownloadAssetsMsg {
+    // API Response for the download operatin
+    IotaAPIResponse api_response    = 1;
+
+    // Asset Name
+    string  asset_name              = 2;
+
+    // Release Version
+    string release_version          = 3;
+
+    // parent folder to download
+    string parent_dir               = 4;
+}
+
+message PrepareWorkspaceMsg {
+    // API Response for the prepare operatin
+    IotaAPIResponse api_response    = 1;
+
+    // FW Version
+    string fw_version               = 2;
+
+    // Driver Version
+    string driver_version           = 3;
+
+    // Venice Version
+    string venice_version           = 4;
+
+    // parent folder to retrieve
+    string parent_dir               = 5;
 }
