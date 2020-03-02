@@ -416,3 +416,8 @@ func GetMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
 	}
 	return
 }
+
+// BuildCollectorKey builds the collector key with vrfname, IP and port
+func BuildCollectorKey(vrfName string, c netproto.ExportConfig) string {
+	return vrfName + "-" + c.Destination + "-" + c.Transport.Port
+}

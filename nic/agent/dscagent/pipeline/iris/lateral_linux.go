@@ -30,8 +30,14 @@ const (
 var lateralDB = map[string][]string{}
 var doneCache = map[string]context.CancelFunc{}
 var arpCache sync.Map
+
+// ArpClient is the global arp client for netagent
 var ArpClient *arp.Client
+
+// MgmtLink is the global management link for netagent
 var MgmtLink netlink.Link
+
+// GwCache is the global cache for ip to their gateway (if needed)
 var GwCache = map[string]string{}
 
 // CreateLateralNetAgentObjects creates lateral objects for telmetry objects and does refcounting. This is temporary code till HAL subsumes ARP'ing for dest IPs

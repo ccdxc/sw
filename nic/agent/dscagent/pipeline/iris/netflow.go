@@ -11,6 +11,7 @@ import (
 	//utils2 "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"net"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
+	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -25,10 +27,15 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+type netflowIDs struct {
+	collectorID uint64
+	NetflowKeys []string
+}
+
 var netflowSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
-var netflowSessionToCollectorIDMapping = map[string][]*halapi.CollectorKeyHandle{}
 
 var templateContextMap = map[*halapi.CollectorKeyHandle]context.CancelFunc{}
+var CollectorToNetflow = map[string]*netflowIDs{}
 
 // HandleFlowExportPolicy handles crud operations on netflow session
 func HandleFlowExportPolicy(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, oper types.Operation, netflow netproto.FlowExportPolicy, vrfID uint64) error {
@@ -49,65 +56,42 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		var destPort int
+		var collectorID uint64
+		var foundCollector bool
 		dstIP := c.Destination
 		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), netflow.GetKey())
 		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
-		//dMAC, ok := arpCache[dstIP]
-		//if !ok {
-		//	log.Error(errors.Wrapf(types.ErrARPMissingDMAC, "IP: %s", dstIP))
-		//}
-		//
-		//collectorEP := netproto.Endpoint{
-		//	TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		//	ObjectMeta: api.ObjectMeta{
-		//		Tenant:    types.DefaultVrf,
-		//		Namespace: types.DefaultNamespace,
-		//		Name:      fmt.Sprintf("_internal_collector_ep_%s", dMAC),
-		//	},
-		//	Spec: netproto.EndpointSpec{
-		//		NetworkName:   types.InternalDefaultUntaggedNetwork,
-		//		NodeUUID:      "REMOTE",
-		//		IPv4Addresses: []string{dstIP},
-		//		MacAddress:    dMAC,
-		//	},
-		//}
-		//
-		//// Lookup if existing collector EP is known
-		//if knownEP, ok := isCollectorEPKnown(infraAPI, collectorEP); ok {
-		//	if !reflect.DeepEqual(collectorEP.Spec.IPv4Addresses, knownEP.Spec.IPv4Addresses) {
-		//		log.Infof("Netflow Pipeline Handler: %s", types.InfoKnownEPUpdateNeeded)
-		//		knownEP.Spec.IPv4Addresses = append(knownEP.Spec.IPv4Addresses, dstIP)
-		//		err := updateEndpointHandler(infraAPI, epClient, intfClient, knownEP, vrfID, types.UntaggedCollVLAN)
-		//		if err != nil {
-		//			log.Error(errors.Wrapf(types.ErrCollectorEPUpdateFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err))
-		//			return errors.Wrapf(types.ErrCollectorEPUpdateFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err)
-		//		}
-		//	} else {
-		//		log.Infof("Netflow Pipeline Handler: %s", types.InfoKnownEPNoUpdateNeeded)
-		//	}
-		//} else {
-		//	log.Infof("Netflow Pipeline Handler: %s", types.InfoUnknownEPCreateNeeded)
-		//	err := createEndpointHandler(infraAPI, epClient, intfClient, collectorEP, vrfID, types.UntaggedCollVLAN)
-		//	if err != nil {
-		//		log.Error(errors.Wrapf(types.ErrCollectorEPCreateFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err))
-		//		return errors.Wrapf(types.ErrCollectorEPCreateFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err)
-		//	}
-		//}
 
+		collectorKey := commonUtils.BuildCollectorKey(netflow.Spec.VrfName, c)
+		netflows, ok := CollectorToNetflow[collectorKey]
+		if ok {
+			netflows.NetflowKeys = append(netflows.NetflowKeys, netflow.GetKey())
+			collectorID = netflows.collectorID
+			foundCollector = true
+		} else {
+			collectorID = infraAPI.AllocateID(types.CollectorID, 0)
+		}
+		collectorKeys = append(collectorKeys, convertCollectorKeyHandle(collectorID))
+		if foundCollector {
+			continue
+		}
 		// Create HAL Collector
 		l2SegID := getL2SegByCollectorIP(infraAPI, dstIP)
-		collectorReqMsg := convertCollector(infraAPI, c, netflow, vrfID, l2SegID)
+		collectorReqMsg := convertCollector(infraAPI, c, netflow, vrfID, l2SegID, collectorID)
 		resp, err := telemetryClient.CollectorCreate(context.Background(), collectorReqMsg)
 		if resp != nil {
 			if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Collector Create Failed for %s | %s", netflow.GetKind(), netflow.GetKey())); err != nil {
 				return err
 			}
 		}
-		collectorKeys = append(collectorKeys, collectorReqMsg.Request[0].GetKeyOrHandle())
 
+		CollectorToNetflow[collectorKey] = &netflowIDs{
+			collectorID: collectorID,
+			NetflowKeys: []string{netflow.GetKey()},
+		}
 		templateCtx, cancel := context.WithCancel(context.Background())
 		templateContextMap[collectorReqMsg.Request[0].GetKeyOrHandle()] = cancel
 		destIP := net.ParseIP(c.Destination)
@@ -129,7 +113,6 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	}
 
 	netflowSessionToFlowMonitorRuleMapping[netflow.GetKey()] = flowMonitorIDs
-	netflowSessionToCollectorIDMapping[netflow.GetKey()] = collectorKeys
 	dat, _ := netflow.Marshal()
 
 	if err := infraAPI.Store(netflow.Kind, netflow.GetKey(), dat); err != nil {
@@ -163,7 +146,6 @@ func updateFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, netflow netproto.FlowExportPolicy, vrfID uint64) error {
 	// Delete Flow Monitor rules
 	var flowMonitorDeleteReq halapi.FlowMonitorRuleDeleteRequestMsg
-	var collectorDeleteReq halapi.CollectorDeleteRequestMsg
 
 	for _, flowMonitorKey := range netflowSessionToFlowMonitorRuleMapping[netflow.GetKey()] {
 		req := &halapi.FlowMonitorRuleDeleteRequest{
@@ -184,7 +166,6 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	// TODO Remove this hack once HAL side's telemetry code is cleaned up and DSCAgent must not maintain any internal state
 	delete(netflowSessionToFlowMonitorRuleMapping, netflow.GetKey())
 
-	var collectorKeys []*halapi.CollectorKeyHandle
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		dstIP := c.Destination
@@ -193,54 +174,47 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 			log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
-		//dMAC, ok := arpCache[dstIP]
-		//if !ok {
-		//	log.Error(errors.Wrapf(types.ErrARPMissingDMAC, "IP: %s", dstIP))
-		//}
-		//
-		//collectorEP := netproto.Endpoint{
-		//	TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		//	ObjectMeta: api.ObjectMeta{
-		//		Tenant:    types.DefaultVrf,
-		//		Namespace: types.DefaultNamespace,
-		//		Name:      fmt.Sprintf("_internal_collector_ep_%s", dMAC),
-		//	},
-		//}
-		//
-		//if knownEP, ok := isCollectorEPKnown(infraAPI, collectorEP); ok {
-		//	log.Infof("Netflow Pipeline Handler: %s", types.InfoCollectorEPDeleteNeeded)
-		//	err := deleteEndpointHandler(infraAPI, epClient, intfClient, knownEP, vrfID, types.UntaggedCollVLAN)
-		//	if err != nil {
-		//		log.Error(errors.Wrapf(types.ErrCollectorEPDeleteFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err))
-		//		return errors.Wrapf(types.ErrCollectorEPDeleteFailure, "FlowExportPolicy: %s | CollectorEP: %s | Err: %v", netflow.GetKey(), collectorEP.GetKey(), err)
-		//	}
-		//}
-
-		//collectorReqMsg := convertCollector(infraAPI, c, netflow, vrfID)
-		//collectorKeys = append(collectorKeys, collectorReqMsg.Request[0].GetKeyOrHandle())
-		//cancel := templateContextMap[collectorReqMsg.Request[0].GetKeyOrHandle()]
-		//if cancel != nil {
-		//	cancel()
-		//}
-	}
-
-	collectorKeys, _ = netflowSessionToCollectorIDMapping[netflow.GetKey()]
-
-	for _, collectorKey := range collectorKeys {
-		cancel := templateContextMap[collectorKey]
-		if cancel != nil {
-			cancel()
+		cKey := commonUtils.BuildCollectorKey(netflow.Spec.VrfName, c)
+		netflowKeys, ok := CollectorToNetflow[cKey]
+		if !ok {
+			log.Error(errors.Wrapf(types.ErrCollectorAlreadyDeleted, "FlowExportPolicy: %s | DestKey: %s", netflow.GetKey(), cKey))
+			return errors.Wrapf(types.ErrCollectorAlreadyDeleted, "FlowExportPolicy: %s | DestKey: %s", netflow.GetKey(), cKey)
 		}
-		req := &halapi.CollectorDeleteRequest{
-			KeyOrHandle: collectorKey,
+		// Remove the mirror key from the map
+		length := len(netflowKeys.NetflowKeys)
+		index := -1
+		for idx, n := range netflowKeys.NetflowKeys {
+			if n == netflow.GetKey() {
+				index = idx
+				break
+			}
 		}
-		collectorDeleteReq.Request = append(collectorDeleteReq.Request, req)
-	}
-
-	cResp, err := telemetryClient.CollectorDelete(context.Background(), &collectorDeleteReq)
-	if cResp != nil {
-		if err := utils.HandleErr(types.Delete, cResp.Response[0].ApiStatus, err, fmt.Sprintf("FlowMonitorRule Delete Failed for %s | %s", netflow.GetKind(), netflow.GetKey())); err != nil {
-			return err
+		if index != -1 {
+			netflowKeys.NetflowKeys[index] = netflowKeys.NetflowKeys[length-1]
+			netflowKeys.NetflowKeys = netflowKeys.NetflowKeys[:length-1]
+		}
+		if len(netflowKeys.NetflowKeys) == 0 {
+			collectorKey := convertCollectorKeyHandle(netflowKeys.collectorID)
+			cancel := templateContextMap[collectorKey]
+			if cancel != nil {
+				cancel()
+			}
+			collectorDeleteReq := &halapi.CollectorDeleteRequestMsg{
+				Request: []*halapi.CollectorDeleteRequest{
+					{
+						KeyOrHandle: collectorKey,
+					},
+				},
+			}
+			cResp, err := telemetryClient.CollectorDelete(context.Background(), collectorDeleteReq)
+			if cResp != nil {
+				if err := utils.HandleErr(types.Delete, cResp.Response[0].ApiStatus, err, fmt.Sprintf("FlowMonitorRule Delete Failed for collector %s | %s", netflow.GetKind(), cKey)); err != nil {
+					return err
+				}
+			}
+			delete(CollectorToNetflow, cKey)
+		} else {
+			log.Infof("NetflowCollector: %s | DstIP: %s | VrfName: %s still referenced by %s", netflow.GetKey(), dstIP, netflow.Spec.VrfName, strings.Join(netflowKeys.NetflowKeys, " "))
 		}
 	}
 
@@ -251,7 +225,7 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	return nil
 }
 
-func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, netflow netproto.FlowExportPolicy, vrfID, l2SegID uint64) *halapi.CollectorRequestMsg {
+func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, netflow netproto.FlowExportPolicy, vrfID, l2SegID, collectorID uint64) *halapi.CollectorRequestMsg {
 	var port uint64
 	var protocol halapi.IPProtocol
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
@@ -268,11 +242,7 @@ func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, 
 	return &halapi.CollectorRequestMsg{
 		Request: []*halapi.CollectorSpec{
 			{
-				KeyOrHandle: &halapi.CollectorKeyHandle{
-					KeyOrHandle: &halapi.CollectorKeyHandle_CollectorId{
-						CollectorId: infraAPI.AllocateID(types.CollectorID, 0),
-					},
-				},
+				KeyOrHandle:  convertCollectorKeyHandle(collectorID),
 				VrfKeyHandle: convertVrfKeyHandle(vrfID),
 				Encap: &halapi.EncapInfo{
 					EncapType:  halapi.EncapType_ENCAP_TYPE_DOT1Q,
@@ -289,73 +259,6 @@ func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, 
 		},
 	}
 }
-
-//func (s *PolicyState) SendTemplates(ctx context.Context, ckey *types.CollectorKey) error {
-//	dest := ckey.Destination
-//	dport := int(ckey.Port)
-//	interval := time.Duration(ckey.TemplateInterval) * time.Second
-//
-//	tick := time.NewTicker(interval)
-//
-//	tmplt, err := ipfix.CreateTemplateMsg()
-//	if err != nil {
-//		log.Errorf("failed to generate template, %v", err)
-//		return err
-//	}
-//
-//	nc := net.ListenConfig{Control: func(network, address string, c syscall.RawConn) error {
-//		var sockErr error
-//		if err := c.Control(func(fd uintptr) {
-//			sockErr = unix.SetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT, 1)
-//		}); err != nil {
-//			return err
-//		}
-//		return sockErr
-//	},
-//	}
-//
-//	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", s.getMgmtIPAddr(), ipfixSrcPort))
-//	if err != nil {
-//		log.Errorf("failed to bind %v, %v", fmt.Sprintf("%v:%v", s.getMgmtIPAddr(), ipfixSrcPort), err)
-//		return err
-//	}
-//
-//	tctx, cancel := context.WithCancel(context.Background())
-//	templateCtx := &ipfixTemplateContext{
-//		cancel: cancel,
-//		tick:   tick,
-//	}
-//
-//	s.ipfixCtx.Store(ckey.String(), templateCtx)
-//
-//	go func() {
-//		defer conn.Close()
-//		// send first template as soon as we start
-//		if _, err := conn.WriteTo(tmplt, &net.UDPAddr{IP: net.ParseIP(dest), Port: dport}); err != nil {
-//			log.Errorf("failed to send to %v:%v, %v", dest, dport, err)
-//			atomic.AddUint64(&templateCtx.txErr, 1)
-//		} else {
-//			atomic.AddUint64(&templateCtx.txMsg, 1)
-//		}
-//
-//		for {
-//			select {
-//			case <-tick.C:
-//				if _, err := conn.WriteTo(tmplt, &net.UDPAddr{IP: net.ParseIP(dest), Port: dport}); err != nil {
-//					log.Errorf("failed to send to %v", err)
-//					atomic.AddUint64(&templateCtx.txErr, 1)
-//				} else {
-//					atomic.AddUint64(&templateCtx.txMsg, 1)
-//				}
-//			case <-tctx.Done():
-//				log.Infof("timer stopped, stopping templates to %v:%v", dest, dport)
-//				return
-//			}
-//		}
-//	}()
-//
-//	return nil
-//}
 
 // TODO Remove this once the HAL side telemetry code is cleaned up. Agents must not be sending raw packets on sockets
 func sendTemplate(ctx context.Context, infraAPI types.InfraAPI, destIP net.IP, destPort int, netflow netproto.FlowExportPolicy) {
@@ -452,4 +355,12 @@ func getL2SegByCollectorIP(i types.InfraAPI, destIP string) (l2SegID uint64) {
 	}
 	l2SegID = types.UntaggedCollVLAN
 	return
+}
+
+func convertCollectorKeyHandle(collectorID uint64) *halapi.CollectorKeyHandle {
+	return &halapi.CollectorKeyHandle{
+		KeyOrHandle: &halapi.CollectorKeyHandle_CollectorId{
+			CollectorId: collectorID,
+		},
+	}
 }

@@ -10,6 +10,161 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestHandleNetflowCollector(t *testing.T) {
+	netflows := []netproto.FlowExportPolicy{
+		{
+			TypeMeta: api.TypeMeta{Kind: "Netflow"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "testNetflow1",
+			},
+			Spec: netproto.FlowExportPolicySpec{
+				Interval: "30s",
+				Exports: []netproto.ExportConfig{
+					{
+						Destination: "192.168.100.101",
+						Transport: &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "2055",
+						},
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "Netflow"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "testNetflow2",
+			},
+			Spec: netproto.FlowExportPolicySpec{
+				Interval: "30s",
+				Exports: []netproto.ExportConfig{
+					{
+						Destination: "192.168.100.101",
+						Transport: &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "2055",
+						},
+					},
+				},
+			},
+		},
+		{
+			TypeMeta: api.TypeMeta{Kind: "Netflow"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "testNetflow3",
+			},
+			Spec: netproto.FlowExportPolicySpec{
+				Interval: "30s",
+				Exports: []netproto.ExportConfig{
+					{
+						Destination: "192.168.100.101",
+						Transport: &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "2055",
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, netflow := range netflows {
+		if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Create, netflow, 65); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Make sure only 1 collector is created i.e "-192.168.100.101-2055"
+	if len(CollectorToNetflow) != 1 {
+		t.Fatalf("Expected 1 key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	netflowKeys, ok := CollectorToNetflow["-192.168.100.101-2055"]
+	if !ok {
+		t.Fatalf("Expected -192.168.100.101-2055 to be key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if len(netflowKeys.NetflowKeys) != 3 {
+		t.Fatalf("Expected 3 netflows. %v", netflowKeys.NetflowKeys)
+	}
+
+	// Update first netflow to a different IP and make sure a new key is generated
+	netflows[0].Spec.Exports[0].Destination = "192.168.100.102"
+	if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflows[0], 65); err != nil {
+		t.Fatal(err)
+	}
+	if len(CollectorToNetflow) != 2 {
+		t.Fatalf("Expected 2 key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	netflowKeys, ok = CollectorToNetflow["-192.168.100.101-2055"]
+	if !ok {
+		t.Fatalf("Expected -192.168.100.101-2055 to be key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if len(netflowKeys.NetflowKeys) != 2 {
+		t.Fatalf("Expected 2 netflows. %v", netflowKeys.NetflowKeys)
+	}
+	netflowKeys, ok = CollectorToNetflow["-192.168.100.102-2055"]
+	if !ok {
+		t.Fatalf("Expected -192.168.100.102-2055 to be key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if len(netflowKeys.NetflowKeys) != 1 {
+		t.Fatalf("Expected 1 netflows. %v", netflowKeys.NetflowKeys)
+	}
+
+	// Update the last netflow to have a different port
+	netflows[2].Spec.Exports[0].Transport.Port = "2056"
+	if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflows[2], 65); err != nil {
+		t.Fatal(err)
+	}
+	if len(CollectorToNetflow) != 3 {
+		t.Fatalf("Expected 3 key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	netflowKeys, ok = CollectorToNetflow["-192.168.100.101-2056"]
+	if !ok {
+		t.Fatalf("Expected -192.168.100.101-2056 to be key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if len(netflowKeys.NetflowKeys) != 1 {
+		t.Fatalf("Expected 1 netflows. %v", netflowKeys.NetflowKeys)
+	}
+
+	// Update the second netflow
+	netflows[1].Spec.Exports[0].Transport.Port = "2056"
+	if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflows[1], 65); err != nil {
+		t.Fatal(err)
+	}
+	if len(CollectorToNetflow) != 2 {
+		t.Fatalf("Expected 2 key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if _, ok = CollectorToNetflow["-192.168.100.101-2055"]; ok {
+		t.Fatalf("Expected -192.168.100.101-2055 to be deleted. %v", CollectorToNetflow)
+	}
+
+	// Update the first one
+	netflows[0].Spec.Exports[0].Destination = "192.168.100.101"
+	netflows[0].Spec.Exports[0].Transport.Port = "2056"
+	if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflows[0], 65); err != nil {
+		t.Fatal(err)
+	}
+	if len(CollectorToNetflow) != 1 {
+		t.Fatalf("Expected 2 key in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+	if _, ok = CollectorToNetflow["-192.168.100.101-2056"]; !ok {
+		t.Fatalf("Expected -192.168.100.101-2056 to be in the map. %v", CollectorToNetflow)
+	}
+
+	// Delete the flows
+	for _, netflow := range netflows {
+		if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Delete, netflow, 65); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(CollectorToNetflow) != 0 {
+		t.Fatalf("Expected 0 keys in CollectorToNetflow, %v", CollectorToNetflow)
+	}
+}
+
 func TestHandleNetflowUpdates(t *testing.T) {
 	netflow := netproto.FlowExportPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Netflow"},

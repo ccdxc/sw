@@ -1296,7 +1296,11 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 	defer log.Infof("FlowExportPolicy: %v | Op: %s | %s", netflow, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	vrf, err := validator.ValidateFlowExportPolicy(i.InfraAPI, netflow)
+	collectorToKeys := map[string]int{}
+	for dest, keys := range iris.CollectorToNetflow {
+		collectorToKeys[dest] = len(keys.NetflowKeys)
+	}
+	vrf, err := validator.ValidateFlowExportPolicy(i.InfraAPI, netflow, oper, collectorToKeys)
 	if err != nil {
 		log.Error(err)
 		return nil, err

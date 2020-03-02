@@ -181,6 +181,12 @@ const (
 
 	// MaxMirrorSessions is the maximum number of mirror sessions allowed.
 	MaxMirrorSessions = 8
+
+	// MaxCollectorsPerFlow is the maximum number of collectors per flow export policy.
+	MaxCollectorsPerFlow = 4
+
+	// MaxCollectors is the maximum number of collectors
+	MaxCollectors = 16
 )
 
 // ID Allocation constants and offsets

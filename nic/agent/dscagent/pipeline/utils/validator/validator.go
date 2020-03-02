@@ -359,20 +359,78 @@ func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper
 }
 
 // ValidateFlowExportPolicy performs static field validations on srcIP, DstIP and named reference validation on vrf
-func ValidateFlowExportPolicy(i types.InfraAPI, netflow netproto.FlowExportPolicy) (vrf netproto.Vrf, err error) {
-	var collectorIPAddresses []string
-	for _, c := range netflow.Spec.Exports {
-		collectorIPAddresses = append(collectorIPAddresses, c.Destination)
+func ValidateFlowExportPolicy(i types.InfraAPI, netflow netproto.FlowExportPolicy, oper types.Operation, collectorToKeys map[string]int) (vrf netproto.Vrf, err error) {
+	// Named reference validations
+	if len(netflow.Spec.Exports) > types.MaxCollectorsPerFlow {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsPerFlowExceeded))
+		err = errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsPerFlowExceeded)
+		return
 	}
 
-	//cfg := i.GetConfig()
+	uniqueCreates := 0
 
-	//arpCache, err = utils.ResolveIPAddress(cfg.MgmtIP, cfg.MgmtIntf, collectorIPAddresses...)
-	//if err != nil {
-	//	return
-	//}
+	switch oper {
+	case types.Create:
+		// Get the count of unique creates
+		for _, c := range netflow.Spec.Exports {
+			destKey := utils.BuildCollectorKey(netflow.Spec.VrfName, c)
+			if _, ok := collectorToKeys[destKey]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Update:
+		// Get the existing netflow object and consider valid deletes i.e
+		// objects that would get deleted (ones having single reference). Add the unique
+		// creates to the get the actual increase in collector number if any.
+		var existingNetflow netproto.FlowExportPolicy
+		dat, errr := i.Read(netflow.Kind, netflow.GetKey())
+		if errr != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrObjNotFound))
+			err = errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrObjNotFound)
+			return
+		}
+		err = existingNetflow.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
+			err = errors.Wrapf(types.ErrUnmarshal, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
+			return
+		}
 
-	// Named reference validations
+		// Track if the collector needs to deleted
+		deleteKey := map[string]bool{}
+		for _, c := range existingNetflow.Spec.Exports {
+			destKey := utils.BuildCollectorKey(existingNetflow.Spec.VrfName, c)
+			deleteKey[destKey] = false
+			// If referenced by a singular key then could be removed
+			if size, ok := collectorToKeys[destKey]; ok && size == 1 {
+				deleteKey[destKey] = true
+			}
+		}
+
+		for _, c := range netflow.Spec.Exports {
+			destKey := utils.BuildCollectorKey(netflow.Spec.VrfName, c)
+			deleteKey[destKey] = false
+		}
+
+		for k, del := range deleteKey {
+			if del {
+				uniqueCreates--
+				continue
+			}
+			// For keys that are not to be deleted, check if they are new entries
+			if _, ok := collectorToKeys[k]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Delete:
+	}
+
+	if len(collectorToKeys)+uniqueCreates > types.MaxCollectors {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsExceeded))
+		err = errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsExceeded)
+		return
+	}
+
 	vrf, err = ValidateVrf(i, netflow.Tenant, netflow.Namespace, netflow.Spec.VrfName)
 	if err != nil {
 		return

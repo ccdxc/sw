@@ -129,6 +129,8 @@ const (
 	ErrMetricsGet                            = Error("ErrMetricsGet")
 	ErrMetricsSend                           = Error("ErrMetricsSend")
 	ErrMetricsRecv                           = Error("ErrMetricsRecv")
+	ErrMaxCollectorsPerFlowExceeded          = Error("ErrMaxCollectorsPerFlowExceeded")
+	ErrMaxCollectorsExceeded                 = Error("ErrMaxCollectorsExceeded")
 )
 
 // Const Info
