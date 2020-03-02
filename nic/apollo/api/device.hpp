@@ -193,6 +193,10 @@ public:
     /// \return    true of false based on whether learning is enabled or not
     bool learning_enabled(void) const { return learning_en_; }
 
+    /// \brief return the aging timeout for MAC or IP when learning is enabled
+    /// \return    aging timeout value in seconds
+    uint32_t learn_age_timeout(void) const { return learn_age_timeout_; }
+
 private:
     /// \brief constructor
     device_entry() {
@@ -231,6 +235,8 @@ private:
     bool bridging_en_;
     ///< true if learning is enabled
     bool learning_en_;
+    ///< aging timeout in seconds for learnt MAC or IP
+    uint32_t learn_age_timeout_;
     ///< impl object instance
     impl_base *impl_;
 } __PACK__;

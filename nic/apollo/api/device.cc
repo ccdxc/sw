@@ -96,6 +96,7 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
     oper_mode_ = spec->dev_oper_mode;
     bridging_en_ = spec->bridging_en;
     learning_en_ = spec->learning_en;
+    learn_age_timeout_ = spec->learn_age_timeout;
     return SDK_RET_OK;
 }
 
@@ -144,6 +145,7 @@ void
 device_entry::fill_spec_(pds_device_spec_t *spec) {
     spec->gateway_ip_addr = gw_ip_addr_;
     spec->dev_oper_mode = oper_mode_;
+    spec->learn_age_timeout = learn_age_timeout_;
 }
 
 void

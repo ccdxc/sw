@@ -14,6 +14,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 
@@ -31,7 +32,6 @@ learn_state::learn_state() {
     memset(&counters_, 0, sizeof(counters_));
 
     // default timeout/age values
-    ep_timeout_secs_ = LEARN_EP_DEFAULT_AGE_SEC;
     arp_probe_timeout_secs_ = LEARN_EP_ARP_PROBE_TIMEOUT_SEC;
     pkt_poll_interval_msecs_ = LEARN_PKT_POLL_INTERVAL_MSEC;
 }
@@ -98,13 +98,21 @@ learn_state::init (void) {
         return SDK_RET_ERR;
     }
 
-    // TODO: get aging time from device spec
-
     if (lif_init_() != SDK_RET_OK) {
         return SDK_RET_ERR;
     }
 
     return SDK_RET_OK;
+}
+
+uint32_t
+learn_state::ep_timeout(void) const {
+    uint32_t age;
+    age = device_db()->find()->learn_age_timeout();
+    if (age == 0) {
+        age = LEARN_EP_DEFAULT_AGE_SEC;
+    }
+    return age;
 }
 
 sdk_ret_t

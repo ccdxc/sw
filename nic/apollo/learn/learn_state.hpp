@@ -111,7 +111,7 @@ public:
 
     /// \brief      return configured endpoint age
     /// \return     age in seconds
-    uint16_t ep_timeout(void) const { return ep_timeout_secs_; }
+    uint32_t ep_timeout(void) const;
 
     /// \brief      return arp probe reply timeout
     /// \return     timeout value in seconds
@@ -151,7 +151,6 @@ private:
     pds_epoch_t epoch_;                 ///< epoch for api batch
     rte_indexer *vnic_objid_idxr_;      ///< vnic object id
     dpdk_device *learn_lif_;            ///< learn lif device
-    uint16_t ep_timeout_secs_;          ///< endpoint age
     uint16_t arp_probe_timeout_secs_;   ///< arp probe timeout
     uint16_t pkt_poll_interval_msecs_;  ///< learn pkt poll frequency
     learn_counters_t counters_;         ///< debug counters
