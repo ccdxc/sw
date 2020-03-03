@@ -222,7 +222,13 @@ func TestAuditLogArchive(t *testing.T) {
 	// start spyglass
 	ti.startSpyglass()
 	defer ti.fdr.Stop()
-	AssertOk(t, verifyArchiveRequests(superAdminCtx, t, ti, tests[0:1]), "error verifying archive request after spyglass restart")
+	AssertEventually(t, func() (bool, interface{}) {
+		err = verifyArchiveRequests(superAdminCtx, t, ti, tests[0:1])
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}, "error verifying archive request after spyglass restart", "3s", "30s")
 	deleteArchiveRequests(superAdminCtx, t, ti, tests[0:1])
 }
 
