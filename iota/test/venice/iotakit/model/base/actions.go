@@ -130,7 +130,7 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 		}
 
 		// check smartnic status in Venice
-		snic, err := sm.GetSmartNICByName(np.Name())
+		snic, err := sm.GetSmartNICByName(np.Nodeuuid)
 		if err != nil {
 			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.Name(), err)
 			log.Errorf("%v", err)

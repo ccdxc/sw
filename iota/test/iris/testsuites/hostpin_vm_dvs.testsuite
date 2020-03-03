@@ -18,6 +18,7 @@ setup:
     config  :
         - step : utils.cleanup
         - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         - step : config.venice.mode_switch_hostpin
         - step : config.netagent.hw_push_config
           args :

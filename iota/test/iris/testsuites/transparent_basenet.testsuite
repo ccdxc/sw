@@ -20,6 +20,8 @@ setup:
     config  :
 
         - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         #- step : testcases.frequency.clock_settings
         #- step : utils.reboot_all
         - step : utils.naples_workloads

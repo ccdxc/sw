@@ -108,6 +108,10 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	if err != nil {
 		return err
 	}
+	sm.AutoDiscovery = true
+	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
+               sm.AutoDiscovery = false
+        }
 	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
 	sm.msessions = make(map[string]*objects.MirrorSession)
 	sm.FakeNaples = make(map[string]*objects.Naples)

@@ -721,6 +721,11 @@ naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
+naples-firmware-iterative:
+	$(MAKE) ws-tools
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
+
 naples-firmware-elba:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba clean
 	$(MAKE) ws-tools

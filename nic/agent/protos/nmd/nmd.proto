@@ -128,6 +128,9 @@ message DistributedServiceCardStatus {
 
     // The reason why the DSC is not in admitted phase, if known
     string AdmissionPhaseReason     = 10 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
+
+    // ManagementInterface where Venice was discovered
+    string ManagementInterface      = 11 [(gogoproto.jsontag) = "management-interface,omitempty"];
 }
 
 // DistributedServiceCardCmdExecute contains information on what command to execute

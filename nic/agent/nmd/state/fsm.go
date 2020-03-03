@@ -10,7 +10,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
-	nmdProto "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -29,7 +28,6 @@ func NewNMDStateMachine() *NMDStateMachine {
 				{Name: "doNTP", Src: []string{"doDynamic", "doStatic"}, Dst: "doNTP"},
 				{Name: "doAdmission", Src: []string{"doNTP"}, Dst: "doAdmission"},
 				{Name: "doUpgrade", Src: []string{"doAdmission"}, Dst: "doUpgrade"},
-				{Name: "rebootPending", Src: []string{"doAdmission", "doUpgrade"}, Dst: "rebootPending"},
 			},
 			fsm.Callbacks{
 				"doStatic": func(e *fsm.Event) {
@@ -165,18 +163,18 @@ func NewNMDStateMachine() *NMDStateMachine {
 					}
 					// TODO hook up Upgrade
 				},
-
-				"rebootPending": func(e *fsm.Event) {
-					log.Infof("Entered State: %v", e.Event)
-					nmd, ok := e.Args[0].(*NMD)
-					if !ok {
-						log.Error("Failed to cast event args to type NMD.")
-						e.Err = errors.New("failed to cast event args to type NMD")
-						return
-					}
-					log.Info("Setting the transition phase to reboot pending")
-					nmd.config.Status.TransitionPhase = nmdProto.DistributedServiceCardStatus_REBOOT_PENDING.String()
-				},
+				//
+				//"rebootPending": func(e *fsm.Event) {
+				//	log.Infof("Entered State: %v", e.Event)
+				//	nmd, ok := e.Args[0].(*NMD)
+				//	if !ok {
+				//		log.Error("Failed to cast event args to type NMD.")
+				//		e.Err = errors.New("failed to cast event args to type NMD")
+				//		return
+				//	}
+				//	log.Info("Setting the transition phase to reboot pending")
+				//	nmd.config.Status.TransitionPhase = nmdProto.DistributedServiceCardStatus_REBOOT_PENDING.String()
+				//},
 			},
 		),
 	}

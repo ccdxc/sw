@@ -822,14 +822,14 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 		log.Errorf("%v", nerr)
 		return nerr
 	}
-	mode := "OOB"
-	for _, naples := range sm.NaplesNodes {
-		if naples.Nodeuuid == node.Nodeuuid && naples.GetTestNode().InstanceParams().Resource.InbandMgmt {
-			mode = "INBAND"
-		}
-	}
+	//mode := "OOB"
+	//for _, naples := range sm.NaplesNodes {
+	//	if naples.Nodeuuid == node.Nodeuuid && naples.GetTestNode().InstanceParams().Resource.InbandMgmt {
+	//		mode = "INBAND"
+	//	}
+	//}
 	// check naples status
-	if naplesStatus.Spec.Mode != "NETWORK" || naplesStatus.Spec.NetworkMode != mode {
+	if naplesStatus.Spec.Mode != "NETWORK" {
 		nerr := fmt.Errorf("Invalid NMD mode configuration: %+v", naplesStatus.Spec)
 		log.Errorf("%v", nerr)
 		return nerr
@@ -1026,19 +1026,19 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 
 		}
 	}
-	log.Infof("Reloading Naples: %v", hostNames)
+	log.Info("Skipping Naples Reloads")
 
-	reloadMsg := &iota.ReloadMsg{
-		NodeMsg: nodeMsg,
-	}
+	//reloadMsg := &iota.ReloadMsg{
+	//	NodeMsg: nodeMsg,
+	//}
 	// Trigger App
-	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
-	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
-	if err != nil {
-		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
-	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
-	}
+	//topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	//reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	//if err != nil {
+	//	return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
+	//} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+	//	return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	//}
 
 	return nil
 }

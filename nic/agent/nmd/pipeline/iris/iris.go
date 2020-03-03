@@ -1,8 +1,6 @@
 package iris
 
 import (
-	"net"
-
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/state"
@@ -154,10 +152,11 @@ func (p *Pipeline) GetPipelineType() string {
 // WriteDelphiObjects ...
 func (p *Pipeline) WriteDelphiObjects() (err error) {
 	n := p.Nmd
-	var mgmtIP string
+	//var mgmtIP string
 
 	var transitionPhase delphiProto.DistributedServiceCardStatus_Transition
 	naplesConfig := p.DelSrv.Agent.Nmd.GetNaplesConfig()
+	log.Infof("Naples config during delphi write: %v", naplesConfig)
 
 	switch naplesConfig.Status.TransitionPhase {
 	case delphiProto.DistributedServiceCardStatus_DHCP_SENT.String():
@@ -180,12 +179,12 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		transitionPhase = 0
 	}
 
-	// For static case write only the IP in mgmt IP and not the subnet
-	if ip, _, err := net.ParseCIDR(naplesConfig.Status.IPConfig.IPAddress); err == nil {
-		mgmtIP = ip.String()
-	} else {
-		mgmtIP = naplesConfig.Status.IPConfig.IPAddress
-	}
+	//// For static case write only the IP in mgmt IP and not the subnet
+	//if ip, _, err := net.ParseCIDR(naplesConfig.Status.IPConfig.IPAddress); err == nil {
+	//	mgmtIP = ip.String()
+	//} else {
+	//	mgmtIP = naplesConfig.Status.IPConfig.IPAddress
+	//}
 
 	// Set up appropriate mode
 	var naplesMode delphiProto.DistributedServiceCardStatus_Mode
@@ -224,9 +223,9 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 		Controllers:                naplesConfig.Status.Controllers,
 		DistributedServiceCardMode: naplesMode,
 		TransitionPhase:            transitionPhase,
-		MgmtIP:                     mgmtIP,
-		ID:                         naplesConfig.Spec.ID,
-		DSCName:                    naplesConfig.Status.DSCName,
+		//MgmtIP:                     naplesConfig.Status.IPConfig.IPAddress,
+		ID:      naplesConfig.Spec.ID,
+		DSCName: naplesConfig.Status.DSCName,
 		Fru: &delphiProto.DistributedServiceCardFru{
 			ManufacturingDate: naplesConfig.Status.Fru.ManufacturingDate,
 			Manufacturer:      naplesConfig.Status.Fru.Manufacturer,

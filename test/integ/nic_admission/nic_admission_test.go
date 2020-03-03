@@ -88,7 +88,7 @@ var (
 	cmdRegURL   = flag.String("cmd-reg-url", smartNICRegURL, "CMD Registration URL")
 	cmdAuthURL  = flag.String("cmd-upd-url", smartNICUpdURL, "CMD Updates URL")
 	resolverURL = flag.String("resolver-url", resolverURLs, "Resolver URLs")
-	mode        = flag.String("mode", "host", "Naples mode, host or network")
+	mode        = flag.String("mode", "network", "Naples mode, host or network")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
 
 	logger = log.GetNewLogger(log.GetDefaultConfig("nic_admission_test"))
@@ -379,6 +379,7 @@ func deleteNaplesOOBInterfaces() error {
 
 func TestCreateNMDs(t *testing.T) {
 	// Init tsdb
+	t.Skip("Skipped since this test needs to be re-written after auto-discovery")
 	ctx, cancel := context.WithCancel(context.Background())
 	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
 	defer cancel()

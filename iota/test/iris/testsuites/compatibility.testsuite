@@ -17,9 +17,10 @@ setup:
     config  :
 
         - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         - step : utils.naples_workloads
         - step : config.netagent.hw_push_config
-        - step : testcases.penctl.install
 
 common:
     verifs:

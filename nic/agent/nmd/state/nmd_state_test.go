@@ -473,7 +473,7 @@ func TestCtrlrSmartNICRegisterAndUpdate(t *testing.T) {
 		updNIC.ObjectMeta.Name == "00ae.cd01.0203", "NIC status did not match", updNIC)
 }
 
-func TestNaplesDefaultHostMode(t *testing.T) {
+func TestNaplesDefaultNetworkMode(t *testing.T) {
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
@@ -487,7 +487,7 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode == nmd.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode == nmd.MgmtMode_NETWORK.String() && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
@@ -504,42 +504,12 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 			return false, nil
 		}
 
-		if naplesCfg.Spec.Mode != nmd.MgmtMode_HOST.String() {
+		if naplesCfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			return false, nil
 		}
 		return true, nil
 	}
 	AssertEventually(t, f2, "Failed to get the default naples config")
-}
-
-func TestNaplesRestartHostMode(t *testing.T) {
-	// Cleanup any prior DB file
-	os.Remove(emDBPath)
-
-	// create nmd
-	nm, _, _, _, _ := createNMD(t, emDBPath, "host", nicKey1)
-	Assert(t, (nm != nil), "Failed to create nmd", nm)
-
-	f1 := func() (bool, interface{}) {
-
-		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
-			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
-			return true, nil
-		}
-		return true, nil
-	}
-	AssertEventually(t, f1, "Failed to verify mode is in host")
-
-	// stop NMD, don't clean up DB
-	stopNMD(t, nm, false)
-
-	// start/create NMD again, simulating restart
-	nm, _, _, _, _ = createNMD(t, emDBPath, "host", nicKey1)
-	defer stopNMD(t, nm, true)
-
-	Assert(t, (nm != nil), "Failed to create nmd", nm)
-	AssertEventually(t, f1, "Failed to verify host mode, after Restart")
 }
 
 func TestNaplesNetworkMode(t *testing.T) {

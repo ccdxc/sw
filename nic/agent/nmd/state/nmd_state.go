@@ -215,10 +215,11 @@ func NewNMD(pipeline Pipeline,
 				Kind: "DistributedServiceCard",
 			},
 			Spec: nmd.DistributedServiceCardSpec{
-				Mode:       nmd.MgmtMode_HOST.String(),
-				PrimaryMAC: fru.MacStr,
-				ID:         fru.MacStr,
-				DSCProfile: nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
+				Mode:        nmd.MgmtMode_NETWORK.String(),
+				NetworkMode: nmd.NetworkMode_INBAND.String(),
+				PrimaryMAC:  fru.MacStr,
+				ID:          fru.MacStr,
+				DSCProfile:  nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
 				IPConfig: &cluster.IPConfig{
 					IPAddress:  "",
 					DefaultGW:  "",
@@ -253,6 +254,12 @@ func NewNMD(pipeline Pipeline,
 			}
 		}
 
+		// Override the default mgmt mode as network in case of older version.
+		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
+		} else {
+			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
+		}
 		// Always re-read the contents of fru.json upon startup
 		config.Status.Fru = ReadFruFromJSON()
 	} else {
@@ -1566,7 +1573,16 @@ func (n *NMD) GetIPConfig() *cluster.IPConfig {
 
 // SetIPConfig sets the IPConfig
 func (n *NMD) SetIPConfig(cfg *cluster.IPConfig) {
+	n.Lock()
+	defer n.Unlock()
 	n.config.Status.IPConfig = cfg
+}
+
+// SetMgmtInterface sets the management interface after auto discovery
+func (n *NMD) SetMgmtInterface(intf string) {
+	n.Lock()
+	defer n.Unlock()
+	n.config.Status.ManagementInterface = intf
 }
 
 // GetVeniceIPs returns the venice co-ordinates

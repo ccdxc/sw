@@ -95,6 +95,11 @@ func (ag *NMD) DeleteDSCRollout(sro *protos.DSCRollout) error {
 	return nil
 }
 
+// SetMgmtInterface stubbed out
+func (ag *NMD) SetMgmtInterface(intf string) {
+
+}
+
 // GetAgentID returns the agent id
 func (ag *NMD) GetAgentID() string {
 	return "mockAgent_" + ag.Name

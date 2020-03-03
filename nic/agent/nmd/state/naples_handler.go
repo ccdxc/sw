@@ -201,12 +201,12 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 		// Update Spec
 		n.SetNaplesConfig(cfg.Spec)
 
-		if !isDataplaneClassic() {
-			log.Info("Setting reboot needed flag")
-			n.rebootNeeded = true
-		} else {
-			n.rebootNeeded = false
-		}
+		//if !isDataplaneClassic() {
+		//	log.Info("Setting reboot needed flag")
+		//	n.rebootNeeded = true
+		//} else {
+		//	n.rebootNeeded = false
+		//}
 
 		if err := n.handleHostModeTransition(); err != nil {
 			return errInternalServer(err)
@@ -226,31 +226,26 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 			return errBadRequest(err)
 		}
 
-		if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
-			// There is no mode change in apulu pipeline
-			n.rebootNeeded = false
-		} else {
-			// Check if reboot is needed after the completion of the mode switch
-			// Reboot is required for -
-			// 1. When the dataplane is in Classic mode and the intention received from the user is to move to Network Mode
-			// 2. When a user initiates a transition to NetworkMode - a user initiated action will have different timestamp than what is currently saved
-			//    This is required, as many clients/libraries of other processes have the keys in-memory. A process restart, achieved through Naples Reboot,
-			//    is necessary to ensure that these in-memory keys are flushed out.
-			if isDataplaneClassic() || types.TimestampString(&n.config.CreationTime.Timestamp) != types.TimestampString(&cfg.CreationTime.Timestamp) {
-				log.Info("Setting reboot needed flag")
-				n.rebootNeeded = true
-
-				// When moving from HOST->NETWORK, there are no Trust bundles saved
-				// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
-				err := utils.ClearNaplesTrustRoots()
-				if err != nil {
-					log.Errorf("Failed to clear trust certs. Err : %v", err)
-				}
-			} else {
-				// A reboot is not required only in case when at init time, the saved configs are replayed
-				n.rebootNeeded = false
-			}
-		}
+		//// Check if reboot is needed after the completion of the mode switch
+		//// Reboot is required for -
+		//// 1. When the dataplane is in Classic mode and the intention received from the user is to move to Network Mode
+		//// 2. When a user initiates a transition to NetworkMode - a user initiated action will have different timestamp than what is currently saved
+		////    This is required, as many clients/libraries of other processes have the keys in-memory. A process restart, achieved through Naples Reboot,
+		////    is necessary to ensure that these in-memory keys are flushed out.
+		//if isDataplaneClassic() || types.TimestampString(&n.config.CreationTime.Timestamp) != types.TimestampString(&cfg.CreationTime.Timestamp) {
+		//	log.Info("Setting reboot needed flag")
+		//	n.rebootNeeded = true
+		//
+		//	// When moving from HOST->NETWORK, there are no Trust bundles saved
+		//	// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
+		//	err := utils.ClearNaplesTrustRoots()
+		//	if err != nil {
+		//		log.Errorf("Failed to clear trust certs. Err : %v", err)
+		//	}
+		//} else {
+		//	// A reboot is not required only in case when at init time, the saved configs are replayed
+		//	n.rebootNeeded = false
+		//}
 
 		// Update Spec
 		n.SetNaplesConfig(cfg.Spec)
@@ -288,13 +283,13 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	n.config.Status.Mode = n.config.Spec.Mode
 
 	var controllers []string
-	var mgmtIntf string
-
-	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
-		mgmtIntf = ipif.NaplesInbandInterface
-	} else if n.config.Spec.NetworkMode == nmd.NetworkMode_OOB.String() {
-		mgmtIntf = ipif.NaplesOOBInterface
-	}
+	//var mgmtIntf string
+	//
+	//if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+	//	mgmtIntf = ipif.NaplesInbandInterface
+	//} else if n.config.Spec.NetworkMode == nmd.NetworkMode_OOB.String() {
+	//	mgmtIntf = ipif.NaplesOOBInterface
+	//}
 
 	for _, c := range n.config.Status.Controllers {
 		controllers = append(controllers, fmt.Sprintf("%s:%s", c, globals.CMDGRPCAuthPort))
@@ -303,7 +298,7 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	statusObj := agentTypes.DistributedServiceCardStatus{
 		DSCMode:     n.config.Status.Mode,
 		DSCName:     n.config.Status.DSCName,
-		MgmtIntf:    mgmtIntf,
+		MgmtIntf:    n.config.Status.ManagementInterface,
 		Controllers: controllers,
 	}
 	if n.config.Status.IPConfig != nil {
@@ -420,9 +415,9 @@ func (n *NMD) handleHostModeTransition() error {
 		n.config.Status.AdmissionPhase = ""
 		n.config.Status.AdmissionPhaseReason = ""
 
-		if n.rebootNeeded {
-			n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_REBOOT_PENDING.String()
-		}
+		//if n.rebootNeeded {
+		//	n.config.Status.TransitionPhase = nmd.DistributedServiceCardStatus_REBOOT_PENDING.String()
+		//}
 
 		if err := n.PersistState(true); err != nil {
 			log.Errorf("Failed to persist Naples Config. Err : %v", err)
@@ -779,12 +774,12 @@ func (n *NMD) AdmitNaples() {
 
 					nic, _ := n.GetSmartNIC()
 					recorder.Event(eventtypes.DSC_ADMITTED, fmt.Sprintf("DSC %s(%s) admitted to the cluster", nic.Spec.ID, nic.Name), nic)
-					// Transition to reboot pending only on successful admission only if reboot has not been done.
-					if n.rebootNeeded {
-						if err := n.stateMachine.FSM.Event("rebootPending", n); err != nil {
-							log.Errorf("Reboot pending mode transition event failed. Err: %v", err)
-						}
-					}
+					//// Transition to reboot pending only on successful admission only if reboot has not been done.
+					//if n.rebootNeeded {
+					//	if err := n.stateMachine.FSM.Event("rebootPending", n); err != nil {
+					//		log.Errorf("Reboot pending mode transition event failed. Err: %v", err)
+					//	}
+					//}
 					if err := n.UpdateNaplesInfoFromConfig(); err != nil {
 						log.Errorf("Failed to update naples config post updation")
 					}

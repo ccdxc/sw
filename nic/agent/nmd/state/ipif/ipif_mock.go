@@ -14,9 +14,9 @@ func NewMockIPClient(nmd api.NmdAPI, intf string) (*IPClient, error) {
 	var dhcpState DHCPState
 	mgmtIntf, _ := netlink.LinkByName(intf)
 	ipClient := IPClient{
-		nmd:       nmd,
-		intf:      mgmtIntf,
-		dhcpState: &dhcpState,
+		nmd:         nmd,
+		primaryIntf: mgmtIntf,
+		dhcpState:   &dhcpState,
 	}
 	return &ipClient, nil
 }

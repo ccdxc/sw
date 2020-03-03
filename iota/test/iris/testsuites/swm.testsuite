@@ -16,6 +16,8 @@ setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
     config  :
         - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         - step : utils.naples_workloads
         - step : config.netagent.hw_push_config
         - step : testcases.penctl.install

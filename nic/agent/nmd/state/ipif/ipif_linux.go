@@ -39,9 +39,10 @@ func NewIPClient(nmd api.NmdAPI, intf string, pipeline string) (*IPClient, error
 	}
 
 	ipClient := IPClient{
-		nmd:       nmd,
-		intf:      link,
-		dhcpState: &dhcpState,
+		nmd:                 nmd,
+		primaryIntf:         link,
+		secondaryInterfaces: getSecondaryMgmtLink(pipeline, intf),
+		dhcpState:           &dhcpState,
 	}
 
 	return &ipClient, nil
@@ -58,19 +59,19 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 	}
 
 	// Assign IP Address statically
-	if err := netlink.AddrReplace(c.intf, addr); err != nil {
-		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.intf, err)
+	if err := netlink.AddrReplace(c.primaryIntf, addr); err != nil {
+		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.primaryIntf, err)
 		return "", err
 	}
 	// Assign default gw TODO: Verify if the route added by AddrAdd is good enough
 	if len(ipConfig.DefaultGW) != 0 {
 		defaultRoute := &netlink.Route{
-			LinkIndex: c.intf.Attrs().Index,
+			LinkIndex: c.primaryIntf.Attrs().Index,
 			Gw:        net.ParseIP(ipConfig.DefaultGW),
 		}
 		err := netlink.RouteAdd(defaultRoute)
 		if err != nil {
-			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.intf, err)
+			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.primaryIntf, err)
 		}
 	}
 
@@ -103,8 +104,8 @@ func (c *IPClient) DoDHCPConfig() error {
 				log.Info("Retrying DHCP Config")
 				if err := c.doDHCP(); err != nil {
 					log.Errorf("DHCP Config failed due to %v | Retrying...", err)
-					if (c.dhcpState.Client) != nil {
-						if err := c.dhcpState.Client.Close(); err != nil {
+					if (c.dhcpState.PrimaryIntfClient) != nil {
+						if err := c.dhcpState.PrimaryIntfClient.Close(); err != nil {
 							log.Errorf("Failed to cancel DoDHCPConfig. Err: %v", err)
 						}
 					}
@@ -113,8 +114,8 @@ func (c *IPClient) DoDHCPConfig() error {
 					return
 				}
 			case <-ctx.Done():
-				if (c.dhcpState.Client) != nil {
-					if err := c.dhcpState.Client.Close(); err != nil {
+				if (c.dhcpState.PrimaryIntfClient) != nil {
+					if err := c.dhcpState.PrimaryIntfClient.Close(); err != nil {
 						log.Errorf("Failed to cancel DoDHCPConfig. Err: %v", err)
 					}
 				}
@@ -134,37 +135,43 @@ func (c *IPClient) StopDHCPConfig() {
 }
 
 func (c *IPClient) doDHCP() error {
-	if (c.dhcpState.Client) != nil {
-		if err := c.dhcpState.Client.Close(); err != nil {
-			log.Errorf("Failed to close pktsock during doDHCP init. Err: %v", err)
+	if (c.dhcpState.PrimaryIntfClient) != nil {
+		if err := c.dhcpState.PrimaryIntfClient.Close(); err != nil {
+			log.Errorf("Failed to close pktsock during doDHCP init for primary interface. Err: %v", err)
 		}
 	}
 
-	pktSock, err := dhcp.NewPacketSock(c.intf.Attrs().Index, 68, 67)
-	if err != nil {
-		log.Errorf("Failed to create packet sock Err: %v", err)
-		return err
+	for _, c := range c.dhcpState.SecondaryIntfClients {
+		if c != nil {
+			if err := c.Close(); err != nil {
+				log.Errorf("Failed to close pktsock during doDHCP init for secondary interfaces. Err: %v", err)
+			}
+		}
 	}
 
-	client, err := dhcp.New(dhcp.HardwareAddr(c.intf.Attrs().HardwareAddr), dhcp.Connection(pktSock))
-	if err != nil {
-		log.Errorf("Failed to instantiate new DHCP Client. Err: %v", err)
-		pktSock.Close()
-		return err
-	}
-	// Start the control loop and keep polling for err
-	c.dhcpState.Client = client
+	c.dhcpState.PrimaryIntfClient = instantiateDHCPClient(c.primaryIntf)
 
-	if err := c.startDHCP(client); err != nil {
-		log.Errorf("Failed to start dhcp client. Err: %v", err)
-		pktSock.Close()
+	for _, link := range c.secondaryInterfaces {
+		c.dhcpState.SecondaryIntfClients = append(c.dhcpState.SecondaryIntfClients, instantiateDHCPClient(link))
+	}
+
+	if err := c.startDHCP(c.dhcpState.PrimaryIntfClient, c.primaryIntf); err != nil {
+		log.Errorf("Failed to start dhcp client on primary interface. Err: %v", err)
+		for idx, client := range c.dhcpState.SecondaryIntfClients {
+			log.Info("Trying DHCP on secondary interface")
+			err := c.startDHCP(client, c.secondaryInterfaces[idx])
+			if err == nil {
+				return nil
+			}
+		}
+		log.Infof("Trying DHCP on secondary interface")
 		return err
 	}
 
 	return nil
 }
 
-func (c *IPClient) startDHCP(client *dhcp.Client) (err error) {
+func (c *IPClient) startDHCP(client *dhcp.Client, intf netlink.Link) (err error) {
 	disc := client.DiscoverPacket()
 	disc.AddOption(PensandoDHCPRequestOption.Code, PensandoDHCPRequestOption.Value)
 
@@ -199,7 +206,7 @@ func (c *IPClient) startDHCP(client *dhcp.Client) (err error) {
 		return
 	}
 
-	return c.dhcpState.updateDHCPState(ack, c.intf)
+	return c.dhcpState.updateDHCPState(ack, intf)
 
 }
 
@@ -314,7 +321,9 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		d.nmd.PersistState(true)
 	}
 
+	log.Infof("IPConfig during DHCP: %v", ipCfg)
 	d.nmd.SetIPConfig(ipCfg)
+	d.nmd.SetMgmtInterface(mgmtLink.Attrs().Name)
 
 	// Set the interface IPs
 	// Note: This is a temporary code. This config needs to handled by the netagent
@@ -329,7 +338,7 @@ func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link
 		select {
 		case <-ticker.C:
 			d := d
-			_, newAck, err := d.Client.Renew(ackPacket)
+			_, newAck, err := d.PrimaryIntfClient.Renew(ackPacket)
 			if err != nil {
 				log.Infof("Failed to get the new Ack Packet.  Err: %v | Retrying...", err)
 			} else {
@@ -356,7 +365,7 @@ func (c *IPClient) DoNTPSync() error {
 
 // GetIPClientIntf returns the current interface for the instantiated IPClient
 func (c *IPClient) GetIPClientIntf() string {
-	return c.intf.Attrs().Name
+	return c.primaryIntf.Attrs().Name
 }
 
 // GetDHCPState get current dhcp state
@@ -606,4 +615,61 @@ func (d *DHCPState) isValidStaticRouteInfo(route StaticRoute) error {
 	}
 
 	return nil
+}
+
+func getSecondaryMgmtLink(pipeline, primaryIntf string) (secondaryMgmtLinks []netlink.Link) {
+	switch pipeline {
+	case globals.NaplesPipelineApollo:
+		dsc0, err := netlink.LinkByName(ApuluINB0Interface)
+		if err != nil {
+			log.Errorf("Failed to look up interface %v during IP Client init. Err: %v", ApuluINB0Interface, err)
+		}
+		dsc1, err := netlink.LinkByName(ApuluINB1Interface)
+		if err != nil {
+			log.Errorf("Failed to look up interface %v during IP Client init. Err: %v", ApuluINB1Interface, err)
+		}
+
+		if dsc0 != nil {
+			if err := netlink.LinkSetUp(dsc0); err != nil {
+				log.Errorf("Failed to set interface %v up during IP Client init. Err: %v", ApuluINB0Interface, err)
+			}
+			secondaryMgmtLinks = append(secondaryMgmtLinks, dsc0)
+		}
+
+		if dsc1 != nil {
+			if err := netlink.LinkSetUp(dsc1); err != nil {
+				log.Errorf("Failed to set interface %v up during IP Client init. Err: %v", ApuluINB1Interface, err)
+			}
+			secondaryMgmtLinks = append(secondaryMgmtLinks, dsc0)
+		}
+		return
+	case globals.NaplesPipelineIris:
+		oob, err := netlink.LinkByName(NaplesOOBInterface)
+		if err != nil {
+			log.Errorf("Failed to look up interface %v during IP Client init. Err: %v", NaplesOOBInterface, err)
+		}
+		if oob != nil {
+			if err := netlink.LinkSetUp(oob); err != nil {
+				log.Errorf("Failed to set interface %v up during IP Client init. Err: %v", NaplesOOBInterface, err)
+			}
+		}
+		secondaryMgmtLinks = append(secondaryMgmtLinks, oob)
+		return
+	default:
+		return
+	}
+}
+
+func instantiateDHCPClient(link netlink.Link) *dhcp.Client {
+	pktSock, err := dhcp.NewPacketSock(link.Attrs().Index, 68, 67)
+	if err != nil {
+		log.Errorf("Failed to create packet sock Err: %v", err)
+		return nil
+	}
+
+	client, err := dhcp.New(dhcp.HardwareAddr(link.Attrs().HardwareAddr), dhcp.Connection(pktSock))
+	if err != nil {
+		log.Errorf("Failed to  instantiate primary DHCP Client. Err: %v", err)
+	}
+	return client
 }

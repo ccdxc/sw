@@ -78,9 +78,9 @@ type NMD struct {
 	revProxy     *revproxy.ReverseProxyRouter
 	stateMachine *NMDStateMachine
 	tsdbCancel   context.CancelFunc
-	rebootNeeded bool
-	metrics      *NMDMetrics
-	Pipeline     Pipeline
+	//rebootNeeded bool
+	metrics  *NMDMetrics
+	Pipeline Pipeline
 
 	// Naples Information
 	RunningFirmware        *nmd.DSCRunningSoftware
