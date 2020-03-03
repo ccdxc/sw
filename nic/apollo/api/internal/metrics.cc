@@ -10,7 +10,9 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/lib/metrics/metrics.hpp"
+#include "nic/apollo/api/internal/metrics.hpp"
+
+namespace api {
 
 sdk::metrics::metrics_schema_t port_metrics_schema = {
     .name = "Port",
@@ -1038,8 +1040,8 @@ sdk::metrics::metrics_schema_t host_if_metrics_schema = {
 sdk_ret_t
 register_metrics (void)
 {
-    sdk::metrics::metrics_register(&port_metrics_schema);
-    sdk::metrics::metrics_register(&mgmt_port_metrics_schema);
     sdk::metrics::metrics_register(&host_if_metrics_schema);
     return SDK_RET_OK;
 }
+
+}    // namespace api

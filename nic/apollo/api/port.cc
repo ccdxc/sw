@@ -11,6 +11,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -18,6 +19,7 @@
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/port.hpp"
+#include "nic/apollo/api/internal/metrics.hpp"
 
 namespace api {
 
@@ -188,6 +190,16 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
     }
     intf->set_port_info(port_info);
     if_db()->insert(intf);
+    // register the stats region with metrics submodule
+    if (port_args->port_type == port_type_t::PORT_TYPE_ETH) {
+        sdk::metrics::metrics_register((sdk::metrics::key_t *)&key,
+                                       &port_metrics_schema,
+                                       sdk::linkmgr::port_stats_addr(ifindex));
+    } else if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
+        sdk::metrics::metrics_register((sdk::metrics::key_t *)&key,
+                                       &mgmt_port_metrics_schema,
+                                       sdk::linkmgr::port_stats_addr(ifindex));
+    }
     return SDK_RET_OK;
 }
 

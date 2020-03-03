@@ -6,9 +6,10 @@
 #include <stdint.h>
 #include <vector>
 
-#include "shm.hpp"
-#include "kvstore.hpp"
-#include "htable.hpp"
+#include "include/sdk/types.hpp"
+#include "lib/metrics/shm.hpp"
+#include "lib/metrics/kvstore.hpp"
+#include "lib/metrics/htable.hpp"
 
 namespace sdk {
 namespace metrics {
@@ -36,6 +37,12 @@ typedef std::vector<metrics_counter_pair_t> metrics_counters_t;
 
 // Returns a handle. NULL in case of failure
 extern void *metrics_register(metrics_schema_t *schema);
+static inline void *
+metrics_register (key_t *key, metrics_schema_t *schema,
+                  mem_addr_t addr) {
+    // TODO: #stavros, defining this to reflect the intended usage
+    return NULL;
+}
 
 extern void metrics_set_address(void *handler, key_t key, unsigned int counter,
                                 void *address);
