@@ -172,12 +172,14 @@ func (pm *PolicyManager) HandleEvents() error {
 func (pm *PolicyManager) initAPIGrpcClient(serviceName string) apiclient.Services {
 	for {
 		for i := 0; i < maxRetry; i++ {
+			bl := balancer.New(pm.nsClient)
 			// create a grpc client
 			client, apiErr := apiclient.NewGrpcAPIClient(globals.Tpm, serviceName, vLog.WithContext("pkg", "TPM-GRPC-API"),
-				rpckit.WithBalancer(balancer.New(pm.nsClient)))
+				rpckit.WithBalancer(bl))
 			if apiErr == nil {
 				return client
 			}
+			bl.Close()
 			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, apiErr)
 			time.Sleep(2 * time.Second)
 		}
@@ -188,13 +190,15 @@ func (pm *PolicyManager) initAPIGrpcClient(serviceName string) apiclient.Service
 func (pm *PolicyManager) initMetricGrpcClient(serviceName string) metric.MetricApiClient {
 	for {
 		for i := 0; i < maxRetry; i++ {
+			bl := balancer.New(pm.nsClient)
 			// create a grpc client
 			client, err := rpckit.NewRPCClient(globals.Tpm, serviceName,
-				rpckit.WithBalancer(balancer.New(pm.nsClient)))
+				rpckit.WithBalancer(bl))
 			if err == nil {
 				return metric.NewMetricApiClient(client.ClientConn)
 			}
 
+			bl.Close()
 			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, err)
 			time.Sleep(2 * time.Second)
 		}

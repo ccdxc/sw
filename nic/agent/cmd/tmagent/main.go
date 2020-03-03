@@ -8,8 +8,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/tmagent/state"
-	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 
 	"github.com/pensando/sw/api"

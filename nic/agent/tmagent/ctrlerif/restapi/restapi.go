@@ -22,7 +22,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent"
-	"github.com/pensando/sw/nic/agent/tpa/state/types"
+	"github.com/pensando/sw/nic/agent/tmagent/types"
 	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/utils/log"
