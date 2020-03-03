@@ -18,6 +18,7 @@ third-party/asic/aarch64
 third-party/asic/include
 third-party/asic/capri
 third-party/asic/ip
+third-party/asic/elba
 third-party/libev
 third-party/libnuma
 third-party/vpp-pkg

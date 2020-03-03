@@ -88,6 +88,7 @@ public:
   vector<uint32_t> block_read(uint32_t chip, uint64_t addr, int size, bool no_zero_time, uint32_t flags=secure_acc_e);
   bool burst_write(uint32_t chip, uint64_t addr, unsigned int len, const unsigned char * data, bool no_zero_time, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
   bool burst_read(uint32_t chip, uint64_t addr, unsigned int len, unsigned char * data, bool no_zero_time, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
+  void flush_all_pending();
   bool cpu_csr_node_burst_write(uint32_t chip, uint64_t addr, unsigned int len, const unsigned char * data, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
   bool cpu_csr_node_burst_read(uint32_t chip, uint64_t addr, unsigned int len, unsigned char * data, uint32_t flags=secure_acc_e, bool reverse_byte_order = false);
 

@@ -12,7 +12,7 @@
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "platform/utils/mpart_rsvd.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
-#include "platform/capri/csr/asicrw_if.hpp"
+#include "platform/csr/asicrw_if.hpp"
 #include "platform/mputrace/mputrace.hpp"
 
 namespace sdk {

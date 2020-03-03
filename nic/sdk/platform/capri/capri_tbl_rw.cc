@@ -27,7 +27,7 @@
 #include "third-party/asic/ip/verif/pcpp/cpp_int_helper.h"
 #include "third-party/asic/capri/verif/apis/cap_pics_api.h"
 #include "third-party/asic/capri/verif/apis/cap_pict_api.h"
-#include "platform/capri/csr/asicrw_if.hpp"
+#include "platform/csr/asicrw_if.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pict_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"

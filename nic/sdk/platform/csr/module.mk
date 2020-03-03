@@ -1,5 +1,5 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-
+# TODO rename this library to sdk_asicrw_if
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkcapri_asicrw_if.so
 MODULE_DEFS     = ${NIC_CSR_DEFINES}

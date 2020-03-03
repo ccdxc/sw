@@ -1,5 +1,5 @@
 #include "lib/pal/pal.hpp"
-#include "platform/capri/csr/asicrw_if.hpp"
+#include "platform/csr/asicrw_if.hpp"
 
 uint32_t
 cpu_hal_if::read(uint32_t chip, uint64_t addr,

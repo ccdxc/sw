@@ -81,6 +81,8 @@ public:
     PLOG_ERR("cpu burst read not implemented. name=" << _cpu_if_name << " path:" << _cpu_if_hier_path << endl);
     return false;
   }
+  virtual void flush_all_pending() {
+  }
 
   //virtual int call_uvm_hdl_deposit(uint32_t chip, char * path, vector<uint32_t> & value) { return 0; }
 
