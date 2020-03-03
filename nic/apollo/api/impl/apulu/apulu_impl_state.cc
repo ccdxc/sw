@@ -56,8 +56,10 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     SDK_ASSERT(copp_idxr_ != NULL);
 
     // NAT table bookkeeping (reserve 0th entry for no xlation)
+    // NOTE: 1st half of the table is used for config and 2nd half by VPP
+    //       for dynamic bindings
     p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
-    nat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
+    nat_idxr_ = rte_indexer::factory(tinfo.tabledepth >> 1, true, true);
     SDK_ASSERT(nat_idxr_ != NULL);
 
     // DNAT table bookkeeping

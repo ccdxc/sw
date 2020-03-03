@@ -12,6 +12,7 @@
 #define __MAPPING_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -81,16 +82,18 @@ public:
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
+    rte_indexer *ip_mac_binding_idxr(void) { return ip_mac_binding_idxr_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
-    friend class vnic_impl;
+    friend class vnic_impl;       ///< friend of mapping_impl_state
     friend void local_mapping_dump_cb(sdk_table_api_params_t *params);
 
 private:
-    mem_hash    *local_mapping_tbl_;
-    mem_hash    *mapping_tbl_;
-    slab        *mapping_impl_slab_;
+    mem_hash *mapping_tbl_;
+    mem_hash *local_mapping_tbl_;
+    rte_indexer *ip_mac_binding_idxr_;
     dhcpctl_handle dhcp_connection_;
+    slab *mapping_impl_slab_;
 };
 
 /// \@}

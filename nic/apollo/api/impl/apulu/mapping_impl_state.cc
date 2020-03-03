@@ -58,6 +58,11 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(mapping_tbl_ != NULL);
 
+    // instantiate indexer for binding table
+    p4pd_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
+    ip_mac_binding_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
+    SDK_ASSERT(ip_mac_binding_idxr_ != NULL);
+
     // create a slab for mapping impl entries
     mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
                                        sizeof(mapping_impl), 8192, true, true);
@@ -71,6 +76,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(local_mapping_tbl_);
     mem_hash::destroy(mapping_tbl_);
+    rte_indexer::destroy(ip_mac_binding_idxr_);
     slab::destroy(mapping_impl_slab_);
 }
 
