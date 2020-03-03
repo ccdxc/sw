@@ -4,6 +4,7 @@
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
 #include "linkmgr_internal.hpp"
+#include "linkmgr.hpp"
 #include "linkmgr_types.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "platform/drivers/xcvr.hpp"
@@ -12,7 +13,6 @@
 #include "lib/pal/pal.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "asic/rw/asicrw.hpp"
-#include "include/sdk/port_utils.hpp"
 
 namespace sdk {
 namespace linkmgr {
@@ -1638,31 +1638,14 @@ sdk_ret_t
 port::port_mac_stats_init(void)
 {
     uint32_t ifindex;
-    sdk::types::mem_addr_t port_stats_base = INVALID_MEM_ADDRESS;
-
-    this->port_stats_base_addr_ = INVALID_MEM_ADDRESS;
-    if (g_linkmgr_cfg.mempartition == NULL) {
-        SDK_TRACE_ERR("port %u stats_init NULL mempartition port stats not supported",
-            this->port_num_);
-        return SDK_RET_OK; // legacy
-    }
-    port_stats_base = g_linkmgr_cfg.mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS);
-    SDK_TRACE_DEBUG("port %u stats_init mpartition 0x%x, port_stats_base 0x%llx",
-            this->port_num_, g_linkmgr_cfg.mempartition, port_stats_base);
-
-    if ((port_stats_base == 0) || (port_stats_base== INVALID_MEM_ADDRESS)) {
-        // legacy json; old stats model; log and return ok
-        SDK_TRACE_ERR("port %u stats_init port_stats_base 0x%llx port stats not supported",
-            this->port_num_, port_stats_base);
-        return SDK_RET_OK;
-    }
 
     ifindex = sdk::lib::catalog::logical_port_to_ifindex(port_num());
-    this->port_stats_base_addr_ = port_stats_base + port_stats_addr_offset(ifindex);
-
-    SDK_TRACE_DEBUG("port %u stats_init port_stats_base = 0x%llx, port_stats_base_addr_ = 0x%llx",
-                     this->port_num_, port_stats_base, this->port_stats_base_addr_);
-
+    this->port_stats_base_addr_ = sdk::linkmgr::port_stats_addr(ifindex);
+    if (this->port_stats_base_addr_ == INVALID_MEM_ADDRESS) {
+        return SDK_RET_ERR;
+    }
+    SDK_TRACE_DEBUG("port %u stats_init, port_stats_base_addr_ = 0x%llx",
+                    this->port_num_, this->port_stats_base_addr_);
     return SDK_RET_OK;
 }
 

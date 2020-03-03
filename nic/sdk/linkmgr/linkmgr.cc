@@ -10,6 +10,7 @@
 #include "linkmgr_state.hpp"
 #include "linkmgr_internal.hpp"
 #include "port.hpp"
+#include "include/sdk/port_utils.hpp"
 
 using namespace sdk::event_thread;
 using namespace sdk::ipc;
@@ -1326,6 +1327,27 @@ port_admin_state_t
 port_default_admin_state (void)
 {
     return g_linkmgr_cfg.admin_state;
+}
+
+mem_addr_t
+port_stats_addr (uint32_t ifindex)
+{
+    sdk::types::mem_addr_t port_stats_base;
+
+    if (g_linkmgr_cfg.mempartition == NULL) {
+        SDK_TRACE_ERR("port %s stats_init NULL mempartition port stats not supported",
+                      eth_ifindex_to_str(ifindex).c_str());
+        return INVALID_MEM_ADDRESS;
+    }
+    port_stats_base = g_linkmgr_cfg.mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS);
+
+    if ((port_stats_base == 0) || (port_stats_base == INVALID_MEM_ADDRESS)) {
+        SDK_TRACE_ERR("port %s stats_init port_stats_base 0x%llx port stats not supported",
+                      eth_ifindex_to_str(ifindex).c_str(), port_stats_base);
+        return INVALID_MEM_ADDRESS;
+    }
+
+    return port_stats_base + port_stats_addr_offset(ifindex);
 }
 
 }    // namespace linkmgr

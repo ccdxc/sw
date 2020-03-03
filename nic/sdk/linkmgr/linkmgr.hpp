@@ -110,6 +110,12 @@ port_admin_state_t port_default_admin_state(void);
 void linkmgr_threads_stop(void);
 void linkmgr_threads_wait(void);
 
+// \@brief     get the stats base address
+// \@param[in] ifindex ifindex of the port
+// \@return    on success, returns stats base address for port,
+//             else INVALID_MEM_ADDRESS
+mem_addr_t port_stats_addr(uint32_t ifindex);
+
 static inline void
 port_args_init (port_args_t *args)
 {
