@@ -225,8 +225,8 @@ bool
 NotifyQ::TxQPost(const void *desc)
 {
     notify_qstate_t     qstate;
+    asic_db_addr_t      db_addr;
     uint64_t            qstate_addr;
-    uint64_t            tx_db_addr;
     uint64_t            tx_db_data;
     uint64_t            desc_addr;
     uint32_t            new_p_index0;
@@ -249,14 +249,16 @@ NotifyQ::TxQPost(const void *desc)
         desc_addr = tx_ring_base + (tx_desc_size * tx_head);
         WRITE_MEM(desc_addr, (uint8_t *)desc, tx_desc_size, 0);
 
-        tx_db_addr = HW_DB_ADDR_LOCAL_CSR +
-                     ACCEL_LIF_DBADDR_SET(lif_id, tx_qtype);
+        db_addr.lif_id = lif_id;
+        db_addr.q_type = tx_qtype;
+        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB, ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+
         tx_head = new_p_index0;
         tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);
-        NIC_LOG_DEBUG("{}: NOTIFYQ tx_db_addr {:#x} tx_db_data {:#x}",
-                      name, tx_db_addr, tx_db_data);
+
         PAL_barrier();
-        WRITE_DB64(tx_db_addr, tx_db_data);
+        sdk::asic::pd::asic_ring_db(&db_addr, tx_db_data);
+
         return true;
     }
 
@@ -379,7 +381,7 @@ HwMonitor::ErrPoll(void *obj)
      * HW unrecoverable errors detected, notify host driver so it can
      * issue LIF reset if applicable.
      */
-    if ((mon->reason_code & ACCEL_LIF_REASON_ALL_ERR_RESET_MASK) && 
+    if ((mon->reason_code & ACCEL_LIF_REASON_ALL_ERR_RESET_MASK) &&
         mon->lif.notifyq) {
 
         reset_event_t reset_ev = {0};

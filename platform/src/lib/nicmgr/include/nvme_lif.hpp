@@ -54,21 +54,7 @@
 
 
 /*
- *  Local doorbell address formation
- */
-#define NVME_DB_ADDR_BASE_LOCAL             0x8800000
-#define NVME_LIF_DBADDR_UPD                 0x0b
-#define NVME_DB_UPD_SHFT                     17
-#define NVME_DB_LIF_SHFT                     6
-#define NVME_DB_TYPE_SHFT                    3
-#define NVME_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
-    (((uint64_t)(lif) << NVME_DB_LIF_SHFT) |                \
-    ((uint64_t)(qtype) << NVME_DB_TYPE_SHFT) |              \
-    ((uint64_t)(NVME_LIF_DBADDR_UPD) << NVME_DB_UPD_SHFT) | \
-    NVME_DB_ADDR_BASE_LOCAL)
-
-/*
- *  Local doorbell data formation
+ *  Local doorbell formation
  */
 #define NVME_DB_DATA_QID_SHIFT               24
 #define NVME_DB_DATA_RING_SHIFT              16

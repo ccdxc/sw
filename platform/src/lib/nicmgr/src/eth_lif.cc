@@ -51,6 +51,12 @@ using namespace sdk::platform::utils;
 
 sdk::lib::indexer *EthLif::fltr_allocator = sdk::lib::indexer::factory(4096);
 
+static inline uint8_t
+eth_lif_db_upd (void)
+{
+    return ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                 ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+}
 
 const char *
 EthLif::lif_state_to_str(enum eth_lif_state state)
@@ -2772,7 +2778,9 @@ EthLif::LinkEventHandler(port_status_t *evd)
         return;
     }
 
-    uint64_t addr, req_db_addr;
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     // Send the link event notification
     struct link_change_event msg = {
@@ -2784,18 +2792,18 @@ EthLif::LinkEventHandler(port_status_t *evd)
 
     addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
     WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
-    req_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-        (hal_lif_info_.lif_id << 6) + (ETH_NOTIFYQ_QTYPE << 3);
+
+    db_addr.lif_id = hal_lif_info_.lif_id;
+    db_addr.q_type = ETH_NOTIFYQ_QTYPE;
+    db_addr.upd = eth_lif_db_upd();
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
-    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
+
+    db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     // FIXME: Wait for completion
 }
@@ -2818,7 +2826,9 @@ EthLif::XcvrEventHandler(port_status_t *evd)
         return;
     }
 
-    uint64_t addr, req_db_addr;
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     ++lif_status->eid;
 
@@ -2830,18 +2840,18 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 
     addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
     WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
-    req_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-        (hal_lif_info_.lif_id << 6) + (ETH_NOTIFYQ_QTYPE << 3);
+
+    db_addr.lif_id = hal_lif_info_.lif_id;
+    db_addr.q_type = ETH_NOTIFYQ_QTYPE;
+    db_addr.upd = eth_lif_db_upd();
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
-    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
+
+    db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     // FIXME: Wait for completion
 }
@@ -2871,7 +2881,9 @@ EthLif::SendFWDownEvent()
         return;
     }
 
-    uint64_t addr, req_db_addr;
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     // Send the link event notification
     struct reset_event msg = {
@@ -2883,22 +2895,23 @@ EthLif::SendFWDownEvent()
 
     addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
     WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
-    req_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-        (hal_lif_info_.lif_id << 6) + (ETH_NOTIFYQ_QTYPE << 3);
+
+    db_addr.lif_id = hal_lif_info_.lif_id;
+    db_addr.q_type = ETH_NOTIFYQ_QTYPE;
+    db_addr.upd = eth_lif_db_upd();
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
-    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
+
+    db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     // FIXME: Wait for completion
 
-    NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state), "RESET",
+    NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name,
+                 lif_state_to_str(state), "RESET",
                  lif_state_to_str(state));
 }
 

@@ -116,6 +116,10 @@ typedef enum asic_state_e {
     ASIC_STATE_QUIESCED = 1
 } asic_state_t;
 
+// Asic Doorbell address
+uint64_t asic_local_dbaddr_get(void);
+uint64_t asic_host_dbaddr_get(void);
+
 // returns true if the init type is SOFT, false otherwise
 bool is_soft_init(void);
 // returns true if the init type is UPGRADE, false otherwise

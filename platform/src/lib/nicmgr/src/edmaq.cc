@@ -119,7 +119,9 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
 bool
 EdmaQ::Reset()
 {
-    uint64_t addr, req_db_addr;
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     NIC_LOG_INFO("{}: Resetting edmaq lif {} qtype {} qid {}",
         name, lif, qtype, qid);
@@ -137,18 +139,16 @@ EdmaQ::Reset()
 
     MEM_SET(addr, 0, fldsiz(edma_qstate_t, pc_offset), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    req_db_addr =
-#ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b0 << 17) +
-                (lif << 6) +
-                (qtype << 3);
+    db_addr.lif_id = lif;
+    db_addr.q_type = qtype;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_NONE,
+                                        ASIC_DB_UPD_INDEX_UPDATE_NONE, false);
 
-    WRITE_DB64(req_db_addr, qid << 24);
+    db_data = qid << 24;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     init = false;
 
@@ -181,9 +181,11 @@ EdmaQ::Debug(bool enable)
 
 bool
 EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
-    struct edmaq_ctx *ctx)
+            struct edmaq_ctx *ctx)
 {
-    uint64_t addr, req_db_addr;
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
     auto offset = 0;
     auto chunk_sz = (size < EDMAQ_MAX_TRANSFER_SZ) ? size : EDMAQ_MAX_TRANSFER_SZ;
     auto transfer_sz = 0;
@@ -243,17 +245,15 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         bytes_left -= transfer_sz;
     }
 
-    req_db_addr =
-#ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
-                (lif << 6) +
-                (qtype << 3);
+    db_addr.lif_id = lif;
+    db_addr.q_type = qtype;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                        ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     PAL_barrier();
-    WRITE_DB64(req_db_addr, (qid << 24) | head);
+
+    db_data = (qid << 24) | head;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     if (ctx == NULL) {
         Flush();

@@ -46,20 +46,6 @@ enum virtio_qtype {
     (VIRTIO_PHYS_ADDR_HOST_SET(host) | VIRTIO_PHYS_ADDR_LIF_SET(lif))
 
 /*
- *  Local doorbell address formation
- */
-#define VIRTIO_DB_ADDR_BASE_LOCAL               0x8800000
-#define VIRTIO_LIF_DBADDR_UPD                   0b1101 /* PI_INCR | SCHED_EVAL */
-#define VIRTIO_DB_UPD_SHFT                      17
-#define VIRTIO_DB_LIF_SHFT                      6
-#define VIRTIO_DB_TYPE_SHFT                     3
-#define VIRTIO_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
-    (((uint64_t)(lif) << VIRTIO_DB_LIF_SHFT) |                \
-    ((uint64_t)(qtype) << VIRTIO_DB_TYPE_SHFT) |              \
-    ((uint64_t)(VIRTIO_LIF_DBADDR_UPD) << VIRTIO_DB_UPD_SHFT) | \
-    VIRTIO_DB_ADDR_BASE_LOCAL)
-
-/*
  *  Local doorbell data formation
  */
 #define VIRTIO_DB_DATA_QID_SHIFT                24

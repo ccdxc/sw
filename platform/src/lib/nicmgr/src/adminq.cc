@@ -219,7 +219,9 @@ AdminQ::Reset()
 bool
 AdminQ::AdminRequestQReset()
 {
-    uint64_t req_qstate_addr, req_db_addr;
+    uint64_t req_qstate_addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     if (!req_init)
         return true;
@@ -236,13 +238,13 @@ AdminQ::AdminRequestQReset()
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
                             P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    req_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b0 << 17) + (lif << 6) + (req_qtype << 3);
+    db_addr.lif_id = lif;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_NONE,
+                                        ASIC_DB_UPD_INDEX_UPDATE_NONE, false);
+    db_addr.q_type = req_qtype;
 
-    WRITE_DB64(req_db_addr, req_qid << 24);
+    db_data = (req_qid << 24);
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     req_init = false;
 
@@ -252,7 +254,9 @@ AdminQ::AdminRequestQReset()
 bool
 AdminQ::AdminResponseQReset()
 {
-    uint64_t resp_qstate_addr, resp_db_addr;
+    uint64_t resp_qstate_addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
 
     if (!resp_init)
         return true;
@@ -269,13 +273,13 @@ AdminQ::AdminResponseQReset()
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
                             P4PLUS_CACHE_INVALIDATE_TXDMA);
 
-    resp_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b0 << 17) + (lif << 6) + (resp_qtype << 3);
+    db_addr.lif_id = lif;
+    db_addr.q_type = resp_qtype;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_NONE,
+                                        ASIC_DB_UPD_INDEX_UPDATE_NONE, false);
 
-    WRITE_DB64(resp_db_addr, resp_qid << 24);
+    db_data = resp_qid << 24;
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     resp_init = false;
 
@@ -285,7 +289,8 @@ AdminQ::AdminResponseQReset()
 bool
 AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
 {
-    uint64_t addr;
+    uint64_t req_db_data, addr;
+    asic_db_addr_t db_addr = { 0 };
     struct nicmgr_req_comp_desc comp = {0};
 
     addr = req_comp_base + req_comp_tail * sizeof(struct nicmgr_req_comp_desc);
@@ -312,16 +317,16 @@ AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
         req_tail = (req_tail + 1) & (req_ring_size - 1);
 
         // Ring doorbell to update the PI
-        uint64_t req_db_addr =
-#ifdef __aarch64__
-            CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-            CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1000 /* PI_UPD + NO_SCHED */ << 17) +
-            (lif << 6) + (req_qtype << 3);
-        uint64_t req_db_data = (req_qid << 24) | (0 << 16) | req_head;
-        NIC_LOG_DEBUG("{}: req_db_addr {:#x} req_db_data {:#x}", name, req_db_addr, req_db_data);
+        db_addr.lif_id = lif;
+        db_addr.q_type = req_qtype;
+        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_NONE,
+                                            ASIC_DB_UPD_INDEX_SET_PINDEX,
+                                            false);
+
+        req_db_data = (req_qid << 24) | (0 << 16) | req_head;
         PAL_barrier();
-        WRITE_DB64(req_db_addr, req_db_data);
+
+        sdk::asic::pd::asic_ring_db(&db_addr, req_db_data);
 
         return true;
     }
@@ -332,6 +337,8 @@ AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
 bool
 AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
 {
+    uint64_t resp_db_data;
+    asic_db_addr_t db_addr = { 0 };
     // Write response descriptor
     uint64_t resp_desc_addr = resp_ring_base + (sizeof(*resp_desc) * resp_tail);
     WRITE_MEM(resp_desc_addr, (uint8_t *)resp_desc, sizeof(*resp_desc), 0);
@@ -344,16 +351,15 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
     resp_tail = (resp_tail + 1) & (resp_ring_size - 1);
 
     // Ring doorbell to update the PI and run response program
-    uint64_t resp_db_addr =
-#ifdef __aarch64__
-        CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-        CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b1011 /* PI_UPD + SCHED_COSB */ << 17) +
-        (lif << 6) + (resp_qtype << 3);
-    uint64_t resp_db_data = (resp_qid << 24) | (0 << 16) | resp_tail;
-    NIC_LOG_DEBUG("{}: resp_db_addr {:#x} resp_db_data {:#x}", name, resp_db_addr, resp_db_data);
+    db_addr.lif_id = lif;
+    db_addr.q_type = resp_qtype;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                        ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+
+    resp_db_data = (resp_qid << 24) | (0 << 16) | resp_tail;
+
     PAL_barrier();
-    WRITE_DB64(resp_db_addr, resp_db_data);
+    sdk::asic::pd::asic_ring_db(&db_addr, resp_db_data);
 
     return true;
 }

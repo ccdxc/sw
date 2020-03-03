@@ -45,18 +45,7 @@
 /*
  * Local doorbell address formation
  */
-#define ACCEL_LIF_DBADDR_UPD            0x0b
-#define DB_UPD_SHFT                     17
-#define DB_LIF_SHFT                     6
-#define DB_TYPE_SHFT                    3
 #define DB_QID_SHFT                     24
-#define ACCEL_LIF_DBADDR_SET(lif, qtype)                \
-    (((uint64_t)(lif) << DB_LIF_SHFT) |                 \
-    ((uint64_t)(qtype) << DB_TYPE_SHFT) |               \
-    ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT))
-
-#define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
-    (ACCEL_LIF_DBADDR_SET(lif, qtype) | HW_DB_ADDR_LOCAL_CSR)
 
 #define ACCEL_LIF_DBDATA_SET(qid, pndx)                 \
     (((uint64_t)(qid) << DB_QID_SHFT) | (pndx))

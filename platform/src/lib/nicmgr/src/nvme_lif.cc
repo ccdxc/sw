@@ -472,7 +472,8 @@ NvmeLif::CmdHandler(void *req,
         return NVME_RC_SUCCESS;
     }
 
-    uint64_t addr, db_addr, db_data;
+    uint64_t addr, db_data;
+    asic_db_addr_t db_addr;
 
     if (src_addr != 0) {
         struct edma_cmd_desc edma_cmd = {
@@ -565,14 +566,17 @@ NvmeLif::CmdHandler(void *req,
     //skip color check to later after polling
 
     //Ring doorbell at the end
-    db_addr = NVME_LIF_LOCAL_DBADDR_SET(LifIdGet(), NVME_QTYPE_ARMQ);
+    db_addr.lif_id = LifIdGet();
+    db_addr.q_type = NVME_QTYPE_ARMQ;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB, ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+
     db_data = NVME_LIF_LOCAL_DBDATA_SET(NVME_ARMQ_EDMAQ_QID, 0 /*ring*/, edma_ring_head);
+
     NIC_LOG_DEBUG("db lif: {} qtype: {} qid: {} ring: {} pindex: {}",
                   LifIdGet(), NVME_QTYPE_ARMQ, NVME_ARMQ_EDMAQ_QID, 0, edma_ring_head);
-    NIC_LOG_DEBUG("db_addr: {:#x} db_data: {:#x}", db_addr, db_data);
     PAL_barrier();
     //free(ctrlr_data_p);
-    WRITE_DB64(db_addr, db_data);
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
     // skip completion, monitor the last one.
     edma_comp_tail = (edma_comp_tail + 1) % NVME_ARMQ_EDMA_RING_SIZE;

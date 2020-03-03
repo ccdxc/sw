@@ -18,44 +18,7 @@
 /*
  * Local doorbell address formation
  */
-#ifdef ELBA
-#include "elb_top_csr_defines.h"
-#include "elb_wa_csr_define.h"
-#include "elb_ms_csr_define.h"
-
-#ifdef __aarch64__
-#define HW_DB_ADDR_LOCAL_CSR            (ELB_ADDR_BASE_DB_WA_OFFSET + \
-                                         ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#else
-#define HW_DB_ADDR_LOCAL_CSR            (ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#endif  // __aarch64__
-#else
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-#include "cap_ms_c_hdr.h"
-#ifdef __aarch64__
-#define HW_DB_ADDR_LOCAL_CSR            (CAP_ADDR_BASE_DB_WA_OFFSET + \
-                                         CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#else
-#define HW_DB_ADDR_LOCAL_CSR            (CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#endif // __aarch64__
-#endif // ELBA
-
-#define FTL_LIF_DBADDR_UPD              0x0b
-#define FTL_LIF_DBADDR_UPD_INC          0x0f
-#define FTL_LIF_DBADDR_UPD_CLR          0x02
-#define DB_UPD_SHFT                     17
-#define DB_LIF_SHFT                     6
-#define DB_TYPE_SHFT                    3
 #define DB_QID_SHFT                     24
-#define FTL_LIF_DBADDR_SET(lif, qtype, upd)                         \
-    (((uint64_t)(lif) << DB_LIF_SHFT) |                             \
-    ((uint64_t)(qtype) << DB_TYPE_SHFT) |                           \
-    ((uint64_t)(upd) << DB_UPD_SHFT))
-
-#define FTL_LIF_LOCAL_DBADDR_SET(lif, qtype, upd)                   \
-    (FTL_LIF_DBADDR_SET(lif, qtype, upd) | HW_DB_ADDR_LOCAL_CSR)
 
 #define FTL_LIF_DBDATA_SET(qid, pndx)                               \
     (((uint64_t)(qid) << DB_QID_SHFT) | (pndx))

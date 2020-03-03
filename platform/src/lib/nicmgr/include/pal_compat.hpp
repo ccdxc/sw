@@ -5,6 +5,8 @@
 #ifndef __PAL_COMPAT_HPP__
 #define __PAL_COMPAT_HPP__
 
+#include "nic/sdk/asic/pd/db.hpp"
+
 #ifdef __x86_64__
 
 #include "nic/sdk/lib/pal/pal.hpp"
@@ -53,8 +55,6 @@ static inline uint64_t READ_REG64(uint64_t addr)
     uint64_t v = val; \
     sdk::lib::pal_reg_write(addr, (uint32_t *)&v, 2); \
 }
-
-#define WRITE_DB64      sdk::lib::pal_ring_db64
 
 #ifndef PAL_barrier
 #define PAL_barrier()           do {} while (0)
@@ -105,8 +105,6 @@ static inline void WRITE_DEVINFO(const char *cfg_path, const char *fname,
 #define WRITE_REG32     pal_reg_wr32
 #define READ_REG64      pal_reg_rd64
 #define WRITE_REG64     pal_reg_wr64
-
-#define WRITE_DB64      pal_reg_wr64
 
 #define MEM_CLR(pa, va, sz, skip) { \
     if (!skip) { \

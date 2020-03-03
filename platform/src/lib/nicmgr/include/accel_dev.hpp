@@ -31,12 +31,6 @@
 // Temporarily using CHIPID since VER is not yet exported from model
 #define HW_CHIP_VER_CSR                 (ELB_ADDR_BASE_MS_MS_OFFSET + \
                                          ELB_MS_CSR_STA_TAP_CHIPID_BYTE_ADDRESS)
-#ifdef __aarch64__
-#define HW_DB_ADDR_LOCAL_CSR            (ELB_ADDR_BASE_DB_WA_OFFSET + \
-                                         ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#else
-#define HW_DB_ADDR_LOCAL_CSR            ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS
-#endif  // __aarch64__
 // Temporarily set ASIC type/rev to 0 since VER is not yet exported from model
 #define HW_ASIC_TYPE_GET(ver)           ((ver) & 0)
 #define HW_ASIC_REV_GET(ver)            ((ver) & 0)
@@ -57,12 +51,6 @@
 
 #define HW_CHIP_VER_CSR                 (CAP_ADDR_BASE_MS_MS_OFFSET + \
                                          CAP_MS_CSR_STA_VER_BYTE_ADDRESS)
-#ifdef __aarch64__
-#define HW_DB_ADDR_LOCAL_CSR            (CAP_ADDR_BASE_DB_WA_OFFSET + \
-                                         CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
-#else
-#define HW_DB_ADDR_LOCAL_CSR            CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS
-#endif // __aarch64__
 #define HW_ASIC_TYPE_GET(ver)           CAP_MS_CSR_STA_VER_CHIP_TYPE_GET(ver)
 #define HW_ASIC_REV_GET(ver)            CAP_MS_CSR_STA_VER_CHIP_VERSION_GET(ver)
 #define CPDC_INT_ERR_LOG_MASK           CAPRI_CPDC_INT_ERR_LOG_MASK

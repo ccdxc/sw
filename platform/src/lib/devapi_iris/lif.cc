@@ -896,11 +896,11 @@ sdk_ret_t
 devapi_lif::update_bcast_filters(lif_bcast_filter_t bcast_filter)
 {
     sdk_ret_t status = SDK_RET_OK;
-    
+
     NIC_LOG_DEBUG("Bcast filters update lif: {}: arp: {}, dhcp_client: {}, "
                   "dhcp_server: {}, netbios: {}",
-                  get_id(), 
-                  bcast_filter.arp, bcast_filter.dhcp_client, 
+                  get_id(),
+                  bcast_filter.arp, bcast_filter.dhcp_client,
                   bcast_filter.dhcp_server, bcast_filter.netbios);
     if (bcast_filter.arp != info_.bcast_filter.arp ||
         bcast_filter.dhcp_client != info_.bcast_filter.dhcp_client ||
@@ -926,11 +926,11 @@ devapi_lif::update_mcast_filters(lif_mcast_filter_t mcast_filter)
 
     NIC_LOG_DEBUG("Mcast filters Update lif: {}: ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
                   "dhcpv6_relay: {}, dhcpv6_mcast: {}, ipv6_mld: {}, ipv6_neigh_sol: {}",
-                  get_id(), 
+                  get_id(),
                   mcast_filter.ipv6_neigh_adv, mcast_filter.ipv6_router_adv,
-                  mcast_filter.dhcpv6_relay, mcast_filter.dhcpv6_mcast, 
+                  mcast_filter.dhcpv6_relay, mcast_filter.dhcpv6_mcast,
                   mcast_filter.ipv6_mld, mcast_filter.ipv6_neigh_sol);
-    
+
     if (mcast_filter.ipv6_neigh_adv != info_.mcast_filter.ipv6_neigh_adv ||
         mcast_filter.ipv6_router_adv != info_.mcast_filter.ipv6_router_adv ||
         mcast_filter.dhcpv6_relay != info_.mcast_filter.dhcpv6_relay ||
@@ -1371,7 +1371,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     *req_ptr = req;
 }
 
-sdk_ret_t 
+sdk_ret_t
 devapi_lif::set_micro_seg_en(bool en)
 {
     devapi_lif *lif= NULL;

@@ -385,14 +385,15 @@ VirtIOLif::SetupTxQstate(int tx_qid,
 void
 VirtIOLif::NotifyTxQueue(int tx_qid)
 {
-    uint64_t addr = VIRTIO_LIF_LOCAL_DBADDR_SET(LifIdGet(), VIRTIO_QTYPE_TX);
-    uint64_t data = VIRTIO_LIF_LOCAL_DBDATA_SET(tx_qid, 0, 0);
+    asic_db_addr_t db_addr = { 0 };
+    uint64_t db_data = VIRTIO_LIF_LOCAL_DBDATA_SET(tx_qid, 0, 0);
 
-    NIC_LOG_DEBUG("{}: TXQ{} doorbell addr {:#x} data {:#x}",
-                  LifNameGet(), tx_qid, addr, data);
+    db_addr.lif_id = LifIdGet();
+    db_addr.q_type = VIRTIO_QTYPE_TX;
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL, ASIC_DB_UPD_INDEX_INCR_PINDEX, false);
 
     PAL_barrier();
-    WRITE_DB64(addr, data);
+    sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 }
 
 /*

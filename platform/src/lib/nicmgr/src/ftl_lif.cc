@@ -841,7 +841,7 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
         FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
 
         /*
-         * Note: this->lif_name must remains fixed as it was used 
+         * Note: this->lif_name must remains fixed as it was used
          * for log tracing purposes. Only the HAL lif name should change.
          */
         strncpy0(hal_lif_info_.name, cmd->name, sizeof(hal_lif_info_.name));
@@ -869,16 +869,16 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
         break;
 
     case FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS:
-        force_session_expired_ts_set(&normal_age_tmo_cb, 
+        force_session_expired_ts_set(&normal_age_tmo_cb,
                               normal_age_cb_addr(), cmd->force_expired_ts);
-        force_session_expired_ts_set(&accel_age_tmo_cb, 
+        force_session_expired_ts_set(&accel_age_tmo_cb,
                               accel_age_cb_addr(), cmd->force_expired_ts);
         break;
 
     case FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS:
-        force_conntrack_expired_ts_set(&normal_age_tmo_cb, 
+        force_conntrack_expired_ts_set(&normal_age_tmo_cb,
                               normal_age_cb_addr(), cmd->force_expired_ts);
-        force_conntrack_expired_ts_set(&accel_age_tmo_cb, 
+        force_conntrack_expired_ts_set(&accel_age_tmo_cb,
                               accel_age_cb_addr(), cmd->force_expired_ts);
         break;
 
@@ -1091,7 +1091,7 @@ FtlLif::ftl_lif_pollers_deq_burst_action(ftl_lif_event_t event)
 
     // Don't log as this function is called very frequently
     //FTL_LIF_FSM_LOG();
-    
+
     fsm_ctx.devcmd.status =
         pollers_ctl.dequeue_burst(cmd->index, &burst_count,
                                   (uint8_t *)fsm_ctx.devcmd.rsp_data, cmd->buf_sz);
@@ -1380,11 +1380,11 @@ FtlLif::age_tmo_cb_get(lif_attr_age_tmo_t *attr_age_tmo,
 
     NIC_LOG_DEBUG("    tcp_syn_tmo {} tcp_est_tmo {} tcp_fin_tmo {} "
                   "tcp_timewait_tmo {} tcp_rst_tmo {}",
-                  attr_age_tmo->tcp_syn_tmo, attr_age_tmo->tcp_est_tmo, 
+                  attr_age_tmo->tcp_syn_tmo, attr_age_tmo->tcp_est_tmo,
                   attr_age_tmo->tcp_fin_tmo, attr_age_tmo->tcp_timewait_tmo,
                   attr_age_tmo->tcp_rst_tmo);
     NIC_LOG_DEBUG("    udp_tmo {} udp_est_tmo {} icmp_tmo {} others_tmo {} "
-                  " session_tmo {}", attr_age_tmo->udp_tmo, 
+                  " session_tmo {}", attr_age_tmo->udp_tmo,
                   attr_age_tmo->udp_est_tmo, attr_age_tmo->icmp_tmo,
                   attr_age_tmo->others_tmo, attr_age_tmo->session_tmo);
 }
@@ -1718,7 +1718,7 @@ ftl_lif_queues_ctl_t::start(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 {
-    uint64_t        db_addr;
+    asic_db_addr_t  db_addr = { 0 };
     uint64_t        db_data;
 
     if (qid >= qcount()) {
@@ -1735,11 +1735,16 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
         /*
          * Doorbell update with a pndx increment
          */
-        db_addr = FTL_LIF_LOCAL_DBADDR_SET(lif.LifIdGet(), qtype(),
-                                           FTL_LIF_DBADDR_UPD_INC);
+        db_addr.lif_id = lif.LifIdGet();
+        db_addr.q_type = qtype();
+        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
+                                            false);
+
         db_data = FTL_LIF_DBDATA_SET(qid, 0);
+
         PAL_barrier();
-        WRITE_DB64(db_addr, db_data);
+        sdk::asic::pd::asic_ring_db(&db_addr, db_data);
         break;
 
     default:
@@ -1800,7 +1805,7 @@ ftl_lif_queues_ctl_t::stop(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
 {
-    uint64_t        db_addr;
+    asic_db_addr_t  db_addr = { 0 };
     uint64_t        db_data;
 
     if (qid >= qcount()) {
@@ -1817,11 +1822,16 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
         /*
          * Doorbell update clear
          */
-        db_addr = FTL_LIF_LOCAL_DBADDR_SET(lif.LifIdGet(), qtype(),
-                                           FTL_LIF_DBADDR_UPD_CLR);
+        db_addr.lif_id = lif.LifIdGet();
+        db_addr.q_type = qtype();
+        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                            false);
+
         db_data = FTL_LIF_DBDATA_SET(qid, 0);
+
         PAL_barrier();
-        WRITE_DB64(db_addr, db_data);
+        sdk::asic::pd::asic_ring_db(&db_addr, db_data);
         break;
 
     default:
@@ -2006,7 +2016,7 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
 
                 read_mem_small(qstate_addr, (uint8_t *)&scanner_qstate,
                                sizeof(scanner_qstate));
-                metrics->scanners.total_expired_entries  += 
+                metrics->scanners.total_expired_entries  +=
                          scanner_qstate.metrics0.expired_entries;
                 metrics->scanners.total_scan_invocations +=
                          scanner_qstate.metrics0.scan_invocations;
@@ -2017,7 +2027,7 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
                  * range size (all queues of the same qtype do except maybe
                  * the last queue).
                  */
-                if ((qid == 0) || 
+                if ((qid == 0) ||
                     (curr_range_sz == scanner_qstate.fsm.scan_range_sz)) {
 
                     min_elapsed_ticks = std::min(min_elapsed_ticks,
@@ -2249,7 +2259,7 @@ scanner_session_cb_activate(int64_t qstate_addr)
 static void
 scanner_session_cb_deactivate(int64_t qstate_addr)
 {
-    scanner_session_cb_activate_t   deactivate = 
+    scanner_session_cb_activate_t   deactivate =
             (scanner_session_cb_activate_t)~SCANNER_SESSION_CB_ACTIVATE;
 
     /*

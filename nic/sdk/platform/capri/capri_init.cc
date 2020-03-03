@@ -30,6 +30,7 @@
 #include "third-party/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "third-party/asic/capri/model/cap_ms/cap_ms_csr.h"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 
 namespace sdk {
 namespace platform {
@@ -218,12 +219,12 @@ capri_prd_init()
 
 /*
  * Workaround for TxDMA stuck on recirc issue -
- * If a recirc packet hits PDMA when the pipeline is full, the pipeline gets stuck 
- * since there is an XOFF from stage0 preventing the recirc packet from re-entering 
- * the pipeline. This XOFF to recirc packet will in-turn back-pressure the pipeline 
- * resulting in a deadlock. Workaround for this is to bring down the max-number-of-phv 
- * setting in P4+ thereby creating more room in pipeline. 
- * Programming it to 84 in both TxDMA/RxDMA for now which is holding up for RDMA. 
+ * If a recirc packet hits PDMA when the pipeline is full, the pipeline gets stuck
+ * since there is an XOFF from stage0 preventing the recirc packet from re-entering
+ * the pipeline. This XOFF to recirc packet will in-turn back-pressure the pipeline
+ * resulting in a deadlock. Workaround for this is to bring down the max-number-of-phv
+ * setting in P4+ thereby creating more room in pipeline.
+ * Programming it to 84 in both TxDMA/RxDMA for now which is holding up for RDMA.
  * ASIC team is working on the right number to tune this.
  */
 
@@ -265,7 +266,7 @@ capri_prd_init()
     ms_csr.cfg_elam_general.arm(1);
     ms_csr.cfg_elam_general.num_post_sample(1);
     ms_csr.cfg_elam_general.write();
-    
+
     return SDK_RET_OK;
 }
 
@@ -539,6 +540,24 @@ end:
     return ret;
 }
 
+inline uint64_t
+capri_local_dbaddr (void)
+{
+    uint64_t db_addr =
+#ifdef __aarch64__
+       CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif // __aarch64__
+       CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS;
+
+    return db_addr;
+}
+
+inline uint64_t
+capri_host_dbaddr (void)
+{
+    return CAP_WA_CSR_DHS_HOST_DOORBELL_BYTE_ADDRESS;
+}
+
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk
@@ -587,6 +606,18 @@ bool
 is_quiesced (void)
 {
     return asic_state == ASIC_STATE_QUIESCED ? true : false;
+}
+
+uint64_t
+asic_local_dbaddr_get (void)
+{
+    return sdk::platform::capri::capri_local_dbaddr();
+}
+
+uint64_t
+asic_host_dbaddr_get (void)
+{
+    return sdk::platform::capri::capri_host_dbaddr();
 }
 
 //------------------------------------------------------------------------------
