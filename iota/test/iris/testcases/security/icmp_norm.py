@@ -9,6 +9,10 @@ import iota.test.iris.utils.hal_show as hal_show_utils
 
 icmp_pkt_count = 5000
 icmp_pkt_size  = 2500
+# This represents the number of commands sent per workload pair during the Trigger phase.
+# This is used in Verify phase to track the drop stats differences b/w each WL pair.
+# As of now 6 commands are sent in total; in case this changes adjust this count accordingly.
+num_cmds_per_wl_pair = 6
 
 def Setup(tc):
     if tc.args.type != 'remote_only':
@@ -54,6 +58,15 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, w1.node_name, naples_cmd)
         tc.cmd_cookies.append("ICMP Fragment Drops at end of test")
 
+        # get other debug data, used for debugging in case of any failure
+        naples_cmd = r"/nic/bin/halctl show system statistics drop ingress"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, naples_cmd)
+        tc.cmd_cookies.append("System Ingress Drop Stats")
+
+        naples_cmd = r"/nic/bin/halctl show system statistics intf"
+        api.Trigger_AddNaplesCommand(req, w1.node_name, naples_cmd)
+        tc.cmd_cookies.append("System Interface Stats")
+
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
@@ -95,10 +108,19 @@ def Verify(tc):
         # drop is 2 times the number of packets sent
         if (icmp_frag_drop_start == icmp_frag_drop_end):
             api.Logger.info("No change in ICMP fragment drop, possible connectivity issues b/w few workloads")
+            # Dump debug data for debugging failure.
+            # Previous iteration data is valid only from second iteration.
+            if cookie_idx > 5:
+                api.Logger.info("Debug data before the failed test iteration")
+                api.PrintCommandResults(tc.resp.commands[cookie_idx-2])
+                api.PrintCommandResults(tc.resp.commands[cookie_idx-1])
+            api.Logger.info("Debug data after the failed test iteration")
+            api.PrintCommandResults(tc.resp.commands[cookie_idx+4])
+            api.PrintCommandResults(tc.resp.commands[cookie_idx+5])
         if (icmp_frag_drop_start + (2 * icmp_pkt_count)) != icmp_frag_drop_end:
             result = api.types.status.FAILURE
             api.Logger.info("Test Failed, ICMP frag drop before: %s, after: %s" %(icmp_frag_drop_start,icmp_frag_drop_end))
-        cookie_idx += 4
+        cookie_idx += num_cmds_per_wl_pair
 
     if result != api.types.status.FAILURE:
         api.Logger.info("Test Passed")
