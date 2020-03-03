@@ -21,8 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
-
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
@@ -360,9 +358,6 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 
 	nm.SetNaplesConfig(cfg.Spec)
 	err = nm.UpdateNaplesConfig(nm.GetNaplesConfig())
-
-	nm.IPClient, _ = ipif.NewMockIPClient(nm, "mock")
-
 	nm.Upgmgr = upgAgt
 	nm.cmd = ct
 	nm.Platform = ag

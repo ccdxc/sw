@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api/generated/cluster"
 
 	"github.com/pensando/sw/nic/agent/nmd/mock"
@@ -49,6 +51,7 @@ var (
 	staticIPConfig = cluster.IPConfig{
 		IPAddress:  "172.16.10.10/28",
 		DNSServers: []string{"172.16.10.1", "172.16.10.2"},
+		DefaultGW:  "172.16.10.1",
 	}
 	_, allocSubnet, _           = net.ParseCIDR(testSubnet)
 	veniceIPs                   = "42.42.42.42,84.84.84.84"
@@ -108,7 +111,9 @@ func TestDHCPSpecControllers(t *testing.T) {
 	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
+	defer ipClient.StopDHCPConfig()
 	time.Sleep(2 * time.Second)
+	_ = ipClient.GetInterfaceIPs()
 
 	// Check DHCP Config should succeed
 	AssertOk(t, err, "Failed to perform DHCP")
@@ -389,6 +394,10 @@ func TestDHCPValidClasslessStaticRoutesOption(t *testing.T) {
 		}
 	}
 	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+	sRoutes := ipClient.GetStaticRoutes()
+	if len(sRoutes) == 0 {
+		t.Fatalf("Failed to get static routes.")
+	}
 }
 
 //++++++++++++++++++++++++++++ Corner Test Cases ++++++++++++++++++++++++++++++++++++++++
@@ -414,7 +423,8 @@ func TestDHCPValidVendorAttributes(t *testing.T) {
 	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
 
 	// Ensure dhcp state is missing vendor attributes
-	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+	state := ipClient.GetDHCPState()
+	AssertEquals(t, dhcpDone.String(), state, "DHCP State must reflect DHCP Done")
 
 	// Ensure that there are expected Venice IPs
 	veniceIPs := strings.Split(veniceIPs, ",")
@@ -861,6 +871,50 @@ func TestRenewalLoopPanics(t *testing.T) {
 	time.Sleep(leaseDuration)
 
 	ipClient.StopDHCPConfig()
+}
+
+func TestSecondaryMgmtInterfacesApulu(t *testing.T) {
+	dscMAC, _ := net.ParseMAC("00:10:fa:6e:38:4a")
+
+	// Create fake mock interfaces
+	fakeDsc0 := &netlink.Veth{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:         "dsc0",
+			TxQLen:       1000,
+			HardwareAddr: dscMAC,
+		},
+		PeerName: "dsc1",
+	}
+	defer netlink.LinkDel(fakeDsc0)
+	err := netlink.LinkAdd(fakeDsc0)
+	AssertOk(t, err, "Failed to create mock interfaces")
+	secondaryApuluLinks := getSecondaryMgmtLink(globals.NaplesPipelineApollo, "mock")
+	if len(secondaryApuluLinks) != 2 {
+		t.Fatalf("Failed to get secondary mgmt links for Apulu")
+	}
+}
+
+func TestSecondaryMgmtInterfacesIris(t *testing.T) {
+	dscMAC, _ := net.ParseMAC("00:10:fa:6e:38:4b")
+
+	// Create fake mock interfaces
+	fakeOOB := &netlink.Veth{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:         "oob_mnic0",
+			TxQLen:       1000,
+			HardwareAddr: dscMAC,
+		},
+		PeerName: "foo",
+	}
+	defer netlink.LinkDel(fakeOOB)
+	err := netlink.LinkAdd(fakeOOB)
+	AssertOk(t, err, "Failed to create mock interfaces")
+	secondaryApuluLinks := getSecondaryMgmtLink(globals.NaplesPipelineIris, "mock")
+	if len(secondaryApuluLinks) != 1 {
+		t.Fatalf("Failed to get secondary mgmt links for Apulu")
+	}
+
+	netlink.LinkDel(fakeOOB)
 }
 
 //++++++++++++++++++++++++++++ Test Utility Functions ++++++++++++++++++++++++++++++++++++++++
