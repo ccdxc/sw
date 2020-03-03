@@ -39,7 +39,8 @@ def Trigger(tc):
     req = None
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     tc.cmd_cookies = []
-    interval = "0.01"
+    ping_count = getattr(tc.args, "ping_count", 20)
+    interval = getattr(tc.args, "ping_interval", 0.01)
 
     naplesHosts = api.GetNaplesHostnames()
     for node in naplesHosts:
@@ -47,8 +48,8 @@ def Trigger(tc):
             cmd_cookie = "%s --> %s" %\
                          (str(bgppeer.LocalAddr), str(bgppeer.PeerAddr))
             api.Trigger_AddNaplesCommand(req, node, \
-                                         "ping -i %s -c 5000 %s" % \
-                                         (interval, str(bgppeer.PeerAddr)))
+                                         "ping -i %f -c %d %s" % \
+                                         (interval, ping_count, str(bgppeer.PeerAddr)))
             api.Logger.info("Ping test from %s" % (cmd_cookie))
             tc.cmd_cookies.append(cmd_cookie)
 

@@ -10,8 +10,21 @@ operUp = "up"
 operDown = "down"
 adminUp = "up"
 adminDown = "down"
+verifyRetry = 120 #no of seconds to retry for
+
 
 def verifyDataPortState(naples_nodes, admin, oper):
+    ret = api.types.status.SUCCESS
+    retry_remaining = verifyRetry
+    ret = verifyDataPortStateHelper(naples_nodes, admin, oper)
+    while api.types.status.FAILURE == ret and retry_remaining > 0:
+        sleep(1)
+        retry_remaining = retry_remaining - 1
+        ret = verifyDataPortStateHelper(naples_nodes, admin, oper)
+    
+    return ret
+
+def verifyDataPortStateHelper(naples_nodes, admin, oper):
     ret = api.types.status.SUCCESS
     for node in naples_nodes:
         node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
@@ -53,7 +66,7 @@ def switchPortFlap(tc):
         api.Logger.error("Failed to flap the switch port")
         return ret
 
-    sleep(5) #give a short gap before printing status
+    sleep(2) #give a short gap before printing status
     return api.types.status.SUCCESS
 
 

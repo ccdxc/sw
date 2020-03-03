@@ -57,6 +57,8 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            ping_count: 200
+            ping_interval: 0.1
         iterators :
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]

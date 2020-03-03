@@ -17,7 +17,8 @@ def Trigger(tc):
     req = None
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     tc.cmd_cookies = []
-    interval = "0.01"
+    ping_count = getattr(tc.args, "ping_count", 20)
+    interval = getattr(tc.args, "ping_interval", 0.01)
 
     naplesHosts = api.GetNaplesHostnames()
     for node1 in naplesHosts:
@@ -32,8 +33,8 @@ def Trigger(tc):
             cmd_cookie = "%s --> %s" %\
                          (device1.IP, device2.IP)
             api.Trigger_AddNaplesCommand(req, node1, \
-                                         "ping -i %s -c 2000 -s %d %s" % \
-                                         (interval, tc.iterators.pktsize, \
+                                   "ping -i %f -c %d -s %d %s" % \
+                                    (interval, ping_count, tc.iterators.pktsize, \
                                           device2.IP))
             api.Logger.info("Loopback ping test from %s" % (cmd_cookie))
             tc.cmd_cookies.append(cmd_cookie)
