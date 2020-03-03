@@ -9,9 +9,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -122,9 +124,11 @@ func init() {
 	showCmd.AddCommand(systemShowCmd)
 	systemShowCmd.Flags().Bool("power", false, "Show system power information")
 	systemShowCmd.Flags().Bool("temperature", false, "Show system power information")
+	systemShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	systemShowCmd.AddCommand(queueStatsCmd)
 	queueStatsCmd.Flags().Bool("input", false, "Show system input queue-statistics")
 	queueStatsCmd.Flags().Bool("output", false, "Show system input queue-statistics")
+	queueStatsCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	debugCmd.AddCommand(traceDebugCmd)
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, warn, info, debug, verbose)")
@@ -140,13 +144,19 @@ func init() {
 
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemStatsShowCmd.AddCommand(llcShowCmd)
+	llcShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	systemStatsShowCmd.AddCommand(tableShowCmd)
+	tableShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	systemStatsShowCmd.AddCommand(pbShowCmd)
+	pbShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	pbShowCmd.AddCommand(systemQueueCreditsShowCmd)
+	systemQueueCreditsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	pbShowCmd.AddCommand(pbDetailShowCmd)
+	pbDetailShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	systemStatsShowCmd.AddCommand(dropShowCmd)
+	dropShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 }
 
 func dropShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -179,7 +189,14 @@ func dropShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printDropStats(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		printDropStats(resp)
+	}
 }
 
 func printDropStatsHeader() {
@@ -241,33 +258,39 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	queueHeaderPrint()
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		queueHeaderPrint()
 
-	qVal := [16]uint32{}
-	qVal2 := [16]uint32{}
-	var str string
+		qVal := [16]uint32{}
+		qVal2 := [16]uint32{}
+		var str string
 
-	for _, portCredit := range resp.GetPortQueueCredit() {
-		fmt.Printf("%-5d|", portCredit.GetPort())
-		for _, queueCredit := range portCredit.GetQueueCredit() {
-			qIndex := queueCredit.GetQueue()
-			if qIndex < 16 {
-				qVal[qIndex] = queueCredit.GetCredit()
-			} else {
-				qVal2[qIndex-16] = queueCredit.GetCredit()
+		for _, portCredit := range resp.GetPortQueueCredit() {
+			fmt.Printf("%-5d|", portCredit.GetPort())
+			for _, queueCredit := range portCredit.GetQueueCredit() {
+				qIndex := queueCredit.GetQueue()
+				if qIndex < 16 {
+					qVal[qIndex] = queueCredit.GetCredit()
+				} else {
+					qVal2[qIndex-16] = queueCredit.GetCredit()
+				}
 			}
+			str = fmt.Sprintf("%-9v\n", qVal)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
+			fmt.Printf("     |")
+			str = fmt.Sprintf("%-9v\n", qVal2)
+			str = strings.Replace(str, "[", "", -1)
+			str = strings.Replace(str, "]", "", -1)
+			fmt.Printf("%s\n", str)
 		}
-		str = fmt.Sprintf("%-9v\n", qVal)
-		str = strings.Replace(str, "[", "", -1)
-		str = strings.Replace(str, "]", "", -1)
-		fmt.Printf("%s\n", str)
-		fmt.Printf("     |")
-		str = fmt.Sprintf("%-9v\n", qVal2)
-		str = strings.Replace(str, "[", "", -1)
-		str = strings.Replace(str, "]", "", -1)
-		fmt.Printf("%s\n", str)
 	}
-
 }
 
 func queueHeaderPrint() {
@@ -354,7 +377,14 @@ func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 		output = true
 	}
 
-	systemQueueStatsPrint(resp.GetPbStats(), input, output)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		systemQueueStatsPrint(resp.GetPbStats(), input, output)
+	}
 }
 
 func systemQueueStatsPrint(resp *pds.PacketBufferStats, input bool, output bool) {
@@ -541,35 +571,41 @@ func pbShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var dmaIn uint32
-	var dmaOut uint32
-	var ingIn uint32
-	var ingOut uint32
-	var egrIn uint32
-	var egrOut uint32
-	uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
-	uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		var dmaIn uint32
+		var dmaOut uint32
+		var ingIn uint32
+		var ingOut uint32
+		var egrIn uint32
+		var egrOut uint32
+		uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+		uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-	for _, entry := range resp.GetPbStats().GetPortStats() {
-		if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
-			dmaIn = entry.GetBufferStats().GetSopCountIn()
-			dmaOut = entry.GetBufferStats().GetSopCountOut()
-		} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
-			ingIn = entry.GetBufferStats().GetSopCountIn()
-			ingOut = entry.GetBufferStats().GetSopCountOut()
-		} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
-			egrIn = entry.GetBufferStats().GetSopCountIn()
-			egrOut = entry.GetBufferStats().GetSopCountOut()
-		} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
-			uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
-			uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
+		for _, entry := range resp.GetPbStats().GetPortStats() {
+			if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
+				dmaIn = entry.GetBufferStats().GetSopCountIn()
+				dmaOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
+				ingIn = entry.GetBufferStats().GetSopCountIn()
+				ingOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
+				egrIn = entry.GetBufferStats().GetSopCountIn()
+				egrOut = entry.GetBufferStats().GetSopCountOut()
+			} else if entry.GetPacketBufferPort().GetPortType() == pds.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
+				uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
+				uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
+			}
 		}
+		pbStatsShow(dmaIn, dmaOut,
+			ingIn, ingOut,
+			egrIn, egrOut,
+			uplinkIn, uplinkOut)
 	}
-	pbStatsShow(dmaIn, dmaOut,
-		ingIn, ingOut,
-		egrIn, egrOut,
-		uplinkIn, uplinkOut)
-
 }
 
 func pbStatsShow(dmaIn uint32, dmaOut uint32,
@@ -826,7 +862,14 @@ func tableShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	tableStatsPrintResp(resp.GetResponse())
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		tableStatsPrintResp(resp.GetResponse())
+	}
 }
 
 func tableStatsPrintHeader() {
@@ -880,14 +923,20 @@ func llcShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	llcGetPrintHeader()
-
 	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 		return
 	}
 
-	llcGetPrintResp(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		llcGetPrintHeader()
+		llcGetPrintResp(resp)
+	}
 }
 
 func llcGetPrintHeader() {
@@ -1091,6 +1140,7 @@ func systemShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	power := false
 	temp := false
+	yamlOutput := false
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -1105,6 +1155,10 @@ func systemShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("temperature") {
 		temp = true
 	}
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		yamlOutput = true
+	}
+
 	if cmd == nil || (cmd.Flags().Changed("power") == false &&
 		cmd.Flags().Changed("temperature") == false) {
 		temp = true
@@ -1112,15 +1166,15 @@ func systemShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if power {
-		systemPowerShow(client)
+		systemPowerShow(client, yamlOutput)
 	}
 
 	if temp {
-		systemTemperatureShow(client)
+		systemTemperatureShow(client, yamlOutput)
 	}
 }
 
-func systemPowerShow(client pds.DebugSvcClient) {
+func systemPowerShow(client pds.DebugSvcClient, yamlOutput bool) {
 	var empty *pds.Empty
 
 	// PDS call
@@ -1135,10 +1189,17 @@ func systemPowerShow(client pds.DebugSvcClient) {
 		return
 	}
 
-	printPowerHeader()
-	fmt.Printf("%-10s%-10d\n", "Pin", resp.GetPin())
-	fmt.Printf("%-10s%-10d\n", "Pout1", resp.GetPout1())
-	fmt.Printf("%-10s%-10d\n", "Pout2", resp.GetPout2())
+	if yamlOutput {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		printPowerHeader()
+		fmt.Printf("%-10s%-10d\n", "Pin", resp.GetPin())
+		fmt.Printf("%-10s%-10d\n", "Pout1", resp.GetPout1())
+		fmt.Printf("%-10s%-10d\n", "Pout2", resp.GetPout2())
+	}
 }
 
 func printPowerHeader() {
@@ -1148,7 +1209,7 @@ func printPowerHeader() {
 	fmt.Println(hdrLine)
 }
 
-func systemTemperatureShow(client pds.DebugSvcClient) {
+func systemTemperatureShow(client pds.DebugSvcClient, yamlOutput bool) {
 	var empty *pds.Empty
 
 	// PDS call
@@ -1163,10 +1224,17 @@ func systemTemperatureShow(client pds.DebugSvcClient) {
 		return
 	}
 
-	printTempHeader()
-	fmt.Printf("%-20s%-10d\n", "Die Temperature", resp.GetDieTemp())
-	fmt.Printf("%-20s%-10d\n", "Local Temperature", resp.GetLocalTemp())
-	fmt.Printf("%-20s%-10d\n", "HBM Temperature", resp.GetHbmTemp())
+	if yamlOutput {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		printTempHeader()
+		fmt.Printf("%-20s%-10d\n", "Die Temperature", resp.GetDieTemp())
+		fmt.Printf("%-20s%-10d\n", "Local Temperature", resp.GetLocalTemp())
+		fmt.Printf("%-20s%-10d\n", "HBM Temperature", resp.GetHbmTemp())
+	}
 }
 
 func printTempHeader() {
@@ -1454,20 +1522,27 @@ func pbDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	inputQueueInfo := make([][]InputQueueInfo, 12)
-	for i := range inputQueueInfo {
-		inputQueueInfo[i] = make([]InputQueueInfo, 32)
-	}
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		inputQueueInfo := make([][]InputQueueInfo, 12)
+		for i := range inputQueueInfo {
+			inputQueueInfo[i] = make([]InputQueueInfo, 32)
+		}
 
-	outputQueueInfo := make([][]OutputQueueInfo, 12)
-	for i := range outputQueueInfo {
-		outputQueueInfo[i] = make([]OutputQueueInfo, 32)
-	}
+		outputQueueInfo := make([][]OutputQueueInfo, 12)
+		for i := range outputQueueInfo {
+			outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+		}
 
-	for _, entry := range resp.GetPbStats().GetPortStats() {
-		pbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
-	}
+		for _, entry := range resp.GetPbStats().GetPortStats() {
+			pbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
+		}
 
-	pbOccupancyCountersShow(inputQueueInfo)
-	pbOqCountersShow(outputQueueInfo)
+		pbOccupancyCountersShow(inputQueueInfo)
+		pbOqCountersShow(outputQueueInfo)
+	}
 }

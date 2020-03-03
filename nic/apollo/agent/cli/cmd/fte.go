@@ -7,8 +7,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -45,6 +47,7 @@ func init() {
 	fteShowCmd.AddCommand(fteStatsShowCmd)
 	fteStatsShowCmd.Flags().Bool("api", false, "Show FTE API statistics")
 	fteStatsShowCmd.Flags().Bool("table", false, "Show FTE table statistics")
+	fteStatsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	clearCmd.AddCommand(fteClearCmd)
 	fteClearCmd.AddCommand(fteStatsClearCmd)
@@ -117,6 +120,7 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	apiStats := true
 	tableStats := true
+	yamlOutput := false
 
 	if cmd != nil {
 		if cmd.Flags().Changed("api") == false &&
@@ -125,6 +129,9 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			apiStats = false
 		} else if cmd.Flags().Changed("table") == false {
 			tableStats = false
+		}
+		if cmd.Flags().Changed("yaml") == true {
+			yamlOutput = true
 		}
 	}
 	client := pds.NewDebugSvcClient(c)
@@ -144,13 +151,27 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if apiStats {
-		fteApiStatsPrintHeader()
-		fteApiStatsPrintEntry(resp.GetApiStats())
+		if yamlOutput {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		} else {
+			fteApiStatsPrintHeader()
+			fteApiStatsPrintEntry(resp.GetApiStats())
+		}
 	}
 
 	if tableStats {
-		fteTableStatsPrintHeader()
-		fteTableStatsPrintEntry(resp.GetTableStats())
+		if yamlOutput {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		} else {
+			fteTableStatsPrintHeader()
+			fteTableStatsPrintEntry(resp.GetTableStats())
+		}
 	}
 }
 

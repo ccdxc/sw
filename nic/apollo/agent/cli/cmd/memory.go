@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -28,6 +30,7 @@ func init() {
 	memShowCmd.Flags().Bool("slab", false, "Show slab information")
 	memShowCmd.Flags().Bool("mtrack", false, "Show mtrack information")
 	memShowCmd.Flags().Bool("heap", false, "Show heap information")
+	memShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	memShowCmd.Flags().Uint32Var(&slabID, "slab-id", 0, "Specify slab id")
 	memShowCmd.Flags().MarkHidden("id")
 }
@@ -49,6 +52,7 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 	slab := false
 	mtrack := false
 	heap := false
+	yamlOutput := false
 
 	client := pds.NewDebugSvcClient(c)
 
@@ -61,6 +65,9 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		if cmd.Flags().Changed("heap") {
 			heap = true
+		}
+		if cmd.Flags().Changed("yaml") {
+			yamlOutput = true
 		}
 	}
 
@@ -78,14 +85,20 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 		if err != nil {
 			fmt.Printf("Getting slab failed. %v\n", err)
 		} else {
-			// Print header
-			slabShowHeader()
-
-			// Print slab
 			if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 				fmt.Printf("Get slab operation failed with %v error\n", resp.ApiStatus)
 			} else {
-				slabShowResp(resp)
+				if yamlOutput {
+					respType := reflect.ValueOf(resp)
+					b, _ := yaml.Marshal(respType.Interface())
+					fmt.Println(string(b))
+					fmt.Println("---")
+				} else {
+					// Print header
+					slabShowHeader()
+					// Print slab
+					slabShowResp(resp)
+				}
 			}
 		}
 		fmt.Printf("\n")
@@ -108,14 +121,20 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 			if err != nil {
 				fmt.Printf("Getting mtrack failed. %v\n", err)
 			} else {
-				// Print header
-				mtrackShowHeader()
-
-				// Print mtrack
 				if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 					fmt.Printf("Get mtrack operation failed with %v error\n", resp.ApiStatus)
 				} else {
-					mtrackShowResp(resp)
+					if yamlOutput {
+						respType := reflect.ValueOf(resp)
+						b, _ := yaml.Marshal(respType.Interface())
+						fmt.Println(string(b))
+						fmt.Println("---")
+					} else {
+						// Print header
+						mtrackShowHeader()
+						// Print mtrack
+						mtrackShowResp(resp)
+					}
 				}
 			}
 			fmt.Printf("\n")
@@ -134,7 +153,14 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 			if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 				fmt.Printf("Get heap operation failed with %v error\n", resp.ApiStatus)
 			} else {
-				heapShowResp(resp)
+				if yamlOutput {
+					respType := reflect.ValueOf(resp)
+					b, _ := yaml.Marshal(respType.Interface())
+					fmt.Println(string(b))
+					fmt.Println("---")
+				} else {
+					heapShowResp(resp)
+				}
 			}
 		}
 		fmt.Printf("\n")

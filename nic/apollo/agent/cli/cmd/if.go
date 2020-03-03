@@ -8,10 +8,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -40,7 +42,9 @@ func init() {
 	showCmd.AddCommand(lifShowCmd)
 	showCmd.AddCommand(ifShowCmd)
 	lifShowCmd.Flags().StringVar(&lifID, "id", "", "Specify Lif ID")
+	lifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify interface ID")
+	ifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -82,9 +86,18 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printIfHeader()
-	for _, resp := range respMsg.Response {
-		printIf(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printIfHeader()
+		for _, resp := range respMsg.Response {
+			printIf(resp)
+		}
 	}
 }
 
@@ -199,9 +212,18 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printLifHeader()
-	for _, resp := range respMsg.Response {
-		printLif(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printLifHeader()
+		for _, resp := range respMsg.Response {
+			printLif(resp)
+		}
 	}
 }
 

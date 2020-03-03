@@ -7,11 +7,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -77,8 +79,10 @@ func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
 	portStatsShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
+	portStatsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
+	portStatusShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	debugCmd.AddCommand(portUpdateCmd)
 	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
@@ -333,6 +337,7 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	client := pds.NewPortSvcClient(c)
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
 
 	var req *pds.PortGetRequest
 	if cmd != nil && cmd.Flags().Changed("port") {
@@ -358,11 +363,19 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printPortStatusHeader()
-
-	// Print Ports
-	for _, resp := range respMsg.Response {
-		printPortStatus(resp)
+	if yamlOutput {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printPortStatusHeader()
+		// Print Ports
+		for _, resp := range respMsg.Response {
+			printPortStatus(resp)
+		}
 	}
 }
 
@@ -421,6 +434,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	client := pds.NewPortSvcClient(c)
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
 
 	var req *pds.PortGetRequest
 	if cmd != nil && cmd.Flags().Changed("port") {
@@ -446,11 +460,19 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	printPortStatsHeader()
-
-	// Print Ports
-	for _, resp := range respMsg.Response {
-		printPortStats(resp)
+	if yamlOutput {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		printPortStatsHeader()
+		// Print Ports
+		for _, resp := range respMsg.Response {
+			printPortStats(resp)
+		}
 	}
 }
 

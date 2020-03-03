@@ -7,13 +7,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"strings"
 	"math"
+	"reflect"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -38,6 +40,7 @@ var (
 func init() {
 	showCmd.AddCommand(natShowCmd)
 	natShowCmd.Flags().StringVarP(&natPbId, "id", "i", "", "Specify NAT Port Block ID")
+	natShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 }
 
 func natShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -70,10 +73,19 @@ func natShowCmdHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		// Print NAT Port Blocks
-		printNatPbHeader()
-		for _, resp := range respMsg.Response {
-			printNatPb(resp)
+		if (cmd != nil) && cmd.Flags().Changed("yaml") {
+			for _, resp := range respMsg.Response {
+				respType := reflect.ValueOf(resp)
+				b, _ := yaml.Marshal(respType.Interface())
+				fmt.Println(string(b))
+				fmt.Println("---")
+			}
+		} else {
+			// Print NAT Port Blocks
+			printNatPbHeader()
+			for _, resp := range respMsg.Response {
+				printNatPb(resp)
+			}
 		}
 	} else {
 		var cmdCtxt *pds.CommandCtxt
@@ -107,7 +119,7 @@ func printNatPb(nat *pds.NatPortBlock) {
 	var ipv4prefix pds.IPv4Prefix
 	if spec.GetNatAddress().GetRange() != nil {
 		diff := spec.GetNatAddress().GetRange().GetIPv4Range().GetHigh().GetV4Addr() -
-				spec.GetNatAddress().GetRange().GetIPv4Range().GetLow().GetV4Addr() + 1
+			spec.GetNatAddress().GetRange().GetIPv4Range().GetLow().GetV4Addr() + 1
 		ipv4prefix.Addr = spec.GetNatAddress().GetRange().GetIPv4Range().GetLow().GetV4Addr()
 		ipv4prefix.Len = 32 - uint32(math.Log2(float64(diff)))
 	} else {

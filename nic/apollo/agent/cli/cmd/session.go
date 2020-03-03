@@ -8,9 +8,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -75,6 +77,7 @@ var sessionClearCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(sessionStatsShowCmd)
 	sessionStatsShowCmd.Flags().StringVarP(&sessionStatsID, "session-stats-index", "i", "", "Specify session stats index. Ex: 1-20 or 10")
+	sessionStatsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	sessionStatsShowCmd.MarkFlagRequired("session-stats-index")
 
 	showCmd.AddCommand(sessionShowCmd)
@@ -84,6 +87,7 @@ func init() {
 	sessionShowCmd.Flags().Uint32Var(&sessionSrcPort, "srcport", 0, "Specify session src port")
 	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
 	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
+	sessionShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	showCmd.AddCommand(flowShowCmd)
 	flowShowCmd.Flags().Uint32Var(&flowVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
@@ -92,6 +96,7 @@ func init() {
 	flowShowCmd.Flags().Uint32Var(&flowSrcPort, "srcport", 0, "Specify flow src port")
 	flowShowCmd.Flags().Uint32Var(&flowDstPort, "dstport", 0, "Specify flow dst port")
 	flowShowCmd.Flags().Uint32Var(&flowIPProto, "ipproto", 0, "Specify flow IP proto")
+	flowShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	clearCmd.AddCommand(sessionClearCmd)
 	sessionClearCmd.Flags().Uint32Var(&sessionVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
@@ -241,6 +246,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 	// If one of the filters is set, then all of them are set, so just checking
 	// for one
 	filter := cmd != nil && cmd.Flags().Changed("srcip")
+	yamlOutput := cmd != nil && cmd.Flags().Changed("yaml")
 
 	// If a filter is specified, use GRPC, otherwise use UDS to get the flow
 	// data
@@ -264,7 +270,9 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		flowPrintHeader()
+		if yamlOutput == false {
+			flowPrintHeader()
+		}
 
 		for {
 			respMsg, err := stream.Recv()
@@ -280,10 +288,17 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 				fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
 				return
 			}
-			// Print flows
 			for _, flow := range respMsg.GetFlow() {
+				// Print flows
 				if flowMatchFilter(cmd, flow) {
-					flowPrintEntry(flow)
+					if yamlOutput {
+						respType := reflect.ValueOf(flow)
+						b, _ := yaml.Marshal(respType.Interface())
+						fmt.Println(string(b))
+						fmt.Println("---")
+					} else {
+						flowPrintEntry(flow)
+					}
 				}
 			}
 		}
@@ -386,6 +401,8 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var empty *pds.Empty
 
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
+
 	// PDS call
 	stream, err := client.SessionGet(context.Background(), empty)
 	if err != nil {
@@ -393,7 +410,9 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	sessionPrintHeader()
+	if yamlOutput == false {
+		sessionPrintHeader()
+	}
 
 	for {
 		respMsg, err := stream.Recv()
@@ -410,7 +429,14 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		// Print sessions
 		for _, session := range respMsg.GetSession() {
-			sessionPrintEntry(session)
+			if yamlOutput {
+				respType := reflect.ValueOf(session)
+				b, _ := yaml.Marshal(respType.Interface())
+				fmt.Println(string(b))
+				fmt.Println("---")
+			} else {
+				sessionPrintEntry(session)
+			}
 		}
 	}
 }
@@ -435,6 +461,7 @@ func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
 	client := pds.NewDebugSvcClient(c)
 
 	var statsIDLow uint32
@@ -472,8 +499,15 @@ func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	sessionStatsPrintHeader()
-	sessionStatsPrintEntry(respMsg)
+	if yamlOutput {
+		respType := reflect.ValueOf(respMsg)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		sessionStatsPrintHeader()
+		sessionStatsPrintEntry(respMsg)
+	}
 }
 
 func sessionStatsPrintHeader() {

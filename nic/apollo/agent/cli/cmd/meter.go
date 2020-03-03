@@ -44,6 +44,7 @@ func init() {
 
 	meterShowCmd.AddCommand(meterStatsShowCmd)
 	meterStatsShowCmd.Flags().StringVarP(&statsID, "meter-stats-index", "i", "", "Specify meter stats index. Ex: 1-20 or 10")
+	meterStatsShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	meterStatsShowCmd.MarkFlagRequired("meter-stats-index")
 }
 
@@ -98,8 +99,15 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	meterStatsPrintHeader()
-	meterStatsPrintEntry(respMsg)
+	if cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(respMsg)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		meterStatsPrintHeader()
+		meterStatsPrintEntry(respMsg)
+	}
 }
 
 func meterStatsPrintHeader() {

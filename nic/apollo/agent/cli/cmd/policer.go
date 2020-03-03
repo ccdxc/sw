@@ -7,10 +7,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -30,6 +32,7 @@ var policerShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(policerShowCmd)
 	policerShowCmd.Flags().StringVarP(&policerID, "id", "i", "", "Specify policer ID")
+	policerShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 }
 
 func policerShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -73,10 +76,19 @@ func policerShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print policer
-	printPolicerHeader()
-	for _, resp := range respMsg.Response {
-		printPolicer(resp)
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		// Print policer
+		printPolicerHeader()
+		for _, resp := range respMsg.Response {
+			printPolicer(resp)
+		}
 	}
 }
 

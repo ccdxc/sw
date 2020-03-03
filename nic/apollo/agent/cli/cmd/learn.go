@@ -7,21 +7,21 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"strings"
-	"reflect"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
+	"reflect"
+	"strings"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
 
 var (
-	vpcId     string
-	subnetId  string
-	epIP      string
-	epMAC     string
+	vpcId    string
+	subnetId string
+	epIP     string
+	epMAC    string
 )
 
 var learnShowCmd = &cobra.Command{
@@ -121,14 +121,14 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnMACRequest
+	var req *pds.LearnMACRequest
 	if cmd != nil && cmd.Flags().Changed("mac") && cmd.Flags().Changed("subnet") {
 		// Get specific entry
 		req = &pds.LearnMACRequest{
 			Key: []*pds.LearnMACKey{
 				&pds.LearnMACKey{
 					SubnetId: uuid.FromStringOrNil(subnetId).Bytes(),
-					MACAddr: utils.MACAddrStrToUint64(epMAC),
+					MACAddr:  utils.MACAddrStrToUint64(epMAC),
 				},
 			},
 		}
@@ -186,13 +186,13 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnIPRequest
+	var req *pds.LearnIPRequest
 	if cmd != nil && cmd.Flags().Changed("ip") && cmd.Flags().Changed("vpc") {
 		// Get specific entry
 		req = &pds.LearnIPRequest{
 			Key: []*pds.LearnIPKey{
 				&pds.LearnIPKey{
-					VPCId: uuid.FromStringOrNil(vpcId).Bytes(),
+					VPCId:  uuid.FromStringOrNil(vpcId).Bytes(),
 					IPAddr: utils.IPAddrStrToPDSIPAddr(epIP),
 				},
 			},
@@ -288,14 +288,14 @@ func learnMACClearCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnMACRequest
+	var req *pds.LearnMACRequest
 	if cmd != nil && cmd.Flags().Changed("mac") && cmd.Flags().Changed("subnet") {
 		// Get specific entry
 		req = &pds.LearnMACRequest{
 			Key: []*pds.LearnMACKey{
 				&pds.LearnMACKey{
 					SubnetId: uuid.FromStringOrNil(subnetId).Bytes(),
-					MACAddr: utils.MACAddrStrToUint64(epMAC),
+					MACAddr:  utils.MACAddrStrToUint64(epMAC),
 				},
 			},
 		}
@@ -341,13 +341,13 @@ func learnIPClearCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req	*pds.LearnIPRequest
+	var req *pds.LearnIPRequest
 	if cmd != nil && cmd.Flags().Changed("ip") && cmd.Flags().Changed("vpc") {
 		// Get specific entry
 		req = &pds.LearnIPRequest{
 			Key: []*pds.LearnIPKey{
 				&pds.LearnIPKey{
-					VPCId: uuid.FromStringOrNil(vpcId).Bytes(),
+					VPCId:  uuid.FromStringOrNil(vpcId).Bytes(),
 					IPAddr: utils.IPAddrStrToPDSIPAddr(epIP),
 				},
 			},
@@ -452,7 +452,7 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 	if len(resp.GetResponse()) > 0 {
 		printLearnMACHeader()
 	}
-	for _,MACEntry := range resp.GetResponse() {
+	for _, MACEntry := range resp.GetResponse() {
 		fmt.Printf("%-20s%-40s%-40s%-10s%-10d\n",
 			utils.MactoStr(MACEntry.GetKey().GetMACAddr()),
 			uuid.FromBytesOrNil(MACEntry.GetKey().GetSubnetId()).String(),
@@ -463,7 +463,7 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 			if len(MACEntry.GetIPInfo()) > 0 {
 				fmt.Printf("	IPs learnt:\n")
 			}
-			for _,IPKey := range MACEntry.GetIPInfo() {
+			for _, IPKey := range MACEntry.GetIPInfo() {
 				fmt.Printf("		%s\n",
 					utils.IPAddrToStr(IPKey.GetIPAddr()))
 			}
@@ -483,7 +483,7 @@ func printLearnIP(resp *pds.LearnIPGetResponse) {
 	if len(resp.GetResponse()) > 0 {
 		printLearnIPHeader()
 	}
-	for _,IPEntry := range resp.GetResponse() {
+	for _, IPEntry := range resp.GetResponse() {
 		fmt.Printf("%-20s%-40s%-20s%-40s%-10s\n",
 			utils.IPAddrToStr(IPEntry.GetKey().GetIPAddr()),
 			uuid.FromBytesOrNil(IPEntry.GetKey().GetVPCId()).String(),
@@ -506,7 +506,7 @@ func printLearnStats(resp *pds.LearnStatsGetResponse) {
 	if len(stats.GetDropStats()) > 0 {
 		fmt.Printf("	# Drop counters:\n")
 	}
-	for _,dropStats := range stats.GetDropStats() {
+	for _, dropStats := range stats.GetDropStats() {
 		fmt.Printf("		%-31s: %-20d\n",
 			LearnPktDropReasonToStr(dropStats.GetReason()),
 			dropStats.GetNumDrops())
