@@ -105,10 +105,10 @@ class BgpObject(base.ConfigObjectBase):
     def ValidateJSONSpec(self, spec):
         if spec['kind'] != 'RoutingConfig': return False
         if spec['meta']['name'] != self.GID(): return False
-        if spec['spec']['bgp-config']['as-number'] != obj.LocalASN: return False
+        if spec['spec']['bgp-config']['as-number'] != self.LocalASN: return False
         if int(ipaddress.ip_address(spec['spec']['bgp-config']['router-id'])) != self.RouterId:
             return False
-        cfgpeers = BGPPeerClient.Objects(node)
+        cfgpeers = BGPPeerClient.Objects(self.Node)
         operpeers = spec['spec']['bgp-config']['neighbors']
         if (len(cfgpeers) != len(operpeers)):
             logger.error(f"Mismatch in number of peers. cfg {len(cfgpeers)} oper {len(operpeers)}")
