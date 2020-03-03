@@ -31,6 +31,30 @@ void* osal_aligned_alloc(size_t alignment, size_t size)
 	return kmalloc(block_count*alignment, GFP_KERNEL);
 }
 
+void *osal_contig_alloc(size_t alignment, size_t size)
+{
+	size_t block_count;
+
+	alignment = alignment ? alignment : 1;
+	block_count = (size + alignment - 1)/alignment;
+#ifdef __FreeBSD__
+	return contigmalloc(block_count*alignment, M_KMALLOC, GFP_KERNEL,
+			0, ~0ull, alignment, 0);
+#else
+	return kmalloc(block_count*alignment, GFP_KERNEL);
+#endif
+}
+
+void osal_contig_free(void *ptr, size_t size)
+{
+#ifdef __FreeBSD__
+	if (ptr)
+		contigfree(ptr, size, M_KMALLOC);
+#else
+	return kfree(ptr);
+#endif
+}
+
 void osal_free(void* ptr) 
 {
 	return kfree(ptr);

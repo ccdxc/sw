@@ -108,16 +108,28 @@ mpool_create_mem_objects(struct mem_pool *mpool)
 	void *p;
 
 	mpool->mp_config.mpc_page_size = 0;
-	if (mpool->mp_config.mpc_pool_size) {
+	if (mpool->mp_config.mpc_pool_size > PNSO_MEM_ALIGN_PAGE) {
+		p = osal_contig_alloc(mpool->mp_config.mpc_align_size,
+				mpool->mp_config.mpc_pool_size);
+		if (p) {
+			mpool->mp_config.mpc_contig_memory = true;
+			return p;
+		}
+		OSAL_LOG_ERROR("failed to allocate contig mem objects for pool %s size: %u",
+			       mpool_get_type_str(mpool->mp_config.mpc_type),
+			       mpool->mp_config.mpc_pool_size);
+
+	} else {
 		p = mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE ?
 		    osal_aligned_alloc(mpool->mp_config.mpc_align_size,
 				       mpool->mp_config.mpc_pool_size) :
 		    osal_alloc(mpool->mp_config.mpc_pool_size);
-		if (p) {
+		if (p)
 			return p;
-		}
-		OSAL_LOG_ERROR("failed to allocate mem objects for pool %s",
-			       mpool_get_type_str(mpool->mp_config.mpc_type));
+
+		OSAL_LOG_ERROR("failed to allocate mem objects for pool %s size: %u",
+			       mpool_get_type_str(mpool->mp_config.mpc_type),
+			       mpool->mp_config.mpc_pool_size);
 	}
 
 	return NULL;
@@ -127,7 +139,11 @@ static void
 mpool_destroy_mem_objects(struct mem_pool *mpool)
 {
 	if (mpool->mp_objects) {
-		osal_free(mpool->mp_objects);
+		if (mpool->mp_config.mpc_contig_memory)
+			osal_contig_free(mpool->mp_objects,
+					mpool->mp_config.mpc_pool_size);
+		else
+			osal_free(mpool->mp_objects);
 		mpool->mp_objects = NULL;
 	}
 }
@@ -655,6 +671,8 @@ mpool_pprint(const struct mem_pool *mpool)
 	OSAL_LOG_DEBUG("%-30s: %u:%s", "mpool->mp_config.mpc_type",
 			mpool->mp_config.mpc_type,
 			mpool_get_type_str(mpool->mp_config.mpc_type));
+	OSAL_LOG_DEBUG("%-30s: %d", "mpool->mp_config.mpc_contig_memory",
+			mpool->mp_config.mpc_contig_memory);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_objects",
 			mpool->mp_config.mpc_num_objects);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_vec_elems",

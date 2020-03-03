@@ -16,6 +16,16 @@ void* osal_aligned_alloc(size_t alignment, size_t size)
 	return aligned_alloc(alignment, size);
 }
 
+void *osal_contig_alloc(size_t alignment, size_t size)
+{
+	return aligned_alloc(alignment, size);
+}
+
+void osal_contig_free(void* ptr, size_t size)
+{
+	return free(ptr);
+}
+
 void osal_free(void* ptr) 
 {
 	return free(ptr);

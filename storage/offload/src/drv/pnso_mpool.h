@@ -102,6 +102,7 @@ struct mem_pool_stack {
 
 struct mem_pool_config {
 	enum mem_pool_type mpc_type;	/* cpdc/crypto/sgl/etc pool */
+	bool mpc_contig_memory;		/* contiguous memory or not */
 	uint32_t mpc_num_objects;	/* total number of objects */
 	uint32_t mpc_num_vec_elems;	/* total number of vector elements */
 	uint32_t mpc_object_size;	/* size of an object */
