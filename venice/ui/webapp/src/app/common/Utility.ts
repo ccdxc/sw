@@ -740,7 +740,7 @@ export class Utility {
     if (isNaN(number)) {
       return false;
     }
-    if (number < 1 || number > 65536) {
+    if (number < 0 || number > 65536) {
       return false;
     }
     return true;
