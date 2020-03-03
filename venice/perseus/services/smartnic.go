@@ -388,6 +388,8 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				log.Errorf("BGP Global Spec Update received resp (%v)[%+v]", err, resp)
 				return
 			}
+			CfgAsn = updCfg.globalCfg.LocalASN
+			m.handleBGPConfigChange()
 		case Delete:
 			uid, err := uuid.FromString(rtConfig.UUID)
 			if err != nil {
@@ -404,6 +406,7 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				log.Errorf("BGP Global Spec Delete received resp (%v)[%+v]", err, resp)
 				return
 			}
+			CfgAsn = 0
 		}
 
 		addPeerReq := pegasusClient.BGPPeerRequest{}

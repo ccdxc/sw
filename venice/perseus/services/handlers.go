@@ -99,24 +99,74 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 
 	ctx := context.TODO()
 	if deleteOp != true {
-		presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
+		if nic.pushed {
+			presp, err := m.pegasusClient.BGPPeerUpdate(ctx, &peerReq)
+			if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+				log.Errorf("Peer update Request returned (%v)[%+v]", err, presp)
+			}
+		} else {
+			presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
+			if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+				log.Errorf("Peer create Request returned (%v)[%+v]", err, presp)
+			}
+			nic.pushed = true
+		}
+
+	} else {
+		if nic.pushed {
+			peerDReq := pegasusClient.BGPPeerDeleteRequest{}
+			peer := pegasusClient.BGPPeerKeyHandle{
+				IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
+			}
+			log.Infof("Add create peer [%+v]", peer)
+			peerDReq.Request = append(peerDReq.Request, &peer)
+			presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerDReq)
+			if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+				log.Errorf("Peer delete Request returned (%v)[%+v]", err, presp)
+			}
+			nic.pushed = false
+		}
+	}
+
+	if !deleteOp {
+		peerAfReq := pegasusClient.BGPPeerAfRequest{
+			Request: []*pegasusClient.BGPPeerAfSpec{
+				{
+					Id:          uid.Bytes(),
+					PeerAddr:    ip2PDSType(nic.ip),
+					LocalAddr:   ip2PDSType(""),
+					Disable:     false,
+					NexthopSelf: false,
+					DefaultOrig: false,
+					Afi:         pegasusClient.BGPAfi_BGP_AFI_L2VPN,
+					Safi:        pegasusClient.BGPSafi_BGP_SAFI_EVPN,
+				},
+			},
+		}
+		presp, err := m.pegasusClient.BGPPeerAfCreate(ctx, &peerAfReq)
 		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-			log.Errorf("Peer create Request returned (%v)[%+v]", err, presp)
+			log.Errorf("Peer AF create Request returned (%v)[%+v]", err, presp)
 		}
 		nic.pushed = true
 	} else {
-		peerDReq := pegasusClient.BGPPeerDeleteRequest{}
-		peer := pegasusClient.BGPPeerKeyHandle{
-			IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
+		peerAfReq := pegasusClient.BGPPeerAfDeleteRequest{
+			Request: []*pegasusClient.BGPPeerAfKeyHandle{
+				{
+					IdOrKey: &pegasusClient.BGPPeerAfKeyHandle_Key{Key: &pegasusClient.BGPPeerAfKey{PeerAddr: ip2PDSType(nic.ip), LocalAddr: ip2PDSType(""), Afi: pegasusClient.BGPAfi_BGP_AFI_L2VPN, Safi: pegasusClient.BGPSafi_BGP_SAFI_EVPN}},
+				},
+			},
 		}
-		log.Infof("Add create peer [%+v]", peer)
-		peerDReq.Request = append(peerDReq.Request, &peer)
-		presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerDReq)
+		presp, err := m.pegasusClient.BGPPeerAfDelete(ctx, &peerAfReq)
+
 		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-			log.Errorf("Peer delete Request returned (%v)[%+v]", err, presp)
+
+			log.Errorf("Peer AF delete Request returned (%v)[%+v]", err, presp)
+
 		}
 		nic.pushed = false
+		log.Infof("Del Peer AF [%+v]", peerAfReq.Request[0])
 	}
+
 	m.updated = true
 	pReq = peerReq
 	once.Do(m.pollStatus)
@@ -149,6 +199,18 @@ func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.Netwo
 	}
 	m.snicMap[evtIntf.Status.DSC] = snic
 	m.configurePeer(snic, false)
+}
+
+func (m *ServiceHandlers) handleBGPConfigChange() {
+	for _, nic := range m.snicMap {
+		m.configurePeer(nic, false)
+	}
+}
+
+func (m *ServiceHandlers) handleBGPConfigDelete() {
+	for _, nic := range m.snicMap {
+		m.configurePeer(nic, true)
+	}
 }
 
 func (m *ServiceHandlers) handleDeleteNetIntfObject(evtIntf *network.NetworkInterface) {
