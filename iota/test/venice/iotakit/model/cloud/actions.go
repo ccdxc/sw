@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -180,14 +181,15 @@ func (sm *SysModel) VerifyBGPCluster() error {
 
 		for _, np := range sm.NaplesNodes {
 			verfied := false
+			ip := strings.Split(np.LoopbackIP, "/")[0]
 			for _, item := range data {
-				if np.LoopbackIP == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+				if ip == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
 					verfied = true
 					break
 				}
 			}
 			if !verfied {
-				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), np.LoopbackIP)
+				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), ip)
 				log.Errorf(msg)
 				return errors.New(msg)
 			}
@@ -195,14 +197,15 @@ func (sm *SysModel) VerifyBGPCluster() error {
 
 		for _, np := range sm.FakeNaples {
 			verfied := false
+			ip := strings.Split(np.LoopbackIP, "/")[0]
 			for _, item := range data {
-				if np.IP() == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+				if ip == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
 					verfied = true
 					break
 				}
 			}
 			if !verfied {
-				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), np.Name())
+				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", ip, np.Name())
 				log.Errorf(msg)
 				return errors.New(msg)
 			}

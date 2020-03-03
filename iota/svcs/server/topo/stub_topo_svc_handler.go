@@ -118,6 +118,15 @@ func (ts *StubTopologyService) GetWorkloads(ctx context.Context, req *iota.Workl
 	return req, nil
 }
 
+// GetWorkloads gets current list of workloads
+func (ts *StubTopologyService) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | RemoveNetworks Received Request Msg: %v", req)
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	// TODO return fully formed resp here
+	return req, nil
+}
+
 // DeleteWorkloads deletes a workload
 func (ts *StubTopologyService) DeleteWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteWorkloads. Received Request Msg: %v", req)

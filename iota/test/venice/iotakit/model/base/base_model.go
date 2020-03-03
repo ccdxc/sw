@@ -286,6 +286,7 @@ func (sm *SysModel) createMultiSimNaples(node *testbed.TestNode) error {
 			for _, snic := range snicList {
 				if snic.Spec.ID == simName {
 					sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node, snic)
+					sm.FakeNaples[simName].SetIP(simInfo.GetIpAddress())
 					success = true
 				}
 			}
@@ -538,8 +539,11 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	}
 
 	for _, naples := range sm.FakeNaples {
-		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		//cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
 		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.SmartNic)
+		//node uuid already in format
+		cfgParams.NaplesLoopBackIPs[naples.Nodeuuid] = naples.IP()
+		naples.LoopbackIP = naples.IP()
 	}
 
 	for _, node := range sm.VeniceNodeMap {

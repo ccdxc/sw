@@ -130,7 +130,7 @@ function setup_pci_mgmt_ip() {
 
     # override possible command line setting
     # with default settings if multiple NICs
-    if [ $num_mgmt -gt 1 ] ; then
+    if [ $num_mgmt -gt 0 ] ; then
         own_ip="169.254.XX.2"
         trg_ip="169.254.XX.1"
 

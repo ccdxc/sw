@@ -1179,3 +1179,28 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 func (sm *SysModel) GetExclusiveServices() ([]string, error) {
 	return []string{}, nil
 }
+
+//RemoveNetworks remove networks from switch
+func (sm *SysModel) RemoveNetworks(switchName string) error {
+
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+
+	orch, err := sm.GetOrchestrator()
+	if err != nil {
+		return err
+	}
+
+	removeNetworkMsg := &iota.NetworksMsg{
+		Switch:           switchName,
+		OrchestratorNode: orch.Name,
+	}
+
+	removeResp, err := topoClient.RemoveNetworks(context.Background(), removeNetworkMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to remove networks Err: %v", err)
+	} else if removeResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to rremove networks API Status: %+v | Err: %v", removeResp.ApiResponse, err)
+	}
+
+	return nil
+}

@@ -164,6 +164,8 @@ type TestNodeInterface interface {
 	IsOrchesratorNode() bool
 
 	MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error)
+
+	RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error)
 }
 
 //ManagedNodeInterface represent interface for a managed node

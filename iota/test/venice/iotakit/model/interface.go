@@ -88,6 +88,8 @@ type ClusterActionIntf interface {
 	RemoveAddNaples(naples *objects.NaplesCollection) error
 	FlapDataSwitchPortsPeriodically(ctx context.Context, ports *objects.SwitchPortCollection,
 		downTime time.Duration, flapInterval time.Duration, flapCount int) error
+
+	RemoveNetworks(switchName string) error
 }
 
 type ObjectIntf interface {

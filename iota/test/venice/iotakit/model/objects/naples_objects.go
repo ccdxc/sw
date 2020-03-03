@@ -11,10 +11,11 @@ import (
 
 // Naples represents a smart-nic
 type Node struct {
-	name     string
-	iotaNode *iota.Node
-	testNode *testbed.TestNode
-	Nodeuuid string
+	name      string
+	iotaNode  *iota.Node
+	testNode  *testbed.TestNode
+	Nodeuuid  string
+	IPAddress string
 }
 
 // Naples represents a smart-nic
@@ -54,7 +55,14 @@ func NewThirdPartyNode(name string, node *testbed.TestNode) *ThirdPartyNode {
 }
 
 func (n *Node) IP() string {
+	if n.IPAddress != "" {
+		return n.IPAddress
+	}
 	return n.testNode.InstanceParams().NicMgmtIP
+}
+
+func (n *Node) SetIP(ip string) {
+	n.IPAddress = ip
 }
 
 func (n *Node) Name() string {

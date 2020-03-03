@@ -31,6 +31,11 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 		return err
 	}
 
+	sm.AutoDiscovery = true
+	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
+		sm.AutoDiscovery = false
+	}
+
 	sm.NoModeSwitchReboot = true
 	sm.NoSetupDataPathAfterSwitch = true
 

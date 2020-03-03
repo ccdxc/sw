@@ -417,10 +417,17 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 
 	//Mounting does not work as we are not running agent on ESXi control VM
 	/*err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
-
 	if err != nil {
 		vm.logger.Errorf("Mounting VM directory failed")
 	}*/
+
+        mkdir := []string{"mkdir", "-p", vm.baseDir}
+	cmdInfo, _, _ := vm.remoteWorkload.RunCommand(mkdir, "", 0, 0, false, false)
+	if cmdInfo.ExitCode != 0 {
+		return errors.New("mkdir command failed " + cmdInfo.Stderr)
+	}
+
+
 
 	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)

@@ -175,6 +175,21 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
+	dvs, err := dc.findDvs("Pen-DVS-sudhiaithal-iota-dc")
+	TestUtils.Assert(t, err == nil, "successfuly found dvs")
+	TestUtils.Assert(t, dvs != nil, "dvs nil")
+
+	pgs, err := dc.FetchDVPortGroupsNames("Pen-DVS-sudhiaithal-iota-dc")
+	TestUtils.Assert(t, err == nil, "successfuly found dvs")
+	TestUtils.Assert(t, len(pgs) != 0, "dvs nil")
+
+	for _, pg := range pgs {
+		fmt.Printf("pG %v\n", pg)
+
+	}
+	err = dc.RemovePG("Dv-test")
+	TestUtils.Assert(t, err == nil, "successfuly removed dvs")
+
 	/*dvsSpec := DVSwitchSpec{
 	Name: "iota-dvs", Cluster: "sudhiaithal-iota-cluster",
 	MaxPorts: 10,

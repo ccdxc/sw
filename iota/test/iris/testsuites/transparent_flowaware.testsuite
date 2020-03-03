@@ -20,6 +20,7 @@ setup:
 
         - step : utils.cleanup
         - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         - step : config.netagent.mode_switch
           args :
                fwd_mode    : "TRANSPARENT"

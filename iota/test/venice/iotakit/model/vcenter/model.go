@@ -474,6 +474,13 @@ func (sm *VcenterSysModel) InitConfig(scale, scaleData bool) error {
 			log.Infof("Error deleting orch config %v", err)
 		}
 
+		//Clean up networks too
+		err = sm.RemoveNetworks(sm.Tb.GetSwitch())
+		if err != nil {
+			log.Infof("Error removing networks from switch %v", err)
+			return err
+		}
+
 		time.Sleep(120 * time.Second)
 
 		err = orch.Commit()

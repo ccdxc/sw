@@ -75,6 +75,8 @@ service TopologyApi {
     // WorkloadMoveMsg moves workloads
     rpc MoveWorkloads(WorkloadMoveMsg) returns  (WorkloadMoveMsg) {};
 
+    //Remove  Netowrks
+    rpc RemoveNetworks(NetworksMsg) returns  (NetworksMsg) {};
 }
 
 // Op defines topology operation
@@ -609,6 +611,30 @@ message WorkloadMoveMsg {
     //Orchestrator node 
     string orchestrator_node              = 3;
 }
+
+message Network {
+    
+    //Network name
+    string    name      = 1;
+
+    uint32    vlan      = 2;
+
+}
+
+
+// NetworksMsg 
+message NetworksMsg {
+    IotaAPIResponse api_response     = 1;
+
+    // List of workload moves
+    repeated Network Network         = 2;
+
+    string    switch                 = 3;
+  
+    //Orchestrator node 
+    string orchestrator_node         = 4;
+}
+
 
 
 // Captures the overall health of the e2e cluster

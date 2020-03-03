@@ -979,6 +979,141 @@ func (dc *DataCenter) FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria
 	return "", errors.New("Portgroup not found")
 }
 
+func (dc *DataCenter) FetchDVPortGroupsNames(name string) ([]string, error) {
+	err := dc.setUpFinder()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error setup datacenter")
+	}
+
+	dvs, err := dc.findDvs(name)
+	if err != nil {
+		return nil, errors.Wrap(err, "Dvs not found")
+	}
+
+	// Set base search criteria
+	//active := true
+	criteria := types.DistributedVirtualSwitchPortCriteria{
+		//UplinkPort: &mcriteria.Uplink,
+		//Connected:  &active,
+
+		//Connected: types.NewBool(true),
+
+		//Active:     types.NewBool(cmd.active),
+		//UplinkPort: types.NewBool(cmd.uplinkPort),
+		//Inside:     types.NewBool(cmd.inside),
+	}
+	res, err := dvs.FetchDVPorts(dc.vc.Ctx(), &criteria)
+	if err != nil {
+		return nil, err
+	}
+	netList, err := dc.Finder().NetworkList(dc.vc.Ctx(), "*")
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed Fetch networks")
+	}
+
+	nwKey := func(uuid, key string) string {
+		return uuid + "-" + key
+	}
+	nwMap := make(map[string]string)
+	for _, net := range netList {
+		nwRef, err := net.EthernetCardBackingInfo(dc.Ctx())
+		if err != nil {
+			continue
+		}
+		switch nw := nwRef.(type) {
+		case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+			nwMap[nwKey(nw.Port.SwitchUuid, nw.Port.PortgroupKey)] = filepath.Base(net.GetInventoryPath())
+		}
+
+	}
+
+	nws := make(map[string]bool)
+	log.Infof("Number od DV Ports %v %v", len(res), len(nwMap))
+	for _, port := range res {
+		setting := port.Config.Setting.(*types.VMwareDVSPortSetting)
+
+		switch setting.Vlan.(type) {
+		case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+			pgName, ok := nwMap[nwKey(port.DvsUuid, port.PortgroupKey)]
+			if ok {
+				nws[pgName] = true
+			}
+		case *types.VmwareDistributedVirtualSwitchPvlanSpec:
+			pgName, ok := nwMap[nwKey(port.DvsUuid, port.PortgroupKey)]
+			if ok {
+				nws[pgName] = true
+			}
+
+		}
+
+	}
+
+	pgs := []string{}
+	for pg, _ := range nws {
+		pgs = append(pgs, pg)
+	}
+	return pgs, nil
+}
+
+// RemovePG removes the pg with the given name
+func (dc *DataCenter) RemovePG(pgName string) error {
+
+	dc.getClientWithRLock()
+	defer dc.releaseClientRLock()
+
+	err := dc.setUpFinder()
+	if err != nil {
+		return errors.Wrapf(err, "Error setup datacenter")
+	}
+
+	net, err := dc.Finder().Network(dc.vc.Ctx(), pgName)
+	if err != nil {
+		return errors.Wrap(err, "Failed Fetch network")
+	}
+
+	objPg, ok := net.(*object.DistributedVirtualPortgroup)
+	if !ok {
+		return errors.New("Failed at getting dvs port group object")
+	}
+
+	fmt.Printf("PG %v", objPg)
+
+	task, err := objPg.Destroy(dc.vc.Ctx())
+	if err != nil {
+		// Failed to delete PG
+		// TODO: Generate Event and mark object?
+		return err
+	}
+
+	_, err = task.WaitForResult(dc.vc.Ctx(), nil)
+	if err != nil {
+		// Failed to delete PG
+		// TODO: Generate Event and mark object?
+		return err
+	}
+
+	return nil
+}
+
+// RemoveAllPortGroupsFromDvs removes the pg with the given name
+func (dc *DataCenter) RemoveAllPortGroupsFromDvs(switchName string) error {
+
+	pgs, err := dc.FetchDVPortGroupsNames(switchName)
+	if err != nil {
+		return err
+	}
+
+	for _, pg := range pgs {
+		err = dc.RemovePG(pg)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
+
 //FetchDVPorts fetches port keys matching
 func (dc *DataCenter) FetchDVPorts(name string, mcriteria DvsPGMatchCriteria) ([]types.DistributedVirtualPort, error) {
 
@@ -1161,6 +1296,7 @@ func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err
 	}
+
 	_, err = task.WaitForResult(dc.Ctx())
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err

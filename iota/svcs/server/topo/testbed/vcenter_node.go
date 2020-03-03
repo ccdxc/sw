@@ -365,6 +365,28 @@ func (n *VcenterNode) AssocaiateIndependentNode(node TestNodeInterface) error {
 	return nil
 }
 
+//RemoveNetworks not supported for other nodes
+func (n *VcenterNode) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+
+	err := n.dc.RemoveAllPortGroupsFromDvs(req.Switch)
+
+	if err != nil {
+		req.ApiResponse = &iota.IotaAPIResponse{
+			ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
+			ErrorMsg:  fmt.Sprintf("Error removing networks from %v %v", req.Switch, err.Error()),
+		}
+
+		return req, nil
+	}
+
+	req.ApiResponse = &iota.IotaAPIResponse{
+		ApiStatus: iota.APIResponseType_API_STATUS_OK,
+	}
+
+	return req, nil
+
+}
+
 func init() {
 
 }

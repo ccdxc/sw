@@ -264,7 +264,7 @@ L:
 				log.Errorf("Error querying loopback interfaces: Err: %v", err)
 				return err
 			}
-			if (len(cl.params.Dscs) - len(cl.params.FakeDscs)) == len(loppbackIntfs) {
+			if (len(cl.params.Dscs) + len(cl.params.FakeDscs)) == len(loppbackIntfs) {
 				break L
 			}
 			time.Sleep(2 * time.Second)
@@ -282,7 +282,7 @@ L:
 		}
 		intf.Spec.IPAllocType = "static"
 		intf.Spec.IPConfig = &cluster.IPConfig{
-			IPAddress: loopbackIP + "/32",
+			IPAddress: strings.Split(loopbackIP, "/")[0] + "/32",
 		}
 		err = rClient.UpdateNetworkInterface(intf)
 		if err != nil {

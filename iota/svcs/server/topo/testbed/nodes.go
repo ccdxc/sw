@@ -900,3 +900,14 @@ func (n *TestNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg)
 
 	return req, errors.New("Workload move not supported")
 }
+
+//RemoveNetworks not supported for other nodes
+func (n *TestNode) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+
+	req.ApiResponse = &iota.IotaAPIResponse{
+		ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+		ErrorMsg:  fmt.Sprintf("Remove network is not implemented by node %v", req.Switch),
+	}
+
+	return req, errors.New("Remove network  supported")
+}

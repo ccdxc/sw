@@ -46,6 +46,8 @@
 		Command
 		WorkloadMove
 		WorkloadMoveMsg
+		Network
+		NetworksMsg
 		ClusterHealthMsg
 		NodeHealth
 		NetworkQosClass

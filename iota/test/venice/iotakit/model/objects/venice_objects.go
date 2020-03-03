@@ -352,6 +352,26 @@ func (vnc *VeniceNodeCollection) ForEachVeniceNode(fn VeniceNodeIteratorFn) erro
 	return nil
 }
 
+//RunCommand runs command on the venice node
+func (vnc *VeniceNodeCollection) RunCommand(node *VeniceNode, cmd string) (string, string, int32, error) {
+
+	//Derivce the container ID
+	trig := vnc.Testbed.NewTrigger()
+
+	entity := node.iotaNode.Name + "_venice"
+
+	trig.AddCommand(cmd, entity, node.iotaNode.Name)
+
+	// trigger commands
+	triggerResp, err := trig.Run()
+	if err != nil {
+		log.Errorf("Failed to run command to get service node Err: %v", err)
+		return "", "", -1, err
+	}
+
+	return triggerResp[0].Stdout, triggerResp[0].Stderr, triggerResp[0].ExitCode, nil
+}
+
 //GetVeniceContainersWithService  Get nodes running service
 func (vnc *VeniceNodeCollection) GetVeniceContainersWithService(service string, sideCar bool) (*VeniceContainerCollection, error) {
 	if vnc.err != nil {
