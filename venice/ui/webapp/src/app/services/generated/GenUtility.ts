@@ -280,9 +280,10 @@ export class GenServiceUtility {
           connIsErrorState: false,
         });
         const watchBody = {};
-        if (resVersion > 0) {
+        // comment out this block in order to have a  quick fix for https://pensando.atlassian.net/browse/VS-1296. WE MUST REVISIT THIS.
+        /* if (resVersion > 0) {
           watchBody['O.resource-version'] = (resVersion + 1).toString();
-        }
+        } */
 
         // TODO: the retry should be replaced with an observable retry
         const watchMethod = () => {
