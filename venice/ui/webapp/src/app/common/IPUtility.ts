@@ -75,6 +75,9 @@ export class IPUtility {
    * mask is optional
    */
   public static isValidIPWithOptionalMask(ip: string): boolean {
+    if (ip === '0.0.0.0/0') {
+      return true;
+    }
     const arr: string[] = ip.split('/');
     if (arr.length > 2) {
       return false;
