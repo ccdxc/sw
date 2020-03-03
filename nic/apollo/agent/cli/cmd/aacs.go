@@ -29,9 +29,9 @@ var aacsServerStopCmd = &cobra.Command{
 }
 
 func init() {
-	updateCmd.AddCommand(aacsServerStartCmd)
+	debugCmd.AddCommand(aacsServerStartCmd)
 	aacsServerStartCmd.Flags().Uint32Var(&aacsServerPort, "server-port", 9000, "Specify AACS server listen port")
-	updateCmd.AddCommand(aacsServerStopCmd)
+	debugCmd.AddCommand(aacsServerStopCmd)
 }
 
 func aacsServerStartCmdHandler(cmd *cobra.Command, args []string) {

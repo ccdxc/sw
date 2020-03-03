@@ -39,7 +39,7 @@ func init() {
 	showCmd.AddCommand(deviceShowCmd)
 	deviceShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 
-	updateCmd.AddCommand(deviceUpdateCmd)
+	debugCmd.AddCommand(deviceUpdateCmd)
 	deviceUpdateCmd.Flags().StringVar(&deviceProfile, "profile", "default", "Specify device profile (Ex: default, p1, p2)")
 	deviceUpdateCmd.MarkFlagRequired("profile")
 }
