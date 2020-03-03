@@ -6,6 +6,12 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/pensando/sw/nic/metaswitch/rtrctl/impl"
+)
+
+const (
+	pegasusGRPCDefaultPort = "50057"
 )
 
 // showCmd represents the show command
@@ -17,4 +23,5 @@ var showCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(showCmd)
+	impl.RegisterNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, showCmd)
 }

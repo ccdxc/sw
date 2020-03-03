@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/satori/go.uuid"
 
@@ -27,6 +28,9 @@ type NLRIPrefix struct {
 }
 
 func NewNLRIPrefix(in []byte) *NLRIPrefix {
+	if len(in) < 3 {
+		return nil
+	}
 	ret := &NLRIPrefix{
 		Type:   int(in[0]),
 		Length: int(in[1]),
@@ -214,6 +218,7 @@ type ShadowBGPPeerSpec struct {
 	LocalAddr string
 	PeerAddr  string
 	Password  bool
+	State     string
 	*mstypes.BGPPeerSpec
 }
 
@@ -228,6 +233,7 @@ func newBGPPeerSpec(in *mstypes.BGPPeerSpec) ShadowBGPPeerSpec {
 		LocalAddr:   PdsIPToString(in.LocalAddr),
 		PeerAddr:    PdsIPToString(in.PeerAddr),
 		Password:    len(in.Password) != 0,
+		State:       strings.TrimPrefix(in.State.String(), "ADMIN_STATE_"),
 		BGPPeerSpec: in,
 	}
 }
@@ -247,7 +253,7 @@ func newBGPPeerStatus(in *mstypes.BGPPeerStatus) ShadowBGPPeerStatus {
 		Id:            "",
 		LastErrorRcvd: string(in.LastErrorRcvd),
 		LastErrorSent: string(in.LastErrorSent),
-		Status:        in.Status.String(),
+		Status:        strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
 		PrevStatus:    in.PrevStatus.String(),
 		BGPPeerStatus: in,
 	}
@@ -267,6 +273,33 @@ func NewBGPPeer(in *mstypes.BGPPeer) *ShadowBGPPeer {
 	}
 }
 
+// ShadowBGPPeerAf shadows the BGPPeerAf for CLI purposes
+type ShadowBGPPeerAFSpec struct {
+	*mstypes.BGPPeerAfSpec
+	Id        string
+	LocalAddr string
+	PeerAddr  string
+	Afi       string
+	Safi      string
+}
+
+// NewBGPPeerAfSpec creates a shadow of BGPPeerAF
+func NewBGPPeerAfSpec(in *mstypes.BGPPeerAfSpec) *ShadowBGPPeerAFSpec {
+	uid, err := uuid.FromBytes(in.Id)
+	uidstr := ""
+	if err == nil {
+		uidstr = uid.String()
+	}
+	return &ShadowBGPPeerAFSpec{
+		BGPPeerAfSpec: in,
+		Id:            uidstr,
+		LocalAddr:     PdsIPToString(in.LocalAddr),
+		PeerAddr:      PdsIPToString(in.PeerAddr),
+		Afi:           strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
+		Safi:          strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
+	}
+}
+
 // ShadowBGPNLRIPrefixStatus is a shadow of the BGPNLRIPrefixStatus
 type ShadowBGPNLRIPrefixStatus struct {
 	Prefix      *NLRIPrefix
@@ -278,9 +311,10 @@ type ShadowBGPNLRIPrefixStatus struct {
 
 func NewBGPNLRIPrefixStatus(in *mstypes.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
 	return &ShadowBGPNLRIPrefixStatus{
-		ASPathStr:   string(in.ASPathStr),
-		PathOrigId:  string(in.PathOrigId),
-		NextHopAddr: string(in.NextHopAddr),
-		Prefix:      NewNLRIPrefix(in.Prefix),
+		ASPathStr:           fmt.Sprintf("%v", in.ASPathStr),
+		PathOrigId:          net.IP(in.PathOrigId).String(),
+		NextHopAddr:         net.IP(in.NextHopAddr).String(),
+		Prefix:              NewNLRIPrefix(in.Prefix),
+		BGPNLRIPrefixStatus: in,
 	}
 }

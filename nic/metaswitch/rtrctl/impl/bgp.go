@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-package cmd
+package impl
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -43,7 +42,7 @@ var peerAfShowCmd = &cobra.Command{
 }
 
 var nlriPrefixShowCmd = &cobra.Command{
-	Use:   "nlri-prefix",
+	Use:   "nlri",
 	Short: "show nlri prefix information",
 	Long:  "show nlri prefix object information",
 	Args:  cobra.NoArgs,
@@ -51,71 +50,21 @@ var nlriPrefixShowCmd = &cobra.Command{
 }
 
 func init() {
-	showCmd.AddCommand(bgpShowCmd)
-	bgpShowCmd.PersistentFlags().Bool("json", false, "output in json")
-	bgpShowCmd.AddCommand(peerShowCmd)
-	bgpShowCmd.AddCommand(peerAfShowCmd)
-	bgpShowCmd.AddCommand(nlriPrefixShowCmd)
+
 }
 
-const bgpGlobalStr = `BGP Global Configuration
+const (
+	bgpGlobalStr = `-----------------------------------
+BGP Global Configuration
+-----------------------------------
 Local ASN   : %d
 Router ID   : %v
 Cluster ID  : %v
 `
-const bgpPeerStr = `BGP Peer details
-------------------------------------
-UUID            : %s
-Admin State     : %v
-Local Address   : %v
-Remote Address  : %v
-Remote ASN      : %d
-Authentication  : %v
-Flags           : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
-Timers          : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-
-Status          : %v
-Previous State  : %v
-Last Err Recvd  : %v
-Last Err Sent   : %v
-------------------------------------
-`
-
-const bgpNLRI = `
-------------------------------------
-AFI/SAFI        : [ %v/%v ]
-Route Source    : %d
-Path ID         : %d
-AS Path         : %v
-Originator      : %v
-Next Hop Addr   : %v
-BestPath        : %v
-Prefix          : %v
-------------------------------------
-`
-
-const bgpPeerAFStr = `BGP Peer Address Family
-------------------------------------
-UUID            : %s
-AFI/SAFI        : [ %v/%v ]
-LocalAddress    : %v
-Remote Address  : %v
-Flags           : [ Disable: %v /Next-Hop-Self: %v / Default-originate: %v ]
-------------------------------------
-`
-
-func printBGPPeerAF(paf pegasusClient.BGPPeerAf) string {
-	uid, err := uuid.FromBytes(paf.Spec.Id)
-	uidStr := ""
-	if err != nil {
-		uidStr = uid.String()
-	}
-
-	return fmt.Sprintf(bgpPeerAFStr, uidStr, paf.Spec.Afi.String(), paf.Spec.Safi.String(), utils.PdsIPToString(paf.Spec.LocalAddr), utils.PdsIPToString(paf.Spec.PeerAddr), paf.Spec.Disable, paf.Spec.NexthopSelf, paf.Spec.DefaultOrig)
-}
+)
 
 func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
-	c, err := utils.CreateNewGRPCClient()
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
@@ -142,8 +91,31 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+const (
+	bgpPeerFmt = `%-40s %-10s %-16v %-16v %-5v %-10v %-16v`
+	bgpPeerHdr = "UUID,AdminState,Local Address,Remote Address,ASN,Auth,Status"
+
+	bgpPeerDetStr = `BGP Peer details
+------------------------------------
+UUID            : %s
+Admin State     : %v
+Local Address   : %v
+Remote Address  : %v
+Remote ASN      : %d
+Authentication  : %v
+Flags           : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
+Timers          : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+
+Status          : %v
+Previous State  : %v
+Last Err Recvd  : %v
+Last Err Sent   : %v
+------------------------------------
+`
+)
+
 func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
-	c, err := utils.CreateNewGRPCClient()
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
@@ -161,29 +133,52 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	doJSON := cmd.Flag("json").Value.String() == "true"
+	doDetail := cmd.Flag("detail").Value.String() == "true"
+
+	if !doJSON && !doDetail {
+		utils.PrintHeader(bgpPeerFmt, bgpPeerHdr)
+	}
 	peers := []*utils.ShadowBGPPeer{}
 	for _, p := range respMsg.Response {
 		peer := utils.NewBGPPeer(p)
 		if doJSON {
 			peers = append(peers, peer)
 		} else {
-			fmt.Printf(bgpPeerStr, peer.Spec.Id, peer.Spec.State.String(), peer.Spec.LocalAddr,
-				peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Spec.RRClient,
-				peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime, peer.Spec.KeepAlive,
-				peer.Status.Status, peer.Status.PrevStatus, peer.Status.LastErrorRcvd,
-				peer.Status.LastErrorSent)
+			if doDetail {
+				fmt.Printf(bgpPeerDetStr, peer.Spec.Id, peer.Spec.State, peer.Spec.LocalAddr,
+					peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Spec.RRClient,
+					peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime, peer.Spec.KeepAlive,
+					peer.Status.Status, peer.Status.PrevStatus, peer.Status.LastErrorRcvd,
+					peer.Status.LastErrorSent)
+			} else {
+				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.LocalAddr, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
+				fmt.Printf("\n")
+			}
 		}
 	}
 	if doJSON {
 		b, _ := json.MarshalIndent(peers, "", "  ")
 		fmt.Println(string(b))
-		return nil
 	}
 	return nil
 }
 
+const (
+	bgpPeerAfHdr    = "UUID,Local Address,Peer Address,AFI,SAFI"
+	bgpPeerAFFmt    = "%-40s %-16v %-16v %-16v %-16v"
+	bgpPeerAFDetStr = `BGP Peer Address Family
+------------------------------------
+UUID            : %s
+AFI/SAFI        : [ %v/%v ]
+LocalAddress    : %v
+Remote Address  : %v
+Flags           : [ Disable: %v /Next-Hop-Self: %v / Default-originate: %v ]
+------------------------------------
+`
+)
+
 func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
-	c, err := utils.CreateNewGRPCClient()
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
@@ -200,17 +195,56 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Operation failed with error")
 	}
 
+	doJSON := cmd.Flag("json").Value.String() == "true"
+	doDetail := cmd.Flag("detail").Value.String() == "true"
+
+	if !doJSON && !doDetail {
+		utils.PrintHeader(bgpPeerAFFmt, bgpPeerAfHdr)
+	}
+
+	var afs []*utils.ShadowBGPPeerAFSpec
 	if len(respMsg.Response) != 0 {
-		fmt.Println()
+		for _, r := range respMsg.Response {
+			afp := utils.NewBGPPeerAfSpec(r.Spec)
+			if doJSON {
+				afs = append(afs, afp)
+			} else {
+				if doDetail {
+					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.LocalAddr, afp.PeerAddr, afp.Disable, afp.NexthopSelf, afp.DefaultOrig)
+				} else {
+					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.LocalAddr, afp.PeerAddr, afp.Afi, afp.Safi)
+					fmt.Println("")
+				}
+			}
+		}
 	} else {
 		fmt.Println("Got empty response")
 	}
-
+	if doJSON {
+		b, _ := json.MarshalIndent(afs, "", "  ")
+		fmt.Println(string(b))
+	}
 	return nil
 }
 
+const (
+	bgpNLRI = `
+------------------------------------
+AFI/SAFI        : [ %v/%v ]
+Route Source    : %d
+Path ID         : %d
+AS Path         : %v
+Originator      : %v
+Next Hop Addr   : %v
+BestPath        : %v
+Prefix Length   : %v
+Prefix          : %v
+------------------------------------
+`
+)
+
 func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
-	c, err := utils.CreateNewGRPCClient()
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
@@ -226,13 +260,15 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
 		return errors.New("Operation failed with error")
 	}
+	fmt.Printf("Work in progress!\n")
 	doJSON := cmd.Flag("json").Value.String() == "true"
 
-	nlris := []*utils.ShadowBGPNLRIPrefixStatus{}
+	var nlris []*utils.ShadowBGPNLRIPrefixStatus
 	for _, p := range respMsg.Response {
-		nlris = append(nlris, utils.NewBGPNLRIPrefixStatus(p.Status))
+		nlri := utils.NewBGPNLRIPrefixStatus(p.Status)
+		nlris = append(nlris, nlri)
 		if !doJSON {
-
+			fmt.Printf(bgpNLRI, nlri.Afi.String(), nlri.Safi.String(), nlri.RouteSource, nlri.PathID, nlri.ASPathStr, nlri.PathOrigId, nlri.NextHopAddr, nlri.BestRoute, nlri.PrefixLen, nlri.Prefix)
 		}
 	}
 
