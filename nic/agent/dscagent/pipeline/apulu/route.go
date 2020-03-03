@@ -537,9 +537,19 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	ctx := context.TODO()
 
+	pafresp, err := client.BGPPeerAfDelete(ctx, &peerAFDelReq)
+	if err != nil {
+		log.Infof("Peer AF Delete Request returned (%v)[%v]", err, pafresp)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config (%s)", rtCfg.GetKey(), err)
+	}
+	if pafresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
+		log.Infof("Peer create Request returned (%v)[%v]", err, pafresp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config Status(%v)", rtCfg.GetKey(), pafresp.ApiStatus)
+	}
+
 	pdresp, err := client.BGPPeerDelete(ctx, &peerDelReq)
 	if err != nil {
-		log.Infof("Peer create Request returned (%v)[%v]", err, pdresp)
+		log.Infof("Peer Delete Request returned (%v)[%v]", err, pdresp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if pdresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
