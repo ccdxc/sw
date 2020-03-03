@@ -1172,7 +1172,7 @@ class PenOrchestrator:
         if not self.naples:
             return
         try: 
-            self.naples.Connect() # Make sure it is connected
+            self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover)) # Make sure it is connected
             self.naples.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
             self.naples.Close()
         except: 
