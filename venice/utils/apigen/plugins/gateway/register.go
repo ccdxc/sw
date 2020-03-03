@@ -1399,7 +1399,7 @@ func parseNimbusManifestFile(raw []byte) map[string]nimbusManifestFile {
 	return manifest
 }
 
-// genManifest generates the current manifest of protos being processed.
+// genNimbusManifest generates the current manifest of protos being processed.
 func genNimbusManifest(path, object, service string) (map[string]nimbusManifestFile, error) {
 	var manifest map[string]nimbusManifestFile
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -1413,7 +1413,7 @@ func genNimbusManifest(path, object, service string) (map[string]nimbusManifestF
 		}
 		manifest = parseNimbusManifestFile(raw)
 	}
-	manifest[service] = nimbusManifestFile{
+	manifest[object] = nimbusManifestFile{
 		Object:  object,
 		Service: service,
 	}
