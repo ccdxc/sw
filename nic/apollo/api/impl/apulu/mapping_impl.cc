@@ -225,9 +225,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
-                      "for mapping (vpc %s, ip %s), vnic %s, err %u",
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
-                      vnic->key().str(), ret);
+                      "for mapping %s, vnic %s, err %u",
+                      mapping->key2str().c_str(), vnic->key().str(), ret);
         return ret;
     }
     local_mapping_overlay_ip_hdl_ = tparams.handle;
@@ -241,15 +240,30 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
-                      "mapping (vpc %s, ip %s), vnic %s, err %u",
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
-                      vnic->key().str(), ret);
+                      "mapping %s, vnic %s, err %u",
+                      mapping->key2str().c_str(), vnic->key().str(), ret);
         goto error;
     }
     mapping_hdl_ = tparams.handle;
 
     PDS_TRACE_DEBUG("Rsvd LOCAL_MAPPING handle 0x%lx, MAPPING handle 0x%lx",
                     local_mapping_overlay_ip_hdl_, mapping_hdl_);
+
+#if 0
+    // if IP/MAC binding checks are enabled, reserve entries in IP_MAC_BINDING
+    // table so we can point from the corresponding L2 entry in the
+    // LOCAL_MAPPING table
+    if (vnic->binding_checks_en() && !vnic->switch_vnic() &&
+        (spec->skey.ip_addr.af == IP_AF_IPV4)) {
+        ret = mapping_impl_db()->ip_mac_binding_idxr()->alloc(&ipv4_mac_binding_hw_id_);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in IP_MAC_BINDING table for "
+                          "mapping %s, vnic %s, err %u",
+                          mapping->key2str().c_str(), vnic->key().str(), ret);
+            goto error;
+        }
+    }
+#endif
 
     // check if this mapping has public IP
     if (!spec->public_ip_valid) {
@@ -265,9 +279,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
-                      "for public IP %s of mapping (vpc %s, ip %s), "
-                      "vnic %s, err %u", ipaddr2str(&spec->public_ip),
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
+                      "for public IP %s of mapping %s, vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
                       vnic->key().str(), ret);
         goto error;
     }
@@ -282,9 +295,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for public IP "
-                      "%s of mapping (vpc %s, ip %s), vnic %s, err %u",
-                      ipaddr2str(&spec->public_ip),
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
+                      "%s of mapping %s, vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
                       vnic->key().str(), ret);
         goto error;
     }
@@ -298,9 +310,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for public IP %s in NAT table "
-                      "for mapping (vpc %s, ip %s), vnic %s, err %u",
-                      ipaddr2str(&spec->public_ip),
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
+                      "for mapping %s vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
                       vnic->key().str(), ret);
         goto error;
     }
@@ -309,8 +320,7 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = apulu_impl_db()->nat_idxr()->alloc(&to_overlay_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for overlay IP in NAT table for "
-                      "mapping (vpc %s, ip %s), vnic %s, err %u",
-                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.ip_addr),
+                      "mapping %s, vnic %s, err %u", mapping->key2str().c_str(),
                       vnic->key().str(), ret);
         goto error;
     }
@@ -439,6 +449,13 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         return ret;
     }
 
+#if 0
+    // free the IP_MAC_BINDING table entries reserved, if any
+    if (ipv4_mac_binding_hw_id_ != PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID) {
+        mapping_impl_db()->ip_mac_binding_idxr()->free(ipv4_mac_binding_hw_id_);
+    }
+#endif
+
     // nothing else to do if public ip is not configured
     if (!mapping->is_public_ip_valid()) {
         return SDK_RET_OK;
@@ -500,6 +517,11 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         tparams.handle = mapping_public_ip_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&tparams);
     }
+#if 0
+    if (ipv4_mac_binding_hw_id_ != PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID) {
+        mapping_impl_db()->ip_mac_binding_idxr()->free(ipv4_mac_binding_hw_id_);
+    }
+#endif
     if (to_public_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
         apulu_impl_db()->nat_idxr()->free(to_public_ip_nat_idx_);
     }
@@ -541,7 +563,7 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
     ret = nat_data.write(to_public_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for overlay IP "
-                      "to public IP xlation for mapping %s)",
+                      "to public IP xlation for mapping %s",
                       to_public_ip_nat_idx_, mapping->key2str().c_str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -551,7 +573,7 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
     ret = nat_data.write(to_overlay_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for public IP "
-                      "to overlay IP xlation for mapping (vpc %u, ip %s)",
+                      "to overlay IP xlation for mapping %s",
                       to_overlay_ip_nat_idx_, mapping->key2str().c_str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -655,8 +677,10 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
                                          ((vpc_impl *)vpc->impl())->hw_id(),
                                          &spec->skey.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
-                                           vnic_impl_obj->hw_id(),
-                                           to_public_ip_nat_idx_);
+        vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
+        (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
+             true : false, vnic_impl_obj->binding_hw_id(),
+        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                    &local_mapping_data,
                                    LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
@@ -691,8 +715,11 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
                                              ((vpc_impl *)vpc->impl())->hw_id(),
                                              &spec->public_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
-                                               vnic_impl_obj->hw_id(),
-                                               to_overlay_ip_nat_idx_);
+            vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
+            (vnic->binding_checks_en() &&
+             (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
+            vnic_impl_obj->binding_hw_id(),
+            PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams,
                                        &local_mapping_key,
                                        NULL, &local_mapping_data,

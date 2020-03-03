@@ -168,11 +168,15 @@ public:
 
     /// \brief     return vnic's h/w id
     /// \return    h/w id assigned to the vnic
-    uint16_t hw_id(void) { return hw_id_; }
+    uint16_t hw_id(void) const { return hw_id_; }
 
     /// \brief     return nexthop idx allocated for this vnic
     /// \return    nexthop index corresponding to this vnic
-    uint16_t nh_idx(void) { return nh_idx_; }
+    uint16_t nh_idx(void) const { return nh_idx_; }
+
+    /// \brief     return vnic's h/w id in IP_MAC_BINDING table table
+    /// \return    h/w id assigned to the vnic in IP_MAC_BINDING table
+    uint32_t binding_hw_id(void) const { return binding_hw_id_; }
 
 private:
     /// \brief constructor
@@ -181,6 +185,7 @@ private:
         nh_idx_ = 0xFFFF;
         local_mapping_hdl_ = handle_t::null();
         mapping_hdl_ = handle_t::null();
+        binding_hw_id_ = PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID;
     }
 
     /// \brief destructor
@@ -285,6 +290,8 @@ private:
     ///< are valid only in a transaction)
     handle_t local_mapping_hdl_;
     handle_t mapping_hdl_;
+    // h/w id for IP_MAC_BINDING table
+    uint32_t binding_hw_id_;
 };
 
 /// \@}

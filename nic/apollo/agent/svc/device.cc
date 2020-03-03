@@ -65,7 +65,6 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
-
     }
 
 end:

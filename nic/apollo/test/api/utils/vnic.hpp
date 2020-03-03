@@ -27,7 +27,7 @@ public:
     pds_encap_t vnic_encap;
     pds_encap_t fabric_encap;
     uint64_t mac_u64;
-    bool src_dst_check;
+    bool binding_checks_en;
     uint8_t tx_mirror_session_bmap;
     uint8_t rx_mirror_session_bmap;
     bool configure_policy;
@@ -38,7 +38,7 @@ public:
     }
     vnic_feeder(const vnic_feeder& feeder) {
         init(feeder.key, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
-             feeder.fabric_encap.type, feeder.src_dst_check,
+             feeder.fabric_encap.type, feeder.binding_checks_en,
              feeder.configure_policy);
     }
 
@@ -47,7 +47,7 @@ public:
               uint64_t mac = k_feeder_mac,
               pds_encap_type_t vnic_encap_type = PDS_ENCAP_TYPE_DOT1Q,
               pds_encap_type_t fabric_encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
-              bool src_dst_check = true, bool configure_policy = true);
+              bool binding_checks_en = true, bool configure_policy = true);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -71,7 +71,7 @@ operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
-       << " src dst check: " << spec->src_dst_check
+       << " IP/MAC bindings check : " << spec->binding_checks_en
        << " tx_mirror_session_bmap: " << +spec->tx_mirror_session_bmap
        << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap
        << " v4 meter: " << spec->v4_meter.str()

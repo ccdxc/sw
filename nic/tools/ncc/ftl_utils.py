@@ -83,6 +83,14 @@ def is_table_pad_256(table, pipeline):
 
     return False
 
+# TODO use pragmas
+def is_table_pad_128(table, pipeline):
+    # TODO nexthop and session_track is 256 bits in Apulu
+    if pipeline == 'apulu' and ('ip_mac_binding' in str(table)):
+        return True
+
+    return False
+
 def is_hash_field(field_name):
     for field in hash_field_list:
         if field_name.startswith(field):

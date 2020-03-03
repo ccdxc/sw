@@ -154,13 +154,13 @@
 //::                        (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                         flit, flitoffset, typestr, hdrname) = fields
 //::                        if hdrname in all_fields_of_header_in_same_byte.keys():
-//::                            all_fields_of_header_in_same_byte[hdrname] += p4fldwidth 
+//::                            all_fields_of_header_in_same_byte[hdrname] += p4fldwidth
 //::                        else:
-//::                            all_fields_of_header_in_same_byte[hdrname] = p4fldwidth 
+//::                            all_fields_of_header_in_same_byte[hdrname] = p4fldwidth
 //::                        #endif
 //::                    #endfor
 //::                    max_fld_union_key_len = max(x for x in all_fields_of_header_in_same_byte.values())
-//::                    pad_to_512 += max_fld_union_key_len 
+//::                    pad_to_512 += max_fld_union_key_len
 //::
 //::                    all_fields_of_header_in_same_byte = []
 //::                    for fields in uflds:
@@ -369,7 +369,7 @@
 //::                                    flit, flitoffset, typestr, hdrname) = fields
 //::                                    if not keyencountered:
 //::                                        if typestr != 'K':
-//::                                            decrement_index = True 
+//::                                            decrement_index = True
 //::                                        else:
 //::                                            keyencountered = True
 //::                                            break
@@ -400,9 +400,9 @@
 //::                                    (multip4fldname, p4fldname, p4fldwidth, phvbit, \
 //::                                     flit, flitoffset, typestr, hdrname) = fields
 //::                                    if hdrname in all_fields_of_header_in_same_byte.keys():
-//::                                        all_fields_of_header_in_same_byte[hdrname] += p4fldwidth 
+//::                                        all_fields_of_header_in_same_byte[hdrname] += p4fldwidth
 //::                                    else:
-//::                                        all_fields_of_header_in_same_byte[hdrname] = p4fldwidth 
+//::                                        all_fields_of_header_in_same_byte[hdrname] = p4fldwidth
 //::                                    #endif
 //::                                #endfor
 //::                                max_fld_union_key_len = max(x for x in all_fields_of_header_in_same_byte.values())
@@ -520,6 +520,10 @@
 //::                if (pad_to_512):
 //::                    if is_table_pad_256(table, pipeline):
 //::                        ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 256, '')
+//::                    elif is_table_pad_128(table, pipeline):
+//::                        if pad_to_512 % 128 != 0:
+//::                            ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 128, '')
+//::                        #endif
 //::                    else:
 //::                        ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512, '')
 //::                    #endif

@@ -29,6 +29,7 @@
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/p4/include/apulu_table_sizes.h"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 #define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
@@ -173,6 +174,16 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             goto error;
         }
         mapping_hdl_ = tparams.handle;
+
+        // reserve an entry in IP_MAC_BINDING table always (table is big enough)
+        // and whether to use this or not we will decide when mappings are
+        // programmed
+        ret = mapping_impl_db()->ip_mac_binding_idxr()->alloc(&binding_hw_id_);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve entry in IP_MAC_BINDING table for "
+                          "vnic %s, err %u", spec->key.str(), ret);
+            goto error;
+        }
         break;
 
     case API_OP_UPDATE:
@@ -218,6 +229,11 @@ vnic_impl::release_resources(api_base *api_obj) {
          (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM)) &&
         (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
+    }
+
+    // free the IP_MAC_BINDING table entries reserved
+    if (binding_hw_id_ != PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID) {
+        mapping_impl_db()->ip_mac_binding_idxr()->free(binding_hw_id_);
     }
     return SDK_RET_OK;
 }
@@ -281,6 +297,11 @@ vnic_impl::nuke_resources(api_base *api_obj) {
          (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM))
         && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
+    }
+
+    // free the IP_MAC_BINDING table entries reserved
+    if (binding_hw_id_ != PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID) {
+        mapping_impl_db()->ip_mac_binding_idxr()->free(binding_hw_id_);
     }
     return SDK_RET_OK;
 }
@@ -565,6 +586,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vnic_actiondata_t vnic_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
+    binding_info_entry_t ip_mac_binding_data;
     meter_stats_actiondata_t meter_stats_data = { 0 };
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
@@ -639,6 +661,15 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
                       "entry at %u", spec->key.str(), hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // program the IP_MAC_BINDING table and keep it ready
+    ip_mac_binding_data.set_addr(spec->mac_addr);
+    ret = ip_mac_binding_data.write(binding_hw_id_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program IP_MAC_BINDING table entry %u for "
+                      "vnic %s, err %u", binding_hw_id_, spec->key.str(), ret);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -754,11 +785,13 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the data
     local_mapping_data.vnic_id = hw_id_;
     local_mapping_data.xlate_id = PDS_IMPL_RSVD_NAT_HW_ID;
-    if (spec->src_dst_check) {
+#if 0
+    if (spec->binding_checks_en) {
         local_mapping_data.binding_check_enabled = TRUE;
         // we don't know the IPs associated with this yet until local IP
         // mappings are created later on
     }
+#endif
 
     // program LOCAL_MAPPING entry
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,

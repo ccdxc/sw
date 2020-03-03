@@ -31,7 +31,8 @@ typedef struct pds_vnic_spec_s {
     pds_encap_t vnic_encap;                    ///< vnic encap for this vnic
     pds_encap_t fabric_encap;                  ///< fabric encap for this vnic
     mac_addr_t mac_addr;                       ///< vnic's overlay mac address
-    bool src_dst_check;                        ///< TRUE if src/dst check is enabled
+    bool binding_checks_en;                    ///< TRUE if MAC/IP binding
+                                               ///< checks are enabled
     uint8_t tx_mirror_session_bmap;            ///< Tx mirror sessions, if any
     uint8_t rx_mirror_session_bmap;            ///< Rx mirror sessions, if any
     pds_obj_key_t v4_meter;                    ///< IPv4 Metering policy to apply on

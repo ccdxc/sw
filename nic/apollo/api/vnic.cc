@@ -28,6 +28,7 @@ namespace api {
 
 vnic_entry::vnic_entry() {
     switch_vnic_ = false;
+    binding_checks_en_ = false;
     host_if_ = k_pds_obj_key_invalid;
     ht_ctxt_.reset();
 }
@@ -130,10 +131,11 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     }
     fabric_encap_ = spec->fabric_encap;
     switch_vnic_ = spec->switch_vnic;
+    binding_checks_en_ = spec->binding_checks_en;
     if (switch_vnic_) {
         // switch vnics can send/receive traffic multiple SIPs/SMACs
-        if (unlikely(spec->src_dst_check)) {
-            PDS_TRACE_ERR("switch vnics can't have src/dst check knob enabled, "
+        if (unlikely(spec->binding_checks_en)) {
+            PDS_TRACE_ERR("switch vnics can't have IP/MAC binding checks enabled, "
                           "vnic %s api op %u failed", key_.str(),
                           api_ctxt->api_op);
             return SDK_RET_INVALID_ARG;
@@ -195,8 +197,8 @@ vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
 
     PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, v4 meter %s, "
                     "v6 meter %s, mac %s\nvnic encap %s, fabric encap %s, "
-                    "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
-                    "host if %s",
+                    "rxmirror bitmap %x, tx mirror bitmap %x, "
+                    "binding checks %s, host if %s",
                     key_.str(), spec->subnet.str(),
                     spec->v4_meter.str(), spec->v6_meter.str(),
                     macaddr2str(spec->mac_addr),
@@ -204,7 +206,8 @@ vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
                     pds_encap2str(&spec->fabric_encap),
                     spec->rx_mirror_session_bmap,
                     spec->tx_mirror_session_bmap,
-                    spec->switch_vnic, spec->host_if.str());
+                    spec->binding_checks_en ? "true" : "false",
+                    spec->host_if.str());
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -235,6 +238,9 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     }
     if (switch_vnic_ != spec->switch_vnic) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_SWITCH_VNIC;
+    }
+    if (binding_checks_en_ != spec->binding_checks_en) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_BINDING_CHECKS;
     }
     if ((num_ing_v4_policy_ != spec->num_ing_v4_policy)          ||
         (num_ing_v6_policy_ != spec->num_ing_v6_policy)          ||
@@ -304,6 +310,7 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     spec->v4_meter = v4_meter_;
     spec->v6_meter = v6_meter_;
     spec->switch_vnic = switch_vnic_;
+    spec->binding_checks_en = binding_checks_en_;
     spec->host_if = host_if_;
     return SDK_RET_OK;
 }

@@ -76,7 +76,7 @@ void
 vnic_feeder::init(pds_obj_key_t key, uint32_t num_vnic, uint64_t mac,
                   pds_encap_type_t vnic_encap_type,
                   pds_encap_type_t fabric_encap_type,
-                  bool src_dst_check, bool configure_policy) {
+                  bool binding_checks_en, bool configure_policy) {
     this->key = key;
     this->vpc = int2pdsobjkey(1);
     this->subnet = int2pdsobjkey(1);
@@ -84,7 +84,7 @@ vnic_feeder::init(pds_obj_key_t key, uint32_t num_vnic, uint64_t mac,
     vnic_feeder_encap_init(pdsobjkey2int(key), vnic_encap_type, &vnic_encap);
     vnic_feeder_encap_init(pdsobjkey2int(key), fabric_encap_type,
                            &fabric_encap);
-    this->src_dst_check = src_dst_check;
+    this->binding_checks_en = binding_checks_en;
     this->tx_mirror_session_bmap = 0;
     this->rx_mirror_session_bmap = 0;
     this->configure_policy = configure_policy;
@@ -139,7 +139,7 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     spec->vnic_encap = vnic_encap;
     spec->fabric_encap = fabric_encap;
     MAC_UINT64_TO_ADDR(spec->mac_addr, mac_u64);
-    spec->src_dst_check = src_dst_check;
+    spec->binding_checks_en = binding_checks_en;
     spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
     spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
 
@@ -185,7 +185,7 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
         if (!test::pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
             return false;
 
-        if (src_dst_check != spec->src_dst_check)
+        if (binding_checks_en != spec->binding_checks_en)
             return false;
 
         if (tx_mirror_session_bmap != spec->tx_mirror_session_bmap)

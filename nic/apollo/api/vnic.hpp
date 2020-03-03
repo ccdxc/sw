@@ -25,9 +25,10 @@ class vnic_state;
 // attribute update bits for vnic object
 #define PDS_VNIC_UPD_VNIC_ENCAP          0x1
 #define PDS_VNIC_UPD_SWITCH_VNIC         0x2
-#define PDS_VNIC_UPD_POLICY              0x4
-#define PDS_VNIC_UPD_HOST_IFINDEX        0x8
-#define PDS_VNIC_UPD_METER               0x10
+#define PDS_VNIC_UPD_BINDING_CHECKS      0x4
+#define PDS_VNIC_UPD_POLICY              0x8
+#define PDS_VNIC_UPD_HOST_IFINDEX        0x10
+#define PDS_VNIC_UPD_METER               0x20
 // route table is not an attr inside the vnic object, however
 // a route table change on subnet can affect vnic's programming
 // TODO: revisit and see if there is a better way to handle this
@@ -244,6 +245,10 @@ public:
     /// \return    true if vnic is switch vnic, else false
     bool switch_vnic(void) { return switch_vnic_; }
 
+    /// \brief     return true if IP/MAC binding checks are enabled
+    /// \return    true if IP/MAC binding checks are enabled on this vnic
+    bool binding_checks_en(void) { return binding_checks_en_; }
+
     /// \brief     return the MAC address corresponding to this vnic
     /// \return    ethernet MAC address of this vnic
     mac_addr_t& mac(void) { return mac_; }
@@ -322,15 +327,17 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;             ///< vnic key
-    pds_obj_key_t subnet_;          ///< subnet of this vnic
-    pds_obj_key_t v4_meter_;        ///< IPv4 metering policy
-    pds_obj_key_t v6_meter_;        ///< IPv6 metering policy
-    pds_encap_t   vnic_encap_;      ///< vnic's vlan encap
-    pds_encap_t   fabric_encap_;    ///< fabric encap information
-    bool          switch_vnic_;     ///< TRUE if this is switch vnic
-    mac_addr_t    mac_;             ///< MAC address of this vnic
-    pds_obj_key_t host_if_;         ///< PF/VF this vnic is behind
+    pds_obj_key_t key_;                  ///< vnic key
+    pds_obj_key_t subnet_;               ///< subnet of this vnic
+    pds_obj_key_t v4_meter_;             ///< IPv4 metering policy
+    pds_obj_key_t v6_meter_;             ///< IPv6 metering policy
+    pds_encap_t   vnic_encap_;           ///< vnic's vlan encap
+    pds_encap_t   fabric_encap_;         ///< fabric encap information
+    bool          binding_checks_en_;    ///< TRUE if IP/MAC binding checks
+                                         ///< are enabled
+    bool          switch_vnic_;          ///< TRUE if this is switch vnic
+    mac_addr_t    mac_;                  ///< MAC address of this vnic
+    pds_obj_key_t host_if_;              ///< PF/VF this vnic is behind
     /// number of ingress IPv4 policies
     uint8_t       num_ing_v4_policy_;
     /// ingress IPv4 policies
@@ -347,12 +354,13 @@ private:
     uint8_t       num_egr_v6_policy_;
     /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_VNIC_POLICY];
-    pds_obj_key_t tx_policer_;       ///< egress policer index
-    pds_obj_key_t rx_policer_;       ///< ingress policer index
-    ht_ctxt_t     ht_ctxt_;          ///< hash table context
-    impl_base     *impl_;            ///< impl object instance
+    pds_obj_key_t tx_policer_;           ///< egress policer index
+    pds_obj_key_t rx_policer_;           ///< ingress policer index
+    ht_ctxt_t     ht_ctxt_;              ///< hash table context
+    impl_base     *impl_;                ///< impl object instance
 
-    friend class vnic_state;    ///< vnic_state is friend of vnic_entry
+    /// vnic_state is friend of vnic_entry
+    friend class vnic_state;
 } __PACK__;
 
 /// @}     // end of PDS_VNIC_ENTRY

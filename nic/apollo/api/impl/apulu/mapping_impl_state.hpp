@@ -76,8 +76,15 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
-    sdk_ret_t add_dhcp_host_reservation(const pds_mapping_spec_t *spec);
-    sdk_ret_t remove_dhcp_host_reservation(const char *hostname);
+    /// \brief add dhcp binding for this mapping
+    /// \param[in] spec    mapping configuration
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert_dhcp_binding(const pds_mapping_spec_t *spec);
+
+    /// \brief add remove binding corresponding to this mapping
+    /// \param[in] hostnmae    hostname corresponding to the mapping
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t remove_dhcp_binding(const char *hostname);
 
 private:
     mem_hash *local_mapping_tbl(void) { return local_mapping_tbl_; }

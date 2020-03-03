@@ -419,41 +419,40 @@ mapping_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
-const char *dhcp_ctl_ip = "127.0.0.1";
-const int dhcp_ctl_port = 7911;
-
+const char *k_dhcp_ctl_ip = "127.0.0.1";
+const int k_dhcp_ctl_port = 7911;
 sdk_ret_t
-mapping_impl_state::add_dhcp_host_reservation(const pds_mapping_spec_t *spec) {
+mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec) {
+    dhcpctl_status ret;
     dhcpctl_data_string ipaddr = NULL;
     dhcpctl_data_string mac = NULL;
     dhcpctl_status waitstatus = 0;
-    dhcpctl_status ret = 0;
     struct ether_addr eth_addr = {};
     dhcpctl_handle host = NULL;
 
     if (!dhcp_connection_) {
-        ret = dhcpctl_connect(&dhcp_connection_, dhcp_ctl_ip, dhcp_ctl_port,
+        ret = dhcpctl_connect(&dhcp_connection_, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to connect to dhcpd: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
             return SDK_RET_ERR;
         }
     }
- 
+
     ret = dhcpctl_new_object(&host, dhcp_connection_, "host");
     if (ret != ISC_R_SUCCESS) {
         // If the connection fails for some reason(dhcpd restarted?) try to
         // establish the channel again.
-        ret = dhcpctl_connect(&dhcp_connection_, dhcp_ctl_ip, dhcp_ctl_port,
+        ret = dhcpctl_connect(&dhcp_connection_, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to connect to dhcpd: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
             return SDK_RET_ERR;
         }
 
         ret = dhcpctl_new_object(&host, dhcp_connection_, "host");
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to allocate host object: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to allocate host object, err %u", ret);
             return SDK_RET_ERR;
         }
     }
@@ -461,16 +460,17 @@ mapping_impl_state::add_dhcp_host_reservation(const pds_mapping_spec_t *spec) {
     memset(&ipaddr, 0, sizeof ipaddr);
     ret = omapi_data_string_new (&ipaddr, IP4_ADDR8_LEN, MDL);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("Unable to allocate data string: ret = %u", ret);
+        PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         return SDK_RET_OOM;
     }
-    memcpy(ipaddr->value, (const void *)&spec->skey.ip_addr.addr.v4_addr, IP4_ADDR8_LEN);
+    memcpy(ipaddr->value, (const void *)&spec->skey.ip_addr.addr.v4_addr,
+           IP4_ADDR8_LEN);
     dhcpctl_set_value (host, ipaddr, "ip-address");
 
     memset(&mac, 0, sizeof(mac));
     ret = omapi_data_string_new(&mac, sizeof(eth_addr), MDL);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("Unable to allocate data string: ret = %u", ret);
+        PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         return SDK_RET_OOM;
     }
     ether_aton_r((const char *)spec->overlay_mac, &eth_addr);
@@ -480,36 +480,35 @@ mapping_impl_state::add_dhcp_host_reservation(const pds_mapping_spec_t *spec) {
     dhcpctl_set_string_value(host, spec->key.str(), "name");
     dhcpctl_set_int_value(host, 1, "hardware-type");
 
-    ret = dhcpctl_open_object(host, dhcp_connection_, DHCPCTL_CREATE|DHCPCTL_EXCL);
+    ret = dhcpctl_open_object(host, dhcp_connection_,
+                              DHCPCTL_CREATE|DHCPCTL_EXCL);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_open_object() failed: ret = %u", ret);
-        return SDK_RET_ERR;
-    }
- 
-    ret = dhcpctl_wait_for_completion(host, &waitstatus);
-    if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_wait_for_completion() failed: ret = %u", ret);
+        PDS_TRACE_ERR("dhcp open object failure, err %u", ret);
         return SDK_RET_ERR;
     }
 
+    ret = dhcpctl_wait_for_completion(host, &waitstatus);
+    if (ret != ISC_R_SUCCESS) {
+        PDS_TRACE_ERR("dhcp wait for completion failure, err %u", ret);
+        return SDK_RET_ERR;
+    }
     omapi_data_string_dereference(&ipaddr, MDL);
     omapi_data_string_dereference(&mac, MDL);
     omapi_object_dereference(&host, MDL);
-
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-mapping_impl_state::remove_dhcp_host_reservation(const char *hostname) {
+mapping_impl_state::remove_dhcp_binding(const char *hostname) {
     dhcpctl_status ret = 0;
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
 
     if (!dhcp_connection_) {
-        ret = dhcpctl_connect(&dhcp_connection_, dhcp_ctl_ip, dhcp_ctl_port,
+        ret = dhcpctl_connect(&dhcp_connection_, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to connect to dhcpd: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
             return SDK_RET_ERR;
         }
     }
@@ -517,54 +516,52 @@ mapping_impl_state::remove_dhcp_host_reservation(const char *hostname) {
     memset(&host, 0, sizeof(host));
     ret = dhcpctl_new_object(&host, dhcp_connection_, "host");
     if (ret != ISC_R_SUCCESS) {
-        ret = dhcpctl_connect(&dhcp_connection_, dhcp_ctl_ip, dhcp_ctl_port,
+        ret = dhcpctl_connect(&dhcp_connection_, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to connect to dhcpd: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
             return SDK_RET_ERR;
         }
-       
+
         // Try to create the object again.
         ret = dhcpctl_new_object(&host, dhcp_connection_, "host");
         if (ret != ISC_R_SUCCESS) {
-            PDS_TRACE_ERR("Unable to allocate host object: ret = %u", ret);
+            PDS_TRACE_ERR("Failed to allocate host object, err %u", ret);
             return SDK_RET_ERR;
         }
     }
 
     ret = dhcpctl_set_string_value(host, hostname, "name");
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("Unable to allocate data string: ret = %u", ret);
+        PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         return SDK_RET_ERR;
     }
 
     ret = dhcpctl_open_object(host, dhcp_connection_, 0);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_open_object() failed: ret = %u", ret);
+        PDS_TRACE_ERR("dhcp open object failed, err %u", ret);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     ret = dhcpctl_wait_for_completion(host, &waitstatus);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_wait_for_completion() failed: ret = %u", ret);
+        PDS_TRACE_ERR("dhcp wait for completion failure, err %u", ret);
         return SDK_RET_ERR;
     }
 
     ret = dhcpctl_object_remove( dhcp_connection_, host );
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_object_remove() failed: ret = %u", ret);
+        PDS_TRACE_ERR("dhcp object remove failure, err %u", ret);
         return SDK_RET_ERR;
     }
 
     ret = dhcpctl_wait_for_completion(host, &waitstatus);
     if (ret != ISC_R_SUCCESS) {
-        PDS_TRACE_ERR("dhcpctl_wait_for_completion() failed: ret = %u", ret);
+        PDS_TRACE_ERR("dhcp wait for completion failure, err %u", ret);
         return SDK_RET_ERR;
     }
-
     omapi_object_dereference(&host, MDL);
-
-    return SDK_RET_OK; 
+    return SDK_RET_OK;
 }
 
 /// \@}

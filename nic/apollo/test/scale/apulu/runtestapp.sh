@@ -14,7 +14,8 @@ cleanup() {
     # remove pipeline.json
     rm -f $NICDIR/conf/pipeline.json
     # stop vpp
-    pkill -9 vpp
+    sudo pkill -9 vpp
+    sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
 }
 trap cleanup EXIT
 

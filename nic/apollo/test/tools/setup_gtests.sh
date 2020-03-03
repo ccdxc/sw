@@ -15,7 +15,7 @@ function finish () {
     echo "===== Collecting logs ====="
     ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
     rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json
-    sudo rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
+    sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
 }
 trap finish EXIT
 

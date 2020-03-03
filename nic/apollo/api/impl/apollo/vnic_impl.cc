@@ -329,7 +329,7 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vpc_id = vpc->hw_id();
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 =
-        spec->src_dst_check ? false : true;
+        spec->binding_checks_en ? false : true;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check2 = false;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group2 = 0;
 
@@ -419,7 +419,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.vpc_id = vpc->hw_id();
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check1 =
-        spec->src_dst_check ? false : true;
+        spec->binding_checks_en ? false : true;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check2 = false;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group2 = 0;
 
@@ -895,7 +895,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
         spec->fabric_encap.val.mpls_tag = vnic_by_slot_key.mpls_dst_label;
     }
     SDK_ASSERT(rx_src_dst_check == tx_src_dst_check);
-    spec->src_dst_check = rx_src_dst_check;
+    spec->binding_checks_en = rx_src_dst_check;
 
     return SDK_RET_OK;
 }

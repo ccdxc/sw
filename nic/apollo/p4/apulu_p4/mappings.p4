@@ -152,6 +152,7 @@ action binding_info(addr) {
 @pragma stage 4
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table ip_mac_binding {
     reads {
         vnic_metadata.binding_id    : exact;

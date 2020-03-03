@@ -35,6 +35,9 @@
 // reserved NAT h/w id
 #define PDS_IMPL_RSVD_NAT_HW_ID                0
 
+// reserved index in IP_MAC_BINDING table
+#define PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID     0
+
 // reserved DHCP relay NACL index
 // NOTE:
 // this index must be between PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MIN and
@@ -85,11 +88,16 @@ namespace impl {
     }                                                                        \
 }
 
-#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx)  \
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,  \
+                                               binding_checks_en,            \
+                                               binding_idx1, binding_idx2)   \
 {                                                                            \
     memset(data, 0, sizeof(*(data)));                                        \
     (data)->vnic_id = (vnic_hw_id);                                          \
     (data)->xlate_id = (xlate_idx);                                          \
+    (data)->binding_check_enabled = (binding_checks_en);                     \
+    (data)->binding_id1 = (binding_idx1);                                    \
+    (data)->binding_id2 = (binding_idx1);                                    \
 }
 
 #define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \
