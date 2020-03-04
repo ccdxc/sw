@@ -19,7 +19,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard, ClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, ISearchSearchResponse, SearchSearchRequest, SearchSearchRequest_mode, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { IWorkloadAutoMsgWorkloadWatchHelper, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
@@ -31,12 +31,13 @@ import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { SelectItem } from 'primeng/api';
 
 interface ChartData {
   // macs or ids of the dsc
   labels: string[];
   // values of the card
-  datasets: { [key: string]: any}[];
+  datasets: { [key: string]: any }[];
 }
 
 @Component({
@@ -56,17 +57,17 @@ interface ChartData {
  * The matching naples objects are added to this.filteredNaples which is used to render the table.
  */
 
- /**
-  TODO:
-  interface naplesUI {
-   associatedConditionStatus: ....
-   associatedWorkloads:....
-  }
-   uiData = data._ui as naplesUI
+/**
+ TODO:
+ interface naplesUI {
+  associatedConditionStatus: ....
+  associatedWorkloads:....
+ }
+  uiData = data._ui as naplesUI
 
-   That way uiData.associatedConditionStatus has type checking and auto-completion.
-   line 402, 403, 454
-  */
+  That way uiData.associatedConditionStatus has type checking and auto-completion.
+  line 402, 403, 454
+ */
 
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
 
@@ -75,11 +76,12 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
-  // naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   dataObjects: ReadonlyArray<ClusterDistributedServiceCard> = [];
   dataObjectsBackUp: ReadonlyArray<ClusterDistributedServiceCard> = null;
   inLabelEditMode: boolean = false;
   labelEditorMetaData: LabelEditorMetadataModel;
+
+  inProfileAssigningMode: boolean = false;
 
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
@@ -103,6 +105,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
     { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
     { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: '80px' },
+    { field: 'spec.dscprofile', header: 'Profile', class: '', sortable: true, width: '80px' },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: '160px' },
     { field: 'spec.admit', header: 'Admit', class: '', sortable: false, localSearch: true, width: 5, filterfunction: this.searchAdmits },
     { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: '120px' },
@@ -185,13 +188,18 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   searchDSCsCount: number = 0;
 
   // this map is used to make sure the same card always has the same color
-  dscMacToColorMap: {[key: string]: string} = {};
+  dscMacToColorMap: { [key: string]: string } = {};
   top10CardTelemetryData: ITelemetry_queryMetricsQueryResponse = null;
   top10CardChartData: ChartData[];
-  top10CardChartOptions: {[key: string]: any}[];
+  top10CardChartOptions: { [key: string]: any }[];
   chosenCardMac: string;
   chosenCard: ClusterDistributedServiceCard;
   ASSOCIATED_WORKLOADS: string = NaplesComponent.NAPLES_FIELD_WORKLOADS;
+
+  dscprofilesEventUtility: HttpEventUtility<ClusterDSCProfile>;
+  dscprofileOptions: SelectItem[] = [];
+  selectedDSCProfiles: SelectItem;
+  dscprofiles: ReadonlyArray<ClusterDSCProfile> = [];
 
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
@@ -232,7 +240,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.getDSCTotalCount();  // start retrieving data.
   }
 
-  generateChartOptions (title: string, addSmallestUnit: boolean = false) {
+  generateChartOptions(title: string, addSmallestUnit: boolean = false) {
     const scales = {
       yAxes: [{
         ticks: {
@@ -259,15 +267,15 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         }
       },
       hover: {
-        onHover: function(e) {
+        onHover: function (e) {
           const point = this.getElementAtEvent(e);
           e.target.style.cursor = (point && point.length) ? 'pointer' : 'default';
         }
       },
       tooltips: {
-        intersect : false,
+        intersect: false,
         callbacks: {
-          label: function(tooltipItem, data) {
+          label: function (tooltipItem, data) {
             return data['datasets'][0]['data'][tooltipItem['index']];
           }
         }
@@ -275,13 +283,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       onClick: (e, data) => {
         // only display workloads when cards and workloads are loaded
         if (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount &&
-            data && data.length > 0 && data[0]) {
+          data && data.length > 0 && data[0]) {
           const index = data[0]._index;
           const chart = data[0]._chart;
           if (index >= 0 && chart && chart.config && chart.config.data) {
             const chartData = chart.config.data;
             if (chartData.labels.length > 0 && chartData.labels[index] &&
-                this.chosenCardMac !== chartData.labels[index]) {
+              this.chosenCardMac !== chartData.labels[index]) {
               this.chosenCardMac = chartData.labels[index];
               const card: ClusterDistributedServiceCard =
                 this.dataObjects.find(item => item.spec.id === this.chosenCardMac);
@@ -298,7 +306,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     };
   }
 
-  generateChartData (labels: string[], values: number[]) {
+  generateChartData(labels: string[], values: number[]) {
     const numOfColors = Utility.allColors.length;
     const bgColors: string[] = labels.map((label: string, idx: number) => {
       // selected card has 1 as opacity
@@ -314,20 +322,20 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     return {
       labels: labels.map((mac, idx) => this.matchCardMacToCardId(mac)),
       datasets: [
-          {
-            label: (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount) ?
-              '(Click the bar to see the workloads running on this DSC)' : '',
-            backgroundColor: bgColors,
-            data: values
-          }
+        {
+          label: (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount) ?
+            '(Click the bar to see the workloads running on this DSC)' : '',
+          backgroundColor: bgColors,
+          data: values
+        }
       ]
     };
   }
 
-  matchCardMacToCardId (mac: string): string {
+  matchCardMacToCardId(mac: string): string {
     if (this.dataObjects) {
       const card: ClusterDistributedServiceCard =
-          this.dataObjects.find(item => item.meta && item.meta.name === mac);
+        this.dataObjects.find(item => item.meta && item.meta.name === mac);
       if (card) {
         return card.spec.id;
       }
@@ -341,25 +349,25 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       tenant: Utility.getInstance().getTenant()
     };
     const query1: MetricsPollingQuery = MetricsUtility.topTenQueryPolling(
-          'SessionSummaryMetrics', ['TotalActiveSessions']);
+      'SessionSummaryMetrics', ['TotalActiveSessions']);
     const query2: MetricsPollingQuery = MetricsUtility.topTenQueryPolling(
-          'FteCPSMetrics', ['ConnectionsPerSecond']);
+      'FteCPSMetrics', ['ConnectionsPerSecond']);
     queryList.queries.push(query1);
     queryList.queries.push(query2);
 
     // refresh every 5 minutes
     const sub = this.metricsqueryService.pollMetrics
-        ('top10nCards', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
-      (data: ITelemetry_queryMetricsQueryResponse) => {
-        if (data && data.results && data.results.length === queryList.queries.length) {
-          this.top10CardTelemetryData = data;
-          this.processTop10CardTelemetryData(data);
+      ('top10nCards', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
+        (data: ITelemetry_queryMetricsQueryResponse) => {
+          if (data && data.results && data.results.length === queryList.queries.length) {
+            this.top10CardTelemetryData = data;
+            this.processTop10CardTelemetryData(data);
+          }
+        },
+        (err) => {
+          this.controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC matics.');
         }
-      },
-      (err) => {
-        this.controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC matics.');
-      }
-    );
+      );
   }
 
   processTop10CardTelemetryData(data: ITelemetry_queryMetricsQueryResponse) {
@@ -426,6 +434,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   invokeWatch() {
     this.watchWorkloads();
     this.watchNaples();
+    this.watchDSCProfiles();
   }
 
   buildAdvSearchCols() {
@@ -450,7 +459,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         if (response.connIsErrorState) {
           return;
         }
-        this.workloadList = response.data  as WorkloadWorkload[];
+        this.workloadList = response.data as WorkloadWorkload[];
         this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
       }
     );
@@ -513,27 +522,30 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         if (response.connIsErrorState) {
           return;
         }
-        this.dataObjects  = response.data;
+        this.dataObjects = response.data;
         this.processDSCrecords();
       }
     );
     this.subscriptions.push(dscSubscription);
   }
 
-  watchNaples_bk() {
-    this._clearDSCMaps();
-    this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.dataObjects = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    // this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
+  watchDSCProfiles() {
+    this.dscprofilesEventUtility = new HttpEventUtility<ClusterDSCProfile>(ClusterDSCProfile, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
+    this.dscprofiles = this.dscprofilesEventUtility.array;
+    const subscription = this.clusterService.WatchDSCProfile().subscribe(
       response => {
-        this.naplesEventUtility.processEvents(response);
-        this.processDSCrecords();
+        this.dscprofilesEventUtility.processEvents(response);
+        if (this.dscprofiles && this.dscprofiles.length > 0) {
+          this.dscprofiles.forEach((dscprofile: ClusterDSCProfile) => {
+            const obj: SelectItem = {
+              value: dscprofile.meta.name,
+              label: dscprofile.meta.name
+            };
+            this.dscprofileOptions.push(obj);
+          });
+        }
       },
-      (error) => {
-        this.tableLoading = false;
-        this.controllerService.invokeRESTErrorToaster('Failed to get Naples', error);
-      }
+      this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -942,7 +954,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
   }
 
-  updateWithForkjoin(updatedNaples: ClusterDistributedServiceCard[]) {
+  assignDSCProfile() {
+    if (!this.inProfileAssigningMode) {
+      this.inProfileAssigningMode = true;
+    }
+  }
+
+  updateDSCLabelsWithForkjoin(updatedNaples: ClusterDistributedServiceCard[]) {
     const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
@@ -977,19 +995,28 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       if (successCount > 0) {
         const msg = 'Successfully updated ' + successCount.toString() + ' ' + objectType + '.';
         this._controllerService.invokeSuccessToaster(summary, msg);
-        this.inLabelEditMode = false;
+        this.onForkJoinSuccess();
       }
       if (failCount > 0) {
         this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));
+        this.selectedDSCProfiles = null;
       }
     },
       this._controllerService.restErrorHandler(summary + ' Failed'));
   }
 
+  onForkJoinSuccess() {
+    this.inLabelEditMode = false;
+    this.inProfileAssigningMode = false;
+    this.tableContainer.selectedDataObjects = [];
+
+    this.selectedDSCProfiles = null;
+  }
+
   // The save emitter from labeleditor returns the updated objects here.
   // We use forkjoin to update all the naples.
   handleEditSave(updatedNaples: ClusterDistributedServiceCard[]) {
-    this.updateWithForkjoin(updatedNaples);
+    this.updateDSCLabelsWithForkjoin(updatedNaples);
   }
 
   handleEditCancel($event) {
@@ -1195,5 +1222,36 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       }
     }
     return outputs;
+  }
+
+  cancelDSCProfileDialog() {
+    this.inProfileAssigningMode = false;
+    this.selectedDSCProfiles = null;
+  }
+
+  onSaveProfileToDSCs() {
+    const updatedNaples = this.tableContainer.selectedDataObjects;
+    if (this.selectedDSCProfiles) {
+      this.updateDSCProfilesWithForkjoin(updatedNaples);
+    }
+  }
+
+  updateDSCProfilesWithForkjoin(updatedNaples: ClusterDistributedServiceCard[]) {
+    const observables: Observable<any>[] = [];
+    for (const naplesObject of updatedNaples) {
+      const name = naplesObject.meta.name;
+      if (naplesObject.spec.dscprofile !== this.selectedDSCProfiles.value) {
+        naplesObject.spec.dscprofile = this.selectedDSCProfiles.value;
+        const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
+        observables.push(sub);
+      }
+    }
+    if (observables.length === 0) {
+      this._controllerService.invokeInfoToaster('No update neccessary', 'All selected DSCs are assigned ' + this.selectedDSCProfiles.value + ' DSC profile already.');
+      return;
+    }
+    const summary = 'Distributed Services Card update profile';
+    const objectType = 'DSC';
+    this.handleForkJoin(observables, summary, objectType);
   }
 }

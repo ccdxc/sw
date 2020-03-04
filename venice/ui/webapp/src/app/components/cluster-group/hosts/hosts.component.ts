@@ -375,7 +375,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
    */
   buildMoreWorkloadTooltip(host: ClusterHost): string {
     const wltips = [];
-    const workloads = host[HostsComponent.HOST_FIELD_WORKLOADS];
+    const workloads = host._ui[HostsComponent.HOST_FIELD_WORKLOADS];
     for (let i = 0; i < workloads.length; i++) {
       if (i >= this.maxWorkloadsPerRow) {
         const workload = workloads[i];
@@ -408,7 +408,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   searchWorkloads(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const workloads = data[i][HostsComponent.HOST_FIELD_WORKLOADS];
+      const workloads = data[i]._ui[HostsComponent.HOST_FIELD_WORKLOADS];
       // workloads[i] is a full object
       for (let k = 0; k < workloads.length; k++) {
         const recordValue = _.get(workloads[k], ['meta', 'name']);

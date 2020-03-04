@@ -57,7 +57,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
       top: '9px',
       left: '8px',
     },
-    url: '/assets/images/icons/monitoring/ic_tech_support-black.svg',   // TODO: wait for new svg file
+    url: '/assets/images/icons/cluster/networkinterfaces/dsc-interface-black.svg',
   };
   headerIcon: Icon = {
     margin: {

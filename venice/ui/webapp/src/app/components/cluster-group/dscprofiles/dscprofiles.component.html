@@ -4,17 +4,12 @@
   </div>
 </app-pagebody>
 <ng-template #DataTable>
-  <app-tableviewedit fxLayout="column" style="height: 100%;"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
+  <app-tableviewedit fxLayout="column" style="height: 100%;" [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
                      [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
+                     [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
                      [actionTemplate]="actionTemplate"
-                     [expandTemplate]="expandTemplate"
-                     [createTemplate]="createTemplate"
+                     [expandTemplate]="expandTemplate" [createTemplate]="createTemplate"
                      [enableCheckbox]="true"
                      [tableLoading]="tableLoading"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
@@ -24,10 +19,9 @@
 <ng-template #actionButtonsTemplate>
   <div fxFlex="none" fxLayoutAlign="start center">
     <!-- TABLE FUNCTION ICONS HERE -->
-    <mat-icon class="global-multi-records-delete-icon"
-              *ngIf="areSelectedRowsDeletable()"
-              [matTooltip]="'Delete selected dscprofiles'"
-              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+    <mat-icon class="global-multi-records-delete-icon" *ngIf="areSelectedRowsDeletable()"
+              [matTooltip]="'Delete selected dscprofiles'" (click)="onDeleteSelectedRows($event)">
+      delete</mat-icon>
   </div>
 
 </ng-template>
@@ -38,9 +32,9 @@
     <div fxLayout="row">
       <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
                        title="DSC Profiles"
-                       [total]="dataObjects.length" [icon]="headerIcon"
-                       [enableColumnSelect]="true"
-                       [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
+                       [total]="dataObjects.length" [icon]="headerIcon" [enableColumnSelect]="true"
+                       [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)">
         <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
       </app-tableheader>
     </div>
@@ -49,8 +43,8 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newdscprofile (formClose)="creationFormClose()"
-                     fxFlex="grow" [existingObjects]='dataObjects'>
+  <app-newdscprofile (formClose)="creationFormClose()" fxFlex="grow"
+                     [existingObjects]='dataObjects'>
   </app-newdscprofile>
 </ng-template>
 
@@ -64,7 +58,16 @@
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'spec.dscs'">
-
+      <div *ngFor="let w of rowData._ui['associatedDSCS'] let i=index"
+           class="clusterdscprofile-dsc-div">
+        <ng-container *roleGuard="'clusterDistributedservicecard_read'">
+          <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.meta.name}}"
+             [matTooltip]="'Jump to workloads page'">{{w?.spec.id}}</a>
+          <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
+             [matTooltip]="buildMoreDSCsTooltip(rowData)">
+            ... {{rowData._ui['associatedDSCS'].length - maxDSCsPerRow}} more</a>
+        </ng-container>
+      </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
@@ -75,7 +78,8 @@
 <!-- TABLE ACTION -->
 <ng-template #actionTemplate let-rowData>
 
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
+       *ngIf="showDeleteButton(rowData)">
     <mat-icon matTooltip="Delete DSC Profile" *roleGuard="'clusterdscprofile_delete'"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete
@@ -85,5 +89,6 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                     (formClose)="closeRowExpand()" fxFlex="none"></app-newdscprofile>
+                     (formClose)="closeRowExpand()"
+                     fxFlex="none"></app-newdscprofile>
 </ng-template>

@@ -65,7 +65,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterDistributedServiceCard) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(13); // there are 13 columns defined in naplesdetail.c.ts
+    expect(fields.length).toBe(14); // there are 13 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -195,7 +195,8 @@ describe('NaplesdetailComponent', () => {
       'spec': {
         'admit': true,
         'id': 'naples1-host',
-        'mgmt-mode': 'network'
+        'mgmt-mode': 'network',
+        'dscprofile': 'default'
       },
       'status': {
         'admission-phase': 'admitted',
@@ -346,11 +347,11 @@ describe('NaplesdetailComponent', () => {
     // get attached link directive instances
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
-    expect(routerLinks.length).toBe(2, 'should have 2 routerLinks');
-    expect(routerLinks[1].linkParams).toBe('../'); // VS-639
+    expect(routerLinks.length).toBe(3, 'should have 3 routerLinks');  // dsc-profile, host,  naples(2)
+    expect(routerLinks[2].linkParams).toBe('../'); // VS-639
 
     testingUtility.sendClick(buttons[0]);
-    expect(routerLinks[1].navigatedTo).toBe('../'); // VS-639
+    expect(routerLinks[2].navigatedTo).toBe('../'); // VS-639
 
   });
 

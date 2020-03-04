@@ -93,7 +93,7 @@
              [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
           <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
              [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ...
-            {{rowData['processedWorkloads'].length - maxWorkloadsPerRow}} more</a>
+            {{rowData._ui['processedWorkloads'].length - maxWorkloadsPerRow}} more</a>
         </ng-container>
       </div>
     </ng-container>

@@ -192,6 +192,10 @@
                    fxLayoutAlign="start center">
                 <div>Processor:</div>
               </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <div>DSC Profile:</div>
+              </div>
             </div>
             <div fxFlex="40px"></div>
             <!-- Values -->
@@ -224,6 +228,12 @@
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-auto-admit-nics">
                   {{ selectedObj?.status['system-info']['os-info']['processor'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-auto-admit-nics">
+                  <a routerLink="/cluster/dscprofiles"> {{ selectedObj?.spec.dscprofile }}</a>
                 </div>
               </div>
             </div>

@@ -229,7 +229,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
             console.log('get NetworkNetworkInterface list', response);
             const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
             this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
-            this.getDSCNetworkInterfaces();
+            if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0 ) {
+               this.getDSCNetworkInterfaces();
+            }
         }
       );
       /*

@@ -26,8 +26,8 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
   fwdModeOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec.propInfo['fwd-mode'].enum);
   policyModeOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec.propInfo['policy-mode'].enum);
 
-  selectedFwdMode: SelectItem[] = [];
-  selectedPolicyMode: SelectItem[] = [];
+  selectedFwdMode: SelectItem ;
+  selectedPolicyMode: SelectItem ;
 
   constructor(protected _controllerService: ControllerService,
     private clusterService: ClusterService,
@@ -88,6 +88,18 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
       this._controllerService.setToolbarData(currToolbar);
     }
   }
+
+  /**
+   * Override parent API
+   * We use UI-model to update backend-model
+   */
+  getObjectValues(): IClusterDSCProfile {
+    const dscProfile: ClusterDSCProfile =  this.newObject.getFormGroupValues();
+    dscProfile.spec['fwd-mode'] = this.selectedFwdMode.value;
+    dscProfile.spec['policy-mode'] = this.selectedPolicyMode.value;
+    return dscProfile;
+  }
+
   createObject(object: IClusterDSCProfile) {
     return this.clusterService.AddDSCProfile(object, '', true, false);
   }

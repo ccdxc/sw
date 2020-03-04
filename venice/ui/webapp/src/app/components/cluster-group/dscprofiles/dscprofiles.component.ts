@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
+import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
 
@@ -33,7 +33,11 @@ import { Observable } from 'rxjs';
   encapsulation: ViewEncapsulation.None
 })
 export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, OnDestroy {
+  public static DSCPROFILE_FIELD_DSCS: string = 'associatedDSCS';
+
   dataObjects: ReadonlyArray<ClusterDSCProfile> = [];
+
+  naplesList: ClusterDistributedServiceCard[] = [];
 
   isTabComponent: boolean;
   disableTableWhenRowExpanded: boolean;
@@ -42,6 +46,8 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
   tableLoading: boolean = false;
 
   dscprofilesEventUtility: HttpEventUtility<ClusterDSCProfile>;
+
+  maxDSCsPerRow: number = 8;
 
   bodyicon: any = {
     margin: {
@@ -61,7 +67,7 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
-    { field: 'spec.dscs', header: 'Distributed Services Cards', class: 'dscprofiles-column-dscs', sortable: false, width: 25 },
+    { field: 'spec.dscs', header: 'Associated DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 25 },
     { field: 'spec.fwd-mode', header: 'FWD Mode', class: 'dscprofiles-column-fwd-mode', sortable: true, width: 15 },
     { field: 'spec.policy-mode', header: 'Policy Mode', class: 'dscprofiles-column-policy-mode', sortable: true, width: 15 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
@@ -94,23 +100,59 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
     });
   }
   postNgInit(): void {
-    // this.buildAdvSearchCols();
-    this.getDSCProfiles();
+    // this.buildAdvSearchCols();  // TODO: add advance search,  profiles percentage distribution.  profile-1 has 25% of total DSCs,  profile-2 has 75% of DSCs
+    this.watchDSCProfiles();
+    this.watchNaples();
   }
 
   /**
-   * Fetch security apps records
+   * Fetch DSC Profiles records
    */
-  getDSCProfiles() {
+  watchDSCProfiles() {
     this.dscprofilesEventUtility = new HttpEventUtility<ClusterDSCProfile>(ClusterDSCProfile, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
     this.dataObjects = this.dscprofilesEventUtility.array;
     const subscription = this.clusterService.WatchDSCProfile().subscribe(
       response => {
         this.dscprofilesEventUtility.processEvents(response);
+        this.handleDataReady();
       },
       this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
+  watchNaples() {
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.naplesList = response.data as ClusterDistributedServiceCard[];
+        this.handleDataReady();
+      }
+    );
+    this.subscriptions.push(dscSubscription);
+  }
+
+  handleDataReady() {
+    // When naplesList and dataObjects (dscprofiles) are ready, build profile-dscs
+    if (this.naplesList && this.dataObjects) {
+      for (let i = 0 ; i < this.dataObjects.length; i ++ ) {
+          const dscProfile: ClusterDSCProfile = this.dataObjects[i];
+          const dscsnames = [];
+          for (let j = 0 ;  j < this.naplesList.length; j ++ ) {
+             const dsc: ClusterDistributedServiceCard = this.naplesList[j];
+             if (dscProfile.meta.name  === dsc.spec.dscprofile) {
+              dscsnames.push(dsc);
+             }
+          }
+          // this if block is temporary, once DSCProfile.proto bug fix, we don't need it.
+          if (!dscProfile._ui) {
+            dscProfile._ui = {};
+          }
+          dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS] = dscsnames;
+      }
+    }
   }
 
 
@@ -137,6 +179,31 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
       return false;
     }
     return true;
+  }
+
+  /**
+   * This API serves HTML template. When there are many DSCs in one profile, we don't list all DSCs. This API builds the tooltip text;
+   * @param dsc
+   */
+  buildMoreDSCsTooltip(dscprofile: ClusterDSCProfile): string {
+    const dscTips = [];
+    const dscs = dscprofile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS];
+    for (let i = 0; i < dscs.length; i++) {
+      if (i >= this.maxDSCsPerRow) {
+        const dsc = dscs[i];
+        dscTips.push(dsc.meta.name);
+      }
+    }
+    return dscTips.join(' , ');
+  }
+
+  /**
+   * This API serves html template.
+   * @param dscProfile:ClusterDSCProfile
+   */
+  showDeleteButton(dscProfile: ClusterDSCProfile): boolean {
+      // If dscProfile has associated DSC, we can not delete this dscProfile
+      return (dscProfile._ui && dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS] &&  dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS].length > 0) ? false : true;
   }
 
 }

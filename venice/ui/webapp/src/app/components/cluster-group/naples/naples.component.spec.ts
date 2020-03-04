@@ -1,4 +1,5 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed, tick, fakeAsync, discardPeriodicTasks, flush } from '@angular/core/testing';
 import { MatIconRegistry } from '@angular/material';
@@ -48,7 +49,8 @@ describe('NaplesComponent', () => {
     },
     'spec': {
       'id': 'naples1-host',
-      'admit': true
+      'admit': true,
+      'dscprofile': 'default'
     },
     'status': {
       'host': 'naples-host-1',
@@ -76,7 +78,8 @@ describe('NaplesComponent', () => {
     },
     'spec': {
       'id': 'naples2-host',
-      'admit': true
+      'admit': true,
+      'dscprofile': 'default'
     },
     'status': {
       'host': 'naples-host-2',
@@ -104,7 +107,8 @@ describe('NaplesComponent', () => {
     },
     'spec': {
       'id': 'naples3-host',
-      'admit': true
+      'admit': true,
+      'dscprofile': 'default'
     },
     'status': {
       'host': 'naples-host-3',
@@ -199,7 +203,9 @@ describe('NaplesComponent', () => {
         NoopAnimationsModule,
         SharedModule,
         MaterialdesignModule,
-        PrimengModule
+        PrimengModule,
+        FormsModule,
+        ReactiveFormsModule
       ],
       providers: [
         ControllerService,

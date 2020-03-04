@@ -120,7 +120,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   }
 
   getSearchedAlert() {
-    this.monitoringService.GetAlert(this.searchedAlert).subscribe(
+    const searchedAlertSubscription  = this.monitoringService.GetAlert(this.searchedAlert).subscribe(
       response => {
         this.selectedAlert = response.body as MonitoringAlert;
       },
@@ -130,6 +130,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
         this.controllerService.invokeRESTErrorToaster('Failed to fetch alert ' + this.searchedAlert, error);
       }
     );
+    this.subscriptions.push(searchedAlertSubscription);
   }
 
   closeDetails() {

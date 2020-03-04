@@ -1,3 +1,8 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
 .naples-add-label-button {
   cursor: pointer;
   color: #676763;
@@ -91,4 +96,40 @@
 
 .naples-status-green-icon {
   color: #77a746;
+}
+
+.naples-plist .ui-listbox {
+  min-width: 20em;
+}
+
+.naples-plist input.ui-inputtext:not(.ui-dropdown-filter) {
+  padding: 2px;
+  text-indent: 18px;
+}
+
+.naples-plist .ui-listbox .ui-listbox-item>span {
+  display: flex;
+  margin-left: 5px;
+
+}
+
+.naples-plist .ui-listbox-header.ui-listbox-header-w-checkbox .ui-listbox-filter-container {
+  width: calc(100% - 0.1em);
+}
+
+.naples-plist-label-editor-button {
+  margin: 5px;
+}
+
+.naples-plist-label-editor-save {
+  color: #6ba0e5;
+  margin: 10px 0px 10px 5px;
+  display: inline-block;
+}
+
+.naples-plist-label-editor-delete {
+  margin-left: 5px;
+  margin-top: 6px;
+  cursor: pointer;
+  display: inline-block;
 }
