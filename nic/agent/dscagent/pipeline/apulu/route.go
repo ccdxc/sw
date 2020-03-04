@@ -138,21 +138,30 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 
 	var autoConfig bool
+	var state msTypes.AdminState
+
 	// Configure the Underlay Peers
 	peerReq := msTypes.BGPPeerRequest{}
 	peerAFReq := msTypes.BGPPeerAfRequest{}
 	for _, n := range rtCfg.Spec.BGPConfig.Neighbors {
 		rip := net.ParseIP(n.IPAddress)
+		if n.Shutdown == true {
+			state = msTypes.AdminState_ADMIN_STATE_DISABLE
+		} else {
+			state = msTypes.AdminState_ADMIN_STATE_ENABLE
+		}
+
 		// if set to 0.0.0.0 auto configure the neighborts learnt via DHCP
 		if rip.IsUnspecified() {
 			autoConfig = true
 			for _, i := range dsccfg.DSCInterfaceIPs {
 				peer := msTypes.BGPPeerSpec{
 					Id:           uid.Bytes(),
-					State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
+					State:        state,
 					PeerAddr:     ip2PDSType(i.GatewayIP),
 					LocalAddr:    unknLocal,
 					RemoteASN:    n.RemoteAS,
+					Password:     []byte(n.Password),
 					SendComm:     true,
 					SendExtComm:  true,
 					ConnectRetry: 5,
@@ -179,10 +188,11 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		}
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
+			State:        state,
 			PeerAddr:     ip2PDSType(n.IPAddress),
 			LocalAddr:    unknLocal,
 			RemoteASN:    n.RemoteAS,
+			Password:     []byte(n.Password),
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
@@ -404,6 +414,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 	peerReq := msTypes.BGPPeerRequest{}
 	peerAFReq := msTypes.BGPPeerAfRequest{}
+	var state msTypes.AdminState
 
 	// use the UUID from the new config
 	uid, err = uuid.FromString(rtCfg.UUID)
@@ -415,15 +426,23 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		Af: pdstypes.IPAF_IP_AF_INET,
 	}
 	for _, o := range newPeers {
+		if o.Shutdown == true {
+			state = msTypes.AdminState_ADMIN_STATE_DISABLE
+		} else {
+			state = msTypes.AdminState_ADMIN_STATE_ENABLE
+		}
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
+			State:        state,
 			PeerAddr:     ip2PDSType(o.IPAddress),
 			LocalAddr:    unknLocal,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
+			Password:     []byte(o.Password),
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
+			KeepAlive:    60,
+			HoldTime:     180,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
@@ -494,6 +513,7 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
 		return nil
 	}
+
 	// Delete configured peers
 	peerDelReq := msTypes.BGPPeerDeleteRequest{}
 	peerAFDelReq := msTypes.BGPPeerAfDeleteRequest{}
