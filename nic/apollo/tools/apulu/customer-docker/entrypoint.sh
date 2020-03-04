@@ -27,6 +27,9 @@ cd /sw/nic
 # do this precomilation here in the developer workspace before forking the
 # container. Else some .so files can't be copied from /sw/nic to
 # /sw/apollo_sw/nic
+
+export SKIPPDSCTL=0
+echo $SKIPPDSCTL
 ./apollo/tools/build_custom_docker.sh clean apulu
 make PIPELINE=apulu
 make PIPELINE=apulu ARCH=aarch64 PLATFORM=hw
@@ -34,7 +37,7 @@ make PIPELINE=apulu ARCH=aarch64 PLATFORM=hw firmware
 
 echo "starting dev-docker creation for apulu"
 ./apollo/tools/dev-docker/build_dev_docker.sh 1 all apulu
-
+export SKIPPDSCTL=1
 cd /
 if [ -d /sw/apollo_sw ];then
     mount --bind /sw/apollo_sw /sw

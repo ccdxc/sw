@@ -183,7 +183,7 @@ remove_files() {
 
 save_files() {
     # Mention the .so to be saved and restored'
-    files='libsdkcapri_csrint.so libnicmgr_'$pipeline'.so libpciemgr_if.so librdmamgr_apollo.so '
+    files='libsdkcapri_csrint.so libnicmgr_'$pipeline'.so libpciemgr_if.so librdmamgr_apollo.so pdsctl.gobin '
     # Platform includes used by nicmgr
     platform_inc='pciemgr_if/include/pciemgr_if.hpp '
     platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
