@@ -79,8 +79,15 @@ local_mapping_hit:
     phvwr       p.control_metadata_binding_check_enabled, \
                     d.local_mapping_info_d.binding_check_enabled
     phvwr       p.vnic_metadata_binding_id, d.local_mapping_info_d.binding_id1
-    phvwr.e     p.p4i_i2e_xlate_id, d.local_mapping_info_d.xlate_id
-    phvwr.f     p.control_metadata_local_mapping_done, TRUE
+    seq         c1, k.control_metadata_rx_packet, FALSE
+    seq.c1      c1, d.local_mapping_info_d.allow_tagged_pkts, FALSE
+    seq.c1      c1, k.ctag_1_valid, TRUE
+    phvwr       p.p4i_i2e_xlate_id, d.local_mapping_info_d.xlate_id
+    nop.!c1.e
+    phvwr       p.control_metadata_local_mapping_done, TRUE
+local_mapping_drop_tagged_pkt:
+    phvwr.e     p.control_metadata_p4i_drop_reason[P4I_DROP_TAGGED_PKT_FROM_VNIC], 1
+    phvwr.f     p.capri_intrinsic_drop, 1
 
 local_mapping_hash_hit:
     phvwr.e     p.ingress_recirc_local_mapping_ohash, r2

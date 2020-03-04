@@ -235,19 +235,23 @@ public:
 
     /// \brief     return vnic encap information of vnic
     /// \return    vnic encap type and value
-    pds_encap_t vnic_encap(void) { return vnic_encap_; }
+    pds_encap_t vnic_encap(void) const { return vnic_encap_; }
+
+    /// \brief     return true if vnic encap is .1q
+    /// \return    true if vnic encap is .1q, false otherwise
+    bool tagged(void) const { return vnic_encap_.type == PDS_ENCAP_TYPE_DOT1Q; }
 
     /// \brief     return fabric encap information of vnic
     /// \return    fabric encap type and value
-    pds_encap_t fabric_encap(void) { return fabric_encap_; }
+    pds_encap_t fabric_encap(void) const { return fabric_encap_; }
 
     /// \brief     return true if vnic is switch vnic or else return false
     /// \return    true if vnic is switch vnic, else false
-    bool switch_vnic(void) { return switch_vnic_; }
+    bool switch_vnic(void) const { return switch_vnic_; }
 
     /// \brief     return true if IP/MAC binding checks are enabled
     /// \return    true if IP/MAC binding checks are enabled on this vnic
-    bool binding_checks_en(void) { return binding_checks_en_; }
+    bool binding_checks_en(void) const { return binding_checks_en_; }
 
     /// \brief     return the MAC address corresponding to this vnic
     /// \return    ethernet MAC address of this vnic

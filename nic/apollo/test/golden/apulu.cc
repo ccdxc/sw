@@ -616,6 +616,7 @@ local_mappings_init (void)
     local_info->vnic_id = g_vnic_id1;
     local_info->binding_check_enabled = 1;
     local_info->binding_id1 = g_binding_id1;
+    local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
 }
 
@@ -685,6 +686,7 @@ local_mappings_with_ohash_init (void)
     local_info->vnic_id = g_vnic_id1;
     local_info->binding_check_enabled = 1;
     local_info->binding_id1 = g_binding_id1;
+    local_info->allow_tagged_pkts = 1;
     entry_write(P4TBL_ID_LOCAL_MAPPING_OHASH, hint, &key, NULL, &data, true,
                 LOCAL_MAPPING_OHASH_TABLE_SIZE);
 }

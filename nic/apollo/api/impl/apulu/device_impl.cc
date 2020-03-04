@@ -223,6 +223,7 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
         "nacl",
         "vnic_policer_tx",
         "mac_ip_binding_fail",
+        "tagged_pkt_from_vnic",
     };
 
     SDK_ASSERT(sizeof(idrop)/sizeof(idrop[0]) == (P4I_DROP_REASON_MAX + 1));

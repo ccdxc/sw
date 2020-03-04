@@ -33,7 +33,8 @@
 #define P4I_DROP_NACL                   1
 #define P4I_DROP_VNIC_POLICER_TX        2
 #define P4I_DROP_MAC_IP_BINDING_FAIL    3
-#define P4I_DROP_REASON_MAX             3
+#define P4I_DROP_TAGGED_PKT_FROM_VNIC   4
+#define P4I_DROP_REASON_MAX             4
 
 #define P4E_DROP_REASON_MIN                         0
 #define P4E_DROP_SESSION_INVALID                    0

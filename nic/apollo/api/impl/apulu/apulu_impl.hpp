@@ -90,7 +90,8 @@ namespace impl {
 
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,  \
                                                binding_checks_en,            \
-                                               binding_idx1, binding_idx2)   \
+                                               binding_idx1, binding_idx2,   \
+                                               allow_tagged)                 \
 {                                                                            \
     memset(data, 0, sizeof(*(data)));                                        \
     (data)->vnic_id = (vnic_hw_id);                                          \
@@ -98,6 +99,7 @@ namespace impl {
     (data)->binding_check_enabled = (binding_checks_en);                     \
     (data)->binding_id1 = (binding_idx1);                                    \
     (data)->binding_id2 = (binding_idx1);                                    \
+    (data)->allow_tagged_pkts = (allow_tagged);                              \
 }
 
 #define PDS_IMPL_FILL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)                   \

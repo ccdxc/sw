@@ -1,13 +1,13 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id xlate_id binding_check_enabled binding_id1 binding_id2
+@pragma capi appdatafields vnic_id xlate_id allow_tagged_pkts binding_check_enabled binding_id1 binding_id2
 @pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
                           hash7, hint7, hash8, hint8, hash9, hint9,
-                          more_hashes, more_hints, xlate_id,
+                          more_hashes, more_hints, xlate_id, allow_tagged_pkts,
                           binding_check_enabled, binding_id1, binding_id2) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -19,6 +19,12 @@ action local_mapping_info(entry_valid, vnic_id,
                      binding_check_enabled);
         modify_field(vnic_metadata.binding_id, binding_id1);
         modify_field(scratch_metadata.binding_id, binding_id2);
+        modify_field(scratch_metadata.flag, allow_tagged_pkts);
+        if ((control_metadata.rx_packet == FALSE) and
+            (scratch_metadata.flag == FALSE) and
+            (ctag_1.valid == TRUE)) {
+            ingress_drop(P4I_DROP_TAGGED_PKT_FROM_VNIC);
+        }
         modify_field(control_metadata.local_mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
