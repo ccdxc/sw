@@ -171,10 +171,10 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/linkmgr:
     labels: ["daily"]
-  iota/test/standalone/compat/server-linux:
-    labels: ["compat-linux"]
-  iota/test/standalone/compat/server-esx:
-    labels: ["compat-esx"]
+#  iota/test/standalone/compat/server-linux:
+#    labels: ["compat-linux"]
+#  iota/test/standalone/compat/server-esx:
+#    labels: ["compat-esx"]
 #  iota/test/standalone/cnic_swm:
 #    labels: ["hourly"]
 #  iota/test/standalone/swm:
