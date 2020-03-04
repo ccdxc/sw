@@ -74,6 +74,7 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.primaryIntf, err)
 		}
 	}
+	c.nmd.SetMgmtInterface(c.primaryIntf.Attrs().Name)
 
 	return addr.String(), nil
 }

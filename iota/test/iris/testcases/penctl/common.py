@@ -622,6 +622,10 @@ def GetNaplesFrequency(n):
     else:
         return -1
 
+def GetNaplesUUID(n):
+    naples_fru = GetNaplesFruJson(n)
+    return naples_fru["mac-address"]
+
 def GetPenctlFruJson(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)

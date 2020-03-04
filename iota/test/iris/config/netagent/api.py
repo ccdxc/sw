@@ -5,15 +5,23 @@ import time
 import ipaddress
 import requests
 import json
+import re
 from collections import defaultdict
 import iota.harness.api as api
 import iota.test.iris.config.api as cfg_api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from iota.test.iris.testcases.penctl.common import GetNaplesUUID
 
 _cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
 ip=api.GetPrimaryIntNicMgmtIp()
 base_url = "http://"+ip+":8888/"
+
+def formatMac(mac: str) -> str:
+    mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
+    mac = ''.join(mac.split())  # remove whitespaces
+    mac = ".".join(["%s" % (mac[i:i+4]) for i in range(0, 12, 4)])
+    return mac
 
 AGENT_URLS = []
 AGENT_NODES = []
@@ -185,7 +193,10 @@ def UpdateNodeUuidEndpoints(objects):
         if not node_name:
             node_name = ep.spec.node_uuid
         assert(node_name)
-        ep.spec.node_uuid = agent_uuid_map[node_name]
+        if api.IsNaplesNode(node_name):
+            ep.spec.node_uuid = formatMac(GetNaplesUUID(node_name))
+        else:
+           ep.spec.node_uuid = agent_uuid_map[node_name]
         ep.spec._node_name = node_name
 
 def UpdateTestBedVlans(objects):
