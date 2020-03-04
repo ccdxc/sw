@@ -805,7 +805,11 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 		for _, vn := range tb.Nodes {
 			if vn.Personality == iota.PersonalityType_PERSONALITY_VENICE ||
 				vn.Personality == iota.PersonalityType_PERSONALITY_VENICE_BM {
-				veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
+				if vn.SecondaryIP != "" {
+					veniceIps = append(veniceIps, vn.SecondaryIP)
+				} else {
+					veniceIps = append(veniceIps, vn.NodeMgmtIP) // in HW setups, use venice mgmt ip
+				}
 			}
 		}
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {

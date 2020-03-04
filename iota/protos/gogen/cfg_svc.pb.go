@@ -69,6 +69,8 @@
 		SwitchMsg
 		TestBedNode
 		EntityCopyMsg
+		DownloadAssetsMsg
+		PrepareWorkspaceMsg
 */
 package iotamodel
 

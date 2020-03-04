@@ -312,11 +312,11 @@ class TestSuite:
             Logger.debug("Skipping Testsuite: %s because of command-line filters." % self.Name())
             return True
 
-        if self.GetTestbedType() != types.tbtype.ANY and\
-           self.GetTestbedType() != store.GetTestbed().GetTestbedType()\
-           and not GlobalOptions.dryrun:
-            Logger.debug("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
-            return True
+        #if self.GetTestbedType() != types.tbtype.ANY and\
+        #   self.GetTestbedType() != store.GetTestbed().GetTestbedType()\
+        #   and not GlobalOptions.dryrun:
+        #    Logger.debug("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
+        #   return True
 
         if not store.GetTestbed().IsSimulation() and  not store.GetTestbed().GetOs().intersection(self.__get_oss()) and not GlobalOptions.dryrun:
             Logger.debug("Skipping Testsuite: %s due to OS mismatch." % self.Name())

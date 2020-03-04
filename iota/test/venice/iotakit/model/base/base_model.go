@@ -156,6 +156,9 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		if testbed.IsNaplesHW(node.Personality) {
 			nc++
 		}
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
+			nc = nc + int(node.NaplesMultSimConfig.NumInstances)
+		}
 	}
 L:
 	for {

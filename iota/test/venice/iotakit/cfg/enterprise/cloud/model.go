@@ -78,13 +78,22 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 	cl.Cfg.NumRoutingConfigs = len(params.VeniceNodes)
 	cl.Cfg.NumNeighbors = 2 + len(params.Dscs) //2 Ecx and from 3rd, naples
 
-	cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
-	cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
+	if params.Scale {
+		cl.Cfg.NumOfTenants = 2
+		cl.Cfg.NumOfVRFsPerTenant = 50
+		cl.Cfg.NumOfSubnetsPerVpc = 20
+		cl.Cfg.NumOfIPAMPsPerTenant = 1
+		cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
+		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
 
-	cl.Cfg.NumOfTenants = 2
-	cl.Cfg.NumOfVRFsPerTenant = 2
-	cl.Cfg.NumOfSubnetsPerVpc = 2
-	cl.Cfg.NumOfIPAMPsPerTenant = 1
+	} else {
+		cl.Cfg.NumOfTenants = 2
+		cl.Cfg.NumOfVRFsPerTenant = 2
+		cl.Cfg.NumOfSubnetsPerVpc = 2
+		cl.Cfg.NumOfIPAMPsPerTenant = 1
+		cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
+		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
+	}
 
 	cl.Cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 10
 	cl.Cfg.NetworkSecurityPolicyParams.NumIPPairsPerRule = 4

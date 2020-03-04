@@ -1192,14 +1192,14 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 		}
 
 		// check the response
-		//for _, cmdResp := range resp {
-		//	if cmdResp.ExitCode != 0 {
-		//		log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
-		//		return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
-		//			cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		for _, cmdResp := range resp {
+			if cmdResp.ExitCode != 0 {
+				log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
+				return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+					cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
-		//	}
-		//}
+			}
+		}
 	}
 
 	return nil
