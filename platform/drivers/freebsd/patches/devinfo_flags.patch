@@ -1,10 +1,18 @@
-Patch to enable ibv_devinfo to decode flag bit 15.
+commit 15b1bf1adfb24795613cb3071d817a86c36c3253
+Author: Andrew Boyer <aboyer@pensando.io>
+Date:   Tue Mar 3 05:10:27 2020 -0800
+
+    freebsd: Patch to enable ibv_devinfo to decode flag bit 15
+
+    This patch was rejected by linux-rdma upstream.
+
+    Signed-off-by: Andrew Boyer <aboyer@pensando.io>
 
 diff --git a/contrib/ofed/libibverbs/examples/devinfo.c b/contrib/ofed/libibverbs/examples/devinfo.c
-index 94f16e1b3f3..4981cc8a480 100644
+index 7693cb30739..865a7a3e02c 100644
 --- a/contrib/ofed/libibverbs/examples/devinfo.c
 +++ b/contrib/ofed/libibverbs/examples/devinfo.c
-@@ -217,6 +217,7 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
+@@ -219,6 +219,7 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
  				   IBV_DEVICE_RC_RNR_NAK_GEN |
  				   IBV_DEVICE_SRQ_RESIZE |
  				   IBV_DEVICE_N_NOTIFY_CQ |
@@ -12,7 +20,7 @@ index 94f16e1b3f3..4981cc8a480 100644
  				   IBV_DEVICE_MEM_WINDOW |
  				   IBV_DEVICE_UD_IP_CSUM |
  				   IBV_DEVICE_XRC |
-@@ -257,6 +258,8 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
+@@ -259,6 +260,8 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
  		printf("\t\t\t\t\tSRQ_RESIZE\n");
  	if (dev_cap_flags & IBV_DEVICE_N_NOTIFY_CQ)
  		printf("\t\t\t\t\tN_NOTIFY_CQ\n");
@@ -22,7 +30,7 @@ index 94f16e1b3f3..4981cc8a480 100644
  		printf("\t\t\t\t\tMEM_WINDOW\n");
  	if (dev_cap_flags & IBV_DEVICE_UD_IP_CSUM)
 diff --git a/contrib/ofed/libibverbs/verbs.h b/contrib/ofed/libibverbs/verbs.h
-index eff10f87de5..39608c26aaa 100644
+index 49827556128..c8c88096394 100644
 --- a/contrib/ofed/libibverbs/verbs.h
 +++ b/contrib/ofed/libibverbs/verbs.h
 @@ -117,6 +117,7 @@ enum ibv_device_cap_flags {

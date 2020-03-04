@@ -1,0 +1,37 @@
+commit d64411777410a7fe7b494ca5e720f7c3a9658cf4
+Author: Andrew Boyer <aboyer@pensando.io>
+Date:   Tue Mar 3 05:12:16 2020 -0800
+
+    freebsd: Avoid leaking resources when resetting RDMA driver [PS-2226]
+
+    If an RDMA driver resets itself by posting a NETDEV_UNREGISTER event while
+    a userspace process has the device open, cleanup will fail and unregister
+    will hang forever.
+
+    The issue is that the uverbs file will be partially destroyed, clearing its
+    fops structure. Then, when the userspace process shuts down, the uverbs
+    file will be closed, but its ->release() function will not be called.
+
+    This leaks whatever RDMA data structures were in use by the process.
+
+    To fix the issue, change linux_file_close() to use the file pointer's
+    embedded f_ops, rather than pulling them from the cdev. This allows cleanup
+    to run even after the cdev has been destroyed.
+
+    Signed-off-by: Andrew Boyer <aboyer@pensando.io>
+
+diff --git a/sys/compat/linuxkpi/common/src/linux_compat.c b/sys/compat/linuxkpi/common/src/linux_compat.c
+index 498b05cdc20..29350a57061 100644
+--- a/sys/compat/linuxkpi/common/src/linux_compat.c
++++ b/sys/compat/linuxkpi/common/src/linux_compat.c
+@@ -1507,8 +1507,8 @@ linux_file_close(struct file *file, struct thread *td)
+ 	linux_set_current(td);
+ 	linux_poll_wait_dequeue(filp);
+ 	linux_get_fop(filp, &fop, &ldev);
+-	if (fop->release != NULL)
+-		error = -OPW(file, td, fop->release(filp->f_vnode, filp));
++	if (filp->f_op->release != NULL)
++		error = -OPW(file, td, filp->f_op->release(filp->f_vnode, filp));
+ 	funsetown(&filp->f_sigio);
+ 	if (filp->f_vnode != NULL)
+ 		vdrop(filp->f_vnode);
