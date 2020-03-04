@@ -3174,6 +3174,10 @@ typedef struct pd_clock_detail_get_args_s {
 typedef struct pd_clock_trigger_sync_args_s {
 } __PACK__ pd_clock_trigger_sync_args_t;
 
+typedef struct pd_set_clock_multiplier_args_s {
+    uint32_t  frequency;
+} __PACK__ pd_set_clock_multiplier_args_t;
+
 // packet buffer
 typedef struct pd_packet_buffer_update_args_s {
     bool       pause;
@@ -3681,7 +3685,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
     ENTRY(PD_FUNC_ID_TEL_L2SEG_UPDATE,           342, "PD_FUNC_ID_TEL_L2SEG_UPDATE")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP, 343, "PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP")  \
-    ENTRY(PD_FUNC_ID_MAX,                        344, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SET_CLOCK_MULTIPLIER,       344, "PD_FUNC_ID_SET_CLOCK_MULTIPLIER")\
+    ENTRY(PD_FUNC_ID_MAX,                        345, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -4089,6 +4094,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_clock_delta_comp);
         PD_UNION_ARGS_FIELD(pd_clock_detail_get);
         PD_UNION_ARGS_FIELD(pd_clock_trigger_sync);
+        PD_UNION_ARGS_FIELD(pd_set_clock_multiplier);
 
         // packet buffer
         PD_UNION_ARGS_FIELD(pd_packet_buffer_update);
@@ -4604,6 +4610,7 @@ PD_FUNCP_TYPEDEF(pd_conv_sw_clock_to_hw_clock);
 PD_FUNCP_TYPEDEF(pd_clock_delta_comp);
 PD_FUNCP_TYPEDEF(pd_clock_detail_get);
 PD_FUNCP_TYPEDEF(pd_clock_trigger_sync);
+PD_FUNCP_TYPEDEF(pd_set_clock_multiplier);
 
 //packet buffer
 PD_FUNCP_TYPEDEF(pd_packet_buffer_update);

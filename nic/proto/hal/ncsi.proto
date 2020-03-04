@@ -41,6 +41,8 @@ service Ncsi {
   rpc ChannelUpdate (ChannelRequestMsg) returns (ChannelResponseMsg) {}
   rpc ChannelDelete (ChannelRequestMsg) returns (ChannelResponseMsg) {}
   rpc ChannelGet (ChannelGetRequestMsg) returns (ChannelGetResponseMsg) {}
+  // ERSPAN clock multiplier Update on frequency change
+  rpc ClockMultiplierUpdate (ClockMultiplierUpdateRequestMsg) returns (ClockMultiplierUpdateResponse) {}
 }
 
 // Vlan Filters
@@ -318,4 +320,16 @@ message ChannelGetResponse {
 
 message ChannelGetResponseMsg {
   repeated ChannelGetResponse response = 1;
+}
+
+message ClockMultiplierUpdateRequest {
+  uint32  frequency = 1;
+}
+
+message ClockMultiplierUpdateResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+}
+
+message ClockMultiplierUpdateRequestMsg {
+  repeated ClockMultiplierUpdateRequest request = 1;
 }

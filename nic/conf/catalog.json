@@ -360,6 +360,7 @@
     "clock_info" :
     [
         {"freq" : "833", "multiplier" : "2576980377"},
-        {"freq" : "416", "multiplier" : "1288490188"}
+        {"freq" : "416", "multiplier" : "1288490188"},
+        {"freq" : "416", "multiplier" : "644245094"}
     ]
 }

@@ -777,6 +777,24 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::lib::memrev(g_hbm_clockaddr->multiplier, (uint8_t *)&g_clock_table_info.multiplier, CLOCK_WIDTH);
 }
 
+//----------------------------------------------
+// Read a new multiplier and reprogram HBM
+//----------------------------------------------
+hal_ret_t
+pd_set_clock_multiplier (pd_func_args_t *pd_func_args)
+{
+    pd_set_clock_multiplier_args_t *args = 
+                                       pd_func_args->pd_set_clock_multiplier;
+ 
+    // Read the multiplier again in case there is a change in frequency
+    g_clock_freq = args->frequency; 
+    g_clock_table_info.multiplier = 
+                   g_hal_state->catalog()->clock_get_multiplier(g_clock_freq);
+    pd_clock_trigger_sync(pd_func_args);
+
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // start a periodic timer for Hw and sw clock delta computation
 //------------------------------------------------------------------------------

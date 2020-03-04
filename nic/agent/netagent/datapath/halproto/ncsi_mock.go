@@ -431,6 +431,24 @@ func (mr *MockNcsiClientMockRecorder) ChannelGet(ctx, in interface{}, opts ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChannelGet", reflect.TypeOf((*MockNcsiClient)(nil).ChannelGet), varargs...)
 }
 
+// ClockMultiplierUpdate mocks base method
+func (m *MockNcsiClient) ClockMultiplierUpdate(ctx context.Context, in *ClockMultiplierUpdateRequestMsg, opts ...grpc.CallOption) (*ClockMultiplierUpdateResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClockMultiplierUpdate", varargs...)
+	ret0, _ := ret[0].(*ClockMultiplierUpdateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClockMultiplierUpdate indicates an expected call of ClockMultiplierUpdate
+func (mr *MockNcsiClientMockRecorder) ClockMultiplierUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClockMultiplierUpdate", reflect.TypeOf((*MockNcsiClient)(nil).ClockMultiplierUpdate), varargs...)
+}
+
 // MockNcsiServer is a mock of NcsiServer interface
 type MockNcsiServer struct {
 	ctrl     *gomock.Controller
@@ -738,4 +756,17 @@ func (m *MockNcsiServer) ChannelGet(arg0 context.Context, arg1 *ChannelGetReques
 // ChannelGet indicates an expected call of ChannelGet
 func (mr *MockNcsiServerMockRecorder) ChannelGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChannelGet", reflect.TypeOf((*MockNcsiServer)(nil).ChannelGet), arg0, arg1)
+}
+
+// ClockMultiplierUpdate mocks base method
+func (m *MockNcsiServer) ClockMultiplierUpdate(arg0 context.Context, arg1 *ClockMultiplierUpdateRequestMsg) (*ClockMultiplierUpdateResponse, error) {
+	ret := m.ctrl.Call(m, "ClockMultiplierUpdate", arg0, arg1)
+	ret0, _ := ret[0].(*ClockMultiplierUpdateResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClockMultiplierUpdate indicates an expected call of ClockMultiplierUpdate
+func (mr *MockNcsiServerMockRecorder) ClockMultiplierUpdate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClockMultiplierUpdate", reflect.TypeOf((*MockNcsiServer)(nil).ClockMultiplierUpdate), arg0, arg1)
 }

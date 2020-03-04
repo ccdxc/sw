@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/utils/eventmgr/eventmgr.hpp"
 #include "nic/hal/core/event_ipc.hpp"
+#include "nic/hal/pd/pd_api.hpp"
 
 namespace hal {
 
@@ -440,6 +441,25 @@ channel_get (ChannelGetRequest& req, ChannelGetResponseMsg *rsp)
     ret = ncsi_nicmgr_block_call(&msg);
 
     return ret;
+}
+
+hal_ret_t
+clock_multiplier_update (ClockMultiplierUpdateRequest& req, ClockMultiplierUpdateResponse *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    hal::pd::pd_set_clock_multiplier_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+
+    pd_func_args.pd_set_clock_multiplier = &args;
+    
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_SET_CLOCK_MULTIPLIER, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        rsp->set_api_status(types::API_STATUS_HW_PROG_ERR);
+    }     
+     
+    rsp->set_api_status(types::API_STATUS_OK);
+
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

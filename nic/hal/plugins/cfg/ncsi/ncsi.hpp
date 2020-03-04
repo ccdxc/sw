@@ -40,6 +40,8 @@ using ncsi::ChannelResponse;
 using ncsi::ChannelGetRequest;
 using ncsi::ChannelGetResponseMsg;
 using ncsi::ChannelGetResponse;
+using ncsi::ClockMultiplierUpdateRequest;
+using ncsi::ClockMultiplierUpdateResponse;
 
 namespace hal {
 
@@ -70,6 +72,8 @@ hal_ret_t channel_create(ChannelRequest& req, ChannelResponse *rsp);
 hal_ret_t channel_update(ChannelRequest& req, ChannelResponse *rsp);
 hal_ret_t channel_delete(ChannelRequest& req, ChannelResponse *rsp);
 hal_ret_t channel_get(ChannelGetRequest& req, ChannelGetResponseMsg *rsp);
+
+hal_ret_t clock_multiplier_update(ClockMultiplierUpdateRequest& req, ClockMultiplierUpdateResponse *rsp);
 
 }    // namespace hal
 
