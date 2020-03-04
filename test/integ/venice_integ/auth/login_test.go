@@ -441,6 +441,7 @@ func TestUserStatus(t *testing.T) {
 }
 
 func TestLdapLogin(t *testing.T) {
+	t.Skip()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
@@ -552,6 +553,7 @@ func TestLdapLogin(t *testing.T) {
 }
 
 func TestUsernameConflict(t *testing.T) {
+	t.Skip()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
@@ -638,6 +640,7 @@ func TestUsernameConflict(t *testing.T) {
 }
 
 func TestLdapChecks(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Domains: []*auth.LdapDomain{
@@ -743,6 +746,7 @@ func TestLdapChecks(t *testing.T) {
 }
 
 func TestRadiusLogin(t *testing.T) {
+	t.Skip()
 	config := getACSConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -1007,6 +1011,7 @@ func TestPasswordReset(t *testing.T) {
 }
 
 func TestAuthOrder(t *testing.T) {
+	t.Skip()
 	radiusConfig := getACSConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,

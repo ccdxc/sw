@@ -63,31 +63,37 @@ l5J+aSPYHBx8IcFbmpmJZ/paZc+bVth6E5CcoBHDjB7ctfaL24E9HQ==
 }
 
 func TestADAuthenticate(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testAuthenticate(t, config)
 }
 
 func TestADIncorrectPasswordAuthentication(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testIncorrectPasswordAuthentication(t, config)
 }
 
 func TestADIncorrectUserAuthentication(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testIncorrectUserAuthentication(t, config)
 }
 
 func TestADIncorrectLdapAttributeMapping(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testIncorrectLdapAttributeMapping(t, config)
 }
 
 func TestADIncorrectBaseDN(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testIncorrectBaseDN(t, config)
 }
 
 func TestADIncorrectBindPassword(t *testing.T) {
+	t.Skip()
 	config := getADConfig()
 	testIncorrectBindPassword(t, config)
 }

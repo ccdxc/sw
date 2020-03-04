@@ -228,6 +228,7 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 }
 
 func TestACSAuthentication(t *testing.T) {
+	t.Skip()
 	config := getACSConfig()
 	testAuthenticator(t, config)
 }
@@ -266,5 +267,6 @@ func testNoGroupUser(t *testing.T, config *RadiusConfig) {
 }
 
 func TestACSNoUserGroup(t *testing.T) {
+	t.Skip()
 	testNoGroupUser(t, getACSNoGroupUserConfig())
 }

@@ -205,6 +205,7 @@ var _ = Describe("auth tests", func() {
 			}, 30, 1).Should(BeNil())
 		})
 		It("successful radius auth", func() {
+			Skip("disabling radius tests to move servers")
 			radiusCtx, err := authntestutils.NewLoggedInContext(context.TODO(), ts.tu.APIGwAddr, &auth.PasswordCredential{Username: ts.tu.Radius.User, Password: ts.tu.Radius.Password})
 			Expect(err).ShouldNot(HaveOccurred())
 			var user *auth.User
