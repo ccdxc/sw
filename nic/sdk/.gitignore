@@ -13,12 +13,7 @@ build
 third-party/avago/fw
 third-party/locale
 third-party/dpdk
-third-party/asic/x86_64
-third-party/asic/aarch64
-third-party/asic/include
-third-party/asic/capri
-third-party/asic/ip
-third-party/asic/elba
+third-party/asic
 third-party/libev
 third-party/libnuma
 third-party/vpp-pkg
