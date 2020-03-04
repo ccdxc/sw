@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -229,11 +230,8 @@ static void ionic_uninit_context(struct verbs_device *vdev,
 				 struct ibv_context *ibctx)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
-	int rc;
 
-	rc = ionic_tbl_destroy(&ctx->qp_tbl);
-	if (rc)
-		ionic_err("context freed before destroying resources");
+	ionic_tbl_destroy(&ctx->qp_tbl);
 
 	pthread_mutex_destroy(&ctx->mut);
 

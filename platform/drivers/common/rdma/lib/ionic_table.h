@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #ifndef IONIC_TABLE_H
 #define IONIC_TABLE_H
@@ -36,6 +43,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __FreeBSD__
 #ifndef likely
@@ -85,10 +93,9 @@ static inline void ionic_tbl_init(struct ionic_tbl_root *tbl)
 /** ionic_tbl_init - Destroy the table, which should be empty.
  * @tbl:	Table root.
  */
-static inline int ionic_tbl_destroy(struct ionic_tbl_root *tbl)
+static inline void ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 {
 	uint32_t node_i;
-	int rc = 0;
 
 	/* The table should be empty.  If not empty, it means the context is
 	 * being destroyed, but there are qps still in the table that have not
@@ -105,18 +112,18 @@ static inline int ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 	 * there is an error destroying a qp or other resource.
 	 */
 	for (node_i = 0; node_i < TBL_ROOT_CAPACITY; ++node_i) {
-		if (tbl->node[node_i]) {
-			/* Indicate to the caller that the table was not empty,
-			 * but still make a best effort to free the table.
-			 */
-			rc = -EBUSY;
-			free(tbl->node[node_i]);
-		}
+		if (!tbl->node[node_i])
+			continue;
+
+		/* Indicate to the caller that the table was not empty,
+		 * but still make a best effort to free the table.
+		 */
+		fprintf(stderr,
+			"ionic_rdma: context freed with active resources\n");
+		free(tbl->node[node_i]);
 	}
 
 	free(tbl->free_node);
-
-	return rc;
 }
 
 /** ionic_tbl_lookup - Lookup value for key in the table.

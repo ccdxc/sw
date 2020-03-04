@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -33,6 +34,8 @@
 #ifndef IONIC_FW_H
 #define IONIC_FW_H
 
+#define BIT(x) (1ul << (x))
+
 /* common to all versions */
 
 /* wqe scatter gather element */
@@ -45,18 +48,18 @@ struct ionic_sge {
 /* admin queue mr type */
 enum ionic_mr_flags {
 	/* bits that determine mr access */
-	IONIC_MRF_LOCAL_WRITE		= (1u << 0),
-	IONIC_MRF_REMOTE_WRITE		= (1u << 1),
-	IONIC_MRF_REMOTE_READ		= (1u << 2),
-	IONIC_MRF_REMOTE_ATOMIC		= (1u << 3),
-	IONIC_MRF_MW_BIND		= (1u << 4),
-	IONIC_MRF_ZERO_BASED		= (1u << 5),
-	IONIC_MRF_ON_DEMAND		= (1u << 6),
-	IONIC_MRF_ACCESS_MASK		= (1u << 12) - 1,
+	IONIC_MRF_LOCAL_WRITE		= BIT(0),
+	IONIC_MRF_REMOTE_WRITE		= BIT(1),
+	IONIC_MRF_REMOTE_READ		= BIT(2),
+	IONIC_MRF_REMOTE_ATOMIC		= BIT(3),
+	IONIC_MRF_MW_BIND		= BIT(4),
+	IONIC_MRF_ZERO_BASED		= BIT(5),
+	IONIC_MRF_ON_DEMAND		= BIT(6),
+	IONIC_MRF_ACCESS_MASK		= BIT(12) - 1,
 
 	/* bits that determine mr type */
-	IONIC_MRF_IS_MW			= (1u << 14),
-	IONIC_MRF_INV_EN		= (1u << 15),
+	IONIC_MRF_IS_MW			= BIT(14),
+	IONIC_MRF_INV_EN		= BIT(15),
 
 	/* base flags combinations for mr types */
 	IONIC_MRF_USER_MR		= 0,
@@ -188,14 +191,14 @@ enum ionic_v1_cqe_src_qpn_bits {
 	IONIC_V1_CQE_RECV_OP_SEND_IMM	= 2,
 	IONIC_V1_CQE_RECV_OP_RDMA_IMM	= 3,
 
-	IONIC_V1_CQE_RECV_IS_IPV4	= (1u << (7 + IONIC_V1_CQE_RECV_OP_SHIFT)),
-	IONIC_V1_CQE_RECV_IS_VLAN	= (1u << (6 + IONIC_V1_CQE_RECV_OP_SHIFT)),
+	IONIC_V1_CQE_RECV_IS_IPV4	= BIT(7 + IONIC_V1_CQE_RECV_OP_SHIFT),
+	IONIC_V1_CQE_RECV_IS_VLAN	= BIT(6 + IONIC_V1_CQE_RECV_OP_SHIFT),
 };
 
 /* bits for cqe qid_type_flags */
 enum ionic_v1_cqe_qtf_bits {
-	IONIC_V1_CQE_COLOR		= (1u << 0),
-	IONIC_V1_CQE_ERROR		= (1u << 1),
+	IONIC_V1_CQE_COLOR		= BIT(0),
+	IONIC_V1_CQE_ERROR		= BIT(1),
 	IONIC_V1_CQE_TYPE_SHIFT		= 5,
 	IONIC_V1_CQE_TYPE_MASK		= 0x7,
 	IONIC_V1_CQE_QID_SHIFT		= 8,
@@ -266,7 +269,7 @@ struct ionic_v1_recv_bdy {
 struct ionic_v1_common_bdy {
 	union {
 		struct {
-			__le32		ah_id;
+			__be32		ah_id;
 			__be32		dest_qpn;
 			__be32		dest_qkey;
 		} send;
@@ -328,10 +331,10 @@ enum ionic_v1_op {
 	IONIC_V1_OP_BIND_MW,
 
 	/* flags */
-	IONIC_V1_FLAG_FENCE		= (1u << 0),
-	IONIC_V1_FLAG_SOL		= (1u << 1),
-	IONIC_V1_FLAG_INL		= (1u << 2),
-	IONIC_V1_FLAG_SIG		= (1u << 3),
+	IONIC_V1_FLAG_FENCE		= BIT(0),
+	IONIC_V1_FLAG_SOL		= BIT(1),
+	IONIC_V1_FLAG_INL		= BIT(2),
+	IONIC_V1_FLAG_SIG		= BIT(3),
 
 	/* flags last four bits for sgl spec format */
 	IONIC_V1_FLAG_SPEC32		= (1u << 12),

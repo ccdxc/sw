@@ -25,7 +25,7 @@ static inline u32 ionic_mrid_index(u32 lrkey)
 	return lrkey >> IONIC_MRID_INDEX_SHIFT;
 }
 
-/* common for all versions */
+/* common to all versions */
 
 /* wqe scatter gather element */
 struct ionic_sge {
@@ -513,10 +513,10 @@ enum ionic_v1_op {
 	IONIC_V1_OP_BIND_MW,
 
 	/* flags */
-	IONIC_V1_FLAG_FENCE		= (1u << 0),
-	IONIC_V1_FLAG_SOL		= (1u << 1),
-	IONIC_V1_FLAG_INL		= (1u << 2),
-	IONIC_V1_FLAG_SIG		= (1u << 3),
+	IONIC_V1_FLAG_FENCE		= BIT(0),
+	IONIC_V1_FLAG_SOL		= BIT(1),
+	IONIC_V1_FLAG_INL		= BIT(2),
+	IONIC_V1_FLAG_SIG		= BIT(3),
 
 	/* flags last four bits for sgl spec format */
 	IONIC_V1_FLAG_SPEC32		= (1u << 12),

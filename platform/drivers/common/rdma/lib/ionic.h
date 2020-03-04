@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #ifndef IONIC_H
 #define IONIC_H
@@ -297,7 +304,7 @@ static inline struct ionic_qp *to_ionic_srq(struct ibv_srq *ibsrq)
 #endif /* IONIC_SRQ_XRC */
 static inline struct ionic_ah *to_ionic_ah(struct ibv_ah *ibah)
 {
-        return container_of(ibah, struct ionic_ah, ibah);
+	return container_of(ibah, struct ionic_ah, ibah);
 }
 
 static inline bool ionic_ibop_is_local(enum ibv_wr_opcode op)

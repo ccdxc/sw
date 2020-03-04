@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -34,6 +35,7 @@
 #define __IONIC_ABI_H__
 
 #include <infiniband/kern-abi.h>
+
 #include "ionic_fw.h"
 
 #define IONIC_ABI_VERSION	2

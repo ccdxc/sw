@@ -1,33 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
- *
- * This software is available to you under a choice of one of two
- * licenses.  You may choose to be licensed under the terms of the GNU
- * General Public License (GPL) Version 2, available from the file
- * COPYING in the main directory of this source tree, or the
- * OpenIB.org BSD license below:
- *
- *     Redistribution and use in source and binary forms, with or
- *     without modification, are permitted provided that the following
- *     conditions are met:
- *
- *      - Redistributions of source code must retain the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer.
- *
- *      - Redistributions in binary form must reproduce the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #ifndef IONIC_TABLE_H
@@ -36,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* Number of valid bits in a key */
 #define TBL_KEY_SHIFT           24
@@ -78,10 +52,9 @@ static inline void ionic_tbl_init(struct ionic_tbl_root *tbl)
 /** ionic_tbl_init - Destroy the table, which should be empty.
  * @tbl:	Table root.
  */
-static inline int ionic_tbl_destroy(struct ionic_tbl_root *tbl)
+static inline void ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 {
 	uint32_t node_i;
-	int rc = 0;
 
 	/* The table should be empty.  If not empty, it means the context is
 	 * being destroyed, but there are qps still in the table that have not
@@ -98,18 +71,18 @@ static inline int ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 	 * there is an error destroying a qp or other resource.
 	 */
 	for (node_i = 0; node_i < TBL_ROOT_CAPACITY; ++node_i) {
-		if (tbl->node[node_i]) {
-			/* Indicate to the caller that the table was not empty,
-			 * but still make a best effort to free the table.
-			 */
-			rc = -EBUSY;
-			free(tbl->node[node_i]);
-		}
+		if (!tbl->node[node_i])
+			continue;
+
+		/* Indicate to the caller that the table was not empty,
+		 * but still make a best effort to free the table.
+		 */
+		fprintf(stderr,
+			"ionic_rdma: context freed with active resources\n");
+		free(tbl->node[node_i]);
 	}
 
 	free(tbl->free_node);
-
-	return rc;
 }
 
 /** ionic_tbl_lookup - Lookup value for key in the table.

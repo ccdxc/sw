@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #include <infiniband/driver.h>
 #include <sys/mman.h>

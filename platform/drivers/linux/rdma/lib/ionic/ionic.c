@@ -1,33 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
- *
- * This software is available to you under a choice of one of two
- * licenses.  You may choose to be licensed under the terms of the GNU
- * General Public License (GPL) Version 2, available from the file
- * COPYING in the main directory of this source tree, or the
- * OpenIB.org BSD license below:
- *
- *     Redistribution and use in source and binary forms, with or
- *     without modification, are permitted provided that the following
- *     conditions are met:
- *
- *      - Redistributions of source code must retain the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer.
- *
- *      - Redistributions in binary form must reproduce the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #include <stdio.h>
@@ -233,30 +206,6 @@ err_ctx:
 	return NULL;
 }
 
-static void ionic_free_context(struct ibv_context *ibctx)
-{
-	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
-	int rc;
-
-	rc = ionic_tbl_destroy(&ctx->qp_tbl);
-	if (rc)
-		ionic_err("context freed before destroying resources");
-
-	pthread_mutex_destroy(&ctx->mut);
-
-	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
-
-	verbs_uninit_context(&ctx->vctx);
-
-	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
-	free(ctx->stats);
-
-	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
-	free(ctx->lats);
-
-	free(ctx);
-}
-
 #define PCI_VENDOR_ID_PENSANDO 0x1dd8
 #define CNA(v, d) VERBS_PCI_MATCH(PCI_VENDOR_ID_##v, d, NULL)
 
@@ -265,7 +214,7 @@ static const struct verbs_match_ent cna_table[] = {
 	{}
 };
 
-static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev)
+static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sdev)
 {
 	struct ionic_dev *dev;
 
@@ -281,7 +230,7 @@ static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev
 	if (!dev)
 		return NULL;
 
-	dev->abi_ver = sysfs_dev->abi_ver;
+	dev->abi_ver = sdev->abi_ver;
 
 	return &dev->vdev;
 }
@@ -301,6 +250,5 @@ static const struct verbs_device_ops ionic_dev_ops = {
 	.alloc_device		= ionic_alloc_device,
 	.uninit_device		= ionic_uninit_device,
 	.alloc_context		= ionic_alloc_context,
-	.free_context		= ionic_free_context,
 };
 PROVIDER_DRIVER(ionic, ionic_dev_ops);

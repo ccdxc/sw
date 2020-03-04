@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -51,8 +52,7 @@ static int ionic_order_base2(size_t val)
 	val |= val >> 8;
 	val |= val >> 16;
 
-	/* leave zero or exactly one high bit set
-	 * or exactly one low bit set */
+	/* leave zero, exactly one high bit set, or exactly one low bit set */
 	val ^= val >> 1;
 
 	if (sizeof(size_t) == 8)

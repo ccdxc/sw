@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -200,7 +207,7 @@ static int ionic_rereg_mr(struct verbs_mr *vmr, int flags, struct ibv_pd *pd,
 #endif
 
 	if (flags & IBV_REREG_MR_KEEP_VALID)
-		return ENOTSUP;
+		return EOPNOTSUPP;
 
 	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
 				(uintptr_t)addr, access, pd,
@@ -289,11 +296,6 @@ err:
 	return NULL;
 }
 
-static int ionic_resize_cq(struct ibv_cq *ibcq, int ncqe)
-{
-	return -ENOSYS;
-}
-
 static int ionic_destroy_cq(struct ibv_cq *ibcq)
 {
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
@@ -326,7 +328,7 @@ static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibpd,
 #ifdef __FreeBSD__
 	vctx = verbs_get_ctx_op(ibpd->context, create_srq_ex);
 	if (!vctx) {
-		errno = -ENOSYS;
+		errno = EOPNOTSUPP;
 		return NULL;
 	}
 
@@ -969,8 +971,8 @@ static int ionic_poll_cq(struct ibv_cq *ibcq, int nwc, struct ibv_wc *wc)
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, poll_cq);
-
 #endif /* IONIC_LIB_STATS */
+
 	if (nwc < 1)
 		return 0;
 
@@ -2234,8 +2236,8 @@ static int ionic_post_send_common(struct ionic_ctx *ctx,
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_send);
-
 #endif /* IONIC_LIB_STATS */
+
 	if (unlikely(!bad))
 		return EINVAL;
 
@@ -2399,8 +2401,8 @@ static int ionic_post_recv_common(struct ionic_ctx *ctx,
 
 	ionic_lat_trace(ctx->lats, application);
 	ionic_stat_incr(ctx->stats, post_recv);
-
 #endif /* IONIC_LIB_STATS */
+
 	if (unlikely(!bad))
 		return EINVAL;
 
@@ -2599,12 +2601,14 @@ static int ionic_get_srq_num(struct ibv_srq *ibsrq, uint32_t *srq_num)
 	return 0;
 }
 
+#ifdef __FreeBSD__
 static int ionic_modify_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr,
 			    int init_attr)
 {
-	return -ENOSYS;
+	return EOPNOTSUPP;
 }
 
+#endif /* __FreeBSD__ */
 static int ionic_destroy_srq(struct ibv_srq *ibsrq)
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibsrq->context);
@@ -2636,11 +2640,13 @@ static int ionic_destroy_srq(struct ibv_srq *ibsrq)
 	return 0;
 }
 
+#ifdef __FreeBSD__
 static int ionic_query_srq(struct ibv_srq *ibsrq, struct ibv_srq_attr *attr)
 {
-	return -ENOSYS;
+	return EOPNOTSUPP;
 }
 
+#endif /* __FreeBSD__ */
 static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 			       struct ibv_recv_wr **bad)
 {
@@ -2675,7 +2681,7 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 #ifdef __FreeBSD__
 	vctx = verbs_get_ctx_op(ibpd->context, create_qp_ex);
 	if (!vctx) {
-		errno = -ENOSYS;
+		errno = EOPNOTSUPP;
 		return NULL;
 	}
 
@@ -2814,6 +2820,31 @@ static int ionic_dealloc_mw(struct ibv_mw *ibmw)
 	return 0;
 }
 
+#ifndef __FreeBSD__ /* FreeBSD version in ionic.c */
+static void ionic_free_context(struct ibv_context *ibctx)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+
+	ionic_tbl_destroy(&ctx->qp_tbl);
+
+	pthread_mutex_destroy(&ctx->mut);
+
+	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
+
+	verbs_uninit_context(&ctx->vctx);
+#ifdef IONIC_LIB_STATS
+
+	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
+	free(ctx->stats);
+
+	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
+	free(ctx->lats);
+#endif /* IONIC_LIB_STATS */
+
+	free(ctx);
+}
+
+#endif /* __FreeBSD__ */
 #ifdef __FreeBSD__
 static const struct ibv_context_ops ionic_ctx_ops = {
 #else
@@ -2829,7 +2860,6 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
 	.req_notify_cq		= ionic_req_notify_cq,
-	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 #ifdef IONIC_SRQ_XRC
 	.create_srq		= ionic_create_srq,
@@ -2850,6 +2880,7 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.bind_mw		= ionic_bind_mw,
 	.dealloc_mw		= ionic_dealloc_mw,
 #ifndef __FreeBSD__
+	.free_context		= ionic_free_context,
 
 #ifdef IONIC_SRQ_XRC
 	.create_srq_ex		= ionic_create_srq_ex,

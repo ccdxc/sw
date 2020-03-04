@@ -1,33 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
- *
- * This software is available to you under a choice of one of two
- * licenses.  You may choose to be licensed under the terms of the GNU
- * General Public License (GPL) Version 2, available from the file
- * COPYING in the main directory of this source tree, or the
- * OpenIB.org BSD license below:
- *
- *     Redistribution and use in source and binary forms, with or
- *     without modification, are permitted provided that the following
- *     conditions are met:
- *
- *      - Redistributions of source code must retain the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer.
- *
- *      - Redistributions in binary form must reproduce the above
- *        copyright notice, this list of conditions and the following
- *        disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
- * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
- * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
  */
 
 #include <stdio.h>
@@ -172,7 +145,7 @@ static int ionic_rereg_mr(struct verbs_mr *vmr, int flags, struct ibv_pd *pd,
 	struct ib_uverbs_rereg_mr_resp resp;
 
 	if (flags & IBV_REREG_MR_KEEP_VALID)
-		return ENOTSUP;
+		return EOPNOTSUPP;
 
 	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
 				(uintptr_t)addr, access, pd,
@@ -255,11 +228,6 @@ err_queue:
 err:
 	errno = rc;
 	return NULL;
-}
-
-static int ionic_resize_cq(struct ibv_cq *ibcq, int ncqe)
-{
-	return -ENOSYS;
 }
 
 static int ionic_destroy_cq(struct ibv_cq *ibcq)
@@ -2384,6 +2352,27 @@ static int ionic_dealloc_mw(struct ibv_mw *ibmw)
 	return 0;
 }
 
+static void ionic_free_context(struct ibv_context *ibctx)
+{
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
+
+	ionic_tbl_destroy(&ctx->qp_tbl);
+
+	pthread_mutex_destroy(&ctx->mut);
+
+	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
+
+	verbs_uninit_context(&ctx->vctx);
+
+	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
+	free(ctx->stats);
+
+	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
+	free(ctx->lats);
+
+	free(ctx);
+}
+
 const struct verbs_context_ops ionic_ctx_ops = {
 	.query_device		= ionic_query_device,
 	.query_port		= ionic_query_port,
@@ -2395,7 +2384,6 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
 	.req_notify_cq		= ionic_req_notify_cq,
-	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 	.create_qp		= ionic_create_qp,
 	.query_qp		= ionic_query_qp,
@@ -2408,6 +2396,7 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.alloc_mw		= ionic_alloc_mw,
 	.bind_mw		= ionic_bind_mw,
 	.dealloc_mw		= ionic_dealloc_mw,
+	.free_context		= ionic_free_context,
 
 	.create_qp_ex		= ionic_create_qp_ex,
 };

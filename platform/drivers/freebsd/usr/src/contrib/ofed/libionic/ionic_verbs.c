@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -171,7 +172,7 @@ static int ionic_rereg_mr(struct ibv_mr *vmr, int flags, struct ibv_pd *pd,
 	struct ibv_rereg_mr_resp resp;
 
 	if (flags & IBV_REREG_MR_KEEP_VALID)
-		return ENOTSUP;
+		return EOPNOTSUPP;
 
 	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
 				(uintptr_t)addr, access, pd,
@@ -254,11 +255,6 @@ err_queue:
 err:
 	errno = rc;
 	return NULL;
-}
-
-static int ionic_resize_cq(struct ibv_cq *ibcq, int ncqe)
-{
-	return -ENOSYS;
 }
 
 static int ionic_destroy_cq(struct ibv_cq *ibcq)
@@ -2265,7 +2261,7 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 
 	vctx = verbs_get_ctx_op(ibpd->context, create_qp_ex);
 	if (!vctx) {
-		errno = -ENOSYS;
+		errno = EOPNOTSUPP;
 		return NULL;
 	}
 
@@ -2402,7 +2398,6 @@ static const struct ibv_context_ops ionic_ctx_ops = {
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
 	.req_notify_cq		= ionic_req_notify_cq,
-	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 	.create_qp		= ionic_create_qp,
 	.query_qp		= ionic_query_qp,

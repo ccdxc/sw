@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #ifndef __IONIC_ABI_H__
 #define __IONIC_ABI_H__
@@ -39,6 +46,7 @@
 #include <rdma/ionic-abi.h>
 #include <kernel-abi/ionic-abi.h>
 #endif /* __FreeBSD__ */
+
 #include "ionic_fw.h"
 
 #ifdef __FreeBSD__

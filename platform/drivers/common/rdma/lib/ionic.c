@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
+#ifdef __FreeBSD__
 /*
  * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
@@ -29,6 +31,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#else
+/*
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
+ */
+#endif /* __FreeBSD__ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -276,32 +283,17 @@ err_ctx:
 #endif /* __FreeBSD__ */
 }
 
-#ifdef __FreeBSD__
+#ifdef __FreeBSD__ /* Linux version in ionic_verbs.c */
 static void ionic_uninit_context(struct verbs_device *vdev,
 				 struct ibv_context *ibctx)
-#else
-static void ionic_free_context(struct ibv_context *ibctx)
-#endif
 {
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
-#ifdef NOT_UPSTREAM
-	int rc;
-
-	rc = ionic_tbl_destroy(&ctx->qp_tbl);
-	if (rc)
-		ionic_err("context freed before destroying resources");
-#else
 
 	ionic_tbl_destroy(&ctx->qp_tbl);
-#endif /* NOT_UPSTREAM */
 
 	pthread_mutex_destroy(&ctx->mut);
 
 	ionic_unmap(ctx->dbpage, 1u << ctx->pg_shift);
-#ifndef __FreeBSD__
-
-	verbs_uninit_context(&ctx->vctx);
-#endif
 #ifdef IONIC_LIB_STATS
 
 	ionic_stats_print(IONIC_DEBUG_FILE, ctx->stats);
@@ -310,12 +302,9 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	ionic_lats_print(IONIC_DEBUG_FILE, ctx->lats);
 	free(ctx->lats);
 #endif /* IONIC_LIB_STATS */
-#ifndef __FreeBSD__
-
-	free(ctx);
-#endif
 }
 
+#endif /* __FreeBSD__ */
 #define PCI_VENDOR_ID_PENSANDO 0x1dd8
 #ifdef __FreeBSD__
 #define CNA(v, d) { .vendor = (PCI_VENDOR_ID_##v), .device = (d) }
@@ -345,7 +334,7 @@ static const struct verbs_device_ops ionic_dev_ops = {
 static struct verbs_device *ionic_alloc_device(const char *sysfs_path,
 					       int abi_version)
 #else
-static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev)
+static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sdev)
 #endif /* __FreeBSD__ */
 {
 	struct ionic_dev *dev;
@@ -398,7 +387,7 @@ found:
 
 	dev->abi_ver = abi_version;
 #else
-	dev->abi_ver = sysfs_dev->abi_ver;
+	dev->abi_ver = sdev->abi_ver;
 #endif /* __FreeBSD__ */
 
 	return &dev->vdev;
@@ -425,7 +414,6 @@ static const struct verbs_device_ops ionic_dev_ops = {
 	.alloc_device		= ionic_alloc_device,
 	.uninit_device		= ionic_uninit_device,
 	.alloc_context		= ionic_alloc_context,
-	.free_context		= ionic_free_context,
 };
 PROVIDER_DRIVER(ionic, ionic_dev_ops);
 #endif /* __FreeBSD__ */
