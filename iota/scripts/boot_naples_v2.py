@@ -141,7 +141,7 @@ def IpmiReset():
 
 
 # Create system config file to enable console with out triggering
-# authentication. 
+# authentication.
 def CreateConfigConsoleNoAuth():
     console_enable = {'console': 'enable'}
     with open(NAPLES_CONFIG_SPEC_LOCAL, 'w') as outfile:
@@ -410,7 +410,7 @@ class EntityManagement:
 
     def clear_buffer(self):
         try:
-            #Clear buffer 
+            #Clear buffer
             self.hdl.read_nonblocking(1000000000, timeout = 3)
         except:
             pass
@@ -504,7 +504,7 @@ class NaplesManagement(EntityManagement):
                 #login successful
                 self.SyncLine()
                 return
-            except: 
+            except:
                 print("failed to login, trying again")
         #try ipmi reset as final option
         if force_connect:
@@ -861,7 +861,7 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
             print("sleeping 60 after shutdown -r in Reboot")
             time.sleep(60)
-            self.WaitForSsh()    
+            self.WaitForSsh()
         self.RunSshCmd("uptime")
         return
 
@@ -982,7 +982,7 @@ class EsxHostManagement(HostManagement):
 
     def __check_naples_deivce(self):
         try: self.RunSshCmd("lspci -d 1dd8:")
-        except: 
+        except:
             print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
 

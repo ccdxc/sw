@@ -14,6 +14,7 @@ device:
     macaddress  : macaddr/0000.aaaa.aaa1
     encap       : vxlan
     origin      : implicitly-created
+    learningagetimeout : 36000
 
 uplink:
     - entry:
@@ -94,6 +95,12 @@ vpc:
           bgppeeraf:
               afi       : ipv4
               safi      : unicast
+        - peeraddr      : 50.50.50.1  # overlay bgp peer 1
+          localaddr     : 9.9.9.9
+          remoteasn     : 100
+          bgppeeraf:
+              afi       : l2vpn
+              safi      : evpn
 
     - id    : 1
       stack : ipv4
@@ -120,6 +127,19 @@ vpc:
           fabricencapvalue : 202
           v4routerip       : '2.1.0.0'
           vroutermac       : macaddr/0055.0100.0001
+          evpnevi:
+            - id     : 1
+              rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - id     : 1
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - id     : 2
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
 
       nexthop:
         - id         : 3

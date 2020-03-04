@@ -448,13 +448,17 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def ValidateJSON(self, node, resps):
         for j in resps:
-            uuid = j['meta']['uuid']
-            obj = self.__getObjectByUUID(node, uuid)
-            if not obj:
-                logger.error(f'Failed to find {self.ObjType} object with uuid {uuid} on node {node}')
+            if hasattr(j['meta'], 'uuid'):
+                uuid = j['meta']['uuid']
+                obj = self.__getObjectByUUID(node, uuid)
+                if not obj:
+                    logger.error(f'Failed to find {self.ObjType} object with \
+                                 uuid {uuid} on node {node}')
                 return False
-            if not obj.ValidateJSONSpec(j):
-                return False
+                if not obj.ValidateJSONSpec(j):
+                    return False
+            else:
+                logger.error("Found an object without uuid - ", j)
         return True
 
     def ValidateHttpRead(self, node, resps):

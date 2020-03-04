@@ -456,6 +456,9 @@ class SubnetObjectClient(base.ConfigClientBase):
         evpnevirt.client.CreateObjects(node)
         return True
 
+    def UpdateHostInterfaces(self, node):
+        InterfaceClient.UpdateHostInterfaces(node, self.Objects(node))
+
 client = SubnetObjectClient()
 
 def GetMatchingObjects(selectors):

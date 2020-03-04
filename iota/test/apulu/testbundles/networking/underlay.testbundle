@@ -13,8 +13,8 @@ testcases:
             #ipaf    : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
-            pktsize : [ 64, 128, 256, 512, 1024 ]
-    
+            pktsize : [ 64, 128, 1024 ]
+
     -   name    : Ping_Underlay_Workloads_With_Flap
         testcase: testcases.underlay.ping
         stress  : True
@@ -41,7 +41,7 @@ testcases:
             #ipaf    : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             #pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192 ]
-            pktsize : [ 64, 128, 256, 512, 1024 ]
+            pktsize : [ 64 ]
 
     -   name    : flap_switch_ports
         testcase: testcases.triggers.switch_flap

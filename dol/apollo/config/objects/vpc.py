@@ -89,7 +89,7 @@ class VpcObject(base.ConfigObjectBase):
         self.Tos = 0 # to start with
         self.Mutable = utils.IsUpdateSupported()
         self.Status = VpcStatus()
-        self.ReadImplicit()
+        self.UpdateImplicit()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
         self.__ip_subnet_prefix_pool[0] = {}
@@ -183,7 +183,7 @@ class VpcObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
-    def ReadImplicit(self):
+    def UpdateImplicit(self):
         if (GlobalOptions.dryrun):
             return
         if (not self.IsOriginImplicitlyCreated()):
@@ -302,7 +302,25 @@ class VpcObject(base.ConfigObjectBase):
                     "vrf-type": "CUSTOMER",
                     "v4-route-table": self.V4RouteTableName,
                     "router-mac": str(self.VirtualRouterMACAddr),
-                    "vxlan-vni": self.Vnid
+                    "vxlan-vni": self.Vnid,
+                    "route-import-export": {
+                        "address-family": "evpn",
+                        "rd-auto": True,
+                        "rt-export": [
+                            {
+                                "type": "type2",
+                                "admin-value": 4294967295,
+                                "assigned-value": 2001
+                            }
+                        ],
+                        "rt-import": [
+                            {
+                                "type": "type2",
+                                "admin-value": 4294967295,
+                                "assigned-value": 2001
+                            }
+                        ]
+                    }
                 }
             }
         return json.dumps(spec)

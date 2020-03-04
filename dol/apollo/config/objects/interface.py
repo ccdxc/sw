@@ -43,15 +43,20 @@ class InterfaceInfoObject(base.ConfigObjectBase):
     def __init__(self, node, iftype, spec, ifspec):
         self.Node = node
         self.__type = iftype
+        self.VrfName = ''
+        self.Network = ''
+        self.PfxStr = ''
         if (iftype == topo.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
+            self.VrfName = 'underlay-vpc'
+        elif iftype == topo.InterfaceTypes.MGMT:
+            self.VrfName = 'default'
         elif (iftype == topo.InterfaceTypes.UPLINKPC):
             self.port_bmap = getattr(spec, 'portbmp', None)
         elif (iftype == topo.InterfaceTypes.L3):
             if (hasattr(spec, 'vpcid')):
                 self.VpcId = spec.vpcid
-            else:
-                self.VpcId = getattr(spec, 'vpc', 0)
+                self.VrfName = f'Vpc{spec.vpcid}'
             if (hasattr(ifspec, 'ipprefix')):
                 self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
             else:
@@ -70,6 +75,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
                 self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
             else:
                 logger.info("ipprefix not specified for interface", ifspec.iid)
+        if hasattr(self, "ip_prefix"):
+            self.PfxStr = self.ip_prefix.exploded
 
     def Show(self):
         if (self.__type == topo.InterfaceTypes.UPLINK):
@@ -77,8 +84,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (self.__type == topo.InterfaceTypes.UPLINKPC):
             res = str("port_bmap: %s" % self.port_bmap)
         elif (self.__type == topo.InterfaceTypes.L3):
-            res = str("VPC:%d|ip:%s|port: %s|encap:%s|mac:%s"% \
-                    (self.VpcId, self.ip_prefix, self.Port, self.encap, \
+            res = str("VPC:%s|ip:%s|port: %s|encap:%s|mac:%s"% \
+                    (self.VrfName, self.ip_prefix, self.Port, self.encap, \
                     self.macaddr.get()))
         elif (self.__type == topo.InterfaceTypes.LOOPBACK):
             res = f"ip:{self.ip_prefix}"
@@ -87,16 +94,44 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         logger.info("- %s" % res)
 
 class InterfaceObject(base.ConfigObjectBase):
-    def __init__(self, spec, ifspec, node, spec_json=None):
+    def __init__(self, spec, ifspec, node, spec_json=None, type=topo.InterfaceTypes.NONE):
         super().__init__(api.ObjectTypes.INTERFACE, node)
-        if hasattr(spec, 'origin'):
-            self.SetOrigin(spec.origin)
+        super().SetOrigin(getattr(ifspec, 'origin', None))
+        print(spec_json)
+        if type == topo.InterfaceTypes.ETH:
+            self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
+            self.Ifname = spec_json['meta']['name']
+            self.Tenant = spec_json['meta']['tenant']
+            self.Namespace = spec_json['meta']['namespace']
+            self.Type = 0
+            if spec_json['spec']['type'] == "HOST_PF":
+                self.Type = topo.InterfaceTypes.ETH
+            else:
+                logger.error("Unhandled if type")
+            self.AdminState = spec_json['spec']['admin-status']
+            info = InterfaceInfoObject(node, topo.InterfaceTypes.ETH, None, None)
+            self.IfInfo = info
+            self.IfInfo.VrfName = 'Vpc1'
+            self.IfInfo.Network = 'Subnet1'
+            self.IfInfo.ip_prefix = ''
+            self.Status = InterfaceStatus()
+            self.GID(spec_json['meta']['name'])
+            uuid_str = spec_json['meta']['uuid']
+            if hasattr(spec_json['status'], 'id'):
+                self.HostIfIdx = spec_json['status']['id']
+            else:
+                self.HostIfIdx = 0
+                logger.error("Host PF interface status does not have id", spec_json)
+            self.UUID = utils.PdsUuid(bytes.fromhex(uuid_str.replace('-','')),\
+                    self.ObjType)
+            self.DeriveOperInfo()
+            self.Show()
+            return
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         if (hasattr(ifspec, 'iid')):
             self.InterfaceId = int(ifspec.iid)
         else:
             self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
-        self.SpecJson = spec_json
         self.Ifname = spec.id
         self.Type = topo.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
@@ -111,7 +146,7 @@ class InterfaceObject(base.ConfigObjectBase):
         self.GID("Interface ID:%d"%self.InterfaceId)
         self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
         self.Mutable = utils.IsUpdateSupported()
-        self.ReadImplicit()
+        self.UpdateImplicit()
 
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
         self.DeriveOperInfo()
@@ -129,10 +164,12 @@ class InterfaceObject(base.ConfigObjectBase):
             self.IfInfo.Show()
         return
 
-    def ReadImplicit(self):
-        if (GlobalOptions.dryrun):
+    def UpdateImplicit(self):
+        if not GlobalOptions.netagent:
             return
-        if (not self.IsOriginImplicitlyCreated()):
+        if utils.IsDol() and GlobalOptions.dryrun:
+            return
+        if not self.IsOriginImplicitlyCreated():
             return
         # We need to read info from naples and update the DS
         resp = api.client[self.Node].GetHttp(self.ObjType)
@@ -161,7 +198,7 @@ class InterfaceObject(base.ConfigObjectBase):
                 self.IfInfo.ip_prefix = ipaddress.ip_network(ifinst['spec']['ip-address'],\
                         False)
             if hasattr(ifinst['spec'], 'vrf-name'):
-                self.IfInfo.VpcId = ifinst['spec']['vrf-name']
+                self.IfInfo.VrfName = ifinst['spec']['vrf-name']
         return
 
     def Dup(self):
@@ -210,12 +247,10 @@ class InterfaceObject(base.ConfigObjectBase):
             iftype = 'LOOPBACK'
         elif self.Type == topo.InterfaceTypes.L3:
             iftype = 'L3'
+        elif self.Type == topo.InterfaceTypes.ETH:
+            iftype = 'HOST_PF'
         else:
             return None
-        if hasattr(self.IfInfo, 'VpcId') and isinstance(self.IfInfo.VpcId, str):
-            vrfname = self.IfInfo.VpcId
-        else:
-            vrfname = 'underlay-vpc'
         spec = {
             "kind": "Interface",
             "meta": {
@@ -230,8 +265,9 @@ class InterfaceObject(base.ConfigObjectBase):
             "spec": {
                 "type": iftype,
                 "admin-status": 'UP',
-                "vrf-name": vrfname,
-                "ip-address": (self.IfInfo.ip_prefix.exploded),
+                "vrf-name": self.IfInfo.VrfName,
+                "network": self.IfInfo.Network,
+                "ip-address": self.IfInfo.PfxStr,
             }
         }
         return json.dumps(spec)
@@ -246,7 +282,8 @@ class InterfaceObject(base.ConfigObjectBase):
                 return False
             if spec.L3IfSpec.PortId != self.IfInfo.Port.GetUuid():
                 return False
-            # TODO: Enable once device delete is fixed. MAC is also overwritten with 0 on deleting device config.
+            # TODO: Enable once device delete is fixed. MAC is also \
+            # overwritten with 0 on deleting device config.
             #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():
             #    return False
         return True
@@ -257,6 +294,13 @@ class InterfaceObject(base.ConfigObjectBase):
         self.lif = self.obj_helper_lif.GetRandomHostLif()
         logger.info(" Selecting %s for Test" % self.lif.GID())
         self.lif.Show()
+        return
+
+    def UpdateVrfAndNetwork(self, subnets):
+        for subnet in subnets:
+            if self.HostIfIdx == subnet.HostIfIdx:
+                self.IfInfo.VrfName = subnet.VPC.GID()
+                self.IfInfo.Network = subnet.GID()
         return
 
 class InterfaceObjectClient(base.ConfigClientBase):
@@ -415,6 +459,39 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.Objs[node].pop(obj.InterfaceId, None)
         return
 
+    def __get_first_host_if(self, node):
+        resp = self.ReadAgentInterfaces(node)
+        #if utils.IsDryRun():
+            #return
+        if not resp:
+            return None
+        for r in resp:
+            if r['spec']['type'] == 'HOST_PF':
+                utils.dump(r)
+                return r
+        return None
+
+    def UpdateHostInterfaces(self, node, subnets):
+        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
+        if not resp:
+            return None
+        for r in resp:
+            if r['spec']['type'] == 'HOST_PF':
+                ifspec = InterfaceSpec_()
+                ifinfo = InterfaceSpec_()
+                ifspec.origin = 'fixed'
+                obj = InterfaceObject(None, ifspec, spec_json=r, node=node, \
+                                      type=topo.InterfaceTypes.ETH)
+                obj.UpdateVrfAndNetwork(subnets)
+                self.Objs[node].update({obj.InterfaceId: obj})
+                obj.Show()
+                api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
+                return #TODO remove once 8 subnets are created
+        print("after update pf")
+        resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
+        for r in resp:
+            print(r)
+
     def CreateObjects(self, node):
         if not GlobalOptions.netagent:
             cookie = utils.GetBatchCookie(node)
@@ -427,12 +504,12 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         else:
             obj = self.__loopback_if[node]
+            obj.Show()
             api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
             #api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
             #list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
             # create loopback interface
         return
-
 
     def GetGrpcReadAllLifMessage(self):
         grpcmsg = interface_pb2.LifGetRequest()

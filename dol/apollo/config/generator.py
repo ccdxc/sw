@@ -34,6 +34,7 @@ from apollo.config.objects.metaswitch.evpnevi import client as EvpnEviClient
 from apollo.config.objects.metaswitch.evpnevirt import client as EvpnEviRtClient
 from apollo.config.objects.metaswitch.evpnipvrf import client as EvpnIpVrfClient
 from apollo.config.objects.metaswitch.evpnipvrfrt import client as EvpnIpVrfRtClient
+from infra.common.glopts import GlobalOptions
 import apollo.config.store as store
 import apollo.config.utils as utils
 
@@ -138,6 +139,9 @@ def __create(node):
 
     # Commit the Batch
     BatchClient.Commit(node)
+
+    if not utils.IsDol() and GlobalOptions.netagent:
+        SubnetClient.UpdateHostInterfaces(node)
 
     # Start separate batch for mirror
     # so that mapping gets programmed before mirror

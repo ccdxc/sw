@@ -461,9 +461,12 @@ def ReadObject(obj, expApiStatus = types_pb2.API_STATUS_OK):
         if not resps:
             return types_pb2.API_STATUS_NOT_FOUND
         for j in resps:
-            if j['meta']['uuid'] == obj.UUID.UuidStr:
-                found = True
-                ret = obj.ValidateJSONSpec(j)
+            if hasattr(j['meta'], 'uuid'):
+                if j['meta']['uuid'] == obj.UUID.UuidStr:
+                    found = True
+                    ret = obj.ValidateJSONSpec(j)
+                else:
+                    logger.error('uuid not found in - ', j)
         # positive case. obj found and valid
         if expApiStatus == types_pb2.API_STATUS_OK:
             if found and ret:
