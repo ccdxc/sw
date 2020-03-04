@@ -123,6 +123,11 @@ handle_lif_stats:
 
     ATOMIC_INC_VAL_2(r1, r3, r4, r5, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes), 1)
 
+    #update ecn marked packet counter
+    bbne            CAPRI_KEY_FIELD(to_s7_stats_info, np_ecn_marked_packets), 1, done
+    addi            r3, r2, LIF_STATS_RX_RDMA_ECN_PACKETS_OFFSET // BD slot
+    ATOMIC_INC_VAL_1(r1, r3, r4, r5, 1)
+
 #endif
 
 done:
