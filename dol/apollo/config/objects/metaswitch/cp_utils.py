@@ -1,7 +1,9 @@
 #! /usr/bin/python3
 import evpn_pb2 as evpn_pb2
+import types_pb2 as types_pb2
+import struct
 
-def GetRTType(RTType):    
+def GetRTType(RTType):
     if RTType == 'import':
         return evpn_pb2.EVPN_RT_IMPORT
     elif RTType == 'export':
@@ -19,10 +21,15 @@ def GetRT(RT):
         rt_str = rt_str+chr(int(x,16))
     return bytes(rt_str, 'utf-8')
 
-def GetEVPNCfg(EVPNCfg):    
+def GetEVPNCfg(EVPNCfg):
     if EVPNCfg == 'auto':
         return evpn_pb2.EVPN_CFG_AUTO
     elif EVPNCfg == 'manual':
         return evpn_pb2.EVPN_CFG_MANUAL
     else:
         return evpn_pb2.EVPN_CFG_INVALID
+
+def IPv4EndianReverse(ipaddr):
+    if ipaddr.Af == types_pb2.IP_AF_INET:
+       u32 = ipaddr.V4Addr
+       ipaddr.V4Addr = struct.unpack("<I", struct.pack(">I", u32))[0]

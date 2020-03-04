@@ -94,8 +94,9 @@ node:
               rrclient      : false
               holdtime      : 90
               keepalive     : 30
+              password      : test
               bgppeeraf:
-                - peeraddr  : 10.1.1.2
+                  peeraddr  : 10.1.1.2
                   localaddr : 0.0.0.0
                   afi       : ipv4
                   safi      : unicast
@@ -103,14 +104,16 @@ node:
             - peeraddr      : 11.1.1.2
               localaddr     : 0.0.0.0
               adminstate    : 1
+              remoteasn     : 100
               sendcomm      : true
               sendextcomm   : true
               connectretry  : 5
               rrclient      : false
               holdtime      : 90
               keepalive     : 30
+              password      : test
               bgppeeraf:
-                - peeraddr  : 11.1.1.2
+                  peeraddr  : 11.1.1.2
                   localaddr : 0.0.0.0
                   afi       : ipv4
                   safi      : unicast
@@ -118,14 +121,16 @@ node:
             - peeraddr      : 2.2.2.2
               localaddr     : 1.1.1.1
               adminstate    : 1
+              remoteasn     : 100
               sendcomm      : true
               sendextcomm   : true
               connectretry  : 5
               rrclient      : false
               holdtime      : 90
               keepalive     : 30
+              password      : test
               bgppeeraf:
-                - peeraddr  : 2.2.2.2
+                  peeraddr  : 2.2.2.2
                   localaddr : 1.1.1.1
                   afi       : l2vpn
                   safi      : evpn
@@ -133,14 +138,16 @@ node:
             - peeraddr      : 10.1.1.3
               localaddr     : 1.1.1.1
               adminstate    : 1
+              remoteasn     : 100
               sendcomm      : true
               sendextcomm   : true
               connectretry  : 5
               rrclient      : false
               holdtime      : 90
               keepalive     : 30
+              password      : test
               bgppeeraf:
-                - peeraddr  : 10.1.1.3
+                  peeraddr  : 10.1.1.3
                   localaddr : 1.1.1.1
                   afi       : l2vpn
                   safi      : evpn
@@ -162,6 +169,12 @@ node:
               evpnevi:
                 - id     : 1
                   parent-id : 1  # associate this evpnevi to the respective subnet
+                  rttype : import_export
+                  autort : manual
+                  autord : auto
+                  encap  : vxlan
+                - id     : 2
+                  parent-id : 2  # associate this evpnevi to the respective subnet
                   rttype : import_export
                   autort : manual
                   autord : auto
@@ -222,14 +235,14 @@ node:
               direction : bidir
           nat46 : false
           evpnipvrf:
-            - id    : 1
-              parent-id : 1
-              vni   : 200
-              autord : auto
+            - id        : 1
+              parent-id : 2
+              vni       : 200
+              autord    : auto
           evpnipvrfrt:
-            - id     : 1
-              parent-id : 1
-              rttype : import_export
-              rt     : 00:02:00:00:00:00:00:c8
+            - id        : 1
+              parent-id : 2
+              rttype    : import_export
+              rt        : 00:02:00:00:00:00:00:c8
 
 

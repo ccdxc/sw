@@ -35,6 +35,7 @@ from apollo.config.objects.metaswitch.evpnevirt import client as EvpnEviRtClient
 from apollo.config.objects.metaswitch.evpnipvrf import client as EvpnIpVrfClient
 from apollo.config.objects.metaswitch.evpnipvrfrt import client as EvpnIpVrfRtClient
 from infra.common.glopts import GlobalOptions
+from apollo.config.store import client as EzAccessStoreClient
 import apollo.config.store as store
 import apollo.config.utils as utils
 
@@ -130,6 +131,14 @@ def __create(node):
 
     # Create Device Object
     DeviceClient.CreateObjects(node)
+
+    if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+        # Cannot extend batch across controlplane hijacked objects
+        # when Overlay routing is enabled 
+        # Commit the Batch
+        BatchClient.Commit(node)
+        # Start a new Batch
+        BatchClient.Start(node)
 
     # Create Interface Objects
     InterfaceClient.CreateObjects(node)

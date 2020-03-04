@@ -315,11 +315,11 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     proto_spec->set_sendextcomm(true);
     proto_spec->set_password("test");
     if (lo) {
-    proto_spec->set_keepalive(10);
-    proto_spec->set_holdtime(30);
+    proto_spec->set_keepalive(30);
+    proto_spec->set_holdtime(90);
     } else {
-    proto_spec->set_keepalive(3);
-    proto_spec->set_holdtime(9);
+    proto_spec->set_keepalive(30);
+    proto_spec->set_holdtime(90);
     }
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );

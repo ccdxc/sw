@@ -48,8 +48,7 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.VPCId = spec.Id
-        if spec.VNI:
-            spec.VNI = self.VNI
+        spec.VNI = self.VNI
         spec.AutoRD = cp_utils.GetEVPNCfg(self.AutoRD)
         if self.RD:
             spec.RD = self.RD

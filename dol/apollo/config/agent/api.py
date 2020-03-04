@@ -320,13 +320,13 @@ class ApolloAgentClient:
         self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
                                                            self.__channel, 'BGPPeerAf')
         self.__stubs[ObjectTypes.BGP_EVPN_EVI] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnEviSpec')
+                                                    self.__channel, 'EvpnEvi')
         self.__stubs[ObjectTypes.BGP_EVPN_EVI_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnEviRtSpec')
+                                                    self.__channel, 'EvpnEviRt')
         self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnIpVrfSpec')
+                                                    self.__channel, 'EvpnIpVrf')
         self.__stubs[ObjectTypes.BGP_EVPN_IP_VRF_RT] = ClientStub(evpn_pb2_grpc.EvpnSvcStub,
-                                                    self.__channel, 'EvpnIpVrfRtSpec')
+                                                    self.__channel, 'EvpnIpVrfRt')
         self.__stubs[ObjectTypes.STATIC_ROUTE] = ClientStub(cp_route_pb2_grpc.CPRouteSvcStub,
                                                         self.__channel, 'CPStaticRoute')
         return

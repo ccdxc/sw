@@ -11,6 +11,7 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 import bgp_pb2 as bgp_pb2
+import apollo.config.objects.metaswitch.cp_utils as cp_utils
 
 class BgpPeerAfObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
@@ -80,6 +81,11 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         utils.GetRpcIPAddr(self.LocalAddr, spec.LocalAddr)
         utils.GetRpcIPAddr(self.PeerAddr, spec.PeerAddr)
+
+        # Metaswitch treats IPv4 address as an array - so requires it in Network order
+        cp_utils.IPv4EndianReverse(spec.LocalAddr)
+        cp_utils.IPv4EndianReverse(spec.PeerAddr)
+
         spec.Afi = self.GetAfi()
         spec.Safi = self.GetSafi()
         spec.Disable = self.Disable
