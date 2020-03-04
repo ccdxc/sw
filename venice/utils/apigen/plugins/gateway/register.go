@@ -3976,6 +3976,7 @@ func init() {
 	reg.RegisterFunc("isObjNamespaced", isObjNamespaced)
 	reg.RegisterFunc("getProxyPaths", common.GetProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
+	reg.RegisterFunc("HasPrefix", strings.HasPrefix)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
 	reg.RegisterFunc("TrimPrefix", strings.TrimPrefix)
 	reg.RegisterFunc("ToLower", strings.ToLower)

@@ -25,7 +25,6 @@ def process_response(req_msg, resp_msg):
             print ("Spec: PeerAddr    : %s" % long2ip(socket.ntohl(spec.PeerAddr.V4Addr)))
             print ("Spec: Afi         : %s" % spec.Afi)
             print ("Spec: Safi        : %s" % spec.Safi)
-            print ("Spec: Disable     : %s" % spec.Disable)
             print ("Spec: NexthopSelf : %s" % spec.NexthopSelf)
             print ("Spec: DefaultOrig : %s" % spec.DefaultOrig)
     else:
@@ -42,7 +41,6 @@ def create_peer_af():
     req_msg.LocalAddr.V4Addr = laddr
     req_msg.Afi = afi
     req_msg.Safi= safi
-    req_msg.Disable = disable
     req_msg.NexthopSelf = 0 
     req_msg.DefaultOrig = 0 
     resp = stub.BGPPeerAfCreate(req)     
@@ -59,43 +57,42 @@ def update_peer_af():
     req_msg.LocalAddr.V4Addr = laddr
     req_msg.Afi = afi
     req_msg.Safi= safi
-    req_msg.Disable = disable
-    req_msg.NexthopSelf = false
-    req_msg.DefaultOrig = false 
+    req_msg.NexthopSelf = 0
+    req_msg.DefaultOrig = 0
     resp = stub.BGPPeerAfUpdate(req)
     process_response(req, resp)
     return
 
 def get_peer_af():
-    req = bgp_pb2.BGPPeerAfRequest()
+    req = bgp_pb2.BGPPeerAfGetRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid
-    req_msg.PeerAddr.Af = 1
-    req_msg.PeerAddr.V4Addr = paddr
-    req_msg.LocalAddr.Af = 1
-    req_msg.LocalAddr.V4Addr = laddr
-    req_msg.Afi = afi
-    req_msg.Safi= safi
+    #req_msg.Id = uuid
+    req_msg.Key.PeerAddr.Af = 1
+    req_msg.Key.PeerAddr.V4Addr = paddr
+    req_msg.Key.LocalAddr.Af = 1
+    req_msg.Key.LocalAddr.V4Addr = laddr
+    req_msg.Key.Afi = afi
+    req_msg.Key.Safi= safi
     resp =  stub.BGPPeerAfGet(req)     
     process_response(req, resp)
     return
 
 def get_all_peer_af():
-    req = bgp_pb2.BGPPeerAfRequest()
+    req = bgp_pb2.BGPPeerAfGetRequest()
     resp =  stub.BGPPeerAfGet(req)     
     process_response(req, resp)
     return
 
 def delete_peer_af():
-    req = bgp_pb2.BGPPeerAfRequest()
+    req = bgp_pb2.BGPPeerAfDeleteRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid
-    req_msg.PeerAddr.Af = 1
-    req_msg.PeerAddr.V4Addr = paddr
-    req_msg.LocalAddr.Af = 1
-    req_msg.LocalAddr.V4Addr = laddr
-    req_msg.Afi = afi
-    req_msg.Safi= safi
+    #req_msg.Id = uuid
+    req_msg.Key.PeerAddr.Af = 1
+    req_msg.Key.PeerAddr.V4Addr = paddr
+    req_msg.Key.LocalAddr.Af = 1
+    req_msg.Key.LocalAddr.V4Addr = laddr
+    req_msg.Key.Afi = afi
+    req_msg.Key.Safi= safi
     resp = stub.BGPPeerAfDelete(req)     
     process_response(req, resp)
     return
@@ -109,8 +106,8 @@ def init():
     return
 
 def print_help():
-    print ("Usage: %s <opt> UUID local_addr peer_addr afi<1/25> safi<1/70> disable<0/1>" % sys.argv[0])
-    print ("eg   : %s 1 100 10.1.1.1 10.1.1.2 1 1 0" %sys.argv[0])
+    print ("Usage: %s <opt> UUID local_addr peer_addr afi<1/25> safi<1/70> " % sys.argv[0])
+    print ("eg   : %s 1 100 10.1.1.1 10.1.1.2 1 1 " %sys.argv[0])
     print ("opt  : 1: create\t2: update\t3: delete\t4: get")
     print ("empty get does get-all")
     return
@@ -122,12 +119,10 @@ def read_args():
     global paddr
     global afi 
     global safi 
-    global disable
     laddr = 0
     paddr = 0
     afi=1
     safi=1
-    disable=0
 
     opt = int (sys.argv[1])
     if args > 1:
@@ -140,8 +135,6 @@ def read_args():
         afi = int (sys.argv[5])
     if args > 5:
         safi = int (sys.argv[6])
-    if args > 6:
-        disable = int (sys.argv[7])
     return
 
 def ip2long(ip):

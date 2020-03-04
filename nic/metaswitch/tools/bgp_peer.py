@@ -75,31 +75,31 @@ def update_peer():
     return
 
 def get_peer():
-    req = bgp_pb2.BGPPeerRequest()
+    req = bgp_pb2.BGPPeerGetRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid
-    req_msg.PeerAddr.Af = 1
-    req_msg.PeerAddr.V4Addr = paddr
-    req_msg.LocalAddr.Af = 1
-    req_msg.LocalAddr.V4Addr = laddr
+    #req_msg.Id = uuid
+    req_msg.Key.PeerAddr.Af = 1
+    req_msg.Key.PeerAddr.V4Addr = paddr
+    req_msg.Key.LocalAddr.Af = 1
+    req_msg.Key.LocalAddr.V4Addr = laddr
     resp =  stub.BGPPeerGet(req)     
     process_response(req, resp)
     return
 
 def get_all_peer():
-    req = bgp_pb2.BGPPeerRequest()
+    req = bgp_pb2.BGPPeerGetRequest()
     resp =  stub.BGPPeerGet(req)     
     process_response(req, resp)
     return
 
 def delete_peer():
-    req = bgp_pb2.BGPPeerRequest()
+    req = bgp_pb2.BGPPeerDeleteRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid 
-    req_msg.PeerAddr.Af = 1
-    req_msg.PeerAddr.V4Addr = paddr
-    req_msg.LocalAddr.Af = 1
-    req_msg.LocalAddr.V4Addr = laddr
+    #req_msg.Id = uuid 
+    req_msg.Key.PeerAddr.Af = 1
+    req_msg.Key.PeerAddr.V4Addr = paddr
+    req_msg.Key.LocalAddr.Af = 1
+    req_msg.Key.LocalAddr.V4Addr = laddr
     resp = stub.BGPPeerDelete(req)     
     process_response(req, resp)
     return

@@ -78,8 +78,8 @@
 namespace pds_ms {
 
 static void
-populate_lim_vrf_spec (ms_vrf_id_t      vrf_id,
-                       pds::LimVrfSpec& req)
+populate_lim_vrf_spec (ms_vrf_id_t vrf_id,
+                       LimVrfSpec& req)
 {
     std::string vrf_name;
 
@@ -149,7 +149,7 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
         pds_ms_evpn_rtm_join(&conf, rtm_index);
     }
     // LIM VRF Row Update
-    pds::LimVrfSpec lim_vrf_spec;
+    LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vrf_id, lim_vrf_spec);
     pds_ms_set_amb_lim_vrf (lim_vrf_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 

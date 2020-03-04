@@ -9,8 +9,9 @@
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "qb0mib.h"
 using namespace pds_ms;
+using namespace types;
 
-namespace pds {
+namespace pds_ms {
 NBB_VOID
 update_bgp_route_map_table (NBB_ULONG correlator)
 {
@@ -59,7 +60,7 @@ update_bgp_route_map_table (NBB_ULONG correlator)
 }
 
 static NBB_VOID 
-bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
+bgp_peer_fill_keys_(BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
 {
     auto bgp_peer_uuid_obj = (bgp_peer_uuid_obj_t*) uuid_obj;
     auto localaddr = req.mutable_localaddr();
@@ -75,7 +76,7 @@ bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
 }
 
 static NBB_VOID 
-bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
+bgp_peer_af_fill_keys_(BGPPeerAfSpec& req,
                        bgp_peer_af_uuid_obj_t* uuid_obj)
 {
     auto bgp_peer_af_uuid_obj = (bgp_peer_af_uuid_obj_t*) uuid_obj;
@@ -84,8 +85,8 @@ bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
 
     auto peeraddr = req.mutable_peeraddr();
     ip_addr_to_spec(&bgp_peer_af_uuid_obj->ms_id().peer_ip, peeraddr);
-    req.set_afi((pds::BGPAfi) bgp_peer_af_uuid_obj->ms_id().afi);
-    req.set_safi((pds::BGPSafi) bgp_peer_af_uuid_obj->ms_id().safi);
+    req.set_afi((BGPAfi) bgp_peer_af_uuid_obj->ms_id().afi);
+    req.set_safi((BGPSafi) bgp_peer_af_uuid_obj->ms_id().safi);
 
 
     PDS_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
@@ -110,7 +111,7 @@ populate_disable_peer_af_spec (BGPPeerSpec &peer, BGPPeerAfSpec *peer_af,
 }
 
 NBB_VOID
-bgp_rm_ent_pre_get(pds::BGPSpec &req, pds::BGPGetResponse* resp, NBB_VOID* kh)
+bgp_rm_ent_pre_get(BGPSpec &req, BGPGetResponse* resp, NBB_VOID* kh)
 {
     BGPKeyHandle *key_spec = (BGPKeyHandle *)kh;
 
@@ -119,7 +120,7 @@ bgp_rm_ent_pre_get(pds::BGPSpec &req, pds::BGPGetResponse* resp, NBB_VOID* kh)
 }
 
 NBB_VOID
-bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp, NBB_VOID* kh)
+bgp_peer_pre_get(BGPPeerSpec &req, BGPPeerGetResponse* resp, NBB_VOID* kh)
 {
     pds_obj_key_t uuid = {0};
     BGPPeerKeyHandle *key_handle = (BGPPeerKeyHandle *)kh;
@@ -150,7 +151,7 @@ bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp, NBB_VOID*
 }
 
 NBB_VOID
-bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
+bgp_peer_pre_set(BGPPeerSpec &req, NBB_LONG row_status,
                  NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
@@ -248,8 +249,8 @@ bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data)
 }
 
 NBB_VOID
-bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
-                          pds::BGPPeerAfGetResponse* resp,
+bgp_peer_afi_safi_pre_get(BGPPeerAfSpec &req,
+                          BGPPeerAfGetResponse* resp,
                           NBB_VOID* kh)
 {
     pds_obj_key_t uuid = {0};
@@ -283,7 +284,7 @@ bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
 }
 
 NBB_VOID
-bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
+bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
@@ -369,7 +370,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
 }
 
 NBB_VOID
-bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
+bgp_rm_ent_pre_set (BGPSpec &req, NBB_LONG row_status,
                     NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     AdminState state = ADMIN_STATE_ENABLE;
@@ -393,24 +394,24 @@ bgp_rm_ent_pre_set (pds::BGPSpec &req, NBB_LONG row_status,
 }
 
 NBB_VOID
-bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
+bgp_peer_get_fill_func (BGPPeerSpec&   req,
                         NBB_ULONG*           oid)
 {
     oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
 }
 
 NBB_VOID
-bgp_peer_status_get_fill_func (pds::BGPPeerSpec&   req,
+bgp_peer_status_get_fill_func (BGPPeerSpec&   req,
                                NBB_ULONG*            oid)
 {
     oid[AMB_BGP_PRST_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
 }
 
 NBB_VOID 
-bgp_peer_set_fill_func (pds::BGPPeerSpec&   req,
-                    AMB_GEN_IPS         *mib_msg,
-                    AMB_BGP_PEER        *v_amb_bgp_peer,
-                    NBB_LONG            row_status)
+bgp_peer_set_fill_func (BGPPeerSpec& req,
+                        AMB_GEN_IPS  *mib_msg,
+                        AMB_BGP_PEER *v_amb_bgp_peer,
+                        NBB_LONG     row_status)
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -448,8 +449,7 @@ bgp_peer_set_fill_func (pds::BGPPeerSpec&   req,
 }
 
 NBB_VOID
-bgp_rm_ent_get_fill_func (pds::BGPSpec &req,
-                          NBB_ULONG *oid)
+bgp_rm_ent_get_fill_func (BGPSpec &req, NBB_ULONG *oid)
 {
     pds_obj_key_t uuid = {0};
     bgp_uuid_obj_t::ms_id_t entity_index = 0;
@@ -476,10 +476,10 @@ bgp_rm_ent_get_fill_func (pds::BGPSpec &req,
 }
 
 NBB_VOID 
-bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
-                      AMB_GEN_IPS        *mib_msg,
-                      AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent,
-                      NBB_LONG           row_status)
+bgp_rm_ent_set_fill_func (BGPSpec        &req,
+                          AMB_GEN_IPS    *mib_msg,
+                          AMB_BGP_RM_ENT *v_amb_bgp_rm_ent,
+                          NBB_LONG       row_status)
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -535,17 +535,17 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
 }
 
 NBB_VOID
-bgp_peer_af_get_fill_func (pds::BGPPeerAfSpec    &req,
+bgp_peer_af_get_fill_func (BGPPeerAfSpec    &req,
                            NBB_ULONG*             oid)
 {
     oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
 }
 
 NBB_VOID 
-bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec    &req,
-                       AMB_GEN_IPS           *mib_msg,
-                       AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
-                       NBB_LONG               row_status)
+bgp_peer_af_set_fill_func (BGPPeerAfSpec         &req,
+                           AMB_GEN_IPS           *mib_msg,
+                           AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
+                           NBB_LONG              row_status)
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -571,9 +571,6 @@ bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec    &req,
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_DISABLE);
     
 }
-} // end namespace pds
-
-namespace pds_ms {
 
 // Fill bgpRmEntTable: AMB_BGP_RM_ENT
 NBB_VOID

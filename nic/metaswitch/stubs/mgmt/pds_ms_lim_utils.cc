@@ -9,14 +9,13 @@
 #include "nic/apollo/core/trace.hpp"
 #include "lim_mgmt_if.h"
 
-using namespace pds_ms;
-namespace pds {
+namespace pds_ms {
 
 NBB_VOID
-lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
+lim_l3_if_addr_pre_set(LimInterfaceAddrSpec &req, NBB_LONG row_status,
                        NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
-    pds_ms::pds_ms_config_t  conf = {0};
+    pds_ms_config_t  conf = {0};
     conf.correlator  = correlator;
     conf.row_status  = row_status;
     conf.entity_index = PDS_MS_RTM_DEF_ENT_INDEX;
@@ -30,7 +29,7 @@ lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
     PDS_TRACE_INFO("%s redistributed connected rule to BGP for address %s",
                    (row_status == AMB_ROW_DESTROY) ? "Removing" : "Adding",
                    ipaddr2str(&lo_ipaddr));
-    pds_ms::pds_ms_rtm_redis_connected (&conf);
+    pds_ms_rtm_redis_connected (&conf);
 }
 
 
@@ -106,9 +105,7 @@ lim_sw_intf_fill_func (LimInterfaceSpec&    req,
     oid[AMB_LIM_SOFTWIF_IF_TYPE] = ms_if_subtype;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_SOFTWIF_TYPE);
 }
-} // end of namespace pds
 
-namespace pds_ms {
 
 // Fill limEntTable: AMB_LIM_ENT
 NBB_VOID

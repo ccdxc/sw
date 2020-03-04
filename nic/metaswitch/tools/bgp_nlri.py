@@ -50,7 +50,7 @@ def process_response(req_msg, resp_msg):
     return
 
 def get_nlri():
-    req = bgp_pb2.BGPNLRIPrefixRequest()
+    req = bgp_pb2.BGPNLRIPrefixGetRequest()
     resp =  stub.BGPNLRIPrefixGet(req)     
     process_response(req, resp)
     return

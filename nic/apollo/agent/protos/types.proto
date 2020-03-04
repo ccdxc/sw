@@ -311,3 +311,10 @@ message FlowKey {
     MACFlowKey MACFlowKey = 2;
   }
 }
+
+// admin state of control plane objects
+enum AdminState {
+  ADMIN_STATE_NONE    = 0;
+  ADMIN_STATE_ENABLE  = 1;
+  ADMIN_STATE_DISABLE = 2;
+}

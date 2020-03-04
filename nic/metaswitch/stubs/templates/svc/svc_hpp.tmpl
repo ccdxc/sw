@@ -5,12 +5,20 @@
  */
 {{$pkgName := .Package}}
 {{$fileName := .GetName}}
+{{$extFileName := "" }}
+{{if (HasPrefix .GetName "internal_") }}
+  {{$extFileName = TrimPrefix .GetName "internal_" }}
+  {{$pkgName = "pds"}}
+{{end}}
+
 #ifndef __{{TrimSuffix .GetName ".proto" | ToUpper}}_GEN_HPP__
 #define __{{TrimSuffix .GetName ".proto" | ToUpper}}_GEN_HPP__
-
 #include "grpc++/grpc++.h"
 #include "gen/proto/types.pb.h"
 #include "gen/proto/meta/meta.pb.h"
+{{if not (eq $extFileName "")}} 
+#include "gen/proto/{{TrimSuffix $extFileName ".proto" | ToLower}}.grpc.pb.h"
+{{end}}
 #include "gen/proto/{{TrimSuffix .GetName ".proto" | ToLower}}.grpc.pb.h"
 
 using grpc::Status;

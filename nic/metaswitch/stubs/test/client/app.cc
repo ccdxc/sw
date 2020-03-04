@@ -34,7 +34,7 @@ using grpc::Status;
 using namespace pds_ms_test;
 using namespace std;
 using namespace pds;
-using namespace pds_ms;
+using namespace types;
 
 static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
@@ -44,7 +44,7 @@ static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub> g_route_stub_;
-static unique_ptr<pds::CPTestSvc::Stub>  g_cp_test_stub_;
+static unique_ptr<pds_ms::CPTestSvc::Stub>  g_cp_test_stub_;
 
 // Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
@@ -91,16 +91,16 @@ static void create_intf_proto_grpc (bool lo=false) {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     if (lo) {
-        pds_if.key = msidx2pdsobjkey(k_lo_if_id);
+        pds_if.key = pds_ms::msidx2pdsobjkey(k_lo_if_id);
         pds_if.type = PDS_IF_TYPE_LOOPBACK;
         pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
         pds_if.loopback_if_info.ip_prefix.len = 32;
     } else {
-        pds_if.key = msidx2pdsobjkey(k_l3_if_id);
+        pds_if.key = pds_ms::msidx2pdsobjkey(k_l3_if_id);
         pds_if.type = PDS_IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
-        pds_if.l3_if_info.vpc = msidx2pdsobjkey(k_underlay_vpc_id);
+        pds_if.l3_if_info.vpc = pds_ms::msidx2pdsobjkey(k_underlay_vpc_id);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
         pds_if.l3_if_info.ip_prefix.len = 16;
@@ -126,7 +126,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.mutable_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -147,8 +147,8 @@ static void create_evpn_evi_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi UUID is same as subnet UUID
-    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi UUID is same as subnet UUID
+    proto_spec->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     if (g_test_conf_.manual_rd) {
         proto_spec->set_autord (pds::EVPN_CFG_MANUAL);
         proto_spec->set_rd((const char *)g_test_conf_.rd, 8);
@@ -161,7 +161,6 @@ static void create_evpn_evi_proto_grpc () {
         proto_spec->set_autort (pds::EVPN_CFG_AUTO);
     }
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
-    proto_spec->set_encap (pds::EVPN_ENCAP_VXLAN);
 
     printf ("Pushing EVPN Evi proto...\n");
     ret_status = g_evpn_stub_->EvpnEviCreate(&context, request, &response);
@@ -180,8 +179,8 @@ static void create_evpn_evi_rt_proto_grpc () {
     Status              ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
-    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    proto_spec->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
@@ -196,13 +195,13 @@ static void create_evpn_evi_rt_proto_grpc () {
 }
 
 static void create_l2f_test_mac_ip_proto_grpc () {
-    CPL2fTestCreateSpec request;
-    CPL2fTestResponse   response;
+    pds_ms::CPL2fTestCreateSpec request;
+    pds_ms::CPL2fTestResponse   response;
     ClientContext       context;
     Status              ret_status;
 
     auto proto_spec = &request;
-    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     auto ipaddr = proto_spec->mutable_ipaddr();
     ipaddr->set_af(types::IP_AF_INET);
     ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
@@ -227,7 +226,7 @@ static void create_route_proto_grpc () {
     Status                ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
+    proto_spec->set_routetableid(pds_ms::msidx2pdsobjkey(k_underlay_rttbl_id).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
     dest_addr->set_v4addr (0);
@@ -264,8 +263,8 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
-    proto_spec->set_state(pds::ADMIN_STATE_ENABLE);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_state(ADMIN_STATE_ENABLE);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -341,7 +340,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_bgp_id).id);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -359,7 +358,6 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
         proto_spec->set_afi(pds::BGP_AFI_L2VPN);
         proto_spec->set_safi(pds::BGP_SAFI_EVPN);
     }
-    proto_spec->set_disable(false);
     proto_spec->set_nexthopself(false);
     proto_spec->set_defaultorig(false);
 
@@ -415,7 +413,7 @@ static void create_subnet_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid(pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -448,8 +446,8 @@ static void create_underlay_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_v4routetableid(pds_ms::msidx2pdsobjkey(k_underlay_rttbl_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_NONE);
@@ -473,8 +471,8 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_overlay_rttbl_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_v4routetableid(pds_ms::msidx2pdsobjkey(k_overlay_rttbl_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -497,8 +495,8 @@ static void create_evpn_ip_vrf_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_vni(200);
 
     printf ("Pushing EVPN IP VRF proto...\n");
@@ -518,8 +516,8 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     proto_spec->set_rt(rt,8);
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
@@ -618,7 +616,7 @@ int main(int argc, char** argv)
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
-    g_cp_test_stub_ = CPTestSvc::NewStub (channel);
+    g_cp_test_stub_ = pds_ms::CPTestSvc::NewStub (channel);
 
     if (argc == 1)
     {

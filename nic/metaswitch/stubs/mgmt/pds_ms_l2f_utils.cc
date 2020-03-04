@@ -78,9 +78,7 @@ pds_ms_l2f_stub_create (pds_ms_config_t *conf)
     NBB_TRC_EXIT();
     return;
 }
-}
 
-namespace pds {
 types::ApiStatus
 l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec *req, CPL2fTestResponse *resp)
 {
@@ -121,4 +119,4 @@ l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec *req, CPL2fTestResponse *re
 
     return types::ApiStatus::API_STATUS_OK;
 }
-} // end namespace pds
+} // end namespace pds_ms

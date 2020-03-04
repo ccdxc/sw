@@ -27,7 +27,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	msapi "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	msapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

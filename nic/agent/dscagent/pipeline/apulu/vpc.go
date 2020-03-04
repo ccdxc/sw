@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	msTypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -88,10 +88,9 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	evrfReq := msTypes.EvpnIpVrfRequest{
 		Request: []*msTypes.EvpnIpVrfSpec{
 			{
-				Id:     uid.Bytes(),
-				VPCId:  uid.Bytes(),
-				VNI:    vrf.Spec.VxLANVNI,
-				AutoRD: msTypes.EvpnCfg_EVPN_CFG_AUTO,
+				Id:    uid.Bytes(),
+				VPCId: uid.Bytes(),
+				VNI:   vrf.Spec.VxLANVNI,
 			},
 		},
 	}
@@ -261,10 +260,9 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		evrfReq := msTypes.EvpnIpVrfRequest{
 			Request: []*msTypes.EvpnIpVrfSpec{
 				{
-					Id:     uid.Bytes(),
-					VPCId:  uid.Bytes(),
-					VNI:    vrf.Spec.VxLANVNI,
-					AutoRD: msTypes.EvpnCfg_EVPN_CFG_AUTO,
+					Id:    uid.Bytes(),
+					VPCId: uid.Bytes(),
+					VNI:   vrf.Spec.VxLANVNI,
 				},
 			},
 		}

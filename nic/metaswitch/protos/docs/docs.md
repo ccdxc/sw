@@ -41,6 +41,17 @@
   
   
 
+- [pdsa.proto](#pdsa.proto)
+    - [GlobalOpts](#venice.GlobalOpts)
+    - [PdsaFields](#venice.PdsaFields)
+  
+  
+    - [File-level Extensions](#pdsa.proto-extensions)
+    - [File-level Extensions](#pdsa.proto-extensions)
+    - [File-level Extensions](#pdsa.proto-extensions)
+  
+  
+
 - [gogo.proto](#gogo.proto)
   
   
@@ -116,17 +127,6 @@
   
   
 
-- [pdsa.proto](#pdsa.proto)
-    - [GlobalOpts](#venice.GlobalOpts)
-    - [PdsaFields](#venice.PdsaFields)
-  
-  
-    - [File-level Extensions](#pdsa.proto-extensions)
-    - [File-level Extensions](#pdsa.proto-extensions)
-    - [File-level Extensions](#pdsa.proto-extensions)
-  
-  
-
 - [timestamp.proto](#timestamp.proto)
     - [Timestamp](#google.protobuf.Timestamp)
   
@@ -171,6 +171,7 @@
     - [RuleMatch](#types.RuleMatch)
   
     - [AddressType](#types.AddressType)
+    - [AdminState](#types.AdminState)
     - [ApiStatus](#types.ApiStatus)
     - [EncapType](#types.EncapType)
     - [IPAF](#types.IPAF)
@@ -182,175 +183,165 @@
   
   
 
-- [common.proto](#common.proto)
-  
-    - [AdminState](#pds.AdminState)
-  
-  
-  
-
-- [bgp.proto](#bgp.proto)
-    - [BGP](#pds.BGP)
-    - [BGPDeleteRequest](#pds.BGPDeleteRequest)
-    - [BGPDeleteResponse](#pds.BGPDeleteResponse)
-    - [BGPGetRequest](#pds.BGPGetRequest)
-    - [BGPGetResponse](#pds.BGPGetResponse)
-    - [BGPKeyHandle](#pds.BGPKeyHandle)
-    - [BGPNLRIPrefix](#pds.BGPNLRIPrefix)
-    - [BGPNLRIPrefixGetRequest](#pds.BGPNLRIPrefixGetRequest)
-    - [BGPNLRIPrefixGetResponse](#pds.BGPNLRIPrefixGetResponse)
-    - [BGPNLRIPrefixKey](#pds.BGPNLRIPrefixKey)
-    - [BGPNLRIPrefixKeyHandle](#pds.BGPNLRIPrefixKeyHandle)
-    - [BGPNLRIPrefixStatus](#pds.BGPNLRIPrefixStatus)
-    - [BGPPeer](#pds.BGPPeer)
-    - [BGPPeerAf](#pds.BGPPeerAf)
-    - [BGPPeerAfDeleteRequest](#pds.BGPPeerAfDeleteRequest)
-    - [BGPPeerAfDeleteResponse](#pds.BGPPeerAfDeleteResponse)
-    - [BGPPeerAfGetRequest](#pds.BGPPeerAfGetRequest)
-    - [BGPPeerAfGetResponse](#pds.BGPPeerAfGetResponse)
-    - [BGPPeerAfKey](#pds.BGPPeerAfKey)
-    - [BGPPeerAfKeyHandle](#pds.BGPPeerAfKeyHandle)
-    - [BGPPeerAfRequest](#pds.BGPPeerAfRequest)
-    - [BGPPeerAfResponse](#pds.BGPPeerAfResponse)
-    - [BGPPeerAfSpec](#pds.BGPPeerAfSpec)
-    - [BGPPeerAfStatus](#pds.BGPPeerAfStatus)
-    - [BGPPeerDeleteRequest](#pds.BGPPeerDeleteRequest)
-    - [BGPPeerDeleteResponse](#pds.BGPPeerDeleteResponse)
-    - [BGPPeerGetRequest](#pds.BGPPeerGetRequest)
-    - [BGPPeerGetResponse](#pds.BGPPeerGetResponse)
-    - [BGPPeerKey](#pds.BGPPeerKey)
-    - [BGPPeerKeyHandle](#pds.BGPPeerKeyHandle)
-    - [BGPPeerRequest](#pds.BGPPeerRequest)
-    - [BGPPeerResponse](#pds.BGPPeerResponse)
-    - [BGPPeerSpec](#pds.BGPPeerSpec)
-    - [BGPPeerStatus](#pds.BGPPeerStatus)
-    - [BGPRequest](#pds.BGPRequest)
-    - [BGPResponse](#pds.BGPResponse)
-    - [BGPSpec](#pds.BGPSpec)
-    - [BGPStatus](#pds.BGPStatus)
-  
-    - [BGPAfi](#pds.BGPAfi)
-    - [BGPPeerRRClient](#pds.BGPPeerRRClient)
-    - [BGPPeerState](#pds.BGPPeerState)
-    - [BGPSafi](#pds.BGPSafi)
-    - [NLRISrc](#pds.NLRISrc)
-  
-  
-    - [BGPSvc](#pds.BGPSvc)
-  
-
-- [cp_route.proto](#cp_route.proto)
-    - [CPRoute](#pds.CPRoute)
-    - [CPRouteGetRequest](#pds.CPRouteGetRequest)
-    - [CPRouteGetResponse](#pds.CPRouteGetResponse)
-    - [CPRouteKey](#pds.CPRouteKey)
-    - [CPRouteKeyHandle](#pds.CPRouteKeyHandle)
-    - [CPRouteSpec](#pds.CPRouteSpec)
-    - [CPRouteStatus](#pds.CPRouteStatus)
-    - [CPStaticRoute](#pds.CPStaticRoute)
-    - [CPStaticRouteDeleteRequest](#pds.CPStaticRouteDeleteRequest)
-    - [CPStaticRouteDeleteResponse](#pds.CPStaticRouteDeleteResponse)
-    - [CPStaticRouteGetRequest](#pds.CPStaticRouteGetRequest)
-    - [CPStaticRouteGetResponse](#pds.CPStaticRouteGetResponse)
-    - [CPStaticRouteKey](#pds.CPStaticRouteKey)
-    - [CPStaticRouteKeyHandle](#pds.CPStaticRouteKeyHandle)
-    - [CPStaticRouteRequest](#pds.CPStaticRouteRequest)
-    - [CPStaticRouteResponse](#pds.CPStaticRouteResponse)
-    - [CPStaticRouteSpec](#pds.CPStaticRouteSpec)
-    - [CPStaticRouteStatus](#pds.CPStaticRouteStatus)
-  
-    - [RouteProtocol](#pds.RouteProtocol)
-    - [RouteType](#pds.RouteType)
-  
-  
-    - [CPRouteSvc](#pds.CPRouteSvc)
-  
-
 - [cp_test.proto](#cp_test.proto)
-    - [CPL2fTestCreateSpec](#pds.CPL2fTestCreateSpec)
-    - [CPL2fTestDeleteSpec](#pds.CPL2fTestDeleteSpec)
-    - [CPL2fTestResponse](#pds.CPL2fTestResponse)
+    - [CPL2fTestCreateSpec](#pds_ms.CPL2fTestCreateSpec)
+    - [CPL2fTestDeleteSpec](#pds_ms.CPL2fTestDeleteSpec)
+    - [CPL2fTestResponse](#pds_ms.CPL2fTestResponse)
   
   
   
-    - [CPTestSvc](#pds.CPTestSvc)
-  
-
-- [evpn.proto](#evpn.proto)
-    - [EvpnDeleteResponse](#pds.EvpnDeleteResponse)
-    - [EvpnEvi](#pds.EvpnEvi)
-    - [EvpnEviDeleteRequest](#pds.EvpnEviDeleteRequest)
-    - [EvpnEviDeleteResponse](#pds.EvpnEviDeleteResponse)
-    - [EvpnEviGetRequest](#pds.EvpnEviGetRequest)
-    - [EvpnEviGetResponse](#pds.EvpnEviGetResponse)
-    - [EvpnEviKey](#pds.EvpnEviKey)
-    - [EvpnEviKeyHandle](#pds.EvpnEviKeyHandle)
-    - [EvpnEviRequest](#pds.EvpnEviRequest)
-    - [EvpnEviResponse](#pds.EvpnEviResponse)
-    - [EvpnEviRt](#pds.EvpnEviRt)
-    - [EvpnEviRtDeleteRequest](#pds.EvpnEviRtDeleteRequest)
-    - [EvpnEviRtDeleteResponse](#pds.EvpnEviRtDeleteResponse)
-    - [EvpnEviRtGetRequest](#pds.EvpnEviRtGetRequest)
-    - [EvpnEviRtGetResponse](#pds.EvpnEviRtGetResponse)
-    - [EvpnEviRtKey](#pds.EvpnEviRtKey)
-    - [EvpnEviRtKeyHandle](#pds.EvpnEviRtKeyHandle)
-    - [EvpnEviRtRequest](#pds.EvpnEviRtRequest)
-    - [EvpnEviRtResponse](#pds.EvpnEviRtResponse)
-    - [EvpnEviRtSpec](#pds.EvpnEviRtSpec)
-    - [EvpnEviRtStatus](#pds.EvpnEviRtStatus)
-    - [EvpnEviSpec](#pds.EvpnEviSpec)
-    - [EvpnEviStatus](#pds.EvpnEviStatus)
-    - [EvpnIpVrf](#pds.EvpnIpVrf)
-    - [EvpnIpVrfDeleteRequest](#pds.EvpnIpVrfDeleteRequest)
-    - [EvpnIpVrfDeleteResponse](#pds.EvpnIpVrfDeleteResponse)
-    - [EvpnIpVrfGetRequest](#pds.EvpnIpVrfGetRequest)
-    - [EvpnIpVrfGetResponse](#pds.EvpnIpVrfGetResponse)
-    - [EvpnIpVrfKey](#pds.EvpnIpVrfKey)
-    - [EvpnIpVrfKeyHandle](#pds.EvpnIpVrfKeyHandle)
-    - [EvpnIpVrfRequest](#pds.EvpnIpVrfRequest)
-    - [EvpnIpVrfResponse](#pds.EvpnIpVrfResponse)
-    - [EvpnIpVrfRt](#pds.EvpnIpVrfRt)
-    - [EvpnIpVrfRtDeleteRequest](#pds.EvpnIpVrfRtDeleteRequest)
-    - [EvpnIpVrfRtDeleteResponse](#pds.EvpnIpVrfRtDeleteResponse)
-    - [EvpnIpVrfRtGetRequest](#pds.EvpnIpVrfRtGetRequest)
-    - [EvpnIpVrfRtGetResponse](#pds.EvpnIpVrfRtGetResponse)
-    - [EvpnIpVrfRtKey](#pds.EvpnIpVrfRtKey)
-    - [EvpnIpVrfRtKeyHandle](#pds.EvpnIpVrfRtKeyHandle)
-    - [EvpnIpVrfRtRequest](#pds.EvpnIpVrfRtRequest)
-    - [EvpnIpVrfRtResponse](#pds.EvpnIpVrfRtResponse)
-    - [EvpnIpVrfRtSpec](#pds.EvpnIpVrfRtSpec)
-    - [EvpnIpVrfRtStatus](#pds.EvpnIpVrfRtStatus)
-    - [EvpnIpVrfSpec](#pds.EvpnIpVrfSpec)
-    - [EvpnIpVrfStatus](#pds.EvpnIpVrfStatus)
-    - [EvpnMacIp](#pds.EvpnMacIp)
-    - [EvpnMacIpGetRequest](#pds.EvpnMacIpGetRequest)
-    - [EvpnMacIpGetResponse](#pds.EvpnMacIpGetResponse)
-    - [EvpnMacIpKey](#pds.EvpnMacIpKey)
-    - [EvpnMacIpKeyHandle](#pds.EvpnMacIpKeyHandle)
-    - [EvpnMacIpStatus](#pds.EvpnMacIpStatus)
-  
-    - [EvpnCfg](#pds.EvpnCfg)
-    - [EvpnEncaps](#pds.EvpnEncaps)
-    - [EvpnRtType](#pds.EvpnRtType)
-    - [EvpnSource](#pds.EvpnSource)
-  
-  
-    - [EvpnSvc](#pds.EvpnSvc)
+    - [CPTestSvc](#pds_ms.CPTestSvc)
   
 
 - [internal.proto](#internal.proto)
-    - [BgpRouteMapSpec](#pds.BgpRouteMapSpec)
-    - [EvpnBdSpec](#pds.EvpnBdSpec)
-    - [EvpnIfBindCfgSpec](#pds.EvpnIfBindCfgSpec)
-    - [LimGenIrbIfSpec](#pds.LimGenIrbIfSpec)
-    - [LimInterfaceAddrSpec](#pds.LimInterfaceAddrSpec)
-    - [LimInterfaceCfgSpec](#pds.LimInterfaceCfgSpec)
-    - [LimInterfaceSpec](#pds.LimInterfaceSpec)
-    - [LimVrfSpec](#pds.LimVrfSpec)
+    - [BgpRouteMapSpec](#pds_ms.BgpRouteMapSpec)
+    - [EvpnBdSpec](#pds_ms.EvpnBdSpec)
+    - [EvpnIfBindCfgSpec](#pds_ms.EvpnIfBindCfgSpec)
+    - [LimGenIrbIfSpec](#pds_ms.LimGenIrbIfSpec)
+    - [LimInterfaceAddrSpec](#pds_ms.LimInterfaceAddrSpec)
+    - [LimInterfaceCfgSpec](#pds_ms.LimInterfaceCfgSpec)
+    - [LimInterfaceSpec](#pds_ms.LimInterfaceSpec)
+    - [LimVrfSpec](#pds_ms.LimVrfSpec)
   
-    - [LimIntfType](#pds.LimIntfType)
+    - [LimIntfType](#pds_ms.LimIntfType)
   
   
+  
+
+- [internal_bgp.proto](#internal_bgp.proto)
+    - [BGP](#pds_ms.BGP)
+    - [BGPDeleteRequest](#pds_ms.BGPDeleteRequest)
+    - [BGPDeleteResponse](#pds_ms.BGPDeleteResponse)
+    - [BGPGetRequest](#pds_ms.BGPGetRequest)
+    - [BGPGetResponse](#pds_ms.BGPGetResponse)
+    - [BGPKeyHandle](#pds_ms.BGPKeyHandle)
+    - [BGPNLRIPrefix](#pds_ms.BGPNLRIPrefix)
+    - [BGPNLRIPrefixGetRequest](#pds_ms.BGPNLRIPrefixGetRequest)
+    - [BGPNLRIPrefixGetResponse](#pds_ms.BGPNLRIPrefixGetResponse)
+    - [BGPNLRIPrefixKey](#pds_ms.BGPNLRIPrefixKey)
+    - [BGPNLRIPrefixKeyHandle](#pds_ms.BGPNLRIPrefixKeyHandle)
+    - [BGPNLRIPrefixStatus](#pds_ms.BGPNLRIPrefixStatus)
+    - [BGPPeer](#pds_ms.BGPPeer)
+    - [BGPPeerAf](#pds_ms.BGPPeerAf)
+    - [BGPPeerAfDeleteRequest](#pds_ms.BGPPeerAfDeleteRequest)
+    - [BGPPeerAfDeleteResponse](#pds_ms.BGPPeerAfDeleteResponse)
+    - [BGPPeerAfGetRequest](#pds_ms.BGPPeerAfGetRequest)
+    - [BGPPeerAfGetResponse](#pds_ms.BGPPeerAfGetResponse)
+    - [BGPPeerAfKey](#pds_ms.BGPPeerAfKey)
+    - [BGPPeerAfKeyHandle](#pds_ms.BGPPeerAfKeyHandle)
+    - [BGPPeerAfRequest](#pds_ms.BGPPeerAfRequest)
+    - [BGPPeerAfResponse](#pds_ms.BGPPeerAfResponse)
+    - [BGPPeerAfSpec](#pds_ms.BGPPeerAfSpec)
+    - [BGPPeerAfStatus](#pds_ms.BGPPeerAfStatus)
+    - [BGPPeerDeleteRequest](#pds_ms.BGPPeerDeleteRequest)
+    - [BGPPeerDeleteResponse](#pds_ms.BGPPeerDeleteResponse)
+    - [BGPPeerGetRequest](#pds_ms.BGPPeerGetRequest)
+    - [BGPPeerGetResponse](#pds_ms.BGPPeerGetResponse)
+    - [BGPPeerKey](#pds_ms.BGPPeerKey)
+    - [BGPPeerKeyHandle](#pds_ms.BGPPeerKeyHandle)
+    - [BGPPeerRequest](#pds_ms.BGPPeerRequest)
+    - [BGPPeerResponse](#pds_ms.BGPPeerResponse)
+    - [BGPPeerSpec](#pds_ms.BGPPeerSpec)
+    - [BGPPeerStatus](#pds_ms.BGPPeerStatus)
+    - [BGPRequest](#pds_ms.BGPRequest)
+    - [BGPResponse](#pds_ms.BGPResponse)
+    - [BGPSpec](#pds_ms.BGPSpec)
+    - [BGPStatus](#pds_ms.BGPStatus)
+  
+    - [BGPAfi](#pds_ms.BGPAfi)
+    - [BGPPeerRRClient](#pds_ms.BGPPeerRRClient)
+    - [BGPPeerState](#pds_ms.BGPPeerState)
+    - [BGPSafi](#pds_ms.BGPSafi)
+    - [NLRISrc](#pds_ms.NLRISrc)
+  
+  
+    - [BGPSvc](#pds_ms.BGPSvc)
+  
+
+- [internal_cp_route.proto](#internal_cp_route.proto)
+    - [CPRoute](#pds_ms.CPRoute)
+    - [CPRouteGetRequest](#pds_ms.CPRouteGetRequest)
+    - [CPRouteGetResponse](#pds_ms.CPRouteGetResponse)
+    - [CPRouteKey](#pds_ms.CPRouteKey)
+    - [CPRouteKeyHandle](#pds_ms.CPRouteKeyHandle)
+    - [CPRouteStatus](#pds_ms.CPRouteStatus)
+    - [CPStaticRoute](#pds_ms.CPStaticRoute)
+    - [CPStaticRouteDeleteRequest](#pds_ms.CPStaticRouteDeleteRequest)
+    - [CPStaticRouteDeleteResponse](#pds_ms.CPStaticRouteDeleteResponse)
+    - [CPStaticRouteGetRequest](#pds_ms.CPStaticRouteGetRequest)
+    - [CPStaticRouteGetResponse](#pds_ms.CPStaticRouteGetResponse)
+    - [CPStaticRouteKey](#pds_ms.CPStaticRouteKey)
+    - [CPStaticRouteKeyHandle](#pds_ms.CPStaticRouteKeyHandle)
+    - [CPStaticRouteRequest](#pds_ms.CPStaticRouteRequest)
+    - [CPStaticRouteResponse](#pds_ms.CPStaticRouteResponse)
+    - [CPStaticRouteSpec](#pds_ms.CPStaticRouteSpec)
+    - [CPStaticRouteStatus](#pds_ms.CPStaticRouteStatus)
+  
+    - [RouteProtocol](#pds_ms.RouteProtocol)
+    - [RouteType](#pds_ms.RouteType)
+  
+  
+    - [CPRouteSvc](#pds_ms.CPRouteSvc)
+  
+
+- [internal_evpn.proto](#internal_evpn.proto)
+    - [EvpnEvi](#pds_ms.EvpnEvi)
+    - [EvpnEviDeleteRequest](#pds_ms.EvpnEviDeleteRequest)
+    - [EvpnEviDeleteResponse](#pds_ms.EvpnEviDeleteResponse)
+    - [EvpnEviGetRequest](#pds_ms.EvpnEviGetRequest)
+    - [EvpnEviGetResponse](#pds_ms.EvpnEviGetResponse)
+    - [EvpnEviKey](#pds_ms.EvpnEviKey)
+    - [EvpnEviKeyHandle](#pds_ms.EvpnEviKeyHandle)
+    - [EvpnEviRequest](#pds_ms.EvpnEviRequest)
+    - [EvpnEviResponse](#pds_ms.EvpnEviResponse)
+    - [EvpnEviRt](#pds_ms.EvpnEviRt)
+    - [EvpnEviRtDeleteRequest](#pds_ms.EvpnEviRtDeleteRequest)
+    - [EvpnEviRtDeleteResponse](#pds_ms.EvpnEviRtDeleteResponse)
+    - [EvpnEviRtGetRequest](#pds_ms.EvpnEviRtGetRequest)
+    - [EvpnEviRtGetResponse](#pds_ms.EvpnEviRtGetResponse)
+    - [EvpnEviRtKey](#pds_ms.EvpnEviRtKey)
+    - [EvpnEviRtKeyHandle](#pds_ms.EvpnEviRtKeyHandle)
+    - [EvpnEviRtRequest](#pds_ms.EvpnEviRtRequest)
+    - [EvpnEviRtResponse](#pds_ms.EvpnEviRtResponse)
+    - [EvpnEviRtSpec](#pds_ms.EvpnEviRtSpec)
+    - [EvpnEviRtStatus](#pds_ms.EvpnEviRtStatus)
+    - [EvpnEviSpec](#pds_ms.EvpnEviSpec)
+    - [EvpnEviStatus](#pds_ms.EvpnEviStatus)
+    - [EvpnIpVrf](#pds_ms.EvpnIpVrf)
+    - [EvpnIpVrfDeleteRequest](#pds_ms.EvpnIpVrfDeleteRequest)
+    - [EvpnIpVrfDeleteResponse](#pds_ms.EvpnIpVrfDeleteResponse)
+    - [EvpnIpVrfGetRequest](#pds_ms.EvpnIpVrfGetRequest)
+    - [EvpnIpVrfGetResponse](#pds_ms.EvpnIpVrfGetResponse)
+    - [EvpnIpVrfKey](#pds_ms.EvpnIpVrfKey)
+    - [EvpnIpVrfKeyHandle](#pds_ms.EvpnIpVrfKeyHandle)
+    - [EvpnIpVrfRequest](#pds_ms.EvpnIpVrfRequest)
+    - [EvpnIpVrfResponse](#pds_ms.EvpnIpVrfResponse)
+    - [EvpnIpVrfRt](#pds_ms.EvpnIpVrfRt)
+    - [EvpnIpVrfRtDeleteRequest](#pds_ms.EvpnIpVrfRtDeleteRequest)
+    - [EvpnIpVrfRtDeleteResponse](#pds_ms.EvpnIpVrfRtDeleteResponse)
+    - [EvpnIpVrfRtGetRequest](#pds_ms.EvpnIpVrfRtGetRequest)
+    - [EvpnIpVrfRtGetResponse](#pds_ms.EvpnIpVrfRtGetResponse)
+    - [EvpnIpVrfRtKey](#pds_ms.EvpnIpVrfRtKey)
+    - [EvpnIpVrfRtKeyHandle](#pds_ms.EvpnIpVrfRtKeyHandle)
+    - [EvpnIpVrfRtRequest](#pds_ms.EvpnIpVrfRtRequest)
+    - [EvpnIpVrfRtResponse](#pds_ms.EvpnIpVrfRtResponse)
+    - [EvpnIpVrfRtSpec](#pds_ms.EvpnIpVrfRtSpec)
+    - [EvpnIpVrfRtStatus](#pds_ms.EvpnIpVrfRtStatus)
+    - [EvpnIpVrfSpec](#pds_ms.EvpnIpVrfSpec)
+    - [EvpnIpVrfStatus](#pds_ms.EvpnIpVrfStatus)
+    - [EvpnMacIp](#pds_ms.EvpnMacIp)
+    - [EvpnMacIpGetRequest](#pds_ms.EvpnMacIpGetRequest)
+    - [EvpnMacIpGetResponse](#pds_ms.EvpnMacIpGetResponse)
+    - [EvpnMacIpKey](#pds_ms.EvpnMacIpKey)
+    - [EvpnMacIpKeyHandle](#pds_ms.EvpnMacIpKeyHandle)
+    - [EvpnMacIpStatus](#pds_ms.EvpnMacIpStatus)
+  
+    - [EvpnCfg](#pds_ms.EvpnCfg)
+    - [EvpnRtType](#pds_ms.EvpnRtType)
+    - [EvpnSource](#pds_ms.EvpnSource)
+  
+  
+    - [EvpnSvc](#pds_ms.EvpnSvc)
   
 
 - [Scalar Value Types](#scalar-value-types)
@@ -965,6 +956,85 @@ methods, and PUT verb for idempotent methods instead of the default POST.
 
 
 
+<a name="pdsa.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## pdsa.proto
+
+
+
+<a name="venice.GlobalOpts"/>
+
+### GlobalOpts
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| OidLen | [string](#string) |  |  |
+| Mib | [string](#string) |  |  |
+| FillFn | [string](#string) |  |  |
+| ActionFn | [string](#string) |  |  |
+| UpdateForDelete | [bool](#bool) |  |  |
+| SpecMsg | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="venice.PdsaFields"/>
+
+### PdsaFields
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Field | [string](#string) |  |  |
+| SetFieldFn | [string](#string) |  |  |
+| GetFieldFn | [string](#string) |  |  |
+| SetKeyOidIndex | [string](#string) |  |  |
+| GetKeyOidIndex | [string](#string) |  |  |
+| SetKeyOidFn | [string](#string) |  |  |
+| GetKeyOidFn | [string](#string) |  |  |
+| SetKeyOidLenIndex | [string](#string) |  |  |
+| GetKeyOidLenIndex | [string](#string) |  |  |
+| IgnoreIfEmpty | [bool](#bool) |  |  |
+| IsZeroIPValid | [bool](#bool) |  |  |
+| SetKeyOidAddrIndex | [string](#string) |  |  |
+| GetKeyOidAddrIndex | [string](#string) |  |  |
+| SetKeyOidAddrTypeIndex | [string](#string) |  |  |
+| GetKeyOidAddrTypeIndex | [string](#string) |  |  |
+| AddrTypeFieldName | [string](#string) |  |  |
+| AddrLenFieldName | [string](#string) |  |  |
+| KeysMsg | [string](#string) |  |  |
+| IsInternalField | [bool](#bool) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+
+<a name="pdsa.proto-extensions"/>
+
+### File-level Extensions
+| Extension | Type | Base | Number | Description |
+| --------- | ---- | ---- | ------ | ----------- |
+| pdsaFields | PdsaFields | google.protobuf.FieldOptions | 83400 |  |
+| pdsaGetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82401 |  |
+| pdsaSetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82400 |  |
+
+ 
+
+ 
+
+
+
 <a name="gogo.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1050,85 +1120,6 @@ methods, and PUT verb for idempotent methods instead of the default POST.
 | unsafe_marshaler | bool | google.protobuf.MessageOptions | 64023 |  |
 | unsafe_unmarshaler | bool | google.protobuf.MessageOptions | 64024 |  |
 | verbose_equal | bool | google.protobuf.MessageOptions | 64004 |  |
-
- 
-
- 
-
-
-
-<a name="pdsa.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## pdsa.proto
-
-
-
-<a name="venice.GlobalOpts"/>
-
-### GlobalOpts
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| OidLen | [string](#string) |  |  |
-| Mib | [string](#string) |  |  |
-| FillFn | [string](#string) |  |  |
-| ActionFn | [string](#string) |  |  |
-| UpdateForDelete | [bool](#bool) |  |  |
-| SpecMsg | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="venice.PdsaFields"/>
-
-### PdsaFields
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Field | [string](#string) |  |  |
-| SetFieldFn | [string](#string) |  |  |
-| GetFieldFn | [string](#string) |  |  |
-| SetKeyOidIndex | [string](#string) |  |  |
-| GetKeyOidIndex | [string](#string) |  |  |
-| SetKeyOidFn | [string](#string) |  |  |
-| GetKeyOidFn | [string](#string) |  |  |
-| SetKeyOidLenIndex | [string](#string) |  |  |
-| GetKeyOidLenIndex | [string](#string) |  |  |
-| IgnoreIfEmpty | [bool](#bool) |  |  |
-| IsZeroIPValid | [bool](#bool) |  |  |
-| SetKeyOidAddrIndex | [string](#string) |  |  |
-| GetKeyOidAddrIndex | [string](#string) |  |  |
-| SetKeyOidAddrTypeIndex | [string](#string) |  |  |
-| GetKeyOidAddrTypeIndex | [string](#string) |  |  |
-| AddrTypeFieldName | [string](#string) |  |  |
-| AddrLenFieldName | [string](#string) |  |  |
-| KeysMsg | [string](#string) |  |  |
-| IsInternalField | [bool](#bool) |  |  |
-
-
-
-
-
- 
-
- 
-
-
-<a name="pdsa.proto-extensions"/>
-
-### File-level Extensions
-| Extension | Type | Base | Number | Description |
-| --------- | ---- | ---- | ------ | ----------- |
-| pdsaFields | PdsaFields | google.protobuf.FieldOptions | 83400 |  |
-| pdsaGetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82401 |  |
-| pdsaSetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82400 |  |
 
  
 
@@ -1742,6 +1733,19 @@ Public/Internet or Service/Infra address
 
 
 
+<a name="types.AdminState"/>
+
+### AdminState
+admin state of control plane objects
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ADMIN_STATE_NONE | 0 |  |
+| ADMIN_STATE_ENABLE | 1 |  |
+| ADMIN_STATE_DISABLE | 2 |  |
+
+
+
 <a name="types.ApiStatus"/>
 
 ### ApiStatus
@@ -1856,1115 +1860,6 @@ Security rule action is one of the below
 
 
 
-<a name="common.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## common.proto
-
-
- 
-
-
-<a name="pds.AdminState"/>
-
-### AdminState
-Admin State
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ADMIN_STATE_NONE | 0 |  |
-| ADMIN_STATE_ENABLE | 1 |  |
-| ADMIN_STATE_DISABLE | 2 |  |
-
-
- 
-
- 
-
- 
-
-
-
-<a name="bgp.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## bgp.proto
-
-
-
-<a name="pds.BGP"/>
-
-### BGP
-BGP object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [BGPSpec](#pds.BGPSpec) |  |  |
-| Status | [BGPStatus](#pds.BGPStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPDeleteRequest"/>
-
-### BGPDeleteRequest
-BGP delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPKeyHandle](#pds.BGPKeyHandle) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPDeleteResponse"/>
-
-### BGPDeleteResponse
-BGP delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPGetRequest"/>
-
-### BGPGetRequest
-BGP get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPKeyHandle](#pds.BGPKeyHandle) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPGetResponse"/>
-
-### BGPGetResponse
-BGP get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGP](#pds.BGP) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPKeyHandle"/>
-
-### BGPKeyHandle
-BGP KeyHandle used in Get/Delete
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefix"/>
-
-### BGPNLRIPrefix
-BGP NLRI prefix object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Status | [BGPNLRIPrefixStatus](#pds.BGPNLRIPrefixStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefixGetRequest"/>
-
-### BGPNLRIPrefixGetRequest
-BGP NLRI prefix get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPNLRIPrefixKeyHandle](#pds.BGPNLRIPrefixKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefixGetResponse"/>
-
-### BGPNLRIPrefixGetResponse
-BGP NLRI prefix get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGPNLRIPrefix](#pds.BGPNLRIPrefix) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefixKey"/>
-
-### BGPNLRIPrefixKey
-BGP NLRI prefix key object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-| Prefix | [bytes](#bytes) |  | prefix in NLRI |
-| PrefixLen | [uint32](#uint32) |  | prefix length |
-| RouteSource | [NLRISrc](#pds.NLRISrc) |  | route source (learned from BGP peer or AFM) |
-| RouteSourceIndex | [uint32](#uint32) |  | route source index |
-| PathID | [uint32](#uint32) |  | path ID |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefixKeyHandle"/>
-
-### BGPNLRIPrefixKeyHandle
-BGP NLRI key handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Key | [BGPNLRIPrefixKey](#pds.BGPNLRIPrefixKey) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPNLRIPrefixStatus"/>
-
-### BGPNLRIPrefixStatus
-BGP NLRI prefix table
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-| Prefix | [bytes](#bytes) |  | prefix in NLRI |
-| PrefixLen | [uint32](#uint32) |  | prefix length |
-| RouteSource | [NLRISrc](#pds.NLRISrc) |  | route source (learned from BGP peer or AFM) |
-| RouteSourceIndex | [uint32](#uint32) |  | route source index |
-| PathID | [uint32](#uint32) |  | path ID |
-| BestRoute | [bool](#bool) |  | chosen as BGP best route or not |
-| ASPathStr | [bytes](#bytes) |  | AS path string |
-| PathOrigId | [bytes](#bytes) |  | originator ID |
-| NextHopAddr | [bytes](#bytes) |  | next-hop address |
-
-
-
-
-
-
-<a name="pds.BGPPeer"/>
-
-### BGPPeer
-BGP peer object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [BGPPeerSpec](#pds.BGPPeerSpec) |  |  |
-| Status | [BGPPeerStatus](#pds.BGPPeerStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAf"/>
-
-### BGPPeerAf
-BGP peer AF object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [BGPPeerAfSpec](#pds.BGPPeerAfSpec) |  |  |
-| Status | [BGPPeerAfStatus](#pds.BGPPeerAfStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfDeleteRequest"/>
-
-### BGPPeerAfDeleteRequest
-BGP peer af delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerAfKeyHandle](#pds.BGPPeerAfKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfDeleteResponse"/>
-
-### BGPPeerAfDeleteResponse
-BGP peer delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfGetRequest"/>
-
-### BGPPeerAfGetRequest
-BGP peer af get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerAfKeyHandle](#pds.BGPPeerAfKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfGetResponse"/>
-
-### BGPPeerAfGetResponse
-BGP peer AF get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGPPeerAf](#pds.BGPPeerAf) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfKey"/>
-
-### BGPPeerAfKey
-BGP peer key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfKeyHandle"/>
-
-### BGPPeerAfKeyHandle
-BGP peer delete spec
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [BGPPeerAfKey](#pds.BGPPeerAfKey) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfRequest"/>
-
-### BGPPeerAfRequest
-BGP peer AF create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerAfSpec](#pds.BGPPeerAfSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfResponse"/>
-
-### BGPPeerAfResponse
-BGP peer AF create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfSpec"/>
-
-### BGPPeerAfSpec
-BGP peer AF configurations
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of peer AF config |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-| NexthopSelf | [bool](#bool) |  | enforce this router to set self as next-hop for advertised routes |
-| DefaultOrig | [bool](#bool) |  | originate a default route to this peer |
-| Disable | [bool](#bool) |  | internal only enable/disable address families. this field is internally mapped with create/delete request |
-
-
-
-
-
-
-<a name="pds.BGPPeerAfStatus"/>
-
-### BGPPeerAfStatus
-BGP peer AF status
-
-
-
-
-
-
-<a name="pds.BGPPeerDeleteRequest"/>
-
-### BGPPeerDeleteRequest
-BGP peer delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerKeyHandle](#pds.BGPPeerKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerDeleteResponse"/>
-
-### BGPPeerDeleteResponse
-BGP peer delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerGetRequest"/>
-
-### BGPPeerGetRequest
-BGP peer get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerKeyHandle](#pds.BGPPeerKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerGetResponse"/>
-
-### BGPPeerGetResponse
-BGP peer get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGPPeer](#pds.BGPPeer) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerKey"/>
-
-### BGPPeerKey
-BGP peer key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
-
-
-
-
-
-
-<a name="pds.BGPPeerKeyHandle"/>
-
-### BGPPeerKeyHandle
-BGP peer get and delete key handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [BGPPeerKey](#pds.BGPPeerKey) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerRequest"/>
-
-### BGPPeerRequest
-BGP peer create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPPeerSpec](#pds.BGPPeerSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerResponse"/>
-
-### BGPPeerResponse
-BGP peer create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPPeerSpec"/>
-
-### BGPPeerSpec
-BGP peer configurations
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of peer |
-| State | [AdminState](#pds.AdminState) |  | peer enable/disable admin state. if peer is not enabled then local router must not initiate connections to the neighbor and must not respond to TCP connections attempts from neighbor |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address. control plane chooses the local IP address of the session if an all 0 IP address is provided |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
-| RemoteASN | [uint32](#uint32) |  | remote 4-byte AS number |
-| SendComm | [bool](#bool) |  | send regular community attributes to neighbor |
-| SendExtComm | [bool](#bool) |  | send extended community attributes to neighbor |
-| RRClient | [BGPPeerRRClient](#pds.BGPPeerRRClient) |  | peer is a route reflector client |
-| ConnectRetry | [uint32](#uint32) |  | BGP session connect-retry timer in seconds |
-| HoldTime | [uint32](#uint32) |  | BGP session holdtime timer in seconds |
-| KeepAlive | [uint32](#uint32) |  | BGP session keepalive timer in seconds |
-| Password | [bytes](#bytes) |  | MD5 authentication |
-
-
-
-
-
-
-<a name="pds.BGPPeerStatus"/>
-
-### BGPPeerStatus
-BGP peer status
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Status | [BGPPeerState](#pds.BGPPeerState) |  | BGP session status |
-| PrevStatus | [BGPPeerState](#pds.BGPPeerState) |  | BGP session previous status |
-| LastErrorRcvd | [bytes](#bytes) |  | last error received |
-| LastErrorSent | [bytes](#bytes) |  | Last error sent |
-
-
-
-
-
-
-<a name="pds.BGPRequest"/>
-
-### BGPRequest
-BGP create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [BGPSpec](#pds.BGPSpec) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPResponse"/>
-
-### BGPResponse
-BGP create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGPStatus](#pds.BGPStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPSpec"/>
-
-### BGPSpec
-BGP configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of BGP config |
-| LocalASN | [uint32](#uint32) |  | the local autonomous system number |
-| RouterId | [fixed32](#fixed32) |  | router ID for this bgp instance |
-| ClusterId | [fixed32](#fixed32) |  | cluster ID of the local router. if not configured, router ID will be used as cluster ID |
-| State | [AdminState](#pds.AdminState) |  | internal-only fields |
-
-
-
-
-
-
-<a name="pds.BGPStatus"/>
-
-### BGPStatus
-operational status of BGP
-
-
-
-
-
- 
-
-
-<a name="pds.BGPAfi"/>
-
-### BGPAfi
-BGP address family identifier
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BGP_AFI_NONE | 0 |  |
-| BGP_AFI_IPV4 | 1 |  |
-| BGP_AFI_IPV6 | 2 |  |
-| BGP_AFI_L2VPN | 25 |  |
-
-
-
-<a name="pds.BGPPeerRRClient"/>
-
-### BGPPeerRRClient
-BGP peer RR client
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BGP_PEER_RR_NONE | 0 |  |
-| BGP_PEER_RR_CLIENT | 1 |  |
-| BGP_PEER_RR_MESHED_CLIENT | 2 |  |
-
-
-
-<a name="pds.BGPPeerState"/>
-
-### BGPPeerState
-BGP peer last_state
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BGP_PEER_STATE_NONE | 0 |  |
-| BGP_PEER_STATE_IDLE | 1 |  |
-| BGP_PEER_STATE_CONNECT | 2 |  |
-| BGP_PEER_STATE_ACTIVE | 3 |  |
-| BGP_PEER_STATE_OPENSENT | 4 |  |
-| BGP_PEER_STATE_OPENCONFIRM | 5 |  |
-| BGP_PEER_STATE_ESTABLISHED | 6 |  |
-
-
-
-<a name="pds.BGPSafi"/>
-
-### BGPSafi
-BGP sub-address family identitfier
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BGP_SAFI_NONE | 0 |  |
-| BGP_SAFI_UNICAST | 1 |  |
-| BGP_SAFI_MULTICAST | 2 |  |
-| BGP_SAFI_BOTH | 3 |  |
-| BGP_SAFI_LABEL | 4 |  |
-| BGP_SAFI_VPLS | 65 |  |
-| BGP_SAFI_EVPN | 70 |  |
-| BGP_SAFI_MPLS_BGP_VPN | 128 |  |
-| BGP_SAFI_PRIVATE | 241 |  |
-
-
-
-<a name="pds.NLRISrc"/>
-
-### NLRISrc
-NLRI source
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| NLRI_NONE | 0 |  |
-| NLRI_PEER | 1 | learned from peer |
-| NLRI_AFM | 2 | learned from AFM |
-| NLRI_SELF | 3 | created by itself |
-
-
- 
-
- 
-
-
-<a name="pds.BGPSvc"/>
-
-### BGPSvc
-bgp service definition
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| BGPCreate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
-| BGPUpdate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
-| BGPDelete | [BGPDeleteRequest](#pds.BGPDeleteRequest) | [BGPDeleteResponse](#pds.BGPDeleteRequest) |  |
-| BGPGet | [BGPGetRequest](#pds.BGPGetRequest) | [BGPGetResponse](#pds.BGPGetRequest) |  |
-| BGPPeerCreate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerUpdate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerDelete | [BGPPeerDeleteRequest](#pds.BGPPeerDeleteRequest) | [BGPPeerDeleteResponse](#pds.BGPPeerDeleteRequest) |  |
-| BGPPeerGet | [BGPPeerGetRequest](#pds.BGPPeerGetRequest) | [BGPPeerGetResponse](#pds.BGPPeerGetRequest) |  |
-| BGPPeerAfCreate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds.BGPPeerAfRequest) |  |
-| BGPPeerAfUpdate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds.BGPPeerAfRequest) |  |
-| BGPPeerAfDelete | [BGPPeerAfDeleteRequest](#pds.BGPPeerAfDeleteRequest) | [BGPPeerAfDeleteResponse](#pds.BGPPeerAfDeleteRequest) |  |
-| BGPPeerAfGet | [BGPPeerAfGetRequest](#pds.BGPPeerAfGetRequest) | [BGPPeerAfGetResponse](#pds.BGPPeerAfGetRequest) |  |
-| BGPNLRIPrefixGet | [BGPNLRIPrefixGetRequest](#pds.BGPNLRIPrefixGetRequest) | [BGPNLRIPrefixGetResponse](#pds.BGPNLRIPrefixGetRequest) |  |
-
- 
-
-
-
-<a name="cp_route.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## cp_route.proto
-------------------------------------------------------------------------------
-{C} Copyright 2019 Pensando Systems Inc. All rights reserved
-protobuf specification for Control Plane Route Table
-------------------------------------------------------------------------------
-
-
-<a name="pds.CPRoute"/>
-
-### CPRoute
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [CPRouteSpec](#pds.CPRouteSpec) |  |  |
-| Status | [CPRouteStatus](#pds.CPRouteStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.CPRouteGetRequest"/>
-
-### CPRouteGetRequest
-control plane route table get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [CPRouteKeyHandle](#pds.CPRouteKeyHandle) | repeated | requests |
-
-
-
-
-
-
-<a name="pds.CPRouteGetResponse"/>
-
-### CPRouteGetResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [CPRoute](#pds.CPRoute) | repeated |  |
-
-
-
-
-
-
-<a name="pds.CPRouteKey"/>
-
-### CPRouteKey
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| RouteTableId | [uint32](#uint32) |  | route table id this route belongs to |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
-| DestPrefixLen | [uint32](#uint32) |  | destination address prefix |
-| NHAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
-| IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
-| Proto | [RouteProtocol](#pds.RouteProtocol) |  | protocol via which the route is learned |
-
-
-
-
-
-
-<a name="pds.CPRouteKeyHandle"/>
-
-### CPRouteKeyHandle
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [CPRouteKey](#pds.CPRouteKey) |  |  |
-
-
-
-
-
-
-<a name="pds.CPRouteSpec"/>
-
-### CPRouteSpec
-control plane route table
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| RouteTableId | [uint32](#uint32) |  | route table id this route belongs to |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
-| DestPrefixLen | [uint32](#uint32) |  | destination address prefix |
-| NHAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
-| IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
-| Type | [RouteType](#pds.RouteType) |  | type of route |
-| Proto | [RouteProtocol](#pds.RouteProtocol) |  | protocol via which the route is learned |
-
-
-
-
-
-
-<a name="pds.CPRouteStatus"/>
-
-### CPRouteStatus
-control plane route table
-
-
-
-
-
-
-<a name="pds.CPStaticRoute"/>
-
-### CPStaticRoute
-control plane static route object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [CPStaticRouteSpec](#pds.CPStaticRouteSpec) |  |  |
-| Status | [CPStaticRouteStatus](#pds.CPStaticRouteStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteDeleteRequest"/>
-
-### CPStaticRouteDeleteRequest
-control plane route delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [CPStaticRouteKeyHandle](#pds.CPStaticRouteKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteDeleteResponse"/>
-
-### CPStaticRouteDeleteResponse
-control plane route delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteGetRequest"/>
-
-### CPStaticRouteGetRequest
-control plane route get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [CPStaticRouteKeyHandle](#pds.CPStaticRouteKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteGetResponse"/>
-
-### CPStaticRouteGetResponse
-control plane route get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [CPStaticRoute](#pds.CPStaticRoute) | repeated |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteKey"/>
-
-### CPStaticRouteKey
-control plane static route key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
-| PrefixLen | [uint32](#uint32) |  | destination address prefix length |
-| NextHopAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteKeyHandle"/>
-
-### CPStaticRouteKeyHandle
-control plane static route key handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [CPStaticRouteKey](#pds.CPStaticRouteKey) |  |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteRequest"/>
-
-### CPStaticRouteRequest
-control plane static route create, delete and update message
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [CPStaticRouteSpec](#pds.CPStaticRouteSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteResponse"/>
-
-### CPStaticRouteResponse
-response messages
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteSpec"/>
-
-### CPStaticRouteSpec
-control plane static route configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of spec |
-| RouteTableId | [bytes](#bytes) |  | route table id this route belongs to |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
-| PrefixLen | [uint32](#uint32) |  | destination address prefix length |
-| NextHopAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
-| State | [AdminState](#pds.AdminState) |  | route is enabled or not |
-| Override | [bool](#bool) |  | override admin distance |
-| AdminDist | [uint32](#uint32) |  | admin distance |
-| InterfaceId | [bytes](#bytes) |  | internal only outgoing interface UUID needed on pegasus |
-| IfIndex | [uint32](#uint32) |  |  |
-
-
-
-
-
-
-<a name="pds.CPStaticRouteStatus"/>
-
-### CPStaticRouteStatus
-status of control plane static route, if any
-
-
-
-
-
- 
-
-
-<a name="pds.RouteProtocol"/>
-
-### RouteProtocol
-route protocols
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ROUTE_PROTO_NONE | 0 |  |
-| ROUTE_PROTO_LOCAL | 2 |  |
-| ROUTE_PROTO_STATIC | 3 |  |
-| ROUTE_PROTO_BGP | 14 |  |
-
-
-
-<a name="pds.RouteType"/>
-
-### RouteType
-route type
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| ROUTE_TYPE_NONE | 0 |  |
-| ROUTE_TYPE_OTHER | 1 |  |
-| ROUTE_TYPE_REJECT | 2 |  |
-| ROUTE_TYPE_LOCAL | 3 |  |
-| ROUTE_TYPE_REMOTE | 4 |  |
-
-
- 
-
- 
-
-
-<a name="pds.CPRouteSvc"/>
-
-### CPRouteSvc
-control plane route service definition
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| CPStaticRouteCreate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
-| CPStaticRouteUpdate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
-| CPStaticRouteDelete | [CPStaticRouteDeleteRequest](#pds.CPStaticRouteDeleteRequest) | [CPStaticRouteDeleteResponse](#pds.CPStaticRouteDeleteRequest) |  |
-| CPStaticRouteGet | [CPStaticRouteGetRequest](#pds.CPStaticRouteGetRequest) | [CPStaticRouteGetResponse](#pds.CPStaticRouteGetRequest) |  |
-| CPRouteGet | [CPRouteGetRequest](#pds.CPRouteGetRequest) | [CPRouteGetResponse](#pds.CPRouteGetRequest) |  |
-
- 
-
-
-
 <a name="cp_test.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -2972,7 +1867,7 @@ control plane route service definition
 
 
 
-<a name="pds.CPL2fTestCreateSpec"/>
+<a name="pds_ms.CPL2fTestCreateSpec"/>
 
 ### CPL2fTestCreateSpec
 
@@ -2981,7 +1876,7 @@ control plane route service definition
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | SubnetId | [bytes](#bytes) |  |  |
-| IPAddr | [.types.IPAddress](#pds..types.IPAddress) |  |  |
+| IPAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
 | MACAddr | [bytes](#bytes) |  |  |
 | IfId | [uint32](#uint32) |  |  |
 
@@ -2990,7 +1885,7 @@ control plane route service definition
 
 
 
-<a name="pds.CPL2fTestDeleteSpec"/>
+<a name="pds_ms.CPL2fTestDeleteSpec"/>
 
 ### CPL2fTestDeleteSpec
 
@@ -2999,7 +1894,7 @@ control plane route service definition
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | SubnetId | [bytes](#bytes) |  |  |
-| IPAddr | [.types.IPAddress](#pds..types.IPAddress) |  |  |
+| IPAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
 | MACAddr | [bytes](#bytes) |  |  |
 
 
@@ -3007,7 +1902,7 @@ control plane route service definition
 
 
 
-<a name="pds.CPL2fTestResponse"/>
+<a name="pds_ms.CPL2fTestResponse"/>
 
 ### CPL2fTestResponse
 
@@ -3015,7 +1910,7 @@ control plane route service definition
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
 
 
 
@@ -3028,907 +1923,15 @@ control plane route service definition
  
 
 
-<a name="pds.CPTestSvc"/>
+<a name="pds_ms.CPTestSvc"/>
 
 ### CPTestSvc
 service definition
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CPL2fTestCreate | [CPL2fTestCreateSpec](#pds.CPL2fTestCreateSpec) | [CPL2fTestResponse](#pds.CPL2fTestCreateSpec) |  |
-| CPL2fTestDelete | [CPL2fTestDeleteSpec](#pds.CPL2fTestDeleteSpec) | [CPL2fTestResponse](#pds.CPL2fTestDeleteSpec) |  |
-
- 
-
-
-
-<a name="evpn.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## evpn.proto
-
-
-
-<a name="pds.EvpnDeleteResponse"/>
-
-### EvpnDeleteResponse
-EVPN EVI RT delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEvi"/>
-
-### EvpnEvi
-EVPN EVI object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [EvpnEviSpec](#pds.EvpnEviSpec) |  |  |
-| Status | [EvpnEviStatus](#pds.EvpnEviStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviDeleteRequest"/>
-
-### EvpnEviDeleteRequest
-EVPN EVI delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviKeyHandle](#pds.EvpnEviKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviDeleteResponse"/>
-
-### EvpnEviDeleteResponse
-EVPN EVI delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviGetRequest"/>
-
-### EvpnEviGetRequest
-EVPN EVI get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviKeyHandle](#pds.EvpnEviKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviGetResponse"/>
-
-### EvpnEviGetResponse
-EVPN EVI get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnEvi](#pds.EvpnEvi) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviKey"/>
-
-### EvpnEviKey
-EVPN EVI key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
-
-
-
-
-
-
-<a name="pds.EvpnEviKeyHandle"/>
-
-### EvpnEviKeyHandle
-EVPN EVI key handle for get and delete
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [EvpnEviKey](#pds.EvpnEviKey) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRequest"/>
-
-### EvpnEviRequest
-EvpnEvi create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviSpec](#pds.EvpnEviSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviResponse"/>
-
-### EvpnEviResponse
-EVPN EVI create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnEviStatus](#pds.EvpnEviStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRt"/>
-
-### EvpnEviRt
-EVPN EVI RT object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [EvpnEviRtSpec](#pds.EvpnEviRtSpec) |  |  |
-| Status | [EvpnEviRtStatus](#pds.EvpnEviRtStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtDeleteRequest"/>
-
-### EvpnEviRtDeleteRequest
-EVPN EVI RT delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviRtKeyHandle](#pds.EvpnEviRtKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtDeleteResponse"/>
-
-### EvpnEviRtDeleteResponse
-EVPN EVI RT delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtGetRequest"/>
-
-### EvpnEviRtGetRequest
-EVPN EVI RT get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviRtKeyHandle](#pds.EvpnEviRtKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtGetResponse"/>
-
-### EvpnEviRtGetResponse
-EVPN EVI RT get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnEviRt](#pds.EvpnEviRt) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtKey"/>
-
-### EvpnEviRtKey
-EVPN EVI RT key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
-| RT | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtKeyHandle"/>
-
-### EvpnEviRtKeyHandle
-EVPN EVI RT Key Handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [EvpnEviRtKey](#pds.EvpnEviRtKey) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtRequest"/>
-
-### EvpnEviRtRequest
-EvpnEviRtSpec create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnEviRtSpec](#pds.EvpnEviRtSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtResponse"/>
-
-### EvpnEviRtResponse
-EVPN EVI RT create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnEviRtStatus](#pds.EvpnEviRtStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtSpec"/>
-
-### EvpnEviRtSpec
-EVPN EVI RT Configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | spec UUID key |
-| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
-| RT | [bytes](#bytes) |  |  |
-| RTType | [EvpnRtType](#pds.EvpnRtType) |  |  |
-| EVIId | [uint32](#uint32) |  | Internal only |
-
-
-
-
-
-
-<a name="pds.EvpnEviRtStatus"/>
-
-### EvpnEviRtStatus
-operational status of EVPN EVI RT, if any
-
-
-
-
-
-
-<a name="pds.EvpnEviSpec"/>
-
-### EvpnEviSpec
-EVPN EVI configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of spec |
-| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
-| AutoRD | [EvpnCfg](#pds.EvpnCfg) |  | manual or auto route-distinguisher |
-| RD | [bytes](#bytes) |  | route-distinguisher, in case of manual configuration |
-| AutoRT | [EvpnCfg](#pds.EvpnCfg) |  | manual or auto route-target. in case of manual route-target, route-targets should be configured with EvpnEviRtSpec |
-| RTType | [EvpnRtType](#pds.EvpnRtType) |  | route-target type, applicable to auto route-targets only |
-| Encap | [EvpnEncaps](#pds.EvpnEncaps) |  | data place encapsulation |
-| EVIId | [uint32](#uint32) |  | Internal only |
-
-
-
-
-
-
-<a name="pds.EvpnEviStatus"/>
-
-### EvpnEviStatus
-operational status of EVPN EVI, if any
-
-
-
-
-
-
-<a name="pds.EvpnIpVrf"/>
-
-### EvpnIpVrf
-EVPN IP VRF object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [EvpnIpVrfSpec](#pds.EvpnIpVrfSpec) |  |  |
-| Status | [EvpnIpVrfStatus](#pds.EvpnIpVrfStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfDeleteRequest"/>
-
-### EvpnIpVrfDeleteRequest
-EVPN IP VRF delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfKeyHandle](#pds.EvpnIpVrfKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfDeleteResponse"/>
-
-### EvpnIpVrfDeleteResponse
-EVPN IP VRF delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfGetRequest"/>
-
-### EvpnIpVrfGetRequest
-EVPN IP VRF get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfKeyHandle](#pds.EvpnIpVrfKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfGetResponse"/>
-
-### EvpnIpVrfGetResponse
-EVPN IP VRF get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrf](#pds.EvpnIpVrf) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfKey"/>
-
-### EvpnIpVrfKey
-EVPN IP VRF key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| VPCId | [bytes](#bytes) |  | reference to vpc spec |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfKeyHandle"/>
-
-### EvpnIpVrfKeyHandle
-EVPN IP VRF key handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [EvpnIpVrfKey](#pds.EvpnIpVrfKey) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRequest"/>
-
-### EvpnIpVrfRequest
-EvpnIPVrf create and update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfSpec](#pds.EvpnIpVrfSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfResponse"/>
-
-### EvpnIpVrfResponse
-EVPN IP VRF create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrfStatus](#pds.EvpnIpVrfStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRt"/>
-
-### EvpnIpVrfRt
-EVPN IP VRF RT object
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [EvpnIpVrfRtSpec](#pds.EvpnIpVrfRtSpec) |  |  |
-| Status | [EvpnIpVrfRtStatus](#pds.EvpnIpVrfRtStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtDeleteRequest"/>
-
-### EvpnIpVrfRtDeleteRequest
-EVPN IP VRF RT delete request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfRtKeyHandle](#pds.EvpnIpVrfRtKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtDeleteResponse"/>
-
-### EvpnIpVrfRtDeleteResponse
-EVPN IP VRF RT delete response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtGetRequest"/>
-
-### EvpnIpVrfRtGetRequest
-EVPN IP VRF RT get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfRtKeyHandle](#pds.EvpnIpVrfRtKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtGetResponse"/>
-
-### EvpnIpVrfRtGetResponse
-EVPN IP VRF RT get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrfRt](#pds.EvpnIpVrfRt) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtKey"/>
-
-### EvpnIpVrfRtKey
-EVPN IP VRF RT key parameters
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| VPCId | [bytes](#bytes) |  | reference to vpc spec |
-| RT | [bytes](#bytes) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtKeyHandle"/>
-
-### EvpnIpVrfRtKeyHandle
-EVPN IP VRF RT key handle
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [EvpnIpVrfRtKey](#pds.EvpnIpVrfRtKey) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtRequest"/>
-
-### EvpnIpVrfRtRequest
-EVPN EVI RT create/update request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnIpVrfRtSpec](#pds.EvpnIpVrfRtSpec) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtResponse"/>
-
-### EvpnIpVrfRtResponse
-EVPN IP VRF RT create and update response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrfRtStatus](#pds.EvpnIpVrfRtStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtSpec"/>
-
-### EvpnIpVrfRtSpec
-EVPN IP VRF RT Configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | spec UUID key |
-| VPCId | [bytes](#bytes) |  | reference to VPS spec |
-| RT | [bytes](#bytes) |  |  |
-| RTType | [EvpnRtType](#pds.EvpnRtType) |  |  |
-| VRFName | [string](#string) |  | Internal only |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfRtStatus"/>
-
-### EvpnIpVrfRtStatus
-operational status of EVPN IP VRF RT, if any
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfSpec"/>
-
-### EvpnIpVrfSpec
-EVPN IP VRF configuration
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | spec UUID key |
-| VPCId | [bytes](#bytes) |  | reference to VPC spec |
-| VNI | [uint32](#uint32) |  |  |
-| AutoRD | [EvpnCfg](#pds.EvpnCfg) |  |  |
-| RD | [bytes](#bytes) |  |  |
-| VRFName | [string](#string) |  | Internal only |
-
-
-
-
-
-
-<a name="pds.EvpnIpVrfStatus"/>
-
-### EvpnIpVrfStatus
-operational status of EVPN IP VRF, if any
-
-
-
-
-
-
-<a name="pds.EvpnMacIp"/>
-
-### EvpnMacIp
-EVPN MAC IP
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Status | [EvpnMacIpStatus](#pds.EvpnMacIpStatus) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnMacIpGetRequest"/>
-
-### EvpnMacIpGetRequest
-EVPN MAC IP get request
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Request | [EvpnMacIpKeyHandle](#pds.EvpnMacIpKeyHandle) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnMacIpGetResponse"/>
-
-### EvpnMacIpGetResponse
-EVPN MAC IP get response
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [EvpnMacIp](#pds.EvpnMacIp) | repeated |  |
-
-
-
-
-
-
-<a name="pds.EvpnMacIpKey"/>
-
-### EvpnMacIpKey
-EVPN MAC IP Table Key
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| EVIId | [uint32](#uint32) |  |  |
-| EthTagID | [uint32](#uint32) |  |  |
-| MACAddress | [bytes](#bytes) |  |  |
-| IPAddress | [.types.IPAddress](#pds..types.IPAddress) |  |  |
-| PathID | [uint32](#uint32) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnMacIpKeyHandle"/>
-
-### EvpnMacIpKeyHandle
-EVPN MAC IP Table key handle for get and delete
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  |  |
-| Key | [EvpnMacIpKey](#pds.EvpnMacIpKey) |  |  |
-
-
-
-
-
-
-<a name="pds.EvpnMacIpStatus"/>
-
-### EvpnMacIpStatus
-EVPN MAC IP Table entries
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| EVIId | [uint32](#uint32) |  |  |
-| EthTagID | [uint32](#uint32) |  |  |
-| MACAddress | [bytes](#bytes) |  |  |
-| IPAddress | [.types.IPAddress](#pds..types.IPAddress) |  |  |
-| PathID | [uint32](#uint32) |  |  |
-| Source | [EvpnSource](#pds.EvpnSource) |  |  |
-| NHAddress | [.types.IPAddress](#pds..types.IPAddress) |  |  |
-| LocalIfId | [uint32](#uint32) |  |  |
-
-
-
-
-
- 
-
-
-<a name="pds.EvpnCfg"/>
-
-### EvpnCfg
-EVPN configured or auto values
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| EVPN_CFG_INVALID | 0 |  |
-| EVPN_CFG_MANUAL | 2 |  |
-| EVPN_CFG_AUTO | 3 |  |
-
-
-
-<a name="pds.EvpnEncaps"/>
-
-### EvpnEncaps
-encapsulation
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| EVPN_ENCAP_INVALID | 0 |  |
-| EVPN_ENCAP_MPLS | 1 |  |
-| EVPN_ENCAP_VXLAN | 2 |  |
-
-
-
-<a name="pds.EvpnRtType"/>
-
-### EvpnRtType
-route-target type
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| EVPN_RT_INVALID | 0 |  |
-| EVPN_RT_IMPORT | 1 |  |
-| EVPN_RT_EXPORT | 2 |  |
-| EVPN_RT_IMPORT_EXPORT | 3 |  |
-| EVPN_RT_NONE | 4 |  |
-
-
-
-<a name="pds.EvpnSource"/>
-
-### EvpnSource
-EVPN Source Type
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| EVPN_SOURCE_NONE | 0 |  |
-| EVPN_SOURCE_LOCAL | 1 |  |
-| EVPN_SOURCE_REMOTE | 2 |  |
-
-
- 
-
- 
-
-
-<a name="pds.EvpnSvc"/>
-
-### EvpnSvc
-Evpn service definition
-
-| Method Name | Request Type | Response Type | Description |
-| ----------- | ------------ | ------------- | ------------|
-| EvpnEviCreate | [EvpnEviRequest](#pds.EvpnEviRequest) | [EvpnEviResponse](#pds.EvpnEviRequest) |  |
-| EvpnEviUpdate | [EvpnEviRequest](#pds.EvpnEviRequest) | [EvpnEviResponse](#pds.EvpnEviRequest) |  |
-| EvpnEviDelete | [EvpnEviDeleteRequest](#pds.EvpnEviDeleteRequest) | [EvpnEviDeleteResponse](#pds.EvpnEviDeleteRequest) |  |
-| EvpnEviGet | [EvpnEviGetRequest](#pds.EvpnEviGetRequest) | [EvpnEviGetResponse](#pds.EvpnEviGetRequest) |  |
-| EvpnEviRtCreate | [EvpnEviRtRequest](#pds.EvpnEviRtRequest) | [EvpnEviRtResponse](#pds.EvpnEviRtRequest) |  |
-| EvpnEviRtUpdate | [EvpnEviRtRequest](#pds.EvpnEviRtRequest) | [EvpnEviRtResponse](#pds.EvpnEviRtRequest) |  |
-| EvpnEviRtDelete | [EvpnEviRtDeleteRequest](#pds.EvpnEviRtDeleteRequest) | [EvpnEviRtDeleteResponse](#pds.EvpnEviRtDeleteRequest) |  |
-| EvpnEviRtGet | [EvpnEviRtGetRequest](#pds.EvpnEviRtGetRequest) | [EvpnEviRtGetResponse](#pds.EvpnEviRtGetRequest) |  |
-| EvpnIpVrfCreate | [EvpnIpVrfRequest](#pds.EvpnIpVrfRequest) | [EvpnIpVrfResponse](#pds.EvpnIpVrfRequest) |  |
-| EvpnIpVrfUpdate | [EvpnIpVrfRequest](#pds.EvpnIpVrfRequest) | [EvpnIpVrfResponse](#pds.EvpnIpVrfRequest) |  |
-| EvpnIpVrfDelete | [EvpnIpVrfDeleteRequest](#pds.EvpnIpVrfDeleteRequest) | [EvpnIpVrfDeleteResponse](#pds.EvpnIpVrfDeleteRequest) |  |
-| EvpnIpVrfGet | [EvpnIpVrfGetRequest](#pds.EvpnIpVrfGetRequest) | [EvpnIpVrfGetResponse](#pds.EvpnIpVrfGetRequest) |  |
-| EvpnIpVrfRtCreate | [EvpnIpVrfRtRequest](#pds.EvpnIpVrfRtRequest) | [EvpnIpVrfRtResponse](#pds.EvpnIpVrfRtRequest) |  |
-| EvpnIpVrfRtUpdate | [EvpnIpVrfRtRequest](#pds.EvpnIpVrfRtRequest) | [EvpnIpVrfRtResponse](#pds.EvpnIpVrfRtRequest) |  |
-| EvpnIpVrfRtDelete | [EvpnIpVrfRtDeleteRequest](#pds.EvpnIpVrfRtDeleteRequest) | [EvpnIpVrfRtDeleteResponse](#pds.EvpnIpVrfRtDeleteRequest) |  |
-| EvpnIpVrfRtGet | [EvpnIpVrfRtGetRequest](#pds.EvpnIpVrfRtGetRequest) | [EvpnIpVrfRtGetResponse](#pds.EvpnIpVrfRtGetRequest) |  |
-| EvpnMacIpGet | [EvpnMacIpGetRequest](#pds.EvpnMacIpGetRequest) | [EvpnMacIpGetResponse](#pds.EvpnMacIpGetRequest) |  |
+| CPL2fTestCreate | [CPL2fTestCreateSpec](#pds_ms.CPL2fTestCreateSpec) | [CPL2fTestResponse](#pds_ms.CPL2fTestCreateSpec) |  |
+| CPL2fTestDelete | [CPL2fTestDeleteSpec](#pds_ms.CPL2fTestDeleteSpec) | [CPL2fTestResponse](#pds_ms.CPL2fTestDeleteSpec) |  |
 
  
 
@@ -3941,7 +1944,7 @@ Evpn service definition
 
 
 
-<a name="pds.BgpRouteMapSpec"/>
+<a name="pds_ms.BgpRouteMapSpec"/>
 
 ### BgpRouteMapSpec
 spec to configure ext-comm ORF route map table
@@ -3964,7 +1967,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.EvpnBdSpec"/>
+<a name="pds_ms.EvpnBdSpec"/>
 
 ### EvpnBdSpec
 
@@ -3981,7 +1984,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.EvpnIfBindCfgSpec"/>
+<a name="pds_ms.EvpnIfBindCfgSpec"/>
 
 ### EvpnIfBindCfgSpec
 
@@ -3998,7 +2001,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.LimGenIrbIfSpec"/>
+<a name="pds_ms.LimGenIrbIfSpec"/>
 
 ### LimGenIrbIfSpec
 
@@ -4016,7 +2019,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.LimInterfaceAddrSpec"/>
+<a name="pds_ms.LimInterfaceAddrSpec"/>
 
 ### LimInterfaceAddrSpec
 
@@ -4024,9 +2027,9 @@ spec to configure ext-comm ORF route map table
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| IfType | [LimIntfType](#pds.LimIntfType) |  | Interface Type should be converted to MS interface type/subtype, cannot be autogen. |
+| IfType | [LimIntfType](#pds_ms.LimIntfType) |  | Interface Type should be converted to MS interface type/subtype, cannot be autogen. |
 | IfId | [uint32](#uint32) |  | Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn |
-| IPAddr | [.types.IPAddress](#pds..types.IPAddress) |  |  |
+| IPAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
 | PrefixLen | [uint32](#uint32) |  |  |
 
 
@@ -4034,7 +2037,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.LimInterfaceCfgSpec"/>
+<a name="pds_ms.LimInterfaceCfgSpec"/>
 
 ### LimInterfaceCfgSpec
 
@@ -4057,7 +2060,7 @@ spec to configure ext-comm ORF route map table
 
 
 
-<a name="pds.LimInterfaceSpec"/>
+<a name="pds_ms.LimInterfaceSpec"/>
 
 ### LimInterfaceSpec
 This spec should be used to create only LIF and Loopback interfaces.
@@ -4066,7 +2069,7 @@ If at all there is a need to create other types of interfaces, another spec shou
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| IfType | [LimIntfType](#pds.LimIntfType) |  | interface Type should be converted to MS interface type/subtype, cannot be autogen |
+| IfType | [LimIntfType](#pds_ms.LimIntfType) |  | interface Type should be converted to MS interface type/subtype, cannot be autogen |
 | IfId | [uint32](#uint32) |  |  |
 
 
@@ -4074,7 +2077,7 @@ If at all there is a need to create other types of interfaces, another spec shou
 
 
 
-<a name="pds.LimVrfSpec"/>
+<a name="pds_ms.LimVrfSpec"/>
 
 ### LimVrfSpec
 
@@ -4093,7 +2096,7 @@ If at all there is a need to create other types of interfaces, another spec shou
  
 
 
-<a name="pds.LimIntfType"/>
+<a name="pds_ms.LimIntfType"/>
 
 ### LimIntfType
 
@@ -4110,6 +2113,1926 @@ If at all there is a need to create other types of interfaces, another spec shou
  
 
  
+
+ 
+
+
+
+<a name="internal_bgp.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## internal_bgp.proto
+
+
+
+<a name="pds_ms.BGP"/>
+
+### BGP
+BGP object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [BGPSpec](#pds_ms.BGPSpec) |  |  |
+| Status | [BGPStatus](#pds_ms.BGPStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPDeleteRequest"/>
+
+### BGPDeleteRequest
+BGP delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPKeyHandle](#pds_ms.BGPKeyHandle) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPDeleteResponse"/>
+
+### BGPDeleteResponse
+BGP delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPGetRequest"/>
+
+### BGPGetRequest
+BGP get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPKeyHandle](#pds_ms.BGPKeyHandle) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPGetResponse"/>
+
+### BGPGetResponse
+BGP get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [BGP](#pds_ms.BGP) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPKeyHandle"/>
+
+### BGPKeyHandle
+BGP KeyHandle used in Get/Delete
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefix"/>
+
+### BGPNLRIPrefix
+BGP NLRI prefix object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Status | [BGPNLRIPrefixStatus](#pds_ms.BGPNLRIPrefixStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefixGetRequest"/>
+
+### BGPNLRIPrefixGetRequest
+BGP NLRI prefix get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPNLRIPrefixKeyHandle](#pds_ms.BGPNLRIPrefixKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefixGetResponse"/>
+
+### BGPNLRIPrefixGetResponse
+BGP NLRI prefix get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [BGPNLRIPrefix](#pds_ms.BGPNLRIPrefix) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefixKey"/>
+
+### BGPNLRIPrefixKey
+BGP NLRI prefix key object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Afi | [BGPAfi](#pds_ms.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds_ms.BGPSafi) |  | BGP sub-address family |
+| Prefix | [bytes](#bytes) |  | prefix in NLRI |
+| PrefixLen | [uint32](#uint32) |  | prefix length |
+| RouteSource | [NLRISrc](#pds_ms.NLRISrc) |  | route source (learned from BGP peer or AFM) |
+| RouteSourceIndex | [uint32](#uint32) |  | route source index |
+| PathID | [uint32](#uint32) |  | path ID |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefixKeyHandle"/>
+
+### BGPNLRIPrefixKeyHandle
+BGP NLRI key handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Key | [BGPNLRIPrefixKey](#pds_ms.BGPNLRIPrefixKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPNLRIPrefixStatus"/>
+
+### BGPNLRIPrefixStatus
+BGP NLRI prefix table
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Afi | [BGPAfi](#pds_ms.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds_ms.BGPSafi) |  | BGP sub-address family |
+| Prefix | [bytes](#bytes) |  | prefix in NLRI |
+| PrefixLen | [uint32](#uint32) |  | prefix length |
+| RouteSource | [NLRISrc](#pds_ms.NLRISrc) |  | route source (learned from BGP peer or AFM) |
+| RouteSourceIndex | [uint32](#uint32) |  | route source index |
+| PathID | [uint32](#uint32) |  | path ID |
+| BestRoute | [bool](#bool) |  | chosen as BGP best route or not |
+| ASPathStr | [bytes](#bytes) |  | AS path string |
+| PathOrigId | [bytes](#bytes) |  | originator ID |
+| NextHopAddr | [bytes](#bytes) |  | next-hop address |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeer"/>
+
+### BGPPeer
+BGP peer object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [BGPPeerSpec](#pds_ms.BGPPeerSpec) |  |  |
+| Status | [BGPPeerStatus](#pds_ms.BGPPeerStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAf"/>
+
+### BGPPeerAf
+BGP peer AF object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [BGPPeerAfSpec](#pds_ms.BGPPeerAfSpec) |  |  |
+| Status | [BGPPeerAfStatus](#pds_ms.BGPPeerAfStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfDeleteRequest"/>
+
+### BGPPeerAfDeleteRequest
+BGP peer af delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerAfKeyHandle](#pds_ms.BGPPeerAfKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfDeleteResponse"/>
+
+### BGPPeerAfDeleteResponse
+BGP peer delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfGetRequest"/>
+
+### BGPPeerAfGetRequest
+BGP peer af get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerAfKeyHandle](#pds_ms.BGPPeerAfKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfGetResponse"/>
+
+### BGPPeerAfGetResponse
+BGP peer AF get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [BGPPeerAf](#pds_ms.BGPPeerAf) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfKey"/>
+
+### BGPPeerAfKey
+BGP peer key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP local IP address |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| Afi | [BGPAfi](#pds_ms.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds_ms.BGPSafi) |  | BGP sub-address family |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfKeyHandle"/>
+
+### BGPPeerAfKeyHandle
+BGP peer delete spec
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [BGPPeerAfKey](#pds_ms.BGPPeerAfKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfRequest"/>
+
+### BGPPeerAfRequest
+BGP peer AF create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerAfSpec](#pds_ms.BGPPeerAfSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfResponse"/>
+
+### BGPPeerAfResponse
+BGP peer AF create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfSpec"/>
+
+### BGPPeerAfSpec
+BGP peer AF configurations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of peer AF config |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP local IP address |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| Afi | [BGPAfi](#pds_ms.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds_ms.BGPSafi) |  | BGP sub-address family |
+| NexthopSelf | [bool](#bool) |  | enforce this router to set self as next-hop for advertised routes |
+| DefaultOrig | [bool](#bool) |  | originate a default route to this peer |
+| Disable | [bool](#bool) |  | internal only enable/disable address families. this field is internally mapped with create/delete request |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerAfStatus"/>
+
+### BGPPeerAfStatus
+BGP peer AF status
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerDeleteRequest"/>
+
+### BGPPeerDeleteRequest
+BGP peer delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerKeyHandle](#pds_ms.BGPPeerKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerDeleteResponse"/>
+
+### BGPPeerDeleteResponse
+BGP peer delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerGetRequest"/>
+
+### BGPPeerGetRequest
+BGP peer get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerKeyHandle](#pds_ms.BGPPeerKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerGetResponse"/>
+
+### BGPPeerGetResponse
+BGP peer get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [BGPPeer](#pds_ms.BGPPeer) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerKey"/>
+
+### BGPPeerKey
+BGP peer key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP local IP address |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerKeyHandle"/>
+
+### BGPPeerKeyHandle
+BGP peer get and delete key handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [BGPPeerKey](#pds_ms.BGPPeerKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerRequest"/>
+
+### BGPPeerRequest
+BGP peer create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPPeerSpec](#pds_ms.BGPPeerSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerResponse"/>
+
+### BGPPeerResponse
+BGP peer create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerSpec"/>
+
+### BGPPeerSpec
+BGP peer configurations
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of peer |
+| State | [.types.AdminState](#pds_ms..types.AdminState) |  | peer enable/disable admin state. if peer is not enabled then local router must not initiate connections to the neighbor and must not respond to TCP connections attempts from neighbor |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP local IP address. control plane chooses the local IP address of the session if an all 0 IP address is provided |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| RemoteASN | [uint32](#uint32) |  | remote 4-byte AS number |
+| SendComm | [bool](#bool) |  | send regular community attributes to neighbor |
+| SendExtComm | [bool](#bool) |  | send extended community attributes to neighbor |
+| RRClient | [BGPPeerRRClient](#pds_ms.BGPPeerRRClient) |  | peer is a route reflector client |
+| ConnectRetry | [uint32](#uint32) |  | BGP session connect-retry timer in seconds |
+| HoldTime | [uint32](#uint32) |  | BGP session holdtime timer in seconds |
+| KeepAlive | [uint32](#uint32) |  | BGP session keepalive timer in seconds |
+| Password | [bytes](#bytes) |  | MD5 authentication |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerStatus"/>
+
+### BGPPeerStatus
+BGP peer status
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Status | [BGPPeerState](#pds_ms.BGPPeerState) |  | BGP session status |
+| PrevStatus | [BGPPeerState](#pds_ms.BGPPeerState) |  | BGP session previous status |
+| LastErrorRcvd | [bytes](#bytes) |  | last error received |
+| LastErrorSent | [bytes](#bytes) |  | Last error sent |
+
+
+
+
+
+
+<a name="pds_ms.BGPRequest"/>
+
+### BGPRequest
+BGP create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [BGPSpec](#pds_ms.BGPSpec) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPResponse"/>
+
+### BGPResponse
+BGP create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [BGPStatus](#pds_ms.BGPStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPSpec"/>
+
+### BGPSpec
+BGP configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of BGP config |
+| LocalASN | [uint32](#uint32) |  | the local autonomous system number |
+| RouterId | [fixed32](#fixed32) |  | router ID for this bgp instance |
+| ClusterId | [fixed32](#fixed32) |  | cluster ID of the local router. router ID will be used as cluster ID if cluster ID is not configured or configured to zero |
+| State | [.types.AdminState](#pds_ms..types.AdminState) |  | internal-only fields |
+
+
+
+
+
+
+<a name="pds_ms.BGPStatus"/>
+
+### BGPStatus
+operational status of BGP
+
+
+
+
+
+ 
+
+
+<a name="pds_ms.BGPAfi"/>
+
+### BGPAfi
+BGP address family identifier
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_AFI_NONE | 0 |  |
+| BGP_AFI_IPV4 | 1 |  |
+| BGP_AFI_L2VPN | 25 |  |
+
+
+
+<a name="pds_ms.BGPPeerRRClient"/>
+
+### BGPPeerRRClient
+BGP peer RR client
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_PEER_RR_NONE | 0 |  |
+| BGP_PEER_RR_CLIENT | 1 |  |
+
+
+
+<a name="pds_ms.BGPPeerState"/>
+
+### BGPPeerState
+BGP peer last_state
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_PEER_STATE_NONE | 0 |  |
+| BGP_PEER_STATE_IDLE | 1 |  |
+| BGP_PEER_STATE_CONNECT | 2 |  |
+| BGP_PEER_STATE_ACTIVE | 3 |  |
+| BGP_PEER_STATE_OPENSENT | 4 |  |
+| BGP_PEER_STATE_OPENCONFIRM | 5 |  |
+| BGP_PEER_STATE_ESTABLISHED | 6 |  |
+
+
+
+<a name="pds_ms.BGPSafi"/>
+
+### BGPSafi
+BGP sub-address family identitfier
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_SAFI_NONE | 0 |  |
+| BGP_SAFI_UNICAST | 1 |  |
+| BGP_SAFI_EVPN | 70 |  |
+
+
+
+<a name="pds_ms.NLRISrc"/>
+
+### NLRISrc
+NLRI source
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NLRI_NONE | 0 |  |
+| NLRI_PEER | 1 | learned from peer |
+| NLRI_AFM | 2 | learned from AFM |
+| NLRI_SELF | 3 | created by itself |
+
+
+ 
+
+ 
+
+
+<a name="pds_ms.BGPSvc"/>
+
+### BGPSvc
+bgp service definition
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| BGPCreate | [BGPRequest](#pds_ms.BGPRequest) | [BGPResponse](#pds_ms.BGPRequest) |  |
+| BGPUpdate | [BGPRequest](#pds_ms.BGPRequest) | [BGPResponse](#pds_ms.BGPRequest) |  |
+| BGPDelete | [BGPDeleteRequest](#pds_ms.BGPDeleteRequest) | [BGPDeleteResponse](#pds_ms.BGPDeleteRequest) |  |
+| BGPGet | [BGPGetRequest](#pds_ms.BGPGetRequest) | [BGPGetResponse](#pds_ms.BGPGetRequest) |  |
+| BGPPeerCreate | [BGPPeerRequest](#pds_ms.BGPPeerRequest) | [BGPPeerResponse](#pds_ms.BGPPeerRequest) |  |
+| BGPPeerUpdate | [BGPPeerRequest](#pds_ms.BGPPeerRequest) | [BGPPeerResponse](#pds_ms.BGPPeerRequest) |  |
+| BGPPeerDelete | [BGPPeerDeleteRequest](#pds_ms.BGPPeerDeleteRequest) | [BGPPeerDeleteResponse](#pds_ms.BGPPeerDeleteRequest) |  |
+| BGPPeerGet | [BGPPeerGetRequest](#pds_ms.BGPPeerGetRequest) | [BGPPeerGetResponse](#pds_ms.BGPPeerGetRequest) |  |
+| BGPPeerAfCreate | [BGPPeerAfRequest](#pds_ms.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds_ms.BGPPeerAfRequest) |  |
+| BGPPeerAfUpdate | [BGPPeerAfRequest](#pds_ms.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds_ms.BGPPeerAfRequest) |  |
+| BGPPeerAfDelete | [BGPPeerAfDeleteRequest](#pds_ms.BGPPeerAfDeleteRequest) | [BGPPeerAfDeleteResponse](#pds_ms.BGPPeerAfDeleteRequest) |  |
+| BGPPeerAfGet | [BGPPeerAfGetRequest](#pds_ms.BGPPeerAfGetRequest) | [BGPPeerAfGetResponse](#pds_ms.BGPPeerAfGetRequest) |  |
+| BGPNLRIPrefixGet | [BGPNLRIPrefixGetRequest](#pds_ms.BGPNLRIPrefixGetRequest) | [BGPNLRIPrefixGetResponse](#pds_ms.BGPNLRIPrefixGetRequest) |  |
+
+ 
+
+
+
+<a name="internal_cp_route.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## internal_cp_route.proto
+------------------------------------------------------------------------------
+{C} Copyright 2019 Pensando Systems Inc. All rights reserved
+protobuf specification for Control Plane Route Table
+------------------------------------------------------------------------------
+
+
+<a name="pds_ms.CPRoute"/>
+
+### CPRoute
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Status | [CPRouteStatus](#pds_ms.CPRouteStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPRouteGetRequest"/>
+
+### CPRouteGetRequest
+control plane route table get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [CPRouteKeyHandle](#pds_ms.CPRouteKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPRouteGetResponse"/>
+
+### CPRouteGetResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [CPRoute](#pds_ms.CPRoute) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPRouteKey"/>
+
+### CPRouteKey
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RouteTableId | [uint32](#uint32) |  | route table id this route belongs to |
+| DestAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | destination address |
+| DestPrefixLen | [uint32](#uint32) |  | destination address prefix |
+| NHAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | next-hop address |
+| IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
+| Proto | [RouteProtocol](#pds_ms.RouteProtocol) |  | protocol via which the route is learned |
+
+
+
+
+
+
+<a name="pds_ms.CPRouteKeyHandle"/>
+
+### CPRouteKeyHandle
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Key | [CPRouteKey](#pds_ms.CPRouteKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPRouteStatus"/>
+
+### CPRouteStatus
+control plane route table
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RouteTableId | [uint32](#uint32) |  | route table id this route belongs to |
+| DestAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | destination address |
+| DestPrefixLen | [uint32](#uint32) |  | destination address prefix |
+| NHAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | next-hop address |
+| IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
+| Type | [RouteType](#pds_ms.RouteType) |  | type of route |
+| Proto | [RouteProtocol](#pds_ms.RouteProtocol) |  | protocol via which the route is learned |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRoute"/>
+
+### CPStaticRoute
+control plane static route object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [CPStaticRouteSpec](#pds_ms.CPStaticRouteSpec) |  |  |
+| Status | [CPStaticRouteStatus](#pds_ms.CPStaticRouteStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteDeleteRequest"/>
+
+### CPStaticRouteDeleteRequest
+control plane route delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [CPStaticRouteKeyHandle](#pds_ms.CPStaticRouteKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteDeleteResponse"/>
+
+### CPStaticRouteDeleteResponse
+control plane route delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteGetRequest"/>
+
+### CPStaticRouteGetRequest
+control plane route get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [CPStaticRouteKeyHandle](#pds_ms.CPStaticRouteKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteGetResponse"/>
+
+### CPStaticRouteGetResponse
+control plane route get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [CPStaticRoute](#pds_ms.CPStaticRoute) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteKey"/>
+
+### CPStaticRouteKey
+control plane static route key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| DestAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | destination address |
+| PrefixLen | [uint32](#uint32) |  | destination address prefix length |
+| NextHopAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | next-hop address |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteKeyHandle"/>
+
+### CPStaticRouteKeyHandle
+control plane static route key handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [CPStaticRouteKey](#pds_ms.CPStaticRouteKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteRequest"/>
+
+### CPStaticRouteRequest
+control plane static route create and update request message
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [CPStaticRouteSpec](#pds_ms.CPStaticRouteSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteResponse"/>
+
+### CPStaticRouteResponse
+response messages
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteSpec"/>
+
+### CPStaticRouteSpec
+control plane static route configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RouteTableId | [bytes](#bytes) |  | route table id this route belongs to |
+| DestAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | destination address |
+| PrefixLen | [uint32](#uint32) |  | destination address prefix length |
+| NextHopAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | next-hop address |
+| State | [.types.AdminState](#pds_ms..types.AdminState) |  | route is enabled or not |
+| Override | [bool](#bool) |  | override admin distance |
+| AdminDist | [uint32](#uint32) |  | admin distance |
+| InterfaceId | [bytes](#bytes) |  | optional interface ID, if this route is configured on RR |
+| IfIndex | [uint32](#uint32) |  | internal only |
+
+
+
+
+
+
+<a name="pds_ms.CPStaticRouteStatus"/>
+
+### CPStaticRouteStatus
+status of control plane static route, if any
+
+
+
+
+
+ 
+
+
+<a name="pds_ms.RouteProtocol"/>
+
+### RouteProtocol
+route protocols
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ROUTE_PROTO_NONE | 0 |  |
+| ROUTE_PROTO_LOCAL | 2 |  |
+| ROUTE_PROTO_STATIC | 3 |  |
+| ROUTE_PROTO_BGP | 14 |  |
+
+
+
+<a name="pds_ms.RouteType"/>
+
+### RouteType
+route type
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| ROUTE_TYPE_NONE | 0 |  |
+| ROUTE_TYPE_OTHER | 1 |  |
+| ROUTE_TYPE_REJECT | 2 |  |
+| ROUTE_TYPE_LOCAL | 3 |  |
+| ROUTE_TYPE_REMOTE | 4 |  |
+
+
+ 
+
+ 
+
+
+<a name="pds_ms.CPRouteSvc"/>
+
+### CPRouteSvc
+control plane route service definition
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| CPStaticRouteCreate | [CPStaticRouteRequest](#pds_ms.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds_ms.CPStaticRouteRequest) |  |
+| CPStaticRouteUpdate | [CPStaticRouteRequest](#pds_ms.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds_ms.CPStaticRouteRequest) |  |
+| CPStaticRouteDelete | [CPStaticRouteDeleteRequest](#pds_ms.CPStaticRouteDeleteRequest) | [CPStaticRouteDeleteResponse](#pds_ms.CPStaticRouteDeleteRequest) |  |
+| CPStaticRouteGet | [CPStaticRouteGetRequest](#pds_ms.CPStaticRouteGetRequest) | [CPStaticRouteGetResponse](#pds_ms.CPStaticRouteGetRequest) |  |
+| CPRouteGet | [CPRouteGetRequest](#pds_ms.CPRouteGetRequest) | [CPRouteGetResponse](#pds_ms.CPRouteGetRequest) |  |
+
+ 
+
+
+
+<a name="internal_evpn.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## internal_evpn.proto
+
+
+
+<a name="pds_ms.EvpnEvi"/>
+
+### EvpnEvi
+EVPN EVI object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [EvpnEviSpec](#pds_ms.EvpnEviSpec) |  |  |
+| Status | [EvpnEviStatus](#pds_ms.EvpnEviStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviDeleteRequest"/>
+
+### EvpnEviDeleteRequest
+EVPN EVI delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviKeyHandle](#pds_ms.EvpnEviKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviDeleteResponse"/>
+
+### EvpnEviDeleteResponse
+EVPN EVI delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviGetRequest"/>
+
+### EvpnEviGetRequest
+EVPN EVI get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviKeyHandle](#pds_ms.EvpnEviKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviGetResponse"/>
+
+### EvpnEviGetResponse
+EVPN EVI get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnEvi](#pds_ms.EvpnEvi) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviKey"/>
+
+### EvpnEviKey
+EVPN EVI key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviKeyHandle"/>
+
+### EvpnEviKeyHandle
+EVPN EVI key handle for get and delete
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [EvpnEviKey](#pds_ms.EvpnEviKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRequest"/>
+
+### EvpnEviRequest
+EVPN EVI create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviSpec](#pds_ms.EvpnEviSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviResponse"/>
+
+### EvpnEviResponse
+EVPN EVI create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnEviStatus](#pds_ms.EvpnEviStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRt"/>
+
+### EvpnEviRt
+EVPN EVI RT object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [EvpnEviRtSpec](#pds_ms.EvpnEviRtSpec) |  |  |
+| Status | [EvpnEviRtStatus](#pds_ms.EvpnEviRtStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtDeleteRequest"/>
+
+### EvpnEviRtDeleteRequest
+EVPN EVI RT delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviRtKeyHandle](#pds_ms.EvpnEviRtKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtDeleteResponse"/>
+
+### EvpnEviRtDeleteResponse
+EVPN EVI RT delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtGetRequest"/>
+
+### EvpnEviRtGetRequest
+EVPN EVI RT get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviRtKeyHandle](#pds_ms.EvpnEviRtKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtGetResponse"/>
+
+### EvpnEviRtGetResponse
+EVPN EVI RT get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnEviRt](#pds_ms.EvpnEviRt) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtKey"/>
+
+### EvpnEviRtKey
+EVPN EVI RT key
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| SubnetId | [bytes](#bytes) |  | reference to subnet spec |
+| RT | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtKeyHandle"/>
+
+### EvpnEviRtKeyHandle
+EVPN EVI RT Key Handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [EvpnEviRtKey](#pds_ms.EvpnEviRtKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtRequest"/>
+
+### EvpnEviRtRequest
+EvpnEviRtSpec create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnEviRtSpec](#pds_ms.EvpnEviRtSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtResponse"/>
+
+### EvpnEviRtResponse
+EVPN EVI RT create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnEviRtStatus](#pds_ms.EvpnEviRtStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtSpec"/>
+
+### EvpnEviRtSpec
+EVPN EVI RT Configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of EVPN EVI RT |
+| SubnetId | [bytes](#bytes) |  | reference to subnet |
+| RT | [bytes](#bytes) |  | 8 byte route-target. first two octets represent type of extended community octet 1: type or type-high, only 0,1 and 2 are allowed types octet 2: sub-type or type-low, should always be 2 for route-target extended community |
+| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type |
+| EVIId | [uint32](#uint32) |  | Internal only |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviRtStatus"/>
+
+### EvpnEviRtStatus
+operational status of EVPN EVI RT, if any
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviSpec"/>
+
+### EvpnEviSpec
+EVPN EVI configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of EVPN EVI |
+| SubnetId | [bytes](#bytes) |  | reference to subnet |
+| AutoRD | [EvpnCfg](#pds_ms.EvpnCfg) |  | manual or auto route-distinguisher |
+| RD | [bytes](#bytes) |  | 8 byte route-distinguisher, in case of manual configuration |
+| AutoRT | [EvpnCfg](#pds_ms.EvpnCfg) |  | manual or auto route-target. in case of manual route-target, route-targets should be configured with EvpnEviRtSpec |
+| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target type, applicable to auto route-targets only |
+| EVIId | [uint32](#uint32) |  | Internal only |
+| Encap | [uint32](#uint32) |  | data place encapsulation |
+
+
+
+
+
+
+<a name="pds_ms.EvpnEviStatus"/>
+
+### EvpnEviStatus
+operational status of EVPN EVI, if any
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrf"/>
+
+### EvpnIpVrf
+EVPN IP VRF object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [EvpnIpVrfSpec](#pds_ms.EvpnIpVrfSpec) |  |  |
+| Status | [EvpnIpVrfStatus](#pds_ms.EvpnIpVrfStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfDeleteRequest"/>
+
+### EvpnIpVrfDeleteRequest
+EVPN IP VRF delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfKeyHandle](#pds_ms.EvpnIpVrfKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfDeleteResponse"/>
+
+### EvpnIpVrfDeleteResponse
+EVPN IP VRF delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfGetRequest"/>
+
+### EvpnIpVrfGetRequest
+EVPN IP VRF get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfKeyHandle](#pds_ms.EvpnIpVrfKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfGetResponse"/>
+
+### EvpnIpVrfGetResponse
+EVPN IP VRF get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnIpVrf](#pds_ms.EvpnIpVrf) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfKey"/>
+
+### EvpnIpVrfKey
+EVPN IP VRF key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| VPCId | [bytes](#bytes) |  | reference to vpc spec |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfKeyHandle"/>
+
+### EvpnIpVrfKeyHandle
+EVPN IP VRF key handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [EvpnIpVrfKey](#pds_ms.EvpnIpVrfKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRequest"/>
+
+### EvpnIpVrfRequest
+EVPN IP VRF create and update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfSpec](#pds_ms.EvpnIpVrfSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfResponse"/>
+
+### EvpnIpVrfResponse
+EVPN IP VRF create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnIpVrfStatus](#pds_ms.EvpnIpVrfStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRt"/>
+
+### EvpnIpVrfRt
+EVPN IP VRF RT object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [EvpnIpVrfRtSpec](#pds_ms.EvpnIpVrfRtSpec) |  |  |
+| Status | [EvpnIpVrfRtStatus](#pds_ms.EvpnIpVrfRtStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtDeleteRequest"/>
+
+### EvpnIpVrfRtDeleteRequest
+EVPN IP VRF RT delete request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfRtKeyHandle](#pds_ms.EvpnIpVrfRtKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtDeleteResponse"/>
+
+### EvpnIpVrfRtDeleteResponse
+EVPN IP VRF RT delete response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtGetRequest"/>
+
+### EvpnIpVrfRtGetRequest
+EVPN IP VRF RT get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfRtKeyHandle](#pds_ms.EvpnIpVrfRtKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtGetResponse"/>
+
+### EvpnIpVrfRtGetResponse
+EVPN IP VRF RT get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnIpVrfRt](#pds_ms.EvpnIpVrfRt) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtKey"/>
+
+### EvpnIpVrfRtKey
+EVPN IP VRF RT key parameters
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| VPCId | [bytes](#bytes) |  | reference to vpc spec |
+| RT | [bytes](#bytes) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtKeyHandle"/>
+
+### EvpnIpVrfRtKeyHandle
+EVPN IP VRF RT key handle
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  |  |
+| Key | [EvpnIpVrfRtKey](#pds_ms.EvpnIpVrfRtKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtRequest"/>
+
+### EvpnIpVrfRtRequest
+EVPN EVI RT create/update request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnIpVrfRtSpec](#pds_ms.EvpnIpVrfRtSpec) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtResponse"/>
+
+### EvpnIpVrfRtResponse
+EVPN IP VRF RT create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnIpVrfRtStatus](#pds_ms.EvpnIpVrfRtStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtSpec"/>
+
+### EvpnIpVrfRtSpec
+EVPN IP VRF RT Configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of EVPN IP VRF |
+| VPCId | [bytes](#bytes) |  | reference to VPC |
+| RT | [bytes](#bytes) |  | 8 byte route-target. first two octets represent type of extended community octet 1: type or type-high, only 0,1 and 2 are allowed types octet 2: sub-type or type-low, should always be 2 for route-target extended community |
+| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type |
+| VRFName | [string](#string) |  | Internal only |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfRtStatus"/>
+
+### EvpnIpVrfRtStatus
+operational status of EVPN IP VRF RT, if any
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfSpec"/>
+
+### EvpnIpVrfSpec
+EVPN IP VRF configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of EVPN IP VRF |
+| VPCId | [bytes](#bytes) |  | reference to VPC |
+| VNI | [uint32](#uint32) |  | VxLAN vnid |
+| RD | [bytes](#bytes) |  | 8 byte manual route-distinguisher, if not auto route-distinguisher |
+| VRFName | [string](#string) |  | Internal only |
+
+
+
+
+
+
+<a name="pds_ms.EvpnIpVrfStatus"/>
+
+### EvpnIpVrfStatus
+operational status of EVPN IP VRF, if any
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIp"/>
+
+### EvpnMacIp
+EVPN MAC IP
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Status | [EvpnMacIpStatus](#pds_ms.EvpnMacIpStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIpGetRequest"/>
+
+### EvpnMacIpGetRequest
+EVPN MAC IP get request
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Request | [EvpnMacIpKeyHandle](#pds_ms.EvpnMacIpKeyHandle) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIpGetResponse"/>
+
+### EvpnMacIpGetResponse
+EVPN MAC IP get response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
+| Response | [EvpnMacIp](#pds_ms.EvpnMacIp) | repeated |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIpKey"/>
+
+### EvpnMacIpKey
+EVPN MAC IP Table Key
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| EVIId | [uint32](#uint32) |  |  |
+| EthTagID | [uint32](#uint32) |  |  |
+| MACAddress | [bytes](#bytes) |  |  |
+| IPAddress | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| PathID | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIpKeyHandle"/>
+
+### EvpnMacIpKeyHandle
+EVPN MAC IP Table key handle for get and delete
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Key | [EvpnMacIpKey](#pds_ms.EvpnMacIpKey) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.EvpnMacIpStatus"/>
+
+### EvpnMacIpStatus
+EVPN MAC IP table entries
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| EVIId | [uint32](#uint32) |  |  |
+| EthTagID | [uint32](#uint32) |  |  |
+| MACAddress | [bytes](#bytes) |  |  |
+| IPAddress | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| PathID | [uint32](#uint32) |  |  |
+| Source | [EvpnSource](#pds_ms.EvpnSource) |  |  |
+| NHAddress | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| LocalIfId | [uint32](#uint32) |  |  |
+
+
+
+
+
+ 
+
+
+<a name="pds_ms.EvpnCfg"/>
+
+### EvpnCfg
+EVPN RD/RT config types - manual or auto-generated
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EVPN_CFG_NONE | 0 |  |
+| EVPN_CFG_MANUAL | 1 |  |
+| EVPN_CFG_AUTO | 2 |  |
+
+
+
+<a name="pds_ms.EvpnRtType"/>
+
+### EvpnRtType
+EVPN route-target import/export type
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EVPN_RT_NONE | 0 |  |
+| EVPN_RT_IMPORT | 1 |  |
+| EVPN_RT_EXPORT | 2 |  |
+| EVPN_RT_IMPORT_EXPORT | 3 |  |
+
+
+
+<a name="pds_ms.EvpnSource"/>
+
+### EvpnSource
+EVPN route source local/remote
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EVPN_SOURCE_NONE | 0 |  |
+| EVPN_SOURCE_LOCAL | 1 |  |
+| EVPN_SOURCE_REMOTE | 2 |  |
+
+
+ 
+
+ 
+
+
+<a name="pds_ms.EvpnSvc"/>
+
+### EvpnSvc
+Evpn service definition
+
+| Method Name | Request Type | Response Type | Description |
+| ----------- | ------------ | ------------- | ------------|
+| EvpnEviCreate | [EvpnEviRequest](#pds_ms.EvpnEviRequest) | [EvpnEviResponse](#pds_ms.EvpnEviRequest) |  |
+| EvpnEviUpdate | [EvpnEviRequest](#pds_ms.EvpnEviRequest) | [EvpnEviResponse](#pds_ms.EvpnEviRequest) |  |
+| EvpnEviDelete | [EvpnEviDeleteRequest](#pds_ms.EvpnEviDeleteRequest) | [EvpnEviDeleteResponse](#pds_ms.EvpnEviDeleteRequest) |  |
+| EvpnEviGet | [EvpnEviGetRequest](#pds_ms.EvpnEviGetRequest) | [EvpnEviGetResponse](#pds_ms.EvpnEviGetRequest) |  |
+| EvpnEviRtCreate | [EvpnEviRtRequest](#pds_ms.EvpnEviRtRequest) | [EvpnEviRtResponse](#pds_ms.EvpnEviRtRequest) |  |
+| EvpnEviRtUpdate | [EvpnEviRtRequest](#pds_ms.EvpnEviRtRequest) | [EvpnEviRtResponse](#pds_ms.EvpnEviRtRequest) |  |
+| EvpnEviRtDelete | [EvpnEviRtDeleteRequest](#pds_ms.EvpnEviRtDeleteRequest) | [EvpnEviRtDeleteResponse](#pds_ms.EvpnEviRtDeleteRequest) |  |
+| EvpnEviRtGet | [EvpnEviRtGetRequest](#pds_ms.EvpnEviRtGetRequest) | [EvpnEviRtGetResponse](#pds_ms.EvpnEviRtGetRequest) |  |
+| EvpnIpVrfCreate | [EvpnIpVrfRequest](#pds_ms.EvpnIpVrfRequest) | [EvpnIpVrfResponse](#pds_ms.EvpnIpVrfRequest) |  |
+| EvpnIpVrfUpdate | [EvpnIpVrfRequest](#pds_ms.EvpnIpVrfRequest) | [EvpnIpVrfResponse](#pds_ms.EvpnIpVrfRequest) |  |
+| EvpnIpVrfDelete | [EvpnIpVrfDeleteRequest](#pds_ms.EvpnIpVrfDeleteRequest) | [EvpnIpVrfDeleteResponse](#pds_ms.EvpnIpVrfDeleteRequest) |  |
+| EvpnIpVrfGet | [EvpnIpVrfGetRequest](#pds_ms.EvpnIpVrfGetRequest) | [EvpnIpVrfGetResponse](#pds_ms.EvpnIpVrfGetRequest) |  |
+| EvpnIpVrfRtCreate | [EvpnIpVrfRtRequest](#pds_ms.EvpnIpVrfRtRequest) | [EvpnIpVrfRtResponse](#pds_ms.EvpnIpVrfRtRequest) |  |
+| EvpnIpVrfRtUpdate | [EvpnIpVrfRtRequest](#pds_ms.EvpnIpVrfRtRequest) | [EvpnIpVrfRtResponse](#pds_ms.EvpnIpVrfRtRequest) |  |
+| EvpnIpVrfRtDelete | [EvpnIpVrfRtDeleteRequest](#pds_ms.EvpnIpVrfRtDeleteRequest) | [EvpnIpVrfRtDeleteResponse](#pds_ms.EvpnIpVrfRtDeleteRequest) |  |
+| EvpnIpVrfRtGet | [EvpnIpVrfRtGetRequest](#pds_ms.EvpnIpVrfRtGetRequest) | [EvpnIpVrfRtGetResponse](#pds_ms.EvpnIpVrfRtGetRequest) |  |
+| EvpnMacIpGet | [EvpnMacIpGetRequest](#pds_ms.EvpnMacIpGetRequest) | [EvpnMacIpGetResponse](#pds_ms.EvpnMacIpGetRequest) |  |
 
  
 

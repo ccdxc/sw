@@ -88,7 +88,7 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		PeerAddr:     ip2PDSType(nic.ip),
 		LocalAddr:    ip2PDSType(""),
 		RemoteASN:    CfgAsn,
-		State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+		State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 		SendComm:     true,
 		SendExtComm:  true,
 		ConnectRetry: 5,

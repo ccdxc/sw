@@ -13,6 +13,7 @@
 {{$file := .}}
 {{$fileName := .GetName}}
 {{$pkgName := .Package}}
+{{$extPkgName := "pds"}}
 {{$pkg := addStr "." $pkgName}}
 {{$pkg := addStr $pkg "."}}
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
@@ -36,7 +37,7 @@
     {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
     /*===== Set Dump Spec: {{$msgName}} =====*/
-    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
         std::string cfg;
         google::protobuf::util::JsonPrintOptions options;
         options.add_whitespace = true;
@@ -55,7 +56,7 @@
     }
 
     /*===== Set MS Table: {{$struct}} =====*/
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,
                                        NBB_ULONG *oid) {
         /***************************************************************************/
         /* Local Variables                                                         */
@@ -121,7 +122,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_set_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields({{$pkgName}}::{{$msgName}} &req,
                                              AMB_GEN_IPS *mib_msg,
                                              {{$struct}} *v_{{$struct | ToLower}},
                                              NBB_LONG row_status) {
@@ -181,8 +182,16 @@
                                                       {{$fieldOpt.IsZeroIPValid}});
                     {{end}}
                 AMB_SET_FIELD_PRESENT (mib_msg, {{$fieldOpt.SetFieldIdx}}-1);
-                  {{else}}
+                  {{else}} 
+                    {{if (eq .GetTypeName ".pds_ms.EvpnCfg")}}
+                pds_ms_set_evpn_cfg((NBB_LONG*)&v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                    {{else}}
+                      {{if (eq .GetTypeName ".pds_ms.EvpnRtType")}}
+                pds_ms_set_evpn_rttype((NBB_LONG*)&v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                      {{else}}
                 v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
+                      {{end}}
+                    {{end}}
                   {{end}}
                 {{else}}
                   {{if (eq $castFn "pds_ms_set_amb_bool")}}
@@ -239,7 +248,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_fill_{{$struct | ToLower}}_fields */
 
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             bool skip_fill,
@@ -291,7 +300,7 @@
         pre_set_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_pre_set_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             NBB_VOID* kh,
@@ -308,7 +317,7 @@
         post_set_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_post_set_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             NBB_VOID* kh,
@@ -339,7 +348,7 @@
     {{end}}
     {{if not (eq $oidLen "")}}
     /*===== Get Dump Spec: {{$msgName}} =====*/
-    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req) {
+    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
         std::string cfg;
         google::protobuf::util::JsonPrintOptions options;
         options.add_whitespace = true;
@@ -377,7 +386,7 @@
         NBB_ASSERT_NUM_EQ(SHARED.saved_ips->ips_type, IPS_AMB_GET);
 
         v_amb_get = (AMB_GET *)SHARED.saved_ips;
-        pds::{{$rootMsg.GetName}} *resp = (pds::{{$rootMsg.GetName}}*)v_amb_get->correlator.pds_ms_resp_ctx;
+        {{$pkgName}}::{{$rootMsg.GetName}} *resp = ({{$pkgName}}::{{$rootMsg.GetName}}*)v_amb_get->correlator.pds_ms_resp_ctx;
         SHARED.saved_ips = NULL;
 
         if (({{$struct}} *)NTL_OFF_GET_POINTER(v_amb_get, &v_amb_get->bulk_data_offset) == NULL) {
@@ -474,11 +483,19 @@
                     {{$fieldOpt.Name | ToLower}}_addr->set_af(res_{{$fieldOpt.Field}}.af());
                     {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(res_{{$fieldOpt.Field}}.v4addr());
                     {{else}}
-                      {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
-                      {{if (eq $typeCastFn "")}}
-                    ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                      {{if (eq .GetTypeName ".pds_ms.EvpnCfg")}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}(pds_ms_get_evpn_cfg(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
                       {{else}}
+                        {{if (eq .GetTypeName ".pds_ms.EvpnRtType")}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}(pds_ms_get_evpn_rttype(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
+                        {{else}}
+                        {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
+                          {{if (eq $typeCastFn "")}}
+                    ent->set_{{$fieldOpt.Name | ToLower}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                          {{else}}
                     ent->set_{{$fieldOpt.Name | ToLower}}(({{$typeCastFn}})v_{{$struct | ToLower}}->{{$fieldOpt.Field}});
+                          {{end}}
+                        {{end}}
                       {{end}}
                     {{end}}
                   {{else}}
@@ -662,7 +679,7 @@
 
     } /* pds_ms_check_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$specMsgName}} &req,
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid({{$pkgName}}::{{$specMsgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
         /***************************************************************************/
         /* Local Variables                                                         */
@@ -730,7 +747,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_get_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -811,7 +828,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_getall_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -895,7 +912,7 @@
         pre_get_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_pre_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
+    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
         if (pre_get_{{$struct | ToLower}}_func != NULL) {
             pre_get_{{$struct | ToLower}}_func(req, resp, kh);
         }
@@ -908,7 +925,7 @@
         post_get_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_post_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
+    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
         if (post_get_{{$struct | ToLower}}_func != NULL) {
             post_get_{{$struct | ToLower}}_func(req, resp, kh);
         }
@@ -921,7 +938,7 @@
         pre_getall_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_pre_getall_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         if (pre_getall_{{$struct | ToLower}}_func != NULL) {
             pre_getall_{{$struct | ToLower}}_func(resp);
         }
@@ -934,7 +951,7 @@
         post_getall_{{$struct | ToLower}}_func = func;
     } /* pds_ms_reg_post_getall_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         if (post_getall_{{$struct | ToLower}}_func != NULL) {
             post_getall_{{$struct | ToLower}}_func(resp);
         }
@@ -956,7 +973,7 @@
       {{$specMsgName := $param.SpecMsg}}
       {{$mib    := $param.Mib}}
     // Helper to convert {{.GetName}} to {{$specMsgName}}
-    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsgName}} &out) {
+    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsgName}} &out) {
       {{$fields := .Fields}}
       {{range $fields}}
         {{if and (eq .GetName "Key") (not (eq $specMsgName ""))}}
@@ -981,7 +998,11 @@
                         {{if (eq .GetTypeName ".types.IPAddress")}}
             out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.key().{{$fieldOpt.Name | ToLower}}()));
                         {{else}}
+                          {{ if HasPrefix .GetTypeName ".pds_ms."}}
+            out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.key().{{$fieldOpt.Name | ToLower}}());
+                          {{else}}
             out.set_{{$fieldOpt.Name | ToLower}}(in.key().{{$fieldOpt.Name | ToLower}}());
+                          {{end}}
                         {{end}}
                       {{end}}
                     {{end}}
@@ -1004,7 +1025,7 @@
         {{$specMsgName := $param.SpecMsg}}
         {{$mib    := $param.Mib}}
     // Helper to convert {{.GetName}} to {{$specMsgName}}
-    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsgName}} &out) {
+    NBB_VOID pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsgName}} &out) {
         {{$fields := .Fields}}
         {{range $fields}}
           {{if and (eq .GetName "Key") (not (eq $specMsgName ""))}}
@@ -1029,7 +1050,11 @@
                           {{if (eq .GetTypeName ".types.IPAddress")}}
             out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.key().{{$fieldOpt.Name | ToLower}}()));
                           {{else}}
+                            {{ if HasPrefix .GetTypeName ".pds_ms."}}
+            out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.key().{{$fieldOpt.Name | ToLower}}());
+                            {{else}}
             out.set_{{$fieldOpt.Name | ToLower}}(in.key().{{$fieldOpt.Name | ToLower}}());
+                            {{end}}
                           {{end}}
                         {{end}}
                       {{end}}
@@ -1047,5 +1072,242 @@
     } /* pds_ms_get_{{$specMsgName | ToLower}}_from_{{.GetName | ToLower}} */
       {{end}}
     {{end}}
+  {{end}}
+{{end}}
+
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key"))) (HasPrefix $fileName "internal_")}}
+    {{$param := (getPdsaSetGlobalOpts . $cam)}}
+    {{$struct := $param.Struct}}
+    {{$specMsgName := $param.SpecMsg}}
+    {{$mib    := $param.Mib}}
+    /*===== Helper to convert external {{$msgName}} to internal =====*/
+    NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}} in, {{$pkgName}}::{{$msgName}}& out) {
+        PDS_TRACE_DEBUG ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{$fieldProcessed := false}}
+        {{if hasExtension "venice.pdsaFields" .}}
+        {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
+        // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+          {{else}}
+            {{if hasExtension "venice.pdsaFields" .}}
+              {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+              {{$fieldProcessed = true}}
+              {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+        out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.{{$fieldOpt.Name | ToLower}}()));
+                {{else}}
+                  {{ if HasPrefix .GetTypeName ".pds_ms."}}
+        out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
+                  {{else}}
+        out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                  {{end}}
+                {{end}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+        {{if not $fieldProcessed}}
+        out.set_{{.GetName | ToLower}}(in.{{.GetName | ToLower}}());
+        {{end}}
+      {{end}}
+    } /* pds_ms_ext_to_int_{{$msgName | ToLower}} */
+  {{else}}
+    {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
+      {{$param := (getPdsaGetGlobalOpts . $cam)}}
+      {{$struct := $param.Struct}}
+      {{$specMsgName := $param.SpecMsg}}
+      {{$mib    := $param.Mib}}
+    /*===== Helper to convert external {{$msgName}} to internal =====*/
+    NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}}& in, {{$pkgName}}::{{$msgName}}& out) {
+        PDS_TRACE_DEBUG ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{$fieldProcessed := false}}
+        {{if hasExtension "venice.pdsaFields" .}}
+        {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
+        // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+          {{else}}
+            {{if hasExtension "venice.pdsaFields" .}}
+            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+              {{$fieldProcessed = true}}
+              {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+        out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.{{$fieldOpt.Name | ToLower}}()));
+                {{else}}
+                  {{ if HasPrefix .GetTypeName ".pds_ms."}}
+        out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
+                  {{else}}
+        out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                  {{end}}
+                {{end}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+        {{if not $fieldProcessed}}
+        out.set_{{.GetName | ToLower}}(in.{{.GetName | ToLower}}());
+        {{end}}
+      {{end}}
+    } /* pds_ms_ext_to_int_{{$msgName | ToLower}} */
+    {{end}}
+  {{end}}
+{{end}}
+
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key"))) (HasPrefix $fileName "internal_")}}
+    {{$param := (getPdsaSetGlobalOpts . $cam)}}
+    {{$struct := $param.Struct}}
+    {{$specMsgName := $param.SpecMsg}}
+    {{$mib    := $param.Mib}}
+    /*===== Helper to convert external {{$msgName}} to internal =====*/
+    NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}(const {{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out) {
+        PDS_TRACE_DEBUG ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{$fieldProcessed := false}}
+        {{if hasExtension "venice.pdsaFields" .}}
+        {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
+        // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+          {{else}}
+            {{if hasExtension "venice.pdsaFields" .}}
+              {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+              {{$fieldProcessed = true}}
+              {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+        out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.{{$fieldOpt.Name | ToLower}}()));
+                {{else}}
+                  {{ if HasPrefix .GetTypeName ".pds_ms."}}
+        out.set_{{$fieldOpt.Name | ToLower}}((pds::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
+                  {{else}}
+        out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                  {{end}}
+                {{end}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+        {{if not $fieldProcessed}}
+        out.set_{{.GetName | ToLower}}(in.{{.GetName | ToLower}}());
+        {{end}}
+      {{end}}
+    } /* pds_ms_int_to_ext_{{$msgName | ToLower}} */
+  {{else}}
+    {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
+      {{$param := (getPdsaGetGlobalOpts . $cam)}}
+      {{$struct := $param.Struct}}
+      {{$specMsgName := $param.SpecMsg}}
+      {{$mib    := $param.Mib}}
+    /*===== Helper to convert external {{$msgName}} to internal =====*/
+    NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}(const {{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out) {
+        PDS_TRACE_DEBUG ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+      {{$fields := .Fields}}
+      {{range $fields}}
+        {{$fieldProcessed := false}}
+        {{if hasExtension "venice.pdsaFields" .}}
+        {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+          {{if not (eq $isFldInTbl true)}}
+        // !!! {{.Name}} field is not in table {{$mib}} {{$struct}}!!!
+          {{else}}
+            {{if hasExtension "venice.pdsaFields" .}}
+            {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+              {{$fieldProcessed = true}}
+              {{if and (not (eq $fieldOpt.Name "")) (not $fieldOpt.IsInternalField)}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+        out.set_allocated_{{$fieldOpt.Name | ToLower}}(new types::IPAddress(in.{{$fieldOpt.Name | ToLower}}()));
+                {{else}}
+                  {{ if HasPrefix .GetTypeName ".pds_ms."}}
+        out.set_{{$fieldOpt.Name | ToLower}}((pds::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
+                  {{else}}
+        out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                  {{end}}
+                {{end}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+        {{if not $fieldProcessed}}
+        out.set_{{.GetName | ToLower}}(in.{{.GetName | ToLower}}());
+        {{end}}
+      {{end}}
+    } /* pds_ms_int_to_ext_{{$msgName | ToLower}} */
+    {{end}}
+  {{end}}
+{{end}}
+
+
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if and (HasSuffix .GetName "GetResponse") (HasPrefix $fileName "internal_")}}
+    /*===== Helper to convert GetResponse to external =====*/
+    NBB_VOID pds_ms_convert_{{$msgName | ToLower}}_ext_response({{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}} *out) {
+        PDS_TRACE_DEBUG ("GetResponse conversion: {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+    {{$respFields := .Fields}}
+    {{range $respFields}}
+    {{$respField := .}}
+      {{if or (eq "response" .GetName) (eq "Response" .GetName)}}
+        {{$repeated := false}}
+        {{if (isRepeatedField .)}}
+        {{$repeated = true}}
+        for (int i=0; i<in.response_size(); i++) {
+            auto res = out->add_response();
+        {{else}}
+            auto res = out->mutable_response();
+        {{end}}
+        {{if TypeIsMessage .}}
+          {{$innerRespMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+          {{$innerRespFields := $innerRespMsg.Fields}}
+          {{$specPresent := false}}
+          {{range $innerRespFields}}
+          {{$innerRespField := .}}
+            {{if or (eq "spec" .GetName) (eq "Spec" .GetName)}}
+              {{$specPresent := true}}
+              {{$specMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+              {{if hasExtension "venice.pdsaGetGlobOpts" $specMsg}}
+                {{$param := (getPdsaGetGlobalOpts $specMsg $cam)}}
+                {{$struct := $param.Struct}}
+                {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
+            auto spec = res->mutable_spec();
+                {{if $repeated}}
+            pds_ms_int_to_ext_{{$specMsgName | ToLower}}(in.response(i).spec(), *spec);
+                {{else}}
+            pds_ms_int_to_ext_{{$specMsgName | ToLower}}(in.response().spec(), *spec);
+                {{end}}
+              {{end}}
+            {{end}}
+            {{if or (eq "status" .GetName) (eq "Status" .GetName)}}
+              {{$specMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+              {{if hasExtension "venice.pdsaGetGlobOpts" $specMsg}}
+                {{$param := (getPdsaGetGlobalOpts $specMsg $cam)}}
+                {{$struct := $param.Struct}}
+                {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
+            auto status = res->mutable_status();
+                {{if $repeated}}
+            pds_ms_int_to_ext_{{$specMsgName | ToLower}}(in.response(i).status(), *status);
+                {{else}}
+            pds_ms_int_to_ext_{{$specMsgName | ToLower}}(in.response().status(), *status);
+                {{end}}
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+        {{if isRepeatedField .}}
+        }
+        {{end}}
+      {{end}}
+    {{end}}
+    } /*pds_ms_get_external_{{$msgName | ToLower}}*/
   {{end}}
 {{end}}

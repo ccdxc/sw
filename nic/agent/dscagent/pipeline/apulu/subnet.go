@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
+	msTypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -95,7 +95,6 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
 				AutoRT:   msTypes.EvpnCfg_EVPN_CFG_MANUAL,
 				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
-				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
 			},
 		},
 	}
@@ -260,7 +259,6 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				SubnetId: uid.Bytes(),
 				AutoRD:   msTypes.EvpnCfg_EVPN_CFG_AUTO,
 				RTType:   msTypes.EvpnRtType_EVPN_RT_NONE,
-				Encap:    msTypes.EvpnEncaps_EVPN_ENCAP_VXLAN,
 			},
 		},
 	}

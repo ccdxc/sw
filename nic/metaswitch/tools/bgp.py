@@ -48,7 +48,7 @@ def update_bgp():
     return
 
 def get_bgp():
-    req = bgp_pb2.BGPRequest()
+    req = bgp_pb2.BGPGetRequest()
     req_msg = req.Request
     req_msg.Id = uuid
     resp =  stub.BGPGet(req)     
@@ -56,17 +56,15 @@ def get_bgp():
     return
 
 def get_bgp_all():
-    req = bgp_pb2.BGPRequest()
+    req = bgp_pb2.BGPGetRequest()
     resp =  stub.BGPGet(req)     
     process_response(req, resp)
-    req
+    return 
 
 def delete_bgp():
-    req = bgp_pb2.BGPRequest()
+    req = bgp_pb2.BGPDeleteRequest()
     req_msg = req.Request
     req_msg.Id = uuid
-    req_msg.LocalASN = asn
-    req_msg.RouterId = routerid;
     resp = stub.BGPDelete(req)     
     process_response(req, resp)
     return

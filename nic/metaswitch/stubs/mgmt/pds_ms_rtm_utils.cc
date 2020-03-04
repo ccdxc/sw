@@ -7,7 +7,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "qc0rtmib.h"
 
-namespace pds {
+namespace pds_ms {
 NBB_VOID
 rtm_strt_set_fill_func (CPStaticRouteSpec&      req,
                         AMB_GEN_IPS             *mib_msg,
@@ -34,37 +34,34 @@ rtm_strt_get_fill_func (CPStaticRouteSpec& req, NBB_ULONG *oid)
 }
 
 NBB_VOID
-cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status,
+cp_route_pre_set (CPStaticRouteSpec &req, NBB_LONG row_status,
                   NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
     pds_ms_get_uuid(&uuid, req.interfaceid());
-    if (pds_ms::is_pds_obj_key_invalid(uuid)) {
+    if (is_pds_obj_key_invalid(uuid)) {
         req.set_ifindex(0);
         return;
     }
 
-    auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
 
     if (uuid_obj == nullptr) {
-        throw pds_ms::Error(std::string("Invalid interface ")
+        throw Error(std::string("Invalid interface ")
                             .append(uuid.str()).append(" in CP Route proto"));
     }
-    if (uuid_obj->obj_type() != pds_ms::uuid_obj_type_t::INTERFACE) {
-        throw pds_ms::Error(std::string("Invalid UUID ")
-                            .append(uuid.str()).append(" of type ")
-                            .append(uuid_obj_type_str(uuid_obj->obj_type()))
-                            .append(" for interface in CP Route proto"));
+    if (uuid_obj->obj_type() != uuid_obj_type_t::INTERFACE) {
+        throw Error(std::string("Invalid UUID ")
+                    .append(uuid.str()).append(" of type ")
+                    .append(uuid_obj_type_str(uuid_obj->obj_type()))
+                    .append(" for interface in CP Route proto"));
     }
-    auto ifindex = ((pds_ms::interface_uuid_obj_t *) uuid_obj)->ms_id();
+    auto ifindex = ((interface_uuid_obj_t *) uuid_obj)->ms_id();
     req.set_ifindex(ifindex);
     PDS_TRACE_DEBUG("Setting CP Route Interface index 0x%x from UUID %s",
                     ifindex, uuid.str());
 }
-} // End of namespace pds
-
-namespace pds_ms {
 
 // Fill rtmEntityTable: AMB_CIPR_RTM_ENTITY 
 NBB_VOID 

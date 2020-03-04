@@ -43,7 +43,7 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
         ent->set_id(std::to_string(1));
-        ent->set_state(pds::ADMIN_STATE_ENABLE);
+        ent->set_state(types::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);

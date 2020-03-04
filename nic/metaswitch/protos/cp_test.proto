@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-package pds;
+package pds_ms;
 
 import "pdsa.proto";
 import "meta/meta.proto";

@@ -1,0 +1,386 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// protobuf specification for EVPN EVI/IP VRF and associated RT configurations
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// Evpn service definition
+service EvpnSvc
+{
+  rpc EvpnEviCreate (EvpnEviRequest) returns (EvpnEviResponse) {}
+  rpc EvpnEviUpdate (EvpnEviRequest) returns (EvpnEviResponse) {}
+  rpc EvpnEviDelete (EvpnEviDeleteRequest) returns (EvpnEviDeleteResponse) {}
+  rpc EvpnEviGet (EvpnEviGetRequest) returns (EvpnEviGetResponse) {}
+  rpc EvpnEviRtCreate (EvpnEviRtRequest) returns (EvpnEviRtResponse) {}
+  rpc EvpnEviRtUpdate (EvpnEviRtRequest) returns (EvpnEviRtResponse) {}
+  rpc EvpnEviRtDelete (EvpnEviRtDeleteRequest) returns (EvpnEviRtDeleteResponse) {}
+  rpc EvpnEviRtGet (EvpnEviRtGetRequest) returns (EvpnEviRtGetResponse) {}
+  rpc EvpnIpVrfCreate (EvpnIpVrfRequest) returns (EvpnIpVrfResponse) {}
+  rpc EvpnIpVrfUpdate (EvpnIpVrfRequest) returns (EvpnIpVrfResponse) {}
+  rpc EvpnIpVrfDelete (EvpnIpVrfDeleteRequest) returns (EvpnIpVrfDeleteResponse) {}
+  rpc EvpnIpVrfGet (EvpnIpVrfGetRequest) returns (EvpnIpVrfGetResponse) {}
+  rpc EvpnIpVrfRtCreate (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtResponse) {}
+  rpc EvpnIpVrfRtUpdate (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtResponse) {}
+  rpc EvpnIpVrfRtDelete (EvpnIpVrfRtDeleteRequest) returns (EvpnIpVrfRtDeleteResponse) {}
+  rpc EvpnIpVrfRtGet (EvpnIpVrfRtGetRequest) returns (EvpnIpVrfRtGetResponse) {}
+  rpc EvpnMacIpGet  (EvpnMacIpGetRequest) returns (EvpnMacIpGetResponse) {}
+}
+
+// EVPN RD/RT config types - manual or auto-generated
+enum EvpnCfg {
+  EVPN_CFG_NONE   = 0;
+  EVPN_CFG_MANUAL = 1;
+  EVPN_CFG_AUTO   = 2;
+}
+
+// EVPN route-target import/export type
+enum EvpnRtType {
+  EVPN_RT_NONE             = 0;
+  EVPN_RT_IMPORT           = 1;
+  EVPN_RT_EXPORT           = 2;
+  EVPN_RT_IMPORT_EXPORT    = 3;
+}
+
+// EVPN route source local/remote
+enum EvpnSource {
+    EVPN_SOURCE_NONE    = 0;
+    EVPN_SOURCE_LOCAL   = 1;
+    EVPN_SOURCE_REMOTE  = 2;
+}
+
+// EVPN EVI configuration
+message EvpnEviSpec {
+  // unique key/identifier of EVPN EVI
+  bytes      Id       = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // reference to subnet
+  bytes      SubnetId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // manual or auto route-distinguisher 
+  EvpnCfg    AutoRD   = 3;
+  // 8 byte route-distinguisher, in case of manual configuration
+  bytes      RD       = 4;
+  // manual or auto route-target. in case of manual route-target, 
+  // route-targets should be configured with EvpnEviRtSpec
+  EvpnCfg    AutoRT   = 5;
+  // route-target type, applicable to auto route-targets only
+  EvpnRtType RTType   = 6;
+}
+
+// operational status of EVPN EVI, if any
+message EvpnEviStatus {
+}
+
+// EVPN EVI object
+message EvpnEvi {
+  EvpnEviSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnEviStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN EVI create and update response
+message EvpnEviResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnEviStatus   Response  = 2;
+}
+
+// EVPN EVI create and update request
+message EvpnEviRequest {
+  repeated EvpnEviSpec Request = 1;
+}
+
+// EVPN EVI key parameters
+message EvpnEviKey {
+  // reference to subnet spec
+  bytes SubnetId = 1;
+}
+
+// EVPN EVI key handle for get and delete 
+message EvpnEviKeyHandle {
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes      Id  = 1;
+    EvpnEviKey Key = 2;
+  }
+}
+
+// EVPN EVI delete request
+message EvpnEviDeleteRequest {
+  repeated EvpnEviKeyHandle Request = 1;
+}
+
+// EVPN EVI delete response
+message EvpnEviDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN EVI get request
+message EvpnEviGetRequest {
+  repeated EvpnEviKeyHandle Request = 1;
+}
+
+// EVPN EVI get response
+message EvpnEviGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated EvpnEvi Response  = 2;
+}
+
+// EVPN IP VRF configuration
+message EvpnIpVrfSpec {
+  // unique key/identifier of EVPN IP VRF
+  bytes   Id     = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // reference to VPC
+  bytes   VPCId  = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // VxLAN vnid
+  uint32  VNI    = 3;
+  // 8 byte manual route-distinguisher, if not auto route-distinguisher
+  bytes   RD     = 4;
+}
+
+// operational status of EVPN IP VRF, if any
+message EvpnIpVrfStatus {
+}
+
+// EVPN IP VRF object
+message EvpnIpVrf {
+  EvpnIpVrfSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnIpVrfStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN IP VRF create and update request
+message EvpnIpVrfRequest {
+  repeated EvpnIpVrfSpec Request = 1;
+}
+
+// EVPN IP VRF create and update response
+message EvpnIpVrfResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnIpVrfStatus Response  = 2;
+}
+
+// EVPN IP VRF key parameters
+message EvpnIpVrfKey {
+  // reference to vpc spec
+  bytes VPCId = 1;
+}
+
+// EVPN IP VRF key handle
+message EvpnIpVrfKeyHandle {
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes        Id  = 1;
+    EvpnIpVrfKey Key = 2;
+  }
+}
+
+// EVPN IP VRF delete request
+message EvpnIpVrfDeleteRequest {
+  repeated EvpnIpVrfKeyHandle Request = 1;
+}
+
+// EVPN IP VRF delete response
+message EvpnIpVrfDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN IP VRF get request
+message EvpnIpVrfGetRequest {
+  repeated EvpnIpVrfKeyHandle Request = 1;
+}
+
+// EVPN IP VRF get response
+message EvpnIpVrfGetResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated EvpnIpVrf Response  = 2;
+}
+
+// EVPN EVI RT Configuration
+message EvpnEviRtSpec {
+  // unique key/identifier of EVPN EVI RT
+  bytes      Id       = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // reference to subnet 
+  bytes      SubnetId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // 8 byte route-target. first two octets represent type of extended community
+  // octet 1: type or type-high, only 0,1 and 2 are allowed types
+  // octet 2: sub-type or type-low, should always be 2 for route-target extended
+  // community
+  bytes      RT       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // route-target import/export type
+  EvpnRtType RTType   = 4;
+}
+
+// operational status of EVPN EVI RT, if any
+message EvpnEviRtStatus {
+}
+
+// EVPN EVI RT object
+message EvpnEviRt {
+  EvpnEviRtSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnEviRtStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN EVI RT create and update response
+message EvpnEviRtResponse {
+  types.ApiStatus ApiStatus = 1;
+  EvpnEviRtStatus Response  = 2;
+}
+
+// EvpnEviRtSpec create and update request
+message EvpnEviRtRequest {
+  repeated EvpnEviRtSpec Request = 1;
+}
+
+// EVPN EVI RT key
+message EvpnEviRtKey {
+  // reference to subnet spec
+  bytes SubnetId = 1;
+  bytes RT       = 2;
+}
+
+// EVPN EVI RT Key Handle
+message EvpnEviRtKeyHandle {
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes        Id  = 1;
+    EvpnEviRtKey Key = 2;
+  }
+}
+
+// EVPN EVI RT delete request
+message EvpnEviRtDeleteRequest {
+  repeated EvpnEviRtKeyHandle Request = 1;
+}
+
+// EVPN EVI RT delete response
+message EvpnEviRtDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN EVI RT get request
+message EvpnEviRtGetRequest {
+  repeated EvpnEviRtKeyHandle Request = 1;
+}
+
+// EVPN EVI RT get response
+message EvpnEviRtGetResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated EvpnEviRt Response  = 2;
+}
+
+// EVPN EVI RT create/update request
+message EvpnIpVrfRtRequest {
+  repeated EvpnIpVrfRtSpec Request = 1;
+}
+
+// EVPN IP VRF RT Configuration
+message EvpnIpVrfRtSpec {
+  // unique key/identifier of EVPN IP VRF
+  bytes      Id     = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // reference to VPC
+  bytes      VPCId  = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // 8 byte route-target. first two octets represent type of extended community
+  // octet 1: type or type-high, only 0,1 and 2 are allowed types
+  // octet 2: sub-type or type-low, should always be 2 for route-target extended
+  // community
+  bytes      RT     = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // route-target import/export type
+  EvpnRtType RTType = 4;
+}
+
+// operational status of EVPN IP VRF RT, if any
+message EvpnIpVrfRtStatus {
+}
+
+// EVPN IP VRF RT object
+message EvpnIpVrfRt {
+  EvpnIpVrfRtSpec   Spec   = 1 [(gogoproto.jsontag) = "spec,omitempty"];
+  EvpnIpVrfRtStatus Status = 2 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN IP VRF RT create and update response
+message EvpnIpVrfRtResponse {
+  types.ApiStatus   ApiStatus = 1;
+  EvpnIpVrfRtStatus Response  = 2;
+}
+
+// EVPN IP VRF RT key parameters
+message EvpnIpVrfRtKey {
+  // reference to vpc spec
+  bytes VPCId = 1;
+  bytes RT    = 2;
+}
+
+// EVPN IP VRF RT key handle
+message EvpnIpVrfRtKeyHandle {
+  // unique identifier or key parameters
+  oneof id_or_key {
+    bytes          Id  = 1;
+    EvpnIpVrfRtKey Key = 2;
+  }
+}
+
+// EVPN IP VRF RT delete request
+message EvpnIpVrfRtDeleteRequest {
+  repeated EvpnIpVrfRtKeyHandle Request = 1;
+}
+
+// EVPN IP VRF RT delete response
+message EvpnIpVrfRtDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+// EVPN IP VRF RT get request
+message EvpnIpVrfRtGetRequest {
+  repeated EvpnIpVrfRtKeyHandle Request = 1;
+}
+
+// EVPN IP VRF RT get response
+message EvpnIpVrfRtGetResponse {
+  types.ApiStatus      ApiStatus = 1;
+  repeated EvpnIpVrfRt Response  = 2;
+}
+
+// EVPN MAC IP table entries
+message EvpnMacIpStatus {
+  uint32          EVIId      = 1;
+  uint32          EthTagID   = 2;
+  bytes           MACAddress = 3;
+  types.IPAddress IPAddress  = 4;
+  uint32          PathID     = 5;
+  EvpnSource      Source     = 6;
+  types.IPAddress NHAddress  = 7;
+  uint32          LocalIfId  = 8;
+}
+
+// EVPN MAC IP Table Key
+message EvpnMacIpKey {
+  uint32          EVIId      = 1;
+  uint32          EthTagID   = 2;
+  bytes           MACAddress = 3;
+  types.IPAddress IPAddress  = 4;
+  uint32          PathID     = 5;
+}
+
+// EVPN MAC IP Table key handle for get and delete
+message EvpnMacIpKeyHandle {
+  EvpnMacIpKey Key = 1;
+}
+
+// EVPN MAC IP get request
+message EvpnMacIpGetRequest {
+  repeated EvpnMacIpKeyHandle Request = 1;
+}
+
+// EVPN MAC IP
+message EvpnMacIp {
+  EvpnMacIpStatus Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN MAC IP get response
+message EvpnMacIpGetResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated EvpnMacIp Response  = 2;
+}

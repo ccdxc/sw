@@ -9,7 +9,7 @@
 #include "evpn_mgmt_if.h"
 using namespace pds_ms;
 
-namespace pds {
+namespace pds_ms {
 NBB_VOID
 evpn_evi_pre_get (EvpnEviSpec &req, EvpnEviGetResponse* resp, NBB_VOID* kh)
 {
@@ -217,6 +217,8 @@ evpn_evi_pre_set (EvpnEviSpec  &req,
         throw Error (std::string("EVPN EVI request with invalid Subnet UUID ")
                      .append(uuid.str()), SDK_RET_INVALID_ARG);
     }
+    // set encapsulation to VxLAN always
+    req.set_encap(AMB_EVPN_ENCAPS_VXLAN);
 }
 
 NBB_VOID
@@ -572,9 +574,7 @@ evpn_mac_ip_get_fill_func (EvpnMacIpStatus& req, NBB_ULONG *oid)
 {
     oid[AMB_EVPN_MAC_IP_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
 }
-} // End namespace pds
 
-namespace pds_ms {
 // Fill evpnEntTable: AMB_EVPN_ENT 
 NBB_VOID
 pds_ms_fill_amb_evpn_ent (AMB_GEN_IPS  *mib_msg, pds_ms_config_t *conf)

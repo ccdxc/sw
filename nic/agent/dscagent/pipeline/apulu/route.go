@@ -13,8 +13,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	msTypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	msTypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -146,9 +146,9 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	for _, n := range rtCfg.Spec.BGPConfig.Neighbors {
 		rip := net.ParseIP(n.IPAddress)
 		if n.Shutdown == true {
-			state = msTypes.AdminState_ADMIN_STATE_DISABLE
+			state = pdstypes.AdminState_ADMIN_STATE_DISABLE
 		} else {
-			state = msTypes.AdminState_ADMIN_STATE_ENABLE
+			state = pdstypes.AdminState_ADMIN_STATE_ENABLE
 		}
 
 		// if set to 0.0.0.0 auto configure the neighborts learnt via DHCP
@@ -177,7 +177,6 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 					LocalAddr:   unknLocal,
 					Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
 					Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
-					Disable:     false,
 					NexthopSelf: false,
 					DefaultOrig: false,
 				}
@@ -207,7 +206,6 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 				Id:          uid.Bytes(),
 				PeerAddr:    ip2PDSType(n.IPAddress),
 				LocalAddr:   unknLocal,
-				Disable:     false,
 				NexthopSelf: false,
 				DefaultOrig: false,
 			}
@@ -244,7 +242,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			log.Info("lookuphost returned ", a)
 			peer := msTypes.BGPPeerSpec{
 				Id:       uid.Bytes(),
-				State:    msTypes.AdminState_ADMIN_STATE_ENABLE,
+				State:    pdstypes.AdminState_ADMIN_STATE_ENABLE,
 				PeerAddr: ip2PDSType(a[0]),
 				// XXX-TBD change to appropriate address
 				LocalAddr:    localIP,
@@ -264,7 +262,6 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 				LocalAddr:   localIP,
 				Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
 				Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
-				Disable:     false,
 				NexthopSelf: false,
 				DefaultOrig: false,
 			}
@@ -427,9 +424,9 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	for _, o := range newPeers {
 		if o.Shutdown == true {
-			state = msTypes.AdminState_ADMIN_STATE_DISABLE
+			state = pdstypes.AdminState_ADMIN_STATE_DISABLE
 		} else {
-			state = msTypes.AdminState_ADMIN_STATE_ENABLE
+			state = pdstypes.AdminState_ADMIN_STATE_ENABLE
 		}
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
@@ -456,7 +453,6 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 					LocalAddr:   unknLocal,
 					Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
 					Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
-					Disable:     false,
 					NexthopSelf: false,
 					DefaultOrig: false,
 				}
@@ -469,7 +465,6 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 					LocalAddr:   unknLocal,
 					Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
 					Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
-					Disable:     false,
 					NexthopSelf: false,
 					DefaultOrig: false,
 				}

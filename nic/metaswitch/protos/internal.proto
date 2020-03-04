@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 syntax = "proto3";
-package pds;
+package pds_ms;
 import "pdsa.proto";
 import "types.proto";
 

@@ -26,7 +26,9 @@ extern "C" {
 {{$cam := getMetaswitchMibTablesInfo}} 
 
 {{$file := .}}
+{{$fileName := .GetName}}
 {{$pkgName := .Package}}
+{{$extPkgName := "pds"}}
 {{$msgs := .Messages}}
 {{range $msgs}}
   {{$msgName := .GetName}}
@@ -40,20 +42,20 @@ extern "C" {
       {{$mib    := $param.Mib}}
       {{if not (eq $oidLen "")}}
     /*===== Set helpers for MS Table: {{$struct}} =====*/
-    typedef void (*pre_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
-    typedef void (*post_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
+    typedef void (*pre_set_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
+    typedef void (*post_set_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,
                                        NBB_ULONG *oid);
-    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields(pds::{{$msgName}} &req,
+    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields({{$pkgName}}::{{$msgName}} &req,
                                              AMB_GEN_IPS *mib_msg,
                                              {{$struct}} *v_{{$struct | ToLower}},
                                              NBB_LONG row_status);
     NBB_VOID pds_ms_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type);
-    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req);
-    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool skip_fill, bool op_update=false);
-    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
+    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req);
+    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool skip_fill, bool op_update=false);
+    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool op_update=false);
       {{end}}
     {{end}}
     {{if hasExtension "venice.pdsaGetGlobOpts" . }}
@@ -69,29 +71,46 @@ extern "C" {
       {{if not (eq $oidLen "")}}
       {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
     /*===== Get helpers for MS Table: {{$struct}} =====*/
-    typedef void (*pre_get_{{$struct | ToLower}}_func_type)(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
-    typedef void (*post_get_{{$struct | ToLower}}_func_type)(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
-    typedef void (*pre_getall_{{$struct | ToLower}}_func_type)(pds::{{$rootMsg.GetName}}* resp);
-    typedef void (*post_getall_{{$struct | ToLower}}_func_type)(pds::{{$rootMsg.GetName}}* resp);
+    typedef void (*pre_get_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
+    typedef void (*post_get_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
+    typedef void (*pre_getall_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    typedef void (*post_getall_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$rootMsg.GetName}}* resp);
     typedef bool (*pre_fill_get_{{$struct | ToLower}}_func_type)({{$struct | ToLower}}* v_{{$struct | ToLower}});
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$specMsgName}} &req,
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid({{$pkgName}}::{{$specMsgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
     NBB_VOID pds_ms_reg_pre_fill_get_{{$struct | ToLower}}(pre_fill_get_{{$struct | ToLower}}_func_type);
     bool     pds_ms_pre_fill_get_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}});
     NBB_VOID pds_ms_reg_pre_get_{{$struct | ToLower}}(pre_get_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_get_{{$struct | ToLower}}(post_get_{{$struct | ToLower}}_func_type);
-    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}(pds::{{$msgName}} &req);
-    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp);
-    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$specMsgName}} &req, pds::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
+    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req);
+    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh);
 
     NBB_VOID pds_ms_reg_pre_getall_{{$struct | ToLower}}(pre_getall_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_getall_{{$struct | ToLower}}(post_getall_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp);
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp);
-    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp);
+      {{end}}
+    {{end}}
+    {{if  (HasPrefix $fileName "internal_")}}
+      {{if hasExtension "venice.pdsaSetGlobOpts" . }}
+    /*===== convsersion APIs between external and internal protos =====*/
+    NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}} in, {{$pkgName}}::{{$msgName}}& out);
+    NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}({{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out);
+      {{else}}
+        {{if hasExtension "venice.pdsaGetGlobOpts" . }}
+    /*===== convsersion APIs between external and internal protos =====*/
+    NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}} in, {{$pkgName}}::{{$msgName}}& out);
+    NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}({{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out);
+        {{end}}
+      {{end}}
+      {{if (HasSuffix .GetName "GetResponse") }}
+    /*===== convsersion APIs between external and internal protos =====*/
+    NBB_VOID pds_ms_convert_{{$msgName | ToLower}}_ext_response({{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}} *out);
       {{end}}
     {{end}}
   {{else}}
@@ -100,13 +119,13 @@ extern "C" {
         {{$param := (getPdsaSetGlobalOpts . $cam)}}
         {{$specMsg := $param.SpecMsg}}
     // Helper to convert {{.GetName}} to {{$specMsg}} 
-    NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsg}} &out);
+    NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsg}} &out);
       {{else}}
         {{if hasExtension "venice.pdsaGetGlobOpts" . }}
           {{$param := (getPdsaGetGlobalOpts . $cam)}}
           {{$specMsg := $param.SpecMsg}}
     // Helper to convert {{.GetName}} to {{$specMsg}}
-    NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}(pds::{{.GetName}} in, pds::{{$specMsg}} &out);
+    NBB_VOID pds_ms_get_{{$specMsg | ToLower}}_from_{{.GetName | ToLower}}({{$extPkgName}}::{{.GetName}} in, {{$pkgName}}::{{$specMsg}} &out);
         {{end}}
       {{end}}
     {{end}}

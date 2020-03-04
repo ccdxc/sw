@@ -7,11 +7,11 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/internal_bgp_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/internal_evpn_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/internal_cp_route_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_test_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_route_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_cp_route_utils_gen.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -22,6 +22,7 @@ extern "C" {
 #include <iostream>
 
 using namespace std;
+using namespace pds_ms;
 
 extern NBB_BOOL sms_initialize(NBB_CXT_T NBB_CXT);
 extern NBB_BOOL pds_ms_register_mib_notify_sink(NBB_CXT_T NBB_CXT);
@@ -103,27 +104,27 @@ nbase_init ()
     SMSI_FTM_INITIALIZE();
 
     // Register user callback to convert between MS IfIndex & Linux IfIndex
-    A0_USER_REG_LOCAL_IF_MAP_FN (pds_ms::ms_to_lnx_ifindex);
-    A0_USER_REG_SYSTEM_IF_MAP_FN(pds_ms::lnx_to_ms_ifindex);
+    A0_USER_REG_LOCAL_IF_MAP_FN (ms_to_lnx_ifindex);
+    A0_USER_REG_SYSTEM_IF_MAP_FN(lnx_to_ms_ifindex);
 
-    pds_ms_reg_pre_set_amb_bgp_rm_ent (pds::bgp_rm_ent_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_rm_ent (pds::bgp_rm_ent_pre_get);
-    pds_ms_reg_pre_set_amb_bgp_peer(pds::bgp_peer_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_peer(pds::bgp_peer_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_evi(pds::evpn_evi_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_evi(pds::evpn_evi_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_evi_rt(pds::evpn_evi_rt_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_evi_rt(pds::evpn_evi_rt_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_ip_vrf(pds::evpn_ip_vrf_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_ip_vrf(pds::evpn_ip_vrf_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_ip_vrf_rt(pds::evpn_ip_vrf_rt_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_ip_vrf_rt(pds::evpn_ip_vrf_rt_pre_get);
-    pds_ms_reg_pre_set_amb_bgp_peer_afi_safi(pds::bgp_peer_afi_safi_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_peer_afi_safi(pds::bgp_peer_afi_safi_pre_get);
+    pds_ms_reg_pre_set_amb_bgp_rm_ent (bgp_rm_ent_pre_set);
+    pds_ms_reg_pre_get_amb_bgp_rm_ent (bgp_rm_ent_pre_get);
+    pds_ms_reg_pre_set_amb_bgp_peer(bgp_peer_pre_set);
+    pds_ms_reg_pre_get_amb_bgp_peer(bgp_peer_pre_get);
+    pds_ms_reg_pre_set_amb_evpn_evi(evpn_evi_pre_set);
+    pds_ms_reg_pre_get_amb_evpn_evi(evpn_evi_pre_get);
+    pds_ms_reg_pre_set_amb_evpn_evi_rt(evpn_evi_rt_pre_set);
+    pds_ms_reg_pre_get_amb_evpn_evi_rt(evpn_evi_rt_pre_get);
+    pds_ms_reg_pre_set_amb_evpn_ip_vrf(evpn_ip_vrf_pre_set);
+    pds_ms_reg_pre_get_amb_evpn_ip_vrf(evpn_ip_vrf_pre_get);
+    pds_ms_reg_pre_set_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_set);
+    pds_ms_reg_pre_get_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_get);
+    pds_ms_reg_pre_set_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_set);
+    pds_ms_reg_pre_get_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_get);
     pds_ms_reg_pre_fill_get_amb_bgp_peer_afi_safi(
-        pds::bgp_peer_afi_safi_pre_fill_get);
-    pds_ms_reg_pre_set_amb_lim_l3_if_addr(pds::lim_l3_if_addr_pre_set);
-    pds_ms_reg_pre_set_amb_cipr_rtm_static_rt(pds::cp_route_pre_set);
+        bgp_peer_afi_safi_pre_fill_get);
+    pds_ms_reg_pre_set_amb_lim_l3_if_addr(lim_l3_if_addr_pre_set);
+    pds_ms_reg_pre_set_amb_cipr_rtm_static_rt(cp_route_pre_set);
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */
@@ -231,7 +232,7 @@ nbase_init ()
     /*************************************************************************/
     /* Create Metaswitch Stubs and Processes                                 */
     /*************************************************************************/
-    pds_ms::pds_ms_stubs_create();
+    pds_ms_stubs_create();
     
     /***************************************************************************/
     /* Spin N-Base Again, its stopped in _cs_create_cpi_stub                   */
@@ -280,10 +281,10 @@ EXIT_LABEL:
 
 bool pds_ms_mgmt_init()
 {
-    pds_ms::mgmt_state_init();
+    mgmt_state_init();
     // Enter thread-safe context to cache nbase thread ptr
     {
-        auto ctx = pds_ms::mgmt_state_t::thread_context();
+        auto ctx = mgmt_state_t::thread_context();
         ctx.state()->set_nbase_thread(sdk::lib::thread::current_thread());
     }
     // Start nbase - blocking call

@@ -81,7 +81,7 @@ namespace pds_ms {
 static void
 populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
                        uint32_t          bd_id,
-                       pds::EvpnBdSpec&  req)
+                       EvpnBdSpec&       req)
 {
     req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_eviindex (bd_id);
@@ -89,10 +89,10 @@ populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
 }
 
 static void
-populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
-                                pds::EvpnIfBindCfgSpec&  req,
-                                uint32_t                 bd_id,
-                                uint32_t                 if_index)
+populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t  *subnet_spec,
+                                EvpnIfBindCfgSpec& req,
+                                uint32_t           bd_id,
+                                uint32_t           if_index)
 {
     req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_ifindex (if_index);
@@ -100,8 +100,8 @@ populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
 }
 
 static void
-populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
-                            uint32_t                  if_index)
+populate_lim_swif_cfg_spec (LimInterfaceCfgSpec& req,
+                            uint32_t             if_index)
 {
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_ifindex (if_index);
@@ -114,17 +114,17 @@ populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
 }
 
 static void
-populate_lim_soft_if_spec (pds::LimInterfaceSpec& req,
-                           pds_ifindex_t          host_ifindex)
+populate_lim_soft_if_spec (LimInterfaceSpec& req,
+                           pds_ifindex_t     host_ifindex)
 {
     req.set_ifid (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
-    req.set_iftype (pds::LIM_IF_TYPE_LIF);
+    req.set_iftype (LIM_IF_TYPE_LIF);
 }
 
 static types::ApiStatus
-process_subnet_update (pds_subnet_spec_t   *subnet_spec,
-                       uint32_t             bd_id,
-                       NBB_LONG            row_status)
+process_subnet_update (pds_subnet_spec_t *subnet_spec,
+                       uint32_t          bd_id,
+                       NBB_LONG          row_status)
 {
     uint32_t if_index;
 
@@ -135,13 +135,13 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
                      (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
                      subnet_spec->key.str(), bd_id);
 
-    pds::EvpnBdSpec evpn_bd_spec;
+    EvpnBdSpec evpn_bd_spec;
     populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
     pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
     if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
         // Create Lif here for now
-        pds::LimInterfaceSpec lim_swif_spec;
+        LimInterfaceSpec lim_swif_spec;
         auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
         populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
@@ -153,12 +153,12 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
                           subnet_spec->host_if.str(), lif_ifindex, if_index);
 
         // Set Lif interface settings
-        pds::LimInterfaceCfgSpec lim_swifcfg_spec;
+        LimInterfaceCfgSpec lim_swifcfg_spec;
         populate_lim_swif_cfg_spec (lim_swifcfg_spec, if_index);
         pds_ms_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
         // evpnIfBindCfgTable Row Update
-        pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
+        EvpnIfBindCfgSpec evpn_if_bind_spec;
         populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, if_index);
         pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
@@ -191,7 +191,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
         PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);
-        pds::EvpnBdSpec evpn_bd_spec;
+        EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
         pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
@@ -199,7 +199,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
         PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);
-        pds::LimInterfaceSpec lim_swif_spec;
+        LimInterfaceSpec lim_swif_spec;
         auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
         populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
@@ -210,12 +210,12 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                          subnet_spec->host_if.str(), lif_ifindex, ms_ifindex);
 
         // Set Lif interface settings
-        pds::LimInterfaceCfgSpec lim_swifcfg_spec;
+        LimInterfaceCfgSpec lim_swifcfg_spec;
         populate_lim_swif_cfg_spec (lim_swifcfg_spec, ms_ifindex);
         pds_ms_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
         // evpnIfBindCfgTable Row Update
-        pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
+        EvpnIfBindCfgSpec evpn_if_bind_spec;
         populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, ms_ifindex);
         pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
@@ -227,9 +227,9 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         ip_prefix.len = subnet_spec->v4_prefix.len;
         ip_prefix.addr.af = IP_AF_IPV4;
         ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
-        pds::LimInterfaceAddrSpec lim_addr_spec;
+        LimInterfaceAddrSpec lim_addr_spec;
         populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
-                                pds::LIM_IF_TYPE_IRB, bd_id);
+                                LIM_IF_TYPE_IRB, bd_id);
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
 

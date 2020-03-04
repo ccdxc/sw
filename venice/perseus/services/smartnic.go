@@ -97,7 +97,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 					if !reflect.DeepEqual(b, b1) {
 						peer := pegasusPeerUpdate{Oper: Update, peer: pegasusClient.BGPPeerSpec{
 							Id:           uid.Bytes(),
-							State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+							State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 							PeerAddr:     ip2PDSType(b1.IPAddress),
 							LocalAddr:    unknLocal,
 							RemoteASN:    b1.RemoteAS,
@@ -141,7 +141,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 			if !found {
 				ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Delete, peer: pegasusClient.BGPPeerSpec{
 					Id:           uid.Bytes(),
-					State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+					State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 					PeerAddr:     ip2PDSType(b.IPAddress),
 					LocalAddr:    unknLocal,
 					RemoteASN:    b.RemoteAS,
@@ -174,7 +174,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 			}
 			ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Create, peer: pegasusClient.BGPPeerSpec{
 				Id:           uid.Bytes(),
-				State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+				State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 				PeerAddr:     ip2PDSType(b.IPAddress),
 				LocalAddr:    unknLocal,
 				RemoteASN:    b.RemoteAS,
@@ -263,7 +263,7 @@ func (m *ServiceHandlers) setupLBIf() {
 			Request: []*pegasusClient.CPStaticRouteSpec{
 				{
 					PrefixLen: 0,
-					State:     pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+					State:     pdstypes.AdminState_ADMIN_STATE_ENABLE,
 					Override:  false,
 					DestAddr: &pdstypes.IPAddress{
 						Af: pdstypes.IPAF_IP_AF_INET,
@@ -324,7 +324,7 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 	for _, n := range evtRtConfig.Spec.BGPConfig.Neighbors {
 		peer := pegasusClient.BGPPeerSpec{
 			Id:          uid.Bytes(),
-			State:       pegasusClient.AdminState_ADMIN_STATE_ENABLE,
+			State:       pdstypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:    ip2PDSType(n.IPAddress),
 			RemoteASN:   n.RemoteAS,
 			SendComm:    true,
