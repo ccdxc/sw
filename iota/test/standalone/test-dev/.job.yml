@@ -52,7 +52,7 @@ e2e-targets:
    sub-area:
    feature:
    clusters:
-     - image: build-7
+     - image: build-17
        count: 2
        resources:
          server-type: any
@@ -70,7 +70,7 @@ e2e-targets:
    sub-area:
    feature:
    clusters:
-     - image: build-7
+     - image: build-17
        count: 2
        resources:
          server-type: any

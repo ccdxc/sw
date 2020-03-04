@@ -19,11 +19,12 @@ e2e-targets:
      - build-apulu-arm
      - build-iota
    clusters:
-     - image: build-7
+     - image: build-17
        count: 2
        resources:
-         # Freebsd works with only server-d
-         server-type: server-a
+         servers:
+           - type: server-a
+           - type: hpe
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:

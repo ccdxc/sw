@@ -20,10 +20,12 @@ e2e-targets:
        - build-iris-arm
        - build-iota
      clusters:
-       - image: build-7
+       - image: build-17
          count: 2
          resources:
-           server-type: server-a
+           servers:
+             - type: server-a
+             - type: hpe
            # nic-type can be naples, mellanox, or raw
            nic-type: naples
          # Required when RDMA is reenabled
