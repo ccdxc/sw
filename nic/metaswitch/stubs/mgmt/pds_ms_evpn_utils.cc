@@ -497,6 +497,10 @@ evpn_evi_set_fill_func (EvpnEviSpec&    req,
     data->entity_index                = PDS_MS_EVPN_ENT_INDEX;
     oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);
+
+    // Do not advertise Router MAC, VRF RT in Type 2 routes
+    data->add_vrf_info                = AMB_FALSE;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ADD_VRF_INFO);
 }
 
 NBB_VOID

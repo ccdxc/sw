@@ -42,7 +42,7 @@ ms_to_pds_ifindex (uint32_t ms_ifindex)
 }
 
 std::string 
-pds_ifindex_to_ifname (uint32_t pds_ifindex)
+pds_ifindex_to_ifname (uint32_t pds_ifindex, bool init)
 {
     return "";
 }

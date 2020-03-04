@@ -61,17 +61,20 @@ bool lif_walk_cb(void* obj, void* ctxt) {
 }
 
 std::string 
-pds_ifindex_to_ifname (uint32_t pds_ifindex)
+pds_ifindex_to_ifname (uint32_t pds_ifindex, bool init)
 {
     lif_walk_ctxt_t  ctxt;
     ctxt.pds_ifindex = pds_ifindex;
 
-    if (lif_db() != nullptr) {
-        PDS_TRACE_DEBUG("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
-        lif_db()->walk(lif_walk_cb, &ctxt);
-        if (!ctxt.ifname.empty()) {
-            PDS_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());
-            return ctxt.ifname;
+    if (!init) {
+        // Do not access LIF DB before it is initialized
+        if (lif_db() != nullptr) {
+            PDS_TRACE_DEBUG("Looking for IfIndex 0x%x", ctxt.pds_ifindex);
+            lif_db()->walk(lif_walk_cb, &ctxt);
+            if (!ctxt.ifname.empty()) {
+                PDS_TRACE_INFO("PDS IfIndex 0x%x Ifname %s", pds_ifindex, ctxt.ifname.c_str());
+                return ctxt.ifname;
+            }
         }
     }
 
@@ -150,7 +153,7 @@ uint32_t pds_port_to_ms_ifindex_and_ifname (uint32_t port, std::string* ifname)
 {
     // Simulate an Ifindex that would come from NetAgent
     auto pds_ifindex = IFINDEX(IF_TYPE_UPLINK, 0, port, ETH_IF_DEFAULT_CHILD_PORT);
-    *ifname = pds_ifindex_to_ifname (pds_ifindex);
+    *ifname = pds_ifindex_to_ifname (pds_ifindex, true);
     // Convert to MS IfIndex
     return pds_to_ms_ifindex(pds_ifindex, IF_TYPE_ETH);
 }
