@@ -38,7 +38,7 @@ common:
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health
     debugs:
-        #-   step : verif.utils.collect_logs_and_cores
+        -   step    : verif.utils.collect_techsupport
 
     setup:
         #-   step    : verif.utils.link_flap
@@ -50,8 +50,7 @@ testbundles:
         - networking/scale_session.testbundle
 
     regression:
-        # Relative paths from iota/test/iris/testbundles/
+        # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
-    #- step      : verif.utils.collect_logs_and_cores
-    #- step      : testcases.frequency.clock_settings_td
+    -   step    : verif.utils.collect_techsupport

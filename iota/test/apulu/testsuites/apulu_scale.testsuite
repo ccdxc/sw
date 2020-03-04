@@ -46,7 +46,7 @@ testbundles:
         - api_crud_scale/api_crud_scale.testbundle
 
     regression:
-        # Relative paths from iota/test/iris/testbundles/
+        # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
     - step      : verif.utils.collect_techsupport

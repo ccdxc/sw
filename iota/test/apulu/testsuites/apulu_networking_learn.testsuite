@@ -55,7 +55,7 @@ testbundles:
         #- reboot/reboot.testbundle
 
     regression:
-        # Relative paths from iota/test/iris/testbundles/
+        # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
