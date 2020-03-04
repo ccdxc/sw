@@ -129,6 +129,10 @@
 //::     k_d_action_data_json = {}
 //::     k_d_action_data_json['INGRESS_KD'] = {}
 //::     ftl_table_using_str = ''
+//::
+//::     # track the struct names being generated to avoid duplicates
+//::     structs_gen_dict = {}
+//::
 //::     for table in pddict['tables']:
 //::        if not is_table_ftl_gen(table, pddict):
 //::            continue
@@ -228,6 +232,9 @@
 //::        if (len(pddict['tables'][table]['actions']) > 1):
 //::            gen_actionid = True
 //::        #endif
+//::
+//::        # generate key entry only once for multiple actions
+//::        key_entry_gen_done = False
 //::
 //::        for action in pddict['tables'][table]['actions']:
 //::            data_fields_list = []
@@ -534,21 +541,49 @@
 //::                # construct the struct names
 //::                struct_name = actionname
 //::                struct_full_name = struct_name + '_entry_t'
+//::
+//::                k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
+//::
+//::                # if the struct is already generated, then skip it
+//::                if struct_full_name in structs_gen_dict:
+//::                    continue
+//::                #endif
+//::                structs_gen_dict[struct_full_name] = 1
 
 //::
 //::                ######################################
 //::                # KEY STRUCT
 //::                ######################################
 //::
-//::                if is_table_gen_key(table, pddict):
+//::                if key_entry_gen_done == False:
+//::                    if is_table_gen_key(table, pddict):
+//::                        if is_table_tcam_based(table, pddict):
+//::                            struct_name = str(table)
+//::                            key_entry_gen_done = True
+//::                        #endif
 struct __attribute__((__packed__)) ${struct_name}_key_entry_t {
-//::                    for key_field in reversed(key_fields_list):
-//::                        ftl_field_str_list = ftl_process_field(key_field)
-//::                        for ftl_field_str in ftl_field_str_list:
+//::                        for key_field in reversed(key_fields_list):
+//::                            ftl_field_str_list = ftl_process_field(key_field)
+//::                            for ftl_field_str in ftl_field_str_list:
     ${ftl_field_str}
+//::                            #endfor
 //::                        #endfor
-//::                    #endfor
+//::                        if is_table_tcam_based(table, pddict):
+//::                            getters_gen_str = getters_gen(False, key_fields_list)
+//::                            setters_gen_str = setters_gen(False, key_fields_list)
+//::                            key_str = key2str_gen(key_fields_list)
+
+#ifdef __cplusplus
+
+public:
+${key_str}
+${getters_gen_str}
+${setters_gen_str}
+#endif
+//::                        # fi is_table_tcam_based
+//::                        #endif
 };
+//::                    #endif
 //::                #endif
 
 //::                ######################################
@@ -562,7 +597,7 @@ struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
 //::                #endif
 //::                if gen_actionid == True:
 //::                #TODO use define for actionid type
-    uint8_t actionid:P4PD_ACTIONPC_BITS;
+    uint8_t actionid : P4PD_ACTIONPC_BITS;
 //::                #endif
 //::                for data_field in reversed(data_fields_list):
 //::                    # TODO remove once key is expanded for Apollo
@@ -659,27 +694,33 @@ public:
     }
 
     sdk_ret_t write(uint32_t index) {
+//::                # hbm table writes
+//::                if is_table_hbm_table(table, pddict):
         // swizzle the hwentry
         sdk::lib::swizzle(this, entry_size());
 
-//::                # hbm table writes
-//::                if is_table_hbm_table(table, pddict):
         sdk::asic::pd::asicpd_hbm_table_entry_write(
                     ${tableid}, index, (uint8_t *)this, entry_size_bits());
+//::                else:
+        // not implemented
+        SDK_ASSERT(0);
 //::                #endif
         return SDK_RET_OK;
     }
 
     sdk_ret_t read(uint32_t index) {
-        uint16_t entry_size_;
-
 //::                # hbm table writes
 //::                if is_table_hbm_table(table, pddict):
+        uint16_t entry_size_;
+
         sdk::asic::pd::asicpd_hbm_table_entry_read(
                     ${tableid}, index, (uint8_t *)this, &entry_size_);
-//::                #endif
         // swizzle the hwentry
         sdk::lib::swizzle(this, entry_size());
+//::                else:
+        // not implemented
+        SDK_ASSERT(0);
+//::                #endif
         return SDK_RET_OK;
     }
 //::                else:
@@ -711,7 +752,7 @@ public:
 //::                # KEY METHODS
 //::                ######################################
 //::
-//::                if is_table_gen_key(table, pddict):
+//::                if is_table_gen_key_with_data(table, pddict):
     void copy_key(${struct_name}_entry_t *s) {
 //::                    for key_field in reversed(key_fields_list):
 //::                        field_name = key_field.name()
@@ -795,7 +836,7 @@ public:
 //::                    #endif
                  ${args});
     }
-//::                # if is_table_gen_key end
+//::                # if is_table_gen_key_with_data end
 //::                #endif
 //::
 //::                ######################################
@@ -984,7 +1025,7 @@ public:
     int tostr(char *buff, uint32_t len) {
         int offset = 0;
 
-//::                if is_table_gen_key(table, pddict):
+//::                if is_table_gen_key_with_data(table, pddict):
         offset = key2str(buff, len);
         // delimiter b/w key and data
         snprintf(buff + offset, len-offset, ", ");
@@ -994,7 +1035,7 @@ public:
     }
 
     void clear(void) {
-//::                if is_table_gen_key(table, pddict):
+//::                if is_table_gen_key_with_data(table, pddict):
         clear_key();
 //::                #endif
 //::                if is_table_gen_hints(table, pddict):
@@ -1019,7 +1060,7 @@ public:
 //::
 //::                # To set fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table, pddict) and pipeline != 'iris':
+//::                if is_table_gen_key_with_data(table, pddict) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -1043,7 +1084,12 @@ public:
 //::
 //::                        split_field_dict[split_field_name] = 1
 //::                        field_set_str_list = key_data_field.set_field_str('_' + split_field_name)
+//::                        split_field_width = get_split_field_width(split_field_name)
+//::                        if split_field_width > 64:
+    void set_${split_field_name}(uint8_t *_${split_field_name}) {
+//::                        else:
     void set_${split_field_name}(${field_type_str} _${split_field_name}) {
+//::                        #endif
 //::                    else:
 //::                        field_set_str_list = key_data_field.set_field_str('_' + field_name)
     void set_${field_name}(${field_type_str} _${field_name}) {
@@ -1067,7 +1113,7 @@ public:
 //::
 //::                # To get fields if they are split
 //::                split_field_dict = {}
-//::                if is_table_gen_key(table, pddict) and pipeline != 'iris':
+//::                if is_table_gen_key_with_data(table, pddict) and pipeline != 'iris':
 //::                    key_data_chain = itertools.chain(key_fields_list, data_fields_list)
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
@@ -1090,12 +1136,21 @@ public:
 //::
 //::                        split_field_dict[split_field_name] = 1
 //::                        field_get_str_list = key_data_field.get_field_str(split_field_name)
+//::                        split_field_width = get_split_field_width(split_field_name)
+//::                        if split_field_width > 64:
+    void get_${split_field_name}(uint8_t *${split_field_name}) {
+//::                            for field_get_str in field_get_str_list:
+        ${field_get_str}
+        return;
+//::                            #endfor
+//::                        else:
     ${field_type_str} get_${split_field_name}(void) {
         ${field_type_str} ${split_field_name} = 0x0;
-//::                        for field_get_str in field_get_str_list:
+//::                            for field_get_str in field_get_str_list:
         ${field_get_str}
-//::                        #endfor
+//::                            #endfor
         return ${split_field_name};
+//::                        #endif
 //::                    else:
 //::                        if field_width > get_field_bit_unit():
 //::                            arr_len = get_bit_arr_length(field_width)
@@ -1120,14 +1175,15 @@ public:
 //::                    ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, struct_name, struct_full_name)
 //::                #endif
 //::
-//::                # reset the global state since this in invoked multiple times
-//::                ftl_hash_field_cnt_reset()
-//::                split_fields_dict_reset()
-//::                hash_hint_fields_dict_reset()
-//::
+//::            else:
+//::                k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
 //::            #endif
-//::        k_d_action_data_json['INGRESS_KD'][table][actionname] = kd_json
 //::        #endfor
+//::
+//::        # reset the global state since this in invoked multiple times
+//::        ftl_hash_field_cnt_reset()
+//::        split_fields_dict_reset()
+//::        hash_hint_fields_dict_reset()
 //::
 //::        add_kd_action_bits = False
 //::        if len(pddict['tables'][table]['actions']) > 1:

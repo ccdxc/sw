@@ -48,6 +48,11 @@ def is_field_hash(field_name):
     return 'hash' in field_name;
 
 def is_table_ftl_gen(table, pddict):
+    # generate for all tables for apulu
+    if pddict['pipeline'] == 'apulu':
+        return True
+
+    # generate only for tables with @pragma capi_bitfields_struct
     for annotation_dict in pddict['tables'][table]['annotations']:
         if 'capi_bitfields_struct' in annotation_dict:
             return True
@@ -64,13 +69,25 @@ def is_table_hbm_table(table, pddict):
 def is_table_index_based(table, pddict):
     return pddict['tables'][table]['type'] == 'Index'
 
-# generate key for table
+# tcam based table
+def is_table_tcam_based(table, pddict):
+    return pddict['tables'][table]['type'] == 'Ternary'
+
+# Hash based table
+def is_table_hash_based(table, pddict):
+    return pddict['tables'][table]['type'] == 'Hash'
+
+# dont generate key struct for index based tables
 def is_table_gen_key(table, pddict):
     return not is_table_index_based(table, pddict)
 
-# generate hashes/hints for table
+# for hash based tables, generate key along with data
+def is_table_gen_key_with_data(table, pddict):
+    return is_table_hash_based(table, pddict)
+
+# generate hashes/hints for hash based table
 def is_table_gen_hints(table, pddict):
-    return not is_table_index_based(table, pddict)
+    return is_table_hash_based(table, pddict)
 
 # TODO use pragmas
 def is_table_pad_256(table, pipeline):
@@ -215,6 +232,9 @@ def validate_field_width_arr(field_name, field_width):
     if field_width % get_field_bit_arr_unit() != 0:
         raise Exception('field ' + field_name + ' width ' + str(field_width) + ' not multiple of '+ str(get_field_bit_arr_unit()))
 
+def get_byte_from_bit (bit):
+    return bit/8
+
 set_field_template_1 = Template(
 """\
 ${field_name} = (${field_arg} >> ${shift}) & ${mask_str};\
@@ -297,15 +317,47 @@ class Field:
             split_field_name = self.split_name()
             split_fields_list = get_split_field(split_field_name)
             split_field_width = get_split_field_width(split_field_name)
-            for split_field in split_fields_list:
-                field_name = split_field.name()
-                sbit = split_field.sbit()
-                ebit = split_field.ebit()
-                mask = 0
-                for i in range(ebit-sbit+1):
-                    mask |= (1 << i)
-                shift = split_field_width - (ebit + 1)
-                field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
+            # handle case if total width is > 64
+            if split_field_width > 64:
+                for split_field in split_fields_list:
+                    field_name = split_field.name()
+                    sbit = split_field.sbit()
+                    ebit = split_field.ebit()
+                    # if total width > 64, then argument is uint8_t array
+                    if (ebit - sbit + 1) <= 8:
+                        mask = 0
+                        for i in range(ebit-sbit+1):
+                            mask |= (1 << i)
+                        # starting bit for this field in the argument
+                        start_bit = split_field_width - (ebit + 1)
+                        # calculate the corresponding byte to index in argument
+                        start_byte = get_byte_from_bit(start_bit)
+                        field_arg_index_str = field_arg + '[' + str(start_byte) + ']'
+                        # bit shift within the corresponding byte
+                        shift = 8 - (ebit + 1)
+                        field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg_index_str, shift=shift, mask_str=str(hex(mask))))
+                    else:
+                        # starting bit for this field in the argument
+                        start_bit = split_field_width - (ebit + 1)
+                        # calculate the corresponding byte to index in argument
+                        start_byte = get_byte_from_bit(start_bit)
+                        # ending bit for this field in argument
+                        end_bit = split_field_width - (sbit + 1)
+                        # calculate the corresponding byte to index in argument
+                        end_byte = get_byte_from_bit(end_bit)
+                        # offset from which memcpy should start
+                        start_offset =  '&' + field_arg + '[' + str(start_byte) + ']'
+                        field_str_list.append(set_field_template_2.substitute(field_name=field_name, field_arg=start_offset, arr_len=str(end_byte - start_byte + 1)))
+            else:
+                for split_field in split_fields_list:
+                    field_name = split_field.name()
+                    sbit = split_field.sbit()
+                    ebit = split_field.ebit()
+                    mask = 0
+                    for i in range(ebit-sbit+1):
+                        mask |= (1 << i)
+                    shift = split_field_width - (ebit + 1)
+                    field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
                 validate_field_width_arr(field_name, field_width)
@@ -329,15 +381,49 @@ class Field:
             split_field_name = self.split_name()
             split_fields_list = get_split_field(split_field_name)
             split_field_width = get_split_field_width(split_field_name)
-            for split_field in split_fields_list:
-                field_name = split_field.name()
-                sbit = split_field.sbit()
-                ebit = split_field.ebit()
-                mask = 0
-                for i in range(ebit-sbit+1):
-                    mask |= (1 << i)
-                shift = split_field_width - (ebit + 1)
-                field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
+            # handle case if total width is > 64
+            if split_field_width > 64:
+                if split_field_width % 8 != 0:
+                    raise Exception(split_field + ' is not a multiple of 8')
+                for split_field in split_fields_list:
+                    field_name = split_field.name()
+                    sbit = split_field.sbit()
+                    ebit = split_field.ebit()
+                    # if total width > 64, then argument is uint8_t array
+                    if (ebit - sbit + 1) <= 8:
+                        mask = 0
+                        for i in range(ebit-sbit+1):
+                            mask |= (1 << i)
+                        # starting bit for this field in the argument
+                        start_bit = split_field_width - (ebit + 1)
+                        # calculate the corresponding byte to index in argument
+                        start_byte = get_byte_from_bit(start_bit)
+                        field_arg_index_str = field_arg + '[' + str(start_byte) + ']'
+                        # bit shift within the corresponding byte
+                        shift = 8 - (ebit + 1)
+                        field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg_index_str, shift=shift, mask_str=str(hex(mask))))
+                    else:
+                        # starting bit for this field in the argument
+                        start_bit = split_field_width - (ebit + 1)
+                        # calculate the corresponding byte to index in argument
+                        start_byte = get_byte_from_bit(start_bit)
+                        # ending bit for this field in argument
+                        end_bit = split_field_width - (sbit + 1)
+                        # calculate the corresponding byte to index in argument
+                        end_byte = get_byte_from_bit(end_bit)
+                        # offset from which memcpy should start
+                        start_offset =  '&' + field_arg + '[' + str(start_byte) + ']'
+                        field_str_list.append(get_field_template_2.substitute(field_name=field_name, field_arg=start_offset, arr_len=str(end_byte - start_byte + 1)))
+            else:
+                for split_field in split_fields_list:
+                    field_name = split_field.name()
+                    sbit = split_field.sbit()
+                    ebit = split_field.ebit()
+                    mask = 0
+                    for i in range(ebit-sbit+1):
+                        mask |= (1 << i)
+                    shift = split_field_width - (ebit + 1)
+                    field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
                 validate_field_width_arr(field_name, field_width)
@@ -587,3 +673,223 @@ def ftl_table_gen(output_h_dir, output_c_dir, tableid, num_hints, table_name, ta
     f = open(output_c_dir + '/ftl.cc', "a+")
     output = ftl_table_template_cc.substitute(tableid=tableid, table_name=table_name, table_entry_name=table_entry_name, num_hints=num_hints)
     f.write(output)
+
+getters_gen_template_1 = Template(
+"""\
+    uint8_t get_actionid(void) {
+        return actionid;
+    }
+
+""")
+
+getters_gen_template_2 = Template(
+"""\
+    void get_${split_field_name}(uint8_t *${split_field_name}) {
+""")
+
+getters_gen_template_3 = Template(
+"""\
+    ${field_type_str} get_${split_field_name}(void) {
+        ${field_type_str} ${split_field_name} = 0x0;
+""")
+
+getters_gen_template_4 = Template(
+"""\
+        ${field_get_str}
+""")
+
+getters_gen_template_5 = Template(
+"""\
+        return ${split_field_name};
+""")
+
+getters_gen_template_6 = Template(
+"""\
+    void get_${field_name}(uint8_t *_${field_name}) {
+        memcpy(_${field_name}, ${field_name}, ${arr_len});
+        return;
+""")
+
+getters_gen_template_7 = Template(
+"""\
+    ${field_type_str} get_${field_name}(void) {
+        return ${field_name};
+""")
+
+getters_gen_template_8 = Template(
+"""\
+    }
+
+""")
+
+getters_gen_template_9 = Template(
+"""\
+        return;
+""")
+
+def getters_gen(gen_actionid, key_data_chain):
+    getters_gen_str = ""
+    if gen_actionid == True:
+        getters_gen_str += getters_gen_template_1.substitute()
+
+    split_field_dict = {}
+
+    for key_data_field in key_data_chain:
+        # ignore if field is hash/hint/padding
+        if not key_data_field.is_key_appdata_field():
+            continue
+
+        field_name = key_data_field.name()
+        field_width = key_data_field.width()
+        field_type_str = key_data_field.field_type_str()
+        if key_data_field.is_field_split():
+            split_field_name = key_data_field.split_name()
+
+            # ignore if method is already generated
+            if split_field_name in split_field_dict:
+                continue
+
+            split_field_dict[split_field_name] = 1
+            field_get_str_list = key_data_field.get_field_str(split_field_name)
+            split_field_width = get_split_field_width(split_field_name)
+
+            if split_field_width > 64:
+                getters_gen_str += getters_gen_template_2.substitute(split_field_name=split_field_name)
+                for field_get_str in field_get_str_list:
+                    getters_gen_str += getters_gen_template_4.substitute(field_get_str=field_get_str)
+                getters_gen_str += getters_gen_template_9.substitute()
+            else:
+                getters_gen_str += getters_gen_template_3.substitute(field_type_str=field_type_str, split_field_name=split_field_name)
+                for field_get_str in field_get_str_list:
+                    getters_gen_str += getters_gen_template_4.substitute(field_get_str=field_get_str)
+                getters_gen_str += getters_gen_template_5.substitute(split_field_name=split_field_name)
+        else:
+            if field_width > get_field_bit_unit():
+                arr_len = get_bit_arr_length(field_width)
+                getters_gen_str += getters_gen_template_6.substitute(field_name=field_name, arr_len=arr_len)
+            else:
+                getters_gen_str += getters_gen_template_7.substitute(field_type_str=field_type_str, field_name=field_name)
+        getters_gen_str += getters_gen_template_8.substitute(field_type_str=field_type_str, field_name=field_name)
+
+    return getters_gen_str
+
+setters_gen_template_1 = Template(
+"""\
+    void set_actionid(uint8_t actionid_) {
+        actionid = actionid_;
+    }
+
+""")
+
+setters_gen_template_2 = Template(
+"""\
+    void set_${split_field_name}(uint8_t *_${split_field_name}) {
+""")
+
+setters_gen_template_3 = Template(
+"""\
+    void set_${split_field_name}(${field_type_str} _${split_field_name}) {
+""")
+
+setters_gen_template_4 = Template(
+"""\
+    void set_${field_name}(${field_type_str} _${field_name}) {
+""")
+
+setters_gen_template_5 = Template(
+"""\
+        ${field_set_str}
+""")
+
+setters_gen_template_6 = Template(
+"""\
+    }
+
+""")
+
+def setters_gen(gen_actionid, key_data_chain):
+    setters_gen_str = ""
+
+    if gen_actionid == True:
+        setters_gen_str += setters_gen_template_1.substitute()
+
+    # To set fields if they are split
+    split_field_dict = {}
+
+    for key_data_field in key_data_chain:
+        # ignore if field is hash/hint/padding
+        if not key_data_field.is_key_appdata_field():
+            continue
+
+        field_name = key_data_field.name()
+        field_width = key_data_field.width()
+        field_type_str = key_data_field.field_type_str()
+        if key_data_field.is_field_split():
+            split_field_name = key_data_field.split_name()
+
+            # ignore if method is already generated
+            if split_field_name in split_field_dict:
+                continue
+
+            split_field_dict[split_field_name] = 1
+            field_set_str_list = key_data_field.set_field_str('_' + split_field_name)
+            split_field_width = get_split_field_width(split_field_name)
+
+            if split_field_width > 64:
+                setters_gen_str += setters_gen_template_2.substitute(split_field_name=split_field_name)
+            else:
+                setters_gen_str += setters_gen_template_3.substitute(split_field_name=split_field_name, field_type_str=field_type_str)
+        else:
+            field_set_str_list = key_data_field.set_field_str('_' + field_name)
+            setters_gen_str += setters_gen_template_4.substitute(field_name=field_name, field_type_str=field_type_str)
+
+        for field_set_str in field_set_str_list:
+            setters_gen_str += setters_gen_template_5.substitute(field_set_str=field_set_str)
+
+        setters_gen_str += setters_gen_template_6.substitute()
+
+    return setters_gen_str
+
+key_str_gen_template_1 = Template(
+"""\
+    int key2str(char *buff, uint32_t len) {
+""")
+
+key_str_gen_template_2 = Template(
+"""\
+        return snprintf(buff, len, "key: "
+""")
+
+key_str_gen_template_3 = Template(
+"""\
+                 "${format_str}",
+""")
+
+key_str_gen_template_4 = Template(
+"""\
+                 ${args});
+    }
+
+""")
+
+def key2str_gen(key_fields_list):
+    key_str = key_str_gen_template_1.substitute()
+
+    format_list, args_list = ftl_field_print(key_fields_list)
+
+    key_str += key_str_gen_template_2.substitute()
+
+    if len(format_list) == 1:
+        format_str = format_list[0]
+    else:
+        format_str = ', '.join(map(lambda format: format, format_list))
+
+    key_str += key_str_gen_template_3.substitute(format_str=format_str)
+
+    if len(args_list) == 1:
+        args = args_list[0]
+    else:
+        args = ', '.join(map(lambda arg: arg, args_list))
+    key_str += key_str_gen_template_4.substitute(args=args)
+
+    return key_str
