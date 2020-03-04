@@ -109,18 +109,13 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
                             pds::DeviceResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_device_spec_t *api_spec;
+    pds_device_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::CANCELLED;
-    }
-    api_spec = core::agent_state::state()->device();
-    if (api_spec == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::OK;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -139,16 +134,16 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         batched_internally = true;
     }
 
-    pds_device_proto_to_api_spec(api_spec, proto_req->request());
+    pds_device_proto_to_api_spec(&api_spec, proto_req->request());
     if (!core::agent_state::state()->pds_mock_mode()) {
-        ret = pds_device_update(api_spec, bctxt);
+        ret = pds_device_update(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             if (batched_internally) {
                 pds_batch_destroy(bctxt);
             }
             goto end;
         }
-        memcpy(core::agent_state::state()->device(), api_spec, sizeof(pds_device_spec_t));
+        memcpy(core::agent_state::state()->device(), &api_spec, sizeof(pds_device_spec_t));
     }
 
     // update device.conf with profile
@@ -244,7 +239,6 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     pds_device_info_t info;
 
     if (api_spec->dev_oper_mode != PDS_DEV_OPER_MODE_NONE) {
-        api_spec = core::agent_state::state()->device();
         memcpy(&info.spec, api_spec, sizeof(pds_device_spec_t));
         if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_device_read(&info);
