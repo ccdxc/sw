@@ -57,7 +57,6 @@ export enum MonitoringAlertStatus_severity {
 export enum MonitoringArchiveRequestSpec_type {
     'event' = "event",
     'auditevent' = "auditevent",
-    'fwlog' = "fwlog",
 }
 
 export enum MonitoringArchiveRequestStatus_status {
@@ -227,6 +226,11 @@ export enum MonitoringAlertSpec_state_uihint {
     'resolved' = "Resolved",
 }
 
+export enum MonitoringArchiveRequestSpec_type_uihint {
+    'auditevent' = "AuditEvent",
+    'event' = "Event",
+}
+
 export enum MonitoringEventPolicySpec_format_uihint {
     'syslog-bsd' = "BSD",
     'syslog-rfc5424' = "RFC5424",
@@ -376,6 +380,7 @@ export class AllEnums {
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
+    MonitoringArchiveRequestSpec_type_uihint = MonitoringArchiveRequestSpec_type_uihint;
     MonitoringEventPolicySpec_format_uihint = MonitoringEventPolicySpec_format_uihint;
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogPolicySpec_format_uihint = MonitoringFwlogPolicySpec_format_uihint;

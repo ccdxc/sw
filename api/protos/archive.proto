@@ -12,7 +12,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 import "search.proto";
 
-// ArchiveQuery is to archive audit logs, events and firewall logs based on time window, field values
+// ArchiveQuery is to archive audit logs and events based on time window, field values
 message ArchiveQuery {
     // OR of Text-requirements to be matched, Exclude is not supported for Text search
     repeated search.TextRequirement Texts = 1 [(gogoproto.jsontag) = "texts,omitempty"];
@@ -31,9 +31,10 @@ message ArchiveQuery {
 
 message ArchiveRequestSpec {
     enum LogType {
+        // ui-hint: Event
         Event      = 0;
+        // ui-hint: AuditEvent
         AuditEvent = 1;
-        FwLog      = 2;
     }
     string Type        = 1 [(venice.check) = "StrEnum(ArchiveRequestSpec.LogType)", (gogoproto.jsontag) = "type"];
     ArchiveQuery Query = 2 [(gogoproto.jsontag) = "query"];
@@ -54,7 +55,7 @@ message ArchiveRequestStatus {
     string URI    = 3 [(gogoproto.jsontag) = "uri,omitempty"];
 }
 
-// ArchiveRequest is to asynchronously archive audit logs, events and firewall logs
+// ArchiveRequest is to asynchronously archive audit logs and events
 message ArchiveRequest {
     // KV store prefix
     option (venice.objectPrefix) = {Collection: "archive-requests", Path: "/{O.Tenant}"};

@@ -57,7 +57,6 @@ func NewClientGetter(name string, logtype string, rslvr resolver.Interface, l lo
 				l:             l,
 			}, nil
 		}
-	case monitoring.ArchiveRequestSpec_FwLog.String():
 	default:
 		return nil, fmt.Errorf("unknown archive request type: %s", logtype)
 	}

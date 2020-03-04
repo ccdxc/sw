@@ -32,19 +32,16 @@ var _ listerwatcher.WatcherClient
 var ArchiveRequestSpec_LogType_normal = map[string]string{
 	"auditevent": "auditevent",
 	"event":      "event",
-	"fwlog":      "fwlog",
 }
 
 var ArchiveRequestSpec_LogType_vname = map[int32]string{
 	0: "event",
 	1: "auditevent",
-	2: "fwlog",
 }
 
 var ArchiveRequestSpec_LogType_vvalue = map[string]int32{
 	"event":      0,
 	"auditevent": 1,
-	"fwlog":      2,
 }
 
 func (x ArchiveRequestSpec_LogType) String() string {

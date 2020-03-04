@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { MonitoringArchiveRequestSpec_type,  } from './enums';
+import { MonitoringArchiveRequestSpec_type,  MonitoringArchiveRequestSpec_type_uihint  } from './enums';
 import { MonitoringArchiveQuery, IMonitoringArchiveQuery } from './monitoring-archive-query.model';
 
 export interface IMonitoringArchiveRequestSpec {
@@ -24,7 +24,7 @@ export class MonitoringArchiveRequestSpec extends BaseModel implements IMonitori
     'query': MonitoringArchiveQuery = null;
     public static propInfo: { [prop in keyof IMonitoringArchiveRequestSpec]: PropInfoItem } = {
         'type': {
-            enum: MonitoringArchiveRequestSpec_type,
+            enum: MonitoringArchiveRequestSpec_type_uihint,
             default: 'event',
             required: true,
             type: 'string'

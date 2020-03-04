@@ -13994,7 +13994,7 @@
           "description": "OR of tenants within the scope of which archive needs to be performed. If not specified, it will be set to tenant of the logged in user. Also users in non default tenant can archive logs in their tenant scope only."
         }
       },
-      "description": "ArchiveQuery is to archive audit logs, events and firewall logs based on time window, field values."
+      "description": "ArchiveQuery is to archive audit logs and events based on time window, field values."
     },
     "monitoringArchiveRequest": {
       "type": "object",
@@ -14015,7 +14015,7 @@
           "$ref": "#/definitions/monitoringArchiveRequestStatus"
         }
       },
-      "description": "ArchiveRequest is to asynchronously archive audit logs, events and firewall logs."
+      "description": "ArchiveRequest is to asynchronously archive audit logs and events."
     },
     "monitoringArchiveRequestCreate": {
       "type": "object",
@@ -14033,7 +14033,7 @@
           "$ref": "#/definitions/monitoringArchiveRequestSpec"
         }
       },
-      "description": "ArchiveRequest is to asynchronously archive audit logs, events and firewall logs."
+      "description": "ArchiveRequest is to asynchronously archive audit logs and events."
     },
     "monitoringArchiveRequestList": {
       "type": "object",
@@ -14067,10 +14067,13 @@
           "type": "string",
           "enum": [
             "event",
-            "auditevent",
-            "fwlog"
+            "auditevent"
           ],
-          "default": "event"
+          "default": "event",
+          "x-ui-hints": {
+            "auditevent": "AuditEvent",
+            "event": "Event"
+          }
         },
         "query": {
           "$ref": "#/definitions/monitoringArchiveQuery"

@@ -90,8 +90,6 @@ func NewObjstoreExporter(reqType, tenant string, rslvr resolver.Interface, logge
 		bucket = objstoreapi.Buckets_events.String()
 	case monitoring.ArchiveRequestSpec_AuditEvent.String():
 		bucket = objstoreapi.Buckets_auditevents.String()
-	case monitoring.ArchiveRequestSpec_FwLog.String():
-		bucket = objstoreapi.Buckets_fwlogs.String()
 	}
 	expter := &objstoreExporter{
 		rslvr:  rslvr,
