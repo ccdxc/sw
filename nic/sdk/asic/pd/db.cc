@@ -70,12 +70,8 @@ asic_ring_hostdb (asic_db_addr_t *db_addr, uint64_t data)
     if (unlikely(g_db_addr_host_csr == 0)) {
         g_db_addr_host_csr = sdk::asic::asic_host_dbaddr_get();
     }
-
     SDK_ASSERT(db_addr);
     addr = ASIC_HOST_DBADDR_GET(db_addr->lif_id, db_addr->q_type, db_addr->upd);
-
-    SDK_TRACE_DEBUG("host doorbell write64 addr: %p, data: %llu", addr, data);
-
     ASIC_PAL_DB_WRITE(addr, data, 64);
 }
 
@@ -88,12 +84,8 @@ asic_ring_db (asic_db_addr_t *db_addr, uint64_t data)
     if (unlikely(g_db_addr_local_csr == 0)) {
         g_db_addr_local_csr = sdk::asic::asic_local_dbaddr_get();
     }
-
     SDK_ASSERT(db_addr);
     addr = ASIC_LOCAL_DBADDR_GET(db_addr->lif_id, db_addr->q_type, db_addr->upd);
-
-    SDK_TRACE_DEBUG("doorbell write64 addr: %p, data: %llu", addr, data);
-
     ASIC_PAL_DB_WRITE(addr, data, 64);
 }
 
@@ -106,12 +98,8 @@ asic_ring_db (asic_db_addr_t *db_addr, uint32_t data)
     if (unlikely(g_db_addr_local_csr == 0)) {
         g_db_addr_local_csr = sdk::asic::asic_local_dbaddr_get();
     }
-
     SDK_ASSERT(db_addr);
     addr = ASIC_LOCAL_DBADDR_GET(db_addr->lif_id, db_addr->q_type, db_addr->upd);
-
-    SDK_TRACE_DEBUG("doorbell write32 addr: %p, data: %llu", addr, data);
-
     ASIC_PAL_DB_WRITE(addr, data, 32);
 }
 
@@ -124,12 +112,8 @@ asic_ring_db (asic_db_addr_t *db_addr, uint16_t data)
     if (unlikely(g_db_addr_local_csr == 0)) {
         g_db_addr_local_csr = sdk::asic::asic_local_dbaddr_get();
     }
-
     SDK_ASSERT(db_addr);
     addr = ASIC_LOCAL_DBADDR_GET(db_addr->lif_id, db_addr->q_type, db_addr->upd);
-
-    SDK_TRACE_DEBUG("doorbell write16 addr: %p, data: %llu", addr, data);
-
     ASIC_PAL_DB_WRITE(addr, data, 16);
 }
 

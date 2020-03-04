@@ -47,6 +47,9 @@ dhcp_relay::factory(pds_dhcp_relay_spec_t *spec) {
 
 void
 dhcp_relay::destroy(dhcp_relay *relay) {
+    if (relay->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
+    }
     relay->~dhcp_relay();
     dhcp_db()->free(relay);
 }
@@ -57,18 +60,30 @@ dhcp_relay::clone(api_ctxt_t *api_ctxt) {
 
     cloned_relay = dhcp_db()->alloc_relay();
     if (cloned_relay) {
-        new (cloned_relay) dhcp_relay();
-        if (cloned_relay->init_config(api_ctxt) != SDK_RET_OK) {
-            cloned_relay->~dhcp_relay();
-            dhcp_db()->free(cloned_relay);
-            return NULL;
-        }
+         new (cloned_relay) dhcp_relay();
+         if (cloned_relay->init_config(api_ctxt) != SDK_RET_OK) {
+             goto error;
+         }
+         cloned_relay->impl_ = impl_->clone();
+         if (unlikely(cloned_relay->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone DHCP relay %s impl", key_.str());
+            goto error;
+         }
     }
     return cloned_relay;
+
+error:
+
+    cloned_relay->~dhcp_relay();
+    dhcp_db()->free(cloned_relay);
+    return NULL;
 }
 
 sdk_ret_t
 dhcp_relay::free(dhcp_relay *relay) {
+    if (relay->impl_) {
+        impl_base::free(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
+    }
     relay->~dhcp_relay();
     dhcp_db()->free(relay);
     return SDK_RET_OK;
@@ -82,12 +97,21 @@ dhcp_relay::build(pds_obj_key_t *key) {
     if (relay) {
         new (relay) dhcp_relay();
         memcpy(&relay->key_, key, sizeof(*key));
+        relay->impl_ = impl_base::build(impl::IMPL_OBJ_ID_DHCP_RELAY,
+                                        key, relay);
+        if (relay->impl_ == NULL) {
+            dhcp_relay::destroy(relay);
+            return NULL;
+        }
     }
     return relay;
 }
 
 void
 dhcp_relay::soft_delete(dhcp_relay *relay) {
+    if (relay->impl_) {
+        impl_base::soft_delete(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
+    }
     relay->del_from_db();
     relay->~dhcp_relay();
     dhcp_db()->free(relay);
@@ -100,6 +124,11 @@ dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
     pds_dhcp_relay_spec_t *spec;
 
     spec = &api_ctxt->api_params->dhcp_relay_spec;
+    PDS_TRACE_DEBUG("DHCP server IP %s", ipaddr2str(&spec->server_ip));
+    if (spec->server_ip.af != IP_AF_IPV4) {
+        PDS_TRACE_ERR("Invalid DHCP relay server IP, only IPv4 is supported");
+        return SDK_RET_INVALID_ARG;
+    }
     if (spec->agent_ip.af == IP_AF_NIL) {
         // not (local) DHCP relay agent IP provided, use mytep IP
         device = device_db()->find();
@@ -118,7 +147,6 @@ dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
         }
     }
     key_ = api_ctxt->api_params->dhcp_relay_spec.key;
-
     return SDK_RET_OK;
 }
 
