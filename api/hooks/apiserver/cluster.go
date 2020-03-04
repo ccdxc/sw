@@ -10,6 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/version"
+
+	"github.com/pensando/sw/api/generated/rollout"
+
 	"github.com/pensando/sw/venice/utils/featureflags"
 
 	"github.com/gogo/protobuf/types"
@@ -50,6 +54,11 @@ type clusterHooks struct {
 	restoreInProgressMu sync.Mutex
 	restoreInProgress   bool
 }
+
+const (
+	relAMajorVersion = 1
+	relAMinorVersion = 3
+)
 
 // ClusterHooksObjStoreClient is used for testing and overrides the objectstore client used by the hooks.
 var ClusterHooksObjStoreClient objclient.Client
@@ -1134,6 +1143,113 @@ func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Inter
 		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
 	}
 
+	//create default firewall profile under the following conditions
+	// 1. upgrade from A Release to B Release (1.3 to 1.4 & up)
+	// 2. apiserver restart during upgrade
+
+	//Node precommit is never failed for dsc profile. We log error and continue
+	cl.logger.Infof("(nodePreCommitHook) Get ClusterVersion Object")
+	verObj := cluster.Version{}
+	vkey := verObj.MakeKey(string(apiclient.GroupCluster))
+	err := kvs.Get(ctx, vkey, &verObj)
+	if err == nil && verObj.Status.RolloutBuildVersion == "" {
+		cl.logger.Infof("(nodePreCommitHook) Rollout not in progress")
+		return i, true, nil
+	}
+	cl.logger.Infof("(nodePreCommitHook) Get RolloutAction Object")
+	rolloutActionObj := &rollout.RolloutAction{}
+	rolloutActionObjKey := rolloutActionObj.MakeKey(string(apiclient.GroupRollout))
+
+	if err = kvs.Get(ctx, rolloutActionObjKey, rolloutActionObj); err != nil {
+		cl.logger.Infof("(nodePreCommitHook) RolloutAction object not present")
+		return i, true, nil
+	}
+
+	//Assumption A release starts with 1.3 && B Release starts with 1.4 & up
+	rolloutMajorVersion := version.GetMajorVersion(rolloutActionObj.Spec.Version)
+	rolloutMinorVersion := version.GetMinorVersion(rolloutActionObj.Spec.Version)
+	if rolloutMajorVersion == 0 || rolloutMinorVersion == 0 {
+		cl.logger.Errorf("(nodePreCommitHook) Invalid Version")
+		return i, true, nil
+	}
+	//upgrade from 1.3 to 1.4+ but not to 2.x
+	if strings.HasPrefix(verObj.Status.BuildVersion, "1.3") && rolloutMajorVersion == relAMajorVersion && rolloutMinorVersion > relAMinorVersion {
+		insertionFWProfile := &cluster.DSCProfile{}
+		insertionFWProfile.Defaults("all")
+		insertionFWProfile.Spec.FwdMode = "INSERTION"
+		insertionFWProfile.Spec.FlowPolicyMode = "ENFORCED"
+		apiSrv := apisrvpkg.MustGetAPIServer()
+		insertionFWProfile.APIVersion = apiSrv.GetVersion()
+		insertionFWProfile.SelfLink = insertionFWProfile.MakeURI("configs", insertionFWProfile.APIVersion, string(apiclient.GroupCluster))
+		insertionFWProfile.Name = "InsertionFWProfile"
+		insertionFWProfile.Tenant = ""
+		insertionFWProfile.Namespace = ""
+		insertionFWProfile.GenerationID = "1"
+		insertionFWProfile.UUID = uuid.NewV4().String()
+		ts, _ := types.TimestampProto(time.Now())
+
+		insertionFWProfile.CreationTime, insertionFWProfile.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
+		insertionFWProfileKey := insertionFWProfile.MakeKey(string(apiclient.GroupCluster))
+		intoFWProfile := cluster.DSCProfile{}
+		err = kvs.Get(ctx, insertionFWProfileKey, &intoFWProfile)
+		if err != nil {
+			cl.logger.Infof("(nodePreCommitHook) InsertionFWProfile not found (%+v). Creating now", err)
+			err = txn.Create(insertionFWProfileKey, insertionFWProfile)
+			if err != nil {
+				cl.logger.Errorf("(nodePreCommitHook)InsertionFWProfile Creation Error %+v", err)
+				return i, true, nil
+			}
+		}
+
+		// Create a Default Profile as well
+		dscDefaultProfile := &cluster.DSCProfile{}
+		dscDefaultProfile.Defaults("all")
+		dscDefaultProfile.APIVersion = apiSrv.GetVersion()
+		dscDefaultProfile.SelfLink = dscDefaultProfile.MakeURI("configs", dscDefaultProfile.APIVersion, string(apiclient.GroupCluster))
+		dscDefaultProfile.Name = globals.DefaultDSCProfile
+		dscDefaultProfile.Tenant = ""
+		dscDefaultProfile.Namespace = ""
+		dscDefaultProfile.GenerationID = "1"
+		dscDefaultProfile.UUID = uuid.NewV4().String()
+		timestamp, _ := types.TimestampProto(time.Now())
+
+		dscDefaultProfile.CreationTime, dscDefaultProfile.ModTime = api.Timestamp{Timestamp: *timestamp}, api.Timestamp{Timestamp: *timestamp}
+		dscDefaultProfileKey := dscDefaultProfile.MakeKey(string(apiclient.GroupCluster))
+		intoDscProfile := cluster.DSCProfile{}
+		err = kvs.Get(ctx, dscDefaultProfileKey, &intoDscProfile)
+		if err != nil {
+			cl.logger.Infof("(nodePreCommitHook) dscDefaultProfile not found (%+v). Creating now", err)
+			err = txn.Create(dscDefaultProfileKey, dscDefaultProfile)
+			if err != nil {
+				cl.logger.Errorf("(nodePreCommitHook)dscDefaultProfile Creation Error %+v", err)
+				return i, true, nil
+			}
+		}
+
+		into := cluster.DistributedServiceCardList{}
+		into.Kind = "DistributedServiceCardList"
+		r := cluster.DistributedServiceCard{}
+		keyDSC := r.MakeKey(string(apiclient.GroupCluster))
+
+		ctx = apiutils.SetVar(ctx, "ObjKind", "cluster.DistributedServiceCard")
+		err = kvs.List(ctx, keyDSC, &into)
+		if err != nil {
+			cl.logger.ErrorLog("msg", "(nodePreCommitHook) DistributedServiceCardList failed", "key", key, "err", err)
+			return nil, true, nil
+		}
+		cl.logger.Infof("(nodePreCommitHook) DSC List is %+v", into.GetItems())
+		for _, s := range into.GetItems() {
+			if s.Spec.DSCProfile == "" {
+				//Get and Set firewall profile
+				s.Spec.DSCProfile = insertionFWProfile.Name
+				dscKey := s.MakeKey(string(apiclient.GroupCluster))
+				err = kvs.Update(ctx, dscKey, s)
+				if err != nil {
+					cl.logger.Errorf("(nodePreCommitHook) DSCProfile update to DSCObject %s failed. Error (+%v)", s.Name, err)
+				}
+			}
+		}
+	}
 	return i, true, nil
 }
 

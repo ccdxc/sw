@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"io"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/mocks"
@@ -111,9 +112,88 @@ func TestNodeObject(t *testing.T) {
 	defer cancelFunc()
 
 	rcfg := network.RoutingConfig{}
+
+	clusterVer := cluster.Version{
+		Status: cluster.VersionStatus{
+			RolloutBuildVersion: "TestVersion1.0",
+			BuildVersion:        "1.3.0-E-2",
+		},
+	}
+	nic := cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{
+			Kind: "DistributedServiceCard",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "00ae.cd01.0001",
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			ID: "hostname",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "0.0.0.0/0",
+			},
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			DSCProfile:  "",
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: "UNKNOWN",
+			SerialNum:      "TestNIC",
+			PrimaryMAC:     "00ae.cd01.0001",
+			IPConfig: &cluster.IPConfig{
+				IPAddress: "192.168.10.3/32",
+			},
+		},
+	}
+	roa := rollout.RolloutAction{
+		TypeMeta: api.TypeMeta{
+			Kind: "RolloutAction",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: rolloutName,
+		},
+		Spec: rollout.RolloutSpec{
+			Version:                   "1.5.0-E-2",
+			ScheduledStartTime:        nil,
+			ScheduledEndTime:          nil,
+			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
+			MaxParallel:               0,
+			MaxNICFailuresBeforeAbort: 0,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			DSCMustMatchConstraint:    true, // hence venice upgrade only
+			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+		},
+		Status: rollout.RolloutActionStatus{
+			OperationalState: rollout.RolloutPhase_PROGRESSING.String(),
+		},
+	}
+	expected := []cluster.DistributedServiceCard{nic}
+
+	kvs.Listfn = func(ctx context.Context, key string, into runtime.Object) error {
+		obj := into.(*cluster.DistributedServiceCardList)
+		for _, v := range expected {
+			r := v
+			obj.Items = append(obj.Items, &r)
+		}
+		return nil
+	}
+
 	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
-		inO := into.(*network.RoutingConfig)
-		*inO = rcfg
+		switch into.(type) {
+		case *network.RoutingConfig:
+			in0 := into.(*network.RoutingConfig)
+			*in0 = rcfg
+		case *cluster.Version:
+			in0 := into.(*cluster.Version)
+			*in0 = clusterVer
+		case *rollout.RolloutAction:
+			in0 := into.(*rollout.RolloutAction)
+			*in0 = roa
+		case *cluster.DistributedServiceCard:
+			in0 := into.(*cluster.DistributedServiceCard)
+			*in0 = nic
+		}
 		return nil
 	}
 
