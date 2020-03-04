@@ -14,6 +14,7 @@ type ControllerAPI interface {
 	HandleVeniceCoordinates(obj DistributedServiceCardStatus) error
 	Start(ctx context.Context) error
 	Stop() error
+	WatchObjects(kinds []string)
 }
 
 // InfraAPI implements all infra APIs that are common across pipelines
@@ -59,6 +60,8 @@ type PipelineAPI interface {
 
 	// HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
 	HandleVeniceCoordinates(dsc DistributedServiceCardStatus)
+	// RegisterControllerAPI allows access to ControllerAPI via the Pipeline.
+	RegisterControllerAPI(controllerAPI ControllerAPI)
 
 	// HandleVrf handles CRUDs for VRF object
 	HandleVrf(oper Operation, obj netproto.Vrf) ([]netproto.Vrf, error)

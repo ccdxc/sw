@@ -31,14 +31,16 @@ func HandleProfile(infraAPI types.InfraAPI, client halapi.SystemClient, oper typ
 }
 
 func updateProfileHandler(infraAPI types.InfraAPI, client halapi.SystemClient, profile netproto.Profile) error {
+
+	// Based on the modes unwatch TODO
 	sysSpec := convertProfile(profile)
+	//Unwatch, purge configs
 	resp, err := client.SysSpecUpdate(context.Background(), sysSpec)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", profile.GetKind(), profile.GetKey())); err != nil {
 			return err
 		}
 	}
-
 	dat, _ := profile.Marshal()
 
 	if err := infraAPI.Store(profile.Kind, profile.GetKey(), dat); err != nil {
@@ -59,7 +61,7 @@ func convertFwdMode(fwdMode string) halapi.ForwardMode {
 	switch strings.ToLower(fwdMode) {
 	case strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()):
 		return halapi.ForwardMode_FWD_MODE_TRANSPARENT
-	case strings.ToLower(netproto.ProfileSpec_USEG.String()):
+	case strings.ToLower(netproto.ProfileSpec_INSERTION.String()):
 		return halapi.ForwardMode_FWD_MODE_MICROSEG
 	default:
 		return halapi.ForwardMode_FWD_MODE_NONE

@@ -85,8 +85,10 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 				profileState.DSCProfile.GenerationID}
 			profileState.DSCProfile.Lock()
 			if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
-				//profileState.pushObj.AddObjReceivers([]memdb.Receiver{sns.recvHandle})
-				//sm.mbus.AddObject(convertDSCProfile(profileState))
+				ret := profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
+				if ret != nil {
+					log.Infof("Add receiver failed %v", ret)
+				}
 			}
 			profileState.DSCProfile.Unlock()
 		}
@@ -176,15 +178,12 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			profileState, err := sm.FindDSCProfile("", newProfile)
 			if err == nil {
 				log.Infof("Found the profile: update the agent ")
-				profileState.DscList[nsnic.ObjectMeta.Name] =
-					dscProfileVersion{
-						profileState.DSCProfile.Name,
-						profileState.DSCProfile.GenerationID,
-					}
+				profileState.DscList[nsnic.ObjectMeta.Name] = dscProfileVersion{
+					profileState.DSCProfile.Name, profileState.DSCProfile.GenerationID}
+
 				profileState.DSCProfile.Lock()
 				if sm.isDscAdmitted(nsnic) {
-					//TODO:profileState.pushObj.AddObjReceivers([]memdb.Receiver{sns.recvHandle})
-					//sm.mbus.AddObject(convertDSCProfile(profileState))
+					profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{hs.recvHandle})
 				}
 				profileState.DSCProfile.Unlock()
 			}
@@ -194,8 +193,8 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			oldProfileState, _ := sm.FindDSCProfile("", oldProfile)
 			if _, ok := oldProfileState.DscList[nsnic.ObjectMeta.Name]; ok {
 				delete(oldProfileState.DscList, nsnic.ObjectMeta.Name)
-				//TODO:profileState.pushObj.DelObjReceivers([]memdb.Receiver{sns.recvHandle})
-				sm.mbus.DeleteObject(convertDSCProfile(oldProfileState))
+
+				oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{hs.recvHandle})
 			}
 		}
 	} else {

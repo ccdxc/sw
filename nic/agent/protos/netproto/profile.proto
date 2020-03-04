@@ -41,7 +41,7 @@ message ProfileSpec {
   enum Fwd_Mode 
   {
      TRANSPARENT = 0; //Transparent Packet fwding mode
-     USEG        = 1; //MicroSeg mode where naples attracts traffic   
+     INSERTION   = 1; //Insertion mode where dsc attracts traffic  using microSegmentation  
   }  
 
   enum Policy_Mode 

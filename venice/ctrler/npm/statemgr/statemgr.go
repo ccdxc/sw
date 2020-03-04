@@ -398,6 +398,8 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		svc.CompleteRegistration()
 	}
 
+	sm.EnableSelectivePushForKind("Profile")
+
 	// start all object watches
 	// there is a specific order we do these watches to meet dependency requirements
 	// 1. apps before sgpolicies
@@ -554,6 +556,7 @@ func (sm *Statemgr) registerKindsWithMbus() {
 	sm.mbus.RegisterKind("NetworkSecurityPolicy")
 	sm.mbus.RegisterKind("NetworkInterface")
 	sm.mbus.RegisterKind("Collector")
+	sm.mbus.RegisterKind("Profile")
 }
 
 //EnableSelectivePushForKind enable selective push for a kind

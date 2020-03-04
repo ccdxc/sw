@@ -21,7 +21,7 @@ setup:
         - step : testcases.penctl.enable_ssh
         - step : config.netagent.mode_switch
           args :
-               fwd_mode    : "USEG"
+               fwd_mode    : "INSERTION"
                policy_Mode : "ENFORCED"
         - step : config.netagent.hw_push_config
           args :

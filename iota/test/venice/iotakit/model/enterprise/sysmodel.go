@@ -12,6 +12,7 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -476,9 +477,52 @@ func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData boo
 	log.Infof("Setting up default config...")
 
 	//TODO, we have to move this out of sysmodel
-	defaultSgPolicies, err := sm.ListNetworkSecurityPolicy()
-	if err != nil {
-		return fmt.Errorf("Error in listing policies %v", err)
+	dscNodes := sm.NaplesNodes
+	log.Infof("Number of dscs %v", len(dscNodes))
+
+	cfgClient := sm.ConfigClient()
+
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+L:
+	for {
+		select {
+		case <-bkCtx.Done():
+			return fmt.Errorf("Less than %v dscs checked into venice", len(sm.NaplesNodes))
+		default:
+			dscObject, err := cfgClient.ListSmartNIC()
+			if err == nil && len(dscObject) == len(sm.NaplesNodes) {
+				break L
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+	cfgClient.CreateDscProfile(&dscProfile)
+	dscObject, err := cfgClient.ListSmartNIC()
+
+	for _, dsc := range dscObject {
+		dsc.Spec.DSCProfile = "insertion.enforced"
+		cfgClient.UpdateSmartNIC(dsc)
+	}
+
+	err = sm.InitConfig(scale, scaleData)
+
+	defaultSgPolicies, err1 := sm.ListNetworkSecurityPolicy()
+	if err1 != nil {
+		return fmt.Errorf("Error in listing policies %v", err1)
 	}
 
 	for _, pol := range defaultSgPolicies {

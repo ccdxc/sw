@@ -392,7 +392,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 		Spec: cluster.DistributedServiceCardSpec{
 			MgmtMode:    "NETWORK",
 			NetworkMode: "OOB",
-			DSCProfile:  "default",
+			DSCProfile:  globals.DefaultDSCProfile,
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "ADMITTED",
@@ -457,7 +457,7 @@ func (it *integTestSuite) DeleteHost(name, macAddr string) error {
 			Admit:       false,
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
-			DSCProfile:  "default",
+			DSCProfile:  globals.DefaultDSCProfile,
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: cluster.DistributedServiceCardStatus_PENDING.String(),

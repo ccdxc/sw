@@ -485,7 +485,6 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		if !smartNICObjExists {
 			nicObj.Spec.Admit = clusterObj.Spec.AutoAdmitDSCs
 			nicObj.Spec.DSCProfile = globals.DefaultDSCProfile
-
 		}
 
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object

@@ -473,7 +473,7 @@ func TestCreateNMDs(t *testing.T) {
 									IPAddress: "127.0.0.10/16",
 								},
 								PrimaryMAC: priMac,
-								DSCProfile: "default",
+								DSCProfile: globals.DefaultDSCProfile,
 							},
 						}
 
@@ -924,7 +924,7 @@ func TestNICReadmit(t *testing.T) {
 				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
-			DSCProfile: "default",
+			DSCProfile: globals.DefaultDSCProfile,
 		},
 	}
 
@@ -1082,7 +1082,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 				IPAddress: "127.0.0.10/16",
 			},
 			PrimaryMAC: priMac,
-			DSCProfile: "default",
+			DSCProfile: globals.DefaultDSCProfile,
 		},
 	}
 
@@ -1276,7 +1276,7 @@ func Setup(m *testing.M) {
 	_, err = tInfo.apiClient.ClusterV1().DSCProfile().Create(context.Background(), defaultProfile)
 	if err != nil {
 		fmt.Printf("Error creating default DSCProfile object, %v", err)
-		os.Exit(-1)
+		log.Fatalf("Failed to create default DSCProfile")
 	}
 
 	log.Infof("#### ApiServer and CMD smartnic server is UP")

@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -27,6 +28,7 @@ type DSCProfileState struct {
 	stateMgr     *Statemgr                    // pointer to state manager
 	NodeVersions map[string]dscProfileVersion // Map fpr node -> version
 	DscList      map[string]dscProfileVersion // set for list of dsc
+	PushObj      memdb.PushObjectHandle
 }
 
 // initNodeVersions initializes node versions for the policy
@@ -52,8 +54,8 @@ func DSCProfileStateFromObj(obj runtime.Object) (*DSCProfileState, error) {
 		nsobj := obj.(*ctkit.DSCProfile)
 		switch nsobj.HandlerCtx.(type) {
 		case *DSCProfileState:
-			fps := nsobj.HandlerCtx.(*DSCProfileState)
-			return fps, nil
+			dps := nsobj.HandlerCtx.(*DSCProfileState)
+			return dps, nil
 		default:
 			return nil, ErrIncorrectObjectType
 		}
@@ -71,30 +73,31 @@ func (sm *Statemgr) GetDSCProfileWatchOptions() *api.ListWatchOptions {
 
 // NewDSCProfileState creates new dscProfile state object
 func NewDSCProfileState(dscProfile *ctkit.DSCProfile, stateMgr *Statemgr) (*DSCProfileState, error) {
-	fps := DSCProfileState{
+	dps := DSCProfileState{
 		DSCProfile:   dscProfile,
 		stateMgr:     stateMgr,
 		NodeVersions: make(map[string]dscProfileVersion),
 		DscList:      make(map[string]dscProfileVersion),
 	}
-	dscProfile.HandlerCtx = &fps
+	dscProfile.HandlerCtx = &dps
 
-	return &fps, nil
+	return &dps, nil
 }
 
 // convertDSCProfile converts dsc profile state to security profile
-func convertDSCProfile(fps *DSCProfileState) *netproto.Profile {
+func convertDSCProfile(dps *DSCProfileState) *netproto.Profile {
 	// build sg message
 	creationTime, _ := types.TimestampProto(time.Now())
 	fwp := netproto.Profile{
 		TypeMeta:   api.TypeMeta{Kind: "Profile"},
-		ObjectMeta: agentObjectMeta(fps.DSCProfile.ObjectMeta),
+		ObjectMeta: agentObjectMeta(dps.DSCProfile.ObjectMeta),
 		Spec: netproto.ProfileSpec{
-			PolicyMode: fps.DSCProfile.Spec.FlowPolicyMode,
-			FwdMode:    fps.DSCProfile.Spec.FwdMode,
+			PolicyMode: dps.DSCProfile.Spec.FlowPolicyMode,
+			FwdMode:    dps.DSCProfile.Spec.FwdMode,
 		},
 	}
 	fwp.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	log.Infof("UUID is %v", fwp.ObjectMeta.UUID)
 
 	return &fwp
 }
@@ -109,7 +112,17 @@ func (sm *Statemgr) OnDSCProfileCreate(dscProfile *ctkit.DSCProfile) error {
 		log.Errorf("Error creating dscProfile %+v. Err: %v", dscProfile, err)
 		return err
 	}
-	//TODO: Yet to integrate with agent push in next PR
+	// in case of error, write status back
+	defer func() {
+		if err != nil {
+			//TODO:Propagation Status
+			//dps.DSCProfile.Status.PropagationStatus.Status = fmt.Sprintf("DSCProfile processing error")
+		}
+	}()
+
+	// store it in local DB
+	pushObj, err := sm.mbus.AddPushObject(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile), nil)
+	dps.PushObj = pushObj
 	dps.initNodeVersions()
 	sm.PeriodicUpdaterPush(dps)
 
@@ -127,26 +140,26 @@ func (sm *Statemgr) OnDSCProfileUpdate(dscProfile *ctkit.DSCProfile, nfwp *clust
 		return nil
 	}
 
-	fps, err := sm.FindDSCProfile(dscProfile.Tenant, dscProfile.Name)
+	dps, err := sm.FindDSCProfile(dscProfile.Tenant, dscProfile.Name)
 	if err != nil {
 		log.Errorf("Could not find the dsc profile %+v. Err: %v", dscProfile.ObjectMeta, err)
 		return err
 	}
 
 	// update the object in mbus
-	fps.DSCProfile.Spec = nfwp.Spec
-	fps.DSCProfile.ObjectMeta = nfwp.ObjectMeta
-	fps.DSCProfile.Status = cluster.DSCProfileStatus{}
+	dps.DSCProfile.Spec = nfwp.Spec
+	dps.DSCProfile.ObjectMeta = nfwp.ObjectMeta
+	dps.DSCProfile.Status = cluster.DSCProfileStatus{}
 
 	log.Infof("Sending update received")
 	// TODO Lakshmi : Might have to send the list of DSCs based on the api provided by Sudhi
-	//sm.mbus.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(fps), references(dscProfile))
+	//sm.mbus.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile))
 	log.Infof("Updated dscProfile: %+v", dscProfile)
 
-	dscs := fps.DscList
+	dscs := dps.DscList
 	for dsc := range dscs {
-		fps.DscList[dsc] = dscProfileVersion{dscProfile.Name, nfwp.GenerationID}
-		//Get the DistributedServiceCardState and update
+		dps.DscList[dsc] = dscProfileVersion{dscProfile.Name, nfwp.GenerationID}
+		//TODO:Get the DistributedServiceCardState and update
 		//Update the "dsc" with expected Profile
 	}
 	return nil
@@ -155,16 +168,15 @@ func (sm *Statemgr) OnDSCProfileUpdate(dscProfile *ctkit.DSCProfile, nfwp *clust
 // OnDSCProfileDelete handles dscProfile deletion
 func (sm *Statemgr) OnDSCProfileDelete(dscProfile *ctkit.DSCProfile) error {
 	// see if we have the dscProfile
-	fps, err := sm.FindDSCProfile("", dscProfile.Name)
+	dps, err := sm.FindDSCProfile("", dscProfile.Name)
 	if err != nil {
 		log.Errorf("Could not find the dscProfile %v. Err: %v", dscProfile, err)
 		return err
 	}
 
-	log.Infof("Deleting dscProfile: %+v %v", dscProfile, fps)
+	log.Infof("Deleting dscProfile: %+v %v", dscProfile, dps)
 
-	//TODO: once sudhi provides one naples send, will add that code here
-	return nil
+	return dps.PushObj.DeleteObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile))
 }
 
 // FindDSCProfile finds a dscProfile
@@ -187,6 +199,7 @@ func (dps *DSCProfileState) GetKey() string {
 // Write write the object to api server
 func (dps *DSCProfileState) Write() error {
 	var err error
+	//TODO:Handle status
 	return err
 }
 

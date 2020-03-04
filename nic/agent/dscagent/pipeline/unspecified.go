@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,10 +30,11 @@ import (
 // FakeAgentAPI implements PipelineAPI for FakeAgent Pipeline
 type FakeAgentAPI struct {
 	sync.Mutex
-	InfraAPI    types.InfraAPI
-	IntfClient  halapi.InterfaceClient
-	EventClient halapi.EventClient
-	PortClient  halapi.PortClient
+	InfraAPI      types.InfraAPI
+	ControllerAPI types.ControllerAPI
+	IntfClient    halapi.InterfaceClient
+	EventClient   halapi.EventClient
+	PortClient    halapi.PortClient
 }
 
 // NewPipelineAPI returns the implementer or PipelineAPI for FakeAgent Pipeline
@@ -122,12 +124,35 @@ func (i *FakeAgentAPI) PipelineInit() error {
 		return err
 	}
 
+	log.Infof("setting up the watchers")
+
+	go func() {
+		for {
+			if i.ControllerAPI == nil {
+				log.Infof("Wait for controller registration")
+				// Wait till Controller API is correctly registered
+				time.Sleep(time.Second)
+				continue
+			}
+			log.Infof("Watch all objects")
+			i.ControllerAPI.WatchObjects(types.AllKinds)
+			return
+		}
+
+	}()
+
 	return nil
 }
 
 // HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
 func (i *FakeAgentAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
 	log.Infof("FakeAgent got venice co-ordinates [%+v]", dsc)
+}
+
+// RegisterControllerAPI ensures the handles for controller API is appropriately set up
+func (i *FakeAgentAPI) RegisterControllerAPI(controllerAPI types.ControllerAPI) {
+	log.Infof("set controller API")
+	i.ControllerAPI = controllerAPI
 }
 
 // HandleVrf handles CRUD Methods for Vrf Object
@@ -1323,6 +1348,7 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
 	if err != nil {
 		log.Error(err)
+		log.Infof("meta failed")
 		return
 	}
 
@@ -1335,6 +1361,7 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 		)
 		dat, err = i.InfraAPI.Read(profile.Kind, profile.GetKey())
 		if err != nil {
+			log.Infof(" Get failed for %s", profile.GetKey())
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
 		}
@@ -1343,6 +1370,7 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
 			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
+		log.Infof("Got this object %v ", obj)
 		profiles = append(profiles, obj)
 
 		return
@@ -1350,35 +1378,44 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 		var (
 			dat [][]byte
 		)
+
+		log.Infof("List recieved for profile")
+
 		dat, err = i.InfraAPI.List(profile.Kind)
 		if err != nil {
+			log.Infof("List failed ")
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
 		}
+		log.Infof("len of obje %v", len(dat))
 
 		for _, o := range dat {
 			var profile netproto.Profile
 			err := proto.Unmarshal(o, &profile)
 			if err != nil {
+				log.Infof("Unmarshall failed")
 				log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
 				continue
 			}
+			log.Infof("Got this object %v", profile)
 			profiles = append(profiles, profile)
 		}
 
 		return
 	case types.Create:
 		profileBytes, _ := profile.Marshal()
+		log.Infof("Create recieved for profile")
 
 		if err := i.InfraAPI.Store(profile.Kind, profile.GetKey(), profileBytes); err != nil {
+			log.Infof("Error boldDBCreate")
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err))
 			return nil, errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
-		return nil, nil
 
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingProfile netproto.Profile
+		log.Infof("Update received for profile")
 		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
@@ -1392,7 +1429,7 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 
 		// Check for idempotency
 		if proto.Equal(&profile.Spec, &existingProfile.Spec) {
-			//log.Infof("Profile: %s | Info: %s ", profile.GetKey(), types.InfoIgnoreUpdate)
+			log.Infof("Profile: %s | ignore update ", profile.GetKey())
 			return nil, nil
 		}
 
@@ -1401,7 +1438,6 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err))
 			return nil, errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
-		return nil, nil
 
 	case types.Delete:
 		var existingProfile netproto.Profile
@@ -1421,6 +1457,20 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 			return nil, errors.Wrapf(types.ErrBoltDBStoreDelete, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
 		return nil, nil
+	}
+
+	//ToDo: have to check for idemptonet calls??
+	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
+		}()
+	} else { // We support only insertion enforced
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
+		}()
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
+		}()
 	}
 
 	return

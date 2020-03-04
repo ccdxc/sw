@@ -138,26 +138,26 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 				cl.logger.DebugLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("updating module: %s with IP: %s", modObj.Name, modObj.Status.Node))
 			}
 		}
-		//TODO: Once CMD can update the spec, this can be removed
 		oldprofname := curNIC.Spec.DSCProfile
-		if oldprofname == "" {
-			return nil, false, fmt.Errorf("oldprofilename is nil")
-		}
-
-		oldProfile := cluster.DSCProfile{
-			ObjectMeta: api.ObjectMeta{
-				Name: oldprofname,
-			},
-		}
-		err := kvs.Get(ctx, oldProfile.MakeKey("cluster"), &oldProfile)
-		if err != nil {
-			return nil, false, fmt.Errorf("unable to find old profile")
+		//TODO:revisit once the feature stabilises
+		var oldProfile cluster.DSCProfile
+		if oldprofname != "" {
+			oldProfile = cluster.DSCProfile{
+				ObjectMeta: api.ObjectMeta{
+					Name: oldprofname,
+				},
+			}
+			err := kvs.Get(ctx, oldProfile.MakeKey("cluster"), &oldProfile)
+			if err != nil {
+				return i, false, fmt.Errorf("unable to find old profile")
+			}
 		}
 
 		updprofname := updNIC.Spec.DSCProfile
 		if updprofname == "" {
-			return nil, false, fmt.Errorf("updprofile is nil")
+			return i, false, fmt.Errorf("updprofilename is nil")
 		}
+
 		updProfile := cluster.DSCProfile{
 			ObjectMeta: api.ObjectMeta{
 				Name: updprofname,
@@ -165,11 +165,17 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		}
 		err = kvs.Get(ctx, updProfile.MakeKey("cluster"), &updProfile)
 		if err != nil {
-			return nil, false, fmt.Errorf("unable to find the new profile")
+			return i, false, fmt.Errorf("unable to find the new profile")
 		}
-		err = verifyAllowedProfile(oldProfile, updProfile)
-		if err != nil {
-			return nil, false, fmt.Errorf("error in validating profile: %v", err)
+		if oldprofname != "" {
+
+			errStr := fmt.Sprintf("Profile old :  %v %v  new: %v %v ", oldProfile.Spec.FwdMode, oldProfile.Spec.FlowPolicyMode, updProfile.Spec.FwdMode, updProfile.Spec.FlowPolicyMode)
+
+			cl.logger.Errorf(errStr)
+			err = verifyAllowedProfile(oldProfile, updProfile)
+			if err != nil {
+				return i, false, fmt.Errorf("error in validating profile: %v", err)
+			}
 		}
 
 		// Prevent mode change (decommissioning) if NIC is NOT admitted

@@ -16,8 +16,8 @@ import (
 	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/utils"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -57,7 +57,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			},
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
-			DSCProfile:  "default",
+			DSCProfile:  globals.DefaultDSCProfile,
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: "UNKNOWN",
@@ -83,7 +83,7 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 			Kind: "DSCProfile",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "default",
+			Name: globals.DefaultDSCProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
 			FwdMode:        "TRANSPARENT",

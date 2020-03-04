@@ -15,6 +15,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/venice/globals"
 )
 
 // CreateEventPolicyObj helper function to create event policy object with the given params.
@@ -212,7 +213,7 @@ func CreateSmartNIC(mac, phase, node string, condition *cluster.DSCCondition) *c
 			},
 			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
 			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
-			DSCProfile:  "default",
+			DSCProfile:  globals.DefaultDSCProfile,
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: phase,

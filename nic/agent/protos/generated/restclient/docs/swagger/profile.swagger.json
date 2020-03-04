@@ -512,7 +512,7 @@
           "type": "string",
           "enum": [
             "transparent",
-            "useg"
+            "insertion"
           ],
           "default": "transparent"
         },

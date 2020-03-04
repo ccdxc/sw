@@ -47,6 +47,11 @@ type ObjClient interface {
 
 	ListNetworkInterfaces() (objs []*network.NetworkInterface, err error)
 	UpdateNetworkInterface(sgp *network.NetworkInterface) error
+	CreateDscProfile(dscProfile *cluster.DSCProfile) error
+	GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCProfile, err error)
+	ListDscProfile() (objs []*cluster.DSCProfile, err error)
+	DeleteDscProfile(dscProfile *cluster.DSCProfile) error
+	UpdateDscProfile(dscProfile *cluster.DSCProfile) error
 
 	CreateApp(app *security.App) error
 	ListApp() (objs []*security.App, err error)
@@ -1005,6 +1010,71 @@ func (r *Client) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 	}
 
 	return err
+}
+
+// CreateeDscProfile Creates DSC Profile
+func (r *Client) CreateDscProfile(obj *cluster.DSCProfile) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DSCProfile().Create(r.ctx, obj)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// GetDscProfile Get DSC Profile
+func (r *Client) GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCProfile, err error) {
+	for _, restcl := range r.restcls {
+		dscProfile, err = restcl.ClusterV1().DSCProfile().Get(r.ctx, meta)
+		if err == nil {
+			break
+		}
+	}
+
+	return dscProfile, err
+}
+
+// ListDscProfile List Profiles
+func (r *Client) ListDscProfile() (objs []*cluster.DSCProfile, err error) {
+	opts := api.ListWatchOptions{}
+	for _, restcl := range r.restcls {
+		objs, err = restcl.ClusterV1().DSCProfile().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+	return objs, err
+}
+
+// DeleteDscProfile deletes profiles
+func (r *Client) DeleteDscProfile(dscProfile *cluster.DSCProfile) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DSCProfile().Delete(r.ctx, &dscProfile.ObjectMeta)
+		if err == nil {
+			break
+		} else {
+			log.Errorf("Error deleting object %v", err)
+		}
+	}
+
+	return err
+}
+
+// UpdateDscProfile update profiles
+func (r *Client) UpdateDscProfile(dscProfile *cluster.DSCProfile) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DSCProfile().Update(r.ctx, dscProfile)
+		if err == nil {
+			break
+		}
+	}
+	return err
+
 }
 
 // ListObjectStoreObjects list object store objects

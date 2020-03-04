@@ -7,6 +7,9 @@ import (
 	"io"
 	"time"
 
+	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"

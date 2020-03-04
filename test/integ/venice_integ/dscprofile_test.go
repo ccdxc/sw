@@ -5,6 +5,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -117,6 +119,20 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	dscObj.Spec.DSCProfile = "NewProfileLNS"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	AssertOk(c, err, "Error DistributedServicesCard update failed")
+
+	AssertEventually(c, func() (bool, interface{}) {
+
+		ag := nic.agent
+		profile := netproto.Profile{
+			TypeMeta: api.TypeMeta{Kind: "Profile"},
+		}
+		profiles, _ := ag.PipelineAPI.HandleProfile(agentTypes.List, profile)
+		if len(profiles) != 1 {
+			return false, nil
+		}
+
+		return true, nil
+	}, "DSCProfile was not updated in agent", "100ms", it.pollTimeout())
 
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
@@ -294,7 +310,7 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 
 	dscObj.Spec.DSCProfile = "transparent.basenet"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
-	Assert(c, err != nil, "Error DistributedServicesCard update occurred")
+	AssertOk(c, err, "Error DistributedServicesCard update occurred")
 
 	// TRANSPARENT.FLOWAWARE ===> INSERTION.ENFORCED ==== > EXP: ALLOWED
 	dscObj, err = it.getDistributedServiceCard(it.getNaplesMac(0))
@@ -329,5 +345,9 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	Assert(c, err != nil, "Error DistributedServicesCard update occurred")
+
+	// DELETE PROFILES
+	/*_, err = it.restClient.ClusterV1().DSCProfile().Delete(ctx, &dscProfile.ObjectMeta)
+	AssertOk(c, err, "Error deleting dscprofile")*/
 
 }

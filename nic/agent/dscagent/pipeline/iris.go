@@ -39,6 +39,7 @@ type IrisAPI struct {
 	sync.Mutex
 	SysmgrClient    *sysmgr.Client
 	InfraAPI        types.InfraAPI
+	ControllerAPI   types.ControllerAPI
 	VrfClient       halapi.VrfClient
 	L2SegmentClient halapi.L2SegmentClient
 	EpClient        halapi.EndpointClient
@@ -237,6 +238,11 @@ func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus
 	}
 	iris.ArpClient = client
 	iris.MgmtLink = mgmtLink
+}
+
+// RegisterControllerAPI ensures the handles for controller API is appropriately set up
+func (i *IrisAPI) RegisterControllerAPI(controllerAPI types.ControllerAPI) {
+	i.ControllerAPI = controllerAPI
 }
 
 // HandleVrf handles CRUD Methods for Vrf Object
@@ -1373,7 +1379,6 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 
 		return
 	case types.Create:
-
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingProfile netproto.Profile
@@ -1390,7 +1395,7 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 
 		// Check for idempotency
 		if proto.Equal(&profile.Spec, &existingProfile.Spec) {
-			//log.Infof("Profile: %s | Info: %s ", profile.GetKey(), types.InfoIgnoreUpdate)
+			log.Infof("Profile: %s | Info: %s ", profile.GetKey(), types.Update)
 			return nil, nil
 		}
 
@@ -1406,19 +1411,9 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
 			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
-		// Delete restores the default profile
-		profile = netproto.Profile{
-			TypeMeta: api.TypeMeta{Kind: "Profile"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "default",
-			},
-			Spec: netproto.ProfileSpec{
-				FwdMode:    string(netproto.ProfileSpec_TRANSPARENT),
-				PolicyMode: string(netproto.ProfileSpec_BASENET),
-			},
-		}
+
+		return nil, nil
+
 	}
 	log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjBegin)
 	defer log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
@@ -1432,6 +1427,20 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, oper, profile); err != nil {
 		log.Error(err)
 		return nil, err
+	}
+
+	//ToDo: have to check for idemptonet calls??
+	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
+		}()
+	} else { // We support only insertion enforced
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
+		}()
+		go func() {
+			i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
+		}()
 	}
 
 	return

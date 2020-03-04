@@ -35,6 +35,7 @@ import (
 type ApuluAPI struct {
 	sync.Mutex
 	InfraAPI                types.InfraAPI
+	ControllerAPI           types.ControllerAPI
 	VPCClient               halapi.VPCSvcClient
 	SubnetClient            halapi.SubnetSvcClient
 	DeviceSvcClient         halapi.DeviceSvcClient
@@ -143,6 +144,19 @@ func (a *ApuluAPI) PipelineInit() error {
 
 	// handle all the metrics
 	apulu.HandleMetrics(a.InfraAPI, a.OperClient)
+	// Ensure that the watches for all objects are set up since Apulu doesn't have a profile that dictates which objects to be watched
+	go func() {
+		for {
+			if a.ControllerAPI == nil {
+				// Wait till Controller API is correctly registered
+				time.Sleep(time.Minute)
+				continue
+			}
+			a.ControllerAPI.WatchObjects(types.AllKinds)
+			return
+		}
+
+	}()
 	return nil
 }
 
@@ -201,6 +215,11 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		Intf: lb,
 	}
 	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+}
+
+// RegisterControllerAPI ensures the handles for controller API is appropriately set up
+func (a *ApuluAPI) RegisterControllerAPI(controllerAPI types.ControllerAPI) {
+	a.ControllerAPI = controllerAPI
 }
 
 // HandleDevice handles CRUD methods for Device objects

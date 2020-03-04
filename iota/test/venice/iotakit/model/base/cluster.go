@@ -1013,8 +1013,9 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 	if noReboot {
 		return nil
 	}
-	// reload naples
-	var hostNames string
+	//No longeer reload  of naples is needed : Auto Discovery / DSCProfile change should help
+	// Retaining this, in case , we have to revert
+	/*var hostNames string
 	nodeMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
@@ -1039,6 +1040,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 	//} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 	//	return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 	//}
+	}*/
 
 	return nil
 }
@@ -1160,8 +1162,8 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 			if testbed.IsNaplesHW(node.Personality) {
 				for _, naples := range node.NaplesConfigs.Configs {
 					trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
-					//Hack for now until we push full profile
-					trig.AddCommand(fmt.Sprintf("/nic/bin/halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
+					//DSCProfile is pushed now. Disable penctl
+					//trig.AddCommand(fmt.Sprintf("/nic/bin/halctl debug system --fwd ms --pol enf"), naples.Name, node.NodeName)
 				}
 			}
 		}
@@ -1172,14 +1174,14 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 		}
 
 		// check the response
-		for _, cmdResp := range resp {
-			if cmdResp.ExitCode != 0 {
-				log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
-				return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
-					cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+		//for _, cmdResp := range resp {
+		//	if cmdResp.ExitCode != 0 {
+		//		log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
+		//		return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+		//			cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
-			}
-		}
+		//	}
+		//}
 	}
 
 	return nil

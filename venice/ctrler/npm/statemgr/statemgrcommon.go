@@ -15,13 +15,13 @@ func (sm *Statemgr) CompleteRegistration() {
 	sm.SetEndpointReactor(sm)
 	sm.SetNetworkSecurityPolicyReactor(sm)
 	sm.SetWorkloadReactor(sm)
+	sm.SetDSCProfileReactor(sm)
 
 	sm.SetEndpointStatusReactor(sm)
 	sm.SetSecurityProfileStatusReactor(sm)
 	sm.SetNetworkSecurityPolicyStatusReactor(sm)
 	sm.SetNetworkInterfaceStatusReactor(sm)
 	sm.SetAggregateStatusReactor(sm)
-	sm.SetDSCProfileReactor(sm)
 }
 
 func init() {

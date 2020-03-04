@@ -146,7 +146,49 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		}
 	}
 	//Wait for node to be admitted
-	time.Sleep(time.Minute)
+	sm.InitCfgModel()
+	cfgClient := sm.ConfigClient()
+
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancelFunc()
+	nc := 0
+	for _, node := range sm.Tb.Nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			nc++
+		}
+	}
+L:
+	for {
+		select {
+		case <-bkCtx.Done():
+			return fmt.Errorf("Less than %v dscs checked into venice", nc)
+		default:
+			dscObject, err := cfgClient.ListSmartNIC()
+			if err == nil {
+				log.Infof("Number of DscObjects %v %v", len(dscObject), nc)
+				if len(dscObject) != nc {
+					continue
+				}
+			} else {
+				log.Infof("got error %v", err)
+			}
+			admittedCount := 0
+			for _, dsc := range dscObject {
+				if dsc.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String() {
+					admittedCount++
+				} else {
+					log.Infof("Status is %s", dsc.Status.AdmissionPhase)
+				}
+			}
+			if admittedCount == nc {
+				log.Infof("Nodes admitted %v", admittedCount)
+				break L
+			}
+			log.Infof("admitted count : %v", admittedCount)
+			time.Sleep(time.Second)
+		}
+
+	}
 
 	err := sm.SetUpNaplesPostCluster(sm.Tb.Nodes)
 	if err != nil {
@@ -419,12 +461,13 @@ func (sm *SysModel) AssociateHosts() error {
 				h := objects.NewHost(obj, n.GetIotaNode(), n)
 				sm.NaplesHosts[n.GetIotaNode().Name] = h
 
-				//Add BM type to support upgrade
-				n.SmartNic.Labels["type"] = "bm"
+				//No need to Update the NIC: Add BM type to support upgrade
+				//Commenting for now, if this breaks vecenter sanity, looks here
+				/*n.SmartNic.Labels["type"] = "bm"
 				if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
 					log.Infof("Error updating smart nic object %v", err)
 					return err
-				}
+				}*/
 				break
 			}
 		}

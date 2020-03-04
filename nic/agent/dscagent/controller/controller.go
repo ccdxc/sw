@@ -36,6 +36,7 @@ type API struct {
 	sync.Mutex
 	sync.WaitGroup
 	tsmWG, tpmWG                              sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
+	nimbusClient                              *nimbus.NimbusClient
 	WatchCtx                                  context.Context
 	PipelineAPI                               types.PipelineAPI
 	InfraAPI                                  types.InfraAPI
@@ -167,6 +168,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			ClientName:     types.Netagent,
 			ResolverClient: c.ResolverClient})
 	} else if strings.Contains(strings.ToLower(obj.DSCMode), "host") {
+
 		if err := c.Stop(); err != nil {
 			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 		}
@@ -181,7 +183,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 
 // Start starts the control loop for connecting to Venice
 func (c *API) Start(ctx context.Context) error {
-	defer c.Done()
+	//defer c.Done()
 	for {
 		select {
 		case <-ctx.Done():
@@ -263,34 +265,15 @@ func (c *API) Start(ctx context.Context) error {
 			time.Sleep(types.ControllerWaitDelay)
 			continue
 		}
+		c.nimbusClient = nimbusClient
+
+		// Ensure that the controller API is registered with the pipeline
+		log.Infof("Controller API: %v", c)
+		c.PipelineAPI.RegisterControllerAPI(c)
 
 		go func() {
-			log.Infof("Controller API: %s", types.InfoAggWatchStarted)
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"App", "NetworkSecurityPolicy"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-		}()
 
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-		}()
-
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"RoutingConfig"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-		}()
-
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Interface", "Collector"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-		}()
-
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
+			if err := c.nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
 		}()
@@ -325,9 +308,33 @@ func (c *API) Start(ctx context.Context) error {
 
 		// TODO Watch for Mirror and NetflowSessions
 		time.Sleep(time.Millisecond * 100)
-		nimbusClient.Wait()
+		c.nimbusClient.Wait()
 		tsmWatchCancel()
 		tpmWatchCancel()
+	}
+}
+
+func (c *API) WatchObjects(kinds []string) {
+	for {
+		select {
+		case <-c.WatchCtx.Done():
+			log.Infof("Controller API: %s kinds: %s", types.InfoTSMWatcherDone, kinds)
+			return
+		default:
+		}
+		// Wait till nimbus client is appropriately instantiated.
+		if c.nimbusClient == nil {
+			time.Sleep(time.Minute)
+			continue
+		}
+		go func() {
+			//log.Infof("Controller API: %s", types.InfoAggWatchStarted)
+			if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
+				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+			}
+		}()
+		time.Sleep(time.Millisecond * 100)
+		c.nimbusClient.Wait()
 	}
 }
 
