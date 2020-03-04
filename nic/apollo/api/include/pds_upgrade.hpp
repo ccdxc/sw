@@ -13,8 +13,7 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/upgrade/upgrade.hpp"
-#include "nic/apollo/upgrade/event_cb.hpp"
+#include "nic/apollo/upgrade/include/upgrade.hpp"
 
 /// \defgroup PDS_UPGRADE PDS Upgrade API
 /// @{
@@ -31,6 +30,10 @@ typedef struct pds_upg_spec_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_upgrade(pds_upg_spec_t *spec);
 
+// every application registers to upgrade manager with its process name
+// this should match with the name mentioned in upgrade.json
+// changing this will break ISSU (in service software upgrade)
+#define UPG_PDS_AGENT_NAME "pdsagent"
 
 /// @}
 

@@ -35,6 +35,7 @@ typedef uint32_t upg_thread_id_t;
 /// each process/thread should implement this and act on these events.
 typedef struct upg_event_s {
     /// registering thread id
+    /// used for debug traces. no other significance.
     upg_thread_id_t  thread_id;
 
     /// compat checks should be done here (on A)

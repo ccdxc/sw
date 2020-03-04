@@ -54,9 +54,12 @@ pds_upgrade (pds_upg_spec_t *spec)
         }
         INVOKE_EV_THREAD_CB(compat_check_cb, ret)
         break;
+    case UPG_STAGE_PREPARE:
+        // TODO
+        break;
     case UPG_STAGE_SWITCHOVER:
         // return error if last stage is not rollback
-        if (api::g_upg_state->last_stage() != UPG_STAGE_ROLLBACK) {
+        if (api::g_upg_state->last_stage() != UPG_STAGE_PREPARE) {
             PDS_TRACE_ERR("Upgrade, invalid stage, last stage %s",
                           upg_stage2str(api::g_upg_state->last_stage()));
             return SDK_RET_ERR;

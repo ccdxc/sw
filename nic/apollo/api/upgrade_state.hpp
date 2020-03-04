@@ -15,7 +15,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"
-#include "nic/apollo/upgrade/event_cb.hpp"
+#include "nic/apollo/upgrade/include/event_cb.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 

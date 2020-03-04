@@ -223,7 +223,7 @@ public:
     virtual sdk_ret_t transaction_end(bool abort) override;
 
     // bootype. TODO: returning true now. need to fix.
-    bool coldboot(void) { return true; }
+    bool cold_boot(void) { return true; }
 private:
     string                  cfg_path_;
     string                  pipeline_;

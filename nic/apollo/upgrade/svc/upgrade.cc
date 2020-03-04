@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
-#include "nic/apollo/upgrade/logger.hpp"
+#include "nic/apollo/upgrade/core/logger.hpp"
 
 Status
 UpgSvcImpl::UpgradeRequest(ServerContext *context,

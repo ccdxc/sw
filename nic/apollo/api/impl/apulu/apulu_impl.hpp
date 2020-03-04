@@ -342,7 +342,7 @@ private:
 
     /// \brief  routine to save the table engine config
     /// \param[in] pipe pipeline
-    void table_engine_cfg_bkup_(p4pd_pipeline_t pipe);
+    void table_engine_cfg_backup_(p4pd_pipeline_t pipe);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;

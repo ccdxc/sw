@@ -114,7 +114,7 @@ apulu_impl::txdma_symbols_init_(void **p4plus_symbols,
 }
 
 void
-apulu_impl::table_engine_cfg_bkup_(p4pd_pipeline_t pipe) {
+apulu_impl::table_engine_cfg_backup_(p4pd_pipeline_t pipe) {
     p4_tbl_eng_cfg_t *cfg;
     uint32_t num_cfgs, max_cfgs;
 
@@ -504,12 +504,12 @@ apulu_impl::p4plus_table_init_(void) {
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
     // configure only in hardinit
-    // for upgrade init, save the information and will be applied after p4 quiesce
-    if (api::g_pds_state.coldboot()) {
+    if (api::g_pds_state.cold_boot()) {
         sdk::platform::capri::capri_p4plus_table_init(&prog,
                                                       api::g_pds_state.platform_type());
     } else {
-        table_engine_cfg_bkup_(P4_PIPELINE_RXDMA);
+        // for upgrade init, save the information and will be applied after p4 quiesce
+        table_engine_cfg_backup_(P4_PIPELINE_RXDMA);
     }
 
     p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
@@ -521,12 +521,12 @@ apulu_impl::p4plus_table_init_(void) {
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
     // configure only in hardinit
-    // for upgrade init, save the information and will be applied after p4 quiesce
-    if (api::g_pds_state.coldboot()) {
+    if (api::g_pds_state.cold_boot()) {
         sdk::platform::capri::capri_p4plus_table_init(&prog,
                                                       api::g_pds_state.platform_type());
     } else {
-        table_engine_cfg_bkup_(P4_PIPELINE_TXDMA);
+        // for upgrade init, save the information and will be applied after p4 quiesce
+        table_engine_cfg_backup_(P4_PIPELINE_TXDMA);
     }
 
     return SDK_RET_OK;
@@ -539,7 +539,7 @@ apulu_impl::pipeline_init(void) {
     std::string cfg_path = api::g_pds_state.cfg_path();
 
     p4pd_cfg.cfg_path = cfg_path.c_str();
-    ret = pipeline_p4_hbm_init(&p4pd_cfg, api::g_pds_state.coldboot());
+    ret = pipeline_p4_hbm_init(&p4pd_cfg, api::g_pds_state.cold_boot());
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // skip the remaining if it is a soft initialization
@@ -551,7 +551,7 @@ apulu_impl::pipeline_init(void) {
     SDK_ASSERT(ret == SDK_RET_OK);
     // rss config is not modified across upgrades
     // TODO : confirm this aproach is correct
-    if (api::g_pds_state.coldboot()) {
+    if (api::g_pds_state.cold_boot()) {
         ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
                              P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     }
@@ -561,7 +561,7 @@ apulu_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
     // on upgrade boot, this will be done during switchover
-    if (api::g_pds_state.coldboot()) {
+    if (api::g_pds_state.cold_boot()) {
         ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
         SDK_ASSERT(ret == SDK_RET_OK);
         ret = sdk::asic::pd::asicpd_deparser_init();
@@ -571,12 +571,16 @@ apulu_impl::pipeline_init(void) {
     g_pds_impl_state.init(&api::g_pds_state);
     api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
 
-    // on upgrade boot, just save the config to apply during switch
-    // if the id is same
-    if (api::g_pds_state.coldboot() ||
+    // it can happen that service lif is modified during upgrade. in that case
+    // just initialize the new service lif
+    //
+    // during A to B upgrade and the service lif id of A(g_upg_state->service_lif_id)
+    // matches with B(APULU_SERVICE_LIF), verify the configs are perfectly matching
+    if (api::g_pds_state.cold_boot() ||
         (api::g_upg_state->service_lif_id() != APULU_SERVICE_LIF)) {
         ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
     } else {
+        // on upgrade boot, verify the config
         ret = service_lif_upg_verify(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
     }
     SDK_ASSERT(ret == SDK_RET_OK);
@@ -587,19 +591,19 @@ apulu_impl::pipeline_init(void) {
 }
 
 
-// this re-writes the common registers in the pipeline.
+// this re-writes the common registers in the pipeline during A to B upgrade.
 // should be called in quiesced state and it should be the final
 // stage of the upgrade steps
-// if this returns OK, pipeline is switched to new.
-// if there is an error, rollback should be applied to old. so old
-// configuration should be saved by previous impl
+// if this returns OK, pipeline is switched to B from A.
+// if there is an error, rollback should rewrites these to A. so old
+// configuration should be saved by A impl(see upg_backup)
 // keep this code very minimum to reduce the traffic hit duration.
 // avoid TRACES.
 sdk_ret_t
 apulu_impl::upg_switchover(void) {
     sdk_ret_t ret;
     p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
-                            P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
+                               P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
     p4_tbl_eng_cfg_t *cfg;
     uint32_t num_cfgs, max_cfgs;
     std::list<qstate_cfg_t> q;
@@ -644,22 +648,24 @@ apulu_impl::upg_switchover(void) {
 }
 
 // backup all the existing configs which will be modified during switchover.
-// invoked by upg managager when there is a failure during switchover
+// during A to B upgrade, this will be invoked by A
+// if there is a switchover failue from A to B, during rollbacking, this backed up config
+// will be applied as B might have overwritten some of these configs
 // pipeline switchover and pipeline backup should be in sync
-// sequence : A(backup) -> Upgrade -> A2B(switchover) ->
-//          : B(switchover_failure) -> Rollback -> B2A(switchover) -> success/failure
-// B2A(switchover_failure) cannot be recoverd
+// sequence : A(backup) -> upgrade -> A2B(switchover) ->
+//          : B(switchover_failure) -> rollback -> B2A(switchover) -> success/failure
+// B2A(switchover_failure) cannot be recovered
 sdk_ret_t
 apulu_impl::upg_backup(void) {
     p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
-                            P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
+                               P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
     p4_tbl_eng_cfg_t *cfg;
     p4plus_prog_t prog;
     uint32_t rss_tblid = P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR;
 
     // backup table engine config
     for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {
-        table_engine_cfg_bkup_(pipe[i]);
+        table_engine_cfg_backup_(pipe[i]);
     }
     // backup rss table engine config
     api::g_upg_state->tbl_eng_rss_cfg(&cfg);

@@ -9,7 +9,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
-#include "nic/apollo/agent/core/cmd.hpp"
+#include "nic/apollo/agent/core/svc_thread.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/event.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
@@ -21,7 +21,7 @@
 namespace core {
 
 //TODO: Move these to global store
-static sdk::event_thread::event_thread *g_cmd_server_thread;
+static sdk::event_thread::event_thread *g_svc_server_thread;
 static sdk::lib::thread *g_routing_thread;
 sdk_ret_t spawn_routing_thread(void);
 
@@ -235,21 +235,21 @@ device_profile_read (void)
 // spawn command server thread
 //------------------------------------------------------------------------------
 sdk_ret_t
-spawn_cmd_server_thread (void)
+spawn_svc_server_thread (void)
 {
     // spawn periodic thread that does background tasks
-    g_cmd_server_thread =
+    g_svc_server_thread =
         sdk::event_thread::event_thread::factory(
-            "cfg", PDS_AGENT_THREAD_ID_CMD_SERVER,
-            sdk::lib::THREAD_ROLE_CONTROL, 0x0, core::cmd_server_thread_init,
-            core::cmd_server_thread_exit, NULL, // message
+            "svc", PDS_AGENT_THREAD_ID_SVC_SERVER,
+            sdk::lib::THREAD_ROLE_CONTROL, 0x0, core::svc_server_thread_init,
+            core::svc_server_thread_exit, NULL, // message
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             true);
 
-    SDK_ASSERT_TRACE_RETURN((g_cmd_server_thread != NULL), SDK_RET_ERR,
-                            "Command server thread create failure");
-    g_cmd_server_thread->start(g_cmd_server_thread);
+    SDK_ASSERT_TRACE_RETURN((g_svc_server_thread != NULL), SDK_RET_ERR,
+                            "Service server thread create failure");
+    g_svc_server_thread->start(g_svc_server_thread);
 
     return SDK_RET_OK;
 }
@@ -302,8 +302,8 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
         return ret;
     }
 
-    // spawn command server thread
-    ret = spawn_cmd_server_thread();
+    // spawn service server thread
+    ret = spawn_svc_server_thread();
     if (ret != SDK_RET_OK) {
         return ret;
     }

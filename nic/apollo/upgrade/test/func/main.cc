@@ -80,6 +80,10 @@ TEST_F(upg_func_gtest, start_switch) {
     ret = pds_upgrade(&spec);
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    spec.stage = UPG_STAGE_PREPARE;
+    ret = pds_upgrade(&spec);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
     spec.stage = UPG_STAGE_SWITCHOVER;
     sdk::platform::capri::capri_quiesce_start();
     ret = pds_upgrade(&spec);

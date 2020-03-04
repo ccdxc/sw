@@ -5,13 +5,11 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/upgrade/upgrade.hpp"
+#include "nic/apollo/agent/core/core.hpp"
+#include "nic/apollo/upgrade/include/upgrade.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 
 namespace core {
-
-// don't change this as this is upgrade dependent
-#define UPG_PDS_AGENT_NAME "pdsagent"
 
 static inline upg_status_t
 sdk_ret_to_upg_status (sdk_ret_t sdk_ret)
@@ -26,34 +24,38 @@ sdk_ret_to_upg_status (sdk_ret_t sdk_ret)
     }
 }
 
-//------------------------------------------------------------------------------
-// register for upgrade specific events
-//------------------------------------------------------------------------------
+// upgrade event handler
+// these events are coming from upgrade manager over sdk IPC
 static void
 upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
-    upg_event_msg_t rspev;
+    upg_event_msg_t resp;
     pds_upg_spec_t  spec;
     sdk_ret_t       ret = SDK_RET_OK;
 
-    PDS_TRACE_DEBUG("Received UPG IPC event stage %s",
+    PDS_TRACE_DEBUG("Received UPG IPC event stage {}",
                     upg_stage2str(event->stage));
 
     // TODO fill other infos
     spec.stage = event->stage;
     ret = pds_upgrade(&spec);
-    rspev.rsp_status = sdk_ret_to_upg_status(ret);
-    rspev.stage = event->stage;
-    strncpy(rspev.rsp_thread_name, UPG_PDS_AGENT_NAME, sizeof(rspev.rsp_thread_name));
-    sdk::ipc::broadcast(UPG_EVENT_ID_RSP, &rspev, sizeof(rspev));
+    resp.stage = event->stage;
+    resp.rsp_status = sdk_ret_to_upg_status(ret);
+    strncpy(resp.rsp_thread_name, UPG_PDS_AGENT_NAME, sizeof(resp.rsp_thread_name));
+    // invoked by service thread
+    resp.rsp_thread_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
+    // respond to upgrade manager with unicast message
+    sdk::ipc::respond(msg, &resp, sizeof(resp));
 }
 
 void
 upg_event_subscribe (void)
 {
-    // subscribe for upgrade client poll.
-    sdk::ipc::subscribe(UPG_EVENT_ID_REQ, upg_event_handler, NULL);
+    // subscribe for upgrade events from upgrade manager
+    // for both broadcast and unicast messages
+    sdk::ipc::subscribe(PDS_IPC_MSG_ID_UPGRADE, upg_event_handler, NULL);
+    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPGRADE, upg_event_handler, NULL);
 }
 
 }    // namespace core

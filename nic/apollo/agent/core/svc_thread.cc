@@ -10,20 +10,20 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
+#include "nic/apollo/agent/core/upgrade_event.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "gen/proto/debug.pb.h"
 
-#define CMD_SERVER_SOCKET_PATH          "/var/run/cmd_server_sock"
+#define SVC_SERVER_SOCKET_PATH          "/var/run/pds_svc_server_sock"
 #define CMD_IOVEC_DATA_LEN              (256)
 
 namespace core {
 
 static thread_local sdk::event_thread::io_t cmd_accept_io;
-extern void upg_event_subscribe(void);
 
 static void
-cmd_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
+svc_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
     char iov_data[CMD_IOVEC_DATA_LEN];
     int cmd_fd,bytes_read;
@@ -61,7 +61,7 @@ cmd_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
 }
 
 static void
-cmd_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
+svc_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
     sdk::event_thread::io_t *cmd_read_io;
     int fd2;
@@ -82,13 +82,13 @@ cmd_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
     }
 
     // Initialize and start watcher to read client requests
-    sdk::event_thread::io_init(cmd_read_io, cmd_server_read_cb, fd2,
+    sdk::event_thread::io_init(cmd_read_io, svc_server_read_cb, fd2,
                                EVENT_READ);
     sdk::event_thread::io_start(cmd_read_io);
 }
 
 void
-cmd_server_thread_init (void *ctxt)
+svc_server_thread_init (void *ctxt)
 {
     int fd;
     struct sockaddr_un sock_addr;
@@ -104,7 +104,7 @@ cmd_server_thread_init (void *ctxt)
 
     memset(&sock_addr, 0, sizeof (sock_addr));
     sock_addr.sun_family = AF_UNIX;
-    strcpy(sock_addr.sun_path, CMD_SERVER_SOCKET_PATH);
+    strcpy(sock_addr.sun_path, SVC_SERVER_SOCKET_PATH);
 
     if (bind(fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
         PDS_TRACE_ERR ("Failed to bind unix domain socket for cmd server thread");
@@ -116,13 +116,13 @@ cmd_server_thread_init (void *ctxt)
         return;
     }
 
-    sdk::event_thread::io_init(&cmd_accept_io, cmd_server_accept_cb, fd,
+    sdk::event_thread::io_init(&cmd_accept_io, svc_server_accept_cb, fd,
                                EVENT_READ);
     sdk::event_thread::io_start(&cmd_accept_io);
 }
 
 void
-cmd_server_thread_exit (void *ctxt)
+svc_server_thread_exit (void *ctxt)
 {
     sdk::event_thread::io_stop(&cmd_accept_io);
 }

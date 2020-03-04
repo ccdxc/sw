@@ -143,15 +143,11 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) { return sdk::SDK_RET_ERR; }
 
-    ///
     /// \brief Routine to backup the pipeline configs during upgrade
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t upg_backup(void) { return sdk::SDK_RET_ERR; }
 
-    ///
     /// \brief Routine to switchover the pipeline configs during upgrade
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t upg_switchover(void) { return sdk::SDK_RET_ERR; }
 

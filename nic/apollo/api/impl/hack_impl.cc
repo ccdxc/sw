@@ -135,6 +135,7 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
 
 /**
  * @brief     routine to validate service LIFs config during upgrade
+ *            during A to B upgrade this will be called by B
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
@@ -160,6 +161,7 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         PDS_TRACE_ERR("LIF map not found");
         return SDK_RET_ERR;
     }
+    // get the qstate pc offsets
     rv = sdk::platform::capri::get_pc_offset(pginfo,
                                         "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
     if (rv != 0) {
@@ -167,13 +169,14 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         return SDK_RET_ERR;
     }
 
-    // read qstate and compare with the existing config
     rv = sdk::platform::capri::read_qstate(
         qstate.hbm_address, (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
     if (rv != 0) {
         PDS_TRACE_ERR("RXDMA qstate read failed");
         return SDK_RET_ERR;
     }
+    // compare the ring configuration done by A with B config
+    // it should be matching in address and size
     if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
         (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
         (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
@@ -190,6 +193,8 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         PDS_TRACE_ERR("TXDMA qstate read failed");
         return SDK_RET_ERR;
     }
+    // compare the ring configuration done by A with B config
+    // it should be matching in address and size
     if ((lif_qstate.ring0_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME)) ||
         (lif_qstate.ring1_base != api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME)) ||
         (lif_qstate.ring_size != log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10))) {
@@ -201,6 +206,7 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
                     qstate.hbm_address + sizeof(lifqstate_t), lif_qstate.pc, pgm_offset);
 
     // save the qstate hbm address
+    // this will be applied during switchover stage from A to B
     if (pgm_offset != lif_qstate.pc) {
         lif_qstate.pc = pgm_offset;
         api::g_upg_state->set_qstate_cfg(qstate.hbm_address, sizeof(lifqstate_t), pgm_offset);

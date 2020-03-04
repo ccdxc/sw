@@ -5,15 +5,15 @@
 #ifndef __CORE_HPP__
 #define __CORE_HPP__
 
-#include "nic/apollo/core/core.hpp"
+#include "nic/apollo/include/globals.hpp"
 
 namespace core {
 
 enum {
-    PDS_AGENT_THREAD_ID_NONE = PDS_THREAD_ID_MAX,
-    PDS_AGENT_THREAD_ID_CMD_SERVER,
+    PDS_AGENT_THREAD_ID_NONE = pds_thread_id_t::PDS_AGENT_THREAD_ID_MIN,
+    PDS_AGENT_THREAD_ID_SVC_SERVER,
     PDS_AGENT_THREAD_ID_ROUTING,
-    PDS_AGENT_THREAD_ID_MAX = 48,
+    PDS_AGENT_THREAD_ID_MAX = pds_thread_id_t::PDS_AGENT_THREAD_ID_MAX,
 };
 
 #define CALLOC(id, size) calloc(size, size);

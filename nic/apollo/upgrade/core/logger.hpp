@@ -14,7 +14,7 @@ namespace upg {
 
 // operd logging
 extern sdk::operd::logger_ptr g_upg_log;
-#define UPG_LOG_NAME "upgradelog"
+#define UPGRADE_LOG_NAME "upgradelog"
 
 }    // namespace upg
 

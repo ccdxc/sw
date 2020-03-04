@@ -6,20 +6,18 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/apollo/upgrade/core/logger.hpp"
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
-#include "nic/apollo/upgrade/upgrade.hpp"
-#include "nic/apollo/upgrade/logger.hpp"
+#include "nic/apollo/upgrade/include/upgrade.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 
-#define GRPC_UPG_PORT       8888
-#define UPG_THREAD_ID_EVENT 1
 static sdk::event_thread::event_thread *g_upg_event_thread;
 
 namespace upg {
 
-sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPG_LOG_NAME);
+sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 
 }    // namespace upg
 
@@ -30,13 +28,23 @@ print_usage (char **argv)
 }
 
 static void
-upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie, const void *ctxt)
 {
     upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
 
-    printf("Received UPG IPC event stageid %s, status %s, thread %s\n",
+    g_upg_log->debug("Received UPG IPC event stageid %s, status %s, thread %s, thread_id %u\n",
            upg_stage2str(event->stage), upg_status2str(event->rsp_status),
-           event->rsp_thread_name);
+           event->rsp_thread_name, event->rsp_thread_id);
+
+    // send the next event based on current status
+    // for testing. TODO : fit actual code
+    if (event->stage == UPG_STAGE_COMPAT_CHECK) {
+        upg_event_msg_t next_event;
+
+        next_event.stage = UPG_STAGE_START;
+        sdk::ipc::request(event->rsp_thread_id, PDS_IPC_MSG_ID_UPGRADE,
+                          &next_event, sizeof(next_event), NULL);
+    }
 }
 
 void
@@ -44,12 +52,13 @@ upg_event_thread_init (void *ctxt)
 {
     upg_event_msg_t event;
 
-    // subscribe upgrade client up events
-    sdk::ipc::subscribe(UPG_EVENT_ID_RSP, upg_event_handler, NULL);
+    // subscribe for upgrade event responses from clients
+    sdk::ipc::reg_response_handler(PDS_IPC_MSG_ID_UPGRADE, upg_event_handler, NULL);
 
-    // send client ready check
-    event.stage = UPG_STAGE_READY;
-    sdk::ipc::broadcast(UPG_EVENT_ID_REQ, &event, sizeof(event));
+    // send compat check. only this messages will be broadcasted.
+    // all other messages will be unicasted based on serial/parallel mode
+    event.stage = UPG_STAGE_COMPAT_CHECK;
+    sdk::ipc::broadcast(PDS_IPC_MSG_ID_UPGRADE, &event, sizeof(event));
     return;
 }
 
@@ -68,7 +77,7 @@ spawn_upg_event_thread (void)
     // spawn periodic thread that does background tasks
     g_upg_event_thread =
         sdk::event_thread::event_thread::factory(
-            "upg", UPG_THREAD_ID_EVENT,
+            "upg", PDS_IPC_ID_UPGRADE,
             sdk::lib::THREAD_ROLE_CONTROL, 0x0, upg_event_thread_init,
             upg_event_thread_exit, NULL, // message
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -97,7 +106,7 @@ svc_init (void)
     // do gRPC initialization
     grpc_init();
     g_grpc_server_addr =
-        std::string("0.0.0.0:") + std::to_string(GRPC_UPG_PORT);
+        std::string("0.0.0.0:") + std::to_string(GRPC_UPGRADE_PORT);
     server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);

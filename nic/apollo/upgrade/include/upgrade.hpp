@@ -8,29 +8,28 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __UPGRADE_UPGRADE__HPP__
-#define __UPGRADE_UPGRADE__HPP__
+#ifndef __INCLUDE_UPGRADE_HPP__
+#define __INCLUDE_UPGRADE_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/apollo/include/globals.hpp"
 
-// TODO : namespace to use (pds ? )
-//
 /// \defgroup UPG Upgrade Manager
 /// @{
 
 
 /// \brief upgrade stages
 typedef enum upg_stage_e {
-    UPG_STAGE_NONE = 0,   ///< invalid
-    UPG_STAGE_READY,      ///< upgarde ready check
-    UPG_STAGE_START,      ///< start an upgrade
-    UPG_STAGE_PREPARE,    ///< prepare for an upgrade
-    UPG_STAGE_ABORT,      ///< abort the on-going upgrade
-    UPG_STAGE_INIT,       ///< initialize the new upgrade
-    UPG_STAGE_ROLLBACK,   ///< rollback to the previous version
-    UPG_STAGE_SWITCHOVER, ///< switch to the new version
-    UPG_STAGE_EXIT,       ///< exit previous or new depends on upgrade status.
-    UPG_STAGE_MAX,        ///< invalid
+    UPG_STAGE_NONE = 0,         ///< invalid
+    UPG_STAGE_COMPAT_CHECK,     ///< upgarde ready check
+    UPG_STAGE_START,            ///< start an upgrade
+    UPG_STAGE_PREPARE,          ///< prepare for an upgrade
+    UPG_STAGE_ABORT,            ///< abort the on-going upgrade
+    UPG_STAGE_INIT,             ///< initialize the new upgrade
+    UPG_STAGE_ROLLBACK,         ///< rollback to the previous version
+    UPG_STAGE_SWITCHOVER,       ///< switch to the new version
+    UPG_STAGE_EXIT,             ///< exit previous or new depends on upgrade status.
+    UPG_STAGE_MAX,              ///< invalid
 } upg_stage_t;
 
 /// \brief upgrade modes
@@ -51,13 +50,6 @@ typedef enum upg_oper_state_action_e {
     UPG_OPER_STATE_ACTION_REPLACE     ///< replace the existing operational state table
 } upg_oper_state_action_t;
 
-/// \brief upgrade event id
-typedef enum upg_event_id_e {
-    // TODO : discuss on conflict with local event_ids (for example pds core)
-    UPG_EVENT_ID_REQ = 32,
-    UPG_EVENT_ID_RSP = 33,
-} upg_event_id_t;
-
 /// \brief upgrade responses
 typedef enum upg_status_e {
     UPG_STATUS_OK = 0,     ///< operation successful
@@ -70,24 +62,26 @@ typedef enum upg_status_e {
 /// we should not add anything in the middle.
 /// TODO: should i convert to protobuf and send
 typedef struct upg_event_msg_s {
-    upg_stage_t  stage;              ///< request stage
-    upg_status_t rsp_status;            ///< response status
-    char         rsp_thread_name[64];   ///< response thread name
+    upg_stage_t    stage;                 ///< request stage
+    upg_status_t   rsp_status;            ///< response status
+    char           rsp_thread_name[64];   ///< response thread name
+    uint32_t       rsp_thread_id;         ///< response thread id. can be used
+                                          ///< to send unicast ipc to this thread
     // TODO other infos
-} __attribute__ ((packed)) upg_event_msg_t;
+} __PACK__ upg_event_msg_t;
 
 // trace utilities
 // stage to string
 static const char *upg_stage_name[] =  {
-    [UPG_STAGE_NONE]       = "none",
-    [UPG_STAGE_READY]      = "ready",
-    [UPG_STAGE_START]      = "start",
-    [UPG_STAGE_PREPARE]    = "prepare",
-    [UPG_STAGE_ABORT]      = "abort",
-    [UPG_STAGE_INIT]       = "init",
-    [UPG_STAGE_ROLLBACK]   = "rollback",
-    [UPG_STAGE_SWITCHOVER] = "switchover",
-    [UPG_STAGE_EXIT]       = "exit",
+    [UPG_STAGE_NONE]         = "none",
+    [UPG_STAGE_COMPAT_CHECK] = "compatcheck",
+    [UPG_STAGE_START]        = "start",
+    [UPG_STAGE_PREPARE]      = "prepare",
+    [UPG_STAGE_ABORT]        = "abort",
+    [UPG_STAGE_INIT]         = "init",
+    [UPG_STAGE_ROLLBACK]     = "rollback",
+    [UPG_STAGE_SWITCHOVER]   = "switchover",
+    [UPG_STAGE_EXIT]         = "exit",
 };
 
 static inline const char *
@@ -111,4 +105,4 @@ upg_status2str (upg_status_t status)
 
 /// @}
 
-#endif    // __UPGRADE_UPGRADE__HPP__
+#endif    // __INCLUDE_UPGRADE_HPP__

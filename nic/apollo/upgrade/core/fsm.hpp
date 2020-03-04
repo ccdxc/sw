@@ -14,7 +14,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/upgrade/include/pds_upgmgr.hpp"
 #include "nic/apollo/upgrade/core/stage.hpp"
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"

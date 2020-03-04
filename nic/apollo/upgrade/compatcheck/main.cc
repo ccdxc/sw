@@ -7,13 +7,13 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/upgrade/logger.hpp"
+#include "nic/apollo/upgrade/core/logger.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 namespace upg {
 
-sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPG_LOG_NAME);
+sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 
 // TODO: may need to remove the below code once pds_init moved log operd
 // based logging

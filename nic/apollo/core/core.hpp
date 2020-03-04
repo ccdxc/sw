@@ -15,12 +15,13 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/include/globals.hpp"
 
 namespace core {
 
 // threads inside the PDS HAL library (these ids are also used as IPC endpoints)
 enum {
-    PDS_THREAD_ID_NONE       = 0,
+    PDS_THREAD_ID_NONE       = pds_thread_id_t::PDS_THREAD_ID_MIN,
     PDS_THREAD_ID_CFG        = 1,
     PDS_THREAD_ID_API        = 2,
     PDS_THREAD_ID_PERIODIC   = 3,
@@ -28,7 +29,7 @@ enum {
     PDS_THREAD_ID_PCIEMGR    = 5,
     PDS_THREAD_ID_LEARN      = 6,
     PDS_THREAD_ID_FTE        = 7,
-    PDS_THREAD_ID_MAX        = 32
+    PDS_THREAD_ID_MAX        = pds_thread_id_t::PDS_THREAD_ID_MAX,
 };
 
 enum {
