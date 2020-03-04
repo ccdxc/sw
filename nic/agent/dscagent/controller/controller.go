@@ -183,7 +183,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 
 // Start starts the control loop for connecting to Venice
 func (c *API) Start(ctx context.Context) error {
-	//defer c.Done()
+	defer c.Done()
 	for {
 		select {
 		case <-ctx.Done():
@@ -191,6 +191,10 @@ func (c *API) Start(ctx context.Context) error {
 			return nil
 		default:
 		}
+
+		// Ensure that the controller API is registered with the pipeline
+		log.Infof("Controller API: %v", c)
+		c.PipelineAPI.RegisterControllerAPI(c)
 
 		// TODO unify this on Venice side to have a single config controller
 		c.npmClient, _ = c.factory.NewRPCClient(
@@ -266,10 +270,6 @@ func (c *API) Start(ctx context.Context) error {
 			continue
 		}
 		c.nimbusClient = nimbusClient
-
-		// Ensure that the controller API is registered with the pipeline
-		log.Infof("Controller API: %v", c)
-		c.PipelineAPI.RegisterControllerAPI(c)
 
 		go func() {
 
