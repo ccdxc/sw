@@ -3680,3 +3680,181 @@ func TestMemdbObjPushWatcher_9(t *testing.T) {
 
 }
 */
+
+func TestMemdbObjPushAndMemdbWatcher_1(t *testing.T) {
+
+	initObjectStore()
+	ResetWatchMap()
+	pObjMaps := make(map[string][]PushObjectHandle)
+	var err error
+
+	relations := []relation{
+		{"a", "b", 0, 1},
+	}
+
+	generateObjectReferences(relations)
+
+	// create a new memdb
+	md := NewMemdb()
+	registerKinds(md)
+	//const watchConcur = maxReceivers
+	const watchConcur = 1
+	const objConcur = 1
+	const totalObjects = 1
+
+	md.EnableSelctivePush("a")
+	//md.EnableSelctivePush("b")
+	Assert(t, md.pushdb.KindEnabled("a"), "kind disabled")
+	Assert(t, !md.pushdb.KindEnabled("b"), "kind disabled")
+
+	// setup concurrent watches, registration will fail if not enabled
+	receivers := addReceivers(t, md, watchConcur)
+
+	// setup concurrent watches, registration should succeed now
+	watchers := startWatchers(t, watchConcur)
+	Assert(t, md.pushdb.ReceiversCount() == watchConcur, "Count did not match")
+	defer stopWatchers(t, watchers)
+
+	startWatchForKinds(t, md, watchers, []string{"a"})
+	//md.WatchObjects("b", &watcher)
+
+	watcher := Watcher{}
+	watcher.Channel = make(chan Event, WatchLen)
+	md.WatchObjects("b", &watcher)
+	err = sendObjects(md.AddObjectWithReferences, "b", 0, 1)
+	AssertOk(t, err, "Error creating object")
+
+	pObjMaps["a"], err = sendPushObjects(md.AddPushObject, "a", 0, totalObjects, nil)
+	AssertOk(t, err, "Error creating object")
+	AssertEquals(t, len(pObjMaps["a"]), totalObjects, "Error creating object")
+
+	kindMap := make(map[EventType]map[string]int)
+	kindMap = make(map[EventType]map[string]int)
+	kindMap[CreateEvent] = make(map[string]int)
+	kindMap[CreateEvent]["b"] = 1
+	err = verifyObjects(t, md, &watcher, kindMap, time.Duration(500*time.Millisecond))
+	AssertOk(t, err, "Error verifying objects")
+
+	for ii := 0; ii < totalObjects; ii++ {
+		err = pObjMaps["a"][ii].AddObjReceivers(receivers)
+		AssertOk(t, err, "Error Adding receivers")
+	}
+
+	for ii := 0; ii < watchConcur; ii++ {
+		watch, _ := watchMap[watchers[ii].watcher.Name]
+		watch.evtsExp.Reset()
+		watch.evtsExp.evKindMap[CreateEvent]["b"] = 0
+		watch.evtsExp.evKindMap[CreateEvent]["a"] = 1
+	}
+
+	errs := make(chan error, watchConcur)
+	for ii := 0; ii < watchConcur; ii++ {
+		ii := ii
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watchers[ii].watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	errs = make(chan error, watchConcur)
+	for ii := 0; ii < watchConcur; ii++ {
+		ii := ii
+		go func() {
+			errs <- verifyEvObjects(t, watchMap[watchers[ii].watcher.Name], time.Duration(1*time.Second))
+		}()
+
+	}
+
+	for ii := 0; ii < watchConcur; ii++ {
+		err := <-errs
+		AssertOk(t, err, "Error verifying objects")
+	}
+
+	/*
+		pObjMaps["b"], err = sendPushObjects(md.AddPushObject, "b", 0, totalObjects, receivers)
+		AssertOk(t, err, "Error creating object")
+		AssertEquals(t, len(pObjMaps["a"]), totalObjects, "Error creating object")
+
+		for ii := 0; ii < totalObjects; ii++ {
+			err = pObjMaps["b"][ii].AddObjReceivers(receivers)
+			AssertOk(t, err, "Error Adding receivers")
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			watch, _ := watchMap[watchers[ii].watcher.Name]
+			watch.evtsExp.Reset()
+			watch.evtsExp.evKindMap[CreateEvent]["b"] = totalObjects
+			watch.evtsExp.evKindMap[CreateEvent]["a"] = 0
+		}
+
+		errs = make(chan error, watchConcur)
+		for ii := 0; ii < watchConcur; ii++ {
+			ii := ii
+			go func() {
+				errs <- verifyEvObjects(t, watchMap[watchers[ii].watcher.Name], time.Duration(1*time.Second))
+			}()
+
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			err := <-errs
+			AssertOk(t, err, "Error verifying objects")
+		}
+
+		for ii := 0; ii < totalObjects; ii++ {
+			err = pObjMaps["a"][ii].AddObjReceivers(receivers)
+			AssertOk(t, err, "Error Adding receivers")
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			watch, _ := watchMap[watchers[ii].watcher.Name]
+			watch.evtsExp.Reset()
+			watch.evtsExp.evKindMap[CreateEvent]["b"] = totalObjects
+			watch.evtsExp.evKindMap[CreateEvent]["a"] = totalObjects
+		}
+
+		errs = make(chan error, watchConcur)
+		for ii := 0; ii < watchConcur; ii++ {
+			ii := ii
+			go func() {
+				errs <- verifyEvObjects(t, watchMap[watchers[ii].watcher.Name], time.Duration(1*time.Second))
+			}()
+
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			err := <-errs
+			AssertOk(t, err, "Error verifying objects")
+		}
+
+		for ii := 0; ii < totalObjects; ii++ {
+			err = pObjMaps["a"][ii].RemoveObjReceivers(receivers)
+			AssertOk(t, err, "Error Adding receivers")
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			watch, _ := watchMap[watchers[ii].watcher.Name]
+			watch.evtsExp.evKindMap[DeleteEvent]["a"] = totalObjects
+		}
+
+		errs = make(chan error, watchConcur)
+		for ii := 0; ii < watchConcur; ii++ {
+			ii := ii
+			go func() {
+				errs <- verifyEvObjects(t, watchMap[watchers[ii].watcher.Name], time.Duration(1*time.Second))
+			}()
+
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			err := <-errs
+			AssertOk(t, err, "Error verifying objects")
+		}
+
+		for ii := 0; ii < watchConcur; ii++ {
+			ok := md.pushdb.ReceiverEnabled("", watchers[ii].watcher.Name)
+			Assert(t, !ok, "Receiver registerd with kind")
+		}
+		stopWatchForKinds(t, md, watchers, []string{"a", "b", "c"})
+	*/
+}

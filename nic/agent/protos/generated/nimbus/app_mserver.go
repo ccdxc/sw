@@ -391,7 +391,11 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("App", &watcher)
+	err := eh.server.memDB.WatchObjects("App", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "App", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("App", &watcher)
 
 	// get a list of all Apps

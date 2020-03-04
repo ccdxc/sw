@@ -391,7 +391,11 @@ func (eh *RouteTableTopic) WatchRouteTables(watchOptions *api.ListWatchOptions, 
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("RouteTable", &watcher)
+	err := eh.server.memDB.WatchObjects("RouteTable", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "RouteTable", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("RouteTable", &watcher)
 
 	// get a list of all RouteTables
@@ -918,7 +922,11 @@ func (eh *RoutingConfigTopic) WatchRoutingConfigs(watchOptions *api.ListWatchOpt
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("RoutingConfig", &watcher)
+	err := eh.server.memDB.WatchObjects("RoutingConfig", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "RoutingConfig", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("RoutingConfig", &watcher)
 
 	// get a list of all RoutingConfigs

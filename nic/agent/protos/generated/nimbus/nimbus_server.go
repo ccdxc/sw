@@ -1096,7 +1096,11 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 	eh.registerAggWatcher(aggKey, nodeID, kindStrings, &watcher)
 	defer eh.unRegisterAggWatcher(aggKey, nodeID)
 	for _, kind := range kindStrings {
-		eh.server.memDB.WatchObjects(kind, &watcher)
+		err := eh.server.memDB.WatchObjects(kind, &watcher)
+		if err != nil {
+			log.Errorf("Error Starting watch for kind %v Err: %v", kind, err)
+			return err
+		}
 		defer eh.server.memDB.StopWatchObjects(kind, &watcher)
 
 		watchEvts := netproto.AggObjectEventList{}

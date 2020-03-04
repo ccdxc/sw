@@ -101,15 +101,8 @@ func (p *pushDB) getPushObjdb(kind string) *pushObjDB {
 		return od
 	}
 
-	// create new objectdb
-	od = &pushObjDB{
-		objects:    make(map[string]*pObjState),
-		pushFilter: &p.objPushFilter,
-	}
+	return nil
 
-	// save it and return
-	p.pObjDB[kind] = od
-	return od
 }
 
 //EnableKind enables kind fitering
@@ -117,6 +110,7 @@ func (pf *objPushFilter) EnableKind(kind string) error {
 	pf.Lock()
 	defer pf.Unlock()
 	pf.enabledKinds[kind] = true
+
 	return nil
 }
 

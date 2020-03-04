@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -332,13 +333,15 @@ const (
 	pushObjDBType              = 1
 )
 
-func (md *Memdb) getObjectDB(dbType objDBType, kind string) objDBInterface {
+func (md *Memdb) getObjectDB(kind string) objDBInterface {
 
-	if dbType == pushObjDBType {
-		return md.getPushObjectDBByType(kind)
+	dbIntf := md.getPushObjectDBByType(kind)
+
+	if dbIntf == nil || reflect.ValueOf(dbIntf).IsNil() {
+		return md.getObjectDBByType(kind)
 	}
 
-	return md.getObjectDBByType(kind)
+	return dbIntf
 }
 
 func (md *Memdb) getPushObjdb(kind string) *pushObjDB {
@@ -546,7 +549,17 @@ func (r *receiver) bitid() uint {
 
 //EnableSelctivePush enables kind fitering
 func (md *Memdb) EnableSelctivePush(kind string) error {
-	return md.pushdb.EnableKind(kind)
+	md.pushdb.EnableKind(kind)
+
+	// create new objectdb
+	od := &pushObjDB{
+		objects:    make(map[string]*pObjState),
+		pushFilter: &md.pushdb.objPushFilter,
+	}
+
+	md.pushdb.pObjDB[kind] = od
+
+	return nil
 }
 
 //DisableKindPushFilter disables kind fitering
@@ -634,13 +647,13 @@ func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[
 	od.setObject(key, obj)
 	od.Unlock()
 
-	if md.dbAddResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
+	if md.dbAddResolver.resolvedCheck(key, obj.Object()) {
 		log.Infof("Add Object key %v resolved", key)
 		obj.Lock()
 		obj.resolved()
 		obj.Unlock()
 		od.watchEvent(obj, CreateEvent)
-		md.dbAddResolver.trigger(od.dbType(), key, obj.Object())
+		md.dbAddResolver.trigger(key, obj.Object())
 	} else {
 		obj.Lock()
 		obj.addUnResolved()
@@ -684,7 +697,7 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 	md.updateReferences(key, obj.Object(), refs)
 	ostate.SetValue(obj.Object())
 
-	if md.dbAddResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
+	if md.dbAddResolver.resolvedCheck(key, obj.Object()) {
 		log.Infof("Update Object key %v resolved", key)
 		event := UpdateEvent
 		if ostate.isAddUnResolved() {
@@ -695,7 +708,7 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 		ostate.resolved()
 		ostate.Unlock()
 		od.watchEvent(ostate, event)
-		md.dbAddResolver.trigger(od.dbType(), key, obj.Object())
+		md.dbAddResolver.trigger(key, obj.Object())
 	} else {
 		log.Infof("Update Object key %v unresolved", key)
 		ostate.updateUnResolved()
@@ -800,7 +813,7 @@ func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs m
 		return nil
 	}
 
-	if md.dbDelResolver.resolvedCheck(od.dbType(), key, obj.Object()) {
+	if md.dbDelResolver.resolvedCheck(key, obj.Object()) {
 		// add it to db and send out watch notification
 		log.Infof("Delete Object key %v resolved, refs %v", key, refs)
 		existingObj.Unlock()
@@ -808,7 +821,7 @@ func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs m
 		od.deleteObject(key)
 		od.Unlock()
 		od.watchEvent(existingObj, DeleteEvent)
-		md.dbDelResolver.trigger(od.dbType(), key, obj.Object())
+		md.dbDelResolver.trigger(key, obj.Object())
 	} else {
 		log.Infof("Delete Object key %v unresolved, refs %v", key, refs)
 		existingObj.deleteUnResolved()

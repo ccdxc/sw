@@ -391,7 +391,11 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("Endpoint", &watcher)
+	err := eh.server.memDB.WatchObjects("Endpoint", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "Endpoint", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("Endpoint", &watcher)
 
 	// get a list of all Endpoints

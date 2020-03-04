@@ -391,7 +391,11 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("NetworkSecurityPolicy", &watcher)
+	err := eh.server.memDB.WatchObjects("NetworkSecurityPolicy", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "NetworkSecurityPolicy", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("NetworkSecurityPolicy", &watcher)
 
 	// get a list of all NetworkSecurityPolicys

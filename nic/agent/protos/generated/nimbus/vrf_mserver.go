@@ -391,7 +391,11 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("Vrf", &watcher)
+	err := eh.server.memDB.WatchObjects("Vrf", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "Vrf", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("Vrf", &watcher)
 
 	// get a list of all Vrfs

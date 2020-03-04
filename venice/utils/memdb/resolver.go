@@ -7,9 +7,9 @@ import (
 
 type resolver interface {
 	//Check object resolved
-	resolvedCheck(dbType objDBType, key string, obj Object) bool
+	resolvedCheck(key string, obj Object) bool
 	//trigger recursive dep check once resolved
-	trigger(dbType objDBType, key string, obj Object) error
+	trigger(key string, obj Object) error
 }
 
 type resolverBase struct {
@@ -38,7 +38,7 @@ func (r *addResolver) getReferenceKind(key string) string {
 	return dKind
 }
 
-func (r *addResolver) resolvedCheck(dbType objDBType, key string, obj Object) bool {
+func (r *addResolver) resolvedCheck(key string, obj Object) bool {
 	node := r.md.objGraph.References(key)
 	if node == nil {
 		//This node had no references, hence resolved.
@@ -47,7 +47,7 @@ func (r *addResolver) resolvedCheck(dbType objDBType, key string, obj Object) bo
 	refObjsResolved := true
 	for key, refs := range node.Refs {
 		_, dKind, _ := getSKindDKindFieldKey(key)
-		objDB := r.md.getObjectDB(dbType, memDbKind(dKind))
+		objDB := r.md.getObjectDB(memDbKind(dKind))
 		objDB.Lock()
 		for _, ref := range refs {
 			refObj := objDB.getObject(getRefKey(ref))
@@ -84,7 +84,7 @@ func getRefKey(ref string) string {
 	return ref
 }
 
-func (r *deleteResolver) resolvedCheck(dbType objDBType, key string, obj Object) bool {
+func (r *deleteResolver) resolvedCheck(key string, obj Object) bool {
 
 	node := r.md.objGraph.Referrers(key)
 	if node == nil {
@@ -94,7 +94,7 @@ func (r *deleteResolver) resolvedCheck(dbType objDBType, key string, obj Object)
 	refObjsPresent := false
 	for key, refs := range node.Refs {
 		sKind, _, _ := getSKindDKindFieldKey(key)
-		objDB := r.md.getObjectDB(dbType, sKind)
+		objDB := r.md.getObjectDB(sKind)
 		objDB.Lock()
 		for _, ref := range refs {
 			refObj := objDB.getObject(getRefKey(ref))
@@ -118,7 +118,7 @@ type transitQueue struct {
 	obj Object
 }
 
-func (r *addResolver) trigger(dbType objDBType, key string, obj Object) error {
+func (r *addResolver) trigger(key string, obj Object) error {
 
 	inFlightObjects := []transitQueue{transitQueue{key: key, obj: obj}}
 	pendingObjects := []Event{}
@@ -131,7 +131,7 @@ func (r *addResolver) trigger(dbType objDBType, key string, obj Object) error {
 		}
 		for key, referrers := range node.Refs {
 			skind, _, _ := getSKindDKindFieldKey(key)
-			objDB := r.md.getObjectDB(dbType, skind)
+			objDB := r.md.getObjectDB(skind)
 			objDB.Lock()
 		L:
 			for _, referrer := range referrers {
@@ -142,7 +142,7 @@ func (r *addResolver) trigger(dbType objDBType, key string, obj Object) error {
 					if !referrerObj.isResolved() {
 						inFlightObjects = append(inFlightObjects, transitQueue{key: referrerObj.Key(),
 							obj: referrerObj.Object()})
-						if r.resolvedCheck(dbType, referrerObj.Key(), referrerObj.Object()) {
+						if r.resolvedCheck(referrerObj.Key(), referrerObj.Object()) {
 							log.Infof("Object key %v resolved\n", referrerObj.Key())
 							if referrerObj.isUpdateUnResolved() {
 								objDB.watchEvent(referrerObj, UpdateEvent)
@@ -192,7 +192,7 @@ func (r *addResolver) trigger(dbType objDBType, key string, obj Object) error {
 	return nil
 }
 
-func (r *deleteResolver) trigger(dbType objDBType, key string, obj Object) error {
+func (r *deleteResolver) trigger(key string, obj Object) error {
 
 	inFlightObjects := []transitQueue{transitQueue{key: key, obj: obj}}
 	pendingObjects := []Event{}
@@ -205,7 +205,7 @@ func (r *deleteResolver) trigger(dbType objDBType, key string, obj Object) error
 		}
 		for key, references := range node.Refs {
 			_, dKind, _ := getSKindDKindFieldKey(key)
-			objDB := r.md.getObjectDB(dbType, dKind)
+			objDB := r.md.getObjectDB(dKind)
 			objDB.Lock()
 		L:
 			for _, reference := range references {
@@ -213,7 +213,7 @@ func (r *deleteResolver) trigger(dbType objDBType, key string, obj Object) error
 				if referenceObj != nil {
 					referenceObj.Lock()
 					if referenceObj.isDelUnResolved() {
-						if r.resolvedCheck(dbType, referenceObj.Key(), referenceObj.Object()) {
+						if r.resolvedCheck(referenceObj.Key(), referenceObj.Object()) {
 							//Put the deleted node to run as next loop
 							inFlightObjects = append(inFlightObjects, transitQueue{key: referenceObj.Key(),
 								obj: referenceObj.Object()})

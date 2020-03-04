@@ -391,7 +391,11 @@ func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
-	eh.server.memDB.WatchObjects("Network", &watcher)
+	err := eh.server.memDB.WatchObjects("Network", &watcher)
+	if err != nil {
+		log.Errorf("Error Starting watch for kind %v Err: %v", "Network", err)
+		return err
+	}
 	defer eh.server.memDB.StopWatchObjects("Network", &watcher)
 
 	// get a list of all Networks
