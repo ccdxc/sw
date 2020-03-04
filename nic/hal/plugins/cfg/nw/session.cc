@@ -4569,6 +4569,47 @@ session_send_delete_list(dllist_ctxt_t *del_list)
     return ret;
 }
 
+
+/*
+ * Send batched deletes to FTE 
+ */
+hal_ret_t
+session_delete_all (void)
+{
+    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
+
+    struct session_delete_all_data_t {
+        dllist_ctxt_t session_list;
+    } ctxt;
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t             *session = (session_t *)entry;
+        session_delete_all_data_t  *session_data = (session_delete_all_data_t *) ctxt;
+        dllist_ctxt_t              *list_head =     &session_data->session_list;
+
+        // Add the sessions to the list to send a delete
+
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                hal_handle_id_list_entry_slab()->alloc();
+
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
+        }
+
+        list_entry->handle_id = session->hal_handle;
+        dllist_add(list_head, &list_entry->dllist_ctxt);
+
+        return false; 
+    };
+
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
+    curr_thread->punch_heartbeat();
+    session_send_delete_list(&ctxt.session_list);
+
+    return HAL_RET_OK;
+}
+
 /*
  * Upgrade Handling -- Send TCP FIN to sessions with local EPs
  */

@@ -633,7 +633,7 @@ hal_logger_init (hal_cfg_t *hal_cfg)
                            10,      // 10 files
                            ::utils::trace_err,
                            getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
-                                                       (::utils::trace_info));
+                                                       (::utils::trace_debug));
 
     return HAL_RET_OK;
 }

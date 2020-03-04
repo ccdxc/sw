@@ -636,6 +636,7 @@ hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
 void enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p);
 bool session_modified_after_timestamp (session_t *session, uint64_t ts);
+hal_ret_t session_delete_all(void);
 
 }    // namespace hal
 

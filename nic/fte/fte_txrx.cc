@@ -69,6 +69,8 @@ public:
     void incr_freed_tx_stats(void);
     void compute_cps();
     uint16_t softq_stats_get();
+    void set_quiesce(bool quiesce) { quiesce_ = quiesce; }
+    bool is_quiesced() { return quiesce_; }
 
 private:
     uint8_t                 id_;
@@ -88,6 +90,7 @@ private:
     timespec_t              t_old_ts_, t_cur_ts_;
     uint64_t                time_diff;
     uint64_t                max_sessions_; // sessions per inst;
+    bool                    quiesce_;
 
     void process_arq();
     void process_arq_new();
@@ -300,7 +303,8 @@ inst_t::inst_t(uint8_t fte_id) :
     iflow_(NULL),
     rflow_(NULL),
     bypass_fte_(false),
-    max_sessions_(0)
+    max_sessions_(0),
+    quiesce_(true)
 {
     if (hal::is_platform_type_sim()) {
         // SIM
@@ -333,6 +337,9 @@ inst_t::inst_t(uint8_t fte_id) :
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)vaddr;
         bzero(stats_.fte_hbm_stats, sizeof(fte_hbm_stats_t));
     }
+
+    if (hal::g_hal_state->is_microseg_enabled()) 
+        set_quiesce(false);
 }
 
 //------------------------------------------------------------------------------
@@ -988,8 +995,8 @@ void inst_t::process_arq_new ()
                 ctx_->set_drop();
             }
 
-            if (hal::g_hal_state->is_base_net()) {
-                HAL_TRACE_ERR("FTE should not receive any pkts in Base Net.");
+            if (is_quiesced()) {
+                HAL_TRACE_ERR("FTE in Quiesce mode -- dropping packet");
                 drop_pkt = true;
                 ctx_->set_drop();
                 continue;
@@ -1175,6 +1182,29 @@ set_fte_max_sessions (uint8_t fte_id, uint64_t max_sessions)
 done:
     return;
 }
+
+void
+fte_set_quiesce (uint8_t fte_id, bool quiesce)
+{
+    struct fn_ctx_t {
+        bool quiesce;
+    } fn_ctx;
+
+    if (fte_disabled_)
+        goto done;
+
+    fn_ctx.quiesce = quiesce;
+    HAL_TRACE_VERBOSE("Quiesce {}", quiesce);
+
+    fte_execute(fte_id, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
+            t_inst->set_quiesce(fn_ctx->quiesce);
+        }, &fn_ctx);
+
+done:
+    return;
+ 
+} 
 
 
 //------------------------------------------------------------------------------

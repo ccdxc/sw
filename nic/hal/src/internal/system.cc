@@ -803,6 +803,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
 
+            // 2. Set FTE to stop Quiescing
+            fte::fte_set_quiesce(0 /* FTE ID */, false);
+
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
@@ -814,7 +817,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
              */
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
-
+ 
+            // 2. Set FTE to stop Quiescing
+            fte::fte_set_quiesce(0 /* FTE ID */, false);
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
@@ -852,6 +857,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // 6. vMotion Init
             ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
 
+            // 7. Set FTE to stop Quiescing
+            fte::fte_set_quiesce(0 /* FTE ID */, false);
+
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
     }
@@ -872,10 +880,12 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // 3. Remove host enics from mseg prom list
             ret = enicif_update_host_prom(false);
 
-            // 4. Make FTE to drop packets.
+            // 4. Mark Quiesce on in FTE
+            fte::fte_set_quiesce(0 /* FTE ID */, true);
 
             // 5. Clear sessions
-            
+            hal::session_delete_all();
+
             // 6. Change mode
             hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
@@ -889,7 +899,8 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // 9. vMotion Init
             ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
 
-            // 10. Resume FTE to proces packets
+            // 10. Mark Quiesce off in FTE
+            fte::fte_set_quiesce(0 /* FTE ID */, false);
         }
     }
 

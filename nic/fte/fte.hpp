@@ -119,4 +119,7 @@ hal_ret_t fte_softq_stats_get(uint8_t fte_id, int &stat);
 // Set max session per fte
 void set_fte_max_sessions(uint8_t fte_id, uint64_t max_session);
 
+// Set Quisce on FTE
+void fte_set_quiesce(uint8_t fte_id, bool quiesce);
+
 } // namespace fte
