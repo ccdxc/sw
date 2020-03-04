@@ -92,6 +92,7 @@ func IsHalUp() bool {
 		log.Errorf("Failed to connect to HAL URL %s | Err %s", types.HalGRPCDefaultURL, err)
 		return false
 	}
+	defer rpcClient.ClientConn.Close()
 	if rpcClient.ClientConn.GetState() == connectivity.Ready {
 		return true
 	}
