@@ -1352,6 +1352,7 @@ acl_init_from_status (acl_t *acl, const AclStatus& status)
 static hal_ret_t
 acl_init_from_stats (acl_t *acl, const AclStats& stats)
 {
+    // Only PD ACL has stats
     return HAL_RET_OK;
 }
 
@@ -1384,7 +1385,9 @@ acl_process_get (acl_t *acl, AclGetResponse *rsp)
     // fill operational state of this acl
     rsp->mutable_status()->set_acl_handle(acl->hal_handle);
 
-    // fill stats of this acl
+    // fill stats of this acl - intialize with 0, PD will set it
+    rsp->mutable_stats()->set_num_packets(0);
+
     rsp->set_api_status(types::API_STATUS_OK);
 
     // Getting PD information

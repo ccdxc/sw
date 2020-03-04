@@ -41,14 +41,83 @@ acl_pd_delink_pi_pd (pd_acl_t *pd_acl, acl_t *pi_acl)
     }
 }
 
+// Allocate (or free) a stats block from NACL STATS table associated with
+// this ACL
+static hal_ret_t
+nacl_stats_program_tbl (pd_acl_t *pd_acl, bool insert)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    uint32_t                index;
+    directmap              *nacl_stats_tbl = NULL;
+    nacl_stats_actiondata_t d = {0};
+
+    nacl_stats_tbl = g_hal_state_pd->dm_table(P4TBL_ID_NACL_STATS);
+    SDK_ASSERT_RETURN((nacl_stats_tbl != NULL), HAL_RET_ERR);
+
+    // populate the action information
+    d.action_id = NACL_STATS_NACL_STATS_ID; 
+
+    // Initialize the stats
+    d.action_u.nacl_stats_nacl_stats.stats_packets = 0;
+
+    if (insert) {
+        sdk_ret = nacl_stats_tbl->insert(&d, &index);
+        // Ref.nic/hal/iris/datapath/p4/stats.p4
+        // Index 0, aka NACL_STATS_NOP_ENTRY is reserved
+        // We will get an index that ranges from 1 .. HAL_MAX_ACLS(512) - 1
+        pd_acl->stats_index = (uint16_t)index;
+    } else {
+        sdk_ret = nacl_stats_tbl->remove(pd_acl->stats_index);
+    }
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("nacl stats table write failure, ret {}",
+                      ret);
+        return ret;
+    }
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+nacl_stats_tbl_read (uint32_t index, uint64_t *stats)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    sdk_ret_t               sdk_ret;
+    directmap              *nacl_stats_tbl = NULL;
+    nacl_stats_actiondata_t d = {0};
+
+    *stats = 0;
+    nacl_stats_tbl = g_hal_state_pd->dm_table(P4TBL_ID_NACL_STATS);
+    SDK_ASSERT_RETURN((nacl_stats_tbl != NULL), HAL_RET_ERR);
+
+    // populate the action information
+    d.action_id = NACL_STATS_NACL_STATS_ID; 
+
+    // Initialize the stats
+    d.action_u.nacl_stats_nacl_stats.stats_packets = 0;
+
+    sdk_ret = nacl_stats_tbl->retrieve(index, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("nacl stats table write failure, ret {}",
+                      ret);
+        return ret;
+    }
+    *stats = d.action_u.nacl_stats_nacl_stats.stats_packets;
+
+    return HAL_RET_OK;
+}
+
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Acl
 // ----------------------------------------------------------------------------
 static hal_ret_t
 acl_pd_alloc_res (pd_acl_t *pd_acl)
 {
-    // Allocate any hardware resources
-    return HAL_RET_OK;
+    // Allocate a stats block for this ACL
+    hal_ret_t ret = nacl_stats_program_tbl(pd_acl, true);
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -57,8 +126,9 @@ acl_pd_alloc_res (pd_acl_t *pd_acl)
 static hal_ret_t
 acl_pd_dealloc_res (pd_acl_t *pd_acl)
 {
-    // Deallocate any hardware resources
-    return HAL_RET_OK;
+    // Deallocate the stats block for this ACL
+    hal_ret_t ret = nacl_stats_program_tbl(pd_acl, false);
+    return ret;
 }
 
 static void
@@ -358,6 +428,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
 
             data.action_u.nacl_nacl_permit.policer_index = copp_index;
 
+            // Fill in the stats index
+            data.action_u.nacl_nacl_permit.stats_idx = pd_acl->stats_index;
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_REDIRECT:
@@ -435,11 +507,14 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                 }
 #endif
             }
-
+            // Fill in the stats index
+            data.action_u.nacl_nacl_permit.stats_idx = pd_acl->stats_index;
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_PERMIT:
             data.action_id = NACL_NACL_PERMIT_ID;
+            // Fill in the stats index
+            data.action_u.nacl_nacl_permit.stats_idx = pd_acl->stats_index;
             populate_permit_actions(&data, as);
             break;
         case acl::ACL_ACTION_DENY:
@@ -459,6 +534,8 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
                 }
                 data.action_u.nacl_nacl_deny.drop_reason_valid = drop_action_data ? 1 : 0;
                 data.action_u.nacl_nacl_deny.drop_reason = drop_action_data;
+                // Fill in the stats index
+                data.action_u.nacl_nacl_deny.stats_idx = pd_acl->stats_index;
             }
             break;
         default:
@@ -900,8 +977,10 @@ pd_acl_get (pd_func_args_t *pd_func_args)
     pd_acl_t          *pd_acl = (pd_acl_t *)acl->pd;
     AclGetResponse    *rsp = args->rsp;
     uint32_t          hw_tcam_idx;
+    uint64_t          stats_val;
 
     auto acl_info = rsp->mutable_status()->mutable_epd_status();
+    auto stats = rsp->mutable_stats();
 
     acl_tbl = g_hal_state_pd->acl_table();
     SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
@@ -914,6 +993,11 @@ pd_acl_get (pd_func_args_t *pd_func_args)
     }
 
     acl_info->set_hw_tcam_idx(hw_tcam_idx);
+    acl_info->set_hw_stats_idx(pd_acl->stats_index);
+
+    // Update statistics for this ACL
+    ret = nacl_stats_tbl_read(pd_acl->stats_index, &stats_val);
+    stats->set_num_packets((uint64_t)stats_val);
     return ret;
 }
 
@@ -924,12 +1008,11 @@ static hal_ret_t
 acl_pd_restore_data (pd_acl_restore_args_t *args)
 {
     hal_ret_t      ret = HAL_RET_OK;
-#if 0
     acl_t    *acl = args->acl;
     pd_acl_t *acl_pd = (pd_acl_t *)acl->pd;
 
     auto acl_info = args->acl_status->epd_status();
-#endif
+    acl_pd->stats_index = (uint16_t)acl_info.hw_stats_idx();
 
     return ret;
 }

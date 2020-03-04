@@ -170,7 +170,8 @@ message AclRequestMsg {
 
 // Acl oper state for enterprise pipeline
 message AclStatusEpd {
-  uint32 hw_tcam_idx = 1; // HW tcam index
+  uint32 hw_tcam_idx = 1;   // HW tcam index
+  uint32 hw_stats_idx = 2;  // HW stats index
 }
 
 // Acl oper state for cloud pipeline
@@ -229,6 +230,7 @@ message AclGetRequestMsg {
 
 // AclStats captures all the statistics of a acl
 message AclStats {
+  uint64 num_packets = 1;  // Number of packets that hit this ACL Rule
 }
 
 // AclGetResponse captures all the information about a acl

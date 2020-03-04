@@ -12,9 +12,10 @@ namespace hal {
 namespace pd {
 
 typedef struct pd_acl_s {
+    // Index into the stats table
+    uint16_t stats_index;
     // ACL TCAM entry handle
     acl_tcam_entry_handle_t handle;
-
     // pi ptr
     acl_t                   *pi_acl;
 } __PACK__ pd_acl_t;
@@ -43,6 +44,7 @@ acl_pd_init (pd_acl_t *pd_acl)
     }
     pd_acl->pi_acl = NULL;
     pd_acl->handle = ACL_TCAM_ENTRY_INVALID_HANDLE;
+    pd_acl->stats_index = USHRT_MAX;
 
     return pd_acl;
 }

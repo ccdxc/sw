@@ -576,15 +576,17 @@ func aclShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func aclShowStatusHeader() {
-	hdrLine := strings.Repeat("-", 20)
+	hdrLine := strings.Repeat("-", 40)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s\n", "Handle", "TCAMIdx")
+	fmt.Printf("%-10s%-10s%-11s%-10s\n", "Handle", "TCAMIdx", "StatsIdx", "Packets")
 	fmt.Println(hdrLine)
 }
 
 func aclShowStatusOneResp(resp *halproto.AclGetResponse) {
 	status := resp.GetStatus()
-	fmt.Printf("%-10d%-10d\n",
+	fmt.Printf("%-10d%-10d%-11d%-10d\n",
 		status.GetAclHandle(),
-		status.GetEpdStatus().GetHwTcamIdx())
+		status.GetEpdStatus().GetHwTcamIdx(),
+		status.GetEpdStatus().GetHwStatsIdx(),
+		resp.GetStats().GetNumPackets())
 }
