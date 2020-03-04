@@ -82,9 +82,10 @@ type InstanceParams struct {
 		ServerType string // baremetal server type (server-a or server-d)
 		InbandMgmt bool
 		Network    struct {
-			Address string
-			Gateway string
-			IPRange string
+			Interface string
+			Address   string
+			Gateway   string
+			IPRange   string
 		}
 	}
 
@@ -570,7 +571,10 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			NumInstances: (uint32)(node.topoNode.NumInstances),
 			VeniceIps:    nil,
 			NicType:      node.instParams.Resource.NICType,
-			Parent:       "eno1",
+			Parent:       node.instParams.Resource.Network.Interface,
+		}
+		if node.NaplesMultSimConfig.Parent == "" {
+			node.NaplesMultSimConfig.Parent = "eno1"
 		}
 	case iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM:
 		switch personality {

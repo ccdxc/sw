@@ -253,10 +253,28 @@ func (cl *CloudCfg) setupLoopbacks() error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
 
+	expectedLoopbacks := len(cl.params.Dscs) + len(cl.params.FakeDscs)
 L:
 	for true {
 		select {
 		case <-bkCtx.Done():
+			loopbackDSCs := make(map[string]bool)
+			for _, dsc := range cl.params.Dscs {
+				loopbackDSCs[dsc.Name] = false
+			}
+			for _, dsc := range cl.params.FakeDscs {
+				loopbackDSCs[dsc.Name] = false
+			}
+			for _, intf := range loppbackIntfs {
+				loopbackDSCs[strings.Split(intf.Name, "-")[0]] = true
+			}
+
+			for dsc, val := range loopbackDSCs {
+				if !val {
+					log.Infof("DSC missing loopback interface %v", dsc)
+				}
+			}
+			log.Errorf("Expected %v , found %v ", expectedLoopbacks, len(loppbackIntfs))
 			return fmt.Errorf("Error finding all loopback interfaces : %s", err)
 		default:
 			loppbackIntfs, err = rClient.ListNetworkLoopbackInterfaces()

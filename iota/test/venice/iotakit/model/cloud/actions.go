@@ -140,7 +140,7 @@ type RtrCtlStruct []struct {
 		LocalAddr    string `json:"LocalAddr"`
 		PeerAddr     string `json:"PeerAddr"`
 		Password     bool   `json:"Password"`
-		State        int    `json:"State"`
+		State        string `json:"State"`
 		RemoteASN    int    `json:"RemoteASN"`
 		SendComm     bool   `json:"SendComm"`
 		SendExtComm  bool   `json:"SendExtComm"`

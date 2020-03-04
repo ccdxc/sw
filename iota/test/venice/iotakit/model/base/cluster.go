@@ -1094,33 +1094,7 @@ func (sm *SysModel) readNodeUUIDs(nodes []*testbed.TestNode) error {
 	return nil
 }
 
-func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
-
-	// get token ao authenticate to agent
-	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
-	if err != nil {
-		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
-
-	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
-	defer cancel()
-	var token string
-	for i := 0; true; i++ {
-
-		token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
-		if err == nil {
-			break
-		}
-		if i == 6 {
-
-			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-			log.Errorf("%v", nerr)
-			return nerr
-		}
-	}
-
+func (sm *SysModel) enableSSH(nodes []*testbed.TestNode, token string) error {
 	//After reloading make sure we setup the host
 	trig := sm.Tb.NewTrigger()
 	for _, node := range nodes {
@@ -1155,8 +1129,52 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 		}
 	}
 
+	return nil
+
+}
+
+func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
+
+	// get token ao authenticate to agent
+	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
+	if err != nil {
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+
+	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
+	defer cancel()
+	var token string
+	for i := 0; true; i++ {
+
+		token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
+		if err == nil {
+			break
+		}
+		if i == 6 {
+			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+	}
+
+	//Naples may take time to join in auto discovery
+	for i := 0; true; i++ {
+		err = sm.enableSSH(nodes, token)
+		if err == nil {
+			break
+		}
+		if i == 6 {
+			nerr := fmt.Errorf("Could not enable ssh on naples: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+		time.Sleep(3 * time.Second)
+	}
+
 	if !sm.NoSetupDataPathAfterSwitch {
-		trig = sm.Tb.NewTrigger()
+		trig := sm.Tb.NewTrigger()
 		//Make sure we can run command on naples
 		for _, node := range nodes {
 			if testbed.IsNaplesHW(node.Personality) {
@@ -1168,7 +1186,7 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 			}
 		}
 
-		resp, err = trig.Run()
+		resp, err := trig.Run()
 		if err != nil {
 			return fmt.Errorf("Error update public key on naples. Err: %v", err)
 		}
