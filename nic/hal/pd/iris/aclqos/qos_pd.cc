@@ -1749,6 +1749,426 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+
+// ----------------------------------------------------------------------------
+// SWM related
+// ----------------------------------------------------------------------------
+
+#define QOS_ACTION(_arg) d.action_u.qos_qos._arg
+static hal_ret_t
+qos_class_pd_program_qos_table_for_swm (uint32_t swm_p4_q, bool program)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    sdk_ret_t      sdk_ret;
+    directmap      *qos_tbl = NULL;
+    qos_actiondata_t d;
+    uint32_t       qos_class_id;
+
+    qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
+    SDK_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
+
+    qos_class_id = swm_p4_q;    // p4_ig_q
+
+    memset(&d, 0, sizeof(d));
+
+    if(program) {
+        if(swm_p4_q == CAPRI_TM_P4_SWM_UC_QUEUE) {
+            QOS_ACTION(egress_tm_oq) = CAPRI_TM_P4_SWM_UC_QUEUE_REPLACEMENT;    // p4_eg_q
+        } else if (swm_p4_q == CAPRI_TM_P4_SWM_FLOOD_QUEUE) {
+            QOS_ACTION(egress_tm_oq) = CAPRI_TM_P4_SWM_FLOOD_QUEUE_REPLACEMENT; // p4_eg_q
+        } else {
+            QOS_ACTION(egress_tm_oq) = swm_p4_q;    // p4_eg_q
+        }
+
+        // Non BMC UC traffic picks oq 0 at mgmt port
+        if (swm_p4_q != CAPRI_TM_P4_SWM_FLOOD_QUEUE) {
+            QOS_ACTION(dest_tm_oq) = (swm_p4_q - CAPRI_TM_P4_UPLINK_IQ_OFFSET);  // dest_oq: 5 or 6
+        }
+        SDK_ASSERT(capri_tm_q_valid(swm_p4_q));
+    } else {
+        // de-program - nothing to set
+    }
+
+    sdk_ret = qos_tbl->update(qos_class_id, &d);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("qos table write failure, qos-class-id {} p4_eg_q {} "
+                      "ret {}",
+                      qos_class_id, swm_p4_q, ret);
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("qos table qos-class-id {} programmed egress_tm_oq {} "
+                    "dest_oq {} cos_en {} cos {} dscp_en {} dscp {} ",
+                    qos_class_id,
+                    QOS_ACTION(egress_tm_oq),
+                    QOS_ACTION(dest_tm_oq),
+                    QOS_ACTION(cos_en),
+                    QOS_ACTION(cos),
+                    QOS_ACTION(dscp_en),
+                    QOS_ACTION(dscp));
+
+    return ret;
+}
+#undef QOS_ACTION
+
+hal_ret_t
+pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool program)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   sdk_ret;
+
+    uint32_t    etype = 0;
+    uint32_t    cos = 0;
+    int32_t     tc = 0;
+    int32_t     tc_to_iq = 0;
+    int32_t     uplink_iq = 0;
+    int32_t     p4_oq = CAPRI_TM_P4_UPLINK_IQ_OFFSET;   // 24
+    int32_t     default_p4_oq = CAPRI_TM_P4_UPLINK_IQ_OFFSET;   // 24
+
+    bool        mgmt_port = ((swm_uplink_port == TM_PORT_NCSI) ? true : false);
+
+    if (mgmt_port) {
+        tc = QOS_SWM_CAM_NCSI_COS;
+        uplink_iq = QOS_SWM_CAM_NCSI_COS;
+
+        if (program) {
+            etype = QOS_SWM_NCSI_ETHERTYPE;
+            cos = QOS_SWM_CAM_NCSI_COS;
+            tc_to_iq = QOS_SWM_CAM_NCSI_COS;
+            p4_oq = CAPRI_TM_P4_SWM_NCSI_QUEUE;
+            default_p4_oq = CAPRI_TM_P4_SWM_UC_QUEUE;
+        }
+    } else {
+        tc = QOS_SWM_CAM_COS;
+        uplink_iq = QOS_SWM_CAM_COS;
+
+        if (program) {
+            cos = QOS_SWM_CAM_COS;
+            tc_to_iq = QOS_SWM_CAM_COS;
+            p4_oq = CAPRI_TM_P4_SWM_UC_QUEUE;
+            default_p4_oq = CAPRI_TM_P4_SWM_FLOOD_QUEUE;
+        }
+    }
+
+    if (mgmt_port) {
+        // program the ethertype to cam_type and set cam_enable to compare ethertype
+        sdk_ret = capri_tm_uplink_set_cam_type(TM_PORT_NCSI, 
+                                               QOS_SWM_CAM_ENTRY, etype);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming etype {} for port {} ret {}",
+                          etype, TM_PORT_NCSI, sdk_ret);
+            return ret;
+        }
+    } else { 
+        // program the dmac to cam_da and set cam_enable to compare DA
+        sdk_ret = capri_tm_uplink_set_cam_da(swm_uplink_port, 
+                                             QOS_SWM_CAM_ENTRY, dmac);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming dmac {} for port {} ret {}",
+                          dmac, swm_uplink_port, sdk_ret);
+            return ret;
+        }
+    }
+
+    /*
+     *      DMAC/ETHERTYPE (dmac/etype) =>  COS (cos)
+     *      COS (tc)                    =>  IQ (tc_to_iq)
+     *      IQ (uplink_iq)              =>  P4_OQ
+     */
+
+    // program cam_cos to drive SWM_CAM_COS/ SWM_CAM_NCSI_COS
+    sdk_ret = capri_tm_uplink_set_cam_cos(swm_uplink_port, 
+                                         QOS_SWM_CAM_ENTRY, cos);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error programming cam_cos {} for port {} ret {}",
+                      cos, swm_uplink_port, sdk_ret);
+        return ret;
+    }
+
+    // program tc_to_q mapping based on SWM_CAM_COS/ SWM_CAM_NCSI_COS
+    sdk_ret = capri_tm_uplink_input_map_update(swm_uplink_port, 
+                                               tc,          // cos
+                                               tc_to_iq);   // iq
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error programming tc_to_q map for cos {} to iq {} "
+                      "on port {} ret {}",
+                      tc, tc_to_iq, swm_uplink_port, ret);
+        return ret;
+    }
+
+    // program iq_to_p4_oq map for BMC UC queue/ NCSI queue
+    sdk_ret = capri_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port, 
+                                                  uplink_iq,
+                                                  p4_oq);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error programming uplink_iq_to_p4_oq_map for iq {} "
+                      "p4_oq {} on port {} ret {}",
+                      uplink_iq, p4_oq, swm_uplink_port, ret);
+        return ret;
+    }
+
+    // set default RX queue for SWM uplink/ mgmt  port to 
+    // CAPRI_TM_P4_SWM_FLOOD_QUEUE/ CAPRI_TM_P4_SWM_UC_QUEUE,
+    // map all uplink iqs other than QOS_SWM_CAM_COS/ QOS_SWM_CAM_NCSI_COS
+    for (int iq = 0; iq < 8; iq ++) {
+
+        if (iq == uplink_iq)
+            continue;
+
+        // TODO: look for user-defined classes and skip defaulting those queues
+
+        // program iq_to_p4_oq map for BMC MC/BC queue
+        sdk_ret = capri_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
+                                                      iq,
+                                                      default_p4_oq);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming uplink_iq_to_p4_oq_map for iq {} "
+                          "p4_oq {} on port {} ret {}",
+                          iq, default_p4_oq, swm_uplink_port, ret);
+            return ret;
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_qos_reserve_and_program_swm_queues (uint32_t swm_p4_q, bool alloc)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    indexer::status ret_idx = indexer::SUCCESS;
+    uint32_t        swm_uplink_q = 0;
+    const char      *str = (alloc ? "alloc" : "de-alloc");
+
+    swm_uplink_q = swm_p4_q - CAPRI_TM_P4_UPLINK_IQ_OFFSET; // 5 or 6
+
+    HAL_TRACE_DEBUG("{} of swm_uplink_q {} swm_p4_q {}", 
+                    str, swm_uplink_q, swm_p4_q);
+
+    if (g_hal_state_pd->qos_uplink_iq_idxr()->is_index_allocated(swm_uplink_q)) {
+        if(alloc) {
+#if 0
+        HAL_TRACE_ERR("swm_uplink_q {} already in use; "
+                      "failing swm qos config for swm uplink port {}", 
+                      swm_uplink_q, args->swm_uplink_port);
+        return HAL_RET_ENTRY_EXISTS;
+#endif
+            // TODO: to fig out why is it already allocated even w/o any config
+            HAL_TRACE_DEBUG("swm_uplink_q {} already in use; "
+                            "freeing it up for swm qos config", 
+                            swm_uplink_q);
+        }
+
+        ret_idx = g_hal_state_pd->qos_uplink_iq_idxr()->free(swm_uplink_q);
+        if (ret_idx != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Failed to free swm_uplink_q {} ret_idx {}",
+                          swm_uplink_q, ret_idx);
+            return HAL_RET_ERR;
+        }
+    }
+
+    if(alloc) {
+        // alloc the queue
+        ret_idx = g_hal_state_pd->qos_uplink_iq_idxr()->alloc_withid(swm_uplink_q);
+        if (ret_idx != indexer::SUCCESS) {
+            HAL_TRACE_ERR("Failed to alloc swm_uplink_q {} ret_idx {}",
+                          swm_uplink_q, ret_idx);
+            return HAL_RET_NO_RESOURCE;
+        }
+
+        //TODO: alloc the queue at qos_txdma_iq_idxr as well; esp for NCSI queue
+        //that ingresses at mgmt port and egresses PB at PXDMA port towards ARM.
+    }
+
+    // program/ reset the PQ_QOS_TBL
+    ret = qos_class_pd_program_qos_table_for_swm(swm_p4_q, alloc);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program qos_table for swm_p4_q {} ret {}",
+                      swm_p4_q, ret);
+        return HAL_RET_ERR;
+    }
+
+    HAL_TRACE_DEBUG("{} done for SWM queues", str);
+
+    return ret;
+}
+
+hal_ret_t
+pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    pd_qos_swm_queue_init_args_t *args =
+                            pd_func_args->pd_qos_swm_queue_init;
+
+    HAL_TRACE_DEBUG("SWM queue init for uplink {}", args->swm_uplink_port);
+
+    if ( (args->swm_uplink_port < 1) || (args->swm_uplink_port > 8) ) {
+        HAL_TRACE_ERR("unsupported port number for SWM {}", 
+                      args->swm_uplink_port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    /*
+     * Reserving Queue #30 at P4 ingr, #16 at P4 egr ports for SWM UC traffic.
+     * Reserving Queue #29 at P4 ingr/egr ports for SWM NCSI protocol traffic.
+     *
+     * To be able to do that, respective uplink queues need to be reserved, 
+     * hence allocating queues 6 and 5 (at uplinks) so that they remain 
+     * unavailable for user-defined classes.
+     *
+     * Queue #31 is used at P4 ingr, #17 at P4 egr for SWM flood traffic, but
+     * since this queue is not associated with uplink-queues - they are unused 
+     * and hence need not be reserved in the indexer.
+     */
+
+    // reserve BMC UC queue for SWM
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to reserve/program queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_UC_QUEUE, ret);
+        return ret;
+    }
+
+    // reserve NCSI queue for SWM
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to reserve/program queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
+        //TODO: should this be freed as it failed or use whatever has been 
+        // allocated successfully? That would make debugging a nightmare..
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE, 
+                                                        false) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
+                          "ret {}",
+                          CAPRI_TM_P4_SWM_UC_QUEUE, ret);
+        }
+        return ret;
+    }
+
+    // nothing to reserve, just program BMC Flood queue for SWM
+    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
+                                                 true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_FLOOD_QUEUE, ret);
+        //TODO: should this be freed as it failed or use whatever has been 
+        // allocated successfully? That would make debugging a nightmare..
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
+                                                        false) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
+                          "ret {}",
+                          CAPRI_TM_P4_SWM_UC_QUEUE, ret);
+        }
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE,
+                                                        false) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
+                          "ret {}",
+                          CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
+        }
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("Done allocating SWM related queues!");
+
+    ret = pd_qos_program_uplink_for_swm(args->swm_uplink_port, args->dmac, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program HW ret {}", ret);
+        //TODO: should this be freed as it failed or use whatever has been 
+        // allocated successfully? That would make debugging a nightmare..
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
+                                                        false) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
+                          "ret {}",
+                          CAPRI_TM_P4_SWM_UC_QUEUE, ret);
+        }
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE,
+                                                        false) != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
+                          "ret {}",
+                          CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
+        }
+        return ret;
+    }
+
+    ret = pd_qos_program_uplink_for_swm(TM_PORT_NCSI, 0, true);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program HW ret {}", ret);
+    }
+
+    HAL_TRACE_DEBUG("Done programming the uplinks to pick the allocated queues "
+                    "for SWM traffic!");
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    pd_qos_swm_queue_deinit_args_t *args =
+                            pd_func_args->pd_qos_swm_queue_deinit;
+
+    HAL_TRACE_DEBUG("SWM queue deinit for uplink {}", args->swm_uplink_port);
+
+    if ( (args->swm_uplink_port < 1) || (args->swm_uplink_port > 8) ) {
+        HAL_TRACE_ERR("unsupported port number for SWM {}", 
+                      args->swm_uplink_port);
+        return HAL_RET_INVALID_ARG;
+    }
+
+    // free BMC UC queue for SWM
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE, 
+                                                false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_UC_QUEUE, ret);
+    }
+
+    // free NCSI queue for SWM
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE, 
+                                                false); 
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
+    }
+
+    // deprogram BMC Flood queue for SWM
+    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
+                                                 false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to deprogram queues for swm_p4_q {} ret {}",
+                      CAPRI_TM_P4_SWM_FLOOD_QUEUE, ret);
+    }
+
+    HAL_TRACE_DEBUG("Done de-allocating SWM related queues!");
+
+    // reset programming on uplink
+    ret = pd_qos_program_uplink_for_swm(args->swm_uplink_port, 0, false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to deprogram HW ret {}", ret);
+    }
+
+    // reset programming on mgmt port
+    ret = pd_qos_program_uplink_for_swm(TM_PORT_NCSI, 0, false);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to program HW ret {}", ret);
+    }
+
+    HAL_TRACE_DEBUG("Done de-programming HW for SWM config!");
+
+    return HAL_RET_OK;
+}
+
+
 hal_ret_t
 pd_qos_class_defaults_set (qos_class_t *qos_class)
 {

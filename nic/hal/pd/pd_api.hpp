@@ -1674,6 +1674,15 @@ pd_qos_class_set_global_pause_type_init (
     return;
 }
 
+typedef struct pd_qos_swm_queue_init_args_s {
+    uint32_t swm_uplink_port;
+    uint64_t dmac;
+} __PACK__ pd_qos_swm_queue_init_args_t;
+
+typedef struct pd_qos_swm_queue_deinit_args_s {
+    uint32_t swm_uplink_port;
+} __PACK__ pd_qos_swm_queue_deinit_args_t;
+
 typedef struct pd_qos_class_restore_args_s {
     qos_class_t              *qos_class;
     const QosClassStatus    *qos_class_status;
@@ -3686,7 +3695,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_TEL_L2SEG_UPDATE,           342, "PD_FUNC_ID_TEL_L2SEG_UPDATE")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP, 343, "PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP")  \
     ENTRY(PD_FUNC_ID_SET_CLOCK_MULTIPLIER,       344, "PD_FUNC_ID_SET_CLOCK_MULTIPLIER")\
-    ENTRY(PD_FUNC_ID_MAX,                        345, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_INIT,         345, "PD_FUNC_ID_QOS_SWM_QUEUE_INIT")  \
+    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       346, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
+    ENTRY(PD_FUNC_ID_MAX,                        347, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3875,6 +3886,8 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_get);
         PD_UNION_ARGS_FIELD(pd_qos_class_periodic_stats_update);
         PD_UNION_ARGS_FIELD(pd_qos_class_set_global_pause_type);
+        PD_UNION_ARGS_FIELD(pd_qos_swm_queue_init);
+        PD_UNION_ARGS_FIELD(pd_qos_swm_queue_deinit);
 
         // copp
         PD_UNION_ARGS_FIELD(pd_copp_create);
@@ -4372,6 +4385,8 @@ PD_FUNCP_TYPEDEF(pd_qos_class_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_set_global_pause_type);
 PD_FUNCP_TYPEDEF(pd_qos_class_init_tc_to_iq_map);
+PD_FUNCP_TYPEDEF(pd_qos_swm_queue_init);
+PD_FUNCP_TYPEDEF(pd_qos_swm_queue_deinit);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);

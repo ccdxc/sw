@@ -256,6 +256,10 @@ hal_pd_load_symbols (void)
                    pd_qos_class_set_global_pause_type);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP,
                    pd_qos_class_init_tc_to_iq_map);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_SWM_QUEUE_INIT,
+                   pd_qos_swm_queue_init);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,
+                   pd_qos_swm_queue_deinit);
 
     // copp
     PD_FUNC_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);

@@ -576,6 +576,208 @@ capri_tm_is_valid_port (uint32_t port)
 }
 
 sdk_ret_t
+capri_tm_uplink_set_cam_type (tm_port_t port,
+                              uint32_t  entry,
+                              uint32_t  etype)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    uint32_t cam_compare = 1;   // 2 - compare DA, 1 - compare ethertype, 0 - reset
+
+    if(!etype)
+        cam_compare = 0;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_type.read();
+                pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.read();
+
+                if ( (entry >= 0) || (entry < 4) ) {
+//:: for ent in range(4):
+                    if(${ent} == entry) {
+                        pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_type.entry_${ent}(etype);
+                        pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.entry_${ent}(cam_compare);
+                    }
+//:: #endfor
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_type.write();
+                    pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_tm_uplink_set_cam_da (tm_port_t port,
+                            uint32_t  entry,
+                            uint64_t  dmac)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    uint32_t cam_compare = 2;   // 2 - compare DA, 1 - compare ethertype, 0 - reset
+
+    if(!dmac)
+        cam_compare = 0;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_da.read();
+                pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.read();
+
+                if ( (entry >= 0) || (entry < 4) ) {
+//:: for ent in range(4):
+                    if(${ent} == entry) {
+                        pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_da.entry_${ent}(dmac);
+                        pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.entry_${ent}(cam_compare);
+                    }
+//:: #endfor
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_da.write();
+                    pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_enable.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_tm_uplink_set_cam_cos (tm_port_t port,
+                             uint32_t  entry,
+                             uint32_t  cos)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_cos.read();
+
+                if ( (entry >= 0) || (entry < 4) ) {
+//:: for ent in range(4):
+                    if(${ent} == entry) {
+                        pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_cos.entry_${ent}(cos);
+                    }
+//:: #endfor
+                } else {
+                    SDK_TRACE_ERR("%u is not a valid entry", entry);
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.hbm.hbm_port_${p}.cfg_hbm_parser_cam_cos.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port,
+                                     tm_q_t     iq,
+                                     tm_q_t     p4_q)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+
+    cpp_int oq_map_val;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.cfg_parser${p}.read();
+                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
+
+                cpp_helper.set_slc(oq_map_val, p4_q,
+                                   iq * 5,
+                                   ((iq + 1) * 5) - 1);
+
+                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.cfg_parser${p}.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
 capri_tm_uplink_iq_no_drop_update (tm_port_t port,
                                    tm_q_t iq,
                                    bool no_drop)

@@ -2018,6 +2018,53 @@ end:
     return 0;    // TODO: fix me
 }
 
+
+hal_ret_t 
+qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_qos_swm_queue_init_args_t pd_qos_swm_args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("invoked SWM queue init for uplink port {} dmac {}", 
+                    swm_uplink_port, dmac);
+
+    // PD Call to init SWM queue
+    pd_qos_swm_args.swm_uplink_port = swm_uplink_port;
+    pd_qos_swm_args.dmac = dmac;
+    pd_func_args.pd_qos_swm_queue_init = &pd_qos_swm_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_SWM_QUEUE_INIT, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("FAILED to init SWM Queues for uplink {}, err {}",
+                      swm_uplink_port, ret);
+    }
+
+    return ret;
+}
+
+hal_ret_t 
+qos_swm_queue_deinit(uint32_t swm_uplink_port)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_qos_swm_queue_deinit_args_t pd_qos_swm_args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
+
+    HAL_TRACE_DEBUG("invoked SWM queue de-init for uplink port {}", 
+                    swm_uplink_port);
+
+    // PD Call to de-init SWM queue
+    pd_qos_swm_args.swm_uplink_port = swm_uplink_port;
+    pd_func_args.pd_qos_swm_queue_deinit = &pd_qos_swm_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("FAILED to deinit SWM Queues for uplink {}, err {}",
+                      swm_uplink_port, ret);
+    }
+
+    return ret;
+}
+
+
 // Copp
 static inline void
 copp_lock (copp_t *copp,

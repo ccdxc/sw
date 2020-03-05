@@ -96,6 +96,18 @@ using sdk::lib::indexer;
 #define CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
 #define CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1)
 
+// SWM related defines
+#define CAPRI_TM_P4_SWM_NCSI_QUEUE              29
+#define CAPRI_TM_P4_SWM_UC_QUEUE                CAPRI_TM_P4_CPU_COPY_QUEUE  // 30
+#define CAPRI_TM_P4_SWM_UC_QUEUE_REPLACEMENT    CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  // 16
+#define CAPRI_TM_P4_SWM_FLOOD_QUEUE             CAPRI_TM_P4_SPAN_QUEUE      // 31
+#define CAPRI_TM_P4_SWM_FLOOD_QUEUE_REPLACEMENT CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      // 17
+
+#define QOS_SWM_CAM_ENTRY       0
+#define QOS_SWM_CAM_COS         (CAPRI_TM_P4_SWM_UC_QUEUE - CAPRI_TM_P4_UPLINK_IQ_OFFSET)   // TC 6
+#define QOS_SWM_CAM_NCSI_COS    (CAPRI_TM_P4_SWM_NCSI_QUEUE - CAPRI_TM_P4_UPLINK_IQ_OFFSET) // TC 5
+#define QOS_SWM_NCSI_ETHERTYPE  0x88F8
+
 #define QOS_QUEUE_DEFAULT 0
 #define QOS_COS_DEFAULT   0
 #define QOS_UPLINK_IQ_START_INDEX   0
@@ -170,6 +182,18 @@ sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port,
 sdk_ret_t capri_tm_get_uplink_mac_xoff (tm_port_t port,
                                         uint32_t *xoff_cos_bitmap);
 sdk_ret_t capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos);
+sdk_ret_t capri_tm_uplink_set_cam_type (tm_port_t port,
+                                        uint32_t  entry,
+                                        uint32_t  etype);
+sdk_ret_t capri_tm_uplink_set_cam_da (tm_port_t port,
+                                      uint32_t  entry,
+                                      uint64_t  dmac);
+sdk_ret_t capri_tm_uplink_set_cam_cos (tm_port_t port,
+                                       uint32_t  entry,
+                                       uint32_t  cos);
+sdk_ret_t capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t port,
+                                               tm_q_t     iq,
+                                               tm_q_t     p4_q);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
