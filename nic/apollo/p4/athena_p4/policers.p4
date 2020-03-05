@@ -17,12 +17,12 @@ action policer_bw(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
     modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
 
-@pragma stage 5
+@pragma stage 3
 @pragma index_table
 @pragma policer_table two_color
-table policer_bw {
+table policer_bw1 {
     reads {
-        control_metadata.throttle_bw : exact;
+        control_metadata.throttle_bw1_id : exact;
     }
     actions {
         policer_bw;
@@ -30,7 +30,7 @@ table policer_bw {
     size : POLICER_BW_SIZE;
 }
 
-
+#if 0
 action policer_pps(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                        color_aware, rsvd, axi_wr_pend, burst, rate, tbkt) {
 
@@ -49,26 +49,27 @@ action policer_pps(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
     modify_field(scratch_metadata.policer_rate, rate);
     modify_field(scratch_metadata.policer_tbkt, tbkt);
 }
+#endif
 
-@pragma stage 5
+@pragma stage 4
 @pragma index_table
 @pragma policer_table two_color
-table policer_pps {
+table policer_bw2 {
     reads {
-        control_metadata.throttle_pps : exact;
+        control_metadata.throttle_bw2_id : exact;
     }
     actions {
-        policer_pps;
+        policer_bw;
     }
-    size : POLICER_PPS_SIZE;
+    size : POLICER_BW_SIZE;
 }
 
 
 control policers {
-    if (control_metadata.throttle_pps_valid == TRUE) {
-        apply(policer_pps);
+    if (control_metadata.throttle_bw1_id_valid == TRUE) {
+        apply(policer_bw1);
     }
-    if (control_metadata.throttle_bw_valid == TRUE) {
-        apply(policer_bw);
+    if (control_metadata.throttle_bw2_id_valid == TRUE) {
+        apply(policer_bw2);
     }
 }

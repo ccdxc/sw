@@ -159,19 +159,13 @@
             "_comment": "1M * 64B"
         },
         {
-            "name": "session_info_common",
-            "size": "128M",
-            "cache": "p4eg",
-            "_comment": "4M * 32"
-        },
-        {
-            "name": "session_info_h2s",
+            "name": "session_info",
             "size": "256M",
             "cache": "p4eg",
-            "_comment": "4M * 64B"
+            "_comment": "4M * 64"
         },
         {
-            "name": "session_info_s2h",
+            "name": "session_rewrite",
             "size": "256M",
             "cache": "p4eg",
             "_comment": "4M * 64B"

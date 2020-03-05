@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "athena.h"
-
+#if 0
 #include "EGRESS_session_info_h2s_k.h"
 
 struct session_info_h2s_k_          k;
@@ -209,3 +209,9 @@ session_info_h2s_user_pkt_encap_done:
 
 session_info_h2s_invalid:
     /* If session info is invalid, redirect packet to slow-path */
+#else
+%%
+session_info_h2s:
+    nop.e
+    nop
+#endif

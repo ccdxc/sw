@@ -42,10 +42,11 @@ header_type control_metadata_t {
         conntrack_index_valid               : 1;
         epoch1_id_valid                     : 1;
         epoch2_id_valid                     : 1;
-        throttle_pps_valid                  : 1;
-        throttle_bw_valid                   : 1;
+        throttle_bw1_id_valid               : 1;
+        throttle_bw2_id_valid               : 1;
         statistics_id_valid                 : 1;
-        histogram_id_valid                  : 1;
+        histogram_packet_len_id_valid       : 1;
+        histogram_latency_id_valid          : 1;
         update_checksum                     : 1;
         launch_v4                           : 1; // Dummy - never set
         vnic_type                           : 1;
@@ -53,6 +54,8 @@ header_type control_metadata_t {
         strip_l2_header_flag                : 1;
         strip_vlan_tag_flag                 : 1;
         add_vlan_tag_flag                   : 1;
+        skip_flow_log                       : 1;
+        l2_vnic                             : 1;
         nat_type                            : 2;
         encap_type                          : 2;
         mpls_label_b20_b4                   : 16;
@@ -73,19 +76,21 @@ header_type control_metadata_t {
 
         /* Session Info */
         egress_action                       : 3;
-        statistics_id                       : 9;
-        histogram_id                        : 9;
-        allowed_flow_state_bitmask          : 10;
-        statistics_mask                     : 16;
+        vnic_statistics_id                  : 9;
+        histogram_packet_len_id             : 9;
+        histogram_latency_id                : 9;
+        allowed_flow_state_bitmap           : 10;
+        vnic_statistics_mask                : 32;
         index                               : 22;
         session_index                       : 22;
         conntrack_index                     : 22;
+        session_rewrite_id                  : 22;
         epoch1_value                        : 16;
         epoch2_value                        : 16;
         epoch1_id                           : 20;
         epoch2_id                           : 20;
-        throttle_pps                        : 13;
-        throttle_bw                         : 13;
+        throttle_bw1_id                     : 13;
+        throttle_bw2_id                     : 13;
 
         rx_packet_len                       : 14;
         tx_packet_len                       : 14;
@@ -139,12 +144,8 @@ header_type scratch_metadata_t {
         flow_data_pad       : 5;
 
         // Session info
-        timestamp           : 16;
+        timestamp           : 18;
         config_epoch        : 32;
-        config_substrate_src_ip : 32;
-        pop_hdr_flag        : 1;
-        user_pkt_rewrite_type   : 2;
-        user_pkt_rewrite_ip : 128;
 
         // Session info - substrate encap to switch
         encap_type          : 3;
@@ -156,8 +157,7 @@ header_type scratch_metadata_t {
         ip_daddr            : 32;
         udp_sport           : 16;
         udp_dport           : 16;
-        mpls1_label         : 20;
-        mpls2_label         : 20;
+        mpls_label          : 20;
 
         // Counters
         counter_rx          : 64;

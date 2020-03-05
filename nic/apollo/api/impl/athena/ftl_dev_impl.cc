@@ -848,7 +848,7 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     devcmd->req().scanners_init.qcount = qcount;
 
     tableid = qtype == FTL_QTYPE_SCANNER_SESSION ?
-              P4TBL_ID_SESSION_INFO_COMMON : P4TBL_ID_CONNTRACK;
+              P4TBL_ID_SESSION_INFO : P4TBL_ID_CONNTRACK;
     p4pd_error_t p4pd_error = p4pd_global_table_properties_get(tableid, &tprop);
     if (p4pd_error != P4PD_SUCCESS) {
         PDS_TRACE_ERR("failed to obtain properties for tableid %u: "

@@ -274,8 +274,8 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
-  athena/gtests:
-    commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
+  athena/build_tests:
+    commands: ["sh", "-c", "true"]
     owners: ["email:skittur@pensando.io"]
     area:
     sub-area:
@@ -284,25 +284,35 @@ targets:
     - build-athena-x86
     - build-athena-arm
 
-  athena_app/session_aging_sim_simple:
-    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
-    owners: ["email:raghava@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-athena-x86
-    - build-athena-arm
+#  athena/gtests:
+#    commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
+#    owners: ["email:skittur@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
+#    build-dependencies:
+#    - build-athena-x86
+#    - build-athena-arm
 
-  athena_app/session_aging_sim_medium:
-    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_medium"]
-    owners: ["email:raghava@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-athena-x86
-    - build-athena-arm
+#  athena_app/session_aging_sim_simple:
+#    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
+#    owners: ["email:raghava@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
+#    build-dependencies:
+#    - build-athena-x86
+#    - build-athena-arm
+
+#  athena_app/session_aging_sim_medium:
+#    commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_medium"]
+#    owners: ["email:raghava@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
+#    build-dependencies:
+#    - build-athena-x86
+#    - build-athena-arm
 
   #athena_app/conntrack_aging_sim_simple:
     #commands: ["make", "PIPELINE=athena", "jobd/athena_app/conntrack_aging_sim_simple"]

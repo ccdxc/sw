@@ -2,6 +2,7 @@
 #include "EGRESS_p.h"
 #include "athena.h"
 
+#if 0
 #include "EGRESS_session_info_s2h_k.h"
 
 struct session_info_s2h_k_          k;
@@ -94,3 +95,11 @@ session_info_s2h_user_pkt_encap_done:
         phvwr           p.control_metadata_redir_oport, TM_PORT_UPLINK_0
 
 session_info_s2h_invalid:
+#else
+
+%%
+session_info_s2h:
+    nop.e
+    nop
+
+#endif

@@ -22,6 +22,7 @@ extern "C" {
 static sdk_ret_t
 pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
 {
+#if 0
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
@@ -279,6 +280,7 @@ pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
             return SDK_RET_HW_PROGRAM_ERR;
         }
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -292,6 +294,7 @@ sdk_ret_t
 pds_flow_session_info_read (pds_flow_session_key_t *key,
                             pds_flow_session_info_t *info)
 {
+#if 0
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
@@ -531,12 +534,14 @@ read_s2h:
             return SDK_RET_HW_READ_ERR;
         }
     }
+#endif
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 pds_flow_session_common_info_update (pds_flow_session_spec_t *spec)
 {
+#if 0
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
@@ -607,12 +612,14 @@ pds_flow_session_common_info_update (pds_flow_session_spec_t *spec)
                        session_info_id);
         return SDK_RET_HW_PROGRAM_ERR;
     }
+#endif
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 pds_flow_session_rewrite_info_update (pds_flow_session_spec_t *spec)
 {
+#if 0
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_h2s_actiondata_t session_h2s_actiondata = { 0 };
@@ -826,6 +833,7 @@ pds_flow_session_rewrite_info_update (pds_flow_session_spec_t *spec)
             return SDK_RET_HW_PROGRAM_ERR;
         }
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -838,6 +846,7 @@ pds_flow_session_info_update (pds_flow_session_spec_t *spec)
 sdk_ret_t
 pds_flow_session_info_delete (pds_flow_session_key_t *key)
 {
+#if 0
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
@@ -898,6 +907,7 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
                       session_info_id);
         return SDK_RET_HW_PROGRAM_ERR;
     }
+#endif
     return SDK_RET_OK;
 }
 
