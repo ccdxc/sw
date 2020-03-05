@@ -2,19 +2,20 @@
   <div fxLayout="row" class="alert-indication-main-menu-number-back-group-div popup-alert">
     <div (click)="onAlertNumber($event, 'critical')" *ngIf="alertNumber.critical>0">
       <span
-            class="alert-indication-main-menu-number alert-indication-main-menu-number-critical"></span>
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-critical">&nbsp;</span>
       <span
             class="alert-indication-severity-number">{{alertNumber.critical>999?alertNumber.critical+ '+':alertNumber.critical}}</span>
     </div>
     <div (click)="onAlertNumber($event, 'warn')" class="alert-indication-warning"
          *ngIf="alertNumber.warn>0">
       <span
-            class="alert-indication-main-menu-number alert-indication-main-menu-number-warning"></span>
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-warning">&nbsp;</span>
       <span
             class="alert-indication-severity-number">{{alertNumber.warn>999?alertNumber.warn+ '+':alertNumber.warn}}</span>
     </div>
     <div (click)="onAlertNumber($event, 'info')" *ngIf="alertNumber.info>0">
-      <span class="alert-indication-main-menu-number alert-indication-main-menu-number-info"></span>
+      <span
+            class="alert-indication-main-menu-number alert-indication-main-menu-number-info">&nbsp;</span>
       <span
             class="alert-indication-severity-number">{{alertNumber.info>999?alertNumber.info+'+':alertNumber.info}}</span>
     </div>

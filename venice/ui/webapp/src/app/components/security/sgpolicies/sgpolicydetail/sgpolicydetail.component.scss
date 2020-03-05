@@ -290,6 +290,10 @@ $vertical-gutter: 5px;
   vertical-align: baseline;
 }
 
+.sgpolicydetail-table-container .ui-table-scrollable-body {
+  overflow-x: hidden;
+}
+
 .pensando-ui .global-table-action-icon.sgpolicy-insert-icon {
   padding-left: 0;
   padding-top: 3px;

@@ -62,7 +62,9 @@
       </div>
     </div>
   </mat-expansion-panel>
-  <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  <div fxFlex class="sgpolicydetail-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
   <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row"
