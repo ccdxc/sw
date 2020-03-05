@@ -272,6 +272,7 @@ dependencies:
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/linux
     - reference: api
     - reference: test/ci_targets/e2e
   nic/asm:

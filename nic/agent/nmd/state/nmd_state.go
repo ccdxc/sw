@@ -1529,19 +1529,19 @@ func (n *NMD) PersistDeviceSpec(fwdMode string, featureProfile device.FeaturePro
 	}
 
 	// Update app-start.conf file. TODO Remove this workaround when all the processes are migrated to read from device.conf
-	var appStartSpec []byte
-	switch fwdMode {
-	case device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String():
-		appStartSpec = []byte("hostpin")
-	default:
-		appStartSpec = []byte("classic")
-	}
+	// var appStartSpec []byte
+	// switch fwdMode {
+	// case device.ForwardingMode_FORWARDING_MODE_HOSTPIN.String():
+	// 	appStartSpec = []byte("hostpin")
+	// default:
+	// 	appStartSpec = []byte("classic")
+	// }
 
-	log.Infof("App Start Spec is : %v", appStartSpec)
-	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
-	if err := ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
-		log.Errorf("Failed to write app start conf. Err: %v", err)
-	}
+	// log.Infof("App Start Spec is : %v", appStartSpec)
+	// appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	// if err := ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
+	// 	log.Errorf("Failed to write app start conf. Err: %v", err)
+	// }
 
 	err = utils.BackupDeviceConfig()
 	if err != nil {
