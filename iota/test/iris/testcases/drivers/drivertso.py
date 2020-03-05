@@ -103,7 +103,8 @@ def VerifyMSS(tc):
 
 
 def verifySingle(tc):
-    status = VerifyNetStat(tc)
+# TODO: covered in csum test.
+#    status = VerifyNetStat(tc)
 
     status1, retran, bw = VerifyRetrans(tc)
     if status1 == api.types.status.SUCCESS:

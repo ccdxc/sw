@@ -2,22 +2,33 @@ import iota.harness.api as api
 import iota.test.utils.naples_host as host
 
 # In netstat output for FreeBSD, first one is received bad checksum counter.
-NETSTAT_TCP_BAD_CHECKSUM = 'sudo netstat -s -p tcp | grep "discarded for bad checksums" | cut -d " " -f 1 | tr -d " " '
-NETSTAT_UDP_BAD_CHECKSUM = 'sudo netstat -s -p udp | grep "with bad checksum" | cut -d " " -f 1| tr -d " " '
-NETSTAT_ICMP_BAD_CHECKSUM = 'sudo netstat -s -p icmp | grep "with bad checksum" | cut -d " " -f 1| tr -d " " '
+NETSTAT_BSD_ICMP_BAD_CHECKSUM = 'sudo netstat -s -p icmp | grep "with bad checksum" | cut -d " " -f 1| tr -d " " '
+NETSTAT_BSD_TCP_BAD_CHECKSUM = 'sudo netstat -s -p tcp | grep "discarded for bad checksum" | cut -d " " -f 1 | tr -d " " '
+NETSTAT_BSD_UDP_BAD_CHECKSUM = 'sudo netstat -s -p udp | grep "with bad checksum" | cut -d " " -f 1| tr -d " " '
+
+NETSTAT_LINUX_ICMP_BAD_CHECKSUM = 'sudo netstat -s -w | grep InCsumErrors | cut -d ":" -f 2 | tr -d " " '
+NETSTAT_LINUX_TCP_BAD_CHECKSUM = 'sudo netstat -s -t | grep InCsumErrors | cut -d ":" -f 2 | tr -d " " '
+NETSTAT_LINUX_UDP_BAD_CHECKSUM = 'sudo netstat -s -u | grep InCsumErrors | cut -d ":" -f 2 | tr -d " " '
 
 def getNetstatBadCsum(node, proto):
-    if api.GetNodeOs(node.node_name) != host.OS_TYPE_BSD:
+    if api.GetNodeOs(node.node_name) != host.OS_TYPE_BSD and api.GetNodeOs(node.node_name) != host.OS_TYPE_LINUX :
         return 0
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-
-    if proto == 'tcp':
-        api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_TCP_BAD_CHECKSUM)
-    elif proto == 'udp':
-        api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_UDP_BAD_CHECKSUM)
+    if api.GetNodeOs(node.node_name) == host.OS_TYPE_BSD:
+        if proto == 'tcp':
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_BSD_TCP_BAD_CHECKSUM)
+        elif proto == 'udp':
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_BSD_UDP_BAD_CHECKSUM)
+        else:
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_BSD_ICMP_BAD_CHECKSUM)
     else:
-        api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_ICMP_BAD_CHECKSUM)
+        if proto == 'tcp':
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_LINUX_TCP_BAD_CHECKSUM)
+        elif proto == 'udp':
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_LINUX_UDP_BAD_CHECKSUM)
+        else:
+            api.Trigger_AddHostCommand(req, node.node_name, NETSTAT_LINUX_ICMP_BAD_CHECKSUM)
 
     resp = api.Trigger(req)
     if resp is None:
@@ -33,7 +44,10 @@ def getNetstatBadCsum(node, proto):
                 api.PrintCommandResults(cmd)
                 return -1
 
-    return int(cmd.stdout)
+    if cmd.stdout == "":
+        return -1
+    else:
+        return int(cmd.stdout)
 
 def getBsdStats(node, intf, pattern):
     stats_map = []

@@ -45,7 +45,8 @@ if exists yum; then
     net-tools \
     tcpdump \
     psmisc \
-    hping3
+    hping3 \
+    nmap
   if [[ ! -e /usr/bin/ninja ]]; then
       ln -s /usr/bin/ninja-build /usr/bin/ninja
   fi
@@ -69,5 +70,6 @@ else
     python-docutils \
     valgrind \
     psmisc \
-    hping3
+    hping3 \
+    nmap
 fi

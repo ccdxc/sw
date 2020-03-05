@@ -18,6 +18,9 @@ done
 rm -f /root/.ssh/known_hosts
 chown vm:vm /pensando
 
+# Install additional package here.
+pkg install -y nmap
+
 if [ -n "$skip_install" ]; then
     echo "user requested to skip install"
 else
