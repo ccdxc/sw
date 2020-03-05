@@ -11,6 +11,7 @@
 #include "app_test_utils.hpp"
 #include "script_parser.hpp"
 #include "session_aging.hpp"
+#include "conntrack_aging.hpp"
 
 namespace test {
 namespace athena_app {
@@ -18,6 +19,7 @@ namespace athena_app {
 const static map<string,test_fn_t>  name2fn_map =
 {
     SESSION_AGING_NAME2FN_MAP
+    CONNTRACK_AGING_NAME2FN_MAP
     APP_TEST_NAME2FN_MAP_ENTRY(APP_TEST_EXIT_FN),
 };
 
@@ -52,7 +54,7 @@ name2fn_find(const string &token)
     return nullptr;
 }
 
-void
+sdk_ret_t
 script_exec(const string& scripts_dir,
             const string& script_fname)
 {
@@ -61,12 +63,15 @@ script_exec(const string& scripts_dir,
     token_parser_t      token_parser;
     string              test_name;
     test_vparam_t       vparam;
+    test_param_tuple_t  tuple;
     token_type_t        token_type;
     struct timeval      start;
     struct timeval      end;
     size_t              tcid;
+    bool                in_tuple;
     bool                has_app_exit;
     bool                overall_success;
+    sdk_ret_t           ret = SDK_RET_INVALID_ARG;
 
     script_parser = new script_parser_t(scripts_dir, script_fname,
                                         token_parser);
@@ -85,28 +90,60 @@ script_exec(const string& scripts_dir,
 
             TEST_LOG_INFO("Script line %u: first token must be a valid "
                           "test function name\n", script_parser->line_no());
-            return;
+            goto done;
         }
 
         // loop and build params vector
+        in_tuple = false;
         while (!script_parser->eof()) {
             token_type = script_parser->parse();
             if ((token_type == TOKEN_TYPE_EOL) ||
                 (token_type == TOKEN_TYPE_EOF)) {
+
+                if (in_tuple) {
+                    TEST_LOG_INFO("Script line %u: missing tuple terminator\n",
+                                  script_parser->line_no());
+                    goto done;
+                }
                 break;
             }
 
             switch (token_type) {
 
+            case TOKEN_TYPE_TUPLE_BEGIN: {
+                if (in_tuple) {
+                    TEST_LOG_INFO("Script line %u: tuple cannot be nested\n",
+                                  script_parser->line_no());
+                    goto done;
+                }
+                in_tuple = true;
+                break;
+            }
+
+            case TOKEN_TYPE_TUPLE_END: {
+                if (!in_tuple) {
+                    TEST_LOG_INFO("Script line %u: out of place tuple terminator\n",
+                                  script_parser->line_no());
+                    goto done;
+                }
+                vparam.push_back(test_param_t(tuple));
+                tuple.clear();
+                in_tuple = false;
+                break;
+            }
             case TOKEN_TYPE_STR: {
                 string      param_str;
 
                 if (!script_parser->parse_str(&param_str)) {
                     TEST_LOG_INFO("Script line %u: invalid string parameter\n",
                                   script_parser->line_no());
-                    return;
+                    goto done;
                 }
-                vparam.push_back(test_param_t(param_str));
+                if (in_tuple) {
+                    tuple.push_back(test_param_t(param_str));
+                } else {
+                    vparam.push_back(test_param_t(param_str));
+                }
                 break;
             }
 
@@ -116,9 +153,13 @@ script_exec(const string& scripts_dir,
                 if (!script_parser->parse_num(&param_num)) {
                     TEST_LOG_INFO("Script line %u: invalid numeric parameter\n",
                                   script_parser->line_no());
-                    return;
+                    goto done;
                 }
-                vparam.push_back(test_param_t(param_num));
+                if (in_tuple) {
+                    tuple.push_back(test_param_t(param_num));
+                } else {
+                    vparam.push_back(test_param_t(param_num));
+                }
                 break;
             }
 
@@ -132,15 +173,18 @@ script_exec(const string& scripts_dir,
             test_name.append(" (null)");
         }
         test_suite.push_back(test_entry_t(test_name, test_fn, vparam));
+        tuple.clear();
         vparam.clear();
     }
 
     delete script_parser;
+    script_parser = nullptr;
+    ret = SDK_RET_OK;
 
     if (test_suite.size() == 0) {
         TEST_LOG_INFO("Script file not present or is empty; "
                       "testing is hereby skipped\n");
-        return;
+        goto done;
     }
 
     has_app_exit = false;
@@ -165,7 +209,7 @@ script_exec(const string& scripts_dir,
                    test_entry.test_fn(test_entry.vparam) : true;
 
         gettimeofday(&end, NULL);
-        TEST_LOG_INFO(" Finished test #: %d name: %s status %u time %u\n",
+        TEST_LOG_INFO(" Finished test #: %d name: %s status %u time %u secs\n",
                       (int)tcid, test_entry.test_name.c_str(),
                       test_entry.test_success, (unsigned)(end.tv_sec - start.tv_sec));
         overall_success &= test_entry.test_success;
@@ -191,6 +235,12 @@ script_exec(const string& scripts_dir,
         vparam.push_back(test_param_t((uint32_t)overall_success));
         test_entry.test_fn(vparam);
     }
+
+done:
+    if (script_parser) {
+        delete script_parser;
+    }
+    return ret;
 }
 
 }    // namespace athena_app

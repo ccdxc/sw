@@ -308,6 +308,14 @@ jobd/athena_app/session_aging_sim_simple: ${JOBD_PREREQS}
 jobd/athena_app/session_aging_sim_medium: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_medium.txt
 
+.PHONY: jobd/athena_app/conntrack_aging_sim_simple
+jobd/athena_app/conntrack_aging_sim_simple: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_simple.txt
+
+.PHONY: jobd/athena_app/conntrack_aging_sim_medium
+jobd/athena_app/conntrack_aging_sim_medium: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_medium.txt
+
 .PHONY: jobd/configtest
 jobd/configtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --configtest

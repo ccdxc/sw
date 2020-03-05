@@ -30,7 +30,7 @@ static rte_atomic16_t       module_inited = RTE_ATOMIC16_INIT(0);
 static uint32_t             pollers_qcount;
 static bool                 expiry_log_en;
 
-static void
+static sdk_ret_t
 expiry_fn_dflt_fn(uint32_t expiry_id,
                   pds_flow_age_expiry_type_t expiry_type,
                   void *user_ctx);
@@ -377,11 +377,13 @@ expiry_submap_process(uint32_t submap_id,
     }
 }
 
-static void
+static sdk_ret_t
 expiry_fn_dflt_fn(uint32_t expiry_id,
                   pds_flow_age_expiry_type_t expiry_type,
                   void *user_ctx)
 {
+    sdk_ret_t   ret = SDK_RET_INVALID_ARG;
+
     if (expiry_log_en) {
         PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);
     }
@@ -392,13 +394,13 @@ expiry_fn_dflt_fn(uint32_t expiry_id,
         pds_flow_session_key_t  key = {0};
 
         /*
-         * Temporary: the following code is just a placeholder as the API
-         * pds_flow_session_info_delete() alone is probably not sufficient
-         * for completely removing a flow.
+         * TODO: need to also delete at least the corresponding flow cache
+         * (hash) entry but to do that, the session entry must provide
+         * a back pointer to the flow cache index.
          */
         key.session_info_id = expiry_id;
         key.direction = HOST_TO_SWITCH | SWITCH_TO_HOST;
-        pds_flow_session_info_delete(&key);
+        ret = pds_flow_session_info_delete(&key);
         break;
     }
 
@@ -411,13 +413,15 @@ expiry_fn_dflt_fn(uint32_t expiry_id,
          * for completely removing a conntrack entry.
          */
         key.conntrack_id = expiry_id;
-        pds_conntrack_state_delete(&key);
+        ret = pds_conntrack_state_delete(&key);
         break;
     }
 
     default:
         break;
     }
+
+    return ret;
 }
 
 } // namespace ftl_pollers_client

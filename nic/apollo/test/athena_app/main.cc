@@ -28,6 +28,8 @@
 #include "fte_athena.hpp"
 #include "app_test_utils.hpp"
 
+using namespace test::athena_app;
+
 namespace core {
 // number of trace files to keep
 #define TRACE_NUM_FILES                        5
@@ -380,7 +382,16 @@ main (int argc, char **argv)
     printf("Initialization done ...\n");
 
     if (!script_fname.empty()) {
-        test::athena_app::script_exec(script_dir, script_fname);
+
+        /*
+         * Fail the test if there were a script parsing error;
+         * otherwise, let the test script determine its own fate.
+         */
+        if (script_exec(script_dir, script_fname) != SDK_RET_OK) {
+            test_vparam_t vparam;
+            vparam.push_back(test_param_t((uint32_t)false));
+            app_test_exit(vparam);
+        }
     }
 
 #ifdef __x86_64__
@@ -407,7 +418,7 @@ main (int argc, char **argv)
  * App test exit with test result - callable from script_exec()
  */
 bool
-app_test_exit(test::athena_app::test_vparam_ref_t vparam)
+app_test_exit(test_vparam_ref_t vparam)
 {
     pds_teardown();
     exit(vparam.expected_bool() ? 0 : 1);

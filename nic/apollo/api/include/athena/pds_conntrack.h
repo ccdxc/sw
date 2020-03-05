@@ -63,6 +63,7 @@ typedef struct pds_conntrack_spec_s {
 
 /// \brief Connection tracking status
 typedef struct pds_conntrack_status_s {
+    uint32_t    timestamp;          ///< Current timestamp
 } __PACK__ pds_conntrack_status_t;
 
 /// \brief Epoch info

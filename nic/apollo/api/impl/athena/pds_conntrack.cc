@@ -82,6 +82,7 @@ pds_conntrack_state_read (pds_conntrack_key_t *key,
         (pds_flow_type_t)conntrack_actiondata.action_u.conntrack_conntrack.flow_type;
     info->spec.data.flow_state =
         (pds_flow_state_t)conntrack_actiondata.action_u.conntrack_conntrack.flow_state;
+    info->status.timestamp = conntrack_actiondata.action_u.conntrack_conntrack.timestamp;
     return SDK_RET_OK;
 }
 

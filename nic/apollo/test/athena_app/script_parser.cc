@@ -55,7 +55,14 @@ script_parser_t::parse(void)
             token_consume_set();
             return TOKEN_TYPE_EOL;
         }
-
+        if (token_parser.is_tuple_begin(token)) {
+            token_consume_set();
+            return TOKEN_TYPE_TUPLE_BEGIN;
+        }
+        if (token_parser.is_tuple_end(token)) {
+            token_consume_set();
+            return TOKEN_TYPE_TUPLE_END;
+        }
         if (token_parser.is_num(token)) {
             return TOKEN_TYPE_NUM;
         }
@@ -158,21 +165,28 @@ token_parser_t::next_token_get(void)
 
     /*
      * next token begins at curr_pos until the 1st delim found,
-     * or until end of line.
+     * or until end of {line}.
      */
     whitespaces_skip();
     if (!is_comment()) {
         while (curr_pos < line.size()) {
-            matched_pos = line.find_first_of(whitespaces, curr_pos);
+            matched_pos = line.find_first_of(combined_delims, curr_pos);
             if (matched_pos != string::npos) {
+
+                /*
+                 * Either found a delimiter or a whitespaces char
+                 */
+                if (matched_pos == curr_pos) {
+                    matched_pos++;
+                }
                 token.assign(line.substr(curr_pos, matched_pos - curr_pos));
-                curr_pos = matched_pos + 1;
+                curr_pos = matched_pos;
                 break;
             }
 
             /*
              * Since whitespaces were initially skipped on function entry, the
-             * next token had to have ended with a whitespace (above) or EOL.
+             * next token had to have ended with a delimiter (above) or EOL.
              * If not, then the rest of the line constitutes the next token.
              */
             matched_pos = line.find_first_of(eol_delims, curr_pos);
@@ -185,9 +199,11 @@ token_parser_t::next_token_get(void)
             /*
              * EOL, if found, is also returned as a token
              */
-            token.assign(line.substr(curr_pos, matched_pos == curr_pos ?
-                                               1 : matched_pos - curr_pos));
-            curr_pos = matched_pos + 1;
+            if (matched_pos == curr_pos) {
+                matched_pos++;
+            }
+            token.assign(line.substr(curr_pos, matched_pos - curr_pos));
+            curr_pos = matched_pos;
             break;
         }
     }

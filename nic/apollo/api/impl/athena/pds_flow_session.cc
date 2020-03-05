@@ -328,6 +328,7 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
 
     info->spec.data.conntrack_id = session_cinfo->conntrack_id;
+    info->status.timestamp = session_cinfo->timestamp;
     if (key->direction & HOST_TO_SWITCH) {
         info->spec.data.host_to_switch_flow_info.policer_pps_id =
             session_cinfo->h2s_throttle_pps_id =

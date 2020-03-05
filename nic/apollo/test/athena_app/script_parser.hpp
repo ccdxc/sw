@@ -17,6 +17,8 @@ namespace athena_app {
 typedef enum {
     TOKEN_TYPE_EOF,
     TOKEN_TYPE_EOL,
+    TOKEN_TYPE_TUPLE_BEGIN,
+    TOKEN_TYPE_TUPLE_END,
     TOKEN_TYPE_NUM,
     TOKEN_TYPE_STR,
 } token_type_t;
@@ -29,9 +31,12 @@ class token_parser_t
 public:
     token_parser_t() :
         whitespaces(" \f\t\v"),
+        tuple_begin("{"),
+        tuple_end("}"),
         eol_delims(";\r\n"),
         curr_pos(0)
     {
+        combined_delims.assign(whitespaces + tuple_begin + tuple_end);
     }
 
     ~token_parser_t()
@@ -41,6 +46,7 @@ public:
     void extra_whitespaces_add(const string& arg_whitespaces)
     {
         whitespaces.append(arg_whitespaces);
+        combined_delims.assign(whitespaces + tuple_begin + tuple_end);
     }
 
     void extra_eol_delims_add(const string& arg_delims)
@@ -60,6 +66,18 @@ public:
                (token.find_first_of(eol_delims) == 0);
     }
 
+    bool is_tuple_begin(const string& token)
+    {
+        return !token.empty() && 
+               (token.find_first_of(tuple_begin) == 0);
+    }
+
+    bool is_tuple_end(const string& token)
+    {
+        return !token.empty() &&
+               (token.find_first_of(tuple_end) == 0);
+    }
+
     bool is_num(const string& token)
     {
         return !token.empty() && isdigit(token.at(0));
@@ -72,6 +90,9 @@ public:
 private:
 
     string              whitespaces;
+    string              tuple_begin;
+    string              tuple_end;
+    string              combined_delims;
     string              eol_delims;
     string              line;
     string              token;

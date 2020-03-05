@@ -24,6 +24,9 @@ bool session_aging_clear_full(test_vparam_ref_t vparam);
 bool session_aging_simple(test_vparam_ref_t vparam);
 bool session_aging_random_start_count(test_vparam_ref_t vparam);
 bool session_aging_full(test_vparam_ref_t vparam);
+bool session_aging_normal_tmo_set(test_vparam_ref_t vparam);
+bool session_aging_accel_tmo_set(test_vparam_ref_t vparam);
+bool session_aging_accel_control(test_vparam_ref_t vparam);
 bool session_aging_metrics_show(test_vparam_ref_t vparam);
 
 #define SESSION_AGING_NAME2FN_MAP                                   \
@@ -35,6 +38,9 @@ bool session_aging_metrics_show(test_vparam_ref_t vparam);
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_random_start_count),   \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_expiry_log_set),       \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_full),                 \
+    APP_TEST_NAME2FN_MAP_ENTRY(session_aging_normal_tmo_set),       \
+    APP_TEST_NAME2FN_MAP_ENTRY(session_aging_accel_tmo_set),        \
+    APP_TEST_NAME2FN_MAP_ENTRY(session_aging_accel_control),        \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_metrics_show),         \
 
 }    // namespace athena_app

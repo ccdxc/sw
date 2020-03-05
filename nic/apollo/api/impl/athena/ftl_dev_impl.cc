@@ -83,6 +83,8 @@ static sdk_ret_t dev_identify(void);
 static sdk_ret_t lif_init(void);
 static sdk_ret_t attr_age_tmo_set(enum lif_attr attr,
                                   const pds_flow_age_timeouts_t *attr_age_tmo);
+static sdk_ret_t attr_age_tmo_get(enum lif_attr attr,
+                                  pds_flow_age_timeouts_t *attr_age_tmo);
 static sdk_ret_t force_expired_ts_set(enum lif_attr attr,
                                       bool force_expired_ts);
 static sdk_ret_t metrics_get(enum ftl_qtype qtype,
@@ -257,9 +259,21 @@ normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo)
 }
 
 sdk_ret_t
+normal_timeouts_get(pds_flow_age_timeouts_t *age_tmo)
+{
+    return attr_age_tmo_get(FTL_LIF_ATTR_NORMAL_AGE_TMO, age_tmo);
+}
+
+sdk_ret_t
 accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo)
 {
     return attr_age_tmo_set(FTL_LIF_ATTR_ACCEL_AGE_TMO, age_tmo);
+}
+
+sdk_ret_t
+accel_timeouts_get(pds_flow_age_timeouts_t *age_tmo)
+{
+    return attr_age_tmo_get(FTL_LIF_ATTR_ACCEL_AGE_TMO, age_tmo);
 }
 
 sdk_ret_t
@@ -438,6 +452,17 @@ attr_age_tmo_set(enum lif_attr attr,
     devcmd.req().lif_setattr.attr = attr;
     devcmd.req().lif_setattr.age_tmo = *attr_age_tmo;
     return devcmd.submit();
+}
+
+static sdk_ret_t
+attr_age_tmo_get(enum lif_attr attr,
+                 pds_flow_age_timeouts_t *attr_age_tmo)
+{
+    devcmd_t        devcmd(ftl_lif, age_tmo_cfg_lock, age_tmo_cfg_unlock);
+
+    devcmd.req().lif_getattr.opcode = FTL_DEVCMD_OPCODE_LIF_GETATTR;
+    devcmd.req().lif_getattr.attr = attr;
+    return devcmd.submit(nullptr, (void *)attr_age_tmo);
 }
 
 static sdk_ret_t

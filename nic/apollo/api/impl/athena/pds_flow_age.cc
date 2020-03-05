@@ -71,9 +71,21 @@ pds_flow_age_normal_timeouts_set(const pds_flow_age_timeouts_t *norm_age_timeout
 }
 
 sdk_ret_t
+pds_flow_age_normal_timeouts_get(pds_flow_age_timeouts_t *norm_age_timeouts)
+{
+    return ftl_dev_impl::normal_timeouts_get(norm_age_timeouts);
+}
+
+sdk_ret_t
 pds_flow_age_accel_timeouts_set(const pds_flow_age_timeouts_t *accel_age_timeouts)
 {
     return ftl_dev_impl::accel_timeouts_set(accel_age_timeouts);
+}
+
+sdk_ret_t
+pds_flow_age_accel_timeouts_get(pds_flow_age_timeouts_t *accel_age_timeouts)
+{
+    return ftl_dev_impl::accel_timeouts_get(accel_age_timeouts);
 }
 
 sdk_ret_t

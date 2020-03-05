@@ -52,7 +52,9 @@ sdk_ret_t pollers_dequeue_burst(uint32_t qid,
                                 uint32_t slot_data_buf_sz,
                                 uint32_t *burst_count);
 sdk_ret_t normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
+sdk_ret_t normal_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
 sdk_ret_t accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
+sdk_ret_t accel_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
 sdk_ret_t accel_aging_control(bool enable_sense);
 sdk_ret_t force_session_expired_ts_set(bool force_expired_ts);
 sdk_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);

@@ -2027,18 +2027,24 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
                  * range size (all queues of the same qtype do except maybe
                  * the last queue).
                  */
-                if ((qid == 0) ||
-                    (curr_range_sz == scanner_qstate.fsm.scan_range_sz)) {
+                if (((qid == 0) || 
+                     (curr_range_sz == scanner_qstate.fsm.scan_range_sz)) &&
 
+                    /*
+                     * qstate min_range_elapsed_ticks had been initialized to ~0
+                     * so skip the entry if it were never updated.
+                     */
+                    (scanner_qstate.metrics0.min_range_elapsed_ticks != (uint64_t)~0)) {
+
+                    avg_count++;
                     min_elapsed_ticks = std::min(min_elapsed_ticks,
                                         scanner_qstate.metrics0.min_range_elapsed_ticks);
                     max_elapsed_ticks = std::max(max_elapsed_ticks,
                                         scanner_qstate.metrics0.max_range_elapsed_ticks);
-                    avg_count++;
                     total_min_elapsed_ticks +=
-                            scanner_qstate.metrics0.min_range_elapsed_ticks;
+                          scanner_qstate.metrics0.min_range_elapsed_ticks;
                     total_max_elapsed_ticks +=
-                            scanner_qstate.metrics0.max_range_elapsed_ticks;
+                          scanner_qstate.metrics0.max_range_elapsed_ticks;
                 }
                 curr_range_sz = scanner_qstate.fsm.scan_range_sz;
                 break;
@@ -2059,8 +2065,10 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
         }
 
         if (avg_count) {
-            metrics->scanners.min_range_elapsed_ns =
-                     hw_coreclk_ticks_to_time_ns(min_elapsed_ticks);
+            if (min_elapsed_ticks != (uint64_t)~0) {
+                metrics->scanners.min_range_elapsed_ns =
+                         hw_coreclk_ticks_to_time_ns(min_elapsed_ticks);
+            }
             metrics->scanners.max_range_elapsed_ns =
                      hw_coreclk_ticks_to_time_ns(max_elapsed_ticks);
             metrics->scanners.avg_min_range_elapsed_ns =

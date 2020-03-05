@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file contains the all session aging test cases for athena
+/// This file contains all session aging test cases for athena
 ///
 //----------------------------------------------------------------------------
 #include "session_aging.hpp"
@@ -26,20 +26,13 @@ namespace athena_app {
    (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_NOT_FOUND))
 
 static uint32_t             pollers_qcount;
-static uint32_t             create_count;
-static uint32_t             expiry_count;
 static uint32_t             session_table_depth;
 static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 
-static bool expiry_count_check(const age_metrics_t& hw_metrics,
-                               uint32_t sw_expiry_count);
-
-static void
-flow_session_key_init(pds_flow_session_key_t *key)
-{
-    memset(key, 0, sizeof(*key));
-    key->direction = HOST_TO_SWITCH | SWITCH_TO_HOST;
-}
+/*
+ * Global tolerance for use across multiple linked tests
+ */
+static aging_tolerance_t    glb_tolerance;
 
 static void
 flow_session_spec_init(pds_flow_session_spec_t *spec)
@@ -77,14 +70,13 @@ session_clear_full(test_vparam_ref_t vparam)
 
 static bool
 session_populate_simple(test_vparam_ref_t vparam,
-                        id_map_t& session_id_map)
+                        aging_tolerance_t& tolerance)
 {
     pds_flow_session_spec_t spec;
-    uint32_t    i;
     sdk_ret_t   ret = SDK_RET_OK;
 
     flow_session_spec_init(&spec);
-    for (i = 0; i < vparam.size(); i++) {
+    for (uint32_t i = 0; i < vparam.size(); i++) {
         ret = vparam.num(i, &spec.key.session_info_id);
         if (!SESSION_RET_VALIDATE(ret)) {
             break;
@@ -93,22 +85,21 @@ session_populate_simple(test_vparam_ref_t vparam,
         if (!SESSION_CREATE_RET_VALIDATE(ret)) {
             break;
         }
-        session_id_map.insert(spec.key.session_info_id);
+        tolerance.create_id_map_insert(spec.key.session_info_id);
     }
 
-    create_count = session_id_map.size();
-    TEST_LOG_INFO("Session entries created: %d\n", create_count);
+    TEST_LOG_INFO("Session entries created: %d\n",
+                  tolerance.create_id_map_size());
     return SESSION_CREATE_RET_VALIDATE(ret);
 }
 
 static bool
 session_populate_random_start_count(test_vparam_ref_t vparam,
-                                    id_map_t& session_id_map)
+                                    aging_tolerance_t& tolerance)
 {
     pds_flow_session_spec_t spec;
     uint32_t    start_idx;
     uint32_t    count;
-    uint32_t    i;
     sdk_ret_t   ret = SDK_RET_OK;
 
     /*
@@ -129,23 +120,24 @@ session_populate_random_start_count(test_vparam_ref_t vparam,
     if (SESSION_RET_VALIDATE(ret)) {
         TEST_LOG_INFO("start_idx: %u count: %u\n", start_idx, count);
         flow_session_spec_init(&spec);
-        for (i = 0; i < count; i++) {
+        for (uint32_t i = 0; i < count; i++) {
             spec.key.session_info_id = start_idx++;
             ret = pds_flow_session_info_create(&spec);
             if (!SESSION_CREATE_RET_VALIDATE(ret)) {
                 break;
             }
-            session_id_map.insert(spec.key.session_info_id);
+            tolerance.create_id_map_insert(spec.key.session_info_id);
         }
     }
 
-    create_count = session_id_map.size();
-    TEST_LOG_INFO("Session entries created: %u\n", create_count);
+    TEST_LOG_INFO("Session entries created: %u\n",
+                  tolerance.create_id_map_size());
     return SESSION_CREATE_RET_VALIDATE(ret);
 }
 
 static bool
-session_populate_full(test_vparam_ref_t vparam)
+session_populate_full(test_vparam_ref_t vparam,
+                      aging_tolerance_t& tolerance)
 {
     pds_flow_session_spec_t spec;
     uint32_t    depth;
@@ -163,31 +155,26 @@ session_populate_full(test_vparam_ref_t vparam)
         if (!SESSION_CREATE_RET_VALIDATE(ret)) {
             break;
         }
+        tolerance.create_id_map_insert(spec.key.session_info_id);
     }
 
-    create_count = depth ? spec.key.session_info_id - 1 : 0;
-    TEST_LOG_INFO("Session entries created: %u\n", create_count);
+    TEST_LOG_INFO("Session entries created: %u\n",
+                  tolerance.create_id_map_size());
     return SESSION_CREATE_RET_VALIDATE(ret);
 }
 
-static void
+static sdk_ret_t
 session_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    expiry_count++;
-    (*aging_expiry_dflt_fn)(expiry_id, expiry_type, nullptr);
+    aging_tolerance_t   *tolerance;
 
-    /*
-     * Cross check against create map
-     */
-    if (user_ctx) {
-        id_map_t *id_map = static_cast<id_map_t *>(user_ctx);
-        if (!id_map->find_erase(expiry_id)) {
-            TEST_LOG_INFO("expiry_id %u was not created for this test\n",
-                          expiry_id);
-        }
-    }
+    tolerance = static_cast<aging_tolerance_t *>(user_ctx);
+    tolerance->expiry_count_inc();
+    tolerance->session_tmo_tolerance_check(expiry_id);
+    tolerance->create_id_map_find_erase(expiry_id);
+    return (*aging_expiry_dflt_fn)(expiry_id, expiry_type, nullptr);
 }
                              
 bool
@@ -271,8 +258,11 @@ session_aging_pollers_poll(void *user_ctx)
 static bool
 session_aging_expiry_count_check(void *user_ctx)
 {
+    aging_tolerance_t   *tolerance;
+
     session_aging_pollers_poll(user_ctx);
-    return expiry_count >= create_count;
+    tolerance = static_cast<aging_tolerance_t *>(user_ctx);
+    return tolerance->expiry_count() >= tolerance->create_id_map_size();
 }
 
 bool
@@ -285,26 +275,22 @@ bool
 session_aging_simple(test_vparam_ref_t vparam)
 {
     test_timestamp_t    ts;
-    id_map_t            session_id_map;
-    age_metrics_t       hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
+    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
     bool                success;
 
-    expiry_count = 0;
+    glb_tolerance.reset();
     hw_metrics.baseline();
-    success = session_populate_simple(vparam, session_id_map);
+    success = session_populate_simple(vparam, glb_tolerance);
     if (success) {
-        time_expiry_set(ts, APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        time_limit_exec(ts, session_aging_expiry_count_check,
-                        (void *)&session_id_map);
-        success = session_aging_expiry_count_check((void *)&session_id_map);
-        TEST_LOG_INFO("Session entries aged out: %u\n", expiry_count);
-
-        expiry_count_check(hw_metrics, expiry_count);
-        if (session_id_map.size()) {
-            TEST_LOG_INFO("Not all entries were aged out, remaining count: %u\n",
-                          session_id_map.size());
-            success = false;
-        }
+        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+        ts.time_limit_exec(session_aging_expiry_count_check,
+                           (void *)&glb_tolerance);
+        TEST_LOG_INFO("Session entries aged out: %u\n",
+                      glb_tolerance.expiry_count());
+        glb_tolerance.create_id_map_empty_check();
+        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
+        success = session_aging_expiry_count_check((void *)&glb_tolerance) &&
+                  glb_tolerance.zero_failures();
     }
     return success;
 }
@@ -313,31 +299,27 @@ bool
 session_aging_random_start_count(test_vparam_ref_t vparam)
 {
     test_timestamp_t    ts;
-    id_map_t            session_id_map;
-    age_metrics_t       hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
+    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
     bool                success;
 
-    expiry_count = 0;
+    glb_tolerance.reset();
     hw_metrics.baseline();
-    success = session_populate_random_start_count(vparam, session_id_map);
+    success = session_populate_random_start_count(vparam, glb_tolerance);
     if (success) {
-        time_expiry_set(ts, APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        time_limit_exec(ts, session_aging_expiry_count_check,
-                        (void *)&session_id_map);
-        success = session_aging_expiry_count_check((void *)&session_id_map);
-        TEST_LOG_INFO("Session entries aged out: %u\n", expiry_count);
-
-        expiry_count_check(hw_metrics, expiry_count);
-        if (session_id_map.size()) {
-            TEST_LOG_INFO("Not all entries were aged out, remaining count: %u\n",
-                          session_id_map.size());
-            success = false;
-        }
+        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+        ts.time_limit_exec(session_aging_expiry_count_check,
+                          (void *)&glb_tolerance);
+        TEST_LOG_INFO("Session entries aged out: %u\n",
+                      glb_tolerance.expiry_count());
+        glb_tolerance.create_id_map_empty_check();
+        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
+        success = session_aging_expiry_count_check((void *)&glb_tolerance) &&
+                  glb_tolerance.zero_failures();
     }
 
     /*
      * It was important to testing with random numbers but just in case
-     * there are any issues with the random number generator, we just
+     * there were any issues with the random number generator, we just
      * log and return success until our confidence level increases.
      */
     if (!success && !vparam.size()) {
@@ -352,48 +334,57 @@ bool
 session_aging_full(test_vparam_ref_t vparam)
 {
     test_timestamp_t    ts;
-    age_metrics_t       hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
+    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
     bool                success;
 
-    expiry_count = 0;
+    glb_tolerance.reset(CREATE_ID_MAP_COUNT_ONLY);
     hw_metrics.baseline();
-    success = session_populate_full(vparam);
+    success = session_populate_full(vparam, glb_tolerance);
     if (success) {
-        time_expiry_set(ts, APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        time_limit_exec(ts, session_aging_expiry_count_check);
-        success = session_aging_expiry_count_check(nullptr);
-        TEST_LOG_INFO("Session entries aged out: %u\n", expiry_count);
-        expiry_count_check(hw_metrics, expiry_count);
+        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+        ts.time_limit_exec(session_aging_expiry_count_check,
+                           (void *)&glb_tolerance);
+        TEST_LOG_INFO("Session entries aged out: %u\n",
+                      glb_tolerance.expiry_count());
+        glb_tolerance.create_id_map_empty_check();
+        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
+        success = session_aging_expiry_count_check((void *)&glb_tolerance) &&
+                  glb_tolerance.zero_failures();
     }
     return success;
 }
 
+bool
+session_aging_normal_tmo_set(test_vparam_ref_t vparam)
+{
+    glb_tolerance.reset();
+    glb_tolerance.normal_tmo.session_tmo_set(vparam.expected_num());
+    return glb_tolerance.zero_failures();
+}
+
+bool
+session_aging_accel_tmo_set(test_vparam_ref_t vparam)
+{
+    glb_tolerance.reset();
+    glb_tolerance.accel_tmo.session_tmo_set(vparam.expected_num());
+    return glb_tolerance.zero_failures();
+}
+
+bool
+session_aging_accel_control(test_vparam_ref_t vparam)
+{
+    glb_tolerance.reset();
+    glb_tolerance.age_accel_control(vparam.expected_bool());
+    return glb_tolerance.zero_failures();
+}
 
 bool
 session_aging_metrics_show(test_vparam_ref_t vparam)
 {
-    age_metrics_t       hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
+    aging_metrics_t hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
 
     hw_metrics.show();
     return true;
-}
-
-
-/*
- * For informational purposes, see if HW metrics agreed with SW count
- */
-static bool
-expiry_count_check(const age_metrics_t& hw_metrics,
-                   uint32_t sw_expiry_count)
-{
-    uint32_t    delta;
-
-    delta = (uint32_t)hw_metrics.delta_expired_entries();
-    if (delta != sw_expiry_count) {
-        TEST_LOG_INFO("HW delta_expired_entries %u != SW expiry_count %u\n",
-                      delta, sw_expiry_count);
-    }
-    return delta == sw_expiry_count;
 }
 
 }    // namespace athena_app
