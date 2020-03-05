@@ -3507,7 +3507,7 @@ EVPN EVI configuration
 | AutoRT | [EvpnCfg](#pds_ms.EvpnCfg) |  | manual or auto route-target. in case of manual route-target, route-targets should be configured with EvpnEviRtSpec |
 | RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target type, applicable to auto route-targets only |
 | EVIId | [uint32](#uint32) |  | Internal only |
-| Encap | [uint32](#uint32) |  | data place encapsulation |
+| Encap | [uint32](#uint32) |  | data plane encapsulation |
 
 
 
