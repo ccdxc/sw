@@ -94,9 +94,11 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 	currentDay := time.Now().Local().Format("2006-01-02")
 
 	switch dtype {
+	case globals.FwLogsObjects:
+		return strings.ToLower(fmt.Sprintf("%s.%s", ExternalIndexPrefix, GetDocType(dtype)))
 	case globals.Configs:
 		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype)))
-	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs:
+	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs, globals.FwLogs:
 		if !utils.IsEmpty(tenant) {
 			return strings.ToLower(fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay))
 		}
@@ -124,6 +126,10 @@ func GetDocType(dtype globals.DataType) string {
 		return "auditlogs"
 	case globals.DebugLogs:
 		return "systemlogs"
+	case globals.FwLogs:
+		return "firewalllogs"
+	case globals.FwLogsObjects:
+		return "objectsfirewalllogs"
 	case globals.Stats:
 		return "N/A"
 	}

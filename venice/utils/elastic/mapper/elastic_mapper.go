@@ -6,6 +6,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -301,7 +302,16 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 	switch val.Kind() {
 	case reflect.Struct:
 
+		if val.Type() == reflect.ValueOf(time.Now()).Type() {
+			eType := elastic.Mapping{
+				"type": "date",
+			}
+			config[key] = eType
+			return
+		}
+
 		sMap := make(map[string]interface{})
+		// Do not nest into the time.Time struct
 		for i := 0; i < val.Type().NumField(); i++ {
 			f := val.Field(i)
 			log.Debugf("%s Field#%d: N:%v T:%v K:%v = %+v\n",

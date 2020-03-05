@@ -146,6 +146,7 @@ func (e *Client) IsClusterHealthy(ctx context.Context) (bool, error) {
 	defer cancel()
 
 	result, err := e.esClient.ClusterHealth().Do(ctxWithDeadline)
+	e.logger.Debugf("ClusterHealth request result %+v,  err: %v", result, err)
 	if err != nil {
 		return false, err
 	}
@@ -171,6 +172,11 @@ func (e *Client) Version() (string, error) {
 	}
 
 	return "", fmt.Errorf("failed to get elasticsearch version")
+}
+
+// IndexNames returns the names of indices present on Es
+func (e *Client) IndexNames() ([]string, error) {
+	return e.esClient.IndexNames()
 }
 
 // CreateIndexTemplate creates the requested index template with given setting and name.
@@ -536,6 +542,8 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 	var rErr error
 	var retry bool
 
+	e.logger.Debugf("bulk request length: %d, Index %s, ID %s", len(objs), objs[0].Index, objs[0].ID)
+
 	for {
 		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
 			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
@@ -564,6 +572,7 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 			// execute the bulk request
 			bulkResp, err := bulkReq.Do(ctxWithDeadline)
 			if err != nil {
+				e.logger.Infof("bulk request failed with err: %v, Index %s, ID %s", err, objs[0].Index, objs[0].ID)
 				return nil, err
 			}
 

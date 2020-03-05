@@ -38,6 +38,7 @@ const (
 	numLogTransmitWorkers = 10
 	workItemBufferSize    = 1000
 	connectErr            = "connect:" // copied from vos
+	fwLogMetaVersion      = "v1"
 	fwlogsBucketName      = "fwlogs.fwlogs"
 	fwLogCSVVersion       = "v1"
 )
@@ -255,6 +256,7 @@ func transmitLogs(ctx context.Context,
 		meta["logcount"] = strconv.Itoa(numLogs)
 		meta["nodeid"] = nodeUUID
 		meta["csvversion"] = fwLogCSVVersion
+		meta["metaversion"] = fwLogMetaVersion
 
 		// Send the file on to the channel for testing
 		if testChannel != nil {
@@ -461,7 +463,7 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 	fwLog := []string{
 		ipSrc,
 		ipDest,
-		ts.String(),
+		ts.Format(time.RFC3339),
 		sPort,
 		dPort,
 		ipProt,

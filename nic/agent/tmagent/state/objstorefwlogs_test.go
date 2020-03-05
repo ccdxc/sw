@@ -52,7 +52,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	minioServer(l)
 	defer l.Close()
 	url := l.Addr().(*net.TCPAddr).String()
-	// url := "127.0.0.1:9000"
+	// url := "127.0.0.1:19001"
 
 	c := gomock.NewController(t)
 	defer c.Finish()
@@ -126,7 +126,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	Assert(t, testObject.IndexBucketName != "", "index bucket name is empty")
 	Assert(t, testObject.Data != "", "object data is empty")
 	Assert(t, testObject.Index != "", "index is empty")
-	Assert(t, len(testObject.Meta) == 5, "object meta is empty %s", testObject.Meta)
+	Assert(t, len(testObject.Meta) == 6, "object meta is empty %s", testObject.Meta)
 
 	// done := make(chan bool)
 	// <-done

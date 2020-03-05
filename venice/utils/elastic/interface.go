@@ -74,6 +74,9 @@ type ESClient interface {
 
 	// returns index level stats on different operations happening on an index
 	GetIndicesStats(ctx context.Context, indices []string) (*es.IndicesStatsResponse, error)
+
+	// IndexNames returns name of indices currently present in elastic search
+	IndexNames() ([]string, error)
 }
 
 // Scroller provides io.Reader interface to scrolling in Elastic. This is not thread safe.

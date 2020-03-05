@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"

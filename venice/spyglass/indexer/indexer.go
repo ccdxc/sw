@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -43,15 +44,20 @@ import (
  */
 
 const (
-	elasticWaitIntvl  = time.Second
-	maxElasticRetries = 200
-	apiSrvWaitIntvl   = time.Second
-	maxAPISrvRetries  = 200
-	indexBatchSize    = 100
-	indexBatchIntvl   = 5 * time.Second
-	indexRefreshIntvl = 60 * time.Second
-	maxWriters        = 8 // Max concurrent writers
-	indexMaxBuffer    = maxWriters * indexBatchSize
+	elasticWaitIntvl                    = time.Second
+	maxElasticRetries                   = 200
+	apiSrvWaitIntvl                     = time.Second
+	maxAPISrvRetries                    = 200
+	indexBatchSize                      = 100
+	indexBatchIntvl                     = 5 * time.Second
+	indexRefreshIntvl                   = 60 * time.Second
+	maxOrderedWriters                   = 8
+	maxAppendOnlyWriters                = 1                                        // Used for firewall logs
+	maxWriters                          = maxOrderedWriters + maxAppendOnlyWriters // Max concurrent writers
+	indexMaxBuffer                      = maxWriters * indexBatchSize
+	fwLogsElasticBatchSize              = 50
+	fwLogsElasticWriteWorkerSize        = 10
+	fwLogsElasticWriterWorkerBufferSize = 1000
 )
 
 // Option fills the optional params for Indexer
@@ -70,7 +76,8 @@ type Indexer struct {
 	apiClient     apiservice.Services
 
 	// VOS client
-	vosClient apiservice.Services
+	vosClient           apiservice.Services
+	vosFwLogsHTTPClient objstore.Client
 
 	// ElasticDB client object
 	elasticClient elastic.ESClient
@@ -86,18 +93,17 @@ type Indexer struct {
 	channels map[string]<-chan *kvstore.WatchEvent
 
 	// Fan-in channels of index request objects.
-	// The watcher events are fanned to an array of
-	// requestChannels with length maxWriters. A pool of Elastic Writers
-	// each listen to one channel.
-	reqChan []chan *indexRequest
+	// The watcher events are fanned to a group of
+	// requestChannels with length maxWriters .
+	// Index request goes to either ordered writer
+	// or append-only-writer (unordered), but not both.
+	// As of now only firewall logs go to unordered writer.
+	// A pool of Elastic Writers each listen to one channel.
+	reqChan map[int]chan *indexRequest
 
 	// Max number of objects indexed using
 	// Bulk/Batch API
 	batchSize int
-
-	// Max number of Elastic writers acting
-	// as worker-pool to index incoming objects
-	maxWriters int
 
 	// Bulk indexing interval. If the batchSize
 	// is not met, this timer kicks in to perform
@@ -136,7 +142,15 @@ type Indexer struct {
 	cache cache.Interface
 
 	// Whether or not to watch VOS objects
-	watchVos bool
+	watchVos       bool
+	WatchAPIServer bool // exported because its set using Option closure.
+
+	// running tests, its exported so that it can be set
+	// using options from test package
+	// The test fields are set using the Option closure.
+	VosTest bool
+
+	VosTestGrpcURL string
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -169,7 +183,9 @@ type writerMapEntry struct {
 }
 
 // NewIndexer instantiates a new indexer
-func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger, opts ...Option) (Interface, error) {
+func NewIndexer(ctx context.Context,
+	apiServerAddr string, rsr resolver.Interface, cache cache.Interface,
+	logger log.Logger, opts ...Option) (Interface, error) {
 
 	logger.Infof("Creating Indexer, apiserver-addr: %s", apiServerAddr)
 
@@ -182,11 +198,13 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		batchSize:         indexBatchSize,
 		indexIntvl:        indexBatchIntvl,
 		indexRefreshIntvl: indexRefreshIntvl,
-		maxWriters:        maxWriters,
 		doneCh:            make(chan error),
 		count:             0,
 		cache:             cache,
 		watchVos:          true,
+		WatchAPIServer:    true,
+		VosTest:           false,
+		VosTestGrpcURL:    "", // 127.0.0.1:9051
 	}
 
 	for _, opt := range opts {
@@ -198,6 +216,9 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 	if indexer.elasticClient == nil {
 		// Initialize elastic client
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			if indexer.VosTest {
+				return elastic.NewClient("", rsr, logger.WithContext("submodule", "elastic"))
+			}
 			return elastic.NewAuthenticatedClient("", rsr, logger.WithContext("submodule", "elastic"))
 		}, elasticWaitIntvl, maxElasticRetries)
 		if err != nil {
@@ -208,26 +229,43 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 		indexer.elasticClient = result.(elastic.ESClient)
 	}
 
-	// Initialize api client
-	apiClientBalancer := balancer.New(rsr)
-	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(apiClientBalancer))
-	}, apiSrvWaitIntvl, maxAPISrvRetries)
-	if err != nil {
-		logger.Errorf("Failed to create api client, addr: %s err: %v",
-			apiServerAddr, err)
-		indexer.elasticClient.Close()
-		apiClientBalancer.Close()
-		return nil, err
+	if indexer.WatchAPIServer {
+		// Initialize api client
+		apiClientBalancer := balancer.New(rsr)
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(apiClientBalancer))
+		}, apiSrvWaitIntvl, maxAPISrvRetries)
+		if err != nil {
+			logger.Errorf("Failed to create api client, addr: %s err: %v",
+				apiServerAddr, err)
+			indexer.elasticClient.Close()
+			apiClientBalancer.Close()
+			return nil, err
+		}
+
+		logger.Debugf("Created API client")
+		indexer.apiClient = result.(apiservice.Services)
 	}
 
-	logger.Debugf("Created API client")
-	indexer.apiClient = result.(apiservice.Services)
-
 	if indexer.watchVos {
+		// Create objstrore http client for fwlogs
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			return createBucketClient(ctx, rsr, globals.ReservedFwLogsTenantName, fwlogsBucketName)
+		}, apiSrvWaitIntvl, maxAPISrvRetries)
+		if err != nil {
+			logger.Errorf("Failed to create objstore client for fwlogs")
+			return nil, err
+		}
+		indexer.vosFwLogsHTTPClient = result.(objstore.Client)
+
+		// create grpc client with vos
+		vosGrpcURL := globals.Vos
+		if indexer.VosTest {
+			vosGrpcURL = indexer.VosTestGrpcURL
+		}
 		vosClientBalancer := balancer.New(rsr)
 		result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.Vos, logger, rpckit.WithBalancer(vosClientBalancer))
+			return apiservice.NewGrpcAPIClient(globals.Spyglass, vosGrpcURL, logger, rpckit.WithBalancer(vosClientBalancer))
 		}, apiSrvWaitIntvl, maxAPISrvRetries)
 		if err != nil {
 			logger.Errorf("Failed to create vos client, addr: %s err: %v",
@@ -258,12 +296,19 @@ func (idr *Indexer) Start() error {
 		return err
 	}
 
-	idr.reqChan = make([]chan *indexRequest, idr.maxWriters)
-	for i := range idr.reqChan {
-		idr.reqChan[i] = make(chan *indexRequest, indexMaxBuffer)
+	k := 0
+	idr.reqChan = make(map[int]chan *indexRequest)
+	for i := 0; i < maxOrderedWriters; i++ {
+		idr.reqChan[k] = make(chan *indexRequest, indexMaxBuffer)
+		k++
 	}
-	idr.requests = make([][]*elastic.BulkRequest, idr.maxWriters)
-	idr.resVersionUpdater = make([]func(), idr.maxWriters)
+	for i := 0; i < maxAppendOnlyWriters; i++ {
+		idr.reqChan[k] = make(chan *indexRequest, indexMaxBuffer)
+		k++
+	}
+
+	idr.requests = make([][]*elastic.BulkRequest, maxWriters)
+	idr.resVersionUpdater = make([]func(), maxWriters)
 
 	go func() {
 		idr.Add(1)
@@ -271,13 +316,32 @@ func (idr *Indexer) Start() error {
 	}()
 
 	// start the Elastic Writer Pool
-	idr.logger.Infof("Starting %d writers", idr.maxWriters)
-	for i := 0; i < idr.maxWriters; i++ {
+	k = 0
+	idr.logger.Infof("Starting ordered %d writers", maxOrderedWriters)
+	for i := 0; i < maxOrderedWriters; i++ {
 		idr.Add(1)
 		go func(id int) {
 			defer idr.Done()
-			idr.startWriter(id)
-		}(i)
+			idr.startOrderedWriter(id)
+		}(k)
+		k++
+	}
+
+	// start append only writers
+	idr.logger.Infof("Starting append only %d writers", maxAppendOnlyWriters)
+	for i := 0; i < maxAppendOnlyWriters; i++ {
+		idr.Add(1)
+		go func(id int) {
+			defer idr.Done()
+			// TODO: Generalize if needed. For now directly feeding fwlog parameters
+			// because append-only-writer is only working for fwlogs.
+			idr.startAppendOnlyWriter(id,
+				fwLogsElasticBatchSize,
+				fwLogsElasticWriteWorkerSize,
+				fwLogsElasticWriterWorkerBufferSize,
+				idr.fwlogsRequestCreator)
+		}(k)
+		k++
 	}
 
 	// Block on the done channel
@@ -368,7 +432,6 @@ func (idr *Indexer) Stop() {
 
 // CreateIndex creates the given index with the given settings in SearchDB.
 func (idr *Indexer) CreateIndex(index, settings string) error {
-
 	// Create index and setup index mapping
 	if err := idr.elasticClient.CreateIndex(idr.ctx, index, settings); err != nil && !elastic.IsIndexExists(err) {
 		idr.logger.Errorf("Failed to create index: %s, err: %v, %v", index, err, elastic.IsIndexExists(err))
@@ -482,28 +545,26 @@ func (idr *Indexer) GetRunningStatus() bool {
 // Initialize the searchDB with indices
 // required for Venice search
 func (idr *Indexer) initSearchDB() error {
-	index := elastic.GetIndex(globals.Configs, globals.DefaultTenant)
-
 	// Delete current index since we may have missed delete events while spyglass was down
-	idr.elasticClient.DeleteIndex(idr.ctx, index)
-	if err := idr.elasticClient.DeleteIndex(idr.ctx, index); err != nil && !elastic.IsIndexNotExists(err) {
-		elasticErr := err.(*es.Error)
-		idr.logger.Errorf("Failed to delete index: %s, err: %+v", index, elasticErr)
+	if err := idr.deleteIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
 		return err
 	}
-	idr.logger.Info("Deleted index")
 
 	// Create index and mapping for Policy objects
-	mapping, err := idr.getIndexMapping(globals.Configs)
-	if err != nil {
-		idr.logger.Errorf("Failed to get index mapping, err: %v", err)
+	if err := idr.createIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
 		return err
 	}
-	if err := idr.elasticClient.CreateIndex(idr.ctx, index, mapping); err != nil {
-		idr.logger.Errorf("Failed to create index: %s, err: %v", index, err)
+
+	// Create index and mapping for Firewall logs
+	if err :=
+		idr.createIndexHelper(globals.FwLogs, globals.ReservedFwLogsTenantName); err != nil && !elastic.IsIndexExists(err) {
 		return err
 	}
-	idr.logger.Info("Created index")
+
+	// Create index and mapping for Firewall logs
+	if err := idr.createIndexHelper(globals.FwLogsObjects, ""); err != nil && !elastic.IsIndexExists(err) {
+		return err
+	}
 
 	return nil
 }
@@ -557,4 +618,51 @@ func (idr *Indexer) refreshIndices() {
 			}
 		}
 	}()
+}
+
+func (idr *Indexer) createIndexHelper(indexMapper globals.DataType, tenantName string) error {
+	index := elastic.GetIndex(indexMapper, tenantName)
+	mapping, err := idr.getIndexMapping(indexMapper)
+	if err != nil {
+		idr.logger.Errorf("Failed to get index mapping for index %s, mapper %s, err: %v", index, indexMapper, err)
+		return err
+	}
+	if err := idr.elasticClient.CreateIndex(idr.ctx, index, mapping); err != nil {
+		idr.logger.Errorf("Failed to create index: %s, err: %v", index, err)
+		return err
+	}
+	idr.logger.Info("Created index ", index)
+	return nil
+}
+
+func (idr *Indexer) deleteIndexHelper(indexMapper globals.DataType, tenantName string) error {
+	index := elastic.GetIndex(indexMapper, tenantName)
+	idr.elasticClient.DeleteIndex(idr.ctx, index)
+	if err := idr.elasticClient.DeleteIndex(idr.ctx, index); err != nil && !elastic.IsIndexNotExists(err) {
+		if elasticErr, ok := err.(*es.Error); ok {
+			idr.logger.Errorf("Failed to delete index: %s, err: %+v", index, elasticErr)
+		}
+		return err
+	}
+	idr.logger.Info("Deleted index ", index)
+	return nil
+}
+
+func createBucketClient(ctx context.Context, resolver resolver.Interface, tenantName string, bucketName string) (objstore.Client, error) {
+	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting tls provider (%s)", err)
+	}
+
+	if tlsp == nil {
+		return objstore.NewClient(tenantName, bucketName, resolver)
+	}
+
+	tlsc, err := tlsp.GetClientTLSConfig(globals.Vos)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting tls client (%s)", err)
+	}
+	tlsc.ServerName = globals.Vos
+
+	return objstore.NewClient(tenantName, bucketName, resolver, objstore.WithTLSConfig(tlsc))
 }

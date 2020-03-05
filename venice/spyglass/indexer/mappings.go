@@ -157,6 +157,42 @@ func (idr *Indexer) getIndexMapping(dType globals.DataType) (string, error) {
 
 	case globals.Alerts:
 		return "", nil
+
+	case globals.FwLogs:
+		// get the elastic mapping config
+		config, err := mapper.ElasticMapper(FwLogV1{},
+			elastic.GetDocType(dType),
+			mapper.WithShardCount(3),
+			mapper.WithReplicaCount(2),
+			mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
+			mapper.WithCharFilter())
+		if err != nil {
+			idr.logger.Errorf("Failed to generate elastic mapping for docType: %d, err: %v",
+				dType, err)
+			return "", err
+		}
+
+		// get the json string for the mapping
+		str, err := config.JSONString()
+		return str, err
+
+	case globals.FwLogsObjects:
+		// get the elastic mapping config
+		config, err := mapper.ElasticMapper(FwLogObjectV1{},
+			elastic.GetDocType(dType),
+			mapper.WithShardCount(3),
+			mapper.WithReplicaCount(2),
+			mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
+			mapper.WithCharFilter())
+		if err != nil {
+			idr.logger.Errorf("Failed to generate elastic mapping for docType: %d, err: %v",
+				dType, err)
+			return "", err
+		}
+
+		// get the json string for the mapping
+		str, err := config.JSONString()
+		return str, err
 	}
 
 	return "", nil

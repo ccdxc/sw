@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/generated/rollout"
@@ -49,37 +49,40 @@ func (idr *Indexer) createWatchers() error {
 	groupMap := runtime.GetDefaultScheme().Kinds()
 	apiClientVal := reflect.ValueOf(idr.apiClient)
 
-	for group := range groupMap {
-		if idr.ctx.Err() != nil { // context canceled; indexer stopped
-			idr.stopWatchersHelper()
-			return fmt.Errorf("context canceled, returning from create watchers")
-		}
-
-		// Objstore is handled separately below
-		if group == "objstore" || group == "bookstore" {
-			continue
-		}
-		// TODO: Remove hardcoded version
-		version := "V1"
-		key := strings.Title(group) + version
-		groupFunc := apiClientVal.MethodByName(key)
-		if !groupFunc.IsValid() {
-			idr.logger.Infof("API Group %s does not have a watch method", key)
-			continue
-		}
-		opts := api.ListWatchOptions{}
-		if entry, ok := idr.writerMap[key]; ok && entry.resVersion != "" {
-			opts.ObjectMeta = api.ObjectMeta{
-				ResourceVersion: entry.resVersion,
+	if idr.WatchAPIServer {
+		for group := range groupMap {
+			if idr.ctx.Err() != nil { // context canceled; indexer stopped
+				idr.stopWatchersHelper()
+				return fmt.Errorf("context canceled, returning from create watchers")
 			}
-		}
 
-		serviceGroup := groupFunc.Call(nil)
-		watch, err := serviceGroup[0].Interface().(service).Watch(idr.ctx, &opts)
-		err = idr.addWatcher(key, watch, err)
-		if err != nil {
-			idr.stopWatchersHelper() // stop the existing watchers
-			return err
+			// Objstore is handled separately below
+			if group == "objstore" || group == "bookstore" {
+				continue
+			}
+			// TODO: Remove hardcoded version
+			version := "V1"
+			key := strings.Title(group) + version
+			groupFunc := apiClientVal.MethodByName(key)
+			if !groupFunc.IsValid() {
+				idr.logger.Infof("API Group %s does not have a watch method", key)
+				continue
+			}
+			opts := api.ListWatchOptions{}
+			opts.FieldChangeSelector = []string{"Spec"}
+			// if entry, ok := idr.writerMap[key]; ok && entry.resVersion != "" {
+			// 	opts.ObjectMeta = api.ObjectMeta{
+			// 		ResourceVersion: entry.resVersion,
+			// 	}
+			// }
+
+			serviceGroup := groupFunc.Call(nil)
+			watch, err := serviceGroup[0].Interface().(service).Watch(idr.ctx, &opts)
+			err = idr.addWatcher(key, watch, err)
+			if err != nil {
+				idr.stopWatchersHelper() // stop the existing watchers
+				return err
+			}
 		}
 	}
 
@@ -95,7 +98,13 @@ func (idr *Indexer) createWatchers() error {
 	for _, bucket := range objstore.Buckets_name {
 		key := fmt.Sprintf("objstore-%s", bucket)
 		opts := api.ListWatchOptions{}
+
 		opts.Tenant = globals.DefaultTenant
+
+		if bucket == fwlogsBucketName {
+			opts.Tenant = globals.ReservedFwLogsTenantName
+		}
+
 		// To watch on a bucket, bucket name must be provided as the namespace
 		opts.Namespace = bucket
 		watch, err := idr.vosClient.ObjstoreV1().Object().Watch(idr.ctx, &opts)
@@ -157,12 +166,24 @@ func (idr *Indexer) startWatchers() {
 		cases[1] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(idr.ctx.Done())}
 
 		// Add the object watcher channels
+		// Skip firewall log key from this allocation
 		i := 2
 		for key, ch := range idr.channels {
 			cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
 			apiGroupMappings[i] = key
-			idr.writerMap[key] = &writerMapEntry{
-				writerID: (i - 2) % maxWriters,
+			if strings.Contains(key, "fwlogs") {
+				idr.logger.Infof("Assinging writer %d to key %s", maxOrderedWriters, "fwlogs")
+				// fwlogs go to append only writer
+				idr.writerMap[key] = &writerMapEntry{
+					// the appendOnlyWriterStartId is the end of maxOrderedWritersId,
+					// its 8 today
+					writerID: maxOrderedWriters,
+				}
+			} else {
+				idr.logger.Infof("Assinging writer %d to key %s", (i-2)%maxOrderedWriters, key)
+				idr.writerMap[key] = &writerMapEntry{
+					writerID: (i - 2) % maxOrderedWriters,
+				}
 			}
 			i++
 		}
@@ -240,6 +261,7 @@ func (idr *Indexer) GetWriteCount() uint64 {
 // handleWatcherEvent enqueue the watcher-event into the correct writers requestChannel
 // NOTE: All events for an api group must always go to the same writer
 func (idr *Indexer) handleWatcherEvent(apiGroup string, et kvstore.WatchEventType, obj interface{}) {
+
 	// create request object and enqueue it to the request channel
 	ometa, _ := runtime.GetObjectMeta(obj)
 	resVersion := ometa.GetResourceVersion()
@@ -260,15 +282,16 @@ func (idr *Indexer) handleWatcherEvent(apiGroup string, et kvstore.WatchEventTyp
 	// we should wrap this channel send inside a select loop along with timer
 	// and threshold counter to do recovery by doing either adaptive backoff or
 	// increasing the writer pool size (bounded by NUMPROCS). This is TBD.
+
 	idr.reqChan[idr.writerMap[apiGroup].writerID] <- req
 }
 
 // Start the Bulk/Batch writer to Elasticsearch
-func (idr *Indexer) startWriter(id int) {
+func (idr *Indexer) startOrderedWriter(id int) {
 	// input validation
-	if id < 0 || id >= idr.maxWriters {
+	if id < 0 || id >= maxOrderedWriters {
 		idr.logger.Debugf("argID: %d out of range [%d .. %d]",
-			id, 0, idr.maxWriters)
+			id, 0, maxOrderedWriters)
 		return
 	}
 
@@ -467,6 +490,7 @@ func (idr *Indexer) startWriter(id int) {
 
 // Attempts to send the buffered requests for the writer with the given id
 func (idr *Indexer) attemptSendBulkRequest(id int) error {
+	idr.logger.Debugf("Writer: %d Bulk request len %d", id, len(idr.requests[id]))
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
 	}, indexRetryIntvl, indexMaxRetries)
@@ -484,7 +508,10 @@ func (idr *Indexer) updateIndexer(id int) {
 	idr.updateWriteCount(uint64(len(idr.requests[id])))
 
 	updateFunc := idr.resVersionUpdater[id]
-	updateFunc()
+	// UpdateFunc is not present for firewall logs
+	if updateFunc != nil {
+		updateFunc()
+	}
 
 	idr.resVersionUpdater[id] = nil
 	idr.requests[id] = nil

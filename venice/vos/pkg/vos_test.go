@@ -134,7 +134,11 @@ func TestCreateBuckets(t *testing.T) {
 	Assert(t, fb.bucketExists == len(objstore.Buckets_name), "did not find correct number of calls [%v][%v]", fb.bucketExists, len(objstore.Buckets_name))
 	Assert(t, fb.makeBucket == len(objstore.Buckets_name), "did not find correct number of calls [%v][%v]", fb.makeBucket, len(objstore.Buckets_name))
 	for k := range objstore.Buckets_value {
-		if v1, ok := bmap["default."+k]; !ok {
+		tenantName := "default"
+		if k == "fwlogs" {
+			tenantName = "fwlogs"
+		}
+		if v1, ok := bmap[tenantName+"."+k]; !ok {
 			t.Errorf("did not find key [%v]", k)
 		} else {
 			if v1 != 1 {

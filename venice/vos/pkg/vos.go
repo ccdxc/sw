@@ -2,6 +2,7 @@ package vospkg
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/objstore"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
@@ -102,6 +103,11 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 		loop = false
 		for _, n := range objstore.Buckets_name {
 			name := "default." + strings.ToLower(n)
+
+			if n == "fwlogs" {
+				name = globals.ReservedFwLogsTenantName + "." + strings.ToLower(n)
+			}
+
 			if err = i.createBucket(name); err != nil {
 				log.Errorf("create bucket [%v] failed retry [%d] (%s)", name, retryCount, err)
 				loop = true
@@ -157,7 +163,10 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 //  This starts Minio server and starts a HTTP server handling multipart forms used or
 //  uploading files to the object store and a gRPC frontend that frontends all other operations
 //  for the objectstore.
-func New(ctx context.Context, trace bool, args []string) error {
+// testURL = url for minio server for testing
+// Vos is setup differently when testURL is provided. For example, tls is not used whil testing and
+// insecure minio connection is initialized.
+func New(ctx context.Context, trace bool, args []string, testURL string) error {
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
 	log.Infof("minio env: %+v", os.Environ())
@@ -171,36 +180,48 @@ func New(ctx context.Context, trace bool, args []string) error {
 	time.Sleep(2 * time.Second)
 	inst := &instance{}
 	url := k8s.GetPodIP() + ":" + globals.VosMinioPort
+	if testURL != "" {
+		url = testURL + ":" + globals.VosMinioPort
+	}
 
 	log.Infof("connecting to minio at [%v]", url)
 
-	mclient, err := minioclient.New(url, minioKey, minioSecret, true)
+	secureMinio := true
+	if testURL != "" {
+		secureMinio = false
+	}
+	mclient, err := minioclient.New(url, minioKey, minioSecret, secureMinio)
 	if err != nil {
 		log.Errorf("Failed to create client (%s)", err)
 		return errors.Wrap(err, "Failed to create Client")
 	}
-	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
-	if err != nil {
-		log.Errorf("failed to get tls provider (%s)", err)
-		return errors.Wrap(err, "failed GetDefaultTLSProvider()")
-	}
 	defTr := http.DefaultTransport.(*http.Transport)
-	tlsClientConfig, err := tlsp.GetClientTLSConfig(globals.Vos)
-	if err != nil {
-		log.Errorf("failed to get client tls config (%s)", err)
-		return errors.Wrap(err, "client tls config")
+
+	var tlsc *tls.Config
+	if testURL == "" {
+		tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
+		if err != nil {
+			log.Errorf("failed to get tls provider (%s)", err)
+			return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+		}
+
+		tlsClientConfig, err := tlsp.GetClientTLSConfig(globals.Vos)
+		if err != nil {
+			log.Errorf("failed to get client tls config (%s)", err)
+			return errors.Wrap(err, "client tls config")
+		}
+		defTr.TLSClientConfig = tlsClientConfig
+
+		tlsc, err = tlsp.GetServerTLSConfig(globals.Vos)
+		if err != nil {
+			log.Errorf("failed to get tls config (%s)", err)
+			return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+		}
+		tlsc.ServerName = globals.Vos
 	}
-	defTr.TLSClientConfig = tlsClientConfig
+
 	mclient.SetCustomTransport(defTr)
 	client := &storeImpl{BaseBackendClient: mclient}
-
-	tlsc, err := tlsp.GetServerTLSConfig(globals.Vos)
-	if err != nil {
-		log.Errorf("failed to get tls config (%s)", err)
-		return errors.Wrap(err, "failed GetDefaultTLSProvider()")
-	}
-	tlsc.ServerName = globals.Vos
-
 	inst.Init(client)
 
 	grpcBackend, err := newGrpcServer(inst, client)

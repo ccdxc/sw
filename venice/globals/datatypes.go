@@ -24,4 +24,10 @@ const (
 
 	// Stats type
 	Stats
+
+	// FwLogs represents raw Firewall logs
+	FwLogs
+
+	// FwLogsObjects represents Firewall log Objects (csv or json zipped files) stored in object store
+	FwLogsObjects
 )

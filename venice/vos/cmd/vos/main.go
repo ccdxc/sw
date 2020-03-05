@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/vos/pkg"
+	vospkg "github.com/pensando/sw/venice/vos/pkg"
 )
 
 var pkgName = globals.Vos
@@ -76,7 +76,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// init obj store
-	err := vospkg.New(ctx, *traceAPI, args)
+	err := vospkg.New(ctx, *traceAPI, args, "")
 	if err != nil {
 		// let the scheduler restart obj store
 		log.Fatalf("failed to init object store, %s", err)

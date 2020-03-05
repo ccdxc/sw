@@ -226,3 +226,8 @@ func (e *mockClient) GetResetCount() int {
 func (e *mockClient) GetClusterHealth(indices []string) (*es.ClusterHealthResponse, error) {
 	return &es.ClusterHealthResponse{}, nil
 }
+
+// IndexNames returns name of indices currently present in elastic search
+func (e *mockClient) IndexNames() ([]string, error) {
+	panic("not implemented")
+}
