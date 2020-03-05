@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -255,21 +256,6 @@ func transmitLogs(ctx context.Context,
 		meta["nodeid"] = nodeUUID
 		meta["csvversion"] = fwLogCSVVersion
 
-		log.Infof("dataBucketName %s, indexBucketName %s, time %s, logcount %s, data len %d",
-			bucketName, indexBucketName, time.Now().String(), meta["logcount"], len(objBuffer.Bytes()))
-
-		// PutObject uploads an object to the object store
-		r := bytes.NewReader(objBuffer.Bytes())
-		if err := putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, len(objBuffer.Bytes()), meta); err != nil {
-			log.Errorf("could not put object %s", err.Error())
-		}
-
-		// The index's object name is same as the data object name
-		ir := bytes.NewReader(indexBuffer.Bytes())
-		if err := putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, len(indexBuffer.Bytes()), map[string]string{}); err != nil {
-			log.Errorf("could not put object %s", err.Error())
-		}
-
 		// Send the file on to the channel for testing
 		if testChannel != nil {
 			testChannel <- TestObject{
@@ -281,22 +267,42 @@ func transmitLogs(ctx context.Context,
 				Meta:            meta,
 			}
 		}
+
+		// PutObject uploads an object to the object store
+		r := bytes.NewReader(objBuffer.Bytes())
+		putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, len(objBuffer.Bytes()), meta, meta["logcount"], true)
+
+		// The index's object name is same as the data object name
+		ir := bytes.NewReader(indexBuffer.Bytes())
+		putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, len(indexBuffer.Bytes()), map[string]string{}, "", false)
+
 	}
 }
 
 func putObjectHelper(ctx context.Context,
 	c objstore.Client, bucketName string, objectName string, reader io.Reader,
-	size int, metaData map[string]string) error {
-	// We are waiting infinitely if its a connect error, otherwise dropping the data. Is that ok?
-	for {
-		if _, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, int64(size), metaData); err != nil && strings.Contains(err.Error(), connectErr) {
-			log.Errorf("connection error in putting object to object store (%s)", err)
-			continue
-		} else if err != nil {
-			// other errors
-			return err
+	size int, metaData map[string]string, logcount string, dolog bool) {
+	tries := 0
+	waitIntvl := time.Second * 20
+	maxRetries := 15
+	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		a, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, int64(size), metaData)
+		if err != nil {
+			tries++
+			log.Errorf("temporary, could not put object (%s)", err)
 		}
-		return nil
+		return a, err
+	}, waitIntvl, maxRetries)
+
+	if err != nil {
+		log.Errorf("dropping, bucket %s, time %s, logcount %s, data len %d, tries %d, err %s",
+			bucketName, time.Now().String(), logcount, size, tries, err)
+		return
+	}
+
+	if dolog {
+		log.Infof("success, bucket %s, time %s, logcount %s, data len %d, tries %d",
+			bucketName, time.Now().String(), logcount, size, tries)
 	}
 }
 
