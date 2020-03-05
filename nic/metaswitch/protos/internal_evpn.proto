@@ -84,7 +84,7 @@ message EvpnEviSpec {
 
   // Internal only
   uint32 EVIId = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", IsInternalField: true}];
-  // data place encapsulation
+  // data plane encapsulation
   uint32 Encap = 1001 [(venice.pdsaFields) = {Field:"encapsulation", IsInternalField: true}];
 }
 
