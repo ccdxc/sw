@@ -5,6 +5,7 @@ package npminteg
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -43,6 +44,7 @@ func (it *integTestSuite) endpointPollTimeout() string {
 
 // CreateAgent creates an instance of agent
 func CreateAgent(logger log.Logger, veniceURL, nodeUUID string) (*Dpagent, error) {
+	os.RemoveAll(globals.NetAgentDBPath)
 	// create new network agent
 	var lis netutils.TestListenAddr
 	if err := lis.GetAvailablePort(); err != nil {

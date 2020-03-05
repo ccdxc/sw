@@ -166,27 +166,6 @@ func (i *IrisAPI) PipelineInit() error {
 	}
 	log.Infof("Iris API: %s | %s", types.InfoPipelineInit, types.InfoDefaultUntaggedNetworkCreate)
 
-	// Add the default profile to boltDB during pipeline init
-	defaultProfile := netproto.Profile{
-		TypeMeta: api.TypeMeta{Kind: "Profile"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "default",
-		},
-		Spec: netproto.ProfileSpec{
-			FwdMode:    string(netproto.ProfileSpec_TRANSPARENT),
-			PolicyMode: string(netproto.ProfileSpec_BASENET),
-		},
-	}
-
-	dat, _ := defaultProfile.Marshal()
-
-	if err := i.InfraAPI.Store(defaultProfile.Kind, defaultProfile.GetKey(), dat); err != nil {
-		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", defaultProfile.GetKey(), err))
-		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", defaultProfile.GetKey(), err)
-	}
-
 	// parse the uuid
 	resp, err := i.SystemClient.SystemUUIDGet(context.Background(), &halapi.Empty{})
 	if err != nil {
@@ -1430,18 +1409,24 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	}
 
 	//ToDo: have to check for idemptonet calls??
-	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
+	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
 		go func() {
-			i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
-		}()
-	} else { // We support only insertion enforced
-		go func() {
-			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
-		}()
-		go func() {
-			i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
+			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"})
 		}()
 	}
+	// ToDO remove this commented out code
+	//if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
+	//	go func() {
+	//		i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
+	//	}()
+	//} else { // We support only insertion enforced
+	//	go func() {
+	//		i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
+	//	}()
+	//	go func() {
+	//		i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
+	//	}()
+	//}
 
 	return
 }

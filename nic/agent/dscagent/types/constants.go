@@ -14,7 +14,7 @@ import (
 type Operation int
 
 // AllKinds captures all the objects that agent will watch from Venice
-var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig", "Interface"}
+var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
 
 // IPAddressKind captures the type of IPAddress options, Singleton, Hyphen separated range or CIDR
 type IPAddressKind int

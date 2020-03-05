@@ -8,6 +8,63 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestValidateEndpoint(t *testing.T) {
+	endpoint := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testEndpoint",
+		},
+		Spec: netproto.EndpointSpec{
+			NetworkName:   "skywalker",
+			IPv4Addresses: []string{"10.1.1.1", "10.1.1.2"},
+			MacAddress:    "baba.baba.baba",
+			NodeUUID:      "luke",
+			UsegVlan:      42,
+		},
+	}
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	dat, _ := vrf.Marshal()
+
+	if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+	network := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "skywalker",
+		},
+		Spec: netproto.NetworkSpec{
+			VlanID: 32,
+		},
+	}
+	dat, _ = network.Marshal()
+
+	if err := infraAPI.Store(network.Kind, network.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := ValidateEndpoint(infraAPI, endpoint); err != nil {
+		t.Fatal(err)
+	}
+	endpoint.Spec.IPv4Addresses = []string{"10.1.1.1/32", "10.1.1.2/32"}
+	if _, _, err := ValidateEndpoint(infraAPI, endpoint); err == nil {
+		t.Fatal(err)
+	}
+}
+
 func TestValidateFlowExportPolicy(t *testing.T) {
 	netflow := netproto.FlowExportPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Netflow"},

@@ -272,17 +272,15 @@ func (c *API) Start(ctx context.Context) error {
 		c.nimbusClient = nimbusClient
 
 		go func() {
-
-			if err := c.nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
+			c.WatchObjects([]string{"Profile", "IPAMPolicy", "Interface", "Collector"})
 		}()
 
-		go func() {
-			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"IPAMPolicy"}, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-			}
-		}()
+		// TODO temporarily commented out to debug.
+		//go func() {
+		//	if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"IPAMPolicy"}, c.PipelineAPI); err != nil {
+		//		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+		//	}
+		//}()
 
 		// Start Interface update
 
@@ -333,7 +331,7 @@ func (c *API) WatchObjects(kinds []string) {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
 		}()
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Second * 2)
 		c.nimbusClient.Wait()
 	}
 }

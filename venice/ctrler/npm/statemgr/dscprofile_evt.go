@@ -97,6 +97,8 @@ func convertDSCProfile(dps *DSCProfileState) *netproto.Profile {
 		},
 	}
 	fwp.CreationTime = api.Timestamp{Timestamp: *creationTime}
+	fwp.ObjectMeta.Tenant = "default"
+	fwp.ObjectMeta.Namespace = "default"
 	log.Infof("UUID is %v", fwp.ObjectMeta.UUID)
 
 	return &fwp

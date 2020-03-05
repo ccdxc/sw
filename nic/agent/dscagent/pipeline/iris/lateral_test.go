@@ -98,7 +98,7 @@ func TestMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 			MacAddress:    "42:42:42:42:42:42",
 			NodeUUID:      NodeUUID,
 			UsegVlan:      42,
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", destIPOutSideSubnet)},
+			IPv4Addresses: []string{destIPOutSideSubnet},
 		},
 	}
 
@@ -154,8 +154,8 @@ func TestMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(knownEP.Spec.IPv4Addresses, []string{fmt.Sprintf("%s/32", obj.Spec.Dst)}) {
-		t.Fatalf("Mismatch in ipv4 address %v and %v", knownEP.Spec.IPv4Addresses, []string{fmt.Sprintf("%s/32", obj.Spec.Dst)})
+	if !reflect.DeepEqual(knownEP.Spec.IPv4Addresses, []string{obj.Spec.Dst}) {
+		t.Fatalf("Mismatch in ipv4 address %v and %v", knownEP.Spec.IPv4Addresses, []string{obj.Spec.Dst})
 	}
 
 	// Assert Nw and EP counts are the same before and after lateral obj creates
@@ -249,7 +249,7 @@ func TestNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 			MacAddress:    "42:42:42:42:42:42",
 			NodeUUID:      NodeUUID,
 			UsegVlan:      42,
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", destIPOutSideSubnet)},
+			IPv4Addresses: []string{destIPOutSideSubnet},
 		},
 	}
 
@@ -414,7 +414,7 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 	AssertOk(t, err, "Lateral tunnel obj not found")
 
 	// Ensure TEP EP and Tunnel are associated.
-	AssertEquals(t, []string{fmt.Sprintf("%s/32", tun.Spec.Dst)}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
+	AssertEquals(t, []string{tun.Spec.Dst}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
 
 	// Call delete objs
 	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
@@ -649,7 +649,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	AssertOk(t, err, "Lateral tunnel obj not found")
 
 	// Ensure TEP EP and Tunnel are associated.
-	AssertEquals(t, []string{fmt.Sprintf("%s/32", tun.Spec.Dst)}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
+	AssertEquals(t, []string{tun.Spec.Dst}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
 
 	//Call delete for mirror
 	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
@@ -744,7 +744,7 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 			MacAddress:    "42:42:42:42:42:42",
 			NodeUUID:      NodeUUID,
 			UsegVlan:      42,
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", destIPOutSideSubnet)},
+			IPv4Addresses: []string{destIPOutSideSubnet},
 		},
 	}
 
@@ -780,7 +780,7 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	}
 	err = tunnel.Unmarshal(dat)
 	Assert(t, err == nil, "Venice known collectors must create a lateral tunnel. Tunnel : %v", tunnel)
-	AssertEquals(t, []string{fmt.Sprintf("%s/32", tunnel.Spec.Dst)}, knownEP.Spec.IPv4Addresses, "Lateral Tunnel must point to the EP")
+	AssertEquals(t, []string{tunnel.Spec.Dst}, knownEP.Spec.IPv4Addresses, "Lateral Tunnel must point to the EP")
 
 	// Assert Nw and EP counts are the same before and after lateral obj creates
 	listNw, _ = infraAPI.List("Network")
@@ -943,7 +943,7 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 			MacAddress:    "42:42:42:42:42:42",
 			NodeUUID:      NodeUUID,
 			UsegVlan:      42,
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", destIPOutSideSubnet)},
+			IPv4Addresses: []string{destIPOutSideSubnet},
 		},
 	}
 
@@ -1105,7 +1105,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorIP(t *testing.T) {
 	AssertOk(t, err, "Lateral tunnel obj not found")
 
 	// Ensure TEP EP and Tunnel are associated.
-	AssertEquals(t, []string{fmt.Sprintf("%s/32", tun.Spec.Dst)}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
+	AssertEquals(t, []string{tun.Spec.Dst}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
 
 	// Call delete objs
 	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, true)
@@ -1598,7 +1598,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
 	AssertOk(t, err, "Lateral tunnel obj not found")
 
 	// Ensure TEP EP and Tunnel are associated.
-	AssertEquals(t, []string{fmt.Sprintf("%s/32", tun.Spec.Dst)}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
+	AssertEquals(t, []string{tun.Spec.Dst}, ep.Spec.IPv4Addresses, "Tunnel and EP objects did not correspond to each other.\nTun: %v\nEP: %v", tun, ep)
 
 	// Call delete objs
 	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
@@ -1762,7 +1762,7 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 			MacAddress:    "42:42:42:42:42:42",
 			NodeUUID:      NodeUUID,
 			UsegVlan:      42,
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", destIPOutSideSubnet)},
+			IPv4Addresses: []string{destIPOutSideSubnet},
 		},
 	}
 

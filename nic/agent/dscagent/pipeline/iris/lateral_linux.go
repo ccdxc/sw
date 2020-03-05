@@ -55,7 +55,6 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	collectorKnown, tunnelKnown := reconcileLateralObjects(infraAPI, owner, destIP, tunnelOp)
 	if collectorKnown {
 		var knownCollector *netproto.Endpoint
-		pip := net.ParseIP(destIP).String()
 		eDat, err := infraAPI.List("Endpoint")
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
@@ -68,8 +67,7 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 				continue
 			}
 			for _, address := range endpoint.Spec.IPv4Addresses {
-				epIP, _, _ := net.ParseCIDR(address)
-				if epIP.String() == pip {
+				if address == destIP {
 					knownCollector = &endpoint
 					break
 				}
@@ -169,7 +167,7 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 					MacAddress:    knownEp.Spec.MacAddress,
 				},
 			}
-			ep.Spec.IPv4Addresses = append(ep.Spec.IPv4Addresses, fmt.Sprintf("%s/32", destIP))
+			ep.Spec.IPv4Addresses = append(ep.Spec.IPv4Addresses, destIP)
 			if err = updateEndpointHandler(infraAPI, epClient, intfClient, *ep, vrfID, types.UntaggedCollVLAN); err != nil {
 				log.Error(errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err))
 				return errors.Wrapf(types.ErrCollectorEPUpdateFailure, "MirrorSession: %s |  Err: %v", owner, err)
@@ -222,7 +220,6 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	log.Infof("Deleting Lateral NetAgent objects. Owner: %v MgmtIP: %v DestIP: %v TunnelOp: %v", owner, mgmtIP, destIP, tunnelOp)
 
 	var lateralEP *netproto.Endpoint
-	pip := net.ParseIP(destIP).String()
 	eDat, err := infraAPI.List("Endpoint")
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
@@ -235,8 +232,7 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 			continue
 		}
 		for _, address := range endpoint.Spec.IPv4Addresses {
-			epIP, _, _ := net.ParseCIDR(address)
-			if epIP.String() == pip {
+			if address == destIP {
 				lateralEP = &endpoint
 				break
 			}
@@ -335,10 +331,8 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 			}
 			delete(lateralDB, collectorCompositeKey)
 		} else {
-			pip := net.ParseIP(destIP).String()
 			for idx, dep := range lateralEP.Spec.IPv4Addresses {
-				epIP, _, _ := net.ParseCIDR(dep)
-				if epIP.String() == pip {
+				if dep == destIP {
 					log.Infof("Updating endpoint: %s", lateralEP.GetKey())
 					ep := &netproto.Endpoint{
 						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
@@ -456,7 +450,6 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, destIP strin
 			}
 		}
 
-		pip := net.ParseIP(destIP).String()
 		for _, o := range eDat {
 			var endpoint netproto.Endpoint
 			err := endpoint.Unmarshal(o)
@@ -465,8 +458,7 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, destIP strin
 				continue
 			}
 			for _, address := range endpoint.Spec.IPv4Addresses {
-				epIP, _, _ := net.ParseCIDR(address)
-				if epIP.String() == pip {
+				if address == destIP {
 					knownCollector = &endpoint
 					break
 				}
@@ -487,7 +479,6 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, destIP strin
 
 	var knownCollector *netproto.Endpoint
 
-	pip := net.ParseIP(destIP).String()
 	// Find EP and add refcount
 	for _, o := range eDat {
 		var endpoint netproto.Endpoint
@@ -497,8 +488,7 @@ func reconcileLateralObjects(infraAPI types.InfraAPI, owner string, destIP strin
 			continue
 		}
 		for _, address := range endpoint.Spec.IPv4Addresses {
-			epIP, _, _ := net.ParseCIDR(address)
-			if epIP.String() == pip {
+			if address == destIP {
 				knownCollector = &endpoint
 				break
 			}
@@ -624,7 +614,7 @@ func generateLateralEP(destIP string) (*netproto.Endpoint, error) {
 		Spec: netproto.EndpointSpec{
 			NetworkName:   types.InternalDefaultUntaggedNetwork,
 			NodeUUID:      "REMOTE",
-			IPv4Addresses: []string{fmt.Sprintf("%s/32", epIP)},
+			IPv4Addresses: []string{epIP},
 			MacAddress:    dMAC,
 		},
 	}
