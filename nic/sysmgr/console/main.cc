@@ -8,6 +8,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #define APP_START "/sysconfig/config0/app-start.conf"
+#define DEPRECATED_CONSOLE_MAGIC_FILE "/sysconfig/config0/.console"
 #define SYSTEM_CONFIG_FILE "/sysconfig/config0/system-config.json"
 
 #define HOSTPIN    "hostpin"
@@ -84,6 +85,11 @@ static bool console_enabled (void)
     boost::property_tree::ptree config_spec;
     std::string console;
 
+    //Check if old way of .console magic file is present.
+    if (access(DEPRECATED_CONSOLE_MAGIC_FILE, F_OK) != -1) {
+        return (true);
+    }
+
     if (access(SYSTEM_CONFIG_FILE, F_OK) != -1)
     {
         //Parse the config spec file.
@@ -113,7 +119,7 @@ main (int argc, char *argv[])
     const char *no_auth[] = {"/bin/login", "-f", "root", NULL};
 
     openlog("console", (LOG_CONS | LOG_PID | LOG_NDELAY), LOG_AUTH);
-    if (console_enabled()) { 
+    if (console_enabled()) {
         // Set to drop straight into bash shell, with no authentication
         // need. Just do so.
         execvp(no_auth[0], (char* const*)no_auth);
