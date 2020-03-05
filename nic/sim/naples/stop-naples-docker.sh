@@ -12,6 +12,6 @@ fi
 # remove any dangling images
 docker images purge
 #docker rmi -f $(docker images -q -f dangling=true)
-docker rmi -f naples:$VER
+docker rmi -f pensando/naples:$VER
 
 exit 0

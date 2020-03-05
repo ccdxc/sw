@@ -10,11 +10,27 @@ if [ ! -f nic.tgz ]; then
     exit 1
 fi
 
-ln -f nic.tgz sim/naples
-#ln -f debug.tgz sim/naples
-
-echo "Building and saving a docker image ..."
-cd sim/naples
+case "$1" in
+    'apulu-venice')
+        echo "Proceeding to build docker image for apulu-venice pipeline"
+        ln -f nic_venice.tgz apollo/tools/apulu/docker/nic.tgz
+        cd apollo/tools/apulu/docker
+        SUPPORT_FILES=""
+        ;;
+    'apulu')
+        echo "Proceeding to build docker image for apulu pipeline"
+        ln -f nic.tgz apollo/tools/apulu/docker
+        cd apollo/tools/apulu/docker
+        SUPPORT_FILES=""
+        ;;
+    *)
+        echo "Proceeding to build docker image for iris pipeline"
+        ln -f nic.tgz sim/naples
+        #ln -f debug.tgz sim/naples
+        cd sim/naples
+        SUPPORT_FILES="README Vagrantfile naples_vm_bringup.py"
+        ;;
+esac
 
 docker build -t pensando/naples:$VER . && docker save -o naples-docker-$VER.tar pensando/naples:$VER
 if [ $? -eq 0 ]; then
@@ -31,7 +47,7 @@ fi
 
 # prepare the release tar ball now
 echo "Preparing final image ..."
-tar cvzf $IMAGE_DIR/naples-release-$VER.tgz README Vagrantfile naples-docker-$VER.tgz naples_vm_bringup.py
+tar cvzf $IMAGE_DIR/naples-release-$VER.tgz naples-docker-$VER.tgz $SUPPORT_FILES
 
 echo "Image ready in $IMAGE_DIR"
 exit 0

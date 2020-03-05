@@ -344,8 +344,8 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 jobd/e2e/naples-sim-image: ${JOBD_PREREQS}
 	cd ${NICDIR}/.. && ${MAKE} -C nic/upgrade_manager/export/upggosdk
 	go build -ldflags="-s -w" -o ${NICDIR}/build/x86_64/${PIPELINE}/penctl  github.com/pensando/sw/penctl
-	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
-	${NICDIR}/tools/release.sh
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE}${FLAVOR} --target sim --no-strip
+	${NICDIR}/tools/release.sh ${PIPELINE}${FLAVOR}
 
 .PHONY: jobd/e2e/naples-sim
 jobd/e2e/naples-sim: ${JOBD_PREREQS} jobd/e2e/naples-sim-image
@@ -373,8 +373,8 @@ jobd/make/nic:
 jobd/agent: ${JOBD_PREREQS}
 	cd ${NICDIR}/.. && ${MAKE} -C nic/sysmgr/proto
 	cd ${NICDIR}/.. && ${MAKE} -C nic/agent/dscagent
-	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE} --target sim --no-strip
-	${NICDIR}/tools/release.sh
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE}${FLAVOR} --target sim --no-strip
+	${NICDIR}/tools/release.sh ${PIPELINE}${FLAVOR}
 	cd ${NICDIR}/.. go test -tags iris ./nic/agent/dscagent/...
 	# TODO uncomment the sanities once these are fixed
 	#${NICDIR}/e2etests/go/agent/scripts/golden-sanity.sh

@@ -51,7 +51,7 @@ echo "Purging old/dangling images, if any ..."
 # remove any dangling images
 # docker rmi -f $(docker images -q -f dangling=true)
 docker images purge
-docker rmi -f naples:$VER
+docker rmi -f pensando/naples:$VER
 
 echo "Loading docker image into registry ..."
 docker load --input naples-docker-$VER.tgz

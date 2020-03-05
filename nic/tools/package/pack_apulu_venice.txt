@@ -11,3 +11,21 @@ nic/conf/$PIPELINE/techsupport_venice.json                        /nic/conf/tech
 
 # system level tools
 nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bringup_mgmt_ifs.sh
+
+# Penctl (required for Naples SIM)
+nic/build/$ARCH/$PIPELINE/bin/penctl                              /nic/bin/
+
+# Naples SIM
+/usr/lib64/libltdl.so.7                                           /nic/lib64/
+nic/conf/$PIPELINE/device.json                                    /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/catalog.json                                   /nic/conf/$PIPELINE/
+nic/apollo/tools/$PIPELINE/docker/start-naples.sh                 /nic/tools/
+nic/sysmgr/src/$PIPELINE/pipeline-venice-sim.json                 /nic/conf/sysmgr_no_datapath.json
+nic/conf/$PIPELINE/hal.json                                       /nic/conf/$PIPELINE/
+nic/build/$ARCH/$PIPELINE/lib/libstdc++.so.6                      /nic/lib/
+/lib64/libstdc++.so.6                                             /nic/lib64/
+/usr/lib64/libJudy.so.1                                           /nic/lib64
+nic/apollo/tools/$PIPELINE/docker/start-pdsagent-mock.sh          /nic/tools/
+nic/apollo/tools/$PIPELINE/docker/setup_env_mock.sh               /nic/tools/
+nic/build/$ARCH/$PIPELINE/lib/libdpdksim.so                       /nic/lib/
+/lib64/libedit.so*                                                /nic/lib/

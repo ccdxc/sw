@@ -1,0 +1,31 @@
+[
+    {
+        "name": "agent",
+        "command": "/nic/tools/start-pdsagent-mock.sh",
+        "dependencies": [],
+        "flags": ["save_stdout_on_crash"],
+        "memory-limit": 800.0,
+        "cpu-max-percentage": 75,
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+    },
+    {
+        "name": "nmd",
+        "command": "/bin/sh /nic/tools/start-nmd.sh",
+        "dependencies": [],
+        "flags": ["restartable","save_stdout_on_crash", "cap_stdout_stderr"],
+        "cpu-max-percentage": 25,
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+    },
+    {
+        "name": "pen-netagent",
+        "command": "/nic/bin/netagent",
+        "dependencies": [],
+        "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
+        "memory-limit": 300.0,
+        "cpu-max-percentage": 75,
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+     }
+]

@@ -34,4 +34,5 @@ do
     fi
 done
 
+# apulu is a sub PIPELINE within apollo. Use NAPLES_PIPELINE=apollo
 exec env TMPDIR=/data NAPLES_PIPELINE=apollo /nic/bin/nmd
