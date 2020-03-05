@@ -91,19 +91,24 @@ def __get_devices_linux(mac_hint):
 
 
 def __print_intfs_linux(mac_hint, intf_type):
-    devs=__get_devices_linux(mac_hint)
+    devs = __get_devices_linux(mac_hint)
     if intf_type == "data-nic":
+        if len(devs) < 2:
+            print("Not able to find Naples Data ports", file=sys.stderr)
+            return 1
         devs.pop()
         for dev in devs:
             print(dev[0])
     else:
+        if len(devs) == 0:
+            print("Not able to find Naples OOB port", file=sys.stderr)
+            return 1
         print(devs[-1][0])
 
 
 def __print_mnic_ip_linux(mac_hint, intf_type):
     devs=__get_devices_linux(mac_hint)
     print("169.254.{}.1".format(devs[-1][1]))
-
 
 
 def __get_devices_freebsd(mac_hint):
@@ -125,12 +130,19 @@ def __get_devices_freebsd(mac_hint):
     return devs
 
 def __print_intfs_freebsd(mac_hint, intf_type):
-    devs=__get_devices_freebsd(mac_hint)
+    devs = __get_devices_freebsd(mac_hint)
+
     if intf_type == "data-nic":
+        if len(devs) < 2:
+            print("Not able to find Naples Data ports", file=sys.stderr)
+            return 1
         devs.pop()
         for dev in devs:
             print(dev[0])
     else:
+        if len(devs) == 0:
+            print("Not able to find Naples OOB port", file=sys.stderr)
+            return 1
         print(devs[-1][0])
 
 
