@@ -390,7 +390,7 @@ class PolicyObjectClient(base.ConfigClientBase):
             return 0
         return self.__v6epolicyiter[node][vpcid].rrnext().PolicyId
 
-    def Add_V4Policy(self, vpcid, direction, v4rules, policytype, overlaptype, level='subnet'):
+    def Add_V4Policy(self, node, vpcid, direction, v4rules, policytype, overlaptype, level='subnet'):
         obj = PolicyObject(node, vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype, level)
         if direction == 'ingress':
             self.__v4ingressobjs[node][vpcid].append(obj)
@@ -399,7 +399,7 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.Objs[node].update({obj.PolicyId: obj})
         return obj.PolicyId
 
-    def Add_V6Policy(self, vpcid, direction, v6rules, policytype, overlaptype, level='subnet'):
+    def Add_V6Policy(self, node, vpcid, direction, v6rules, policytype, overlaptype, level='subnet'):
         obj = PolicyObject(node, vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype, level)
         if direction == 'ingress':
             self.__v6ingressobjs[node][vpcid].append(obj)
@@ -408,7 +408,7 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.Objs[node].update({obj.PolicyId: obj})
         return obj.PolicyId
 
-    def Generate_Allow_All_Rules(self, spfx, dpfx):
+    def Generate_Allow_All_Rules(self, spfx, dpfx, priority=RulePriority.MAX):
         rules = []
         # allow all ports
         l4AllPorts = L4MatchObject(True)
@@ -421,15 +421,15 @@ class PolicyObjectClient(base.ConfigClientBase):
             l3match = L3MatchObject(True, proto, srcpfx=spfx, dstpfx=dpfx)
             if proto == SupportedIPProtos.ICMP:
                 for icmpl4match in icmpL4Matches:
-                    rule = RuleObject(l3match, icmpl4match)
+                    rule = RuleObject(l3match, icmpl4match, priority)
                     rules.append(rule)
             else:
-                rule = RuleObject(l3match, l4AllPorts)
+                rule = RuleObject(l3match, l4AllPorts, priority)
                 rules.append(rule)
         return rules
 
     def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
-        # TODO: make it random. Add allow all with default pfx for now
+        # TODO: randomize - Add allow all with default pfx & low prio for now
         if af == utils.IP_VERSION_6:
             pfx = utils.IPV6_DEFAULT_ROUTE
         else:
@@ -438,10 +438,12 @@ class PolicyObjectClient(base.ConfigClientBase):
 
     def GenerateVnicPolicies(self, numPolicy, subnet, direction, is_v6=False):
         if not self.__supported:
-            return
+            return []
 
         vpcid = subnet.VPC.VPCId
         if is_v6:
+            if not self.__v6supported:
+                return []
             af = utils.IP_VERSION_6
             add_policy = self.Add_V6Policy
         else:
@@ -449,14 +451,15 @@ class PolicyObjectClient(base.ConfigClientBase):
             add_policy = self.Add_V4Policy
         subnetpfx = subnet.IPPrefix[1] if af == utils.IP_VERSION_4 else subnet.IPPrefix[0]
         naclid = subnet.GetNaclId(direction, af)
-        naclobj = self.GetPolicyObject(naclid)
+        node = subnet.Node
+        naclobj = self.GetPolicyObject(node, naclid)
 
         vnic_policies = []
         for i in range(numPolicy):
             overlaptype = naclobj.OverlapType
             policytype = naclobj.PolicyType
             rules = self.Generate_random_rules_from_nacl(naclobj, subnetpfx, af)
-            policyid = add_policy(vpcid, direction, rules, policytype, overlaptype, 'vnic')
+            policyid = add_policy(node, vpcid, direction, rules, policytype, overlaptype, 'vnic')
             vnic_policies.append(policyid)
         return vnic_policies
 

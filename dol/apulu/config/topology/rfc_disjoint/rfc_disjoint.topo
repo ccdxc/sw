@@ -68,7 +68,7 @@ node:
                 - count   : 1             # VNICs per subnet
                   ipcount : 2             # Local IP mapping per vnic
                   public  : false
-                  #policy  : true          # security policy at vnic level (0 - 5)
+                  policy  : true          # security policy at vnic level (0 - 2)
                   tagged  : false         # true or false (default true)
               rmap:                       # Remote IP mappings per subnet
                 - count : 1

@@ -393,30 +393,51 @@ def __get_final_result(tc_rule, match_rule):
         logger.info("No rule matching the packet - so DENY")
     return final_result
 
-def __get_matching_rule(policy, pkt, tc_rule):
+def __get_matching_rule(policies, pkt, tc_rule):
     packet_tuples = __get_packet_tuples(pkt)
     action = tc_rule.Action
     prio = tc_rule.Priority
+    rules = []
+    for policyid in policies:
+        policyobj = __get_config_object(ObjectTypes.POLICY, policyid)
+        rules.extend(policyobj.rules)
     # Get a new copy of stable sorted (based on priority) rules
     # Note: lower the value of rule.Priority higher the Priority
-    rules = sorted(policy.rules, key=lambda x: x.Priority)
+    rules = sorted(rules, key=lambda x: x.Priority)
     match_rule = None
     for rule in rules:
         if __is_matching_rule(packet_tuples, rule):
+            # if priorities are same for multiple rules, choose the first
             match_rule = rule
             break
     return match_rule
 
+def __get_security_policies_from_lmapping(lmapping, direction):
+    attr = ""
+    attr += "Ing" if direction == "ingress" else "Eg"
+    attr += "V4" if lmapping.IsV4() else "V6"
+    attr += "SecurityPolicyIds"
+    vnic = lmapping.VNIC
+    subnet = vnic.SUBNET
+    policies = []
+    # TODO: order in which they applied
+    policies.extend(getattr(vnic, attr))
+    policies.extend(getattr(subnet, attr))
+    return policies
+
 def GetExpectedCPSPacket(testcase, args):
     tc_rule = testcase.config.tc_rule
     if tc_rule is None:
+        # TODO: What is the expectation for empty policy?
         # no rule in policy - so implicit deny
         logger.info("GetExpectedCPSPacket: packet denied, empty rules")
         return None
-    # TODO: handle vnic security policies
+    # get nacl which we selected for testing
     policy = testcase.config.policy
+    # get all security policies which needs to be applied
+    policies = __get_security_policies_from_lmapping(testcase.config.localmapping, policy.Direction)
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
-    match_rule = __get_matching_rule(policy, pkt, tc_rule)
+    match_rule = __get_matching_rule(policies, pkt, tc_rule)
     final_result = __get_final_result(tc_rule, match_rule)
     if final_result == types_pb2.SECURITY_RULE_ACTION_DENY:
         logger.info("GetExpectedCPSPacket: packet denied")
@@ -493,15 +514,18 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
 def GetTunnelIPFromMapping(testcase, packet, args=None):
     return str(testcase.config.remotemapping.TUNNEL.RemoteIPAddr)
 
+def __get_config_object(objtype, id):
+    dutNode = EzAccessStore.GetDUTNode()
+    objClient = EzAccessStore.GetConfigClient(objtype)
+    return objClient.GetObjectByKey(dutNode, id)
+
 def __getTunObject(nh_type, id):
     if nh_type == "tep":
         objtype = ObjectTypes.TUNNEL
     else:
         #TODO: Handle nh, nhgroup, vpc_peer
         assert(0)
-    dutNode = EzAccessStore.GetDUTNode()
-    objClient = EzAccessStore.GetConfigClient(objtype)
-    return objClient.GetObjectByKey(dutNode, id)
+    return __get_config_object(objtype, id)
 
 def __get_matching_route(routetbl, addr):
     addr = ipaddress.ip_address(addr)

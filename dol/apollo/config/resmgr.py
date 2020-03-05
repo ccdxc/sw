@@ -58,7 +58,7 @@ class Resmgr(base.ConfigObjectBase):
         MAX_ROUTE_TABLE = 1024
         MAX_ROUTES_PER_ROUTE_TBL = 1023
     MAX_POLICY = 1023
-    MAX_POLICY_PER_VNIC = 5
+    MAX_POLICY_PER_VNIC = 2
     MAX_POLICER_PER_DIRECTION = 1024
     MAX_MIRROR = 8
     MAX_TAG = 1
