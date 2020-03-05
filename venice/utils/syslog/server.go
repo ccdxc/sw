@@ -1,6 +1,7 @@
 package syslog
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"net"
@@ -120,10 +121,10 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 
 					numMsg := 0
 					fmt.Printf("tcp syslog server %s ready %v\n", l.Addr().String(), conn.RemoteAddr().String())
+					conn.SetReadDeadline(time.Now().Add(time.Second * 30))
+					rd := bufio.NewReader(conn)
 					for ctx.Err() == nil {
-						buff := make([]byte, 1024)
-						conn.SetReadDeadline(time.Now().Add(time.Second * 30))
-						n, err := conn.Read(buff)
+						buff, err := rd.ReadBytes('\n')
 						if err != nil {
 							for _, s := range []string{"closed network connection", "EOF"} {
 								if strings.Contains(err.Error(), s) {
@@ -135,8 +136,8 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 						}
 
 						numMsg++
-						fmt.Printf("[%v] server %v received: %v \n", numMsg, l.Addr().String(), string(buff[:n]))
-						lp, err := parseSyslog(logType, buff[:n])
+						fmt.Printf("[%v] server %v received: %v \n", numMsg, l.Addr().String(), string(buff))
+						lp, err := parseSyslog(logType, buff)
 						if err != nil {
 							fmt.Printf("stop syslog server %v\n", err)
 							return
