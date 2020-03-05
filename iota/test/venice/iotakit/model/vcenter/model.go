@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/enterprise"
@@ -116,151 +115,43 @@ func (sm *VcenterSysModel) AllowVeniceAndOrchestrator() error {
 	return nil
 }
 
+//deleteAllWorkloads deletes all workloads
+func (sm *VcenterSysModel) deleteAllWorkloads() error {
+
+	// first get a list of all existing.Workloads from iota
+	gwlm := &iota.WorkloadMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		WorkloadOp:  iota.Op_GET,
+	}
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
+	log.Debugf("Got get workload resp: %+v, err: %v", getResp, err)
+	if err != nil {
+		log.Errorf("Failed to instantiate Apps. Err: %v", err)
+		return fmt.Errorf("Error creating IOTA workload. err: %v", err)
+	} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Failed to instantiate Apps. resp: %+v.", getResp.ApiResponse)
+		return fmt.Errorf("Error creating IOTA workload. Resp: %+v", getResp.ApiResponse)
+	}
+
+	if len(getResp.Workloads) != 0 {
+		getResp.WorkloadOp = iota.Op_DELETE
+		delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
+		log.Debugf("Got get workload delete resp: %+v, err: %v", delResp, err)
+		if err != nil {
+			log.Errorf("Failed to delete old workloads. Err: %v", err)
+			return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
+		}
+
+	}
+
+	return nil
+}
+
 //SetupWorkloads bring up.Workloads on host
 func (sm *VcenterSysModel) SetupWorkloads(scale bool) error {
 
-	var wc objects.WorkloadCollection
-
-	/*
-		hosts, err := sm.ListRealHosts()
-		if err != nil {
-			log.Error("Error finding real hosts to run traffic tests")
-			return err
-		}
-
-			nws, err := sm.ListNetwork()
-			if err != nil {
-				log.Error("Error finding networks.")
-				return err
-			}
-
-			getHost := func(uuid string) *objects.Host {
-				nodeMac := strings.Replace(uuid, ":", "", -1)
-				nodeMac = strings.Replace(nodeMac, ".", "", -1)
-				for _, host := range hosts {
-					objMac := strings.Replace(host.VeniceHost.GetSpec().DSCs[0].MACAddress, ".", "", -1)
-					if objMac == nodeMac {
-						return host
-					}
-				}
-				return nil
-			}
-	*/
-
-	skipSetup := os.Getenv("SKIP_SETUP")
-	// if we are skipping setup we dont need to bringup the workload
-	if skipSetup != "" {
-		//Tru to setup state of.Workloads
-		delWloads := &iota.WorkloadMsg{WorkloadOp: iota.Op_DELETE, Workloads: []*iota.Workload{}}
-		// first get a list of all existing.Workloads from iota
-		gwlm := &iota.WorkloadMsg{
-			ApiResponse: &iota.IotaAPIResponse{},
-			WorkloadOp:  iota.Op_GET,
-		}
-		topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
-		getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
-		log.Debugf("Got get workload resp: %+v, err: %v", getResp, err)
-		if err != nil {
-			log.Errorf("Failed to instantiate Apps. Err: %v", err)
-			return fmt.Errorf("Error creating IOTA workload. err: %v", err)
-		} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			log.Errorf("Failed to instantiate Apps. resp: %+v.", getResp.ApiResponse)
-			return fmt.Errorf("Error creating IOTA workload. Resp: %+v", getResp.ApiResponse)
-		}
-
-		log.Info("Doing Workload bring up check")
-		for _, naples := range sm.NaplesNodes {
-			log.Infof("Naples Found %v", naples.Name())
-		}
-		for _, gwrk := range getResp.Workloads {
-			//Add to delete list
-			delWloads.Workloads = append(delWloads.Workloads, gwrk)
-			continue
-			/*
-				host, ok := sm.NaplesHosts[gwrk.NodeName]
-				if !ok {
-					host, ok = sm.ThirdPartyHosts[gwrk.NodeName]
-					if !ok {
-						msg := fmt.Sprintf("Did not find naples for workload %v %v", gwrk.NodeName, gwrk.WorkloadName)
-						log.Error(msg)
-						delWloads.Workloads = append(delWloads.Workloads, gwrk)
-						continue
-					}
-				} else {
-					//Make sure naples uuid and host uuid match
-					host = getHost(host.Naples.Nodeuuid)
-					if host == nil {
-						msg := fmt.Sprintf("Did not find associated host for workload %v %v", gwrk.NodeName, gwrk.WorkloadName)
-						log.Error(msg)
-						//Add to delete list
-						delWloads.Workloads = append(delWloads.Workloads, gwrk)
-						continue
-					}
-				}
-
-				wloads, err := sm.ListWorkloadsOnHost(host.VeniceHost)
-				if err != nil {
-					log.Errorf("Error finding real.Workloads on hosts, inititing delete")
-					delWloads.Workloads = append(delWloads.Workloads, gwrk)
-					continue
-				}
-				var workloadObj *workload.Workload
-				for _, w := range wloads {
-					if w.Name == gwrk.WorkloadName {
-						workloadObj = w
-						break
-					}
-				}
-				if workloadObj == nil {
-					//Workload not present on host, delete it
-					delWloads.Workloads = append(delWloads.Workloads, gwrk)
-				} else {
-					added := false
-					for _, nw := range nws {
-						if nw.Spec.VlanID == workloadObj.Spec.Interfaces[0].ExternalVlan {
-							wl := objects.NewWorkload(host, workloadObj, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage,
-								sm.Tb.GetSwitch(), nw.Name)
-							sm.WorkloadsObjs[workloadObj.Name] = wl
-							if err != nil {
-								log.Errorf("Error creating workload %v", workloadObj)
-								return err
-							}
-							sm.WorkloadsObjs[workloadObj.Name].SetIotaWorkload(gwrk)
-							wc.Workloads = append(wc.Workloads, wl)
-							added = true
-						}
-					}
-					if !added {
-						//Network does not exists, delete workload too
-						delWloads.Workloads = append(delWloads.Workloads, gwrk)
-					}
-				}
-			*/
-		}
-
-		if len(delWloads.Workloads) != 0 {
-			delResp, err := topoClient.DeleteWorkloads(context.Background(), delWloads)
-			log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
-			if err != nil {
-				log.Errorf("Failed to delete old Apps. Err: %v", err)
-				return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
-			}
-
-		}
-	}
-
-	if len(wc.Workloads) != 0 {
-		workloads := []*workload.Workload{}
-		for _, wr := range wc.Workloads {
-			wr.VeniceWorkload.ObjectMeta.Labels = map[string]string{"MgmtIp": wr.GetMgmtIP()}
-			workloads = append(workloads, wr.VeniceWorkload)
-		}
-
-		if err := sm.CreateWorkloads(workloads); err != nil {
-			log.Errorf("unable to update the.Workloads label")
-		}
-	}
-
+	log.Infof("Skipping setup of workloads on vcenter model")
 	return nil
 }
 
@@ -472,6 +363,12 @@ func (sm *VcenterSysModel) InitConfig(scale, scaleData bool) error {
 		if err != nil {
 			//Ignore as it may not be present
 			log.Infof("Error deleting orch config %v", err)
+		}
+
+		err = sm.deleteAllWorkloads()
+		if err != nil {
+			log.Infof("Error Removing existing workloads %v", err)
+			return err
 		}
 
 		//Clean up networks too

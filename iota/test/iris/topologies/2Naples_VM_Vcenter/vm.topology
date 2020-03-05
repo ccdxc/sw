@@ -11,7 +11,7 @@ nodes:
       workloads:
         esx:
             type       : WORKLOAD_TYPE_VM
-            image      : "build-199"
+            image      : "build-1007"
             ncpu       : 4
             memory     : 4
             #Max number of concurrent workloads
@@ -28,7 +28,7 @@ nodes:
       workloads:
         esx:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-199"
+            image   : "build-1007"
             ncpu       : 4
             memory     : 4
             #Max number of concurrent workloads

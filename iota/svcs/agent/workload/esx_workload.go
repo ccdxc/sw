@@ -14,6 +14,7 @@ import (
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
+	"github.com/pensando/sw/iota/svcs/common/runner"
 	"golang.org/x/crypto/ssh"
 
 	"github.com/pkg/errors"
@@ -60,22 +61,33 @@ func newVMVcenterWorkload(name string, parent string, logger *log.Logger) Worklo
 		vmESXWorkloadBase: vmESXWorkloadBase{remoteWorkload: remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}}
 }
 
-func (vm *remoteWorkload) waitForVMUp(timeout time.Duration) error {
-	cTimeout := time.After(time.Second * time.Duration(timeout))
+func (vm *remoteWorkload) waitForVMUp() error {
+	cTimeout := time.After(time.Second * time.Duration(restartTimeout))
 	for {
-		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(vm.ip, "22"), 2*time.Second)
+		addr := vm.ip
+		addr = net.JoinHostPort(addr, "22")
+		conn, _ := net.DialTimeout("tcp", addr, 2*time.Second)
 		if conn != nil {
 			conn.Close()
-			break
+			//Make sure ssh also works
+			cfg := InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+			nrunner := runner.NewRunner(cfg)
+			command := fmt.Sprintf("date")
+			err := nrunner.Run(addr, command, constants.RunCommandForeground)
+			if err == nil {
+				break
+			}
 		}
 		select {
 		case <-cTimeout:
-			msg := fmt.Sprintf("Timeout system to be up %s ", vm.ip)
+			msg := fmt.Sprintf("Timeout system to be up %s ", addr)
+			log.Errorf(msg)
 			return errors.New(msg)
 		default:
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+
 	return nil
 }
 
@@ -122,6 +134,37 @@ func (vm *vmESXWorkloadBase) startVMAgent(args ...string) error {
 	if resp.NodeStatus.GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
 		vm.logger.Errorf("Failed to add naples esx personality %v", resp.NodeStatus.GetErrorMsg())
 		return err
+	}
+
+	return nil
+}
+
+func (vm *vmESXWorkloadBase) waitForSSH() error {
+
+	cTimeout := time.After(time.Second * time.Duration(restartTimeout))
+	for {
+		addr := vm.ip
+		addr = net.JoinHostPort(addr, "22")
+		conn, _ := net.DialTimeout("tcp", addr, 2*time.Second)
+		if conn != nil {
+			conn.Close()
+			//Make sure ssh also works
+			cfg := InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+			nrunner := runner.NewRunner(cfg)
+			command := fmt.Sprintf("date")
+			err := nrunner.Run(addr, command, constants.RunCommandForeground)
+			if err == nil {
+				break
+			}
+		}
+		select {
+		case <-cTimeout:
+			msg := fmt.Sprintf("Timeout system to be up %s ", addr)
+			log.Errorf(msg)
+			return errors.New(msg)
+		default:
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 
 	return nil
@@ -176,7 +219,7 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 
 	vm.logger.Info("Deploying VM Complete...")
 	vm.ip = vmInfo.IP
-	if err = vm.waitForVMUp(restartTimeout); err != nil {
+	if err = vm.waitForVMUp(); err != nil {
 		return errors.Wrap(err, "SSH connection failed")
 	}
 
@@ -398,7 +441,7 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 
 	vm.logger.Info("Deploying VM Complete...")
 	vm.ip = vmInfo.IP
-	if err = vm.waitForVMUp(restartTimeout); err != nil {
+	if err = vm.waitForVMUp(); err != nil {
 		return errors.Wrap(err, "SSH connection failed")
 	}
 
@@ -421,13 +464,11 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 		vm.logger.Errorf("Mounting VM directory failed")
 	}*/
 
-        mkdir := []string{"mkdir", "-p", vm.baseDir}
+	mkdir := []string{"mkdir", "-p", vm.baseDir}
 	cmdInfo, _, _ := vm.remoteWorkload.RunCommand(mkdir, "", 0, 0, false, false)
 	if cmdInfo.ExitCode != 0 {
 		return errors.New("mkdir command failed " + cmdInfo.Stderr)
 	}
-
-
 
 	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
 	vm.RunCommand(cmd, "", 0, 0, false, true)
