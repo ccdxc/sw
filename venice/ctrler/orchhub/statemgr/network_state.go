@@ -32,7 +32,7 @@ func (sm *Statemgr) OnNetworkCreate(w *ctkit.Network) error {
 		return err
 	}
 
-	err = sm.SendNetworkProbeEvent(&w.Network, kvstore.Created)
+	sm.SendNetworkProbeEvent(&w.Network, kvstore.Created)
 
 	return nil
 }
@@ -40,6 +40,12 @@ func (sm *Statemgr) OnNetworkCreate(w *ctkit.Network) error {
 // OnNetworkUpdate handles update event
 func (sm *Statemgr) OnNetworkUpdate(w *ctkit.Network, nw *network.Network) error {
 	_, err := NetworkStateFromObj(w)
+	if err != nil {
+		return err
+	}
+
+	sm.SendNetworkProbeEvent(nw, kvstore.Updated)
+
 	return err
 }
 

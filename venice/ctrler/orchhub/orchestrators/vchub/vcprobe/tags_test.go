@@ -69,7 +69,7 @@ func TestTags(t *testing.T) {
 		Wg:         &sync.WaitGroup{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
-	vcp.Start()
+	vcp.Start(false)
 
 	defer func() {
 		cancel()
@@ -78,8 +78,7 @@ func TestTags(t *testing.T) {
 	}()
 
 	// Start test
-	state.Wg.Add(1)
-	go vcp.StartWatchers()
+	vcp.StartWatchers()
 
 	time.Sleep(3 * time.Second)
 
@@ -236,7 +235,7 @@ func TestTagWriting(t *testing.T) {
 		Wg:         &sync.WaitGroup{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
-	vcp.Start()
+	vcp.Start(false)
 
 	defer func() {
 		cancel()
@@ -245,8 +244,7 @@ func TestTagWriting(t *testing.T) {
 	}()
 
 	// Start test
-	state.Wg.Add(1)
-	go vcp.StartWatchers()
+	vcp.StartWatchers()
 
 	time.Sleep(3 * time.Second)
 
@@ -376,7 +374,11 @@ func (h *testHelper) verifyTags(expMap map[string][]string) {
 
 	AssertEquals(h.t, len(expMap), len(items), "%s : Expected msgs did not match, %+v", getCaller(), items)
 	for _, item := range items {
-		m := item.Val.(defs.VCEventMsg)
+
+		m, ok := item.Val.(defs.VCEventMsg)
+		if !ok {
+			continue
+		}
 		expTags, ok := expMap[m.Key]
 		Assert(h.t, ok, "received event for unexpected key %s", m.Key)
 		for _, change := range m.Changes {
@@ -399,7 +401,10 @@ func (h *testHelper) getTagMsgsFromStore() []defs.Probe2StoreMsg {
 	for hasItems {
 		select {
 		case item := <-h.storeCh:
-			m := item.Val.(defs.VCEventMsg)
+			m, ok := item.Val.(defs.VCEventMsg)
+			if !ok {
+				continue
+			}
 			for _, change := range m.Changes {
 				if change.Name == string(defs.VMPropTag) {
 					items = append(items, item)

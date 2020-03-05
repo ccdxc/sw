@@ -60,6 +60,8 @@ const (
 	VCEvent = Probe2StoreMsgType("VCEvent")
 	// VCNotification indicates a notification (event) received from vCenter
 	VCNotification = Probe2StoreMsgType("VCNotification")
+	// VCConnectionStatus indicates probe has re-established connection
+	VCConnectionStatus = Probe2StoreMsgType("VCConnectionStatus")
 )
 
 // VmkWorkloadPrefix - used when creating name for dummy workload for vmkernel networking

@@ -46,6 +46,7 @@ type InstanceManager struct {
 	orchestratorMap   map[string]Orchestrator
 	stateMgr          *statemgr.Statemgr
 	vcenterList       string
+	vcHubOpts         []vchub.Option
 }
 
 // Stop stops the watcher
@@ -69,7 +70,7 @@ func (w *InstanceManager) stop() {
 }
 
 // NewInstanceManager creates a new watcher
-func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent) (*InstanceManager, error) {
+func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent, vcHubOpts []vchub.Option) (*InstanceManager, error) {
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	instance := &InstanceManager{
@@ -83,6 +84,7 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 		orchestratorMap:   make(map[string]Orchestrator),
 		stateMgr:          stateMgr,
 		instanceManagerCh: instanceManagerCh,
+		vcHubOpts:         vcHubOpts,
 	}
 
 	diagSvc := diagsvc.GetDiagnosticsService(globals.OrchHub, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, logger)
@@ -147,7 +149,7 @@ func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 	switch config.Spec.Type {
 	case orchestration.OrchestratorSpec_VCenter.String():
 		// If vCenter, call launch VCHub
-		vchubInst := vchub.LaunchVCHub(w.stateMgr, config, w.logger)
+		vchubInst := vchub.LaunchVCHub(w.stateMgr, config, w.logger, w.vcHubOpts...)
 		w.orchestratorMap[config.GetKey()] = vchubInst
 	}
 }

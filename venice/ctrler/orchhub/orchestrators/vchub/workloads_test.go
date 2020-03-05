@@ -24,7 +24,7 @@ import (
 func TestWorkloads(t *testing.T) {
 
 	dcName := "DC1"
-	dvsName := createDVSName(dcName)
+	dvsName := CreateDVSName(dcName)
 	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	macStr := conv.MacString(pNicMac)
 
@@ -248,6 +248,7 @@ func TestWorkloads(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -269,16 +270,16 @@ func TestWorkloads(t *testing.T) {
 					},
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+				addPGState(t, vchub, dcName, CreatePGName("PG1"), "PG1", "PG1")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG3", "10.1.1.0/24", "10.1.1.1", 300, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG3"), "PG3", "PG3")
+				addPGState(t, vchub, dcName, CreatePGName("PG3"), "PG3", "PG3")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG4", "10.1.1.0/24", "10.1.1.1", 400, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG4"), "PG4", "PG4")
+				addPGState(t, vchub, dcName, CreatePGName("PG4"), "PG4", "PG4")
 
 			},
 			verify: func(v *VCHub) {
@@ -436,6 +437,7 @@ func TestWorkloads(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -455,10 +457,10 @@ func TestWorkloads(t *testing.T) {
 					},
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+				addPGState(t, vchub, dcName, CreatePGName("PG1"), "PG1", "PG1")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -637,6 +639,7 @@ func TestWorkloads(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -657,10 +660,10 @@ func TestWorkloads(t *testing.T) {
 					},
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+				addPGState(t, vchub, dcName, CreatePGName("PG1"), "PG1", "PG1")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 
 			},
 			verify: func(v *VCHub) {
@@ -810,6 +813,7 @@ func TestWorkloads(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -829,10 +833,10 @@ func TestWorkloads(t *testing.T) {
 					},
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+				addPGState(t, vchub, dcName, CreatePGName("PG1"), "PG1", "PG1")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -962,6 +966,7 @@ func TestWorkloads(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -981,10 +986,10 @@ func TestWorkloads(t *testing.T) {
 					},
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+				addPGState(t, vchub, dcName, CreatePGName("PG1"), "PG1", "PG1")
 
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
-				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{

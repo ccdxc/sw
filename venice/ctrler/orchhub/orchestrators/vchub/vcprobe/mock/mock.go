@@ -63,7 +63,8 @@ func extractPvlanID(spec *types.DVPortgroupConfigSpec) (int32, error) {
 func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
 	pgs := v.VCProbe.ListPG(dcRef)
 
-	finder := v.VCProbe.GetFinderWithRLock()
+	client := v.GetClientWithRLock()
+	finder := v.CreateFinder(client)
 	dcList, err := finder.DatacenterList(context.Background(), "*")
 	if err != nil {
 		v.Log.Errorf("Mock Probe failed to list datacenters, %s", err)

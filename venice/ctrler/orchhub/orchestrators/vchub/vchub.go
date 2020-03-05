@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
@@ -14,6 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -38,12 +40,32 @@ type VCHub struct {
 	// TODO: don't use DC display name as key, use ID instead
 	DcMap        map[string]*PenDC
 	DcID2NameMap map[string]string
+	// Will be taken with write lock by sync
+	syncLock sync.RWMutex
+	// whether to act upon venice network events
+	// When we are disconnected, we do not want to act upon network events
+	// until we are reconnected and sync has finished.
+	// processVeniceEvents will be set to false once we are disconnected.
+	// Any network events will be drained and thrown out.
+	// Once connection is restored, sync will take syncLock and set processVeniceEvents to be
+	// true. Any new network events will be blocked until sync has finished, and then
+	// will be reacted to.
+	// A lock is needed for this flag since periodic sync can be triggered by another thread
+	// while the connection status is being reacted to in store
+	processVeniceEvents     bool
+	processVeniceEventsLock sync.Mutex
 	// Opts is options used during creation of this instance
-	opts []Option
+	opts         []Option
+	useMockProbe bool
 }
 
 // Option specifies optional values for vchub
 type Option func(*VCHub)
+
+// WithMockProbe uses a probe interceptor to handle issues with vcsim
+func WithMockProbe(v *VCHub) {
+	v.useMockProbe = true
+}
 
 // LaunchVCHub starts VCHub
 func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
@@ -112,28 +134,20 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 			opt(v)
 		}
 	}
-	// Store related go routines
+
 	v.Wg.Add(1)
 	go v.startEventsListener()
-
-	// Store must be created before probe for sync to work properly
 	v.createProbe(config)
-
-	v.sync()
-
-	v.Wg.Add(1)
-	go v.probe.StartWatchers()
-
-	v.DcMapLock.Lock()
-	defer v.DcMapLock.Unlock()
-	for _, dc := range v.DcMap {
-		v.probe.StartEventReceiver([]types.ManagedObjectReference{dc.dcRef})
-	}
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
-	v.probe = vcprobe.NewVCProbe(v.vcReadCh, v.vcEventCh, v.State)
-	v.probe.Start()
+	probe := vcprobe.NewVCProbe(v.vcReadCh, v.vcEventCh, v.State)
+	if v.useMockProbe {
+		v.probe = mock.NewProbeMock(probe)
+	} else {
+		v.probe = probe
+	}
+	v.probe.Start(false)
 }
 
 // Destroy tears down VCHub instance
@@ -141,15 +155,50 @@ func (v *VCHub) Destroy(delete bool) {
 	// Teardown probe and store
 	v.Log.Infof("Destroying VCHub....")
 
-	// Clearing probe/session state after all routines finish
-	// so that a thread in the middle of writing doesn't get a nil client
-	if delete {
-		v.Log.Infof("Cleaning up state on VCenter.")
-		v.deleteAllDVS()
-		v.DeleteHosts()
-	}
 	v.cancel()
 	v.Wg.Wait()
+
+	v.probe.ClearState()
+
+	if delete {
+		ctx, cancel := context.WithCancel(context.Background())
+		v.Ctx = ctx
+		v.cancel = cancel
+
+		// Create new probe in write only mode (we don't start watchers or update vcenter status)
+		v.probe = vcprobe.NewVCProbe(nil, nil, v.State)
+		v.probe.Start(true)
+
+		v.Log.Infof("Cleaning up state on VCenter.")
+		waitCh := make(chan bool, 1)
+
+		// Cleanup might end up getting blocked forever if vCenter cannot be reached
+		// Give up after 500 ms
+		v.Wg.Add(1)
+		go func() {
+			defer v.Wg.Done()
+			for !v.probe.IsSessionReady() {
+				select {
+				case <-v.Ctx.Done():
+					return
+				case <-time.After(50 * time.Millisecond):
+				}
+			}
+			v.deleteAllDVS()
+			waitCh <- true
+		}()
+		// Timeout limit for vcenter cleanup
+		select {
+		case <-waitCh:
+			v.Log.Infof("VCenter cleanup finished")
+		case <-time.After(500 * time.Millisecond):
+			v.Log.Infof("Failed to cleanup vcenter within 500ms")
+		}
+		v.cancel()
+		v.Wg.Wait()
+
+		v.DeleteHosts()
+	}
 
 	v.probe.ClearState()
 
@@ -172,7 +221,7 @@ func (v *VCHub) deleteAllDVS() {
 	for _, dc := range v.DcMap {
 		_, ok := v.ForceDCNames[dc.Name]
 		if len(v.ForceDCNames) > 0 && !ok {
-			log.Infof("Skipping deletion of DVS from %v.", dc.Name)
+			v.Log.Infof("Skipping deletion of DVS from %v.", dc.Name)
 			continue
 		}
 
@@ -180,7 +229,7 @@ func (v *VCHub) deleteAllDVS() {
 		for _, penDVS := range dc.DvsMap {
 			err := v.probe.RemovePenDVS(dc.Name, penDVS.DvsName, defaultRetryCount)
 			if err != nil {
-				log.Errorf("Failed deleting DVS %v in DC %v. Err : %v", penDVS.DvsName, dc.Name, err)
+				v.Log.Errorf("Failed deleting DVS %v in DC %v. Err : %v", penDVS.DvsName, dc.Name, err)
 			}
 		}
 		dc.Unlock()
@@ -196,14 +245,6 @@ func (v *VCHub) Sync() {
 		defer v.Wg.Done()
 		v.sync()
 	}()
-
-	// Resync the inventory
-	// Sync api server state needed for store.
-	// v.store.Sync()
-
-	// Gets diffs
-	// Pushes deletes/creates as watch events
-	// v.probe.Sync()
 }
 
 // Debug returns debug info

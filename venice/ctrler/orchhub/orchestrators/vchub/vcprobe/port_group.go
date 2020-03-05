@@ -59,7 +59,8 @@ func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgro
 // GetPenPG returns the PG if it exists, or an error
 func (v *VCProbe) GetPenPG(dcName string, pgName string, retry int) (*object.DistributedVirtualPortgroup, error) {
 	fn := func() (interface{}, error) {
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 		return v.getPenPG(dcName, pgName, finder)
 	}
@@ -148,7 +149,8 @@ func (v *VCProbe) RenamePG(dcName string, oldName string, newName string, retry 
 // RemovePenPG removes the pg with the given name
 func (v *VCProbe) RemovePenPG(dcName, pgName string, retry int) error {
 	fn := func() (interface{}, error) {
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
 		objPG, err := v.getPenPG(dcName, pgName, finder)

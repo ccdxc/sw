@@ -61,11 +61,11 @@ func TestVmotion(t *testing.T) {
 	defer s.Destroy()
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start()
+	mockProbe.Start(false)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -82,7 +82,7 @@ func TestVmotion(t *testing.T) {
 	logger.Infof("Creating PenDC for %s\n", dc.Obj.Reference().Value)
 	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc.Obj.Self.Value)
 	// Add DVS
-	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc.GetDVS(dvsName)
 	if !ok {
 		logger.Info("GetDVS Failed")
@@ -99,7 +99,7 @@ func TestVmotion(t *testing.T) {
 	// Create one PG for vmkNic
 	pgConfigSpec := []types.DVPortgroupConfigSpec{
 		types.DVPortgroupConfigSpec{
-			Name:     createPGName("vMotion_PG"),
+			Name:     CreatePGName("vMotion_PG"),
 			NumPorts: 8,
 			DefaultPortConfig: &types.VMwareDVSPortSetting{
 				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
@@ -113,7 +113,7 @@ func TestVmotion(t *testing.T) {
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
 	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], 1)
-	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"), 1)
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), 1)
 	AssertOk(t, err, "failed to add portgroup")
 
 	logger.Infof("===== Pre-Sync Initial config =====")

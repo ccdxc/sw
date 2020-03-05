@@ -36,7 +36,7 @@ func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logge
 	if resolver != nil {
 		apicl, err = apiclient.NewGrpcAPIClient(globals.OrchHub, apiSrvURL, logger, rpckit.WithBalancer(balancer.New(resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC Server [%s]\n", apiSrvURL)
+			logger.Warnf("Failed to connect to gRPC Server [%s]\n", apiSrvURL)
 		}
 	}
 
@@ -46,7 +46,7 @@ func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logge
 		logger.Errorf("Error initiating controller kit. Err: %v", err)
 		return nil, err
 	}
-	log.Infof("New ctkit controller created")
+	logger.Infof("New ctkit controller created")
 
 	stateMgr := &Statemgr{
 		apicl:             apicl,
@@ -126,36 +126,35 @@ func (s *Statemgr) SendNetworkProbeEvent(obj runtime.Object, evtType kvstore.Wat
 	if nw == nil {
 		return fmt.Errorf("object passed is not of network type. Object : %v", obj)
 	}
-
-	if len(nw.Spec.Orchestrators) == 0 {
-		return fmt.Errorf("network %v is not associated with any orchestrator", nw.ObjectMeta.Name)
-	}
-
-	for _, orch := range nw.Spec.Orchestrators {
-		// orchKey := fmt.Sprintf("%s/%s/%s", nw.ObjectMeta.Tenant, orch.Namespace, orch.Name)
-		orchKey := orch.Name
-		if len(orchKey) == 0 {
-			return fmt.Errorf("could not get orchestrator name")
-		}
-
-		err := s.SendProbeEvent(orchKey, obj, evtType)
-		if err != nil {
-			log.Errorf("Failed to send network probe event to %v. Err : %v", orchKey, err)
-		}
+	err := s.SendProbeEvent(obj, evtType, "")
+	if err != nil {
+		s.logger.Errorf("Failed to send network probe event, Err : %v", err)
+		return err
 	}
 
 	return nil
 }
 
 // SendProbeEvent send probe event to appropriate orchestrator
-func (s *Statemgr) SendProbeEvent(orchKey string, obj runtime.Object, evtType kvstore.WatchEventType) error {
-	log.Infof("Sending probe event - %v Type - %v to Orchestrator - %v", obj, evtType, orchKey)
-	ch, ok := s.probeCh[orchKey]
-	if !ok {
-		return fmt.Errorf("failed to get orchestrator channel for %s", orchKey)
+// If orchKey is blank, it will send to all orchestrators
+func (s *Statemgr) SendProbeEvent(obj runtime.Object, evtType kvstore.WatchEventType, orchKey string) error {
+	s.logger.Infof("Sending probe event - %v Type - %v to Orchestrator - %v", obj, evtType, orchKey)
+	s.probeChMutex.Lock()
+	defer s.probeChMutex.Unlock()
+	if len(orchKey) != 0 {
+		ch, ok := s.probeCh[orchKey]
+		if !ok {
+			return fmt.Errorf("failed to get orchestrator channel for %s", orchKey)
+		}
+
+		ch <- &kvstore.WatchEvent{Object: obj, Type: evtType}
+		return nil
 	}
 
-	ch <- &kvstore.WatchEvent{Object: obj, Type: evtType}
+	for _, ch := range s.probeCh {
+		ch <- &kvstore.WatchEvent{Object: obj, Type: evtType}
+	}
+
 	return nil
 }
 

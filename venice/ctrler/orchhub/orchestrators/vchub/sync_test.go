@@ -107,11 +107,11 @@ func TestVCSyncPG(t *testing.T) {
 
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start()
+	mockProbe.Start(false)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -119,11 +119,11 @@ func TestVCSyncPG(t *testing.T) {
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 
-	spec := testutils.GenPGConfigSpec(createPGName("pgStale"), 2, 3)
+	spec := testutils.GenPGConfigSpec(CreatePGName("pgStale"), 2, 3)
 	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
-	spec1 := testutils.GenPGConfigSpec(createPGName("pgModified"), 4, 5)
+	spec1 := testutils.GenPGConfigSpec(CreatePGName("pgModified"), 4, 5)
 	spec1.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan = &types.VmwareDistributedVirtualSwitchVlanIdSpec{
 		VlanId: 4,
 	}
@@ -141,7 +141,7 @@ func TestVCSyncPG(t *testing.T) {
 				if dc == nil {
 					return false, fmt.Errorf("Failed to find DC %s", name)
 				}
-				dvs := dc.GetPenDVS(createDVSName(name))
+				dvs := dc.GetPenDVS(CreateDVSName(name))
 				if dvs == nil {
 					return false, fmt.Errorf("Failed to find dvs in DC %s", name)
 				}
@@ -177,9 +177,9 @@ func TestVCSyncPG(t *testing.T) {
 
 	// n1 should only be in defaultDC
 	// n2 should be in both
-	pg1 := createPGName("pg1")
-	pg2 := createPGName("pg2")
-	pg3 := createPGName("pgModified")
+	pg1 := CreatePGName("pg1")
+	pg2 := CreatePGName("pg2")
+	pg3 := CreatePGName("pgModified")
 
 	dcPgMap := map[string][]string{
 		defaultTestParams.TestDCName: []string{pg1, pg2, pg3},
@@ -228,11 +228,11 @@ func TestVCSyncHost(t *testing.T) {
 
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start()
+	mockProbe.Start(false)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -247,12 +247,8 @@ func TestVCSyncHost(t *testing.T) {
 	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
 	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc1.Obj.Self.Value)
 	// Add DVS
-	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
-	if !ok {
-		logger.Info("GetDVS Failed")
-		os.Exit(1)
-	}
 	Assert(t, ok, "failed dvs create")
 
 	hostSystem1, err := dc1.AddHost("host1")
@@ -413,11 +409,11 @@ func TestVCSyncVM(t *testing.T) {
 
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start()
+	mockProbe.Start(false)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -431,7 +427,7 @@ func TestVCSyncVM(t *testing.T) {
 	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
 	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc1.Obj.Self.Value)
 	// Add DVS
-	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
 	if !ok {
 		logger.Info("GetDVS Failed")
@@ -457,10 +453,10 @@ func TestVCSyncVM(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	spec := testutils.GenPGConfigSpec(createPGName("pg1"), 2, 3)
+	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
 	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
 	AssertOk(t, err, "failed to create pg")
-	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, createPGName("pg1"), retryCount)
+	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
 	AssertOk(t, err, "failed to get pg")
 
 	// Setting up VMs
@@ -662,11 +658,11 @@ func TestVCSyncVmkNics(t *testing.T) {
 	defer s.Destroy()
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
-	mockProbe.Start()
+	mockProbe.Start(false)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -683,7 +679,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	logger.Infof("Creating PenDC for %s\n", dc.Obj.Reference().Value)
 	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc.Obj.Self.Value)
 	// Add DVS
-	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc.GetDVS(dvsName)
 	if !ok {
 		logger.Info("GetDVS Failed")
@@ -700,7 +696,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	// Create one PG for vmkNic
 	pgConfigSpec := []types.DVPortgroupConfigSpec{
 		types.DVPortgroupConfigSpec{
-			Name:     createPGName("vMotion_PG"),
+			Name:     CreatePGName("vMotion_PG"),
 			NumPorts: 8,
 			DefaultPortConfig: &types.VMwareDVSPortSetting{
 				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
@@ -714,7 +710,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
 	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
-	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"), retryCount)
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), retryCount)
 	AssertOk(t, err, "failed to add portgroup")
 
 	// Create Host
@@ -850,12 +846,11 @@ func TestVCSyncVmkNics(t *testing.T) {
 	testWorkloadMap[wlName] = testNICs
 	vchub.Wg.Add(1)
 	go vchub.startEventsListener()
-	vchub.Wg.Add(1)
-	go vchub.probe.StartWatchers()
+	vchub.probe.StartWatchers()
 	verifyVmkworkloads(testWorkloadMap, "VmkWorkload create with EP failed via watch")
 }
 
-func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
+func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	state := defs.State{

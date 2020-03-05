@@ -32,6 +32,13 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 			primaryVlan, secondaryVlan, err = d.UsegMgr.AssignVlansForPG(pgName)
 			if err != nil {
 				d.Log.Errorf("Failed to assign vlans for PG")
+				if err.Error() == "PG limit reached" {
+					// Generate error
+					evtMsg := fmt.Sprintf("Failed to create Network %s in Datacenter %s. Max network limit reached.", networkMeta.Name, d.DcName)
+					d.Log.Errorf(evtMsg)
+
+					recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+				}
 				return err
 			}
 		}
@@ -40,6 +47,7 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 	err = d.AddPenPGWithVlan(pgName, networkMeta, primaryVlan, secondaryVlan)
 	if err != nil {
 		evtMsg := fmt.Sprintf("Failed to set configuration for network %s in Datacenter %s", networkMeta.Name, d.DcName)
+		d.Log.Errorf("%s, err %s", evtMsg, err)
 		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
 	}
 	return err
@@ -74,8 +82,18 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 			},
 		},
 	}
+	moPG, err := d.probe.GetPGConfig(d.DcName, pgName, []string{"config"}, 1)
 
-	err := d.probe.AddPenPG(d.DcName, d.DvsName, &spec, defaultRetryCount)
+	if err == nil {
+		policySpec, ok := moPG.Config.Policy.(*types.VMwareDVSPortgroupPolicy)
+		if ok {
+			policySpec.VlanOverrideAllowed = true
+			policySpec.PortConfigResetAtDisconnect = true
+			spec.Policy = policySpec
+		}
+	}
+
+	err = d.probe.AddPenPG(d.DcName, d.DvsName, &spec, defaultRetryCount)
 	if err != nil {
 		return err
 	}
@@ -168,7 +186,7 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 
 	err := d.probe.RemovePenPG(d.DcName, pgName, defaultRetryCount)
 	if err != nil {
-		d.Log.Errorf("Failed to delete PG %s, removing management tag", pgName)
+		d.Log.Errorf("Failed to delete PG %s, removing management tag. Err %s", pgName, err)
 		tagErrs := d.probe.RemovePensandoTags(ref)
 		if len(tagErrs) != 0 {
 			d.Log.Errorf("Failed to remove tags, errs %v", tagErrs)

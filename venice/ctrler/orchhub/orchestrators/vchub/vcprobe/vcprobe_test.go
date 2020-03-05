@@ -109,16 +109,22 @@ func TestListAndWatch(t *testing.T) {
 		Wg:         &sync.WaitGroup{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
-	vcp.Start()
+	vcp.Start(false)
 
 	defer func() {
 		cancel()
 		state.Wg.Wait()
 	}()
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready")
 
 	// Start test
-	state.Wg.Add(1)
-	go vcp.StartWatchers()
+	vcp.StartWatchers()
+	vcp.StartWatchForDC(testParams.TestDCName, dc.Obj.Reference().Value)
 
 	eventMap := make(map[defs.VCObject][]defs.Probe2StoreMsg)
 	doneCh := make(chan bool)
@@ -128,7 +134,10 @@ func TestListAndWatch(t *testing.T) {
 			case <-doneCh:
 				return
 			case m := <-storeCh:
-				item := m.Val.(defs.VCEventMsg)
+				item, ok := m.Val.(defs.VCEventMsg)
+				if !ok {
+					continue
+				}
 				eventMap[item.VcObject] = append(eventMap[item.VcObject], m)
 
 				if len(eventMap[defs.HostSystem]) >= 1 &&
@@ -284,7 +293,7 @@ func TestDVSAndPG(t *testing.T) {
 		Wg:         &sync.WaitGroup{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
-	vcp.Start()
+	vcp.Start(false)
 
 	defer func() {
 
@@ -292,7 +301,12 @@ func TestDVSAndPG(t *testing.T) {
 		state.Wg.Wait()
 	}()
 
-	time.Sleep(time.Second * 3)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
 
 	// Trigger the test
 	//var mapPortsSetting *PenDVSPortSettings
@@ -385,6 +399,11 @@ func TestDVSAndPG(t *testing.T) {
 	_, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
 	Assert(t, err != nil, "Found deleted DVS %s", testParams.TestDVSName)
 
+	err = vcp.AddPenDC("DC2", 5)
+	AssertOk(t, err, "Failed to create DC")
+
+	err = vcp.RemovePenDC("DC2", 5)
+	AssertOk(t, err, "Failed to remove DC")
 }
 
 func TestEventReceiver(t *testing.T) {
@@ -517,10 +536,9 @@ func TestEventReceiver(t *testing.T) {
 			VmEvent: types.VmEvent{Event: types.Event{Key: 23, Vm: &vmEventArg}},
 		},
 	}
-	evtObjs := []types.ManagedObjectReference{dc.Obj.Reference()}
-	vcp.initEventTracker(evtObjs)
+	vcp.initEventTracker(dc.Obj.Reference())
 	vcp.receiveEvents(dc.Obj.Reference(), events1)
 	vcp.receiveEvents(dc.Obj.Reference(), events2)
 	vcp.receiveEvents(dc.Obj.Reference(), events3)
-	vcp.deleteEventTracker(evtObjs)
+	vcp.deleteEventTracker(dc.Obj.Reference())
 }

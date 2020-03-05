@@ -421,6 +421,9 @@ func TestOrchestratorCreateList(t *testing.T) {
 	nw, err = sm.ctrler.Orchestrator().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v Orchestrators", len(nw))
 
+	_, err = sm.GetProbeChannel(nw[0].GetName())
+	AssertOk(t, err, "Failed to get probe channel")
+
 	return
 }
 

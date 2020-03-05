@@ -60,7 +60,7 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 		}
 	}
 
-	dvsName := createDVSName(dcName)
+	dvsName := CreateDVSName(dcName)
 
 	// Create a pen dvs
 	// Pvlan allocations on the dvs
@@ -192,22 +192,39 @@ func (d *PenDC) GetPGByID(pgID string) *PenPG {
 }
 
 // RemovePG removes a PG from all DVS in this DC, unless dvsName is not blank
-func (d *PenDC) RemovePG(pgName string, dvsName string) []error {
+// Returns a map from dvs name to number of PG allocations still available
+func (d *PenDC) RemovePG(pgName string, dvsName string) (map[string]int, []error) {
+	d.Log.Infof("Removing PG %s...", pgName)
 	d.Lock()
 	defer d.Unlock()
 	var errs []error
 	for _, penDVS := range d.DvsMap {
+		d.Log.Debugf("Removing PG %s in dvs %s", pgName, penDVS.DvsName)
 		if dvsName == "" || dvsName == penDVS.DvsName {
 			err := penDVS.RemovePenPG(pgName)
 			if err != nil {
-				d.Log.Errorf("Delete PG for dvs %s returned err %s", penDVS.DvsName, err)
+				d.Log.Errorf("Delete PG %s for dvs %s returned err %s", pgName, penDVS.DvsName, err)
 				errs = append(errs, err)
 				continue
 			}
-			penDVS.UsegMgr.ReleaseVlansForPG(pgName)
+			err = penDVS.UsegMgr.ReleaseVlansForPG(pgName)
+			d.Log.Errorf("Delete PG %s for dvs %s returned err %s", pgName, penDVS.DvsName, err)
+			errs = append(errs, err)
 		}
 	}
-	return errs
+	d.Log.Debugf("Removing PG %s completed with errs: %v", pgName, errs)
+	remainingAlloc := d.getRemainingPGAllocations(dvsName)
+	return remainingAlloc, errs
+}
+
+func (d *PenDC) getRemainingPGAllocations(dvsName string) map[string]int {
+	ret := map[string]int{}
+	for _, penDVS := range d.DvsMap {
+		if dvsName == "" || dvsName == penDVS.DvsName {
+			ret[penDVS.DvsName] = penDVS.UsegMgr.GetRemainingPGCount()
+		}
+	}
+	return ret
 }
 
 func (d *PenDC) addHostNameKey(name, key string) {

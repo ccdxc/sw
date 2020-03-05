@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	probeChannelMax = 128
+	probeChannelMax = 500
 )
 
 // OrchestratorState is a wrapper for orchestration object

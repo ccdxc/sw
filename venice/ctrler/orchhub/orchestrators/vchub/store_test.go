@@ -73,9 +73,10 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 		}
 
 		vchub := &VCHub{
-			State:  state,
-			pCache: pCache,
-			DcMap:  map[string]*PenDC{},
+			State:        state,
+			pCache:       pCache,
+			DcMap:        map[string]*PenDC{},
+			DcID2NameMap: map[string]string{},
 		}
 		pCache.SetValidator("Workload", vchub.validateWorkload)
 		pCache.SetValidator(workloadVnicKind, validateWorkloadVnics)
@@ -83,10 +84,10 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 		vchub.StateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
 		vchub.vcReadCh = inbox
+		var mockCtrl *gomock.Controller
 		if tc.setup != nil {
-			mockCtrl := gomock.NewController(t)
+			mockCtrl = gomock.NewController(t)
 			tc.setup(vchub, mockCtrl)
-			defer mockCtrl.Finish()
 		}
 
 		vchub.Wg.Add(1)
@@ -113,6 +114,9 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 		case <-doneCh:
 		case <-time.After(1 * time.Second):
 			t.Fatalf("Store failed to shutdown within timeout")
+		}
+		if mockCtrl != nil {
+			mockCtrl.Finish()
 		}
 	}
 
@@ -164,7 +168,7 @@ func generateVNIC(macAddress, portKey, portgroupKey, vnicType string) types.Base
 }
 
 func addDCState(t *testing.T, vchub *VCHub, dcName string) {
-	dvsName := createDVSName(dcName)
+	dvsName := CreateDVSName(dcName)
 	useg, err := useg.NewUsegAllocator()
 	AssertOk(t, err, "Failed to create useg")
 	penDVS := &PenDVS{
@@ -192,11 +196,12 @@ func addDCState(t *testing.T, vchub *VCHub, dcName string) {
 		},
 		HostName2Key: map[string]string{},
 	}
+	vchub.DcID2NameMap["DC1"] = dcName
 }
 
 func addPGState(t *testing.T, vchub *VCHub, dcName, pgName, pgID, networkName string) {
 	penDC := vchub.GetDC(dcName)
-	penDVS := penDC.GetPenDVS(createDVSName(dcName))
+	penDVS := penDC.GetPenDVS(CreateDVSName(dcName))
 	penPG := &PenPG{
 		State:  vchub.State,
 		probe:  vchub.probe,
@@ -211,6 +216,7 @@ func addPGState(t *testing.T, vchub *VCHub, dcName, pgName, pgID, networkName st
 			Namespace: "default",
 		},
 	}
+	penDVS.UsegMgr.AssignVlansForPG(pgName)
 	penDVS.Pgs[pgName] = penPG
 	penDVS.pgIDMap[pgID] = penPG
 }

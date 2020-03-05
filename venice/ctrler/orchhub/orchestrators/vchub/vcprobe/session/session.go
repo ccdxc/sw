@@ -18,7 +18,7 @@ import (
 
 /**
  * This package ensures that consumers are always using
- * a connected client. VC client related objects (finder, client, viewMgr)
+ * a connected client. VC client related objects (client, viewMgr)
  * are only available through methods that first acquire a lock. The consumer
  * is expected to call the release lock function once they are done with the client.
  * This lock will only be free when SessionCheck is not re-establishing
@@ -40,7 +40,6 @@ type Session struct {
 	vcURL      *url.URL
 	logger     log.Logger
 
-	finder    *find.Finder
 	client    *govmomi.Client
 	viewMgr   *view.Manager
 	tagClient *tags.Manager
@@ -78,6 +77,11 @@ func (s *Session) IsSessionReady() bool {
 	return s.SessionReady
 }
 
+// CreateFinder creates a new finder given a client
+func (s *Session) CreateFinder(c *govmomi.Client) *find.Finder {
+	return find.NewFinder(c.Client, true)
+}
+
 // GetEventManagerWithRLock returns EventManager while holding read lock
 func (s *Session) GetEventManagerWithRLock() *event.Manager {
 	s.clientLock.RLock()
@@ -86,10 +90,10 @@ func (s *Session) GetEventManagerWithRLock() *event.Manager {
 
 // GetClientsWithRLock acquires a reader lock and returns the client objects
 // Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetClientsWithRLock() (*govmomi.Client, *find.Finder, *view.Manager, *tags.Manager) {
+func (s *Session) GetClientsWithRLock() (*govmomi.Client, *view.Manager, *tags.Manager) {
 	// Get lock
 	s.clientLock.RLock()
-	return s.client, s.finder, s.viewMgr, s.tagClient
+	return s.client, s.viewMgr, s.tagClient
 }
 
 // GetClientWithRLock acquires a reader lock and returns the govmomi client
@@ -98,14 +102,6 @@ func (s *Session) GetClientWithRLock() *govmomi.Client {
 	// Get lock
 	s.clientLock.RLock()
 	return s.client
-}
-
-// GetFinderWithRLock acquires a reader lock and returns the finder object
-// Caller must call ReleaseClientsRLock when they are done
-func (s *Session) GetFinderWithRLock() *find.Finder {
-	// Get lock
-	s.clientLock.RLock()
-	return s.finder
 }
 
 // GetViewManagerWithRLock acquires a reader lock and returns the view manager object
@@ -161,7 +157,6 @@ func (s *Session) clearSession() {
 	}
 	s.WatcherWg.Wait()
 	s.client = nil
-	s.finder = nil
 	s.viewMgr = nil
 	s.tagClient = nil
 	s.eventMgr = nil
@@ -208,7 +203,6 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		}
 
 		s.client = c
-		s.finder = find.NewFinder(c.Client, true)
 		s.viewMgr = view.NewManager(c.Client)
 		restCl := rest.NewClient(c.Client)
 		s.tagClient = tags.NewManager(restCl)

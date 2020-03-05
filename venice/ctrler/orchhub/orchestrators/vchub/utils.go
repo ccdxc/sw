@@ -58,7 +58,8 @@ func addNameLabel(labels map[string]string, name string) {
 	labels[NameKey] = name
 }
 
-func createPGName(networkName string) string {
+// CreatePGName creates the PG name
+func CreatePGName(networkName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultPGPrefix, networkName)
 }
 
@@ -71,10 +72,11 @@ func isPensandoPG(name string) bool {
 }
 
 func isPensandoDVS(name, dcName string) bool {
-	return createDVSName(dcName) == name
+	return CreateDVSName(dcName) == name
 }
 
-func createDVSName(dcName string) string {
+// CreateDVSName creates the DVS name
+func CreateDVSName(dcName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultDVSPrefix, dcName)
 }
 

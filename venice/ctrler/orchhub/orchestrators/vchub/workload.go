@@ -377,7 +377,7 @@ func (v *VCHub) releaseUsegVlans(wlObj *workload.Workload, old bool) error {
 		return fmt.Errorf("Cannot free microseg vlans - No DC for workload %s", wlObj.Name)
 	}
 	// TODO: Remove hardcoded dvs name
-	dvs := dc.GetPenDVS(createDVSName(dc.Name))
+	dvs := dc.GetPenDVS(CreateDVSName(dc.Name))
 	if old {
 		for _, intf := range wlObj.Status.Interfaces {
 			v.Log.Infof("Release old useg vlan %d for intf %s, workload %s, host %s", intf.MicroSegVlan,
@@ -404,7 +404,7 @@ func (v *VCHub) setVlanOverride(dcID string, wlObj *workload.Workload) error {
 	// for every microseg vlan of workload interfaces set it override vlan on
 	// corresponding interface of the DVS
 	dc := v.GetDCFromID(dcID)
-	dvs := dc.GetPenDVS(createDVSName(dc.Name))
+	dvs := dc.GetPenDVS(CreateDVSName(dc.Name))
 	for _, inf := range wlObj.Spec.Interfaces {
 		entry := v.getVnicInfoForWorkload(wlObj.Name, inf.MACAddress)
 		if entry == nil {
@@ -441,7 +441,7 @@ func (v *VCHub) reassignUsegs(dcName string, wlObj *workload.Workload) error {
 		v.Log.Errorf("%s", errMsg)
 		return errMsg
 	}
-	dvs := dc.GetPenDVS(createDVSName(dcName))
+	dvs := dc.GetPenDVS(CreateDVSName(dcName))
 
 	for i, inf := range wlObj.Spec.Interfaces {
 		// if we already have usegs in the workload object, try to allocate the same if avaialble
@@ -517,7 +517,7 @@ func (v *VCHub) releaseInterface(dcName string, inf *workload.WorkloadIntfSpec, 
 		}
 
 		// TODO: Remove hardcoded dvs name
-		dvs := dc.GetPenDVS(createDVSName(dcName))
+		dvs := dc.GetPenDVS(CreateDVSName(dcName))
 		err := dvs.UsegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
 		if err != nil {
 			v.Log.Errorf("Failed to release vlan %v", err)
@@ -639,7 +639,7 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 			continue
 		}
 
-		dvs := penDC.GetPenDVS(createDVSName(dcName))
+		dvs := penDC.GetPenDVS(CreateDVSName(dcName))
 
 		vlan, err := dvs.UsegMgr.GetVlanForVnic(inf.MACAddress, host)
 		if err == nil {
@@ -959,7 +959,7 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey str
 			// Delete this old interface from workload
 			v.Log.Infof("Deleting stale interface %v from workload %v", intf.MACAddress, wlName)
 			// Remove useg vlan allocation for this
-			penDC.GetPenDVS(createDVSName(penDC.Name)).UsegMgr.ReleaseVlanForVnic(intf.MACAddress, workloadObj.Spec.HostName)
+			penDC.GetPenDVS(CreateDVSName(penDC.Name)).UsegMgr.ReleaseVlanForVnic(intf.MACAddress, workloadObj.Spec.HostName)
 		}
 	}
 	if len(interfaces) == 0 {

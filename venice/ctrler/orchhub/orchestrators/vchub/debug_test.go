@@ -71,7 +71,7 @@ func TestDebug(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "n1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := vchub.probe.GetPenPG(defaultTestParams.TestDCName, createPGName("n1"), 1)
+		_, err := vchub.probe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("n1"), 1)
 		if err != nil {
 			return false, err
 		}

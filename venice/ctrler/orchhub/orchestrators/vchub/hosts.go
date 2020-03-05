@@ -262,6 +262,12 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 		return
 	}
 	penDC := v.GetDC(dcName)
+	v.deleteHostFromDc(obj, penDC)
+
+	return
+}
+
+func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 	hostName, ok := obj.Labels[NameKey]
 	if penDC != nil && ok {
 		if hKey, ok := penDC.findHostKeyByName(hostName); ok {
@@ -276,7 +282,6 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 	if err := v.StateMgr.Controller().Host().Delete(obj); err != nil {
 		v.Log.Errorf("Could not delete host from Venice %s", obj.Name)
 	}
-	return
 }
 
 // DeleteHosts deletes all host objects from API server for this VCHub instance

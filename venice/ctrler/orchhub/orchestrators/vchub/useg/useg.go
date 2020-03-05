@@ -54,11 +54,13 @@ type Inf interface {
 	ReleaseVlanForVnic(vnicKey string, host string) error
 	GetVlanForVnic(vnicKey string, host string) (int, error)
 	SetVlanForVnic(vnicKey string, host string, vlan int) error
+	GetRemainingVnicCount(host string) (int, error)
 	// TODO: support workload migration
 	// MigrationEvent(key string, oldHost string, newHost string)
 	AssignVlansForPG(pg string) (int, int, error)
 	GetVlansForPG(pg string) (int, int, error)
 	SetVlansForPG(pg string, vlan int) error
+	GetRemainingPGCount() int
 	ReleaseVlansForPG(pg string) error
 	Debug(params map[string]string) (interface{}, error)
 }
@@ -90,6 +92,9 @@ const FirstPGVlan = int(2)
 // FirstUsegVlan is the lowest value
 // that is used for useg assignment
 const FirstUsegVlan = int(1002)
+
+// MaxPGCount is the maximum number of PGs that can be created
+const MaxPGCount = (FirstUsegVlan - FirstPGVlan) / 2
 
 // IsPGVlanSecondary returns whether the given vlan is primary or secondary pvlan
 func IsPGVlanSecondary(vlan int) bool {
@@ -148,6 +153,18 @@ func (u *Allocator) GetVlanForVnic(vnicKey string, host string) (int, error) {
 	}
 
 	return vlanMgr.GetVlan(vnicKey)
+}
+
+// GetRemainingVnicCount returns the number of vnic allocations available
+func (u *Allocator) GetRemainingVnicCount(host string) (int, error) {
+	u.hostLock.Lock()
+	defer u.hostLock.Unlock()
+	vlanMgr, ok := u.hostMgrs[host]
+	if !ok {
+		return -1, fmt.Errorf("host %s has no assignments", host)
+	}
+
+	return vlanMgr.GetFreeVlanCount(), nil
 }
 
 // AssignVlansForPG assigns a primary and secondary vlan for the given PG
@@ -240,6 +257,14 @@ func (u *Allocator) GetVlansForPG(pg string) (int, int, error) {
 	}
 
 	return out1, out2, nil
+}
+
+// GetRemainingPGCount returns the number of PGs that can be assigned
+func (u *Allocator) GetRemainingPGCount() int {
+	u.pgLock.Lock()
+	defer u.pgLock.Unlock()
+
+	return u.pgVlanMgr.GetFreeVlanCount() / 2
 }
 
 // ReleaseVlansForPG releases the primary and secondary vlan assignments for the given PG

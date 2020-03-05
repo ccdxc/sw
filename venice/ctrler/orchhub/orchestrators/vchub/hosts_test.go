@@ -18,7 +18,7 @@ import (
 func TestHosts(t *testing.T) {
 
 	dcName := "DC1"
-	dvsName := createDVSName(dcName)
+	dvsName := CreateDVSName(dcName)
 	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	macStr := conv.MacString(pNicMac)
 

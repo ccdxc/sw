@@ -39,15 +39,15 @@ func (m *MockProbeInf) EXPECT() *MockProbeInfMockRecorder {
 }
 
 // Start mocks base method
-func (m *MockProbeInf) Start() error {
-	ret := m.ctrl.Call(m, "Start")
+func (m *MockProbeInf) Start(vcWriteOnly bool) error {
+	ret := m.ctrl.Call(m, "Start", vcWriteOnly)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Start indicates an expected call of Start
-func (mr *MockProbeInfMockRecorder) Start() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockProbeInf)(nil).Start))
+func (mr *MockProbeInfMockRecorder) Start(vcWriteOnly interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockProbeInf)(nil).Start), vcWriteOnly)
 }
 
 // IsSessionReady mocks base method
@@ -80,16 +80,6 @@ func (m *MockProbeInf) StartWatchers() {
 // StartWatchers indicates an expected call of StartWatchers
 func (mr *MockProbeInfMockRecorder) StartWatchers() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWatchers", reflect.TypeOf((*MockProbeInf)(nil).StartWatchers))
-}
-
-// StartEventReceiver mocks base method
-func (m *MockProbeInf) StartEventReceiver(refs []types.ManagedObjectReference) {
-	m.ctrl.Call(m, "StartEventReceiver", refs)
-}
-
-// StartEventReceiver indicates an expected call of StartEventReceiver
-func (mr *MockProbeInfMockRecorder) StartEventReceiver(refs interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartEventReceiver", reflect.TypeOf((*MockProbeInf)(nil).StartEventReceiver), refs)
 }
 
 // ListVM mocks base method
@@ -150,6 +140,50 @@ func (m *MockProbeInf) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostS
 // ListHosts indicates an expected call of ListHosts
 func (mr *MockProbeInfMockRecorder) ListHosts(dcRef interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListHosts", reflect.TypeOf((*MockProbeInf)(nil).ListHosts), dcRef)
+}
+
+// StopWatchForDC mocks base method
+func (m *MockProbeInf) StopWatchForDC(dcName, dcID string) {
+	m.ctrl.Call(m, "StopWatchForDC", dcName, dcID)
+}
+
+// StopWatchForDC indicates an expected call of StopWatchForDC
+func (mr *MockProbeInfMockRecorder) StopWatchForDC(dcName, dcID interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopWatchForDC", reflect.TypeOf((*MockProbeInf)(nil).StopWatchForDC), dcName, dcID)
+}
+
+// StartWatchForDC mocks base method
+func (m *MockProbeInf) StartWatchForDC(dcName, dcID string) {
+	m.ctrl.Call(m, "StartWatchForDC", dcName, dcID)
+}
+
+// StartWatchForDC indicates an expected call of StartWatchForDC
+func (mr *MockProbeInfMockRecorder) StartWatchForDC(dcName, dcID interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWatchForDC", reflect.TypeOf((*MockProbeInf)(nil).StartWatchForDC), dcName, dcID)
+}
+
+// AddPenDC mocks base method
+func (m *MockProbeInf) AddPenDC(dcName string, retry int) error {
+	ret := m.ctrl.Call(m, "AddPenDC", dcName, retry)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddPenDC indicates an expected call of AddPenDC
+func (mr *MockProbeInfMockRecorder) AddPenDC(dcName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenDC", reflect.TypeOf((*MockProbeInf)(nil).AddPenDC), dcName, retry)
+}
+
+// RemovePenDC mocks base method
+func (m *MockProbeInf) RemovePenDC(dcName string, retry int) error {
+	ret := m.ctrl.Call(m, "RemovePenDC", dcName, retry)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePenDC indicates an expected call of RemovePenDC
+func (mr *MockProbeInfMockRecorder) RemovePenDC(dcName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenDC", reflect.TypeOf((*MockProbeInf)(nil).RemovePenDC), dcName, retry)
 }
 
 // AddPenPG mocks base method

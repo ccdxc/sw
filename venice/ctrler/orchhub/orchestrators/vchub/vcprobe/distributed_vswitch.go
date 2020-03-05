@@ -18,7 +18,8 @@ type PenDVSPortSettings map[string]types.BaseVmwareDistributedVirtualSwitchVlanS
 func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, retry int) error {
 	fn := func() (interface{}, error) {
 		dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
 		// Check if it exists first
@@ -72,7 +73,8 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, r
 // GetPenDVS returns the DVS if it exists or an error
 func (v *VCProbe) GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error) {
 	fn := func() (interface{}, error) {
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 		return v.getPenDVS(dcName, dvsName, finder)
 	}
@@ -109,7 +111,8 @@ func (v *VCProbe) getPenDVS(dcName, dvsName string, finder *find.Finder) (*objec
 // RemovePenDVS removes the DVS
 func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 	fn := func() (interface{}, error) {
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
 		objDvs, err := v.getPenDVS(dcName, dvsName, finder)
@@ -138,7 +141,8 @@ func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 // GetPenDVSPorts returns the port configuration of the given dvs
 func (v *VCProbe) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
 	fn := func() (interface{}, error) {
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 		return v.getPenDVSPorts(dcName, dvsName, criteria, finder)
 	}
@@ -177,7 +181,8 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 		portKeys := make([]string, numPorts)
 		portSpecs := make([]types.DVPortConfigSpec, numPorts)
 
-		finder := v.GetFinderWithRLock()
+		client := v.GetClientWithRLock()
+		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
 		dvsObj, err := v.getPenDVS(dcName, dvsName, finder)

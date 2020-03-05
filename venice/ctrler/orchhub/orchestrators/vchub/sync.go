@@ -14,22 +14,33 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
-func (v *VCHub) sync() {
+// returns whether sync executed
+func (v *VCHub) sync() bool {
+	v.Log.Infof("VCHub sync called")
+
+	v.syncLock.Lock()
+	defer v.syncLock.Unlock()
+
 	v.Log.Infof("VCHub %v synching........", v)
+
 	// Check that probe session is connected
 	count := 3
 	for !v.probe.IsSessionReady() && count > 0 {
 		select {
 		case <-v.Ctx.Done():
-			return
+			return false
 		case <-time.After(1 * time.Second):
 			count--
 		}
 	}
 	if count == 0 {
 		v.Log.Infof("Probe session isn't connected, exiting sync...")
-		return
+		return false
 	}
+	// Once syncLock is given up, network events should be acted upon
+	v.processVeniceEventsLock.Lock()
+	v.processVeniceEvents = true
+	v.processVeniceEventsLock.Unlock()
 
 	opts := api.ListWatchOptions{}
 	// By the time this is called, the statemanager would have setup watchers to the API server
@@ -95,6 +106,7 @@ func (v *VCHub) sync() {
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
+	return true
 }
 
 func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
@@ -184,7 +196,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 		for _, nw := range networks {
 			for _, orch := range nw.Network.Spec.Orchestrators {
 				if orch.Name == v.VcID && orch.Namespace == dcName {
-					pgName := createPGName(nw.Network.Name)
+					pgName := CreatePGName(nw.Network.Name)
 					pgNameMap[pgName] = nw.Network.ObjectMeta
 				}
 			}
@@ -242,7 +254,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 			v.Log.Debugf("Checking nw %s", nw.Network.Name)
 			for _, orch := range nw.Network.Spec.Orchestrators {
 				if orch.Name == v.VcID && orch.Namespace == dcName {
-					pgName := createPGName(nw.Network.Name)
+					pgName := CreatePGName(nw.Network.Name)
 
 					err := penDVS.AddPenPG(pgName, nw.Network.ObjectMeta)
 					v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
@@ -268,7 +280,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 			if !isUplink {
 				err := v.probe.RemovePenPG(dcName, pg.Name, 1)
 				if err != nil {
-					v.Log.Errorf("Failed to delete PG %s, removing management tag", pg.Name)
+					v.Log.Errorf("Failed to delete PG %s, removing management tag. Err %s", pg.Name, err)
 					tagErrs := v.probe.RemovePensandoTags(pg.Reference())
 					if len(tagErrs) != 0 {
 						v.Log.Errorf("Failed to remove tags, errs %v", tagErrs)
@@ -286,7 +298,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 	v.Log.Infof("Syncing vms on DC %s============", dc.Name)
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)
-	penDvs := penDC.GetPenDVS(createDVSName(dcName))
+	penDvs := penDC.GetPenDVS(CreateDVSName(dcName))
 
 	pgKeyToName := map[string]string{}
 	for _, pg := range pgs {

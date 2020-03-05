@@ -59,7 +59,7 @@ func (v *VCHub) debugUseg(params map[string]string) (interface{}, error) {
 		return nil, fmt.Errorf("dc is a required param")
 	}
 	penDC := v.GetDC(dcName)
-	penDVS := penDC.GetDVS(createDVSName(dcName))
+	penDVS := penDC.GetDVS(CreateDVSName(dcName))
 	return penDVS.UsegMgr.Debug(params)
 }
 

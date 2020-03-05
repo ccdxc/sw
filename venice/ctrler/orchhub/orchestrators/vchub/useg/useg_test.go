@@ -23,6 +23,8 @@ func TestPG(t *testing.T) {
 	mgr.SetVlansForPG(key, FirstUsegVlan-3)
 	PGvlans[key] = []int{FirstUsegVlan - 4, FirstUsegVlan - 3}
 
+	tu.AssertEquals(t, MaxPGCount-2, mgr.GetRemainingPGCount(), "free PG Count did not match")
+
 	for index := 2; index < FirstUsegVlan-4; index += 2 {
 		key := fmt.Sprintf("PG-%d", index)
 		v1, v2, err := mgr.AssignVlansForPG(key)
@@ -30,6 +32,7 @@ func TestPG(t *testing.T) {
 		PGvlans[key] = []int{v1, v2}
 	}
 	// should be full, next assignment will fail
+	tu.AssertEquals(t, 0, mgr.GetRemainingPGCount(), "free PG Count did not match")
 	_, _, err = mgr.AssignVlansForPG("PG-fail")
 	tu.Assert(t, err != nil, "Assign PG should have failed")
 
@@ -63,6 +66,9 @@ func TestVlans(t *testing.T) {
 	// Assign 1 host till exhaustion
 	tu.AssertOk(t, err, "Failed to create useg mgr")
 
+	_, err = mgr.GetRemainingVnicCount("unknownHost")
+	tu.Assert(t, err != nil, "Get remaining vnic count for unknown host should have failed")
+
 	doneCh := make(chan bool)
 
 	assignAll := func(host string, usegVlans map[string]int) {
@@ -73,7 +79,10 @@ func TestVlans(t *testing.T) {
 			tu.AssertOk(t, err, "failed to assign vlan for %s", key)
 		}
 		// should be full, next assignment will fail
-		_, err := mgr.AssignVlanForVnic("EP-fail", host)
+		remaining, err := mgr.GetRemainingVnicCount(host)
+		tu.AssertOk(t, err, "Get remaining vnic count failed")
+		tu.AssertEquals(t, 0, remaining, "Remaining vnic count did not match")
+		_, err = mgr.AssignVlanForVnic("EP-fail", host)
 		tu.Assert(t, err != nil, "Assign EP should have failed")
 	}
 
@@ -85,7 +94,10 @@ func TestVlans(t *testing.T) {
 			tu.AssertOk(t, err, "failed to assign vlan for %s", key)
 		}
 		// should be full, next assignment will fail
-		_, err := mgr.AssignVlanForVnic("EP-fail", host)
+		remaining, err := mgr.GetRemainingVnicCount(host)
+		tu.AssertOk(t, err, "Get remaining vnic count failed")
+		tu.AssertEquals(t, 0, remaining, "Remaining vnic count did not match")
+		_, err = mgr.AssignVlanForVnic("EP-fail", host)
 		tu.Assert(t, err != nil, "Assign EP should have failed")
 	}
 

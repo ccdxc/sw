@@ -7,6 +7,7 @@ import (
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	instanceManager "github.com/pensando/sw/venice/ctrler/orchhub/instancemanager"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub"
 	"github.com/pensando/sw/venice/ctrler/orchhub/rpcserver"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
@@ -31,7 +32,8 @@ type Opts struct {
 	// DebugMode enables verbose logging and stack trace dump support.
 	DebugMode bool
 	// Resolver to use
-	Resolver resolver.Interface
+	Resolver  resolver.Interface
+	VCHubOpts []vchub.Option
 }
 
 // OrchCtrler specifies the structure
@@ -67,7 +69,7 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 		return nil, err
 	}
 
-	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh)
+	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh, opts.VCHubOpts)
 	if instance == nil || err != nil {
 		opts.Logger.Errorf("Failed to create instance manager. Err : %v", err)
 	}

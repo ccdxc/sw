@@ -1,6 +1,7 @@
 package vcprobe
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -62,46 +63,32 @@ func (v *VCProbe) newTagsProbe() {
 	}
 }
 
-// Start starts the client
-func (t *tagsProbe) Start() {
-	t.Log.Debugf("Start tags called")
-	t.Wg.Add(1)
-	go func() {
-		defer t.Wg.Done()
-		for !t.SessionReady {
-			select {
-			case <-t.Ctx.Done():
-				return
-			case <-time.After(50 * time.Millisecond):
-			}
-		}
-		t.Log.Debugf("Setting up tags...")
-		t.SetupVCTags()
-	}()
-}
-
 func (t *tagsProbe) StartWatch() {
 	t.Log.Debugf("Tag Start Watch starting")
 	t.pollTags()
 }
 
-func (t *tagsProbe) SetupVCTags() {
+// SetupVCTags continually tries to create tags until ctx is killed
+// Ctx should be derived from ClientCtx
+// Returns whether all tags were set up successfully
+func (t *tagsProbe) SetupVCTags(ctx context.Context) bool {
 	var tagCategory *tags.Category
 	var err error
-	retryUntilSuccessful := func(fn func() bool) {
-		for t.ClientCtx.Err() == nil {
+	retryUntilSuccessful := func(fn func() bool) bool {
+		for ctx.Err() == nil {
 			if fn() {
 				break
 			}
 			select {
-			case <-t.ClientCtx.Done():
-				return
+			case <-ctx.Done():
+				return false
 			case <-time.After(tagsPollDelay):
 			}
 		}
+		return true
 	}
 	// Create category
-	retryUntilSuccessful(func() bool {
+	completed := retryUntilSuccessful(func() bool {
 		tc := t.GetTagClientWithRLock()
 		defer t.ReleaseClientsRLock()
 		tagCategory, err = tc.GetCategory(t.ClientCtx, defs.VCTagCategory)
@@ -125,10 +112,13 @@ func (t *tagsProbe) SetupVCTags() {
 		t.Log.Errorf("Failed to create default category: %s", err)
 		return false
 	})
+	if !completed {
+		return false
+	}
 
 	// Get tags for category
 	var tagObjs []tags.Tag
-	retryUntilSuccessful(func() bool {
+	completed = retryUntilSuccessful(func() bool {
 		tc := t.GetTagClientWithRLock()
 		defer t.ReleaseClientsRLock()
 		var err error
@@ -144,9 +134,12 @@ func (t *tagsProbe) SetupVCTags() {
 	for _, tag := range tagObjs {
 		t.writeTagInfo[tag.Name] = tag.ID
 	}
+	if !completed {
+		return false
+	}
 
 	// Create VCTagManaged
-	retryUntilSuccessful(func() bool {
+	completed = retryUntilSuccessful(func() bool {
 		tc := t.GetTagClientWithRLock()
 		defer t.ReleaseClientsRLock()
 		if _, ok := t.writeTagInfo[t.managedTagName]; ok {
@@ -167,6 +160,10 @@ func (t *tagsProbe) SetupVCTags() {
 		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
 		return false
 	})
+	if !completed {
+		return false
+	}
+	return true
 }
 
 func (t *tagsProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
@@ -450,7 +447,9 @@ func (t *tagsProbe) genUpdates(chSet *DeltaStrSet) {
 			},
 		}
 		t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, pc)
-		t.outbox <- m
+		if t.outbox != nil {
+			t.outbox <- m
+		}
 	}
 }
 

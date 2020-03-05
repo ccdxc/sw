@@ -1,6 +1,7 @@
 package vcprobe
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -11,44 +12,54 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25/mo"
-	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 
-	"github.com/pensando/sw/api/generated/orchestration"
-	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
 const (
 	retryDelay = 500 * time.Millisecond
 )
 
+type dcCtxEntry struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
 // VCProbe represents an instance of a vCenter Interface
 // This is comprised of a SOAP interface and a REST interface
 type VCProbe struct {
 	*defs.State
 	*session.Session
-	outbox      chan<- defs.Probe2StoreMsg
-	eventCh     chan<- defs.Probe2StoreMsg
-	tp          *tagsProbe
-	Started     bool
-	vcProbeLock sync.Mutex
+	outbox       chan<- defs.Probe2StoreMsg
+	eventCh      chan<- defs.Probe2StoreMsg
+	tp           *tagsProbe
+	Started      bool
+	vcProbeLock  sync.Mutex
+	dcCtxMapLock sync.Mutex
+	// Map from ID to ctx to use
+	dcCtxMap map[string]dcCtxEntry
 }
 
 // ProbeInf is the interface Probe implements
 type ProbeInf interface {
-	Start() error
+	// Start runs the probe. If in vcWriteOnly mode, probe will only perform writes to vcenter
+	Start(vcWriteOnly bool) error
 	IsSessionReady() bool
 	ClearState()
 	StartWatchers()
-	StartEventReceiver(refs []types.ManagedObjectReference)
 	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
 	ListDC() []mo.Datacenter
 	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
 	ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup
 	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
+	StopWatchForDC(dcName, dcID string)
+	StartWatchForDC(dcName, dcID string)
+
+	// datacenter.go functions
+	AddPenDC(dcName string, retry int) error
+	RemovePenDC(dcName string, retry int) error
 
 	// port_group.go functions
 	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error
@@ -77,11 +88,12 @@ type ProbeInf interface {
 // NewVCProbe returns a new probe
 func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State) *VCProbe {
 	probe := &VCProbe{
-		State:   state,
-		Started: false,
-		outbox:  hOutbox,
-		eventCh: hEventCh,
-		Session: session.NewSession(state.Ctx, state.VcURL, state.Log),
+		State:    state,
+		Started:  false,
+		outbox:   hOutbox,
+		eventCh:  hEventCh,
+		Session:  session.NewSession(state.Ctx, state.VcURL, state.Log),
+		dcCtxMap: map[string]dcCtxEntry{},
 	}
 	probe.newTagsProbe()
 	return probe
@@ -89,7 +101,8 @@ func NewVCProbe(hOutbox, hEventCh chan<- defs.Probe2StoreMsg, state *defs.State)
 }
 
 // Start creates a client and view manager
-func (v *VCProbe) Start() error {
+// vcWriteOnly indicates that this probe is only used for writing to vcenter
+func (v *VCProbe) Start(vcWriteOnly bool) error {
 	v.Log.Info("Starting probe")
 	v.vcProbeLock.Lock()
 	if v.Started {
@@ -100,10 +113,10 @@ func (v *VCProbe) Start() error {
 	v.Wg.Add(1)
 	go v.PeriodicSessionCheck(v.Wg)
 
-	v.tp.Start()
-
-	v.Wg.Add(1)
-	go v.run()
+	if !vcWriteOnly {
+		v.Wg.Add(1)
+		go v.run()
+	}
 	v.vcProbeLock.Unlock()
 
 	return nil
@@ -137,6 +150,8 @@ func (v *VCProbe) ClearState() {
 
 // Run runs the probe
 func (v *VCProbe) connectionListen() {
+	// Send status event to vchub store
+	// Store writes status
 	v.Log.Infof("Connection listen Started")
 	// Listen to the session connection and update orch object
 	for {
@@ -144,139 +159,178 @@ func (v *VCProbe) connectionListen() {
 		case <-v.Ctx.Done():
 			return
 		case connErr := <-v.ConnUpdate:
-			o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
-			if err != nil {
-				// orchestrator object does not exists anymore, not need to run the probe
-				v.Log.Infof("Orchestrator Object %v does not exist, no need to start the probe",
-					v.OrchConfig.GetKey())
-				return
-			}
 			if connErr == nil {
-				v.Log.Infof("Updating orchestrator connection status to %v",
-					orchestration.OrchestratorStatus_Success.String())
-				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
-				o.Write()
-			} else {
-				v.Log.Infof("Updating orchestrator connection status to %v",
-					orchestration.OrchestratorStatus_Failure.String())
-				o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
-				o.Write()
-
-				evt := eventtypes.ORCH_CONNECTION_ERROR
-				evtMsg := connErr.Error()
-				// Generate event depending on error type
-				// Check if it is a credential issue
-				if soap.IsSoapFault(connErr) {
-					soapErr := soap.ToSoapFault(connErr)
-					evtMsg = soapErr.String
-					if _, ok := soapErr.Detail.Fault.(types.InvalidLogin); ok {
-						// Login error
-						evt = eventtypes.ORCH_LOGIN_FAILURE
-					}
+				// Verify if tags are created now that session is ready
+				// If tag server is having issues (503 service unavailable),
+				// we don't want to block processing vcenter events
+				// If after blocking for 500ms the tags are not set up, we start a routine
+				// in the backround to retry the tag creation, and move on
+				ctx, tCancel := context.WithTimeout(v.ClientCtx, 500*time.Millisecond)
+				tagsCreated := v.tp.SetupVCTags(ctx)
+				tCancel()
+				if !tagsCreated {
+					v.WatcherWg.Add(1)
+					go func() {
+						defer v.WatcherWg.Done()
+						v.tp.SetupVCTags(v.ClientCtx)
+					}()
 				}
-				recorder.Event(evt, evtMsg, v.State.OrchConfig)
 			}
+
+			if v.outbox != nil {
+				m := defs.Probe2StoreMsg{
+					MsgType: defs.VCConnectionStatus,
+					Val:     connErr,
+				}
+				v.outbox <- m
+			}
+
 		}
 	}
 }
 
+// If fn returns false, the function will not retry
+func (v *VCProbe) tryForever(fn func() bool) {
+	if !v.SessionReady {
+		return
+	}
+	v.WatcherWg.Add(1)
+	go func() {
+		defer v.WatcherWg.Done()
+		for {
+			if v.ClientCtx.Err() != nil {
+				return
+			}
+			retry := fn()
+			if !retry {
+				return
+			}
+			v.Log.Infof("try forever exited, retrying...")
+			time.Sleep(retryDelay)
+		}
+	}()
+}
+
 // StartWatchers starts the watches for vCenter objects
 func (v *VCProbe) StartWatchers() {
-	defer v.Wg.Done()
-
-	for !v.Started {
-		if v.Ctx.Err() != nil {
-			return
-		}
-		time.Sleep(1 * time.Second)
+	if !v.Started || !v.IsSessionReady() {
+		return
 	}
 	v.Log.Debugf("Start Watchers starting")
 
-	for v.Ctx.Err() == nil {
+	// Adding to watcher group so that clientCtx will be valid when accessed
+	v.WatcherWg.Add(1)
+	go func() {
+		defer v.WatcherWg.Done()
+		if !v.Started || !v.IsSessionReady() {
+			return
+		}
+		for v.ClientCtx.Err() == nil {
 
-		tryForever := func(fn func()) {
-			for !v.SessionReady {
-				select {
-				case <-v.Ctx.Done():
-					return
-				case <-time.After(50 * time.Millisecond):
-				}
+			// DC watch
+			v.tryForever(func() bool {
+				v.Log.Infof("DC watch Started")
+				v.startWatch(v.ClientCtx, defs.Datacenter, []string{"name"},
+					v.sendVCEvent, nil)
+				return true
+			})
+
+			v.tryForever(func() bool {
+				v.tp.StartWatch()
+				v.Log.Infof("tag probe finished")
+				return true
+			})
+			// tryForever(func() {
+			// 	// Should create hosts from this event
+			// 	v.startWatch(defs.VmwareDistributedVirtualSwitch, []string{"config"}, v.processDVSEvent)
+			// })
+			select {
+			case <-v.ClientCtx.Done():
 			}
-			v.WatcherWg.Add(1)
-			go func() {
-				defer v.WatcherWg.Done()
-				for {
-					if v.ClientCtx.Err() != nil {
-						return
-					}
-					fn()
-					time.Sleep(retryDelay)
-				}
-			}()
+
 		}
 
-		// DC watch
-		tryForever(func() {
-			v.Log.Debugf("DC watch Started")
-			v.startWatch(defs.Datacenter, []string{"name"},
-				func(update types.ObjectUpdate, kind defs.VCObject) {
-					// Sending dc event
-					v.sendVCEvent(update, kind)
-					var dcName string
-					for _, prop := range update.ChangeSet {
-						dcName = prop.Val.(string)
-					}
+	}()
 
-					_, ok := v.ForceDCNames[dcName]
-					if len(v.ForceDCNames) > 0 && !ok {
-						v.Log.Infof("Skipping DC event for DC %s", dcName)
-						return
-					}
+	return
+}
 
-					// Starting watches on objects inside the given DC
-					tryForever(func() {
-						v.Log.Debugf("Host watch Started on DC %s", dcName)
-						v.startWatch(defs.HostSystem, []string{"config", "name"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
-					})
-
-					tryForever(func() {
-						v.Log.Debugf("VM watch Started on DC %s", dcName)
-						vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
-						v.startWatch(defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
-					})
-					tryForever(func() {
-						v.Log.Debugf("PG watch Started")
-						v.startWatch(defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
-					})
-
-				}, nil)
-		})
-
-		tryForever(func() {
-			v.tp.StartWatch()
-			v.Log.Infof("tag probe finished")
-		})
-		// tryForever(func() {
-		// 	// Should create hosts from this event
-		// 	v.startWatch(defs.VmwareDistributedVirtualSwitch, []string{"config"}, v.processDVSEvent)
-		// })
-
-		// If watcher context ends, we restart the watches
-		select {
-		case <-v.ClientCtx.Done():
-		}
-
+// StopWatchForDC terminates DC level watchers
+func (v *VCProbe) StopWatchForDC(dcName, dcID string) {
+	v.dcCtxMapLock.Lock()
+	defer v.dcCtxMapLock.Unlock()
+	// Cancel watch for this DC
+	ctxEntry, ok := v.dcCtxMap[dcID]
+	if !ok {
+		v.Log.Infof("DC %s removed, but found no active watchers", dcID)
+	} else {
+		v.Log.Infof("Canceling watchers for DC %s", dcID)
+		ctxEntry.cancel()
+		delete(v.dcCtxMap, dcID)
 	}
 
 	return
 }
 
-func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(objUpdate types.ObjectUpdate, kind defs.VCObject), container *types.ManagedObjectReference) {
+// StartWatchForDC starts DC level watchers
+func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
+	v.dcCtxMapLock.Lock()
+	defer v.dcCtxMapLock.Unlock()
+	if _, ok := v.dcCtxMap[dcID]; ok {
+		v.Log.Infof("DC watchers already running for DC %s", dcName)
+		// watchers already exist
+		return
+	}
+
+	if !v.IsSessionReady() {
+		return
+	}
+
+	// Starting watches on objects inside the given DC
+	ctx, cancel := context.WithCancel(v.ClientCtx)
+	v.dcCtxMap[dcID] = dcCtxEntry{ctx, cancel}
+
+	ref := types.ManagedObjectReference{
+		Type:  string(defs.Datacenter),
+		Value: dcID,
+	}
+
+	v.tryForever(func() bool {
+		v.Log.Debugf("Host watch Started on DC %s", dcName)
+		v.startWatch(ctx, defs.HostSystem, []string{"config", "name"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
+		if ctx.Err() != nil {
+			return false
+		}
+		return true
+	})
+
+	v.tryForever(func() bool {
+		v.Log.Debugf("VM watch Started on DC %s", dcName)
+		vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
+		v.startWatch(ctx, defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(dcID, dcName), &ref)
+		if ctx.Err() != nil {
+			return false
+		}
+		return true
+	})
+	v.tryForever(func() bool {
+		v.Log.Debugf("PG watch Started")
+		v.startWatch(ctx, defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
+		if ctx.Err() != nil {
+			return false
+		}
+		return true
+	})
+	v.WatcherWg.Add(1)
+	go v.runEventReceiver(ref)
+}
+
+func (v *VCProbe) startWatch(ctx context.Context, vcKind defs.VCObject, props []string, updateFn func(objUpdate types.ObjectUpdate, kind defs.VCObject), container *types.ManagedObjectReference) {
 	v.Log.Debugf("Start watch called for %s", vcKind)
 	kind := string(vcKind)
 
 	var err error
-	client, _, viewMgr, _ := v.GetClientsWithRLock()
+	client, viewMgr, _ := v.GetClientsWithRLock()
 	v.ReleaseClientsRLock()
 
 	root := client.ServiceContent.RootFolder
@@ -285,7 +339,7 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 	}
 	kinds := []string{}
 
-	cView, err := viewMgr.CreateContainerView(v.ClientCtx, *container, kinds, true)
+	cView, err := viewMgr.CreateContainerView(ctx, *container, kinds, true)
 	if err != nil {
 		v.Log.Errorf("CreateContainerView returned %v", err)
 		v.CheckSession = true
@@ -309,13 +363,13 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 	}
 
 	for {
-		err = property.WaitForUpdates(v.ClientCtx, property.DefaultCollector(client.Client), filter, updFunc)
+		err = property.WaitForUpdates(ctx, property.DefaultCollector(client.Client), filter, updFunc)
 
 		if err != nil {
 			v.Log.Errorf("property.WaitForView returned %v", err)
 		}
 
-		if v.ClientCtx.Err() != nil {
+		if ctx.Err() != nil {
 			return
 		}
 		v.Log.Infof("%s property.WaitForView exited", kind)
@@ -338,7 +392,9 @@ func (v *VCProbe) sendVCEvent(update types.ObjectUpdate, kind defs.VCObject) {
 		},
 	}
 	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: %+v", key, kind, update.ChangeSet)
-	v.outbox <- m
+	if v.outbox != nil {
+		v.outbox <- m
+	}
 }
 
 func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update types.ObjectUpdate, kind defs.VCObject) {
@@ -357,7 +413,9 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 			},
 		}
 		v.Log.Debugf("Sending message to store, key: %s, obj: %s", key, kind)
-		v.outbox <- m
+		if v.outbox != nil {
+			v.outbox <- m
+		}
 	}
 }
 
@@ -387,7 +445,7 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 
 // ListObj performs a list operation in vCenter
 func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
-	client, _, viewMgr, _ := v.GetClientsWithRLock()
+	client, viewMgr, _ := v.GetClientsWithRLock()
 	defer v.ReleaseClientsRLock()
 
 	root := client.ServiceContent.RootFolder
@@ -479,7 +537,10 @@ func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interfac
 			return ret, err
 		}
 		i++
-		v.CheckSession = true
+		if i < count {
+			v.Log.Errorf("oper failed: %s, retrying...", err)
+			v.CheckSession = true
+		}
 		select {
 		case <-v.ClientCtx.Done():
 			return nil, err
@@ -489,49 +550,42 @@ func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interfac
 	return nil, err
 }
 
-// StartEventReceiver starts receiving events on specified objects
-func (v *VCProbe) StartEventReceiver(refs []types.ManagedObjectReference) {
-	// This is called from another watcher, so ClientCtx is protected by WatcherWg
-	// Increment the WatcherWg counter
-	// It is also called from store when newDC is detected. Use Wg for that
-	if v.Ctx == nil {
-		// This can happen during unit tests where client login may not be done at all
+func (v *VCProbe) initEventTracker(ref types.ManagedObjectReference) {
+	v.EventTrackerLock.Lock()
+	defer v.EventTrackerLock.Unlock()
+	v.Log.Debugf("Start Event Receiver for %s", ref.Value)
+	v.LastEvent[ref.Value] = 0
+}
+
+func (v *VCProbe) deleteEventTracker(ref types.ManagedObjectReference) {
+	v.EventTrackerLock.Lock()
+	defer v.EventTrackerLock.Unlock()
+	if _, ok := v.LastEvent[ref.Value]; ok {
+		v.Log.Infof("Stop event receiver for %s", ref.Value)
+		delete(v.LastEvent, ref.Value)
+	}
+}
+
+func (v *VCProbe) runEventReceiver(ref types.ManagedObjectReference) {
+	defer v.WatcherWg.Done()
+	v.initEventTracker(ref)
+	defer v.deleteEventTracker(ref)
+
+	v.dcCtxMapLock.Lock()
+	// XXX
+	dcID := ref.Value
+	ctxEntry, ok := v.dcCtxMap[dcID]
+	v.dcCtxMapLock.Unlock()
+	if !ok {
+		v.Log.Infof("No context for DC %s", dcID)
 		return
 	}
-	v.WatcherWg.Add(1)
-	go v.runEventReceiver(refs)
-}
-
-func (v *VCProbe) initEventTracker(refs []types.ManagedObjectReference) {
-	v.EventTrackerLock.Lock()
-	defer v.EventTrackerLock.Unlock()
-	for _, r := range refs {
-		v.Log.Debugf("Start Event Receiver for %s", r.Value)
-		v.LastEvent[r.Value] = 0
-	}
-}
-
-func (v *VCProbe) deleteEventTracker(refs []types.ManagedObjectReference) {
-	v.EventTrackerLock.Lock()
-	defer v.EventTrackerLock.Unlock()
-	for _, ref := range refs {
-		if _, ok := v.LastEvent[ref.Value]; ok {
-			v.Log.Infof("Stop event receiver for %s", ref.Value)
-			delete(v.LastEvent, ref.Value)
-		}
-	}
-}
-
-func (v *VCProbe) runEventReceiver(refs []types.ManagedObjectReference) {
-	defer v.WatcherWg.Done()
-	v.initEventTracker(refs)
-	defer v.deleteEventTracker(refs)
-
+	ctx := ctxEntry.ctx
 releaseEventTracker:
-	for v.ClientCtx.Err() == nil {
+	for ctx.Err() == nil {
 		for !v.SessionReady {
 			select {
-			case <-v.ClientCtx.Done():
+			case <-ctx.Done():
 				break releaseEventTracker
 			case <-time.After(50 * time.Millisecond):
 			}
@@ -544,10 +598,10 @@ releaseEventTracker:
 		// Events() return after delivering last N events, restart it
 		// TODO there should be a way to request events newer than a eventId, not clear if that is
 		// supported
-		eventMgr.Events(v.ClientCtx, refs, 10, false, false, v.receiveEvents)
+		eventMgr.Events(ctx, []types.ManagedObjectReference{ref}, 10, false, false, v.receiveEvents)
 		time.Sleep(500 * time.Millisecond)
 	}
-	v.Log.Infof("Event Receiver Exited")
+	v.Log.Infof("Event Receiver for DC %s Exited", dcID)
 }
 
 func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent) error {
@@ -701,7 +755,10 @@ func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types
 }
 
 func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg interface{}) {
-	// TODO: create a new high priority channel for events
+	if v.eventCh == nil {
+		return
+	}
+
 	switch msgType {
 	case defs.VMotionStart:
 		v.eventCh <- defs.Probe2StoreMsg{
