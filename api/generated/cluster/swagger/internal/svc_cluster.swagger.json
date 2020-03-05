@@ -6497,7 +6497,7 @@
         "spec": {
           "$ref": "#/definitions/clusterDSCProfileSpec"
         },
-        "status.omitempty": {
+        "status": {
           "$ref": "#/definitions/clusterDSCProfileStatus"
         }
       },
@@ -6538,7 +6538,11 @@
             "transparent",
             "insertion"
           ],
-          "default": "transparent"
+          "default": "transparent",
+          "x-ui-hints": {
+            "insertion": "Insertion",
+            "transparent": "Transparent"
+          }
         },
         "policy-mode": {
           "type": "string",
@@ -6547,7 +6551,12 @@
             "flowaware",
             "enforced"
           ],
-          "default": "basenet"
+          "default": "basenet",
+          "x-ui-hints": {
+            "basenet": "BaseNet",
+            "enforced": "Enforced",
+            "flowaware": "FlowAware"
+          }
         }
       },
       "description": "ProfileSpec - Spec applicable to DSC."

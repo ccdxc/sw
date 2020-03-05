@@ -6595,7 +6595,7 @@
         "spec": {
           "$ref": "#/definitions/clusterDSCProfileSpec"
         },
-        "status.omitempty": {
+        "status": {
           "$ref": "#/definitions/clusterDSCProfileStatus"
         }
       },
@@ -6615,9 +6615,6 @@
         },
         "spec": {
           "$ref": "#/definitions/clusterDSCProfileSpec"
-        },
-        "status.omitempty": {
-          "$ref": "#/definitions/clusterDSCProfileStatus"
         }
       },
       "description": "Profile."
@@ -6657,7 +6654,11 @@
             "transparent",
             "insertion"
           ],
-          "default": "transparent"
+          "default": "transparent",
+          "x-ui-hints": {
+            "insertion": "Insertion",
+            "transparent": "Transparent"
+          }
         },
         "policy-mode": {
           "type": "string",
@@ -6666,7 +6667,12 @@
             "flowaware",
             "enforced"
           ],
-          "default": "basenet"
+          "default": "basenet",
+          "x-ui-hints": {
+            "basenet": "BaseNet",
+            "enforced": "Enforced",
+            "flowaware": "FlowAware"
+          }
         }
       },
       "description": "ProfileSpec - Spec applicable to DSC."
@@ -6684,13 +6690,10 @@
           "type": "string"
         },
         "meta": {
-          "$ref": "#/definitions/apiObjectMeta"
+          "$ref": "#/definitions/apiObjectMetaUpdate"
         },
         "spec": {
           "$ref": "#/definitions/clusterDSCProfileSpec"
-        },
-        "status.omitempty": {
-          "$ref": "#/definitions/clusterDSCProfileStatus"
         }
       },
       "description": "Profile."

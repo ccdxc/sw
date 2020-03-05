@@ -15,13 +15,18 @@ import "github.com/pensando/sw/api/meta.proto";
 message DSCProfileSpec {
     enum Fwd_Mode 
     {
+       // ui-hint: Transparent
        TRANSPARENT = 0; //Transparent Packet forwarding mode
+       // ui-hint: Insertion
        INSERTION   = 1; //MicroSeg mode where DSC attracts traffic
     }
     enum FlowPolicy_Mode
     {
+       // ui-hint: BaseNet
        BASENET   = 0; // Basic networking mode.
+       // ui-hint: FlowAware
        FLOWAWARE = 1; // Flows are learnt in this mode
+       // ui-hint: Enforced
        ENFORCED  = 2; // Flows are learnt and policy enforced
     }
     string FwdMode    = 1 [(venice.check) = "StrEnum(DSCProfileSpec.Fwd_Mode)",
@@ -38,7 +43,7 @@ message DSCProfile {
     api.TypeMeta          T      = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta        O      = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     DSCProfileSpec        Spec   = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,inline"];
-    DSCProfileStatus      Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status.omitempty"];
+    DSCProfileStatus      Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
 

@@ -154,6 +154,17 @@ export enum ClusterDSCCondition_status_uihint {
     'unknown' = "Unknown",
 }
 
+export enum ClusterDSCProfileSpec_fwd_mode_uihint {
+    'insertion' = "Insertion",
+    'transparent' = "Transparent",
+}
+
+export enum ClusterDSCProfileSpec_policy_mode_uihint {
+    'basenet' = "BaseNet",
+    'enforced' = "Enforced",
+    'flowaware' = "FlowAware",
+}
+
 export enum ClusterDistributedServiceCardSpec_mgmt_mode_uihint {
     'host' = "Host",
     'network' = "Network",
@@ -257,6 +268,8 @@ export class AllEnums {
     ClusterClusterCondition_status_uihint = ClusterClusterCondition_status_uihint;
     ClusterDSCCondition_type_uihint = ClusterDSCCondition_type_uihint;
     ClusterDSCCondition_status_uihint = ClusterDSCCondition_status_uihint;
+    ClusterDSCProfileSpec_fwd_mode_uihint = ClusterDSCProfileSpec_fwd_mode_uihint;
+    ClusterDSCProfileSpec_policy_mode_uihint = ClusterDSCProfileSpec_policy_mode_uihint;
     ClusterDistributedServiceCardSpec_mgmt_mode_uihint = ClusterDistributedServiceCardSpec_mgmt_mode_uihint;
     ClusterDistributedServiceCardSpec_network_mode_uihint = ClusterDistributedServiceCardSpec_network_mode_uihint;
     ClusterDistributedServiceCardStatus_admission_phase_uihint = ClusterDistributedServiceCardStatus_admission_phase_uihint;

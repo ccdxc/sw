@@ -16,7 +16,7 @@ export interface IClusterDSCProfile {
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
     'spec'?: IClusterDSCProfileSpec;
-    'status.omitempty'?: IClusterDSCProfileStatus;
+    'status'?: IClusterDSCProfileStatus;
     '_ui'?: any;
 }
 
@@ -28,7 +28,7 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
     'spec': ClusterDSCProfileSpec = null;
-    'status.omitempty': ClusterDSCProfileStatus = null;
+    'status': ClusterDSCProfileStatus = null;
     public static propInfo: { [prop in keyof IClusterDSCProfile]: PropInfoItem } = {
         'kind': {
             required: false,
@@ -46,7 +46,7 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
             required: false,
             type: 'object'
         },
-        'status.omitempty': {
+        'status': {
             required: false,
             type: 'object'
         },
@@ -76,7 +76,7 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
         super();
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new ClusterDSCProfileSpec();
-        this['status.omitempty'] = new ClusterDSCProfileStatus();
+        this['status'] = new ClusterDSCProfileStatus();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -114,9 +114,9 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
             this['spec'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['status.omitempty'].setValues(values['status.omitempty'], fillDefaults);
+            this['status'].setValues(values['status'], fillDefaults);
         } else {
-            this['status.omitempty'].setValues(null, fillDefaults);
+            this['status'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -129,7 +129,7 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
                 'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterDSCProfile.propInfo['api-version']),
                 'meta': CustomFormGroup(this['meta'].$formGroup, ClusterDSCProfile.propInfo['meta'].required),
                 'spec': CustomFormGroup(this['spec'].$formGroup, ClusterDSCProfile.propInfo['spec'].required),
-                'status.omitempty': CustomFormGroup(this['status.omitempty'].$formGroup, ClusterDSCProfile.propInfo['status.omitempty'].required),
+                'status': CustomFormGroup(this['status'].$formGroup, ClusterDSCProfile.propInfo['status'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
@@ -142,8 +142,8 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
                 control.updateValueAndValidity();
             });
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('status.omitempty') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('status.omitempty').get(field);
+            Object.keys((this._formGroup.get('status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('status').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -160,7 +160,7 @@ export class ClusterDSCProfile extends BaseModel implements IClusterDSCProfile {
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this['meta'].setFormGroupValuesToBeModelValues();
             this['spec'].setFormGroupValuesToBeModelValues();
-            this['status.omitempty'].setFormGroupValuesToBeModelValues();
+            this['status'].setFormGroupValuesToBeModelValues();
         }
     }
 }

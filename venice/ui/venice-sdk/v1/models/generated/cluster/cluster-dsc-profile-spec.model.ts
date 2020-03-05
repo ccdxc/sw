@@ -7,8 +7,8 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterDSCProfileSpec_fwd_mode,  } from './enums';
-import { ClusterDSCProfileSpec_policy_mode,  } from './enums';
+import { ClusterDSCProfileSpec_fwd_mode,  ClusterDSCProfileSpec_fwd_mode_uihint  } from './enums';
+import { ClusterDSCProfileSpec_policy_mode,  ClusterDSCProfileSpec_policy_mode_uihint  } from './enums';
 
 export interface IClusterDSCProfileSpec {
     'fwd-mode': ClusterDSCProfileSpec_fwd_mode;
@@ -24,13 +24,13 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
     'policy-mode': ClusterDSCProfileSpec_policy_mode = null;
     public static propInfo: { [prop in keyof IClusterDSCProfileSpec]: PropInfoItem } = {
         'fwd-mode': {
-            enum: ClusterDSCProfileSpec_fwd_mode,
+            enum: ClusterDSCProfileSpec_fwd_mode_uihint,
             default: 'transparent',
             required: true,
             type: 'string'
         },
         'policy-mode': {
-            enum: ClusterDSCProfileSpec_policy_mode,
+            enum: ClusterDSCProfileSpec_policy_mode_uihint,
             default: 'basenet',
             required: true,
             type: 'string'
