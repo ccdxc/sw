@@ -1122,7 +1122,7 @@ func (sm *SysModel) enableSSH(nodes []*testbed.TestNode, token string) error {
 	// check the response
 	for _, cmdResp := range resp {
 		if cmdResp.ExitCode != 0 {
-			log.Errorf("Changing naples mode failed. %+v", cmdResp)
+			//log.Errorf("Changing naples mode failed. %+v", cmdResp)
 			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
 				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 
@@ -1146,31 +1146,43 @@ func (sm *SysModel) SetUpNaplesPostCluster(nodes []*testbed.TestNode) error {
 	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
 	defer cancel()
 	var token string
-	for i := 0; true; i++ {
 
-		token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
-		if err == nil {
-			break
-		}
-		if i == 6 {
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+
+L:
+	for true {
+		select {
+		case <-bkCtx.Done():
 			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
 			log.Errorf("%v", nerr)
 			return nerr
+		default:
+			token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
+			if err == nil {
+				break L
+			}
+			time.Sleep(3 * time.Second)
 		}
 	}
 
-	//Naples may take time to join in auto discovery
-	for i := 0; true; i++ {
-		err = sm.enableSSH(nodes, token)
-		if err == nil {
-			break
-		}
-		if i == 6 {
+	bkCtx, cancelFunc = context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+
+L1:
+	for true {
+		select {
+		case <-bkCtx.Done():
 			nerr := fmt.Errorf("Could not enable ssh on naples: %v", err)
 			log.Errorf("%v", nerr)
 			return nerr
+		default:
+			err = sm.enableSSH(nodes, token)
+			if err == nil {
+				break L1
+			}
+			time.Sleep(3 * time.Second)
 		}
-		time.Sleep(3 * time.Second)
 	}
 
 	if !sm.NoSetupDataPathAfterSwitch {

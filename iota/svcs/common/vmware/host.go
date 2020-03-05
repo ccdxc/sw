@@ -644,7 +644,7 @@ func (h *Host) boot(name string, ncpus uint, memory uint) (*VMInfo, error) {
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(h.Ctx())
+	ip, err = vm.WaitForIP(h.Ctx(), true)
 	if err != nil {
 		return nil, errors.Wrap(err, "Wait for IP failed")
 	}
@@ -733,7 +733,7 @@ func (h *Host) GetVMIP(name string) (string, error) {
 		return "", err
 	}
 
-	return vm.WaitForIP(h.Ctx())
+	return vm.WaitForIP(h.Ctx(), true)
 }
 
 //PoweredOn VM powered on

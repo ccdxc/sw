@@ -527,6 +527,10 @@ class NaplesManagement(EntityManagement):
         self.ReadExternalIP()
         self.WaitForSsh()
 
+    def StartSSH(self):
+        self.SendlineExpect("echo classic > /sysconfig/config0/app-start.conf", "#")
+        self.SendlineExpect("/etc/init.d/S50sshd start", "#")
+
     def Reboot(self):
         if not self.host.PciSensitive():
             self.hdl.sendline('reboot')
@@ -638,10 +642,7 @@ class NaplesManagement(EntityManagement):
 
 
     def __read_mac(self):
-        if self.mac_addr != None:
-            print("Skipping mac read as already read {0}".format(self.mac_addr))
-            return
-        for _ in range(3):
+        for _ in range(10):
             output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
             mac_regexp = '(?:[0-9a-fA-F]:?){12}'
             x = re.findall(mac_regexp, output)
@@ -651,16 +652,15 @@ class NaplesManagement(EntityManagement):
                 return
             else:
                 print("Did not Read MAC  {0}".format(self.mac_addr))
+            time.sleep(2)
         raise Exception("Not able to read oob mac")
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True, force_connect=True):
         self.__login(force_connect)
-        print("sleeping 60 seconds in Login")
-        time.sleep(60)
+        self.__read_mac()
         if bringup_oob:
             self.ReadExternalIP()
-        self.__read_mac()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
@@ -1226,9 +1226,6 @@ class PenOrchestrator:
 
         self.host.SetNaples(self.naples)
 
-        # Connect to Naples console.
-        self.naples.Connect()
-
         if GlobalOptions.mem_size:
             self.naples.CheckMemorySize(GlobalOptions.mem_size)
 
@@ -1307,6 +1304,7 @@ class PenOrchestrator:
             self.host.Init(driver_pkg = self.driver_images.drivers_pkg, cleanup = True)
             return
 
+        self.naples.StartSSH()
         self.naples.ReadGoldFwVersion()
         fwType = self.naples.ReadRunningFirmwareType()
 
@@ -1314,20 +1312,16 @@ class PenOrchestrator:
         #naples.InitForUpgrade(goldfw = True)
         if self.naples.IsSSHUP():
             #OOb is present and up install right away,
-            if fwType != FIRMWARE_TYPE_GOLD:
-                self.naples.RebootGoldFw()
-            if GlobalOptions.fast_upgrade:
-                print("installing and running tests with firmware {0} without checking goldfw".format(self.fw_images.image))
-                try:
-                    self.naples.InstallMainFirmware()
-                except:
-                    print("failed to upgrade main firmware only. error was:")
-                    print(traceback.format_exc())
-                    print("attempting gold + main firmware update")
-                    self.__fullUpdate()
-            else:
+            print("installing and running tests with firmware {0} without checking goldfw".format(self.fw_images.image))
+            try:
+                self.naples.InstallMainFirmware()
+                if not IsNaplesGoldFWLatest():
+                    self.naples.InstallGoldFirmware()
+            except:
+                print("failed to upgrade main firmware only. error was:")
+                print(traceback.format_exc())
+                print("attempting gold + main firmware update")
                 self.__fullUpdate()
-            self.naples.Reboot()
         else:
             self.naples.ReadInternalIP()
             if fwType != FIRMWARE_TYPE_GOLD:
@@ -1356,12 +1350,9 @@ class PenOrchestrator:
         # ESX would require drivers to be installed here to avoid
         # onr more reboot
         self.host.InitForReboot()
-        #Reboot is common for both mode change and upgrade
-        # Reboot host again, this will reboot naples also
-        self.host.Reboot()
+        #Do and IP reset to make sure naples and Host are in sync
+        self.naples.IpmiResetAndWait()
 
-        #Naples would have rebooted to, login again.
-        time.sleep(60)
         self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
 
         # Common to Case 2 and Case 1.
@@ -1377,9 +1368,7 @@ class PenOrchestrator:
             # host.InstallMainFirmware(mount_data = False, copy_fw = False)
 
     def __fullUpdate(self):
-        fwType = self.naples.ReadRunningFirmwareType()
-        if fwType != FIRMWARE_TYPE_GOLD:
-            self.naples.RebootGoldFw()
+        self.naples.ForceSwitchToGoldFW()
         if GlobalOptions.use_gold_firmware:
             print("installing and running tests with gold firmware {0}".format(self.fw_images.gold_fw_img))
             self.naples.InstallGoldFirmware()

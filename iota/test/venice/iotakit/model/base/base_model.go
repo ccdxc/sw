@@ -187,7 +187,6 @@ L:
 				log.Infof("Nodes admitted %v", admittedCount)
 				break L
 			}
-			log.Infof("admitted count : %v", admittedCount)
 			time.Sleep(time.Second)
 		}
 

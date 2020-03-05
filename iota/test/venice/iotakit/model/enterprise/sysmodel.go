@@ -518,8 +518,6 @@ L:
 		cfgClient.UpdateSmartNIC(dsc)
 	}
 
-	err = sm.InitConfig(scale, scaleData)
-
 	defaultSgPolicies, err1 := sm.ListNetworkSecurityPolicy()
 	if err1 != nil {
 		return fmt.Errorf("Error in listing policies %v", err1)

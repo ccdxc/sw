@@ -382,7 +382,7 @@ func (entity *Entity) boot(name string, ncpus uint, memory uint) (*VMInfo, error
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(entity.Ctx())
+	ip, err = vm.WaitForIP(entity.Ctx(), true)
 	if err != nil {
 		return nil, errors.Wrap(err, "Wait for IP failed")
 	}
@@ -492,7 +492,7 @@ func (entity *Entity) BootVM(name string) (*VMInfo, error) {
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(entity.Ctx())
+	ip, err = vm.WaitForIP(entity.Ctx(), true)
 	if err != nil {
 		return nil, err
 	}
