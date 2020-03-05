@@ -135,6 +135,13 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 	// 1. Logs buffer reaches 6k
 	// 2. Every 1 minute
 	// Whatever condition hits first
+	ticks := int64(0)
+	timerTickDuration := time.Millisecond * 100
+
+	// The go version that we are using does not have time.Duration.Milliseconds() method.
+	totalTicksForPeriodicTransmit :=
+		int64((periodicTransmitTime.Seconds() * 1000) / (timerTickDuration.Seconds() * 1000))
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -181,9 +188,11 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 
 			endTs = l.ts
 			prevTime = endTs
-		case <-time.After(periodicTransmitTime):
-			if len(bufferedLogs) > 0 {
+		case <-time.After(timerTickDuration):
+			ticks++
+			if ticks >= totalTicksForPeriodicTransmit && len(bufferedLogs) > 0 {
 				helper()
+				ticks = 0
 			}
 		}
 	}
