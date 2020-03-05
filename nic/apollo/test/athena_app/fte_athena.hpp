@@ -13,12 +13,6 @@
 
 namespace fte_ath {
 
-struct stats_t {
-    uint64_t tx;
-    uint64_t rx;
-    uint64_t drop;
-};
-
 void fte_init(void);
 
 void fte_flow_prog(struct rte_mbuf *m);

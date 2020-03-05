@@ -16,6 +16,9 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
                   bm_allocator sdklinkmgr sdklinkmgrcsr memhash \
                   sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS}
 MODULE_FLAGS    = -O3
+ifeq ($(ARCH), x86_64)
+MODULE_FLAGS  += -march=native
+endif
 MODULE_DEFS     = -DRTE_FORCE_INTRINSICS
 MODULE_PREREQS  = dpdk.submake
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
