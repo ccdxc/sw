@@ -308,9 +308,9 @@ class EntityManagement:
             try:
                 self.NaplesWait()
                 break
-            except Exception as ex:
+            except:
                 if i > 3:
-                    raise ex
+                    raise Exception("Naples prompt not observed")
                 i = i + 1
                 continue
         print("Waiting for host ssh..")
@@ -504,7 +504,7 @@ class NaplesManagement(EntityManagement):
         for _ in range(4):
             try:
                 midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                                    hdl = self.hdl, timeout = 180)
+                                    hdl = self.hdl, timeout = 30)
                 if midx == 0: return
                 # Got capri login prompt, send username/password.
                 self.SendlineExpect(GlobalOptions.username, "Password:")
@@ -571,7 +571,6 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("", "#", trySync=True)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(self.fw_images.image),
                             "#", timeout = UPGRADE_TIMEOUT)
-        self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#", trySync=True)
         self.SyncLine()
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
         #    raise Exception('failed to switch firmware to mainfwa')
@@ -1280,7 +1279,6 @@ class PenOrchestrator:
         if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
             #First do a reset as naples may be in screwed up state.
             try:
-                self.naples.Connect()
                 self.naples.Connect(force_connect=False)
                 #Read Naples Gold FW version if system in good state.
                 #If not able to read then we will reset
@@ -1341,7 +1339,6 @@ class PenOrchestrator:
                     self.naples.IpmiResetAndWait()
                 else:
                     self.host.Reboot()
-            self.naples.Close()
             gold_pkg = self.driver_images.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else self.driver_images.gold_drv_old_pkg
             self.host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
             if GlobalOptions.use_gold_firmware:

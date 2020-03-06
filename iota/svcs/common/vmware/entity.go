@@ -398,7 +398,7 @@ func (entity *Entity) boot(name string, ncpus uint, memory uint) (*VMInfo, error
 		break
 	}
 
-	if err == nil {
+	if err != nil {
 		return nil, errors.Wrap(err, "Wait for IP failed")
 	}
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
