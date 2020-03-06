@@ -87,6 +87,14 @@ export const sideNavMenu: SideNavItem[] = [
     link: ['/workload']
   },
   {
+    label: 'Network',
+    icon: {
+      cssClass: 'app-l-side-nav-network',
+    },
+    roleGuard: UIRolePermissions.networknetwork_read,
+    link: ['/network']
+  },
+  {
     label: 'Security',
     icon: {
       cssClass: 'app-l-side-nav-security',

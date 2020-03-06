@@ -21,8 +21,6 @@ import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { StagingService } from '@app/services/generated/staging.service';
 
-
-
 describe('NewVcenterIntegrationComponent', () => {
   let component: NewVcenterIntegrationComponent;
   let fixture: ComponentFixture<NewVcenterIntegrationComponent>;

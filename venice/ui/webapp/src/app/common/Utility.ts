@@ -1090,6 +1090,20 @@ export class Utility {
   }
 
   /**
+   * This API delete a object property or an array of object prorperties
+   */
+  public static removeObjectProperties(inputObject: any, properties: string | Array<string>) {
+    if (inputObject && properties) {
+      if (!Array.isArray(properties)) {
+        properties = [properties];
+      }
+      properties.forEach(item => {
+        delete inputObject[item];
+      });
+    }
+  }
+
+  /**
    * This API traverse object TREE to fetch value
    * Unless specified, will automatically apply return the ui hints
    * version of the value if possible

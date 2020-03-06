@@ -1,0 +1,82 @@
+@import "src/global-mixins";
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
+
+.new-network-container {
+  background: white;
+
+  .new-network-content {
+    margin-top: 4* $vertical-gutter;
+    @include primary-font();
+    width: 600px;
+    margin-bottom: 20px;
+
+    .new-network-input-container {
+      width: 300px;
+    }
+
+    .new-network-input {
+      width: 100%;
+      height: 30px;
+    }
+
+    fieldset {
+      width: 100%;
+      border: 1px solid $dary-grey;
+      padding: 5px;
+
+      legend {
+        padding: 0 5px;
+        @include primary-font(15px);
+        color: #676763;
+        margin-bottom: 0px;
+        width: 92px;
+      }
+    }
+
+    .new-network-orchestrator-selectbox,
+    .new-network-orchestrator-inputbox {
+      width: 265px;
+    }
+
+    .new-network-orchestrator-selectbox.requiredField :first-child {
+      width: calc(100% - 2px) !important;
+    }
+
+    .new-network-add-orchestrator {
+      cursor: pointer;
+      width: 100px;
+      margin-left: 10px;
+    }
+
+    .new-network-orchestrator-delete-icon {
+      margin-left: 5px;
+    }
+  }
+
+  .new-network-button-container {
+    margin-top: 1.5 * $vertical-gutter;
+
+    .button-container {
+      position: relative;
+      max-height: 0px;
+    }
+
+    .new-network-save,
+    .new-network-cancel {
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      padding: 4px 10px;
+      line-height: 25px;
+      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

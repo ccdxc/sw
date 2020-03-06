@@ -1,6 +1,7 @@
 {
   "enabled-features" : [
     "help",
+    "apiCapture",
     "dataCache",
     "fwLogs"
   ],

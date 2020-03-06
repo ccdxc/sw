@@ -1,0 +1,82 @@
+<div fxFlex="auto" fxLayout="column" class="new-network-container">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+    <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="new-network-content">
+      <ng-container *ngTemplateOutlet="singleMode"></ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #singleMode>
+  <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+    <div fxFlex="nogrow" fxLayout="column" class="new-network-input-container">
+      <span formGroupName="meta"
+            [ngClass]="{requiredField: isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))}">
+        <input fxFlex="nogrow" formControlName="name" class="new-network-input" appErrorTooltip
+               spellcheck="false" type="text"
+               pInputText appFloatLabel="Name">
+      </span>
+      <div fxFlex="15px"></div>
+      <span formGroupName="spec"
+            [ngClass]="{requiredField: isFieldEmpty(newObject.$formGroup.get(['spec', 'vlan-id']))}">
+        <input fxFlex="nogrow" formControlName="vlan-id" class="new-network-input" appErrorTooltip
+               spellcheck="false" type="number" min="0" max="4096"
+               pInputText appFloatLabel="VLAN">
+      </span>
+    </div>
+    <div fxFlex="15px"></div>
+    <fieldset>
+      <legend>Orchestrators</legend>
+      <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
+           [formGroup]="newObject.$formGroup.get(['spec', 'orchestrators'])">
+        <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
+             *ngFor="let orchestrator of controlAsFormArray(newObject.$formGroup.get(['spec','orchestrators'])).controls; index as index;">
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
+            <div fxFlex="10px"></div>
+            <span fxFlex="none" fxLayout="row" [ngClass]="{
+              'new-network-orchestrator-selectbox': true,
+              'requiredField': isFieldEmpty(orchestrator.get(['orchestrator-name'])),
+              'selectboxWithValue': !isFieldEmpty(orchestrator.get(['orchestrator-name']))
+            }">
+              <p-dropdown appFloatLabel="vCenter Name" appendTo="body" class="new-network-input"
+                          [options]="vcenterOptions" formControlName="orchestrator-name">
+              </p-dropdown>
+            </span>
+            <div fxFlex="15px"></div>
+            <span fxFlex="none" fxLayout="row" [ngClass]="{
+              'new-network-orchestrator-inputbox': true,
+              'requiredField': isFieldEmpty(orchestrator.get(['namespace']))
+            }">
+              <input fxFlex="nogrow" appFloatLabel="Datacenter Name" appErrorTooltip
+                     class="new-network-input"
+                     [appErrorTooltip]="'Datacenter in the orchestrator in which this network should be created in.'"
+                     formControlName="namespace" spellcheck="false" type="text" pInputText>
+            </span>
+            <mat-icon fxFlex="nogrow"
+                      class="global-trash-button new-network-orchestrator-delete-icon"
+                      *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','orchestrators'])).length > 1"
+                      (click)="removeOrchestrator(index)">delete</mat-icon>
+          </div>
+        </div>
+        <div fxFlex="none" (click)="addOrchestrator()" class="new-network-add-orchestrator">
+          + ORCHESTRATOR
+        </div>
+      </div>
+    </fieldset>
+  </div>
+</ng-template>
+
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" fxLayout="row" fxLayoutAlign="end center"
+       class="new-network-button-container">
+    <div fxFlex="nogrow" class="button-container">
+      <span (click)="saveObject()" [title]="getTooltip()"
+            class="global-button-primary global-button-padding new-network-save"
+            [ngClass]="computeInlineButtonClass()">SAVE</span>
+    </div>
+    <div fxFlex="nogrow" class="button-container">
+      <span (click)="cancelObject()"
+            class="global-button-neutral global-button-padding new-network-cancel">CANCEL</span>
+    </div>
+  </div>
+</ng-template>

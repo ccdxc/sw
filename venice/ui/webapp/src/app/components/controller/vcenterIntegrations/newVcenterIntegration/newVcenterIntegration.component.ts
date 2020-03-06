@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, OnDestroy, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, OnDestroy, ViewChild, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { Animations } from '@app/animations';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -17,7 +17,8 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   templateUrl: './newVcenterIntegration.component.html',
   styleUrls: ['./newVcenterIntegration.component.scss'],
   animations: [Animations],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationOrchestrator, OrchestrationOrchestrator> implements OnInit, AfterViewInit, OnDestroy {
 
@@ -137,6 +138,27 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     } else {
       if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
           === MonitoringExternalCred_auth_type['username-password']) {
+        if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
+          if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']))) {
+            this.createButtonTooltip = 'Error: Username is empty.';
+            return false;
+          }
+          if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
+            this.createButtonTooltip = 'Error: Password is empty.';
+            return false;
+          }
+        } else {
+          if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) &&
+              !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
+            this.createButtonTooltip = 'Error: Username is empty.';
+            return false;
+          }
+          if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) &&
+              this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
+            this.createButtonTooltip = 'Error: Password is empty.';
+            return false;
+          }
+        }
         if (this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value &&
             this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value !==
             this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value) {
@@ -147,6 +169,51 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
             this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']).value !==
             this.newObject.$formGroup.get(['spec', 'credentials', 'password']).value) {
           this.createButtonTooltip = 'Error: Password does not match.';
+          return false;
+        }
+      }
+    }
+    if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+          === MonitoringExternalCred_auth_type.token) {
+      if (this.currentObjCredType !==  MonitoringExternalCred_auth_type.token) {
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'bearer-token']))) {
+          this.createButtonTooltip = 'Error: Bearer Token is empty.';
+          return false;
+        }
+      }
+    }
+    if (this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+          === MonitoringExternalCred_auth_type.certs) {
+      if (this.currentObjCredType !==  MonitoringExternalCred_auth_type.certs) {
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']))) {
+          this.createButtonTooltip = 'Error: Private key is empty.';
+          return false;
+        }
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data']))) {
+          this.createButtonTooltip = 'Error: Cert file is empty.';
+          return false;
+        }
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']))) {
+          this.createButtonTooltip = 'Error: CA bundle file is empty.';
+          return false;
+        }
+      } else {
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])) &&
+            (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
+            !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data'])))) {
+          this.createButtonTooltip = 'Error: Private key is empty.';
+          return false;
+        }
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) &&
+            (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])) ||
+            !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data'])))) {
+          this.createButtonTooltip = 'Error: Cert file is empty.';
+          return false;
+        }
+        if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) &&
+            (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
+            !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])))) {
+          this.createButtonTooltip = 'Error: CA bundle file is empty.';
           return false;
         }
       }
@@ -180,7 +247,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
       currToolbar.buttons = [
         {
           cssClass: 'global-button-primary newVcenter-button newVcenter-save',
-          text: 'Create vCenter',
+          text: 'CREATE VCENTER',
           genTooltip: () => this.getTooltip(),
           callback: () => { this.saveObject(); },
           computeClass: () => this.computeButtonClass()
@@ -229,42 +296,24 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
         'force-dc-names': Utility.getGUID()
       };
     }
-    delete currValue.status;
+    Utility.removeObjectProperties(currValue, 'status');
     const formGrp: any = currValue.spec.credentials;
-    delete formGrp.confirmPassword;
+    Utility.removeObjectProperties(formGrp, 'confirmPassword');
     const credential: IMonitoringExternalCred = currValue.spec.credentials;
     if (credential['auth-type'] === MonitoringExternalCred_auth_type['username-password']) {
-      delete credential['bearer-token'];
-      delete credential['key-data'];
-      delete credential['ca-data'];
-      delete credential['cert-data'];
-      if (!credential.username) {
-        delete credential.username;
-      }
-      if (!credential.password) {
-        delete credential.password;
+      Utility.removeObjectProperties(credential, ['bearer-token', 'key-data', 'ca-data', 'cert-data']);
+      if (this.isInline && !credential.username) {
+        Utility.removeObjectProperties(currValue.spec, 'credentials');
       }
     } else if (credential['auth-type'] === MonitoringExternalCred_auth_type.token) {
-      delete credential['key-data'];
-      delete credential['ca-data'];
-      delete credential['cert-data'];
-      delete credential.username;
-      delete credential.password;
-      if (!credential['bearer-token']) {
-        delete credential['bearer-token'];
+      Utility.removeObjectProperties(credential, ['username', 'password', 'key-data', 'ca-data', 'cert-data']);
+      if (this.isInline && !credential['bearer-token']) {
+        Utility.removeObjectProperties(currValue.spec, 'credentials');
       }
     } else if (credential['auth-type'] === MonitoringExternalCred_auth_type.certs) {
-      delete credential['bearer-token'];
-      delete credential.username;
-      delete credential.password;
-      if (!credential['key-data']) {
-        delete credential['key-data'];
-      }
-      if (!credential['ca-data']) {
-        delete credential['ca-data'];
-      }
-      if (!credential['cert-data']) {
-        delete credential['cert-data'];
+      Utility.removeObjectProperties(credential, ['bearer-token', 'username', 'password']);
+      if (this.isInline && !credential['key-data']) {
+        Utility.removeObjectProperties(currValue.spec, 'credentials');
       }
     }
     return currValue;
@@ -282,11 +331,32 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     return this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'uri']));
   }
 
-  isCredentialRequired(field: string, type: string) {
-    return (!this.isInline) &&
-      this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
-        === MonitoringExternalCred_auth_type[type] &&
-      this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', field]));
+  isUsernameRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type['username-password'];
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']));
+  }
+
+  isPasswordRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type['username-password'];
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
   }
 
   isConfirmPwdRequired() {
@@ -294,5 +364,61 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
         === MonitoringExternalCred_auth_type['username-password'] &&
       !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password'])) &&
       this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
+  }
+
+  isTokenRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'bearer-token']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type.token;
+    }
+    return this.currentObjCredType !== MonitoringExternalCred_auth_type.token;
+  }
+
+  iskeyRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type.certs;
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type.certs) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
+        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']));
+  }
+
+  isCertRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type.certs;
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type.certs) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data'])) ||
+        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']));
+  }
+
+  isCaRequired() {
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'ca-data']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type.certs;
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type.certs) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
+        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']));
   }
 }

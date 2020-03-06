@@ -29,7 +29,7 @@
         <legend>Credential</legend>
         <div fxflex="nogrow" fxLayout="column" class="newVcenter-cred-box"
              [formGroup]="newObject.$formGroup.get(['spec','credentials'])">
-          <div class="newVcenter-radio-container" *ngIf="!isInline">
+          <div class="newVcenter-radio-container">
             <mat-radio-group fxFlex="nogrow" class="newVenter-attach-radio"
                              fxLayoutAlign="start center" fxLayoutGap="10px"
                              formControlName="auth-type">
@@ -44,14 +44,14 @@
                [ngSwitch]="newObject.$formGroup.get(['spec','credentials', 'auth-type']).value">
             <div fxLayout="column" *ngSwitchCase="'username-password'" [@slideInOut]>
               <span
-                    [ngClass]="{requiredField: isCredentialRequired('username', 'username-password')}">
+                    [ngClass]="{requiredField: isUsernameRequired()}">
                 <input fxFlex="nogrow" class="newVcenter-input" formControlName="username"
                        appErrorTooltip spellcheck="false" appFloatLabel="User Name"
                        type="text" pInputText>
               </span>
               <div fxFlex="10px"></div>
               <span
-                    [ngClass]="{requiredField: isCredentialRequired('password', 'username-password')}">
+                    [ngClass]="{requiredField: isPasswordRequired()}">
                 <input fxFlex="nogrow" class="newVcenter-input" formControlName="password"
                        appErrorTooltip spellcheck="false" appFloatLabel="Password"
                        type="password" pInputText>
@@ -65,7 +65,7 @@
             </div>
             <div fxLayout="column" *ngSwitchCase="'token'" [@slideInOut]>
               <span
-                    [ngClass]="{textarea: true,requiredField: isCredentialRequired('bearer-token', 'token')}">
+                    [ngClass]="{textarea: true,requiredField: isTokenRequired()}">
                 <textarea fxFlex="100" formControlName="bearer-token" class="newVcenter-textarea"
                           appErrorTooltip spellcheck="false" type="text" pInputTextarea
                           autoResize="autoResize" appFloatLabel="Token"></textarea>
@@ -73,21 +73,21 @@
             </div>
             <div fxLayout="column" *ngSwitchCase="'certs'" [@slideInOut]>
               <span
-                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('key-data', 'certs')}">
+                    [ngClass]="{textarea: true, requiredField: iskeyRequired()}">
                 <textarea fxFlex="100" formControlName="key-data" class="newVcenter-textarea"
                           appErrorTooltip spellcheck="false" type="text" pInputTextarea
                           autoResize="autoResize" appFloatLabel="Private Key"></textarea>
               </span>
               <div fxFlex="10px"></div>
               <span
-                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('cert-data', 'certs')}">
+                    [ngClass]="{textarea: true, requiredField: isCertRequired()}">
                 <textarea fxFlex="100" formControlName="cert-data" class="newVcenter-textarea"
                           appErrorTooltip spellcheck="false" type="text" pInputTextarea
                           autoResize="autoResize" appFloatLabel="Cert"></textarea>
               </span>
               <div fxFlex="10px"></div>
               <span
-                    [ngClass]="{textarea: true, requiredField: isCredentialRequired('ca-data', 'certs')}">
+                    [ngClass]="{textarea: true, requiredField: isCaRequired()}">
                 <textarea fxFlex="100" formControlName="ca-data" class="newVcenter-textarea"
                           appErrorTooltip spellcheck="false" type="text" pInputTextarea
                           autoResize="autoResize" appFloatLabel="CA Bundle"></textarea>

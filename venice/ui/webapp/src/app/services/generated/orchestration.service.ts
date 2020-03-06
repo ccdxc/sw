@@ -9,7 +9,6 @@ import {Eventtypes} from '@app/enum/eventtypes.enum';
 import {environment} from '@env/environment';
 import {Utility} from '@common/Utility';
 import { UIConfigsService } from '../uiconfigs.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 

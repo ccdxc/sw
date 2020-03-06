@@ -47,6 +47,10 @@ export const routes: Routes = [
         loadChildren: '@components/workload/workload.module#WorkloadModule',
       },
       {
+        path: 'network',
+        loadChildren: '@components/network/network.module#NetworkModule',
+      },
+      {
         path: 'monitoring',
         loadChildren: '@components/monitoring-group/monitoring-group.module#MonitoringGroupModule',
       },

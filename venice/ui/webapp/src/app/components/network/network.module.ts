@@ -1,32 +1,29 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { Routes, RouterModule } from '@angular/router';
-
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
-
-
-import { NetworkComponent } from './network/network.component';
-import { NetworkcoreComponent } from './networkcore.component';
-
+import { FlexLayoutModule} from '@angular/flex-layout';
+import { SharedModule} from '@components/shared/shared.module';
 import { NetworkRoutingModule } from './network.route';
+import { WidgetsModule } from 'web-app-framework';
+import { NetworkComponent } from './network.component';
+import { NewnetworkComponent } from './newnetwork/newnetwork.component';
 
 @NgModule({
   imports: [
     CommonModule,
-    FormsModule,
-
-    PrimengModule,
-    MaterialdesignModule,
-
-    NetworkRoutingModule
+      FormsModule,
+      ReactiveFormsModule,
+      PrimengModule,
+      FlexLayoutModule,
+      MaterialdesignModule,
+      WidgetsModule,
+      SharedModule,
+      NetworkRoutingModule
   ],
-  declarations: [NetworkComponent, NetworkcoreComponent],
-  entryComponents: [
-    NetworkcoreComponent
-  ]
+  declarations: [NetworkComponent, NewnetworkComponent]
 })
+
+
 export class NetworkModule { }
