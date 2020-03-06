@@ -76,6 +76,10 @@ void Service::launch()
 
 void Service::check_dep_and_launch()
 {
+    if (this->is_running()) {
+        g_log->info("%s already running", this->spec->name.c_str());
+        return;
+    }
     g_log->info("Checking dependencies for %s",
                 this->spec->name.c_str());
     for (auto dep: this->dependencies)
