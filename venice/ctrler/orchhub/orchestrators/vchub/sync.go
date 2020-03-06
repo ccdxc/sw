@@ -134,7 +134,7 @@ func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []
 			},
 		}
 		v.Log.Debugf("Process config change for host %s", host.Reference().Value)
-		vmkMap[createVmkWorkloadName(v.VcID, dc.Reference().Value, host.Reference().Value)] = true
+		vmkMap[v.createVmkWorkloadName(dc.Reference().Value, host.Reference().Value)] = true
 		v.handleHost(m)
 	}
 }
@@ -143,7 +143,7 @@ func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts 
 	v.Log.Infof("Syncing stale hosts on DC %s============", dc.Name)
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {
-		hostName := createHostName(v.VcID, dc.Self.Value, vcHost.Self.Value)
+		hostName := v.createHostName(dc.Self.Value, vcHost.Self.Value)
 		vcHostMap[hostName] = true
 	}
 
@@ -307,7 +307,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 	vmMap := map[string]mo.VirtualMachine{}
 	for _, vm := range vms {
 		// TODO: check the vm is for us
-		vmName := createVMWorkloadName(v.VcID, dc.Self.Value, vm.Self.Value)
+		vmName := v.createVMWorkloadName(dc.Self.Value, vm.Self.Value)
 		vmMap[vmName] = vm
 	}
 
@@ -386,7 +386,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 			if !ok {
 				continue
 			}
-			host := createHostName(v.VcID, dc.Self.Value, vm.Runtime.Host.Value)
+			host := v.createHostName(dc.Self.Value, vm.Runtime.Host.Value)
 			vlan, err := penDvs.UsegMgr.GetVlanForVnic(macStr, host)
 			if err != nil {
 				continue // Skipping delete from overrides map

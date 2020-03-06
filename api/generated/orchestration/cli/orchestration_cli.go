@@ -22,6 +22,13 @@ var CreateOrchestratorFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "manage-namespaces",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "type",
 		Type:   "String",
 		Help:   "",

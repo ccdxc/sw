@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -69,7 +70,7 @@ func WithMockProbe(v *VCHub) {
 
 // LaunchVCHub starts VCHub
 func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
-	logger.Infof("VCHub instance for %s is starting...", config.GetName())
+	logger.Infof("VCHub instance for %s(orch-%d) is starting...", config.GetName(), config.Status.OrchID)
 	vchub := &VCHub{}
 	vchub.setupVCHub(stateMgr, config, logger, opts...)
 
@@ -99,11 +100,13 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 			forceDCMap[dc] = true
 		}
 	}
+	orchID := fmt.Sprintf("orch-%d", config.Status.OrchID)
 	state := defs.State{
 		VcURL:        vcURL,
 		VcID:         config.GetName(),
+		OrchID:       orchID,
 		Ctx:          ctx,
-		Log:          logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
+		Log:          logger.WithContext("submodule", fmt.Sprintf("VCHub-%s(%s)", config.GetName(), orchID)),
 		StateMgr:     stateMgr,
 		OrchConfig:   config,
 		Wg:           &sync.WaitGroup{},
@@ -264,4 +267,22 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 		penHosts = append(penHosts, host)
 	}
 	return penHosts
+}
+
+// CreateVmkWorkloadName returns vmk workload name string
+func (v *VCHub) createVmkWorkloadName(namespace, objName string) string {
+	// don't include namespace (DC name) in the vmk workload name
+	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, v.createHostName("", objName))
+}
+
+// createHostName returns host name string
+func (v *VCHub) createHostName(namespace, objName string) string {
+	// Remove DC name from the host name. On events like workload update, the DC of the event is
+	// different from the DC where the host is
+	return fmt.Sprintf("%s", utils.CreateGlobalKey(v.OrchID, "" /* namespace */, objName))
+}
+
+func (v *VCHub) createVMWorkloadName(namespace, objName string) string {
+	// don't include namespace (DC name) in the workload name
+	return fmt.Sprintf("%s", utils.CreateGlobalKey(v.OrchID, "", objName))
 }

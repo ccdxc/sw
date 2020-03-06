@@ -438,6 +438,16 @@
             "format": "byte"
           },
           {
+            "name": "spec.manage-namespaces",
+            "description": "Namespaces that will be managed by this orchestrator. \"ALL\" will manage all namespaces.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "name": "status.connection-status",
             "in": "query",
             "required": false,
@@ -462,6 +472,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.orch-id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -1300,6 +1317,13 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "manage-namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Namespaces that will be managed by this orchestrator. \"ALL\" will manage all namespaces."
         }
       },
       "description": "OrchestratorSpec contains the configuration of the cluster."
@@ -1334,6 +1358,10 @@
         },
         "session-id": {
           "type": "string"
+        },
+        "orch-id": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "description": "OrchestratorStatus contains the current state of connection with the orchestrator."

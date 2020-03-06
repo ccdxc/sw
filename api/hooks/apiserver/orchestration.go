@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/orchestration"
@@ -18,11 +19,60 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+const (
+	maxOrchSupported = 64
+)
+
 // ErrOrchManaged is the error message returned when a user tries to modify an object created by Orchhub
 var ErrOrchManaged = fmt.Errorf("object is managed by Venice and can only be deleted by Admin")
 
 type orchHooks struct {
 	logger log.Logger
+	sync.Mutex
+	allocOrchID    [maxOrchSupported]bool
+	numAllocOrchID int32
+}
+
+func (o *orchHooks) getOrchestratorID(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string,
+	oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	o.Lock()
+	defer o.Unlock()
+
+	orch, ok := i.(orchestration.Orchestrator)
+	if !ok {
+		o.logger.ErrorLog("method", "getOrchestratorID", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return i, true, fmt.Errorf("Invalid input type")
+	}
+
+	if o.numAllocOrchID == 0 {
+		var orchs orchestration.OrchestratorList
+		kindKey := orchs.MakeKey(string(apiclient.GroupOrchestration))
+		err := kv.List(ctx, kindKey, &orchs)
+		if err != nil {
+			return nil, true, fmt.Errorf("Error retrieving orchestrators: %v", err)
+		}
+
+		// ApiServer restarts, we initialize allocOrchID based on the information query from kv store
+		if len(orchs.Items) != 0 {
+			for _, otherOrch := range orchs.Items {
+				o.allocOrchID[otherOrch.Status.OrchID] = true
+				o.numAllocOrchID++
+			}
+		}
+	}
+
+	var index int32
+	for index = 0; index < maxOrchSupported; index++ {
+		if o.allocOrchID[index] == false {
+			o.allocOrchID[index] = true
+			break
+		}
+	}
+
+	orch.Status.OrchID = index
+
+	o.numAllocOrchID++
+	return orch, true, nil
 }
 
 func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string,
@@ -41,12 +91,31 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		return nil, true, fmt.Errorf("Error retrieving orchestrators: %v", err)
 	}
 
+	if len(orchs.Items) >= maxOrchSupported {
+		return nil, true, fmt.Errorf("Unable to support more than %v orchestrators", maxOrchSupported)
+	}
+
 	for _, otherOrch := range orchs.Items {
 		if otherOrch.Spec.URI == orch.Spec.URI && otherOrch.Name != orch.Name {
 			return i, true, fmt.Errorf("URI is already used by Orchestrator %s", otherOrch.Name)
 		}
 	}
+
 	return i, true, nil
+}
+
+func (o *orchHooks) deleteOrchestrator(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryrun bool) {
+	o.Lock()
+	defer o.Unlock()
+
+	orch, ok := i.(orchestration.Orchestrator)
+	if !ok {
+		o.logger.ErrorLog("method", "deleteOrchestrator", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return
+	}
+
+	o.allocOrchID[orch.Status.OrchID] = false
+	o.numAllocOrchID--
 }
 
 func createOrchCheckHook(kind string) apiserver.PreCommitFunc {
@@ -94,7 +163,9 @@ func registerOrchestrationHooks(svc apiserver.Service, l log.Logger) {
 	l.Log("msg", "registering Hooks")
 	oh := orchHooks{logger: l.WithContext("Service", "Orchestrator")}
 	svc.GetCrudService("Orchestrator", apiintf.CreateOper).WithPreCommitHook(oh.validateOrchestrator)
+	svc.GetCrudService("Orchestrator", apiintf.CreateOper).WithPreCommitHook(oh.getOrchestratorID)
 	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.validateOrchestrator)
+	svc.GetCrudService("Orchestrator", apiintf.DeleteOper).WithPostCommitHook(oh.deleteOrchestrator)
 }
 
 func init() {

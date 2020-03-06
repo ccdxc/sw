@@ -69,7 +69,7 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 	v.Log.Infof("Got handle workload event for %s in DC %s", m.Key, m.DcName)
 	meta := &api.ObjectMeta{
-		Name: createVMWorkloadName(m.Originator, m.DcID, m.Key),
+		Name: v.createVMWorkloadName(m.DcID, m.Key),
 		// TODO: Don't use default tenant
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
@@ -128,7 +128,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		case defs.VMPropName:
 			v.processVMName(prop, m.Originator, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropRT:
-			v.processVMRuntime(prop, m.Originator, m.DcID, m.DcName, workloadObj)
+			v.processVMRuntime(prop, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropTag:
 			v.processTags(prop, m.Originator, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropOverallStatus:
@@ -179,7 +179,7 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		v.Log.Infof("Ignore COLD VMotionStart Event for VM %s", m.VMKey)
 		return
 	}
-	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
+	wlName := v.createVMWorkloadName(m.DcID, m.VMKey)
 	var hostKey string
 	dcID := m.DcID
 	dc := v.GetDCFromID(dcID)
@@ -215,7 +215,7 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		v.Log.Errorf("Ignore vMotion for %s - dest DC %s not found", m.VMKey, dcID)
 		return
 	}
-	hostName := createHostName(v.VcID, dcID, hostKey)
+	hostName := v.createHostName(dcID, hostKey)
 	workloadObj := v.pCache.GetWorkloadByName(wlName)
 	if workloadObj == nil {
 		v.Log.Debugf("Ignore VMotionStart Event for VM %s - No workload", m.VMKey)
@@ -288,8 +288,8 @@ func (v *VCHub) migrateFromNonPensandoHost(wlObj *workload.Workload, destDc *Pen
 
 func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
 	v.Log.Infof("VMotionFailedMsg for VM %s in DC %s", m.VMKey, m.DcID)
-	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
-	hostName := createHostName(v.VcID, m.DcID, m.DstHostKey)
+	wlName := v.createVMWorkloadName(m.DcID, m.VMKey)
+	hostName := v.createHostName(m.DcID, m.DstHostKey)
 	wlObj := v.pCache.GetWorkloadByName(wlName)
 	if wlObj == nil {
 		v.Log.Errorf("Ignore Cancel vMotion for %s - no workload found", wlName)
@@ -673,7 +673,7 @@ func (v *VCHub) processTags(prop types.PropertyChange, vcID string, dcID string,
 	workload.Labels = generateLabelsFromTags(workload.Labels, tagMsg)
 }
 
-func (v *VCHub) processVMRuntime(prop types.PropertyChange, vcID string, dcID string, dcName string, workload *workload.Workload) {
+func (v *VCHub) processVMRuntime(prop types.PropertyChange, dcID string, dcName string, workload *workload.Workload) {
 	v.Log.Debugf("VMRuntime change for %s", workload.Name)
 	if prop.Val == nil {
 		return
@@ -687,7 +687,7 @@ func (v *VCHub) processVMRuntime(prop types.PropertyChange, vcID string, dcID st
 		v.Log.Errorf("Runtime's host property was empty")
 		return
 	}
-	hostName := createHostName(vcID, dcID, rt.Host.Value)
+	hostName := v.createHostName(dcID, rt.Host.Value)
 	workload.Spec.HostName = hostName
 }
 
@@ -902,8 +902,8 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey str
 	if !isPensandoHost(hConfig) {
 		return
 	}
-	wlName := createVmkWorkloadName(v.VcID, penDC.dcRef.Value, hKey)
-	hostName := createHostName(v.VcID, penDC.dcRef.Value, hKey)
+	wlName := v.createVmkWorkloadName(penDC.dcRef.Value, hKey)
+	hostName := v.createHostName(penDC.dcRef.Value, hKey)
 	workloadObj := v.getVmkWorkload(penDC, wlName, hostName)
 	newNicMap := map[string]bool{}
 	interfaces := []workload.WorkloadIntfSpec{}

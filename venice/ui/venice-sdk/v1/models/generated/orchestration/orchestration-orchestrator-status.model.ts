@@ -14,6 +14,7 @@ export interface IOrchestrationOrchestratorStatus {
     'last-connected'?: Date;
     'last-sync'?: Date;
     'session-id'?: string;
+    'orch-id'?: number;
     '_ui'?: any;
 }
 
@@ -25,6 +26,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     'last-connected': Date = null;
     'last-sync': Date = null;
     'session-id': string = null;
+    'orch-id': number = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorStatus]: PropInfoItem } = {
         'connection-status': {
             enum: OrchestrationOrchestratorStatus_connection_status_uihint,
@@ -43,6 +45,10 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
         'session-id': {
             required: false,
             type: 'string'
+        },
+        'orch-id': {
+            required: false,
+            type: 'number'
         },
     }
 
@@ -108,6 +114,13 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
         } else {
             this['session-id'] = null
         }
+        if (values && values['orch-id'] != null) {
+            this['orch-id'] = values['orch-id'];
+        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('orch-id')) {
+            this['orch-id'] = OrchestrationOrchestratorStatus.propInfo['orch-id'].default;
+        } else {
+            this['orch-id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -119,6 +132,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
                 'last-connected': CustomFormControl(new FormControl(this['last-connected']), OrchestrationOrchestratorStatus.propInfo['last-connected']),
                 'last-sync': CustomFormControl(new FormControl(this['last-sync']), OrchestrationOrchestratorStatus.propInfo['last-sync']),
                 'session-id': CustomFormControl(new FormControl(this['session-id']), OrchestrationOrchestratorStatus.propInfo['session-id']),
+                'orch-id': CustomFormControl(new FormControl(this['orch-id']), OrchestrationOrchestratorStatus.propInfo['orch-id']),
             });
         }
         return this._formGroup;
@@ -134,6 +148,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
             this._formGroup.controls['last-connected'].setValue(this['last-connected']);
             this._formGroup.controls['last-sync'].setValue(this['last-sync']);
             this._formGroup.controls['session-id'].setValue(this['session-id']);
+            this._formGroup.controls['orch-id'].setValue(this['orch-id']);
         }
     }
 }

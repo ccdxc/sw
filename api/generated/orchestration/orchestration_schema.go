@@ -58,8 +58,10 @@ var typesMapOrchestration = map[string]*api.Struct{
 			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"login-data":        api.CLIInfo{Path: "Spec.LoginData", Skip: false, Insert: "", Help: ""},
+			"manage-namespaces": api.CLIInfo{Path: "Spec.ManageNamespaces", Skip: false, Insert: "", Help: ""},
 			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"orch-id":           api.CLIInfo{Path: "Status.OrchID", Skip: false, Insert: "", Help: ""},
 			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"session-id":        api.CLIInfo{Path: "Status.SessionID", Skip: false, Insert: "", Help: ""},
@@ -79,6 +81,8 @@ var typesMapOrchestration = map[string]*api.Struct{
 			"Credentials": api.Field{Name: "Credentials", CLITag: api.CLIInfo{ID: "credentials", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "credentials", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExternalCred"},
 
 			"LoginData": api.Field{Name: "LoginData", CLITag: api.CLIInfo{ID: "login-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "login-data", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"ManageNamespaces": api.Field{Name: "ManageNamespaces", CLITag: api.CLIInfo{ID: "manage-namespaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "manage-namespaces", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"orchestration.OrchestratorSpec.LoginDataEntry": &api.Struct{
@@ -98,6 +102,8 @@ var typesMapOrchestration = map[string]*api.Struct{
 			"LastSync": api.Field{Name: "LastSync", CLITag: api.CLIInfo{ID: "last-sync", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-sync", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"OrchID": api.Field{Name: "OrchID", CLITag: api.CLIInfo{ID: "orch-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orch-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 }

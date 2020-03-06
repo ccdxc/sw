@@ -50,6 +50,10 @@ message OrchestratorSpec {
     // Credentials for the orchestrator
     monitoring.ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
     map<string, string>  LoginData = 4 [(gogoproto.jsontag) = "login-data,omitempty"];
+
+    // Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces.
+    repeated string ManageNamespaces = 5 [(gogoproto.nullable) = true,
+                             (gogoproto.jsontag) = "manage-namespaces,omitempty"];
 }
 
 // OrchestratorStatus contains the current state of connection with the orchestrator.
@@ -69,4 +73,5 @@ message OrchestratorStatus {
     api.Timestamp LastConnected   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-connected,omitempty"];
     api.Timestamp LastSync        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-sync,omitempty"];
     string SessionID              = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-id,omitempty"];
+    int32 OrchID                  = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orch-id,omitempty"];
 }

@@ -96,23 +96,7 @@ func isPensandoHost(hConfig *types.HostConfigInfo) bool {
 	return false
 }
 
-func createVMWorkloadName(orchID, namespace, objName string) string {
-	// don't include namespace (DC name) in the workload name
-	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, "", objName))
-}
-
-func createVmkWorkloadName(orchID, namespace, objName string) string {
-	// don't include namespace (DC name) in the vmk workload name
-	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, createHostName(orchID, "", objName))
-}
-
 func createVmkWorkloadNameFromHostName(hostName string) string {
 	// uses apiserver host object.Name
 	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, hostName)
-}
-
-func createHostName(orchID, namespace, objName string) string {
-	// Remove DC name from the host name. On events like workload update, the DC of the event is
-	// different from the DC where the host is
-	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, "" /* namespace */, objName))
 }

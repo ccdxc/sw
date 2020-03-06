@@ -172,8 +172,8 @@ func TestVmotion(t *testing.T) {
 
 	testWorkloads := map[string]string{} // [workload] = host
 
-	vmName := createVMWorkloadName(orchInfo1[0].Name, dc.Obj.Self.Value, vm1.Reference().Value)
-	host1Name := createHostName(orchInfo1[0].Name, dc.Obj.Self.Value, penHost1.Obj.Self.Value)
+	vmName := vchub.createVMWorkloadName(dc.Obj.Self.Value, vm1.Reference().Value)
+	host1Name := vchub.createHostName(dc.Obj.Self.Value, penHost1.Obj.Self.Value)
 	testWorkloads[vmName] = host1Name
 
 	// Add Validations
@@ -299,7 +299,7 @@ func TestVmotion(t *testing.T) {
 	vchub.handleVCNotification(m)
 
 	// Verify that VM is on host2 by getting workload for the vm
-	host2Name := createHostName(orchInfo1[0].Name, dc.Obj.Self.Value, penHost2.Obj.Self.Value)
+	host2Name := vchub.createHostName(dc.Obj.Self.Value, penHost2.Obj.Self.Value)
 	testWorkloads[vmName] = host2Name
 	verifyVMWorkloads(testWorkloads, "VM not found on host2")
 

@@ -15,6 +15,7 @@ export interface IOrchestrationOrchestratorSpec {
     'uri': string;
     'credentials'?: IMonitoringExternalCred;
     'login-data'?: object;
+    'manage-namespaces'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -29,6 +30,8 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
     /** Credentials for the orchestrator. */
     'credentials': MonitoringExternalCred = null;
     'login-data': object = null;
+    /** Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces. */
+    'manage-namespaces': Array<string> = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorSpec]: PropInfoItem } = {
         'type': {
             enum: OrchestrationOrchestratorSpec_type_uihint,
@@ -50,6 +53,11 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
         'login-data': {
             required: false,
             type: 'object'
+        },
+        'manage-namespaces': {
+            description:  `Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces.`,
+            required: false,
+            type: 'Array<string>'
         },
     }
 
@@ -76,6 +84,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['credentials'] = new MonitoringExternalCred();
+        this['manage-namespaces'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -114,6 +123,13 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
         } else {
             this['login-data'] = null
         }
+        if (values && values['manage-namespaces'] != null) {
+            this['manage-namespaces'] = values['manage-namespaces'];
+        } else if (fillDefaults && OrchestrationOrchestratorSpec.hasDefaultValue('manage-namespaces')) {
+            this['manage-namespaces'] = [ OrchestrationOrchestratorSpec.propInfo['manage-namespaces'].default];
+        } else {
+            this['manage-namespaces'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -125,6 +141,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
                 'uri': CustomFormControl(new FormControl(this['uri'], [required, minLengthValidator(1), ]), OrchestrationOrchestratorSpec.propInfo['uri']),
                 'credentials': CustomFormGroup(this['credentials'].$formGroup, OrchestrationOrchestratorSpec.propInfo['credentials'].required),
                 'login-data': CustomFormControl(new FormControl(this['login-data']), OrchestrationOrchestratorSpec.propInfo['login-data']),
+                'manage-namespaces': CustomFormControl(new FormControl(this['manage-namespaces']), OrchestrationOrchestratorSpec.propInfo['manage-namespaces']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('credentials') as FormGroup).controls).forEach(field => {
@@ -145,6 +162,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
             this._formGroup.controls['uri'].setValue(this['uri']);
             this['credentials'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['login-data'].setValue(this['login-data']);
+            this._formGroup.controls['manage-namespaces'].setValue(this['manage-namespaces']);
         }
     }
 }

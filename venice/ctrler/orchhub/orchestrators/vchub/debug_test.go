@@ -38,7 +38,7 @@ func TestDebug(t *testing.T) {
 	AssertOk(t, err, "failed dc create")
 	_, err = dc1.AddHost("host1")
 	AssertOk(t, err, "Failed to create host")
-	_, err = dc1.AddVM("vm1", "host1", nil)
+	vm, err := dc1.AddVM("vm1", "host1", nil)
 	AssertOk(t, err, "Failed to create vm")
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -49,6 +49,7 @@ func TestDebug(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Status.OrchID = 1
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -92,8 +93,9 @@ func TestDebug(t *testing.T) {
 	testDebug(DebugUseg, params, `{"PG":{"#Pen-PG-n1-primary":2,"#Pen-PG-n1-secondary":3},"Hosts":{}}`)
 
 	params = map[string]string{}
-	testDebug(DebugCache, params, `{"Workload":{"default/default/127.0.0.1:8989--vm-19":{"kind":"Workload","api-version":"v1","meta":{"name":"127.0.0.1:8989--vm-19","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.namespace":"","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1"},"creation-time":"","mod-time":""},"spec":{"host-name":"127.0.0.1:8989--host-14"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`)
+	debugString := `{"Workload":{"default/default/` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `":{"kind":"Workload","api-version":"v1","meta":{"name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.namespace":"","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1"},"creation-time":"","mod-time":""},"spec":{"host-name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Runtime.Host.Value) + `"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`
 
+	testDebug(DebugCache, params, debugString)
 	params = map[string]string{}
 	testDebug(DebugState, params, `{"PenTestDC":{"ID":"datacenter-2","DVS":{"#Pen-DVS-PenTestDC":{"ID":"dvs-21","PGs":{"#Pen-PG-n1":{"ID":"dvportgroup-25","Network":"n1"}}}}}}`)
 

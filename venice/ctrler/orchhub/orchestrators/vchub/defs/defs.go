@@ -204,6 +204,7 @@ type TagMsg struct {
 type State struct {
 	VcURL      *url.URL
 	VcID       string
+	OrchID     string
 	ClusterID  string
 	Ctx        context.Context
 	Log        log.Logger

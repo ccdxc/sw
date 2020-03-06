@@ -270,7 +270,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	// CREATING HOSTS
 	staleHost2 := createHostObj(
-		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00001"),
+		vchub.createHostName(dc1.Obj.Self.Value, "hostsystem-00001"),
 		"test",
 		conv.MacString(pNicMac),
 	)
@@ -281,7 +281,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	// Create a another stale host with same mac addr but different VC id
 	staleHost := createHostObj(
-		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
+		vchub.createHostName(dc1.Obj.Self.Value, "hostsystem-00000"),
 		"test",
 		conv.MacString(pNicMac),
 	)
@@ -292,7 +292,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	// Stale host that will have a stale workload referring to it
 	staleHost3 := createHostObj(
-		createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00002"),
+		vchub.createHostName(dc1.Obj.Self.Value, "hostsystem-00002"),
 		"test",
 		conv.MacString(pNicMac),
 	)
@@ -303,7 +303,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	// Create stale workload
 	staleWorkload := createWorkloadObj(
-		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
+		vchub.createVMWorkloadName(dc1.Obj.Self.Value, "staleWorkload"),
 		staleHost3.Name,
 		[]workload.WorkloadIntfSpec{
 			workload.WorkloadIntfSpec{
@@ -318,7 +318,7 @@ func TestVCSyncHost(t *testing.T) {
 	AssertOk(t, err, "failed to create workload")
 
 	host1 := createHostObj(
-		createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+		vchub.createHostName(dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
 		"test1",
 		"",
 	)
@@ -360,7 +360,7 @@ func TestVCSyncHost(t *testing.T) {
 	}
 
 	dcHostMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{host1.Name, createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value)},
+		defaultTestParams.TestDCName: []string{host1.Name, vchub.createHostName(dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value)},
 	}
 
 	verifyHosts(dcHostMap)
@@ -481,7 +481,7 @@ func TestVCSyncVM(t *testing.T) {
 
 	// CREATING HOSTS
 	host1 := createHostObj(
-		createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+		vchub.createHostName(dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
 		"test1",
 		"",
 	)
@@ -489,7 +489,7 @@ func TestVCSyncVM(t *testing.T) {
 
 	// CREATING WORKLOADS
 	staleWorkload := createWorkloadObj(
-		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
+		vchub.createVMWorkloadName(dc1.Obj.Self.Value, "staleWorkload"),
 		host1.Name,
 		[]workload.WorkloadIntfSpec{
 			workload.WorkloadIntfSpec{
@@ -509,7 +509,7 @@ func TestVCSyncVM(t *testing.T) {
 	sm.Controller().Workload().Create(&staleWorkload)
 
 	workloadExisting := createWorkloadObj(
-		createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmExisting.Self.Value),
+		vchub.createVMWorkloadName(dc1.Obj.Self.Value, vmExisting.Self.Value),
 		host1.Name,
 		[]workload.WorkloadIntfSpec{
 			workload.WorkloadIntfSpec{
@@ -576,7 +576,7 @@ func TestVCSyncVM(t *testing.T) {
 	}
 
 	dcWorkloadMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{workloadExisting.Name, createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmNew.Self.Value)},
+		defaultTestParams.TestDCName: []string{workloadExisting.Name, vchub.createVMWorkloadName(dc1.Obj.Self.Value, vmNew.Self.Value)},
 	}
 
 	verifyWorkloads(dcWorkloadMap, "Failed to verify workloads")
@@ -762,7 +762,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	logger.Infof("===== Sync1 =====")
 	vchub.Sync()
 
-	wlName := createVmkWorkloadName(orchInfo1[0].Name, dc.Obj.Self.Value, host.Obj.Self.Value)
+	wlName := vchub.createVmkWorkloadName(dc.Obj.Self.Value, host.Obj.Self.Value)
 	testWorkloadMap[wlName] = testNICs
 
 	// Add Validations

@@ -82,7 +82,7 @@ func TestHosts(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: createHostName(v.VcID, dcName, "hostsystem-44"),
+					Name: v.createHostName(dcName, "hostsystem-44"),
 				}
 				expHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -188,7 +188,7 @@ func TestHosts(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
+					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -274,7 +274,7 @@ func TestHosts(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
+					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -360,7 +360,7 @@ func TestHosts(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
+					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
 
 				time.Sleep(50 * time.Millisecond)
@@ -398,7 +398,7 @@ func TestHosts(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
+					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
 
 				time.Sleep(50 * time.Millisecond)

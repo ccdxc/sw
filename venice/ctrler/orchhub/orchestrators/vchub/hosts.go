@@ -25,7 +25,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	}
 
 	meta := &api.ObjectMeta{
-		Name: createHostName(m.Originator, m.DcID, m.Key),
+		Name: v.createHostName(m.DcID, m.Key),
 	}
 	var existingHost, hostObj *cluster.Host
 	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
@@ -272,7 +272,7 @@ func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 	if penDC != nil && ok {
 		if hKey, ok := penDC.findHostKeyByName(hostName); ok {
 			// Delete vmkworkload
-			vmkWlName := createVmkWorkloadName(v.VcID, penDC.dcRef.Value, hKey)
+			vmkWlName := v.createVmkWorkloadName(penDC.dcRef.Value, hKey)
 			v.deleteWorkloadByName(vmkWlName)
 			penDC.delHostNameKey(hostName)
 		}

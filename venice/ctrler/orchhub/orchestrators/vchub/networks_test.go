@@ -408,12 +408,12 @@ func TestNetworks(t *testing.T) {
 
 				// Add workloads and hosts for this DC
 
-				h1 := createHostObj(createHostName("127.0.0.1:8990", "DC1", "h1"), "h1", "aaaa.bbbb.cccc")
+				h1 := createHostObj(vchub.createHostName("DC1", "h1"), "h1", "aaaa.bbbb.cccc")
 				vchub.StateMgr.Controller().Host().Create(&h1)
 				utils.AddOrchNameLabel(h1.Labels, "127.0.0.1:8990")
 				utils.AddOrchNamespaceLabel(h1.Labels, "DC1")
 
-				w1 := createWorkloadObj(createVMWorkloadName("127.0.0.1:8990", "DC1", "w1"), h1.Name, nil)
+				w1 := createWorkloadObj(vchub.createVMWorkloadName("DC1", "w1"), h1.Name, nil)
 				utils.AddOrchNamespaceLabel(w1.Labels, "DC1")
 				utils.AddOrchNameLabel(w1.Labels, "127.0.0.1:8990")
 

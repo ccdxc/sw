@@ -49,7 +49,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -135,7 +135,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -284,7 +284,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -464,7 +464,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -511,7 +511,7 @@ func TestWorkloads(t *testing.T) {
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
+				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", v.createHostName(dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the deleted inf")
 			},
 		},
@@ -668,7 +668,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -699,7 +699,7 @@ func TestWorkloads(t *testing.T) {
 					if len(item.Spec.Interfaces) != 2 {
 						return false, nil
 					}
-					if item.Spec.HostName != createHostName(v.VcID, dcName, "hostsystem-25") {
+					if item.Spec.HostName != v.createHostName(dcName, "hostsystem-25") {
 						return false, nil
 					}
 					return true, nil
@@ -714,9 +714,9 @@ func TestWorkloads(t *testing.T) {
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
+				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", v.createHostName(dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
-				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-25"))
+				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", v.createHostName(dcName, "hostsystem-25"))
 				AssertOk(t, err, "Vlan should be assigned on the new host")
 			},
 		},
@@ -840,7 +840,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -878,7 +878,7 @@ func TestWorkloads(t *testing.T) {
 				AssertEquals(t, len(expWorkload.Spec.Interfaces), len(item.Spec.Interfaces), "Interfaces were not equal")
 
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
+				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", v.createHostName(dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
 			},
 		},
@@ -993,7 +993,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1074,7 +1074,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-40"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-40"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1084,7 +1084,7 @@ func TestWorkloads(t *testing.T) {
 						APIVersion: "v1",
 					},
 					ObjectMeta: api.ObjectMeta{
-						Name: createVMWorkloadName(v.VcID, dcName, "virtualmachine-40"),
+						Name: v.createVMWorkloadName(dcName, "virtualmachine-40"),
 						Labels: map[string]string{
 							NameKey:            "test-vm",
 							utils.NamespaceKey: dcName,
@@ -1179,7 +1179,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1198,7 +1198,7 @@ func TestWorkloads(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 					Spec: workload.WorkloadSpec{
-						HostName: createHostName(v.VcID, dcName, "hostsystem-21"),
+						HostName: v.createHostName(dcName, "hostsystem-21"),
 					},
 				}
 
@@ -1278,7 +1278,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1335,7 +1335,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1436,7 +1436,7 @@ func TestWorkloads(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
+					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 					Labels: map[string]string{
