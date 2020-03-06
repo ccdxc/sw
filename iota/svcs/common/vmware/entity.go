@@ -24,6 +24,10 @@ import (
 	//"github.com/vmware/govmomi/ovf"
 )
 
+const (
+	maxIPWaitRetries = 20
+)
+
 // TLSVerify turns on TLS verification.
 var TLSVerify = false
 
@@ -98,6 +102,7 @@ type EntityIntf interface {
 	FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error)
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 	RelaxSecurityOnPg(name string, pgName string) error
+	ReconfigureVMNetwork(vm *VM, currNW string, newNW string, maxReconfigs int) error
 	AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error
 	AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error
 	RemoveKernelNic(cluster, host string, pgName string) error
@@ -382,11 +387,20 @@ func (entity *Entity) boot(name string, ncpus uint, memory uint) (*VMInfo, error
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(entity.Ctx(), true)
-	if err != nil {
-		return nil, errors.Wrap(err, "Wait for IP failed")
+
+	for i := 0; i < maxIPWaitRetries; i++ {
+		timeoutCtx, cancelFunc := context.WithTimeout(entity.Ctx(), 1*time.Minute)
+		defer cancelFunc()
+		ip, err = vm.WaitForIP(timeoutCtx, true)
+		if err != nil {
+			continue
+		}
+		break
 	}
 
+	if err == nil {
+		return nil, errors.Wrap(err, "Wait for IP failed")
+	}
 	return &VMInfo{Name: name, IP: ip}, nil // first arg is string, second is net.IP.
 }
 

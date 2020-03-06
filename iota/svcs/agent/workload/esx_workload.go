@@ -439,13 +439,13 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 		}
 	}
 
-	vm.logger.Info("Deploying VM Complete...")
+	vm.logger.Infof("Deploying %v VM Complete...", vm.vmName)
 	vm.ip = vmInfo.IP
 	if err = vm.waitForVMUp(); err != nil {
 		return errors.Wrap(err, "SSH connection failed")
 	}
 
-	vm.logger.Info("VM is up now..")
+	vm.logger.Infof("VM %v is up now..", vm.vmName)
 	vm.vm, err = host.NewVM(vm.vmName)
 	if err != nil {
 		return errors.Wrap(err, "Could not find deployed VM")
@@ -532,7 +532,7 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		}
 	}
 
-	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, pgName, 1); err != nil {
+	if err := vm.vhost.ReconfigureVMNetwork(vm.vm, constants.EsxDefaultNetwork, pgName, 1); err != nil {
 		return "", errors.Wrapf(err, "Error in Reconfiguring Def network to %v", pgName)
 	}
 

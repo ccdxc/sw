@@ -303,7 +303,16 @@ class EntityManagement:
         print("sleeping 120 seconds after IpmiReset")
         time.sleep(120)
         print("finished 120 second sleep. Looking for prompt now...")
-        self.NaplesWait()
+        i = 0
+        while True:
+            try:
+                self.NaplesWait()
+                break
+            except Exception as ex:
+                if i > 3:
+                    raise ex
+                i = i + 1
+                continue
         print("Waiting for host ssh..")
         self.host.WaitForSsh()
 
@@ -555,9 +564,9 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
+        self.InstallPrep()
         if copy_fw:
             self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.image), entity_dir = NAPLES_TMP_DIR)
-        self.InstallPrep()
         self.SendlineExpect("", "#", trySync=True)
         self.SendlineExpect("", "#", trySync=True)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(self.fw_images.image),

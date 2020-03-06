@@ -166,29 +166,25 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("sudhiaithal-iota-dc")
+	dc, err := vc.SetupDataCenter("pbhide-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["sudhiaithal-iota-dc"]
-	TestUtils.Assert(t, ok, "successfuly setup dc")
+	dc, ok := vc.datacenters["pbhide-iota-dc"]
+	TestUtils.Assert(t, ok, "pbhide setup dc")
 
-	c, ok := dc.clusters["sudhiaithal-iota-cluster"]
+	c, ok := dc.clusters["pbhide-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	dvs, err := dc.findDvs("Pen-DVS-sudhiaithal-iota-dc")
+	dvs, err := dc.findDvs("#Pen-DVS-pbhide-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly found dvs")
 	TestUtils.Assert(t, dvs != nil, "dvs nil")
 
-	pgs, err := dc.FetchDVPortGroupsNames("Pen-DVS-sudhiaithal-iota-dc")
-	TestUtils.Assert(t, err == nil, "successfuly found dvs")
-	TestUtils.Assert(t, len(pgs) != 0, "dvs nil")
+	vm, err2 := dc.NewVM("workload-host-1-w10")
+	TestUtils.Assert(t, err2 == nil, "VM FOUND")
+	TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	for _, pg := range pgs {
-		fmt.Printf("pG %v\n", pg)
-
-	}
-	err = dc.RemovePG("Dv-test")
-	TestUtils.Assert(t, err == nil, "successfuly removed dvs")
+	ip, err := vm.vm.WaitForIP(ctx, true)
+	fmt.Printf("VM IP %v", ip)
 
 	/*dvsSpec := DVSwitchSpec{
 	Name: "iota-dvs", Cluster: "sudhiaithal-iota-cluster",
@@ -199,7 +195,7 @@ func Test_vcenter_find_host(t *testing.T) {
 	//err = dc.AddDvs(dvsSpec)
 	//TestUtils.Assert(t, err == nil, "dvs added")
 
-	vm, err2 := dc.NewVM("workload-host-1-w1")
+	vm, err2 = dc.NewVM("workload-host-1-w1")
 	TestUtils.Assert(t, err2 == nil, "VM FOUND")
 	TestUtils.Assert(t, vm != nil, "VM FOND")
 
