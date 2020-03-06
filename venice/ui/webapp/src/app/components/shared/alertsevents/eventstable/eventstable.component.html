@@ -48,10 +48,15 @@
              (click)="onEventNumberClick($event, 'info')" [matTooltip]="'Infomational Events'"
              *ngIf="eventNumbers.info>0 && eventNumbers.info !== events.length">
           {{ eventNumbers.info }}</div>
+        <div class="global-button global-alert-debug alertsevents-main-menu-number "
+             [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'debug' ? 'alertsevents-disabled' : ''"
+             (click)="onEventNumberClick($event, 'debug')" [matTooltip]="'Debug Events'"
+             *ngIf="showDebugEvents && eventNumbers.debug>0 && eventNumbers.debug !== events.length">
+          {{ eventNumbers.debug }}</div>
         <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
                     labelStyleClass="alertsevents-checkbox-label" binary="true"
                     label="Show Debug Events"
-                    [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
+                    [(ngModel)]="showDebugEvents" (onChange)="showDebugPressed()"></p-checkbox>
         <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
                        (timeRange)="setEventsTimeRange($event)"
                        [hiddenTimeRangeOptions]="['Previous month']"></app-timerange>

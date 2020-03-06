@@ -210,6 +210,11 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     }
   }
 
+  showDebugPressed() {
+    this.genQueryBodies();
+    this.getEvents();
+  }
+
   filterEvents() {
     this.eventsLoading = true;
     // We put the filtering into a set timeoute so that it gets pushed to the end of
