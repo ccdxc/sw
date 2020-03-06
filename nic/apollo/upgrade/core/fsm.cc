@@ -19,7 +19,7 @@
 #include "nic/apollo/upgrade/core/idl.hpp"
 #include "nic/apollo/upgrade/core/utils.hpp"
 #include "nic/apollo/upgrade/core/fsm.hpp"
-#include "nic/apollo/upgrade/core/gen/upg_fsm.hpp"
+#include "gen/proto/upg_fsm.hpp"
 
 namespace upg {
 

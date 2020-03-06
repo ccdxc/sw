@@ -56,6 +56,7 @@ ASM_16_TARGETIDS    :=
 PROTO_TARGETIDS     :=
 SVCGEN_TARGETIDS    :=
 MEMRGNS_TARGETIDS   :=
+UPGFSMGEN_TARGETIDS :=
 MOCKGEN_TARGETIDS   :=
 GOIMPORTS_TARGETIDS :=
 EXPORT_TARGETIDS    :=
@@ -210,6 +211,13 @@ define INCLUDE_MODULEMK
         $${TGID}_ARGS               := $${MODULE_ARGS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             MEMRGNS_TARGETIDS           += $${TGID}
+        endif
+    else ifeq "$$(suffix $${MODULE_TARGET})" ".upgfsmgen"
+        $${TGID}_RECIPE_TYPE        := UPGFSMGEN
+        $${TGID}_BASECMD            := $${MODULE_BASECMD}
+        $${TGID}_ARGS               := $${MODULE_ARGS}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+           UPGFSMGEN_TARGETIDS           += $${TGID}
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".mockgen"
         $${TGID}_RECIPE_TYPE        := MOCKGEN
@@ -371,6 +379,7 @@ $(foreach modpath,${MODULE_PATHS}, \
 
 TARGETIDS := $(strip ${CXX_TARGETIDS} ${P4_TARGETIDS} ${P4_16_TARGETIDS} \
                      ${MEMRGNS_TARGETIDS} \
+                     ${UPGFSMGEN_TARGETIDS} \
                      ${ASM_TARGETIDS} ${ASM_16_TARGETIDS} ${PROTO_TARGETIDS} \
                      ${SVCGEN_TARGETIDS} ${MOCKGEN_TARGETIDS} \
                      ${GOIMPORTS_TARGETIDS} ${EXPORT_TARGETIDS} \
