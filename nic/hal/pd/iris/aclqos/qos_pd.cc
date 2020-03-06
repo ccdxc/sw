@@ -2010,7 +2010,7 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("SWM queue init for uplink {}", args->swm_uplink_port);
 
-    if ( (args->swm_uplink_port < 1) || (args->swm_uplink_port > 8) ) {
+    if (args->swm_uplink_port > TM_PORT_UPLINK_7) {
         HAL_TRACE_ERR("unsupported port number for SWM {}", 
                       args->swm_uplink_port);
         return HAL_RET_INVALID_ARG;
@@ -2119,7 +2119,7 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("SWM queue deinit for uplink {}", args->swm_uplink_port);
 
-    if ( (args->swm_uplink_port < 1) || (args->swm_uplink_port > 8) ) {
+    if (args->swm_uplink_port > TM_PORT_UPLINK_7) {
         HAL_TRACE_ERR("unsupported port number for SWM {}", 
                       args->swm_uplink_port);
         return HAL_RET_INVALID_ARG;

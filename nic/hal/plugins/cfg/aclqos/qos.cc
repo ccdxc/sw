@@ -2030,7 +2030,7 @@ qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac)
                     swm_uplink_port, dmac);
 
     // PD Call to init SWM queue
-    pd_qos_swm_args.swm_uplink_port = swm_uplink_port;
+    pd_qos_swm_args.swm_uplink_port = swm_uplink_port-1;  // change to 0 based
     pd_qos_swm_args.dmac = dmac;
     pd_func_args.pd_qos_swm_queue_init = &pd_qos_swm_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_SWM_QUEUE_INIT, &pd_func_args);
@@ -2053,7 +2053,7 @@ qos_swm_queue_deinit(uint32_t swm_uplink_port)
                     swm_uplink_port);
 
     // PD Call to de-init SWM queue
-    pd_qos_swm_args.swm_uplink_port = swm_uplink_port;
+    pd_qos_swm_args.swm_uplink_port = swm_uplink_port-1;  // change to 0 based
     pd_func_args.pd_qos_swm_queue_deinit = &pd_qos_swm_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT, &pd_func_args);
     if (ret != HAL_RET_OK) {
