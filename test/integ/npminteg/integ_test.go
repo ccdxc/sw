@@ -256,6 +256,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 func (it *integTestSuite) SetUpTest(c *C) {
 	log.Infof("============================= %s starting ==========================", c.TestName())
+	os.Remove(globals.NetAgentDBPath)
 	it.logger = logger.WithContext("t_name", c.TestName())
 }
 

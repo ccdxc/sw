@@ -21,13 +21,21 @@ func HandleProfile(infraAPI types.InfraAPI, client halapi.SystemClient, oper typ
 	switch oper {
 	case types.Create:
 		fallthrough
-	case types.Delete:
-		fallthrough
 	case types.Update:
 		return updateProfileHandler(infraAPI, client, profile)
+	case types.Delete:
+		return deleteProfileHandler(infraAPI, client, profile)
 	default:
 		return errors.Wrapf(types.ErrUnsupportedOp, "Op: %s", oper)
 	}
+}
+
+func deleteProfileHandler(infraAPI types.InfraAPI, client halapi.SystemClient, profile netproto.Profile) error {
+	if err := infraAPI.Delete(profile.Kind, profile.GetKey()); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Profile: %s | Err: %v", profile.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Profile: %s | Err: %v", profile.GetKey(), err)
+	}
+	return nil
 }
 
 func updateProfileHandler(infraAPI types.InfraAPI, client halapi.SystemClient, profile netproto.Profile) error {

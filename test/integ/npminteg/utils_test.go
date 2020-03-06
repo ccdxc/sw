@@ -63,6 +63,7 @@ func CreateAgent(logger log.Logger, veniceURL, nodeUUID string) (*Dpagent, error
 		DSCName:     nodeUUID,
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
+		MgmtIntf:    "lo",
 		Controllers: []string{veniceURL},
 	}
 	err = nagent.ControllerAPI.HandleVeniceCoordinates(o)

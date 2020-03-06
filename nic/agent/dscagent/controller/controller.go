@@ -35,6 +35,7 @@ import (
 type API struct {
 	sync.Mutex
 	sync.WaitGroup
+	//watchMutex                                sync.Mutex     // This prevents nimbus internal wg reuse panic that happens on calling WatchAggregate while wg.Wait() is getting evaluated.
 	tsmWG, tpmWG                              sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
 	nimbusClient                              *nimbus.NimbusClient
 	WatchCtx                                  context.Context
@@ -125,9 +126,31 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) error {
 	c.Lock()
 	defer c.Unlock()
+
 	log.Infof("Controller API: %s | Obj: %v", types.InfoHandlingVeniceCoordinates, obj)
-	c.InfraAPI.StoreConfig(obj)
+
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") && len(obj.Controllers) != 0 {
+		//// Reject incomplete configs TODO Remove this hack -> hack commented out with watch mutexes
+		//if len(obj.MgmtIP) == 0 || len(obj.MgmtIntf) == 0 {
+		//	log.Infof("Ignoring incomplete mode change spec. Obj: %v", obj)
+		//	return nil
+		//}
+		//
+		//// Check for idempotency.
+		//existingCfg := c.InfraAPI.GetConfig()
+		//log.Infof("Controller API: Testing for config idempotency. Existing Cfg: %v | New Config: %v", existingCfg, obj)
+		//sort.Strings(existingCfg.Controllers)
+		//sort.Strings(obj.Controllers)
+		//
+		//if reflect.DeepEqual(existingCfg.Controllers, obj.Controllers) {
+		//	log.Infof("Controller API: %s", types.InfoIgnoreVeniceCoordinatesUpdate)
+		//	return nil
+		//}
+		c.InfraAPI.StoreConfig(obj)
+
+		// Ensure that the controller API is registered with the pipeline
+		log.Infof("Controller API: %v", c)
+		c.PipelineAPI.RegisterControllerAPI(c)
 
 		// let the pipeline do its thing
 		c.PipelineAPI.HandleVeniceCoordinates(obj)
@@ -168,7 +191,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			ClientName:     types.Netagent,
 			ResolverClient: c.ResolverClient})
 	} else if strings.Contains(strings.ToLower(obj.DSCMode), "host") {
-
+		c.InfraAPI.StoreConfig(obj)
 		if err := c.Stop(); err != nil {
 			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 		}
@@ -191,10 +214,6 @@ func (c *API) Start(ctx context.Context) error {
 			return nil
 		default:
 		}
-
-		// Ensure that the controller API is registered with the pipeline
-		log.Infof("Controller API: %v", c)
-		c.PipelineAPI.RegisterControllerAPI(c)
 
 		// TODO unify this on Venice side to have a single config controller
 		c.npmClient, _ = c.factory.NewRPCClient(
@@ -271,8 +290,10 @@ func (c *API) Start(ctx context.Context) error {
 		}
 		c.nimbusClient = nimbusClient
 
+		watchExited := make(chan bool)
 		go func() {
 			c.WatchObjects([]string{"Profile", "IPAMPolicy", "Interface", "Collector"})
+			watchExited <- true
 		}()
 
 		// TODO temporarily commented out to debug.
@@ -305,8 +326,7 @@ func (c *API) Start(ctx context.Context) error {
 		}()
 
 		// TODO Watch for Mirror and NetflowSessions
-		time.Sleep(time.Millisecond * 100)
-		c.nimbusClient.Wait()
+		<-watchExited
 		tsmWatchCancel()
 		tpmWatchCancel()
 	}
@@ -316,7 +336,7 @@ func (c *API) WatchObjects(kinds []string) {
 	for {
 		select {
 		case <-c.WatchCtx.Done():
-			log.Infof("Controller API: %s kinds: %s", types.InfoTSMWatcherDone, kinds)
+			log.Infof("Controller API: %s | Kinds: %s", types.InfoTSMWatcherDone, kinds)
 			return
 		default:
 		}
@@ -325,14 +345,16 @@ func (c *API) WatchObjects(kinds []string) {
 			time.Sleep(time.Minute)
 			continue
 		}
+		watchExited := make(chan error)
 		go func() {
-			//log.Infof("Controller API: %s", types.InfoAggWatchStarted)
+			log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
 			if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+				watchExited <- err
 			}
 		}()
-		time.Sleep(time.Second * 2)
-		c.nimbusClient.Wait()
+		err := <-watchExited
+		log.Infof("Watch for kinds: %v exited. | Err: %v", kinds, err)
 	}
 }
 
@@ -359,6 +381,7 @@ func (c *API) Stop() error {
 			log.Error(errors.Wrapf(types.ErrTPMWatcherClose, "Controller API: %s", err))
 		}
 	}
+
 	return nil
 }
 

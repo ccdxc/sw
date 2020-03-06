@@ -26,9 +26,10 @@ func TestControllerAPINetworkMode(t *testing.T) {
 	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
 	defer c.Stop()
 	o := types.DistributedServiceCardStatus{
-		DSCName: "mock-dsc",
-		DSCMode: "network_managed_inband",
-		MgmtIP:  "42.42.42.42/24",
+		DSCName:  "mock-dsc",
+		DSCMode:  "network_managed_inband",
+		MgmtIP:   "42.42.42.42/24",
+		MgmtIntf: "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	time.Sleep(time.Second * 2)
@@ -86,6 +87,7 @@ func TestAppWatch(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	AssertOk(t, err, "Failed to trigger mode change")
@@ -194,6 +196,7 @@ func TestNetworkSecurityPolicyWatch(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	AssertOk(t, err, "Failed to trigger mode change")
@@ -297,6 +300,7 @@ func TestNetworkWatch(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	AssertOk(t, err, "Failed to trigger mode change")
@@ -395,6 +399,7 @@ func TestEndpointWatch(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	AssertOk(t, err, "Failed to trigger mode change")
@@ -453,6 +458,7 @@ func TestControllerAPIDefaultRestURL(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	time.Sleep(time.Second * 2)
@@ -471,6 +477,7 @@ func TestControllerAPIMalformedRestURL(t *testing.T) {
 		DSCMode:     "network_managed_inband",
 		MgmtIP:      "42.42.42.42/24",
 		Controllers: []string{"10.10.10.1"},
+		MgmtIntf:    "lo",
 	}
 	err = c.HandleVeniceCoordinates(o)
 	time.Sleep(time.Second * 2)

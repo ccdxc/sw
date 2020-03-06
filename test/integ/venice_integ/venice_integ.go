@@ -703,6 +703,7 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 			DSCMode:     "network_managed_inband",
 			MgmtIP:      "42.42.42.42/24",
 			Controllers: []string{veniceURL},
+			MgmtIntf:    "lo",
 		}
 		err = dscAgent.ControllerAPI.HandleVeniceCoordinates(o)
 		logger.Infof("RestURL: %v", agentTypes.DefaultAgentRestURL)

@@ -1391,6 +1391,12 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
 		}
 
+		// Take a lock to ensure a single HAL API is active at any given point
+		if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, oper, profile); err != nil {
+			log.Error(err)
+			return nil, err
+		}
+
 		return nil, nil
 
 	}
@@ -1552,6 +1558,26 @@ func (i *IrisAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.
 
 // ReplayConfigs replays last known configs from boltDB
 func (i *IrisAPI) ReplayConfigs() error {
+
+	// Replay Profile Object
+	profiles, err := i.InfraAPI.List("Profile")
+	if err == nil {
+		for _, o := range profiles {
+			var profile netproto.Profile
+			err := profile.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Profile. Err: %v", err)
+				continue
+			}
+			creator, ok := profile.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Profile object")
+				if _, err := i.HandleProfile(types.Create, profile); err != nil {
+					log.Errorf("Failed to recreate Profile: %v. Err: %v", profile.GetKey(), err)
+				}
+			}
+		}
+	}
 	// Replay Network Object
 	networks, err := i.InfraAPI.List("Network")
 	if err == nil {
@@ -1627,26 +1653,6 @@ func (i *IrisAPI) ReplayConfigs() error {
 				log.Info("Replaying persisted NetworkSecurityPolicy objects")
 				if _, err := i.HandleNetworkSecurityPolicy(types.Create, sgp); err != nil {
 					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
-				}
-			}
-		}
-	}
-
-	// Replay Profile Object
-	profiles, err := i.InfraAPI.List("Profile")
-	if err == nil {
-		for _, o := range profiles {
-			var profile netproto.Profile
-			err := profile.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Profile. Err: %v", err)
-				continue
-			}
-			creator, ok := profile.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Info("Replaying persisted Profile object")
-				if _, err := i.HandleProfile(types.Create, profile); err != nil {
-					log.Errorf("Failed to recreate Profile: %v. Err: %v", profile.GetKey(), err)
 				}
 			}
 		}

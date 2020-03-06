@@ -139,6 +139,7 @@ const (
 	InfoNPMWatcherDone                  = Info("InfoNPMWatcherDone")
 	InfoNPMWatcherReaped                = Info("InfoNPMWatcherReaped")
 	InfoHandlingVeniceCoordinates       = Info("InfoHandlingVeniceCoordinates")
+	InfoIgnoreVeniceCoordinatesUpdate   = Info("InfoIgnoreVeniceCoordinatesUpdate")
 	InfoUpdateVeniceCoordinates         = Info("InfoUpdateVeniceCoordinates")
 	InfoConnectedToNPM                  = Info("InfoConnectedToNPM")
 	InfoConnectedToTSM                  = Info("InfoConnectedToTSM")
