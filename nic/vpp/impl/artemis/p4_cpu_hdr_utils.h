@@ -28,12 +28,6 @@
 #define VPP_P4_TO_ARM_HDR_SZ               ARTEMIS_P4_TO_ARM_HDR_SZ
 
 always_inline u8
-pds_flow_add_vxlan (vlib_buffer_t *p0)
-{
-    return 0;
-}
-
-always_inline u8
 pds_is_flow_l2l (vlib_buffer_t *p0)
 {
     return 0;

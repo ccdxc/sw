@@ -25,24 +25,15 @@
 #define VPP_CPU_FLAGS_NAPT_SVC_POS         10
 #define VPP_CPU_FLAGS_FLOW_LOG_POS         11
 #define VPP_CPU_FLAGS_FLOW_L2L_POS         12
-#define VPP_CPU_FLAGS_FLOW_VXLAN_ADD_POS   13
 
 #define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
 #define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
 #define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << VPP_CPU_FLAGS_NAPT_SVC_POS)
 #define VPP_CPU_FLAGS_FLOW_LOG_VALID       (1 << VPP_CPU_FLAGS_FLOW_LOG_POS)
 #define VPP_CPU_FLAGS_FLOW_L2L_VALID       (1 << VPP_CPU_FLAGS_FLOW_L2L_POS)
-#define VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID (1 << VPP_CPU_FLAGS_FLOW_VXLAN_ADD_POS)
 
 #define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
-
-always_inline u8
-pds_get_flow_add_vxlan (vlib_buffer_t *p0)
-{
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID) ? 1 : 0;
-}
 
 always_inline u8
 pds_is_flow_l2l (vlib_buffer_t *p0)
@@ -88,18 +79,19 @@ format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
                " flow_hash[0x%x], l2_offset[%d], "
                "\n\tl3_offset[%d] l4_offset[%d], l2_inner_offset[%d],"
                " l3_inner_offset[%d], "
-               "\n\tl4_inner_offset[%d], payload_offset[%d], lif[%d],"
-               " egress_bd_id[%d], "
+               "\n\tl4_inner_offset[%d], payload_offset[%d], tcp_flags[0x%x],"
+               "\n\tsession_id[%d], lif[%d], egress_bd_id[%d], "
                "\n\tservice_xlate_id[%d], mapping_xlate_id[%d],"
                " tx_meter_id[%d],"
-               "\n\tnexthop_id[%d], vpc_id[%d], vnic_id[%d],"
-               " flags_short[0x%x]",
+               "\n\tnexthop_id[%d], vpc_id[%d], vnic_id[%d], "
+               "dnat_id[%d], flags_short[0x%x]",
                t->packet_len, t->flags, t->nacl_data, t->ingress_bd_id, t->flow_hash,
                t->l2_offset, t->l3_offset, t->l4_offset, t->l2_inner_offset,
                t->l3_inner_offset, t->l4_inner_offset, t->payload_offset,
-               t->lif, t->egress_bd_id, t->service_xlate_id, t->mapping_xlate_id,
+               t->tcp_flags, t->session_id, t->lif, t->egress_bd_id,
+               t->service_xlate_id, t->mapping_xlate_id,
                t->tx_meter_id, t->nexthop_id, t->vpc_id, t->vnic_id,
-               t->flags_short);
+               t->dnat_id, t->flags_short);
     return s;
 }
 
@@ -108,9 +100,13 @@ format_pds_p4_tx_cpu_hdr (u8 * s, va_list * args)
 {
     p4_tx_cpu_hdr_t *t = va_arg (*args, p4_tx_cpu_hdr_t *);
 
-    s = format(s, "lif[0x%x], nhop_valid[%d], nhop_type[%d], nhop_id[%d]",
+    s = format(s, "lif[0x%x], nhop_valid[%d], nhop_type[%d], nhop_id[%d] "
+               "mapping_overide[%d], flow_lkp_id_override[%d], "
+               "flow_lkp_id[%d]",
                t->lif_sbit0_ebit7 | (t->lif_sbit8_ebit10 << 8),
-               t->nexthop_valid, t->nexthop_type, t->nexthop_id);
+               t->nexthop_valid, t->nexthop_type, t->nexthop_id,
+               t->local_mapping_override, t->flow_lkp_id_override,
+               t->flow_lkp_id);
     return s;
 }
 

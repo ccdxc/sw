@@ -469,7 +469,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 {
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
-    u8 miss_hit = 0;
+    u8                  miss_hit = 0;
+    pds_flow_main_t     *fm = &pds_flow_main;
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
 
@@ -485,7 +486,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         r_dst_ip = src_ip = clib_net_to_host_u32(ip40->src_address.as_u32);
         r_src_ip = dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
         protocol = ip40->protocol;
-        lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+        if (!flow_exists) {
+            lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+        } else {
+            lkp_id = fm->session_index_pool[session_id].ingress_bd;
+        }
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP) ||
                           (ip40->protocol == IP_PROTOCOL_UDP)))) {
@@ -517,7 +522,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch( 0xff);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
-            pds_flow_handle_l2l(p0, flow_exists, &miss_hit);
+            pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
         }
         ftlv4_cache_set_flow_miss_hit(miss_hit);
         ftlv4_cache_set_update_flag(flow_exists);
@@ -559,7 +564,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         src_ip = ip60->src_address.as_u8;
         dst_ip = ip60->dst_address.as_u8;
         protocol = ip60->protocol;
-        lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+        if (!flow_exists) {
+            lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+        } else {
+            lkp_id = fm->session_index_pool[session_id].ingress_bd;
+        }
 
         if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP) ||
                           (ip60->protocol == IP_PROTOCOL_UDP)))) {
@@ -590,7 +599,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
-            pds_flow_handle_l2l(p0, flow_exists, &miss_hit);
+            pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
         }
         ftlv6_cache_set_flow_miss_hit(miss_hit);
         ftlv6_cache_set_update_flag(flow_exists);

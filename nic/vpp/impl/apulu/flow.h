@@ -286,14 +286,16 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
 {
     p4_tx_cpu_hdr_t *tx0, *tx1;
     u32 lif0, lif1;
+    u32 ses_id0, ses_id1;
+    pds_flow_main_t *fm = &pds_flow_main;
 
-    if (pds_get_flow_add_vxlan(b0)) {
+    if (pds_is_flow_l2l(b0)) {
         pds_flow_add_vxlan_template(b0);
         lif0 = PDS_FLOW_UPLINK0_LIF_ID;
     } else {
         lif0 = vnet_buffer(b0)->pds_flow_data.lif;
     }
-    if (pds_get_flow_add_vxlan(b1)) {
+    if (pds_is_flow_l2l(b1)) {
         pds_flow_add_vxlan_template(b1);
         lif1 = PDS_FLOW_UPLINK0_LIF_ID;
     } else {
@@ -302,15 +304,25 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
     tx0 = vlib_buffer_get_current(b0);
     tx1 = vlib_buffer_get_current(b1);
 
-    tx0->pad = 0;
-    tx1->pad = 0;
-    tx0->nexthop_valid = 0;
-    tx1->nexthop_valid = 0;
+    tx0->lif_flags = 0;
+    tx1->lif_flags = 0;
     tx0->lif_sbit0_ebit7 = lif0 & 0xff;
     tx1->lif_sbit0_ebit7 = lif0 & 0xff;
     tx0->lif_sbit8_ebit10 = lif1 >> 0x8;
     tx1->lif_sbit8_ebit10 = lif1 >> 0x8;
 
+    ses_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
+    if (fm->session_index_pool[ses_id0].ingress_bd) {
+        tx0->flow_lkp_id_override = 1;
+        tx0->flow_lkp_id =
+            clib_host_to_net_u16(fm->session_index_pool[ses_id0].ingress_bd);
+    }
+    ses_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
+    if (fm->session_index_pool[ses_id1].ingress_bd) {
+        tx1->flow_lkp_id_override = 1;
+        tx1->flow_lkp_id =
+            clib_host_to_net_u16(fm->session_index_pool[ses_id1].ingress_bd);
+    }
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
     //Dont care about nexthoptype/id as we don't set nexthop_valid.
@@ -321,19 +333,25 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
 {
     p4_tx_cpu_hdr_t *tx0;
     u32 lif = 0;
+    u32 ses_id;
+    pds_flow_main_t *fm = &pds_flow_main;
 
-    if (pds_get_flow_add_vxlan(b0)) {
+    if (pds_is_flow_l2l(b0)) {
         pds_flow_add_vxlan_template(b0);
         lif = PDS_FLOW_UPLINK0_LIF_ID;
     } else {
         lif = vnet_buffer(b0)->pds_flow_data.lif;
     }
     tx0 = vlib_buffer_get_current(b0);
-    tx0->pad = 0;
-    tx0->nexthop_valid = 0;
+    tx0->lif_flags = 0;
     tx0->lif_sbit0_ebit7 = lif & 0xff;
     tx0->lif_sbit8_ebit10 = lif >> 0x8;
-
+    ses_id = vnet_buffer(b0)->pds_flow_data.ses_id;
+    if (fm->session_index_pool[ses_id].ingress_bd) {
+        tx0->flow_lkp_id_override = 1;
+        tx0->flow_lkp_id =
+            clib_host_to_net_u16(fm->session_index_pool[ses_id].ingress_bd);
+    }
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     //Dont care about nexthoptype/id as we don't set nexthop_valid.
 }
@@ -839,14 +857,18 @@ err:
 }
 
 always_inline void
-pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists, u8 *miss_hit)
+pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
+                     u8 *miss_hit, u32 ses_id)
 {
+    pds_flow_main_t     *fm = &pds_flow_main;
+
     if (flow_exists) {
         *miss_hit = 0;
     } else {
         *miss_hit = 1;
-        // first l2l flow miss packet, add vxlan header
-        vnet_buffer(p0)->pds_flow_data.flags |= VPP_CPU_FLAGS_FLOW_VXLAN_ADD_VALID;
+        // store ingress bd id as in second pass we will not get this
+        fm->session_index_pool[ses_id].ingress_bd =
+                vnet_buffer(p0)->sw_if_index[VLIB_TX];
     }
 }
 

@@ -149,7 +149,7 @@ typedef struct session_prog_trace_s {
 } session_prog_trace_t;
 
 typedef struct pds_flow_hw_ctx_s {
-    u8 dummy;
+    u16 ingress_bd;
 } pds_flow_hw_ctx_t;
 
 
@@ -234,6 +234,7 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
         }
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
+        ctx->ingress_bd = 0;
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
              ctx - fm->session_index_pool + 1;
         refill_count--;
@@ -271,6 +272,7 @@ always_inline u32 pds_session_id_alloc(void)
         }
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
+        ctx->ingress_bd = 0;
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
             ctx - fm->session_index_pool + 1;
         refill_count--;
