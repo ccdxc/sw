@@ -239,6 +239,7 @@ class Eth : public Device
     static void PortStatusUpdate(void *obj);
 
     static std::string eth_type_to_str(EthDevType type);
+    static std::string os_type_to_str(unsigned int os_type);
     static EthDevType str_to_eth_type(std::string const &s);
 
     const char *opcode_to_str(cmd_opcode_t opcode);

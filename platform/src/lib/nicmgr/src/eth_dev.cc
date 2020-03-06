@@ -961,6 +961,27 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
     }
 }
 
+std::string
+Eth::os_type_to_str(unsigned int os_type)
+{
+    static char buf[16];
+    const char *s;
+
+    switch (os_type) {
+    case IONIC_OS_TYPE_LINUX:   s = "Linux";   break;
+    case IONIC_OS_TYPE_WIN:     s = "Windows"; break;
+    case IONIC_OS_TYPE_DPDK:    s = "DPDK";    break;
+    case IONIC_OS_TYPE_FREEBSD: s = "FreeBSD"; break;
+    case IONIC_OS_TYPE_IPXE:    s = "iPXE";    break;
+    case IONIC_OS_TYPE_ESXI:    s = "ESXi";    break;
+    default:
+        snprintf(buf, sizeof(buf), "unknown(%d)", os_type);
+        s = buf;
+        break;
+    }
+    return s;
+}
+
 status_code_t
 Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
@@ -1070,12 +1091,31 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
+    union drv_identity *drvid = (union drv_identity *)req_data;
     union dev_identity *ident = (union dev_identity *)resp_data;
     struct dev_identify_cmd *cmd = (struct dev_identify_cmd *)req;
     struct dev_identify_comp *comp = (struct dev_identify_comp *)resp;
     int mul, div;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    // Note drvid (req_data) and ident (resp_data) are aliases to
+    // the same memory region.  Process all "drvid" input parameters
+    // first, then we'll clear "ident" and fill output info.
+
+    // sanitize these strings
+    drvid->os_dist_str[sizeof(drvid->os_dist_str) - 1] = '\0';
+    drvid->kernel_ver_str[sizeof(drvid->kernel_ver_str) - 1] = '\0';
+    drvid->driver_ver_str[sizeof(drvid->driver_ver_str) - 1] = '\0';
+    // log driver identify info
+    NIC_LOG_INFO("{}: driver identify info", spec->name);
+    NIC_LOG_INFO("    os: {} {} {}",
+                 os_type_to_str(drvid->os_type),
+                 drvid->os_dist, drvid->os_dist_str);
+    NIC_LOG_INFO("    kernel: {} {}",
+                 drvid->kernel_ver, drvid->kernel_ver_str);
+    NIC_LOG_INFO("    driver: {}",
+                 drvid->driver_ver_str);
 
     memset(ident, 0, sizeof(union dev_identity));
 
