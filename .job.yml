@@ -191,8 +191,8 @@ jobs:
     labels: ["precommit", "hourly"]
   nic/apollo/tools/apulu/customer-docker: 
     labels: ["precommit", "hourly"]
-  nic/apollo/tools/athena/customer-docker: 
-    labels: ["precommit", "hourly"]
+#  nic/apollo/tools/athena/customer-docker: 
+#    labels: ["precommit", "hourly"]
   nic/sdk:
     labels: ["precommit", "hourly", "2xhourly"]
   nic/utils/ftlite:
@@ -268,7 +268,7 @@ dependencies:
      - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/customer-docker
-    - reference: nic/apollo/tools/athena/customer-docker
+  #  - reference: nic/apollo/tools/athena/customer-docker
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -357,7 +357,7 @@ dependencies:
     - reference: nic/apollo
   nic/tools/package:
     - reference: nic/apollo/tools/apulu/customer-docker
-    - reference: nic/apollo/tools/athena/customer-docker
+  #  - reference: nic/apollo/tools/athena/customer-docker
   nic/upgrade_manager:
     - reference: iota/test/standalone/sanity/esx
   nic/utils:
