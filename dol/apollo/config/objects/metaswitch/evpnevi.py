@@ -29,7 +29,6 @@ class EvpnEviObject(base.ConfigObjectBase):
         self.RTType = getattr(evpnevispec, 'rttype', None)
         self.AutoRT = getattr(evpnevispec, 'autort', None)
         self.RTType = getattr(evpnevispec, 'rttype', None)
-        self.Encap = getattr(evpnevispec, 'encap', None)
         self.EVIId = getattr(evpnevispec, 'eviid', None)
         ########## PRIVATE ATTRIBUTES OF EVPEVI CONFIG OBJECT #############
         self.Show()
@@ -38,7 +37,7 @@ class EvpnEviObject(base.ConfigObjectBase):
     def __repr__(self):
         return f"EvpnEvi:{self.UUID} SubnetId: {self.SubnetId} AutoRd:\
                 {self.AutoRD} RD:{self.RD} AutoRt:{self.AutoRT} RTType:\
-                {self.RTType} Encap:{self.Encap}"
+                {self.RTType}"
 
     def Show(self):
         logger.info("EvpnEvi config Object: %s" % self)
@@ -59,13 +58,6 @@ class EvpnEviObject(base.ConfigObjectBase):
                 spec.RD = self.RD
         spec.RTType = cp_utils.GetRTType(self.RTType)
         spec.AutoRT = cp_utils.GetEVPNCfg(self.AutoRT)
-        if self.Encap:
-            if self.Encap == 'mpls':
-                spec.Encap = evpn_pb2.EVPN_ENCAP_MPLS
-            elif self.Encap == 'vxlan':
-                spec.Encap = evpn_pb2.EVPN_ENCAP_VXLAN
-            else:
-                spec.Encap = evpn_pb2.EVPN_ENCAP_INVALID
         return
 
     def ValidateSpec(self, spec):

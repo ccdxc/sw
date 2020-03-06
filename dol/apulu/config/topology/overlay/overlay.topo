@@ -10,17 +10,21 @@ node:
         stack           : ipv4 # ipv4 (default), ipv6
         bridging        : false # false (default), true
         learning        : false # false (default), true
-        ipaddress       : None # Taken from resmgr
+        ipaddress       : '1.1.1.1'
         gateway         : None # Taken from resmgr
         encap           : vxlan # vxlan or mplsodup
         overlayrouting  : true
 # Tunnel, nexthop and route-tables are retained for pkt generation. They are
 # not pushed to the model
         tunnel      :
-            - count : 1
+            - id : 2
+              count : 1
               type  : underlay
-            - count : 1
+              dstaddr : '2.2.2.2'
+            - id : 3
+              count : 1
               type  : underlay-ecmp
+              dstaddr : '10.1.1.3'
     uplink:
        - entry:
            id      : uplink0
@@ -44,30 +48,32 @@ node:
         - stack  : ipv4 # dual, ipv4 , ipv6
           count : 1
           type  : underlay
-          routetbl: # Only for read op
-             - type: specific # route table with only default routes
-               routetype: only_default
-               v4routes:
-                  - '0.0.0.0\0'
-               v6routes:
-                  - '0::\0'
-               teptype : underlay
           nexthop: # Only for read op
-            - type : underlay
-              count : 2
+            - id   : 2
+              count : 1
+              type : underlay
+              macaddress    : macaddr/0242.0a01.0102
+            - id   : 3
+              count : 1
+              type : underlay
+              macaddress    : macaddr/0242.0b01.0102
+          nexthop-group: # Only for read op
+            - count : 1
+              type : underlay
+
           interface:
             - iid           : 1
               iftype        : l3
               ifadminstatus : UP
               ipprefix      : '10.1.1.1\24'
-              macaddress    : macaddr/00ae.cd00.4fde
+              macaddress    : macaddr/0242.0a01.0101
               portid        : 1
               encap         : none
             - iid           : 2
               iftype        : l3
               ifadminstatus : UP
               ipprefix      : '11.1.1.1\24'
-              macaddress    : macaddr/00ae.cd00.4fdd
+              macaddress    : macaddr/0242.0b01.0101
               portid        : 2
               encap         : none
             - iid           : 3
@@ -190,18 +196,12 @@ node:
                   rt     : 00:02:00:01:10:00:00:65
           nexthop: # Only for read op
             - type : overlay
-              count : 2
-            - type : overlay
               dual-ecmp : true
               count : 2
           nexthop-group: # Only for read op
-            - type : underlay
-              count : 2
             - type : overlay
               count : 2
-            - type : overlay
-              dual-ecmp : true
-              count : 2
+              dual-ecmp : True
           routetbl: # Only for read op
             - type: base
               routetype: overlap

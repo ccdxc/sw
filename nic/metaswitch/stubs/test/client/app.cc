@@ -181,7 +181,7 @@ static void create_evpn_evi_rt_proto_grpc () {
     auto proto_spec = request.add_request ();
     proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
     proto_spec->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
+    proto_spec->set_rt((const char *)g_test_conf_.rt[0], 8);
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN Evi RT proto...\n");
@@ -204,7 +204,7 @@ static void create_l2f_test_mac_ip_proto_grpc () {
     proto_spec->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     auto ipaddr = proto_spec->mutable_ipaddr();
     ipaddr->set_af(types::IP_AF_INET);
-    ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
+    ipaddr->set_v4addr(g_test_conf_.local_mai_ip[0][0]);
     char mac_addr[] = {0x00,0x12,0x23,0x45,0x67,0x8};
     proto_spec->set_macaddr (mac_addr, 6);
     proto_spec->set_ifid (g_test_conf_.lif_if_index);
@@ -416,16 +416,16 @@ static void create_subnet_proto_grpc () {
     proto_spec->set_vpcid(pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
-    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
+    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni[0]);
     // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
     //       Else failure in non-mock PDS mode.
     //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
     //                       PDS_MAX_KEY_LEN);
-    proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
+    proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr[0]);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();
     v4_prefix->set_len(24);
-    v4_prefix->set_addr (g_test_conf_.local_gwip_addr);
+    v4_prefix->set_addr (g_test_conf_.local_gwip_addr[0]);
 
     printf ("Pushing Subnet proto...\n");
     ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
@@ -476,7 +476,7 @@ static void create_vpc_proto_grpc () {
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
-    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
+    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni[0]);
 
     printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);

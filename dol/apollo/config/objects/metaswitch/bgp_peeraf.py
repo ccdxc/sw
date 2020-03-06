@@ -25,7 +25,6 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         self.Afi = getattr(spec, "afi", "ipv4")
         self.Safi = getattr(spec, "safi", "unicast")
         self.AfiStr = f"{self.Afi}-{self.Safi}"
-        self.Disable = getattr(spec, "disable", False)
         self.NexthopSelf = getattr(spec, "nexthopself", False)
         self.DefaultOrig = getattr(spec, "defaultorig", False)
         self.Show()
@@ -33,9 +32,9 @@ class BgpPeerAfObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return "BGPPeerAf: %s |Id:%d|Localaddr:%s|PeerAddr:%s|Afi:%s|Safi:%s|"\
-               "%s|Disable:%s|Nexthopself:%d|DefaultOrig:%s" %\
+               "%s|Nexthopself:%d|DefaultOrig:%s" %\
                (self.UUID, self.Id, self.LocalAddr, self.PeerAddr, self.Afi, \
-                self.Safi, self.AfiStr, self.Disable, self.NexthopSelf, \
+                self.Safi, self.AfiStr, self.NexthopSelf, \
                 self.DefaultOrig)
 
     def Show(self):
@@ -88,7 +87,6 @@ class BgpPeerAfObject(base.ConfigObjectBase):
 
         spec.Afi = self.GetAfi()
         spec.Safi = self.GetSafi()
-        spec.Disable = self.Disable
         spec.NexthopSelf = self.NexthopSelf
         spec.DefaultOrig = self.DefaultOrig
         spec.Id = self.GetKey()
@@ -104,8 +102,6 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         if spec.Afi != self.Afi:
             return False
         if spec.Safi != self.Safi:
-            return False
-        if spec.Disable != self.Disable:
             return False
         if spec.Nexthopself != self.Nexthopself:
             return False

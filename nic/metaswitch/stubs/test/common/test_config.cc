@@ -66,13 +66,29 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     value                   = pt.get <std::string>("local.ip");
     conf->local_ip_addr     = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.ip2");
-    conf->local_ip_addr_2     = inet_addr (value.c_str());
+    conf->local_ip_addr_2   = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.lo-ip");
     conf->local_lo_ip_addr  = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.gwip");
-    conf->local_gwip_addr   = inet_addr (value.c_str());
+    conf->local_gwip_addr[0] = inet_addr (value.c_str());
+    value                    = pt.get <std::string>("local.gwip1");
+    conf->local_gwip_addr[1] = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.ac-ip");
-    conf->local_mai_ip      = inet_addr (value.c_str());
+    conf->local_mai_ip[0][0]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip1");
+    conf->local_mai_ip[0][1]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip2");
+    conf->local_mai_ip[0][2]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip3");
+    conf->local_mai_ip[0][3]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip10");
+    conf->local_mai_ip[1][0]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip11");
+    conf->local_mai_ip[1][1]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip12");
+    conf->local_mai_ip[1][2]   = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ac-ip13");
+    conf->local_mai_ip[1][3]   = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.ip");
     conf->remote_ip_addr    = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.ip2");
@@ -92,7 +108,9 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     value                   = pt.get <std::string>("remote.as");
     conf->remote_asn        = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("vni");
-    conf->vni               = strtol (value.c_str(),NULL, 0);
+    conf->vni[0]            = strtol (value.c_str(),NULL, 0);
+    value                   = pt.get <std::string>("vni1");
+    conf->vni[1]            = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("route.dest_ip");
     conf->route_dest_ip     = inet_addr (value.c_str());
     value                   = pt.get <std::string>("route.nh_ip");
@@ -113,7 +131,11 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     if (conf->manual_rt) {
         uint8_t i = 0;
         for (ptree::value_type &rt : pt.get_child("route-target")) {
-            conf->rt[i++] = rt.second.get_value<uint8_t>();
+            conf->rt[0][i++] = rt.second.get_value<uint8_t>();
+        }
+        i = 0;
+        for (ptree::value_type &rt : pt.get_child("route-target1")) {
+            conf->rt[1][i++] = rt.second.get_value<uint8_t>();
         }
         printf ("Using Manual RT\n");
     }

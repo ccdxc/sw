@@ -24,7 +24,6 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.VPCId = parent.UUID
         self.VNI = getattr(evpnipvrfspec, 'vni', 0)
-        self.AutoRD = getattr(evpnipvrfspec, 'autord', 0)
         self.RD = getattr(evpnipvrfspec, 'rd', None)
         self.VRFName = getattr(evpnipvrfspec, 'vrfname', None)
         ########## PRIVATE ATTRIBUTES OF EVPEVI CONFIG OBJECT #############
@@ -33,7 +32,7 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
 
     def __repr__(self):
         return f"EvpnIpVrf:{self.UUID} VPCId: {self.VPCId} VNI:{self.VNI} \
-                AutoRd:{self.AutoRD} RD:{self.RD} VRFName:{self.VRFName}"
+                 RD:{self.RD} VRFName:{self.VRFName}"
 
     def Show(self):
         logger.info("EvpnIpVrf config Object: %s" % self)
@@ -49,7 +48,6 @@ class EvpnIpVrfObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         spec.VPCId = spec.Id
         spec.VNI = self.VNI
-        spec.AutoRD = cp_utils.GetEVPNCfg(self.AutoRD)
         if self.RD:
             spec.RD = self.RD
         if self.VRFName:

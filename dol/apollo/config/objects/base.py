@@ -411,6 +411,8 @@ class ConfigClientBase(base.ConfigClientBase):
         if not ret:
             logger.error("pdsctl show cmd failed for ", self.ObjType)
             return False
+        if self.ObjType == api.ObjectTypes.BGP:
+            return False
         # split output per object
         cmdop = stdout.split("---")
         assert((len(cmdop) - 1) == self.GetNumHwObjects(node))

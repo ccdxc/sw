@@ -23,6 +23,7 @@ from apollo.config.objects.port import client as PortClient
 
 import interface_pb2 as interface_pb2
 import types_pb2 as types_pb2
+import apollo.config.objects.metaswitch.cp_utils as cp_utils
 
 class InterfaceStatus(base.StatusObjectBase):
     def __init__(self):
@@ -237,9 +238,14 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
+            # Metaswitch treats IPv4 address as an array - so requires it in Network order
+            cp_utils.IPv4EndianReverse(spec.L3IfSpec.Prefix.Addr)
+
         if self.Type == topo.InterfaceTypes.LOOPBACK:
             spec.Type = interface_pb2.IF_TYPE_LOOPBACK
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.LoopbackIfSpec.Prefix)
+            # Metaswitch treats IPv4 address as an array - so requires it in Network order
+            cp_utils.IPv4EndianReverse(spec.LoopbackIfSpec.Prefix.Addr)
         return
 
     def PopulateAgentJson(self):
@@ -502,13 +508,17 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), cfgObjects))
                 api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
                 list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
+            if EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled() and utils.IsDol():
+                # create loopback interface
+                lo_obj = self.__loopback_if[node]
+                logger.info(f"Creating 1 Loopback {self.ObjType.name} Objects in {node}")
+                lo_obj.Show()
+                msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), [lo_obj]))
+                api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
         else:
             obj = self.__loopback_if[node]
             obj.Show()
             api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
-            #api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
-            #list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
-            # create loopback interface
         return
 
     def GetGrpcReadAllLifMessage(self):

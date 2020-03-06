@@ -16,8 +16,6 @@ packets:
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : ref://testcase/config/remotemapping/MACAddr
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : ref://testcase/config/remotemapping/IP
