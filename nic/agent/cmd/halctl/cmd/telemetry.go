@@ -254,7 +254,7 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(respMsg.Response) == 0 {
-		if cmd.Flags().Changed("mirror-session-id") {
+		if cmd != nil && cmd.Flags().Changed("mirror-session-id") {
 			fmt.Printf("Mirror Session ID %d not found.\n", mirrorID)
 		}
 		return
