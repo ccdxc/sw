@@ -9,7 +9,6 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	mstypes "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -25,6 +24,40 @@ type NLRIPrefix struct {
 	Type   int
 	Length int
 	Prefix EVPNPrefix
+}
+
+func dumpBytes(in []byte) string {
+	out := ""
+	for _, b := range in {
+		out = fmt.Sprintf("%s%02x ", out, b)
+	}
+	return out
+}
+
+func printRD(in []byte) string {
+	switch in[1] {
+	case 0:
+		return fmt.Sprintf("%d:%d", binary.BigEndian.Uint16(in[2:4]), binary.BigEndian.Uint32(in[4:8]))
+	case 1:
+		return fmt.Sprintf("%s:%d", net.IP(in[2:6]).String(), binary.BigEndian.Uint16(in[6:8]))
+	case 2:
+		return fmt.Sprintf("%d:%d", binary.BigEndian.Uint16(in[2:6]), binary.BigEndian.Uint16(in[6:8]))
+	default:
+		return "failed to parse"
+
+	}
+}
+
+func label2int(in []byte) uint32 {
+	if len(in) != 3 {
+		return 0
+	}
+	return (((uint32(in[0]) * 256) + uint32(in[1])) * 256) + uint32(in[2])
+}
+
+// String returns a user friendly string
+func (n *NLRIPrefix) String() string {
+	return fmt.Sprintf("Type : %d  %v", n.Type, n.Prefix)
 }
 
 func NewNLRIPrefix(in []byte) *NLRIPrefix {
@@ -64,10 +97,27 @@ type EVPNType2Route struct {
 type ShadowEVPNType2Route struct {
 	RD         string
 	ESI        string
-	EthTagID   string
+	EthTagID   uint32
 	MACAddress string
 	IPAddress  string
+	MPLSLabel1 uint32
+	MPLSLabel2 uint32
 	*EVPNType2Route
+}
+
+const type2Fmt = `
+                   ----------------
+                   RD             : %v
+                   ESI            : %v
+                   Ethernet Tag   : %v
+                   MAC Address    : %v
+                   IPAddress      : %v
+                   Label1         : %v
+                   Label2         : %v`
+
+// String returns a user friendly string
+func (s *ShadowEVPNType2Route) String() string {
+	return fmt.Sprintf(type2Fmt, s.RD, s.ESI, s.EthTagID, s.MACAddress, s.IPAddress, s.MPLSLabel1, s.MPLSLabel2)
 }
 
 func (a *EVPNType2Route) parseBytes(in []byte) {
@@ -75,25 +125,33 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 		log.Errorf("invalid length [%d] for evpn type2", len(in))
 	}
 	cur := 0
+	a.RD = make([]byte, 8)
 	copy(a.RD, in[cur:cur+8])
 	cur += 8
+	a.ESI = make([]byte, 10)
 	copy(a.ESI, in[cur:cur+10])
 	cur += 10
+	a.EthTagID = make([]byte, 4)
 	copy(a.EthTagID, in[cur:cur+4])
 	cur += 4
 	a.MACAddrLen = int(in[cur])
 	cur += 1
+	a.MACAddress = make([]byte, 6)
 	copy(a.MACAddress, in[cur:cur+6])
 	cur += 6
 	a.IPAddressLen = int(in[cur])
+	cur += 1
 	switch a.IPAddressLen {
 	case 4:
+		a.IPAddress = make([]byte, 4)
 		copy(a.IPAddress, in[cur:cur+4])
 		cur += 4
 	case 16:
+		a.IPAddress = make([]byte, 16)
 		copy(a.IPAddress, in[cur:cur+16])
 		cur += 16
 	}
+	a.MPLSLabel1 = make([]byte, 3)
 	copy(a.MPLSLabel1, in[cur:cur+3])
 	cur += 3
 	if len(in) > cur {
@@ -104,11 +162,13 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 func newEVPNType2Route(in *EVPNType2Route) *ShadowEVPNType2Route {
 	return &ShadowEVPNType2Route{
 		EVPNType2Route: in,
-		RD:             fmt.Sprintf("%v", in.RD),
-		ESI:            fmt.Sprintf("%v", in.ESI),
-		EthTagID:       fmt.Sprintf("%v", in.EthTagID),
+		RD:             printRD(in.RD),
+		ESI:            dumpBytes(in.ESI),
+		EthTagID:       binary.BigEndian.Uint32(in.EthTagID),
 		MACAddress:     net.HardwareAddr(in.MACAddress).String(),
 		IPAddress:      net.IP(in.IPAddress).String(),
+		MPLSLabel1:     label2int(in.MPLSLabel1),
+		MPLSLabel2:     label2int(in.MPLSLabel2),
 	}
 }
 
@@ -125,10 +185,25 @@ type EVPNType5Route struct {
 type ShadowEVPNType5Route struct {
 	RD          string
 	ESI         string
-	EthTagID    string
+	EthTagID    uint32
 	IPPrefix    string
 	GWIPAddress string
 	*EVPNType5Route
+}
+
+const type5Fmt = `
+                   ----------------
+                   RD             : %v
+                   ESI            : %v
+                   Ethernet Tag   : %v
+                   IPPrefix       : %v
+                   Prefix Length  : %v
+                   Gateway IP     : %v
+                   Label1         : %v`
+
+// String returns a user friendly string
+func (s *ShadowEVPNType5Route) String() string {
+	return fmt.Sprintf(type5Fmt, s.RD, s.ESI, s.EthTagID, s.IPPrefix, s.IPPrefixLen, s.GWIPAddress, dumpBytes(s.MPLSLabel1))
 }
 
 func (a *EVPNType5Route) parseBytes(in []byte) {
@@ -136,33 +211,42 @@ func (a *EVPNType5Route) parseBytes(in []byte) {
 		log.Errorf("invalid length [%d] for evpn type2", len(in))
 	}
 	cur := 0
+	a.RD = make([]byte, 8)
 	copy(a.RD, in[cur:cur+8])
 	cur += 8
+	a.ESI = make([]byte, 10)
 	copy(a.ESI, in[cur:cur+10])
 	cur += 10
+	a.EthTagID = make([]byte, 4)
 	copy(a.EthTagID, in[cur:cur+4])
 	cur += 4
 	a.IPPrefixLen = int(in[cur])
+	cur += 1
 	if len(in) == type5MinLen {
+		a.IPPrefix = make([]byte, 4)
 		copy(a.IPPrefix, in[cur:cur+4])
 		cur += 4
+		a.GWIPAddress = make([]byte, 4)
 		copy(a.GWIPAddress, in[cur:cur+4])
 		cur += 4
 	} else {
+		a.IPPrefix = make([]byte, 16)
 		copy(a.IPPrefix, in[cur:cur+16])
 		cur += 16
+		a.GWIPAddress = make([]byte, 16)
 		copy(a.GWIPAddress, in[cur:cur+16])
 		cur += 16
 	}
+	a.MPLSLabel1 = make([]byte, 3)
 	copy(a.MPLSLabel1, in[cur:cur+3])
 }
 
 func newEVPNType5Route(in *EVPNType5Route) *ShadowEVPNType5Route {
 	return &ShadowEVPNType5Route{
 		EVPNType5Route: in,
-		RD:             fmt.Sprintf("%v", in.RD),
-		ESI:            fmt.Sprintf("%v", in.ESI),
-		EthTagID:       fmt.Sprintf("%v", in.EthTagID),
+		RD:             printRD(in.RD),
+		ESI:            dumpBytes(in.ESI),
+		EthTagID:       binary.BigEndian.Uint32(in.EthTagID),
 		IPPrefix:       net.IP(in.IPPrefix).String(),
 		GWIPAddress:    net.IP(in.GWIPAddress).String(),
 	}
@@ -192,13 +276,13 @@ func PdsIPToString(in *pds.IPAddress) string {
 
 // ShadowBgpSpec shadows the BGPSpec for CLI purposes
 type ShadowBgpSpec struct {
-	*mstypes.BGPSpec
+	*pds.BGPSpec
 	Id       string
 	RouterId string
 }
 
 // NewBGPSpec creates a new shadow of the BGPSpec
-func NewBGPSpec(in *mstypes.BGPSpec) *ShadowBgpSpec {
+func NewBGPSpec(in *pds.BGPSpec) *ShadowBgpSpec {
 	uid, err := uuid.FromBytes(in.Id)
 	uidstr := ""
 	if err == nil {
@@ -219,10 +303,10 @@ type ShadowBGPPeerSpec struct {
 	PeerAddr  string
 	Password  bool
 	State     string
-	*mstypes.BGPPeerSpec
+	*pds.BGPPeerSpec
 }
 
-func newBGPPeerSpec(in *mstypes.BGPPeerSpec) ShadowBGPPeerSpec {
+func newBGPPeerSpec(in *pds.BGPPeerSpec) ShadowBGPPeerSpec {
 	uid, err := uuid.FromBytes(in.Id)
 	uidstr := ""
 	if err == nil {
@@ -245,10 +329,10 @@ type ShadowBGPPeerStatus struct {
 	LastErrorSent string
 	Status        string
 	PrevStatus    string
-	*mstypes.BGPPeerStatus
+	*pds.BGPPeerStatus
 }
 
-func newBGPPeerStatus(in *mstypes.BGPPeerStatus) ShadowBGPPeerStatus {
+func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
 	return ShadowBGPPeerStatus{
 		Id:            "",
 		LastErrorRcvd: string(in.LastErrorRcvd),
@@ -266,7 +350,7 @@ type ShadowBGPPeer struct {
 }
 
 // NewBGPPeer creates a shadow of BGPPeer
-func NewBGPPeer(in *mstypes.BGPPeer) *ShadowBGPPeer {
+func NewBGPPeer(in *pds.BGPPeer) *ShadowBGPPeer {
 	return &ShadowBGPPeer{
 		Spec:   newBGPPeerSpec(in.Spec),
 		Status: newBGPPeerStatus(in.Status),
@@ -275,7 +359,7 @@ func NewBGPPeer(in *mstypes.BGPPeer) *ShadowBGPPeer {
 
 // ShadowBGPPeerAf shadows the BGPPeerAf for CLI purposes
 type ShadowBGPPeerAFSpec struct {
-	*mstypes.BGPPeerAfSpec
+	*pds.BGPPeerAfSpec
 	Id        string
 	LocalAddr string
 	PeerAddr  string
@@ -284,7 +368,7 @@ type ShadowBGPPeerAFSpec struct {
 }
 
 // NewBGPPeerAfSpec creates a shadow of BGPPeerAF
-func NewBGPPeerAfSpec(in *mstypes.BGPPeerAfSpec) *ShadowBGPPeerAFSpec {
+func NewBGPPeerAfSpec(in *pds.BGPPeerAfSpec) *ShadowBGPPeerAFSpec {
 	uid, err := uuid.FromBytes(in.Id)
 	uidstr := ""
 	if err == nil {
@@ -306,10 +390,10 @@ type ShadowBGPNLRIPrefixStatus struct {
 	ASPathStr   string
 	PathOrigId  string
 	NextHopAddr string
-	*mstypes.BGPNLRIPrefixStatus
+	*pds.BGPNLRIPrefixStatus
 }
 
-func NewBGPNLRIPrefixStatus(in *mstypes.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
+func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
 	return &ShadowBGPNLRIPrefixStatus{
 		ASPathStr:           fmt.Sprintf("%v", in.ASPathStr),
 		PathOrigId:          net.IP(in.PathOrigId).String(),

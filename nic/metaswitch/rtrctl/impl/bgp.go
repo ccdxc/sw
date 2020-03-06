@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/nic/metaswitch/rtrctl/utils"
 )
 
@@ -69,9 +69,9 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
 	defer c.Close()
-	client := pegasusClient.NewBGPSvcClient(c)
+	client := types.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPGetRequest{}
+	req := &types.BGPGetRequest{}
 	respMsg, err := client.BGPGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting global config failed (%s)", err)
@@ -120,9 +120,9 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
 	defer c.Close()
-	client := pegasusClient.NewBGPSvcClient(c)
+	client := types.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPPeerGetRequest{}
+	req := &types.BGPPeerGetRequest{}
 	respMsg, err := client.BGPPeerGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting Peers failed (%s)", err)
@@ -172,7 +172,7 @@ UUID            : %s
 AFI/SAFI        : [ %v/%v ]
 LocalAddress    : %v
 Remote Address  : %v
-Flags           : [ Disable: %v /Next-Hop-Self: %v / Default-originate: %v ]
+Flags           : [ Next-Hop-Self: %v / Default-originate: %v ]
 ------------------------------------
 `
 )
@@ -183,9 +183,9 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
 	defer c.Close()
-	client := pegasusClient.NewBGPSvcClient(c)
+	client := types.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPPeerAfGetRequest{}
+	req := &types.BGPPeerAfGetRequest{}
 	respMsg, err := client.BGPPeerAfGet(context.Background(), req)
 	if err != nil {
 		return fmt.Errorf("Getting PeerAfs failed (%s)", err)
@@ -210,7 +210,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.LocalAddr, afp.PeerAddr, afp.Disable, afp.NexthopSelf, afp.DefaultOrig)
+					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.LocalAddr, afp.PeerAddr, afp.NexthopSelf, afp.DefaultOrig)
 				} else {
 					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.LocalAddr, afp.PeerAddr, afp.Afi, afp.Safi)
 					fmt.Println("")
@@ -249,9 +249,9 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
 	}
 	defer c.Close()
-	client := pegasusClient.NewBGPSvcClient(c)
+	client := types.NewBGPSvcClient(c)
 
-	req := &pegasusClient.BGPNLRIPrefixGetRequest{}
+	req := &types.BGPNLRIPrefixGetRequest{}
 	respMsg, err := client.BGPNLRIPrefixGet(context.Background(), req)
 	if err != nil {
 		return errors.New("Getting NLRIPrefix failed")
@@ -260,7 +260,6 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
 		return errors.New("Operation failed with error")
 	}
-	fmt.Printf("Work in progress!\n")
 	doJSON := cmd.Flag("json").Value.String() == "true"
 
 	var nlris []*utils.ShadowBGPNLRIPrefixStatus
@@ -268,7 +267,8 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 		nlri := utils.NewBGPNLRIPrefixStatus(p.Status)
 		nlris = append(nlris, nlri)
 		if !doJSON {
-			fmt.Printf(bgpNLRI, nlri.Afi.String(), nlri.Safi.String(), nlri.RouteSource, nlri.PathID, nlri.ASPathStr, nlri.PathOrigId, nlri.NextHopAddr, nlri.BestRoute, nlri.PrefixLen, nlri.Prefix)
+			fmt.Printf(bgpNLRI, strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_"), strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_"),
+				nlri.RouteSource, nlri.PathID, nlri.ASPathStr, nlri.PathOrigId, nlri.NextHopAddr, nlri.BestRoute, nlri.PrefixLen, nlri.Prefix)
 		}
 	}
 
