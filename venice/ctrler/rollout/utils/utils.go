@@ -81,8 +81,7 @@ func (v VersionChecker) CheckNICVersionForAdmission(dscSku string, dscVersion st
 	if len(veniceDotVersions) < 3 || len(dscDotVersions) < 3 { //major.minor.patch
 		log.Infof("ForceRollout:  Image versions not in standard format. VeniceVersion(%s) DSCVersion(%s)", veniceVersion, dscVersion)
 		if veniceVersion != dscVersion {
-			log.Infof("ForceRollout: Invalid image versions (%s Vs %s). Requesting force rollout!", dscVersion, veniceVersion)
-			return RequestRolloutNaples, veniceVersion
+			log.Infof("ForceRollout: Invalid image versions (%s Vs %s).", dscVersion, veniceVersion)
 		}
 		return SkipForceRollout, ""
 	}
@@ -96,8 +95,7 @@ func (v VersionChecker) CheckNICVersionForAdmission(dscSku string, dscVersion st
 	if err != nil {
 		log.Infof("ForceRollout: Failed to convert veniceMinor version to integer(%s). Requesting force rollout!", err)
 		if veniceVersion != dscVersion {
-			log.Infof("ForceRollout: Failed to convert veniceMinor (%+v). Requesting force rollout!", veniceDotVersions)
-			return RequestRolloutNaples, veniceVersion
+			log.Infof("ForceRollout: Failed to convert veniceMinor (%+v).", veniceDotVersions)
 		}
 		return SkipForceRollout, ""
 	}
@@ -107,8 +105,7 @@ func (v VersionChecker) CheckNICVersionForAdmission(dscSku string, dscVersion st
 	if err != nil {
 		log.Infof("ForceRollout: Failed to convert dscMinor version to integer(%s). Requesting force rollout!", err)
 		if veniceVersion != dscVersion {
-			log.Infof("ForceRollout: Failed to convert dscMinor (%+v). Requesting force rollout!", dscDotVersions)
-			return RequestRolloutNaples, veniceVersion
+			log.Infof("ForceRollout: Failed to convert dscMinor (%+v).", dscDotVersions)
 		}
 		return SkipForceRollout, ""
 	}
