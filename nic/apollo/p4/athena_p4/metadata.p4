@@ -187,6 +187,13 @@ header_type scratch_metadata_t {
         redir_qtype         : 3;
         redir_qid           : 24;
         redir_app_id        : 4;
+
+        // Geneve encap (TMP: TB deleted) */
+        vni                 : 24;
+        source_slot_id      : 32;
+        destination_slot_id : 32;
+        sg_id               : 16;
+        originator_physical_ip  : 32;
         
     }
 }

@@ -46,7 +46,7 @@ session_rewrite:
     phvwr.c1        p.ethernet_1_valid, FALSE
     */
     phvwr.c1        p.{mpls_label3_1_valid...ethernet_1_valid}, 0
-    
+#if 0    
     phvwr           p.{ethernet_0_dstAddr...ethernet_0_srcAddr},    \
                     D_R(ipv4_da, ipv4_sa)
 
@@ -56,6 +56,7 @@ session_rewrite:
     phvwr.c1        p.ctag_0_valid, TRUE
     phvwr.c1        p.ethernet_0_etherType, ETHERTYPE_VLAN
     phvwr.!c1       p.ethernet_0_etherType, ETHERTYPE_IPV4
+#endif
 
     
     

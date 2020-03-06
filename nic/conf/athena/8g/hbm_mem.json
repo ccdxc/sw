@@ -166,6 +166,12 @@
         },
         {
             "name": "session_rewrite",
+            "size": "128M",
+            "cache": "p4eg",
+            "_comment": "4M * 32B"
+        },
+        {
+            "name": "session_rewrite_encap",
             "size": "256M",
             "cache": "p4eg",
             "_comment": "4M * 64B"
