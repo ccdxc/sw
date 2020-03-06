@@ -154,8 +154,9 @@ func (sm *Statemgr) OnDSCProfileUpdate(dscProfile *ctkit.DSCProfile, nfwp *clust
 	dps.DSCProfile.Status = cluster.DSCProfileStatus{}
 
 	log.Infof("Sending update received")
-	// TODO Lakshmi : Might have to send the list of DSCs based on the api provided by Sudhi
-	//sm.mbus.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile))
+
+	dps.PushObj.UpdateObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile))
+
 	log.Infof("Updated dscProfile: %+v", dscProfile)
 
 	dscs := dps.DscList
