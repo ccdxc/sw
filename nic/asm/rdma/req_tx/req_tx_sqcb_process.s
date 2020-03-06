@@ -54,6 +54,7 @@ req_tx_sqcb_process:
     bcf             [c2 | c3], table_error
     // If QP is not in RTS state, do no process any event. Branch to check for
     // drain state and process only if SQ has to be drained till a specific WQE
+    // If QP is in RTR state and CNP Ring, send out CNP packet.
     seq            c7, d.state, QP_STATE_RTS // BD Slot
     bcf            [!c7], check_state
     tblwr.c7       d.sq_drained, 0 // Branch Delay Slot
@@ -673,12 +674,17 @@ check_state:
     slt           c7, d.state, QP_STATE_SQD
     bcf           [!c7], process_sq_drain
 
+    // If ring CNP_RING in QP_STATE_RTR, send out CNP pkt
+    seq           c5, r7[CNP_RING_ID], 1
+    seq           c6, d.state, QP_STATE_RTR
+    bcf.c5        [c6], process_req_tx
+
     // One of Init, Reset, RTR, ERR or SQ_ERR states. So disable scheduler
     // bit until modify_qp updates the state to RTS
     DOORBELL_NO_UPDATE_DISABLE_SCHEDULER(CAPRI_TXDMA_INTRINSIC_LIF, \
                                          CAPRI_TXDMA_INTRINSIC_QTYPE, \
                                          CAPRI_TXDMA_INTRINSIC_QID, \
-                                         SQ_RING_ID, r1, r2)
+                                         SQ_RING_ID, r1, r2)  // BD Slot
 
     // On transitioning to QP_STATE_ERR, if flush_rq is set, send flush
     // feedback msg to RQ so that local resp_rx can transition RQ to
