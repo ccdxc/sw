@@ -25,9 +25,9 @@ type LifMetrics struct {
 
 	RxBroadcastPackets metrics.Counter
 
-	XRsvd__0 metrics.Counter
+	XRsvd__0 metrics.Counter `structs:"-"`
 
-	XRsvd__1 metrics.Counter
+	XRsvd__1 metrics.Counter `structs:"-"`
 
 	RxDropUnicastBytes metrics.Counter
 
@@ -41,9 +41,9 @@ type LifMetrics struct {
 
 	RxDropBroadcastPackets metrics.Counter
 
-	RxDmaError metrics.Counter
+	RxDmaError metrics.Counter `structs:"-"`
 
-	XRsvd__2 metrics.Counter
+	XRsvd__2 metrics.Counter `structs:"-"`
 
 	TxUnicastBytes metrics.Counter
 
@@ -57,9 +57,9 @@ type LifMetrics struct {
 
 	TxBroadcastPackets metrics.Counter
 
-	XRsvd__3 metrics.Counter
+	XRsvd__3 metrics.Counter `structs:"-"`
 
-	XRsvd__4 metrics.Counter
+	XRsvd__4 metrics.Counter `structs:"-"`
 
 	TxDropUnicastBytes metrics.Counter
 
@@ -73,201 +73,201 @@ type LifMetrics struct {
 
 	TxDropBroadcastPackets metrics.Counter
 
-	TxDmaError metrics.Counter
+	TxDmaError metrics.Counter `structs:"-"`
 
-	XRsvd__5 metrics.Counter
+	XRsvd__5 metrics.Counter `structs:"-"`
 
-	RxQueueDisabledDrops metrics.Counter
+	RxQueueDisabledDrops metrics.Counter `structs:"-"`
 
-	RxQueueEmptyDrops metrics.Counter
+	RxQueueEmptyDrops metrics.Counter `structs:"-"`
 
-	RxQueueSched metrics.Counter
+	RxQueueSched metrics.Counter `structs:"-"`
 
-	RxDescFetchError metrics.Counter
+	RxDescFetchError metrics.Counter `structs:"-"`
 
-	RxDescDataError metrics.Counter
+	RxDescDataError metrics.Counter `structs:"-"`
 
-	XRsvd__6 metrics.Counter
+	XRsvd__6 metrics.Counter `structs:"-"`
 
-	XRsvd__7 metrics.Counter
+	XRsvd__7 metrics.Counter `structs:"-"`
 
-	XRsvd__8 metrics.Counter
+	XRsvd__8 metrics.Counter `structs:"-"`
 
-	TxQueueDisabledDrops metrics.Counter
+	TxQueueDisabledDrops metrics.Counter `structs:"-"`
 
-	TxQueueSched metrics.Counter
+	TxQueueSched metrics.Counter `structs:"-"`
 
-	TxDescFetchError metrics.Counter
+	TxDescFetchError metrics.Counter `structs:"-"`
 
-	TxDescDataError metrics.Counter
+	TxDescDataError metrics.Counter `structs:"-"`
 
-	XRsvd__9 metrics.Counter
+	XRsvd__9 metrics.Counter `structs:"-"`
 
-	XRsvd__10 metrics.Counter
+	XRsvd__10 metrics.Counter `structs:"-"`
 
-	XRsvd__11 metrics.Counter
+	XRsvd__11 metrics.Counter `structs:"-"`
 
-	XRsvd__12 metrics.Counter
+	XRsvd__12 metrics.Counter `structs:"-"`
 
-	TxRdmaUcastBytes metrics.Counter
+	TxRdmaUcastBytes metrics.Counter `structs:"-"`
 
-	TxRdmaUcastPackets metrics.Counter
+	TxRdmaUcastPackets metrics.Counter `structs:"-"`
 
-	TxRdmaMcastBytes metrics.Counter
+	TxRdmaMcastBytes metrics.Counter `structs:"-"`
 
-	TxRdmaMcastPackets metrics.Counter
+	TxRdmaMcastPackets metrics.Counter `structs:"-"`
 
-	TxRdmaCnpPackets metrics.Counter
+	TxRdmaCnpPackets metrics.Counter `structs:"-"`
 
-	XRsvd__13 metrics.Counter
+	XRsvd__13 metrics.Counter `structs:"-"`
 
-	XRsvd__14 metrics.Counter
+	XRsvd__14 metrics.Counter `structs:"-"`
 
-	XRsvd__15 metrics.Counter
+	XRsvd__15 metrics.Counter `structs:"-"`
 
-	RxRdmaUcastBytes metrics.Counter
+	RxRdmaUcastBytes metrics.Counter `structs:"-"`
 
-	RxRdmaUcastPackets metrics.Counter
+	RxRdmaUcastPackets metrics.Counter `structs:"-"`
 
-	RxRdmaMcastBytes metrics.Counter
+	RxRdmaMcastBytes metrics.Counter `structs:"-"`
 
-	RxRdmaMcastPackets metrics.Counter
+	RxRdmaMcastPackets metrics.Counter `structs:"-"`
 
-	RxRdmaCnpPackets metrics.Counter
+	RxRdmaCnpPackets metrics.Counter `structs:"-"`
 
-	RxRdmaEcnPackets metrics.Counter
+	RxRdmaEcnPackets metrics.Counter `structs:"-"`
 
-	Rsvd16 metrics.Counter
+	Rsvd16 metrics.Counter `structs:"-"`
 
-	Rsvd17 metrics.Counter
+	Rsvd17 metrics.Counter `structs:"-"`
 
-	Rsvd18 metrics.Counter
+	Rsvd18 metrics.Counter `structs:"-"`
 
-	Rsvd19 metrics.Counter
+	Rsvd19 metrics.Counter `structs:"-"`
 
-	Rsvd20 metrics.Counter
+	Rsvd20 metrics.Counter `structs:"-"`
 
-	Rsvd21 metrics.Counter
+	Rsvd21 metrics.Counter `structs:"-"`
 
-	Rsvd22 metrics.Counter
+	Rsvd22 metrics.Counter `structs:"-"`
 
-	Rsvd23 metrics.Counter
+	Rsvd23 metrics.Counter `structs:"-"`
 
-	Rsvd24 metrics.Counter
+	Rsvd24 metrics.Counter `structs:"-"`
 
-	Rsvd25 metrics.Counter
+	Rsvd25 metrics.Counter `structs:"-"`
 
-	Rsvd26 metrics.Counter
+	Rsvd26 metrics.Counter `structs:"-"`
 
-	Rsvd27 metrics.Counter
+	Rsvd27 metrics.Counter `structs:"-"`
 
-	Rsvd28 metrics.Counter
+	Rsvd28 metrics.Counter `structs:"-"`
 
-	Rsvd29 metrics.Counter
+	Rsvd29 metrics.Counter `structs:"-"`
 
-	Rsvd30 metrics.Counter
+	Rsvd30 metrics.Counter `structs:"-"`
 
-	Rsvd31 metrics.Counter
+	Rsvd31 metrics.Counter `structs:"-"`
 
-	Rsvd32 metrics.Counter
+	Rsvd32 metrics.Counter `structs:"-"`
 
-	Rsvd33 metrics.Counter
+	Rsvd33 metrics.Counter `structs:"-"`
 
-	Rsvd34 metrics.Counter
+	Rsvd34 metrics.Counter `structs:"-"`
 
-	Rsvd35 metrics.Counter
+	Rsvd35 metrics.Counter `structs:"-"`
 
-	Rsvd36 metrics.Counter
+	Rsvd36 metrics.Counter `structs:"-"`
 
-	Rsvd37 metrics.Counter
+	Rsvd37 metrics.Counter `structs:"-"`
 
-	Rsvd38 metrics.Counter
+	Rsvd38 metrics.Counter `structs:"-"`
 
-	Rsvd39 metrics.Counter
+	Rsvd39 metrics.Counter `structs:"-"`
 
-	Rsvd40 metrics.Counter
+	Rsvd40 metrics.Counter `structs:"-"`
 
-	Rsvd41 metrics.Counter
+	Rsvd41 metrics.Counter `structs:"-"`
 
-	Rsvd42 metrics.Counter
+	Rsvd42 metrics.Counter `structs:"-"`
 
-	Rsvd43 metrics.Counter
+	Rsvd43 metrics.Counter `structs:"-"`
 
-	Rsvd44 metrics.Counter
+	Rsvd44 metrics.Counter `structs:"-"`
 
-	Rsvd45 metrics.Counter
+	Rsvd45 metrics.Counter `structs:"-"`
 
-	Rsvd46 metrics.Counter
+	Rsvd46 metrics.Counter `structs:"-"`
 
-	Rsvd47 metrics.Counter
+	Rsvd47 metrics.Counter `structs:"-"`
 
-	Rsvd48 metrics.Counter
+	Rsvd48 metrics.Counter `structs:"-"`
 
-	Rsvd49 metrics.Counter
+	Rsvd49 metrics.Counter `structs:"-"`
 
-	RdmaReqRxPktSeqErr metrics.Counter
+	RdmaReqRxPktSeqErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxRnrRetryErr metrics.Counter
+	RdmaReqRxRnrRetryErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxRemoteAccessErr metrics.Counter
+	RdmaReqRxRemoteAccessErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxRemoteInvReqErr metrics.Counter
+	RdmaReqRxRemoteInvReqErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxRemoteOperErr metrics.Counter
+	RdmaReqRxRemoteOperErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxImpliedNakSeqErr metrics.Counter
+	RdmaReqRxImpliedNakSeqErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxCqeErr metrics.Counter
+	RdmaReqRxCqeErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxCqeFlushErr metrics.Counter
+	RdmaReqRxCqeFlushErr metrics.Counter `structs:"-"`
 
-	RdmaReqRxDupResponses metrics.Counter
+	RdmaReqRxDupResponses metrics.Counter `structs:"-"`
 
-	RdmaReqRxInvalidPackets metrics.Counter
+	RdmaReqRxInvalidPackets metrics.Counter `structs:"-"`
 
-	RdmaReqTxLocalAccessErr metrics.Counter
+	RdmaReqTxLocalAccessErr metrics.Counter `structs:"-"`
 
-	RdmaReqTxLocalOperErr metrics.Counter
+	RdmaReqTxLocalOperErr metrics.Counter `structs:"-"`
 
-	RdmaReqTxMemoryMgmtErr metrics.Counter
+	RdmaReqTxMemoryMgmtErr metrics.Counter `structs:"-"`
 
-	Rsvd52 metrics.Counter
+	Rsvd52 metrics.Counter `structs:"-"`
 
-	Rsvd53 metrics.Counter
+	Rsvd53 metrics.Counter `structs:"-"`
 
-	Rsvd54 metrics.Counter
+	Rsvd54 metrics.Counter `structs:"-"`
 
-	RdmaRespRxDupRequests metrics.Counter
+	RdmaRespRxDupRequests metrics.Counter `structs:"-"`
 
-	RdmaRespRxOutOfBuffer metrics.Counter
+	RdmaRespRxOutOfBuffer metrics.Counter `structs:"-"`
 
-	RdmaRespRxOutOfSeqPkts metrics.Counter
+	RdmaRespRxOutOfSeqPkts metrics.Counter `structs:"-"`
 
-	RdmaRespRxCqeErr metrics.Counter
+	RdmaRespRxCqeErr metrics.Counter `structs:"-"`
 
-	RdmaRespRxCqeFlushErr metrics.Counter
+	RdmaRespRxCqeFlushErr metrics.Counter `structs:"-"`
 
-	RdmaRespRxLocalLenErr metrics.Counter
+	RdmaRespRxLocalLenErr metrics.Counter `structs:"-"`
 
-	RdmaRespRxInvRequestErr metrics.Counter
+	RdmaRespRxInvRequestErr metrics.Counter `structs:"-"`
 
-	RdmaRespRxLocalQpOperErr metrics.Counter
+	RdmaRespRxLocalQpOperErr metrics.Counter `structs:"-"`
 
-	RdmaRespRxOutOfAtomicResource metrics.Counter
+	RdmaRespRxOutOfAtomicResource metrics.Counter `structs:"-"`
 
-	RdmaRespTxPktSeqErr metrics.Counter
+	RdmaRespTxPktSeqErr metrics.Counter `structs:"-"`
 
-	RdmaRespTxRemoteInvReqErr metrics.Counter
+	RdmaRespTxRemoteInvReqErr metrics.Counter `structs:"-"`
 
-	RdmaRespTxRemoteAccessErr metrics.Counter
+	RdmaRespTxRemoteAccessErr metrics.Counter `structs:"-"`
 
-	RdmaRespTxRemoteOperErr metrics.Counter
+	RdmaRespTxRemoteOperErr metrics.Counter `structs:"-"`
 
-	RdmaRespTxRnrRetryErr metrics.Counter
+	RdmaRespTxRnrRetryErr metrics.Counter `structs:"-"`
 
-	Rsvd57 metrics.Counter
+	Rsvd57 metrics.Counter `structs:"-"`
 
-	Rsvd58 metrics.Counter
+	Rsvd58 metrics.Counter `structs:"-"`
 
 	// private state
 	metrics gometrics.Metrics

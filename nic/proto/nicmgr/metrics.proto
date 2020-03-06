@@ -22,8 +22,8 @@ message LifMetrics {
     delphi.Counter rx_multicast_packets             = 5 [(venice.metricsField) = {DisplayName: "Rx Multicast Packets" Description: "Rx Multicast Packets"}];// Multicast packets received at LIF
     delphi.Counter rx_broadcast_bytes               = 6 [(venice.metricsField) = {DisplayName: "Rx Broadcast Bytes" Description: "Rx Broadcast Bytes"}];    // Broadcast bytes received at LIF
     delphi.Counter rx_broadcast_packets             = 7 [(venice.metricsField) = {DisplayName: "Rx Broadcast Packets" Description: "Rx Broadcast Packets"}];// Broadcast packets received at LIF
-    delphi.Counter __rsvd__0                        = 8;
-    delphi.Counter __rsvd__1                        = 9;
+    delphi.Counter __rsvd__0                        = 8 [json_name="-"];
+    delphi.Counter __rsvd__1                        = 9 [json_name="-"];
 
     delphi.Counter rx_drop_unicast_bytes            = 10 [(venice.metricsField) = {DisplayName: "Rx Drop Unicast Bytes" Description: "Rx Drop Unicast Bytes"}];        ; // Unicast bytes dropped during received (per LIF)
     delphi.Counter rx_drop_unicast_packets          = 11 [(venice.metricsField) = {DisplayName: "Rx Drop Unicast Packets" Description: "Rx Drop Unicast Packets"}];    ; // Unicast packets dropped during received (per LIF)
@@ -31,8 +31,8 @@ message LifMetrics {
     delphi.Counter rx_drop_multicast_packets        = 13 [(venice.metricsField) = {DisplayName: "Rx Drop Multicast Packets" Description: "Rx Drop Multicast Packets"}];; // Multicast packets dropped during received (per LIF)
     delphi.Counter rx_drop_broadcast_bytes          = 14 [(venice.metricsField) = {DisplayName: "Rx Drop Broadcast Bytes" Description: "Rx Drop Broadcast Bytes"}];    ; // Broadcast bytes dropped during received (per LIF)
     delphi.Counter rx_drop_broadcast_packets        = 15 [(venice.metricsField) = {DisplayName: "Rx Drop Broadcast Packets" Description: "Rx Drop Broadcast Packets"}];; // Broadcast packets dropped during received (per LIF)
-    delphi.Counter rx_dma_error                     = 16; // Packet DMA errors
-    delphi.Counter __rsvd__2                        = 17;
+    delphi.Counter rx_dma_error                     = 16 [json_name="-"]; // Packet DMA errors
+    delphi.Counter __rsvd__2                        = 17 [json_name="-"];
 
     delphi.Counter tx_unicast_bytes                 = 18[(venice.metricsField) = {DisplayName: "Tx Unicast Bytes" Description: "Tx Unicast Bytes"}];        ; // Unicast bytes transmitted by LIF
     delphi.Counter tx_unicast_packets               = 19[(venice.metricsField) = {DisplayName: "Tx Unicast Packets" Description: "Tx Unicast Packets"}];    ; // Unicast packets transmitted by LIF
@@ -40,8 +40,8 @@ message LifMetrics {
     delphi.Counter tx_multicast_packets             = 21[(venice.metricsField) = {DisplayName: "Tx Multicast Packets" Description: "Tx Multicast Packets"}];; // Multicast packets transmitted by LIF
     delphi.Counter tx_broadcast_bytes               = 22[(venice.metricsField) = {DisplayName: "Tx Broadcast Bytes" Description: "Tx Broadcast Bytes"}];    ; // Broadcast bytes transmitted by LIF
     delphi.Counter tx_broadcast_packets             = 23[(venice.metricsField) = {DisplayName: "Tx Broadcast Packets" Description: "Tx Broadcast Packets"}];; // Broadcast packets transmitted by LIF
-    delphi.Counter __rsvd__3                        = 24;
-    delphi.Counter __rsvd__4                        = 25;
+    delphi.Counter __rsvd__3                        = 24 [json_name="-"];
+    delphi.Counter __rsvd__4                        = 25 [json_name="-"];
 
     delphi.Counter tx_drop_unicast_bytes            = 26[(venice.metricsField) = {DisplayName: "Tx Drop Unicast Bytes" Description: "Tx Drop Unicast Bytes"}];        ; // Unicast bytes dropped during transmit (per LIF)
     delphi.Counter tx_drop_unicast_packets          = 27[(venice.metricsField) = {DisplayName: "Tx Drop Unicast Packets" Description: "Tx Drop Unicast Packets"}];    ; // Unicast packets dropped during transmit (per LIF)
@@ -49,114 +49,114 @@ message LifMetrics {
     delphi.Counter tx_drop_multicast_packets        = 29[(venice.metricsField) = {DisplayName: "Tx Drop Multicast Packets" Description: "Tx Drop Multicast Packets"}];; // Multicast packets dropped during transmit (per LIF)
     delphi.Counter tx_drop_broadcast_bytes          = 30[(venice.metricsField) = {DisplayName: "Tx Drop Broadcast Bytes" Description: "Tx Drop Broadcast Bytes"}];    ; // Broadcast bytes dropped during transmit (per LIF)
     delphi.Counter tx_drop_broadcast_packets        = 31[(venice.metricsField) = {DisplayName: "Tx Drop Broadcast Packets" Description: "Tx Drop Broadcast Packets"}];; // Broadcast packets dropped during transmit (per LIF)
-    delphi.Counter tx_dma_error                     = 32; // Packet DMA errors
-    delphi.Counter __rsvd__5                        = 33;
+    delphi.Counter tx_dma_error                     = 32 [json_name="-"]; // Packet DMA errors
+    delphi.Counter __rsvd__5                        = 33 [json_name="-"];
 
-    delphi.Counter rx_queue_disabled_drops          = 34; // Packets dropped due to queue disabled
-    delphi.Counter rx_queue_empty_drops             = 35; // Packets dropped due to buffer exhaustion
-    delphi.Counter rx_queue_sched                   = 36; // Descriptor fetch errors
-    delphi.Counter rx_desc_fetch_error              = 37; // Descriptor fetch errors
-    delphi.Counter rx_desc_data_error               = 38; // Descriptor fetch errors
-    delphi.Counter __rsvd__6                        = 39;
-    delphi.Counter __rsvd__7                        = 40;
-    delphi.Counter __rsvd__8                        = 41;
+    delphi.Counter rx_queue_disabled_drops          = 34 [json_name="-"]; // Packets dropped due to queue disabled
+    delphi.Counter rx_queue_empty_drops             = 35 [json_name="-"]; // Packets dropped due to buffer exhaustion
+    delphi.Counter rx_queue_sched                   = 36 [json_name="-"]; // Descriptor fetch errors
+    delphi.Counter rx_desc_fetch_error              = 37 [json_name="-"]; // Descriptor fetch errors
+    delphi.Counter rx_desc_data_error               = 38 [json_name="-"]; // Descriptor fetch errors
+    delphi.Counter __rsvd__6                        = 39 [json_name="-"];
+    delphi.Counter __rsvd__7                        = 40 [json_name="-"];
+    delphi.Counter __rsvd__8                        = 41 [json_name="-"];
 
-    delphi.Counter tx_queue_disabled_drops          = 42;
-    delphi.Counter tx_queue_sched                   = 43;
-    delphi.Counter tx_desc_fetch_error              = 44;
-    delphi.Counter tx_desc_data_error               = 45;
-    delphi.Counter __rsvd__9                        = 46;
-    delphi.Counter __rsvd__10                       = 47;
-    delphi.Counter __rsvd__11                       = 48;
-    delphi.Counter __rsvd__12                       = 49;
+    delphi.Counter tx_queue_disabled_drops          = 42 [json_name="-"];
+    delphi.Counter tx_queue_sched                   = 43 [json_name="-"];
+    delphi.Counter tx_desc_fetch_error              = 44 [json_name="-"];
+    delphi.Counter tx_desc_data_error               = 45 [json_name="-"];
+    delphi.Counter __rsvd__9                        = 46 [json_name="-"];
+    delphi.Counter __rsvd__10                       = 47 [json_name="-"];
+    delphi.Counter __rsvd__11                       = 48 [json_name="-"];
+    delphi.Counter __rsvd__12                       = 49 [json_name="-"];
 
-    delphi.Counter tx_rdma_ucast_bytes              = 50;
-    delphi.Counter tx_rdma_ucast_packets            = 51;
-    delphi.Counter tx_rdma_mcast_bytes              = 52;
-    delphi.Counter tx_rdma_mcast_packets            = 53;
-    delphi.Counter tx_rdma_cnp_packets              = 54;
-    delphi.Counter __rsvd__13                       = 55;
-    delphi.Counter __rsvd__14                       = 56;
-    delphi.Counter __rsvd__15                       = 57;
+    delphi.Counter tx_rdma_ucast_bytes              = 50 [json_name="-"];
+    delphi.Counter tx_rdma_ucast_packets            = 51 [json_name="-"];
+    delphi.Counter tx_rdma_mcast_bytes              = 52 [json_name="-"];
+    delphi.Counter tx_rdma_mcast_packets            = 53 [json_name="-"];
+    delphi.Counter tx_rdma_cnp_packets              = 54 [json_name="-"];
+    delphi.Counter __rsvd__13                       = 55 [json_name="-"];
+    delphi.Counter __rsvd__14                       = 56 [json_name="-"];
+    delphi.Counter __rsvd__15                       = 57 [json_name="-"];
 
-    delphi.Counter rx_rdma_ucast_bytes            = 58;
-    delphi.Counter rx_rdma_ucast_packets          = 59;
-    delphi.Counter rx_rdma_mcast_bytes            = 60;
-    delphi.Counter rx_rdma_mcast_packets          = 61;
-    delphi.Counter rx_rdma_cnp_packets            = 62;
-    delphi.Counter rx_rdma_ecn_packets            = 63;
-    delphi.Counter rsvd16                         = 64;
-    delphi.Counter rsvd17                         = 65;
+    delphi.Counter rx_rdma_ucast_bytes            = 58 [json_name="-"];
+    delphi.Counter rx_rdma_ucast_packets          = 59 [json_name="-"];
+    delphi.Counter rx_rdma_mcast_bytes            = 60 [json_name="-"];
+    delphi.Counter rx_rdma_mcast_packets          = 61 [json_name="-"];
+    delphi.Counter rx_rdma_cnp_packets            = 62 [json_name="-"];
+    delphi.Counter rx_rdma_ecn_packets            = 63 [json_name="-"];
+    delphi.Counter rsvd16                         = 64 [json_name="-"];
+    delphi.Counter rsvd17                         = 65 [json_name="-"];
 
-    delphi.Counter rsvd18                         = 66;
-    delphi.Counter rsvd19                         = 67;
-    delphi.Counter rsvd20                         = 68;
-    delphi.Counter rsvd21                         = 69;
-    delphi.Counter rsvd22                         = 70;
-    delphi.Counter rsvd23                         = 71;
-    delphi.Counter rsvd24                         = 72;
-    delphi.Counter rsvd25                         = 73;
+    delphi.Counter rsvd18                         = 66 [json_name="-"];
+    delphi.Counter rsvd19                         = 67 [json_name="-"];
+    delphi.Counter rsvd20                         = 68 [json_name="-"];
+    delphi.Counter rsvd21                         = 69 [json_name="-"];
+    delphi.Counter rsvd22                         = 70 [json_name="-"];
+    delphi.Counter rsvd23                         = 71 [json_name="-"];
+    delphi.Counter rsvd24                         = 72 [json_name="-"];
+    delphi.Counter rsvd25                         = 73 [json_name="-"];
 
-    delphi.Counter rsvd26                         = 74;
-    delphi.Counter rsvd27                         = 75;
-    delphi.Counter rsvd28                         = 76;
-    delphi.Counter rsvd29                         = 77;
-    delphi.Counter rsvd30                         = 78;
-    delphi.Counter rsvd31                         = 79;
-    delphi.Counter rsvd32                         = 80;
-    delphi.Counter rsvd33                         = 81;
+    delphi.Counter rsvd26                         = 74 [json_name="-"];
+    delphi.Counter rsvd27                         = 75 [json_name="-"];
+    delphi.Counter rsvd28                         = 76 [json_name="-"];
+    delphi.Counter rsvd29                         = 77 [json_name="-"];
+    delphi.Counter rsvd30                         = 78 [json_name="-"];
+    delphi.Counter rsvd31                         = 79 [json_name="-"];
+    delphi.Counter rsvd32                         = 80 [json_name="-"];
+    delphi.Counter rsvd33                         = 81 [json_name="-"];
 
-    delphi.Counter rsvd34                         = 82;
-    delphi.Counter rsvd35                         = 83;
-    delphi.Counter rsvd36                         = 84;
-    delphi.Counter rsvd37                         = 85;
-    delphi.Counter rsvd38                         = 86;
-    delphi.Counter rsvd39                         = 87;
-    delphi.Counter rsvd40                         = 88;
-    delphi.Counter rsvd41                         = 89;
+    delphi.Counter rsvd34                         = 82 [json_name="-"];
+    delphi.Counter rsvd35                         = 83 [json_name="-"];
+    delphi.Counter rsvd36                         = 84 [json_name="-"];
+    delphi.Counter rsvd37                         = 85 [json_name="-"];
+    delphi.Counter rsvd38                         = 86 [json_name="-"];
+    delphi.Counter rsvd39                         = 87 [json_name="-"];
+    delphi.Counter rsvd40                         = 88 [json_name="-"];
+    delphi.Counter rsvd41                         = 89 [json_name="-"];
 
-    delphi.Counter rsvd42                         = 90;
-    delphi.Counter rsvd43                         = 91;
-    delphi.Counter rsvd44                         = 92;
-    delphi.Counter rsvd45                         = 93;
-    delphi.Counter rsvd46                         = 94;
-    delphi.Counter rsvd47                         = 95;
-    delphi.Counter rsvd48                         = 96;
-    delphi.Counter rsvd49                         = 97;
+    delphi.Counter rsvd42                         = 90 [json_name="-"];
+    delphi.Counter rsvd43                         = 91 [json_name="-"];
+    delphi.Counter rsvd44                         = 92 [json_name="-"];
+    delphi.Counter rsvd45                         = 93 [json_name="-"];
+    delphi.Counter rsvd46                         = 94 [json_name="-"];
+    delphi.Counter rsvd47                         = 95 [json_name="-"];
+    delphi.Counter rsvd48                         = 96 [json_name="-"];
+    delphi.Counter rsvd49                         = 97 [json_name="-"];
 
-    delphi.Counter rdma_req_rx_pkt_seq_err         = 98;
-    delphi.Counter rdma_req_rx_rnr_retry_err       = 99;
-    delphi.Counter rdma_req_rx_remote_access_err   = 100;
-    delphi.Counter rdma_req_rx_remote_inv_req_err  = 101;
-    delphi.Counter rdma_req_rx_remote_oper_err     = 102;
-    delphi.Counter rdma_req_rx_implied_nak_seq_err = 103;
-    delphi.Counter rdma_req_rx_cqe_err             = 104;
-    delphi.Counter rdma_req_rx_cqe_flush_err       = 105;
+    delphi.Counter rdma_req_rx_pkt_seq_err         = 98 [json_name="-"];
+    delphi.Counter rdma_req_rx_rnr_retry_err       = 99 [json_name="-"];
+    delphi.Counter rdma_req_rx_remote_access_err   = 100 [json_name="-"];
+    delphi.Counter rdma_req_rx_remote_inv_req_err  = 101 [json_name="-"];
+    delphi.Counter rdma_req_rx_remote_oper_err     = 102 [json_name="-"];
+    delphi.Counter rdma_req_rx_implied_nak_seq_err = 103 [json_name="-"];
+    delphi.Counter rdma_req_rx_cqe_err             = 104 [json_name="-"];
+    delphi.Counter rdma_req_rx_cqe_flush_err       = 105 [json_name="-"];
 
-    delphi.Counter rdma_req_rx_dup_responses      = 106;
-    delphi.Counter rdma_req_rx_invalid_packets    = 107;
-    delphi.Counter rdma_req_tx_local_access_err   = 108;
-    delphi.Counter rdma_req_tx_local_oper_err     = 109;
-    delphi.Counter rdma_req_tx_memory_mgmt_err    = 110;
-    delphi.Counter rsvd52                         = 111;
-    delphi.Counter rsvd53                         = 112;
-    delphi.Counter rsvd54                         = 113;
+    delphi.Counter rdma_req_rx_dup_responses      = 106 [json_name="-"];
+    delphi.Counter rdma_req_rx_invalid_packets    = 107 [json_name="-"];
+    delphi.Counter rdma_req_tx_local_access_err   = 108 [json_name="-"];
+    delphi.Counter rdma_req_tx_local_oper_err     = 109 [json_name="-"];
+    delphi.Counter rdma_req_tx_memory_mgmt_err    = 110 [json_name="-"];
+    delphi.Counter rsvd52                         = 111 [json_name="-"];
+    delphi.Counter rsvd53                         = 112 [json_name="-"];
+    delphi.Counter rsvd54                         = 113 [json_name="-"];
 
-    delphi.Counter rdma_resp_rx_dup_requests      = 114;
-    delphi.Counter rdma_resp_rx_out_of_buffer     = 115;
-    delphi.Counter rdma_resp_rx_out_of_seq_pkts   = 116;
-    delphi.Counter rdma_resp_rx_cqe_err           = 117;
-    delphi.Counter rdma_resp_rx_cqe_flush_err     = 118;
-    delphi.Counter rdma_resp_rx_local_len_err     = 119;
-    delphi.Counter rdma_resp_rx_inv_request_err   = 120;
-    delphi.Counter rdma_resp_rx_local_qp_oper_err = 121;
+    delphi.Counter rdma_resp_rx_dup_requests      = 114 [json_name="-"];
+    delphi.Counter rdma_resp_rx_out_of_buffer     = 115 [json_name="-"];
+    delphi.Counter rdma_resp_rx_out_of_seq_pkts   = 116 [json_name="-"];
+    delphi.Counter rdma_resp_rx_cqe_err           = 117 [json_name="-"];
+    delphi.Counter rdma_resp_rx_cqe_flush_err     = 118 [json_name="-"];
+    delphi.Counter rdma_resp_rx_local_len_err     = 119 [json_name="-"];
+    delphi.Counter rdma_resp_rx_inv_request_err   = 120 [json_name="-"];
+    delphi.Counter rdma_resp_rx_local_qp_oper_err = 121 [json_name="-"];
 
-    delphi.Counter rdma_resp_rx_out_of_atomic_resource = 122;
-    delphi.Counter rdma_resp_tx_pkt_seq_err            = 123;
-    delphi.Counter rdma_resp_tx_remote_inv_req_err     = 124;
-    delphi.Counter rdma_resp_tx_remote_access_err      = 125;
-    delphi.Counter rdma_resp_tx_remote_oper_err        = 126;
-    delphi.Counter rdma_resp_tx_rnr_retry_err          = 127;
-    delphi.Counter rsvd57                              = 128;
-    delphi.Counter rsvd58                              = 129;
+    delphi.Counter rdma_resp_rx_out_of_atomic_resource = 122 [json_name="-"];
+    delphi.Counter rdma_resp_tx_pkt_seq_err            = 123 [json_name="-"];
+    delphi.Counter rdma_resp_tx_remote_inv_req_err     = 124 [json_name="-"];
+    delphi.Counter rdma_resp_tx_remote_access_err      = 125 [json_name="-"];
+    delphi.Counter rdma_resp_tx_remote_oper_err        = 126 [json_name="-"];
+    delphi.Counter rdma_resp_tx_rnr_retry_err          = 127 [json_name="-"];
+    delphi.Counter rsvd57                              = 128 [json_name="-"];
+    delphi.Counter rsvd58                              = 129 [json_name="-"];
 }

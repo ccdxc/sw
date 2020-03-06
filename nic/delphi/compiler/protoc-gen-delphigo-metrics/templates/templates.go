@@ -34,9 +34,17 @@ type {{.GetName}} struct {
 	key       {{.GetGolangTypeName}}
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	{{.GetCamelCaseName}} metrics.Counter
+	{{if (eq .GetJsonName "-") }}
+		{{.GetCamelCaseName}} metrics.Counter {{Quote}}structs:"{{.GetJsonName}}"{{Quote}}
+	{{else}}
+		{{.GetCamelCaseName}} metrics.Counter
+	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Gauge") }}
-	{{.GetCamelCaseName}}    metrics.Gauge
+	{{if (eq .GetJsonName "-") }}
+		{{.GetCamelCaseName}} metrics.Gauge {{Quote}}structs:"{{.GetJsonName}}"{{Quote}}
+	{{else}}
+		{{.GetCamelCaseName}} metrics.Gauge
+	{{end}}
 	{{end}} {{end}}
 
 	// private state
