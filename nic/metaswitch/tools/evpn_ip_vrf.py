@@ -22,7 +22,6 @@ def process_response(req_msg, resp_msg):
             print ("Entry %d" %idx)
             print ("-----------------------");
             print ("Spec: VNI :%d"%spec.VNI)
-            print ("Spec: AutoRd: %s" % ("Auto" if spec.AutoRD==evpn_pb2.EVPN_CFG_AUTO else "Manual"))
             print ("Spec: RD: %s"%spec.RD)
     else:
         print ("Op Success")
@@ -35,7 +34,7 @@ def create_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RD = rd_str
     req_msg.VNI = vni
-    resp = stub.EvpnIpVrfSpecCreate(req)     
+    resp = stub.EvpnIpVrfCreate(req)     
     process_response(req, resp)
     return
 
@@ -46,31 +45,29 @@ def update_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RD = rd_str
     req_msg.VNI = vni
-    resp = stub.EvpnIpVrfSpecUpdate(req)     
+    resp = stub.EvpnIpVrfUpdate(req)     
     process_response(req, resp)
     return
 
 def get_req():
-    req = evpn_pb2.EvpnIpVrfRequest()
+    req = evpn_pb2.EvpnIpVrfGetRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid
-    req_msg.VPCId = vpcid
-    resp =  stub.EvpnIpVrfSpecGet(req)     
+    req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    resp =  stub.EvpnIpVrfGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
-    req = evpn_pb2.EvpnIpVrfRequest()
-    resp =  stub.EvpnIpVrfSpecGet(req)     
+    req = evpn_pb2.EvpnIpVrfGetRequest()
+    resp =  stub.EvpnIpVrfGet(req)     
     process_response(req, resp)
     return
 
 def delete_req():
-    req = evpn_pb2.EvpnIpVrfRequest()
+    req = evpn_pb2.EvpnIpVrfDeleteRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    resp = stub.EvpnIpVrfSpecDelete(req)     
+    req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    resp = stub.EvpnIpVrfDelete(req)     
     process_response(req, resp)
     return
 

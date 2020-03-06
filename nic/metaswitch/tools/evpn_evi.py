@@ -38,8 +38,7 @@ def create_req():
     req_msg.AutoRT = autort
     req_msg.RD = rd_str
     req_msg.RTType = rttype
-    req_msg.Encap = evpn_pb2.EVPN_ENCAP_VXLAN
-    resp = stub.EvpnEviSpecCreate(req)     
+    resp = stub.EvpnEviCreate(req)     
     process_response(req, resp)
     return
 
@@ -52,32 +51,29 @@ def update_req():
     req_msg.AutoRT = autort
     req_msg.RD = rd_str
     req_msg.RTType = rttype
-    req_msg.Encap = evpn_pb2.EVPN_ENCAP_VXLAN
-    resp = stub.EvpnEviSpecUpdate(req)     
+    resp = stub.EvpnEviUpdate(req)     
     process_response(req, resp)
     return
 
 def get_req():
-    req = evpn_pb2.EvpnEviRequest()
+    req = evpn_pb2.EvpnEviGetRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    resp =  stub.EvpnEviSpecGet(req)     
+    req_msg.Key.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    resp =  stub.EvpnEviGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
-    req = evpn_pb2.EvpnEviRequest()
-    resp =  stub.EvpnEviSpecGet(req)     
+    req = evpn_pb2.EvpnEviGetRequest()
+    resp =  stub.EvpnEviGet(req)     
     process_response(req, resp)
     return
 
 def delete_req():
-    req = evpn_pb2.EvpnEviRequest()
+    req = evpn_pb2.EvpnEviDeleteRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    resp = stub.EvpnEviSpecDelete(req)     
+    req_msg.Key.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    resp = stub.EvpnEviDelete(req)     
     process_response(req, resp)
     return
 

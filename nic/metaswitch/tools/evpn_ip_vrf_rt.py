@@ -38,7 +38,7 @@ def create_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RT = rt_str
     req_msg.RTType = rttype
-    resp = stub.EvpnIpVrfRtSpecCreate(req)     
+    resp = stub.EvpnIpVrfRtCreate(req)     
     process_response(req, resp)
     return
 
@@ -49,33 +49,31 @@ def update_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RT = rt_str
     req_msg.RTType = rttype
-    resp = stub.EvpnIpVrfRtSpecUpdate(req)     
+    resp = stub.EvpnIpVrfRtUpdate(req)     
     process_response(req, resp)
     return
 
 def get_req():
-    req = evpn_pb2.EvpnIpVrfRtRequest()
+    req = evpn_pb2.EvpnIpVrfRtGetRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    resp =  stub.EvpnIpVrfRtSpecGet(req)     
+    req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.Key.RT = rt_str
+    resp =  stub.EvpnIpVrfRtGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
-    req = evpn_pb2.EvpnIpVrfRtRequest()
-    resp =  stub.EvpnIpVrfRtSpecGet(req)     
+    req = evpn_pb2.EvpnIpVrfRtGetRequest()
+    resp =  stub.EvpnIpVrfRtGet(req)     
     process_response(req, resp)
     return
 
 def delete_req():
-    req = evpn_pb2.EvpnIpVrfRtRequest()
+    req = evpn_pb2.EvpnIpVrfRtDeleteRequest()
     req_msg = req.Request.add()
-    req_msg.Id = uuid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    req_msg.RT = rt_str
-    resp = stub.EvpnIpVrfRtSpecDelete(req)     
+    req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
+    req_msg.Key.RT = rt_str
+    resp = stub.EvpnIpVrfRtDelete(req)     
     process_response(req, resp)
     return
 
