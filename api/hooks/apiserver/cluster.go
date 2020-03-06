@@ -1287,6 +1287,10 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("DistributedServiceCard", apiintf.CreateOper).WithPreCommitHook(r.smartNICPreCommitHook)
 	svc.GetCrudService("DistributedServiceCard", apiintf.UpdateOper).WithPreCommitHook(r.smartNICPreCommitHook)
 	svc.GetCrudService("DistributedServiceCard", apiintf.DeleteOper).WithPreCommitHook(r.smartNICPreCommitHook)
+
+	svc.GetCrudService("DSCProfile", apiintf.CreateOper).WithPreCommitHook(r.DSCProfilePreCommitHook)
+	svc.GetCrudService("DSCProfile", apiintf.UpdateOper).WithPreCommitHook(r.DSCProfilePreCommitHook)
+	svc.GetCrudService("DSCProfile", apiintf.DeleteOper).WithPreCommitHook(r.DSCProfilePreCommitHook)
 	// hook to set bootstrap flag
 	svc.GetMethod("AuthBootstrapComplete").WithPreCommitHook(r.setAuthBootstrapFlag)
 	svc.GetMethod("AuthBootstrapComplete").WithResponseWriter(r.getClusterObject)
