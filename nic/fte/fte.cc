@@ -414,8 +414,8 @@ register_pipeline(const std::string& name, const sys::ForwardMode fwdmode,
     for (const std::string& fname: features_outbound) {
         feature_t *feature = feature_lookup_(fname);
         if (!feature) {
-            HAL_TRACE_ERR("fte: unknown feature {} in outbound pipeline {} - skipping",
-                          fname, name);
+            HAL_TRACE_VERBOSE("fte: unknown feature {} in outbound pipeline {} - skipping",
+                              fname, name);
             continue;
         }
         HAL_TRACE_DEBUG("fte: outbound pipeline feature {}/{}", name, fname);
@@ -428,8 +428,8 @@ register_pipeline(const std::string& name, const sys::ForwardMode fwdmode,
     for (const std::string& fname: features_inbound) {
         feature_t *feature = feature_lookup_(fname);
         if (!feature) {
-            HAL_TRACE_ERR("fte: unknown feature {} in inbound pipeline {} - skipping",
-                          fname, name);
+            HAL_TRACE_VERBOSE("fte: unknown feature {} in inbound pipeline {} - skipping",
+                              fname, name);
             continue;
         }
         HAL_TRACE_DEBUG("fte: inbound pipeline feature {}/{}", name, fname);

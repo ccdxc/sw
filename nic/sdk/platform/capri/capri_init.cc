@@ -141,7 +141,7 @@ capri_asm_init (capri_cfg_t *cfg)
            for (uint32_t j = 0; j < num_symbols; j++) {
                symbols[j].name = "";
            }
-           SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
+           ::free(symbols);
        }
 
        if (iret != 0) {

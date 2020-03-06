@@ -53,17 +53,6 @@
             "features"  : ["lb"]
         },
         {
-            "name"      : "nat",
-            "provider"  : "pensando.io",
-            "lib"       : "libplugin_nat.so",
-            "init_func" : "nat_init",
-            "exit_func" : "nat_exit",
-            "auto_load" : "true",
-            "deps"      : [],
-            "sim"       : "true",
-            "features"  : ["nat"]
-        },
-        {
             "name"      : "dol",
             "provider"  : "pensando.io",
             "lib"       : "libplugin_dol.so",
@@ -88,7 +77,6 @@
                 "tcp-trigger-connection",
                 "quiesce",
                 "tls",
-                "ipsec",
                 "app-p4pt"
             ]
         },
@@ -136,15 +124,6 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
-            "name"      : "natcfg",
-            "provider"  : "pensando.io",
-            "lib"       : "libcfg_plugin_nat.so",
-            "init_func" : "natcfg_init",
-            "exit_func" : "natcfg_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
             "name"      : "telemetrycfg",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_telemetry.so",
@@ -182,15 +161,6 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
-            "name"      : "ipsec",
-            "provider"  : "pensando.io",
-            "lib"       : "libcfg_plugin_ipsec.so",
-            "init_func" : "ipsec_init",
-            "exit_func" : "ipsec_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
             "name"      : "rdma",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_rdma.so",
@@ -205,15 +175,6 @@
             "lib"       : "libcfg_plugin_nvme.so",
             "init_func" : "nvme_init",
             "exit_func" : "nvme_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
-            "name"      : "l4lbcfg",
-            "provider"  : "pensando.io",
-            "lib"       : "libcfg_plugin_l4lb.so",
-            "init_func" : "l4lbcfg_init",
-            "exit_func" : "l4lbcfg_exit",
             "auto_load" : "true",
             "deps"      : ["pensando.io/nw"]
         },
@@ -254,9 +215,7 @@
                 "pensando.io/network:fwding-pre-stage",
                 "pensando.io/network:stage-marker",
                 "pensando.io/lb:lb",
-                "pensando.io/nat:nat",
                 "pensando.io/network:rdma",
-                "pensando.io/proxy:ipsec",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",
@@ -268,7 +227,6 @@
                 "pensando.io/telemetry:telemetry",
                 "pensando.io/sfw:sfw",
                 "pensando.io/eplearn:eplearn",
-                "pensando.io/nat:nat",
                 "pensando.io/lb:lb",
                 "pensando.io/proxy:tcp",
                 "pensando.io/app-redir:app-redir-miss",
@@ -284,7 +242,6 @@
                 "pensando.io/sfw:alg_dns",
                 "pensando.io/sfw:alg_rpc",
                 "pensando.io/sfw:alg_rtsp",
-                "pensando.io/proxy:ipsec",
                 "pensando.io/network:fwding",
                 "pensando.io/network:tunnel",
                 "pensando.io/app-redir:app-redir-fini",

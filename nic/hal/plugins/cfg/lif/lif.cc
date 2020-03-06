@@ -89,14 +89,17 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
         }
     } else {
 
-        // Getting PD information
-        args.lif = lif;
-        args.rsp = rsp;
-        pd_func_args.pd_lif_stats_get = &args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
-                          lif->lif_id, ret);
+        // No lif stats for swm lifs. 
+        if (lif->type != types::LIF_TYPE_SWM) {
+            // Getting PD information
+            args.lif = lif;
+            args.rsp = rsp;
+            pd_func_args.pd_lif_stats_get = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_STATS_GET, &pd_func_args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to do PD stats get for lif: {}. ret : {}",
+                              lif->lif_id, ret);
+            }
         }
     }
 
