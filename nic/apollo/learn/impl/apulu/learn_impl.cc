@@ -107,6 +107,7 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     // infer pkt type from from nacl data field
     switch (p4_rx_hdr->nacl_data) {
     case NACL_DATA_ID_L2_MISS_ARP:
+    case NACL_DATA_ID_ARP_REPLY:
         info->pkt_type = PKT_TYPE_ARP;
         break;
     case NACL_DATA_ID_L2_MISS_DHCP:

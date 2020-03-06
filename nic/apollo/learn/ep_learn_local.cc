@@ -137,7 +137,7 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
                     // this is not msg of our interest
                     break;
                 }
-            } else if (DHCP_PACKET_OPTION_REQ_IP_ADDR == op->option) { 
+            } else if (DHCP_PACKET_OPTION_REQ_IP_ADDR == op->option) {
                 ip->af = IP_AF_IPV4;
                 ip->addr.v4_addr = ntohl((*(op->data_as_u32)));
                 ip_found = true;
@@ -399,7 +399,8 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
 {
     switch (ctxt->ip_learn_type) {
     case LEARN_TYPE_NONE:
-        // nothing to do
+        // we may be under ARP probe, update the state
+        ctxt->ip_entry->set_state(EP_STATE_CREATED);
         break;
     case LEARN_TYPE_NEW_LOCAL:
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
