@@ -1290,7 +1290,8 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 }
 
 func isQosGroupValid(qosGroup string) bool {
-	switch qosGroup {
+	tmpQosGroup := strings.ToLower(qosGroup)
+	switch tmpQosGroup {
 	case "default":
 		return true
 	case "user-defined-1":
@@ -1325,7 +1326,8 @@ func isQosGroupValid(qosGroup string) bool {
 }
 
 func inputToQosGroup(qosGroup string) halproto.QosGroup {
-	switch qosGroup {
+	tmpQosGroup := strings.ToLower(qosGroup)
+	switch tmpQosGroup {
 	case "default":
 		return halproto.QosGroup_DEFAULT
 	case "user-defined-1":
