@@ -1467,7 +1467,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 			OperStatus: status.GetStatus().String(),
 		},
 	}
-	log.Infof("Creating host interface [%+v]", i)
+	log.Infof("Processing host interface [%+v]", i)
 	a.LocalInterfaces[i.Name] = i.UUID
 	ifEvnt := types.UpdateIfEvent{
 		Oper: types.Create,
@@ -1528,7 +1528,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 			},
 		},
 	}
-	log.Infof("Creating Uplink interface [%+v]", i)
+	log.Infof("Processing uplink interface [%+v]", i)
 	a.LocalInterfaces[i.Name] = i.UUID
 	ifEvnt := types.UpdateIfEvent{
 		Oper: types.Create,
@@ -1613,7 +1613,6 @@ func (a *ApuluAPI) initEventStream() {
 				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "Init: %v", err))
 				break
 			}
-
 			if resp.Status != halapi.ApiStatus_API_STATUS_OK {
 				log.Error(errors.Wrapf(types.ErrDatapathHandling, "Iris: %v", err))
 			}

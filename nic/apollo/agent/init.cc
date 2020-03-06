@@ -293,14 +293,14 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
         profile = device_profile_read();
     }
 
-    // initialize PDS library
-    ret = init_pds(cfg_file, profile, pipeline);
-
     // init agent state
     ret = core::agent_state::init();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // initialize PDS library
+    ret = init_pds(cfg_file, profile, pipeline);
 
     // spawn service server thread
     ret = spawn_svc_server_thread();

@@ -35,13 +35,19 @@ typedef struct port_get_cb_ctxt_s {
 void
 port_event_cb (port_event_info_t *port_event_info)
 {
+    int phy_port;
+    sdk_ret_t ret;
+    if_entry *intf;
+    pds_obj_key_t key;
     ::core::event_t event;
+    pds_event_t pds_event;
     port_event_t port_event = port_event_info->event;
     port_speed_t port_speed = port_event_info->speed;
     uint32_t logical_port = port_event_info->logical_port;
 
     sdk::linkmgr::port_set_leds(logical_port, port_event);
 
+    // broadcast the event to other components of interest
     memset(&event, 0, sizeof(event));
     event.event_id = EVENT_ID_PORT_STATUS;
     event.port.ifindex =
@@ -49,6 +55,42 @@ port_event_cb (port_event_info_t *port_event_info)
     event.port.event = port_event;
     event.port.speed = port_speed;
     sdk::ipc::broadcast(EVENT_ID_PORT_STATUS, &event, sizeof(event));
+
+    // notify the agent
+    memset(&pds_event, 0, sizeof(pds_event));
+    if (port_event_info->event == port_event_t::PORT_EVENT_LINK_DOWN) {
+        pds_event.event_id = PDS_EVENT_ID_PORT_DOWN;
+    } else if (port_event_info->event == port_event_t::PORT_EVENT_LINK_UP) {
+        pds_event.event_id = PDS_EVENT_ID_PORT_UP;
+    } else {
+        SDK_ASSERT(FALSE);
+    }
+    // find interface instance corresponding to this port
+    intf = if_db()->find(&event.port.ifindex);
+    if (intf == NULL)  {
+        PDS_TRACE_ERR("Interface instance for ifindex 0x%x not found", event.port.ifindex);
+        return;
+    }
+    key = intf->key();
+    ret = sdk::linkmgr::port_get(intf->port_info(), &pds_event.port_info.info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->ifindex(), ret);
+        return;
+    }
+    pds_event.port_info.info.port_num = intf->ifindex();
+    phy_port = sdk::lib::catalog::ifindex_to_phy_port(pds_event.port_info.info.port_num);
+    if (phy_port != -1) {
+        ret = sdk::platform::xcvr_get(phy_port - 1, &pds_event.port_info.info.xcvr_event_info);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to get xcvr for port %u, err %u",
+                          phy_port, ret);
+            return;
+        }
+    }
+    // TODO: @akoradha same as if_walk_port_get_cb(), please fix
+    pds_event.port_info.info.port_an_args = (port_an_args_t *)&key;
+    // notify the agent
+    g_pds_state.event_notify(&pds_event);
 }
 
 bool
@@ -305,7 +347,7 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     //       and CLIs etc. will naturally work with current db walks etc.
     //       we have all eth ports in if db already. with port_args_t
     //       going directly upto agent svc layer, there is no way to send uuid
-    //       now), so hijacking this pointer field
+    //       now, so hijacking this pointer field
     port_info.port_an_args = (port_an_args_t *)&key;
     cb_ctxt->port_get_cb(&port_info, cb_ctxt->ctxt);
     return false;

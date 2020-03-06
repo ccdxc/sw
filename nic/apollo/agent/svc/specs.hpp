@@ -3936,7 +3936,7 @@ pds_port_stats_to_proto (pds::PortStats *stats,
 
 static inline void
 pds_port_spec_to_proto (pds::PortSpec *spec,
-                        sdk::linkmgr::port_args_t *port_info)
+                        const sdk::linkmgr::port_args_t *port_info)
 {
     // @akoradha please fix this
     spec->set_id(port_info->port_an_args, PDS_MAX_KEY_LEN);
@@ -3979,7 +3979,7 @@ pds_port_spec_to_proto (pds::PortSpec *spec,
 
 static inline void
 pds_port_status_to_proto (pds::PortStatus *status,
-                          sdk::linkmgr::port_args_t *port_info)
+                          const sdk::linkmgr::port_args_t *port_info)
 {
     auto link_status = status->mutable_linkstatus();
     auto xcvr_status = status->mutable_xcvrstatus();
@@ -4120,7 +4120,6 @@ pds_event_to_proto_event_response (pds::EventResponse *proto_rsp,
 {
     proto_rsp->set_status(types::ApiStatus::API_STATUS_OK);
     proto_rsp->set_eventid(pds_event_id_api_to_proto_event_id(event->event_id));
-
     switch (event->event_id) {
     case PDS_EVENT_ID_LIF_CREATE:
     case PDS_EVENT_ID_LIF_UPDATE:
@@ -4135,8 +4134,11 @@ pds_event_to_proto_event_response (pds::EventResponse *proto_rsp,
     case PDS_EVENT_ID_PORT_CREATE:
     case PDS_EVENT_ID_PORT_UP:
     case PDS_EVENT_ID_PORT_DOWN:
-        // TODO:
-        PDS_TRACE_ERR("event response conversion not implemented");
+        pds::PortSpec *spec = proto_rsp->mutable_porteventinfo()->mutable_spec();
+        pds::PortStatus *status = proto_rsp->mutable_porteventinfo()->mutable_status();
+        pds_port_spec_to_proto(spec, &event->port_info.info);
+        pds_port_status_to_proto(status, &event->port_info.info);
+        return SDK_RET_OK;
     }
     return SDK_RET_INVALID_ARG;
 }

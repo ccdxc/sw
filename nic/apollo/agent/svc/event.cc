@@ -45,9 +45,10 @@ event_send_cb (sdk::lib::event_id_t event_id_t, void *event_ctxt, void *ctxt)
     EventResponse *rsp = (EventResponse *)event_ctxt;
     grpc::ServerReaderWriter<EventResponse, EventRequest> *stream =
         (grpc::ServerReaderWriter<EventResponse, EventRequest> *)ctxt;
-    PDS_TRACE_DEBUG("Sending event {} to stream {}", event_id_t, ctxt)
+
+    PDS_TRACE_VERBOSE("Sending event {} to stream {}", event_id_t, ctxt)
     auto ret = stream->Write(*rsp);
-    PDS_TRACE_DEBUG("stream->Write returned {}", ret);
+    PDS_TRACE_VERBOSE("stream->Write returned {}", ret);
     return true;
 }
 
@@ -56,8 +57,13 @@ publish_event (const pds_event_t *event)
 {
     EventResponse event_rsp;
 
+    PDS_TRACE_VERBOSE("Publishing event {}", event->event_id);
     pds_event_to_proto_event_response(&event_rsp, event);
-    core::agent_state::state()->event_mgr()->notify_event(event->event_id,
-                                                          &event_rsp,
-                                                          event_send_cb);
+    if (core::agent_state::state()->event_mgr()) {
+        core::agent_state::state()->event_mgr()->notify_event(event->event_id,
+                                                              &event_rsp,
+                                                              event_send_cb);
+    } else {
+        PDS_TRACE_WARN("Dropping the event {}", event->event_id);
+    }
 }

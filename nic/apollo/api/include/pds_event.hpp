@@ -12,6 +12,7 @@
 #define __INCLUDE_API_PDS_EVENT_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
@@ -41,8 +42,15 @@ typedef struct pds_lif_event_info_s {
 
 /// \brief physical port specific event information
 typedef struct pds_port_info_s {
-    /// uuid of the physical port
+    /// unique identifier for the port
     pds_obj_key_t key;
+    // TODO @akoradha port_args is exposed all the way to the agent
+    //       with the current design, we should create port_spec_t,
+    //       port_status_t and port_stats_t like any other object or
+    //       better approach is to fold all the port stuff into if_entry
+    //       and CLIs etc. will naturally work with current db walks etc.
+    //       we have all eth ports in if db already.
+    sdk::linkmgr::port_args_t info;
 } pds_port_info_t;
 
 /// \brief event information passed to event callback of the application

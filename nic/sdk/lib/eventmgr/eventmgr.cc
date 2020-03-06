@@ -249,7 +249,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
         // lookup for the event state
         event_state = (event_state_t *)event_map_->lookup(&event_id);
         if (event_state == NULL) {
-            SDK_TRACE_DEBUG("First subscribtion to event %u, listener 0x%lx",
+            SDK_TRACE_DEBUG("First subscription to event %u, listener 0x%lx",
                             event_id, lctxt);
             event_state = event_state_alloc_init_(event_id);
             if (event_state == NULL) {
@@ -269,7 +269,7 @@ eventmgr::subscribe(event_id_t event_id, void *lctxt) {
         // lookup for the event state
         event_state = (event_state_t *)event_map_->lookup(&event_id);
         if (event_state == NULL) {
-            SDK_TRACE_DEBUG("First subscribtion to event %u, listener 0x%lx",
+            SDK_TRACE_DEBUG("First subscription to event %u, listener 0x%lx",
                             event_id, lctxt);
             event_state = event_state_alloc_init_(event_id);
             if (event_state == NULL) {
@@ -448,6 +448,8 @@ eventmgr::walk_listeners(event_id_t event_id, void *event_ctxt,
 
     event_state = (event_state_t *)event_map_->lookup(&event_id);
     if (event_state == NULL) {
+        SDK_TRACE_DEBUG("event state for event %u not found",
+                        event_id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     SDK_SPINLOCK_LOCK(&event_state->slock);

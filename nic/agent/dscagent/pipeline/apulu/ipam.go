@@ -7,6 +7,7 @@ package apulu
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -128,10 +129,16 @@ func convertIPAMPolicyToDHCPRelay(infraAPI types.InfraAPI, policy netproto.IPAMP
 	}
 
 	for _, srv := range policy.Spec.DHCPRelay.Servers {
+		// TODO: cleanup this endianness mess !!
+		ip := net.ParseIP(srv.IPAddress).To4()
+		pdsIp := (((uint32(ip[0])*256)+uint32(ip[1]))*256+uint32(ip[2]))*256 + uint32(ip[3])
 		dhcpRelay := &halapi.DHCPRelaySpec{
-			Id:       uid.Bytes(),
-			ServerIP: ip2PDSType(srv.IPAddress),
-			VPCId:    vrfuid.Bytes(),
+			Id: uid.Bytes(),
+			ServerIP: &halapi.IPAddress{
+				Af:     halapi.IPAF_IP_AF_INET,
+				V4OrV6: &halapi.IPAddress_V4Addr{V4Addr: pdsIp},
+			},
+			VPCId: vrfuid.Bytes(),
 		}
 		ret.Request = append(ret.Request, dhcpRelay)
 	}
