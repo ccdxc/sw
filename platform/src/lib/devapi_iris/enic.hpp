@@ -23,6 +23,7 @@ private:
     mac_t mac_;
     vlan_t vlan_;
     devapi_lif *lif_;
+    bool skip_native_vlan_;
     std::map<vlan_t, l2seg_info_t *> l2seg_refs_;
     static indexer *allocator_;
     static constexpr uint32_t max_enics = 4096;
@@ -46,6 +47,9 @@ public:
 
     uint32_t get_id(void);
     devapi_l2seg *get_l2seg(vlan_t vlan);
+
+    sdk_ret_t set_skip_native_vlan(bool skip);
+    bool get_skip_native_vlan(void) { return skip_native_vlan_; }
 };
 
 }     // namespace iris

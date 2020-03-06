@@ -245,8 +245,9 @@ message McastFilterGetResponseMsg {
 
 // Vlan Mode
 message VlanModeRequest {
-    bool    enable = 1;
-    uint32  mode   = 2;
+  bool    enable  = 1;
+  uint32  mode    = 2;
+  uint32  channel = 3;
 }
 
 message VlanModeRequestMsg {
@@ -266,6 +267,7 @@ message VlanModeResponseMsg {
 }
 
 message VlanModeGetRequest {
+  uint32 channel = 1;
 }
 
 message VlanModeGetRequestMsg {

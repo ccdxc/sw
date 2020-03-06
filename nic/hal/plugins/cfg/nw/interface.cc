@@ -1930,9 +1930,10 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if_t                        *hal_if    = NULL, *hal_if_clone = NULL;
     if_update_app_ctxt_t        *app_ctxt  = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
-    // oif_t                       oif = {};
     hal_handle_t                *p_hdl = NULL;
     ep_t                        *ep = NULL;
+    l2seg_t                     *nat_l2seg = NULL;
+    lif_t                       *lif = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("invalid cfg_ctxt");
@@ -2026,6 +2027,24 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                 HAL_TRACE_ERR("Not able to del old oifs from oiflists. ret: {}",
                               ret);
                 return ret;
+            }
+        }
+        if (pd_if_args.native_l2seg_clsc_change) {
+            if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+                // Remove enic from existing native l2seg
+                nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+                lif = find_lif_by_handle(hal_if->lif_handle);
+                ret = enicif_classic_update_oif_lists(hal_if, nat_l2seg, lif, false);
+            }
+            if (pd_if_args.new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
+                // Add enic to new native l2seg
+                nat_l2seg = l2seg_lookup_by_handle(pd_if_args.new_native_l2seg_clsc);
+                if (pd_if_args.lif_change) {
+                    lif = pd_if_args.new_lif;
+                } else {
+                    lif = find_lif_by_handle(hal_if->lif_handle);
+                }
+                ret = enicif_classic_update_oif_lists(hal_if, nat_l2seg, lif, true);
             }
         }
         // If lif changes on enic, we should trigger EP to reprogram ipsg entries & reg_mac entries.
@@ -2777,6 +2796,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
         //Port number is 0 based.
         uplink_if_info->set_port_num(hal_if->fp_port_num);
         uplink_if_info->set_native_l2segment_id(hal_if->native_l2seg);
+        uplink_if_info->set_is_oob_management(hal_if->is_oob_management);
         rsp->mutable_status()->mutable_uplink_info()->
             set_num_l2segs(hal_if->l2seg_list->num_elems());
         rsp->mutable_status()->mutable_uplink_info()->

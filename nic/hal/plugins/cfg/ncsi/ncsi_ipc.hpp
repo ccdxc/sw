@@ -6,6 +6,7 @@
 #define __NCSI_IPC_HPP__
 
 #include "gen/proto/ncsi.pb.h"
+#include "nic/include/base.hpp"
 
 using ncsi::VlanFilterRequest;
 using ncsi::VlanFilterResponse;
@@ -31,6 +32,7 @@ using ncsi::VlanModeRequest;
 using ncsi::VlanModeResponse;
 using ncsi::VlanModeGetRequest;
 using ncsi::VlanModeGetResponseMsg;
+using ncsi::VlanModeGetResponse;
 using ncsi::ChannelRequest;
 using ncsi::ChannelResponse;
 using ncsi::ChannelGetRequest;
@@ -58,6 +60,15 @@ DEFINE_ENUM(ncsi_msg_id_t, NCSI_MSG_ID)
 
 DEFINE_ENUM(ncsi_msg_oper_t, NCSI_MSG_OPER)
 #undef NCSI_MSG_OPER
+
+#define NCSI_VLAN_MODE(ENTRY)                                                        \
+    ENTRY(NCSI_VLAN_MODE0_RSVD,             0, "NCSI_VLAN_MODE0_RSVD")               \
+    ENTRY(NCSI_VLAN_MODE1_VLAN,             1, "NCSI_VLAN_MODE1_VLAN")               \
+    ENTRY(NCSI_VLAN_MODE2_VLAN_NATIVE,      2, "NCSI_VLAN_MODE2_VLAN_NATIVE")        \
+    ENTRY(NCSI_VLAN_MODE3_ANY_VLAN_NATIVE,  3, "NCSI_VLAN_MODE3_ANY_VLAN_NATIVE")    \
+    ENTRY(NCSI_VLAN_MODE4_RSVD,             4, "NCSI_VLAN_MODE4_RSVD")  
+DEFINE_ENUM(ncsi_vlan_mode_t, NCSI_VLAN_MODE)
+#undef NCSI_VLAN_MODE
 
 typedef struct ncsi_ipc_msg_s {
     ncsi_msg_id_t   msg_id;

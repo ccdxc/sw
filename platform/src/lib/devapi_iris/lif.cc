@@ -496,6 +496,9 @@ devapi_lif::add_vlan(vlan_t vlan)
          *      - Create Vlan filter
          */
         if (is_classicfwd(vlan)) {
+            if (is_swm() && vlan == NATIVE_VLAN_ID) {
+                enic_->set_skip_native_vlan(false);
+            }
             // Register new mac across all existing vlans
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 if (is_multicast(*it) && is_recallmc()) {
@@ -538,9 +541,15 @@ devapi_lif::del_vlan(vlan_t vlan, bool update_db, bool add_failure)
 
     api_trace("Deleting Vlan Filter");
     NIC_LOG_DEBUG("Deleting Vlan filter: {}", vlan);
+    // For swm, we want to not allow native vlan as well
+    if (!is_swm()) {
+        if (!vlan) {
+            NIC_LOG_DEBUG("Ignoring Delete of Vlan filter 0");
+            return SDK_RET_OK;
+        }
+    }
     if (!vlan) {
-        NIC_LOG_DEBUG("Ignoring Delete of Vlan filter 0");
-        return SDK_RET_OK;
+        vlan = NATIVE_VLAN_ID;
     }
 
     if (!is_classicfwd(vlan)) {
@@ -570,6 +579,11 @@ devapi_lif::del_vlan(vlan_t vlan, bool update_db, bool add_failure)
                     NIC_LOG_DEBUG("Vlan Delete: No-op");
                 }
             }
+
+            if (is_swm() && vlan == NATIVE_VLAN_ID) {
+                enic_->set_skip_native_vlan(true);
+            }
+
         } else {
             // Wont even reach here
             // delete_vlan_filter(vlan);

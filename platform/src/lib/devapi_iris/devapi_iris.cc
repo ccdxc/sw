@@ -1022,6 +1022,12 @@ devapi_iris::swm_disable_rx(uint32_t channel)
     return devapi_swm::swm()->disable_rx(channel);
 }
 
+sdk_ret_t
+devapi_iris::swm_upd_vlan_mode(bool enable, uint32_t mode, uint32_t channel)
+{
+    return devapi_swm::swm()->upd_vlan_mode(enable, mode, channel);;
+}
+
 bool
 devapi_iris::is_hal_up(void)
 {

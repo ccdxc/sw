@@ -89,6 +89,8 @@ typedef struct channel_info_s {
     bool tx_en;
     lif_bcast_filter_t bcast_filter;
     lif_mcast_filter_t mcast_filter;
+    bool vlan_enable;
+    uint32_t vlan_mode;
 } channel_info_t;
 
 typedef struct lif_info_s {

@@ -112,10 +112,11 @@ TEST_F(ncsi_test, test1)
     McastFilterResponse     mcast_rsp;
     ChannelRequest          ch_req;
     ChannelResponse         ch_rsp;
-    uint32_t       test_id = 1;
-    uint32_t                up_port1 = 1, up_port2 = 5, up_port3 = 9;
-    uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
-                   uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
+    VlanModeRequest         vlan_mode_req;
+    VlanModeResponse        vlan_mode_rsp;
+    uint32_t       up_port1 = PORT_NUM_1, up_port2 = PORT_NUM_2, up_port3 = PORT_NUM_3;
+    uint32_t       uplinkif_id1 = UPLINK_IF_INDEX1,
+                   uplinkif_id2 = UPLINK_IF_INDEX2, uplinkif_id3 = UPLINK_IF_INDEX3;
 
     ASSERT_EQ(create_uplink(uplinkif_id1, up_port1), HAL_RET_OK);
     ASSERT_EQ(create_uplink(uplinkif_id2, up_port2), HAL_RET_OK);
@@ -245,6 +246,35 @@ TEST_F(ncsi_test, test1)
     ch_req.set_tx_enable(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::channel_create(ch_req, &ch_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
+
+    // Enable vlan mode
+    vlan_mode_req.set_channel(0);
+    vlan_mode_req.set_enable(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vlan_mode_update(vlan_mode_req, &vlan_mode_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
+
+    // Enable vlan mode with only vlan
+    vlan_mode_req.set_channel(0);
+    vlan_mode_req.set_enable(1);
+    vlan_mode_req.set_mode(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vlan_mode_update(vlan_mode_req, &vlan_mode_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
+
+    // Enable vlan mode with only vlan
+    vlan_mode_req.set_channel(0);
+    vlan_mode_req.set_enable(0);
+    vlan_mode_req.set_mode(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vlan_mode_update(vlan_mode_req, &vlan_mode_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);

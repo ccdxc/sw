@@ -98,6 +98,7 @@ public:
     virtual sdk_ret_t swm_disable_tx(uint32_t channel) = 0;
     virtual sdk_ret_t swm_enable_rx(uint32_t channel) = 0;
     virtual sdk_ret_t swm_disable_rx(uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_vlan_mode(bool enable, uint32_t mode, uint32_t channel) = 0;
 
     // accel APIs
     virtual sdk_ret_t accel_rgroup_add(string name,

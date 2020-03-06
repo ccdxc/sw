@@ -249,12 +249,6 @@ ncsi_ipc_mcast_filter_get (ncsi_ipc_msg_t *msg)
 }
 
 sdk_ret_t
-ncsi_ipc_vlan_mode (ncsi_ipc_msg_t *msg)
-{
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 ncsi_ipc_channel (ncsi_ipc_msg_t *msg)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -317,6 +311,53 @@ ncsi_ipc_channel_get (ncsi_ipc_msg_t *msg)
     return ret;
 }
 
+sdk_ret_t
+ncsi_ipc_vlan_mode (ncsi_ipc_msg_t *msg)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    VlanModeRequest *req = dynamic_cast<VlanModeRequest *>(msg->msg);
+    VlanModeResponse *rsp = dynamic_cast<VlanModeResponse *>(msg->rsp);
+
+    NIC_LOG_DEBUG("NCSI Vlan Mode: channel: {}, enable: {}, mode: {}",
+                  req->channel(), req->enable(), req->mode());
+    devmgr->DevApi()->swm_upd_vlan_mode(req->enable(), req->mode(), req->channel());
+
+    rsp->set_api_status(types::API_STATUS_OK);
+    return ret;
+}
+
+sdk_ret_t
+ncsi_ipc_vlan_mode_get (ncsi_ipc_msg_t *msg)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    std::set<channel_info_t *> channels_info;
+    channel_info_t *cinfo;
+    VlanModeGetResponseMsg *rsp_msg = dynamic_cast<VlanModeGetResponseMsg *>(msg->rsp);
+    VlanModeGetRequest *req = dynamic_cast<VlanModeGetRequest *>(msg->msg);
+    VlanModeGetResponse *rsp;
+
+    NIC_LOG_DEBUG("NCSI Vlan mode get");
+
+    devmgr->DevApi()->swm_get_channels_info(&channels_info);
+
+    for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
+        cinfo = *it;
+        if (req->channel() == 0xFF || req->channel() == cinfo->channel) {
+            rsp = rsp_msg->add_response();
+            rsp->mutable_request()->set_channel(cinfo->channel);
+            rsp->mutable_request()->set_enable(cinfo->vlan_enable);
+            rsp->mutable_request()->set_mode(cinfo->vlan_mode);
+            rsp->set_api_status(types::API_STATUS_OK);
+            NIC_LOG_DEBUG("Channel: {}, vlan_enable: {}, vlan_mode: {}",
+                          cinfo->channel, cinfo->vlan_enable, cinfo->vlan_mode);
+        } else {
+            NIC_LOG_DEBUG("Skipping for channel: {}", cinfo->channel);
+        }
+        channels_info.erase(it++);
+        DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);
+    }
+    return ret;
+}
 
 void 
 ncsi_ipc_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
@@ -365,7 +406,13 @@ ncsi_ipc_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
         }
         break;
     case hal::NCSI_MSG_VLAN_MODE:
-        ret = ncsi_ipc_vlan_mode(ncsi_msg);
+        if (ncsi_msg->oper == hal::NCSI_MSG_OPER_CREATE ||
+            ncsi_msg->oper == hal::NCSI_MSG_OPER_UPDATE ||
+            ncsi_msg->oper == hal::NCSI_MSG_OPER_DELETE) { 
+            ret = ncsi_ipc_vlan_mode(ncsi_msg);
+        } else {
+            ret = ncsi_ipc_vlan_mode_get(ncsi_msg);
+        }
         break;
     case hal::NCSI_MSG_CHANNEL:
         if (ncsi_msg->oper == hal::NCSI_MSG_OPER_CREATE ||

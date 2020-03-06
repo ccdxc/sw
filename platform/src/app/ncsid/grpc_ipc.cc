@@ -219,13 +219,14 @@ int grpc_ipc::PostMsg(struct VlanModeMsg& vlan_mode)
     VlanModeRequestMsg req_msg;
     VlanModeResponseMsg rsp_msg;
 
-    SDK_TRACE_INFO("vlan mode on ncsi channel: 0x%x, vlan_mode: 0x%x", 
-            vlan_mode.port, vlan_mode.mode);
+    SDK_TRACE_INFO("vlan mode on ncsi channel: 0x%x, vlan_enable: 0x%x, vlan_mode: 0x%x", 
+            vlan_mode.port, vlan_mode.enable, vlan_mode.mode);
     req = req_msg.add_request();
 
     //req->set_id(vlan_mode.filter_id);
+    req->set_enable(vlan_mode.enable);
     req->set_mode(vlan_mode.mode);
-    //req->set_channel(vlan_mode.port);
+    req->set_channel(vlan_mode.port);
 
     status = vlan_mode_update(req_msg, rsp_msg);
 

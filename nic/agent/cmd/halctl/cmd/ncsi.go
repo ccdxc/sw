@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	// "reflect"
 	// "sort"
 	"strings"
@@ -690,15 +691,6 @@ func ncsiChannelShowCmdHandler(cmd *cobra.Command, args []string) {
 	req = &halproto.ChannelGetRequest{
 		Channel: channelID,
 	}
-	// if cmd.Flags().Changed("id") {
-	// 	req = &halproto.ChannelGetRequest{
-	// 		Channel = channelID,
-	// 	}
-	// } else {
-	// 	req = &halproto.ChannelGetRequest{
-	// 		Channel = 0xFF,
-	// 	}
-	// }
 
 	channelGetRequestMsg := &halproto.ChannelGetRequestMsg{
 		Request: []*halproto.ChannelGetRequest{req},
@@ -711,35 +703,64 @@ func ncsiChannelShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Header
-	ncsiChannelShowHeader()
-
-	// Print vrfs
-	// m := make(map[uint64]*halproto.VlanFilterGetResponse)
+	m := make(map[uint32]*halproto.ChannelGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		ncsiChannelShowResp(resp)
-		// m[resp.GetSpec().GetKeyOrHandle().GetVrfId()] = resp
+		m[resp.GetRequest().GetChannel()] = resp
 	}
-	// var keys []uint64
-	// for k := range m {
-	// 	keys = append(keys, k)
-	// }
-	// sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-	// for _, k := range keys {
-	// 	vrfShowOneResp(m[k])
-	// }
+	var keys []uint32
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	var vmReq *halproto.VlanModeGetRequest
+	vmReq = &halproto.VlanModeGetRequest{
+		Channel: channelID,
+	}
+	vlanModeGetRequestMsg := &halproto.VlanModeGetRequestMsg{
+		Request: []*halproto.VlanModeGetRequest{vmReq},
+	}
+	// HAL call
+	vrespMsg, err1 := client.VlanModeGet(context.Background(), vlanModeGetRequestMsg)
+	if err1 != nil {
+		fmt.Printf("Getting channels failed. %v\n", err)
+		return
+	}
+	n := make(map[uint32]*halproto.VlanModeGetResponse)
+	for _, vresp := range vrespMsg.Response {
+		if vresp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", vresp.ApiStatus)
+			continue
+		}
+		n[vresp.GetRequest().GetChannel()] = vresp
+	}
+	var keys1 []uint32
+	for k1 := range n {
+		keys1 = append(keys1, k1)
+	}
+	sort.Slice(keys1, func(i, j int) bool { return keys1[i] < keys1[j] })
+
+	// Print Header
+	ncsiChannelShowHeader()
+
+	for _, k := range keys {
+		ncsiChannelShowResp(m[k], n[k])
+	}
 }
 
 func ncsiChannelShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Ch: Channel		Channel Modes: TX, RX\n")
-	hdrLine := strings.Repeat("-", 15)
+	fmt.Printf("VEN: Vlan Enable (0: Native, 1: Mode is valid\n")
+	fmt.Printf("Vlan-Mode: 0: NATIVE0, 1: VLAN_ONLY, 2: VLAN_NATIVE, \n")
+	fmt.Printf("           3: ANY_VLAN_NATIVE, 4 - 0xff: NATIVE4\n")
+	hdrLine := strings.Repeat("-", 40)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-5s%-10s\n", "Ch", "Channel-Modes")
+	fmt.Printf("%-5s%-10s%-10s%-15s\n", "Ch", "Modes", "VEN", "Vlan-Mode")
 	fmt.Println(hdrLine)
 }
 
@@ -764,7 +785,25 @@ func channelModeToStr(resp *halproto.ChannelGetResponse) string {
 	return str
 }
 
-func ncsiChannelShowResp(resp *halproto.ChannelGetResponse) {
-	fmt.Printf("%-5d%-10s\n", resp.GetRequest().GetChannel(),
-		channelModeToStr(resp))
+func vmModeToStr(mode uint32) string {
+	switch mode {
+	case 0:
+		return "NATIVE0"
+	case 1:
+		return "VLAN_ONLY"
+	case 2:
+		return "VLAN_NATIVE"
+	case 3:
+		return "ANY_VLAN_NATIVE"
+	case 4:
+		fallthrough
+	default:
+		return "NATIVE4"
+	}
+}
+
+func ncsiChannelShowResp(resp *halproto.ChannelGetResponse, vmResp *halproto.VlanModeGetResponse) {
+	fmt.Printf("%-5d%-10s%-10v%-15s\n", resp.GetRequest().GetChannel(),
+		channelModeToStr(resp), vmResp.GetRequest().GetEnable(),
+		vmModeToStr(vmResp.GetRequest().GetMode()))
 }

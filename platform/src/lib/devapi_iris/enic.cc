@@ -65,6 +65,7 @@ devapi_enic::init_(devapi_lif *lif)
     mac_ = 0;
     vlan_ = 0;
     lif_ = lif;
+    skip_native_vlan_ = false;
     return SDK_RET_OK;
 }
 
@@ -104,9 +105,11 @@ devapi_enic::enic_halcreate(void)
     req->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     req->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
     req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(lif_->get_id());
-    if (lif_->get_nativel2seg()) {
-        req->mutable_if_enic_info()->mutable_classic_enic_info()->
-            set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+    if (!skip_native_vlan_) {
+        if (lif_->get_nativel2seg()) {
+            req->mutable_if_enic_info()->mutable_classic_enic_info()->
+                set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+        }
     }
 
     VERIFY_HAL();
@@ -188,8 +191,10 @@ devapi_enic::trigger_halupdate(void)
     spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
     spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->
         set_lif_id(lif_->get_id());
-    spec->mutable_if_enic_info()->mutable_classic_enic_info()->
-        set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+    if (!skip_native_vlan_) {
+        spec->mutable_if_enic_info()->mutable_classic_enic_info()->
+            set_native_l2segment_id(lif_->get_nativel2seg()->get_id());
+    }
     for (auto l2seg_it = l2seg_refs_.begin(); l2seg_it != l2seg_refs_.end(); l2seg_it++) {
         l2seg = l2seg_it->second->l2seg;
         spec->mutable_if_enic_info()->mutable_classic_enic_info()->
@@ -311,6 +316,7 @@ devapi_enic::del_vlan(vlan_t vlan, bool skip_hal)
             }
 
             l2seg->del_enic(this);
+            // Skip delete for swm native vlan
             if (!l2seg->is_single_wire_mgmt() && !l2seg->num_enics()) {
                 // Delete L2seg
                 devapi_l2seg::destroy(l2seg);
@@ -320,6 +326,24 @@ devapi_enic::del_vlan(vlan_t vlan, bool skip_hal)
             DEVAPI_FREE(DEVAPI_MEM_L2SEG_INFO, l2seg_info);
         }
     }
+}
+
+sdk_ret_t
+devapi_enic::set_skip_native_vlan(bool skip) 
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    if (skip == skip_native_vlan_) {
+        return SDK_RET_OK;
+    }
+
+    skip_native_vlan_ = skip;
+
+    ret = trigger_halupdate();
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Unable to update native vlan devapi_enic. ret: {}", ret);
+    }
+
+    return ret;
 }
 
 

@@ -334,9 +334,17 @@ hal_ret_t
 vlan_mode_create (VlanModeRequest& req, VlanModeResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    ncsi_ipc_msg_t msg;
 
     hal_api_trace(" API Begin: NCSI vlan mode create ");
     proto_msg_dump(req);
+
+    msg.msg_id = NCSI_MSG_VLAN_MODE;
+    msg.oper = NCSI_MSG_OPER_CREATE;
+    msg.msg = dynamic_cast<Message *>(&req);
+    msg.rsp = dynamic_cast<Message *>(rsp);
+
+    ret = ncsi_nicmgr_block_call(&msg);
 
     return ret;
 }
@@ -346,9 +354,17 @@ hal_ret_t
 vlan_mode_update (VlanModeRequest& req, VlanModeResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    ncsi_ipc_msg_t msg;
 
     hal_api_trace(" API Begin: NCSI vlan mode update ");
     proto_msg_dump(req);
+
+    msg.msg_id = NCSI_MSG_VLAN_MODE;
+    msg.oper = NCSI_MSG_OPER_UPDATE;
+    msg.msg = dynamic_cast<Message *>(&req);
+    msg.rsp = dynamic_cast<Message *>(rsp);
+
+    ret = ncsi_nicmgr_block_call(&msg);
 
     return ret;
 }
@@ -357,9 +373,17 @@ hal_ret_t
 vlan_mode_delete (VlanModeRequest& req, VlanModeResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    ncsi_ipc_msg_t msg;
 
     hal_api_trace(" API Begin: NCSI vlan mode delete ");
     proto_msg_dump(req);
+
+    msg.msg_id = NCSI_MSG_VLAN_MODE;
+    msg.oper = NCSI_MSG_OPER_DELETE;
+    msg.msg = dynamic_cast<Message *>(&req);
+    msg.rsp = dynamic_cast<Message *>(rsp);
+
+    ret = ncsi_nicmgr_block_call(&msg);
 
     return ret;
 }

@@ -16,6 +16,7 @@
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include "nic/include/globals.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/hal/plugins/cfg/ncsi/ncsi_ipc.hpp"
 
 namespace iris {
 
@@ -100,6 +101,8 @@ devapi_swm::create_channel(uint32_t channel, uint32_t port_num)
     cinfo->channel = channel;
     cinfo->port_num = port_num;
     cinfo->swm_lif_id = lif_base_++;
+    cinfo->vlan_enable = 0;
+    cinfo->vlan_mode = 0;
 
     channel_state_[channel] = cinfo;
 
@@ -964,6 +967,99 @@ devapi_swm::disable_rx (uint32_t channel)
                     cinfo->swm_lif_id, channel);
     }
     cinfo->rx_en = false;
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_swm::upd_vlan_mode(bool enable, uint32_t vlan_mode, uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    NIC_LOG_DEBUG("channel: {}, vlan_enable: {}, mode: {}", 
+                  channel, enable, vlan_mode);
+    cinfo = lookup_channel_info_(channel);
+    if (cinfo->vlan_enable == enable && cinfo->vlan_mode == vlan_mode) {
+        NIC_LOG_DEBUG("Channel {}. No change in vlan mode.", channel);
+        goto end;
+    }
+
+    if (cinfo->vlan_enable != enable) {
+        NIC_LOG_DEBUG("channel: {} vlan_enable change {} -> {}",
+                      channel, cinfo->vlan_enable, enable);
+        if (enable) {
+            switch(vlan_mode) {
+             case hal::NCSI_VLAN_MODE1_VLAN:
+                 // Remove native vlan
+                 ret = dapi_->lif_del_vlan(cinfo->swm_lif_id, 0);
+                 if (ret != SDK_RET_OK) {
+                     NIC_LOG_ERR("Failed to del vlan {} from lif {}, channel: {}", 0, 
+                                 cinfo->swm_lif_id, channel);
+                 }
+                 break;
+             case hal::NCSI_VLAN_MODE2_VLAN_NATIVE:
+             case hal::NCSI_VLAN_MODE0_RSVD:
+             case hal::NCSI_VLAN_MODE3_ANY_VLAN_NATIVE:
+             case hal::NCSI_VLAN_MODE4_RSVD:
+             default:
+                 NIC_LOG_DEBUG("Nothing to do for vlan mode change.");
+            }
+        } else {
+            // Disable vlan, Enable native if it moved from NCSI_VLAN_MODE1_VLAN
+            if (cinfo->vlan_mode == hal::NCSI_VLAN_MODE1_VLAN) {
+                 // Enable native vlan
+                 ret = dapi_->lif_add_vlan(cinfo->swm_lif_id, 0);
+                 if (ret != SDK_RET_OK) {
+                     NIC_LOG_ERR("Failed to add vlan {} to lif {}, channel: {}", 0, 
+                                 cinfo->swm_lif_id, channel);
+                 }
+            }
+        }
+    } else {
+        // No enable change
+        if (enable) {
+            // Mode change
+            switch(vlan_mode) {
+            case hal::NCSI_VLAN_MODE1_VLAN:
+                // Any mode => Only vlan
+                // Remove native vlan
+                ret = dapi_->lif_del_vlan(cinfo->swm_lif_id, 0);
+                if (ret != SDK_RET_OK) {
+                    NIC_LOG_ERR("Failed to del vlan {} from lif {}, channel: {}", 0, 
+                                cinfo->swm_lif_id, channel);
+                }
+                break;
+            case hal::NCSI_VLAN_MODE2_VLAN_NATIVE:
+                if (cinfo->vlan_mode == hal::NCSI_VLAN_MODE1_VLAN) {
+                    // Enable native vlan
+                    ret = dapi_->lif_add_vlan(cinfo->swm_lif_id, 0);
+                    if (ret != SDK_RET_OK) {
+                        NIC_LOG_ERR("Failed to add vlan {} to lif {}, channel: {}", 0, 
+                                    cinfo->swm_lif_id, channel);
+                    }
+                }
+                break;
+            case hal::NCSI_VLAN_MODE0_RSVD:
+                if (cinfo->vlan_mode == hal::NCSI_VLAN_MODE1_VLAN) {
+                    // Enable native vlan
+                    ret = dapi_->lif_add_vlan(cinfo->swm_lif_id, 0);
+                    if (ret != SDK_RET_OK) {
+                        NIC_LOG_ERR("Failed to add vlan {} to lif {}, channel: {}", 0, 
+                                    cinfo->swm_lif_id, channel);
+                    }
+                }
+                break;
+            case hal::NCSI_VLAN_MODE3_ANY_VLAN_NATIVE:
+            case hal::NCSI_VLAN_MODE4_RSVD:
+            default:
+                NIC_LOG_DEBUG("Not supported vlan mode change");
+            }
+        }
+    }
+    cinfo->vlan_enable = enable;
+    cinfo->vlan_mode = vlan_mode;
 
 end:
     return ret;

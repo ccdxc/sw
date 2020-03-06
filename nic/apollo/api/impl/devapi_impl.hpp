@@ -107,6 +107,7 @@ public:
     virtual sdk_ret_t swm_disable_tx(uint32_t channel) override;
     virtual sdk_ret_t swm_enable_rx(uint32_t channel) override;
     virtual sdk_ret_t swm_disable_rx(uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_vlan_mode(bool enable, uint32_t mode, uint32_t channel) override;
 
 private:
     devapi_impl() {}

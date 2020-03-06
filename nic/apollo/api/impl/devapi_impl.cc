@@ -532,6 +532,13 @@ devapi_impl::swm_disable_rx(uint32_t channel)
 }
 
 sdk_ret_t
+devapi_impl::swm_upd_vlan_mode(bool enable, uint32_t mode, uint32_t channel)
+{
+    PDS_TRACE_DEBUG("Not provided");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::lif_program_tx_scheduler(lif_info_t *info) {
     sdk_ret_t ret;
     asicpd_scheduler_lif_params_t   apd_lif;
