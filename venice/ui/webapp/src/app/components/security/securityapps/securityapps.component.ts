@@ -85,7 +85,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
     super(_controllerService, cdr, uiconfigsService);
   }
 
-  ngOnInit() {
+  postNgInit() {
     this._route.queryParams.subscribe(params => {
       if (params.hasOwnProperty('app')) {
         // alerttab selected
@@ -114,10 +114,6 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
       buttons: buttons,
       breadcrumb: [{ label: 'Apps', url: Utility.getBaseUIUrl() + 'security/securityapps' }]
     });
-  }
-
-  postNgInit() {
-
   }
 
   getClassName(): string {

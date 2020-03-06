@@ -1,1 +1,23 @@
+@import 'src/global-mixins';
 
+.networknetworkinterface-detail-container {
+  border-bottom: 1px solid #e7e7e3;
+  padding-bottom: 5px;
+  @include primary-font(14px, #676763);
+}
+
+.networknetworkinterface-detail-key {
+  @include primary-font(14px, #676763, bold);
+}
+
+.networknetworkinterface-detail-value {
+  @include primary-font();
+}
+
+.networknetworkinterface-detail-close {
+  cursor: pointer;
+}
+
+.networknetworkinterface-detail-header {
+  @include primary-font(18px, #676763, bold);
+}

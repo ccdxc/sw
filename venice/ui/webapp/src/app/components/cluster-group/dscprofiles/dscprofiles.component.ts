@@ -191,10 +191,13 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
     for (let i = 0; i < dscs.length; i++) {
       if (i >= this.maxDSCsPerRow) {
         const dsc = dscs[i];
-        dscTips.push(dsc.meta.name);
+        if (i <=  2 * this.maxDSCsPerRow) {
+             // We don't want to lood too much records to tooltip. Just load another maxDSCsPerRow. Say maxDSCsPerRow=10, we list first 10 records in table. Tooltip text contains 11-20th records
+            dscTips.push(dsc.meta.name);
+        }
       }
     }
-    return dscTips.join(' , ');
+    return dscTips.join(' , ') + (dscs.length > 2 * this.maxDSCsPerRow) + ' ... more';
   }
 
   /**

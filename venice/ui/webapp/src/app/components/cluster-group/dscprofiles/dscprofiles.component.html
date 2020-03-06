@@ -62,7 +62,7 @@
            class="clusterdscprofile-dsc-div">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.meta.name}}"
-             [matTooltip]="'Jump to workloads page'">{{w?.spec.id}}</a>
+             [matTooltip]="'Jump to DSC page'">{{w?.spec.id}}</a>
           <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
              [matTooltip]="buildMoreDSCsTooltip(rowData)">
             ... {{rowData._ui['associatedDSCS'].length - maxDSCsPerRow}} more</a>

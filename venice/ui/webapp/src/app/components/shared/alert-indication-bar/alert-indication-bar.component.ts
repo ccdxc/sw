@@ -29,6 +29,7 @@ export class AlertIndicationBarComponent implements OnChanges {
   }
 
   computeAlertNumbers() {
+    this.clearAlertNumber();
     this.alertNumber.total = this.alerts.length;
     this.alerts.forEach(alert => {
       this.alertNumber[alert.status.severity] += 1;
@@ -44,6 +45,15 @@ export class AlertIndicationBarComponent implements OnChanges {
    */
   onAlertNumber(event, alertType: string) {
     this.alertType.emit({ event, alertType });
+  }
+
+  clearAlertNumber() {
+    this.alertNumber = {
+      total: 0,
+      critical: 0,
+      warn: 0,
+      info: 0
+    };
   }
 
 }

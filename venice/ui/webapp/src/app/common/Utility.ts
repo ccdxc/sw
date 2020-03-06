@@ -89,7 +89,7 @@ export class Utility {
   public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
 
   public static UNSUPPORTED_CATEGORIES = ['Diagnostics', 'Orchestration'];
-  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'ArchiveRequest', 'Network', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter', 'NetworkInterface', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
+  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter',  'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
 
   public static allColors = [
     '#97b8df',
@@ -1273,6 +1273,8 @@ export class Utility {
         return 'security/securityapps?app=' + name;
       case 'NetworkSecurityPolicy':
         return 'security/sgpolicies';
+      case 'NetworkInterface':
+          return 'cluster/networkinterfaces?interface=' + name;
       case 'AuditEvent':
         return 'monitoring/auditevents';
       case 'FwlogPolicy':

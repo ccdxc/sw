@@ -1,16 +1,13 @@
 <app-pagebody class="networkinterfaces" header="Network Interfaces" [icon]="bodyicon">
   <app-tableviewedit fxLayout="column" class="networkinterfaces-widget" style="height: 100%;"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
+                     [creatingMode]="creatingMode" [showRowExpand]="showRowExpand"
+                     [data]="dataObjects" [cols]="cols"
+                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate"
-                     [enableCheckbox]="true"
+                     [actionTemplate]="actionTemplate" [enableCheckbox]="true"
                      [tableLoading]="tableLoading"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+                     (rowClick)="selectNetworkInterface($event)">
   </app-tableviewedit>
 
 </app-pagebody>
@@ -18,29 +15,31 @@
 
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Network Interfaces" [total]="count" fxFlex="auto" fxLayout="row"
-                   [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
-                   (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+  <div fxFlex="auto" fxLayout="column">
+    <div *ngIf="selectedNetworkInterface" fxFlex="auto" fxLayout="row"
+         class="networknetworkinterface-detail-container">
+      <ng-container *ngTemplateOutlet="selectedNetworkInterfaceDetail;"></ng-container>
+    </div>
+    <app-tableheader title="Network Interfaces" [total]="count" fxFlex="auto" fxLayout="row"
+                     [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                     (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
 
-    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
-  </app-tableheader>
+      <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+    </app-tableheader>
+  </div>
+
 </ng-template>
 
 <ng-template #actionButtonsTemplate>
-  <div fxFlex="none" fxLayoutAlign="start center"
-       *roleGuard="'networknetworkinterface_update'">
+  <div fxFlex="none" fxLayoutAlign="start center" *roleGuard="'networknetworkinterface_update'">
     <!-- TABLE FUNCTION ICONS HERE -->
-    <mat-icon class="global-multi-records-delete-icon"
-              *ngIf="hasSelectedRows()"
-              [matTooltip]="'Update labels to selected records'"
-              (click)="editLabels()">label</mat-icon>
-    <app-labeleditor
-                     [metadata]="labelEditorMetaData"
-                     [inLabelEditMode]="inLabelEditMode"
+    <mat-icon class="global-multi-records-delete-icon" *ngIf="hasSelectedRows()"
+              [matTooltip]="'Update labels to selected records'" (click)="editLabels()">label
+    </mat-icon>
+    <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
                      (saveEmitter)="handleEditSave($event)"
                      (cancelEmitter)="handleEditCancel($event)"
-                     [objects]="this.tableContainer.selectedDataObjects"
-                     [nameKey]="'spec.id'">
+                     [objects]="this.tableContainer.selectedDataObjects" [nameKey]="'spec.id'">
     </app-labeleditor>
   </div>
 
@@ -75,4 +74,101 @@
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div> 
 -->
+</ng-template>
+
+<ng-template #selectedNetworkInterfaceDetail>
+  <div fxFlex>
+    <div fxFlex fxLayout="column">
+      <div class="networknetworkinterface-detail-header" fxFlex fxLayout="row">
+        <a fxFlex fxLayoutAlign="start center">Network Interface Details:</a>
+        <mat-icon class="networknetworkinterface-detail-close" (click)="closeDetails()">close
+        </mat-icon>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">Name:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-value">{{this.selectedNetworkInterface.meta.name}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">DSC:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-value"><a
+                 routerLink="/cluster/dscs/{{this.selectedNetworkInterface.status.dsc}}">
+                {{this.selectedNetworkInterface._ui && this.selectedNetworkInterface._ui['associatedDSC'] ? this.selectedNetworkInterface._ui['associatedDSC'] : this.selectedNetworkInterface.status.dsc}}</a></a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">Modification Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{ $any(this.selectedNetworkInterface.meta['mod-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">Creation Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{ $any(this.selectedNetworkInterface.meta['mod-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-key">Admin
+              Status:
+              Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{this.selectedNetworkInterface.spec['admin-status']}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">Type:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{this.selectedNetworkInterface.spec.type}}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="networknetworkinterface-detail-key">Labels:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{formatLabels(this.selectedNetworkInterface.meta.labels)}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-key">OP
+              Status:</a>
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value">
+              {{this.selectedNetworkInterface.status['oper-status']}}
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </ng-template>
