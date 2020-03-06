@@ -1,10 +1,11 @@
 #include "ipfix/asm_out/INGRESS_p.h"
 #include "ipfix/asm_out/ingress.h"
+#include "ipfix/alt_asm_out/INGRESS_ipfix_flow_stats_k.h"
 #include "p4/asm_out/ingress.h"
 
-struct ipfix_flow_stats_k k;
-struct flow_stats_d       d;
-struct phv_               p;
+struct ipfix_flow_stats_k_  k;
+struct flow_stats_d         d;
+struct phv_                 p;
 
 %%
 
@@ -24,10 +25,28 @@ ipfix_flow_stats:
     phvwr       p.ipfix_record_common_drop_packets, \
                     d.flow_stats_d.drop_packets
 
+    sub         r1, d.flow_stats_d.permit_packets, \
+                    k.ipfix_exported_permit_stats1_pkts
+    phvwr       p.ipfix_record_common_delta_permit_packets, r1
+    sub         r1, d.flow_stats_d.permit_bytes, \
+                    k.ipfix_exported_permit_stats1_byts
+    phvwr       p.ipfix_record_common_delta_permit_bytes, r1
+    sub         r1, d.flow_stats_d.drop_packets, \
+                    k.ipfix_exported_drop_stats_pkts
+    phvwr       p.ipfix_record_common_delta_drop_packets, r1
+    sub         r1, d.flow_stats_d.drop_bytes, \
+                    k.ipfix_exported_drop_stats_byts
+    phvwr       p.ipfix_record_common_delta_drop_bytes, r1
+
+    phvwr       p.{ipfix_exported_permit_stats2_pkts, \
+                    ipfix_exported_permit_stats2_byts}, \
+                    d.{flow_stats_d.permit_packets,flow_stats_d.permit_bytes}
+    phvwr       p.{ipfix_exported_drop_stats_pkts, \
+                    ipfix_exported_drop_stats_byts}, \
+                    d.{flow_stats_d.drop_packets,flow_stats_d.drop_bytes}
+
     // table 0 : lookup qstate address
-    phvwr       p.common_te0_phv_table_addr, \
-                    k.{ipfix_metadata_qstate_addr_sbit0_ebit1, \
-                       ipfix_metadata_qstate_addr_sbit2_ebit33}
+    phvwr       p.common_te0_phv_table_addr, k.ipfix_metadata_qstate_addr
     phvwri      p.common_te0_phv_table_pc, ipfix_create_record[33:6]
     phvwr       p.common_te0_phv_table_raw_table_size, 6
     phvwr       p.common_te0_phv_table_lock_en, 1

@@ -180,9 +180,9 @@
 #define TLS_PROXY_BARCO_MPP2_PI_HBM_TABLE_BASE "tls_barco_mpp2_pi_table_base"
 #define TLS_PROXY_BARCO_MPP3_PI_HBM_TABLE_BASE "tls_barco_mpp3_pi_table_base"
 
-#define ARQRX_BASE              "hbm_arqrx_base"
+#define ARQRX_BASE                      "hbm_arqrx_base"
 
-#define TCP_ACTL_Q_BASE          "tcp_actl_q_base"
+#define TCP_ACTL_Q_BASE                 "tcp_actl_q_base"
 
 #define P4_FLOW_HASH_BASE               "p4_flow_hash_base"
 #define P4_FLOW_HASH_OVERFLOW_BASE      "p4_flow_hash_overflow_base"
@@ -190,19 +190,21 @@
 #define P4_SESSION_STATE_BASE           "p4_session_state_base"
 #define P4_FLOW_STATS_BASE              "p4_flow_stats_base"
 #define IPFIX_STATS_BASE                "ipfix_stats_base"
+#define IPFIX_EXPORTED_FLOW_STATS       "ipfix_exported_flow_stats"
+#define IPFIX_EXPORTED_FLOW_STATS_BASE  "ipfix_exported_flow_stats_base"
+
 #define NUM_CLOCK_TICKS_PER_CNP         "rdma_num_clock_ticks_per_cnp"
 #define NUM_CLOCK_TICKS_PER_US          "rdma_num_clock_ticks_per_us"
 #define RDMA_EQ_INTR_TABLE_BASE         "hbm_rdma_eq_intr_table_base"
+#define RDMA_ATOMIC_RESOURCE_ADDR       "rdma_atomic_resource_addr"
+#define RDMA_PCIE_ATOMIC_BASE_ADDR      "rdma_pcie_atomic_base_addr"
+#define RDMA_STATS_HDRS_ADDR            "rdma_stats_hdrs_addr"
 
-#define RDMA_ATOMIC_RESOURCE_ADDR   "rdma_atomic_resource_addr"
-#define RDMA_PCIE_ATOMIC_BASE_ADDR  "rdma_pcie_atomic_base_addr"
-#define RDMA_STATS_HDRS_ADDR        "rdma_stats_hdrs_addr"
-
-#define P4PT_TCB_BASE 					"p4pt_tcb_base"
-#define P4PT_TCB_ISCSI_REC_BASE 			"p4pt_tcb_iscsi_rec_base"
-#define P4PT_TCB_ISCSI_STATS_BASE 			"p4pt_tcb_iscsi_stats_base"
-#define P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_read_latency_distribution_base"
-#define P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE 	"p4pt_tcb_iscsi_write_latency_distribution_base"
+#define P4PT_TCB_BASE                   "p4pt_tcb_base"
+#define P4PT_TCB_ISCSI_REC_BASE         "p4pt_tcb_iscsi_rec_base"
+#define P4PT_TCB_ISCSI_STATS_BASE       "p4pt_tcb_iscsi_stats_base"
+#define P4PT_TCB_ISCSI_READ_LATENCY_DISTRIBUTION_BASE   "p4pt_tcb_iscsi_read_latency_distribution_base"
+#define P4PT_TCB_ISCSI_WRITE_LATENCY_DISTRIBUTION_BASE  "p4pt_tcb_iscsi_write_latency_distribution_base"
 
 #define TLS_PROXY_GLOBAL_STATS          "tls_proxy_global_stats"
 

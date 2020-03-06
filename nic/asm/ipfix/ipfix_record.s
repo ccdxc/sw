@@ -2,14 +2,16 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "ipfix/asm_out/INGRESS_p.h"
 #include "ipfix/asm_out/ingress.h"
+#include "ipfix/alt_asm_out/INGRESS_ipfix_create_record_k.h"
 #include "../common-p4+/include/capri-macros.h"
 
-struct ipfix_create_record_k k;
-struct ipfix_create_record_d d;
-struct phv_                  p;
+struct ipfix_create_record_k_   k;
+struct ipfix_create_record_d    d;
+struct phv_                     p;
 
 %%
     .param      ipfix_stats_base
+    .param      ipfix_update_exported_flow_stats
 
 ipfix_create_record:
     addi        r5, r0, loword(ipfix_stats_base)
@@ -117,6 +119,11 @@ ipfix_update_record_stats:
     add         r6, r6, r5[26:0]
     or          r7,  1, r5[31:27], 58
     memwr.dx    r6, r7
+    phvwr       p.common_te1_phv_table_addr, \
+                    k.ipfix_t0_metadata_exported_stats_addr
+    phvwri      p.common_te1_phv_table_pc, ipfix_update_exported_flow_stats[33:6]
+    phvwr       p.common_te1_phv_table_raw_table_size, 5
+    phvwr       p.common_te1_phv_table_lock_en, 1
 
 ipfix_header_fixups:
     seq         c1, k.ipfix_metadata_scan_complete, FALSE
@@ -177,8 +184,7 @@ ipfix_update_doorbells:
 
     // update table type and next index in qstate of (self+16)
     phvwr       p.ipfix_t0_metadata_next_record_offset, r6
-    add         r1, k.{ipfix_metadata_qstate_addr_sbit0_ebit1,\
-                       ipfix_metadata_qstate_addr_sbit2_ebit33}, ((64*16)+32)
+    add         r1, k.ipfix_metadata_qstate_addr, ((64*16)+32)
     phvwr       p.phv2mem_cmd5_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
     phvwr       p.phv2mem_cmd5_dma_cmd_phv_start_addr, \
                     CAPRI_PHV_START_OFFSET(ipfix_t0_metadata_next_record_offset)
@@ -203,8 +209,10 @@ ipfix_update_doorbells:
     phvwr       p.phv2mem_cmd6_dma_cmd_eop, 1
 
 ipfix_record_done:
-    phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0
-    nop
+    sne         c1, k.ipfix_metadata_scan_complete, TRUE
+    sne.c1      c1, k.ipfix_t0_metadata_exported_stats_addr, r0
+    cmov.e      r1, c1, 0x4, 0
+    phvwr.f     p.{app_header_table0_valid...app_header_table3_valid}, r1
 
 ipfix_record_exit:
     phvwr.e     p.{app_header_table0_valid...app_header_table3_valid}, 0

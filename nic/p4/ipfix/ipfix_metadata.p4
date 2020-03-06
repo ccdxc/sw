@@ -17,6 +17,14 @@ header_type ipfix_flow_hash_metadata_t {
         next_record_offset : 16;
         flow_hash_table_type : 8;
         flow_hash_index_next : 32;
+        exported_stats_addr : 34;
+    }
+}
+
+header_type ipfix_exported_stats_metadata_t {
+    fields {
+        pkts : 64;
+        byts : 64;
     }
 }
 

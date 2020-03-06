@@ -256,6 +256,17 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
     if (control_metadata.skip_flow_update == TRUE) {
         // return;
     }
+
+    modify_field(scratch_metadata.flow_bytes, capri_p4_intrinsic.packet_len);
+    if ((flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV4) or
+        (flow_lkp_metadata.lkp_type == FLOW_KEY_LOOKUP_TYPE_IPV6)) {
+        if (vlan_tag.valid == TRUE) {
+            subtract_from_field(scratch_metadata.flow_bytes, 18);
+        } else {
+            subtract_from_field(scratch_metadata.flow_bytes, 14);
+        }
+    }
+
     if (capri_intrinsic.drop == TRUE) {
         // update timestamp only if drop reason is flow_hit drop
         if (control_metadata.drop_reason == (1 << DROP_FLOW_HIT)) {
@@ -266,14 +277,14 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
                control_metadata.drop_reason);
         add(scratch_metadata.flow_packets, drop_packets, 1);
         add(scratch_metadata.flow_bytes, drop_bytes,
-            capri_p4_intrinsic.packet_len);
+            scratch_metadata.flow_bytes);
     } else {
         // update timestamp
         modify_field(scratch_metadata.flow_last_seen_timestamp,
                      last_seen_timestamp);
         add(scratch_metadata.flow_packets, permit_packets, 1);
         add(scratch_metadata.flow_bytes, permit_bytes,
-            capri_p4_intrinsic.packet_len);
+            scratch_metadata.flow_bytes);
     }
 
     // dummy ops to keep compiler happy

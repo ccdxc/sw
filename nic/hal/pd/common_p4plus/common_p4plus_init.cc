@@ -16,7 +16,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 86
+#define P4PLUS_SYMBOLS_MAX 87
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -192,6 +192,14 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
         // subtract 2G (saves ASM instructions)
         offset -= ((uint64_t)1 << 31);
         symbols[i].name = IPFIX_STATS_BASE;
+        symbols[i].val = offset;
+        i++;
+    }
+
+    offset = get_mem_addr(IPFIX_EXPORTED_FLOW_STATS);
+    if (offset != INVALID_MEM_ADDRESS) {
+        SDK_ASSERT(get_mem_size_kb(IPFIX_EXPORTED_FLOW_STATS) != 0);
+        symbols[i].name = IPFIX_EXPORTED_FLOW_STATS_BASE;
         symbols[i].val = offset;
         i++;
     }

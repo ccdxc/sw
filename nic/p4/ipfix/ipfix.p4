@@ -4,19 +4,23 @@
 
 #define tx_table_s0_t0          ipfix_start
 #define tx_table_s1_t0          ipfix_flow_hash
-#define tx_table_s2_t0          ipfix_flow_info
-#define tx_table_s3_t0          ipfix_session_state
-#define tx_table_s4_t0          ipfix_flow_stats
-#define tx_table_s5_t0          ipfix_create_record
 #define tx_table_s1_t1          ipfix_export_packet
+#define tx_table_s2_t0          ipfix_flow_info
+#define tx_table_s3_t1          ipfix_read_exported_flow_stats
+#define tx_table_s3_t0          ipfix_session_state
+#define tx_table_s4_t1          ipfix_flow_stats
+#define tx_table_s5_t0          ipfix_create_record
+#define tx_table_s6_t1          ipfix_update_exported_flow_stats
 
 #define tx_table_s0_t0_action	ipfix_start
 #define tx_table_s1_t0_action	ipfix_flow_hash
+#define tx_table_s1_t1_action   ipfix_export_packet
 #define tx_table_s2_t0_action	ipfix_flow_info
 #define tx_table_s3_t0_action	ipfix_session_state
-#define tx_table_s4_t0_action	ipfix_flow_stats
+#define tx_table_s3_t1_action   ipfix_read_exported_flow_stats
+#define tx_table_s4_t1_action	ipfix_flow_stats
 #define tx_table_s5_t0_action	ipfix_create_record
-#define tx_table_s1_t1_action   ipfix_export_packet
+#define tx_table_s6_t1_action   ipfix_update_exported_flow_stats
 
 #include "../common-p4+/common_txdma.p4"
 
@@ -43,6 +47,16 @@ metadata ipfix_s5_metadata_t ipfix_s5_metadata;
 @pragma dont_trim
 @pragma pa_header_union ingress app_header
 metadata p4plus_to_p4_header_t ipfix_app_header;
+
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_4
+metadata ipfix_exported_stats_metadata_t ipfix_exported_permit_stats1;
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_6
+metadata ipfix_exported_stats_metadata_t ipfix_exported_permit_stats2;
+@pragma dont_trim
+@pragma pa_header_union ingress common_t1_s2s
+metadata ipfix_exported_stats_metadata_t ipfix_exported_drop_stats;
 
 @pragma dont_trim
 metadata ipfix_record_header_t ipfix_record_header;
@@ -118,6 +132,7 @@ action ipfix_flow_hash() {
 
 action ipfix_flow_info() {
     modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.flow_index, ipfix_metadata.flow_index);
     modify_field(scratch_metadata.export_id, ipfix_metadata.export_id);
     modify_field(scratch_metadata.export_en, ipfix_metadata.export_en);
 }
@@ -132,6 +147,32 @@ action ipfix_session_state() {
 action ipfix_flow_stats() {
     modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
     modify_field(scratch_metadata.qstate_addr, ipfix_metadata.qstate_addr);
+    modify_field(scratch_metadata.counter64, ipfix_exported_permit_stats1.pkts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_permit_stats1.byts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_drop_stats.pkts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_drop_stats.byts);
+}
+
+action ipfix_read_exported_flow_stats(permit_packets, permit_bytes,
+                                      drop_packets, drop_bytes) {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.counter64, permit_packets);
+    modify_field(scratch_metadata.counter64, permit_bytes);
+    modify_field(scratch_metadata.counter64, drop_packets);
+    modify_field(scratch_metadata.counter64, drop_bytes);
+}
+
+action ipfix_update_exported_flow_stats(permit_packets, permit_bytes,
+                                        drop_packets, drop_bytes) {
+    modify_field(scratch_metadata.scan_complete, ipfix_metadata.scan_complete);
+    modify_field(scratch_metadata.counter64, ipfix_exported_permit_stats2.pkts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_permit_stats2.byts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_drop_stats.pkts);
+    modify_field(scratch_metadata.counter64, ipfix_exported_drop_stats.byts);
+    modify_field(scratch_metadata.counter64, permit_packets);
+    modify_field(scratch_metadata.counter64, permit_bytes);
+    modify_field(scratch_metadata.counter64, drop_packets);
+    modify_field(scratch_metadata.counter64, drop_bytes);
 }
 
 action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
@@ -173,6 +214,8 @@ action ipfix_create_record(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,
                  ipfix_t0_metadata.flow_hash_table_type);
     modify_field(scratch_metadata.flow_hash_index_next,
                  ipfix_t0_metadata.flow_hash_index_next);
+    modify_field(scratch_metadata.qstate_addr,
+                 ipfix_t0_metadata.exported_stats_addr);
 }
 
 action ipfix_export_packet(pc, rsvd, cos_a, cos_b, cos_sel, eval_last,

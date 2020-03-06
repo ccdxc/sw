@@ -426,6 +426,11 @@
             "_comment": "16 exporters x 8 counters(8B)"
         },
         {
+            "name": "ipfix_exported_flow_stats",
+            "size": "128M",
+            "_comment": "4 exporters * 32B (permit/deny X pkts/byts) * 1M flows"
+        },
+        {
             "name": "app-redir-rawc",
             "size": "512K"
         },

@@ -66,6 +66,11 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
     uint64_t deny_bytes = 0x0f0e0d0c0b0a0908ull;
     uint64_t deny_packets = 0x0102030405060708ull;
 
+    // last exported stats
+    uint64_t exported_stats_addr = get_mem_addr(IPFIX_EXPORTED_FLOW_STATS);
+    SDK_ASSERT(exported_stats_addr != INVALID_MEM_ADDRESS);
+    uint64_t data, data_r = 0;
+
     // flow hash
     uint8_t *hwkey = NULL;
     uint32_t hwkey_len = 0;
@@ -132,6 +137,27 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
                &deny_packets, sizeof(deny_packets));
         p4pd_entry_write(P4TBL_ID_FLOW_STATS, flow_index+i, NULL, NULL,
                          &stats_data);
+
+        // last exported stats
+        data_r = permit_packets - 100;
+        memrev((uint8_t *)&data, (uint8_t *)&data_r, sizeof(data));
+        sdk::asic::asic_mem_write(exported_stats_addr + ((flow_index + i) << 5),
+                                  (uint8_t *)&data, sizeof(data));
+        data_r = permit_bytes - (100 * 64);
+        memrev((uint8_t *)&data, (uint8_t *)&data_r, sizeof(data));
+        sdk::asic::asic_mem_write(exported_stats_addr +
+                                  ((flow_index + i) << 5) + sizeof(data),
+                                  (uint8_t *)&data, sizeof(data));
+        data_r = deny_packets - 10;
+        memrev((uint8_t *)&data, (uint8_t *)&data_r, sizeof(data));
+        sdk::asic::asic_mem_write(exported_stats_addr +
+                                  ((flow_index + i) << 5) + (2 * sizeof(data)),
+                                  (uint8_t *)&data, sizeof(data));
+        data_r = deny_bytes - (10 * 64);
+        memrev((uint8_t *)&data, (uint8_t *)&data_r, sizeof(data));
+        sdk::asic::asic_mem_write(exported_stats_addr +
+                                  ((flow_index + i) << 5) + (3 * sizeof(data)),
+                                  (uint8_t *)&data, sizeof(data));
     }
     delete [] hwkey;
 }
@@ -199,8 +225,10 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // qid is equal to the exporter id which is encoded in the timer_id
     qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
-    address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) + (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
-    data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) | (ring_id << DB_RING_SHFT) | p_index;
+    address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) +
+        (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
+    data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) |
+        (ring_id << DB_RING_SHFT) | p_index;
 
     // Update (RMW) export time in the Qstate table
     lif_manager()->read_qstate(lif_id, 0, qid,

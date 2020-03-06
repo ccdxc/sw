@@ -45,12 +45,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -86,12 +86,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -127,12 +127,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -168,12 +168,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -209,12 +209,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -250,12 +250,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -291,12 +291,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -332,12 +332,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -373,12 +373,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -414,12 +414,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -455,12 +455,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -496,12 +496,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -537,12 +537,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -578,12 +578,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -619,12 +619,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -660,12 +660,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -701,12 +701,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -742,12 +742,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -783,12 +783,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -824,12 +824,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -865,12 +865,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
@@ -906,12 +906,12 @@ packets:
                 egress_interface_type   : 0
                 permit_packets          : 0x7060504030201010
                 permit_bytes            : 0x40302010a0b0c0d0
-                delta_permit_packets    : 0
-                delta_permit_bytes      : 0
+                delta_permit_packets    : 100
+                delta_permit_bytes      : 6400
                 drop_packets            : 0x0102030405060708
                 drop_bytes              : 0x0f0e0d0c0b0a0908
-                delta_drop_packets      : 0
-                delta_drop_bytes        : 0
+                delta_drop_packets      : 10
+                delta_drop_bytes        : 640
                 flit_pad2               : 0
                 start_timestamp         : 0
                 last_seen_timestamp     : 0
