@@ -11,7 +11,6 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/types"
@@ -33,9 +32,9 @@ type ServiceHandlers struct {
 	updated       bool
 	pegasusURL    string
 	cfgWatcherSvc types.CfgWatcherService
-	pegasusClient pegasusClient.BGPSvcClient
+	pegasusClient pdstypes.BGPSvcClient
 	ifClient      pdstypes.IfSvcClient
-	routeSvc      pegasusClient.CPRouteSvcClient
+	routeSvc      pdstypes.CPRouteSvcClient
 	apiclient     apiclient.Services
 	snicMap       map[string]snic
 }
@@ -82,8 +81,8 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		return
 	}
 	// call grpc api to configure ms
-	peerReq := pegasusClient.BGPPeerRequest{}
-	peer := pegasusClient.BGPPeerSpec{
+	peerReq := pdstypes.BGPPeerRequest{}
+	peer := pdstypes.BGPPeerSpec{
 		Id:           uid.Bytes(),
 		PeerAddr:     ip2PDSType(nic.ip),
 		LocalAddr:    ip2PDSType(""),
@@ -92,7 +91,7 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		SendComm:     true,
 		SendExtComm:  true,
 		ConnectRetry: 5,
-		RRClient:     pegasusClient.BGPPeerRRClient_BGP_PEER_RR_CLIENT,
+		RRClient:     pdstypes.BGPPeerRRClient_BGP_PEER_RR_CLIENT,
 	}
 	log.Infof("Add create peer [%+v]", peer)
 	peerReq.Request = append(peerReq.Request, &peer)
@@ -114,9 +113,9 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 
 	} else {
 		if nic.pushed {
-			peerDReq := pegasusClient.BGPPeerDeleteRequest{}
-			peer := pegasusClient.BGPPeerKeyHandle{
-				IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
+			peerDReq := pdstypes.BGPPeerDeleteRequest{}
+			peer := pdstypes.BGPPeerKeyHandle{
+				IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
 			}
 			log.Infof("Add create peer [%+v]", peer)
 			peerDReq.Request = append(peerDReq.Request, &peer)
@@ -129,17 +128,16 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 	}
 
 	if !deleteOp {
-		peerAfReq := pegasusClient.BGPPeerAfRequest{
-			Request: []*pegasusClient.BGPPeerAfSpec{
+		peerAfReq := pdstypes.BGPPeerAfRequest{
+			Request: []*pdstypes.BGPPeerAfSpec{
 				{
 					Id:          uid.Bytes(),
 					PeerAddr:    ip2PDSType(nic.ip),
 					LocalAddr:   ip2PDSType(""),
-					Disable:     false,
 					NexthopSelf: false,
 					DefaultOrig: false,
-					Afi:         pegasusClient.BGPAfi_BGP_AFI_L2VPN,
-					Safi:        pegasusClient.BGPSafi_BGP_SAFI_EVPN,
+					Afi:         pdstypes.BGPAfi_BGP_AFI_L2VPN,
+					Safi:        pdstypes.BGPSafi_BGP_SAFI_EVPN,
 				},
 			},
 		}
@@ -149,10 +147,10 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		}
 		nic.pushed = true
 	} else {
-		peerAfReq := pegasusClient.BGPPeerAfDeleteRequest{
-			Request: []*pegasusClient.BGPPeerAfKeyHandle{
+		peerAfReq := pdstypes.BGPPeerAfDeleteRequest{
+			Request: []*pdstypes.BGPPeerAfKeyHandle{
 				{
-					IdOrKey: &pegasusClient.BGPPeerAfKeyHandle_Key{Key: &pegasusClient.BGPPeerAfKey{PeerAddr: ip2PDSType(nic.ip), LocalAddr: ip2PDSType(""), Afi: pegasusClient.BGPAfi_BGP_AFI_L2VPN, Safi: pegasusClient.BGPSafi_BGP_SAFI_EVPN}},
+					IdOrKey: &pdstypes.BGPPeerAfKeyHandle_Key{Key: &pdstypes.BGPPeerAfKey{PeerAddr: ip2PDSType(nic.ip), LocalAddr: ip2PDSType(""), Afi: pdstypes.BGPAfi_BGP_AFI_L2VPN, Safi: pdstypes.BGPSafi_BGP_SAFI_EVPN}},
 				},
 			},
 		}

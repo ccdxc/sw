@@ -21,7 +21,6 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	pdstypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
-	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -43,14 +42,14 @@ const (
 
 type pegasusPeerUpdate struct {
 	Oper   int
-	peer   pegasusClient.BGPPeerSpec
+	peer   pdstypes.BGPPeerSpec
 	addAfs []string
 	delAfs []string
 }
 
 type pegasusCfg struct {
 	globalOper int
-	globalCfg  pegasusClient.BGPSpec
+	globalCfg  pdstypes.BGPSpec
 	peers      []*pegasusPeerUpdate
 }
 
@@ -95,7 +94,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 				if b.IPAddress == b1.IPAddress {
 					found = true
 					if !reflect.DeepEqual(b, b1) {
-						peer := pegasusPeerUpdate{Oper: Update, peer: pegasusClient.BGPPeerSpec{
+						peer := pegasusPeerUpdate{Oper: Update, peer: pdstypes.BGPPeerSpec{
 							Id:           uid.Bytes(),
 							State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 							PeerAddr:     ip2PDSType(b1.IPAddress),
@@ -139,7 +138,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 				}
 			}
 			if !found {
-				ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Delete, peer: pegasusClient.BGPPeerSpec{
+				ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Delete, peer: pdstypes.BGPPeerSpec{
 					Id:           uid.Bytes(),
 					State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 					PeerAddr:     ip2PDSType(b.IPAddress),
@@ -172,7 +171,7 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 				log.Errorf("failed to parse UUID [%v]", err)
 				continue
 			}
-			ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Create, peer: pegasusClient.BGPPeerSpec{
+			ret.peers = append(ret.peers, &pegasusPeerUpdate{Oper: Create, peer: pdstypes.BGPPeerSpec{
 				Id:           uid.Bytes(),
 				State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
 				PeerAddr:     ip2PDSType(b.IPAddress),
@@ -212,7 +211,7 @@ func (m *ServiceHandlers) connectToPegasus() {
 			time.Sleep(time.Second)
 			continue
 		}
-		m.pegasusClient = pegasusClient.NewBGPSvcClient(conn)
+		m.pegasusClient = pdstypes.NewBGPSvcClient(conn)
 		break
 	}
 }
@@ -239,7 +238,7 @@ func (m *ServiceHandlers) setupLBIf() {
 			continue
 		}
 		m.ifClient = pdstypes.NewIfSvcClient(conn)
-		m.routeSvc = pegasusClient.NewCPRouteSvcClient(conn)
+		m.routeSvc = pdstypes.NewCPRouteSvcClient(conn)
 		break
 	}
 	retries := 0
@@ -259,8 +258,8 @@ func (m *ServiceHandlers) setupLBIf() {
 		}
 		log.Infof("Created loopback interface got response [%s][%+v]", resp.ApiStatus, resp.Response)
 
-		route := pegasusClient.CPStaticRouteRequest{
-			Request: []*pegasusClient.CPStaticRouteSpec{
+		route := pdstypes.CPStaticRouteRequest{
+			Request: []*pdstypes.CPStaticRouteSpec{
 				{
 					PrefixLen: 0,
 					State:     pdstypes.AdminState_ADMIN_STATE_ENABLE,
@@ -309,8 +308,8 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 		log.Errorf("failed to parse UUID (%v)", err)
 		return
 	}
-	req := pegasusClient.BGPRequest{
-		Request: &pegasusClient.BGPSpec{
+	req := pdstypes.BGPRequest{
+		Request: &pdstypes.BGPSpec{
 			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,
 			Id:       uid.Bytes(),
 			RouterId: ip2uint32(evtRtConfig.Spec.BGPConfig.RouterId),
@@ -320,9 +319,9 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 	resp, err := m.pegasusClient.BGPCreate(ctx, &req)
 	log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
 
-	peerReq := pegasusClient.BGPPeerRequest{}
+	peerReq := pdstypes.BGPPeerRequest{}
 	for _, n := range evtRtConfig.Spec.BGPConfig.Neighbors {
-		peer := pegasusClient.BGPPeerSpec{
+		peer := pdstypes.BGPPeerSpec{
 			Id:          uid.Bytes(),
 			State:       pdstypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:    ip2PDSType(n.IPAddress),
@@ -336,7 +335,7 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 }
 
 var once sync.Once
-var pReq pegasusClient.BGPPeerRequest
+var pReq pdstypes.BGPPeerRequest
 
 // HandleNodeConfigEvent handles Node updates
 func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNodeConfig *cmd.Node) {
@@ -368,7 +367,7 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 			log.Errorf("failed to get pegasus config 9%s)", err)
 			return
 		}
-		req := pegasusClient.BGPRequest{
+		req := pdstypes.BGPRequest{
 			Request: &updCfg.globalCfg,
 		}
 		switch updCfg.globalOper {
@@ -396,8 +395,8 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				log.Errorf("failed to parse UUID [%s]", rtConfig.UUID)
 				return
 			}
-			dreq := pegasusClient.BGPDeleteRequest{}
-			dreq.Request = &pegasusClient.BGPKeyHandle{
+			dreq := pdstypes.BGPDeleteRequest{}
+			dreq.Request = &pdstypes.BGPKeyHandle{
 				Id: uid.Bytes(),
 			}
 			log.Infof("delete bgp [%+v]", dreq)
@@ -409,12 +408,12 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 			CfgAsn = 0
 		}
 
-		addPeerReq := pegasusClient.BGPPeerRequest{}
-		delPeerReq := pegasusClient.BGPPeerDeleteRequest{}
-		updPeerReq := pegasusClient.BGPPeerRequest{}
+		addPeerReq := pdstypes.BGPPeerRequest{}
+		delPeerReq := pdstypes.BGPPeerDeleteRequest{}
+		updPeerReq := pdstypes.BGPPeerRequest{}
 
-		addPeerAfReq := pegasusClient.BGPPeerAfRequest{}
-		delPeerAfReq := pegasusClient.BGPPeerAfDeleteRequest{}
+		addPeerAfReq := pdstypes.BGPPeerAfRequest{}
+		delPeerAfReq := pdstypes.BGPPeerAfDeleteRequest{}
 		for _, p := range updCfg.peers {
 			switch p.Oper {
 			case Create:
@@ -424,47 +423,46 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				updPeerReq.Request = append(updPeerReq.Request, &p.peer)
 				log.Infof("Update Peer [%+v]", p.peer)
 			case Delete:
-				peer := pegasusClient.BGPPeerKeyHandle{
-					IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: p.peer.PeerAddr}},
+				peer := pdstypes.BGPPeerKeyHandle{
+					IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: p.peer.PeerAddr}},
 				}
 				delPeerReq.Request = append(delPeerReq.Request, &peer)
 				log.Infof("Del Peer [%+v]", p.peer)
 			}
 			for _, af := range p.addAfs {
-				peerAf := pegasusClient.BGPPeerAfSpec{
+				peerAf := pdstypes.BGPPeerAfSpec{
 					Id:          p.peer.Id,
 					PeerAddr:    p.peer.PeerAddr,
 					LocalAddr:   p.peer.LocalAddr,
-					Disable:     false,
 					NexthopSelf: false,
 					DefaultOrig: false,
 				}
 				switch af {
 				case network.BGPAddressFamily_EVPN.String():
-					peerAf.Afi = pegasusClient.BGPAfi_BGP_AFI_L2VPN
-					peerAf.Safi = pegasusClient.BGPSafi_BGP_SAFI_EVPN
+					peerAf.Afi = pdstypes.BGPAfi_BGP_AFI_L2VPN
+					peerAf.Safi = pdstypes.BGPSafi_BGP_SAFI_EVPN
 				case network.BGPAddressFamily_IPv4Unicast.String():
-					peerAf.Afi = pegasusClient.BGPAfi_BGP_AFI_IPV4
-					peerAf.Safi = pegasusClient.BGPSafi_BGP_SAFI_UNICAST
+					peerAf.Afi = pdstypes.BGPAfi_BGP_AFI_IPV4
+					peerAf.Safi = pdstypes.BGPSafi_BGP_SAFI_UNICAST
 				}
 				log.Infof("ADD Peer AF [%+v]", peerAf)
 				addPeerAfReq.Request = append(addPeerAfReq.Request, &peerAf)
 			}
 			for _, af := range p.delAfs {
-				key := &pegasusClient.BGPPeerAfKey{
+				key := &pdstypes.BGPPeerAfKey{
 					PeerAddr:  p.peer.PeerAddr,
 					LocalAddr: p.peer.LocalAddr,
 				}
 				switch af {
 				case network.BGPAddressFamily_EVPN.String():
-					key.Afi = pegasusClient.BGPAfi_BGP_AFI_L2VPN
-					key.Safi = pegasusClient.BGPSafi_BGP_SAFI_EVPN
+					key.Afi = pdstypes.BGPAfi_BGP_AFI_L2VPN
+					key.Safi = pdstypes.BGPSafi_BGP_SAFI_EVPN
 				case network.BGPAddressFamily_IPv4Unicast.String():
-					key.Afi = pegasusClient.BGPAfi_BGP_AFI_IPV4
-					key.Safi = pegasusClient.BGPSafi_BGP_SAFI_UNICAST
+					key.Afi = pdstypes.BGPAfi_BGP_AFI_IPV4
+					key.Safi = pdstypes.BGPSafi_BGP_SAFI_UNICAST
 				}
-				peerAf := pegasusClient.BGPPeerAfKeyHandle{
-					IdOrKey: &pegasusClient.BGPPeerAfKeyHandle_Key{Key: &pegasusClient.BGPPeerAfKey{PeerAddr: key.PeerAddr, LocalAddr: key.LocalAddr, Afi: key.Afi, Safi: key.Safi}},
+				peerAf := pdstypes.BGPPeerAfKeyHandle{
+					IdOrKey: &pdstypes.BGPPeerAfKeyHandle_Key{Key: &pdstypes.BGPPeerAfKey{PeerAddr: key.PeerAddr, LocalAddr: key.LocalAddr, Afi: key.Afi, Safi: key.Safi}},
 				}
 				log.Infof("Del Peer AF [%+v]", peerAf)
 				delPeerAfReq.Request = append(delPeerAfReq.Request, &peerAf)
@@ -526,7 +524,7 @@ var pollBGPStatus bool
 func (m *ServiceHandlers) HandleDebugAction(action string, params map[string]string) (interface{}, error) {
 	switch action {
 	case "list-neighbors":
-		return m.pegasusClient.BGPPeerGet(context.TODO(), &pegasusClient.BGPPeerGetRequest{})
+		return m.pegasusClient.BGPPeerGet(context.TODO(), &pdstypes.BGPPeerGetRequest{})
 	case "poll-bgp-status":
 		pollBGPStatus = true
 		return "set to periodically poll BGP status", nil
@@ -543,10 +541,10 @@ func (m *ServiceHandlers) pollStatus() {
 			if !pollBGPStatus {
 				return
 			}
-			var req pegasusClient.BGPPeerGetRequest
+			var req pdstypes.BGPPeerGetRequest
 			for _, v := range pReq.Request {
-				peer := pegasusClient.BGPPeerKeyHandle{
-					IdOrKey: &pegasusClient.BGPPeerKeyHandle_Key{Key: &pegasusClient.BGPPeerKey{PeerAddr: v.PeerAddr, LocalAddr: v.LocalAddr}},
+				peer := pdstypes.BGPPeerKeyHandle{
+					IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: v.PeerAddr, LocalAddr: v.LocalAddr}},
 				}
 				req.Request = append(req.Request, &peer)
 			}
