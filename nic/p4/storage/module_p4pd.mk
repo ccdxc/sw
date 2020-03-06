@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libp4pd_storage_seq.so
+MODULE_TARGET   = libp4pd_storage_seq.lib
 MODULE_PIPELINE = iris gft
 MODULE_PREREQS  = storage.p4bin
 MODULE_SRC_DIR  = ${BLD_P4GEN_DIR}/storage_seq/src/

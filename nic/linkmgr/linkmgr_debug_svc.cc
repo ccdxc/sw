@@ -10,6 +10,8 @@
 #include "linkmgr_src.hpp"
 #include "linkmgr_debug.hpp"
 
+namespace linkmgr {
+
 Status
 DebugServiceImpl::GenericOpn(ServerContext *context,
                              const GenericOpnRequestMsg *req_msg,
@@ -24,3 +26,5 @@ DebugServiceImpl::GenericOpn(ServerContext *context,
 
     return Status::OK;
 }
+
+} // namespace linkmgr

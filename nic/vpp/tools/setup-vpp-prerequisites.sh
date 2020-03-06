@@ -30,5 +30,5 @@ ln -s $VPP_PKG_DIR/lib/vpp_plugins/dpdk_plugin.so /usr/lib/vpp_plugins/dpdk_plug
 rm -f $NICDIR/conf/vpp_startup.conf
 ln -s $NICDIR/vpp/conf/startup_$PIPELINE.conf $NICDIR/conf/vpp_startup.conf
 #Create softlink for all vpp plugins
-find $NICDIR/vpp/ -name *.mk | xargs grep MODULE_TARGET | grep "\.so" | awk '{ print $3 }' | xargs -I@ bash -c "ln -s $NICDIR/build/x86_64/$PIPELINE/lib/@ /usr/lib/vpp_plugins/@"
+find $NICDIR/vpp/ -name *.mk | xargs grep MODULE_TARGET | grep "\.lib" | awk '{ print $3 }' |  sed 's/\.lib/.so/g' | xargs -I@ bash -c "ln -s $NICDIR/build/x86_64/$PIPELINE/lib/@ /usr/lib/vpp_plugins/@"
 

@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libisc_dhcp.so
+MODULE_TARGET   = libisc_dhcp.lib
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/common/alloc.c \
                   ${MODULE_SRC_DIR}/common/options.c \

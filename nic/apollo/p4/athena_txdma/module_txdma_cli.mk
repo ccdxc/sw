@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = _athena_libp4plus_txdma_p4pdcli.so
+MODULE_TARGET       = _athena_libp4plus_txdma_p4pdcli.lib
 MODULE_PIPELINE     = athena
 MODULE_PREREQS      = athena_commontxdma_p4pd.swigcli
 MODULE_SRC_DIR      = ${BLD_P4GEN_DIR}/p4plus_txdma

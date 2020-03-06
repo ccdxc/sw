@@ -31,7 +31,7 @@ thread_local uint32_t cpu_rx_dpr_sem_free_err = 0;
 thread_local uint32_t cpu_rx_dpr_descr_free_err = 0;
 thread_local uint32_t cpu_rx_dpr_descr_invalid_free_err = 0;
 thread_local int      tg_cpu_id = -1;
-bool cpu_do_zero_copy = true;
+static bool cpu_do_zero_copy = true;
 
 hal_ret_t cpupkt_descr_free(cpupkt_hw_id_t descr_addr);
 

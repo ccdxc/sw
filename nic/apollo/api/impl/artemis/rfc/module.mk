@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = librfc_artemis.so
+MODULE_TARGET   = librfc_artemis.lib
 MODULE_PIPELINE = artemis
 
 ifeq ($(ARCH),aarch64)

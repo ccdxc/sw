@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = librfc_apollo.so
+MODULE_TARGET   = librfc_apollo.lib
 MODULE_PIPELINE = apollo
 
 ifeq ($(ARCH),aarch64)

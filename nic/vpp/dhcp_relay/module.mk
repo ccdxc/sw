@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET    = dhcp_relay.so
+MODULE_TARGET    = dhcp_relay.lib
 MODULE_PIPELINE  = apulu
 MODULE_PREREQS   = vpp_pkg.export
 MODULE_SOLIBS    = pdsvpp_impl pdsvpp_api pdsvpp_cfg

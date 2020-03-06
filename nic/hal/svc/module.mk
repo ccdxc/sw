@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libhal_svc.so
+MODULE_TARGET   = libhal_svc.lib
 MODULE_PIPELINE = iris gft
 MODULE_PREREQS  = hal.svcgen
 ifeq ($(ARCH),x86_64)

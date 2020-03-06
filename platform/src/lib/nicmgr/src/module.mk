@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_PREREQS  := common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin hal.memrgns
-MODULE_TARGET   := libnicmgr.so
+MODULE_TARGET   := libnicmgr.lib
 MODULE_PIPELINE := iris gft
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
                    ${BLD_PROTOGEN_DIR}/

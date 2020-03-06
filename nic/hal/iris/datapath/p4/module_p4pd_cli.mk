@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 ifeq "${P4VER}" "P4_14"
-MODULE_TARGET       = _iris_libp4_p4pdcli.so
+MODULE_TARGET       = _iris_libp4_p4pdcli.lib
 MODULE_PIPELINE     = iris
 MODULE_PREREQS      = iris_p4pd.swigcli
 MODULE_SRC_DIR      = ${BLD_P4GEN_DIR}/p4
@@ -16,7 +16,7 @@ MODULE_LDLIBS       = ${CLI_iris_P4PD_LDLIBS}
 MODULE_SOLIBS       = ${CLI_iris_P4PD_SOLIBS}
 else
 MODULE_PIPELINE     = iris_dontuse
-MODULE_TARGET       = _iris_libp4_p4pdcli.so.dontuse
+MODULE_TARGET       = _iris_libp4_p4pdcli.lib.dontuse
 endif
 
 include ${MKDEFS}/post.mk

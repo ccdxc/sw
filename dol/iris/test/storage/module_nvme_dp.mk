@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_nvme_dp.so
+MODULE_TARGET   = libstorage_nvme_dp.lib
 MODULE_PIPELINE = iris
 MODULE_ARCH     = x86_64
 MODULE_SRCS     = ${MODULE_SRC_DIR}/nvme_dp.cc \

@@ -771,7 +771,7 @@ void inst_t::update_tx_stats(uint16_t pktcount)
     stats_.fte_hbm_stats->qstats.queued_tx_pkts += pktcount;
 }
 
-void free_flow_miss_pkt(uint8_t * pkt)
+static void free_flow_miss_pkt(uint8_t * pkt)
 {
     hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(cpu_rxhdr_t)));
 }

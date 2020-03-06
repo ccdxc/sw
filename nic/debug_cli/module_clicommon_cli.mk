@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = _cli.so
+MODULE_TARGET       = _cli.lib
 MODULE_PIPELINE	    = iris apollo artemis apulu
 MODULE_PREREQS      = clicommon.swigcli
 MODULE_SRC_DIR      = ${BLD_P4CLICMN_DIR}

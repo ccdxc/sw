@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   := libnicmgr_iris.so
+MODULE_TARGET   := libnicmgr_iris.lib
 MODULE_PIPELINE := iris
 MODULE_PREREQS  := nicmgr.proto
 MODULE_SOLIBS   := nicmgr mnet pciemgr_if intrutils evutils devapi_iris rdmamgr_iris misc

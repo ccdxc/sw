@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_ssd_core.so
+MODULE_TARGET   = libstorage_ssd_core.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/ssd_core.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \

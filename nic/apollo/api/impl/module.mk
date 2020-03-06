@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libpdsapi_impl.so
+MODULE_TARGET   = libpdsapi_impl.lib
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) $(wildcard ${MODULE_SRC_DIR}/${PIPELINE}/*.cc)
 MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_INCS     = ${SDKDIR}/dpdk/build/include/ ${SDK_THIRD_PARTY_OMAPI_INCLUDES}

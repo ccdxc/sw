@@ -2,5 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = hub_objects.submake
 MODULE_PIPELINE = iris
-MODULE_PREREQS = libhalproto.so libdelphisdk.so
+MODULE_PREREQS = libhalproto.lib libdelphisdk.lib
 include ${MKDEFS}/post.mk

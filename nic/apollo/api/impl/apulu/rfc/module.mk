@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = librfc_apulu.so
+MODULE_TARGET   = librfc_apulu.lib
 MODULE_PIPELINE = apulu
 
 ifeq ($(ARCH),aarch64)

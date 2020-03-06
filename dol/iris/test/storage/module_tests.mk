@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_tests.so
+MODULE_TARGET   = libstorage_tests.lib
 MODULE_PIPELINE = iris
 MODULE_ARCH     = x86_64
 MODULE_FLAGS    = --std=c++14

@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 #
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libdelphiutils.a
+MODULE_TARGET   = libdelphiutils.lib
 MODULE_PIPELINE = iris gft
 ALL_CC_FILES = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 MODULE_SKIP_COVERAGE = 1

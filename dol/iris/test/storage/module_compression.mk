@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_compression.so
+MODULE_TARGET   = libstorage_compression.lib
 MODULE_PIPELINE = iris
 MODULE_PREREQS  = storage.p4bin
 MODULE_SRCS     = ${MODULE_SRC_DIR}/compression.cc

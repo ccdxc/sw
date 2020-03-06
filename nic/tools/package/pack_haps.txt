@@ -31,7 +31,7 @@ nic/build/aarch64/iris/bin/console                                  /nic/bin/
 nic/build/aarch64/iris/bin/coremgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/delphi_hub                               /nic/bin/
 nic/build/aarch64/iris/bin/delphictl                                /nic/bin/
-nic/build/aarch64/iris/bin/hal                                      /nic/bin/
+nic/build/aarch64/iris/bin/hal_static                               /nic/bin/hal
 nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
 nic/build/aarch64/iris/bin/netagent                                 /nic/bin/
 nic/build/aarch64/iris/bin/nevtsproxy                               /nic/bin/

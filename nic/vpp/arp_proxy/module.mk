@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = arp_proxy.so
+MODULE_TARGET   = arp_proxy.lib
 MODULE_PIPELINE = apulu
 MODULE_ARCH     = aarch64 x86_64
 MODULE_PREREQS  = vpp_pkg.export

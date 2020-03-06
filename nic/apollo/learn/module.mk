@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libpdslearn.so
+MODULE_TARGET   = libpdslearn.lib
 MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_SRCS	= $(wildcard ${MODULE_SRC_DIR}/*.cc)
 ifneq ($(PIPELINE), apulu)

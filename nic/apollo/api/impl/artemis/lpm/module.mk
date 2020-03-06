@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = liblpmitree_artemis.so
+MODULE_TARGET   = liblpmitree_artemis.lib
 MODULE_SRCS     = ${MODULE_SRC_DIR}/../../lpm/lpm.cc \
                   ${MODULE_SRC_DIR}/../../lpm/lpm_priv.cc \
                   ${MODULE_SRC_DIR}/../../lpm/lpm_ipv4_acl.cc \

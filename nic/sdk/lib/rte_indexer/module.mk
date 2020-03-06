@@ -1,6 +1,6 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = librte_indexer.so
+MODULE_TARGET = librte_indexer.lib
 ifeq ($(ARCH),aarch64)
 	MODULE_INCS = ${SDKDIR}/third-party/dpdk/v18.11/lib/librte_eal/common/include          \
 				  ${SDKDIR}/third-party/dpdk/v18.11/lib/librte_eal/common/include/config   \

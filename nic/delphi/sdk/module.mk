@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libdelphisdk.so
+MODULE_TARGET   = libdelphisdk.lib
 MODULE_PIPELINE = iris gft
 MODULE_PREREQS  = libev.export
 MODULE_ARLIBS   = delphimessenger delphishm delphiutils delphiclientproto  delphiproto messengerproto

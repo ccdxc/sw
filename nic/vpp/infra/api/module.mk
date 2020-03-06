@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET    = libpdsvpp_api.so
+MODULE_TARGET    = libpdsvpp_api.lib
 MODULE_PIPELINE  = apulu apollo artemis
 MODULE_PREREQS   = vpp_pkg.export
 MODULE_LDLIBS    = ${SDK_THIRD_PARTY_VPP_LIBS}

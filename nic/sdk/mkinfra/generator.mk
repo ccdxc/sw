@@ -73,6 +73,8 @@ define INCLUDE_MODULEMK
     MODULE_LDPATHS              :=
     MODULE_LDLIBS               :=
     MODULE_LDFLAGS              :=
+    MODULE_ARLIBS_BEGIN         :=
+    MODULE_ARLIBS_END           :=
     MODULE_DEFS                 :=
     MODULE_DEPS                 :=
     MODULE_PIPELINE             :=
@@ -112,10 +114,14 @@ define INCLUDE_MODULEMK
     $${TGID}_SRC_EXTS       := $$(sort $$(suffix $${MODULE_SRCS}))
     $${TGID}_DEFS           := $${MODULE_DEFS}
     $${TGID}_LDLIBS         := $$(addprefix -l,$${MODULE_LDLIBS})
-    $${TGID}_LIBS           := $$(addprefix -l,$${MODULE_SOLIBS}) $$(addprefix -l,$${MODULE_ARLIBS}) $$(MODULE_LIBS)
-    $${TGID}_SOLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_so/,$${MODULE_SOLIBS}),\
+    $${TGID}_LIBS           := $$(addsuffix .so,$$(addprefix -l:lib,$${MODULE_SOLIBS})) \
+				$$(MODULE_ARLIBS_BEGIN) \
+			 	$$(addsuffix .a,$$(addprefix -l:lib,$${MODULE_ARLIBS})) \
+				$$(MODULE_ARLIBS_END) \
+				$$(MODULE_LIBS)
+    $${TGID}_SOLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_lib/,$${MODULE_SOLIBS}),\
                                        $$(patsubst %,lib%.so,$${MODULE_SOLIBS}))
-    $${TGID}_ARLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_a/,$${MODULE_ARLIBS}),\
+    $${TGID}_ARLIB_DEPS     := $$(join $$(patsubst %,${BLD_OUT_DIR}/lib%_lib/,$${MODULE_ARLIBS}),\
                                        $$(patsubst %,lib%.a,$${MODULE_ARLIBS}))
     $${TGID}_INCS           := $$(addprefix -I,$${MODULE_INCS}) ${CONFIG_INCS}
     $${TGID}_LDPATHS        := $$(addprefix -L,$${MODULE_LDPATHS}) \
@@ -142,16 +148,8 @@ define INCLUDE_MODULEMK
 
     # Set the common flags based on the target type
     $${TGID}_FLAGS := $${MODULE_FLAGS}
-    ifeq "$$(suffix $${MODULE_TARGET})" ".a"
-        $${TGID}_FLAGS              += ${CONFIG_ARLIB_FLAGS}
-        $${TGID}_RECIPE_TYPE        := ARLIB
-        $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
-        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
-            CXX_TARGETIDS               += $${TGID}
-        endif
-    else ifeq "$$(suffix $${MODULE_TARGET})" ".so"
-        $${TGID}_FLAGS              += ${CONFIG_SOLIB_FLAGS}
-        $${TGID}_RECIPE_TYPE        := SOLIB
+    ifeq "$$(suffix $${MODULE_TARGET})" ".lib"
+        $${TGID}_RECIPE_TYPE        := LIB
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS} ${P4_DEFS}
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
             CXX_TARGETIDS               += $${TGID}
@@ -361,18 +359,13 @@ define FILTER_TARGETS_BY_PIPELINE
                     ifeq "$${${1}_RECIPE_SUBTYPE}" "GTEST"
                         ALL_GTEST_TARGETS += $${${1}_MKTARGET}
                     endif
-		endif
+                endif
             endif
         endif
     endif
 endef
 
-CACHED_MODULES := ${TOPDIR}/.cached_modules
-ifneq ($(wildcard ${CACHED_MODULES}),)
-MODULES := $(file < ${CACHED_MODULES})
-else
 MODULES := $(shell find ${TOPDIR}/ -name 'module*.mk')
-endif
 MODULE_PATHS = $(strip $(call CANPATH,${MODULES}))
 $(foreach modpath,${MODULE_PATHS}, \
     $(eval $(call INCLUDE_MODULEMK,${modpath})))

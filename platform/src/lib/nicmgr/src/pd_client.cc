@@ -55,12 +55,12 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
     return block;
 }
 
-void table_health_monitor(uint32_t table_id,
-                          char *name,
-                          table_health_state_t curr_state,
-                          uint32_t capacity,
-                          uint32_t usage,
-                          table_health_state_t *new_state)
+static void table_health_monitor(uint32_t table_id,
+                                 char *name,
+                                 table_health_state_t curr_state,
+                                 uint32_t capacity,
+                                 uint32_t usage,
+                                 table_health_state_t *new_state)
 {
     // TODO: Update new_state depending on usage and
     //       raise an event on state change.

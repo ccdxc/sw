@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libdelphimessenger.a
+MODULE_TARGET   = libdelphimessenger.lib
 MODULE_PIPELINE = iris gft
 MODULE_ARLIBS  = messengerproto delphiproto
 ALL_CC_FILES = $(wildcard ${MODULE_SRC_DIR}/*.cc)

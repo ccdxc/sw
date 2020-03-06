@@ -1,7 +1,7 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libpenmetrics.so
+MODULE_TARGET   = libpenmetrics.lib
 MODULE_SOLIBS   = sdkpal logger
 MODULE_LDLIBS   = dl
 MODULE_FLAGS    = -Werror -Wall

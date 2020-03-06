@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_chksum_decomp_chain.so
+MODULE_TARGET   = libstorage_chksum_decomp_chain.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/chksum_decomp_chain.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \

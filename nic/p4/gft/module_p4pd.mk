@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libp4pd_gft.so
+MODULE_TARGET   = libp4pd_gft.lib
 MODULE_PREREQS  = gft.p4bin
 MODULE_PIPELINE = gft
 MODULE_SRC_DIR  = ${BLD_P4GEN_DIR}/gft/src/

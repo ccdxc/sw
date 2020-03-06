@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
-MODULE_TARGET   = libpdsapimock.so
+MODULE_TARGET   = libpdsapimock.lib
 MODULE_PREREQS  = metaswitch.submake
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS 	= $(TOPDIR)/nic/metaswitch/stubs/hals \

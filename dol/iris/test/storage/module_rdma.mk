@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_rdma.so
+MODULE_TARGET   = libstorage_rdma.lib
 MODULE_PIPELINE = iris
 MODULE_ARCH     = x86_64
 MODULE_SRCS     = ${MODULE_SRC_DIR}/rdma.cc

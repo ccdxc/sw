@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libsvc.so
+MODULE_TARGET   = libsvc.lib
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \

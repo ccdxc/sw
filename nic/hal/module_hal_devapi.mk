@@ -5,7 +5,7 @@
 # instead of grpc for the below pipelines.
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libhal_devapi.so
+MODULE_TARGET   = libhal_devapi.lib
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/hal_devapi.cc
 include ${MKDEFS}/post.mk

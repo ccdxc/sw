@@ -1,6 +1,6 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = libftlite_p4psim.so
+MODULE_TARGET = libftlite_p4psim.lib
 ifeq ($(PLATFORM),hw)
 MODULE_FLAGS  = -O3 -DUSE_ARM64_SIMD -Wno-array-bounds
 else

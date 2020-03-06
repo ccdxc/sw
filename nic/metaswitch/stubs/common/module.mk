@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 include $(TOPDIR)/nic/metaswitch/pre.mk
-MODULE_TARGET   = libpdsmscommon.so
+MODULE_TARGET   = libpdsmscommon.lib
 MODULE_PREREQS  = metaswitch.submake
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS 	= $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))

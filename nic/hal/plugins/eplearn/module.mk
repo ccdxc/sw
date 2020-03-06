@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libplugin_ep_learn.so
+MODULE_TARGET   = libplugin_ep_learn.lib
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/arp/*.cc) \

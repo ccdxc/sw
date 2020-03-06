@@ -18,11 +18,15 @@ using debug::GenericOpnResponse;
 using debug::GenericOpnRequestMsg;
 using debug::GenericOpnResponseMsg;
 
+namespace linkmgr {
+
 class DebugServiceImpl final : public Debug::Service {
 public:
     Status GenericOpn(ServerContext *context,
                       const GenericOpnRequestMsg *req_msg,
                       GenericOpnResponseMsg *rsp_msg);
 };
+
+} // namespace linkmgr
 
 #endif    // __LINKMGR_DEBUG_SVC_HPP__

@@ -4,22 +4,26 @@
 ################ TARGET SPECIFIC RECIPE GENERATORS ##################
 #####################################################################
 
-define ADD_RECIPE_FOR_ARLIB
-$${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
+define ADD_RECIPE_FOR_LIB
+$$(patsubst %.lib,%.a,$${${1}_MKTARGET}): $${${1}_OBJS} $${${1}_DEPS}
 	${NAT}${AT}echo ${NAME_MKTARGET} $$(notdir $$@)
+	${AT}mkdir -p $$(dir $$@)
 	${AT}$$(strip $${CMD_AR} $${CMD_AR_FLAGS} $$@ $${${1}_OBJS})
 	${AT}mkdir -p ${BLD_LIB_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_LIB_DIR}/$$(notdir $$@)
 	${AT}ln -sf $$@ ${BLD_LIB_DIR}/
-endef
 
-define ADD_RECIPE_FOR_SOLIB
-$${${1}_MKTARGET}: $${${1}_OBJS} $${${1}_DEPS}
+$$(patsubst %.lib,%.so,$${${1}_MKTARGET}): $${${1}_OBJS} $${${1}_DEPS}
 	${NAT}${AT}echo ${NAME_MKTARGET} $$(notdir $$@)
 	${AT}$$(strip ${CMD_GXX} -o $$@ -shared $${${1}_OBJS} $${${1}_LDFLAGS} $${${1}_LDPATHS} $${${1}_LIBS} $${${1}_LDLIBS})
 	${AT}mkdir -p ${BLD_LIB_DIR}
 	${NAT}${AT}echo ${NAME_SYMLINK} ${BLD_LIB_DIR}/$$(notdir $$@)
 	${AT}ln -sf $$@ ${BLD_LIB_DIR}/
+
+$${${1}_MKTARGET}: $$(patsubst %.lib,%.so,$${${1}_MKTARGET}) $$(patsubst %.lib,%.a,$${${1}_MKTARGET})
+	${NAT}${AT}echo ${NAME_MKTARGET} $$(notdir $$@)
+	${AT}touch $$@
+
 endef
 
 define ADD_RECIPE_FOR_BIN

@@ -13,7 +13,7 @@ MODULE_SOLIBS = halproto
                 logger thread twheel sdkpal catalog utils mtrack trace
 MODULE_LDLIBS = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                 ${NIC_COMMON_LDLIBS}
-#${NIC_HAL_ALL_LDLIBS}
+#${NIC_HAL_ALL_LDLIBS}${SDK_THIRDPARTY_CAPRI_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 include ${MKDEFS}/post.mk

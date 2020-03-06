@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_acc_scale_tests.so
+MODULE_TARGET   = libstorage_acc_scale_tests.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/acc_scale_tests.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \

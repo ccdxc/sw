@@ -279,7 +279,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto \
                                ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
-                               vmotion flowstatsproto ${NIC_HAL_NICMGR_SOLIBS} penipc
+			       haltrace vmotion flowstatsproto ${NIC_HAL_NICMGR_SOLIBS} penipc
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \
@@ -287,14 +287,13 @@ export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_PACKET_PARSER_LDLIBS} \
                                ${NIC_CAPSIM_LDLIBS} \
                                ${NIC_LINKMGR_LDLIBS} \
-                               ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                                ${NIC_COMMON_LDLIBS}
 
 export NIC_HAL_GTEST_SOLIBS := ${NIC_HAL_ALL_SOLIBS} \
                                ${NIC_HAL_DLOPEN_SOLIBS} \
                                haltestutils hal_calls event_thread penipc haldelphi
 
-export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS}
+export NIC_HAL_GTEST_LDLIBS := ${NIC_HAL_ALL_LDLIBS} ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 export NIC_HAL_GTEST_WO_MAIN_LDLIBS :=
 export NIC_FTL_LIBS         := sdkftl
 

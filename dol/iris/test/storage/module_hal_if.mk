@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libstorage_hal_if.so
+MODULE_TARGET   = libstorage_hal_if.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/hal_if.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \

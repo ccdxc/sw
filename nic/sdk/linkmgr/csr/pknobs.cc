@@ -1,9 +1,5 @@
 #include "pknobs.hpp"
 
-uint64_t PKnobsReader::evalKnob(const std::string & name) {
-    return 0;
-}
-
 // TODO fix AAPL
 extern "C" {
 

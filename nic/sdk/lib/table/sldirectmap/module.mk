@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = libsldirectmap.so
+MODULE_TARGET = libsldirectmap.lib
 ifeq ($(ARCH),aarch64)
 MODULE_INCS = ${SDKDIR}/third-party/dpdk/v18.11/lib/librte_eal/common/include \
               ${SDKDIR}/third-party/dpdk/v18.11/lib/librte_eal/common/include/config \

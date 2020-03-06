@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = libpenipc_ev.so
+MODULE_TARGET = libpenipc_ev.lib
 MODULE_SOLIBS =
 MODULE_LDLIBS = ev zmq
 MODULE_FLAGS  = -Werror

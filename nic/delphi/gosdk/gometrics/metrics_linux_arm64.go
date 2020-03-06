@@ -4,7 +4,7 @@ package gometrics
 
 // #cgo CFLAGS: -I${SRCDIR} -I${SRCDIR}/../../../../
 // #cgo CXXFLAGS: -std=c++11
-// #cgo LDFLAGS: ${SRCDIR}/../../../build/aarch64/iris/out/libdelphishm_a/libdelphishm.a ${SRCDIR}/../../../build/aarch64/iris/out/libdelphiutils_a/libdelphiutils.a -L${SRCDIR}/../../../build/aarch64/iris/lib -L${SRCDIR}/../../../build/aarch64/iris/lib/ -lstdc++ -lm -lrt -ldl -lsdkpal -llogger -lprotobuf
+// #cgo LDFLAGS: ${SRCDIR}/../../../build/aarch64/iris/out/libdelphishm_lib/libdelphishm.a ${SRCDIR}/../../../build/aarch64/iris/out/libdelphiutils_lib/libdelphiutils.a -L${SRCDIR}/../../../build/aarch64/iris/lib -L${SRCDIR}/../../../build/aarch64/iris/lib/ -lstdc++ -lm -lrt -ldl -lsdkpal -llogger -lprotobuf
 // #include "nic/delphi/shm/delphi_metrics_cgo.h"
 import "C"
 import (

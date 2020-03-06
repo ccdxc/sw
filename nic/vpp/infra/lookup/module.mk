@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET    = infra_plugin.so
+MODULE_TARGET    = infra_plugin.lib
 MODULE_PIPELINE  = apollo artemis apulu
 MODULE_PREREQS   = vpp_pkg.export
 MODULE_SOLIBS    = pdsvpp_impl pdsvpp_api pdsvpp_ipc

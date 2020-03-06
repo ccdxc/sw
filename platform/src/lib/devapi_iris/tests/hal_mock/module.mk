@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_PIPELINE = iris gft
-MODULE_TARGET = devapi_iris_mock.so
+MODULE_TARGET = devapi_iris_mock.lib
 MODULE_ARCH   = x86_64
 MODULE_INCS     := ${BLD_PROTOGEN_DIR}/ ${MODULE_SRC_DIR}/../.. \
 	               ${TOPDIR}/nic/sdk/platform/devapi

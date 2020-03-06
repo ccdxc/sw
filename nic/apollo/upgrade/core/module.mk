@@ -1,8 +1,7 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-
-MODULE_TARGET        = libpdsupgradecore.so
+MODULE_TARGET        = libpdsupgradecore.lib
 MODULE_PIPELINE      = apulu
 MODULE_INCS          = /usr/local/include \
                        {TOPDIR}/nic/apollo/upgrade/core/ \

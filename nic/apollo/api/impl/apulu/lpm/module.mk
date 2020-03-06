@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = liblpmitree_apulu.so
+MODULE_TARGET   = liblpmitree_apulu.lib
 MODULE_SRCS     = ${MODULE_SRC_DIR}/../../lpm/lpm.cc \
                   ${MODULE_SRC_DIR}/../../lpm/lpm_priv.cc \
                   ${MODULE_SRC_DIR}/../../lpm/lpm_ipv4_acl.cc \

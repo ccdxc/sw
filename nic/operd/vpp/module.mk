@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libvpp_operd_dec.so
+MODULE_TARGET   = libvpp_operd_dec.lib
 MODULE_PIPELINE = apulu
 MODULE_SOLIBS   = pdsproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt pthread

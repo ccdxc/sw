@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libhalupgrade.so
+MODULE_TARGET   = libhalupgrade.lib
 MODULE_PIPELINE = iris gft
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cc)

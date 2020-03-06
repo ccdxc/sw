@@ -1,6 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libcfg_plugin_l4lb.so
+MODULE_TARGET   = libcfg_plugin_l4lb.lib
 MODULE_PIPELINE = iris gft
 MODULE_ARCH     = x86_64
 include ${MKDEFS}/post.mk

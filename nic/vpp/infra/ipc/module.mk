@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET    = libpdsvpp_ipc.so
+MODULE_TARGET    = libpdsvpp_ipc.lib
 MODULE_PIPELINE  = apollo artemis apulu
 MODULE_PREREQS   = vpp_pkg.export
 MODULE_SRCS     = $(wildcard ${MODULE_DIR}/*.c)                             \

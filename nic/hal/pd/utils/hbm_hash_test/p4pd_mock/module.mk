@@ -2,6 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_PIPELINE = apulu iris gft
-MODULE_TARGET = libhbmhashp4pd_mock.so
+MODULE_TARGET = libhbmhashp4pd_mock.lib
 MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk

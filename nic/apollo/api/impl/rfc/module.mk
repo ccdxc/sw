@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libpdsrfc.so
+MODULE_TARGET   = libpdsrfc.lib
 MODULE_PIPELINE = apollo artemis apulu
 ifeq ($(ARCH),aarch64)
 MODULE_INCS     = ${TOPDIR}/nic/sdk/third-party/dpdk/v18.11/lib/librte_eal/common/include \

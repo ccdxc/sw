@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libp4pd_apulu_txdma.so
+MODULE_TARGET   = libp4pd_apulu_txdma.lib
 MODULE_PREREQS  = apulu_txdma.p4bin
 MODULE_PIPELINE = apulu
 MODULE_SRC_DIR  = ${BLD_P4GEN_DIR}/p4plus_txdma/src

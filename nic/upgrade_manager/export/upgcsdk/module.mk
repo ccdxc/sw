@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libupgrade_app.so
+MODULE_TARGET   = libupgrade_app.lib
 MODULE_PREREQS  = upg.submake
 MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   = delphisdk upgradeutils

@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = liblinkmgr_libsrc.so
+MODULE_TARGET   = liblinkmgr_libsrc.lib
 MODULE_PIPELINE = iris gft
 MODULE_SRCS     = ${MODULE_SRC_DIR}/linkmgr_src.cc \
                   ${MODULE_SRC_DIR}/linkmgr_ipc.cc \
