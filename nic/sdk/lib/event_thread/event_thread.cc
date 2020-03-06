@@ -586,6 +586,18 @@ timer_again (timer_t *timer)
     t_event_thread_->timer_again(timer);
 }
 
+double
+timestamp_now (void)
+{
+    // we can get event loop timestamp only from inside the thread context
+    // when called from other thread, typically for CLI comamnds, return global
+    // time stamp which is good enough for lower granularity timers
+    if (t_event_thread_ == NULL) {
+        return ev_time();
+    }
+    return ev_now(t_event_thread_->ev_loop());
+}
+
 void
 message_send (uint32_t thread_id, void *message)
 {

@@ -382,7 +382,7 @@ update_ep_mac (local_learn_ctxt_t *ctxt)
         ctxt->mac_entry->set_state(EP_STATE_CREATED);
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
-        aging_timer_restart(ctxt->mac_entry->timer());
+        mac_aging_timer_restart(ctxt->mac_entry);
         broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
         LEARN_COUNTER_INCR(vnics);
         break;
@@ -420,8 +420,8 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
     // and we reset the timer here
     // since now at least one IP is active, stop MAC aging timer in case it is
     // started
-    aging_timer_restart(ctxt->ip_entry->timer());
-    aging_timer_stop(ctxt->mac_entry->timer());
+    ip_aging_timer_restart(ctxt->ip_entry);
+    mac_aging_timer_stop(ctxt->mac_entry);
     return SDK_RET_OK;
 }
 

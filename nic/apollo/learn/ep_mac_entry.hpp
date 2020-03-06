@@ -97,6 +97,14 @@ public:
     /// \return         pointer to event timer
     sdk::event_thread::timer_t *timer(void) { return &aging_timer_; }
 
+    /// \brief          get aging timer start timestamp
+    /// \return         agining start timestamp in seconds
+    uint64_t ageout_ts(void) const { return ageout_ts_; }
+
+    /// \brief          set aging timer start timestamp
+    /// \param[in]      timestamp
+    void set_ageout_ts(uint64_t ts) { ageout_ts_ = ts; }
+
     /// \brief          get number of associated IP mappings
     /// \return         count of IP addresses
     uint16_t ip_count(void) const { return (uint16_t) ip_list_.size(); }
@@ -119,6 +127,7 @@ private:
     uint32_t                    vnic_obj_id_;     ///< key for vnic associated
     ep_state_t                  state_;           ///< state of this entry
     sdk::event_thread::timer_t  aging_timer_;     ///< timer to ageout MAC entry
+    uint64_t                    ageout_ts_;       ///< aging timer expiry time
     ht_ctxt_t                   ht_ctxt_;         ///< hash table context
     ip_entry_list_t             ip_list_;         ///< list of linked IP entries
 

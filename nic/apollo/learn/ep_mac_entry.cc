@@ -21,6 +21,7 @@ namespace learn {
 
 ep_mac_entry::ep_mac_entry() {
     this->state_ = EP_STATE_LEARNING;
+    ageout_ts_ = 0;
     ht_ctxt_.reset();
 }
 

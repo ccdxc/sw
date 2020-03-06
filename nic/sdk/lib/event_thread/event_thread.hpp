@@ -80,6 +80,8 @@ void timer_start(timer_t *timer);
 void timer_stop(timer_t *timer);
 // Wrapper around ev_timer_again. Restarts the timer.
 void timer_again(timer_t *timer);
+// Wrapper around ev_now
+double timestamp_now(void);
 
 //
 // Message

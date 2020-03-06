@@ -441,10 +441,11 @@ func LearnPktDropReasonToStr(reason pds.LearnPktDropReason) string {
 }
 
 func printLearnMACHeader() {
-	hdrLine := strings.Repeat("-", 120)
+	hdrLine := strings.Repeat("-", 130)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-20s%-40s%-40s%-10s%-10s\n",
-		"MACAddr", "SubnetId", "VnicId", "State", "IP count")
+	fmt.Printf("%-20s%-40s%-40s%-10s%-10s%-8s\n",
+		"MACAddr", "SubnetId", "VnicId", "State", "IP count",
+		"TTL(s)")
 	fmt.Println(hdrLine)
 }
 
@@ -453,12 +454,13 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 		printLearnMACHeader()
 	}
 	for _, MACEntry := range resp.GetResponse() {
-		fmt.Printf("%-20s%-40s%-40s%-10s%-10d\n",
+		fmt.Printf("%-20s%-40s%-40s%-10s%-10d%-8d\n",
 			utils.MactoStr(MACEntry.GetKey().GetMACAddr()),
 			uuid.FromBytesOrNil(MACEntry.GetKey().GetSubnetId()).String(),
 			uuid.FromBytesOrNil(MACEntry.GetVnicId()).String(),
 			LearnStateToStr(MACEntry.GetState()),
-			len(MACEntry.GetIPInfo()))
+			len(MACEntry.GetIPInfo()),
+			MACEntry.GetTTL())
 		if detail == true {
 			if len(MACEntry.GetIPInfo()) > 0 {
 				fmt.Printf("	IPs learnt:\n")
@@ -472,10 +474,10 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 }
 
 func printLearnIPHeader() {
-	hdrLine := strings.Repeat("-", 130)
+	hdrLine := strings.Repeat("-", 140)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-20s%-40s%-20s%-40s%-10s\n",
-		"IPAddr", "VpcID", "MACAddr", "SubnetId", "State")
+	fmt.Printf("%-20s%-40s%-20s%-40s%-10s%-8s\n",
+		"IPAddr", "VpcID", "MACAddr", "SubnetId", "State", "TTL(s)")
 	fmt.Println(hdrLine)
 }
 
@@ -484,12 +486,13 @@ func printLearnIP(resp *pds.LearnIPGetResponse) {
 		printLearnIPHeader()
 	}
 	for _, IPEntry := range resp.GetResponse() {
-		fmt.Printf("%-20s%-40s%-20s%-40s%-10s\n",
+		fmt.Printf("%-20s%-40s%-20s%-40s%-10s%-8d\n",
 			utils.IPAddrToStr(IPEntry.GetKey().GetIPAddr()),
 			uuid.FromBytesOrNil(IPEntry.GetKey().GetVPCId()).String(),
 			utils.MactoStr(IPEntry.GetMACInfo().GetMACAddr()),
 			uuid.FromBytesOrNil(IPEntry.GetMACInfo().GetSubnetId()).String(),
-			LearnStateToStr(IPEntry.GetState()))
+			LearnStateToStr(IPEntry.GetState()),
+			IPEntry.GetTTL())
 	}
 }
 

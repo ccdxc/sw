@@ -10,6 +10,7 @@
 
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/learn/ep_aging.hpp"
 #include "nic/apollo/learn/ep_mac_entry.hpp"
 #include "nic/apollo/learn/ep_ip_entry.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
@@ -46,6 +47,7 @@ ep_mac_entry_to_proto (ep_mac_entry *mac_entry, pds::LearnMACEntry *proto_entry)
                                 MAC_TO_UINT64(mac_entry->key()->mac_addr));
     proto_entry->mutable_key()->set_subnetid(mac_entry->key()->subnet.id,
                                              PDS_MAX_KEY_LEN);
+    proto_entry->set_ttl(remaining_age_mac(mac_entry));
 }
 
 static sdk_ret_t
@@ -97,6 +99,7 @@ ep_ip_entry_to_proto (void *entry, void *rsp)
                           &ip_entry->key()->ip_addr);
     proto_entry->mutable_key()->set_vpcid(ip_entry->key()->vpc.id,
                                           PDS_MAX_KEY_LEN);
+    proto_entry->set_ttl(remaining_age_ip(ip_entry));
     if (mac_entry) {
         proto_entry->mutable_macinfo()->set_macaddr(
                           MAC_TO_UINT64(mac_entry->key()->mac_addr));

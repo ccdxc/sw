@@ -24,6 +24,7 @@ namespace learn {
 ep_ip_entry::ep_ip_entry() {
     ht_ctxt_.reset();
     this->state_ = EP_STATE_LEARNING;
+    ageout_ts_ = 0;
 }
 
 ep_ip_entry::~ep_ip_entry() {

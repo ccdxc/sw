@@ -70,7 +70,7 @@ ip_ageout (ep_ip_entry *ip_entry)
     }
     // if this was the last IP on this EP, start MAC aging timer
     if (mac_entry->ip_count() == 0) {
-        aging_timer_restart(mac_entry->timer());
+        mac_aging_timer_restart(mac_entry);
     }
     broadcast_learn_event(&event);
     return SDK_RET_OK;
@@ -146,6 +146,7 @@ delete_mac_entry (ep_mac_entry *mac_entry)
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
+    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
     return mac_entry->delay_delete();
 }
 
@@ -162,14 +163,7 @@ delete_ep (ep_mac_entry *mac_entry)
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
-
     LEARN_COUNTER_INCR(api_calls);
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to commit API batch, error code %u", ret);
-        LEARN_COUNTER_INCR(api_failure);
-        return SDK_RET_ERR;
-    }
-    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
     return delete_mac_entry(mac_entry);
 }
 

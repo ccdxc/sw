@@ -44,13 +44,15 @@ message LearnIPEntry {
   LearnIPKey  Key     = 1;
   LearnMACKey MACInfo = 2;
   EpState     State   = 3;
+  uint32      TTL     = 4;
 }
 
 message LearnMACEntry {
-  LearnMACKey         Key    = 1;
-  bytes               VnicId = 2;
-  EpState             State  = 3;
-  repeated LearnIPKey IPInfo = 4;
+  LearnMACKey Key            = 1;
+  bytes       VnicId         = 2;
+  EpState     State          = 3;
+  uint32      TTL            = 4;
+  repeated LearnIPKey IPInfo = 5;
 }
 
 enum LearnPktDropReason {

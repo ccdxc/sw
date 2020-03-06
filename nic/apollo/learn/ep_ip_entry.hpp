@@ -82,6 +82,14 @@ public:
     /// \return         pointer to event timer
     sdk::event_thread::timer_t *timer(void) { return &aging_timer_; }
 
+    /// \brief          get aging timer start timestamp
+    /// \return         agining start timestamp in seconds
+    uint64_t ageout_ts(void) const { return ageout_ts_; }
+
+    /// \brief          set aging timer start timestamp
+    /// \param[in]      timestamp
+    void set_ageout_ts(uint64_t ts) { ageout_ts_ = ts; }
+
     /// \brief          get key to this entry
     /// \return         pointer to key
     const ep_ip_key_t *key(void) const { return &key_; }
@@ -112,6 +120,7 @@ private:
     ep_ip_key_t                 key_;              ///< IP learning entry key
     uint32_t                    vnic_obj_id_;      ///< key for vnic associated
     sdk::event_thread::timer_t  aging_timer_;      ///< timer to ageout IP entry
+    uint64_t                    ageout_ts_;        ///< aging start time
     ep_state_t                  state_;            ///< state of this entry
     uint8_t                     arp_probe_count_;  ///< number of ARP probe sent
     ht_ctxt_t                   ht_ctxt_;          ///< hash table context
