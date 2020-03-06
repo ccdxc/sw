@@ -133,16 +133,48 @@ std::string delphi_client::Name()
     return "hal";
 }
 
-void
+static void 
+microseg_sync_result (sdk::ipc::ipc_msg_ptr msg, const void *status)
+{
+    hal::core::micro_seg_info_t *response = (hal::core::micro_seg_info_t *)status;
+    hal::core::micro_seg_info_t *src = (hal::core::micro_seg_info_t *)msg->data();
+
+    HAL_TRACE_DEBUG("Processing microseg response from nicmgr micro_seg_en: {}, rsp_ret: {}",
+                    src->status, src->rsp_ret);
+    response->status = src->status;
+    response->rsp_ret = src->rsp_ret;
+}
+
+sdk_ret_t
 micro_seg_mode_notify (MicroSegMode mode)
 {
-    hal::core::event_t    event;
+    hal::core::micro_seg_info_t      info, rsp;
+
+    rsp.rsp_ret = SDK_RET_OK;
 
     HAL_TRACE_DEBUG("Notifying nicmgr about micro seg change. New mode: {}",
                     MicroSegMode_Name(mode));
-    memset(&event, 0, sizeof(event));
-    event.mseg.status = mode == sys::MICRO_SEG_ENABLE ? true : false;
-    sdk::ipc::broadcast(event_id_t::EVENT_ID_MICRO_SEG, &event, sizeof(event));
+    memset(&info, 0, sizeof(info));
+    info.status = mode == sys::MICRO_SEG_ENABLE ? true : false;
+    // sdk::ipc::broadcast(event_id_t::EVENT_ID_MICRO_SEG, &event, sizeof(event));
+
+    if (!hal_thread_ready(hal::HAL_THREAD_ID_NICMGR)) {
+        HAL_TRACE_ERR("Nicmgr not up, micro seg msg failed");
+        goto end;
+    }
+
+    sdk::ipc::request(hal::HAL_THREAD_ID_NICMGR, event_id_t::EVENT_ID_MICRO_SEG, &info,
+                      sizeof(info), microseg_sync_result, &rsp);
+
+    HAL_TRACE_DEBUG("microseg msg result.. msg {} rspcode {}",
+                    rsp.status, rsp.rsp_ret);
+    if (rsp.rsp_ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Micro seg msg to nicmgr failed with err: {}", rsp.rsp_ret);
+        goto end;
+    }
+
+end:
+    return rsp.rsp_ret;
 }
 
 }    // namespace svc

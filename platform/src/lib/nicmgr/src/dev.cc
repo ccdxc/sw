@@ -782,7 +782,7 @@ void
 DeviceManager::SystemSpecEventHandler(bool micro_seg_en)
 {
     if (this->micro_seg_en != micro_seg_en) {
-        NIC_LOG_ERR("Micro-segmentation mode changed: {} > {}",
+        NIC_LOG_DEBUG("Micro-segmentation mode changed: {} -> {}",
             this->micro_seg_en, micro_seg_en);
     }
 

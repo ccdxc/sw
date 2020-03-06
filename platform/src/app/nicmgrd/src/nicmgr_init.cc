@@ -97,10 +97,17 @@ xcvr_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 static void
 micro_seg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
-    hal::core::event_t *event = (hal::core::event_t *)msg->data();
+    hal::core::micro_seg_info_t *info = (hal::core::micro_seg_info_t *)msg->data();
+    hal::core::micro_seg_info_t rsp;
 
-    NIC_LOG_DEBUG("System spec update: micro_seg_en: {}", event->mseg.status);
-    devmgr->SystemSpecEventHandler(event->mseg.status);
+    NIC_LOG_DEBUG("----------- Micro seg update: micro_seg_en: {} ------------", 
+                  info->status);
+    devmgr->SystemSpecEventHandler(info->status);
+
+    rsp.status = info->status;
+    rsp.rsp_ret = SDK_RET_OK;
+
+    sdk::ipc::respond(msg, &rsp, sizeof(rsp));
 }
 
 static void
@@ -110,7 +117,11 @@ register_for_events (void)
     sdk::ipc::subscribe(event_id_t::EVENT_ID_PORT_STATUS, port_event_handler, NULL);
     sdk::ipc::subscribe(event_id_t::EVENT_ID_XCVR_STATUS, xcvr_event_handler, NULL);
     sdk::ipc::subscribe(event_id_t::EVENT_ID_HAL_UP, hal_up_event_handler, NULL);
-    sdk::ipc::subscribe(event_id_t::EVENT_ID_MICRO_SEG, micro_seg_event_handler, NULL);
+
+    // Blocking events
+    sdk::ipc::reg_request_handler(event_id_t::EVENT_ID_MICRO_SEG,
+                                  micro_seg_event_handler, NULL);
+    // sdk::ipc::subscribe(event_id_t::EVENT_ID_MICRO_SEG, micro_seg_event_handler, NULL);
 }
 
 namespace nicmgr {

@@ -46,6 +46,7 @@ typedef struct xcvr_event_info_s {
 // micro segment event handle
 typedef struct micro_seg_info_s {
     bool status;
+    sdk_ret_t rsp_ret;
 } micro_seg_info_t;
 
 // event structure that gets passed around for every event

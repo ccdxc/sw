@@ -37,7 +37,7 @@ private:
 };
 std::shared_ptr<delphi_client> delphic(void);
 
-void micro_seg_mode_notify(MicroSegMode mode);
+sdk_ret_t micro_seg_mode_notify(MicroSegMode mode);
 }    // namespace svc
 }    // namespace hal
 
