@@ -82,12 +82,14 @@ header_type apulu_p4_to_arm_header_t {
 
 header_type apulu_arm_to_p4_header_t {
     fields {
-        pad                     : 3;
-        local_mapping_overide   : 1;
+        pad                     : 2;
+        flow_lkp_id_override    : 1;
+        local_mapping_override  : 1;
         nexthop_valid           : 1;
         lif                     : 11;
         nexthop_type            : 8;
         nexthop_id              : 16;
+        flow_lkp_id             : 16;
     }
 }
 

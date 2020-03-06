@@ -9,6 +9,11 @@ action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, learn_enabled,
     modify_field(vnic_metadata.vnic_id, vnic_id);
     modify_field(vnic_metadata.bd_id, bd_id);
     modify_field(vnic_metadata.vpc_id, vpc_id);
+    if (arm_to_p4i.flow_lkp_id_override == FALSE) {
+        modify_field(key_metadata.flow_lkp_id, bd_id);
+    } else {
+        modify_field(key_metadata.flow_lkp_id, arm_to_p4i.flow_lkp_id);
+    }
     modify_field(p4i_i2e.nexthop_type, pinned_nexthop_type);
     modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
     modify_field(control_metadata.learn_enabled, learn_enabled);
@@ -45,6 +50,9 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
     }
     if (bd_id != 0) {
         modify_field(vnic_metadata.bd_id, bd_id);
+        if (arm_to_p4i.flow_lkp_id_override == FALSE) {
+            modify_field(key_metadata.flow_lkp_id, bd_id);
+        }
     }
     if (vpc_id != 0) {
         modify_field(vnic_metadata.vpc_id, vpc_id);
@@ -117,6 +125,9 @@ action vni_info(vnic_id, bd_id, vpc_id, rmac, is_l3_vnid) {
     }
     if (bd_id != 0) {
         modify_field(vnic_metadata.bd_id, bd_id);
+        if (arm_to_p4i.flow_lkp_id_override == FALSE) {
+            modify_field(key_metadata.flow_lkp_id, bd_id);
+        }
     }
     if (vpc_id != 0) {
         modify_field(vnic_metadata.vpc_id, vpc_id);

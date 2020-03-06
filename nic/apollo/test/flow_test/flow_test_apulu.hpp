@@ -107,7 +107,7 @@ dump_flow_entry(flow_hash_entry_t *entry, ipv6_addr_t v6_addr_sip,
         fprintf(g_fp, "bd %lu, proto %lu, session_index %lu, smac %s, sip %s, "
                 "dmac %s, dip %s, sport %lu, dport %lu, nh_idx %lu, "
                 "flow_role %lu, ktype %lu\n",
-                entry->vnic_metadata_bd_id, entry->key_metadata_proto,
+                entry->key_metadata_flow_lkp_id, entry->key_metadata_proto,
                 entry->session_index, macaddr2str(smac), src_ip_str,
                 macaddr2str(dmac), dst_ip_str, entry->key_metadata_sport,
                 entry->key_metadata_dport, entry->nexthop_id,
@@ -125,7 +125,7 @@ dump_flow_entry(ipv4_flow_hash_entry_t *entry, ipv4_addr_t v4_addr_sip, mac_addr
     if (g_fp) {
         fprintf(g_fp, "bd %lu, proto %lu, session_index %lu smac %s, sip %s, "
                 "dmac %s, dip %s, sport %lu, dport %lu, nh_idx %lu, "
-                "flow_role %lu\n", entry->vnic_metadata_bd_id,
+                "flow_role %lu\n", entry->key_metadata_flow_lkp_id,
                 entry->key_metadata_proto, entry->session_index,
                 macaddr2str(smac), src_ip_str,  macaddr2str(dmac), dst_ip_str,
                 entry->key_metadata_sport, entry->key_metadata_dport,
@@ -598,7 +598,7 @@ public:
                           uint16_t dport, uint32_t nh_idx) {
         v6entry.clear();
         v6entry.key_metadata_ktype = KEY_TYPE_IPV6;
-        v6entry.vnic_metadata_bd_id = src_bd_id - 1;
+        v6entry.key_metadata_flow_lkp_id = src_bd_id - 1;
         v6entry.key_metadata_sport = sport;
         v6entry.key_metadata_dport = dport;
         v6entry.key_metadata_proto = proto;
@@ -624,7 +624,7 @@ public:
                           uint16_t dport, uint32_t nh_idx) {
         v6entry.clear();
         v6entry.key_metadata_ktype = KEY_TYPE_IPV6;
-        v6entry.vnic_metadata_bd_id = src_bd_id - 1;
+        v6entry.key_metadata_flow_lkp_id = src_bd_id - 1;
         sdk::lib::memrev(v6entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
         sdk::lib::memrev(v6entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
         v6entry.key_metadata_proto = proto;
@@ -651,7 +651,7 @@ public:
         // install iflow
         // memset(&v4entry, 0, sizeof(ipv4_flow_hash_entry_t));
         v4entry.clear();
-        v4entry.vnic_metadata_bd_id = iflow_bd_id;
+        v4entry.key_metadata_flow_lkp_id = iflow_bd_id;
         v4entry.key_metadata_sport = iflow_sport;
         v4entry.key_metadata_dport = iflow_dport;
         v4entry.key_metadata_proto = proto;
@@ -669,7 +669,7 @@ public:
         // install rflow
         // memset(&v4entry, 0, sizeof(ipv4_flow_hash_entry_t));
         v4entry.clear();
-        v4entry.vnic_metadata_bd_id = rflow_bd_id;
+        v4entry.key_metadata_flow_lkp_id = rflow_bd_id;
         v4entry.key_metadata_sport = rflow_sport;
         v4entry.key_metadata_dport = rflow_dport;
         v4entry.key_metadata_proto = proto;
@@ -698,7 +698,7 @@ public:
                              uint8_t proto) {
         // install iflow
         v4entry.clear();
-        v4entry.vnic_metadata_bd_id = iflow_bd_id;
+        v4entry.key_metadata_flow_lkp_id = iflow_bd_id;
         v4entry.key_metadata_sport = iflow_sport;
         v4entry.key_metadata_dport = iflow_dport;
         v4entry.key_metadata_proto = proto;
@@ -713,7 +713,7 @@ public:
 
         // install rflow
         v4entry.clear();
-        v4entry.vnic_metadata_bd_id = rflow_bd_id;
+        v4entry.key_metadata_flow_lkp_id = rflow_bd_id;
         v4entry.key_metadata_sport = rflow_sport;
         v4entry.key_metadata_dport = rflow_dport;
         v4entry.key_metadata_proto = proto;

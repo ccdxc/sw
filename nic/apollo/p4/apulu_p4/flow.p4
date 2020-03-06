@@ -114,13 +114,13 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
 @pragma capi_bitfields_struct
 table flow {
     reads {
-        vnic_metadata.bd_id     : exact;
-        key_metadata.ktype      : exact;
-        key_metadata.src        : exact;
-        key_metadata.dst        : exact;
-        key_metadata.proto      : exact;
-        key_metadata.sport      : exact;
-        key_metadata.dport      : exact;
+        key_metadata.flow_lkp_id    : exact;
+        key_metadata.ktype          : exact;
+        key_metadata.src            : exact;
+        key_metadata.dst            : exact;
+        key_metadata.proto          : exact;
+        key_metadata.sport          : exact;
+        key_metadata.dport          : exact;
     }
     actions {
         flow_hash;
@@ -245,12 +245,12 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
 @pragma capi_bitfields_struct
 table ipv4_flow {
     reads {
-        vnic_metadata.bd_id     : exact;
-        key_metadata.ipv4_src   : exact;
-        key_metadata.ipv4_dst   : exact;
-        key_metadata.proto      : exact;
-        key_metadata.sport      : exact;
-        key_metadata.dport      : exact;
+        key_metadata.flow_lkp_id    : exact;
+        key_metadata.ipv4_src       : exact;
+        key_metadata.ipv4_dst       : exact;
+        key_metadata.proto          : exact;
+        key_metadata.sport          : exact;
+        key_metadata.dport          : exact;
     }
     actions {
         ipv4_flow_hash;

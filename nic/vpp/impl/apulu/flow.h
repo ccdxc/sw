@@ -351,7 +351,7 @@ pds_flow4_key2str (void *key)
     sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_bd_id);
+            k->key_metadata_proto, k->key_metadata_flow_lkp_id);
     return str;
 }
 
@@ -368,7 +368,7 @@ pds_flow6_key2str (void *key)
     sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->vnic_metadata_bd_id);
+            k->key_metadata_proto, k->key_metadata_flow_lkp_id);
     return str;
 }
 

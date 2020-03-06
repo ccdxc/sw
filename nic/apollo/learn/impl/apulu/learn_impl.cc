@@ -152,7 +152,7 @@ arm_to_p4_tx_hdr_fill (char *tx_hdr, p4_tx_info_t *tx_info)
         break;
     default:
         // nexthop_valid is intialized to zero
-        p4_tx_hdr->local_mapping_overide = 1;
+        p4_tx_hdr->local_mapping_override = 1;
         break;
     }
 

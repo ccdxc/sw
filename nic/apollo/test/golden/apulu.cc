@@ -893,7 +893,7 @@ flows_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip1;
     key.key_metadata_proto = g_proto1;
@@ -907,7 +907,7 @@ flows_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_dip1;
     key.key_metadata_ipv4_dst = g_sip1;
     key.key_metadata_proto = g_proto1;
@@ -921,7 +921,7 @@ flows_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip4;
     key.key_metadata_proto = g_proto1;
@@ -935,7 +935,7 @@ flows_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip5;
     key.key_metadata_proto = g_proto1;
@@ -949,7 +949,7 @@ flows_init (void)
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip7;
     key.key_metadata_ipv4_dst = g_dip9;
     key.key_metadata_proto = g_proto1;
@@ -976,7 +976,7 @@ flows_with_ohash_init (void)
     // no recirc
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip6;
     key.key_metadata_proto = g_proto1;
@@ -994,7 +994,7 @@ flows_with_ohash_init (void)
     // ohash table with result
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip1;
     key.key_metadata_ipv4_dst = g_dip6;
     key.key_metadata_proto = g_proto1;
@@ -1010,7 +1010,7 @@ flows_with_ohash_init (void)
     // 2 recircs
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip7;
     key.key_metadata_ipv4_dst = g_dip7;
     key.key_metadata_proto = g_proto1;
@@ -1048,7 +1048,7 @@ flows_with_ohash_init (void)
     hint = hint_nxt;
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_flow_lkp_id = g_bd_id1;
     key.key_metadata_ipv4_src = g_sip7;
     key.key_metadata_ipv4_dst = g_dip7;
     key.key_metadata_proto = g_proto1;

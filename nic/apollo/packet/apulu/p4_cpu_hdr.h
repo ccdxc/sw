@@ -76,12 +76,14 @@ typedef struct p4_tx_cpu_hdr_s {
             uint16_t lif_sbit0_ebit7        : 8;
             uint16_t lif_sbit8_ebit10       : 3;
             uint16_t nexthop_valid          : 1;
-            uint16_t local_mapping_overide  : 1;
-            uint16_t pad                    : 3;
+            uint16_t local_mapping_override : 1;
+            uint16_t flow_lkp_id_override   : 1;
+            uint16_t pad                    : 2;
         };
     };
     uint8_t nexthop_type;
     uint16_t nexthop_id;
+    uint16_t flow_lkp_id;
 } __attribute__ ((packed)) p4_tx_cpu_hdr_t;
 
 #endif     // __APOLLO_PACKET_APULU_P4_CPU_HDR_H__

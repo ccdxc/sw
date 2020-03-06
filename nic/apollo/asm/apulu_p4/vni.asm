@@ -16,6 +16,8 @@ vni_info:
     sne             c1, d.vni_info_d.bd_id, r0
     phvwr.c1        p.vnic_metadata_bd_id, d.vni_info_d.bd_id
     cmov            r6, c1, d.vni_info_d.bd_id, k.vnic_metadata_bd_id
+    seq.c1          c1, k.arm_to_p4i_flow_lkp_id_override, FALSE
+    phvwr.c1        p.key_metadata_flow_lkp_id, d.vni_info_d.bd_id
     sne             c1, d.vni_info_d.vpc_id, r0
     phvwr.c1        p.vnic_metadata_vpc_id, d.vni_info_d.vpc_id
     cmov            r7, c1, d.vni_info_d.vpc_id, k.vnic_metadata_vpc_id

@@ -31,26 +31,26 @@ void
 ftlv4_set_lookup_id(ipv4_flow_hash_entry_t *entry, 
                     uint16_t lookup_id)
 {
-    entry->set_vnic_metadata_bd_id(lookup_id);
+    entry->set_key_metadata_flow_lkp_id(lookup_id);
 }
 
 void
 ftlv6_set_lookup_id(flow_hash_entry_t *entry, 
                     uint16_t lookup_id)
 {
-    entry->set_vnic_metadata_bd_id(lookup_id);
+    entry->set_key_metadata_flow_lkp_id(lookup_id);
 }
 
 uint16_t
 ftlv4_get_lookup_id(ipv4_flow_hash_entry_t *entry)
 {
-    return entry->get_vnic_metadata_bd_id();
+    return entry->get_key_metadata_flow_lkp_id();
 }
 
 uint16_t
 ftlv6_get_lookup_id(flow_hash_entry_t *entry)
 {
-    return entry->get_vnic_metadata_bd_id();
+    return entry->get_key_metadata_flow_lkp_id();
 }
 
 void
