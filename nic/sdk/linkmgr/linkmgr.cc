@@ -2,7 +2,9 @@
 
 #include "asic/asic.hpp"
 #include "platform/drivers/xcvr.hpp"
+#include "port_serdes.hpp"
 #include "lib/pal/pal.hpp"
+#include "platform/pal/include/pal.h"
 #include "lib/thread/thread.hpp"
 #include "lib/event_thread/event_thread.hpp"
 #include "lib/ipc/ipc.hpp"
@@ -382,9 +384,64 @@ linkmgr_timers_init (void)
     return SDK_RET_OK;
 }
 
+static sdk_ret_t
+xcvr_poll_init (linkmgr_cfg_t *cfg)
+{
+    sdk::platform::xcvr_init(cfg->xcvr_event_cb);
+    return SDK_RET_OK;
+}
+
 static void
 linkmgr_event_thread_init (void *ctxt)
 {
+    int         exp_build_id = serdes_build_id();
+    int         exp_rev_id   = serdes_rev_id();
+    std::string cfg_file     = "fw/" + serdes_fw_file();
+
+    cfg_file = std::string(g_linkmgr_cfg.cfg_path) + "/" + cfg_file;
+
+    pal_wr_lock(SBUSLOCK);
+
+    // TODO move back to serdes_fn_init
+    serdes_get_ip_info(1);
+
+    serdes_sbm_set_sbus_clock_divider(sbm_clk_div());
+
+    for (uint32_t asic_port = 0; asic_port < num_asic_ports(0); ++asic_port) {
+        uint32_t sbus_addr = sbus_addr_asic_port(0, asic_port);
+
+        if (sbus_addr == 0) {
+            continue;
+        }
+
+        sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, cfg_file.c_str());
+
+        int build_id = sdk::linkmgr::serdes_fns.serdes_get_build_id(sbus_addr);
+        int rev_id   = sdk::linkmgr::serdes_fns.serdes_get_rev(sbus_addr);
+
+        if (build_id != exp_build_id || rev_id != exp_rev_id) {
+            SDK_TRACE_DEBUG("sbus_addr: 0x%x,"
+                            " build_id: 0x%x, exp_build_id: 0x%x,"
+                            " rev_id: 0x%x, exp_rev_id: 0x%x",
+                            sbus_addr, build_id, exp_build_id,
+                            rev_id, exp_rev_id);
+            // TODO fail if no match
+        }
+
+        sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
+
+        SDK_TRACE_DEBUG("sbus_addr: 0x%x, spico_crc: %d",
+                        sbus_addr,
+                        sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
+    }
+
+    pal_wr_unlock(SBUSLOCK);
+
+    srand(time(NULL));
+
+    // initialize xcvr polling
+    xcvr_poll_init(&g_linkmgr_cfg);
+
     // init the linkmgr timers
     linkmgr_timers_init();
 
@@ -469,24 +526,12 @@ linkmgr_threads_wait (void)
     }
 }
 
-static sdk_ret_t
-xcvr_poll_init (linkmgr_cfg_t *cfg)
-{
-    sdk::platform::xcvr_init(cfg->xcvr_event_cb);
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
     sdk_ret_t    ret = SDK_RET_OK;
 
     g_linkmgr_cfg = *cfg;
-
-    if ((ret = thread_init(cfg)) != SDK_RET_OK) {
-        SDK_TRACE_ERR("linkmgr thread init failed");
-        return ret;
-    }
 
     g_linkmgr_state = linkmgr_state::factory();
     if (NULL == g_linkmgr_state) {
@@ -497,8 +542,10 @@ linkmgr_init (linkmgr_cfg_t *cfg)
     // initialize the port mac and serdes functions
     port::port_init(cfg);
 
-    // initialize xcvr polling
-    xcvr_poll_init(cfg);
+    if ((ret = thread_init(cfg)) != SDK_RET_OK) {
+        SDK_TRACE_ERR("linkmgr thread init failed");
+        return ret;
+    }
 
     return SDK_RET_OK;
 }

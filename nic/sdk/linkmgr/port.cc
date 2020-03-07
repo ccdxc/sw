@@ -1795,44 +1795,6 @@ port::port_init(linkmgr_cfg_t *cfg)
         SDK_TRACE_ERR("port mac init failed");
     }
 
-    pal_wr_lock(SBUSLOCK);
-
-    // TODO move back to serdes_fn_init
-    serdes_get_ip_info(1);
-
-    serdes_sbm_set_sbus_clock_divider(sbm_clk_div());
-
-    for (uint32_t asic_port = 0; asic_port < num_asic_ports(0); ++asic_port) {
-        uint32_t sbus_addr = sbus_addr_asic_port(0, asic_port);
-
-        if (sbus_addr == 0) {
-            continue;
-        }
-
-        sdk::linkmgr::serdes_fns.serdes_spico_upload(sbus_addr, cfg_file.c_str());
-
-        int build_id = sdk::linkmgr::serdes_fns.serdes_get_build_id(sbus_addr);
-        int rev_id   = sdk::linkmgr::serdes_fns.serdes_get_rev(sbus_addr);
-
-        if (build_id != exp_build_id || rev_id != exp_rev_id) {
-            SDK_TRACE_DEBUG("sbus_addr: 0x%x,"
-                            " build_id: 0x%x, exp_build_id: 0x%x,"
-                            " rev_id: 0x%x, exp_rev_id: 0x%x",
-                            sbus_addr, build_id, exp_build_id,
-                            rev_id, exp_rev_id);
-            // TODO fail if no match
-        }
-
-        sdk::linkmgr::serdes_fns.serdes_spico_status(sbus_addr);
-
-        SDK_TRACE_DEBUG("sbus_addr: 0x%x, spico_crc: %d",
-                        sbus_addr,
-                        sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
-    }
-
-    pal_wr_unlock(SBUSLOCK);
-
-    srand(time(NULL));
     return rc;
 }
 
