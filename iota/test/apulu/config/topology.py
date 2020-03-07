@@ -11,6 +11,8 @@ import iota.harness.api as api
 from infra.common.logging import logger as logger
 import apollo.config.generator as generator
 from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
+from apollo.config.store import Init as EzAccessStoreInit
 
 def Main(args):
     node = args.node
@@ -22,7 +24,9 @@ def Main(args):
     cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%args.spec)
 
     naples_uuid_map = api.GetNaplesNodeUuidMap()
+    EzAccessStoreInit(node)
     EzAccessStore.SetUuidMap(naples_uuid_map)
+    EzAccessStoreClient[node].SetUnderlayIPs(api.GetNicUnderlayIPs(node))
 
     generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
 

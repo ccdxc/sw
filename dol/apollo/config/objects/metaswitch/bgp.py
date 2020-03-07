@@ -21,7 +21,12 @@ class BgpObject(base.ConfigObjectBase):
         self.GID("BGP%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP)
         self.LocalASN = getattr(spec, "localasn", 0)
-        self.RouterId = int(ipaddress.ip_address(getattr(spec, "routerid", 0)))
+        # If loopback ip exists in testbed json, use that,
+        # else use from cfgyaml
+        self.RouterId = utils.GetNodeLoopbackIp(node)
+        if not self.RouterId:
+            self.RouterId = ipaddress.ip_address(getattr(spec, "routerid", 0))
+        self.RouterId = int(self.RouterId)
         self.ClusterId = getattr(spec, "clusterid", 0)
         self.Show()
         return

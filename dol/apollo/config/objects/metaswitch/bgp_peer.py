@@ -22,8 +22,17 @@ class BgpPeerObject(base.ConfigObjectBase):
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER)
         self.GID("BGPPeer%d"%self.Id)
         self.State = getattr(spec, "adminstate", 0)
-        self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", None))
-        self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", None))
+        self.PeerAddr = None
+        if hasattr(spec, 'interface'):
+            # override IPs from testbed json
+            self.LocalAddr = utils.GetNodeUnderlayIp(node, spec.interface)
+            self.PeerAddr = utils.GetNodeUnderlayNexthop(node, spec.interface)
+        else:
+            self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", None))
+
+        if self.PeerAddr == None:
+            self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", None))
+
         self.RemoteASN = getattr(spec, "remoteasn", 0)
         self.SendComm = getattr(spec, "sendcomm", False)
         self.SendExtComm = getattr(spec, "sendextcomm", False)

@@ -171,6 +171,9 @@ class Node(object):
         def GetNicMgmtIntf(self):
             return self.__nic_mgmt_intf
 
+        def GetNicUnderlayIPs(self):
+           return self.__nic_underlay_ips
+
         def SetNicMgmtIP(self, ip):
            self.__nic_mgmt_ip = ip
 
@@ -185,6 +188,9 @@ class Node(object):
         
         def SetNicMgmtIntf(self, intf):
             self.__nic_mgmt_intf = intf
+
+        def SetNicUnderlayIPs(self, ips):
+           self.__nic_underlay_ips = ips
 
         def read_from_console(self):
             if self.__nic_console_ip != "" and self.__nic_console_port != "":
@@ -238,6 +244,7 @@ class Node(object):
 
         self.__dev_index = 1
         self.__devices = {}
+        self.__nic_underlay_ips = []
 
 
         nics = getattr(self.__inst, "Nics", None)
@@ -253,6 +260,7 @@ class Node(object):
                     device.SetNicConsolePort(getattr(nic, "ConsolePort", ""))
                     device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                     device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
+                    device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
                     for port in getattr(nic, "Ports", []):
                         device.SetMac(port.MAC)
                         break
@@ -269,6 +277,7 @@ class Node(object):
                     device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
                     device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                     device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
+                    device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
                     device.read_from_console()
 
         self.__nic_pci_info = {}
@@ -451,6 +460,10 @@ class Node(object):
     def GetNicConsolePort(self, device = None):
         dev = self.__get_device(device)
         return dev.GetNicConsolePort()
+
+    def GetNicUnderlayIPs(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetNicUnderlayIPs()
 
     def Name(self):
         return self.__name
@@ -1125,6 +1138,9 @@ class Topology(object):
 
     def GetHostNicIntMgmtIP(self, node_name, device = None):
         return self.__nodes[node_name].GetHostNicIntMgmtIP(device)
+
+    def GetNicUnderlayIPs(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicUnderlayIPs(device)
 
     def GetEsxHostIpAddress(self, node_name):
         return self.__nodes[node_name].EsxHostIpAddress()

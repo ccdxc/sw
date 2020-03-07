@@ -72,10 +72,11 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
         elif (iftype == topo.InterfaceTypes.LOOPBACK):
-            if (hasattr(ifspec, 'ipprefix')):
+            # If loopback ip exists in testbed json, use that,
+            # else use from cfgyaml
+            self.ip_prefix = utils.GetNodeLoopbackPrefix(node)
+            if not self.ip_prefix and hasattr(ifspec, 'ipprefix'):
                 self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-            else:
-                logger.info("ipprefix not specified for interface", ifspec.iid)
         if hasattr(self, "ip_prefix"):
             self.PfxStr = self.ip_prefix.exploded
 

@@ -20,8 +20,16 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         self.Id = next(ResmgrClient[node].BgpPeerAfIdAllocator)
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER_AF)
         self.GID("BGPPeerAf%d"%self.Id)
-        self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", "0.0.0.0"))
-        self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", "0.0.0.0"))
+        self.PeerAddr = None
+        if hasattr(spec, 'interface'):
+            # override IPs from testbed json
+            self.LocalAddr = utils.GetNodeUnderlayIp(node, spec.interface)
+            self.PeerAddr = utils.GetNodeUnderlayNexthop(node, spec.interface)
+        else:
+            self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", "0.0.0.0"))
+
+        if self.PeerAddr == None:
+            self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", "0.0.0.0"))
         self.Afi = getattr(spec, "afi", "ipv4")
         self.Safi = getattr(spec, "safi", "unicast")
         self.AfiStr = f"{self.Afi}-{self.Safi}"

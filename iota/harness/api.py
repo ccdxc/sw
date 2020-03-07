@@ -378,6 +378,9 @@ def GetNicIntMgmtIP(node_name):
 def GetHostNicIntMgmtIP(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetHostNicIntMgmtIP(node_name)
 
+def GetNicUnderlayIPs(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNicUnderlayIPs(node_name)
+
 def GetMaxConcurrentWorkloads(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetMaxConcurrentWorkloads(node_name)
 

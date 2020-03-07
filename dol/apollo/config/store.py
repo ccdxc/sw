@@ -28,6 +28,7 @@ class EzAccessStore:
         self.hostport = None
         self.switchport = None
         self.dutNode = 1
+        self.underlay_ips = []
         return
 
     def SetTunnels(self, objs):
@@ -203,6 +204,27 @@ class EzAccessStore:
             return int(node_uuid, 16)
         return None
 
+    def SetUnderlayIPs(self, underlay_ips):
+        self.underlay_ips = underlay_ips
+
+    def GetLoopbackIp(self):
+        for ip in self.underlay_ips:
+            if 'Loopback' in ip.Name:
+                return ip.IP
+        return None
+
+    def GetUnderlayIp(self, intf_name):
+        for ip in self.underlay_ips:
+            if ip.Name == intf_name:
+                return ip.IP
+        return None
+
+    def GetUnderlayNexthop(self, intf_name):
+        for ip in self.underlay_ips:
+            if ip.Name == intf_name:
+                return getattr(ip, "Nexthop", None)
+        return None
+
     @staticmethod
     def SetBatchClient(obj):
         EzAccessStore.batchClient = obj
@@ -239,5 +261,6 @@ class EzAccessStore:
 client = dict()
 def Init(node):
     global client
-    storeObj = EzAccessStore(node)
-    client[node] = storeObj
+    if not node in client:
+        storeObj = EzAccessStore(node)
+        client[node] = storeObj

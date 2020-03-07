@@ -83,20 +83,28 @@ vpc:
           routerid      : 10.10.10.10
 
       bgppeer:
+        # if interface is specified, ip addresses are overriden from 
+        # testbed json
         - peeraddr      : 10.1.0.2  # underlay bgp peer 1
           localaddr     : 10.1.0.1
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink0"
           remoteasn     : 600
           bgppeeraf:
               afi       : ipv4
               safi      : unicast
         - peeraddr      : 10.2.0.2  # underlay bgp peer 2
           localaddr     : 10.2.0.1
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink1"
           remoteasn     : 600
           bgppeeraf:
               afi       : ipv4
               safi      : unicast
         - peeraddr      : 50.50.50.1  # overlay bgp peer 1
           localaddr     : 10.10.10.10
+          # specify interface to override ip addresses from testbed json
+          interface     : "Loopback0"
           remoteasn     : 100
           bgppeeraf:
               afi       : l2vpn

@@ -908,3 +908,29 @@ class rrobiniter:
 
 def IsDol():
     return defs.TEST_TYPE == "DOL"
+
+def GetNodeLoopbackPrefix(node):
+    loopback_ip = EzAccessStoreClient[node].GetLoopbackIp()
+    if loopback_ip:
+        return ipaddress.ip_network(loopback_ip + "/32")
+    else:
+        return None
+
+def GetNodeLoopbackIp(node):
+    loopback_ip = EzAccessStoreClient[node].GetLoopbackIp()
+    if loopback_ip:
+        return ipaddress.IPv4Address(loopback_ip)
+    else:
+        return None
+
+def GetNodeUnderlayIp(node, intf_name):
+    ip = EzAccessStoreClient[node].GetUnderlayIp(intf_name)
+    if ip:
+        return(ipaddress.IPv4Address(ip))
+    return None
+
+def GetNodeUnderlayNexthop(node, intf_name):
+    nexthop = EzAccessStoreClient[node].GetUnderlayNexthop(intf_name)
+    if nexthop:
+        return(ipaddress.IPv4Address(nexthop))
+    return None

@@ -35,7 +35,10 @@ class DeviceObject(base.ConfigObjectBase):
         self.LearnAgeTimeout = getattr(spec, 'learningagetimeout', 300)
         self.OverlayRoutingEn = getattr(spec, 'overlayrouting', False)
         #TODO: based on stack, get ip & gw addr
-        if getattr(spec, 'ipaddress', None) != None:
+        # If loopback ip exists in testbed json, use that,
+        # else use from cfgyaml
+        self.IPAddr = utils.GetNodeLoopbackIp(node)
+        if not self.IPAddr and getattr(spec, 'ipaddress', None) != None:
             self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
         else:
             self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
