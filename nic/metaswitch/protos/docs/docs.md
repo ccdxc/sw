@@ -3474,7 +3474,7 @@ EVPN EVI RT Configuration
 | Id | [bytes](#bytes) |  | unique key/identifier of EVPN EVI RT |
 | SubnetId | [bytes](#bytes) |  | reference to subnet |
 | RT | [bytes](#bytes) |  | 8 byte route-target. first two octets represent type of extended community octet 1: type or type-high, only 0,1 and 2 are allowed types octet 2: sub-type or type-low, should always be 2 for route-target extended community |
-| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type |
+| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets |
 | EVIId | [uint32](#uint32) |  | Internal only |
 
 
@@ -3814,7 +3814,7 @@ EVPN IP VRF RT Configuration
 | Id | [bytes](#bytes) |  | unique key/identifier of EVPN IP VRF |
 | VPCId | [bytes](#bytes) |  | reference to VPC |
 | RT | [bytes](#bytes) |  | 8 byte route-target. first two octets represent type of extended community octet 1: type or type-high, only 0,1 and 2 are allowed types octet 2: sub-type or type-low, should always be 2 for route-target extended community |
-| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type |
+| RTType | [EvpnRtType](#pds_ms.EvpnRtType) |  | route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets |
 | VRFName | [string](#string) |  | Internal only |
 
 

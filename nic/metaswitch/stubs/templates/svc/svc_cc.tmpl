@@ -323,6 +323,11 @@ Status
         return Status::OK;
     }
     resp->set_apistatus(ret);
+    if (ret != types::API_STATUS_OK) {
+        PDS_TRACE_ERR ("Failed to process gRPC {{.RequestType.Name}}: %s", pds_ms_api_ret_str(ret));
+    } else {
+        PDS_TRACE_DEBUG ("Processed gRPC {{.RequestType.Name}} successfully");
+    }
 
   {{if (HasSuffix $rpc "Get") }}
     pds_ms_convert_{{$respMsgName | ToLower}}_ext_response (proto_resp, resp);

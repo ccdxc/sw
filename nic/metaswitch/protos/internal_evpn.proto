@@ -272,7 +272,7 @@ message EvpnEviRtSpec {
   // octet 2: sub-type or type-low, should always be 2 for route-target extended
   // community
   bytes      RT       = 3 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}];
-  // route-target import/export type
+  // route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
   EvpnRtType RTType   = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only
@@ -380,7 +380,7 @@ message EvpnIpVrfRtSpec {
   // octet 2: sub-type or type-low, should always be 2 for route-target extended
   // community
   bytes      RT     = 3 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}];
-  // route-target import/export type
+  // route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
   EvpnRtType RTType = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only

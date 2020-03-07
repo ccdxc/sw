@@ -803,7 +803,7 @@ type EvpnEviRtSpec struct {
 	// octet 2: sub-type or type-low, should always be 2 for route-target extended
 	// community
 	RT []byte `protobuf:"bytes,3,opt,name=RT,proto3" json:"RT,omitempty" meta:mandatory,immutable`
-	// route-target import/export type
+	// route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
 	RTType EvpnRtType `protobuf:"varint,4,opt,name=RTType,proto3,enum=pds.EvpnRtType" json:"RTType,omitempty"`
 }
 
@@ -1168,7 +1168,7 @@ type EvpnIpVrfRtSpec struct {
 	// octet 2: sub-type or type-low, should always be 2 for route-target extended
 	// community
 	RT []byte `protobuf:"bytes,3,opt,name=RT,proto3" json:"RT,omitempty" meta:mandatory,immutable`
-	// route-target import/export type
+	// route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
 	RTType EvpnRtType `protobuf:"varint,4,opt,name=RTType,proto3,enum=pds.EvpnRtType" json:"RTType,omitempty"`
 }
 

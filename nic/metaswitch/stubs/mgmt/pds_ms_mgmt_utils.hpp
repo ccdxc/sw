@@ -64,6 +64,7 @@ extern "C" {
 #define PDS_MS_BGP_ROUTE_MAP_DEF_NUBMER 1
 using namespace std;
 
+const char* pds_ms_api_ret_str (types::ApiStatus api_err);
 sdk_ret_t pds_ms_api_to_sdk_ret(types::ApiStatus api_err);
 types::ApiStatus pds_ms_sdk_ret_to_api_status(sdk_ret_t sdk_ret);
 
@@ -115,9 +116,10 @@ static inline NBB_VOID pds_ms_set_evpn_rttype(NBB_LONG *rttype,
     if (val == pds_ms::EVPN_RT_NONE) {
         // map rt_none (0) to MS rt_none (4)
         *rttype = AMB_EVPN_RT_NONE;
+    } else {
+        // remaining values of the rt types are one to one match
+        *rttype = (NBB_LONG)val;
     }
-    // remaining values of the rt types are one to one match
-    *rttype = (NBB_LONG)val;
 }
 static inline pds_ms::EvpnRtType pds_ms_get_evpn_rttype(NBB_LONG rttype) {
     if (rttype == AMB_EVPN_RT_NONE) {return pds_ms::EVPN_RT_NONE;}

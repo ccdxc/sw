@@ -208,7 +208,7 @@ message EvpnEviRtSpec {
   // octet 2: sub-type or type-low, should always be 2 for route-target extended
   // community
   bytes      RT       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // route-target import/export type
+  // route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
   EvpnRtType RTType   = 4;
 }
 
@@ -286,7 +286,7 @@ message EvpnIpVrfRtSpec {
   // octet 2: sub-type or type-low, should always be 2 for route-target extended
   // community
   bytes      RT     = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // route-target import/export type
+  // route-target import/export type. EVPN_RT_NONE is an invalid type for manual route-targets
   EvpnRtType RTType = 4;
 }
 

@@ -233,3 +233,20 @@ pds_ms_sdk_ret_to_api_status (sdk_ret_t sdk_ret)
     default: {return API_STATUS_ERR;} // catch undefined errors
     }
 }
+
+const char *
+pds_ms_api_ret_str (ApiStatus api_err)
+{
+    switch (api_err) {
+    case API_STATUS_OK: {return "API_STATUS_OK";}
+    case API_STATUS_ERR: {return "API_STATUS_ERR";}
+    case API_STATUS_INVALID_ARG: {return "API_STATUS_INVALID_ARG";}
+    case API_STATUS_EXISTS_ALREADY: {return "API_STATUS_EXISTS_ALREADY";}
+    case API_STATUS_OUT_OF_MEM: {return "API_STATUS_OUT_OF_MEM";}
+    case API_STATUS_NOT_FOUND: {return "API_STATUS_NOT_FOUND";}
+    case API_STATUS_OUT_OF_RESOURCE: {return "API_STATUS_OUT_OF_RESOURCE";}
+    case API_STATUS_OPERATION_NOT_ALLOWED: {return "API_STATUS_OPERATION_NOT_ALLOWED";}
+    default: {return "Unknown error";} // catch undefined errors
+    }
+    return "Unknown error";
+}
