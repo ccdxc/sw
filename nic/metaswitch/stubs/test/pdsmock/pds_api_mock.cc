@@ -442,12 +442,12 @@ sdk_ret_t pds_svc_mapping_create(pds_svc_mapping_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_mirror_session_read(pds_mirror_session_key_s *spec,
+sdk_ret_t pds_mirror_session_read(pds_obj_key_t *key,
                                   pds_mirror_session_info_s *info) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_s *spec,
+sdk_ret_t pds_mirror_session_delete(pds_obj_key_t *key,
                                     pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }

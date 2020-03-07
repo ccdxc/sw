@@ -1582,16 +1582,16 @@ create_rspan_mirror_sessions (uint32_t num_sessions)
     pds_mirror_session_spec_t ms;
 
     for (i = 0; i < num_sessions; i++) {
-        ms.key.id = msid++;
+        ms.key = test::int2pdsobjkey(msid++);
         ms.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         ms.snap_len = 128;
-        ms.rspan_spec.interface = 0x11010001;  // eth 1/1
+        ms.rspan_spec.uplink_if = test::uuid_from_objid(0x11010001);  // eth 1/1
         ms.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
         ms.rspan_spec.encap.val.vlan_tag = rspan_vlan_start--;
         rv = create_mirror_session(&ms);
         if (rv != SDK_RET_OK) {
-            printf("Failed to create mirror session %u, err %u\n",
-                   ms.key.id, rv);
+            printf("Failed to create mirror session %s, err %u\n",
+                   ms.key.str(), rv);
             return rv;
         }
     }

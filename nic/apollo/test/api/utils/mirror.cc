@@ -13,8 +13,8 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
-                            pds_ifindex_t interface, uint16_t vlan_tag,
+mirror_session_feeder::init(pds_obj_key_t key, uint8_t max_ms,
+                            pds_obj_key_t interface, uint16_t vlan_tag,
                             std::string src_ip, pds_obj_key_t tep,
                             uint32_t span_id, uint32_t dscp) {
 
@@ -36,17 +36,13 @@ mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
 
 void
 mirror_session_feeder::iter_next(int width) {
-
-    key.id += width;
+    key = int2pdsobjkey(pdsobjkey2int(key) + width);
     if (type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-
         type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
         span_id++;
         dscp++;
         src_ip.addr.v4_addr += 1;
-
     } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-
         type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         if (encap.type  == PDS_ENCAP_TYPE_DOT1Q)
             encap.val.vlan_tag++;
@@ -59,9 +55,8 @@ mirror_session_feeder::iter_next(int width) {
 }
 
 void
-mirror_session_feeder::key_build(pds_mirror_session_key_t *key) const {
-    memset(key, 0, sizeof(pds_mirror_session_key_t));
-    key->id = this->key.id;
+mirror_session_feeder::key_build(pds_obj_key_t *key) const {
+    *key = this->key;
 }
 
 void
@@ -72,7 +67,7 @@ mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
     spec->type = type;
     spec->snap_len = snap_len;
     if (type  == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        spec->rspan_spec.interface = interface;
+        spec->rspan_spec.uplink_if = interface;
         memcpy(&spec->rspan_spec.encap, &encap, sizeof(pds_encap_t));
     } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         spec->erspan_spec.vpc = vpc;
@@ -83,14 +78,15 @@ mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
     }
 }
 bool
-mirror_session_feeder::key_compare(const pds_mirror_session_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_mirror_session_key_t)) == 0);
+mirror_session_feeder::key_compare(const pds_obj_key_t *key) const {
+    if (this->key != *key)
+        return false;
+    return true;
 }
 
 bool
 mirror_session_feeder::spec_compare(
                                 const pds_mirror_session_spec_t *spec) const {
-
     if (spec->type != type)
         return false;
 
@@ -99,7 +95,7 @@ mirror_session_feeder::spec_compare(
 
     if (spec->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
         // validate rspan spec
-        if ((spec->rspan_spec.interface != interface) ||
+        if ((spec->rspan_spec.uplink_if != interface) ||
             (spec->rspan_spec.encap.type != encap.type) ||
             (spec->rspan_spec.encap.val.vlan_tag != encap.val.vlan_tag))
             return false;

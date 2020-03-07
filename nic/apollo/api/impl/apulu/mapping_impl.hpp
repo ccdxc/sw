@@ -138,9 +138,13 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
-    /// \brief  return true if mapping is local, false otherwise
-    /// \return true or false
-    bool is_local(void) const { return is_local_; }
+    /// \brief  return the nexthop type this mapping is pointing to
+    /// \return type of the nexthop
+    uint8_t nexthop_type(void) const { return nexthop_type_; }
+
+    /// \brief  return the nexthop table index corresponding to this mapping
+    /// \return nexthop index
+    uint32_t nexthop_id(void) const { return nexthop_id_; }
 
 private:
     /// \brief constructor
@@ -151,6 +155,8 @@ private:
         local_mapping_public_ip_hdl_ = handle_t::null();
         mapping_hdl_ = handle_t::null();
         mapping_public_ip_hdl_ = handle_t::null();
+        nexthop_type_ = NEXTHOP_TYPE_MAX;
+        nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     }
 
     /// \brief destructor
@@ -266,12 +272,11 @@ private:
                                                  ip_addr_t *ip);
 
 private:
-    bool        is_local_;
-    // need to save the below for entry removal as the memhash handle is
-    // not valid b/w the transactions.
     uint32_t    vnic_hw_id_;
     uint32_t    vpc_hw_id_;
     uint32_t    subnet_hw_id_;
+    uint8_t     nexthop_type_;
+    uint32_t    nexthop_id_;
 
     // handles or indices for NAT table
     uint32_t    to_public_ip_nat_idx_;

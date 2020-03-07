@@ -14,7 +14,6 @@
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
-#include "nic/apollo/api/include/pds_mirror.hpp"
 
 using std::unordered_map;
 using std::make_pair;
@@ -29,8 +28,6 @@ typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
-                                                   void *ctxt);
 
 typedef slab *slab_ptr_t;
 
@@ -42,7 +39,6 @@ typedef enum slab_id_e {
     SLAB_ID_SERVICE,
     SLAB_ID_TEP,
     SLAB_ID_ROUTE,
-    SLAB_ID_MIRROR,
     SLAB_ID_IF,
     SLAB_ID_MAX
 } slab_id_t;
@@ -53,7 +49,6 @@ typedef unordered_map<pds_obj_key_t , pds_subnet_spec_t *, pds_obj_key_hash> sub
 typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_mapping_hash_fn> service_db_t;
 typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
 typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
-typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
 
@@ -72,9 +67,6 @@ public:
     const pds_obj_key_t& underlay_vpc(void) const { return underlay_vpc_; }
     void set_underlay_vpc(pds_obj_key_t key) { underlay_vpc_ = key; }
     void reset_underlay_vpc(void) { underlay_vpc_.reset(); }
-    mirror_session_db_t *mirror_session_map(void) {
-        return mirror_session_map_;
-    }
 
     sdk_ret_t slab_walk(sdk::lib::slab_walk_cb_t walk_cb, void *ctxt);
 
@@ -99,9 +91,6 @@ public:
     slab_ptr_t route_table_slab(void) const {
         return slabs_[SLAB_ID_ROUTE];
     }
-    slab_ptr_t mirror_session_slab(void) const {
-        return slabs_[SLAB_ID_MIRROR];
-    }
 
 private:
     cfg_db();
@@ -117,7 +106,6 @@ private:
     service_db_t *service_map_;
     route_table_db_t *route_table_map_;
     pds_device_spec_t device_;
-    mirror_session_db_t *mirror_session_map_;
     slab_ptr_t slabs_[SLAB_ID_MAX - SLAB_ID_MIN + 1];
 };
 
@@ -186,15 +174,6 @@ public:
         return cfg_db_->reset_underlay_vpc();
     }
 
-    pds_mirror_session_spec_t *find_in_mirror_session_db(pds_mirror_session_key_t *key);
-    sdk_ret_t add_to_mirror_session_db(pds_mirror_session_key_t *key,
-                                       pds_mirror_session_spec_t *spec);
-    sdk_ret_t mirror_session_db_walk(mirror_session_walk_cb_t cb, void *ctxt);
-    bool del_from_mirror_session_db(pds_mirror_session_key_t *key);
-    slab_ptr_t mirror_session_slab(void) const {
-        return cfg_db_->mirror_session_slab();
-    }
-
     sdk_ret_t slab_walk(sdk::lib::slab_walk_cb_t walk_cb, void *ctxt) {
         return cfg_db_->slab_walk(walk_cb, ctxt);
     }
@@ -214,9 +193,6 @@ private:
     service_db_t *service_map(void) const { return cfg_db_->service_map();  }
     route_table_db_t *route_table_map(void) const { return
         cfg_db_->route_table_map();
-    }
-    mirror_session_db_t *mirror_session_map(void) const {
-        return cfg_db_->mirror_session_map();
     }
 
 private:

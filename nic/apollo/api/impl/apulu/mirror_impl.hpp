@@ -53,21 +53,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(mirror_impl *impl);
 
-    /// \brief     instantiate a mirror session impl object based on current
-    ///            state (sw and/or hw) given its key
-    /// \param[in] key mirror session entry's key
-    /// \param[in] session    mirror session's API object
-    /// \return    new instance of mirror session implementation object or NULL
-    static mirror_impl *build(pds_mirror_session_key_t *key,
-                              mirror_session *session);
-
-    /// \brief     free a stateless entry's temporary s/w only resources like
-    ///            memory etc., for a stateless entry calling destroy() will
-    ///            remove resources from h/w, which can't be done during ADD/UPD
-    ///            etc. operations esp. when object is constructed on the fly
-    /// \param[in] impl mirror session to be freed
-    static void soft_delete(mirror_impl *impl);
-
     /// \brief     allocate/reserve h/w resources for this object
     /// \param[in] api_obj API object for which resources are being reserved
     /// \param[in] obj_ctxt transient state associated with this API
@@ -132,6 +117,10 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return mirror session's h/w id
+    /// \return    h/w id assigned to the mirror session
+    uint16_t hw_id(void) const { return hw_id_; }
+
 private:
     /// \brief constructor
     mirror_impl() {
@@ -140,6 +129,15 @@ private:
 
     /// \brief destructor
     ~mirror_impl() {}
+
+    /// \brief      fill the mirror session spec
+    /// \param[out] spec mirror session specification to be filled
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_mirror_session_spec_t *spec);
+
+    /// \brief      fill the mirror session status
+    /// \param[out] status mirror session h/w status
+    void fill_status_(pds_mirror_session_status_t *status);
 
 private:
     // P4 datapath specific state

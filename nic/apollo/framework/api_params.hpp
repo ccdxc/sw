@@ -66,7 +66,7 @@ struct api_params_s {
         pds_route_table_spec_t       route_table_spec;
         pds_obj_key_t                policy_key;
         pds_policy_spec_t            policy_spec;
-        pds_mirror_session_key_t     mirror_session_key;
+        pds_obj_key_t                mirror_session_key;
         pds_mirror_session_spec_t    mirror_session_spec;
         pds_obj_key_t                meter_key;
         pds_meter_spec_t             meter_spec;

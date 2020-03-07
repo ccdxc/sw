@@ -96,7 +96,7 @@ pds_vnic_info_from_entry (void *entry, void *ctxt)
 sdk_ret_t
 pds_vnic_read_all (vnic_read_cb_t vnic_read_cb, void *ctxt)
 {
-    pds_vnic_read_args_t args = {0};
+    pds_vnic_read_args_t args = { 0 };
 
     args.ctxt = ctxt;
     args.cb = vnic_read_cb;

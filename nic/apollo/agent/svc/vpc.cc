@@ -198,8 +198,6 @@ VPCSvcImpl::VPCGet(ServerContext *context,
     pds_obj_key_t key;
     pds_vpc_info_t info = { 0 };
 
-    PDS_TRACE_VERBOSE("VPC Get Received")
-
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
@@ -229,9 +227,9 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
                           const pds::VPCPeerRequest *proto_req,
                           pds::VPCPeerResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_vpc_peer_spec_t *api_spec;
-    pds_obj_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 

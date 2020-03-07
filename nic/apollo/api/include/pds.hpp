@@ -99,7 +99,6 @@ typedef uint16_t    pds_vlan_id_t;             ///< VLAN tag value
 typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
 typedef uint16_t    pds_lif_id_t;              ///< (internal) lif identifier
-typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
@@ -203,12 +202,6 @@ typedef struct pds_mapping_key_s {
         };
     };
 } __PACK__ pds_mapping_key_t;
-
-/// \brief    mirror session key
-typedef struct pds_mirror_session_key_s {
-    ///< unique mirror session id in the range [1-8]
-    pds_mirror_session_id_t id;
-} __PACK__ pds_mirror_session_key_t;
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {

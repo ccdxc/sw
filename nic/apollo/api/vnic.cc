@@ -31,6 +31,7 @@ vnic_entry::vnic_entry() {
     binding_checks_en_ = false;
     host_if_ = k_pds_obj_key_invalid;
     ht_ctxt_.reset();
+    impl_ = NULL;
 }
 
 vnic_entry *
@@ -328,14 +329,6 @@ vnic_entry::read(pds_vnic_info_t *info) {
 }
 
 sdk_ret_t
-vnic_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    if (vnic_db()->remove((vnic_entry *)orig_obj)) {
-        return vnic_db()->insert(this);
-    }
-    return SDK_RET_ENTRY_NOT_FOUND;
-}
-
-sdk_ret_t
 vnic_entry::add_to_db(void) {
     PDS_TRACE_VERBOSE("Adding vnic %s to db", key_.str());
     return vnic_db()->insert(this);
@@ -345,6 +338,14 @@ sdk_ret_t
 vnic_entry::del_from_db(void) {
     if (vnic_db()->remove(this)) {
         return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+vnic_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    if (vnic_db()->remove((vnic_entry *)orig_obj)) {
+        return vnic_db()->insert(this);
     }
     return SDK_RET_ENTRY_NOT_FOUND;
 }

@@ -20,8 +20,8 @@ service MirrorSvc {
 
 // RspanSpec is the configuration specification for RSPAN
 message RSpanSpec {
-  // uplink/front panel interface index to send out RSPAN pkts on
-  uint32      InterfaceId = 1;
+  // uplink/front panel interface to send RSPAN pkts on
+  bytes       UplinkIf    = 1;
   // RSPAN encap, only VLAN encapsulation supported here
   types.Encap Encap       = 2;
 }
@@ -29,32 +29,32 @@ message RSpanSpec {
 // ERSpanSpec is the configuration specification for ERSPAN
 message ERSpanSpec {
   // VPC id
-  bytes           VPCId     = 1;
+  bytes               VPCId    = 1 [(gogoproto.moretags) = "meta:mandatory"];
   oneof erspandst {
       // tunnel (aka. TEP) as the ERSPAN destination
-      bytes     TunnelId    = 2;
+      bytes           TunnelId = 2;
       // local/remote mapping as the ERSPAN destination
-      MappingKey Mapping    = 3;
+      MappingKey      Mapping  = 3;
       // Destination IP address to be used for ERSPAN
-      types.IPAddress DstIP = 4;
+      types.IPAddress DstIP    = 4;
   }
   // Source IP address to be used for ERSPAN
-  types.IPAddress SrcIP     = 5;
+  types.IPAddress     SrcIP    = 5;
   // DSCP value to use in the packet
-  uint32          Dscp      = 6;
+  uint32              Dscp     = 6;
   // Span ID to use in the packet
-  uint32          SpanId    = 7;
+  uint32              SpanId   = 7;
 }
 
 // MirrorSessionSpec captures configuration of Mirror session
 message MirrorSessionSpec {
   // unique identifier of mirror policy
-  uint32 Id               = 1 [(gogoproto.moretags) = "meta:mandatory,range:1-7"];
+  bytes        Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // maximum  bytes of packet to mirror
-  uint32 SnapLen          = 2;
+  uint32       SnapLen    = 2;
   oneof mirrordst {
     // RSPAN configuration in case of RSPAN
-    RSpanSpec RspanSpec   = 3;
+    RSpanSpec  RspanSpec  = 3;
     // ERSPAN configuration in case of ERSPAN
     ERSpanSpec ErspanSpec = 4;
   }
@@ -91,7 +91,7 @@ message MirrorSessionResponse {
 
 // Mirror policy get request
 message MirrorSessionGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // Mirror policy get response
@@ -104,7 +104,7 @@ message MirrorSessionGetResponse {
 message MirrorSessionDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // Mirror policy delete response

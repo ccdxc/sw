@@ -50,36 +50,21 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(mirror_session *session);
 
-    ///
-    /// \brief    build object given its key from the (sw and/or hw state we
-    ///           have) and return an instance of the object (this is useful for
-    ///           stateless objects to be operated on by framework during DELETE
-    ///           or UPDATE operations)
-    /// \param[in] key    key of object instance of interest
-    /// \return    mirror session instance corresponding to the key or NULL if
-    ///            entry is not found
-    static mirror_session *build(pds_mirror_session_key_t *key);
+    /// \brief     allocate h/w resources for this object
+    /// \param[in] orig_obj    old version of the unmodified object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
-    ///
-    /// \brief    free a stateless entry's temporary s/w only resources like
-    ///           memory etc., for a stateless entry calling destroy() will
-    ///           remove resources from h/w, which can't be done during ADD/UPD
-    ///           etc. operations esp. when object is constructed on the fly
-    /// \param[in] ms    mirror session
-    ///
-    static void soft_delete(mirror_session *ms);
-
+    /// \brief     free h/w resources used by this object, if any
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
     /// \brief          initialize mirror session with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
-    /// \brief          allocate h/w resources for this object
-    /// \param[in]      orig_obj    old version of the unmodified object
-    /// \param[in]      obj_ctxt    transient state associated with this API
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
-                                        api_obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /// \brief          program all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
@@ -87,16 +72,31 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          free h/w resources used by this object, if any
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
-
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief        add all objects that may be affected if this object is
+    ///               updated to framework's object dependency list
+    /// \param[in]    obj_ctxt    transient state associated with this API
+    ///                           processing
+    /// \return       SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override {
+        // no other objects are affected if mirror session is modified
+        return SDK_RET_OK;
+    }
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -117,6 +117,11 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       api_base *orig_obj,
                                       api_obj_ctxt_t *obj_ctxt) override;
+
+    ///\brief read config
+    ///\param[out] info pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_mirror_session_info_t *info);
 
     /// \brief          add given mirror session to the database
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -139,14 +144,36 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "ms-" + std::to_string(key_.id);
+        return "mrror-" + std::string(key_.str());
     }
 
-    ///\brief read config
-    ///\param[in]  key Pointer to the key object
-    ///\param[out] info Pointer to the info object
-    ///\return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_mirror_session_key_t *key, pds_mirror_session_info_t *info);
+    /// \brief     return the key/id of this vnic
+    /// \return    key/id of the vnic object
+    const pds_obj_key_t key(void) const { return key_; }
+
+    /// \brief     return the uplink interface in RSPAN configuration
+    /// \return    uplink interface in RSPAN configuration
+    const pds_obj_key_t& rspan_uplink_if(void) const { return rspan_.uplink_if_; }
+
+    /// \brief     return the encap in RSPAN configuration
+    /// \return    encap in RSPAN configuration
+    pds_encap_t rspan_encap(void) const { return rspan_.encap_; }
+
+    /// \brief     return the ERSPAN destination vpc
+    /// \return    ERSPAN destination vpc
+    const pds_obj_key_t& erspan_vpc(void) const { return erspan_.vpc_; }
+
+    /// \brief     return the ERSPAN destination TEP
+    /// \return    ERSPAN destination TEP
+    const pds_obj_key_t& erspan_dest_tep(void) const { return erspan_.tep_; }
+
+    /// \brief     return the ERSPAN destination mapping
+    /// \return    ERSPAN destination mapping
+    const pds_obj_key_t& erspan_dest_mapping(void) const { return erspan_.mapping_; }
+
+    /// \brief     return impl instance of this vnic object
+    /// \return    impl instance of the vnic object
+    impl_base *impl(void) { return impl_; }
 
 private:
     /// \brief constructor
@@ -155,20 +182,44 @@ private:
     /// \brief destructor
     ~mirror_session();
 
+    /// \brief      fill the vnic sw spec
+    /// \param[out] spec specification
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_mirror_session_spec_t *spec);
+
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_mirror_session_key_t    key_;        ///< mirror session key
-    impl_base                   *impl_;      ///< impl object instance
+    pds_obj_key_t key_;                ///< mirror session keyA
+    pds_mirror_session_type_t type;    ///< mirror session type
+    union {
+        struct {
+            /// uplink interface the rspanned packets go out on
+            pds_obj_key_t uplink_if_;
+            /// encap on the spanned packets (only .1q is supported)
+            pds_encap_t encap_;
+        } rspan_;
+        struct {
+            /// vpc where ERSPAN destination is (and the
+            pds_obj_key_t vpc_;
+            union {
+                /// Tunnel IP, in case ERSPAN destination is in underlay VPC
+                pds_obj_key_t tep_;
+                /// mapping key, in case ERSPAN destination is in overlay VPC
+                pds_obj_key_t mapping_;
+            };
+        } erspan_;
+    };
+    impl_base *impl_;                  ///< impl object instance
 
     ///< mirror_session_state is friend of mirror_session
     friend class mirror_session_state;
 } __PACK__;
 
-/// \@}    // end of MIRROR_SESSION_ENTRY
+/// \@}    // end of PDS_MIRROR_SESSION
 
 }    // namespace api
 

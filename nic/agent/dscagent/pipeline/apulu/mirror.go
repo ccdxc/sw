@@ -10,6 +10,7 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -69,9 +70,7 @@ func updateMirrorSessionHandler(infraAPI types.InfraAPI, client halapi.MirrorSvc
 
 func deleteMirrorSessionHandler(infraAPI types.InfraAPI, client halapi.MirrorSvcClient, mirror netproto.MirrorSession) error {
 	mirrorDelReq := &halapi.MirrorSessionDeleteRequest{
-		Id: []uint32{
-			uint32(mirror.Status.MirrorSessionID),
-		},
+		Id: [][]byte{uuid.FromStringOrNil(mirror.UUID).Bytes()},
 	}
 
 	resp, err := client.MirrorSessionDelete(context.Background(), mirrorDelReq)
@@ -91,9 +90,10 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, client halapi.MirrorSvc
 func convertMirrorSession(infraAPI types.InfraAPI, mirror netproto.MirrorSession, vpcID uint64) *halapi.MirrorSessionRequest {
 	var mirrorSpecs []*halapi.MirrorSessionSpec
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+	// TODO: we need to create uuid on the fly here !!
 	for _, c := range mirror.Spec.Collectors {
 		m := &halapi.MirrorSessionSpec{
-			Id:      uint32(mirror.Status.MirrorSessionID),
+			Id:      uuid.FromStringOrNil(mirror.UUID).Bytes(),
 			SnapLen: mirror.Spec.PacketSize,
 			Mirrordst: &halapi.MirrorSessionSpec_ErspanSpec{
 				ErspanSpec: &halapi.ERSpanSpec{

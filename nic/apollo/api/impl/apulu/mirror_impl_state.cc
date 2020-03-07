@@ -43,25 +43,24 @@ mirror_impl_state::free(mirror_impl *impl) {
 }
 
 sdk_ret_t
-mirror_impl_state::alloc_hw_id(pds_mirror_session_key_t *key, uint16_t *hw_id) {
-    *hw_id = key->id - 1;
-    if (*hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
-        return SDK_RET_INVALID_ARG;
-    } else if (session_bmap_ & (1 << *hw_id)) {
-        return sdk::SDK_RET_ENTRY_EXISTS;
+mirror_impl_state::alloc_hw_id(pds_obj_key_t *key, uint16_t *hw_id) {
+    if (session_bmap_ != 0xFF) {
+        for (uint8_t i = 0; i < PDS_MAX_MIRROR_SESSION; i++) {
+            if (!(session_bmap_ & (1 << i))) {
+                *hw_id = i;
+                return SDK_RET_OK;
+            }
+        }
     }
-    session_bmap_ |= (1 << *hw_id);
-    PDS_TRACE_DEBUG("Allocated mirror session hw id %u", *hw_id);
-    return SDK_RET_OK;
+    return SDK_RET_NO_RESOURCE;
 }
 
 sdk_ret_t
 mirror_impl_state::free_hw_id(uint16_t hw_id) {
-    if (hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
+    if (hw_id >= PDS_MAX_MIRROR_SESSION) {
         return SDK_RET_INVALID_ARG;
     }
-    session_bmap_ &= ~(1 << hw_id);
-    PDS_TRACE_DEBUG("Freed mirror session hw id %u", hw_id);
+    hw_id &= ~(1 << hw_id);
     return SDK_RET_OK;
 }
 

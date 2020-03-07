@@ -12,13 +12,13 @@
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
-#include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/mirror.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 static sdk_ret_t
 pds_mirror_session_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                               pds_mirror_session_key_t *key,
+                               pds_obj_key_t *key,
                                pds_mirror_session_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -41,16 +41,9 @@ pds_mirror_session_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline mirror_session *
-pds_mirror_session_find (pds_mirror_session_key_t *key)
+pds_mirror_session_find (pds_obj_key_t *key)
 {
-    pds_mirror_session_spec_t spec = {0};
-    spec.key = *key;
-    static mirror_session *ms;
-
-    if (ms == NULL) {
-        ms = mirror_session::factory(&spec);
-    }
-    return ms;
+    return (mirror_session_db()->find(key));
 }
 
 sdk_ret_t
@@ -61,7 +54,7 @@ pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec,
 }
 
 sdk_ret_t
-pds_mirror_session_read (pds_mirror_session_key_t *key,
+pds_mirror_session_read (pds_obj_key_t *key,
                         pds_mirror_session_info_t *info)
 {
     mirror_session *entry = NULL;
@@ -74,7 +67,38 @@ pds_mirror_session_read (pds_mirror_session_key_t *key,
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     info->spec.key = *key;
-    return entry->read(key, info);
+    return entry->read(info);
+}
+
+typedef struct pds_mirror_session_read_args_s {
+    mirror_session_read_cb_t cb;
+    void *ctxt;
+} pds_mirror_session_read_args_t;
+
+bool
+pds_mirror_session_info_from_entry (void *entry, void *ctxt)
+{
+    mirror_session *ms = (mirror_session *)entry;
+    pds_mirror_session_read_args_t *args = (pds_mirror_session_read_args_t *)ctxt;
+    pds_mirror_session_info_t info;
+
+    memset(&info, 0, sizeof(pds_mirror_session_info_t));
+    // call entry read
+    ms->read(&info);
+    // call cb on info
+    args->cb(&info, args->ctxt);
+    return false;
+}
+sdk_ret_t
+pds_mirror_session_read_all (mirror_session_read_cb_t mirror_session_read_cb,
+                             void *ctxt)
+{
+    pds_mirror_session_read_args_t args = { 0 };
+
+    args.ctxt = ctxt;
+    args.cb = mirror_session_read_cb;
+
+    return mirror_session_db()->walk(pds_mirror_session_info_from_entry, &args);
 }
 
 sdk_ret_t
@@ -85,8 +109,7 @@ pds_mirror_session_update (_In_ pds_mirror_session_spec_t *spec,
 }
 
 sdk_ret_t
-pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key,
-                           _In_ pds_batch_ctxt_t bctxt)
+pds_mirror_session_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_mirror_session_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

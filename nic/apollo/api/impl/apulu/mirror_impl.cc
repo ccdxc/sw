@@ -35,12 +35,6 @@ mirror_impl::factory(pds_mirror_session_spec_t *spec) {
     return impl;
 }
 
-void
-mirror_impl::soft_delete(mirror_impl *impl) {
-    impl->~mirror_impl();
-    mirror_impl_db()->free(impl);
-}
-
 impl_base *
 mirror_impl::clone(void) {
     mirror_impl *cloned_impl;
@@ -54,7 +48,8 @@ mirror_impl::clone(void) {
 
 void
 mirror_impl::destroy(mirror_impl *impl) {
-    mirror_impl::soft_delete(impl);
+    impl->~mirror_impl();
+    mirror_impl_db()->free(impl);
 }
 
 sdk_ret_t
@@ -63,6 +58,40 @@ mirror_impl::free(mirror_impl *impl) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+mirror_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    pds_mirror_session_spec_t *spec;
+
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        // allocate hw id for this session
+        spec = &obj_ctxt->api_params->mirror_session_spec;
+        return mirror_impl_db()->alloc_hw_id(&spec->key, &hw_id_);
+    case API_OP_UPDATE:
+        // we will use the same h/w resources as the original object
+    default:
+        break;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mirror_impl::release_resources(api_base *api_obj) {
+    if (hw_id_ != 0xFFFF) {
+        return mirror_impl_db()->free_hw_id(hw_id_);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mirror_impl::nuke_resources(api_base *api_obj) {
+    if (hw_id_ != 0xFFFF) {
+        return mirror_impl_db()->free_hw_id(hw_id_);
+    }
+    return SDK_RET_OK;
+}
+
+#if 0
 mirror_impl *
 mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
     mirror_impl *impl;
@@ -89,31 +118,7 @@ mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
     impl->hw_id_ = hw_id;
     return impl;
 }
-
-sdk_ret_t
-mirror_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    pds_mirror_session_spec_t *spec;
-
-    // allocate hw id for this session
-    spec = &obj_ctxt->api_params->mirror_session_spec;
-    return mirror_impl_db()->alloc_hw_id(&spec->key, &hw_id_);
-}
-
-sdk_ret_t
-mirror_impl::nuke_resources(api_base *api_obj) {
-    if (hw_id_ != 0xFFFF) {
-        return mirror_impl_db()->free_hw_id(hw_id_);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mirror_impl::release_resources(api_base *api_obj) {
-    if (hw_id_ != 0xFFFF) {
-        return mirror_impl_db()->free_hw_id(hw_id_);
-    }
-    return SDK_RET_OK;
-}
+#endif
 
 #define rspan_action     action_u.mirror_rspan
 #define erspan_action    action_u.mirror_erspan
@@ -133,67 +138,36 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         mirror_data.action_id = MIRROR_RSPAN_ID;
-#if 0
-        mirror_data.rspan_action.tm_oport =
-            g_pds_state.catalogue()->ifindex_to_tm_port(spec->rspan_spec.interface);
-#endif
+        // TODO: what nh are we supposed to program here ?
         mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
         mirror_data.rspan_action.truncate_len = spec->snap_len;
         break;
 
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         mirror_data.action_id = MIRROR_ERSPAN_ID;
-        vpc = vpc_db()->find(&spec->erspan_spec.vpc);
-
-        // if the vpc is underlay VPC, dst IP must be a known TEP
+        vpc = vpc_find(&spec->erspan_spec.vpc);
+        mirror_data.erspan_action.truncate_len = spec->snap_len;
         if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
-            tep_key = spec->erspan_spec.tep;
-            if ((tep = tep_db()->find(&tep_key)) == NULL) {
-                PDS_TRACE_ERR("Unknown TEP IP %u", tep_key.id);
-                return SDK_RET_INVALID_ARG;
-            }
+            // lookup the destination TEP
+            tep = tep_find(&spec->erspan_spec.tep);
             // TODO: what if this TEP is local TEP itself ?
-#if 0
-            mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_1;
-#endif
-            mirror_data.erspan_action.ctag = 0;
-            memcpy(mirror_data.erspan_action.dmac, tep->mac(), ETH_ADDR_LEN);
-            memcpy(mirror_data.erspan_action.smac,
-                   device_db()->find()->mac(), ETH_ADDR_LEN);
-            mirror_data.erspan_action.sip =
-                spec->erspan_spec.src_ip.addr.v4_addr;
-            mirror_data.erspan_action.dip = tep->ip().addr.v4_addr;
-            mirror_data.erspan_action.truncate_len = spec->snap_len;
+            //       - check this in init_config()
+            mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+            mirror_data.erspan_action.nexthop_id =
+                ((tep_impl *)(tep->impl()))->hw_id();
+            // TODO: what to do with dscp value ?
         } else {
-#if 0
-            mapping_key.vpc = spec->erspan_spec.vpc;
-            mapping_key.ip_addr = spec->erspan_spec.dst_ip;
-            mapping = mapping_entry::build(&mapping_key);
+            // mirror destination is either local or remote mapping
+            mapping = mapping_entry::build(&spec->erspan_spec.mapping);
             if (mapping == NULL) {
-                PDS_TRACE_ERR("Failed to find mapping entry for (%u, %s)",
-                              mapping_key.vpc.id, ipaddr2str(&mapping_key.ip_addr));
+                PDS_TRACE_ERR("Failed to find mapping %s",
+                              spec->erspan_spec.mapping.str());
                 return SDK_RET_INVALID_ARG;
             }
-
-
-            if (((mapping_impl *)(mapping->impl()))->is_local()) {
-                mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_0;
-                mirror_data.erspan_action.ctag =
-                    spec->erspan_spec.encap.val.vlan_tag;
-            } else {
-                mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_1;
-                // underlay VLAN tag is 0, hence outer VLAN is 0 when going on the
-                // network (both MPLSoUDP and VxLAN cases) port towards the remote
-                // mapping
-                mirror_data.erspan_action.ctag = 0;
-                // get the TEP this mapping is behind and use its MAC address
-                mirror_data.erspan_action.dmac = ;
-            }
-            mirror_data.erspan_action.truncate_len = spec->snap_len;
-            //mirror_data.erspan_action.smac = ;
-            //mirror_data.erspan_action.sip = ;
-            //mirror_data.erspan_action.dip = ;
-#endif
+            mirror_data.erspan_action.nexthop_type =
+                ((mapping_impl *)(mapping->impl()))->nexthop_type();
+            mirror_data.erspan_action.nexthop_id =
+                ((mapping_impl *)(mapping->impl()))->nexthop_id();
         }
         break;
 
@@ -229,15 +203,33 @@ mirror_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     return SDK_RET_OK;
 }
 
+void
+mirror_impl::fill_status_(pds_mirror_session_status_t *status) {
+}
+
+sdk_ret_t
+mirror_impl::fill_spec_(pds_mirror_session_spec_t *spec) {
+    return SDK_RET_INVALID_OP;
+}
+
 sdk_ret_t
 mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    uint16_t hw_id;
-    p4pd_error_t p4pd_ret;
-    mirror_actiondata_t mirror_data;
-    pds_mirror_session_key_t *mkey = (pds_mirror_session_key_t *)key;
-    pds_mirror_session_info_t *minfo = (pds_mirror_session_info_t *)info;
-    (void)api_obj;
+    //uint16_t hw_id;
+    //p4pd_error_t p4pd_ret;
+    //mirror_actiondata_t mirror_data;
+    sdk_ret_t ret;
+    pds_mirror_session_info_t *mirror_session_info = (pds_mirror_session_info_t *)info;
 
+    ret = fill_spec_(&mirror_session_info->spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read hardware spec tables for mirror session %s",
+                      api_obj->key2str().c_str());
+        return ret;
+    }
+    fill_status_(&mirror_session_info->status);
+    return SDK_RET_OK;
+
+#if 0
     hw_id = mkey->id - 1;
     if ((mirror_impl_db()->session_bmap_ & (1 << hw_id)) == 0) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
@@ -276,6 +268,7 @@ mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         return sdk::SDK_RET_INVALID_OP;
     }
     return SDK_RET_OK;
+#endif
 }
 
 /// \@}

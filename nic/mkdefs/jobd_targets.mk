@@ -178,7 +178,7 @@ jobd/dol/apollo/rfc: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apollo/mirror
 jobd/dol/apollo/mirror: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mirror --feature mirror
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mirror --feature mirror
 
 .PHONY: jobd/apollo/pds_scale_test_mock
 jobd/apollo/pds_scale_test_mock: ${JOBD_PREREQS}

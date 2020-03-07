@@ -3210,7 +3210,7 @@ static inline sdk_ret_t
 pds_mirror_session_api_spec_to_proto (pds::MirrorSessionSpec *proto_spec,
                                       const pds_mirror_session_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_snaplen(api_spec->snap_len);
     switch (api_spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
@@ -3218,7 +3218,8 @@ pds_mirror_session_api_spec_to_proto (pds::MirrorSessionSpec *proto_spec,
             pds::RSpanSpec *proto_rspan = proto_spec->mutable_rspanspec();
             pds_encap_to_proto_encap(proto_rspan->mutable_encap(),
                                      &api_spec->rspan_spec.encap);
-            proto_rspan->set_interfaceid(api_spec->rspan_spec.interface);
+            proto_rspan->set_uplinkif(api_spec->rspan_spec.uplink_if.id,
+                                      PDS_MAX_KEY_LEN);
         }
         break;
 
@@ -3279,7 +3280,7 @@ static inline sdk_ret_t
 pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
                                       const pds::MirrorSessionSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->snap_len = proto_spec.snaplen();
     if (proto_spec.has_rspanspec()) {
         api_spec->type = PDS_MIRROR_SESSION_TYPE_RSPAN;
@@ -3296,8 +3297,8 @@ pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
                           api_spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
-        api_spec->rspan_spec.interface =
-            proto_spec.rspanspec().interfaceid();
+        pds_obj_key_proto_to_api_spec(&api_spec->rspan_spec.uplink_if,
+                                      proto_spec.rspanspec().uplinkif());
     } else if (proto_spec.has_erspanspec()) {
         if (!proto_spec.erspanspec().has_srcip()) {
             PDS_TRACE_ERR("Source IP missing in mirror session {} spec",

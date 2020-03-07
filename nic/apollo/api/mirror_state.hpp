@@ -38,7 +38,6 @@ public:
      /// \return pointer to the allocated mirror session, NULL if no memory
     mirror_session *alloc(void);
 
-#if 0
     /// \brief    insert given mirror session instance into the db
     /// \param[in] ms    mirror session to be added to the db
     /// \return   SDK_RET_OK on success, failure status code on error
@@ -49,17 +48,20 @@ public:
     /// \return    pointer to the removed mirror session  instance or NULL,
     ///            if not found
     mirror_session *remove(mirror_session *ms);
-#endif
 
     /// \brief      free mirror session  instance back to slab
     /// \param[in]  mirror session pointer to the allocated mirror session
     void free(mirror_session *ms);
 
-#if 0
     /// \brief     lookup a mirror session in database given the key
     /// \param[in] key mirror session key
-    mirror_session *find(pds_mirror_session_key_t *key) const;
-#endif
+    mirror_session *find(pds_obj_key_t *key) const;
+
+    /// \brief API to walk all the db elements
+    /// \param[in] walk_cb    callback to be invoked for every node
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -75,7 +77,8 @@ private:
     friend class mirror_session;
 
 private:
-    slab    *mirror_session_slab_;    ///< slab to allocate mirror session entry
+    mirror_session *db_[PDS_MAX_MIRROR_SESSION];
+    slab *mirror_session_slab_;    ///< slab to allocate mirror session entry
 };
 
 /// \@}    // end of PDS_MIRROR_SESSION_STATE

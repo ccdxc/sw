@@ -16,8 +16,8 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
                          const pds::NexthopRequest *proto_req,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_nexthop_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -75,8 +75,8 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
                          const pds::NexthopRequest *proto_req,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_nexthop_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -134,8 +134,8 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
                          const pds::NexthopDeleteRequest *proto_req,
                          pds::NexthopDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -190,8 +190,6 @@ NhSvcImpl::NexthopGet(ServerContext *context,
     sdk_ret_t ret;
     pds_obj_key_t key = { 0 };
     pds_nexthop_info_t info = { 0 };
-
-    PDS_TRACE_VERBOSE("Nexthop Get Received")
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);

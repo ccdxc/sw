@@ -36,41 +36,9 @@ mirror_impl::factory(pds_mirror_session_spec_t *spec) {
 }
 
 void
-mirror_impl::soft_delete(mirror_impl *impl) {
+mirror_impl::destroy(mirror_impl *impl) {
     impl->~mirror_impl();
     mirror_impl_db()->free(impl);
-}
-
-mirror_impl *
-mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
-    mirror_impl *impl;
-    p4pd_error_t p4pd_ret;
-    uint32_t hw_id = key->id - 1;
-    mirror_actiondata_t mirror_data = { 0 };
-
-    if (hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
-        return NULL;
-    }
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
-                                       &mirror_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u",
-                      key->id, hw_id);
-        return NULL;
-    }
-
-    impl = mirror_impl_db()->alloc();
-    if (unlikely(impl == NULL)) {
-        return NULL;
-    }
-    new (impl) mirror_impl();
-    impl->hw_id_ = hw_id;
-    return impl;
-}
-
-void
-mirror_impl::destroy(mirror_impl *impl) {
-    mirror_impl::soft_delete(impl);
 }
 
 sdk_ret_t
@@ -105,6 +73,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     tep_entry *tep;
     mac_addr_t mac;
+    if_entry *intf;
     pds_obj_key_t tep_key;
     p4pd_error_t p4pd_ret;
     mapping_entry *mapping;
@@ -116,8 +85,10 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         mirror_data.action_id = MIRROR_RSPAN_ID;
+        intf = if_find(&spec->rspan_spec.uplink_if);
+        SDK_ASSERT(intf->type() == PDS_IF_TYPE_ETH);
         mirror_data.rspan_action.tm_oport =
-            g_pds_state.catalogue()->ifindex_to_tm_port(spec->rspan_spec.interface);
+            g_pds_state.catalogue()->ifindex_to_tm_port(intf->ifindex());
         mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
         mirror_data.rspan_action.truncate_len = spec->snap_len;
         break;
@@ -210,30 +181,29 @@ mirror_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
 sdk_ret_t
 mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    uint16_t hw_id;
     p4pd_error_t p4pd_ret;
     mirror_actiondata_t mirror_data;
-    uint16_t hw_id;
-    pds_mirror_session_key_t *mkey = (pds_mirror_session_key_t *)key;
+    pds_obj_key_t *mkey = (pds_obj_key_t *)key;
     pds_mirror_session_info_t *minfo = (pds_mirror_session_info_t *)info;
-    (void)api_obj;
+    mirror_session *ms = (mirror_session *)api_obj;
 
-    hw_id = mkey->id-1;
+    hw_id = this->hw_id_;
     if ((mirror_impl_db()->session_bmap_ & (1 << hw_id)) == 0) {
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
                                       &mirror_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u", mkey->id);
+        PDS_TRACE_ERR("Failed to read mirror session %s at idx %u", mkey->str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
-    minfo->spec.key.id = mkey->id;
+    minfo->spec.key = *mkey;
     switch (mirror_data.action_id) {
     case MIRROR_RSPAN_ID:
         minfo->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         minfo->spec.snap_len = mirror_data.rspan_action.truncate_len;
-        minfo->spec.rspan_spec.interface =
-            g_pds_state.catalogue()->tm_port_to_ifindex(mirror_data.rspan_action.tm_oport);
+        minfo->spec.rspan_spec.uplink_if = ms->rspan_uplink_if();
         minfo->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
         minfo->spec.rspan_spec.encap.val.vlan_tag =
             mirror_data.rspan_action.ctag;

@@ -13,7 +13,7 @@ DryRunSanity mplsoudp networking
 DryRunSanity vxlan networking
 DryRunSanity lpm lpm
 DryRunSanity rfc rfc
-DryRunSanity mirror mirror
+#DryRunSanity mirror mirror
 
 # end of script
 clean_exit

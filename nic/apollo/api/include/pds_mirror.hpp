@@ -23,7 +23,7 @@
 
 /// \brief    RSPAN configuration
 typedef struct pds_rspan_spec_s {
-    pds_ifindex_t interface;    ///< outgoing interface
+    pds_obj_key_t uplink_if;    ///< outgoing uplink interface
     pds_encap_t encap;          ///< encap details
 } __PACK__ pds_rspan_spec_t;
 
@@ -31,8 +31,12 @@ typedef struct pds_rspan_spec_s {
 typedef struct pds_erspan_spec_s {
     pds_obj_key_t vpc;                ///< vpc of the destination IP
     union {
-        pds_obj_key_t tep;            ///< tep ID of ERSPAN destination
-        pds_obj_key_t mapping;        ///< local/remote mapping destination
+        ///< ERSPAN destination is underlay TEP (vpc is underlay VPC in
+        ///< this case)
+        pds_obj_key_t tep;
+        ///< ERSPAN destination is local or remote mapping IP (vpc is
+        ///< overlay IP in this case)
+        pds_obj_key_t mapping;
     };
     ip_addr_t src_ip;                 ///< IP address of ERSPAN source
     uint32_t dscp;                    ///< DSCP value to use in the packet
@@ -48,7 +52,7 @@ typedef enum pds_mirror_session_type_e {
 
 /// \brief    mirror session configuration
 typedef struct pds_mirror_session_spec_s {
-    pds_mirror_session_key_t key;         ///< key of the mirror session
+    pds_obj_key_t key;                    ///< key of the mirror session
     pds_mirror_session_type_t type;       ///< mirror session type
     uint16_t snap_len;                    ///< max len. of pkt mirrored
     union {
@@ -79,11 +83,27 @@ typedef struct pds_mirror_session_info_s {
 sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_t *spec,
                                     pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+/// \brief    read mirror session information
+/// \param[in] key    key of the mirror session
+/// \param[out] info    mirror session information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_mirror_session_read(pds_obj_key_t *key,
+                                  pds_mirror_session_info_t *info);
+
+typedef void (*mirror_session_read_cb_t)(const pds_mirror_session_info_t *info, void *ctxt);
+
+/// \brief    read all mirror session information
+/// \param[in]  read_cb    callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_mirror_session_read_all(mirror_session_read_cb_t read_cb,
+                                      void *ctxt);
+
 /// \brief read mirror session
-/// \param[in] key    pointer to spec
+/// \param[in] key    pointer to mirror session key
 /// \param[out] info  mirror session information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_read(pds_mirror_session_key_t *key,
+sdk_ret_t pds_mirror_session_read(pds_obj_key_t *key,
                                   pds_mirror_session_info_t *info);
 
 /// \brief    update mirror session
@@ -97,7 +117,7 @@ sdk_ret_t pds_mirror_session_update(pds_mirror_session_spec_t *spec,
 /// \param[in] key    mirror session key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mirror_session_delete(pds_mirror_session_key_t *key,
+sdk_ret_t pds_mirror_session_delete(pds_obj_key_t *key,
                                     pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

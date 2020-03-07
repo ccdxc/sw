@@ -106,6 +106,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return mapping_entry::build(&api_ctxt->api_params->mapping_spec.key);
 
+#if 0
     case OBJ_ID_MIRROR_SESSION:
         // mirror is a stateless object, so we need to construct the object
         // from the datapath tables
@@ -113,6 +114,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
             return mirror_session::build(&api_ctxt->api_params->mirror_session_key);
         }
         return mirror_session::build(&api_ctxt->api_params->mirror_session_spec.key);
+#endif
 
     case OBJ_ID_SVC_MAPPING:
         // service mapping is a stateless object, so we need to construct the
@@ -175,9 +177,11 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
         mapping_entry::soft_delete((mapping_entry *)api_obj);
         break;
 
+#if 0
     case OBJ_ID_MIRROR_SESSION:
         mirror_session::soft_delete((mirror_session *)api_obj);
         break;
+#endif
 
     case OBJ_ID_SVC_MAPPING:
         svc_mapping::soft_delete((svc_mapping *)api_obj);
@@ -397,6 +401,11 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_spec.key);
 
     case OBJ_ID_MIRROR_SESSION:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return mirror_session_db()->find(&api_ctxt->api_params->mirror_session_key);
+        }
+        return mirror_session_db()->find(&api_ctxt->api_params->mirror_session_spec.key);
+
     case OBJ_ID_VPC_PEER:
         return NULL;
 
@@ -450,6 +459,9 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_MIRROR_SESSION:
+        api_obj = mirror_session_db()->find((pds_obj_key_t *)key);;
+        break;
+
     case OBJ_ID_METER:
         PDS_TRACE_ERR("find_obj method no implemented for obj id %u\n", obj_id);
         break;
@@ -509,7 +521,6 @@ bool
 api_base::stateless(obj_id_t obj_id) {
     switch (obj_id) {
     case OBJ_ID_MAPPING:
-    case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_SVC_MAPPING:
     case OBJ_ID_VPC_PEER:
     case OBJ_ID_NAT_PORT_BLOCK:

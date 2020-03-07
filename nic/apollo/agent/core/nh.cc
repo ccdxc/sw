@@ -8,22 +8,12 @@
 
 namespace core {
 
-static inline sdk_ret_t
-nh_create_validate (pds_nexthop_spec_t *spec)
-{
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 nh_create (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
-    if ((ret = nh_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create nh {}, err {}", spec->key.str(), ret);
-        return ret;
-    }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create nh {}, err {}",
@@ -34,22 +24,12 @@ nh_create (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
     return SDK_RET_OK;
 }
 
-static inline sdk_ret_t
-nh_update_validate (pds_obj_key_t *key, pds_nexthop_spec_t *spec)
-{
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 nh_update (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
-    if ((ret = nh_update_validate(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update nh {}, err {}", spec->key.str(), ret);
-        return ret;
-    }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update nh {}, err {}",

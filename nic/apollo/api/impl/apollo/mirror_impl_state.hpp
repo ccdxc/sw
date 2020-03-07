@@ -47,7 +47,7 @@ public:
     /// \param[in]  key   pointer to mirror session key
     /// \param[out] hw_id pointer where allocated h/w id needs to be stored
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t alloc_hw_id(pds_mirror_session_key_t *key, uint16_t *hw_id);
+    sdk_ret_t alloc_hw_id(pds_obj_key_t *key, uint16_t *hw_id);
 
     /// \brief      free h/w mirror table entry given its index
     /// \param[in]  hw_id h/w entry index

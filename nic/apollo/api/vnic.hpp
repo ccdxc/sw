@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __VNIC_HPP__
-#define __VNIC_HPP__
+#ifndef __API_VNIC_HPP__
+#define __API_VNIC_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -373,4 +373,4 @@ private:
 
 using api::vnic_entry;
 
-#endif    // __VNIC_HPP__
+#endif    // __API_VNIC_HPP__

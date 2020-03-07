@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -18,7 +19,7 @@ import (
 )
 
 var (
-	mirrorsessionID uint32
+	mirrorsessionID string
 )
 
 var mirrorSessionShowCmd = &cobra.Command{
@@ -31,7 +32,7 @@ var mirrorSessionShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(mirrorSessionShowCmd)
 	mirrorSessionShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	mirrorSessionShowCmd.Flags().Uint32VarP(&mirrorsessionID, "id", "i", 0, "Specify Mirror session ID")
+	mirrorSessionShowCmd.Flags().StringVarP(&mirrorsessionID, "id", "i", "", "Specify Mirror session ID")
 }
 
 func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -54,12 +55,12 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Mirror session
 		req = &pds.MirrorSessionGetRequest{
-			Id: []uint32{mirrorsessionID},
+			Id: [][]byte{uuid.FromStringOrNil(mirrorsessionID).Bytes()},
 		}
 	} else {
 		// Get all Mirror sessions
 		req = &pds.MirrorSessionGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -96,14 +97,14 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printMirrorSessionRspanHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 84)
 	rspanLine := strings.Repeat(" ", 23)
 	rspanLine += "RSPAN SESSIONS"
 	rspanLine += strings.Repeat(" ", 23)
 	fmt.Println(hdrLine)
 	fmt.Println(rspanLine)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
+	fmt.Printf("%-6s%-10s%-10s%-16s%-40s\n",
 		"ID", "SpanType", "snapLen", "Encap", "Interface")
 	fmt.Println(hdrLine)
 }
@@ -131,10 +132,10 @@ func printRspanMirrorSession(ms *pds.MirrorSession) {
 	}
 	if spanTypeStr == "RSPAN" {
 		encapStr := utils.EncapToString(spec.GetRspanSpec().GetEncap())
-		fmt.Printf("%-6d%-10s%-10d%-16s%-16s\n",
+		fmt.Printf("%-6d%-10s%-10d%-16s%-40s\n",
 			spec.GetId(), spanTypeStr,
 			spec.GetSnapLen(), encapStr,
-			ifIndexToPortIdStr(spec.GetRspanSpec().GetInterfaceId()))
+			uuid.FromBytesOrNil(spec.GetRspanSpec().GetUplinkIf()))
 	}
 }
 

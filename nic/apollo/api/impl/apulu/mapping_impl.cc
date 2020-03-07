@@ -132,7 +132,6 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     if (ret != SDK_RET_OK) {
         return NULL;
     }
-
     is_local = (mapping_data.nexthop_type == NEXTHOP_TYPE_NEXTHOP);
 
     // read local mapping table, this also tells us if there are public
@@ -148,8 +147,15 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         if (ret != SDK_RET_OK) {
             return NULL;
         }
+        // TODO: uncomment once p4 has support for this !!
+#if 0
+        if (local_mapping_data.ip_type != IP_TYPE_OVERLAY) {
+            // this is either public IP or some other type of IP
+            return NULL;
+        }
+#endif
         public_ip_valid = (local_mapping_data.xlate_id !=
-                               PDS_IMPL_RSVD_NAT_HW_ID);
+                               PDS_IMPL_RSVD_NAT_HW_ID) ? true : false;
     }
 
     // if public mapping exists, NAT table provides the public IP
@@ -191,6 +197,12 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     }
     impl->vpc_hw_id_ = ((vpc_impl *)vpc->impl())->hw_id();
     impl->subnet_hw_id_ = mapping_data.egress_bd_id;
+    if (mapping_data.nexthop_valid) {
+        impl->nexthop_type_ = mapping_data.nexthop_type;
+        impl->nexthop_id_ = mapping_data.nexthop_id;
+    } else {
+        impl->nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+    }
     if (public_ip_valid) {
         mapping->set_public_ip(&public_ip);
         impl->to_public_ip_nat_idx_ = local_mapping_data.xlate_id;

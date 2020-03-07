@@ -15,11 +15,11 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_mirror_session_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_mirror_session_spec_t *api_spec;
+    pds_mirror_session_spec_t api_spec;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -42,20 +42,14 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_mirror_session_spec_t *)
-                       core::agent_state::state()->mirror_session_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        key.id = request.id();
-        ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
+        pds_obj_key_proto_to_api_spec(&key, request.id());
+        ret = pds_mirror_session_proto_to_api_spec(&api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
-            core::agent_state::state()->mirror_session_slab()->free(api_spec);
             goto end;
         }
-        ret = core::mirror_session_create(&key, api_spec, bctxt);
+        ret = core::mirror_session_create(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -84,11 +78,11 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_mirror_session_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_mirror_session_spec_t *api_spec;
+    pds_mirror_session_spec_t api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -111,20 +105,14 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_mirror_session_spec_t *)
-                       core::agent_state::state()->mirror_session_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        key.id = request.id();
-        ret = pds_mirror_session_proto_to_api_spec(api_spec, request);
+        pds_obj_key_proto_to_api_spec(&key, request.id());
+        ret = pds_mirror_session_proto_to_api_spec(&api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
-            core::agent_state::state()->mirror_session_slab()->free(api_spec);
             goto end;
         }
-        ret = core::mirror_session_update(&key, api_spec, bctxt);
+        ret = core::mirror_session_update(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -151,8 +139,8 @@ MirrorSvcImpl::MirrorSessionDelete(ServerContext *context,
                                    const pds::MirrorSessionDeleteRequest *proto_req,
                                    pds::MirrorSessionDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_mirror_session_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -176,7 +164,7 @@ MirrorSvcImpl::MirrorSessionDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::mirror_session_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -204,7 +192,7 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
                                 const pds::MirrorSessionGetRequest *proto_req,
                                 pds::MirrorSessionGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_mirror_session_key_t key;
+    pds_obj_key_t key;
     pds_mirror_session_info_t info;
 
     if (proto_req == NULL) {
@@ -217,12 +205,13 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::mirror_session_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             break;
         }
+        // TODO: why is this not like VPCGet() ?
         auto response = proto_rsp->add_response();
         pds_mirror_session_api_spec_to_proto(response->mutable_spec(), &info.spec);
         pds_mirror_session_api_status_to_proto(response->mutable_status(),
