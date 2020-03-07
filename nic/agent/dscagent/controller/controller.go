@@ -623,11 +623,23 @@ func (c *API) netIfWorker(ctx context.Context) {
 			log.Infof("Got event [%v]", ev)
 			switch ev.Oper {
 			case types.Create:
-				resp, err := ifClient.CreateInterface(nctx, &ev.Intf)
-				if err != nil {
-					log.Errorf("create interface failed (%s)", err)
+				// block till upadte succeeds
+				now := time.Now()
+				retries := 0
+				for {
+					resp, err := ifClient.CreateInterface(nctx, &ev.Intf)
+					if err != nil && !strings.Contains(err.Error(), "AlreadyExists") {
+						if time.Since(now) > time.Second*10 {
+							log.Errorf("create interface failed (%s)", err)
+							now = time.Now()
+						}
+						retries++
+						time.Sleep(100 * time.Millisecond)
+						continue
+					}
+					log.Infof("Created interface [%v](%d retries) [%v]", ev.Intf.Name, retries, resp)
+					break
 				}
-				log.Infof("Created interface [%v]", resp)
 			case types.Update:
 				ifev := netproto.InterfaceEvent{
 					EventType: api.EventType_UpdateEvent,
