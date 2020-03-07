@@ -433,6 +433,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     if (lo) {
     proto_spec->set_keepalive(10);
     proto_spec->set_holdtime(30);
+    proto_spec->set_ttl(3);
     } else {
     proto_spec->set_keepalive(3);
     proto_spec->set_holdtime(9);

@@ -197,6 +197,8 @@ message BGPPeerSpec {
   uint32           KeepAlive    = 11 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
   // MD5 authentication
   bytes            Password     = 12 [(venice.pdsaFields) = {Field: "password", IgnoreIfEmpty: true}];
+  // TTL
+  uint32           TTL          = 13 [(venice.pdsaFields) = {Field: "ttl"}];
 }
 
 // BGP peer status

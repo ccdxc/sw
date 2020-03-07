@@ -162,6 +162,8 @@ message BGPPeerSpec {
   uint32           KeepAlive    = 11;
   // MD5 authentication
   bytes            Password     = 12;
+  // TTL
+  uint32           TTL          = 13;
 }
 
 // BGP peer status

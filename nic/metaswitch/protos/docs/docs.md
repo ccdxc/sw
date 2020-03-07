@@ -2656,6 +2656,7 @@ BGP peer configurations
 | HoldTime | [uint32](#uint32) |  | BGP session holdtime timer in seconds |
 | KeepAlive | [uint32](#uint32) |  | BGP session keepalive timer in seconds |
 | Password | [bytes](#bytes) |  | MD5 authentication |
+| TTL | [uint32](#uint32) |  | TTL |
 
 
 
