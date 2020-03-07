@@ -174,6 +174,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			if err := c.Stop(); err != nil {
 				log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 			}
+			c.Wait()
 		}
 
 		c.factory = rpckit.NewClientFactory(c.InfraAPI.GetDscName())

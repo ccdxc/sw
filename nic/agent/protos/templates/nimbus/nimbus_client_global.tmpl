@@ -300,8 +300,16 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 	// make sure rpc client is good
 	if client.rpcClient == nil || client.rpcClient.ClientConn == nil || client.rpcClient.ClientConn.GetState() != connectivity.Ready {
 		log.Errorf("RPC client is disconnected. Exiting watch")
-		return nil
+		if client.rpcClient != nil && client.rpcClient.ClientConn != nil {
+			log.Errorf("RPC client  state %v %v", client.rpcClient, client.rpcClient.ClientConn.GetState())
+		}
+		if client.rpcClient != nil  && client.rpcClient.ClientConn != nil {
+				log.Errorf("RPC client Connection %v", client.rpcClient.ClientConn)
+		} else {
+				log.Errorf("RPC client Connection is nil")
+		}
 
+		return fmt.Errorf("RPC client disconnected")
 	}
 
 	aggKinds := api.AggWatchOptions{}
