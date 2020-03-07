@@ -334,34 +334,18 @@ func (c *API) Start(ctx context.Context) error {
 }
 
 func (c *API) WatchObjects(kinds []string) {
-	for {
-		if c.WatchCtx == nil {
-			log.Info("WatchCtx is not set yet")
-			time.Sleep(time.Minute)
-			continue
-		}
-		select {
-		case <-c.WatchCtx.Done():
-			log.Infof("Controller API: %s | Kinds: %s", types.InfoTSMWatcherDone, kinds)
-			return
-		default:
-		}
-		// Wait till nimbus client is appropriately instantiated.
-		if c.nimbusClient == nil {
-			time.Sleep(time.Minute)
-			continue
-		}
-		watchExited := make(chan error)
-		go func() {
-			log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
-			if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
-				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-				watchExited <- err
-			}
-		}()
-		err := <-watchExited
-		log.Infof("Watch for kinds: %v exited. | Err: %v", kinds, err)
+
+	if c.WatchCtx == nil {
+		log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
+		log.Info("WatchCtx is not set yet")
+		return
 	}
+
+	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
+	if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
+		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+	}
+	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, kinds)
 }
 
 // Stop cancels all watchers and closes all clients to venice controllers

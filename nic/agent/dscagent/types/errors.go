@@ -145,6 +145,7 @@ const (
 	InfoConnectedToTSM                  = Info("InfoConnectedToTSM")
 	InfoConnectedToTPM                  = Info("InfoConnectedToTPM")
 	InfoAggWatchStarted                 = Info("InfoAggWatchStarted")
+	InfoAggWatchStopped                 = Info("InfoAggWatchStopped")
 	InfoControllerReconnecting          = Info("InfoControllerReconnecting")
 	InfoPipelineInit                    = Info("InfoPipelineInit")
 	InfoDefaultUntaggedNetworkCreate    = Info("InfoDefaultUntaggedNetworkCreate")
