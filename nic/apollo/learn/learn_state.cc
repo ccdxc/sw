@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <unistd.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/dpdk/dpdk.hpp"
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
@@ -17,6 +18,7 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
+#include "nic/apollo/learn/learn_uio.hpp"
 
 namespace learn {
 
@@ -54,8 +56,23 @@ learn_state::lif_init_(void) {
     sdk_dpdk_params_t params;
     sdk_dpdk_device_params_t args;
     const char *lif_name = impl::learn_lif_name();
+    int count = 0;
 
     SDK_ASSERT(lif_name);
+
+    // wait for uio devices to come up
+    while (!uio_device_ready()) {
+        if (count >= UIO_DEV_SCAN_MAX_RETRY) {
+            PDS_TRACE_ERR("UIO device not created, asserting!!");
+            SDK_ASSERT(0);
+        }
+        if (0 == (count % 30)) {
+            PDS_TRACE_INFO("UIO device not created yet, retry count %d", count);
+        }
+        sleep(UIO_DEV_SCAN_INTERVAL);
+        count++;
+    }
+    PDS_TRACE_INFO("UIO device created, retry count %d", count);
 
     params.log_cb = learn_log;
     params.eal_init_list = "-n 4 --in-memory --file-prefix learn "

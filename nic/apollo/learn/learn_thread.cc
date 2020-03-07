@@ -177,10 +177,6 @@ learn_thread_init_fn (void *ctxt)
     static event::timer_t pkt_poll_timer;
     float pkt_poll_interval;
 
-    // wait for uio devices to come up
-    // TODO: get rid of sleep here
-    sleep(30);
-
     // initalize learn state and dpdk_device
     SDK_ASSERT(learn_db()->init() == SDK_RET_OK);
 

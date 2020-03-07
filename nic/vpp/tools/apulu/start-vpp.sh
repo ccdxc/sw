@@ -12,7 +12,21 @@ export CONFIG_PATH=$NIC_DIR/conf/
 
 ulimit -c unlimited
 
-# FIX ME AND REMOVE ME
-sleep 20
-
+counter=600
+start_vpp=0
+output=""
+while [ $counter -gt 0 ]
+do
+    output=$(cat /sys/class/uio/uio*/name | grep cpu_mnic0)
+    if [ $output == "cpu_mnic0" ]; then
+        start_vpp=1
+        break
+    fi
+    sleep 1
+    counter=$(( $counter - 1 ))
+done
+if [ $start_vpp == 0 ]; then
+    echo "UIO device not created, not starting VPP!!"
+    exit -1
+fi
 exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp_2_workers.conf

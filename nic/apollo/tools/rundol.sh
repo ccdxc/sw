@@ -65,6 +65,7 @@ function remove_stale_files () {
     rm -f $PDSPKG_TOPDIR/out.sh
     rm -f $PDSPKG_TOPDIR/conf/pipeline.json
     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
+    rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
     rm -rf /sysconfig/config0
 }
 
