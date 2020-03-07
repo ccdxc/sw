@@ -221,6 +221,7 @@ func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus
 
 // RegisterControllerAPI ensures the handles for controller API is appropriately set up
 func (i *IrisAPI) RegisterControllerAPI(controllerAPI types.ControllerAPI) {
+	log.Info("Setting the controller api")
 	i.ControllerAPI = controllerAPI
 }
 
@@ -1417,8 +1418,17 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	//ToDo: have to check for idemptonet calls??
 	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
 		go func() {
-			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"})
+			for {
+				if i.ControllerAPI == nil {
+					log.Info("Wait for controller registration")
+					time.Sleep(time.Second)
+					continue
+				}
+				i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"})
+				return
+			}
 		}()
+
 	}
 	// ToDO remove this commented out code
 	//if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {

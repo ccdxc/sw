@@ -335,6 +335,11 @@ func (c *API) Start(ctx context.Context) error {
 
 func (c *API) WatchObjects(kinds []string) {
 	for {
+		if c.WatchCtx == nil {
+			log.Info("WatchCtx is not set yet")
+			time.Sleep(time.Minute)
+			continue
+		}
 		select {
 		case <-c.WatchCtx.Done():
 			log.Infof("Controller API: %s | Kinds: %s", types.InfoTSMWatcherDone, kinds)
