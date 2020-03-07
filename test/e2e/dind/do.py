@@ -33,7 +33,7 @@ def makeNaplesFRU(containerIndex):
     with open(fruSrcFile, 'r') as f:
         fru = json.load(f)
         macAddr = fru['mac-address']
-        newMac = macAddr[:-2] + str(int(macAddr[-2:]) + containerIndex)
+        newMac = "%s%02x" % (macAddr[:-2], int(macAddr[-2:]) + containerIndex)
         fru['mac-address'] = newMac
         return json.dumps(fru)
 
@@ -160,7 +160,11 @@ class NaplesNode(Node):
         self.startCluster()
     def startNode(self):
         # expose Naples-REST port (9008) for naples instances on 15000+offset ...
-        ports_exposed = """ -p {}:9008 -p {}:8888""".format(exposedPortBase + 5000 + self.containerIndex, exposedPortBase + 5100 + self.containerIndex)
+        port1 = exposedPortBase + self.containerIndex + 5000
+        port2 = exposedPortBase + self.containerIndex + 6000
+        port3 = exposedPortBase + self.containerIndex + 7000
+        port4 = exposedPortBase + self.containerIndex + 8000
+        ports_exposed = """ -p {port1}:9008 -p {port2}:8888 -p {port3}:9007 -p {port4}:50054 """.format(port1=port1, port2=port2, port3=port3, port4=port4)
         if self.testMode == "TELEMETRY":
             self.setupCommon()
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
@@ -170,6 +174,10 @@ class NaplesNode(Node):
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/netagent" """.format(self.name))
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/nmd" """.format(self.name))
             runCommand("""docker exec {}  bash -c "cd /go && go install github.com/pensando/sw/nic/agent/cmd/tmagent" """.format(self.name))
+        elif self.testMode == "CLOUD_SIM":
+            # Naples sim's sysmgr.json or sysmgr_no_datapath.json will bring up all the services needed.
+            runCommand("""docker run --cap-add=NET_ADMIN --dns-search my.dummy -td {ports_exposed} -P -l pens -l pens-naples --network pen-dind-net --sysctl net.ipv6.conf.all.disable_ipv6=0 --ip {ip_addr} -v {src_dir}:/sw --rm --name {name} -h {name} pensando/naples:v1""".format(ports_exposed=ports_exposed, ip_addr=self.ipaddress, name=self.name, src_dir=src_dir))
+            runCommand("""docker exec {}  bash -c "ip link set eth0 down && sleep 1 && ip link set eth0 name oob_mnic0 && ip link set oob_mnic0 up" """.format(self.name))
         else:
             runCommand("""docker run --cap-add=NET_ADMIN --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
             runCommand("""docker exec {}  bash -c "echo exit 0 > /sbin/start-stop-daemon; chmod 700 /sbin/start-stop-daemon" """.format(self.name))
@@ -215,6 +223,9 @@ class NaplesNode(Node):
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
             runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent" """.format(self.name))
             runCommand("""docker exec -d {} tmagent &""".format(self.name))
+        elif self.testMode == "CLOUD_SIM":
+            # Nothing to do here because sysmgr brings up all the related processes. Wait for them to come up.
+            time.sleep(3)
         else:
             runCommand("""docker exec -d {} sh -c '/fakedelphihub > /var/log/pensando/delphihub.out.err.log 2>&1 &' """.format(self.name))
             runCommand("""docker exec -d {} sh -c '/fakehal > /var/log/pensando/fakehal.out.err.log 2>&1 &' """.format(self.name))
@@ -376,7 +387,7 @@ parser.add_argument("-vc_ip", type=str, default="192.168.30.100",help="vCenter I
 parser.add_argument("-num_naples", type=int, default=1, help="number of naples nodes")
 parser.add_argument("-num_quorum", type=int, default=1, help="number of quorum nodes")
 parser.add_argument("-num_nodes", type=int, default=1, help="number of venice nodes")
-parser.add_argument("-test_mode", type=str, default="MOCK", help="Specify Agent datapath mode.")
+parser.add_argument("-test_mode", type=str, default="MOCK", help="Specify Agent datapath mode.(Eg:HAL, TELEMETRY, MOCK, CLOUD_SIM")
 parser.add_argument("-configFile", default="tb_config.json", help="Configuration of the cluster")
 parser.add_argument("-custom_config_file", default="bin/venice-conf.json", help="custom Configuration of the cluster")
 parser.add_argument("-restart", action='store_true', default=False, help="restart venice components in existing Cluster by loading new Pensando code")
@@ -423,6 +434,11 @@ first_venice_ipstr = datastore.get("FirstVeniceIP",args.first_venice_ip)
 first_venice_ip = ipaddr.IPv4Address(first_venice_ipstr)
 first_naples_ipstr = datastore.get("FirstNaplesIP",args.first_naples_ip)
 first_naples_ip = ipaddr.IPv4Address(first_naples_ipstr)
+
+if test_mode == "CLOUD_SIM":
+    if runCommand("""docker inspect pensando/naples:v1 > /dev/null 2>&1""", ignore_error=True) == 1:
+	print "Please build naples sim image first: From nic docker/shell:\"make PIPELINE=apulu FLAVOR=-venice IGNORE_BUILD_PIPELINE=1 JOB_ID=1 jobd/e2e/naples-sim-image\""
+        sys.exit(1)
 
 quorumNames = []
 for i in range(1, num_quorum + 1):

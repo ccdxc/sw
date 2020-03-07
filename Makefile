@@ -639,6 +639,11 @@ e2e:
 	#./test/e2e/dind/do.py -delete
 
 e2e-cp:
+	if [ -z ${BYPASS_CLOUD_SIM} ]; then \
+		${MAKE} -C nic docker/naples-sim; \
+		tar xvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/; \
+		docker load -i nic/obj/images/naples-docker-v1.tgz; \
+	fi
 	if [ -z ${BYPASS_PEGASUS} ]; then \
 		$(MAKE) -C nic docker/pegasus; \
 	fi
