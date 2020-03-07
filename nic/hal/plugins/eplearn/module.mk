@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libplugin_ep_learn.lib
 MODULE_PIPELINE = iris gft
+MODULE_SOLIBS   = isc_dhcp
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/arp/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/dhcp/*.cc) \
