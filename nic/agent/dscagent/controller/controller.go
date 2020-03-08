@@ -336,9 +336,13 @@ func (c *API) Start(ctx context.Context) error {
 func (c *API) WatchObjects(kinds []string) {
 
 	if c.WatchCtx == nil {
-		log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
-		log.Info("WatchCtx is not set yet")
+		log.Infof("Controller API: AggWatch not started WatchCtx is not set | Kinds: %v", kinds)
 		return
+	}
+	if c.nimbusClient == nil {
+		log.Infof("Controller API: AggWatch not started Nimbus client is nil | Kinds: %v", kinds)
+		return
+
 	}
 
 	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)

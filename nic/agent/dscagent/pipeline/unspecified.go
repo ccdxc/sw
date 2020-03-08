@@ -136,7 +136,8 @@ func (i *FakeAgentAPI) PipelineInit() error {
 			}
 			log.Infof("Watch all objects")
 			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"})
-			return
+			log.Infof("Watchers stopped for all kinds")
+			time.Sleep(time.Minute)
 		}
 
 	}()

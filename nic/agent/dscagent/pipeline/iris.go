@@ -1417,18 +1417,30 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 
 	//ToDo: have to check for idemptonet calls??
 	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
-		go func() {
+		// Once we are in this mode, we should not stop this routine.
+		// On ctrler restart : WatchObjects will exit
+		//                     newNimbusClient will be recreated
+		//                      newWatchCtx witll be create in Start()
+		// repeated venice coordinates : GRPC will be closed in HandleVeniceCoordinates, and we will call start again
+		// Upgrade : Before watchCtx is set, ReplayConfigs calls HandleProfile and that setsup the watches. As npm sync will not result in change of object
+		// and we wil not setup new watchers.
+		insertionKinds := []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"}
+
+		log.Infof("Start InsertionMode Watcher")
+		startInsertionWatcher := func() {
 			for {
 				if i.ControllerAPI == nil {
 					log.Info("Wait for controller registration")
 					time.Sleep(time.Second)
 					continue
 				}
-				i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"})
-				return
+				log.Infof("AggWatchers Start for kinds %s", insertionKinds)
+				i.ControllerAPI.WatchObjects(insertionKinds)
+				log.Infof("Watchers stopped for kinds %s", insertionKinds)
+				time.Sleep(time.Minute)
 			}
-		}()
-
+		}
+		go startInsertionWatcher()
 	}
 	// ToDO remove this commented out code
 	//if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {

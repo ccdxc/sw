@@ -152,8 +152,10 @@ func (a *ApuluAPI) PipelineInit() error {
 				time.Sleep(time.Minute)
 				continue
 			}
+			log.Infof("AggWatchers Start for kinds %s", types.AllKinds)
 			a.ControllerAPI.WatchObjects(types.AllKinds)
-			return
+			log.Infof("AggWatchers Stop for kinds %s", types.AllKinds)
+			time.Sleep(time.Minute)
 		}
 
 	}()
