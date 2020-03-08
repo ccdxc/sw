@@ -86,7 +86,10 @@ public:
     ///           bitmap (and stash in the object context for later use)
     /// \param[in] obj_ctxt    transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override {
+        // all attrs are mutable in this object
+        return SDK_RET_OK;
+    }
 
     /// \brief        add all objects that may be affected if this object is
     ///               updated to framework's object dependency list
@@ -105,7 +108,11 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    api_obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override {
+        // all programming is done in the activation stage, as there is
+        // only one table for mirror object
+        return SDK_RET_OK;
+    }
 
     /// \brief          activate the epoch in the dataplane by programming
     ///                 stage 0 tables, if any
@@ -151,6 +158,10 @@ public:
     /// \return    key/id of the vnic object
     const pds_obj_key_t key(void) const { return key_; }
 
+    /// \brief     return the type of the mirror session
+    /// \return    type of the mirror session
+    const pds_mirror_session_type_t type(void) const { return type_; }
+
     /// \brief     return the uplink interface in RSPAN configuration
     /// \return    uplink interface in RSPAN configuration
     const pds_obj_key_t& rspan_interface(void) const { return rspan_.interface_; }
@@ -193,8 +204,8 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;                ///< mirror session keyA
-    pds_mirror_session_type_t type;    ///< mirror session type
+    pds_obj_key_t key_;                 ///< mirror session keyA
+    pds_mirror_session_type_t type_;    ///< mirror session type
     union {
         struct {
             /// uplink interface the rspanned packets go out on
@@ -213,7 +224,7 @@ private:
             };
         } erspan_;
     };
-    impl_base *impl_;                  ///< impl object instance
+    impl_base *impl_;                   ///< impl object instance
 
     ///< mirror_session_state is friend of mirror_session
     friend class mirror_session_state;

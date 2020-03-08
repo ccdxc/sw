@@ -140,22 +140,30 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
         } else {
             // TODO: should we validate mapping ?
             erspan_.mapping_ = spec->erspan_spec.mapping;
+            PDS_TRACE_ERR("ERSPAN to a overlay mapping is not supported");
+            return SDK_RET_INVALID_ARG;
         }
         break;
+
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
-        // TODO: validate uplink if ?
         intf = if_find(&spec->rspan_spec.interface);
-        if (intf == NULL) {
-            PDS_TRACE_ERR("Failed to find uplink interface %s in RSPAN %s "
-                          "config", spec->rspan_spec.interface.str(),
-                          spec->key.str());
-            return SDK_RET_INVALID_ARG;
-        }
-        if (intf->type() != PDS_IF_TYPE_ETH) {
-            PDS_TRACE_ERR("Invalid interface type %u in RSPAN config %s",
-                          spec->rspan_spec.interface.str(),
-                          spec->key.str());
-            return SDK_RET_INVALID_ARG;
+        if (intf) {
+            if ((intf->type() != PDS_IF_TYPE_ETH) &&
+                (intf->type() != PDS_IF_TYPE_UPLINK)) {
+                PDS_TRACE_ERR("Invalid interface type %u in RSPAN config %s, "
+                              "only eth and uplink interfaces are supported",
+                              spec->rspan_spec.interface.str(),
+                              spec->key.str());
+                return SDK_RET_INVALID_ARG;
+            }
+        } else {
+            // check if this is one of the lif types supported
+            if (lif_db()->find(&spec->rspan_spec.interface) == NULL) {
+                PDS_TRACE_ERR("Failed to find interface/lif %s in RSPAN %s "
+                              "config", spec->rspan_spec.interface.str(),
+                              spec->key.str());
+                return SDK_RET_INVALID_ARG;
+            }
         }
         if ((spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_NONE) &&
             (spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_DOT1Q)) {
@@ -167,11 +175,13 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
         rspan_.interface_ = spec->rspan_spec.interface;
         rspan_.encap_ = spec->rspan_spec.encap;
         break;
+
     default:
         PDS_TRACE_ERR("Unknown mirror session type %u", spec->type);
         return SDK_RET_INVALID_ARG;
     }
     memcpy(&this->key_, &spec->key, sizeof(key_));
+    this->type_ = spec->type;
     return SDK_RET_OK;
 }
 
@@ -183,23 +193,6 @@ mirror_session::program_create(api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 mirror_session::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
-}
-
-// TODO: handle updates
-sdk_ret_t
-mirror_session::compute_update(api_obj_ctxt_t *obj_ctxt) {
-#if 0
-    pds_mirror_session_spec_t *spec;
-
-    spec = &obj_ctxt->api_params->mirror_session_spec;
-#endif
-    return SDK_RET_INVALID_OP;
-}
-
-// TODO: fixme
-sdk_ret_t
-mirror_session::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

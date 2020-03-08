@@ -8,6 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -17,7 +19,6 @@
 #include "nic/apollo/api/impl/apulu/mirror_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {
 namespace impl {
@@ -93,9 +94,12 @@ mirror_impl::nuke_resources(api_base *api_obj) {
 
 #define rspan_action     action_u.mirror_rspan
 #define erspan_action    action_u.mirror_erspan
+#define lspan_action     action_u.mirror_lspan
 sdk_ret_t
 mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
                               pds_mirror_session_spec_t *spec) {
+    lif_impl *lif;
+    if_entry *intf;
     vpc_entry *vpc;
     tep_entry *tep;
     p4pd_error_t p4pd_ret;
@@ -104,10 +108,39 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
 
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
-        mirror_data.action_id = MIRROR_RSPAN_ID;
         // TODO: what nh are we supposed to program here ?
-        mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
-        mirror_data.rspan_action.truncate_len = spec->snap_len;
+        intf = if_find(&spec->rspan_spec.interface);
+        if (intf) {
+            intf = if_entry::eth_if(intf);
+            mirror_data.action_id = MIRROR_RSPAN_ID;
+            mirror_data.rspan_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+            // TODO: allocate one nh per eth if and use it here
+            //mirror_data.rspan_action.nexthop_id = intf->nh_idx();
+            mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
+            mirror_data.rspan_action.truncate_len = spec->snap_len;
+        } else {
+            // local span case, get the lif and use its nexthop id
+            lif = lif_impl_db()->find(&spec->rspan_spec.interface);
+            mirror_data.action_id = MIRROR_LSPAN_ID;
+            mirror_data.lspan_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+            switch (lif->type()) {
+            case sdk::platform::LIF_TYPE_HOST:
+            case sdk::platform::LIF_TYPE_MNIC_OOB_MGMT:
+            case sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT:
+                mirror_data.lspan_action.nexthop_id = lif->nh_idx();
+                mirror_data.rspan_action.truncate_len = spec->snap_len;
+                break;
+            default:
+                // blackhole if some other type of lif is provided
+                PDS_TRACE_ERR("Unsupported lif type %u in mirror session %s, ",
+                              "blackholing mirrored traffic",
+                              lif->type(), spec->key.str());
+                mirror_data.lspan_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+                mirror_data.lspan_action.nexthop_id =
+                    PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+                break;
+            }
+        }
         break;
 
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
