@@ -23,7 +23,7 @@
 
 /// \brief    RSPAN configuration
 typedef struct pds_rspan_spec_s {
-    pds_obj_key_t uplink_if;    ///< outgoing uplink interface
+    pds_obj_key_t interface;    ///< outgoing (lif/uplink) interface
     pds_encap_t encap;          ///< encap details
 } __PACK__ pds_rspan_spec_t;
 
@@ -45,8 +45,8 @@ typedef struct pds_erspan_spec_s {
 
 /// \brief    mirror session type
 typedef enum pds_mirror_session_type_e {
-    PDS_MIRROR_SESSION_TYPE_RSPAN  = 0,    ///< RSPAN session type
-    PDS_MIRROR_SESSION_TYPE_ERSPAN = 1,    ///< ERSPAN session type
+    PDS_MIRROR_SESSION_TYPE_RSPAN  = 0,    ///< RSPAN mirror session type
+    PDS_MIRROR_SESSION_TYPE_ERSPAN = 1,    ///< ERSPAN mirror session type
     PDS_MIRROR_SESSION_TYPE_MAX    = PDS_MIRROR_SESSION_TYPE_ERSPAN,
 } pds_mirror_session_type_t;
 

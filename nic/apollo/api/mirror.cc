@@ -144,16 +144,16 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
         break;
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         // TODO: validate uplink if ?
-        intf = if_find(&spec->rspan_spec.uplink_if);
+        intf = if_find(&spec->rspan_spec.interface);
         if (intf == NULL) {
             PDS_TRACE_ERR("Failed to find uplink interface %s in RSPAN %s "
-                          "config", spec->rspan_spec.uplink_if.str(),
+                          "config", spec->rspan_spec.interface.str(),
                           spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
         if (intf->type() != PDS_IF_TYPE_ETH) {
             PDS_TRACE_ERR("Invalid interface type %u in RSPAN config %s",
-                          spec->rspan_spec.uplink_if.str(),
+                          spec->rspan_spec.interface.str(),
                           spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
@@ -164,7 +164,7 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
                           spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        rspan_.uplink_if_ = spec->rspan_spec.uplink_if;
+        rspan_.interface_ = spec->rspan_spec.interface;
         rspan_.encap_ = spec->rspan_spec.encap;
         break;
     default:
@@ -177,7 +177,6 @@ mirror_session::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 mirror_session::program_create(api_obj_ctxt_t *obj_ctxt) {
-    // TODO: may not need this at all !!
     return impl_->program_hw(this, obj_ctxt);
 }
 

@@ -20,10 +20,12 @@ service MirrorSvc {
 
 // RspanSpec is the configuration specification for RSPAN
 message RSpanSpec {
-  // uplink/front panel interface to send RSPAN pkts on
-  bytes       UplinkIf    = 1;
+  // interface to send RSPAN pkts on
+  // NOTE: uplink interfaces and host interfaces (aka. lif) are supported
+  //       currently
+  bytes       Interface = 1;
   // RSPAN encap, only VLAN encapsulation supported here
-  types.Encap Encap       = 2;
+  types.Encap Encap     = 2;
 }
 
 // ERSpanSpec is the configuration specification for ERSPAN

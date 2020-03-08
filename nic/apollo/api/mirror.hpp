@@ -153,7 +153,7 @@ public:
 
     /// \brief     return the uplink interface in RSPAN configuration
     /// \return    uplink interface in RSPAN configuration
-    const pds_obj_key_t& rspan_uplink_if(void) const { return rspan_.uplink_if_; }
+    const pds_obj_key_t& rspan_interface(void) const { return rspan_.interface_; }
 
     /// \brief     return the encap in RSPAN configuration
     /// \return    encap in RSPAN configuration
@@ -198,7 +198,7 @@ private:
     union {
         struct {
             /// uplink interface the rspanned packets go out on
-            pds_obj_key_t uplink_if_;
+            pds_obj_key_t interface_;
             /// encap on the spanned packets (only .1q is supported)
             pds_encap_t encap_;
         } rspan_;

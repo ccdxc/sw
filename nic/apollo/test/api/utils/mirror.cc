@@ -67,7 +67,7 @@ mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
     spec->type = type;
     spec->snap_len = snap_len;
     if (type  == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        spec->rspan_spec.uplink_if = interface;
+        spec->rspan_spec.interface = interface;
         memcpy(&spec->rspan_spec.encap, &encap, sizeof(pds_encap_t));
     } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         spec->erspan_spec.vpc = vpc;
@@ -95,7 +95,7 @@ mirror_session_feeder::spec_compare(
 
     if (spec->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
         // validate rspan spec
-        if ((spec->rspan_spec.uplink_if != interface) ||
+        if ((spec->rspan_spec.interface != interface) ||
             (spec->rspan_spec.encap.type != encap.type) ||
             (spec->rspan_spec.encap.val.vlan_tag != encap.val.vlan_tag))
             return false;

@@ -135,7 +135,7 @@ func printRspanMirrorSession(ms *pds.MirrorSession) {
 		fmt.Printf("%-6d%-10s%-10d%-16s%-40s\n",
 			spec.GetId(), spanTypeStr,
 			spec.GetSnapLen(), encapStr,
-			uuid.FromBytesOrNil(spec.GetRspanSpec().GetUplinkIf()))
+			uuid.FromBytesOrNil(spec.GetRspanSpec().GetInterface()))
 	}
 }
 

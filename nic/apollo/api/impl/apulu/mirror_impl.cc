@@ -91,50 +91,17 @@ mirror_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#if 0
-mirror_impl *
-mirror_impl::build(pds_mirror_session_key_t *key, mirror_session *session) {
-    mirror_impl *impl;
-    p4pd_error_t p4pd_ret;
-    uint32_t hw_id = key->id - 1;
-    mirror_actiondata_t mirror_data = { 0 };
-
-    if (hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
-        return NULL;
-    }
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
-                                       &mirror_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u",
-                      key->id, hw_id);
-        return NULL;
-    }
-
-    impl = mirror_impl_db()->alloc();
-    if (unlikely(impl == NULL)) {
-        return NULL;
-    }
-    new (impl) mirror_impl();
-    impl->hw_id_ = hw_id;
-    return impl;
-}
-#endif
-
 #define rspan_action     action_u.mirror_rspan
 #define erspan_action    action_u.mirror_erspan
 sdk_ret_t
-mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
+                              pds_mirror_session_spec_t *spec) {
     vpc_entry *vpc;
     tep_entry *tep;
-    mac_addr_t mac;
-    pds_obj_key_t tep_key;
     p4pd_error_t p4pd_ret;
     mapping_entry *mapping;
-    pds_mapping_key_t mapping_key;
-    pds_mirror_session_spec_t *spec;
     mirror_actiondata_t mirror_data = { 0 };
 
-    spec = &obj_ctxt->api_params->mirror_session_spec;
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         mirror_data.action_id = MIRROR_RSPAN_ID;
@@ -175,32 +142,66 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_ARG;
     }
 
+    // program the mirror table
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_MIRROR, hw_id_, NULL, NULL,
                                        &mirror_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program mirror session %u at idx %u",
-                      spec->key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to program mirror session %s at idx %u",
+                      spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-mirror_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
+mirror_impl::activate_update_(pds_epoch_t epoch, mirror_session *ms,
+                              api_obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
-mirror_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                       api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+mirror_impl::activate_delete_(pds_epoch_t epoch, mirror_session *ms) {
+    p4pd_error_t p4pd_ret;
+    mirror_actiondata_t mirror_data = { 0 };
+
+    // cleanup the mirror table entry
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_MIRROR, hw_id_, NULL, NULL,
+                                       &mirror_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program mirror session %s at idx %u",
+                      ms->key2str().c_str(), hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 mirror_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                          pds_epoch_t epoch, api_op_t api_op,
                          api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
+    sdk_ret_t ret;
+    pds_mirror_session_spec_t *spec;
+
+    switch (api_op) {
+    case API_OP_CREATE:
+        spec = &obj_ctxt->api_params->mirror_session_spec;
+        ret = activate_create_(epoch, (mirror_session *)api_obj, spec);
+        break;
+
+    case API_OP_DELETE:
+        // spec is not available for DELETE operations
+        ret = activate_delete_(epoch, (mirror_session *)api_obj);
+        break;
+
+    case API_OP_UPDATE:
+        ret = activate_update_(epoch, (mirror_session *)api_obj, obj_ctxt);
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_OP;
+        break;
+    }
+    return ret;
 }
 
 void

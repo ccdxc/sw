@@ -76,7 +76,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 api_obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     cleanup all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -85,7 +87,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 api_obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     update all h/w tables relevant to this object except
     ///            stage 0 table(s), if any, by updating packed entries
@@ -95,7 +99,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                api_obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     activate the epoch in the dataplane by programming
     ///            stage 0 tables, if any
@@ -129,6 +135,31 @@ private:
 
     /// \brief destructor
     ~mirror_impl() {}
+
+    /// \brief      program mirror session related tables during mirror session
+    ///             create by enabling stage0 tables corresponding to new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  ms    mirror session being created
+    /// \param[in]  spec    mirror session configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_create_(pds_epoch_t epoch, mirror_session *ms,
+                               pds_mirror_session_spec_t *spec);
+
+    /// \brief      program mirror session related tables during mirror session
+    ///             update by enabling stage0 tables corresponding to new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  ms    mirror session being updated
+    /// \param[in]  obj_ctxt transient state associated with this API
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, mirror_session *ms,
+                               api_obj_ctxt_t *obj_ctxt);
+
+    /// \brief      program mirror session related tables during mirror session
+    ///             delete by disabling stage0 tables corresponding to new epoch
+    /// \param[in]  epoch epoch being activated
+    /// \param[in]  ms    mirror session being deleted
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_delete_(pds_epoch_t epoch, mirror_session *ms);
 
     /// \brief      fill the mirror session spec
     /// \param[out] spec mirror session specification to be filled
