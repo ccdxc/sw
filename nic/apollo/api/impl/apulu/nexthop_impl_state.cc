@@ -29,6 +29,9 @@ nexthop_impl_state::nexthop_impl_state(pds_state *state) {
     // create indexer and reserve system default blackhole/drop nexthop entry
     nh_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(nh_idxr_ != NULL);
+
+    // reserve next 8 nexthops (1 for each uplink) for RSPAN and other use cases
+    SDK_ASSERT(nh_idxr_->alloc_block(1, 8, false) == SDK_RET_OK);
 }
 
 nexthop_impl_state::~nexthop_impl_state() {

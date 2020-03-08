@@ -122,7 +122,7 @@ if_impl::port(if_entry *intf) {
     const if_entry *eth_if = if_entry::eth_if(intf);
 
     if (eth_if == NULL) {
-        return 0xFFFF;
+        return PDS_PORT_INVALID;
     }
     return g_pds_state.catalogue()->ifindex_to_tm_port(eth_if->ifindex());
 }

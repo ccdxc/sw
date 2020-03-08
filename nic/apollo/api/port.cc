@@ -247,8 +247,9 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
 
 /**
  * @brief        populate port information based on the catalog
- * @param[in]    fp_port      front panel port number
- * @param[in]    port_args    port parameters filled by this API
+ * @param[in]    ifindex     interface index of this port
+ * @param[in]    phy_port    physical port number of this port
+ * @param[out]   port_args    port parameters filled by this API
  * @return       SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
