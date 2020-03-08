@@ -12,10 +12,17 @@ import "meta/meta.proto";
 import "types.proto";
 
 service RouteSvc {
+  // route table APIs
   rpc RouteTableCreate (RouteTableRequest) returns (RouteTableResponse) {}
   rpc RouteTableUpdate (RouteTableRequest) returns (RouteTableResponse) {}
   rpc RouteTableGet (RouteTableGetRequest) returns (RouteTableGetResponse) {}
   rpc RouteTableDelete (RouteTableDeleteRequest) returns (RouteTableDeleteResponse) {}
+
+  // route APIs
+  rpc RouteCreate (RouteRequest) returns (RouteResponse) {}
+  rpc RouteUpdate (RouteRequest) returns (RouteResponse) {}
+  rpc RouteGet (RouteGetRequest) returns (RouteGetResponse) {}
+  rpc RouteDelete (RouteDeleteRequest) returns (RouteDeleteResponse) {}
 }
 
 message NATAction {
@@ -31,8 +38,8 @@ message NATAction {
   types.IPAddress DstNatIP     = 2;
 }
 
-// route object
-message Route {
+// route configuration information
+message RouteInfo {
   // IP prefix
   types.IPPrefix      Prefix         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // priority of the route
@@ -77,13 +84,13 @@ message Route {
 //       supported)
 message RouteTableSpec {
   // unique route table id (this id is not scoped under VPC or subnet)
-  bytes          Id        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes          Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
-  types.IPAF     Af        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAF     Af         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // enable or disable Priority-Based-Routing (PBR) for the route table
-  bool           EnablePBR = 3 [(gogoproto.moretags) = "meta:immutable,default=false"];
+  bool           EnablePBR  = 3 [(gogoproto.moretags) = "meta:immutable,default=false"];
   // routes in this route table
-  repeated Route Routes    = 4;
+  repeated RouteInfo Routes = 4;
 }
 
 // operational status of the route table, if any
@@ -138,4 +145,72 @@ message RouteTableDeleteRequest {
 // route table delete response
 message RouteTableDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
+}
+
+// route specification
+message RouteSpec {
+  // unique route table id (this id is not scoped under VPC or subnet)
+  bytes     Id           = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // route table this route belongs to
+  bytes     RouteTableId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // route configuration
+  RouteInfo Route        = 3 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// operational status of the route, if any
+message RouteStatus {
+}
+
+// stats of the route, if any
+message RouteStats {
+}
+
+// route object
+message Route {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  RouteSpec     Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  RouteStatus   Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  RouteStats    Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// route create and update request
+message RouteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // route configuration
+  RouteSpec       Request   = 2;
+}
+
+// route create and update response
+message RouteResponse {
+  // success or failure status
+  types.ApiStatus ApiStatus = 1;
+  // operational status
+  RouteStatus     Response  = 2;
+}
+
+// route get request
+message RouteGetRequest {
+  // id/key of the route
+  bytes Id = 1;
+}
+
+// route get response
+message RouteGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  RouteInfo       Response  = 2;
+}
+
+// route delete request
+message RouteDeleteRequest {
+  // optional batch context, if this request is part of batch of API calls
+  types.BatchCtxt BatchCtxt = 1;
+  // id/key of the route to be deleted
+  bytes           Id        = 2;
+}
+
+// route delete response
+message RouteDeleteResponse {
+  types.ApiStatus ApiStatus = 1;
 }

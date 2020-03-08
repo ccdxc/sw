@@ -113,25 +113,25 @@ func printRoute(rt *pds.RouteTable) {
 			fmt.Printf("%-6s%-6s", "", "")
 		}
 		switch route.GetNh().(type) {
-		case *pds.Route_NextHop:
+		case *pds.RouteInfo_NextHop:
 			fmt.Printf("%-20s%-12s%-16s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"IP",
 				utils.IPAddrToStr(route.GetNextHop()))
 			first = false
-		case *pds.Route_NexthopId:
+		case *pds.RouteInfo_NexthopId:
 			fmt.Printf("%-20s%-12s%-16d\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"ID",
 				route.GetNexthopId)
 			first = false
-		case *pds.Route_VPCId:
+		case *pds.RouteInfo_VPCId:
 			fmt.Printf("%-20s%-12s%-16d\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"VPC",
 				route.GetVPCId())
 			first = false
-		case *pds.Route_TunnelId:
+		case *pds.RouteInfo_TunnelId:
 			fmt.Printf("%-20s%-12s%-16d\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"TEP",

@@ -2721,36 +2721,36 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         return sdk::SDK_RET_OOM;
     }
     for (uint32_t i = 0; i < num_routes; i++) {
-        const pds::Route &proto_route = proto_spec.routes(i);
+        const pds::RouteInfo &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix,
                                      proto_route.prefix());
         if (api_spec->enable_pbr) {
             api_spec->routes[i].prio = proto_route.priority();
         }
         switch (proto_route.nh_case()) {
-        case pds::Route::kNextHop:
-        case pds::Route::kTunnelId:
+        case pds::RouteInfo::kNextHop:
+        case pds::RouteInfo::kTunnelId:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].tep,
                                           proto_route.tunnelid());
             break;
-        case pds::Route::kNexthopGroupId:
+        case pds::RouteInfo::kNexthopGroupId:
             // NOTE: UNDERLAY_ECMP is not done in the datapath
             api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh_group,
                                           proto_route.nexthopgroupid());
             break;
-        case pds::Route::kVPCId:
+        case pds::RouteInfo::kVPCId:
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vpc,
                                           proto_route.vpcid());
             api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
             break;
-        case pds::Route::kVnicId:
+        case pds::RouteInfo::kVnicId:
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vnic,
                                           proto_route.vnicid());
             api_spec->routes[i].nh_type = PDS_NH_TYPE_VNIC;
             break;
-        case pds::Route::kNexthopId:
+        case pds::RouteInfo::kNexthopId:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh,
                                           proto_route.nexthopid());
@@ -2809,7 +2809,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     proto_spec->set_enablepbr(api_spec->enable_pbr);
 
     for (uint32_t i = 0; i < api_spec->num_routes; i++) {
-        pds::Route *route = proto_spec->add_routes();
+        pds::RouteInfo *route = proto_spec->add_routes();
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
                                      &api_spec->routes[i].prefix);
         if (api_spec->enable_pbr) {
