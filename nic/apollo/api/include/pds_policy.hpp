@@ -151,10 +151,10 @@ typedef struct pds_policy_info_s {
 } pds_policy_info_t;
 
 /// \brief    create policy
-/// \param[in] policy    policy configurationn
+/// \param[in] spec    policy configurationn
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_create(pds_policy_spec_t *policy,
+sdk_ret_t pds_policy_create(pds_policy_spec_t *spec,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    read policy
@@ -172,10 +172,10 @@ typedef void (*policy_read_cb_t)(pds_policy_info_t *info, void *ctxt);
 sdk_ret_t pds_policy_read_all(policy_read_cb_t policy_get_cb, void *ctxt);
 
 /// \brief    update policy
-/// \param[in] policy    policy configuration
+/// \param[in] spec    policy configuration
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_update(pds_policy_spec_t *policy,
+sdk_ret_t pds_policy_update(pds_policy_spec_t *spec,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief    delete policy

@@ -67,7 +67,6 @@ typedef struct pds_route_s {
 
 /// \brief route table configuration
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
-/// \brief route table configuration
 struct pds_route_table_spec_s {
     pds_obj_key_t key;        ///< key
     uint8_t       af;         ///< address family - v4 or v6
@@ -116,9 +115,9 @@ typedef struct pds_route_table_stats_s {
 
 /// \brief route table information
 typedef struct pds_route_table_info_s {
-    pds_route_table_spec_t spec;            ///< Specification
-    pds_route_table_status_t status;        ///< Status
-    pds_route_table_stats_t stats;          ///< Statistics
+    pds_route_table_spec_t spec;        ///< specification
+    pds_route_table_status_t status;    ///< status
+    pds_route_table_stats_t stats;      ///< statistics
 } __PACK__ pds_route_table_info_t;
 
 /// \brief create route table
@@ -149,6 +148,51 @@ sdk_ret_t pds_route_table_update(pds_route_table_spec_t *spec,
 sdk_ret_t pds_route_table_delete(pds_obj_key_t *key,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+/// \brief route configuration
+typedef struct pds_route_spec_s {
+} pds_route_spec_t;
+
+/// \brief route operational status
+typedef struct pds_route_status_s {
+} pds_route_status_t;
+
+/// \brirf route statistics, if any
+typedef struct pds_route_stats_s {
+} pds_route_stats_t;
+
+/// \brief route information
+typedef struct pds_route_info_s {
+    pds_route_spec_t spec;        ///< specification
+    pds_route_status_t status;    ///< status
+    pds_route_stats_t stats;      ///< statistics
+} pds_route_info_t;
+
+/// \brief create route
+/// \param[in] spec route configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_create(pds_route_spec_t *spec,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief read route
+/// \param[in] key route key
+/// \param[out] info route information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_read(pds_obj_key_t *key, pds_route_info_t *info);
+
+/// \brief update route
+/// \param[in] spec route configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_update(pds_route_spec_t *spec,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief delete route
+/// \param[in] key key of the route
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_delete(pds_obj_key_t *key,
+                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 /// @}
 
 #endif    // __INCLUDE_API_PDS_ROUTE_HPP__
