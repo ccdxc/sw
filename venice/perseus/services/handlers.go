@@ -80,6 +80,7 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		log.Errorf("failed to parse UUID (%v)", err)
 		return
 	}
+	keepalive, holdtime := cache.getTimers()
 	// call grpc api to configure ms
 	peerReq := pdstypes.BGPPeerRequest{}
 	peer := pdstypes.BGPPeerSpec{
@@ -91,6 +92,8 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		SendComm:     true,
 		SendExtComm:  true,
 		ConnectRetry: 5,
+		KeepAlive:    keepalive,
+		HoldTime:     holdtime,
 		RRClient:     pdstypes.BGPPeerRRClient_BGP_PEER_RR_CLIENT,
 	}
 	log.Infof("Add create peer [%+v]", peer)

@@ -558,6 +558,14 @@
           "items": {
             "$ref": "#/definitions/netprotoBGPNeighbor"
           }
+        },
+        "keepalive-interval": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "holdtime": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

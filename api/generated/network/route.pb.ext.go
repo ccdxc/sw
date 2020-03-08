@@ -123,6 +123,12 @@ func (m *BGPConfig) Defaults(ver string) bool {
 			ret = i.Defaults(ver) || ret
 		}
 	}
+	ret = true
+	switch ver {
+	default:
+		m.Holdtime = 180
+		m.KeepaliveInterval = 60
+	}
 	return ret
 }
 
@@ -991,6 +997,29 @@ func init() {
 	validatorMapRoute = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapRoute["BGPConfig"] = make(map[string][]func(string, interface{}) error)
+	validatorMapRoute["BGPConfig"]["all"] = append(validatorMapRoute["BGPConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPConfig)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "3600")
+
+		if err := validators.IntRange(m.Holdtime, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Holdtime", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapRoute["BGPConfig"]["all"] = append(validatorMapRoute["BGPConfig"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPConfig)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "3600")
+
+		if err := validators.IntRange(m.KeepaliveInterval, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"KeepaliveInterval", err.Error())
+		}
+		return nil
+	})
 
 	validatorMapRoute["BGPConfig"]["all"] = append(validatorMapRoute["BGPConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*BGPConfig)

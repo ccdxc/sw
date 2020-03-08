@@ -103,6 +103,8 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 							SendComm:     true,
 							SendExtComm:  true,
 							ConnectRetry: 5,
+							HoldTime:     in.Spec.BGPConfig.Holdtime,
+							KeepAlive:    in.Spec.BGPConfig.KeepaliveInterval,
 							Password:     []byte(b1.Password),
 						}}
 						// Add Afs
@@ -147,6 +149,8 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 					SendComm:     true,
 					SendExtComm:  true,
 					ConnectRetry: 5,
+					HoldTime:     in.Spec.BGPConfig.Holdtime,
+					KeepAlive:    in.Spec.BGPConfig.KeepaliveInterval,
 					Password:     []byte(b.Password),
 				}, delAfs: b.EnableAddressFamilies})
 			}
@@ -180,11 +184,20 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 				SendComm:     true,
 				SendExtComm:  true,
 				ConnectRetry: 5,
+				HoldTime:     in.Spec.BGPConfig.Holdtime,
+				KeepAlive:    in.Spec.BGPConfig.KeepaliveInterval,
 				Password:     []byte(b.Password),
 			}, addAfs: b.EnableAddressFamilies})
 		}
 	}
 	return ret, nil
+}
+
+func (c *configCache) getTimers() (keepalive, holdtime uint32) {
+	if c.config != nil && c.config.Spec.BGPConfig != nil {
+		return c.config.Spec.BGPConfig.KeepaliveInterval, c.config.Spec.BGPConfig.KeepaliveInterval
+	}
+	return 60, 180
 }
 
 func ip2uint32(ipstr string) uint32 {
@@ -328,6 +341,8 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 			RemoteASN:   n.RemoteAS,
 			SendComm:    true,
 			SendExtComm: true,
+			HoldTime:    evtRtConfig.Spec.BGPConfig.Holdtime,
+			KeepAlive:   evtRtConfig.Spec.BGPConfig.KeepaliveInterval,
 		}
 		peerReq.Request = append(peerReq.Request, &peer)
 	}

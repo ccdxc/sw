@@ -116,6 +116,8 @@ message BGPConfig {
     string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "IPAddr()"];
     uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
     repeated BGPNeighbor Neighbors = 3 [(gogoproto.jsontag) = "neighbors,omitempty"];
+    uint32 KeepaliveInterval = 4 [(gogoproto.jsontag) = "keepalive-interval,omitempty"];
+    uint32 Holdtime = 5 [(gogoproto.jsontag) = "holdtime,omitempty"];
 }
 
 message RoutingConfigSpec {

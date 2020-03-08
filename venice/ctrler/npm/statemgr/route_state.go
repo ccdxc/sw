@@ -91,8 +91,10 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 
 	if rtcfg.RoutingConfig.Spec.BGPConfig != nil {
 		obj.Spec.BGPConfig = &netproto.BGPConfig{
-			RouterId: rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,
-			ASNumber: rtcfg.RoutingConfig.Spec.BGPConfig.ASNumber,
+			RouterId:          rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,
+			ASNumber:          rtcfg.RoutingConfig.Spec.BGPConfig.ASNumber,
+			KeepaliveInterval: rtcfg.RoutingConfig.Spec.BGPConfig.KeepaliveInterval,
+			Holdtime:          rtcfg.RoutingConfig.Spec.BGPConfig.Holdtime,
 		}
 
 		for _, nbr := range rtcfg.RoutingConfig.Spec.BGPConfig.Neighbors {

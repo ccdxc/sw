@@ -2371,6 +2371,22 @@
             "format": "int64"
           },
           {
+            "name": "bgp-config.keepalive-interval",
+            "description": "KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "bgp-config.holdtime",
+            "description": "Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "evpn-config.shutdown",
             "in": "query",
             "required": false,
@@ -7441,7 +7457,9 @@
     "networkBGPConfig": {
       "type": "object",
       "required": [
-        "router-id"
+        "router-id",
+        "keepalive-interval",
+        "holdtime"
       ],
       "properties": {
         "router-id": {
@@ -7453,6 +7471,20 @@
           "type": "integer",
           "format": "int64",
           "description": "Local ASN for the BGP Instance."
+        },
+        "keepalive-interval": {
+          "type": "integer",
+          "format": "int64",
+          "default": "60",
+          "maximum": 3600,
+          "description": "KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600."
+        },
+        "holdtime": {
+          "type": "integer",
+          "format": "int64",
+          "default": "180",
+          "maximum": 3600,
+          "description": "Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600."
         },
         "neighbors": {
           "type": "array",

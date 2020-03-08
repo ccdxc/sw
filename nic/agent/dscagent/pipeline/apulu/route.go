@@ -165,8 +165,8 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 					SendComm:     true,
 					SendExtComm:  true,
 					ConnectRetry: 5,
-					KeepAlive:    60,
-					HoldTime:     180,
+					KeepAlive:    rtCfg.Spec.BGPConfig.KeepaliveInterval,
+					HoldTime:     rtCfg.Spec.BGPConfig.Holdtime,
 				}
 				log.Infof("Add create peer [%+v]", peer)
 				peerReq.Request = append(peerReq.Request, &peer)
@@ -195,8 +195,8 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
-			KeepAlive:    60,
-			HoldTime:     180,
+			KeepAlive:    rtCfg.Spec.BGPConfig.KeepaliveInterval,
+			HoldTime:     rtCfg.Spec.BGPConfig.Holdtime,
 		}
 		log.Infof("Add create peer [%+v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)
@@ -250,8 +250,8 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 				SendComm:     true,
 				SendExtComm:  true,
 				ConnectRetry: 5,
-				KeepAlive:    60,
-				HoldTime:     180,
+				KeepAlive:    rtCfg.Spec.BGPConfig.KeepaliveInterval,
+				HoldTime:     rtCfg.Spec.BGPConfig.Holdtime,
 			}
 			log.Infof("Add create peer [%+v]", peer)
 			peerReq.Request = append(peerReq.Request, &peer)
@@ -438,8 +438,8 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			SendComm:     true,
 			SendExtComm:  true,
 			ConnectRetry: 5,
-			KeepAlive:    60,
-			HoldTime:     180,
+			KeepAlive:    rtCfg.Spec.BGPConfig.KeepaliveInterval,
+			HoldTime:     rtCfg.Spec.BGPConfig.Holdtime,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)

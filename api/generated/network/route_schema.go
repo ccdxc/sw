@@ -22,6 +22,10 @@ var typesMapRoute = map[string]*api.Struct{
 
 			"ASNumber": api.Field{Name: "ASNumber", CLITag: api.CLIInfo{ID: "as-number", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "as-number", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
+			"KeepaliveInterval": api.Field{Name: "KeepaliveInterval", CLITag: api.CLIInfo{ID: "keepalive-interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "keepalive-interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Holdtime": api.Field{Name: "Holdtime", CLITag: api.CLIInfo{ID: "holdtime", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "holdtime", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
 			"Neighbors": api.Field{Name: "Neighbors", CLITag: api.CLIInfo{ID: "neighbors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "neighbors", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.BGPNeighbor"},
 		},
 	},
@@ -186,7 +190,9 @@ var typesMapRoute = map[string]*api.Struct{
 			"as-number":               api.CLIInfo{Path: "Spec.BGPConfig.ASNumber", Skip: false, Insert: "", Help: ""},
 			"enable-address-families": api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].EnableAddressFamilies", Skip: false, Insert: "", Help: ""},
 			"generation-id":           api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"holdtime":                api.CLIInfo{Path: "Spec.BGPConfig.Holdtime", Skip: false, Insert: "", Help: ""},
 			"ip-address":              api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].IPAddress", Skip: false, Insert: "", Help: ""},
+			"keepalive-interval":      api.CLIInfo{Path: "Spec.BGPConfig.KeepaliveInterval", Skip: false, Insert: "", Help: ""},
 			"kind":                    api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                  api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"multi-hop":               api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].MultiHop", Skip: false, Insert: "", Help: ""},

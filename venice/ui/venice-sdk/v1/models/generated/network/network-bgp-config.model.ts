@@ -12,6 +12,8 @@ import { NetworkBGPNeighbor, INetworkBGPNeighbor } from './network-bgp-neighbor.
 export interface INetworkBGPConfig {
     'router-id': string;
     'as-number'?: number;
+    'keepalive-interval': number;
+    'holdtime': number;
     'neighbors'?: Array<INetworkBGPNeighbor>;
     '_ui'?: any;
 }
@@ -24,6 +26,10 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     'router-id': string = null;
     /** Local ASN for the BGP Instance. */
     'as-number': number = null;
+    /** KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600. */
+    'keepalive-interval': number = null;
+    /** Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600. */
+    'holdtime': number = null;
     /** List of all neighbors. */
     'neighbors': Array<NetworkBGPNeighbor> = null;
     public static propInfo: { [prop in keyof INetworkBGPConfig]: PropInfoItem } = {
@@ -36,6 +42,18 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         'as-number': {
             description:  `Local ASN for the BGP Instance.`,
             required: false,
+            type: 'number'
+        },
+        'keepalive-interval': {
+            default: parseInt('60'),
+            description:  `KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600.`,
+            required: true,
+            type: 'number'
+        },
+        'holdtime': {
+            default: parseInt('180'),
+            description:  `Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600.`,
+            required: true,
             type: 'number'
         },
         'neighbors': {
@@ -94,6 +112,20 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         } else {
             this['as-number'] = null
         }
+        if (values && values['keepalive-interval'] != null) {
+            this['keepalive-interval'] = values['keepalive-interval'];
+        } else if (fillDefaults && NetworkBGPConfig.hasDefaultValue('keepalive-interval')) {
+            this['keepalive-interval'] = NetworkBGPConfig.propInfo['keepalive-interval'].default;
+        } else {
+            this['keepalive-interval'] = null
+        }
+        if (values && values['holdtime'] != null) {
+            this['holdtime'] = values['holdtime'];
+        } else if (fillDefaults && NetworkBGPConfig.hasDefaultValue('holdtime')) {
+            this['holdtime'] = NetworkBGPConfig.propInfo['holdtime'].default;
+        } else {
+            this['holdtime'] = null
+        }
         if (values) {
             this.fillModelArray<NetworkBGPNeighbor>(this, 'neighbors', values['neighbors'], NetworkBGPNeighbor);
         } else {
@@ -108,6 +140,8 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
             this._formGroup = new FormGroup({
                 'router-id': CustomFormControl(new FormControl(this['router-id'], [required, ]), NetworkBGPConfig.propInfo['router-id']),
                 'as-number': CustomFormControl(new FormControl(this['as-number']), NetworkBGPConfig.propInfo['as-number']),
+                'keepalive-interval': CustomFormControl(new FormControl(this['keepalive-interval'], [required, maxValueValidator(3600), ]), NetworkBGPConfig.propInfo['keepalive-interval']),
+                'holdtime': CustomFormControl(new FormControl(this['holdtime'], [required, maxValueValidator(3600), ]), NetworkBGPConfig.propInfo['holdtime']),
                 'neighbors': new FormArray([]),
             });
             // generate FormArray control elements
@@ -129,6 +163,8 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
         if (this._formGroup) {
             this._formGroup.controls['router-id'].setValue(this['router-id']);
             this._formGroup.controls['as-number'].setValue(this['as-number']);
+            this._formGroup.controls['keepalive-interval'].setValue(this['keepalive-interval']);
+            this._formGroup.controls['holdtime'].setValue(this['holdtime']);
             this.fillModelArray<NetworkBGPNeighbor>(this, 'neighbors', this['neighbors'], NetworkBGPNeighbor);
         }
     }

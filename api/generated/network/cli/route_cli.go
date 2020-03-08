@@ -43,8 +43,22 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "holdtime",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "ip-address",
 		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "keepalive-interval",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
