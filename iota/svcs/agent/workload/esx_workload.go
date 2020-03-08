@@ -532,17 +532,13 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		}
 	}
 
-	if err := vm.vhost.ReconfigureVMNetwork(vm.vm, constants.EsxDefaultNetwork, pgName, 1); err != nil {
+	if err := vm.vhost.ReconfigureVMNetwork(vm.vm, constants.EsxDefaultNetwork, vsname, pgName, 1, relaxSecurity); err != nil {
 		return "", errors.Wrapf(err, "Error in Reconfiguring Def network to %v", pgName)
 	}
 
-	if relaxSecurity {
-		err := vm.vhost.RelaxSecurityOnPg(vsname, pgName)
-		if err != nil {
-			return "", errors.Wrap(err, "Failed to relax security on pg")
-		}
+	if err != nil {
+		return "", err
 	}
-
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
 		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
 	}

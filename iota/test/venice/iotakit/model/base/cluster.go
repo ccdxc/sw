@@ -1214,6 +1214,25 @@ L1:
 		}
 	}
 
+	bkCtx, cancelFunc = context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+
+L2:
+	for true {
+		select {
+		case <-bkCtx.Done():
+			nerr := fmt.Errorf("Verifying cluster failed: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		default:
+			err = sm.VerifyClusterStatus()
+			if err == nil {
+				break L2
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
+
 	return nil
 }
 

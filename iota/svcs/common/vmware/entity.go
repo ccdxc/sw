@@ -101,8 +101,7 @@ type EntityIntf interface {
 	BootVM(name string) (*VMInfo, error)
 	FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error)
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
-	RelaxSecurityOnPg(name string, pgName string) error
-	ReconfigureVMNetwork(vm *VM, currNW string, newNW string, maxReconfigs int) error
+	ReconfigureVMNetwork(vm *VM, currNW string, switchName string, newNW string, maxReconfigs int, relaxSecurity bool) error
 	AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error
 	AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error
 	RemoveKernelNic(cluster, host string, pgName string) error
@@ -159,6 +158,7 @@ func (vc *Entity) monitorSession() {
 		}
 		vc.sessionActive, _ = vc.ConnCtx.client.SessionManager.SessionIsActive(vc.ConnCtx.context.context)
 		if !vc.sessionActive {
+			log.Errorf("Entity %v disconnected", vc.Name)
 			if !acquiredLock {
 				vc.clientLock.Lock()
 				acquiredLock = true
@@ -414,8 +414,6 @@ func (entity *Entity) makeVM(name string, vm *object.VirtualMachine) *VM {
 
 // NewVM creates a new virtual machine
 func (entity *Entity) NewVM(name string) (*VM, error) {
-	entity.getClientWithRLock()
-	defer entity.releaseClientRLock()
 	vm, err := entity.Finder().VirtualMachine(entity.Ctx(), name)
 	if err != nil {
 		return nil, err

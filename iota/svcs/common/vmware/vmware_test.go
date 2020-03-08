@@ -166,22 +166,26 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("pbhide-iota-dc")
+	dc, err := vc.SetupDataCenter("sudhiaithal-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["pbhide-iota-dc"]
-	TestUtils.Assert(t, ok, "pbhide setup dc")
+	dc, ok := vc.datacenters["sudhiaithal-iota-dc"]
+	TestUtils.Assert(t, ok, "sudhiaithal setup dc")
 
-	c, ok := dc.clusters["pbhide-iota-cluster"]
+	c, ok := dc.clusters["sudhiaithal-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	dvs, err := dc.findDvs("#Pen-DVS-pbhide-iota-dc")
+	dvs, err := dc.findDvs("Pen-DVS-sudhiaithal-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly found dvs")
 	TestUtils.Assert(t, dvs != nil, "dvs nil")
 
-	vm, err2 := dc.NewVM("workload-host-1-w10")
+	vm, err2 := dc.NewVM("node2-ep1")
 	TestUtils.Assert(t, err2 == nil, "VM FOUND")
 	TestUtils.Assert(t, vm != nil, "VM FOND")
+
+	err2 = dc.ReconfigureVMNetwork(vm, "iota-def-network", "Pen-DVS-sudhiaithal-iota-dc", "iota-data-nw-1001", 0, true)
+	fmt.Printf("Error %v", err2)
+	TestUtils.Assert(t, err2 == nil, "Reconfig faild")
 
 	ip, err := vm.vm.WaitForIP(ctx, true)
 	fmt.Printf("VM IP %v", ip)
@@ -195,7 +199,7 @@ func Test_vcenter_find_host(t *testing.T) {
 	//err = dc.AddDvs(dvsSpec)
 	//TestUtils.Assert(t, err == nil, "dvs added")
 
-	vm, err2 = dc.NewVM("workload-host-1-w1")
+	vm, err2 = dc.NewVM("node2-ep1")
 	TestUtils.Assert(t, err2 == nil, "VM FOUND")
 	TestUtils.Assert(t, vm != nil, "VM FOND")
 
@@ -212,9 +216,9 @@ func Test_vcenter_find_host(t *testing.T) {
 	//fmt.Printf("Dvs port name %v %v", pgName, err)
 	//TestUtils.Assert(t, err == nil, "Connected to venter")
 
-	err = dc.RelaxSecurityOnPg("#Pen-DVS-sudhiaithal-iota-dc", "#Pen-PG-Network-Vlan-2")
-	fmt.Printf("Error %v\n", err)
-	TestUtils.Assert(t, err == nil, "pvlan added")
+	//err = dc.RelaxSecurityOnPg("#Pen-DVS-sudhiaithal-iota-dc", "#Pen-PG-Network-Vlan-2")
+	//fmt.Printf("Error %v\n", err)
+	//TestUtils.Assert(t, err == nil, "pvlan added")
 
 	/*
 		for i := int32(0); i < 100; i += 2 {
