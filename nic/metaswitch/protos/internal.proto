@@ -122,3 +122,47 @@ message BgpRouteMapSpec {
   bytes  MatchExtComm   = 8 [(venice.pdsaFields) = {Field:"ma_ext_comm_exp"}];
   uint32 OrfAssociation = 9 [(venice.pdsaFields) = {Field:"orf_assoc"}];
 }
+
+// spec to hard reset BGP peer
+message BGPPeerResetSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_BGP_PER_OID_LEN",
+    Mib:    "bgpPeerTable",
+  };
+  types.AdminState State        = 1 [(venice.pdsaFields) = {Field: "admin_status"}];
+  types.IPAddress  LocalAddr    = 2 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_LOCAL_ADD_TYP_INDEX"}];
+  // BGP peer IP address
+  types.IPAddress  PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_REMOTE_ADD_TYP_IX"}];
+  uint32           EntIndex     = 4 [(venice.pdsaFields) = {Field:"rm_ent_index", SetKeyOidIndex:"AMB_BGP_PER_RM_ENT_INDEX_INDEX"}];
+}
+
+// spec to route refresh BGP peer
+message BGPPeerRtRefreshSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_BGP_PRST_OID_LEN",
+    Mib:     "bgpPeerStatusTable",
+  };
+  types.IPAddress  LocalAddr    = 1 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
+  // BGP peer IP address
+  types.IPAddress  PeerAddr     = 2 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
+  bool             RtRefreshIn  = 3 [(venice.pdsaFields) = {Field: "rt_refresh"}];
+  bool             RtRefreshOut = 4 [(venice.pdsaFields) = {Field: "resend_all_routes"}];
+  uint32           EntIndex     = 5 [(venice.pdsaFields) = {Field:"rm_ent_index", SetKeyOidIndex:"AMB_BGP_PRST_RM_ENT_INDEX_INDEX"}];
+}
+
+// spec to route refresh BGP peer-af
+message BGPPeerAfRtRefreshSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen:  "AMB_BGP_PAST_OID_LEN",
+    Mib:     "bgpPeerAfiSafiStatusTable",
+  };
+  types.IPAddress  LocalAddr    = 1 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAST_LOCAL_ADDR_TYP_IX"}];
+  // BGP peer IP address
+  types.IPAddress  PeerAddr     = 2 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAST_REMOTE_ADDR_TYP_IX"}];
+  uint32           Afi          = 3 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
+  // BGP sub-address family
+  uint32           Safi         = 4 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
+  bool             RtRefreshIn  = 5 [(venice.pdsaFields) = {Field: "rt_refresh"}];
+  bool             RtRefreshOut = 6 [(venice.pdsaFields) = {Field: "resend_all_routes"}];
+  uint32           EntIndex     = 7 [(venice.pdsaFields) = {Field:"rm_ent_index", SetKeyOidIndex:"AMB_BGP_PAST_RM_ENT_INDEX_INDEX"}];
+}

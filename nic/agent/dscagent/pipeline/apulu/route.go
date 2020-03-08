@@ -125,10 +125,10 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Global Config (%s)", rtCfg.GetKey(), err)
 	}
 	if resp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("BGP Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.Response)
+		log.Infof("BGP Create received resp (%v)[%v]", err, resp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Global config status(%s)", rtCfg.GetKey(), resp.ApiStatus)
 	}
-	log.Infof("BGP create responded [%v]", resp.Response)
+	log.Infof("BGP create responded [%v]", resp.ApiStatus)
 	// Get the controller IPs
 	dscConfig := infraAPI.GetConfig()
 	log.Infof("Adding peers at [%v]", dscConfig.Controllers)

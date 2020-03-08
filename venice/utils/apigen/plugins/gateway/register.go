@@ -3977,6 +3977,7 @@ func init() {
 	reg.RegisterFunc("getProxyPaths", common.GetProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("HasPrefix", strings.HasPrefix)
+	reg.RegisterFunc("Contains", strings.Contains)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
 	reg.RegisterFunc("TrimPrefix", strings.TrimPrefix)
 	reg.RegisterFunc("ToLower", strings.ToLower)

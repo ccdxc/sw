@@ -220,6 +220,8 @@
 		BGPPeerAfDeleteResponse
 		BGPPeerAfGetRequest
 		BGPPeerAfGetResponse
+		BGPClearRouteRequest
+		BGPClearRouteResponse
 		BGPNLRIPrefixStatus
 		BGPNLRIPrefixKey
 		BGPNLRIPrefix

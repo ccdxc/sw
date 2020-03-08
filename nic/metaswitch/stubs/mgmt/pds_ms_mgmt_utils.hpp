@@ -170,8 +170,9 @@ NBB_VOID
 pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid,
                                   string in_str,
                                   NBB_LONG getKeyOidIdx);
-
 namespace pds_ms {
+types::ApiStatus bgp_clear_route_action_func (const pds::BGPClearRouteRequest *req,
+                                              pds::BGPClearRouteResponse  *resp);
 NBB_VOID bgp_rm_ent_get_fill_func (BGPSpec &req,
                                    NBB_ULONG*   oid);
 
@@ -244,6 +245,8 @@ NBB_VOID evpn_ip_vrf_rt_pre_get (EvpnIpVrfRtSpec &req, EvpnIpVrfRtGetResponse *r
                                  NBB_VOID *kh);
 NBB_VOID evpn_evi_get_fill_func (EvpnEviSpec&    req,
                                  NBB_ULONG*       oid);
+NBB_VOID evpn_evi_status_get_fill_func (EvpnEviSpec& req,
+                                        NBB_ULONG*     oid);
 NBB_VOID evpn_evi_set_fill_func (EvpnEviSpec&    req,
                                  AMB_GEN_IPS     *mib_msg,
                                  AMB_EVPN_EVI    *data,

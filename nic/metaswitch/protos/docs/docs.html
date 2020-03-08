@@ -848,6 +848,18 @@
             <ul>
               
                 <li>
+                  <a href="#pds_ms.BGPPeerAfRtRefreshSpec"><span class="badge">M</span>BGPPeerAfRtRefreshSpec</a>
+                </li>
+              
+                <li>
+                  <a href="#pds_ms.BGPPeerResetSpec"><span class="badge">M</span>BGPPeerResetSpec</a>
+                </li>
+              
+                <li>
+                  <a href="#pds_ms.BGPPeerRtRefreshSpec"><span class="badge">M</span>BGPPeerRtRefreshSpec</a>
+                </li>
+              
+                <li>
                   <a href="#pds_ms.BgpRouteMapSpec"><span class="badge">M</span>BgpRouteMapSpec</a>
                 </li>
               
@@ -896,6 +908,14 @@
               
                 <li>
                   <a href="#pds_ms.BGP"><span class="badge">M</span>BGP</a>
+                </li>
+              
+                <li>
+                  <a href="#pds_ms.BGPClearRouteRequest"><span class="badge">M</span>BGPClearRouteRequest</a>
+                </li>
+              
+                <li>
+                  <a href="#pds_ms.BGPClearRouteResponse"><span class="badge">M</span>BGPClearRouteResponse</a>
                 </li>
               
                 <li>
@@ -1049,6 +1069,10 @@
               
                 <li>
                   <a href="#pds_ms.BGPAfi"><span class="badge">E</span>BGPAfi</a>
+                </li>
+              
+                <li>
+                  <a href="#pds_ms.BGPClearRouteOptions"><span class="badge">E</span>BGPClearRouteOptions</a>
                 </li>
               
                 <li>
@@ -5531,6 +5555,166 @@ VLAN tag </p></td>
       <p></p>
 
       
+        <h3 id="pds_ms.BGPPeerAfRtRefreshSpec">BGPPeerAfRtRefreshSpec</h3>
+        <p>spec to route refresh BGP peer-af</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>LocalAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>PeerAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p>BGP peer IP address </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Afi</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Safi</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>BGP sub-address family </p></td>
+                </tr>
+              
+                <tr>
+                  <td>RtRefreshIn</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>RtRefreshOut</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>EntIndex</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds_ms.BGPPeerResetSpec">BGPPeerResetSpec</h3>
+        <p>spec to hard reset BGP peer</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>State</td>
+                  <td><a href="#pds_ms..types.AdminState">.types.AdminState</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>LocalAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>PeerAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p>BGP peer IP address </p></td>
+                </tr>
+              
+                <tr>
+                  <td>EntIndex</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds_ms.BGPPeerRtRefreshSpec">BGPPeerRtRefreshSpec</h3>
+        <p>spec to route refresh BGP peer</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>LocalAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>PeerAddr</td>
+                  <td><a href="#pds_ms..types.IPAddress">.types.IPAddress</a></td>
+                  <td></td>
+                  <td><p>BGP peer IP address </p></td>
+                </tr>
+              
+                <tr>
+                  <td>RtRefreshIn</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>RtRefreshOut</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>EntIndex</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
         <h3 id="pds_ms.BgpRouteMapSpec">BgpRouteMapSpec</h3>
         <p>spec to configure ext-comm ORF route map table</p>
 
@@ -5993,6 +6177,66 @@ VLAN tag </p></td>
                 <tr>
                   <td>Status</td>
                   <td><a href="#pds_ms.BGPStatus">BGPStatus</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds_ms.BGPClearRouteRequest">BGPClearRouteRequest</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>Option</td>
+                  <td><a href="#pds_ms.BGPClearRouteOptions">BGPClearRouteOptions</a></td>
+                  <td></td>
+                  <td><p>clear route options </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Peer</td>
+                  <td><a href="#pds_ms.BGPPeerKeyHandle">BGPPeerKeyHandle</a></td>
+                  <td></td>
+                  <td><p>peer key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>PeerAf</td>
+                  <td><a href="#pds_ms.BGPPeerAfKeyHandle">BGPPeerAfKeyHandle</a></td>
+                  <td></td>
+                  <td><p>peer address-family key </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds_ms.BGPClearRouteResponse">BGPClearRouteResponse</h3>
+        <p>BGP clear route response</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>ApiStatus</td>
+                  <td><a href="#pds_ms..types.ApiStatus">.types.ApiStatus</a></td>
                   <td></td>
                   <td><p> </p></td>
                 </tr>
@@ -7140,13 +7384,6 @@ session if an all 0 IP address is provided </p></td>
                   <td><p> </p></td>
                 </tr>
               
-                <tr>
-                  <td>Response</td>
-                  <td><a href="#pds_ms.BGPStatus">BGPStatus</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
             </tbody>
           </table>
         
@@ -7238,6 +7475,47 @@ if cluster ID is not configured or configured to zero </p></td>
                 <td>BGP_AFI_L2VPN</td>
                 <td>25</td>
                 <td><p></p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="pds_ms.BGPClearRouteOptions">BGPClearRouteOptions</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>BGP_CLEAR_ROUTE_NONE</td>
+                <td>0</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_CLEAR_ROUTE_HARD</td>
+                <td>1</td>
+                <td><p>toggle session</p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_CLEAR_ROUTE_REFRESH_IN</td>
+                <td>2</td>
+                <td><p>request route refresh from peer</p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_CLEAR_ROUTE_REFRESH_OUT</td>
+                <td>3</td>
+                <td><p>send all routes to peer</p></td>
+              </tr>
+            
+              <tr>
+                <td>BGP_CLEAR_ROUTE_REFRESH_BOTH</td>
+                <td>4</td>
+                <td><p>send all routes to peer and request</p></td>
               </tr>
             
           </tbody>
@@ -7476,6 +7754,13 @@ if cluster ID is not configured or configured to zero </p></td>
                 <td>BGPPeerAfGet</td>
                 <td><a href="#pds_ms.BGPPeerAfGetRequest">BGPPeerAfGetRequest</a></td>
                 <td><a href="#pds_ms.BGPPeerAfGetResponse">BGPPeerAfGetResponse</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>BGPClearRoute</td>
+                <td><a href="#pds_ms.BGPClearRouteRequest">BGPClearRouteRequest</a></td>
+                <td><a href="#pds_ms.BGPClearRouteResponse">BGPClearRouteResponse</a></td>
                 <td><p></p></td>
               </tr>
             
@@ -8405,13 +8690,6 @@ if cluster ID is not configured or configured to zero </p></td>
                   <td><p> </p></td>
                 </tr>
               
-                <tr>
-                  <td>Response</td>
-                  <td><a href="#pds_ms.EvpnEviStatus">EvpnEviStatus</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
             </tbody>
           </table>
         
@@ -8647,13 +8925,6 @@ if cluster ID is not configured or configured to zero </p></td>
                   <td><p> </p></td>
                 </tr>
               
-                <tr>
-                  <td>Response</td>
-                  <td><a href="#pds_ms.EvpnEviRtStatus">EvpnEviRtStatus</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
             </tbody>
           </table>
         
@@ -8797,6 +9068,22 @@ route-targets should be configured with EvpnEviRtSpec </p></td>
         <h3 id="pds_ms.EvpnEviStatus">EvpnEviStatus</h3>
         <p>operational status of EVPN EVI, if any</p>
 
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>RD</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>in use route-distinguisher of the EVI </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
         
 
         
@@ -9019,13 +9306,6 @@ route-targets should be configured with EvpnEviRtSpec </p></td>
                 <tr>
                   <td>ApiStatus</td>
                   <td><a href="#pds_ms..types.ApiStatus">.types.ApiStatus</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>Response</td>
-                  <td><a href="#pds_ms.EvpnIpVrfStatus">EvpnIpVrfStatus</a></td>
                   <td></td>
                   <td><p> </p></td>
                 </tr>
@@ -9261,13 +9541,6 @@ route-targets should be configured with EvpnEviRtSpec </p></td>
                 <tr>
                   <td>ApiStatus</td>
                   <td><a href="#pds_ms..types.ApiStatus">.types.ApiStatus</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>Response</td>
-                  <td><a href="#pds_ms.EvpnIpVrfRtStatus">EvpnIpVrfRtStatus</a></td>
                   <td></td>
                   <td><p> </p></td>
                 </tr>

@@ -194,6 +194,9 @@
   
 
 - [internal.proto](#internal.proto)
+    - [BGPPeerAfRtRefreshSpec](#pds_ms.BGPPeerAfRtRefreshSpec)
+    - [BGPPeerResetSpec](#pds_ms.BGPPeerResetSpec)
+    - [BGPPeerRtRefreshSpec](#pds_ms.BGPPeerRtRefreshSpec)
     - [BgpRouteMapSpec](#pds_ms.BgpRouteMapSpec)
     - [EvpnBdSpec](#pds_ms.EvpnBdSpec)
     - [EvpnIfBindCfgSpec](#pds_ms.EvpnIfBindCfgSpec)
@@ -210,6 +213,8 @@
 
 - [internal_bgp.proto](#internal_bgp.proto)
     - [BGP](#pds_ms.BGP)
+    - [BGPClearRouteRequest](#pds_ms.BGPClearRouteRequest)
+    - [BGPClearRouteResponse](#pds_ms.BGPClearRouteResponse)
     - [BGPDeleteRequest](#pds_ms.BGPDeleteRequest)
     - [BGPDeleteResponse](#pds_ms.BGPDeleteResponse)
     - [BGPGetRequest](#pds_ms.BGPGetRequest)
@@ -249,6 +254,7 @@
     - [BGPStatus](#pds_ms.BGPStatus)
   
     - [BGPAfi](#pds_ms.BGPAfi)
+    - [BGPClearRouteOptions](#pds_ms.BGPClearRouteOptions)
     - [BGPPeerRRClient](#pds_ms.BGPPeerRRClient)
     - [BGPPeerState](#pds_ms.BGPPeerState)
     - [BGPSafi](#pds_ms.BGPSafi)
@@ -1944,6 +1950,64 @@ service definition
 
 
 
+<a name="pds_ms.BGPPeerAfRtRefreshSpec"/>
+
+### BGPPeerAfRtRefreshSpec
+spec to route refresh BGP peer-af
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| Afi | [uint32](#uint32) |  |  |
+| Safi | [uint32](#uint32) |  | BGP sub-address family |
+| RtRefreshIn | [bool](#bool) |  |  |
+| RtRefreshOut | [bool](#bool) |  |  |
+| EntIndex | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerResetSpec"/>
+
+### BGPPeerResetSpec
+spec to hard reset BGP peer
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| State | [.types.AdminState](#pds_ms..types.AdminState) |  |  |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| EntIndex | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPPeerRtRefreshSpec"/>
+
+### BGPPeerRtRefreshSpec
+spec to route refresh BGP peer
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  |  |
+| PeerAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | BGP peer IP address |
+| RtRefreshIn | [bool](#bool) |  |  |
+| RtRefreshOut | [bool](#bool) |  |  |
+| EntIndex | [uint32](#uint32) |  |  |
+
+
+
+
+
+
 <a name="pds_ms.BgpRouteMapSpec"/>
 
 ### BgpRouteMapSpec
@@ -2135,6 +2199,38 @@ BGP object
 | ----- | ---- | ----- | ----------- |
 | Spec | [BGPSpec](#pds_ms.BGPSpec) |  |  |
 | Status | [BGPStatus](#pds_ms.BGPStatus) |  |  |
+
+
+
+
+
+
+<a name="pds_ms.BGPClearRouteRequest"/>
+
+### BGPClearRouteRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Option | [BGPClearRouteOptions](#pds_ms.BGPClearRouteOptions) |  | clear route options |
+| Peer | [BGPPeerKeyHandle](#pds_ms.BGPPeerKeyHandle) |  | peer key |
+| PeerAf | [BGPPeerAfKeyHandle](#pds_ms.BGPPeerAfKeyHandle) |  | peer address-family key |
+
+
+
+
+
+
+<a name="pds_ms.BGPClearRouteResponse"/>
+
+### BGPClearRouteResponse
+BGP clear route response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
 
 
 
@@ -2705,7 +2801,6 @@ BGP create and update response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
-| Response | [BGPStatus](#pds_ms.BGPStatus) |  |  |
 
 
 
@@ -2753,6 +2848,21 @@ BGP address family identifier
 | BGP_AFI_NONE | 0 |  |
 | BGP_AFI_IPV4 | 1 |  |
 | BGP_AFI_L2VPN | 25 |  |
+
+
+
+<a name="pds_ms.BGPClearRouteOptions"/>
+
+### BGPClearRouteOptions
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| BGP_CLEAR_ROUTE_NONE | 0 |  |
+| BGP_CLEAR_ROUTE_HARD | 1 | toggle session |
+| BGP_CLEAR_ROUTE_REFRESH_IN | 2 | request route refresh from peer |
+| BGP_CLEAR_ROUTE_REFRESH_OUT | 3 | send all routes to peer |
+| BGP_CLEAR_ROUTE_REFRESH_BOTH | 4 | send all routes to peer and request |
 
 
 
@@ -2835,6 +2945,7 @@ bgp service definition
 | BGPPeerAfUpdate | [BGPPeerAfRequest](#pds_ms.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds_ms.BGPPeerAfRequest) |  |
 | BGPPeerAfDelete | [BGPPeerAfDeleteRequest](#pds_ms.BGPPeerAfDeleteRequest) | [BGPPeerAfDeleteResponse](#pds_ms.BGPPeerAfDeleteRequest) |  |
 | BGPPeerAfGet | [BGPPeerAfGetRequest](#pds_ms.BGPPeerAfGetRequest) | [BGPPeerAfGetResponse](#pds_ms.BGPPeerAfGetRequest) |  |
+| BGPClearRoute | [BGPClearRouteRequest](#pds_ms.BGPClearRouteRequest) | [BGPClearRouteResponse](#pds_ms.BGPClearRouteRequest) |  |
 | BGPNLRIPrefixGet | [BGPNLRIPrefixGetRequest](#pds_ms.BGPNLRIPrefixGetRequest) | [BGPNLRIPrefixGetResponse](#pds_ms.BGPNLRIPrefixGetRequest) |  |
 
  
@@ -3317,7 +3428,6 @@ EVPN EVI create and update response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
-| Response | [EvpnEviStatus](#pds_ms.EvpnEviStatus) |  |  |
 
 
 
@@ -3457,7 +3567,6 @@ EVPN EVI RT create and update response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
-| Response | [EvpnEviRtStatus](#pds_ms.EvpnEviRtStatus) |  |  |
 
 
 
@@ -3519,6 +3628,11 @@ EVPN EVI configuration
 
 ### EvpnEviStatus
 operational status of EVPN EVI, if any
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RD | [bytes](#bytes) |  | in use route-distinguisher of the EVI |
 
 
 
@@ -3657,7 +3771,6 @@ EVPN IP VRF create and update response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrfStatus](#pds_ms.EvpnIpVrfStatus) |  |  |
 
 
 
@@ -3797,7 +3910,6 @@ EVPN IP VRF RT create and update response
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds_ms..types.ApiStatus) |  |  |
-| Response | [EvpnIpVrfRtStatus](#pds_ms.EvpnIpVrfRtStatus) |  |  |
 
 
 

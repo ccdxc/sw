@@ -109,7 +109,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		return err
 	}
 
-	log.Infof("got EVPN EVI create response [%v/%v]", evresp.ApiStatus, evresp.Response)
+	log.Infof("got EVPN EVI create response [%v]", evresp.ApiStatus)
 	defer func() {
 		if !success {
 			key := &msTypes.EvpnEviKey{
@@ -187,7 +187,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 			return err
 		}
-		log.Infof("subnet EVI RT create [%v/%v] got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
+		log.Infof("subnet EVI RT create [%v/%v] got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 		defer func() {
 			if !success {
 				key := &msTypes.EvpnEviRtKey{
@@ -268,7 +268,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to update EVI for subnet [%v/%v]", nw.Tenant, nw.Name)
 		return err
 	}
-	log.Infof("got EVPN EVI update response [%v/%v]", evresp.ApiStatus, evresp.Response)
+	log.Infof("got EVPN EVI update response [%v]", evresp.ApiStatus)
 
 	if evresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Errorf("failed to update EVI for subnet [%v/%v](%v)", nw.Tenant, nw.Name, evresp.ApiStatus)
@@ -364,7 +364,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 		return err
 	}
-	log.Infof("subnet update [%v/%v] RT create  got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
+	log.Infof("subnet update [%v/%v] RT create  got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 
 	evrtresp, err = msc.EvpnEviRtCreate(ctx, &rtDelReq)
 	if err != nil {
@@ -374,7 +374,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 		return err
 	}
-	log.Infof("subnet update [%v/%v] delete RT got response [%v/%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus, evrtresp.Response)
+	log.Infof("subnet update [%v/%v] delete RT got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 
 	dat, _ := nw.Marshal()
 

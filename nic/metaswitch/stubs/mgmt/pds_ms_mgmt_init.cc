@@ -107,24 +107,24 @@ nbase_init ()
     A0_USER_REG_LOCAL_IF_MAP_FN (ms_to_lnx_ifindex);
     A0_USER_REG_SYSTEM_IF_MAP_FN(lnx_to_ms_ifindex);
 
-    pds_ms_reg_pre_set_amb_bgp_rm_ent (bgp_rm_ent_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_rm_ent (bgp_rm_ent_pre_get);
-    pds_ms_reg_pre_set_amb_bgp_peer(bgp_peer_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_peer(bgp_peer_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_evi(evpn_evi_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_evi(evpn_evi_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_evi_rt(evpn_evi_rt_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_evi_rt(evpn_evi_rt_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_ip_vrf(evpn_ip_vrf_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_ip_vrf(evpn_ip_vrf_pre_get);
-    pds_ms_reg_pre_set_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_set);
-    pds_ms_reg_pre_get_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_get);
-    pds_ms_reg_pre_set_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_set);
-    pds_ms_reg_pre_get_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_get);
-    pds_ms_reg_pre_fill_get_amb_bgp_peer_afi_safi(
+    pds_ms_reg_pre_set_bgpspec_amb_bgp_rm_ent (bgp_rm_ent_pre_set);
+    pds_ms_reg_pre_get_bgpspec_amb_bgp_rm_ent (bgp_rm_ent_pre_get);
+    pds_ms_reg_pre_set_bgppeerspec_amb_bgp_peer(bgp_peer_pre_set);
+    pds_ms_reg_pre_get_bgppeerspec_amb_bgp_peer(bgp_peer_pre_get);
+    pds_ms_reg_pre_set_evpnevispec_amb_evpn_evi(evpn_evi_pre_set);
+    pds_ms_reg_pre_get_evpnevispec_amb_evpn_evi(evpn_evi_pre_get);
+    pds_ms_reg_pre_set_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_pre_set);
+    pds_ms_reg_pre_get_evpnevirtspec_amb_evpn_evi_rt(evpn_evi_rt_pre_get);
+    pds_ms_reg_pre_set_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_pre_set);
+    pds_ms_reg_pre_get_evpnipvrfspec_amb_evpn_ip_vrf(evpn_ip_vrf_pre_get);
+    pds_ms_reg_pre_set_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_set);
+    pds_ms_reg_pre_get_evpnipvrfrtspec_amb_evpn_ip_vrf_rt(evpn_ip_vrf_rt_pre_get);
+    pds_ms_reg_pre_set_bgppeerafspec_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_set);
+    pds_ms_reg_pre_get_bgppeerafspec_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_get);
+    pds_ms_reg_pre_fill_get_bgppeerafspec_amb_bgp_peer_afi_safi(
         bgp_peer_afi_safi_pre_fill_get);
-    pds_ms_reg_pre_set_amb_lim_l3_if_addr(lim_l3_if_addr_pre_set);
-    pds_ms_reg_pre_set_amb_cipr_rtm_static_rt(cp_route_pre_set);
+    pds_ms_reg_pre_set_liminterfaceaddrspec_amb_lim_l3_if_addr(lim_l3_if_addr_pre_set);
+    pds_ms_reg_pre_set_cpstaticroutespec_amb_cipr_rtm_static_rt(cp_route_pre_set);
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */

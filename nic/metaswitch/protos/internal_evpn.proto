@@ -90,6 +90,15 @@ message EvpnEviSpec {
 
 // operational status of EVPN EVI, if any
 message EvpnEviStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_EVPN_EVI_OID_LEN",
+    Mib:     "evpnEviTable",
+    FillFn:  "evpn_evi_status_get_fill_func"
+    SpecMsg: "EvpnEviSpec"
+  };
+
+  // in use route-distinguisher of the EVI
+  bytes RD = 1 [(venice.pdsaFields) = {Field:"rd"}];
 }
 
 // EVPN EVI object
@@ -101,7 +110,6 @@ message EvpnEvi {
 // EVPN EVI create and update response
 message EvpnEviResponse {
   types.ApiStatus ApiStatus = 1;
-  EvpnEviStatus   Response  = 2;
 }
 
 // EVPN EVI create and update request
@@ -200,7 +208,6 @@ message EvpnIpVrfRequest {
 // EVPN IP VRF create and update response
 message EvpnIpVrfResponse {
   types.ApiStatus ApiStatus = 1;
-  EvpnIpVrfStatus Response  = 2;
 }
 
 // EVPN IP VRF key parameters
@@ -292,7 +299,6 @@ message EvpnEviRt {
 // EVPN EVI RT create and update response
 message EvpnEviRtResponse {
   types.ApiStatus ApiStatus = 1;
-  EvpnEviRtStatus Response  = 2;
 }
 
 // EvpnEviRtSpec create and update request
@@ -400,7 +406,6 @@ message EvpnIpVrfRt {
 // EVPN IP VRF RT create and update response
 message EvpnIpVrfRtResponse {
   types.ApiStatus   ApiStatus = 1;
-  EvpnIpVrfRtStatus Response  = 2;
 }
 
 // EVPN IP VRF RT key parameters

@@ -151,7 +151,8 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
     // LIM VRF Row Update
     LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vrf_id, lim_vrf_spec);
-    pds_ms_set_amb_lim_vrf (lim_vrf_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+    pds_ms_set_limvrfspec_amb_lim_vrf (lim_vrf_spec, row_status,
+                                       PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 

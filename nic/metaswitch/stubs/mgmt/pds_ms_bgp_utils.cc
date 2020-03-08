@@ -12,6 +12,168 @@ using namespace pds_ms;
 using namespace types;
 
 namespace pds_ms {
+
+ApiStatus
+bgp_peer_hard_reset (BGPPeerSpec& req)
+{
+    BGPPeerResetSpec proto_req;
+
+    // start CTM transaction
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // populate Reset spec from Peer spec
+    proto_req.set_entindex(PDS_MS_BGP_RM_ENT_INDEX);
+    auto laddr = proto_req.mutable_localaddr();
+    laddr->set_af(req.localaddr().af());
+    laddr->set_v4addr(req.localaddr().v4addr());
+    auto paddr = proto_req.mutable_peeraddr();
+    paddr->set_af(req.peeraddr().af());
+    paddr->set_v4addr(req.peeraddr().v4addr());
+
+    // if peer is already disabled, hard reset enables the peer
+
+    // disable peer
+    proto_req.set_state(ADMIN_STATE_DISABLE);
+    pds_ms_set_bgppeerresetspec_amb_bgp_peer (proto_req, AMB_ROW_ACTIVE,
+                                              PDS_MS_CTM_GRPC_CORRELATOR,
+                                              false, false);
+
+    // enable peer
+    proto_req.set_state(ADMIN_STATE_ENABLE);
+    pds_ms_set_bgppeerresetspec_amb_bgp_peer (proto_req, AMB_ROW_ACTIVE,
+                                              PDS_MS_CTM_GRPC_CORRELATOR,
+                                              false, false);
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+ApiStatus
+bgp_peer_route_refresh (BGPPeerSpec& req, BGPClearRouteOptions in_out)
+{
+    BGPPeerRtRefreshSpec proto_req;
+
+    // start CTM transaction
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // populate Reset spec from Peer spec
+    proto_req.set_entindex(PDS_MS_BGP_RM_ENT_INDEX);
+    auto laddr = proto_req.mutable_localaddr();
+    laddr->set_af(req.localaddr().af());
+    laddr->set_v4addr(req.localaddr().v4addr());
+    auto paddr = proto_req.mutable_peeraddr();
+    paddr->set_af(req.peeraddr().af());
+    paddr->set_v4addr(req.peeraddr().v4addr());
+
+    if ((in_out == BGP_CLEAR_ROUTE_REFRESH_IN) ||
+        (in_out == BGP_CLEAR_ROUTE_REFRESH_BOTH)) {
+        // flag to send route refresh to peer
+        proto_req.set_rtrefreshin(true);
+    }
+    if ((in_out == BGP_CLEAR_ROUTE_REFRESH_OUT) ||
+        (in_out == BGP_CLEAR_ROUTE_REFRESH_BOTH)) {
+        // flag to send routes to peer
+        proto_req.set_rtrefreshout(true);
+    }
+
+    pds_ms_set_bgppeerrtrefreshspec_amb_bgp_peer_status (
+                                        proto_req,
+                                        AMB_ROW_ACTIVE,
+                                        PDS_MS_CTM_GRPC_CORRELATOR,
+                                        false, false);
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+ApiStatus
+bgp_peeraf_route_refresh (BGPPeerAfSpec &req, BGPClearRouteOptions in_out)
+{
+    BGPPeerAfRtRefreshSpec proto_req;
+
+    // start CTM transaction
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // populate Reset spec from Peer spec
+    proto_req.set_entindex(PDS_MS_BGP_RM_ENT_INDEX);
+    auto laddr = proto_req.mutable_localaddr();
+    laddr->set_af(req.localaddr().af());
+    laddr->set_v4addr(req.localaddr().v4addr());
+    auto paddr = proto_req.mutable_peeraddr();
+    paddr->set_af(req.peeraddr().af());
+    paddr->set_v4addr(req.peeraddr().v4addr());
+    proto_req.set_afi((NBB_LONG)req.afi());
+    proto_req.set_safi((NBB_LONG)req.safi());
+
+    if ((in_out == BGP_CLEAR_ROUTE_REFRESH_IN) ||
+        (in_out == BGP_CLEAR_ROUTE_REFRESH_BOTH)) {
+        // flag to send af route refresh to peer
+        proto_req.set_rtrefreshin(true);
+    }
+    if ((in_out == BGP_CLEAR_ROUTE_REFRESH_OUT) ||
+        (in_out == BGP_CLEAR_ROUTE_REFRESH_BOTH)) {
+        // flag to send af routes to peer
+        proto_req.set_rtrefreshout(true);
+    }
+
+    pds_ms_set_bgppeerafrtrefreshspec_amb_bgp_peer_afi_safi_stat (
+                                        proto_req,
+                                        AMB_ROW_ACTIVE,
+                                        PDS_MS_CTM_GRPC_CORRELATOR,
+                                        false, false);
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+ApiStatus
+bgp_clear_route_action_func (const pds::BGPClearRouteRequest *req,
+                             pds::BGPClearRouteResponse  *resp)
+{
+    pds_ms::BGPClearRouteOptions option;
+    pds_ms::BGPPeerSpec peer;
+    pds_ms::BGPPeerAfSpec peeraf;
+    ApiStatus ret=API_STATUS_OK;
+
+    // convert external proto to internal fields
+    option = (pds_ms::BGPClearRouteOptions)req->option();
+    if (option == BGP_CLEAR_ROUTE_NONE) {
+        throw Error (std::string("Invalid BGP clear route request"),
+                     SDK_RET_INVALID_ARG);
+    }
+    if (option == BGP_CLEAR_ROUTE_HARD && req->has_peeraf()) {
+        throw Error (std::string("Hard reset connot be done on "
+                     "PeerAF"), SDK_RET_INVALID_ARG);
+    }
+
+    if (req->has_peer()) {
+        // get internal peer spec from keyhandle
+        pds_ms_get_bgppeerspec_from_bgppeerkeyhandle (req->peer(),
+                                                      peer);
+        if (option == BGP_CLEAR_ROUTE_HARD) {
+            ret = bgp_peer_hard_reset(peer);
+        } else {
+            ret = bgp_peer_route_refresh(peer, option);
+        }
+    } else if (req->has_peeraf()) {
+        // get internal peeraf spec from keyhandle
+        pds_ms_get_bgppeerafspec_from_bgppeerafkeyhandle (req->peeraf(),
+                                                          peeraf);
+        ret = bgp_peeraf_route_refresh(peeraf, option);
+    } else {
+        throw Error (std::string("Invalid Peer/PeerAF in BGP clear route "
+                     "request"), SDK_RET_INVALID_ARG);
+    }
+
+    return ret;
+}
+
 NBB_VOID
 update_bgp_route_map_table (NBB_ULONG correlator)
 {
@@ -56,7 +218,8 @@ update_bgp_route_map_table (NBB_ULONG correlator)
     spec.set_safidefined (true);
     spec.set_orfassociation (AMB_BGP_ORF_ASSOC_LOCAL);
     spec.set_matchextcomm (str.c_str(), len);
-    pds_ms_set_amb_bgp_route_map (spec, AMB_ROW_ACTIVE, correlator, FALSE);
+    pds_ms_set_bgproutemapspec_amb_bgp_route_map (spec, AMB_ROW_ACTIVE,
+                                                  correlator, FALSE);
 }
 
 static NBB_VOID 
@@ -227,10 +390,14 @@ bgp_peer_pre_set(BGPPeerSpec &req, NBB_LONG row_status,
         BGPPeerAfSpec peer_af_spec;
         populate_disable_peer_af_spec (req, &peer_af_spec,
                                        BGP_AFI_IPV4, BGP_SAFI_UNICAST);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator, FALSE);
+        pds_ms_set_bgppeerafspec_amb_bgp_peer_afi_safi(peer_af_spec,
+                                                       AMB_ROW_ACTIVE,
+                                                       correlator, FALSE);
         populate_disable_peer_af_spec (req, &peer_af_spec,
                                        BGP_AFI_L2VPN, BGP_SAFI_EVPN);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator, FALSE);
+        pds_ms_set_bgppeerafspec_amb_bgp_peer_afi_safi(peer_af_spec,
+                                                       AMB_ROW_ACTIVE,
+                                                       correlator, FALSE);
     }
 
 }

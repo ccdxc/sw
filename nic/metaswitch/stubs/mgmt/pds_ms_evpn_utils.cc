@@ -486,6 +486,12 @@ evpn_evi_get_fill_func (EvpnEviSpec&    req,
 {
     oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
 }
+NBB_VOID
+evpn_evi_status_get_fill_func (EvpnEviSpec& req,
+                               NBB_ULONG*   oid)
+{
+    oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
+}
 
 NBB_VOID
 evpn_evi_set_fill_func (EvpnEviSpec&    req,

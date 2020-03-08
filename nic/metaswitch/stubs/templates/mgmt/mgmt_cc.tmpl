@@ -28,16 +28,8 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
-    {{$param  := (getPdsaSetGlobalOpts . $cam)}}
-    {{$oidLen := $param.OidLen}}
-    {{$oidFam := $param.OidFam}}
-    {{$struct := $param.Struct}}
-    {{$mib    := $param.Mib}}
-    {{$fillFn := $param.FillFn}}
-    {{if not (eq $oidLen "")}}
-    /*===== Set Dump Spec: {{$msgName}} =====*/
-    NBB_VOID pds_ms_set_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
+    /*===== Dump Spec: {{$msgName}} =====*/
+    NBB_VOID pds_ms_dump_{{$msgName | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
         std::string cfg;
         google::protobuf::util::JsonPrintOptions options;
         options.add_whitespace = true;
@@ -46,23 +38,36 @@
         google::protobuf::util::MessageToJsonString(req, &cfg, options);
         PDS_TRACE_DEBUG("{{$msgName}} configuration:");
         PDS_TRACE_DEBUG("%s", cfg.c_str());
-      {{$fields := .Fields}}
-      {{range $fields}}
-        {{$castFn := getPdsaCastPrintFunc .Type}}
-        {{if (eq $castFn "pds_ms_print_byte_array")}}
-        {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}");
-        {{end}}
-      {{end}}
+  {{$fields := .Fields}}
+  {{range $fields}}
+    {{$castFn := getPdsaCastPrintFunc .Type}}
+    {{if (eq $castFn "pds_ms_print_byte_array")}}
+      {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}");
+    {{end}}
+  {{end}}
     }
+{{end}}
 
+{{$msgs := .Messages}}
+{{range $msgs}}
+  {{$msgName := .GetName}}
+  {{$msg := .}}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key") (Contains .GetName "Clear")))}}
+    {{$param  := (getPdsaSetGlobalOpts . $cam)}}
+    {{$oidLen := $param.OidLen}}
+    {{$oidFam := $param.OidFam}}
+    {{$struct := $param.Struct}}
+    {{$mib    := $param.Mib}}
+    {{$fillFn := $param.FillFn}}
+    {{if not (eq $oidLen "")}}
     /*===== Set MS Table: {{$struct}} =====*/
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,
+    NBB_VOID pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,
                                        NBB_ULONG *oid) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
 
-        NBB_TRC_ENTRY("pds_ms_set_{{$struct | ToLower}}_oid");
+        NBB_TRC_ENTRY("pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid");
         /***************************************************************************/
         /* Zero the OID, then fill in the length, family and entity index.         */
         /***************************************************************************/
@@ -120,16 +125,16 @@
         {{end}}
       {{end}}
         NBB_TRC_EXIT();
-    } /* pds_ms_set_{{$struct | ToLower}}_oid */
+    } /* pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields({{$pkgName}}::{{$msgName}} &req,
+    NBB_VOID pds_ms_fill_{{$msgName | ToLower}}_{{$struct | ToLower}}_fields({{$pkgName}}::{{$msgName}} &req,
                                              AMB_GEN_IPS *mib_msg,
                                              {{$struct}} *v_{{$struct | ToLower}},
                                              NBB_LONG row_status) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
-        NBB_TRC_ENTRY("pds_ms_fill_{{$struct | ToLower}}_fields");
+        NBB_TRC_ENTRY("pds_ms_fill_{{$msgName | ToLower}}_{{$struct | ToLower}}_fields");
 
         /***************************************************************************/
         /* Set all fields absent.                                                  */
@@ -246,9 +251,9 @@
         {{end}}
       {{end}}
         NBB_TRC_EXIT();
-    } /* pds_ms_fill_{{$struct | ToLower}}_fields */
+    } /* pds_ms_fill_{{$msgName | ToLower}}_{{$struct | ToLower}}_fields */
 
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
+    NBB_VOID pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             bool skip_fill,
@@ -256,7 +261,7 @@
         ATG_CPI_ROW_UPDATE  *row_update = NULL;
         AMB_GEN_IPS         *mib_msg = NULL;
 
-        NBB_TRC_ENTRY("pds_ms_set_{{$struct | ToLower}}");
+        NBB_TRC_ENTRY("pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}");
 
         // Build row update
         row_update = pds_ms_ctm_bld_row_update_common (&mib_msg,
@@ -272,14 +277,14 @@
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
         NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
-        pds_ms_set_{{$struct | ToLower}}_oid(req, oid);
+        pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid(req, oid);
 
         /***************************************************************************/
         /* Build {{$struct}}.                                                     */
         /***************************************************************************/
         {{$struct}} *data = ({{$struct}}*)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
         if (!skip_fill) {
-            pds_ms_fill_{{$struct | ToLower}}_fields(req, mib_msg, data, row_status);
+            pds_ms_fill_{{$msgName | ToLower}}_{{$struct | ToLower}}_fields(req, mib_msg, data, row_status);
         } else {
             AMB_SET_ALL_FIELDS_NOT_PRESENT(mib_msg);
         }
@@ -292,41 +297,41 @@
 
         NBB_TRC_EXIT();
         return;
-    } /* pds_ms_set_{{$struct | ToLower}} */
+    } /* pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    pre_set_{{$struct | ToLower}}_func_type pre_set_{{$struct | ToLower}}_func = NULL;
+    pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type func) {
-        pre_set_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_pre_set_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}(pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
+    NBB_VOID pds_ms_pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             NBB_VOID* kh,
                                             bool op_update) {
-        if (pre_set_{{$struct | ToLower}}_func != NULL) {
-            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
+        if (pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
         }
         return;
-    } /* pds_ms_pre_set_{{$struct | ToLower}} */
+    } /* pds_ms_pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    post_set_{{$struct | ToLower}}_func_type post_set_{{$struct | ToLower}}_func = NULL;
+    post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type func) {
-        post_set_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_post_set_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}(post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_post_set_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
+    NBB_VOID pds_ms_post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req,
                                             NBB_LONG row_status,
                                             NBB_ULONG test_correlator,
                                             NBB_VOID* kh,
                                             bool op_update) {
-        if (post_set_{{$struct | ToLower}}_func != NULL) {
-            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
+        if (post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(req, row_status, test_correlator, kh, op_update);
         }
         return;
-    } /* pds_ms_post_set_{{$struct | ToLower}} */
+    } /* pds_ms_post_set_{{$msgName | ToLower}}_{{$struct | ToLower}} */
     {{end}}
   {{end}}
 {{end}}
@@ -335,7 +340,7 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
+  {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key") (Contains .GetName "Clear")))}}
     {{$param := (getPdsaGetGlobalOpts . $cam)}}
     {{$oidLen := $param.OidLen}}
     {{$oidFam := $param.OidFam}}
@@ -347,26 +352,15 @@
       {{$specMsgName = (TrimPrefix .GetName $pkg)}}
     {{end}}
     {{if not (eq $oidLen "")}}
-    /*===== Get Dump Spec: {{$msgName}} =====*/
-    NBB_VOID pds_ms_get_dump_{{$struct | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
-        std::string cfg;
-        google::protobuf::util::JsonPrintOptions options;
-        options.add_whitespace = true;
-        options.always_print_primitive_fields = true;
-        options.preserve_proto_field_names = true;
-        google::protobuf::util::MessageToJsonString(req, &cfg, options);
-        PDS_TRACE_DEBUG("{{$msgName}} configuration:");
-        PDS_TRACE_DEBUG("%s", cfg.c_str());
-    }
     /*===== Get MS Table: {{$struct}} =====*/
       {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
       {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-    NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_spec_response_count;
+    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count;
       {{end}}
       {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-    NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_status_response_count;
+    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count;
       {{end}}
-    NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
+    NBB_VOID pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
     {
         /***************************************************************************/
         /* Local Variables                                                         */
@@ -377,7 +371,7 @@
         bool specific_get = false;
         {{$struct}} *v_{{$struct | ToLower}};
 
-        NBB_TRC_ENTRY("pds_ms_check_get_{{$struct | ToLower}}");
+        NBB_TRC_ENTRY("pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}");
 
         /***************************************************************************/
         /* Check assumptions.                                                      */
@@ -407,7 +401,7 @@
 
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
-                if (pds_ms_pre_fill_get_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
+                if (pds_ms_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
                     num_entries++;
 
       {{$reqfields := $rootMsg.Fields}}
@@ -424,7 +418,7 @@
             {{end}}
             {{if $specPresent}}
               {{if (isRepeatedField .)}}
-                    auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
+                    auto res = resp->mutable_response(pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count + bulk_row);
               {{else}}
                     auto res = resp->response();
               {{end}}
@@ -529,9 +523,9 @@
             }
 
         {{if HasSuffix $msg.GetName "Status"}}
-            pds_ms_check_get_{{$struct | ToLower}}_status_response_count += num_entries;
+            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count += num_entries;
         {{else}}
-            pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += num_entries;
+            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count += num_entries;
         {{end}}
 
             if (specific_get) {
@@ -549,7 +543,7 @@
                 /*************************************************************************/
                 SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-                pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+                pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
                 /*************************************************************************/
                 /* Send response back to the caller.                                     */
@@ -605,7 +599,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
 
             /*************************************************************************/
@@ -634,7 +628,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
 
             /*************************************************************************/
@@ -665,7 +659,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
             /*************************************************************************/
             /* Send response back to the caller.                                     */
@@ -677,15 +671,15 @@
 
         return;
 
-    } /* pds_ms_check_get_{{$struct | ToLower}} */
+    } /* pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid({{$pkgName}}::{{$specMsgName}} &req,
+    NBB_VOID pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid({{$pkgName}}::{{$specMsgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
 
-        NBB_TRC_ENTRY("pds_ms_get_{{$struct | ToLower}}_oid");
+        NBB_TRC_ENTRY("pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid");
         /***************************************************************************/
         /* Zero the OID, then fill in the length, family and entity index.         */
         /***************************************************************************/
@@ -745,9 +739,9 @@
         {{end}}
         {{end}}
         NBB_TRC_EXIT();
-    } /* pds_ms_get_{{$struct | ToLower}}_oid */
+    } /* pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -755,18 +749,18 @@
         NBB_ULONG oid[{{$oidLen}}];
         NBB_BUF_SIZE data_len = sizeof({{$struct}});
 
-        NBB_TRC_ENTRY("pds_ms_get_{{$struct | ToLower}}");
+        NBB_TRC_ENTRY("pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}");
 
         /***************************************************************************/
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
         {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-        pds_ms_check_get_{{$struct | ToLower}}_spec_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count = 0;
         {{end}}
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-        pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
-        SHARED.wait_check_get = pds_ms_check_get_{{$struct | ToLower}};
+        SHARED.wait_check_get = pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}};
 
         /***************************************************************************/
         /* Build and send the first GET.                                           */
@@ -775,7 +769,7 @@
         /***************************************************************************/
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
-        pds_ms_get_{{$struct | ToLower}}_oid(req, oid);
+        pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid(req, oid);
 
         /***************************************************************************/
         /* Invoke custom fill function registered by the user                      */
@@ -810,14 +804,14 @@
 
         NBB_TRC_EXIT();
         return;
-    } /* pds_ms_get_{{$struct | ToLower}} */
+    } /* pds_ms_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
+    NBB_VOID pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
 
-        NBB_TRC_ENTRY("pds_ms_getall_{{$struct | ToLower}}_oid");
+        NBB_TRC_ENTRY("pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid");
         /***************************************************************************/
         /* Zero the OID, then fill in the length, family and entity index.         */
         /***************************************************************************/
@@ -826,9 +820,9 @@
         oid[1] = {{$oidFam}};
 
         NBB_TRC_EXIT();
-    } /* pds_ms_getall_{{$struct | ToLower}}_oid */
+    } /* pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -836,18 +830,18 @@
         NBB_ULONG oid[{{$oidLen}}];
         NBB_BUF_SIZE data_len = sizeof({{$struct}});
 
-        NBB_TRC_ENTRY("pds_ms_getall_{{$struct | ToLower}}");
+        NBB_TRC_ENTRY("pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}");
 
         /***************************************************************************/
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
         {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-        pds_ms_check_get_{{$struct | ToLower}}_spec_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count = 0;
         {{end}}
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-        pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
         {{end}}
-        SHARED.wait_check_get = pds_ms_check_get_{{$struct | ToLower}};
+        SHARED.wait_check_get = pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}};
 
         /***************************************************************************/
         /* Build and send the first GET.                                           */
@@ -856,7 +850,7 @@
         /***************************************************************************/
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
-        pds_ms_getall_{{$struct | ToLower}}_oid(oid);
+        pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid(oid);
 
         /***************************************************************************/
         /* Invoke custom fill function registered by the user                      */
@@ -891,72 +885,72 @@
 
         NBB_TRC_EXIT();
         return;
-    } /* pds_ms_getall_{{$struct | ToLower}} */
+    } /* pds_ms_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    pre_fill_get_{{$struct | ToLower}}_func_type pre_fill_get_{{$struct | ToLower}}_func = NULL;
+    pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_pre_fill_get_{{$struct | ToLower}}(pre_fill_get_{{$struct | ToLower}}_func_type func) {
-        pre_fill_get_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_pre_fill_get_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    bool pds_ms_pre_fill_get_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}}) {
-        if (pre_fill_get_{{$struct | ToLower}}_func != NULL) {
-            return pre_fill_get_{{$struct | ToLower}}_func(v_{{$struct | ToLower}});
+    bool pds_ms_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}}) {
+        if (pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            return pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(v_{{$struct | ToLower}});
         }
         return true;
-    } /* pds_ms_pre_fill_get_{{$struct | ToLower}} */
+    } /* pds_ms_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    pre_get_{{$struct | ToLower}}_func_type pre_get_{{$struct | ToLower}}_func = NULL;
+    pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_pre_get_{{$struct | ToLower}}(pre_get_{{$struct | ToLower}}_func_type func) {
-        pre_get_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_pre_get_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
-        if (pre_get_{{$struct | ToLower}}_func != NULL) {
-            pre_get_{{$struct | ToLower}}_func(req, resp, kh);
+    NBB_VOID pds_ms_pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
+        if (pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(req, resp, kh);
         }
         return;
-    } /* pds_ms_pre_get_{{$struct | ToLower}} */
+    } /* pds_ms_pre_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    post_get_{{$struct | ToLower}}_func_type post_get_{{$struct | ToLower}}_func = NULL;
+    post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_post_get_{{$struct | ToLower}}(post_get_{{$struct | ToLower}}_func_type func) {
-        post_get_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_post_get_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_post_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
-        if (post_get_{{$struct | ToLower}}_func != NULL) {
-            post_get_{{$struct | ToLower}}_func(req, resp, kh);
+    NBB_VOID pds_ms_post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$specMsgName}} &req, {{$pkgName}}::{{$rootMsg.GetName}}* resp, NBB_VOID* kh) {
+        if (post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            post_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(req, resp, kh);
         }
         return;
-    } /* pds_ms_post_get_{{$struct | ToLower}} */
+    } /* pds_ms_post_get_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    pre_getall_{{$struct | ToLower}}_func_type pre_getall_{{$struct | ToLower}}_func = NULL;
+    pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_pre_getall_{{$struct | ToLower}}(pre_getall_{{$struct | ToLower}}_func_type func) {
-        pre_getall_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_pre_getall_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
-        if (pre_getall_{{$struct | ToLower}}_func != NULL) {
-            pre_getall_{{$struct | ToLower}}_func(resp);
+    NBB_VOID pds_ms_pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
+        if (pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(resp);
         }
         return;
-    } /* pds_ms_pre_getall_{{$struct | ToLower}} */
+    } /* pds_ms_pre_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    post_getall_{{$struct | ToLower}}_func_type post_getall_{{$struct | ToLower}}_func = NULL;
+    post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = NULL;
 
-    NBB_VOID pds_ms_reg_post_getall_{{$struct | ToLower}}(post_getall_{{$struct | ToLower}}_func_type func) {
-        post_getall_{{$struct | ToLower}}_func = func;
-    } /* pds_ms_reg_post_getall_{{$struct | ToLower}} */
+    NBB_VOID pds_ms_reg_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}(post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type func) {
+        post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
-        if (post_getall_{{$struct | ToLower}}_func != NULL) {
-            post_getall_{{$struct | ToLower}}_func(resp);
+    NBB_VOID pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}({{$pkgName}}::{{$rootMsg.GetName}}* resp) {
+        if (post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func != NULL) {
+            post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}}_func(resp);
         }
         return;
-    } /* pds_ms_post_getall_{{$struct | ToLower}} */
+    } /* pds_ms_post_getall_{{$msgName | ToLower}}_{{$struct | ToLower}} */
 
     {{end}}
   {{end}}
@@ -1079,7 +1073,7 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key"))) (HasPrefix $fileName "internal_")}}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key") (Contains .GetName "Clear"))) (HasPrefix $fileName "internal_")}}
     {{$param := (getPdsaSetGlobalOpts . $cam)}}
     {{$struct := $param.Struct}}
     {{$specMsgName := $param.SpecMsg}}
@@ -1118,7 +1112,7 @@
       {{end}}
     } /* pds_ms_ext_to_int_{{$msgName | ToLower}} */
   {{else}}
-    {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key")))}}
+    {{if and (hasExtension "venice.pdsaGetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key") (Contains .GetName "Clear"))) (HasPrefix $fileName "internal_")}}
       {{$param := (getPdsaGetGlobalOpts . $cam)}}
       {{$struct := $param.Struct}}
       {{$specMsgName := $param.SpecMsg}}
@@ -1164,7 +1158,7 @@
 {{range $msgs}}
   {{$msgName := .GetName}}
   {{$msg := .}}
-  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key"))) (HasPrefix $fileName "internal_")}}
+  {{if and (hasExtension "venice.pdsaSetGlobOpts" . ) (not (or (HasSuffix .GetName "KeyHandle") (HasSuffix .GetName "Key") (Contains .GetName "Clear"))) (HasPrefix $fileName "internal_")}}
     {{$param := (getPdsaSetGlobalOpts . $cam)}}
     {{$struct := $param.Struct}}
     {{$specMsgName := $param.SpecMsg}}
@@ -1308,6 +1302,6 @@
         {{end}}
       {{end}}
     {{end}}
-    } /*pds_ms_get_external_{{$msgName | ToLower}}*/
+    } /* pds_ms_convert_{{$msgName | ToLower}}_ext_response */
   {{end}}
 {{end}}

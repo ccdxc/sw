@@ -40,6 +40,7 @@ service BGPSvc {
   rpc BGPPeerAfUpdate (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
   rpc BGPPeerAfDelete (BGPPeerAfDeleteRequest) returns (BGPPeerAfDeleteResponse) {}
   rpc BGPPeerAfGet (BGPPeerAfGetRequest) returns (BGPPeerAfGetResponse) {}
+  rpc BGPClearRoute (BGPClearRouteRequest) returns (BGPClearRouteResponse) {}
   rpc BGPNLRIPrefixGet (BGPNLRIPrefixGetRequest) returns (BGPNLRIPrefixGetResponse) {}
 }
 
@@ -119,7 +120,6 @@ message BGPRequest {
 // BGP create and update response
 message BGPResponse {
   types.ApiStatus ApiStatus = 1;
-  BGPStatus       Response  = 2;
 }
 
 // BGP KeyHandle used in Get/Delete
@@ -382,6 +382,36 @@ message BGPPeerAfGetRequest {
 message BGPPeerAfGetResponse {
   types.ApiStatus     ApiStatus = 1;
   repeated BGPPeerAf  Response  = 2;
+}
+
+enum BGPClearRouteOptions {
+    BGP_CLEAR_ROUTE_NONE         = 0;
+    BGP_CLEAR_ROUTE_HARD         = 1; // toggle session
+    BGP_CLEAR_ROUTE_REFRESH_IN   = 2; // request route refresh from peer
+    BGP_CLEAR_ROUTE_REFRESH_OUT  = 3; // send all routes to peer
+    BGP_CLEAR_ROUTE_REFRESH_BOTH = 4; // send all routes to peer and request
+                                      // route refresh from peer
+}
+
+message BGPClearRouteRequest {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "bgp_clear_route_action_func"
+  };
+
+  // clear route options
+  BGPClearRouteOptions Option = 1;
+
+  oneof peer_or_peeraf {
+    // peer key
+    BGPPeerKeyHandle Peer     = 2;
+    // peer address-family key 
+    BGPPeerAfKeyHandle PeerAf = 3;
+  }
+}
+
+// BGP clear route response
+message BGPClearRouteResponse {
+  types.ApiStatus ApiStatus = 1;
 }
 
 // NLRI source

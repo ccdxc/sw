@@ -25,6 +25,12 @@ def process_response(req_msg, resp_msg):
             print ("Spec: RD: %s"% spec.RD)
             print ("Spec: AutoRt: %s" % ("Auto" if spec.AutoRT==evpn_pb2.EVPN_CFG_AUTO else "Manual"))
             print ("Spec: RTType: %d" % spec.RTType)
+            status = resp.Status
+            print ("Oper RD: "),
+            for i in status.RD:
+                mm=int(i.encode('hex'),16)
+                print(hex(mm) ),
+            print
     else:
         print ("Op Success")
     return

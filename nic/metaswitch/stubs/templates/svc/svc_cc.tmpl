@@ -42,23 +42,20 @@ Status
         return Status::CANCELLED;
     }
     types::ApiStatus ret = types::API_STATUS_OK;
-    {{if (HasSuffix $rpc "Create")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
-    {{end}}
-    {{if (HasSuffix $rpc "Delete")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
-    {{end}}
-    {{if (HasSuffix $rpc "Update")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
-    {{end}}
+    PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}}");
     try {
-    ret = {{$param.ActionFn}}(req, resp);
+    ret = {{$pkgName}}::{{$param.ActionFn}}(req, resp);
     } catch (const pds_ms::Error& e) {
-        PDS_TRACE_ERR("MIB Get aborted %s", e.what());
+        PDS_TRACE_ERR("gRPC {{.RequestType.Name}} Action Fn aborted %s", e.what());
         resp->set_apistatus(pds_ms_sdk_ret_to_api_status(e.rc()));
         return Status::OK;
     }
     resp->set_apistatus(ret);
+    if (ret != types::API_STATUS_OK) {
+        PDS_TRACE_ERR ("Failed to process gRPC {{.RequestType.Name}}: %s", pds_ms_api_ret_str(ret));
+    } else {
+        PDS_TRACE_DEBUG ("Processed gRPC {{.RequestType.Name}} successfully");
+    }
     return Status::OK;
     {{end}}
   {{else}}
@@ -72,18 +69,10 @@ Status
     }
     {{$pkgName}}::{{.ResponseType.Name}} proto_resp;
     types::ApiStatus ret = types::API_STATUS_OK;
-
-    {{if (HasSuffix $rpc "Create")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Create");
-    {{end}}
-    {{if (HasSuffix $rpc "Delete")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Delete");
-    {{end}}
     {{if (HasSuffix $rpc "Update")}}
        PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
-    {{end}}
-    {{if (HasSuffix $rpc "Get") }}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
+    {{else}}
+    PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}}");
     {{end}}
     try {
     {{if or (HasSuffix $rpc "Delete") (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
@@ -113,28 +102,28 @@ Status
         {{$pkgName}}::{{$specMsgName}} proto_spec;
               {{if (HasSuffix $rpc "Delete")}}
         pds_ms_get_{{$specMsgName | ToLower}}_from_{{$keyHandleReqName | ToLower}}(req_proto_spec, proto_spec);
-        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, &req_proto_spec);
-        pds_ms_set_dump_{{$struct | ToLower}}(proto_spec);
+        pds_ms_pre_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, &req_proto_spec);
+        pds_ms_dump_{{$specMsgName | ToLower}}(proto_spec);
                 {{if $updForDel}}
-        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE, TRUE);
+        pds_ms_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE, TRUE);
                 {{else}}
-        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, TRUE);
+        pds_ms_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, TRUE);
                 {{end}}
-        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, &req_proto_spec);
+        pds_ms_post_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator, &req_proto_spec);
               {{end}}
               {{if (HasSuffix $rpc "Create")}}
-        pds_ms_ext_to_int_{{$specMsgName | ToLower}} (req_proto_spec, proto_spec);
-        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec);
-        pds_ms_set_dump_{{$struct | ToLower}}(proto_spec);
-        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, FALSE);
-        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec);
+        pds_ms_ext_to_int_{{$specMsgName | ToLower}}(req_proto_spec, proto_spec);
+        pds_ms_pre_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec);
+        pds_ms_dump_{{$specMsgName | ToLower}}(proto_spec);
+        pds_ms_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, FALSE);
+        pds_ms_post_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec);
               {{end}}
               {{if (HasSuffix $rpc "Update")}}
-        pds_ms_ext_to_int_{{$specMsgName | ToLower}} (req_proto_spec, proto_spec);
-        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec, TRUE);
-        pds_ms_set_dump_{{$struct | ToLower}}(proto_spec);
-        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, FALSE, TRUE);
-        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec, TRUE);
+        pds_ms_ext_to_int_{{$specMsgName | ToLower}}(req_proto_spec, proto_spec);
+        pds_ms_pre_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec, TRUE);
+        pds_ms_dump_{{$specMsgName | ToLower}}(proto_spec);
+        pds_ms_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, FALSE, TRUE);
+        pds_ms_post_set_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, &req_proto_spec, TRUE);
               {{end}}
             {{end}}
           {{end}}
@@ -183,10 +172,10 @@ Status
                 {{$pkgName}}::{{$specMsgName}} proto_spec;
                 pds_ms_get_{{$specMsgName | ToLower}}_from_{{$keyHandleReqName | ToLower}}(req_proto_spec, proto_spec);
                 PDS_MS_GET_SHARED_START();
-                pds_ms_pre_get_{{$struct | ToLower}}(proto_spec, &proto_resp, &req_proto_spec);
-                pds_ms_get_dump_{{$struct | ToLower}}(proto_spec);
-                pds_ms_get_{{$struct | ToLower}}(proto_spec, &proto_resp);
-                pds_ms_post_get_{{$struct | ToLower}}(proto_spec, &proto_resp, &req_proto_spec);
+                pds_ms_pre_get_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp, &req_proto_spec);
+                pds_ms_dump_{{$specMsgName | ToLower}}(proto_spec);
+                pds_ms_get_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp);
+                pds_ms_post_get_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp, &req_proto_spec);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                     {{end}}
@@ -197,6 +186,9 @@ Status
                       {{$param := (getPdsaGetGlobalOpts $statusMsg $cam)}}
                       {{$struct := $param.Struct}}
                       {{$specMsgName := $param.SpecMsg}}
+                      {{if (eq $specMsgName "")}}
+                        {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
+                      {{end}}
                       {{$specType := getCppTypeFieldFromProto .Type .GetTypeName}}
                 if (ret == types::API_STATUS_OK) {
                     {{$statusMsgHasNoKeys := true}}
@@ -235,9 +227,10 @@ Status
                       {{end}}
                     {{end}}  
                     PDS_MS_GET_SHARED_START();
-                    pds_ms_pre_get_{{$struct | ToLower}}(proto_status, &proto_resp, &req_proto_spec);
-                    pds_ms_get_{{$struct | ToLower}}(proto_status, &proto_resp);
-                    pds_ms_post_get_{{$struct | ToLower}}(proto_status, &proto_resp, &req_proto_spec);
+                    {{$statusMsgName := (TrimPrefix .GetTypeName $pkg)}}
+                    pds_ms_pre_get_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(proto_status, &proto_resp, &req_proto_spec);
+                    pds_ms_get_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(proto_status, &proto_resp);
+                    pds_ms_post_get_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(proto_status, &proto_resp, &req_proto_spec);
                     PDS_MS_GET_SHARED_END();
                     ret = pds_ms::mgmt_state_t::ms_response_wait();
                 }
@@ -247,12 +240,13 @@ Status
                 {{if hasExtension "venice.pdsaGetGlobOpts" $innerRespMsg}}
                   {{$param := (getPdsaGetGlobalOpts $innerRespMsg $cam)}}
                   {{$struct := $param.Struct}}
+                  {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
                   {{if (HasSuffix $rpc "Get")}}
                 PDS_MS_GET_SHARED_START();
-                pds_ms_pre_get_{{$struct | ToLower}}(proto_spec, &proto_resp);
-                pds_ms_get_dump_{{$struct | ToLower}}(proto_spec);
-                pds_ms_get_{{$struct | ToLower}}(proto_spec, &proto_resp);
-                pds_ms_postget_{{$struct | ToLower}}(proto_spec, &proto_resp);
+                pds_ms_pre_get_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp);
+                pds_ms_dump_{{$specMsgName | ToLower}}(proto_spec);
+                pds_ms_get_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp);
+                pds_ms_postget_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(proto_spec, &proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                   {{end}}
@@ -278,10 +272,14 @@ Status
                       {{if hasExtension "venice.pdsaGetGlobOpts" $specMsg}}
                         {{$param := (getPdsaGetGlobalOpts $specMsg $cam)}}
                         {{$struct := $param.Struct}}
+                        {{$specMsgName := $param.SpecMsg}}
+                        {{if (eq $specMsgName "")}}
+                          {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
+                        {{end}}
                 PDS_MS_GET_SHARED_START();
-                pds_ms_pre_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_post_getall_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                       {{end}}
@@ -291,10 +289,15 @@ Status
                       {{if hasExtension "venice.pdsaGetGlobOpts" $statusMsg}}
                         {{$param := (getPdsaGetGlobalOpts $statusMsg $cam)}}
                         {{$struct := $param.Struct}}
+                        {{$specMsgName := $param.SpecMsg}}
+                        {{if (eq $specMsgName "")}}
+                          {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
+                        {{end}}
                 PDS_MS_GET_SHARED_START();
-                pds_ms_pre_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_post_getall_{{$struct | ToLower}}(&proto_resp);
+                        {{$statusMsgName := (TrimPrefix .GetTypeName $pkg)}}
+                pds_ms_pre_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                       {{end}}
@@ -303,10 +306,11 @@ Status
                   {{if hasExtension "venice.pdsaGetGlobOpts" $innerRespMsg}}
                     {{$param := (getPdsaGetGlobalOpts $innerRespMsg $cam)}}
                     {{$struct := $param.Struct}}
+                    {{$specMsgName := (TrimPrefix .GetTypeName $pkg)}}
                 PDS_MS_GET_SHARED_START();
-                pds_ms_pre_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_post_getall_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_pre_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                pds_ms_post_getall_{{$specMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
                 PDS_MS_GET_SHARED_END();
                 ret = pds_ms::mgmt_state_t::ms_response_wait();
                   {{end}}
