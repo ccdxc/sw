@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
   # baremetal + baremetal Esx test cases
   e2e-esx-fwdr-compat:
-     commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite hostpin_vm --testbundle driver-compat"]
+     commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --testbundle driver-compat"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
      owners: ["email:srivatsa@pensando.io"]
      area:
@@ -37,8 +37,8 @@ e2e-targets:
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
   - /sw/iota/all_corefiles.tgz

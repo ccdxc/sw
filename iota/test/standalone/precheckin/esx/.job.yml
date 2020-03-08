@@ -9,14 +9,13 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + baremetal Esx test cases
- e2e-esx-bm-regression:
-   commands: ["sh", "-c", "make esx-regression && ./run_iota.sh --testsuite useg_enf_esx --regression --skip-sanity"]
-   #  commands: [ "cat /warmd.json && sleep 30000000"]
+  e2e-esx-bm:
+   commands: ["sh", "-c", "make esx-precheckin && ./run_iota.sh --testsuite useg_enf_esx --precheckin --skip-sanity"]
+   # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:akshay@pensando.io"]
    area:
    sub-area:
    feature:
-   max-duration: 24h
    build-dependencies:
      - build-iris-arm
      - build-iota
@@ -24,9 +23,9 @@ e2e-targets:
      - image: build-10
        count: 2
        resources:
-         # server-type could be server-a or server-d
-         server-type: server-a
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         servers:
+           - type: hpe
+           - type: server-a
          nic-type: naples
    provision:
        username: vm
@@ -42,3 +41,4 @@ logfiles:
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/all_corefiles.tgz

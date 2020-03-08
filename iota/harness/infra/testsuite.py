@@ -170,7 +170,11 @@ class TestSuite:
             for bunfile in getattr(self.__spec.testbundles, 'regression', []):
                 tbun = testbundle.TestBundle(bunfile, self)
                 self.__testbundles.append(tbun)
-        return
+
+        if GlobalOptions.precheckin:
+            for bunfile in getattr(self.__spec.testbundles, 'precheckin', []):
+                tbun = testbundle.TestBundle(bunfile, self)
+                self.__testbundles.append(tbun)
 
     def __resolve_teardown(self):
         teardown_spec = getattr(self.__spec, 'teardown', [])

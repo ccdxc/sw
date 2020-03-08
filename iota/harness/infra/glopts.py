@@ -51,6 +51,8 @@ parser.add_argument('--only-firmware-upgrade', dest='only_firmware_upgrade',
                     action='store_true', help='Only Do Firmware Upgrade and Stop.')
 parser.add_argument('--only-reboot', dest='only_reboot',
                     action='store_true', help='Only reboot the nodes and start tests.')
+parser.add_argument('--precheckin', dest='precheckin',
+                    action='store_true', help='Also run precheckin Testsuites.')
 parser.add_argument('--regression', dest='regression',
                     action='store_true', help='Also run regression Testsuites.')
 parser.add_argument('--extended', dest='extended',

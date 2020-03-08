@@ -1,0 +1,16 @@
+meta:
+    name            : flowlog
+    nics            : [ pensando, intel, mellanox, broadcom ]
+    os              : [ linux, esx ]
+    targetcount     : 1 
+
+testcases:
+    -   name        : FlowLogSingleIPv4
+        testcase    : testcases.flowlog.single_ipv4_flow_log
+        iterators   :
+            type    : nested
+            proto   : [tcp]
+            timeout : [0s]
+        args        :
+            type    : remote_only
+

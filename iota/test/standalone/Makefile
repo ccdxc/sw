@@ -17,6 +17,8 @@ esx: extract-artifacts
 
 esx-regression: extract-artifacts
 
+esx-precheckin: extract-artifacts
+
 apulu-linux: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
 apulu-linux: extract-artifacts
 

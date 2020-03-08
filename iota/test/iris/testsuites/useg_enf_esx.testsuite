@@ -1,5 +1,5 @@
 meta:
-    name        : hostpin_vm
+    name        : useg_enf_esx
     description : Hardware Test Suite
     mode        : hardware
     cfgmode     : netagent
@@ -38,6 +38,22 @@ common:
         -   step : verif.utils.collect_logs_and_cores
 
 testbundles:
+    precheckin:
+        - networking/connectivity.testbundle
+        - flowlog/flowlog_precheckin.testbundle
+        - networking/cps_precheckin.testbundle
+        - networking/telemetry_precheckin.testbundle
+        - firewall/policy_precheckin.testbundle
+        - firewall/normalization.testbundle
+        - aging/aging_precheckin.testbundle
+        - penctl/penctl_hostpin.testbundle
+        - p4ctl/p4ctl_hostpin.testbundle
+        #- naples_upgrade/naples_upgrade_hostpin.testbundle
+        - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
+        - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
+        
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle

@@ -1,0 +1,26 @@
+meta:
+    name    : telemetry
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 72
+
+testcases:
+    -   name    : Ping_Mirror_Policy
+        testcase: testcases.telemetry.ping_mirror_policy
+        enable  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            pktsize : [128]
+            proto   : [mixed]
+
+    -   name    : Flowmon_Policy
+        testcase: testcases.telemetry.flowmon_policy
+        enable  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            pktsize : [128]
+            proto   : [mixed]

@@ -1,0 +1,27 @@
+meta:
+    name    : policy
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 7
+
+testcases:
+    -   name    : SessionLimit
+        testcase: testcases.security.firewall_session_limit
+        iterators:
+            type : nested
+            kind : ["local"]
+            proto : ["udp"]
+
+    -   name    : SessionLimitWithOtherTraffic
+        testcase: testcases.security.firewall_allow_other_session_limit
+        iterators:
+            type : nested
+            kind : ["local", "remote"]
+            proto : ["tcp"]
+
+    -   name    : PolicyLocalToRemote
+        testcase: testcases.security.policy_rules_auto
+        iterators :
+            type  : simple
+            proto : ['tcp', 'udp']
+            scale : [50, 50]

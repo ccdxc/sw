@@ -1,0 +1,37 @@
+meta:
+    name    : aging
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 20 
+
+testcases:
+    -   name    : AgingICMPSessions
+        testcase: testcases.aging.ping
+        iterators:
+            type              : simple
+            #timeout           : [10s, 30s, 68s]
+            timeout           : [30s]
+        args    :
+            type: remote_only
+            skip_security_prof: False
+
+    -   name    : AgingUdpSessions
+        testcase: testcases.aging.udp
+        iterators:
+            type              : simple 
+            #timeout           : [20s, 30s, 70s]
+            timeout           : [30s]
+        args    :
+            type: local_only
+            skip_security_prof: False
+
+    -   name    : AgingTcpSessions
+        testcase: testcases.aging.tcp
+        iterators:
+            type              : simple
+            #timeout           : [10s, 30s, 60s]
+            timeout           : [20s]
+        args    :
+            type: local_only
+            skip_security_prof: False
+
