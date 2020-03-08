@@ -253,5 +253,13 @@
          "cpu-max-percentage": 20,
          "timeout": 0.0,
          "cpu-affinity": "0xD"
+     },
+     {
+         "name": "ncsid",
+         "command": "/bin/sh /platform/tools/start-ncsid.sh",
+         "dependencies": [],
+         "flags": ["restartable", "save_stdout_on_crash"],
+         "timeout": 0.0,
+         "cpu-affinity": "0xD"
      }
 ]

@@ -61,6 +61,7 @@ nic/sdk/third-party/ncurses/aarch64/*.so                                       /
 
 # Misc
 platform/tools/start-nicmgr-haps.sh                                             /platform/tools/
+platform/tools/start-ncsid.sh                                                   /platform/tools/
 platform/src/app/nicmgrd/etc/*.json                                             /platform/etc/nicmgrd/
 nic/build/aarch64/iris/out/capviewdb_submake/capviewdb.bin                      /platform/etc/
 platform/src/app/cpld/bin/*.bin                                                 /nic/etc/cpld/

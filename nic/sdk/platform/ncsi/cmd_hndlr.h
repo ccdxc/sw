@@ -149,6 +149,41 @@ struct port_stats {
 	uint8_t rsvd[312];
 };
 
+struct mgmt_port_stats {
+	__le64 frames_rx_ok;
+	__le64 frames_rx_all;
+	__le64 frames_rx_bad_fcs;
+	__le64 frames_rx_bad_all;
+	__le64 octets_rx_ok;
+	__le64 octets_rx_all;
+	__le64 frames_rx_unicast;
+	__le64 frames_rx_multicast;
+	__le64 frames_rx_broadcast;
+	__le64 frames_rx_pause;
+	__le64 frames_rx_bad_length;
+	__le64 frames_rx_undersized;
+	__le64 frames_rx_oversized;
+	__le64 frames_rx_fragments;
+	__le64 frames_rx_jabber;
+	__le64 frames_rx_64b;
+	__le64 frames_rx_65b_127b;
+	__le64 frames_rx_128b_255b;
+	__le64 frames_rx_256b_511b;
+	__le64 frames_rx_512b_1023b;
+	__le64 frames_rx_1024b_1518b;
+	__le64 frames_rx_gt_1518b;
+	__le64 frames_rx_fifo_full;
+	__le64 frames_tx_ok;
+	__le64 frames_tx_all;
+	__le64 frames_tx_bad;
+	__le64 octets_tx_ok;
+	__le64 octets_tx_total;
+	__le64 frames_tx_unicast;
+	__le64 frames_tx_multicast;
+	__le64 frames_tx_broadcast;
+	__le64 frames_tx_pause;
+};
+
 struct NcsiStats {
     //Incremented for each valid NCSI command packet
     uint32_t valid_cmd_rx_cnt;        

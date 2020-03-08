@@ -127,7 +127,5 @@ fi
 
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
 
-HAL_CONFIG_PATH=/nic/conf /platform/bin/ncsid &
-
 echo "All processes brought up, please check ..."
 

@@ -79,7 +79,7 @@ public:
     int PostMsg(struct EnableChanTxMsg& enable_ch_tx);
     int PostMsg(struct EnableBcastFilterMsg& bcast_filter);
     int PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter);
-    int GetLinkStatus(uint32_t port, bool& link_status);
+    int GetLinkStatus(uint32_t port, bool& link_status, uint8_t& link_speed);
 };
 
 #endif //__GRCP_IPC_SERVICE_H__

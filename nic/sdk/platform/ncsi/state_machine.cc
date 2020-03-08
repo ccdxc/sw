@@ -89,7 +89,8 @@ NcsiStateErr StateMachine::UpdateState(NcsiCmd cmd)
 
     SetState(next_state);
 
-    SDK_TRACE_INFO("Update StateMachine: cmd:0x%x initial_state: 0x%x, next_state = 0x%x", cmd, cur_state, next_state);
+    if (cur_state != next_state)
+        SDK_TRACE_INFO("Update StateMachine: cmd:0x%x initial_state: 0x%x, next_state = 0x%x", cmd, cur_state, next_state);
 
     return ret;
 }

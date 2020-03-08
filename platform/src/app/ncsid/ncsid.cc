@@ -6,7 +6,6 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/ncsi/ncsi_mgr.h"
 #include "nic/sdk/lib/logger/logger.hpp"
-#include "delphi_ipc.h"
 #include "grpc_ipc.h"
 
 #define ARRAY_LEN(var)   (int)((sizeof(var)/sizeof(var[0])))
@@ -80,10 +79,8 @@ int ncsi_logger (sdk_trace_level_e trace_level, const char *format, ...)
     }
     return 0;
 }
-shared_ptr<DelphiIpcService> ncsid_delphi_svc;
 shared_ptr<grpc_ipc> grpc_ipc_svc;
 
-delphi::SdkPtr g_sdk;
 NcsiMgr *ncsimgr;
 std::string transport_mode = "RBT";
 transport* xport_obj;
@@ -94,50 +91,45 @@ bool is_interface_online(const char* interface) {
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     memset(&ifr, 0, sizeof(ifr));
     strcpy(ifr.ifr_name, interface);
-    if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
-        //perror("SIOCGIFFLAGS");
+
+    ifr.ifr_flags = (IFF_UP | IFF_BROADCAST | IFF_RUNNING | IFF_MULTICAST);
+
+    if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
+        perror("SIOCSIFFLAGS");
+        return false;
     }
+    
+    memset(&ifr, 0, sizeof(ifr));
+    strcpy(ifr.ifr_name, interface);
+    if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
+        perror("SIOCGIFFLAGS");
+        return false;
+    }
+
     close(sock);
     return !!(ifr.ifr_flags & IFF_UP);
 }
 
-void delphi_mount_cb()
+void InitNcsiMgr()
 {
-    Logger logger_obj;
-
-    //Create the logger
-    logger_obj = CreateLogger("ncsi.log");
-    SetCurrentLogger(logger_obj);
-
-    sdk::lib::logger::init(ncsi_logger);
-
     if (!(transport_mode.compare("RBT")))
         xport_obj = new rbt_transport(iface_name);
     else if (transport_mode.compare("MCTP"))
         xport_obj = new mctp_transport();
     else {
-        printf("Illegal transport mode provided.");
+        SDK_TRACE_INFO("Invalid transport mode: %s", transport_mode.c_str());
         return;
     }
 
-    printf("Initializing ncsi transport in %s mode\n", transport_mode.c_str());
+    SDK_TRACE_INFO("Initializing ncsi transport in %s mode", 
+            transport_mode.c_str());
     while(!is_interface_online(iface_name)) {
-        //printf("Interface is not online, waiting...\n");
-        usleep(100000);
+        //SDK_TRACE_INFO("Interface is not online, waiting...\n");
+        usleep(10000);
     }
 
+    SDK_TRACE_INFO("NCSI interface is UP !"); 
     ncsimgr->Init(xport_obj, grpc_ipc_svc);
-
-    return;
-}
-
-void delphi_init()
-{
-    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    g_sdk = sdk;
-    ncsid_delphi_svc = make_shared<DelphiIpcService>(sdk, delphi_mount_cb);
-
-    ncsid_delphi_svc->Init(ncsid_delphi_svc);
 
     return;
 }
@@ -146,15 +138,22 @@ int main(int argc, char* argv[])
 {
    ncsimgr = new NcsiMgr();
    grpc_ipc_svc = make_shared<grpc_ipc>();
+   Logger logger_obj;
+
+    //Create the logger
+    logger_obj = CreateLogger("ncsi.log");
+    SetCurrentLogger(logger_obj);
+
+    sdk::lib::logger::init(ncsi_logger);
 
     if (argc > 1) {
         if (!strcmp(argv[1], "RBT"))
-            printf("trasnport mode is RBT\n");
+            SDK_TRACE_INFO("transport mode: RBT");
         else if (!strcmp(argv[1], "MCTP"))
-            printf("trasnport mode is MCTP\n");
+            SDK_TRACE_INFO("transport mode: MCTP");
         else
         {
-            printf("Invalid transport mode\n");
+            SDK_TRACE_INFO("Invalid transport mode");
             return usage(argc, argv);
         }
     }
@@ -162,13 +161,11 @@ int main(int argc, char* argv[])
         strncpy(iface_name, argv[2], sizeof(iface_name));
 
     grpc_ipc_svc->connect_hal();
-    delphi_init();
-
-    printf("Waiting for onmountcomplete...\n");
+    InitNcsiMgr();
     evutil_run(EV_DEFAULT);
 
     //Should never reach here
-    printf("should never be printed !!!\n");
+    SDK_TRACE_INFO("should never reach here. Exiting ncsid app !");
 
     return 0;
 }

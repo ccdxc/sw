@@ -7,6 +7,12 @@
 
 using std::chrono::seconds;
 
+#define NCSI_LINK_SPEED_10G     (0x8)
+#define NCSI_LINK_SPEED_25G     (0xA)
+#define NCSI_LINK_SPEED_40G     (0xB)
+#define NCSI_LINK_SPEED_50G     (0xC)
+#define NCSI_LINK_SPEED_100G     (0xD)
+
 #define HAL_GRPC_API_TIMEOUT 25
 
 #define SET_TIMEOUT()                                                       \
@@ -649,7 +655,7 @@ static bool port_handle_api_status(types::ApiStatus api_status,
     return true;
 }
 
-int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status)
+int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status, uint8_t& link_speed)
 {
     //g_link_event_handler->get_link_status();
     PortGetRequest      *req;
@@ -657,6 +663,7 @@ int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status)
     PortGetResponseMsg  rsp_msg;
     grpc::ClientContext context;
     Status              status;
+    link_speed = 0;
 
     if (port == 0)
         port = 0x11010001;
@@ -676,14 +683,37 @@ int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status)
 
         if (port_handle_api_status(
                     rsp_msg.response(0).api_status(), port) == true) {
-            SDK_TRACE_INFO("Port oper status: %x",
+            SDK_TRACE_DEBUG("Port oper status: %x",
                 rsp_msg.response(0).status().link_status().oper_state());
 
             if (rsp_msg.response(0).status().link_status().oper_state() == 
-                    port::PORT_OPER_STATUS_UP)
+                    port::PORT_OPER_STATUS_UP) {
                 link_status = true;
-            else
+
+                switch(rsp_msg.response(0).spec().port_speed()) {
+                    case port::PORT_SPEED_10G:
+                        link_speed = NCSI_LINK_SPEED_10G; //0x8
+                        break;
+                    case port::PORT_SPEED_25G:
+                        link_speed = NCSI_LINK_SPEED_25G; //0xA;
+                        break;
+                    case port::PORT_SPEED_40G:
+                        link_speed = NCSI_LINK_SPEED_40G; //0xB;
+                        break;
+                    case port::PORT_SPEED_50G:
+                        link_speed = NCSI_LINK_SPEED_50G; //0xC;
+                        break;
+                    case port::PORT_SPEED_100G:
+                        link_speed = NCSI_LINK_SPEED_100G; //0xD;
+                        break;
+                    default:
+                        link_speed = 0;
+
+                }// end of switch
+            }
+            else {
                 link_status = false;
+            }
 
         } else {
             SDK_TRACE_ERR("Port Get failed for port %d api_status: %x", 
