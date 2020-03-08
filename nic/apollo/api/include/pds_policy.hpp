@@ -102,7 +102,6 @@ typedef struct rule_s {
 
 /// \brief    generic policy specification
 typedef struct pds_policy_spec_s    pds_policy_spec_t;
-/// \brief    generic policy specification
 struct pds_policy_spec_s {
     pds_obj_key_t       key;            ///< policy key
     uint8_t             af;             ///< Address family
@@ -142,14 +141,13 @@ typedef struct pds_policy_status_s {
 
 /// \brief policy statistics
 typedef struct pds_policy_stats_s {
-
 } pds_policy_stats_t;
 
 /// \brief policy info
 typedef struct pds_policy_info_s {
-    pds_policy_spec_t spec;         ///< Specification
-    pds_policy_status_t status;     ///< Status
-    pds_policy_stats_t stats;       ///< Statistics
+    pds_policy_spec_t spec;         ///< specification
+    pds_policy_status_t status;     ///< status
+    pds_policy_stats_t stats;       ///< statistics
 } pds_policy_info_t;
 
 /// \brief    create policy
@@ -186,6 +184,56 @@ sdk_ret_t pds_policy_update(pds_policy_spec_t *policy,
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_delete(pds_obj_key_t *key,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief    policy rule specification
+typedef struct pds_policy_rule_spec_s {
+    pds_obj_key_t key;       ///< rule identifier
+    pds_obj_key_t policy;    ///< policy this rule is part of
+    rule_t rule;             ///< rule configuration
+} pds_policy_rule_spec_t;
+
+/// \brief policy rule status
+typedef struct pds_policy_rule_status_s {
+} pds_policy_rule_status_t;
+
+/// \brief policy rule statistics
+typedef struct pds_policy_rule_stats_s {
+} pds_policy_rule_stats_t;
+
+/// \brief policy rule info
+typedef struct pds_policy_rule_info_s {
+    pds_policy_rule_spec_t spec;         ///< specification
+    pds_policy_rule_status_t status;     ///< status
+    pds_policy_rule_stats_t stats;       ///< statistics
+} pds_policy_rule_info_t;
+
+/// \brief    create policy rule
+/// \param[in] spec    rule configurationn
+/// \param[in] bctxt   batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_rule_create(pds_policy_rule_spec_t *spec,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief    read policy rule
+/// \param[in]  key    rule key
+/// \param[out] info    rule information
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_rule_read(pds_obj_key_t *key,
+                               pds_policy_rule_info_t *info);
+
+/// \brief    update policy rule
+/// \param[in] spec    rule configuration
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_rule_update(pds_policy_rule_spec_t *spec,
+                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
+
+/// \brief    delete policy rule
+/// \param[in] key    rule key
+/// \param[in] bctxt batch context if API is invoked in a batch
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_rule_delete(pds_obj_key_t *key,
+                                 pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 #define PDS_MAX_SECURITY_PROFILE  1 ///< only one instance of security profile
 
