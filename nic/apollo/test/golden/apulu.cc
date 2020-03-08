@@ -150,6 +150,16 @@ uint32_t g_dip7 = 0x0A0A0103;
 
 uint32_t g_dip9 = 0x0A0A0109;
 
+uint32_t g_sip11 = 0x0B0B010B;
+uint16_t g_vnic_id11 = 0x20B;
+uint8_t  g_mirror_id1 = 1;
+uint8_t  g_mirror_id2 = 5;
+uint64_t g_erspan_dmac1 = 0x000E0E0E0E0EULL;
+uint64_t g_erspan_smac1 = 0x00E1E2E3E4E5ULL;
+uint32_t g_erspan_dip1 = 0xC8010102;
+uint32_t g_erspan_sip1 = 0xC8010101;
+uint32_t g_tunnel2_id11 = 0x7B;
+
 mpartition *g_mempartition;
 
 class sort_mpu_programs_compare {
@@ -618,6 +628,18 @@ local_mappings_init (void)
     local_info->binding_id1 = g_binding_id1;
     local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.key_metadata_local_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip11, 4);
+    local_info->entry_valid = 1;
+    local_info->vnic_id = g_vnic_id11;
+    local_info->binding_check_enabled = 1;
+    local_info->binding_id1 = g_binding_id1;
+    local_info->allow_tagged_pkts = 1;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
 }
 
 static void
@@ -960,6 +982,20 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_flow_lkp_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip11;
+    key.key_metadata_ipv4_dst = g_dip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 }
 
 static void
@@ -1201,6 +1237,57 @@ tunnel2_init (void)
     tunnel2_info->ip_type = IPTYPE_IPV4;
     tunnel2_info->encap_type = TX_REWRITE_ENCAP_VXLAN;
     entry_write(tbl_id, g_tunnel2_id5, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    memcpy(tunnel2_info->dipo, &g_dipo1, 4);
+    tunnel2_info->ip_type = IPTYPE_IPV4;
+    tunnel2_info->encap_type = TX_REWRITE_ENCAP_VXLAN;
+    entry_write(tbl_id, g_tunnel2_id11, 0, 0, &data, false, 0);
+}
+
+static void
+vnic_init (void)
+{
+    vnic_actiondata_t data;
+    vnic_vnic_info_t *vnic_info = &data.action_u.vnic_vnic_info;
+    uint16_t tbl_id = P4TBL_ID_VNIC;
+
+    memset(&data, 0, sizeof(data));
+    vnic_info->tx_mirror_session = (1 << g_mirror_id1) | (1 << g_mirror_id2);
+    entry_write(tbl_id, g_vnic_id11, 0, 0, &data, false, 0);
+}
+
+static void
+mirror_init (void)
+{
+    mirror_actiondata_t data;
+    mirror_erspan_t *erspan_info = &data.action_u.mirror_erspan;
+    uint16_t tbl_id = P4TBL_ID_MIRROR;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = MIRROR_ERSPAN_ID;
+    memcpy(erspan_info->dmac, &g_erspan_dmac1, 6);
+    memcpy(erspan_info->smac, &g_erspan_smac1, 6);
+    erspan_info->dip = g_erspan_dip1;
+    erspan_info->sip = g_erspan_sip1;
+    erspan_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    erspan_info->nexthop_id = g_nexthop_id1;
+    erspan_info->span_id = g_mirror_id1;
+    entry_write(tbl_id, g_mirror_id1, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = MIRROR_ERSPAN_ID;
+    memcpy(erspan_info->dmac, &g_erspan_dmac1, 6);
+    memcpy(erspan_info->smac, &g_erspan_smac1, 6);
+    erspan_info->dip = g_erspan_dip1;
+    erspan_info->sip = g_erspan_sip1;
+    erspan_info->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    erspan_info->nexthop_id = g_nexthop_id1;
+    erspan_info->span_id = g_mirror_id2;
+    erspan_info->apply_tunnel2 = 1;
+    erspan_info->tunnel2_id = g_tunnel2_id11;
+    erspan_info->tunnel2_vni = g_vni1;
+    entry_write(tbl_id, g_mirror_id2, 0, 0, &data, false, 0);
 }
 
 class apulu_test : public ::testing::Test {
@@ -1341,11 +1428,13 @@ TEST_F(apulu_test, test1)
     input_properties_init();
     local_mappings_init();
     local_mappings_with_ohash_init();
+    vnic_init();
     bindings_init();
     mappings_init();
     mappings_with_ohash_init();
     flows_init();
     flows_with_ohash_init();
+    mirror_init();
     sessions_init();
     egress_properties_init();
     tunnels_init();
@@ -1359,7 +1448,8 @@ TEST_F(apulu_test, test1)
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
-    std::vector<uint8_t> mpkt;
+    std::vector<uint8_t> mpkt1;
+    std::vector<uint8_t> mpkt2;
     uint32_t i = 0;
     uint32_t tcscale = 1;
     int tcid = 0;
@@ -1559,6 +1649,35 @@ TEST_F(apulu_test, test1)
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt11));
+        memcpy(ipkt.data(), g_snd_pkt11, sizeof(g_snd_pkt11));
+        epkt.resize(sizeof(g_rcv_pkt11));
+        memcpy(epkt.data(), g_rcv_pkt11, sizeof(g_rcv_pkt11));
+        mpkt1.resize(sizeof(g_rcv_mpkt11_1));
+        memcpy(mpkt1.data(), g_rcv_mpkt11_1, sizeof(g_rcv_mpkt11_1));
+        std::cout << "[TCID=" << tcid << "] Tx SPAN" << std::endl;
+        mpkt2.resize(sizeof(g_rcv_mpkt11_2));
+        memcpy(mpkt2.data(), g_rcv_mpkt11_2, sizeof(g_rcv_mpkt11_2));
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == mpkt1);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, mpkt2));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);

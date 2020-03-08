@@ -10,6 +10,8 @@ struct phv_         p;
 %%
 
 lspan:
+    phvwr           p.egress_recirc_mapping_done, TRUE
+    phvwr           p.control_metadata_mapping_done, TRUE
     add             r6, r0, d.u.lspan_d.truncate_len
     bal             r7, mirror_truncate
     sne             c7, r0, r0
@@ -21,6 +23,8 @@ lspan:
 
 .align
 rspan:
+    phvwr           p.egress_recirc_mapping_done, TRUE
+    phvwr           p.control_metadata_mapping_done, TRUE
     phvwr           p.ctag_1_valid, 1
     add             r1, k.ethernet_1_etherType, d.u.rspan_d.ctag, 16
     phvwr           p.{ctag_1_pcp,ctag_1_dei,ctag_1_vid,ctag_1_etherType}, r1
@@ -36,6 +40,10 @@ rspan:
 
 .align
 erspan:
+    phvwr           p.egress_recirc_mapping_done, TRUE
+    phvwr           p.control_metadata_mapping_done, TRUE
+
+    // timestamp
     phvwr           p.erspan_timestamp, r6
 
     // truncate
@@ -44,21 +52,30 @@ erspan:
     seq             c7, r0, r0
 
     // headers
-    .assert(offsetof(p, erspan_valid) - offsetof(p, ethernet_0_valid) == 10)
-    phvwrmi         p.{erspan_valid,gre_0_valid,vxlan_0_valid,udp_0_valid, \
+    // 0110 0010 0111 => 0x625
+    phvwri          p.{erspan_valid,gre_0_valid,vxlan_0_valid,udp_0_valid, \
                        ipv6_0_valid,ipv4_0_valid,ipv4_0_udp_csum, \
                        ipv4_0_tcp_csum,ipv4_0_csum,ctag_0_valid, \
-                       ethernet_0_valid}, 0x627, 0xFFF
+                       ethernet_0_valid}, 0x625
 
     // ethernet and ctag
-    phvwr           p.ethernet_0_dstAddr, d.u.erspan_d.dmac
-    or              r1, ETHERTYPE_CTAG, d.u.erspan_d.smac, 16
-    phvwr           p.{ethernet_0_srcAddr,ethernet_0_etherType}, r1
+    seq             c1, d.u.erspan_d.ctag, r0
+    cmov            r3, c1, 50, 54
+    bcf             [c1], erspan_common
+    cmov            r4, c1, ETHERTYPE_IPV4, ETHERTYPE_CTAG
+erspan_tagged:
+    phvwr           p.ctag_0_valid, 1
     or              r1, ETHERTYPE_IPV4, d.u.erspan_d.ctag, 16
     phvwr           p.{ctag_0_pcp,ctag_0_dei,ctag_0_vid,ctag_0_etherType}, r1
 
+erspan_common:
+    phvwr           p.ethernet_0_dstAddr, d.u.erspan_d.dmac
+    or              r1, r4, d.u.erspan_d.smac, 16
+    phvwr           p.{ethernet_0_srcAddr,ethernet_0_etherType}, r1
+
     // ipv4
     phvwr           p.{ipv4_0_version,ipv4_0_ihl}, 0x45
+    phvwr           p.ipv4_0_diffserv, d.u.erspan_d.dscp
     phvwr           p.{ipv4_0_srcAddr,ipv4_0_dstAddr}, \
                         d.{u.erspan_d.sip,u.erspan_d.dip}
     phvwr           p.ipv4_0_ttl, 64
@@ -74,16 +91,20 @@ erspan:
     phvwrpair        p.erspan_version, 0x2, p.erspan_bso, 0
     seq             c1, k.ctag_1_valid, TRUE
     phvwrpair.c1    p.erspan_vlan, k.ctag_1_vid, p.erspan_cos, k.ctag_1_pcp
-    phvwr           p.erspan_span_id, k.capri_intrinsic_tm_span_session
+    phvwr           p.erspan_span_id, d.u.erspan_d.span_id
     seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
     phvwr.c1        p.erspan_direction, 1
     phvwrpair       p.{erspan_sgt...erspan_hw_id}, 0, \
                         p.{erspan_granularity,erspan_options}, 0x6
 
-    add             r1, r5, 54
+    add             r1, r5, r3
     phvwr           p.capri_p4_intrinsic_packet_len, r1
-    phvwr           p.rewrite_metadata_nexthop_type, d.u.rspan_d.nexthop_type
-    phvwr           p.p4e_i2e_nexthop_id, d.u.rspan_d.nexthop_id
+    phvwr           p.rewrite_metadata_nexthop_type, d.u.erspan_d.nexthop_type
+    phvwr           p.p4e_i2e_nexthop_id, d.u.erspan_d.nexthop_id
+    phvwr           p.control_metadata_apply_tunnel2, d.u.erspan_d.apply_tunnel2
+    phvwr           p.{rewrite_metadata_tunnel2_id, \
+                        rewrite_metadata_tunnel2_vni}, \
+                        d.{u.erspan_d.tunnel2_id,u.erspan_d.tunnel2_vni}
     phvwr           p.ctag_1_valid, FALSE
     phvwr.e         p.mirror_blob_valid, FALSE
     phvwr.f         p.capri_intrinsic_tm_span_session, 0

@@ -14,6 +14,8 @@ struct phv_         p;
 nexthop_info:
     seq             c1, k.p4e_i2e_nexthop_id, r0
     bcf             [c1], nexthop_invalid
+    phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
+                        d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
     sne             c1, d.nexthop_info_d.tunnel2_id, r0
     bcf             [!c1], nexthop_info2
     add             r1, r0, k.capri_p4_intrinsic_packet_len
@@ -61,8 +63,6 @@ vxlan_encap:
     sub.c1          r1, r1, 4
     phvwr.c1        p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.{ethernet_0_dstAddr,ethernet_0_srcAddr}, \
-                        d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
-    phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_VNI_BITS], \
                         TX_REWRITE_VNI_FROM_TUNNEL

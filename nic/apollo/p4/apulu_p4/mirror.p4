@@ -13,6 +13,9 @@ action mirror_truncate(truncate_len, is_erspan) {
 }
 
 action lspan(nexthop_type, nexthop_id, truncate_len) {
+    modify_field(egress_recirc.mapping_done, TRUE);
+    modify_field(control_metadata.mapping_done, TRUE);
+
     mirror_truncate(truncate_len, FALSE);
 
     remove_header(mirror_blob);
@@ -23,6 +26,9 @@ action lspan(nexthop_type, nexthop_id, truncate_len) {
 }
 
 action rspan(nexthop_type, nexthop_id, ctag, truncate_len) {
+    modify_field(egress_recirc.mapping_done, TRUE);
+    modify_field(control_metadata.mapping_done, TRUE);
+
     add_header(ctag_1);
     modify_field(ctag_1.vid, ctag);
     modify_field(ctag_1.dei, 0);
@@ -39,10 +45,12 @@ action rspan(nexthop_type, nexthop_id, ctag, truncate_len) {
     modify_field(p4e_i2e.nexthop_id, nexthop_id);
 }
 
-action erspan(nexthop_type, nexthop_id, ctag, truncate_len, dmac, smac,
-              sip, dip) {
+action erspan(nexthop_type, nexthop_id, apply_tunnel2, tunnel2_id, tunnel2_vni,
+              ctag, truncate_len, dmac, smac, sip, dip, span_id, dscp) {
+    modify_field(egress_recirc.mapping_done, TRUE);
+    modify_field(control_metadata.mapping_done, TRUE);
+
     add_header(ethernet_0);
-    add_header(ctag_0);
     add_header(ipv4_0);
     add_header(gre_0);
     add_header(erspan);
@@ -51,15 +59,23 @@ action erspan(nexthop_type, nexthop_id, ctag, truncate_len, dmac, smac,
 
     modify_field(ethernet_0.dstAddr, dmac);
     modify_field(ethernet_0.srcAddr, smac);
-    modify_field(ethernet_0.etherType, ETHERTYPE_VLAN);
 
-    modify_field(ctag_0.vid, ctag);
-    modify_field(ctag_0.etherType, ETHERTYPE_IPV4);
+    if (ctag == 0) {
+        modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+        modify_field(scratch_metadata.packet_len, 50);
+    } else {
+        add_header(ctag_0);
+        modify_field(ethernet_0.etherType, ETHERTYPE_VLAN);
+        modify_field(ctag_0.vid, ctag);
+        modify_field(ctag_0.etherType, ETHERTYPE_IPV4);
+        modify_field(scratch_metadata.packet_len, 54);
+    }
 
     modify_field(ipv4_0.version, 4);
     modify_field(ipv4_0.ihl, 5);
+    modify_field(ipv4_0.diffserv, dscp);
     add(ipv4_0.totalLen, capri_p4_intrinsic.packet_len, 36);
-    add_to_field(capri_p4_intrinsic.packet_len, 54);
+    add_to_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
     modify_field(ipv4_0.ttl, 64);
     modify_field(ipv4_0.protocol, IP_PROTO_GRE);
     modify_field(ipv4_0.srcAddr, sip);
@@ -85,13 +101,17 @@ action erspan(nexthop_type, nexthop_id, ctag, truncate_len, dmac, smac,
         modify_field(erspan.vlan, ctag_1.vid);
         modify_field(erspan.cos, ctag_1.pcp);
     }
-    modify_field(erspan.span_id, capri_intrinsic.tm_span_session);
+    modify_field(erspan.span_id, span_id);
 
     remove_header(mirror_blob);
     remove_header(ctag_1);
     modify_field(capri_intrinsic.tm_span_session, 0);
+
     modify_field(rewrite_metadata.nexthop_type, nexthop_type);
     modify_field(p4e_i2e.nexthop_id, nexthop_id);
+    modify_field(control_metadata.apply_tunnel2, apply_tunnel2);
+    modify_field(rewrite_metadata.tunnel2_id, tunnel2_id);
+    modify_field(rewrite_metadata.tunnel2_vni, tunnel2_vni);
 }
 
 @pragma stage 0

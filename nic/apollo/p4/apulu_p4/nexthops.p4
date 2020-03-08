@@ -116,9 +116,6 @@ action ipv4_vxlan_encap(dmac, smac) {
     modify_field(ethernet_0.srcAddr, smac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
 
-    modify_field(ethernet_00.dstAddr, dmac);
-    modify_field(ethernet_00.srcAddr, smac);
-
     modify_field(ipv4_0.version, 4);
     modify_field(ipv4_0.ihl, 5);
     modify_field(ipv4_0.diffserv, rewrite_metadata.tunnel_tos);
@@ -166,9 +163,6 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(ethernet_0.srcAddr, smac);
     modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
 
-    modify_field(ethernet_00.dstAddr, dmac);
-    modify_field(ethernet_00.srcAddr, smac);
-
     modify_field(ipv6_0.version, 6);
     modify_field(ipv6_0.trafficClass, rewrite_metadata.tunnel_tos);
     modify_field(ipv6_0.payloadLen, scratch_metadata.ip_totallen);
@@ -203,6 +197,9 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
         modify_field(rewrite_metadata.tunnel2_id, tunnel2_id);
         modify_field(rewrite_metadata.tunnel2_vni, vlan);
     }
+
+    modify_field(ethernet_00.dstAddr, dmaco);
+    modify_field(ethernet_00.srcAddr, smaco);
 
     if (control_metadata.rx_packet == FALSE) {
         if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
@@ -407,6 +404,7 @@ action tunnel2_info(dipo, ip_type, encap_type, vlan) {
 }
 
 @pragma stage 5
+@pragma index_table
 table tunnel2 {
     reads {
         rewrite_metadata.tunnel2_id : exact;

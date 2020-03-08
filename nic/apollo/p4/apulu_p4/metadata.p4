@@ -95,7 +95,7 @@ header_type rewrite_metadata_t {
         ip_type             : 1;
         tunnel_dmaci        : 48;
         tunnel_vni          : 24;
-        tunnel2_id          : 8;
+        tunnel2_id          : 16;
         tunnel2_vni         : 24;
         tunnel_tos          : 8;
         vlan_strip_en       : 1;

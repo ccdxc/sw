@@ -213,3 +213,32 @@ opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         TCP(sport=0x1234, dport=0x5678, flags='S', options=tcp_opts)
 dump_pkt(ipkt, 'g_snd_pkt10')
 dump_pkt(opkt, 'g_rcv_pkt10')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.11') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+opkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0x0, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:11:12:13:14:15', src='00:D1:D2:D3:D4:D5') / \
+        IP(dst='10.10.1.1', src='11.11.1.11') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+mpkt1 = Ether(dst='00:0E:0E:0E:0E:0E', src='00:E1:E2:E3:E4:E5') / \
+        IP(dst='200.1.1.2', src='200.1.1.1', id=0, ttl=64) / \
+        GRE() / \
+        ERSPAN(vlan=100, sessionid=1, d=0, gra=3) / \
+        ipkt
+mpkt2 = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0x0, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:0E:0E:0E:0E:0E', src='00:E1:E2:E3:E4:E5') / \
+        IP(dst='200.1.1.2', src='200.1.1.1', id=0, ttl=64) / \
+        GRE() / \
+        ERSPAN(vlan=100, sessionid=5, d=0, gra=3) / \
+        ipkt
+dump_pkt(ipkt, 'g_snd_pkt11')
+dump_pkt(opkt, 'g_rcv_pkt11')
+dump_pkt(mpkt1, 'g_rcv_mpkt11_1')
+dump_pkt(mpkt2, 'g_rcv_mpkt11_2')
