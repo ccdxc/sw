@@ -52,8 +52,8 @@ def Trigger(tc):
 
             ret = check_ncsi_conn(tc.cimc_info)
             if ret != api.types.status.SUCCESS:
-                api.Logger.error("ILO not accessible in NCSI mode")
-                return api.types.status.ERROR
+                api.Logger.error("ILO is not accessible in NCSI mode")
+                return api.types.status.FAILURE
     except:
         api.Logger.error(traceback.format_exc())
         return api.types.status.ERROR

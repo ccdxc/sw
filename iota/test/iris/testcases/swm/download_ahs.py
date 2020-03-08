@@ -54,6 +54,5 @@ def Teardown(tc):
             tc.RF.logout()
     except:
         api.Logger.error(traceback.format_exc())
-        return api.types.status.ERROR
 
     return api.types.status.SUCCESS

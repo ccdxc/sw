@@ -94,8 +94,8 @@ def DisableAllmulti(node, interface):
 
 def GetNaplesUptime(node):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    cmd = "awk '{print $1}' /proc/uptime"
-    api.Trigger_AddHostCommand(req, node, cmd)
+    cmd = "cat /proc/uptime |  awk '{print \$1}'"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
     resp = api.Trigger(req)
     if resp is None:
         api.Logger.error("Failed to get uptime from node %s, command not executed" % (node))
@@ -106,7 +106,6 @@ def GetNaplesUptime(node):
         api.Logger.error("Failed to get uptime from node %s" % (node))
         api.PrintCommandResults(cmd)
         return None
-    
     return float(cmd.stdout.strip())
 
 def GetOOBMnicIP(node_name):

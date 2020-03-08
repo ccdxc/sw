@@ -1,7 +1,4 @@
 #! /usr/bin/python3
-import paramiko
-import logging
-import sys
 import time
 import traceback
 

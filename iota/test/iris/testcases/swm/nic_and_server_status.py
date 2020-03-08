@@ -1,10 +1,11 @@
 #! /usr/bin/python3
-import iota.harness.api as api
+import traceback
+from pprint import pprint
 
+import iota.harness.api as api
 from iota.harness.infra.redfish import redfish_client
 from iota.harness.infra.redfish.rest.v1 import ServerDownOrUnreachableError
 from .utils.getcfg import getcfg
-from pprint import pprint
 from .utils.ncsi_ops import check_set_ncsi
 
 
@@ -50,8 +51,8 @@ def Setup(tc):
         api.Logger.error("%s ILO ip not reachable or does not support RedFish"  
                          % test_node.GetCimcIP())
         return api.types.status.ERROR
-    except Exception as e:
-        api.Logger.error(str(e))
+    except:
+        api.Logger.error(traceback.format_exc())
         return api.types.status.ERROR
 
     return api.types.status.SUCCESS
@@ -60,8 +61,8 @@ def Trigger(tc):
     try:
         api.Logger.info(pprint(get_nics_health(tc.RF)))
         api.Logger.info(pprint(get_server_health(tc.RF)))
-    except Exception as e:
-        api.Logger.error(str(e))
+    except:
+        api.Logger.error(traceback.format_exc())
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -72,8 +73,7 @@ def Verify(tc):
 def Teardown(tc):
     try:
         tc.RF.logout()
-    except Exception as e:
-        api.Logger.error(str(e))
-        return api.types.status.ERROR
+    except:
+        api.Logger.error(traceback.format_exc())
 
     return api.types.status.SUCCESS

@@ -16,7 +16,7 @@ from .utils.common import get_redfish_obj
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-VMEDIA_PATH = "http://pxe/iso/swm_test/test.iso"
+VMEDIA_PATH = "http://package-mirror.test.pensando.io/iota/swm_test/test_vmedia_iperf.iso"
 
 def __execute_cmd(node_name, cmd, timeout=None):
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
@@ -117,6 +117,5 @@ def Teardown(tc):
             tc.RF.logout()
     except:
         api.Logger.error(traceback.format_exc())
-        return api.types.status.ERROR
 
     return api.types.status.SUCCESS

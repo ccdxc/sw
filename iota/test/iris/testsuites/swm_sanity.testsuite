@@ -1,6 +1,6 @@
 meta:
-    name        : swm
-    description : SWM Testsuite
+    name        : swm_sanity
+    description : SWM Sanity Testsuite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
@@ -13,11 +13,9 @@ images:
     naples: nic/naples_fw.tar
 
 setup:
-    topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
+    topology: test/iris/topologies/classic_baremetal_1Naples/classic_baremetal.topology
     config  :
         - step : utils.cleanup
-        - step : testcases.penctl.install
-        - step : testcases.penctl.enable_ssh
         - step : utils.naples_workloads
         - step : config.netagent.hw_push_config
         - step : testcases.penctl.install
@@ -33,6 +31,6 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - swm/swm.testbundle
+        - swm/swm_sanity.testbundle
 
 teardown:

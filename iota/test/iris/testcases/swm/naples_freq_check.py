@@ -8,7 +8,7 @@ from .utils.ncsi_ops import check_set_ncsi
 from iota.test.iris.testcases.penctl.common import GetNaplesFruJson
 from iota.test.iris.testcases.penctl.common import GetNaplesFrequency
 
-import json
+import traceback
 
 def Setup(tc):
     naples_nodes = api.GetNaplesNodes()
@@ -31,8 +31,8 @@ def Setup(tc):
         api.Logger.error("{} ILO ip not reachable or does not support RedFish"
                          % tc.ilo_ncsi_ip)
         return api.types.status.ERROR
-    except Exception as e:
-        api.Logger.error(str(e))
+    except:
+        api.Logger.error(traceback.format_exc())
         return api.types.status.ERROR
 
     return api.types.status.SUCCESS
@@ -56,8 +56,8 @@ def Trigger(tc):
             api.Logger.error("Frequency is %d not 416"
                              % naples_freq)
             return api.types.status.FAILURE 
-    except Exception as e:
-        api.Logger.error(str(e))
+    except:
+        api.Logger.error(traceback.format_exc())
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

@@ -1,0 +1,39 @@
+meta:
+    name        : swm_regress
+    description : SWM Regression Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
+    
+    config  :
+        - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
+        - step : utils.naples_workloads
+        - step : config.netagent.hw_push_config
+        - step : testcases.penctl.install
+        - step : testcases.drivers.install_iperf
+        
+common:
+    verifs:
+
+    debugs:
+
+    setup:
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - swm/swm_regress.testbundle
+
+teardown:

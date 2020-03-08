@@ -177,8 +177,10 @@ jobs:
 #    labels: ["compat-esx"]
 #  iota/test/standalone/cnic_swm:
 #    labels: ["hourly"]
-#  iota/test/standalone/swm:
-#    labels: ["hourly"]
+#  iota/test/standalone/sanity/swm:
+#    labels: ["precommit", "2xhourly"]
+#  iota/test/standalone/regression/swm:
+#    labels: ["daily"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
@@ -304,6 +306,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+      #    - reference: iota/test/standalone/sanity/swm
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -336,6 +339,7 @@ dependencies:
   nic/sdk:
     - reference: iota/test/standalone/sanity/linux
     - reference: nic/apollo
+      #    - reference: iota/test/standalone/sanity/swm
   nic/sysmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/linux
@@ -412,6 +416,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+      #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/nicmgr:
     - reference: nic/apollo
     - reference: iota/test/venice
@@ -420,8 +425,10 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
+      #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/sanity/linux
+      #- reference: iota/test/standalone/sanity/swm
   platform/src/app/pciemgrd:
     - reference: iota/test/standalone/sanity/linux
     - reference: nic/apollo

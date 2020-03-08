@@ -62,6 +62,7 @@ def Trigger(tc):
             tc.test_node.WaitForHost()
             elapsed_time = time.time() - start_time
             uptime2 =  GetNaplesUptime(tc.node_name)
+            time.sleep(5)
             if uptime2 < uptime1 + elapsed_time:
                 api.Logger.error("Naples rebooted upon server reset, exiting")
                 return api.types.status.FAILURE

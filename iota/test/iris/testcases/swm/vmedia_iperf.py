@@ -18,7 +18,7 @@ from .utils.host import tuneLinux
 from .utils.vmedia_ops import mount_vmedia
 from .utils.vmedia_ops import eject_vmedia
 
-VMEDIA_PATH = "http://pxe/iso/swm_test/test_vmedia_iperf.iso"
+VMEDIA_PATH = "http://package-mirror.test.pensando.io/iota/swm_test/test_vmedia_iperf.iso"
 
 def Setup(tc):
     tc.mounted = False
@@ -206,6 +206,5 @@ def Teardown(tc):
             tc.RF.logout()
     except:
         api.Logger.error(traceback.format_exc())
-        return api.types.status.ERROR
 
     return api.types.status.SUCCESS

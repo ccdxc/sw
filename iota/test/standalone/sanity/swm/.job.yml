@@ -9,8 +9,8 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal test cases
- e2e-linux-bm-swm:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite swm"]
+ e2e-linux-bm-swm-sanity:
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite swm_sanity"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:tony@pensando.io"]
    area:
@@ -21,7 +21,7 @@ e2e-targets:
      - build-iota
    clusters:
      - image: build-17
-       count: 2
+       count: 1
        resources:
          server-type: hpe-swm
          # nic-type should be naples swm 25G
@@ -39,8 +39,6 @@ e2e-targets:
           EsxPassword: Pen0trl!
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
-  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
   - /sw/iota/all_corefiles.tgz

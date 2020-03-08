@@ -1,0 +1,107 @@
+meta:
+    name    : swm_regress
+    os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 3
+
+testcases:
+    -   name    : download_ahs
+        testcase: testcases.swm.download_ahs
+        enable  : True
+        iterators :
+            type    : nested
+            count   : [5]
+
+    -   name    : reboot_with_ahs
+        testcase: testcases.swm.reboot_with_ahs
+        enable  : True
+        iterators :
+            type    : nested
+            count   : [5]
+    
+    -   name    : ahs_iperf
+        testcase: testcases.swm.ahs_iperf
+        enable  : True
+        iterators :
+            type    : nested
+            proto   : [tcp]
+            ahs_count : [5]
+        args    :
+            timeout : 20000
+    
+    -   name    : vmedia_traffic
+        testcase: testcases.swm.vmedia_traffic
+        enable  : True
+    
+    -   name    : vmedia_iperf
+        testcase: testcases.swm.vmedia_iperf
+        enable  : True
+        iterators :
+            type    : nested
+            proto   : [tcp]
+        args    :
+            timeout : 20000
+    
+    -   name    : mode_switch_iperf
+        testcase: testcases.swm.mode_switch_iperf
+        enable  : True
+        iterators :
+            type    : nested
+            proto   : [tcp, udp]
+        args    :
+            timeout : 20000
+            num_runs : 10
+    
+    -   name    : server_reset
+        testcase: testcases.swm.server_reset
+        enable  : True
+        iterators :
+            type    : nested
+            count   : [10]
+            reboot_types : [cycle, reset]
+        args    :
+            timeout : 7200
+    
+    -   name    : apc_reset
+        testcase: testcases.swm.apc_reset 
+        enable  : False
+        iterators :
+            type    : nested
+            count   : [1]
+        args    :
+            timeout : 7200
+    
+    -   name    : switch_port_flap
+        testcase: testcases.swm.switch_port_flap
+        enable  : False
+        iterators :
+            type    : nested
+            count   : [5]
+        args    :
+            timeout : 7200
+    
+    -   name    : naples_freq_check
+        testcase: testcases.swm.naples_freq_check
+        enable  : True
+    
+    -   name    : oob_access
+        testcase: testcases.swm.oob_access
+        enable  : True
+
+    -   name    : switch_ncsi_channels
+        testcase: testcases.swm.switch_ncsi_channels
+        enable  : True
+        iterators :
+            type    : nested
+            count   : [10]
+        args    :
+            timeout : 7200
+    
+    -   name    : ilo_vlan
+        testcase: testcases.swm.ilo_vlan
+        enable  : False
+        iterators :
+            type    : nested
+            count   : [1]
+        args    :
+            timeout : 7200
