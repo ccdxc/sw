@@ -24,7 +24,7 @@ if [ ! -f /venice-bin/$VENICE_FILE -o ! -f /nic/$FW_FILE ]; then
   echo "all required files are not found"
   echo "expect venice install file /venice-bin/$VENICE_FILE"
   echo "expect naples firmware file /nic/$FW_FILE"
-  exit 1
+  # exit 1
 fi
 
 #expected files
