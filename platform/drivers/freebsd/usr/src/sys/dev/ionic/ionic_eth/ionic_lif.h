@@ -111,7 +111,7 @@ struct ionic_tx_buf {
 };
 
 struct ionic_adminq {
-	char name[QUEUE_NAME_MAX_SZ];
+	char name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	struct ionic_lif *lif;
 	unsigned int num_descs;
@@ -134,7 +134,7 @@ struct ionic_adminq {
 	bool wq_stop;
 
 	struct mtx mtx;
-	char mtx_name[QUEUE_NAME_MAX_SZ];
+	char mtx_name[IONIC_QUEUE_NAME_MAX_SZ];
 	unsigned int head_index;		/* Index for buffer and command descriptors. */
 	unsigned int tail_index;
 	unsigned int comp_index;		/* Index for completion descriptors. */
@@ -148,12 +148,12 @@ struct ionic_adminq {
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
 	 */
-	struct admin_cmd *cmd_ring;
-	struct admin_comp *comp_ring;
+	struct ionic_admin_cmd *cmd_ring;
+	struct ionic_admin_comp *comp_ring;
 };
 
 struct ionic_notifyq {
-	char name[QUEUE_NAME_MAX_SZ];
+	char name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	struct ionic_lif *lif;
 	unsigned int num_descs;
@@ -170,7 +170,7 @@ struct ionic_notifyq {
 	uint32_t total_ring_size;
 
 	struct mtx mtx;
-	char mtx_name[QUEUE_NAME_MAX_SZ];
+	char mtx_name[IONIC_QUEUE_NAME_MAX_SZ];
 	int comp_index;						/* Index for completion descriptors. */
 	uint64_t isr_count;
 	uint64_t comp_count;
@@ -183,12 +183,12 @@ struct ionic_notifyq {
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
 	 */
-	struct notifyq_cmd *cmd_ring;
-	union notifyq_comp *comp_ring;
+	struct ionic_notifyq_cmd *cmd_ring;
+	union ionic_notifyq_comp *comp_ring;
 };
 
 struct ionic_rxque {
-	char name[QUEUE_NAME_MAX_SZ];
+	char name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	struct ionic_lif *lif;
 	unsigned int num_descs; /* Max number of descriptors. */
@@ -211,7 +211,7 @@ struct ionic_rxque {
 	uint32_t total_ring_size;
 
 	struct mtx rx_mtx;
-	char mtx_name[QUEUE_NAME_MAX_SZ];
+	char mtx_name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	unsigned int head_index;
 	unsigned int tail_index;
@@ -230,9 +230,9 @@ struct ionic_rxque {
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
 	 */
-	struct rxq_desc *cmd_ring;
-	struct rxq_comp *comp_ring;
-	struct rxq_sg_desc *sg_ring;	/* SG descriptors. */
+	struct ionic_rxq_desc *cmd_ring;
+	struct ionic_rxq_comp *comp_ring;
+	struct ionic_rxq_sg_desc *sg_ring;	/* SG descriptors. */
 };
 
 /*
@@ -240,7 +240,7 @@ struct ionic_rxque {
  * XXX: Interrupt resource for Tx is part of Rx.
  */
 struct ionic_txque {
-	char name[QUEUE_NAME_MAX_SZ];
+	char name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	struct ionic_lif *lif;
 	unsigned int num_descs;
@@ -266,7 +266,7 @@ struct ionic_txque {
 	uint8_t sg_desc_stride;
 
 	struct mtx tx_mtx;
-	char mtx_name[QUEUE_NAME_MAX_SZ];
+	char mtx_name[IONIC_QUEUE_NAME_MAX_SZ];
 	unsigned int head_index;	/* Index for buffer and command descriptors. */
 	unsigned int tail_index;
 	unsigned int comp_index;	/* Index for completion descriptors. */
@@ -281,9 +281,9 @@ struct ionic_txque {
 	 * H/w command and completion descriptor rings.
 	 * Points to area allocated by DMA.
 	 */
-	struct txq_desc *cmd_ring;
-	struct txq_comp *comp_ring;
-	struct txq_sg_elem *sg_ring;	/* SG descriptors. */
+	struct ionic_txq_desc *cmd_ring;
+	struct ionic_txq_comp *comp_ring;
+	struct ionic_txq_sg_elem *sg_ring;	/* SG descriptors. */
 };
 
 struct ionic_mc_addr {
@@ -371,7 +371,7 @@ struct ionic_lif {
 	struct sysctl_oid *sysctl_ifnet;
 	struct sysctl_ctx_list sysctl_ctx;
 	struct sx sx;
-	char sx_name[QUEUE_NAME_MAX_SZ];
+	char sx_name[IONIC_QUEUE_NAME_MAX_SZ];
 
 	struct rx_filters rx_filters;
 
@@ -398,7 +398,7 @@ struct ionic_lif {
 	uint32_t info_sz;
 	dma_addr_t info_pa;
 	struct ionic_dma_info info_dma;
-	struct lif_info *info;
+	struct ionic_lif_info *info;
 
 	uint64_t num_dev_cmds;
 	uint64_t num_resets;
@@ -472,7 +472,7 @@ int ionic_lif_rss_config(struct ionic_lif *lif, uint16_t types,
 void ionic_rx_fill(struct ionic_rxque *rxq);
 int ionic_rx_clean(struct ionic_rxque *rxq, int rx_limit);
 void ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *buf,
-		struct rxq_comp *comp, struct rxq_desc *desc);
+		struct ionic_rxq_comp *comp, struct ionic_rxq_desc *desc);
 
 void ionic_tx_ring_doorbell(struct ionic_txque *txq, int index);
 int ionic_tx_clean(struct ionic_txque* txq, int tx_limit);

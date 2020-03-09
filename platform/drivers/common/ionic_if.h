@@ -11,64 +11,64 @@
 /**
  * Commands
  */
-enum cmd_opcode {
-	CMD_OPCODE_NOP				= 0,
+enum ionic_cmd_opcode {
+	IONIC_CMD_NOP				= 0,
 
 	/* Device commands */
-	CMD_OPCODE_IDENTIFY			= 1,
-	CMD_OPCODE_INIT				= 2,
-	CMD_OPCODE_RESET			= 3,
-	CMD_OPCODE_GETATTR			= 4,
-	CMD_OPCODE_SETATTR			= 5,
+	IONIC_CMD_IDENTIFY			= 1,
+	IONIC_CMD_INIT				= 2,
+	IONIC_CMD_RESET				= 3,
+	IONIC_CMD_GETATTR			= 4,
+	IONIC_CMD_SETATTR			= 5,
 
 	/* Port commands */
-	CMD_OPCODE_PORT_IDENTIFY		= 10,
-	CMD_OPCODE_PORT_INIT			= 11,
-	CMD_OPCODE_PORT_RESET			= 12,
-	CMD_OPCODE_PORT_GETATTR			= 13,
-	CMD_OPCODE_PORT_SETATTR			= 14,
+	IONIC_CMD_PORT_IDENTIFY			= 10,
+	IONIC_CMD_PORT_INIT			= 11,
+	IONIC_CMD_PORT_RESET			= 12,
+	IONIC_CMD_PORT_GETATTR			= 13,
+	IONIC_CMD_PORT_SETATTR			= 14,
 
 	/* LIF commands */
-	CMD_OPCODE_LIF_IDENTIFY			= 20,
-	CMD_OPCODE_LIF_INIT			= 21,
-	CMD_OPCODE_LIF_RESET			= 22,
-	CMD_OPCODE_LIF_GETATTR			= 23,
-	CMD_OPCODE_LIF_SETATTR			= 24,
+	IONIC_CMD_LIF_IDENTIFY			= 20,
+	IONIC_CMD_LIF_INIT			= 21,
+	IONIC_CMD_LIF_RESET			= 22,
+	IONIC_CMD_LIF_GETATTR			= 23,
+	IONIC_CMD_LIF_SETATTR			= 24,
 
-	CMD_OPCODE_RX_MODE_SET			= 30,
-	CMD_OPCODE_RX_FILTER_ADD		= 31,
-	CMD_OPCODE_RX_FILTER_DEL		= 32,
+	IONIC_CMD_RX_MODE_SET			= 30,
+	IONIC_CMD_RX_FILTER_ADD			= 31,
+	IONIC_CMD_RX_FILTER_DEL			= 32,
 
 	/* Queue commands */
-	CMD_OPCODE_Q_IDENTIFY			= 39,
-	CMD_OPCODE_Q_INIT			= 40,
-	CMD_OPCODE_Q_CONTROL			= 41,
+	IONIC_CMD_Q_IDENTIFY			= 39,
+	IONIC_CMD_Q_INIT			= 40,
+	IONIC_CMD_Q_CONTROL			= 41,
 
 	/* RDMA commands */
-	CMD_OPCODE_RDMA_RESET_LIF		= 50,
-	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
-	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
-	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
+	IONIC_CMD_RDMA_RESET_LIF		= 50,
+	IONIC_CMD_RDMA_CREATE_EQ		= 51,
+	IONIC_CMD_RDMA_CREATE_CQ		= 52,
+	IONIC_CMD_RDMA_CREATE_ADMINQ		= 53,
 
 	/* SR/IOV commands */
-	CMD_OPCODE_VF_GETATTR			= 60,
-	CMD_OPCODE_VF_SETATTR			= 61,
+	IONIC_CMD_VF_GETATTR			= 60,
+	IONIC_CMD_VF_SETATTR			= 61,
 
 	/* QoS commands */
-	CMD_OPCODE_QOS_CLASS_IDENTIFY		= 240,
-	CMD_OPCODE_QOS_CLASS_INIT		= 241,
-	CMD_OPCODE_QOS_CLASS_RESET		= 242,
-	CMD_OPCODE_QOS_CLASS_UPDATE		= 243,
+	IONIC_CMD_QOS_CLASS_IDENTIFY		= 240,
+	IONIC_CMD_QOS_CLASS_INIT		= 241,
+	IONIC_CMD_QOS_CLASS_RESET		= 242,
+	IONIC_CMD_QOS_CLASS_UPDATE		= 243,
 
 	/* Firmware commands */
-	CMD_OPCODE_FW_DOWNLOAD			= 254,
-	CMD_OPCODE_FW_CONTROL			= 255,
+	IONIC_CMD_FW_DOWNLOAD			= 254,
+	IONIC_CMD_FW_CONTROL			= 255,
 };
 
 /**
  * Command Return codes
  */
-enum status_code {
+enum ionic_status_code {
 	IONIC_RC_SUCCESS	= 0,	/* Success */
 	IONIC_RC_EVERSION	= 1,	/* Incorrect version for request */
 	IONIC_RC_EOPCODE	= 2,	/* Invalid cmd opcode */
@@ -88,18 +88,18 @@ enum status_code {
 	IONIC_RC_ERANGE		= 16,	/* Parameter out of range */
 	IONIC_RC_BAD_ADDR	= 17,	/* Descriptor contains a bad ptr */
 	IONIC_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
-	IONIC_RC_ENOSUPP	= 19,    /* Operation not supported */
+	IONIC_RC_ENOSUPP	= 19,	/* Operation not supported */
 	IONIC_RC_ERROR		= 29,	/* Generic error */
 
 	IONIC_RC_ERDMA		= 30,	/* Generic RDMA error */
 };
 
-enum notifyq_opcode {
-	EVENT_OPCODE_LINK_CHANGE	= 1,
-	EVENT_OPCODE_RESET		= 2,
-	EVENT_OPCODE_HEARTBEAT		= 3,
-	EVENT_OPCODE_LOG		= 4,
-	EVENT_OPCODE_XCVR		= 5,
+enum ionic_notifyq_opcode {
+	IONIC_EVENT_LINK_CHANGE		= 1,
+	IONIC_EVENT_RESET		= 2,
+	IONIC_EVENT_HEARTBEAT		= 3,
+	IONIC_EVENT_LOG			= 4,
+	IONIC_EVENT_XCVR		= 5,
 };
 
 /**
@@ -108,7 +108,7 @@ enum notifyq_opcode {
  * @lif_index:  LIF index
  * @cmd_data:   Opcode-specific command bytes
  */
-struct admin_cmd {
+struct ionic_admin_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -116,15 +116,15 @@ struct admin_cmd {
 };
 
 /**
- * struct admin_comp - General admin command completion format
- * @status:     The status of the command (enum status_code)
+ * struct ionic_admin_comp - General admin command completion format
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @cmd_data:   Command-specific bytes.
  * @color:      Color bit.  (Always 0 for commands issued to the
  *              Device Cmd Registers.)
  */
-struct admin_comp {
+struct ionic_admin_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -139,29 +139,29 @@ static inline u8 color_match(u8 color, u8 done_color)
 }
 
 /**
- * struct nop_cmd - NOP command
+ * struct ionic_nop_cmd - NOP command
  * @opcode: opcode
  */
-struct nop_cmd {
+struct ionic_nop_cmd {
 	u8 opcode;
 	u8 rsvd[63];
 };
 
 /**
- * struct nop_comp - NOP command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_nop_comp - NOP command completion
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct nop_comp {
+struct ionic_nop_comp {
 	u8 status;
 	u8 rsvd[15];
 };
 
 /**
- * struct dev_init_cmd - Device init command
+ * struct ionic_dev_init_cmd - Device init command
  * @opcode:    opcode
  * @type:      device type
  */
-struct dev_init_cmd {
+struct ionic_dev_init_cmd {
 	u8     opcode;
 	u8     type;
 	u8     rsvd[62];
@@ -169,27 +169,27 @@ struct dev_init_cmd {
 
 /**
  * struct init_comp - Device init command completion
- * @status: The status of the command (enum status_code)
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct dev_init_comp {
+struct ionic_dev_init_comp {
 	u8 status;
 	u8 rsvd[15];
 };
 
 /**
- * struct dev_reset_cmd - Device reset command
+ * struct ionic_dev_reset_cmd - Device reset command
  * @opcode: opcode
  */
-struct dev_reset_cmd {
+struct ionic_dev_reset_cmd {
 	u8 opcode;
 	u8 rsvd[63];
 };
 
 /**
  * struct reset_comp - Reset command completion
- * @status: The status of the command (enum status_code)
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct dev_reset_comp {
+struct ionic_dev_reset_comp {
 	u8 status;
 	u8 rsvd[15];
 };
@@ -197,28 +197,28 @@ struct dev_reset_comp {
 #define IONIC_IDENTITY_VERSION_1	1
 
 /**
- * struct dev_identify_cmd - Driver/device identify command
+ * struct ionic_dev_identify_cmd - Driver/device identify command
  * @opcode:  opcode
  * @ver:     Highest version of identify supported by driver
  */
-struct dev_identify_cmd {
+struct ionic_dev_identify_cmd {
 	u8 opcode;
 	u8 ver;
 	u8 rsvd[62];
 };
 
 /**
- * struct dev_identify_comp - Driver/device identify command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_dev_identify_comp - Driver/device identify command completion
+ * @status: The status of the command (enum ionic_status_code)
  * @ver:    Version of identify returned by device
  */
-struct dev_identify_comp {
+struct ionic_dev_identify_comp {
 	u8 status;
 	u8 ver;
 	u8 rsvd[14];
 };
 
-enum os_type {
+enum ionic_os_type {
 	IONIC_OS_TYPE_LINUX   = 1,
 	IONIC_OS_TYPE_WIN     = 2,
 	IONIC_OS_TYPE_DPDK    = 3,
@@ -228,15 +228,15 @@ enum os_type {
 };
 
 /**
- * union drv_identity - driver identity information
- * @os_type:          OS type (see enum os_type)
+ * union ionic_drv_identity - driver identity information
+ * @os_type:          OS type (see enum ionic_os_type)
  * @os_dist:          OS distribution, numeric format
  * @os_dist_str:      OS distribution, string format
  * @kernel_ver:       Kernel version, numeric format
  * @kernel_ver_str:   Kernel version, string format
  * @driver_ver_str:   Driver version, string format
  */
-union drv_identity {
+union ionic_drv_identity {
 	struct {
 		__le32 os_type;
 		__le32 os_dist;
@@ -249,7 +249,7 @@ union drv_identity {
 };
 
 /**
- * union dev_identity - device identity information
+ * union ionic_dev_identity - device identity information
  * @version:          Version of device identify
  * @type:             Identify type (0 for now)
  * @nports:           Number of ports provisioned
@@ -266,7 +266,7 @@ union drv_identity {
  *                    device units = usecs * mult / div
  * @eq_count:         Number of shared event queues.
  */
-union dev_identity {
+union ionic_dev_identity {
 	struct {
 		u8     version;
 		u8     type;
@@ -283,19 +283,19 @@ union dev_identity {
 	__le32 words[478];
 };
 
-enum lif_type {
+enum ionic_lif_type {
 	IONIC_LIF_TYPE_CLASSIC = 0,
 	IONIC_LIF_TYPE_MACVLAN = 1,
 	IONIC_LIF_TYPE_NETQUEUE = 2,
 };
 
 /**
- * struct lif_identify_cmd - lif identify command
+ * struct ionic_lif_identify_cmd - lif identify command
  * @opcode:  opcode
- * @type:    lif type (enum lif_type)
+ * @type:    lif type (enum ionic_lif_type)
  * @ver:     version of identify returned by device
  */
-struct lif_identify_cmd {
+struct ionic_lif_identify_cmd {
 	u8 opcode;
 	u8 type;
 	u8 ver;
@@ -303,17 +303,17 @@ struct lif_identify_cmd {
 };
 
 /**
- * struct lif_identify_comp - lif identify command completion
- * @status:  status of the command (enum status_code)
+ * struct ionic_lif_identify_comp - lif identify command completion
+ * @status:  status of the command (enum ionic_status_code)
  * @ver:     version of identify returned by device
  */
-struct lif_identify_comp {
+struct ionic_lif_identify_comp {
 	u8 status;
 	u8 ver;
 	u8 rsvd2[14];
 };
 
-enum lif_capability {
+enum ionic_lif_capability {
 	IONIC_LIF_CAP_ETH        = BIT(0),
 	IONIC_LIF_CAP_RDMA       = BIT(1),
 };
@@ -321,7 +321,7 @@ enum lif_capability {
 /**
  * Logical Queue Types
  */
-enum logical_qtype {
+enum ionic_logical_qtype {
 	IONIC_QTYPE_ADMINQ  = 0,
 	IONIC_QTYPE_NOTIFYQ = 1,
 	IONIC_QTYPE_RXQ     = 2,
@@ -331,19 +331,19 @@ enum logical_qtype {
 };
 
 /**
- * struct lif_logical_qtype - Descriptor of logical to hardware queue type.
+ * struct ionic_lif_logical_qtype - Descriptor of logical to hardware queue type.
  * @qtype:          Hardware Queue Type.
  * @qid_count:      Number of Queue IDs of the logical type.
  * @qid_base:       Minimum Queue ID of the logical type.
  */
-struct lif_logical_qtype {
+struct ionic_lif_logical_qtype {
 	u8     qtype;
 	u8     rsvd[3];
 	__le32 qid_count;
 	__le32 qid_base;
 };
 
-enum lif_state {
+enum ionic_lif_state {
 	IONIC_LIF_DISABLE	= 0,
 	IONIC_LIF_ENABLE	= 1,
 	IONIC_LIF_HANG_RESET	= 2,
@@ -351,14 +351,14 @@ enum lif_state {
 
 /**
  * LIF configuration
- * @state:          lif state (enum lif_state)
+ * @state:          lif state (enum ionic_lif_state)
  * @name:           lif name
  * @mtu:            mtu
  * @mac:            station mac address
- * @features:       features (enum eth_hw_features)
+ * @features:       features (enum ionic_eth_hw_features)
  * @queue_count:    queue counts per queue-type
  */
-union lif_config {
+union ionic_lif_config {
 	struct {
 		u8     state;
 		u8     rsvd[3];
@@ -373,7 +373,7 @@ union lif_config {
 };
 
 /**
- * struct lif_identity - lif identity information (type-specific)
+ * struct ionic_lif_identity - lif identity information (type-specific)
  *
  * @capabilities    LIF capabilities
  *
@@ -404,7 +404,7 @@ union lif_config {
  *     @cq_qtype:        RDMA Completion Qtype.
  *     @eq_qtype:        RDMA Event Qtype.
  */
-union lif_identity {
+union ionic_lif_identity {
 	struct {
 		__le64 capabilities;
 
@@ -417,7 +417,7 @@ union lif_identity {
 			__le32 min_frame_size;
 			__le32 max_frame_size;
 			u8 rsvd2[106];
-			union lif_config config;
+			union ionic_lif_config config;
 		} __attribute__((packed)) eth;
 
 		struct {
@@ -435,24 +435,24 @@ union lif_identity {
 			u8 rsq_stride;
 			u8 dcqcn_profiles;
 			u8 rsvd_dimensions[10];
-			struct lif_logical_qtype aq_qtype;
-			struct lif_logical_qtype sq_qtype;
-			struct lif_logical_qtype rq_qtype;
-			struct lif_logical_qtype cq_qtype;
-			struct lif_logical_qtype eq_qtype;
+			struct ionic_lif_logical_qtype aq_qtype;
+			struct ionic_lif_logical_qtype sq_qtype;
+			struct ionic_lif_logical_qtype rq_qtype;
+			struct ionic_lif_logical_qtype cq_qtype;
+			struct ionic_lif_logical_qtype eq_qtype;
 		} __attribute__((packed)) rdma;
 	} __attribute__((packed));
 	__le32 words[478];
 };
 
 /**
- * struct lif_init_cmd - LIF init command
+ * struct ionic_lif_init_cmd - LIF init command
  * @opcode:       opcode
- * @type:         LIF type (enum lif_type)
+ * @type:         LIF type (enum ionic_lif_type)
  * @index:        LIF index
- * @info_pa:      destination address for lif info (struct lif_info)
+ * @info_pa:      destination address for lif info (struct ionic_lif_info)
  */
-struct lif_init_cmd {
+struct ionic_lif_init_cmd {
 	u8     opcode;
 	u8     type;
 	__le16 index;
@@ -462,10 +462,10 @@ struct lif_init_cmd {
 };
 
 /**
- * struct lif_init_comp - LIF init command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_lif_init_comp - LIF init command completion
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct lif_init_comp {
+struct ionic_lif_init_comp {
 	u8 status;
 	u8 rsvd;
 	__le16 hw_index;
@@ -475,8 +475,8 @@ struct lif_init_comp {
 /**
  * struct q_identify_cmd - queue identify command
  * @opcode:     opcode
- * @lif_type:   lif type (enum lif_type)
- * @type:       logical queue type (enum logical_qtype)
+ * @lif_type:   lif type (enum ionic_lif_type)
+ * @type:       logical queue type (enum ionic_logical_qtype)
  * @ver:        highest queue type version that the driver supports
  */
 struct q_identify_cmd {
@@ -490,7 +490,7 @@ struct q_identify_cmd {
 
 /**
  * struct q_identify_comp - queue identify command completion
- * @status:  status of the command (enum status_code)
+ * @status:  status of the command (enum ionic_status_code)
  * @ver:     queue type version that can be used with FW
  */
 struct q_identify_comp {
@@ -502,7 +502,7 @@ struct q_identify_comp {
 };
 
 /**
- * union q_identity - queue identity information
+ * union ionic_q_identity - queue identity information
  *     @version:        queue type version that can be used with FW
  *     @supported:      bitfield of queue versions, first bit = ver 0
  *     @features:       queue features
@@ -512,7 +512,7 @@ struct q_identify_comp {
  *     @max_sg_elems:   maximum number of sg elements
  *     @sg_desc_stride: number of sg elements per descriptor
  */
-union q_identity {
+union ionic_q_identity {
 	struct {
 		u8      version;
 		u8      supported;
@@ -532,7 +532,7 @@ union q_identity {
 };
 
 /**
- * struct q_init_cmd - Queue init command
+ * struct ionic_q_init_cmd - Queue init command
  * @opcode:       opcode
  * @type:         Logical queue type
  * @ver:          queue type version
@@ -562,7 +562,7 @@ union q_identity {
  * @cq_ring_base: Completion queue ring base address
  * @sg_ring_base: Scatter/Gather ring base address
  */
-struct q_init_cmd {
+struct ionic_q_init_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -588,15 +588,15 @@ struct q_init_cmd {
 } __attribute__((packed));
 
 /**
- * struct q_init_comp - Queue init command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_q_init_comp - Queue init command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @hw_index:   Hardware Queue ID
  * @hw_type:    Hardware Queue type
  * @color:      Color
  */
-struct q_init_comp {
+struct ionic_q_init_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -610,7 +610,7 @@ struct q_init_comp {
 #define IONIC_ADDR_LEN		52
 #define IONIC_ADDR_MASK		(BIT_ULL(IONIC_ADDR_LEN) - 1)
 
-enum txq_desc_opcode {
+enum ionic_txq_desc_opcode {
 	IONIC_TXQ_DESC_OPCODE_CSUM_NONE = 0,
 	IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL = 1,
 	IONIC_TXQ_DESC_OPCODE_CSUM_HW = 2,
@@ -618,7 +618,7 @@ enum txq_desc_opcode {
 };
 
 /**
- * struct txq_desc - Ethernet Tx queue descriptor format
+ * struct ionic_txq_desc - Ethernet Tx queue descriptor format
  * @opcode:       Tx operation, see TXQ_DESC_OPCODE_*:
  *
  *                   IONIC_TXQ_DESC_OPCODE_CSUM_NONE:
@@ -754,7 +754,7 @@ enum txq_desc_opcode {
 #define IONIC_TXQ_DESC_FLAG_TSO_SOT		0x4
 #define IONIC_TXQ_DESC_FLAG_TSO_EOT		0x8
 
-struct txq_desc {
+struct ionic_txq_desc {
 	__le64  cmd;
 	__le16  len;
 	union {
@@ -796,40 +796,40 @@ static inline void decode_txq_desc_cmd(u64 cmd, u8 *opcode, u8 *flags,
 };
 
 /**
- * struct txq_sg_elem - Transmit scatter-gather (SG) descriptor element
+ * struct ionic_txq_sg_elem - Transmit scatter-gather (SG) descriptor element
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
-struct txq_sg_elem {
+struct ionic_txq_sg_elem {
 	__le64 addr;
 	__le16 len;
 	__le16 rsvd[3];
 };
 
 /**
- * struct txq_sg_desc - Transmit scatter-gather (SG) list
+ * struct ionic_txq_sg_desc - Transmit scatter-gather (SG) list
  * @elems:     Scattter-gather elements
  */
-struct txq_sg_desc {
+struct ionic_txq_sg_desc {
 #define IONIC_TX_MAX_SG_ELEMS		8
 #define IONIC_TX_SG_DESC_STRIDE		8
-	struct txq_sg_elem elems[IONIC_TX_MAX_SG_ELEMS];
+	struct ionic_txq_sg_elem elems[IONIC_TX_MAX_SG_ELEMS];
 };
 
-struct txq_sg_desc_v1 {
+struct ionic_txq_sg_desc_v1 {
 #define IONIC_TX_MAX_SG_ELEMS_V1		15
 #define IONIC_TX_SG_DESC_STRIDE_V1		16
-	struct txq_sg_elem elems[IONIC_TX_SG_DESC_STRIDE_V1];
+	struct ionic_txq_sg_elem elems[IONIC_TX_SG_DESC_STRIDE_V1];
 };
 
 /**
- * struct txq_comp - Ethernet transmit queue completion descriptor
- * @status:     The status of the command (enum status_code)
+ * struct ionic_txq_comp - Ethernet transmit queue completion descriptor
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *                 is the completion.
  * @color:      Color bit.
  */
-struct txq_comp {
+struct ionic_txq_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -837,16 +837,16 @@ struct txq_comp {
 	u8     color;
 };
 
-enum rxq_desc_opcode {
-	RXQ_DESC_OPCODE_SIMPLE = 0,
-	RXQ_DESC_OPCODE_SG = 1,
+enum ionic_rxq_desc_opcode {
+	IONIC_RXQ_DESC_OPCODE_SIMPLE = 0,
+	IONIC_RXQ_DESC_OPCODE_SG = 1,
 };
 
 /**
- * struct rxq_desc - Ethernet Rx queue descriptor format
- * @opcode:       Rx operation, see RXQ_DESC_OPCODE_*:
+ * struct ionic_rxq_desc - Ethernet Rx queue descriptor format
+ * @opcode:       Rx operation, see IONIC_RXQ_DESC_OPCODE_*:
  *
- *                   RXQ_DESC_OPCODE_SIMPLE:
+ *                   IONIC_RXQ_DESC_OPCODE_SIMPLE:
  *
  *                      Receive full packet into data buffer
  *                      starting at @addr.  Results of
@@ -856,37 +856,37 @@ enum rxq_desc_opcode {
  * @len:          Data buffer's length, in bytes.
  * @addr:         Data buffer's DMA address
  */
-struct rxq_desc {
+struct ionic_rxq_desc {
 	u8     opcode;
 	u8     rsvd[5];
 	__le16 len;
 	__le64 addr;
-};	
+};
 
 /**
- * struct rxq_sg_elem - Receive scatter-gather (SG) descriptor element
+ * struct ionic_rxq_sg_elem - Receive scatter-gather (SG) descriptor element
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
-struct rxq_sg_elem {
+struct ionic_rxq_sg_elem {
 	__le64 addr;
 	__le16 len;
 	__le16 rsvd[3];
 };
 
 /**
- * struct rxq_sg_desc - Receive scatter-gather (SG) list
+ * struct ionic_rxq_sg_desc - Receive scatter-gather (SG) list
  * @elems:     Scattter-gather elements
  */
-struct rxq_sg_desc {
+struct ionic_rxq_sg_desc {
 #define IONIC_RX_MAX_SG_ELEMS		8
 #define IONIC_RX_SG_DESC_STRIDE		8
-	struct rxq_sg_elem elems[IONIC_RX_SG_DESC_STRIDE];
+	struct ionic_rxq_sg_elem elems[IONIC_RX_SG_DESC_STRIDE];
 };
 
 /**
- * struct rxq_comp - Ethernet receive queue completion descriptor
- * @status:       The status of the command (enum status_code)
+ * struct ionic_rxq_comp - Ethernet receive queue completion descriptor
+ * @status:       The status of the command (enum ionic_status_code)
  * @num_sg_elems: Number of SG elements used by this descriptor
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
@@ -927,7 +927,7 @@ struct rxq_sg_desc {
  * @pkt_type:     Packet type
  * @color:        Color bit.
  */
-struct rxq_comp {
+struct ionic_rxq_comp {
 	u8     status;
 	u8     num_sg_elems;
 	__le16 comp_index;
@@ -948,45 +948,45 @@ struct rxq_comp {
 #define IONIC_RXQ_COMP_PKT_TYPE_MASK	0x7f
 };
 
-enum pkt_type {
-	PKT_TYPE_NON_IP     = 0x000,
-	PKT_TYPE_IPV4       = 0x001,
-	PKT_TYPE_IPV4_TCP   = 0x003,
-	PKT_TYPE_IPV4_UDP   = 0x005,
-	PKT_TYPE_IPV6       = 0x008,
-	PKT_TYPE_IPV6_TCP   = 0x018,
-	PKT_TYPE_IPV6_UDP   = 0x028,
+enum ionic_pkt_type {
+	IONIC_PKT_TYPE_NON_IP     = 0x000,
+	IONIC_PKT_TYPE_IPV4       = 0x001,
+	IONIC_PKT_TYPE_IPV4_TCP   = 0x003,
+	IONIC_PKT_TYPE_IPV4_UDP   = 0x005,
+	IONIC_PKT_TYPE_IPV6       = 0x008,
+	IONIC_PKT_TYPE_IPV6_TCP   = 0x018,
+	IONIC_PKT_TYPE_IPV6_UDP   = 0x028,
 };
 
-enum eth_hw_features {
-	ETH_HW_VLAN_TX_TAG	= BIT(0),
-	ETH_HW_VLAN_RX_STRIP	= BIT(1),
-	ETH_HW_VLAN_RX_FILTER	= BIT(2),
-	ETH_HW_RX_HASH		= BIT(3),
-	ETH_HW_RX_CSUM		= BIT(4),
-	ETH_HW_TX_SG		= BIT(5),
-	ETH_HW_RX_SG		= BIT(6),
-	ETH_HW_TX_CSUM		= BIT(7),
-	ETH_HW_TSO		= BIT(8),
-	ETH_HW_TSO_IPV6		= BIT(9),
-	ETH_HW_TSO_ECN		= BIT(10),
-	ETH_HW_TSO_GRE		= BIT(11),
-	ETH_HW_TSO_GRE_CSUM	= BIT(12),
-	ETH_HW_TSO_IPXIP4	= BIT(13),
-	ETH_HW_TSO_IPXIP6	= BIT(14),
-	ETH_HW_TSO_UDP		= BIT(15),
-	ETH_HW_TSO_UDP_CSUM	= BIT(16),
+enum ionic_eth_hw_features {
+	IONIC_ETH_HW_VLAN_TX_TAG	= BIT(0),
+	IONIC_ETH_HW_VLAN_RX_STRIP	= BIT(1),
+	IONIC_ETH_HW_VLAN_RX_FILTER	= BIT(2),
+	IONIC_ETH_HW_RX_HASH		= BIT(3),
+	IONIC_ETH_HW_RX_CSUM		= BIT(4),
+	IONIC_ETH_HW_TX_SG		= BIT(5),
+	IONIC_ETH_HW_RX_SG		= BIT(6),
+	IONIC_ETH_HW_TX_CSUM		= BIT(7),
+	IONIC_ETH_HW_TSO		= BIT(8),
+	IONIC_ETH_HW_TSO_IPV6		= BIT(9),
+	IONIC_ETH_HW_TSO_ECN		= BIT(10),
+	IONIC_ETH_HW_TSO_GRE		= BIT(11),
+	IONIC_ETH_HW_TSO_GRE_CSUM	= BIT(12),
+	IONIC_ETH_HW_TSO_IPXIP4		= BIT(13),
+	IONIC_ETH_HW_TSO_IPXIP6		= BIT(14),
+	IONIC_ETH_HW_TSO_UDP		= BIT(15),
+	IONIC_ETH_HW_TSO_UDP_CSUM	= BIT(16),
 };
 
 /**
- * struct q_control_cmd - Queue control command
+ * struct ionic_q_control_cmd - Queue control command
  * @opcode:     opcode
  * @type:       Queue type
  * @lif_index:  LIF index
  * @index:      Queue index
  * @oper:       Operation (enum q_control_oper)
  */
-struct q_control_cmd {
+struct ionic_q_control_cmd {
 	u8     opcode;
 	u8     type;
 	__le16 lif_index;
@@ -995,7 +995,7 @@ struct q_control_cmd {
 	u8     rsvd[55];
 };
 
-typedef struct admin_comp q_control_comp;
+typedef struct ionic_admin_comp ionic_q_control_comp;
 
 enum q_control_oper {
 	IONIC_Q_DISABLE		= 0,
@@ -1006,123 +1006,123 @@ enum q_control_oper {
 /**
  * Physical connection type
  */
-enum phy_type {
-	PHY_TYPE_NONE	= 0,
-	PHY_TYPE_COPPER	= 1,
-	PHY_TYPE_FIBER	= 2,
+enum ionic_phy_type {
+	IONIC_PHY_TYPE_NONE	= 0,
+	IONIC_PHY_TYPE_COPPER	= 1,
+	IONIC_PHY_TYPE_FIBER	= 2,
 };
 
 /**
  * Transceiver status
  */
-enum xcvr_state {
-	XCVR_STATE_REMOVED	   = 0,
-	XCVR_STATE_INSERTED	   = 1,
-	XCVR_STATE_PENDING	   = 2,
-	XCVR_STATE_SPROM_READ	   = 3,
-	XCVR_STATE_SPROM_READ_ERR  = 4,
+enum ionic_xcvr_state {
+	IONIC_XCVR_STATE_REMOVED	 = 0,
+	IONIC_XCVR_STATE_INSERTED	 = 1,
+	IONIC_XCVR_STATE_PENDING	 = 2,
+	IONIC_XCVR_STATE_SPROM_READ	 = 3,
+	IONIC_XCVR_STATE_SPROM_READ_ERR	 = 4,
 };
 
 /**
  * Supported link modes
  */
-enum xcvr_pid {
-	XCVR_PID_UNKNOWN           = 0,
+enum ionic_xcvr_pid {
+	IONIC_XCVR_PID_UNKNOWN           = 0,
 
 	/* CU */
-	XCVR_PID_QSFP_100G_CR4     = 1,
-	XCVR_PID_QSFP_40GBASE_CR4  = 2,
-	XCVR_PID_SFP_25GBASE_CR_S  = 3,
-	XCVR_PID_SFP_25GBASE_CR_L  = 4,
-	XCVR_PID_SFP_25GBASE_CR_N  = 5,
+	IONIC_XCVR_PID_QSFP_100G_CR4     = 1,
+	IONIC_XCVR_PID_QSFP_40GBASE_CR4  = 2,
+	IONIC_XCVR_PID_SFP_25GBASE_CR_S  = 3,
+	IONIC_XCVR_PID_SFP_25GBASE_CR_L  = 4,
+	IONIC_XCVR_PID_SFP_25GBASE_CR_N  = 5,
 
 	/* Fiber */
-	XCVR_PID_QSFP_100G_AOC    = 50,
-	XCVR_PID_QSFP_100G_ACC    = 51,
-	XCVR_PID_QSFP_100G_SR4    = 52,
-	XCVR_PID_QSFP_100G_LR4    = 53,
-	XCVR_PID_QSFP_100G_ER4    = 54,
-	XCVR_PID_QSFP_40GBASE_ER4 = 55,
-	XCVR_PID_QSFP_40GBASE_SR4 = 56,
-	XCVR_PID_QSFP_40GBASE_LR4 = 57,
-	XCVR_PID_QSFP_40GBASE_AOC = 58,
-	XCVR_PID_SFP_25GBASE_SR   = 59,
-	XCVR_PID_SFP_25GBASE_LR   = 60,
-	XCVR_PID_SFP_25GBASE_ER   = 61,
-	XCVR_PID_SFP_25GBASE_AOC  = 62,
-	XCVR_PID_SFP_10GBASE_SR   = 63,
-	XCVR_PID_SFP_10GBASE_LR   = 64,
-	XCVR_PID_SFP_10GBASE_LRM  = 65,
-	XCVR_PID_SFP_10GBASE_ER   = 66,
-	XCVR_PID_SFP_10GBASE_AOC  = 67,
-	XCVR_PID_SFP_10GBASE_CU   = 68,
-	XCVR_PID_QSFP_100G_CWDM4  = 69,
-	XCVR_PID_QSFP_100G_PSM4   = 70,
-	XCVR_PID_SFP_25GBASE_ACC  = 71,
+	IONIC_XCVR_PID_QSFP_100G_AOC    = 50,
+	IONIC_XCVR_PID_QSFP_100G_ACC    = 51,
+	IONIC_XCVR_PID_QSFP_100G_SR4    = 52,
+	IONIC_XCVR_PID_QSFP_100G_LR4    = 53,
+	IONIC_XCVR_PID_QSFP_100G_ER4    = 54,
+	IONIC_XCVR_PID_QSFP_40GBASE_ER4 = 55,
+	IONIC_XCVR_PID_QSFP_40GBASE_SR4 = 56,
+	IONIC_XCVR_PID_QSFP_40GBASE_LR4 = 57,
+	IONIC_XCVR_PID_QSFP_40GBASE_AOC = 58,
+	IONIC_XCVR_PID_SFP_25GBASE_SR   = 59,
+	IONIC_XCVR_PID_SFP_25GBASE_LR   = 60,
+	IONIC_XCVR_PID_SFP_25GBASE_ER   = 61,
+	IONIC_XCVR_PID_SFP_25GBASE_AOC  = 62,
+	IONIC_XCVR_PID_SFP_10GBASE_SR   = 63,
+	IONIC_XCVR_PID_SFP_10GBASE_LR   = 64,
+	IONIC_XCVR_PID_SFP_10GBASE_LRM  = 65,
+	IONIC_XCVR_PID_SFP_10GBASE_ER   = 66,
+	IONIC_XCVR_PID_SFP_10GBASE_AOC  = 67,
+	IONIC_XCVR_PID_SFP_10GBASE_CU   = 68,
+	IONIC_XCVR_PID_QSFP_100G_CWDM4  = 69,
+	IONIC_XCVR_PID_QSFP_100G_PSM4   = 70,
+	IONIC_XCVR_PID_SFP_25GBASE_ACC  = 71,
 };
 
 /**
  * Port types
  */
-enum PortType {
-	PORT_TYPE_NONE = 0,	/* port type not configured */
-	PORT_TYPE_ETH  = 1,	/* port carries ethernet traffic (inband) */
-	PORT_TYPE_MGMT = 2,	/* port carries mgmt traffic (out-of-band) */
+enum ionic_port_type {
+	IONIC_PORT_TYPE_NONE = 0,  /* port type not configured */
+	IONIC_PORT_TYPE_ETH  = 1,  /* port carries ethernet traffic (inband) */
+	IONIC_PORT_TYPE_MGMT = 2,  /* port carries mgmt traffic (out-of-band) */
 };
 
 /**
  * Port config state
  */
-enum PortAdminState {
-	PORT_ADMIN_STATE_NONE = 0,	/* port admin state not configured */
-	PORT_ADMIN_STATE_DOWN = 1,	/* port is admin disabled */
-	PORT_ADMIN_STATE_UP   = 2,	/* port is admin enabled */
+enum ionic_port_admin_state {
+	IONIC_PORT_ADMIN_STATE_NONE = 0,   /* port admin state not configured */
+	IONIC_PORT_ADMIN_STATE_DOWN = 1,   /* port is admin disabled */
+	IONIC_PORT_ADMIN_STATE_UP   = 2,   /* port is admin enabled */
 };
 
 /**
  * Port operational status
  */
-enum port_oper_status {
-	PORT_OPER_STATUS_NONE  = 0,	/* port is disabled */
-	PORT_OPER_STATUS_UP    = 1,	/* port is linked up */
-	PORT_OPER_STATUS_DOWN  = 2,	/* port link status is down */
+enum ionic_port_oper_status {
+	IONIC_PORT_OPER_STATUS_NONE  = 0,	/* port is disabled */
+	IONIC_PORT_OPER_STATUS_UP    = 1,	/* port is linked up */
+	IONIC_PORT_OPER_STATUS_DOWN  = 2,	/* port link status is down */
 };
 
 /**
  * Ethernet Forward error correction (fec) modes
  */
-enum port_fec_type {
-	PORT_FEC_TYPE_NONE = 0,		/* Disabled */
-	PORT_FEC_TYPE_FC   = 1,		/* FireCode */
-	PORT_FEC_TYPE_RS   = 2,		/* ReedSolomon */
+enum ionic_port_fec_type {
+	IONIC_PORT_FEC_TYPE_NONE = 0,		/* Disabled */
+	IONIC_PORT_FEC_TYPE_FC   = 1,		/* FireCode */
+	IONIC_PORT_FEC_TYPE_RS   = 2,		/* ReedSolomon */
 };
 
 /**
  * Ethernet pause (flow control) modes
  */
-enum port_pause_type {
-	PORT_PAUSE_TYPE_NONE = 0,	/* Disable Pause */
-	PORT_PAUSE_TYPE_LINK = 1,	/* Link level pause */
-	PORT_PAUSE_TYPE_PFC  = 2,	/* Priority-Flow control */
+enum ionic_port_pause_type {
+	IONIC_PORT_PAUSE_TYPE_NONE = 0,	/* Disable Pause */
+	IONIC_PORT_PAUSE_TYPE_LINK = 1,	/* Link level pause */
+	IONIC_PORT_PAUSE_TYPE_PFC  = 2,	/* Priority-Flow control */
 };
 
 /**
  * Loopback modes
  */
-enum port_loopback_mode {
-	PORT_LOOPBACK_MODE_NONE = 0,	/* Disable loopback */
-	PORT_LOOPBACK_MODE_MAC  = 1,	/* MAC loopback */
-	PORT_LOOPBACK_MODE_PHY  = 2,	/* PHY/Serdes loopback */
+enum ionic_port_loopback_mode {
+	IONIC_PORT_LOOPBACK_MODE_NONE = 0,	/* Disable loopback */
+	IONIC_PORT_LOOPBACK_MODE_MAC  = 1,	/* MAC loopback */
+	IONIC_PORT_LOOPBACK_MODE_PHY  = 2,	/* PHY/Serdes loopback */
 };
 
 /**
  * Transceiver Status information
- * @state:    Transceiver status (enum xcvr_state)
- * @phy:      Physical connection type (enum phy_type)
+ * @state:    Transceiver status (enum ionic_xcvr_state)
+ * @phy:      Physical connection type (enum ionic_phy_type)
  * @pid:      Transceiver link mode (enum pid)
  * @sprom:    Transceiver sprom contents
  */
-struct xcvr_status {
+struct ionic_xcvr_status {
 	u8     state;
 	u8     phy;
 	__le16 pid;
@@ -1135,11 +1135,11 @@ struct xcvr_status {
  * @mtu:                mtu
  * @state:              port admin state (enum port_admin_state)
  * @an_enable:          autoneg enable
- * @fec_type:           fec type (enum port_fec_type)
- * @pause_type:         pause type (enum port_pause_type)
- * @loopback_mode:      loopback mode (enum port_loopback_mode)
+ * @fec_type:           fec type (enum ionic_port_fec_type)
+ * @pause_type:         pause type (enum ionic_port_pause_type)
+ * @loopback_mode:      loopback mode (enum ionic_port_loopback_mode)
  */
-union port_config {
+union ionic_port_config {
 	struct {
 #define IONIC_SPEED_100G	100000	/* 100G in Mbps */
 #define IONIC_SPEED_50G		50000	/* 50G in Mbps */
@@ -1164,28 +1164,28 @@ union port_config {
 
 /**
  * Port Status information
- * @status:             link status (enum port_oper_status)
+ * @status:             link status (enum ionic_port_oper_status)
  * @id:                 port id
  * @speed:              link speed (in Mbps)
- * @link_down_count:    number of times link when from up to down
+ * @link_down_count:    number of times link went from from up to down
  * @xcvr:               tranceiver status
  */
-struct port_status {
+struct ionic_port_status {
 	__le32 id;
 	__le32 speed;
 	u8     status;
 	__le16 link_down_count;
 	u8     rsvd[49];
-	struct xcvr_status  xcvr;
+	struct ionic_xcvr_status  xcvr;
 } __attribute__((packed));
 
 /**
- * struct port_identify_cmd - Port identify command
+ * struct ionic_port_identify_cmd - Port identify command
  * @opcode:     opcode
  * @index:      port index
  * @ver:        Highest version of identify supported by driver
  */
-struct port_identify_cmd {
+struct ionic_port_identify_cmd {
 	u8 opcode;
 	u8 index;
 	u8 ver;
@@ -1193,23 +1193,23 @@ struct port_identify_cmd {
 };
 
 /**
- * struct port_identify_comp - Port identify command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_port_identify_comp - Port identify command completion
+ * @status: The status of the command (enum ionic_status_code)
  * @ver:    Version of identify returned by device
  */
-struct port_identify_comp {
+struct ionic_port_identify_comp {
 	u8 status;
 	u8 ver;
 	u8 rsvd[14];
 };
 
 /**
- * struct port_init_cmd - Port initialization command
+ * struct ionic_port_init_cmd - Port initialization command
  * @opcode:     opcode
  * @index:      port index
- * @info_pa:    destination address for port info (struct port_info)
+ * @info_pa:    destination address for port info (struct ionic_port_info)
  */
-struct port_init_cmd {
+struct ionic_port_init_cmd {
 	u8     opcode;
 	u8     index;
 	u8     rsvd[6];
@@ -1218,39 +1218,39 @@ struct port_init_cmd {
 };
 
 /**
- * struct port_init_comp - Port initialization command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_port_init_comp - Port initialization command completion
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct port_init_comp {
+struct ionic_port_init_comp {
 	u8 status;
 	u8 rsvd[15];
 };
 
 /**
- * struct port_reset_cmd - Port reset command
+ * struct ionic_port_reset_cmd - Port reset command
  * @opcode:     opcode
  * @index:      port index
  */
-struct port_reset_cmd {
+struct ionic_port_reset_cmd {
 	u8 opcode;
 	u8 index;
 	u8 rsvd[62];
 };
 
 /**
- * struct port_reset_comp - Port reset command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_port_reset_comp - Port reset command completion
+ * @status: The status of the command (enum ionic_status_code)
  */
-struct port_reset_comp {
+struct ionic_port_reset_comp {
 	u8 status;
 	u8 rsvd[15];
 };
 
 /**
- * enum stats_ctl_cmd - List of commands for stats control
+ * enum ionic_stats_ctl_cmd - List of commands for stats control
  */
-enum stats_ctl_cmd {
-	STATS_CTL_RESET             = 0,
+enum ionic_stats_ctl_cmd {
+	IONIC_STATS_CTL_RESET		= 0,
 };
 
 /**
@@ -1268,12 +1268,12 @@ enum ionic_port_attr {
 };
 
 /**
- * struct port_setattr_cmd - Set port attributes on the NIC
+ * struct ionic_port_setattr_cmd - Set port attributes on the NIC
  * @opcode:     Opcode
  * @index:      port index
  * @attr:       Attribute type (enum ionic_port_attr)
  */
-struct port_setattr_cmd {
+struct ionic_port_setattr_cmd {
 	u8     opcode;
 	u8     index;
 	u8     attr;
@@ -1292,23 +1292,23 @@ struct port_setattr_cmd {
 };
 
 /**
- * struct port_setattr_comp - Port set attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_port_setattr_comp - Port set attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @color:      Color bit
  */
-struct port_setattr_comp {
+struct ionic_port_setattr_comp {
 	u8     status;
 	u8     rsvd[14];
 	u8     color;
 };
 
 /**
- * struct port_getattr_cmd - Get port attributes from the NIC
+ * struct ionic_port_getattr_cmd - Get port attributes from the NIC
  * @opcode:     Opcode
  * @index:      port index
  * @attr:       Attribute type (enum ionic_port_attr)
  */
-struct port_getattr_cmd {
+struct ionic_port_getattr_cmd {
 	u8     opcode;
 	u8     index;
 	u8     attr;
@@ -1316,11 +1316,11 @@ struct port_getattr_cmd {
 };
 
 /**
- * struct port_getattr_comp - Port get attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_port_getattr_comp - Port get attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @color:      Color bit
  */
-struct port_getattr_comp {
+struct ionic_port_getattr_comp {
 	u8     status;
 	u8     rsvd[3];
 	union {
@@ -1337,14 +1337,14 @@ struct port_getattr_comp {
 };
 
 /**
- * struct lif_status - Lif status register
+ * struct ionic_lif_status - Lif status register
  * @eid:             most recent NotifyQ event id
  * @port_num:        port the lif is connected to
- * @link_status:     port status (enum port_oper_status)
+ * @link_status:     port status (enum ionic_port_oper_status)
  * @link_speed:      speed of link in Mbps
- * @link_down_count: number of times link when from up to down
+ * @link_down_count: number of times link went from up to down
  */
-struct lif_status {
+struct ionic_lif_status {
 	__le64 eid;
 	u8     port_num;
 	u8     rsvd;
@@ -1355,43 +1355,43 @@ struct lif_status {
 };
 
 /**
- * struct lif_reset_cmd - LIF reset command
+ * struct ionic_lif_reset_cmd - LIF reset command
  * @opcode:    opcode
  * @index:     LIF index
  */
-struct lif_reset_cmd {
+struct ionic_lif_reset_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 index;
 	__le32 rsvd2[15];
 };
 
-typedef struct admin_comp lif_reset_comp;
+typedef struct ionic_admin_comp ionic_lif_reset_comp;
 
-enum dev_state {
+enum ionic_dev_state {
 	IONIC_DEV_DISABLE	= 0,
 	IONIC_DEV_ENABLE	= 1,
 	IONIC_DEV_HANG_RESET	= 2,
 };
 
 /**
- * enum dev_attr - List of device attributes
+ * enum ionic_dev_attr - List of device attributes
  */
-enum dev_attr {
+enum ionic_dev_attr {
 	IONIC_DEV_ATTR_STATE    = 0,
 	IONIC_DEV_ATTR_NAME     = 1,
 	IONIC_DEV_ATTR_FEATURES = 2,
 };
 
 /**
- * struct dev_setattr_cmd - Set Device attributes on the NIC
+ * struct ionic_dev_setattr_cmd - Set Device attributes on the NIC
  * @opcode:     Opcode
- * @attr:       Attribute type (enum dev_attr)
- * @state:      Device state (enum dev_state)
+ * @attr:       Attribute type (enum ionic_dev_attr)
+ * @state:      Device state (enum ionic_dev_state)
  * @name:       The bus info, e.g. PCI slot-device-function, 0 terminated
  * @features:   Device features
  */
-struct dev_setattr_cmd {
+struct ionic_dev_setattr_cmd {
 	u8     opcode;
 	u8     attr;
 	__le16 rsvd;
@@ -1404,12 +1404,12 @@ struct dev_setattr_cmd {
 };
 
 /**
- * struct dev_setattr_comp - Device set attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_dev_setattr_comp - Device set attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @features:   Device features
  * @color:      Color bit
  */
-struct dev_setattr_comp {
+struct ionic_dev_setattr_comp {
 	u8     status;
 	u8     rsvd[3];
 	union {
@@ -1420,23 +1420,23 @@ struct dev_setattr_comp {
 };
 
 /**
- * struct dev_getattr_cmd - Get Device attributes from the NIC
+ * struct ionic_dev_getattr_cmd - Get Device attributes from the NIC
  * @opcode:     opcode
- * @attr:       Attribute type (enum dev_attr)
+ * @attr:       Attribute type (enum ionic_dev_attr)
  */
-struct dev_getattr_cmd {
+struct ionic_dev_getattr_cmd {
 	u8     opcode;
 	u8     attr;
 	u8     rsvd[62];
 };
 
 /**
- * struct dev_setattr_comp - Device set attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_dev_setattr_comp - Device set attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @features:   Device features
  * @color:      Color bit
  */
-struct dev_getattr_comp {
+struct ionic_dev_getattr_comp {
 	u8     status;
 	u8     rsvd[3];
 	union {
@@ -1451,7 +1451,7 @@ struct dev_getattr_comp {
  */
 #define IONIC_RSS_HASH_KEY_SIZE		40
 
-enum rss_hash_types {
+enum ionic_rss_hash_types {
 	IONIC_RSS_TYPE_IPV4	= BIT(0),
 	IONIC_RSS_TYPE_IPV4_TCP	= BIT(1),
 	IONIC_RSS_TYPE_IPV4_UDP	= BIT(2),
@@ -1461,9 +1461,9 @@ enum rss_hash_types {
 };
 
 /**
- * enum lif_attr - List of LIF attributes
+ * enum ionic_lif_attr - List of LIF attributes
  */
-enum lif_attr {
+enum ionic_lif_attr {
 	IONIC_LIF_ATTR_STATE        = 0,
 	IONIC_LIF_ATTR_NAME         = 1,
 	IONIC_LIF_ATTR_MTU          = 2,
@@ -1474,22 +1474,22 @@ enum lif_attr {
 };
 
 /**
- * struct lif_setattr_cmd - Set LIF attributes on the NIC
+ * struct ionic_lif_setattr_cmd - Set LIF attributes on the NIC
  * @opcode:     Opcode
- * @type:       Attribute type (enum lif_attr)
+ * @type:       Attribute type (enum ionic_lif_attr)
  * @index:      LIF index
- * @state:      lif state (enum lif_state)
+ * @state:      lif state (enum ionic_lif_state)
  * @name:       The netdev name string, 0 terminated
  * @mtu:        Mtu
  * @mac:        Station mac
- * @features:   Features (enum eth_hw_features)
+ * @features:   Features (enum ionic_eth_hw_features)
  * @rss:        RSS properties
  *              @types:     The hash types to enable (see rss_hash_types).
  *              @key:       The hash secret key.
  *              @addr:      Address for the indirection table shared memory.
- * @stats_ctl:  stats control commands (enum stats_ctl_cmd)
+ * @stats_ctl:  stats control commands (enum ionic_stats_ctl_cmd)
  */
-struct lif_setattr_cmd {
+struct ionic_lif_setattr_cmd {
 	u8     opcode;
 	u8     attr;
 	__le16 index;
@@ -1505,20 +1505,20 @@ struct lif_setattr_cmd {
 			u8     rsvd[6];
 			__le64 addr;
 		} rss;
-		u8 stats_ctl;
+		u8      stats_ctl;
 		u8      rsvd[60];
 	} __attribute__((packed));
 };
 
 /**
- * struct lif_setattr_comp - LIF set attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_lif_setattr_comp - LIF set attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @features:   features (enum eth_hw_features)
+ * @features:   features (enum ionic_eth_hw_features)
  * @color:      Color bit
  */
-struct lif_setattr_comp {
+struct ionic_lif_setattr_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -1530,12 +1530,12 @@ struct lif_setattr_comp {
 };
 
 /**
- * struct lif_getattr_cmd - Get LIF attributes from the NIC
+ * struct ionic_lif_getattr_cmd - Get LIF attributes from the NIC
  * @opcode:     Opcode
- * @attr:       Attribute type (enum lif_attr)
+ * @attr:       Attribute type (enum ionic_lif_attr)
  * @index:      LIF index
  */
-struct lif_getattr_cmd {
+struct ionic_lif_getattr_cmd {
 	u8     opcode;
 	u8     attr;
 	__le16 index;
@@ -1543,18 +1543,18 @@ struct lif_getattr_cmd {
 };
 
 /**
- * struct lif_getattr_comp - LIF get attr command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_lif_getattr_comp - LIF get attr command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @state:      lif state (enum lif_state)
+ * @state:      lif state (enum ionic_lif_state)
  * @name:       The netdev name string, 0 terminated
  * @mtu:        Mtu
  * @mac:        Station mac
- * @features:   Features (enum eth_hw_features)
+ * @features:   Features (enum ionic_eth_hw_features)
  * @color:      Color bit
  */
-struct lif_getattr_comp {
+struct ionic_lif_getattr_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -1569,28 +1569,28 @@ struct lif_getattr_comp {
 	u8     color;
 };
 
-enum rx_mode {
-	RX_MODE_F_UNICAST		= BIT(0),
-	RX_MODE_F_MULTICAST		= BIT(1),
-	RX_MODE_F_BROADCAST		= BIT(2),
-	RX_MODE_F_PROMISC		= BIT(3),
-	RX_MODE_F_ALLMULTI		= BIT(4),
-	RX_MODE_F_RDMA_SNIFFER	= BIT(5),
+enum ionic_rx_mode {
+	IONIC_RX_MODE_F_UNICAST		= BIT(0),
+	IONIC_RX_MODE_F_MULTICAST	= BIT(1),
+	IONIC_RX_MODE_F_BROADCAST	= BIT(2),
+	IONIC_RX_MODE_F_PROMISC		= BIT(3),
+	IONIC_RX_MODE_F_ALLMULTI	= BIT(4),
+	IONIC_RX_MODE_F_RDMA_SNIFFER	= BIT(5),
 };
 
 /**
- * struct rx_mode_set_cmd - Set LIF's Rx mode command
+ * struct ionic_rx_mode_set_cmd - Set LIF's Rx mode command
  * @opcode:     opcode
  * @lif_index:  LIF index
  * @rx_mode:    Rx mode flags:
- *                  RX_MODE_F_UNICAST: Accept known unicast packets.
- *                  RX_MODE_F_MULTICAST: Accept known multicast packets.
- *                  RX_MODE_F_BROADCAST: Accept broadcast packets.
- *                  RX_MODE_F_PROMISC: Accept any packets.
- *                  RX_MODE_F_ALLMULTI: Accept any multicast packets.
- *                  RX_MODE_F_RDMA_SNIFFER: Sniff rdma packets
+ *                  IONIC_RX_MODE_F_UNICAST: Accept known unicast packets.
+ *                  IONIC_RX_MODE_F_MULTICAST: Accept known multicast packets.
+ *                  IONIC_RX_MODE_F_BROADCAST: Accept broadcast packets.
+ *                  IONIC_RX_MODE_F_PROMISC: Accept any packets.
+ *                  IONIC_RX_MODE_F_ALLMULTI: Accept any multicast packets.
+ *                  IONIC_RX_MODE_F_RDMA_SNIFFER: Sniff rdma packets
  */
-struct rx_mode_set_cmd {
+struct ionic_rx_mode_set_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -1598,25 +1598,25 @@ struct rx_mode_set_cmd {
 	__le16 rsvd2[29];
 };
 
-typedef struct admin_comp rx_mode_set_comp;
+typedef struct ionic_admin_comp ionic_rx_mode_set_comp;
 
-enum rx_filter_match_type {
-	RX_FILTER_MATCH_VLAN = 0,
-	RX_FILTER_MATCH_MAC,
-	RX_FILTER_MATCH_MAC_VLAN,
+enum ionic_rx_filter_match_type {
+	IONIC_RX_FILTER_MATCH_VLAN = 0,
+	IONIC_RX_FILTER_MATCH_MAC,
+	IONIC_RX_FILTER_MATCH_MAC_VLAN,
 };
 
 /**
- * struct rx_filter_add_cmd - Add LIF Rx filter command
+ * struct ionic_rx_filter_add_cmd - Add LIF Rx filter command
  * @opcode:     opcode
  * @qtype:      Queue type
  * @lif_index:  LIF index
  * @qid:        Queue ID
- * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
+ * @match:      Rx filter match type.  (See IONIC_RX_FILTER_MATCH_xxx)
  * @vlan:       VLAN ID
  * @addr:       MAC address (network-byte order)
  */
-struct rx_filter_add_cmd {
+struct ionic_rx_filter_add_cmd {
 	u8     opcode;
 	u8     qtype;
 	__le16 lif_index;
@@ -1638,14 +1638,14 @@ struct rx_filter_add_cmd {
 };
 
 /**
- * struct rx_filter_add_comp - Add LIF Rx filter command completion
- * @status:     The status of the command (enum status_code)
+ * struct ionic_rx_filter_add_comp - Add LIF Rx filter command completion
+ * @status:     The status of the command (enum ionic_status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @filter_id:  Filter ID
  * @color:      Color bit.
  */
-struct rx_filter_add_comp {
+struct ionic_rx_filter_add_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -1655,12 +1655,12 @@ struct rx_filter_add_comp {
 };
 
 /**
- * struct rx_filter_del_cmd - Delete LIF Rx filter command
+ * struct ionic_rx_filter_del_cmd - Delete LIF Rx filter command
  * @opcode:     opcode
  * @lif_index:  LIF index
  * @filter_id:  Filter ID
  */
-struct rx_filter_del_cmd {
+struct ionic_rx_filter_del_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -1668,7 +1668,7 @@ struct rx_filter_del_cmd {
 	u8     rsvd2[56];
 };
 
-typedef struct admin_comp rx_filter_del_comp;
+typedef struct ionic_admin_comp ionic_rx_filter_del_comp;
 
 enum ionic_vf_attr {
 	IONIC_VF_ATTR_SPOOFCHK	= 1,
@@ -1758,23 +1758,23 @@ struct ionic_vf_getattr_comp {
 };
 
 /**
- * struct qos_identify_cmd - QoS identify command
+ * struct ionic_qos_identify_cmd - QoS identify command
  * @opcode:    opcode
  * @ver:     Highest version of identify supported by driver
  *
  */
-struct qos_identify_cmd {
+struct ionic_qos_identify_cmd {
 	u8 opcode;
 	u8 ver;
 	u8 rsvd[62];
 };
 
 /**
- * struct qos_identify_comp - QoS identify command completion
- * @status: The status of the command (enum status_code)
+ * struct ionic_qos_identify_comp - QoS identify command completion
+ * @status: The status of the command (enum ionic_status_code)
  * @ver:    Version of identify returned by device
  */
-struct qos_identify_comp {
+struct ionic_qos_identify_comp {
 	u8 status;
 	u8 ver;
 	u8 rsvd[14];
@@ -1788,45 +1788,45 @@ struct qos_identify_comp {
 #define IONIC_QOS_DSCP_MAX		64
 
 /**
- * enum qos_class
+ * enum ionic_qos_class
  */
-enum qos_class {
-	QOS_CLASS_DEFAULT		= 0,
-	QOS_CLASS_USER_DEFINED_1	= 1,
-	QOS_CLASS_USER_DEFINED_2	= 2,
-	QOS_CLASS_USER_DEFINED_3	= 3,
-	QOS_CLASS_USER_DEFINED_4	= 4,
-	QOS_CLASS_USER_DEFINED_5	= 5,
-	QOS_CLASS_USER_DEFINED_6	= 6,
+enum ionic_qos_class {
+	IONIC_QOS_CLASS_DEFAULT		= 0,
+	IONIC_QOS_CLASS_USER_DEFINED_1	= 1,
+	IONIC_QOS_CLASS_USER_DEFINED_2	= 2,
+	IONIC_QOS_CLASS_USER_DEFINED_3	= 3,
+	IONIC_QOS_CLASS_USER_DEFINED_4	= 4,
+	IONIC_QOS_CLASS_USER_DEFINED_5	= 5,
+	IONIC_QOS_CLASS_USER_DEFINED_6	= 6,
 };
 
 /**
- * enum qos_class_type - Traffic classification criteria
+ * enum ionic_qos_class_type - Traffic classification criteria
  */
-enum qos_class_type {
-	QOS_CLASS_TYPE_NONE	= 0,
-	QOS_CLASS_TYPE_PCP	= 1,	/* Dot1Q pcp */
-	QOS_CLASS_TYPE_DSCP	= 2,	/* IP dscp */
+enum ionic_qos_class_type {
+	IONIC_QOS_CLASS_TYPE_NONE	= 0,
+	IONIC_QOS_CLASS_TYPE_PCP	= 1,	/* Dot1Q pcp */
+	IONIC_QOS_CLASS_TYPE_DSCP	= 2,	/* IP dscp */
 };
 
 /**
- * enum qos_sched_type - Qos class scheduling type
+ * enum ionic_qos_sched_type - Qos class scheduling type
  */
-enum qos_sched_type {
-	QOS_SCHED_TYPE_STRICT	= 0,	/* Strict priority */
-	QOS_SCHED_TYPE_DWRR	= 1,	/* Deficit weighted round-robin */
+enum ionic_qos_sched_type {
+	IONIC_QOS_SCHED_TYPE_STRICT	= 0,	/* Strict priority */
+	IONIC_QOS_SCHED_TYPE_DWRR	= 1,	/* Deficit weighted round-robin */
 };
 
 /**
- * union qos_config - Qos configuration structure
+ * union ionic_qos_config - Qos configuration structure
  * @flags:		Configuration flags
  *	IONIC_QOS_CONFIG_F_ENABLE		enable
  *	IONIC_QOS_CONFIG_F_NO_DROP			drop/nodrop
  *	IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		enable dot1q pcp rewrite
  *	IONIC_QOS_CONFIG_F_RW_IP_DSCP		enable ip dscp rewrite
- * @sched_type:		Qos class scheduling type (enum qos_sched_type)
- * @class_type:		Qos class type (enum qos_class_type)
- * @pause_type:		Qos pause type (enum qos_pause_type)
+ * @sched_type:		Qos class scheduling type (enum ionic_qos_sched_type)
+ * @class_type:		Qos class type (enum ionic_qos_class_type)
+ * @pause_type:		Qos pause type (enum ionic_qos_pause_type)
  * @name:		Qos class name
  * @mtu:		MTU of the class
  * @pfc_dot1q_pcp:	Pcp value for pause frames (valid iff F_NODROP)
@@ -1838,7 +1838,7 @@ enum qos_sched_type {
  * @ndscp:		Number of valid dscp values in the ip_dscp field
  * @ip_dscp:		IP dscp values
  */
-union qos_config {
+union ionic_qos_config {
 	struct {
 #define IONIC_QOS_CONFIG_F_ENABLE		BIT(0)
 #define IONIC_QOS_CONFIG_F_NO_DROP			BIT(1)
@@ -1877,29 +1877,29 @@ union qos_config {
 };
 
 /**
- * union qos_identity - QoS identity structure
+ * union ionic_qos_identity - QoS identity structure
  * @version:	Version of the identify structure
  * @type:	QoS system type
  * @nclasses:	Number of usable QoS classes
  * @config:	Current configuration of classes
  */
-union qos_identity {
+union ionic_qos_identity {
 	struct {
 		u8     version;
 		u8     type;
 		u8     rsvd[62];
-		union  qos_config config[IONIC_QOS_CLASS_MAX];
+		union ionic_qos_config config[IONIC_QOS_CLASS_MAX];
 	};
 	__le32 words[478];
 };
 
 /**
- * struct qos_init_cmd - QoS config init command
+ * struct ionic_qos_init_cmd - QoS config init command
  * @opcode:	Opcode
  * @group:	Qos class id
  * @info_pa:	destination address for qos info
  */
-struct qos_init_cmd {
+struct ionic_qos_init_cmd {
 	u8     opcode;
 	u8     group;
 	u8     rsvd[6];
@@ -1907,28 +1907,28 @@ struct qos_init_cmd {
 	u8     rsvd1[48];
 };
 
-typedef struct admin_comp qos_init_comp;
+typedef struct ionic_admin_comp ionic_qos_init_comp;
 
 /**
- * struct qos_reset_cmd - Qos config reset command
+ * struct ionic_qos_reset_cmd - Qos config reset command
  * @opcode:	Opcode
  */
-struct qos_reset_cmd {
+struct ionic_qos_reset_cmd {
 	u8    opcode;
 	u8    group;
 	u8    rsvd[62];
 };
 
-typedef struct admin_comp qos_reset_comp;
+typedef struct ionic_admin_comp ionic_qos_reset_comp;
 
 /**
- * struct fw_download_cmd - Firmware download command
+ * struct ionic_fw_download_cmd - Firmware download command
  * @opcode:	opcode
  * @addr:	dma address of the firmware buffer
  * @offset:	offset of the firmware buffer within the full image
  * @length:	number of valid bytes in the firmware buffer
  */
-struct fw_download_cmd {
+struct ionic_fw_download_cmd {
 	u8     opcode;
 	u8     rsvd[3];
 	__le32 offset;
@@ -1936,21 +1936,21 @@ struct fw_download_cmd {
 	__le32 length;
 };
 
-typedef struct admin_comp fw_download_comp;
+typedef struct ionic_admin_comp ionic_fw_download_comp;
 
-enum fw_control_oper {
+enum ionic_fw_control_oper {
 	IONIC_FW_RESET		= 0,	/* Reset firmware */
 	IONIC_FW_INSTALL	= 1,	/* Install firmware */
 	IONIC_FW_ACTIVATE	= 2,	/* Activate firmware */
 };
 
 /**
- * struct fw_control_cmd - Firmware control command
+ * struct ionic_fw_control_cmd - Firmware control command
  * @opcode:    opcode
- * @oper:      firmware control operation (enum fw_control_oper)
+ * @oper:      firmware control operation (enum ionic_fw_control_oper)
  * @slot:      slot to activate
  */
-struct fw_control_cmd {
+struct ionic_fw_control_cmd {
 	u8  opcode;
 	u8  rsvd[3];
 	u8  oper;
@@ -1959,11 +1959,11 @@ struct fw_control_cmd {
 };
 
 /**
- * struct fw_control_comp - Firmware control copletion
+ * struct ionic_fw_control_comp - Firmware control copletion
  * @opcode:    opcode
  * @slot:      slot where the firmware was installed
  */
-struct fw_control_comp {
+struct ionic_fw_control_comp {
 	u8     status;
 	u8     rsvd;
 	__le16 comp_index;
@@ -1977,15 +1977,15 @@ struct fw_control_comp {
  ******************************************************************/
 
 /**
- * struct rdma_reset_cmd - Reset RDMA LIF cmd
+ * struct ionic_rdma_reset_cmd - Reset RDMA LIF cmd
  * @opcode:        opcode
  * @lif_index:     lif index
  *
  * There is no rdma specific dev command completion struct.  Completion uses
- * the common struct admin_comp.  Only the status is indicated.  Nonzero status
- * means the LIF does not support rdma.
+ * the common struct ionic_admin_comp.  Only the status is indicated.
+ * Nonzero status means the LIF does not support rdma.
  **/
-struct rdma_reset_cmd {
+struct ionic_rdma_reset_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -1993,7 +1993,7 @@ struct rdma_reset_cmd {
 };
 
 /**
- * struct rdma_queue_cmd - Create RDMA Queue command
+ * struct ionic_rdma_queue_cmd - Create RDMA Queue command
  * @opcode:        opcode, 52, 53
  * @lif_index      lif index
  * @qid_ver:       (qid | (rdma version << 24))
@@ -2018,9 +2018,9 @@ struct rdma_reset_cmd {
  * memory registration.
  *
  * There is no rdma specific dev command completion struct.  Completion uses
- * the common struct admin_comp.  Only the status is indicated.
+ * the common struct ionic_admin_comp.  Only the status is indicated.
  **/
-struct rdma_queue_cmd {
+struct ionic_rdma_queue_cmd {
 	u8     opcode;
 	u8     rsvd;
 	__le16 lif_index;
@@ -2038,7 +2038,7 @@ struct rdma_queue_cmd {
  ******************************************************************/
 
 /**
- * struct notifyq_event
+ * struct ionic_notifyq_event
  * @eid:   event number
  * @ecode: event code
  * @data:  unspecified data about the event
@@ -2046,22 +2046,22 @@ struct rdma_queue_cmd {
  * This is the generic event report struct from which the other
  * actual events will be formed.
  */
-struct notifyq_event {
+struct ionic_notifyq_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     data[54];
 };
 
 /**
- * struct link_change_event
+ * struct ionic_link_change_event
  * @eid:		event number
- * @ecode:		event code = EVENT_OPCODE_LINK_CHANGE
+ * @ecode:		event code = IONIC_EVENT_LINK_CHANGE
  * @link_status:	link up or down, with error bits (enum port_status)
  * @link_speed:		speed of the network link
  *
  * Sent when the network link state changes between UP and DOWN
  */
-struct link_change_event {
+struct ionic_link_change_event {
 	__le64 eid;
 	__le16 ecode;
 	__le16 link_status;
@@ -2070,16 +2070,16 @@ struct link_change_event {
 };
 
 /**
- * struct reset_event
+ * struct ionic_reset_event
  * @eid:		event number
- * @ecode:		event code = EVENT_OPCODE_RESET
+ * @ecode:		event code = IONIC_EVENT_RESET
  * @reset_code:		reset type
  * @state:		0=pending, 1=complete, 2=error
  *
  * Sent when the NIC or some subsystem is going to be or
  * has been reset.
  */
-struct reset_event {
+struct ionic_reset_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     reset_code;
@@ -2088,49 +2088,49 @@ struct reset_event {
 };
 
 /**
- * struct heartbeat_event
+ * struct ionic_heartbeat_event
  * @eid:	event number
- * @ecode:	event code = EVENT_OPCODE_HEARTBEAT
+ * @ecode:	event code = IONIC_EVENT_HEARTBEAT
  *
  * Sent periodically by the NIC to indicate continued health
  */
-struct heartbeat_event {
+struct ionic_heartbeat_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     rsvd[54];
 };
 
 /**
- * struct log_event
+ * struct ionic_log_event
  * @eid:	event number
- * @ecode:	event code = EVENT_OPCODE_LOG
+ * @ecode:	event code = IONIC_EVENT_LOG
  * @data:	log data
  *
  * Sent to notify the driver of an internal error.
  */
-struct log_event {
+struct ionic_log_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     data[54];
 };
 
 /**
- * struct xcvr_event
+ * struct ionic_xcvr_event
  * @eid:	event number
- * @ecode:	event code = EVENT_OPCODE_XCVR
+ * @ecode:	event code = IONIC_EVENT_XCVR
  *
  * Transceiver change event
  */
-struct xcvr_event {
+struct ionic_xcvr_event {
 	__le64 eid;
 	__le16 ecode;
 	u8     rsvd[54];
 };
 
 /**
- * struct port_stats
+ * struct ionic_port_stats
  */
-struct port_stats {
+struct ionic_port_stats {
 	__le64 frames_rx_ok;
 	__le64 frames_rx_all;
 	__le64 frames_rx_bad_fcs;
@@ -2222,7 +2222,7 @@ struct port_stats {
 	__le64 frames_tx_truncated;
 };
 
-struct mgmt_port_stats {
+struct ionic_mgmt_port_stats {
 	__le64 frames_rx_ok;
 	__le64 frames_rx_all;
 	__le64 frames_rx_bad_fcs;
@@ -2258,7 +2258,7 @@ struct mgmt_port_stats {
 };
 
 /**
- * struct port_identity - port identity structure
+ * struct ionic_port_identity - port identity structure
  * @version:        identity structure version
  * @type:           type of port (enum port_type)
  * @num_lanes:      number of lanes for the port
@@ -2271,7 +2271,7 @@ struct mgmt_port_stats {
  * @speeds:         supported speeds
  * @config:         current port configuration
  */
-union port_identity {
+union ionic_port_identity {
 	struct {
 		u8     version;
 		u8     type;
@@ -2284,29 +2284,29 @@ union port_identity {
 		u8     loopback_mode[2];
 		__le32 speeds[16];
 		u8     rsvd2[44];
-		union port_config config;
+		union ionic_port_config config;
 	};
 	__le32 words[478];
 };
 
 /**
- * struct port_info - port info structure
+ * struct ionic_port_info - port info structure
  * @port_status:     port status
  * @port_stats:      port stats
  */
-struct port_info {
-	union port_config config;
-	struct port_status status;
+struct ionic_port_info {
+	union ionic_port_config config;
+	struct ionic_port_status status;
 	union {
-		struct port_stats      stats;
-		struct mgmt_port_stats mgmt_stats;
+		struct ionic_port_stats      stats;
+		struct ionic_mgmt_port_stats mgmt_stats;
 	};
 };
 
 /**
- * struct lif_stats
+ * struct ionic_lif_stats
  */
-struct lif_stats {
+struct ionic_lif_stats {
 	/* RX */
 	__le64 rx_ucast_bytes;
 	__le64 rx_ucast_packets;
@@ -2458,78 +2458,78 @@ struct lif_stats {
 };
 
 /**
- * struct lif_info - lif info structure
+ * struct ionic_lif_info - lif info structure
  */
-struct lif_info {
-	union lif_config config;
-	struct lif_status status;
-	struct lif_stats stats;
+struct ionic_lif_info {
+	union ionic_lif_config config;
+	struct ionic_lif_status status;
+	struct ionic_lif_stats stats;
 };
 
-union dev_cmd {
+union ionic_dev_cmd {
 	u32 words[16];
-	struct admin_cmd cmd;
-	struct nop_cmd nop;
+	struct ionic_admin_cmd cmd;
+	struct ionic_nop_cmd nop;
 
-	struct dev_identify_cmd identify;
-	struct dev_init_cmd init;
-	struct dev_reset_cmd reset;
-	struct dev_getattr_cmd getattr;
-	struct dev_setattr_cmd setattr;
+	struct ionic_dev_identify_cmd identify;
+	struct ionic_dev_init_cmd init;
+	struct ionic_dev_reset_cmd reset;
+	struct ionic_dev_getattr_cmd getattr;
+	struct ionic_dev_setattr_cmd setattr;
 
-	struct port_identify_cmd port_identify;
-	struct port_init_cmd port_init;
-	struct port_reset_cmd port_reset;
-	struct port_getattr_cmd port_getattr;
-	struct port_setattr_cmd port_setattr;
+	struct ionic_port_identify_cmd port_identify;
+	struct ionic_port_init_cmd port_init;
+	struct ionic_port_reset_cmd port_reset;
+	struct ionic_port_getattr_cmd port_getattr;
+	struct ionic_port_setattr_cmd port_setattr;
 
 	struct ionic_vf_setattr_cmd vf_setattr;
 	struct ionic_vf_getattr_cmd vf_getattr;
 
-	struct lif_identify_cmd lif_identify;
-	struct lif_init_cmd lif_init;
-	struct lif_reset_cmd lif_reset;
+	struct ionic_lif_identify_cmd lif_identify;
+	struct ionic_lif_init_cmd lif_init;
+	struct ionic_lif_reset_cmd lif_reset;
 
-	struct qos_identify_cmd qos_identify;
-	struct qos_init_cmd qos_init;
-	struct qos_reset_cmd qos_reset;
+	struct ionic_qos_identify_cmd qos_identify;
+	struct ionic_qos_init_cmd qos_init;
+	struct ionic_qos_reset_cmd qos_reset;
 
 	struct q_identify_cmd q_identify;
-	struct q_init_cmd q_init;
-	struct q_control_cmd q_control;
+	struct ionic_q_init_cmd q_init;
+	struct ionic_q_control_cmd q_control;
 };
 
-union dev_cmd_comp {
+union ionic_dev_cmd_comp {
 	u32 words[4];
 	u8 status;
-	struct admin_comp comp;
-	struct nop_comp nop;
+	struct ionic_admin_comp comp;
+	struct ionic_nop_comp nop;
 
-	struct dev_identify_comp identify;
-	struct dev_init_comp init;
-	struct dev_reset_comp reset;
-	struct dev_getattr_comp getattr;
-	struct dev_setattr_comp setattr;
+	struct ionic_dev_identify_comp identify;
+	struct ionic_dev_init_comp init;
+	struct ionic_dev_reset_comp reset;
+	struct ionic_dev_getattr_comp getattr;
+	struct ionic_dev_setattr_comp setattr;
 
-	struct port_identify_comp port_identify;
-	struct port_init_comp port_init;
-	struct port_reset_comp port_reset;
-	struct port_getattr_comp port_getattr;
-	struct port_setattr_comp port_setattr;
+	struct ionic_port_identify_comp port_identify;
+	struct ionic_port_init_comp port_init;
+	struct ionic_port_reset_comp port_reset;
+	struct ionic_port_getattr_comp port_getattr;
+	struct ionic_port_setattr_comp port_setattr;
 
 	struct ionic_vf_setattr_comp vf_setattr;
 	struct ionic_vf_getattr_comp vf_getattr;
 
-	struct lif_identify_comp lif_identify;
-	struct lif_init_comp lif_init;
-	lif_reset_comp lif_reset;
+	struct ionic_lif_identify_comp lif_identify;
+	struct ionic_lif_init_comp lif_init;
+	ionic_lif_reset_comp lif_reset;
 
-	struct qos_identify_comp qos_identify;
-	qos_init_comp qos_init;
-	qos_reset_comp qos_reset;
+	struct ionic_qos_identify_comp qos_identify;
+	ionic_qos_init_comp qos_init;
+	ionic_qos_reset_comp qos_reset;
 
 	struct q_identify_comp q_identify;
-	struct q_init_comp q_init;
+	struct ionic_q_init_comp q_init;
 };
 
 /**
@@ -2543,7 +2543,7 @@ union dev_cmd_comp {
  * @serial_num:      Serial number.
  * @fw_version:      Firmware version.
  */
-union dev_info_regs {
+union ionic_dev_info_regs {
 #define IONIC_DEVINFO_FWVERS_BUFLEN 32
 #define IONIC_DEVINFO_SERIAL_BUFLEN 32
 	struct {
@@ -2561,7 +2561,7 @@ union dev_info_regs {
 };
 
 /**
- * union dev_cmd_regs - Device command register format (read-write)
+ * union ionic_dev_cmd_regs - Device command register format (read-write)
  * @doorbell:        Device Cmd Doorbell, write-only.
  *                   Write a 1 to signal device to process cmd,
  *                   poll done for completion.
@@ -2570,12 +2570,12 @@ union dev_info_regs {
  * @comp:            Opcode-specific response bytes
  * @data:            Opcode-specific side-data
  */
-union dev_cmd_regs {
+union ionic_dev_cmd_regs {
 	struct {
 		u32                   doorbell;
 		u32                   done;
-		union dev_cmd         cmd;
-		union dev_cmd_comp    comp;
+		union ionic_dev_cmd         cmd;
+		union ionic_dev_cmd_comp    comp;
 		u8                    rsvd[48];
 		u32                   data[478];
 	} __attribute__((packed));
@@ -2583,63 +2583,63 @@ union dev_cmd_regs {
 };
 
 /**
- * union dev_regs - Device register format in for bar 0 page 0
+ * union ionic_dev_regs - Device register format in for bar 0 page 0
  * @info:            Device info registers
  * @devcmd:          Device command registers
  */
-union dev_regs {
+union ionic_dev_regs {
 	struct {
-		union dev_info_regs info;
-		union dev_cmd_regs  devcmd;
+		union ionic_dev_info_regs info;
+		union ionic_dev_cmd_regs  devcmd;
 	} __attribute__((packed));
 	__le32 words[1024];
 };
 
-union adminq_cmd {
-	struct admin_cmd cmd;
-	struct nop_cmd nop;
+union ionic_adminq_cmd {
+	struct ionic_admin_cmd cmd;
+	struct ionic_nop_cmd nop;
 	struct q_identify_cmd q_identify;
-	struct q_init_cmd q_init;
-	struct q_control_cmd q_control;
-	struct lif_setattr_cmd lif_setattr;
-	struct lif_getattr_cmd lif_getattr;
-	struct rx_mode_set_cmd rx_mode_set;
-	struct rx_filter_add_cmd rx_filter_add;
-	struct rx_filter_del_cmd rx_filter_del;
-	struct rdma_reset_cmd rdma_reset;
-	struct rdma_queue_cmd rdma_queue;
-	struct fw_download_cmd fw_download;
-	struct fw_control_cmd fw_control;
+	struct ionic_q_init_cmd q_init;
+	struct ionic_q_control_cmd q_control;
+	struct ionic_lif_setattr_cmd lif_setattr;
+	struct ionic_lif_getattr_cmd lif_getattr;
+	struct ionic_rx_mode_set_cmd rx_mode_set;
+	struct ionic_rx_filter_add_cmd rx_filter_add;
+	struct ionic_rx_filter_del_cmd rx_filter_del;
+	struct ionic_rdma_reset_cmd rdma_reset;
+	struct ionic_rdma_queue_cmd rdma_queue;
+	struct ionic_fw_download_cmd fw_download;
+	struct ionic_fw_control_cmd fw_control;
 };
 
-union adminq_comp {
-	struct admin_comp comp;
-	struct nop_comp nop;
+union ionic_adminq_comp {
+	struct ionic_admin_comp comp;
+	struct ionic_nop_comp nop;
 	struct q_identify_comp q_identify;
-	struct q_init_comp q_init;
-	struct lif_setattr_comp lif_setattr;
-	struct lif_getattr_comp lif_getattr;
-	struct rx_filter_add_comp rx_filter_add;
-	struct fw_control_comp fw_control;
+	struct ionic_q_init_comp q_init;
+	struct ionic_lif_setattr_comp lif_setattr;
+	struct ionic_lif_getattr_comp lif_getattr;
+	struct ionic_rx_filter_add_comp rx_filter_add;
+	struct ionic_fw_control_comp fw_control;
 };
 
 #define IONIC_BARS_MAX			6
 #define IONIC_PCI_BAR_DBELL		1
 
 /* BAR0 */
-#define BAR0_SIZE			0x8000
+#define IONIC_BAR0_SIZE				0x8000
 
-#define BAR0_DEV_INFO_REGS_OFFSET	0x0000
-#define BAR0_DEV_CMD_REGS_OFFSET	0x0800
-#define BAR0_DEV_CMD_DATA_REGS_OFFSET	0x0c00
-#define BAR0_INTR_STATUS_OFFSET		0x1000
-#define BAR0_INTR_CTRL_OFFSET		0x2000
-#define DEV_CMD_DONE			0x00000001
+#define IONIC_BAR0_DEV_INFO_REGS_OFFSET		0x0000
+#define IONIC_BAR0_DEV_CMD_REGS_OFFSET		0x0800
+#define IONIC_BAR0_DEV_CMD_DATA_REGS_OFFSET	0x0c00
+#define IONIC_BAR0_INTR_STATUS_OFFSET		0x1000
+#define IONIC_BAR0_INTR_CTRL_OFFSET		0x2000
+#define IONIC_DEV_CMD_DONE			0x00000001
 
-#define ASIC_TYPE_CAPRI			0
+#define IONIC_ASIC_TYPE_CAPRI			0
 
 /**
- * struct doorbell - Doorbell register layout
+ * struct ionic_doorbell - Doorbell register layout
  * @p_index: Producer index
  * @ring:    Selects the specific ring of the queue to update.
  *           Type-specific meaning:
@@ -2650,7 +2650,7 @@ union adminq_comp {
  * @qid:     The queue id selects the queue destination for the
  *           producer index and flags.
  */
-struct doorbell {
+struct ionic_doorbell {
 	__le16 p_index;
 	u8     ring;
 	u8     qid_lo;
@@ -2659,7 +2659,7 @@ struct doorbell {
 };
 
 /**
- * struct intr_ctrl - Interrupt control register
+ * struct ionic_intr_ctrl - Interrupt control register
  * @coalescing_init:  Coalescing timer initial value, in
  *                    device units.  Use @identity->intr_coal_mult
  *                    and @identity->intr_coal_div to convert from
@@ -2716,7 +2716,7 @@ struct doorbell {
  *                    sent, otherwise an interrupt will be sent
  *                    on the next interrupt assertion event.
  */
-struct intr_ctrl {
+struct ionic_intr_ctrl {
 	u8 coalescing_init;
 	u8 rsvd[3];
 	u8 mask;
@@ -2732,8 +2732,8 @@ struct intr_ctrl {
 	u32 rsvd6[3];
 };
 
-#define INTR_CTRL_REGS_MAX	2048
-#define INTR_CTRL_COAL_MAX	0x3F
+#define IONIC_INTR_CTRL_REGS_MAX	2048
+#define IONIC_INTR_CTRL_COAL_MAX	0x3F
 
 #define intr_to_coal(intr_ctrl)		\
 		((void __iomem *)&(intr_ctrl)->coalescing_init)
@@ -2744,20 +2744,20 @@ struct intr_ctrl {
 #define intr_to_mask_on_assert(intr_ctrl)\
 		((void __iomem *)&(intr_ctrl)->mask_on_assert)
 
-struct intr_status {
+struct ionic_intr_status {
 	u32 status[2];
 };
 
-struct notifyq_cmd {
+struct ionic_notifyq_cmd {
 	__le32 data;	/* Not used but needed for qcq structure */
 };
 
-union notifyq_comp {
-	struct notifyq_event event;
-	struct link_change_event link_change;
-	struct reset_event reset;
-	struct heartbeat_event heartbeat;
-	struct log_event log;
+union ionic_notifyq_comp {
+	struct ionic_notifyq_event event;
+	struct ionic_link_change_event link_change;
+	struct ionic_reset_event reset;
+	struct ionic_heartbeat_event heartbeat;
+	struct ionic_log_event log;
 };
 
 /**
@@ -2783,13 +2783,13 @@ enum ionic_eq_comp_code {
 };
 
 /* Deprecate */
-struct identity {
-	union drv_identity drv;
-	union dev_identity dev;
-	union lif_identity lif;
-	union port_identity port;
-	union qos_identity qos;
-	union q_identity txq;
+struct ionic_identity {
+	union ionic_drv_identity drv;
+	union ionic_dev_identity dev;
+	union ionic_lif_identity lif;
+	union ionic_port_identity port;
+	union ionic_qos_identity qos;
+	union ionic_q_identity txq;
 };
 
 #endif /* _IONIC_IF_H_ */

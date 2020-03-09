@@ -178,30 +178,30 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 #if 0
 TEST_F(nicmgr_test, test1)
 {
-    struct rx_filter_add_cmd rx_cmd = {0};
+    struct ionic_rx_filter_add_cmd rx_cmd = {0};
     uint64_t mac1;
     // Get eth device
     Eth *eth_dev = (Eth *)devmgr->GetDevice("eth0");
     assert(eth_dev != NULL);
 
-    union dev_cmd d_cmd;
-    union dev_cmd_comp d_comp;
+    union ionic_dev_cmd d_cmd;
+    union ionic_dev_cmd_comp d_comp;
 
     // RESET
     d_cmd = {0};
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
-    struct lif_init_cmd init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    struct ionic_lif_init_cmd init_cmd = {0};
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    // struct rx_filter_add_comp rx_comp;
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    // struct ionic_rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_VLAN;
     rx_cmd.vlan.vlan = 10;
     // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
@@ -209,8 +209,8 @@ TEST_F(nicmgr_test, test1)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -218,34 +218,34 @@ TEST_F(nicmgr_test, test1)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Set modes
-    struct rx_mode_set_cmd rx_mode_cmd = {0};
-    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-    rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+    struct ionic_rx_mode_set_cmd rx_mode_cmd = {0};
+    rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_BROADCAST;
     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Set Promiscuous mode
     rx_mode_cmd = {0};
-    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-    rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+    rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_PROMISC;
     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
     d_cmd = {0};
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
     init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Mac Filter
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -259,8 +259,8 @@ TEST_F(nicmgr_test, test1)
     for (int i = 1; i < num_vlan_filters; i++) {
         // Vlan Filter
         rx_cmd = {0};
-        rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-        rx_cmd.match = RX_FILTER_MATCH_VLAN;
+        rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+        rx_cmd.match = IONIC_RX_FILTER_MATCH_VLAN;
         rx_cmd.vlan.vlan = i;
         // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
         memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
@@ -275,58 +275,58 @@ TEST_F(nicmgr_test, test1)
 
     // Set modes
     rx_mode_cmd = {0};
-    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-    rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+    rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_BROADCAST;
     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Set Promiscuous mode
     rx_mode_cmd = {0};
-    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-    rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+    rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_PROMISC;
     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
     d_cmd = {0};
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 }
 
 TEST_F(nicmgr_test, test2)
 {
-    struct rx_filter_add_cmd rx_cmd;
+    struct ionic_rx_filter_add_cmd rx_cmd;
     uint64_t mac1;
 
     // Get eth device
     Eth *eth_dev = (Eth *)devmgr->GetDevice("oob_mnic0");
     assert(eth_dev != NULL);
 
-    union dev_cmd d_cmd;
-    union dev_cmd_comp d_comp;
+    union ionic_dev_cmd d_cmd;
+    union ionic_dev_cmd_comp d_comp;
 
     // RESET
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
-    struct lif_init_cmd init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    struct ionic_lif_init_cmd init_cmd = {0};
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    // struct rx_filter_add_comp rx_comp;
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    // struct ionic_rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_VLAN;
     rx_cmd.vlan.vlan = 10;
     // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
     // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -334,31 +334,31 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
      // Set modes
-     struct rx_mode_set_cmd rx_mode_cmd;
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+     struct ionic_rx_mode_set_cmd rx_mode_cmd;
+     rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_BROADCAST;
      memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
      // Set Promiscuous mode
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+     rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_PROMISC;
      memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Vlan Filter
-    // struct rx_filter_add_comp rx_comp;
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    // struct ionic_rx_filter_add_comp rx_comp;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_VLAN;
     rx_cmd.vlan.vlan = 10;
     // printf("opcode: %d rx_cmd_size: %d\n", d_cmd.cmd.opcode, sizeof(rx_cmd));
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
@@ -366,8 +366,8 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Mac Filter
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -375,31 +375,31 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
      // Set modes
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+     rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_BROADCAST;
      memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
      // Set Promiscuous mode
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+     rx_mode_cmd.opcode = IONIC_CMD_RX_MODE_SET;
+     rx_mode_cmd.rx_mode = IONIC_RX_MODE_F_PROMISC;
      memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 }
 
 #endif
 TEST_F(nicmgr_test, test3)
 {
-    struct rx_filter_add_cmd rx_cmd = {0};
+    struct ionic_rx_filter_add_cmd rx_cmd = {0};
     uint64_t mac1;
     Eth *eth_dev = NULL;
-    union dev_cmd d_cmd;
-    union dev_cmd_comp d_comp;
-    struct lif_init_cmd init_cmd = {0};
+    union ionic_dev_cmd d_cmd;
+    union ionic_dev_cmd_comp d_comp;
+    struct ionic_lif_init_cmd init_cmd = {0};
 
 
     // Get eth device
@@ -408,18 +408,18 @@ TEST_F(nicmgr_test, test3)
 
     // RESET
     d_cmd = {0};
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
     init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -427,8 +427,8 @@ TEST_F(nicmgr_test, test3)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x01005e010101;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -441,18 +441,18 @@ TEST_F(nicmgr_test, test3)
     assert(eth_dev != NULL);
 
     // RESET
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
     init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -460,8 +460,8 @@ TEST_F(nicmgr_test, test3)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x01005e020202;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);

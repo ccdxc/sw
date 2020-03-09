@@ -37,7 +37,7 @@ typedef struct ethparams_s {
     u_int64_t devcmddb_pa;
 } ethparams_t;
 
-static union dev_regs dev_regs = {
+static union ionic_dev_regs dev_regs = {
     .info.signature = IONIC_DEV_INFO_SIGNATURE,
 };
 

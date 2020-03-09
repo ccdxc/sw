@@ -87,7 +87,7 @@ typedef enum
 
 #define RETRY_COUNT 30
 
-#define ASIC_TYPE_CAPRI 0
+#define IONIC_ASIC_TYPE_CAPRI 0
 
 // Q flags
 #define QCQ_F_INITED BIT(0)
@@ -98,7 +98,7 @@ typedef enum
 #define QCQ_F_NOTIFYQ BIT(5)
 
 // Q related definitions
-#define QUEUE_NAME_MAX_SZ (32)
+#define IONIC_QUEUE_NAME_MAX_SZ (32)
 #define LIF_NAME_MAX_SZ (32)
 #define DEFAULT_COS 0
 #define DEFAULT_INTR_INDEX 0
@@ -133,8 +133,8 @@ struct ionic_device_bar
 
 struct ionic_admin_ctx
 {
-	union adminq_cmd cmd;
-	union adminq_comp comp;
+	union ionic_adminq_cmd cmd;
+	union ionic_adminq_comp comp;
 };
 
 struct cq_info
@@ -178,7 +178,7 @@ struct cq
 
 struct queue
 {
-	char name[QUEUE_NAME_MAX_SZ];
+	char name[IONIC_QUEUE_NAME_MAX_SZ];
 	struct ionic_dev *idev;
 	struct lif *lif;
 	unsigned int type;
@@ -195,7 +195,7 @@ struct queue
 	unsigned int num_descs;
 	unsigned int desc_size;
 	unsigned int sg_desc_size;
-	struct doorbell __iomem *db;
+	struct ionic_doorbell __iomem *db;
 	void *nop_desc;
 	unsigned int pid;
 };
@@ -223,27 +223,27 @@ struct lif
 	struct io_buffer *tx_iobuf[NTXQ_DESC];
 
 	u32 info_sz;
-	struct lif_info *info;
+	struct ionic_lif_info *info;
 	dma_addr_t info_pa;
 };
 
 struct ionic_dev
 {
-	union dev_info_regs __iomem *dev_info;
-	union dev_cmd_regs __iomem *dev_cmd;
+	union ionic_dev_info_regs __iomem *dev_info;
+	union ionic_dev_cmd_regs __iomem *dev_cmd;
 
-	struct doorbell __iomem *db_pages;
+	struct ionic_doorbell __iomem *db_pages;
 	dma_addr_t phy_db_pages;
 
-	struct intr_ctrl __iomem *intr_ctrl;
-	struct intr_status __iomem *intr_status;
+	struct ionic_intr_ctrl __iomem *intr_ctrl;
+	struct ionic_intr_status __iomem *intr_status;
 
 	unsigned long *hbm_inuse;
 	dma_addr_t phy_hbm_pages;
 	u32 hbm_npages;
 
 	u32 port_info_sz;
-	struct port_info *port_info;
+	struct ionic_port_info *port_info;
 	dma_addr_t port_info_pa;
 };
 
@@ -256,7 +256,7 @@ struct ionic
 	struct ionic_dev idev;
 	struct ionic_device_bar bars[IONIC_IPXE_BARS_MAX];
 	unsigned int num_bars;
-	struct identity ident;
+	struct ionic_identity ident;
 	struct lif *lif;
 	u16 link_status;
 };
@@ -287,19 +287,24 @@ void ionic_poll_tx(struct net_device *netdev);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 
 //helper functions from ionic_main
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_seconds);
+int ionic_dev_cmd_wait_check(struct ionic_dev *idev,
+			     unsigned long max_seconds);
 int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, dma_addr_t addr,
 	unsigned long max_seconds);
 char *ionic_dev_asic_name(u8 asic_type);
-int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long max_seconds);
+int ionic_dev_cmd_go(struct ionic_dev *idev, union ionic_dev_cmd *cmd,
+		     unsigned long max_seconds);
 int ionic_dev_cmd_init(struct ionic_dev *idev, unsigned long max_seconds);
 int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
-				unsigned int lif_index, unsigned long max_seconds);
+			      unsigned int lif_index,
+			      unsigned long max_seconds);
 unsigned int ionic_q_space_avail(struct queue *q);
-int ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index, unsigned long max_seconds);
+int ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index,
+			    unsigned long max_seconds);
 int ionic_lif_reset(struct ionic *ionic);
+
 #endif /* _IONIC_H */

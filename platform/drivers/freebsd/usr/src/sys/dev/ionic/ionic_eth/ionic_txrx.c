@@ -218,17 +218,17 @@ static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
 {
 
-	return ((pkt_type == PKT_TYPE_IPV4_TCP) ||
-		(pkt_type == PKT_TYPE_IPV6_TCP));
+	return ((pkt_type == IONIC_PKT_TYPE_IPV4_TCP) ||
+		(pkt_type == IONIC_PKT_TYPE_IPV6_TCP));
 }
 
 static inline bool
 ionic_is_rx_ipv6(uint8_t pkt_type)
 {
 
-	return ((pkt_type == PKT_TYPE_IPV6) ||
-		(pkt_type == PKT_TYPE_IPV6_TCP) ||
-		(pkt_type == PKT_TYPE_IPV6_UDP));
+	return ((pkt_type == IONIC_PKT_TYPE_IPV6) ||
+		(pkt_type == IONIC_PKT_TYPE_IPV6_TCP) ||
+		(pkt_type == IONIC_PKT_TYPE_IPV6_UDP));
 }
 
 static void
@@ -253,7 +253,7 @@ ionic_dump_mbuf(struct mbuf* m)
  */
 static void
 ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
-    struct rxq_comp *comp, struct ionic_rx_stats *stats)
+    struct ionic_rxq_comp *comp, struct ionic_rx_stats *stats)
 {
 	bool ipv6;
 
@@ -291,7 +291,7 @@ ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
  * Set RSS packet type.
  */
 static void
-ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
+ionic_rx_rss(struct mbuf *m, struct ionic_rxq_comp *comp, int qnum,
     struct ionic_rx_stats *stats, uint16_t rss_hash)
 {
 
@@ -310,13 +310,13 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 	 * enabled for IPv4, set RSS type to IPv4.
 	 */
 	switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
-	case PKT_TYPE_IPV4:
+	case IONIC_PKT_TYPE_IPV4:
 		if (rss_hash & IONIC_RSS_TYPE_IPV4) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV4);
 			stats->rss_ip4++;
 		}
 		break;
-	case PKT_TYPE_IPV4_TCP:
+	case IONIC_PKT_TYPE_IPV4_TCP:
 		if (rss_hash & IONIC_RSS_TYPE_IPV4_TCP) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV4);
 			stats->rss_tcp_ip4++;
@@ -325,7 +325,7 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 			stats->rss_ip4++;
 		}
 		break;
-	case PKT_TYPE_IPV4_UDP:
+	case IONIC_PKT_TYPE_IPV4_UDP:
 		if (rss_hash & IONIC_RSS_TYPE_IPV4_UDP) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV4);
 			stats->rss_udp_ip4++;
@@ -334,13 +334,13 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 			stats->rss_ip4++;
 		}
 		break;
-	case PKT_TYPE_IPV6:
+	case IONIC_PKT_TYPE_IPV6:
 		if (rss_hash & IONIC_RSS_TYPE_IPV6) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6);
 			stats->rss_ip6++;
 		}
 		break;
-	case PKT_TYPE_IPV6_TCP:
+	case IONIC_PKT_TYPE_IPV6_TCP:
 		if (rss_hash & IONIC_RSS_TYPE_IPV6_TCP) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV6);
 			stats->rss_tcp_ip6++;
@@ -349,7 +349,7 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 			stats->rss_ip6++;
 		}
 		break;
-	case PKT_TYPE_IPV6_UDP:
+	case IONIC_PKT_TYPE_IPV6_UDP:
 		if (rss_hash & IONIC_RSS_TYPE_IPV6_UDP) {
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV6);
 			stats->rss_udp_ip6++;
@@ -380,7 +380,7 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 
 void
 ionic_rx_input(struct ionic_rxque *rxq, struct ionic_rx_buf *rxbuf,
-    struct rxq_comp *comp, struct rxq_desc *desc)
+    struct ionic_rxq_comp *comp, struct ionic_rxq_desc *desc)
 {
 	struct mbuf *mb, *m = rxbuf->m;
 	struct ionic_rx_stats *stats = &rxq->stats;
@@ -481,8 +481,8 @@ ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len)
 {
 	bus_dma_segment_t *pseg, seg[IONIC_RX_MAX_SG_ELEMS + 1];
 	struct ionic_rx_buf *rxbuf;
-	struct rxq_desc *desc;
-	struct rxq_sg_desc *sg;
+	struct ionic_rxq_desc *desc;
+	struct ionic_rxq_sg_desc *sg;
 	struct mbuf *m, *mb;
 	struct ionic_rx_stats *stats = &rxq->stats;
 	int i, nsegs, error, size;
@@ -543,7 +543,7 @@ ionic_rx_mbuf_alloc(struct ionic_rxque *rxq, int index, int len)
 
 	desc->addr = seg[0].ds_addr;
 	desc->len = seg[0].ds_len;
-	desc->opcode = nsegs ? RXQ_DESC_OPCODE_SG : RXQ_DESC_OPCODE_SIMPLE;
+	desc->opcode = nsegs ? IONIC_RXQ_DESC_OPCODE_SG : IONIC_RXQ_DESC_OPCODE_SIMPLE;
 
 	size = desc->len;
 	for (i = 0; i < nsegs - 1; i++) {
@@ -592,7 +592,7 @@ ionic_queue_isr(int irq, void *data)
 	int work_done, tx_work;
 
 	KASSERT(rxq, ("rxq is NULL"));
-	KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
+	KASSERT((rxq->intr.index != IONIC_INTR_INDEX_NOT_ASSIGNED),
 	    ("%s has no interrupt resource", rxq->name));
 
 	ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
@@ -831,7 +831,7 @@ ionic_legacy_isr(int irq, void *data)
 		rxq = lif->rxqs[i];
 		txq = lif->txqs[i];
 
-		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
+		KASSERT((rxq->intr.index != IONIC_INTR_INDEX_NOT_ASSIGNED),
 		    ("%s has no interrupt resource", rxq->name));
 		IONIC_QUE_INFO(rxq, "Interrupt source index: %d\n",
 		    rxq->intr.index);
@@ -947,8 +947,8 @@ ionic_get_header_size(struct ionic_txque *txq, struct mbuf *mb,
 static int
 ionic_tx_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 {
-	struct txq_desc *desc;
-	struct txq_sg_elem *sg;
+	struct ionic_txq_desc *desc;
+	struct ionic_txq_sg_elem *sg;
 	struct ionic_tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
 	struct mbuf *m, *newm;
@@ -1068,8 +1068,8 @@ static void
 ionic_tx_tso_dump(struct ionic_txque *txq, struct mbuf *m,
     bus_dma_segment_t  *seg, int nsegs, int stop_index)
 {
-	struct txq_desc *desc;
-	struct txq_sg_elem *sg;
+	struct ionic_txq_desc *desc;
+	struct ionic_txq_sg_elem *sg;
 	struct ionic_tx_buf *txbuf;
 	int i, j, len;
 
@@ -1178,8 +1178,8 @@ ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 	struct mbuf *m, *newm;
 	struct ionic_tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
-	struct txq_desc *desc;
-	struct txq_sg_elem *sg;
+	struct ionic_txq_desc *desc;
+	struct ionic_txq_sg_elem *sg;
 	bus_dma_segment_t seg[IONIC_MAX_TSO_SEGMENTS];
 	dma_addr_t addr;
 	int i, j, index, hdr_len, proto, error, nsegs, num_descs;
@@ -1493,7 +1493,7 @@ static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
 	struct ionic_lif *lif = if_getsoftc(ifp);
-	struct lif_stats *hwstat = &lif->info->stats;
+	struct ionic_lif_stats *hwstat = &lif->info->stats;
 
 	switch (cnt) {
 	case IFCOUNTER_IPACKETS:
@@ -1822,13 +1822,13 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
 
 	switch (fc) {
 	case 0:
-		pause_type |= PORT_PAUSE_TYPE_NONE;
+		pause_type |= IONIC_PORT_PAUSE_TYPE_NONE;
 		break;
 	case 1:
-		pause_type |= PORT_PAUSE_TYPE_LINK;
+		pause_type |= IONIC_PORT_PAUSE_TYPE_LINK;
 		break;
 	case 2:
-		pause_type |= PORT_PAUSE_TYPE_PFC;
+		pause_type |= IONIC_PORT_PAUSE_TYPE_PFC;
 		break;
 	default:
 		if_printf(lif->netdev,
@@ -1871,7 +1871,7 @@ ionic_link_pause_sysctl(SYSCTL_HANDLER_ARGS)
 		return (err);
 
 	pause_type = idev->port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
-	if (pause_type != PORT_PAUSE_TYPE_LINK) {
+	if (pause_type != IONIC_PORT_PAUSE_TYPE_LINK) {
 		if_printf(ifp, "first set pause type to link\n");
 		return (ENXIO);
 	}
@@ -1904,16 +1904,16 @@ ionic_rdma_sniffer_sysctl(SYSCTL_HANDLER_ARGS)
 	int value, err;
 
 	rx_mode = lif->rx_mode;
-	value = (rx_mode & RX_MODE_F_RDMA_SNIFFER) ? 1 : 0;
+	value = (rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER) ? 1 : 0;
 
 	err = sysctl_handle_int(oidp, &value, 0, req);
 	if (err || (req->newptr == NULL))
 		return (err);
 
 	if (value)
-		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
+		rx_mode |= IONIC_RX_MODE_F_RDMA_SNIFFER;
 	else
-		rx_mode &= ~RX_MODE_F_RDMA_SNIFFER;
+		rx_mode &= ~IONIC_RX_MODE_F_RDMA_SNIFFER;
 
 	ionic_lif_rx_mode(lif, rx_mode);
 
@@ -1990,10 +1990,10 @@ static int
 ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif;
-	struct lif_status *lif_status;
-	struct port_status *port_status;
-	union port_config *port_config;
-	struct xcvr_status *xcvr;
+	struct ionic_lif_status *lif_status;
+	struct ionic_port_status *port_status;
+	union ionic_port_config *port_config;
+	struct ionic_xcvr_status *xcvr;
 	struct sbuf *sb;
 	struct ionic *ionic;
 	struct ionic_dev *idev;
@@ -2043,19 +2043,19 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 	    xcvr->pid);
 
 	switch (xcvr->pid) {
-	case XCVR_PID_QSFP_100G_CR4:
-	case XCVR_PID_QSFP_40GBASE_CR4:
-	case XCVR_PID_QSFP_100G_AOC:
-	case XCVR_PID_QSFP_100G_ACC:
-	case XCVR_PID_QSFP_100G_SR4:
-	case XCVR_PID_QSFP_100G_LR4:
-	case XCVR_PID_QSFP_100G_ER4:
-	case XCVR_PID_QSFP_100G_CWDM4:
-	case XCVR_PID_QSFP_100G_PSM4:
-	case XCVR_PID_QSFP_40GBASE_ER4:
-	case XCVR_PID_QSFP_40GBASE_SR4:
-	case XCVR_PID_QSFP_40GBASE_LR4:
-	case XCVR_PID_QSFP_40GBASE_AOC:
+	case IONIC_XCVR_PID_QSFP_100G_CR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_CR4:
+	case IONIC_XCVR_PID_QSFP_100G_AOC:
+	case IONIC_XCVR_PID_QSFP_100G_ACC:
+	case IONIC_XCVR_PID_QSFP_100G_SR4:
+	case IONIC_XCVR_PID_QSFP_100G_LR4:
+	case IONIC_XCVR_PID_QSFP_100G_ER4:
+	case IONIC_XCVR_PID_QSFP_100G_CWDM4:
+	case IONIC_XCVR_PID_QSFP_100G_PSM4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_ER4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_SR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_LR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_AOC:
 		if (xcvr->sprom[SFF_8436_ID] == 0) {
 			/* Older firmware sends page1 info in page0 space */
 			sbuf_printf(sb,
@@ -2072,20 +2072,20 @@ ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 		}
 		break;
 
-	case XCVR_PID_SFP_25GBASE_CR_S:
-	case XCVR_PID_SFP_25GBASE_CR_L:
-	case XCVR_PID_SFP_25GBASE_CR_N:
-	case XCVR_PID_SFP_25GBASE_SR:
-	case XCVR_PID_SFP_25GBASE_LR:
-	case XCVR_PID_SFP_25GBASE_ER:
-	case XCVR_PID_SFP_25GBASE_AOC:
-	case XCVR_PID_SFP_25GBASE_ACC:
-	case XCVR_PID_SFP_10GBASE_SR:
-	case XCVR_PID_SFP_10GBASE_LR:
-	case XCVR_PID_SFP_10GBASE_LRM:
-	case XCVR_PID_SFP_10GBASE_ER:
-	case XCVR_PID_SFP_10GBASE_AOC:
-	case XCVR_PID_SFP_10GBASE_CU:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_S:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_L:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_N:
+	case IONIC_XCVR_PID_SFP_25GBASE_SR:
+	case IONIC_XCVR_PID_SFP_25GBASE_LR:
+	case IONIC_XCVR_PID_SFP_25GBASE_ER:
+	case IONIC_XCVR_PID_SFP_25GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_25GBASE_ACC:
+	case IONIC_XCVR_PID_SFP_10GBASE_SR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LRM:
+	case IONIC_XCVR_PID_SFP_10GBASE_ER:
+	case IONIC_XCVR_PID_SFP_10GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_10GBASE_CU:
 		sbuf_printf(sb, "    SFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
 		    16, &xcvr->sprom[SFF_8472_VENDOR_START],
 		    16, &xcvr->sprom[SFF_8472_PN_START],
@@ -2382,7 +2382,7 @@ static void
 ionic_setup_fw_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
-	struct lif_stats *stat = &lif->info->stats;
+	struct ionic_lif_stats *stat = &lif->info->stats;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2500,7 +2500,7 @@ static void
 ionic_setup_mac_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
     struct sysctl_oid_list *child)
 {
-	struct port_stats *stats;
+	struct ionic_port_stats *stats;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2707,7 +2707,7 @@ static void
 ionic_setup_mgmt_mac_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
     struct sysctl_oid_list *child)
 {
-	struct mgmt_port_stats *stats;
+	struct ionic_mgmt_port_stats *stats;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
@@ -2833,11 +2833,12 @@ ionic_qos_class_type_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error || (req->newptr == NULL))
 		goto err_out;
 
-	if ((value < QOS_CLASS_TYPE_PCP) || (value > QOS_CLASS_TYPE_DSCP)) {
+	if ((value < IONIC_QOS_CLASS_TYPE_PCP) ||
+	    (value > IONIC_QOS_CLASS_TYPE_DSCP)) {
 		error = ERANGE;
 		if_printf(lif->netdev,
 		    "Unsupported classification type - %d(PCP)/%d(DSCP)\n",
-		    QOS_CLASS_TYPE_PCP, QOS_CLASS_TYPE_DSCP);
+		    IONIC_QOS_CLASS_TYPE_PCP, IONIC_QOS_CLASS_TYPE_DSCP);
 		goto err_out;
 	}
 
@@ -3490,27 +3491,28 @@ ionic_set_os_features(struct ifnet *ifp, uint32_t hw_features)
 	if_setcapabilitiesbit(ifp, (IFCAP_VLAN_MTU | IFCAP_JUMBO_MTU |
 		IFCAP_HWSTATS | IFCAP_LRO), 0);
 
-	if (hw_features & ETH_HW_TX_CSUM)
+	if (hw_features & IONIC_ETH_HW_TX_CSUM)
 		if_setcapabilitiesbit(ifp,
-			(IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
+		    (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
 
-	if (hw_features & ETH_HW_RX_CSUM)
+	if (hw_features & IONIC_ETH_HW_RX_CSUM)
 		if_setcapabilitiesbit(ifp,
-			(IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
+		    (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6 | IFCAP_VLAN_HWCSUM), 0);
 
-	if (hw_features & ETH_HW_TSO)
+	if (hw_features & IONIC_ETH_HW_TSO)
 		if_setcapabilitiesbit(ifp, IFCAP_TSO4, 0);
 
-	if (hw_features & ETH_HW_TSO_IPV6)
+	if (hw_features & IONIC_ETH_HW_TSO_IPV6)
 		if_setcapabilitiesbit(ifp, IFCAP_TSO6, 0);
 
-	if (hw_features & (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP))
+	if (hw_features & (IONIC_ETH_HW_VLAN_TX_TAG |
+			   IONIC_ETH_HW_VLAN_RX_STRIP))
 		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWTAGGING, 0);
 
-	if (hw_features & ETH_HW_VLAN_RX_FILTER)
+	if (hw_features & IONIC_ETH_HW_VLAN_RX_FILTER)
 		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWFILTER, 0);
 
-	if (hw_features & (ETH_HW_TSO | ETH_HW_TSO_IPV6))
+	if (hw_features & (IONIC_ETH_HW_TSO | IONIC_ETH_HW_TSO_IPV6))
 		if_setcapabilitiesbit(ifp, IFCAP_VLAN_HWTSO, 0);
 
 	// Enable all capabilities
@@ -3569,11 +3571,11 @@ ionic_iff_up(struct ionic_lif *lif)
 	lif->iff_up = iff_up;
 
 	if (iff_up) {
-		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_UP);
+		ionic_set_port_state(lif->ionic, IONIC_PORT_ADMIN_STATE_UP);
 	} else {
 		/* Report link down until it is set by the next link event */
 		lif->link_up = false;
-		ionic_set_port_state(lif->ionic, PORT_ADMIN_STATE_DOWN);
+		ionic_set_port_state(lif->ionic, IONIC_PORT_ADMIN_STATE_DOWN);
 	}
 #endif
 }
@@ -3621,7 +3623,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 		if ((mask & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6)) &&
 		    (if_getcapabilities(ifp) & (IFCAP_TXCSUM | IFCAP_TXCSUM_IPV6))) {
-			hw_features ^= ETH_HW_TX_CSUM;
+			hw_features ^= IONIC_ETH_HW_TX_CSUM;
 		}
 
 		if ((if_getcapenable(ifp) & IFCAP_TXCSUM))
@@ -3645,8 +3647,9 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		}
 
 		if ((mask & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6)) &&
-		    (if_getcapabilities(ifp) & (IFCAP_RXCSUM | IFCAP_RXCSUM_IPV6))) {
-			hw_features ^= ETH_HW_RX_CSUM;
+		    (if_getcapabilities(ifp) & (IFCAP_RXCSUM |
+						IFCAP_RXCSUM_IPV6))) {
+			hw_features ^= IONIC_ETH_HW_RX_CSUM;
 		}
 
 		/* Checksum offload for vlan tagged packets */
@@ -3659,7 +3662,8 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if ((mask & IFCAP_VLAN_HWTAGGING) &&
 		    (if_getcapabilities(ifp) & IFCAP_VLAN_HWTAGGING)) {
 			if_togglecapenable(ifp, IFCAP_VLAN_HWTAGGING);
-			hw_features ^= (ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_STRIP);
+			hw_features ^= (IONIC_ETH_HW_VLAN_TX_TAG |
+					IONIC_ETH_HW_VLAN_RX_STRIP);
 		}
 
 		if ((mask & IFCAP_VLAN_HWFILTER) &&
@@ -3672,13 +3676,13 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		if ((mask & IFCAP_TSO4) &&
 		    (if_getcapabilities(ifp) & IFCAP_TSO4)) {
 			if_togglecapenable(ifp, IFCAP_TSO4);
-			hw_features ^= ETH_HW_TSO;
+			hw_features ^= IONIC_ETH_HW_TSO;
 		}
 
 		if ((mask & IFCAP_TSO6) &&
 		    (if_getcapabilities(ifp) & IFCAP_TSO6)) {
 			if_togglecapenable(ifp, IFCAP_TSO6);
-			hw_features ^= ETH_HW_TSO_IPV6;
+			hw_features ^= IONIC_ETH_HW_TSO_IPV6;
 		}
 
 		if ((mask & IFCAP_VLAN_HWTSO))

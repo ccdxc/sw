@@ -378,7 +378,7 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	struct device *hwdev;
-	const union lif_identity *ident;
+	const union ionic_lif_identity *ident;
 	struct dentry *dbg_ctx;
 	int rc, val, lif_index, version;
 

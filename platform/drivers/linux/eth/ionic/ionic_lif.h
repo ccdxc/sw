@@ -188,8 +188,8 @@ struct ionic_lif {
 	unsigned int nucast;
 	char name[IONIC_LIF_NAME_MAX_SZ];
 
-	union lif_identity *identity;
-	struct lif_info *info;
+	union ionic_lif_identity *identity;
+	struct ionic_lif_info *info;
 	dma_addr_t info_pa;
 	u32 info_sz;
 	struct ionic_qtype_info qtype_info[IONIC_QTYPE_MAX];
@@ -262,7 +262,7 @@ int ionic_lifs_init(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
-		       union lif_identity *lif_ident);
+		       union ionic_lif_identity *lif_ident);
 int ionic_lifs_size(struct ionic *ionic);
 
 int ionic_slave_alloc(struct ionic *ionic, enum ionic_api_prsn prsn);
@@ -281,7 +281,7 @@ int ionic_reset_queues(struct ionic_lif *lif);
 struct ionic_lif *ionic_netdev_lif(struct net_device *netdev);
 
 static inline void debug_stats_txq_post(struct ionic_qcq *qcq,
-					struct txq_desc *desc, bool dbell)
+					struct ionic_txq_desc *desc, bool dbell)
 {
 	u8 num_sg_elems = ((le64_to_cpu(desc->cmd) >> IONIC_TXQ_DESC_NSGE_SHIFT)
 						& IONIC_TXQ_DESC_NSGE_MASK);

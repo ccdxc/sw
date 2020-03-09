@@ -28,88 +28,88 @@ struct ionic_dev_bar {
 static inline void ionic_struct_size_checks(void)
 {
 	/* Registers */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct doorbell) == 8);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct intr_ctrl) == 32);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct intr_status) == 8);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_doorbell) == 8);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_intr_ctrl) == 32);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_intr_status) == 8);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(union dev_regs) == 4096);
-	VMK_ASSERT_ON_COMPILE(sizeof(union dev_info_regs) == 2048);
-	VMK_ASSERT_ON_COMPILE(sizeof(union dev_cmd_regs) == 2048);
+	VMK_ASSERT_ON_COMPILE(sizeof(union ionic_dev_regs) == 4096);
+	VMK_ASSERT_ON_COMPILE(sizeof(union ionic_dev_info_regs) == 2048);
+	VMK_ASSERT_ON_COMPILE(sizeof(union ionic_dev_cmd_regs) == 2048);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_stats) == 1024);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_stats) == 1024);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct admin_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct admin_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct nop_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct nop_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_admin_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_admin_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_nop_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_nop_comp) == 16);
 
 	/* Device commands */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_identify_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_identify_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_init_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_init_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_reset_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_reset_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_getattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_getattr_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_setattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_setattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_identify_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_identify_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_dev_setattr_comp) == 16);
 
 	/* Port commands */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_identify_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_identify_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_init_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_init_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_reset_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_reset_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_getattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_getattr_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_setattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct port_setattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_identify_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_identify_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_port_setattr_comp) == 16);
 
 	/* LIF commands */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_reset_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(lif_reset_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_getattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_getattr_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_setattr_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_setattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(ionic_lif_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_lif_setattr_comp) == 16);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct q_init_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct q_init_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct q_control_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(q_control_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_q_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_q_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_q_control_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(ionic_q_control_comp) == 16);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_mode_set_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(rx_mode_set_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_comp) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_del_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(rx_filter_del_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rx_mode_set_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(ionic_rx_mode_set_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rx_filter_add_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rx_filter_add_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rx_filter_del_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(ionic_rx_filter_del_comp) == 16);
 
 	/* RDMA commands */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_reset_cmd) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_queue_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rdma_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rdma_queue_cmd) == 64);
 
 	/* Events */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_cmd) == 4);
-	VMK_ASSERT_ON_COMPILE(sizeof(union notifyq_comp) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_event) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct link_change_event) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct reset_event) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct heartbeat_event) == 64);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct log_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_notifyq_cmd) == 4);
+	VMK_ASSERT_ON_COMPILE(sizeof(union ionic_notifyq_comp) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_notifyq_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_link_change_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_reset_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_heartbeat_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_log_event) == 64);
 
 	/* I/O */
-	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_desc) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_sg_desc) == 128);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_txq_desc) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_txq_sg_desc) == 128);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_txq_comp) == 16);
 
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_desc) == 16);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_sg_desc) == 128);
-	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rxq_desc) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rxq_sg_desc) == 128);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct ionic_rxq_comp) == 16);
 }
 
 /** struct ionic_devinfo - device information. */
@@ -121,21 +121,21 @@ struct ionic_devinfo {
 };
 
 struct ionic_dev {
-        union dev_info_regs __iomem *dev_info_regs;
-	union dev_cmd_regs __iomem *dev_cmd_regs;
+        union ionic_dev_info_regs __iomem *dev_info_regs;
+        union ionic_dev_cmd_regs __iomem *dev_cmd_regs;
 
-        struct doorbell __iomem *db_pages;
+        struct ionic_doorbell __iomem *db_pages;
         dma_addr_t phy_db_pages;
 
-        struct intr_ctrl __iomem *intr_ctrl;
-        struct intr_status __iomem *intr_status;
+        struct ionic_intr_ctrl __iomem *intr_ctrl;
+        struct ionic_intr_status __iomem *intr_status;
 
         vmk_Mutex cmb_inuse_lock; /* for cmb_inuse */
         unsigned long *cmb_inuse;
         dma_addr_t phy_cmb_pages;
         uint32_t cmb_npages;
 
-        struct port_info *port_info;
+        struct ionic_port_info *port_info;
         dma_addr_t port_info_pa;
         u32 port_info_sz;
 
@@ -169,10 +169,10 @@ struct desc_info {
         void *cb_arg;
 };
 
-#define QUEUE_NAME_MAX_SZ               (32)
+#define IONIC_QUEUE_NAME_MAX_SZ               (32)
 
 struct queue {
-        char name[QUEUE_NAME_MAX_SZ];
+        char name[IONIC_QUEUE_NAME_MAX_SZ];
         struct ionic_dev *idev;
         struct lif *lif;
 	unsigned int index;
@@ -189,20 +189,20 @@ struct queue {
         unsigned int num_descs;
         unsigned int desc_size;
         unsigned int sg_desc_size;
-        struct doorbell __iomem *db;
+        struct ionic_doorbell __iomem *db;
         void *nop_desc;
         unsigned int pid;
 };
 
-#define INTR_INDEX_NOT_ASSIGNED         (-1)
-#define INTR_NAME_MAX_SZ                (32)
+#define IONIC_INTR_INDEX_NOT_ASSIGNED         (-1)
+#define IONIC_INTR_NAME_MAX_SZ                (32)
 
 struct intr {
-        char name[INTR_NAME_MAX_SZ];
+        char name[IONIC_INTR_NAME_MAX_SZ];
         unsigned int index;
         vmk_IntrCookie cookie;
 //        unsigned int vector;
-        struct intr_ctrl __iomem *ctrl;
+        struct ionic_intr_ctrl __iomem *ctrl;
 };
 
 struct cq {
@@ -226,7 +226,7 @@ void ionic_dev_clean(struct ionic *ionic);
 VMK_ReturnStatus
 ionic_heartbeat_check(struct ionic *ionic);
 
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
+void ionic_dev_cmd_go(struct ionic_dev *idev, union ionic_dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
@@ -254,7 +254,7 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 	u16 lif_index, u16 intr_index);
 
 char *ionic_dev_asic_name(u8 asic_type);
-struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
+struct ionic_doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
 void ionic_intr_clean(struct intr *intr);
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
                     unsigned long index);

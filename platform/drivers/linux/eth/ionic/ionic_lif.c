@@ -101,7 +101,7 @@ static void ionic_link_status_check(struct ionic_lif *lif)
 	bool link_up;
 
 	link_status = le16_to_cpu(lif->info->status.link_status);
-	link_up = link_status == PORT_OPER_STATUS_UP;
+	link_up = link_status == IONIC_PORT_OPER_STATUS_UP;
 
 	if (link_up) {
 		u32 link_speed;
@@ -235,7 +235,7 @@ static int ionic_qcq_enable(struct ionic_qcq *qcq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_control = {
-			.opcode = CMD_OPCODE_Q_CONTROL,
+			.opcode = IONIC_CMD_Q_CONTROL,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
 			.index = cpu_to_le32(q->index),
@@ -285,7 +285,7 @@ static int ionic_qcq_disable(struct ionic_qcq *qcq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_control = {
-			.opcode = CMD_OPCODE_Q_CONTROL,
+			.opcode = IONIC_CMD_Q_CONTROL,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
 			.index = cpu_to_le32(q->index),
@@ -317,7 +317,7 @@ static int ionic_lif_quiesce(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_STATE,
 			.index = lif->index,
 			.state = IONIC_LIF_DISABLE
@@ -582,8 +582,8 @@ static int ionic_qcqs_alloc(struct ionic_lif *lif)
 	flags = IONIC_QCQ_F_INTR;
 	err = ionic_qcq_alloc(lif, IONIC_QTYPE_ADMINQ, 0, "admin", flags,
 			      IONIC_ADMINQ_LENGTH,
-			      sizeof(struct admin_cmd),
-			      sizeof(struct admin_comp),
+			      sizeof(struct ionic_admin_cmd),
+			      sizeof(struct ionic_admin_comp),
 			      0, lif->kern_pid, &lif->adminqcq);
 	if (err)
 		return err;
@@ -592,8 +592,8 @@ static int ionic_qcqs_alloc(struct ionic_lif *lif)
 		flags = IONIC_QCQ_F_NOTIFYQ;
 		err = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq",
 				      flags, IONIC_NOTIFYQ_LENGTH,
-				      sizeof(struct notifyq_cmd),
-				      sizeof(union notifyq_comp),
+				      sizeof(struct ionic_notifyq_cmd),
+				      sizeof(union ionic_notifyq_comp),
 				      0, lif->kern_pid, &lif->notifyqcq);
 		if (err)
 			goto err_out_free_adminqcq;
@@ -675,7 +675,7 @@ static int ionic_lif_txq_init(struct ionic_lif *lif, struct ionic_qcq *qcq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
 			.ver = lif->qtype_info[q->type].version,
@@ -737,7 +737,7 @@ static int ionic_lif_rxq_init(struct ionic_lif *lif, struct ionic_qcq *qcq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
 			.ver = lif->qtype_info[q->type].version,
@@ -806,7 +806,7 @@ static int ionic_lif_rxq_init(struct ionic_lif *lif, struct ionic_qcq *qcq)
 static bool ionic_notifyq_service(struct ionic_cq *cq,
 				  struct ionic_cq_info *cq_info)
 {
-	union notifyq_comp *comp = cq_info->cq_desc;
+	union ionic_notifyq_comp *comp = cq_info->cq_desc;
 	struct ionic_deferred_work *work;
 	struct net_device *netdev;
 	struct ionic_queue *q;
@@ -834,10 +834,10 @@ static bool ionic_notifyq_service(struct ionic_cq *cq,
 			 comp, sizeof(*comp), true);
 
 	switch (le16_to_cpu(comp->event.ecode)) {
-	case EVENT_OPCODE_LINK_CHANGE:
+	case IONIC_EVENT_LINK_CHANGE:
 		ionic_link_status_check_request(lif);
 		break;
-	case EVENT_OPCODE_RESET:
+	case IONIC_EVENT_RESET:
 		work = kzalloc(sizeof(*work), GFP_ATOMIC);
 		if (!work) {
 			netdev_err(lif->netdev, "%s OOM\n", __func__);
@@ -846,17 +846,17 @@ static bool ionic_notifyq_service(struct ionic_cq *cq,
 			ionic_lif_deferred_enqueue(&lif->deferred, work);
 		}
 		break;
-	case EVENT_OPCODE_HEARTBEAT:
-		netdev_info(netdev, "Notifyq EVENT_OPCODE_HEARTBEAT eid=%lld\n",
+	case IONIC_EVENT_HEARTBEAT:
+		netdev_info(netdev, "Notifyq IONIC_EVENT_HEARTBEAT eid=%lld\n",
 			    eid);
 		break;
-	case EVENT_OPCODE_LOG:
-		netdev_info(netdev, "Notifyq EVENT_OPCODE_LOG eid=%lld\n", eid);
+	case IONIC_EVENT_LOG:
+		netdev_info(netdev, "Notifyq IONIC_EVENT_LOG eid=%lld\n", eid);
 		print_hex_dump(KERN_INFO, "notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
 			       comp->log.data, sizeof(comp->log.data), true);
 		break;
-	case EVENT_OPCODE_XCVR:
-		netdev_info(netdev, "Notifyq EVENT_OPCODE_XCVR eid=%lld\n",
+	case IONIC_EVENT_XCVR:
+		netdev_info(netdev, "Notifyq IONIC_EVENT_XCVR eid=%lld\n",
 			    eid);
 		break;
 	default:
@@ -886,7 +886,7 @@ static int ionic_notifyq_clean(struct ionic_lif *lif, int budget)
 static bool ionic_adminq_service(struct ionic_cq *cq,
 				 struct ionic_cq_info *cq_info)
 {
-	struct admin_comp *comp = cq_info->cq_desc;
+	struct ionic_admin_comp *comp = cq_info->cq_desc;
 
 	if (!color_match(comp->color, cq->done_color))
 		return false;
@@ -918,7 +918,7 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 #endif
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	struct lif_stats *ls;
+	struct ionic_lif_stats *ls;
 
 	memset(ns, 0, sizeof(*ns));
 	ls = &lif->info->stats;
@@ -976,9 +976,9 @@ static int ionic_lif_addr_add(struct ionic_lif *lif, const u8 *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_add = {
-			.opcode = CMD_OPCODE_RX_FILTER_ADD,
+			.opcode = IONIC_CMD_RX_FILTER_ADD,
 			.lif_index = cpu_to_le16(lif->index),
-			.match = cpu_to_le16(RX_FILTER_MATCH_MAC),
+			.match = cpu_to_le16(IONIC_RX_FILTER_MATCH_MAC),
 		},
 	};
 	struct ionic_rx_filter *f;
@@ -1022,7 +1022,7 @@ static int ionic_lif_addr_del(struct ionic_lif *lif, const u8 *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+			.opcode = IONIC_CMD_RX_FILTER_DEL,
 			.lif_index = cpu_to_le16(lif->index),
 		},
 	};
@@ -1118,7 +1118,7 @@ static int ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_mode_set = {
-			.opcode = CMD_OPCODE_RX_MODE_SET,
+			.opcode = IONIC_CMD_RX_MODE_SET,
 			.lif_index = cpu_to_le16(lif->index),
 			.rx_mode = cpu_to_le16(rx_mode),
 		},
@@ -1130,17 +1130,17 @@ static int ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 
 	i = snprintf(buf, sizeof(buf), "rx_mode 0x%04x -> 0x%04x:",
 		     lif->rx_mode, rx_mode);
-	if (rx_mode & RX_MODE_F_UNICAST)
+	if (rx_mode & IONIC_RX_MODE_F_UNICAST)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_UNICAST");
-	if (rx_mode & RX_MODE_F_MULTICAST)
+	if (rx_mode & IONIC_RX_MODE_F_MULTICAST)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_MULTICAST");
-	if (rx_mode & RX_MODE_F_BROADCAST)
+	if (rx_mode & IONIC_RX_MODE_F_BROADCAST)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_BROADCAST");
-	if (rx_mode & RX_MODE_F_PROMISC)
+	if (rx_mode & IONIC_RX_MODE_F_PROMISC)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
-	if (rx_mode & RX_MODE_F_ALLMULTI)
+	if (rx_mode & IONIC_RX_MODE_F_ALLMULTI)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
-	if (rx_mode & RX_MODE_F_RDMA_SNIFFER)
+	if (rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER)
 		i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_RDMA_SNIFFER");
 	netdev_dbg(lif->netdev, "lif%d %s\n", lif->index, buf);
 
@@ -1179,18 +1179,18 @@ static int _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 void ionic_set_rx_mode(struct net_device *netdev)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	struct identity *ident = &lif->ionic->ident;
+	struct ionic_identity *ident = &lif->ionic->ident;
 	unsigned int nfilters;
 	unsigned int rx_mode;
 
-	rx_mode = RX_MODE_F_UNICAST;
-	rx_mode |= (netdev->flags & IFF_MULTICAST) ? RX_MODE_F_MULTICAST : 0;
-	rx_mode |= (netdev->flags & IFF_BROADCAST) ? RX_MODE_F_BROADCAST : 0;
-	rx_mode |= (netdev->flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
-	rx_mode |= (netdev->flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
+	rx_mode = IONIC_RX_MODE_F_UNICAST;
+	rx_mode |= (netdev->flags & IFF_MULTICAST) ? IONIC_RX_MODE_F_MULTICAST : 0;
+	rx_mode |= (netdev->flags & IFF_BROADCAST) ? IONIC_RX_MODE_F_BROADCAST : 0;
+	rx_mode |= (netdev->flags & IFF_PROMISC) ? IONIC_RX_MODE_F_PROMISC : 0;
+	rx_mode |= (netdev->flags & IFF_ALLMULTI) ? IONIC_RX_MODE_F_ALLMULTI : 0;
 
 	if (test_bit(IONIC_LIF_F_RDMA_SNIFFER, lif->state))
-		rx_mode |= RX_MODE_F_RDMA_SNIFFER;
+		rx_mode |= IONIC_RX_MODE_F_RDMA_SNIFFER;
 
 	/* sync unicast addresses
 	 * next check to see if we're in an overflow state
@@ -1202,24 +1202,24 @@ void ionic_set_rx_mode(struct net_device *netdev)
 	__dev_uc_sync(netdev, ionic_addr_add, ionic_addr_del);
 	nfilters = le32_to_cpu(ident->lif.eth.max_ucast_filters);
 	if (netdev_uc_count(netdev) + 1 > nfilters) {
-		rx_mode |= RX_MODE_F_PROMISC;
+		rx_mode |= IONIC_RX_MODE_F_PROMISC;
 		lif->uc_overflow = true;
 	} else if (lif->uc_overflow) {
 		lif->uc_overflow = false;
 		if (!(netdev->flags & IFF_PROMISC))
-			rx_mode &= ~RX_MODE_F_PROMISC;
+			rx_mode &= ~IONIC_RX_MODE_F_PROMISC;
 	}
 
 	/* same for multicast */
 	__dev_mc_sync(netdev, ionic_addr_add, ionic_addr_del);
 	nfilters = le32_to_cpu(ident->lif.eth.max_mcast_filters);
 	if (netdev_mc_count(netdev) > nfilters) {
-		rx_mode |= RX_MODE_F_ALLMULTI;
+		rx_mode |= IONIC_RX_MODE_F_ALLMULTI;
 		lif->mc_overflow = true;
 	} else if (lif->mc_overflow) {
 		lif->mc_overflow = false;
 		if (!(netdev->flags & IFF_ALLMULTI))
-			rx_mode &= ~RX_MODE_F_ALLMULTI;
+			rx_mode &= ~IONIC_RX_MODE_F_ALLMULTI;
 	}
 
 	if (lif->rx_mode != rx_mode)
@@ -1231,41 +1231,41 @@ static __le64 ionic_netdev_features_to_nic(netdev_features_t features)
 	u64 wanted = 0;
 
 	if (features & NETIF_F_HW_VLAN_CTAG_TX)
-		wanted |= ETH_HW_VLAN_TX_TAG;
+		wanted |= IONIC_ETH_HW_VLAN_TX_TAG;
 	if (features & NETIF_F_HW_VLAN_CTAG_RX)
-		wanted |= ETH_HW_VLAN_RX_STRIP;
+		wanted |= IONIC_ETH_HW_VLAN_RX_STRIP;
 	if (features & NETIF_F_HW_VLAN_CTAG_FILTER)
-		wanted |= ETH_HW_VLAN_RX_FILTER;
+		wanted |= IONIC_ETH_HW_VLAN_RX_FILTER;
 	if (features & NETIF_F_RXHASH)
-		wanted |= ETH_HW_RX_HASH;
+		wanted |= IONIC_ETH_HW_RX_HASH;
 	if (features & NETIF_F_RXCSUM)
-		wanted |= ETH_HW_RX_CSUM;
+		wanted |= IONIC_ETH_HW_RX_CSUM;
 	if (features & NETIF_F_SG)
-		wanted |= ETH_HW_TX_SG;
+		wanted |= IONIC_ETH_HW_TX_SG;
 	if (features & NETIF_F_HW_CSUM)
-		wanted |= ETH_HW_TX_CSUM;
+		wanted |= IONIC_ETH_HW_TX_CSUM;
 	if (features & NETIF_F_TSO)
-		wanted |= ETH_HW_TSO;
+		wanted |= IONIC_ETH_HW_TSO;
 	if (features & NETIF_F_TSO6)
-		wanted |= ETH_HW_TSO_IPV6;
+		wanted |= IONIC_ETH_HW_TSO_IPV6;
 	if (features & NETIF_F_TSO_ECN)
-		wanted |= ETH_HW_TSO_ECN;
+		wanted |= IONIC_ETH_HW_TSO_ECN;
 	if (features & NETIF_F_GSO_GRE)
-		wanted |= ETH_HW_TSO_GRE;
+		wanted |= IONIC_ETH_HW_TSO_GRE;
 	if (features & NETIF_F_GSO_GRE_CSUM)
-		wanted |= ETH_HW_TSO_GRE_CSUM;
+		wanted |= IONIC_ETH_HW_TSO_GRE_CSUM;
 #ifdef NETIF_F_GSO_IPXIP4
 	if (features & NETIF_F_GSO_IPXIP4)
-		wanted |= ETH_HW_TSO_IPXIP4;
+		wanted |= IONIC_ETH_HW_TSO_IPXIP4;
 #endif
 #ifdef NETIF_F_GSO_IPXIP6
 	if (features & NETIF_F_GSO_IPXIP6)
-		wanted |= ETH_HW_TSO_IPXIP6;
+		wanted |= IONIC_ETH_HW_TSO_IPXIP6;
 #endif
 	if (features & NETIF_F_GSO_UDP_TUNNEL)
-		wanted |= ETH_HW_TSO_UDP;
+		wanted |= IONIC_ETH_HW_TSO_UDP;
 	if (features & NETIF_F_GSO_UDP_TUNNEL_CSUM)
-		wanted |= ETH_HW_TSO_UDP_CSUM;
+		wanted |= IONIC_ETH_HW_TSO_UDP_CSUM;
 
 	return cpu_to_le64(wanted);
 }
@@ -1277,14 +1277,14 @@ static int ionic_set_nic_features(struct ionic_lif *lif,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = cpu_to_le16(lif->index),
 			.attr = IONIC_LIF_ATTR_FEATURES,
 		},
 	};
-	u64 vlan_flags = ETH_HW_VLAN_TX_TAG |
-			 ETH_HW_VLAN_RX_STRIP |
-			 ETH_HW_VLAN_RX_FILTER;
+	u64 vlan_flags = IONIC_ETH_HW_VLAN_TX_TAG |
+			 IONIC_ETH_HW_VLAN_RX_STRIP |
+			 IONIC_ETH_HW_VLAN_RX_FILTER;
 	u64 old_hw_features;
 	int err;
 
@@ -1297,44 +1297,44 @@ static int ionic_set_nic_features(struct ionic_lif *lif,
 	lif->hw_features = le64_to_cpu(ctx.cmd.lif_setattr.features &
 				       ctx.comp.lif_setattr.features);
 
-	if ((old_hw_features ^ lif->hw_features) & ETH_HW_RX_HASH)
+	if ((old_hw_features ^ lif->hw_features) & IONIC_ETH_HW_RX_HASH)
 		ionic_lif_rss_config(lif, lif->rss_types, NULL, NULL);
 
 	if ((vlan_flags & features) &&
 	    !(vlan_flags & le64_to_cpu(ctx.comp.lif_setattr.features)))
 		dev_info_once(lif->ionic->dev, "NIC is not supporting vlan offload, likely in SmartNIC mode\n");
 
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_TX_TAG)
 		dev_dbg(dev, "feature ETH_HW_VLAN_TX_TAG\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_STRIP)
 		dev_dbg(dev, "feature ETH_HW_VLAN_RX_STRIP\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_FILTER)
 		dev_dbg(dev, "feature ETH_HW_VLAN_RX_FILTER\n");
-	if (lif->hw_features & ETH_HW_RX_HASH)
+	if (lif->hw_features & IONIC_ETH_HW_RX_HASH)
 		dev_dbg(dev, "feature ETH_HW_RX_HASH\n");
-	if (lif->hw_features & ETH_HW_TX_SG)
+	if (lif->hw_features & IONIC_ETH_HW_TX_SG)
 		dev_dbg(dev, "feature ETH_HW_TX_SG\n");
-	if (lif->hw_features & ETH_HW_TX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TX_CSUM)
 		dev_dbg(dev, "feature ETH_HW_TX_CSUM\n");
-	if (lif->hw_features & ETH_HW_RX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_RX_CSUM)
 		dev_dbg(dev, "feature ETH_HW_RX_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO)
+	if (lif->hw_features & IONIC_ETH_HW_TSO)
 		dev_dbg(dev, "feature ETH_HW_TSO\n");
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPV6)
 		dev_dbg(dev, "feature ETH_HW_TSO_IPV6\n");
-	if (lif->hw_features & ETH_HW_TSO_ECN)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_ECN)
 		dev_dbg(dev, "feature ETH_HW_TSO_ECN\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE)
 		dev_dbg(dev, "feature ETH_HW_TSO_GRE\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE_CSUM)
 		dev_dbg(dev, "feature ETH_HW_TSO_GRE_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP4)
 		dev_dbg(dev, "feature ETH_HW_TSO_IPXIP4\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP6)
 		dev_dbg(dev, "feature ETH_HW_TSO_IPXIP6\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP)
 		dev_dbg(dev, "feature ETH_HW_TSO_UDP\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP_CSUM)
 		dev_dbg(dev, "feature ETH_HW_TSO_UDP_CSUM\n");
 
 	return 0;
@@ -1370,42 +1370,42 @@ static int ionic_init_nic_features(struct ionic_lif *lif)
 	/* tell the netdev what we actually can support */
 	netdev->features |= NETIF_F_HIGHDMA;
 
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_TX_TAG)
 		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_STRIP)
 		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_FILTER)
 		netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_FILTER;
-	if (lif->hw_features & ETH_HW_RX_HASH)
+	if (lif->hw_features & IONIC_ETH_HW_RX_HASH)
 		netdev->hw_features |= NETIF_F_RXHASH;
-	if (lif->hw_features & ETH_HW_TX_SG)
+	if (lif->hw_features & IONIC_ETH_HW_TX_SG)
 		netdev->hw_features |= NETIF_F_SG;
 
-	if (lif->hw_features & ETH_HW_TX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TX_CSUM)
 		netdev->hw_enc_features |= NETIF_F_HW_CSUM;
-	if (lif->hw_features & ETH_HW_RX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_RX_CSUM)
 		netdev->hw_enc_features |= NETIF_F_RXCSUM;
-	if (lif->hw_features & ETH_HW_TSO)
+	if (lif->hw_features & IONIC_ETH_HW_TSO)
 		netdev->hw_enc_features |= NETIF_F_TSO;
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPV6)
 		netdev->hw_enc_features |= NETIF_F_TSO6;
-	if (lif->hw_features & ETH_HW_TSO_ECN)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_ECN)
 		netdev->hw_enc_features |= NETIF_F_TSO_ECN;
-	if (lif->hw_features & ETH_HW_TSO_GRE)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE)
 		netdev->hw_enc_features |= NETIF_F_GSO_GRE;
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE_CSUM)
 		netdev->hw_enc_features |= NETIF_F_GSO_GRE_CSUM;
 #ifdef NETIF_F_GSO_IPXIP4
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP4)
 		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP4;
 #endif
 #ifdef NETIF_F_GSO_IPXIP6
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP6)
 		netdev->hw_enc_features |= NETIF_F_GSO_IPXIP6;
 #endif
-	if (lif->hw_features & ETH_HW_TSO_UDP)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL;
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP_CSUM)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
 
 	netdev->hw_features |= netdev->hw_enc_features;
@@ -1476,7 +1476,7 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = cpu_to_le16(lif->index),
 			.attr = IONIC_LIF_ATTR_MTU,
 			.mtu = cpu_to_le32(new_mtu),
@@ -1533,9 +1533,9 @@ static int ionic_vlan_rx_add_vid(struct net_device *netdev, __be16 proto,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_add = {
-			.opcode = CMD_OPCODE_RX_FILTER_ADD,
+			.opcode = IONIC_CMD_RX_FILTER_ADD,
 			.lif_index = cpu_to_le16(lif->index),
-			.match = cpu_to_le16(RX_FILTER_MATCH_VLAN),
+			.match = cpu_to_le16(IONIC_RX_FILTER_MATCH_VLAN),
 			.vlan.vlan = cpu_to_le16(vid),
 		},
 	};
@@ -1558,7 +1558,7 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+			.opcode = IONIC_CMD_RX_FILTER_DEL,
 			.lif_index = cpu_to_le16(lif->index),
 		},
 	};
@@ -1588,14 +1588,14 @@ int ionic_lif_rss_config(struct ionic_lif *lif, const u16 types,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_RSS,
 			.rss.addr = cpu_to_le64(lif->rss_ind_tbl_pa),
 		},
 	};
 	unsigned int i, tbl_sz;
 
-	if (lif->hw_features & ETH_HW_RX_HASH) {
+	if (lif->hw_features & IONIC_ETH_HW_RX_HASH) {
 		lif->rss_types = types;
 		ctx.cmd.lif_setattr.rss.types = cpu_to_le16(types);
 	}
@@ -1721,17 +1721,17 @@ static int ionic_txrx_alloc(struct ionic_lif *lif)
 
 	if (lif->qtype_info[IONIC_QTYPE_TXQ].version >= 1 &&
 	    lif->qtype_info[IONIC_QTYPE_TXQ].sg_desc_sz ==
-						  sizeof(struct txq_sg_desc_v1))
-		sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+					  sizeof(struct ionic_txq_sg_desc_v1))
+		sg_desc_sz = sizeof(struct ionic_txq_sg_desc_v1);
 	else
-		sg_desc_sz = sizeof(struct txq_sg_desc);
+		sg_desc_sz = sizeof(struct ionic_txq_sg_desc);
 
 	flags = IONIC_QCQ_F_TX_STATS | IONIC_QCQ_F_SG;
 	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, IONIC_QTYPE_TXQ, i, "tx", flags,
 				      lif->ntxq_descs,
-				      sizeof(struct txq_desc),
-				      sizeof(struct txq_comp),
+				      sizeof(struct ionic_txq_desc),
+				      sizeof(struct ionic_txq_comp),
 				      sg_desc_sz,
 				      lif->kern_pid, &lif->txqcqs[i].qcq);
 		if (err)
@@ -1757,9 +1757,9 @@ static int ionic_txrx_alloc(struct ionic_lif *lif)
 	for (i = 0; i < lif->nxqs; i++) {
 		err = ionic_qcq_alloc(lif, IONIC_QTYPE_RXQ, i, "rx", flags,
 				      lif->nrxq_descs,
-				      sizeof(struct rxq_desc),
-				      sizeof(struct rxq_comp),
-				      sizeof(struct rxq_sg_desc),
+				      sizeof(struct ionic_rxq_desc),
+				      sizeof(struct ionic_rxq_comp),
+				      sizeof(struct ionic_rxq_sg_desc),
 				      lif->kern_pid, &lif->rxqcqs[i].qcq);
 		if (err)
 			goto err_out;
@@ -2021,7 +2021,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 {
 	struct ionic_lif *master_lif = netdev_priv(lower_dev);
 	struct ionic *ionic = master_lif->ionic;
-	union lif_identity *lid;
+	union ionic_lif_identity *lid;
 	struct ionic_lif *lif;
 	int lif_index = -1;
 	int nqueues;
@@ -2245,7 +2245,7 @@ static int ionic_get_vf_stats(struct net_device *netdev, int vf,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
-	struct lif_stats *vs;
+	struct ionic_lif_stats *vs;
 	int ret = 0;
 
 	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
@@ -2710,7 +2710,7 @@ err_out_free_netdev:
 
 int ionic_lifs_alloc(struct ionic *ionic)
 {
-	union lif_identity *lid;
+	union ionic_lif_identity *lid;
 	struct ionic_lif *lif;
 
 	INIT_RADIX_TREE(&ionic->lifs, GFP_KERNEL);
@@ -2883,7 +2883,7 @@ void ionic_lifs_deinit(struct ionic *ionic)
 static int ionic_lif_adminq_init(struct ionic_lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
-	struct q_init_comp comp;
+	struct ionic_q_init_comp comp;
 	struct ionic_dev *idev;
 	struct ionic_qcq *qcq;
 	struct ionic_queue *q;
@@ -2896,7 +2896,7 @@ static int ionic_lif_adminq_init(struct ionic_lif *lif)
 	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_adminq_init(idev, qcq, lif->index, qcq->intr.index);
 	err = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
-	ionic_dev_cmd_comp(idev, (union dev_cmd_comp *)&comp);
+	ionic_dev_cmd_comp(idev, (union ionic_dev_cmd_comp *)&comp);
 	mutex_unlock(&lif->ionic->dev_cmd_lock);
 	if (err) {
 		netdev_err(lif->netdev, "adminq init failed %d\n", err);
@@ -2943,7 +2943,7 @@ static int ionic_lif_notifyq_init(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = cpu_to_le16(lif->index),
 			.type = q->type,
 			.ver = lif->qtype_info[q->type].version,
@@ -2992,7 +2992,7 @@ static int ionic_station_set(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_getattr = {
-			.opcode = CMD_OPCODE_LIF_GETATTR,
+			.opcode = IONIC_CMD_LIF_GETATTR,
 			.index = cpu_to_le16(lif->index),
 			.attr = IONIC_LIF_ATTR_MAC,
 		},
@@ -3035,14 +3035,14 @@ static int ionic_lif_init(struct ionic_lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct device *dev = lif->ionic->dev;
-	struct lif_init_comp comp;
+	struct ionic_lif_init_comp comp;
 	int dbpage_num;
 	int err;
 
 	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
 	err = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
-	ionic_dev_cmd_comp(idev, (union dev_cmd_comp *)&comp);
+	ionic_dev_cmd_comp(idev, (union ionic_dev_cmd_comp *)&comp);
 	mutex_unlock(&lif->ionic->dev_cmd_lock);
 	if (err)
 		return err;
@@ -3159,7 +3159,7 @@ static int ionic_lif_set_netdev_info(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = cpu_to_le16(lif->index),
 			.attr = IONIC_LIF_ATTR_NAME,
 		},
@@ -3249,13 +3249,13 @@ void ionic_lifs_unregister(struct ionic *ionic)
 static void ionic_lif_queue_identify(struct ionic_lif *lif)
 {
 	struct ionic *ionic = lif->ionic;
-	union q_identity *q_ident;
+	union ionic_q_identity *q_ident;
 	struct ionic_dev *idev;
 	int qtype;
 	int err;
 
 	idev = &lif->ionic->idev;
-	q_ident = (union q_identity *)&idev->dev_cmd_regs->data;
+	q_ident = (union ionic_q_identity *)&idev->dev_cmd_regs->data;
 
 	for (qtype = 0; qtype < ARRAY_SIZE(ionic_qtype_versions); qtype++) {
 		struct ionic_qtype_info *qti = &lif->qtype_info[qtype];
@@ -3355,7 +3355,7 @@ static void ionic_lif_queue_identify(struct ionic_lif *lif)
 }
 
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
-		       union lif_identity *lid)
+		       union ionic_lif_identity *lid)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	size_t sz;
@@ -3400,8 +3400,8 @@ int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
 
 int ionic_lifs_size(struct ionic *ionic)
 {
-	struct identity *ident = &ionic->ident;
-	union lif_config *lc = &ident->lif.eth.config;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_lif_config *lc = &ident->lif.eth.config;
 	unsigned int nrdma_eqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;

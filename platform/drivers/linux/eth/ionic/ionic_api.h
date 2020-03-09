@@ -136,7 +136,8 @@ struct dentry *ionic_api_get_debug_ctx(void *handle);
  *
  * Return: pointer to result of identification.
  */
-const union lif_identity *ionic_api_get_identity(void *handle, int *lif_index);
+const union ionic_lif_identity *ionic_api_get_identity(void *handle,
+						       int *lif_index);
 
 /** ionic_api_get_intr - Reserve a device iterrupt index.
  * @handle:		Handle to lif.
@@ -221,8 +222,8 @@ void ionic_api_put_dbid(void *handle, int dbid);
  */
 struct ionic_admin_ctx {
 	struct completion work;
-	union adminq_cmd cmd;
-	union adminq_comp comp;
+	union ionic_adminq_cmd cmd;
+	union ionic_adminq_comp comp;
 };
 
 /** ionic_api_adminq_post - Post an admin command.
@@ -243,6 +244,6 @@ int ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx);
  *
  * Return:		Negative OS error number or zero.
  */
-int ionic_error_to_errno(enum status_code code);
+int ionic_error_to_errno(enum ionic_status_code code);
 
 #endif /* IONIC_API_H */

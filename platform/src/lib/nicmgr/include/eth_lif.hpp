@@ -157,11 +157,11 @@ class EthLif
     const struct eth_devspec *spec;
     struct queue_info qinfo[NUM_QUEUE_TYPES];
     // Config
-    union lif_config *lif_config;
+    union ionic_lif_config *lif_config;
     uint64_t lif_config_addr;
     uint64_t host_lif_config_addr;
     // Status
-    struct lif_status *lif_status;
+    struct ionic_lif_status *lif_status;
     uint64_t lif_status_addr;
     uint64_t host_lif_status_addr;
     // Stats

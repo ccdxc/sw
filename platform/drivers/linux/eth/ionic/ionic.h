@@ -41,7 +41,7 @@ struct ionic_vf {
 	u8	 trusted;
 	u8	 linkstate;
 	dma_addr_t       stats_pa;
-	struct lif_stats stats;
+	struct ionic_lif_stats stats;
 };
 
 struct ionic {
@@ -57,7 +57,7 @@ struct ionic {
 	struct ionic_lif *master_lif;
 	struct radix_tree_root lifs;
 	struct ionic_eq **eqs;
-	struct identity ident;
+	struct ionic_identity ident;
 	unsigned int nnqs_per_lif;
 	unsigned int nrdma_eqs_per_lif;
 	unsigned int ntxqs_per_lif;
@@ -67,7 +67,7 @@ struct ionic {
 	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
 	DECLARE_BITMAP(ethbits, IONIC_LIFS_MAX);
 	unsigned int nintrs;
-	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
+	DECLARE_BITMAP(intrs, IONIC_INTR_CTRL_REGS_MAX);
 #ifndef HAVE_PCI_IRQ_API
 	struct msix_entry *msix;
 #endif

@@ -94,7 +94,7 @@ ionic_q_enable_disable(struct ionic_lif *lif, unsigned int index,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_control = {
-			.opcode = CMD_OPCODE_Q_CONTROL,
+			.opcode = IONIC_CMD_Q_CONTROL,
 			.lif_index = lif->index,
 			.type = qtype,
 			.index = index,
@@ -168,7 +168,7 @@ ionic_adminq_hb_work(struct work_struct *work)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.nop = {
-			.opcode = CMD_OPCODE_NOP,
+			.opcode = IONIC_CMD_NOP,
 		},
 	};
 	int err;
@@ -341,7 +341,7 @@ ionic_calc_rx_size(struct ionic_lif *lif)
 static void
 ionic_get_link_status(struct ionic_lif *lif)
 {
-	struct lif_status *ls = &lif->info->status;
+	struct ionic_lif_status *ls = &lif->info->status;
 
 	if (ls == NULL)
 		return;
@@ -350,7 +350,7 @@ ionic_get_link_status(struct ionic_lif *lif)
 		return;
 
 	lif->link_speed = ls->link_speed;
-	lif->link_up = (ls->link_status == PORT_OPER_STATUS_UP);
+	lif->link_up = (ls->link_status == IONIC_PORT_OPER_STATUS_UP);
 }
 
 /*
@@ -499,8 +499,8 @@ ionic_slave_free(struct ionic *ionic, int index)
 int
 ionic_adminq_clean(struct ionic_adminq* adminq, int limit)
 {
-	struct admin_comp *comp;
-	struct admin_cmd *cmd;
+	struct ionic_admin_comp *comp;
+	struct ionic_admin_cmd *cmd;
 	struct ionic_admin_ctx *ctx;
 	struct ionic_adminq_stats *stat = &adminq->stats;
 	int comp_index, cmd_index, processed;
@@ -539,7 +539,7 @@ ionic_adminq_clean(struct ionic_adminq* adminq, int limit)
 		IONIC_NETDEV_INFO(adminq->lif->netdev, "admin comp:\n");
 		if (__IONIC_DEBUG)
 			print_hex_dump_debug("admin comp ", DUMP_PREFIX_OFFSET,
-			    16, 1, comp, sizeof(struct admin_comp), true);
+			    16, 1, comp, sizeof(struct ionic_admin_comp), true);
 
 		adminq->comp_index = IONIC_MOD_INC(adminq, comp_index);
 		adminq->tail_index = IONIC_MOD_INC(adminq, tail_index);
@@ -635,8 +635,8 @@ _ionic_lif_macvlan_add(struct ionic_lif *lif, uint16_t vid, const uint8_t *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_add = {
-			.opcode = CMD_OPCODE_RX_FILTER_ADD,
-			.match = RX_FILTER_MATCH_MAC_VLAN,
+			.opcode = IONIC_CMD_RX_FILTER_ADD,
+			.match = IONIC_RX_FILTER_MATCH_MAC_VLAN,
 			.mac_vlan.vlan = vid,
 		},
 	};
@@ -679,7 +679,7 @@ _ionic_lif_macvlan_del(struct ionic_lif *lif, uint16_t vid, const uint8_t *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+			.opcode = IONIC_CMD_RX_FILTER_DEL,
 		},
 	};
 
@@ -790,8 +790,8 @@ _ionic_lif_addr_add(struct ionic_lif *lif, const uint8_t *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_add = {
-			.opcode = CMD_OPCODE_RX_FILTER_ADD,
-			.match = RX_FILTER_MATCH_MAC,
+			.opcode = IONIC_CMD_RX_FILTER_ADD,
+			.match = IONIC_RX_FILTER_MATCH_MAC,
 		},
 	};
 
@@ -831,7 +831,7 @@ _ionic_lif_addr_del(struct ionic_lif *lif, const uint8_t *addr)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+			.opcode = IONIC_CMD_RX_FILTER_DEL,
 		},
 	};
 
@@ -955,7 +955,7 @@ _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_mode_set = {
-			.opcode = CMD_OPCODE_RX_MODE_SET,
+			.opcode = IONIC_CMD_RX_MODE_SET,
 			.rx_mode = rx_mode,
 		},
 	};
@@ -964,17 +964,17 @@ _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 #define REMAIN(__x) (sizeof(buf) - (__x))
 
         i = snprintf(buf, sizeof(buf), "Rx mode:");
-        if (rx_mode & RX_MODE_F_UNICAST)
+        if (rx_mode & IONIC_RX_MODE_F_UNICAST)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_UNICAST");
-        if (rx_mode & RX_MODE_F_MULTICAST)
+        if (rx_mode & IONIC_RX_MODE_F_MULTICAST)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_MULTICAST");
-        if (rx_mode & RX_MODE_F_BROADCAST)
+        if (rx_mode & IONIC_RX_MODE_F_BROADCAST)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_BROADCAST");
-        if (rx_mode & RX_MODE_F_PROMISC)
+        if (rx_mode & IONIC_RX_MODE_F_PROMISC)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_PROMISC");
-        if (rx_mode & RX_MODE_F_ALLMULTI)
+        if (rx_mode & IONIC_RX_MODE_F_ALLMULTI)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_ALLMULTI");
-        if (rx_mode & RX_MODE_F_RDMA_SNIFFER)
+        if (rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER)
                 i += snprintf(&buf[i], REMAIN(i), " RX_MODE_F_RDMA_SNIFFER");
         if (rx_mode == 0)
                 i += snprintf(&buf[i], REMAIN(i), " cleared");
@@ -1034,12 +1034,17 @@ ionic_set_rx_mode(struct ifnet *ifp)
 	struct ionic_lif *lif = if_getsoftc(ifp);
 	unsigned int rx_mode;
 
-	rx_mode = RX_MODE_F_UNICAST;
-	rx_mode |= (ifp->if_flags & IFF_MULTICAST) ? RX_MODE_F_MULTICAST : 0;
-	rx_mode |= (ifp->if_flags & IFF_BROADCAST) ? RX_MODE_F_BROADCAST : 0;
-	rx_mode |= (ifp->if_flags & IFF_PROMISC) ? RX_MODE_F_PROMISC : 0;
-	rx_mode |= (ifp->if_flags & IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
-	rx_mode |= (lif->rx_mode & RX_MODE_F_RDMA_SNIFFER) ? RX_MODE_F_RDMA_SNIFFER : 0;
+	rx_mode = IONIC_RX_MODE_F_UNICAST;
+	rx_mode |= (ifp->if_flags & IFF_MULTICAST) ?
+			IONIC_RX_MODE_F_MULTICAST : 0;
+	rx_mode |= (ifp->if_flags & IFF_BROADCAST) ?
+			IONIC_RX_MODE_F_BROADCAST : 0;
+	rx_mode |= (ifp->if_flags & IFF_PROMISC) ?
+			IONIC_RX_MODE_F_PROMISC : 0;
+	rx_mode |= (ifp->if_flags & IFF_ALLMULTI) ?
+			IONIC_RX_MODE_F_ALLMULTI : 0;
+	rx_mode |= (lif->rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER) ?
+			IONIC_RX_MODE_F_RDMA_SNIFFER : 0;
 
 	IONIC_NETDEV_INFO(ifp, "Setting rx mode: %d\n", rx_mode);
 	ionic_lif_rx_mode(lif, rx_mode);
@@ -1171,7 +1176,7 @@ ionic_change_mtu(struct ifnet *ifp, int new_mtu)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_MTU,
 			.mtu = new_mtu,
@@ -1233,8 +1238,8 @@ _ionic_vlan_add(struct ifnet *ifp, uint16_t vid)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_add = {
-			.opcode = CMD_OPCODE_RX_FILTER_ADD,
-			.match = RX_FILTER_MATCH_VLAN,
+			.opcode = IONIC_CMD_RX_FILTER_ADD,
+			.match = IONIC_RX_FILTER_MATCH_VLAN,
 			.vlan.vlan = vid,
 		},
 	};
@@ -1273,7 +1278,7 @@ _ionic_vlan_del(struct ifnet *ifp, uint16_t vid)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
-			.opcode = CMD_OPCODE_RX_FILTER_DEL,
+			.opcode = IONIC_CMD_RX_FILTER_DEL,
 		},
 	};
 
@@ -1440,7 +1445,7 @@ ionic_dev_intr_reserve(struct ionic_lif *lif, struct intr *intr)
 	struct ionic_dev *idev = &ionic->idev;
 	unsigned long index;
 
-	KASSERT((intr->index == INTR_INDEX_NOT_ASSIGNED),
+	KASSERT((intr->index == IONIC_INTR_INDEX_NOT_ASSIGNED),
 	    ("%s already has intr resource(%d)", intr->name, intr->index));
 
 	index = find_first_zero_bit(ionic->intrs, ionic->nintrs);
@@ -1456,7 +1461,7 @@ void
 ionic_dev_intr_unreserve(struct ionic_lif *lif, struct intr *intr)
 {
 
-	if (intr->index != INTR_INDEX_NOT_ASSIGNED)
+	if (intr->index != IONIC_INTR_INDEX_NOT_ASSIGNED)
 		clear_bit(intr->index, lif->ionic->intrs);
 }
 
@@ -1529,7 +1534,7 @@ ionic_adminq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	adminq->index = qnum;
 	adminq->num_descs = num_descs;
 	adminq->pid = lif->kern_pid;
-	adminq->intr.index = INTR_INDEX_NOT_ASSIGNED;
+	adminq->intr.index = IONIC_INTR_INDEX_NOT_ASSIGNED;
 
 	IONIC_ADMIN_LOCK_INIT(adminq);
 
@@ -1554,7 +1559,7 @@ ionic_adminq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	}
 
 	adminq->cmd_ring_pa = adminq->cmd_dma.dma_paddr;
-	adminq->cmd_ring = (struct admin_cmd *)adminq->cmd_dma.dma_vaddr;
+	adminq->cmd_ring = (struct ionic_admin_cmd *)adminq->cmd_dma.dma_vaddr;
 	IONIC_QUE_INFO(adminq,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 	    adminq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
@@ -1563,8 +1568,8 @@ ionic_adminq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	 */
 	adminq->comp_ring_pa = adminq->cmd_ring_pa +
 	    ALIGN(cmd_ring_size, PAGE_SIZE);
-	adminq->comp_ring = (struct admin_comp *)(adminq->cmd_dma.dma_vaddr +
-	    ALIGN(cmd_ring_size, PAGE_SIZE));
+	adminq->comp_ring = (struct ionic_admin_comp *)
+	    (adminq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 
 	IONIC_QUE_INFO(adminq,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
@@ -1634,7 +1639,7 @@ ionic_notifyq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	notifyq->index = qnum;
 	notifyq->num_descs = num_descs;
 	notifyq->pid = pid;
-	notifyq->intr.index = INTR_INDEX_NOT_ASSIGNED;
+	notifyq->intr.index = IONIC_INTR_INDEX_NOT_ASSIGNED;
 
 	/*
 	 * Allocate DMA for command and completion rings.
@@ -1654,14 +1659,14 @@ ionic_notifyq_alloc(struct ionic_lif *lif, unsigned int qnum,
 	}
 
 	notifyq->cmd_ring_pa = notifyq->cmd_dma.dma_paddr;
-	notifyq->cmd_ring = (struct notifyq_cmd *)notifyq->cmd_dma.dma_vaddr;
+	notifyq->cmd_ring = (struct ionic_notifyq_cmd *)notifyq->cmd_dma.dma_vaddr;
 	IONIC_QUE_INFO(notifyq,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 	    notifyq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
 	/*
 	 * Command and completion rings are side by side.
 	 */
-	notifyq->comp_ring = (union notifyq_comp *)(notifyq->cmd_dma.dma_vaddr +
+	notifyq->comp_ring = (union ionic_notifyq_comp *)(notifyq->cmd_dma.dma_vaddr +
 	    ALIGN(cmd_ring_size, PAGE_SIZE));
 
 	/*
@@ -1739,7 +1744,7 @@ ionic_rxque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	rxq->index = qnum;
 	rxq->num_descs = num_descs;
 	rxq->pid = pid;
-	rxq->intr.index = INTR_INDEX_NOT_ASSIGNED;
+	rxq->intr.index = IONIC_INTR_INDEX_NOT_ASSIGNED;
 
 	IONIC_RX_LOCK_INIT(rxq);
 
@@ -1769,7 +1774,7 @@ ionic_rxque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	}
 
 	rxq->cmd_ring_pa = rxq->cmd_dma.dma_paddr;
-	rxq->cmd_ring = (struct rxq_desc *)rxq->cmd_dma.dma_vaddr;
+	rxq->cmd_ring = (struct ionic_rxq_desc *)rxq->cmd_dma.dma_vaddr;
 	IONIC_QUE_INFO(rxq,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 	     rxq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
@@ -1777,10 +1782,10 @@ ionic_rxque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	 * We assume that completion ring is next to command ring.
 	 */
 	rxq->comp_ring_pa = rxq->cmd_ring_pa + ALIGN(cmd_ring_size, PAGE_SIZE);
-	rxq->comp_ring = (struct rxq_comp *)(rxq->cmd_dma.dma_vaddr +
+	rxq->comp_ring = (struct ionic_rxq_comp *)(rxq->cmd_dma.dma_vaddr +
 	    ALIGN(cmd_ring_size, PAGE_SIZE));
 	rxq->sg_ring_pa = rxq->comp_ring_pa + ALIGN(comp_ring_size, PAGE_SIZE);
-	rxq->sg_ring = (struct rxq_sg_desc *)(rxq->cmd_dma.dma_vaddr +
+	rxq->sg_ring = (struct ionic_rxq_sg_desc *)(rxq->cmd_dma.dma_vaddr +
 	    ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(comp_ring_size, PAGE_SIZE));
 
 	/* Setup interrupt */
@@ -1930,7 +1935,7 @@ ionic_txque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	}
 
 	txq->cmd_ring_pa = txq->cmd_dma.dma_paddr;
-	txq->cmd_ring = (struct txq_desc *)txq->cmd_dma.dma_vaddr;
+	txq->cmd_ring = (struct ionic_txq_desc *)txq->cmd_dma.dma_vaddr;
 	IONIC_QUE_INFO(txq,
 	    "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 	    txq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
@@ -1938,7 +1943,7 @@ ionic_txque_alloc(struct ionic_lif *lif, unsigned int qnum,
 	 * Command and completion rings are side by side.
 	 */
 	txq->comp_ring_pa = txq->cmd_ring_pa + ALIGN(cmd_ring_size, PAGE_SIZE);
-	txq->comp_ring = (struct txq_comp *)(txq->cmd_dma.dma_vaddr +
+	txq->comp_ring = (struct ionic_txq_comp *)(txq->cmd_dma.dma_vaddr +
 	    ALIGN(cmd_ring_size, PAGE_SIZE));
 
 	txq->sg_ring_pa = txq->comp_ring_pa + ALIGN(comp_ring_size, PAGE_SIZE);
@@ -1953,7 +1958,7 @@ ionic_txque_alloc(struct ionic_lif *lif, unsigned int qnum,
 		goto failed_alloc;
 	}
 
-	txq->sg_ring = (struct txq_sg_elem *)(txq->cmd_dma.dma_vaddr +
+	txq->sg_ring = (struct ionic_txq_sg_elem *)(txq->cmd_dma.dma_vaddr +
 	    ALIGN(cmd_ring_size, PAGE_SIZE) +
 	    ALIGN(comp_ring_size, PAGE_SIZE));;
 
@@ -2263,7 +2268,7 @@ int
 ionic_setup_intr_coal(struct ionic_lif *lif, int coal)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct identity *ident = &lif->ionic->ident;
+	struct ionic_identity *ident = &lif->ionic->ident;
 	struct ifnet *ifp = lif->netdev;
 	struct ionic_rxque *rxq;
 	uint32_t intr_coal;
@@ -2357,7 +2362,7 @@ static int
 ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 {
 	struct device *dev = ionic->dev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	struct ionic_lif *lif;
 	int err, dbpage_num;
 	char name[16];
@@ -2450,7 +2455,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	}
 
 	lif->info_pa = lif->info_dma.dma_paddr;
-	lif->info = (struct lif_info *)lif->info_dma.dma_vaddr;
+	lif->info = (struct ionic_lif_info *)lif->info_dma.dma_vaddr;
 	if (!lif->info) {
 		dev_err(dev, "failed to allocate lif registers\n");
 		err = -ENOMEM;
@@ -2474,8 +2479,8 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (err)
 		goto err_out_free_qs;
 
-	lif->intr_coalesce_max_us = INTR_CTRL_COAL_MAX * ident->dev.intr_coal_div /
-	    ident->dev.intr_coal_mult;
+	lif->intr_coalesce_max_us = IONIC_INTR_CTRL_COAL_MAX *
+	    ident->dev.intr_coal_div / ident->dev.intr_coal_mult;
 	/* Setup tunables. */
 	ionic_setup_intr_coal(lif, ionic_intr_coalesce);
 
@@ -2610,7 +2615,7 @@ ionic_lif_rss_config(struct ionic_lif *lif, uint16_t types,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_RSS,
 			.rss.types = types,
 			.rss.addr = lif->rss_ind_tbl_pa,
@@ -2721,7 +2726,7 @@ ionic_lif_adminq_deinit(struct ionic_lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_adminq *adminq = lif->adminq;
 
-	if (adminq->intr.index == INTR_INDEX_NOT_ASSIGNED)
+	if (adminq->intr.index == IONIC_INTR_INDEX_NOT_ASSIGNED)
 		return;
 
 	IONIC_ADMIN_LOCK(adminq);
@@ -2846,7 +2851,7 @@ ionic_lif_quiesce(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_STATE,
 			.index = lif->index,
 			.state = IONIC_LIF_DISABLE
@@ -2916,11 +2921,11 @@ ionic_lif_adminq_init(struct ionic_lif *lif)
 {
 	struct ionic_adminq *adminq = lif->adminq;
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct q_init_comp comp;
+	struct ionic_q_init_comp comp;
 	int err = 0;
 
-	union dev_cmd cmd = {
-		.q_init.opcode = CMD_OPCODE_Q_INIT,
+	union ionic_dev_cmd cmd = {
+		.q_init.opcode = IONIC_CMD_Q_INIT,
 		.q_init.lif_index = lif->index,
 		.q_init.cos = lif->cos,
 		.q_init.type = adminq->type,
@@ -2961,7 +2966,8 @@ ionic_lif_adminq_init(struct ionic_lif *lif)
 }
 
 static bool
-ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
+ionic_process_event(struct ionic_notifyq *notifyq,
+		    union ionic_notifyq_comp *comp)
 {
 	struct ionic_lif *lif = notifyq->lif;
 	struct ifnet *ifp = lif->netdev;
@@ -2970,7 +2976,7 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 	if (__IONIC_DEBUG) {
 		IONIC_NETDEV_INFO(ifp, " notifyq event:\n");
 		print_hex_dump_debug("event ", DUMP_PREFIX_OFFSET, 16, 1,
-		    comp, sizeof(union notifyq_comp), true);
+		    comp, sizeof(union ionic_notifyq_comp), true);
 	}
 
 	comp_eid = le64_to_cpu(comp->event.eid);
@@ -2987,7 +2993,7 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 	lif->last_eid = comp_eid;
 
 	switch (comp->event.ecode) {
-	case EVENT_OPCODE_LINK_CHANGE:
+	case IONIC_EVENT_LINK_CHANGE:
 		IONIC_LIF_LOCK(lif);
 		lif->link_speed = comp->link_change.link_speed;
 		lif->link_up = comp->link_change.link_status ?  true : false;
@@ -3001,23 +3007,23 @@ ionic_process_event(struct ionic_notifyq* notifyq, union notifyq_comp *comp)
 		IONIC_LIF_UNLOCK(lif);
 		break;
 
-	case EVENT_OPCODE_RESET:
+	case IONIC_EVENT_RESET:
 		if_printf(ifp, "[eid:%ld]reset code: %d state: %d\n",
 		    comp_eid, comp->reset.reset_code,
 		    comp->reset.state);
 		break;
 
-	case EVENT_OPCODE_HEARTBEAT:
+	case IONIC_EVENT_HEARTBEAT:
 		if_printf(ifp, "[eid:%ld]heartbeat\n", comp_eid);
 		break;
 
-	case EVENT_OPCODE_LOG:
+	case IONIC_EVENT_LOG:
 		if_printf(ifp, "[eid:%ld]log \n", comp_eid);
 		print_hex_dump(KERN_INFO, "nq log", DUMP_PREFIX_OFFSET,
 		    16, 1, comp->log.data, sizeof(comp->log.data), true);
 		break;
 
-	case EVENT_OPCODE_XCVR:
+	case IONIC_EVENT_XCVR:
 		if_printf(ifp, "[eid:%ld]xcvr event\n", comp_eid);
 		ionic_ifmedia_xcvr(lif);
 		break;
@@ -3038,7 +3044,7 @@ int
 ionic_notifyq_clean(struct ionic_notifyq* notifyq)
 {
 	int i, comp_index;
-	union notifyq_comp *comp;
+	union ionic_notifyq_comp *comp;
 
 	/* Sync every time descriptors. */
 	bus_dmamap_sync(notifyq->cmd_dma.dma_tag, notifyq->cmd_dma.dma_map,
@@ -3100,7 +3106,7 @@ ionic_lif_notifyq_init(struct ionic_lif *lif,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = lif->index,
 			.cos = lif->cos,
 			.type = notifyq->type,
@@ -3135,7 +3141,7 @@ ionic_lif_notifyq_init(struct ionic_lif *lif,
 int
 ionic_tx_clean(struct ionic_txque *txq, int tx_limit)
 {
-	struct txq_comp *comp;
+	struct ionic_txq_comp *comp;
 	struct ionic_tx_buf *txbuf;
 	int comp_index, processed, cmd_stop_index, batch = 0;
 	struct ionic_tx_stats *stats = &txq->stats;
@@ -3226,7 +3232,7 @@ ionic_lif_txq_init(struct ionic_lif *lif, struct ionic_txque *txq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = lif->index,
 			.cos = lif->cos,
 			.type = txq->type,
@@ -3390,8 +3396,8 @@ ionic_rx_empty(struct ionic_rxque *rxq)
 int
 ionic_rx_clean(struct ionic_rxque *rxq , int rx_limit)
 {
-	struct rxq_comp *comp;
-	struct rxq_desc *cmd;
+	struct ionic_rxq_comp *comp;
+	struct ionic_rxq_desc *cmd;
 	struct ionic_rx_buf *rxbuf;
 	int i, comp_index, cmd_index;
 
@@ -3456,7 +3462,7 @@ ionic_lif_rxq_init(struct ionic_lif *lif, struct ionic_rxque *rxq)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_init = {
-			.opcode = CMD_OPCODE_Q_INIT,
+			.opcode = IONIC_CMD_Q_INIT,
 			.lif_index = lif->index,
 			.cos = lif->cos,
 			.type = rxq->type,
@@ -3509,80 +3515,80 @@ ionic_ifmedia_xcvr(struct ionic_lif *lif)
 
 	switch(idev->port_info->status.xcvr.pid) {
 	/* Copper */
-	case XCVR_PID_QSFP_100G_CR4:
+	case IONIC_XCVR_PID_QSFP_100G_CR4:
 		media |= IFM_100G_CR4;
 		break;
 
-	case XCVR_PID_QSFP_40GBASE_CR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_CR4:
 		media |= IFM_40G_CR4;
 		break;
 
-	case XCVR_PID_SFP_25GBASE_CR_S:
-	case XCVR_PID_SFP_25GBASE_CR_L:
-	case XCVR_PID_SFP_25GBASE_CR_N:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_S:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_L:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_N:
 		media |= IFM_25G_CR;
 		break;
 
 	/* Fiber */
-	case XCVR_PID_QSFP_100G_SR4:
-	case XCVR_PID_QSFP_100G_AOC:
+	case IONIC_XCVR_PID_QSFP_100G_SR4:
+	case IONIC_XCVR_PID_QSFP_100G_AOC:
 		media |= IFM_100G_SR4;
 		break;
 
-	case XCVR_PID_QSFP_100G_LR4:
-	case XCVR_PID_QSFP_100G_ER4:
-	case XCVR_PID_QSFP_100G_CWDM4:
-	case XCVR_PID_QSFP_100G_PSM4:
+	case IONIC_XCVR_PID_QSFP_100G_LR4:
+	case IONIC_XCVR_PID_QSFP_100G_ER4:
+	case IONIC_XCVR_PID_QSFP_100G_CWDM4:
+	case IONIC_XCVR_PID_QSFP_100G_PSM4:
 		media |= IFM_100G_LR4;
 		break;
 
-	case XCVR_PID_QSFP_40GBASE_SR4:
-	case XCVR_PID_QSFP_40GBASE_AOC:
+	case IONIC_XCVR_PID_QSFP_40GBASE_SR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_AOC:
 		media |= IFM_40G_SR4;
 		break;
 
-	case XCVR_PID_QSFP_40GBASE_LR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_LR4:
 		media |= IFM_40G_LR4;
 		break;
 
-	case XCVR_PID_SFP_25GBASE_SR:
+	case IONIC_XCVR_PID_SFP_25GBASE_SR:
 		media |= IFM_25G_SR;
 		break;
 
-	case XCVR_PID_SFP_25GBASE_LR:
+	case IONIC_XCVR_PID_SFP_25GBASE_LR:
 		media |= IFM_25G_LR;
 		break;
 
-	case XCVR_PID_SFP_25GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_25GBASE_AOC:
 		media |= IFM_25G_AOC;
 		break;
 
-	case XCVR_PID_SFP_25GBASE_ACC:
+	case IONIC_XCVR_PID_SFP_25GBASE_ACC:
 		media |= IFM_25G_ACC;
 		break;
 
-	case XCVR_PID_SFP_10GBASE_SR:
+	case IONIC_XCVR_PID_SFP_10GBASE_SR:
 		media |= IFM_10G_SR;
 		break;
 
-	case XCVR_PID_SFP_10GBASE_LR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LR:
 		media |= IFM_10G_LR;
 		break;
 
-	case XCVR_PID_SFP_10GBASE_LRM:
+	case IONIC_XCVR_PID_SFP_10GBASE_LRM:
 		media |= IFM_10G_LRM;
 		break;
 
-	case XCVR_PID_SFP_10GBASE_ER:
+	case IONIC_XCVR_PID_SFP_10GBASE_ER:
 		media |= IFM_10G_ER;
 		break;
 
-	case XCVR_PID_QSFP_100G_ACC:
-	case XCVR_PID_QSFP_40GBASE_ER4:
-	case XCVR_PID_SFP_25GBASE_ER:
-	case XCVR_PID_SFP_10GBASE_AOC:
-	case XCVR_PID_SFP_10GBASE_CU:
-	case XCVR_PID_UNKNOWN:
+	case IONIC_XCVR_PID_QSFP_100G_ACC:
+	case IONIC_XCVR_PID_QSFP_40GBASE_ER4:
+	case IONIC_XCVR_PID_SFP_25GBASE_ER:
+	case IONIC_XCVR_PID_SFP_10GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_10GBASE_CU:
+	case IONIC_XCVR_PID_UNKNOWN:
 	default:
 		media |= IFM_UNKNOWN;
 		break;
@@ -3729,7 +3735,7 @@ ionic_lif_set_netdev_info(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_NAME,
 		},
@@ -3750,10 +3756,10 @@ ionic_lif_reset_stats(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_STATS_CTRL,
-			.stats_ctl = STATS_CTL_RESET,
+			.stats_ctl = IONIC_STATS_CTL_RESET,
 		},
 	};
 
@@ -3771,7 +3777,7 @@ ionic_station_add(struct ionic_lif *lif)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_getattr = {
-			.opcode = CMD_OPCODE_LIF_GETATTR,
+			.opcode = IONIC_CMD_LIF_GETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_MAC,
 		},
@@ -3850,7 +3856,7 @@ ionic_firmware_download(struct ionic_lif *lif, uint64_t addr,
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.fw_download = {
-			.opcode = CMD_OPCODE_FW_DOWNLOAD,
+			.opcode = IONIC_CMD_FW_DOWNLOAD,
 			.offset = offset,
 			.addr = addr,
 			.length = length
@@ -3866,7 +3872,7 @@ ionic_firmware_install(struct ionic_lif *lif, uint8_t *slot)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.fw_control = {
-			.opcode = CMD_OPCODE_FW_CONTROL,
+			.opcode = IONIC_CMD_FW_CONTROL,
 			.oper = IONIC_FW_INSTALL
 		}
 	};
@@ -3886,7 +3892,7 @@ ionic_firmware_activate(struct ionic_lif *lif, uint8_t slot)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.fw_control = {
-			.opcode = CMD_OPCODE_FW_CONTROL,
+			.opcode = IONIC_CMD_FW_CONTROL,
 			.oper = IONIC_FW_ACTIVATE,
 			.slot = slot
 		}
@@ -3962,7 +3968,7 @@ ionic_lif_init(struct ionic_lif *lif, bool wdog_reset_path)
 	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &ionic->idev;
 	struct ifnet *ifp = lif->netdev;
-	struct q_init_comp comp;
+	struct ionic_q_init_comp comp;
 	int err;
 
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
@@ -4194,7 +4200,7 @@ ionic_set_hw_features(struct ionic_lif *lif, uint32_t features)
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_FEATURES,
 			.features = features,
@@ -4209,37 +4215,37 @@ ionic_set_hw_features(struct ionic_lif *lif, uint32_t features)
 	lif->hw_features = ctx.cmd.lif_setattr.features &
 						ctx.comp.lif_setattr.features;
 
-	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_TX_TAG)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_VLAN_TX_TAG\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_STRIP)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_STRIP)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_VLAN_RX_STRIP\n");
-	if (lif->hw_features & ETH_HW_VLAN_RX_FILTER)
+	if (lif->hw_features & IONIC_ETH_HW_VLAN_RX_FILTER)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_VLAN_RX_FILTER\n");
-	if (lif->hw_features & ETH_HW_RX_HASH)
+	if (lif->hw_features & IONIC_ETH_HW_RX_HASH)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_RX_HASH\n");
-	if (lif->hw_features & ETH_HW_TX_SG)
+	if (lif->hw_features & IONIC_ETH_HW_TX_SG)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TX_SG\n");
-	if (lif->hw_features & ETH_HW_TX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TX_CSUM)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TX_CSUM\n");
-	if (lif->hw_features & ETH_HW_RX_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_RX_CSUM)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_RX_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO)
+	if (lif->hw_features & IONIC_ETH_HW_TSO)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO\n");
-	if (lif->hw_features & ETH_HW_TSO_IPV6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPV6)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_IPV6\n");
-	if (lif->hw_features & ETH_HW_TSO_ECN)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_ECN)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_ECN\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_GRE\n");
-	if (lif->hw_features & ETH_HW_TSO_GRE_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GRE_CSUM)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_GRE_CSUM\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP4)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP4)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_IPXIP4\n");
-	if (lif->hw_features & ETH_HW_TSO_IPXIP6)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_IPXIP6)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_IPXIP6\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_UDP\n");
-	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
+	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP_CSUM)
 		IONIC_NETDEV_INFO(lif->netdev, "feature ETH_HW_TSO_UDP_CSUM\n");
 
 	return (0);
@@ -4288,15 +4294,15 @@ ionic_lif_register(struct ionic_lif *lif)
 	}
 
 	err = ionic_set_features(lif,
-				 ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM
-				| ETH_HW_TSO
-				| ETH_HW_TSO_IPV6);
+				 IONIC_ETH_HW_VLAN_TX_TAG
+				| IONIC_ETH_HW_VLAN_RX_STRIP
+				| IONIC_ETH_HW_VLAN_RX_FILTER
+				| IONIC_ETH_HW_RX_HASH
+				| IONIC_ETH_HW_TX_SG
+				| IONIC_ETH_HW_TX_CSUM
+				| IONIC_ETH_HW_RX_CSUM
+				| IONIC_ETH_HW_TSO
+				| IONIC_ETH_HW_TSO_IPV6);
 	if (err) {
 		IONIC_NETDEV_ERROR(ifp,
 		    "set_features failed, error = %d\n", err);
@@ -4371,7 +4377,7 @@ int
 ionic_lif_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int i, err, nwords;
 
 	IONIC_DEV_LOCK(ionic);
@@ -4446,7 +4452,7 @@ ionic_lif_identify(struct ionic *ionic)
 int
 ionic_lifs_size(struct ionic *ionic)
 {
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int nrdma_eqs = ident->lif.rdma.eq_qtype.qid_count;
 	int nnqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ];
 	int ntxqs = ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ];
@@ -4540,7 +4546,7 @@ int
 ionic_txq_identify(struct ionic *ionic, uint8_t ver)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int i, err;
 	uint32_t nwords;
 

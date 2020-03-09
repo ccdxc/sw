@@ -106,13 +106,13 @@ ionic_rx_filter_save(struct ionic_lif *lif, uint32_t flow_id,
 	INIT_HLIST_NODE(&f->by_id);
 
 	switch (f->cmd.match) {
-	case RX_FILTER_MATCH_VLAN:
+	case IONIC_RX_FILTER_MATCH_VLAN:
 		key = f->cmd.vlan.vlan & RX_FILTER_HLISTS_MASK;
 		break;
-	case RX_FILTER_MATCH_MAC:
+	case IONIC_RX_FILTER_MATCH_MAC:
 		key = *(uint32_t *)f->cmd.mac.addr & RX_FILTER_HLISTS_MASK;
 		break;
-	case RX_FILTER_MATCH_MAC_VLAN:
+	case IONIC_RX_FILTER_MATCH_MAC_VLAN:
 		key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
 		break;
 	default:
@@ -141,7 +141,7 @@ ionic_rx_filter_by_vlan_addr(struct ionic_lif *lif, uint16_t vid,
 	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
-		if (f->cmd.match != RX_FILTER_MATCH_MAC_VLAN)
+		if (f->cmd.match != IONIC_RX_FILTER_MATCH_MAC_VLAN)
 			continue;
 		if (f->cmd.mac_vlan.vlan != vid)
 			continue;
@@ -161,7 +161,7 @@ ionic_rx_filter_by_vlan(struct ionic_lif *lif, uint16_t vid)
 	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
-		if (f->cmd.match != RX_FILTER_MATCH_VLAN)
+		if (f->cmd.match != IONIC_RX_FILTER_MATCH_VLAN)
 			continue;
 		if (f->cmd.vlan.vlan != vid)
 			continue;
@@ -179,7 +179,7 @@ ionic_rx_filter_by_addr(struct ionic_lif *lif, const uint8_t *addr)
 	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
-		if (f->cmd.match != RX_FILTER_MATCH_MAC)
+		if (f->cmd.match != IONIC_RX_FILTER_MATCH_MAC)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN))
 			continue;

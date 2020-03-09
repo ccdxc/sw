@@ -367,9 +367,9 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
                              struct lif, list);
 
         if (params.rxPauseEnabled && params.txPauseEnabled) {
-                requested_pause = PORT_PAUSE_TYPE_LINK;
+                requested_pause = IONIC_PORT_PAUSE_TYPE_LINK;
         } else if (!params.rxPauseEnabled && !params.txPauseEnabled) {
-                requested_pause = PORT_PAUSE_TYPE_NONE;
+                requested_pause = IONIC_PORT_PAUSE_TYPE_NONE;
         } else {
                 return VMK_FAILURE;
         }
@@ -490,11 +490,11 @@ ionic_en_uplink_cable_type_get(vmk_AddrCookie driver_data,
         }
 
         xcvr_pid = idev->port_info->status.xcvr.pid;
-        if (xcvr_pid >= XCVR_PID_QSFP_100G_CR4 &&
-            xcvr_pid <= XCVR_PID_SFP_25GBASE_CR_N) {
+        if (xcvr_pid >= IONIC_XCVR_PID_QSFP_100G_CR4 &&
+            xcvr_pid <= IONIC_XCVR_PID_SFP_25GBASE_CR_N) {
                 *cableType = VMK_UPLINK_CABLE_TYPE_DA;
-        } else if (xcvr_pid >= XCVR_PID_QSFP_100G_AOC &&
-                   xcvr_pid <= XCVR_PID_QSFP_100G_PSM4) {
+        } else if (xcvr_pid >= IONIC_XCVR_PID_QSFP_100G_AOC &&
+                   xcvr_pid <= IONIC_XCVR_PID_QSFP_100G_PSM4) {
                 *cableType = VMK_UPLINK_CABLE_TYPE_FIBRE;
         } else {
                 *cableType = VMK_UPLINK_CABLE_TYPE_OTHER;
@@ -936,7 +936,7 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
         struct ionic_admin_ctx ctx = {
 //                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
                 .cmd.lif_setattr = {
-			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.opcode = IONIC_CMD_LIF_SETATTR,
 			.index = lif->index,
 			.attr = IONIC_LIF_ATTR_MTU,
 			.mtu = new_mtu,
@@ -1090,7 +1090,7 @@ static void
 ionic_en_uplink_lif_stats_get(struct lif *lif,                  // IN
                               vmk_UplinkStats *uplink_stats)    // IN/OUT
 {
-        struct lif_stats *ls = &lif->info->stats;
+        struct ionic_lif_stats *ls = &lif->info->stats;
 
         uplink_stats->rxPkts = ls->rx_ucast_packets +
                                ls->rx_mcast_packets +
@@ -1248,14 +1248,14 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                  &priv_data->dev_recover_world);
         VMK_ASSERT(status == VMK_OK);
 
-        if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) {
+        if (uplink_handle->hw_features & IONIC_ETH_HW_VLAN_RX_STRIP) {
                 status = vmk_UplinkCapRegister(uplink,
                                                VMK_UPLINK_CAP_VLAN_RX_STRIP,
                                                NULL);
                 VMK_ASSERT(status == VMK_OK);
         }
 
-        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) {
+        if (uplink_handle->hw_features & IONIC_ETH_HW_VLAN_TX_TAG) {
                 status = vmk_UplinkCapRegister(uplink,
                                                VMK_UPLINK_CAP_VLAN_TX_INSERT,
                                                NULL);
@@ -1417,8 +1417,8 @@ ionic_en_uplink_cap_enable(vmk_AddrCookie driver_data,            // IN
                       "cap: %d is enabled.", cap);
 
         if (cap == VMK_UPLINK_CAP_IPV4_CSO) {
-                uplink_handle->hw_features |= ETH_HW_RX_CSUM;
-                uplink_handle->hw_features |= ETH_HW_TX_CSUM;
+                uplink_handle->hw_features |= IONIC_ETH_HW_RX_CSUM;
+                uplink_handle->hw_features |= IONIC_ETH_HW_TX_CSUM;
         }
 
         return VMK_OK;
@@ -1457,8 +1457,8 @@ ionic_en_uplink_cap_disable(vmk_AddrCookie driver_data,           // IN
                       "cap: %d is disabled.", cap);
 
         if (cap == VMK_UPLINK_CAP_IPV4_CSO) {
-                uplink_handle->hw_features &= ~ETH_HW_RX_CSUM;
-                uplink_handle->hw_features &= ~ETH_HW_TX_CSUM;
+                uplink_handle->hw_features &= ~IONIC_ETH_HW_RX_CSUM;
+                uplink_handle->hw_features &= ~IONIC_ETH_HW_TX_CSUM;
         }
 
         return VMK_OK;
@@ -2848,7 +2848,7 @@ ionic_en_uplink_coal_params_set(vmk_AddrCookie driver_data,             // IN
 {
         VMK_ReturnStatus status = VMK_OK;
         vmk_uint32 tx_coal, rx_coal, i;
-        struct identity *ident;
+        struct ionic_identity *ident;
         struct lif *lif;
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
@@ -2893,7 +2893,8 @@ ionic_en_uplink_coal_params_set(vmk_AddrCookie driver_data,             // IN
         rx_coal = (params->rxUsecs * ident->dev.intr_coal_mult) /
                   ident->dev.intr_coal_div;
 
-        if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX) {
+        if (tx_coal > IONIC_INTR_CTRL_COAL_MAX ||
+            rx_coal > IONIC_INTR_CTRL_COAL_MAX) {
                 status = VMK_LIMIT_EXCEEDED;
                 goto out;
         }

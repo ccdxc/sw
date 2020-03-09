@@ -21,7 +21,7 @@ ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
         VMK_ReturnStatus status;
         struct ionic_admin_ctx ctx = {
                 .cmd.rx_filter_del = {
-                        .opcode = CMD_OPCODE_RX_FILTER_DEL,
+                        .opcode = IONIC_CMD_RX_FILTER_DEL,
                         .filter_id = f->filter_id,
                 },
         };
@@ -192,13 +192,13 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
         vmk_Memcpy(&f->cmd, &ctx->cmd, sizeof(f->cmd));
 
         switch (f->cmd.match) {
-                case RX_FILTER_MATCH_VLAN:
+                case IONIC_RX_FILTER_MATCH_VLAN:
                         key = f->cmd.vlan.vlan & RX_FILTER_HLISTS_MASK;
                         break;
-                case RX_FILTER_MATCH_MAC:
+                case IONIC_RX_FILTER_MATCH_MAC:
                         key = *(u32 *)f->cmd.mac.addr & RX_FILTER_MAC_MASK;
                         break;
-                case RX_FILTER_MATCH_MAC_VLAN:
+                case IONIC_RX_FILTER_MATCH_MAC_VLAN:
                         key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
                         break;
                 default:

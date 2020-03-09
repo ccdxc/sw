@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# usage:
+#
+# replace OLD_NAME NEW_NAME
+#
+# Do a global sed find/replace on the platform drivers to prepend "ionic_"
+#
+
+cd "$(readlink -f "$(dirname "$0")/../..")"
+
+OLD_NAME=$1
+NEW_NAME=$2
+DIR_NAMES=(
+    platform/drivers/common
+    platform/drivers/common/rdma/drv
+    platform/drivers/pxe
+    platform/drivers/esxi/ionic_en
+    platform/drivers/linux/eth/ionic
+    platform/drivers/linux/rdma/drv/ionic
+    platform/drivers/freebsd/usr/src/sys/dev/ionic/ionic_eth
+    platform/drivers/freebsd/usr/src/sys/dev/ionic/ionic_rdma
+)
+DIR_NAMES2=(
+    platform/src/lib/nicmgr/src
+    platform/src/lib/nicmgr/lib
+    platform/tools/eth/
+    platform/src/app/nicmgrd/tests/
+)
+for DNAME in "${DIR_NAMES[@]}"; do
+    sed -i "s/${OLD_NAME}/${NEW_NAME}/g" $DNAME/*.c $DNAME/*.h
+done
+for DNAME in "${DIR_NAMES2[@]}"; do
+    sed -i "s/${OLD_NAME}/${NEW_NAME}/g" $DNAME/*.cc $DNAME/*.hpp
+done
+
+# Otherwise these files get converted from symlinks to regular files
+git checkout -- platform/drivers/freebsd/usr/src/sys/dev/ionic/ionic_eth/ionic_if.h
+git checkout -- platform/drivers/freebsd/usr/src/sys/dev/ionic/ionic_eth/ionic_regs.h

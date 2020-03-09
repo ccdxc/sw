@@ -1,0 +1,155 @@
+#!/bin/bash
+
+# usage:
+#
+# pushups [/path/to/linux] [/path/to/rdma-core]
+#
+# Copies upstream source files from sw/ into the specified trees.
+#
+
+cd "$(readlink -f "$(dirname "$0")/../..")"
+
+./platform/tools/rdmagen upstream
+
+LINUX_OUT=${1:-/local/`whoami`/linux}
+RDMA_CORE_OUT=${2:-/local/`whoami`/rdma-core}
+
+# rooted in sw/
+LINUX="platform/drivers/linux"
+#FBSD="platform/drivers/freebsd/usr/src"
+COMMON="platform/drivers/common"
+
+LINUX_RDRV="${LINUX}/rdma/drv/ionic"
+LINUX_RDRV_OUT="${LINUX_OUT}/drivers/infiniband/hw/ionic"
+#FBSD_RDRV="${FBSD}/sys/dev/ionic/ionic_rdma"
+
+RDRV_FILES=(
+    "ionic_ibdev.c"
+    "ionic_ibdev.h"
+    "ionic_admin.c"
+    "ionic_controlpath.c"
+    "ionic_datapath.c"
+    "ionic_dcqcn.c"
+    "ionic_fw.h"
+    "ionic_pgtbl.c"
+    "ionic_queue.c"
+    "ionic_queue.h"
+    "ionic_res.c"
+    "ionic_res.h"
+    "ionic_stats.c"
+)
+LINUX_RDRV_FILES=(
+    "ionic_sysfs.c"
+    "ionic_sysfs.h"
+    "Kconfig"
+    "Makefile"
+    "${RDRV_FILES[@]}"
+)
+#FBSD_DRV_FILES=(
+#    "ionic_sysctl.c"
+#    "ionic_sysctl.h"
+#    "${DRV_FILES[@]}"
+#)
+
+for FNAME in "${LINUX_RDRV_FILES[@]}"; do
+    cp "${LINUX_RDRV}/${FNAME}" "${LINUX_RDRV_OUT}/${FNAME}"
+done
+
+LINUX_UAPI="${LINUX_RDRV}/uapi/rdma"
+LINUX_UAPI_OUT="${LINUX_OUT}/include/uapi/rdma"
+#FBSD_UAPI="${FBSD}/sys/ofed/include/uapi/rdma"
+
+for FNAME in "ionic-abi.h"; do
+    cp "${LINUX_UAPI}"/"${FNAME}" "${LINUX_UAPI_OUT}/${FNAME}"
+done
+
+LINUX_EDRV="${LINUX}/eth/ionic"
+LINUX_PENS_OUT="${LINUX_OUT}/drivers/net/ethernet/pensando"
+LINUX_EDRV_OUT="${LINUX_PENS_OUT}/ionic"
+COMMON_EDRV="${COMMON}"
+
+EDRV_FILES=(
+    "ionic_api.c"
+    "ionic_api.h"
+    "ionic_bus.h"
+    "ionic_bus_pci.c"
+    "ionic_dev.c"
+    "ionic_dev.h"
+    "ionic.h"
+    "ionic_lif.c"
+    "ionic_lif.h"
+    "ionic_main.c"
+    "ionic_rx_filter.c"
+    "ionic_rx_filter.h"
+    "ionic_txrx.c"
+    "ionic_txrx.h"
+)
+LINUX_EDRV_FILES=(
+    "ionic_debugfs.c"
+    "ionic_debugfs.h"
+    "ionic_devlink.c"
+    "ionic_devlink.h"
+    "ionic_ethtool.c"
+    "ionic_ethtool.h"
+    "ionic_stats.c"
+    "ionic_stats.h"
+    "Makefile"
+    "${EDRV_FILES[@]}"
+)
+#FBSD_EDRV_FILES=(
+#    "ionic_kpicompat.h"
+#    "ionic_osdep.c"
+#    "ionic_osdep.h"
+#    "${EDRV_FILES[@]}"
+#)
+COMMON_EDRV_FILES=(
+    "ionic_if.h"
+    "ionic_regs.h"
+)
+
+for FNAME in "${LINUX_EDRV_FILES[@]}"; do
+    cp "${LINUX_EDRV}/${FNAME}" "${LINUX_EDRV_OUT}/${FNAME}"
+done
+
+for FNAME in "${COMMON_EDRV_FILES[@]}"; do
+    cp "${COMMON_EDRV}/${FNAME}" "${LINUX_EDRV_OUT}/${FNAME}"
+done
+
+# Kconfig is in a different directory
+cp "${LINUX_EDRV}/Kconfig" "${LINUX_PENS_OUT}/Kconfig"
+
+LINUX_RLIB="${LINUX}/rdma/lib/ionic"
+LINUX_RLIB_OUT="${RDMA_CORE_OUT}/providers/ionic"
+#FBSD_LIB="platform/drivers/freebsd/usr/src/contrib/ofed/libionic"
+
+RLIB_FILES=(
+    "ionic-abi.h"
+    "ionic.c"
+    "ionic_fw.h"
+    "ionic.h"
+    "ionic_memory.c"
+    "ionic_memory.h"
+    "ionic_queue.c"
+    "ionic_queue.h"
+    "ionic_table.h"
+    "ionic_verbs.c"
+)
+LINUX_RLIB_FILES=(
+    "CMakeLists.txt"
+    "${RLIB_FILES[@]}"
+)
+
+for FNAME in "${LINUX_RLIB_FILES[@]}"; do
+    cp "${LINUX_RLIB}/${FNAME}" "${LINUX_RLIB_OUT}/${FNAME}"
+done
+
+LINUX_RAPI_OUT="${RDMA_CORE_OUT}/kernel-headers/rdma"
+#FBSD_RAPI="${FBSD}/sys/ofed/include/uapi/rdma"
+
+for FNAME in "ionic-abi.h"; do
+    cp "${LINUX_UAPI}"/"${FNAME}" "${LINUX_RAPI_OUT}/${FNAME}"
+done
+
+./platform/tools/rdmagen
+
+exit 0

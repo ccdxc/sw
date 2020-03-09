@@ -8,7 +8,7 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 				struct cq_info *cq_info, void *cb_arg)
 {
 	struct ionic_admin_ctx *ctx = cb_arg;
-	struct admin_comp *comp = cq_info->cq_desc;
+	struct ionic_admin_comp *comp = cq_info->cq_desc;
 
         if (VMK_UNLIKELY(!ctx)) {
                 return;

@@ -125,7 +125,7 @@ struct ionic {
         vmk_uint32 bar0_size;
         struct ionic_dev_bar bars[IONIC_BARS_MAX];
         unsigned int num_bars;
-        struct identity ident;
+        struct ionic_identity ident;
         vmk_Lock lifs_lock;
         vmk_ListLinks lifs;
         vmk_Bool is_mgmt_nic;

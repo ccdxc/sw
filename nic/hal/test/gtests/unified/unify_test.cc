@@ -89,12 +89,12 @@ protected:
 TEST_F(unify_test, test1)
 {
     hal_ret_t ret = HAL_RET_OK;
-    struct rx_filter_add_cmd rx_cmd = {0};
+    struct ionic_rx_filter_add_cmd rx_cmd = {0};
     uint64_t mac1;
     Eth *eth_dev = NULL;
-    union dev_cmd d_cmd;
-    union dev_cmd_comp d_comp;
-    struct lif_init_cmd init_cmd = {0};
+    union ionic_dev_cmd d_cmd;
+    union ionic_dev_cmd_comp d_comp;
+    struct ionic_lif_init_cmd init_cmd = {0};
     uint32_t       test_id = 1;
     uint32_t                up_port1 = 1, up_port2 = 5, up_port3 = 9;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
@@ -120,19 +120,19 @@ TEST_F(unify_test, test1)
 
     // RESET
     d_cmd = {0};
-    d_cmd.cmd.opcode = CMD_OPCODE_RESET;
+    d_cmd.cmd.opcode = IONIC_CMD_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
     init_cmd = {0};
-    init_cmd.opcode = CMD_OPCODE_LIF_INIT;
+    init_cmd.opcode = IONIC_CMD_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Mac filter - Add
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_MAC;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
     memcpy(rx_cmd.mac.addr, &mac1, 6);
     memrev(rx_cmd.mac.addr, 6);
@@ -141,8 +141,8 @@ TEST_F(unify_test, test1)
 
     // Vlan filter - Add
     rx_cmd = {0};
-    rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
-    rx_cmd.match = RX_FILTER_MATCH_VLAN;
+    rx_cmd.opcode = IONIC_CMD_RX_FILTER_ADD;
+    rx_cmd.match = IONIC_RX_FILTER_MATCH_VLAN;
     rx_cmd.vlan.vlan = 10;
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);

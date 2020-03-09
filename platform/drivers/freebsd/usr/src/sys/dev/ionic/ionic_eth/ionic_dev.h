@@ -56,91 +56,91 @@ static inline void ionic_struct_size_checks(void)
 	/* Registers */
 	BUILD_BUG_ON(sizeof(struct ionic_intr) != 32);
 
-	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
-	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
-	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
+	BUILD_BUG_ON(sizeof(struct ionic_doorbell) != 8);
+	BUILD_BUG_ON(sizeof(struct ionic_intr_ctrl) != 32);
+	BUILD_BUG_ON(sizeof(struct ionic_intr_status) != 8);
 
-	BUILD_BUG_ON(sizeof(union dev_regs) != 4096);
-	BUILD_BUG_ON(sizeof(union dev_info_regs) != 2048);
-	BUILD_BUG_ON(sizeof(union dev_cmd_regs) != 2048);
+	BUILD_BUG_ON(sizeof(union ionic_dev_regs) != 4096);
+	BUILD_BUG_ON(sizeof(union ionic_dev_info_regs) != 2048);
+	BUILD_BUG_ON(sizeof(union ionic_dev_cmd_regs) != 2048);
 
-	BUILD_BUG_ON(sizeof(struct lif_stats) != 1024);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_stats) != 1024);
 
-	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct admin_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct nop_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct nop_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_admin_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_admin_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_nop_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_nop_comp) != 16);
 
 	/* Device commands */
-	BUILD_BUG_ON(sizeof(struct dev_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_comp) != 16);
 
 	/* Port commands */
-	BUILD_BUG_ON(sizeof(struct port_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_identify_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_comp) != 16);
 
 	/* LIF commands */
-	BUILD_BUG_ON(sizeof(struct lif_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(lif_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_lif_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_comp) != 16);
 
 	BUILD_BUG_ON(sizeof(struct q_identify_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct q_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct q_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct q_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct q_control_cmd) != 64);
-	BUILD_BUG_ON(sizeof(q_control_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_q_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_q_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_q_control_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_q_control_comp) != 16);
 
-	BUILD_BUG_ON(sizeof(struct rx_mode_set_cmd) != 64);
-	BUILD_BUG_ON(sizeof(rx_mode_set_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct rx_filter_add_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct rx_filter_add_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct rx_filter_del_cmd) != 64);
-	BUILD_BUG_ON(sizeof(rx_filter_del_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_mode_set_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_rx_mode_set_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_del_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_rx_filter_del_comp) != 16);
 
 	/* RDMA commands */
-	BUILD_BUG_ON(sizeof(struct rdma_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct rdma_queue_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rdma_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rdma_queue_cmd) != 64);
 
 	/* Events */
-	BUILD_BUG_ON(sizeof(struct notifyq_cmd) != 4);
-	BUILD_BUG_ON(sizeof(union notifyq_comp) != 64);
-	BUILD_BUG_ON(sizeof(struct notifyq_event) != 64);
-	BUILD_BUG_ON(sizeof(struct link_change_event) != 64);
-	BUILD_BUG_ON(sizeof(struct reset_event) != 64);
-	BUILD_BUG_ON(sizeof(struct heartbeat_event) != 64);
-	BUILD_BUG_ON(sizeof(struct log_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_notifyq_cmd) != 4);
+	BUILD_BUG_ON(sizeof(union ionic_notifyq_comp) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_notifyq_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_link_change_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_reset_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_heartbeat_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_log_event) != 64);
 
 	/* I/O */
-	BUILD_BUG_ON(sizeof(struct txq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct txq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct txq_sg_desc_v1) != 256);
-	BUILD_BUG_ON(sizeof(struct txq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_desc) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_sg_desc) != 128);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_sg_desc_v1) != 256);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_comp) != 16);
 
-	BUILD_BUG_ON(sizeof(struct rxq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct rxq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct rxq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_desc) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_sg_desc) != 128);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_comp) != 16);
 }
 
 enum ionic_fw_hb_state {
@@ -154,8 +154,8 @@ enum ionic_fw_hb_state {
 struct ionic;
 
 struct ionic_dev {
-	union dev_info_regs __iomem *dev_info_regs;
-	union dev_cmd_regs __iomem *dev_cmd_regs;
+	union ionic_dev_info_regs __iomem *dev_info_regs;
+	union ionic_dev_cmd_regs __iomem *dev_cmd_regs;
 	bool dev_cmd_disabled;
 	bool dev_cmd_pending;
 
@@ -170,7 +170,7 @@ struct ionic_dev {
 	dma_addr_t phy_cmb_pages;
 	uint32_t cmb_npages;
 
-	struct port_info *port_info;
+	struct ionic_port_info *port_info;
 	dma_addr_t port_info_pa;
 	uint32_t port_info_sz;
 
@@ -190,13 +190,13 @@ struct ionic_dev {
 	uint32_t fw_hb_last;
 };
 
-#define INTR_INDEX_NOT_ASSIGNED (-1)
+#define IONIC_INTR_INDEX_NOT_ASSIGNED (-1)
 
 /* Interrupt name can't be longer than MAXCOMLEN */
-#define INTR_NAME_MAX_SZ 	(MAXCOMLEN)
+#define IONIC_INTR_NAME_MAX_SZ 	(MAXCOMLEN)
 
 struct intr {
-	char name[INTR_NAME_MAX_SZ];
+	char name[IONIC_INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
 };
@@ -210,7 +210,7 @@ void ionic_fw_hb_resched(struct ionic_dev *idev);
 void ionic_fw_hb_start(struct ionic_dev *idev);
 void ionic_fw_hb_stop(struct ionic_dev *idev);
 
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
+void ionic_dev_cmd_go(struct ionic_dev *idev, union ionic_dev_cmd *cmd);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 
 void ionic_dev_cmd_identify(struct ionic_dev *idev, uint16_t ver);
@@ -249,15 +249,15 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 
 int ionic_desc_avail(int ndescs, int head, int tail);
 
-const char *ionic_error_to_str(enum status_code code);
-int ionic_error_to_errno(enum status_code code);
-const char *ionic_port_oper_status_str(enum port_oper_status status);
-const char *ionic_port_admin_state_str(enum PortAdminState state);
-const char *ionic_port_fec_type_str(enum port_fec_type type);
-const char *ionic_port_pause_type_str(enum port_pause_type type);
-const char *ionic_port_loopback_mode_str(enum port_loopback_mode mode);
-const char *ionic_xcvr_state_str(enum xcvr_state state);
-const char *ionic_phy_type_str(enum phy_type type);
+const char *ionic_error_to_str(enum ionic_status_code code);
+int ionic_error_to_errno(enum ionic_status_code code);
+const char *ionic_port_oper_status_str(enum ionic_port_oper_status status);
+const char *ionic_port_admin_state_str(enum ionic_port_admin_state state);
+const char *ionic_port_fec_type_str(enum ionic_port_fec_type type);
+const char *ionic_port_pause_type_str(enum ionic_port_pause_type type);
+const char *ionic_port_loopback_mode_str(enum ionic_port_loopback_mode mode);
+const char *ionic_xcvr_state_str(enum ionic_xcvr_state state);
+const char *ionic_phy_type_str(enum ionic_phy_type type);
 
 #define IONIC_WDOG_TRIG_ADMINQ		1	/* Force one AdminQ error */
 #define IONIC_WDOG_TRIG_DEVCMD		2	/* Force one Dev CMD error */

@@ -80,7 +80,7 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	link_up = ionic->lif->info->status.link_status;
 	if (link_up != ionic->link_status) {
 		ionic->link_status = link_up;
-		if (link_up == PORT_OPER_STATUS_UP) {
+		if (link_up == IONIC_PORT_OPER_STATUS_UP) {
 			netdev_link_up ( netdev );
 		} else {
 			netdev_link_down ( netdev );
@@ -161,7 +161,7 @@ static int ionic_transmit(struct net_device *netdev,
 {
 	struct ionic *ionic = netdev->priv;
 	struct queue *txq = &ionic->lif->txqcqs->q;
-	struct txq_desc *desc = txq->head->desc;
+	struct ionic_txq_desc *desc = txq->head->desc;
 
 	if (!ionic_q_has_space(txq, 1)) {
 		DBGC(ionic, "%s no more desc available the txq is full\n", __FUNCTION__);
@@ -183,7 +183,7 @@ static int ionic_transmit(struct net_device *netdev,
 	txq->head = txq->head->next;
 
 	// ring the doorbell
-	struct doorbell db = {
+	struct ionic_doorbell db = {
 		.qid_lo = txq->hw_index,
 		.qid_hi = txq->hw_index >> 8,
 		.ring = 0,

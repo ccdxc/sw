@@ -94,7 +94,7 @@ ionic_validate_module_params()
 }
 
 
-static const char *ionic_en_error_to_str(enum status_code code)
+static const char *ionic_en_error_to_str(enum ionic_status_code code)
 {
 	switch (code) {
 	case IONIC_RC_SUCCESS:
@@ -144,63 +144,63 @@ static const char *ionic_en_error_to_str(enum status_code code)
 	}
 }
 
-static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
+static const char *ionic_opcode_to_str(enum ionic_cmd_opcode opcode)
 {
 	switch (opcode) {
-	case CMD_OPCODE_NOP:
-		return "CMD_OPCODE_NOP";
-	case CMD_OPCODE_INIT:
-		return "CMD_OPCODE_INIT";
-	case CMD_OPCODE_RESET:
-		return "CMD_OPCODE_RESET";
-	case CMD_OPCODE_IDENTIFY:
-		return "CMD_OPCODE_IDENTIFY";
-	case CMD_OPCODE_GETATTR:
-		return "CMD_OPCODE_GETATTR";
-	case CMD_OPCODE_SETATTR:
-		return "CMD_OPCODE_SETATTR";
-	case CMD_OPCODE_PORT_IDENTIFY:
-		return "CMD_OPCODE_PORT_IDENTIFY";
-	case CMD_OPCODE_PORT_INIT:
-		return "CMD_OPCODE_PORT_INIT";
-	case CMD_OPCODE_PORT_RESET:
-		return "CMD_OPCODE_PORT_RESET";
-	case CMD_OPCODE_PORT_GETATTR:
-		return "CMD_OPCODE_PORT_GETATTR";
-	case CMD_OPCODE_PORT_SETATTR:
-		return "CMD_OPCODE_PORT_SETATTR";
-	case CMD_OPCODE_LIF_INIT:
-		return "CMD_OPCODE_LIF_INIT";
-	case CMD_OPCODE_LIF_RESET:
-		return "CMD_OPCODE_LIF_RESET";
-	case CMD_OPCODE_LIF_IDENTIFY:
-		return "CMD_OPCODE_LIF_IDENTIFY";
-	case CMD_OPCODE_LIF_SETATTR:
-		return "CMD_OPCODE_LIF_SETATTR";
-	case CMD_OPCODE_LIF_GETATTR:
-		return "CMD_OPCODE_LIF_GETATTR";
-	case CMD_OPCODE_RX_MODE_SET:
-		return "CMD_OPCODE_RX_MODE_SET";
-	case CMD_OPCODE_RX_FILTER_ADD:
-		return "CMD_OPCODE_RX_FILTER_ADD";
-	case CMD_OPCODE_RX_FILTER_DEL:
-		return "CMD_OPCODE_RX_FILTER_DEL";
-	case CMD_OPCODE_Q_INIT:
-		return "CMD_OPCODE_Q_INIT";
-	case CMD_OPCODE_Q_CONTROL:
-		return "CMD_OPCODE_Q_CONTROL";
-	case CMD_OPCODE_RDMA_RESET_LIF:
-		return "CMD_OPCODE_RDMA_RESET_LIF";
-	case CMD_OPCODE_RDMA_CREATE_EQ:
-		return "CMD_OPCODE_RDMA_CREATE_EQ";
-	case CMD_OPCODE_RDMA_CREATE_CQ:
-		return "CMD_OPCODE_RDMA_CREATE_CQ";
-	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
-		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
-	case CMD_OPCODE_FW_DOWNLOAD:
-		return "CMD_OPCODE_FW_DOWNLOAD";
-	case CMD_OPCODE_FW_CONTROL:
-		return "CMD_OPCODE_FW_CONTROL";
+	case IONIC_CMD_NOP:
+		return "IONIC_CMD_NOP";
+	case IONIC_CMD_INIT:
+		return "IONIC_CMD_INIT";
+	case IONIC_CMD_RESET:
+		return "IONIC_CMD_RESET";
+	case IONIC_CMD_IDENTIFY:
+		return "IONIC_CMD_IDENTIFY";
+	case IONIC_CMD_GETATTR:
+		return "IONIC_CMD_GETATTR";
+	case IONIC_CMD_SETATTR:
+		return "IONIC_CMD_SETATTR";
+	case IONIC_CMD_PORT_IDENTIFY:
+		return "IONIC_CMD_PORT_IDENTIFY";
+	case IONIC_CMD_PORT_INIT:
+		return "IONIC_CMD_PORT_INIT";
+	case IONIC_CMD_PORT_RESET:
+		return "IONIC_CMD_PORT_RESET";
+	case IONIC_CMD_PORT_GETATTR:
+		return "IONIC_CMD_PORT_GETATTR";
+	case IONIC_CMD_PORT_SETATTR:
+		return "IONIC_CMD_PORT_SETATTR";
+	case IONIC_CMD_LIF_INIT:
+		return "IONIC_CMD_LIF_INIT";
+	case IONIC_CMD_LIF_RESET:
+		return "IONIC_CMD_LIF_RESET";
+	case IONIC_CMD_LIF_IDENTIFY:
+		return "IONIC_CMD_LIF_IDENTIFY";
+	case IONIC_CMD_LIF_SETATTR:
+		return "IONIC_CMD_LIF_SETATTR";
+	case IONIC_CMD_LIF_GETATTR:
+		return "IONIC_CMD_LIF_GETATTR";
+	case IONIC_CMD_RX_MODE_SET:
+		return "IONIC_CMD_RX_MODE_SET";
+	case IONIC_CMD_RX_FILTER_ADD:
+		return "IONIC_CMD_RX_FILTER_ADD";
+	case IONIC_CMD_RX_FILTER_DEL:
+		return "IONIC_CMD_RX_FILTER_DEL";
+	case IONIC_CMD_Q_INIT:
+		return "IONIC_CMD_Q_INIT";
+	case IONIC_CMD_Q_CONTROL:
+		return "IONIC_CMD_Q_CONTROL";
+	case IONIC_CMD_RDMA_RESET_LIF:
+		return "IONIC_CMD_RDMA_RESET_LIF";
+	case IONIC_CMD_RDMA_CREATE_EQ:
+		return "IONIC_CMD_RDMA_CREATE_EQ";
+	case IONIC_CMD_RDMA_CREATE_CQ:
+		return "IONIC_CMD_RDMA_CREATE_CQ";
+	case IONIC_CMD_RDMA_CREATE_ADMINQ:
+		return "IONIC_CMD_RDMA_CREATE_ADMINQ";
+	case IONIC_CMD_FW_DOWNLOAD:
+		return "IONIC_CMD_FW_DOWNLOAD";
+	case IONIC_CMD_FW_CONTROL:
+		return "IONIC_CMD_FW_CONTROL";
 	default:
 		return "DEVCMD_UNKNOWN";
 	}
@@ -249,7 +249,7 @@ ionic_adminq_check_err(struct lif *lif,
                         status = VMK_OK;
                 } else if (ctx->comp.comp.status) {
                         /* For FW upgrade use */
-                        if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
+                        if (ctx->cmd.cmd.opcode == IONIC_CMD_RX_FILTER_DEL &&
                             ctx->comp.comp.status == IONIC_RC_ENOENT) {
                                 return VMK_OK;
                         }
@@ -572,7 +572,7 @@ ionic_identify(struct ionic *ionic)
 {
 	VMK_ReturnStatus status;
 	struct ionic_dev *idev = &ionic->en_dev.idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	vmk_SystemVersionInfo sys_info;
 	unsigned int i;
 	unsigned int nwords;
@@ -620,7 +620,7 @@ ionic_port_identify(struct ionic *ionic)
 {
         VMK_ReturnStatus status;
         struct ionic_dev *idev = &ionic->en_dev.idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	unsigned int i;
 	unsigned int nwords;
 
@@ -646,7 +646,7 @@ ionic_port_init(struct ionic *ionic)
 {
 	struct ionic_en_priv_data *priv_data;
 	struct ionic_dev *idev = &ionic->en_dev.idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int err;
 	unsigned int i;
 	unsigned int nwords;

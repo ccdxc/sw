@@ -138,7 +138,7 @@ struct lif {
         u32 flags;
 
         u32 info_sz;
-        struct lif_info *info;
+        struct ionic_lif_info *info;
         dma_addr_t info_pa;
         vmk_Bool is_skip_res_alloc_after_fw;
 };

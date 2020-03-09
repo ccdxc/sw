@@ -24,8 +24,8 @@
  */
 struct ionic_admin_ctx {
         struct ionic_completion work;
-        union adminq_cmd cmd;
-        union adminq_comp comp;
+        union ionic_adminq_cmd cmd;
+        union ionic_adminq_comp comp;
 };
 
 VMK_ReturnStatus

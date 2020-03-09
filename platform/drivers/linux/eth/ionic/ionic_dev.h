@@ -36,88 +36,88 @@ static inline void ionic_struct_size_checks(void)
 	/* Registers */
 	BUILD_BUG_ON(sizeof(struct ionic_intr) != 32);
 
-	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
-	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
-	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
+	BUILD_BUG_ON(sizeof(struct ionic_doorbell) != 8);
+	BUILD_BUG_ON(sizeof(struct ionic_intr_ctrl) != 32);
+	BUILD_BUG_ON(sizeof(struct ionic_intr_status) != 8);
 
-	BUILD_BUG_ON(sizeof(union dev_regs) != 4096);
-	BUILD_BUG_ON(sizeof(union dev_info_regs) != 2048);
-	BUILD_BUG_ON(sizeof(union dev_cmd_regs) != 2048);
+	BUILD_BUG_ON(sizeof(union ionic_dev_regs) != 4096);
+	BUILD_BUG_ON(sizeof(union ionic_dev_info_regs) != 2048);
+	BUILD_BUG_ON(sizeof(union ionic_dev_cmd_regs) != 2048);
 
-	BUILD_BUG_ON(sizeof(struct lif_stats) != 1024);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_stats) != 1024);
 
-	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct admin_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct nop_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct nop_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_admin_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_admin_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_nop_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_nop_comp) != 16);
 
 	/* Device commands */
-	BUILD_BUG_ON(sizeof(struct dev_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct dev_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct dev_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_comp) != 16);
 
 	/* Port commands */
-	BUILD_BUG_ON(sizeof(struct port_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct port_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct port_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_identify_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_comp) != 16);
 
 	/* LIF commands */
-	BUILD_BUG_ON(sizeof(struct lif_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(lif_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct lif_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct lif_setattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_lif_reset_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_comp) != 16);
 
-	BUILD_BUG_ON(sizeof(struct q_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct q_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct q_control_cmd) != 64);
-	BUILD_BUG_ON(sizeof(q_control_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_q_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_q_init_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_q_control_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_q_control_comp) != 16);
 
-	BUILD_BUG_ON(sizeof(struct rx_mode_set_cmd) != 64);
-	BUILD_BUG_ON(sizeof(rx_mode_set_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct rx_filter_add_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct rx_filter_add_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct rx_filter_del_cmd) != 64);
-	BUILD_BUG_ON(sizeof(rx_filter_del_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_mode_set_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_rx_mode_set_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_del_cmd) != 64);
+	BUILD_BUG_ON(sizeof(ionic_rx_filter_del_comp) != 16);
 
 	/* RDMA commands */
-	BUILD_BUG_ON(sizeof(struct rdma_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct rdma_queue_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rdma_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_rdma_queue_cmd) != 64);
 
 	/* Events */
-	BUILD_BUG_ON(sizeof(struct notifyq_cmd) != 4);
-	BUILD_BUG_ON(sizeof(union notifyq_comp) != 64);
-	BUILD_BUG_ON(sizeof(struct notifyq_event) != 64);
-	BUILD_BUG_ON(sizeof(struct link_change_event) != 64);
-	BUILD_BUG_ON(sizeof(struct reset_event) != 64);
-	BUILD_BUG_ON(sizeof(struct heartbeat_event) != 64);
-	BUILD_BUG_ON(sizeof(struct log_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_notifyq_cmd) != 4);
+	BUILD_BUG_ON(sizeof(union ionic_notifyq_comp) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_notifyq_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_link_change_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_reset_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_heartbeat_event) != 64);
+	BUILD_BUG_ON(sizeof(struct ionic_log_event) != 64);
 
 	/* I/O */
-	BUILD_BUG_ON(sizeof(struct txq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct txq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct txq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_desc) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_sg_desc) != 128);
+	BUILD_BUG_ON(sizeof(struct ionic_txq_comp) != 16);
 
-	BUILD_BUG_ON(sizeof(struct rxq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct rxq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct rxq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_desc) != 16);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_sg_desc) != 128);
+	BUILD_BUG_ON(sizeof(struct ionic_rxq_comp) != 16);
 
 	/* SR/IOV */
 	BUILD_BUG_ON(sizeof(struct ionic_vf_setattr_cmd) != 64);
@@ -127,8 +127,8 @@ static inline void ionic_struct_size_checks(void)
 }
 
 struct ionic_dev {
-	union dev_info_regs __iomem *dev_info_regs;
-	union dev_cmd_regs __iomem *dev_cmd_regs;
+	union ionic_dev_info_regs __iomem *dev_info_regs;
+	union ionic_dev_cmd_regs __iomem *dev_cmd_regs;
 
 	unsigned long last_hb_time;
 	u32 last_hb;
@@ -147,7 +147,7 @@ struct ionic_dev {
 	u32 cmb_npages;
 
 	u32 port_info_sz;
-	struct port_info *port_info;
+	struct ionic_port_info *port_info;
 	dma_addr_t port_info_pa;
 
 	struct ionic_devinfo dev_info;
@@ -291,10 +291,10 @@ void ionic_init_devinfo(struct ionic *ionic);
 int ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_teardown(struct ionic *ionic);
 
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
+void ionic_dev_cmd_go(struct ionic_dev *idev, union ionic_dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
-void ionic_dev_cmd_comp(struct ionic_dev *idev, union dev_cmd_comp *comp);
+void ionic_dev_cmd_comp(struct ionic_dev *idev, union ionic_dev_cmd_comp *comp);
 
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u8 ver);
 void ionic_dev_cmd_init(struct ionic_dev *idev);

@@ -32,7 +32,7 @@ struct rx_filter {
 	uint32_t filter_id;
 	uint16_t rxq_index;
 	bool visited;  /* temp variable */
-	struct rx_filter_add_cmd cmd;
+	struct ionic_rx_filter_add_cmd cmd;
 	struct hlist_node by_hash;
 	struct hlist_node by_id;
 };

@@ -107,11 +107,11 @@ Eth::port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_ad
     case 1:
     case 2:
         // mx0, mx1
-        port_stats_size = sizeof(struct port_stats);
+        port_stats_size = sizeof(struct ionic_port_stats);
         break;
     case 3:
         // bx
-        port_stats_size = sizeof(struct mgmt_port_stats);
+        port_stats_size = sizeof(struct ionic_mgmt_port_stats);
         break;
     default:
         SDK_ASSERT(0);
@@ -187,17 +187,17 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     }
 
     // Reserve Device registers
-    err = pd->devcmd_mem_reserve(dev_resources.regs_mem_addr, sizeof(union dev_regs));
+    err = pd->devcmd_mem_reserve(dev_resources.regs_mem_addr, sizeof(union ionic_dev_regs));
     if (err) {
         NIC_LOG_ERR("{}: Failed to reserve registers mem with error {}", spec->name, err);
         throw;
     }
-    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
+    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, devcmd);
 
     NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
                   dev_resources.regs_mem_addr, devcmd_mem_addr);
 
-    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);
+    regs = (union ionic_dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union ionic_dev_regs), 0);
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
@@ -270,26 +270,26 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     host_port_stats_addr = 0;
 
     // Port Config
-    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
+    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
     host_port_config_addr = 0;
-    port_config = (union port_config *)MEM_MAP(port_config_addr, sizeof(union port_config), 0);
+    port_config = (union ionic_port_config *)MEM_MAP(port_config_addr, sizeof(union ionic_port_config), 0);
     if (port_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
+    MEM_CLR(port_config_addr, port_config, sizeof(union ionic_port_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
 
     // Port Status
-    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
+    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_port_status));
     host_port_status_addr = 0;
-    port_status = (struct port_status *)MEM_MAP(port_status_addr, sizeof(struct port_status), 0);
+    port_status = (struct ionic_port_status *)MEM_MAP(port_status_addr, sizeof(struct ionic_port_status), 0);
     if (port_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
-    MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
+    MEM_CLR(port_status_addr, port_status, sizeof(struct ionic_port_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
@@ -355,17 +355,17 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     }
 
     // Allocate & Init Device registers
-    dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union dev_regs));
+    dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union ionic_dev_regs));
     if (dev_resources.regs_mem_addr == 0) {
         NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
         throw;
     }
-    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union dev_regs, devcmd);
+    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, devcmd);
 
     NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
                   dev_resources.regs_mem_addr, devcmd_mem_addr);
 
-    regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);
+    regs = (union ionic_dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union ionic_dev_regs), 0);
     ;
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
@@ -439,26 +439,26 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     host_port_stats_addr = 0;
 
     // Port Config
-    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
+    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
     host_port_config_addr = 0;
-    port_config = (union port_config *)MEM_MAP(port_config_addr, sizeof(union port_config), 0);
+    port_config = (union ionic_port_config *)MEM_MAP(port_config_addr, sizeof(union ionic_port_config), 0);
     if (port_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    MEM_CLR(port_config_addr, port_config, sizeof(union port_config), skip_hwinit);
+    MEM_CLR(port_config_addr, port_config, sizeof(union ionic_port_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
 
     // Port Status
-    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
+    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_port_status));
     host_port_status_addr = 0;
-    port_status = (struct port_status *)MEM_MAP(port_status_addr, sizeof(struct port_status), 0);
+    port_status = (struct ionic_port_status *)MEM_MAP(port_status_addr, sizeof(struct ionic_port_status), 0);
     if (port_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
-    MEM_CLR(port_status_addr, port_status, sizeof(struct port_status), skip_hwinit);
+    MEM_CLR(port_status_addr, port_status, sizeof(struct ionic_port_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
@@ -800,7 +800,7 @@ Eth::CreateHostDevice()
     pres.pfres.romsz = dev_resources.rom_mem_size;
     pres.pfres.totalvfs = spec->pcie_total_vfs;
     pres.pfres.eth.devregspa = dev_resources.regs_mem_addr;
-    pres.pfres.eth.devregssz = sizeof(union dev_regs);
+    pres.pfres.eth.devregssz = sizeof(union ionic_dev_regs);
     pres.pfres.eth.macaddr = spec->mac_addr;
 
     if (pres.pfres.totalvfs > 0) {
@@ -853,9 +853,9 @@ Eth::CreateHostDevice()
 void
 Eth::DevcmdRegsReset()
 {
-    memset((uint8_t *)devcmd, 0, sizeof(union dev_cmd_regs));
+    memset((uint8_t *)devcmd, 0, sizeof(union ionic_dev_cmd_regs));
 #ifndef __aarch64__
-    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union dev_cmd_regs), 0);
+    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union ionic_dev_cmd_regs), 0);
 #endif
 }
 
@@ -889,7 +889,7 @@ Eth::DevcmdHandler()
     clock_gettime(CLOCK_MONOTONIC, &start_ts);
 #ifndef __aarch64__
     // read devcmd region
-    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union dev_cmd_regs), 0);
+    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(union ionic_dev_cmd_regs), 0);
 #endif
     if (devcmd->done != 0) {
         NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}", spec->name,
@@ -903,8 +903,8 @@ Eth::DevcmdHandler()
     // write data
     if (status == IONIC_RC_SUCCESS) {
 #ifndef __aarch64__
-        WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, data),
-                  (uint8_t *)devcmd + offsetof(union dev_cmd_regs, data), sizeof(devcmd->data), 0);
+        WRITE_MEM(devcmd_mem_addr + offsetof(union ionic_dev_cmd_regs, data),
+                  (uint8_t *)devcmd + offsetof(union ionic_dev_cmd_regs, data), sizeof(devcmd->data), 0);
 #endif
     }
 
@@ -914,12 +914,12 @@ devcmd_done:
     devcmd->done = 1;
 #ifndef __aarch64__
     // write completion
-    WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, comp),
-              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, comp), sizeof(devcmd->comp), 0);
+    WRITE_MEM(devcmd_mem_addr + offsetof(union ionic_dev_cmd_regs, comp),
+              (uint8_t *)devcmd + offsetof(union ionic_dev_cmd_regs, comp), sizeof(devcmd->comp), 0);
 
     // write done
-    WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, done),
-              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, done), sizeof(devcmd->done), 0);
+    WRITE_MEM(devcmd_mem_addr + offsetof(union ionic_dev_cmd_regs, done),
+              (uint8_t *)devcmd + offsetof(union ionic_dev_cmd_regs, done), sizeof(devcmd->done), 0);
 #endif
     clock_gettime(CLOCK_MONOTONIC, &end_ts);
     ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
@@ -934,28 +934,28 @@ const char *
 Eth::opcode_to_str(cmd_opcode_t opcode)
 {
     switch (opcode) {
-        CASE(CMD_OPCODE_NOP);
-        CASE(CMD_OPCODE_IDENTIFY);
-        CASE(CMD_OPCODE_INIT);
-        CASE(CMD_OPCODE_RESET);
-        CASE(CMD_OPCODE_GETATTR);
-        CASE(CMD_OPCODE_SETATTR);
-        CASE(CMD_OPCODE_PORT_IDENTIFY);
-        CASE(CMD_OPCODE_PORT_INIT);
-        CASE(CMD_OPCODE_PORT_RESET);
-        CASE(CMD_OPCODE_PORT_GETATTR);
-        CASE(CMD_OPCODE_PORT_SETATTR);
-        CASE(CMD_OPCODE_LIF_IDENTIFY);
-        CASE(CMD_OPCODE_LIF_INIT);
-        CASE(CMD_OPCODE_LIF_RESET);
-        CASE(CMD_OPCODE_QOS_CLASS_IDENTIFY);
-        CASE(CMD_OPCODE_QOS_CLASS_INIT);
-        CASE(CMD_OPCODE_QOS_CLASS_UPDATE);
-        CASE(CMD_OPCODE_QOS_CLASS_RESET);
-        CASE(CMD_OPCODE_FW_DOWNLOAD);
-        CASE(CMD_OPCODE_FW_CONTROL);
-        CASE(CMD_OPCODE_VF_GETATTR);
-        CASE(CMD_OPCODE_VF_SETATTR);
+        CASE(IONIC_CMD_NOP);
+        CASE(IONIC_CMD_IDENTIFY);
+        CASE(IONIC_CMD_INIT);
+        CASE(IONIC_CMD_RESET);
+        CASE(IONIC_CMD_GETATTR);
+        CASE(IONIC_CMD_SETATTR);
+        CASE(IONIC_CMD_PORT_IDENTIFY);
+        CASE(IONIC_CMD_PORT_INIT);
+        CASE(IONIC_CMD_PORT_RESET);
+        CASE(IONIC_CMD_PORT_GETATTR);
+        CASE(IONIC_CMD_PORT_SETATTR);
+        CASE(IONIC_CMD_LIF_IDENTIFY);
+        CASE(IONIC_CMD_LIF_INIT);
+        CASE(IONIC_CMD_LIF_RESET);
+        CASE(IONIC_CMD_QOS_CLASS_IDENTIFY);
+        CASE(IONIC_CMD_QOS_CLASS_INIT);
+        CASE(IONIC_CMD_QOS_CLASS_UPDATE);
+        CASE(IONIC_CMD_QOS_CLASS_RESET);
+        CASE(IONIC_CMD_FW_DOWNLOAD);
+        CASE(IONIC_CMD_FW_CONTROL);
+        CASE(IONIC_CMD_VF_GETATTR);
+        CASE(IONIC_CMD_VF_SETATTR);
         default:
             return EthLif::opcode_to_str(opcode);
     }
@@ -985,90 +985,90 @@ Eth::os_type_to_str(unsigned int os_type)
 status_code_t
 Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union dev_cmd *cmd = (union dev_cmd *)req;
-    union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
+    union ionic_dev_cmd *cmd = (union ionic_dev_cmd *)req;
+    union ionic_dev_cmd_comp *comp = (union ionic_dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
 
-    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+    if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
         NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
                       opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
     }
 
     switch ((cmd_opcode_t)cmd->cmd.opcode) {
 
-    case CMD_OPCODE_NOP:
+    case IONIC_CMD_NOP:
         status = IONIC_RC_SUCCESS;
         break;
 
     /* Device Commands */
-    case CMD_OPCODE_IDENTIFY:
+    case IONIC_CMD_IDENTIFY:
         status = _CmdIdentify(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_INIT:
+    case IONIC_CMD_INIT:
         status = _CmdInit(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RESET:
+    case IONIC_CMD_RESET:
         status = _CmdReset(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_GETATTR:
+    case IONIC_CMD_GETATTR:
         status = _CmdGetAttr(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_SETATTR:
+    case IONIC_CMD_SETATTR:
         status = _CmdSetAttr(req, req_data, resp, resp_data);
         break;
 
     /* Port Commands */
-    case CMD_OPCODE_PORT_IDENTIFY:
+    case IONIC_CMD_PORT_IDENTIFY:
         status = _CmdPortIdentify(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_PORT_INIT:
+    case IONIC_CMD_PORT_INIT:
         status = _CmdPortInit(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_PORT_RESET:
+    case IONIC_CMD_PORT_RESET:
         status = _CmdPortReset(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_PORT_GETATTR:
+    case IONIC_CMD_PORT_GETATTR:
         status = _CmdPortGetAttr(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_PORT_SETATTR:
+    case IONIC_CMD_PORT_SETATTR:
         status = _CmdPortSetAttr(req, req_data, resp, resp_data);
         break;
 
     /* LIF Commands */
-    case CMD_OPCODE_LIF_IDENTIFY:
+    case IONIC_CMD_LIF_IDENTIFY:
         status = _CmdLifIdentify(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_LIF_INIT:
+    case IONIC_CMD_LIF_INIT:
         status = _CmdLifInit(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_LIF_RESET:
+    case IONIC_CMD_LIF_RESET:
         status = _CmdLifReset(req, req_data, resp, resp_data);
         break;
 
     /* QoS commands */
-    case CMD_OPCODE_QOS_CLASS_IDENTIFY:
+    case IONIC_CMD_QOS_CLASS_IDENTIFY:
         status = _CmdQosIdentify(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_QOS_CLASS_INIT:
+    case IONIC_CMD_QOS_CLASS_INIT:
         status = _CmdQosInit(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_QOS_CLASS_UPDATE:
+    case IONIC_CMD_QOS_CLASS_UPDATE:
         status = _CmdQosUpdate(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_QOS_CLASS_RESET:
+    case IONIC_CMD_QOS_CLASS_RESET:
         status = _CmdQosReset(req, req_data, resp, resp_data);
         break;
 
@@ -1080,7 +1080,7 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     comp->comp.status = status;
 
-    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+    if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
         NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", spec->name,
                       opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
     }
@@ -1091,10 +1091,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union drv_identity *drvid = (union drv_identity *)req_data;
-    union dev_identity *ident = (union dev_identity *)resp_data;
-    struct dev_identify_cmd *cmd = (struct dev_identify_cmd *)req;
-    struct dev_identify_comp *comp = (struct dev_identify_comp *)resp;
+    union ionic_drv_identity *drvid = (union ionic_drv_identity *)req_data;
+    union ionic_dev_identity *ident = (union ionic_dev_identity *)resp_data;
+    struct ionic_dev_identify_cmd *cmd = (struct ionic_dev_identify_cmd *)req;
+    struct ionic_dev_identify_comp *comp = (struct ionic_dev_identify_comp *)resp;
     int mul, div;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
@@ -1117,7 +1117,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_INFO("    driver: {}",
                  drvid->driver_ver_str);
 
-    memset(ident, 0, sizeof(union dev_identity));
+    memset(ident, 0, sizeof(union ionic_dev_identity));
 
     intr_coal_get_params(&mul, &div);
 
@@ -1137,7 +1137,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct dev_init_cmd *cmd = (struct dev_init_cmd *)req;
+    struct ionic_dev_init_cmd *cmd = (struct ionic_dev_init_cmd *)req;
     status_code_t status;
     EthLif *eth_lif = NULL;
 
@@ -1163,7 +1163,7 @@ Eth::_CmdInit(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct dev_reset_cmd *cmd = (struct dev_reset_cmd *)req;
+    struct ionic_dev_reset_cmd *cmd = (struct ionic_dev_reset_cmd *)req;
     status_code_t status;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
@@ -1175,7 +1175,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct dev_getattr_cmd *cmd = (struct dev_getattr_cmd *)req;
+    struct ionic_dev_getattr_cmd *cmd = (struct ionic_dev_getattr_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -1185,7 +1185,7 @@ Eth::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct dev_setattr_cmd *cmd = (struct dev_setattr_cmd *)req;
+    struct ionic_dev_setattr_cmd *cmd = (struct ionic_dev_setattr_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -1196,9 +1196,9 @@ status_code_t
 Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    union port_identity *info = (union port_identity *)resp_data;
-    union port_config *cfg = (union port_config *)&info->config;
-    struct port_identify_cmd *cmd = (struct port_identify_cmd *)req;
+    union ionic_port_identity *info = (union ionic_port_identity *)resp_data;
+    union ionic_port_config *cfg = (union ionic_port_config *)&info->config;
+    struct ionic_port_identify_cmd *cmd = (struct ionic_port_identify_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
@@ -1207,11 +1207,11 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->uplink_port_num == 0) {
         port_config->speed = IONIC_SPEED_100G;
         port_config->mtu = 1500;
-        port_config->state = PORT_ADMIN_STATE_UP;
+        port_config->state = IONIC_PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
     }
 
-    memset(info, 0, sizeof(union port_identity));
+    memset(info, 0, sizeof(union ionic_port_identity));
 
     ret = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)cfg);
     if (ret != SDK_RET_OK) {
@@ -1226,8 +1226,8 @@ status_code_t
 Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    struct port_init_cmd *cmd = (struct port_init_cmd *)req;
-    union port_config *cfg = (union port_config *)req_data;
+    struct ionic_port_init_cmd *cmd = (struct ionic_port_init_cmd *)req;
+    union ionic_port_config *cfg = (union ionic_port_config *)req_data;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
@@ -1247,13 +1247,13 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
         host_port_info_addr = cmd->info_pa;
         NIC_LOG_INFO("{}: host_port_info_addr {:#x}", spec->name, cmd->info_pa);
 
-        host_port_config_addr = cmd->info_pa + offsetof(struct port_info, config);
+        host_port_config_addr = cmd->info_pa + offsetof(struct ionic_port_info, config);
         NIC_LOG_INFO("{}: host_port_config_addr {:#x}", spec->name, host_port_config_addr);
 
-        host_port_status_addr = cmd->info_pa + offsetof(struct port_info, status);
+        host_port_status_addr = cmd->info_pa + offsetof(struct ionic_port_info, status);
         NIC_LOG_INFO("{}: host_port_status_addr {:#x}", spec->name, host_port_status_addr);
 
-        host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
+        host_port_stats_addr = cmd->info_pa + offsetof(struct ionic_port_info, stats);
         NIC_LOG_INFO("{}: host_port_stats_addr {:#x}", spec->name, host_port_stats_addr);
     } else {
         host_port_info_addr = 0;
@@ -1271,7 +1271,7 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct port_reset_cmd *cmd = (struct port_reset_cmd *)req;
+    struct ionic_port_reset_cmd *cmd = (struct ionic_port_reset_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
@@ -1292,7 +1292,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
     port_config_t cfg = {0};
-    struct port_setattr_cmd *cmd = (struct port_setattr_cmd *)req;
+    struct ionic_port_setattr_cmd *cmd = (struct ionic_port_setattr_cmd *)req;
     bool pause_config = FALSE;
 
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
@@ -1334,7 +1334,7 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         break;
     case IONIC_PORT_ATTR_STATS_CTRL:
         switch (cmd->stats_ctl) {
-        case STATS_CTL_RESET:
+        case IONIC_STATS_CTL_RESET:
             cfg.reset_mac_stats = 1;
             break;
         default:
@@ -1379,8 +1379,8 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t ret = SDK_RET_OK;
     port_config_t cfg = {0};
-    struct port_getattr_cmd *cmd = (struct port_getattr_cmd *)req;
-    struct port_getattr_comp *comp = (struct port_getattr_comp *)resp;
+    struct ionic_port_getattr_cmd *cmd = (struct ionic_port_getattr_cmd *)req;
+    struct ionic_port_getattr_comp *comp = (struct ionic_port_getattr_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -1432,15 +1432,15 @@ const char *
 Eth::qos_class_to_str(u8 qos_class)
 {
     switch (qos_class) {
-        CASE(QOS_CLASS_DEFAULT);
-        CASE(QOS_CLASS_USER_DEFINED_1);
-        CASE(QOS_CLASS_USER_DEFINED_2);
-        CASE(QOS_CLASS_USER_DEFINED_3);
-        CASE(QOS_CLASS_USER_DEFINED_4);
-        CASE(QOS_CLASS_USER_DEFINED_5);
-        CASE(QOS_CLASS_USER_DEFINED_6);
+        CASE(IONIC_QOS_CLASS_DEFAULT);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_1);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_2);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_3);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_4);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_5);
+        CASE(IONIC_QOS_CLASS_USER_DEFINED_6);
     default:
-        return "QOS_CLASS_UNKNOWN";
+        return "IONIC_QOS_CLASS_UNKNOWN";
     }
 }
 
@@ -1448,22 +1448,22 @@ status_code_t
 Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
-    struct qos_identify_cmd *cmd = (struct qos_identify_cmd *)req;
-    union qos_identity *ident = (union qos_identity *)resp_data;
-    union qos_config *cfg;
+    struct ionic_qos_identify_cmd *cmd = (struct ionic_qos_identify_cmd *)req;
+    union ionic_qos_identity *ident = (union ionic_qos_identity *)resp_data;
+    union ionic_qos_config *cfg;
     qos_class_info_t info = {0};
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
     DEVAPI_CHECK
 
-    memset(ident, 0, sizeof(union qos_identity));
+    memset(ident, 0, sizeof(union ionic_qos_identity));
 
     ident->version = 1;
     ident->type = 0;
 
     /* convert qos class info to qos config */
-    auto to_config = [](qos_class_info_t *info, union qos_config *cfg) {
+    auto to_config = [](qos_class_info_t *info, union ionic_qos_config *cfg) {
         cfg->flags = IONIC_QOS_CONFIG_F_ENABLE;
 
         cfg->mtu = info->mtu;
@@ -1527,8 +1527,8 @@ status_code_t
 Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
-    union qos_config *cfg = (union qos_config *)req_data;
-    struct qos_init_cmd *cmd = (struct qos_init_cmd *)req;
+    union ionic_qos_config *cfg = (union ionic_qos_config *)req_data;
+    struct ionic_qos_init_cmd *cmd = (struct ionic_qos_init_cmd *)req;
     qos_class_info_t info = {0};
 
     NIC_LOG_DEBUG("{}: {} qos group {}", spec->name, opcode_to_str(cmd->opcode),
@@ -1549,9 +1549,9 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
             info.class_ip_dscp[i] = cfg->ip_dscp[i];
     }
 
-    if (cfg->pause_type == PORT_PAUSE_TYPE_LINK) {
+    if (cfg->pause_type == IONIC_PORT_PAUSE_TYPE_LINK) {
         info.pause_type = sdk::platform::PAUSE_TYPE_LINK_LEVEL;
-    } else if (cfg->pause_type == PORT_PAUSE_TYPE_PFC) {
+    } else if (cfg->pause_type == IONIC_PORT_PAUSE_TYPE_PFC) {
         info.pause_type = sdk::platform::PAUSE_TYPE_PFC;
     } else {
         info.pause_type = sdk::platform::PAUSE_TYPE_NONE;
@@ -1597,8 +1597,8 @@ status_code_t
 Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
-    union qos_config *cfg = (union qos_config *)req_data;
-    struct qos_init_cmd *cmd = (struct qos_init_cmd *)req;
+    union ionic_qos_config *cfg = (union ionic_qos_config *)req_data;
+    struct ionic_qos_init_cmd *cmd = (struct ionic_qos_init_cmd *)req;
     qos_class_info_t info = {0};
 
     NIC_LOG_DEBUG("{}: {} qos group {}", spec->name, opcode_to_str(cmd->opcode),
@@ -1629,9 +1629,9 @@ Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
             info.class_ip_dscp[i] = cfg->ip_dscp[i];
     }
 
-    if (cfg->pause_type == PORT_PAUSE_TYPE_LINK) {
+    if (cfg->pause_type == IONIC_PORT_PAUSE_TYPE_LINK) {
         info.pause_type = sdk::platform::PAUSE_TYPE_LINK_LEVEL;
-    } else if (cfg->pause_type == PORT_PAUSE_TYPE_PFC) {
+    } else if (cfg->pause_type == IONIC_PORT_PAUSE_TYPE_PFC) {
         info.pause_type = sdk::platform::PAUSE_TYPE_PFC;
     }
     info.pause_dot1q_pcp = cfg->pfc_cos;
@@ -1675,7 +1675,7 @@ status_code_t
 Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
-    struct qos_reset_cmd *cmd = (struct qos_reset_cmd *)req;
+    struct ionic_qos_reset_cmd *cmd = (struct ionic_qos_reset_cmd *)req;
 
     NIC_LOG_DEBUG("{}: {} {}", spec->name, opcode_to_str(cmd->opcode),
                   qos_class_to_str(cmd->group));
@@ -1694,13 +1694,13 @@ Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union lif_identity *ident = (union lif_identity *)resp_data;
-    struct lif_identify_cmd *cmd = (struct lif_identify_cmd *)req;
-    struct lif_identify_comp *comp = (struct lif_identify_comp *)resp;
+    union ionic_lif_identity *ident = (union ionic_lif_identity *)resp_data;
+    struct ionic_lif_identify_cmd *cmd = (struct ionic_lif_identify_cmd *)req;
+    struct ionic_lif_identify_comp *comp = (struct ionic_lif_identify_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    memset(ident, 0, sizeof(union lif_identity));
+    memset(ident, 0, sizeof(union ionic_lif_identity));
 
     ident->capabilities = IONIC_LIF_CAP_ETH;
 
@@ -1763,8 +1763,8 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
-    struct lif_init_comp *comp = (struct lif_init_comp *)resp;
+    struct ionic_lif_init_cmd *cmd = (struct ionic_lif_init_cmd *)req;
+    struct ionic_lif_init_comp *comp = (struct ionic_lif_init_comp *)resp;
     uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
     status_code_t ret = IONIC_RC_SUCCESS;
@@ -1806,7 +1806,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->uplink_port_num == 0) {
         port_status->id = 0;
         port_status->speed = IONIC_SPEED_100G;
-        port_status->status = PORT_OPER_STATUS_UP;
+        port_status->status = IONIC_PORT_OPER_STATUS_UP;
     } else {
         // Update port config
         rs = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)port_config);
@@ -1846,7 +1846,7 @@ status_code_t
 Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t ret;
-    struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
+    struct ionic_lif_reset_cmd *cmd = (struct ionic_lif_reset_cmd *)req;
     uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
 
@@ -1891,7 +1891,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct admin_cmd *cmd = (struct admin_cmd *)req;
+    struct ionic_admin_cmd *cmd = (struct ionic_admin_cmd *)req;
     uint64_t lif_id = dev_resources.lif_base + cmd->lif_index;
     EthLif *eth_lif = NULL;
 
@@ -1934,7 +1934,7 @@ Eth::StatsUpdate(void *obj)
     if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
         auto posted = eth_lif->EdmaAsyncProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_stats_addr, eth->host_port_stats_addr, sizeof(struct port_stats), &ctx);
+            eth->port_stats_addr, eth->host_port_stats_addr, sizeof(struct ionic_port_stats), &ctx);
         if (posted)
             evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
@@ -1964,7 +1964,7 @@ Eth::PortConfigUpdate(void *obj)
     if (eth->host_port_config_addr) {
         eth_lif->EdmaProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_config_addr, eth->host_port_config_addr, sizeof(union port_config), NULL);
+            eth->port_config_addr, eth->host_port_config_addr, sizeof(union ionic_port_config), NULL);
     }
 }
 
@@ -1984,7 +1984,7 @@ Eth::PortStatusUpdate(void *obj)
     if (eth->host_port_status_addr) {
         eth_lif->EdmaProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_status_addr, eth->host_port_status_addr, sizeof(struct port_status), NULL);
+            eth->port_status_addr, eth->host_port_status_addr, sizeof(struct ionic_port_status), NULL);
     }
 }
 
@@ -2035,7 +2035,7 @@ Eth::LinkEventHandler(port_status_t *evd)
 
     port_status->id = evd->id;
     port_status->speed = evd->speed;
-    if (port_status->status == PORT_OPER_STATUS_UP && evd->status == PORT_OPER_STATUS_DOWN)
+    if (port_status->status == IONIC_PORT_OPER_STATUS_UP && evd->status == IONIC_PORT_OPER_STATUS_DOWN)
         ++port_status->link_down_count;
     port_status->status = evd->status;
 
@@ -2056,7 +2056,7 @@ Eth::XcvrEventHandler(port_status_t *evd)
     port_status->id = evd->id;
     port_status->speed = evd->speed;
     port_status->status = evd->status;
-    memcpy(&port_status->xcvr, &evd->xcvr, sizeof(struct xcvr_status));
+    memcpy(&port_status->xcvr, &evd->xcvr, sizeof(struct ionic_xcvr_status));
 
     PortStatusUpdate(this);
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
@@ -2078,7 +2078,7 @@ Eth::QuiesceEventHandler(bool quiesce)
 
     port_status.id = 0;
     port_status.speed = IONIC_SPEED_100G;
-    port_status.status = quiesce ? PORT_OPER_STATUS_DOWN : PORT_OPER_STATUS_UP;
+    port_status.status = quiesce ? IONIC_PORT_OPER_STATUS_DOWN : IONIC_PORT_OPER_STATUS_UP;
 
     LinkEventHandler(&port_status);
 }
@@ -2220,8 +2220,8 @@ Eth::SetFwStatus(uint8_t fw_status)
 
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union dev_regs, info) +
-                  offsetof(union dev_info_regs, fw_status),
+    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, info) +
+                  offsetof(union ionic_dev_info_regs, fw_status),
               (uint8_t *)&regs->info.fw_status, sizeof(regs->info.fw_status), 0);
 #endif
 }
@@ -2231,8 +2231,8 @@ Eth::HeartbeatEventHandler()
 {
     regs->info.fw_heartbeat = regs->info.fw_heartbeat + 1;
 #ifndef __aarch64__
-    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union dev_regs, info) +
-                  offsetof(union dev_info_regs, fw_heartbeat),
+    WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, info) +
+                  offsetof(union ionic_dev_info_regs, fw_heartbeat),
               (uint8_t *)&regs->info.fw_heartbeat, sizeof(regs->info.fw_heartbeat), 0);
 #endif
 }

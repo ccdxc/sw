@@ -14,7 +14,7 @@ struct rx_filter {
         u32 flow_id;
         u32 filter_id;
         u16 rxq_index;
-        struct rx_filter_add_cmd cmd;
+        struct ionic_rx_filter_add_cmd cmd;
         struct lif *lif;
 };
 

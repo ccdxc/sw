@@ -174,18 +174,18 @@ class Eth : public Device
     struct eth_dev_res dev_resources;
     // Devcmd
     uint64_t devcmd_mem_addr;
-    union dev_regs *regs;
-    union dev_cmd_regs *devcmd;
+    union ionic_dev_regs *regs;
+    union ionic_dev_cmd_regs *devcmd;
     // PCIe info
     pciehdev_t *pdev;
     // Port Info
     uint64_t host_port_info_addr;
     // Port Config
-    union port_config *port_config;
+    union ionic_port_config *port_config;
     uint64_t port_config_addr;
     uint64_t host_port_config_addr;
     // Port Status
-    struct port_status *port_status;
+    struct ionic_port_status *port_status;
     uint64_t port_status_addr;
     uint64_t host_port_status_addr;
     // Port Stats

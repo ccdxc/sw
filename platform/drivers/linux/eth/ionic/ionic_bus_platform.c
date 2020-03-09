@@ -132,7 +132,7 @@ static int ionic_mnic_dev_setup(struct ionic *ionic)
 
 	idev->dev_info_regs = ionic->bars[IONIC_DEV_BAR].vaddr;
 	idev->dev_cmd_regs = ionic->bars[IONIC_DEV_BAR].vaddr +
-					offsetof(union dev_regs, devcmd);
+					offsetof(union ionic_dev_regs, devcmd);
 	idev->intr_ctrl = ionic->bars[IONIC_INTR_CTRL_BAR].vaddr;
 	idev->msix_cfg_base = ionic->bars[IONIC_MSIX_CFG_BAR].vaddr;
 

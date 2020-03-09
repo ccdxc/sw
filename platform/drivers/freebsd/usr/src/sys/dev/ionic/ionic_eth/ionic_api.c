@@ -148,7 +148,7 @@ ionic_api_get_debug_ctx(void *handle)
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debug_ctx);
 
-const union lif_identity *
+const union ionic_lif_identity *
 ionic_api_get_identity(void *handle, int *lif_index)
 {
 	struct ionic_lif *lif = handle;
@@ -166,7 +166,7 @@ ionic_api_get_intr(void *handle, int *irq)
 {
 	struct ionic_lif *lif = handle;
 	struct intr intr_obj = {
-		.index = INTR_INDEX_NOT_ASSIGNED
+		.index = IONIC_INTR_INDEX_NOT_ASSIGNED
 	};
 	int err;
 
@@ -306,7 +306,7 @@ ionic_api_adminq_post(void *handle, struct ionic_admin_ctx *ctx)
 		    &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
-	ionic_dev_cmd_go(idev, (union dev_cmd *)&ctx->cmd);
+	ionic_dev_cmd_go(idev, (union ionic_dev_cmd *)&ctx->cmd);
 
 	err = ionic_dev_cmd_wait_check(idev, IONIC_API_ADMINQ_WAIT_SEC * HZ);
 	if (err)

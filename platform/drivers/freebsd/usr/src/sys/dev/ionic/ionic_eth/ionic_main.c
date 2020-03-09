@@ -36,15 +36,15 @@ MODULE_AUTHOR("Anish Gupta <anish@pensando.io>");
 MODULE_VERSION(ionic, 1);
 
 const char *
-ionic_port_oper_status_str(enum port_oper_status status)
+ionic_port_oper_status_str(enum ionic_port_oper_status status)
 {
 
 	switch (status) {
-	case PORT_OPER_STATUS_NONE:
+	case IONIC_PORT_OPER_STATUS_NONE:
 		return "PORT_OPER_STATUS_NONE";
-	case PORT_OPER_STATUS_UP:
+	case IONIC_PORT_OPER_STATUS_UP:
 		return "PORT_OPER_STATUS_UP";
-	case PORT_OPER_STATUS_DOWN:
+	case IONIC_PORT_OPER_STATUS_DOWN:
 		return "PORT_OPER_STATUS_DOWN";
 	default:
 		return "PORT_OPER_STATUS_UNKNOWN";
@@ -52,15 +52,15 @@ ionic_port_oper_status_str(enum port_oper_status status)
 }
 
 const char *
-ionic_port_admin_state_str(enum PortAdminState state)
+ionic_port_admin_state_str(enum ionic_port_admin_state state)
 {
 
 	switch (state) {
-	case PORT_ADMIN_STATE_NONE:
+	case IONIC_PORT_ADMIN_STATE_NONE:
 		return "PORT_ADMIN_STATE_NONE";
-	case PORT_ADMIN_STATE_DOWN:
+	case IONIC_PORT_ADMIN_STATE_DOWN:
 		return "PORT_ADMIN_STATE_DOWN";
-	case PORT_ADMIN_STATE_UP:
+	case IONIC_PORT_ADMIN_STATE_UP:
 		return "PORT_ADMIN_STATE_UP";
 	default:
 		return "PORT_ADMIN_STATE_UNKNOWN";
@@ -68,15 +68,15 @@ ionic_port_admin_state_str(enum PortAdminState state)
 }
 
 const char *
-ionic_port_fec_type_str(enum port_fec_type type)
+ionic_port_fec_type_str(enum ionic_port_fec_type type)
 {
 
 	switch (type) {
-	case PORT_FEC_TYPE_NONE:
+	case IONIC_PORT_FEC_TYPE_NONE:
 		return "PORT_FEC_TYPE_NONE";
-	case PORT_FEC_TYPE_FC:
+	case IONIC_PORT_FEC_TYPE_FC:
 		return "PORT_FEC_TYPE_FC";
-	case PORT_FEC_TYPE_RS:
+	case IONIC_PORT_FEC_TYPE_RS:
 		return "PORT_FEC_TYPE_RS";
 	default:
 		return "PORT_FEC_TYPE_UNKNOWN";
@@ -84,15 +84,15 @@ ionic_port_fec_type_str(enum port_fec_type type)
 }
 
 const char *
-ionic_port_pause_type_str(enum port_pause_type type)
+ionic_port_pause_type_str(enum ionic_port_pause_type type)
 {
 
 	switch (type) {
-	case PORT_PAUSE_TYPE_NONE:
+	case IONIC_PORT_PAUSE_TYPE_NONE:
 		return "PORT_PAUSE_TYPE_NONE";
-	case PORT_PAUSE_TYPE_LINK:
+	case IONIC_PORT_PAUSE_TYPE_LINK:
 		return "PORT_PAUSE_TYPE_LINK";
-	case PORT_PAUSE_TYPE_PFC:
+	case IONIC_PORT_PAUSE_TYPE_PFC:
 		return "PORT_PAUSE_TYPE_PFC";
 	default:
 		return "PORT_PAUSE_TYPE_UNKNOWN";
@@ -100,15 +100,15 @@ ionic_port_pause_type_str(enum port_pause_type type)
 }
 
 const char *
-ionic_port_loopback_mode_str(enum port_loopback_mode mode)
+ionic_port_loopback_mode_str(enum ionic_port_loopback_mode mode)
 {
 
 	switch (mode) {
-	case PORT_LOOPBACK_MODE_NONE:
+	case IONIC_PORT_LOOPBACK_MODE_NONE:
 		return "PORT_LOOPBACK_MODE_NONE";
-	case PORT_LOOPBACK_MODE_MAC:
+	case IONIC_PORT_LOOPBACK_MODE_MAC:
 		return "PORT_LOOPBACK_MODE_MAC";
-	case PORT_LOOPBACK_MODE_PHY:
+	case IONIC_PORT_LOOPBACK_MODE_PHY:
 		return "PORT_LOOPBACK_MODE_PHY";
 	default:
 		return "PORT_LOOPBACK_MODE_UNKNOWN";
@@ -116,19 +116,19 @@ ionic_port_loopback_mode_str(enum port_loopback_mode mode)
 }
 
 const char *
-ionic_xcvr_state_str(enum xcvr_state state)
+ionic_xcvr_state_str(enum ionic_xcvr_state state)
 {
 
 	switch (state) {
-	case XCVR_STATE_REMOVED:
+	case IONIC_XCVR_STATE_REMOVED:
 		return "XCVR_STATE_REMOVED";
-	case XCVR_STATE_INSERTED:
+	case IONIC_XCVR_STATE_INSERTED:
 		return "XCVR_STATE_INSERTED";
-	case XCVR_STATE_PENDING:
+	case IONIC_XCVR_STATE_PENDING:
 		return "XCVR_STATE_PENDING";
-	case XCVR_STATE_SPROM_READ:
+	case IONIC_XCVR_STATE_SPROM_READ:
 		return "XCVR_STATE_SPROM_READ";
-	case XCVR_STATE_SPROM_READ_ERR:
+	case IONIC_XCVR_STATE_SPROM_READ_ERR:
 		return "XCVR_STATE_SPROM_READ_ERR";
 	default:
 		return "XCVR_STATE_UNKNOWN";
@@ -136,15 +136,15 @@ ionic_xcvr_state_str(enum xcvr_state state)
 }
 
 const char *
-ionic_phy_type_str(enum phy_type type)
+ionic_phy_type_str(enum ionic_phy_type type)
 {
 
 	switch (type) {
-	case PHY_TYPE_NONE:
+	case IONIC_PHY_TYPE_NONE:
 		return "PHY_TYPE_NONE";
-	case PHY_TYPE_COPPER:
+	case IONIC_PHY_TYPE_COPPER:
 		return "PHY_TYPE_COPPER";
-	case PHY_TYPE_FIBER:
+	case IONIC_PHY_TYPE_FIBER:
 		return "PHY_TYPE_FIBER";
 	default:
 		return "PHY_TYPE_UNKNOWN";
@@ -152,7 +152,7 @@ ionic_phy_type_str(enum phy_type type)
 }
 
 const char *
-ionic_error_to_str(enum status_code code)
+ionic_error_to_str(enum ionic_status_code code)
 {
 
 	switch (code) {
@@ -204,7 +204,7 @@ ionic_error_to_str(enum status_code code)
 }
 
 int
-ionic_error_to_errno(enum status_code code)
+ionic_error_to_errno(enum ionic_status_code code)
 {
 	switch (code) {
 	case IONIC_RC_SUCCESS:
@@ -248,64 +248,64 @@ ionic_error_to_errno(enum status_code code)
 EXPORT_SYMBOL_GPL(ionic_error_to_errno);
 
 static const char *
-ionic_opcode_to_str(enum cmd_opcode opcode)
+ionic_opcode_to_str(enum ionic_cmd_opcode opcode)
 {
 
 	switch (opcode) {
-	case CMD_OPCODE_NOP:
-		return "CMD_OPCODE_NOP";
-	case CMD_OPCODE_INIT:
-		return "CMD_OPCODE_INIT";
-	case CMD_OPCODE_RESET:
-		return "CMD_OPCODE_RESET";
-	case CMD_OPCODE_IDENTIFY:
-		return "CMD_OPCODE_IDENTIFY";
-	case CMD_OPCODE_GETATTR:
-		return "CMD_OPCODE_GETATTR";
-	case CMD_OPCODE_SETATTR:
-		return "CMD_OPCODE_SETATTR";
-	case CMD_OPCODE_PORT_IDENTIFY:
-		return "CMD_OPCODE_PORT_IDENTIFY";
-	case CMD_OPCODE_PORT_INIT:
-		return "CMD_OPCODE_PORT_INIT";
-	case CMD_OPCODE_PORT_RESET:
-		return "CMD_OPCODE_PORT_RESET";
-	case CMD_OPCODE_PORT_GETATTR:
-		return "CMD_OPCODE_PORT_GETATTR";
-	case CMD_OPCODE_PORT_SETATTR:
-		return "CMD_OPCODE_PORT_SETATTR";
-	case CMD_OPCODE_LIF_INIT:
-		return "CMD_OPCODE_LIF_INIT";
-	case CMD_OPCODE_LIF_RESET:
-		return "CMD_OPCODE_LIF_RESET";
-	case CMD_OPCODE_LIF_IDENTIFY:
-		return "CMD_OPCODE_LIF_IDENTIFY";
-	case CMD_OPCODE_LIF_SETATTR:
-		return "CMD_OPCODE_LIF_SETATTR";
-	case CMD_OPCODE_LIF_GETATTR:
-		return "CMD_OPCODE_LIF_GETATTR";
-	case CMD_OPCODE_RX_MODE_SET:
-		return "CMD_OPCODE_RX_MODE_SET";
-	case CMD_OPCODE_RX_FILTER_ADD:
-		return "CMD_OPCODE_RX_FILTER_ADD";
-	case CMD_OPCODE_RX_FILTER_DEL:
-		return "CMD_OPCODE_RX_FILTER_DEL";
-	case CMD_OPCODE_Q_INIT:
-		return "CMD_OPCODE_Q_INIT";
-	case CMD_OPCODE_Q_CONTROL:
-		return "CMD_OPCODE_Q_CONTROL";
-	case CMD_OPCODE_RDMA_RESET_LIF:
-		return "CMD_OPCODE_RDMA_RESET_LIF";
-	case CMD_OPCODE_RDMA_CREATE_EQ:
-		return "CMD_OPCODE_RDMA_CREATE_EQ";
-	case CMD_OPCODE_RDMA_CREATE_CQ:
-		return "CMD_OPCODE_RDMA_CREATE_CQ";
-	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
-		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
-	case CMD_OPCODE_FW_DOWNLOAD:
-		return "CMD_OPCODE_FW_DOWNLOAD";
-	case CMD_OPCODE_FW_CONTROL:
-		return "CMD_OPCODE_FW_CONTROL";
+	case IONIC_CMD_NOP:
+		return "IONIC_CMD_NOP";
+	case IONIC_CMD_INIT:
+		return "IONIC_CMD_INIT";
+	case IONIC_CMD_RESET:
+		return "IONIC_CMD_RESET";
+	case IONIC_CMD_IDENTIFY:
+		return "IONIC_CMD_IDENTIFY";
+	case IONIC_CMD_GETATTR:
+		return "IONIC_CMD_GETATTR";
+	case IONIC_CMD_SETATTR:
+		return "IONIC_CMD_SETATTR";
+	case IONIC_CMD_PORT_IDENTIFY:
+		return "IONIC_CMD_PORT_IDENTIFY";
+	case IONIC_CMD_PORT_INIT:
+		return "IONIC_CMD_PORT_INIT";
+	case IONIC_CMD_PORT_RESET:
+		return "IONIC_CMD_PORT_RESET";
+	case IONIC_CMD_PORT_GETATTR:
+		return "IONIC_CMD_PORT_GETATTR";
+	case IONIC_CMD_PORT_SETATTR:
+		return "IONIC_CMD_PORT_SETATTR";
+	case IONIC_CMD_LIF_INIT:
+		return "IONIC_CMD_LIF_INIT";
+	case IONIC_CMD_LIF_RESET:
+		return "IONIC_CMD_LIF_RESET";
+	case IONIC_CMD_LIF_IDENTIFY:
+		return "IONIC_CMD_LIF_IDENTIFY";
+	case IONIC_CMD_LIF_SETATTR:
+		return "IONIC_CMD_LIF_SETATTR";
+	case IONIC_CMD_LIF_GETATTR:
+		return "IONIC_CMD_LIF_GETATTR";
+	case IONIC_CMD_RX_MODE_SET:
+		return "IONIC_CMD_RX_MODE_SET";
+	case IONIC_CMD_RX_FILTER_ADD:
+		return "IONIC_CMD_RX_FILTER_ADD";
+	case IONIC_CMD_RX_FILTER_DEL:
+		return "IONIC_CMD_RX_FILTER_DEL";
+	case IONIC_CMD_Q_INIT:
+		return "IONIC_CMD_Q_INIT";
+	case IONIC_CMD_Q_CONTROL:
+		return "IONIC_CMD_Q_CONTROL";
+	case IONIC_CMD_RDMA_RESET_LIF:
+		return "IONIC_CMD_RDMA_RESET_LIF";
+	case IONIC_CMD_RDMA_CREATE_EQ:
+		return "IONIC_CMD_RDMA_CREATE_EQ";
+	case IONIC_CMD_RDMA_CREATE_CQ:
+		return "IONIC_CMD_RDMA_CREATE_CQ";
+	case IONIC_CMD_RDMA_CREATE_ADMINQ:
+		return "IONIC_CMD_RDMA_CREATE_ADMINQ";
+	case IONIC_CMD_FW_DOWNLOAD:
+		return "IONIC_CMD_FW_DOWNLOAD";
+	case IONIC_CMD_FW_CONTROL:
+		return "IONIC_CMD_FW_CONTROL";
 	default:
 		return "DEVCMD_UNKNOWN";
 	}
@@ -315,7 +315,7 @@ static void
 ionic_adminq_flush(struct ionic_lif *lif)
 {
 	struct ionic_adminq *adminq = lif->adminq;
-	struct admin_cmd *cmd;
+	struct ionic_admin_cmd *cmd;
 	struct ionic_admin_ctx *ctx;
 	int cmd_index;
 
@@ -388,7 +388,7 @@ static int
 ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
 {
 	struct ionic_adminq *adminq = lif->adminq;
-	struct admin_cmd *cmd;
+	struct ionic_admin_cmd *cmd;
 
 	KASSERT(IONIC_LIF_LOCK_OWNED(lif), ("%s lif not locked", lif->name));
 	IONIC_ADMIN_LOCK(adminq);
@@ -494,7 +494,7 @@ int
 ionic_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int i, err, nwords;
 
 	ident->drv.os_type = IONIC_OS_TYPE_FREEBSD;
@@ -564,7 +564,7 @@ int
 ionic_port_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int i, err, nwords;
 
 	IONIC_DEV_LOCK(ionic);
@@ -584,8 +584,8 @@ int
 ionic_port_init(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
-	union port_config *config;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_port_config *config;
 	int i, err, nwords;
 
 	if (idev->port_info)
@@ -599,7 +599,7 @@ ionic_port_init(struct ionic *ionic)
 		return (-ENOMEM);
 	}
 
-	idev->port_info = (struct port_info *)ionic->port_dma.dma_vaddr;
+	idev->port_info = (struct ionic_port_info *)ionic->port_dma.dma_vaddr;
 	if (!idev->port_info) {
 		IONIC_DEV_ERROR(ionic->dev, "Failed to allocate port info, aborting\n");
 		return (-ENOMEM);
@@ -611,7 +611,7 @@ ionic_port_init(struct ionic *ionic)
 	config = &ident->port.config;
 
 	if (!ionic->is_mgmt_nic)
-		config->state = PORT_ADMIN_STATE_UP;
+		config->state = IONIC_PORT_ADMIN_STATE_UP;
 	for (i = 0; i < nwords; i++)
 		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
 
@@ -673,7 +673,7 @@ int
 ionic_qos_class_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	int i, err, nwords;
 
 	IONIC_DEV_LOCK(ionic);
@@ -692,8 +692,8 @@ ionic_qos_class_identify(struct ionic *ionic)
 int
 ionic_qos_init(struct ionic *ionic)
 {
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int i, tc, max_tcs, err;
 	uint8_t dscp;
 
@@ -734,7 +734,7 @@ ionic_qos_init(struct ionic *ionic)
 }
 
 static int
-ionic_qos_tc_init(struct ionic *ionic, int tc, union qos_config *qos)
+ionic_qos_tc_init(struct ionic *ionic, int tc, union ionic_qos_config *qos)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
@@ -760,7 +760,7 @@ ionic_qos_tc_init(struct ionic *ionic, int tc, union qos_config *qos)
 }
 
 static int
-ionic_qos_tc_update(struct ionic *ionic, int tc, union qos_config *qos)
+ionic_qos_tc_update(struct ionic *ionic, int tc, union ionic_qos_config *qos)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
@@ -800,18 +800,18 @@ ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
 }
 
 static void
-ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
+ionic_qos_set_default(struct ionic_lif *lif, int tc, union ionic_qos_config *qos)
 {
 	struct ionic *ionic = lif->ionic;
-	struct identity *ident = &ionic->ident;
+	struct ionic_identity *ident = &ionic->ident;
 	uint8_t pause_type;
 	int i, pcp_to_tc_map[IONIC_QOS_PCP_MAX] = {-1};
 	int def_pcp = -1;
 	bool tc_pcp_available = true;
 
 	pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
-	if (pause_type != PORT_PAUSE_TYPE_PFC)
-		qos->pause_type = PORT_PAUSE_TYPE_LINK;
+	if (pause_type != IONIC_PORT_PAUSE_TYPE_PFC)
+		qos->pause_type = IONIC_PORT_PAUSE_TYPE_LINK;
 	else
 		qos->pause_type = pause_type;
 
@@ -841,7 +841,7 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	if(def_pcp != -1)
 		qos->dot1q_pcp = def_pcp;
 
-	qos->sched_type = QOS_SCHED_TYPE_DWRR;
+	qos->sched_type = IONIC_QOS_SCHED_TYPE_DWRR;
 	qos->dwrr_weight = 25; /* TODO: set this to 0 when bw_perc is enabled */
 
 	IONIC_NETDEV_INFO(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d "
@@ -857,8 +857,8 @@ ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
@@ -868,7 +868,7 @@ ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc)
 			continue;
 		}
 
-		if (qos->sched_type != QOS_SCHED_TYPE_DWRR) {
+		if (qos->sched_type != IONIC_QOS_SCHED_TYPE_DWRR) {
 			IONIC_NETDEV_ERROR(ifp,
 			    "First set QoS TC: %d policy to DWRR\n", tc);
 			return (EINVAL);
@@ -897,8 +897,8 @@ ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int i, tc, error;
 	uint8_t new_pcp;
 	bool update;
@@ -914,11 +914,11 @@ ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp)
 		 * TODO: remove this once DSCP classification type is supported
 		 * Default it to PCP until then
 		 */
-		if (qos->class_type == QOS_CLASS_TYPE_NONE) {
-			qos->class_type = QOS_CLASS_TYPE_PCP;
+		if (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) {
+			qos->class_type = IONIC_QOS_CLASS_TYPE_PCP;
 		}
 
-		if (qos->class_type != QOS_CLASS_TYPE_PCP) {
+		if (qos->class_type != IONIC_QOS_CLASS_TYPE_PCP) {
 			IONIC_NETDEV_WARN(ifp,
 			    "Current policy(%d) is not PCP for TC: %d\n",
 			    	qos->class_type, tc);
@@ -959,8 +959,8 @@ ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
@@ -993,8 +993,8 @@ ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int i, tc, error, ndscp;
 	uint8_t new_dscp[IONIC_QOS_DSCP_MAX];
 
@@ -1005,7 +1005,7 @@ ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 			continue;
 		}
 
-		if (qos->class_type != QOS_CLASS_TYPE_DSCP) {
+		if (qos->class_type != IONIC_QOS_CLASS_TYPE_DSCP) {
 			IONIC_NETDEV_WARN(ifp,
 			    "Current policy(%d) is not DSCP for TC: %d\n",
 			    	qos->class_type, tc);
@@ -1045,8 +1045,8 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
@@ -1067,8 +1067,8 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 		ionic_qos_set_default(lif, tc, qos);
 		qos->flags |= IONIC_QOS_CONFIG_F_ENABLE;
 
-		qos->class_type = (lif->ionic->qos.class_type == QOS_CLASS_TYPE_NONE) ?
-			QOS_CLASS_TYPE_PCP : lif->ionic->qos.class_type;
+		qos->class_type = (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE) ?
+			IONIC_QOS_CLASS_TYPE_PCP : lif->ionic->qos.class_type;
 
 		error = ionic_qos_tc_init(ionic, tc, qos);
 		if (error) {
@@ -1087,8 +1087,8 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
@@ -1124,9 +1124,9 @@ ionic_qos_sched_type_update(struct ionic_lif *lif, uint8_t *sched)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
-	enum qos_sched_type sched_type;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
+	enum ionic_qos_sched_type sched_type;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
@@ -1136,9 +1136,9 @@ ionic_qos_sched_type_update(struct ionic_lif *lif, uint8_t *sched)
 			continue;
 
 		if (sched[tc])
-			sched_type = QOS_SCHED_TYPE_DWRR;
+			sched_type = IONIC_QOS_SCHED_TYPE_DWRR;
 		else
-			sched_type = QOS_SCHED_TYPE_STRICT;
+			sched_type = IONIC_QOS_SCHED_TYPE_STRICT;
 		if (qos->sched_type == sched_type)
 			continue;
 
@@ -1158,12 +1158,12 @@ ionic_qos_sched_type_update(struct ionic_lif *lif, uint8_t *sched)
 
 int
 ionic_qos_class_type_update(struct ionic_lif *lif,
-    enum qos_class_type class)
+    enum ionic_qos_class_type class)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ifnet *ifp = lif->netdev;
-	struct identity *ident = &ionic->ident;
-	union qos_config *qos;
+	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *qos;
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);

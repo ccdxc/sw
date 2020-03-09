@@ -79,22 +79,22 @@ const char *
 EthLif::opcode_to_str(cmd_opcode_t opcode)
 {
     switch (opcode) {
-        CASE(CMD_OPCODE_NOP);
-        CASE(CMD_OPCODE_LIF_IDENTIFY);
-        CASE(CMD_OPCODE_LIF_GETATTR);
-        CASE(CMD_OPCODE_LIF_SETATTR);
-        CASE(CMD_OPCODE_RX_MODE_SET);
-        CASE(CMD_OPCODE_RX_FILTER_ADD);
-        CASE(CMD_OPCODE_RX_FILTER_DEL);
-        CASE(CMD_OPCODE_Q_IDENTIFY);
-        CASE(CMD_OPCODE_Q_INIT);
-        CASE(CMD_OPCODE_Q_CONTROL);
-        CASE(CMD_OPCODE_RDMA_RESET_LIF);
-        CASE(CMD_OPCODE_RDMA_CREATE_EQ);
-        CASE(CMD_OPCODE_RDMA_CREATE_CQ);
-        CASE(CMD_OPCODE_RDMA_CREATE_ADMINQ);
-        CASE(CMD_OPCODE_FW_DOWNLOAD);
-        CASE(CMD_OPCODE_FW_CONTROL);
+        CASE(IONIC_CMD_NOP);
+        CASE(IONIC_CMD_LIF_IDENTIFY);
+        CASE(IONIC_CMD_LIF_GETATTR);
+        CASE(IONIC_CMD_LIF_SETATTR);
+        CASE(IONIC_CMD_RX_MODE_SET);
+        CASE(IONIC_CMD_RX_FILTER_ADD);
+        CASE(IONIC_CMD_RX_FILTER_DEL);
+        CASE(IONIC_CMD_Q_IDENTIFY);
+        CASE(IONIC_CMD_Q_INIT);
+        CASE(IONIC_CMD_Q_CONTROL);
+        CASE(IONIC_CMD_RDMA_RESET_LIF);
+        CASE(IONIC_CMD_RDMA_CREATE_EQ);
+        CASE(IONIC_CMD_RDMA_CREATE_CQ);
+        CASE(IONIC_CMD_RDMA_CREATE_ADMINQ);
+        CASE(IONIC_CMD_FW_DOWNLOAD);
+        CASE(IONIC_CMD_FW_CONTROL);
         default: return "UNKNOWN";
     }
 }
@@ -208,26 +208,26 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     AddLifMetrics();
 
     // Lif Config
-    lif_config_addr = pd->nicmgr_mem_alloc(sizeof(union lif_config));
+    lif_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_lif_config));
     host_lif_config_addr = 0;
-    lif_config = (union lif_config *)MEM_MAP(lif_config_addr, sizeof(union lif_config), 0);
+    lif_config = (union ionic_lif_config *)MEM_MAP(lif_config_addr, sizeof(union ionic_lif_config), 0);
     if (lif_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(lif_config_addr, lif_config, sizeof(union lif_config), skip_hwinit);
+    MEM_CLR(lif_config_addr, lif_config, sizeof(union ionic_lif_config), skip_hwinit);
 
     NIC_LOG_INFO("{}: lif_config_addr {:#x}", hal_lif_info_.name, lif_config_addr);
 
     // Lif Status
-    lif_status_addr = pd->nicmgr_mem_alloc(sizeof(struct lif_status));
+    lif_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_lif_status));
     host_lif_status_addr = 0;
-    lif_status = (struct lif_status *)MEM_MAP(lif_status_addr, sizeof(struct lif_status), 0);
+    lif_status = (struct ionic_lif_status *)MEM_MAP(lif_status_addr, sizeof(struct ionic_lif_status), 0);
     if (lif_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(lif_status_addr, lif_status, sizeof(struct lif_status), skip_hwinit);
+    MEM_CLR(lif_status_addr, lif_status, sizeof(struct ionic_lif_status), skip_hwinit);
 
     NIC_LOG_INFO("{}: lif_status_addr {:#x}", hal_lif_info_.name, lif_status_addr);
 
@@ -235,12 +235,12 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     notify_enabled = 0;
     notify_ring_head = 0;
     notify_ring_base =
-        pd->nicmgr_mem_alloc(4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE));
+        pd->nicmgr_mem_alloc(4096 + (sizeof(union ionic_notifyq_comp) * ETH_NOTIFYQ_RING_SIZE));
     if (notify_ring_base == 0) {
         NIC_LOG_ERR("{}: Failed to allocate notify ring!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE),
+    MEM_CLR(notify_ring_base, 0, 4096 + (sizeof(union ionic_notifyq_comp) * ETH_NOTIFYQ_RING_SIZE),
             skip_hwinit);
 
     NIC_LOG_INFO("{}: notify_ring_base {:#x}", hal_lif_info_.name, notify_ring_base);
@@ -328,7 +328,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
     uint64_t addr;
-    struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
+    struct ionic_lif_init_cmd *cmd = (struct ionic_lif_init_cmd *)req;
     enum eth_lif_state pre_state;
 
     NIC_LOG_DEBUG("{}: LIF_INIT", hal_lif_info_.name);
@@ -431,7 +431,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     // Initialize NotifyQ
     notify_enabled = 0;
     notify_ring_head = 0;
-    MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
+    MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union ionic_notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
 
     // Initialize EDMA service
     if (!edmaq->Init(0, admin_cosA, admin_cosB)) {
@@ -453,13 +453,13 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     if (cmd->info_pa) {
         NIC_LOG_INFO("{}: host_lif_info_addr {:#x}", hal_lif_info_.name, cmd->info_pa);
 
-        host_lif_config_addr = cmd->info_pa + offsetof(struct lif_info, config);
+        host_lif_config_addr = cmd->info_pa + offsetof(struct ionic_lif_info, config);
         NIC_LOG_INFO("{}: host_lif_config_addr {:#x}", hal_lif_info_.name, host_lif_config_addr);
 
-        host_lif_status_addr = cmd->info_pa + offsetof(struct lif_info, status);
+        host_lif_status_addr = cmd->info_pa + offsetof(struct ionic_lif_info, status);
         NIC_LOG_INFO("{}: host_lif_status_addr {:#x}", hal_lif_info_.name, host_lif_status_addr);
 
-        host_lif_stats_addr = cmd->info_pa + offsetof(struct lif_info, stats);
+        host_lif_stats_addr = cmd->info_pa + offsetof(struct ionic_lif_info, stats);
         NIC_LOG_INFO("{}: host_lif_stats_addr {:#x}", hal_lif_info_.name, host_lif_stats_addr);
 
         evutil_timer_start(EV_A_ & stats_timer, &EthLif::StatsUpdate, this, 0.0, 0.2);
@@ -470,10 +470,10 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Init the stats region
     MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-    p4plus_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats),
+    p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
                             P4PLUS_CACHE_INVALIDATE_BOTH);
-    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
-    p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
+    p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
+    p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
 
     state = LIF_STATE_INIT;
 
@@ -662,7 +662,7 @@ void
 EthLif::AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *resp_data)
 {
     EthLif *lif = (EthLif *)obj;
-    union dev_cmd *cmd = (union dev_cmd *)req;
+    union ionic_dev_cmd *cmd = (union ionic_dev_cmd *)req;
 
     if (cmd->cmd.lif_index == lif->res->lif_index) {
         lif->CmdHandler(req, req_data, resp, resp_data);
@@ -676,8 +676,8 @@ EthLif::AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *
 status_code_t
 EthLif::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union dev_cmd *cmd = (union dev_cmd *)req;
-    union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
+    union ionic_dev_cmd *cmd = (union ionic_dev_cmd *)req;
+    union ionic_dev_cmd_comp *comp = (union ionic_dev_cmd_comp *)resp;
     status_code_t status = IONIC_RC_SUCCESS;
 
     if (cmd->cmd.lif_index != res->lif_index) {
@@ -687,70 +687,70 @@ EthLif::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
         goto out;
     }
 
-    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+    if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
         NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
                       opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
     }
 
     switch ((cmd_opcode_t)cmd->cmd.opcode) {
 
-    case CMD_OPCODE_NOP:
+    case IONIC_CMD_NOP:
         status = IONIC_RC_SUCCESS;
         break;
 
-    case CMD_OPCODE_LIF_GETATTR:
+    case IONIC_CMD_LIF_GETATTR:
         status = _CmdGetAttr(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_LIF_SETATTR:
+    case IONIC_CMD_LIF_SETATTR:
         status = _CmdSetAttr(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RX_MODE_SET:
+    case IONIC_CMD_RX_MODE_SET:
         status = _CmdRxSetMode(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RX_FILTER_ADD:
+    case IONIC_CMD_RX_FILTER_ADD:
         status = _CmdRxFilterAdd(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RX_FILTER_DEL:
+    case IONIC_CMD_RX_FILTER_DEL:
         status = _CmdRxFilterDel(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_Q_IDENTIFY:
+    case IONIC_CMD_Q_IDENTIFY:
         status = _CmdQIdentify(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_Q_INIT:
+    case IONIC_CMD_Q_INIT:
         status = _CmdQInit(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_Q_CONTROL:
+    case IONIC_CMD_Q_CONTROL:
         status = _CmdQControl(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RDMA_RESET_LIF:
+    case IONIC_CMD_RDMA_RESET_LIF:
         status = _CmdRDMAResetLIF(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_EQ:
+    case IONIC_CMD_RDMA_CREATE_EQ:
         status = _CmdRDMACreateEQ(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_CQ:
+    case IONIC_CMD_RDMA_CREATE_CQ:
         status = _CmdRDMACreateCQ(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+    case IONIC_CMD_RDMA_CREATE_ADMINQ:
         status = _CmdRDMACreateAdminQ(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_FW_DOWNLOAD:
+    case IONIC_CMD_FW_DOWNLOAD:
         status = _CmdFwDownload(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_FW_CONTROL:
+    case IONIC_CMD_FW_CONTROL:
         status = _CmdFwControl(req, req_data, resp, resp_data);
         break;
 
@@ -764,7 +764,7 @@ out:
     comp->comp.status = status;
     comp->comp.rsvd = 0xff;
 
-    if ((cmd_opcode_t)cmd->cmd.opcode != CMD_OPCODE_NOP) {
+    if ((cmd_opcode_t)cmd->cmd.opcode != IONIC_CMD_NOP) {
         NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", hal_lif_info_.name,
                       opcode_to_str((cmd_opcode_t)cmd->cmd.opcode), status);
     }
@@ -782,7 +782,7 @@ EthLif::CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct fw_download_cmd *cmd = (struct fw_download_cmd *)req;
+    struct ionic_fw_download_cmd *cmd = (struct ionic_fw_download_cmd *)req;
     FILE *file;
     int err;
     status_code_t status = IONIC_RC_SUCCESS;
@@ -901,7 +901,7 @@ err_out:
 status_code_t
 EthLif::_CmdFwControl(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct fw_control_cmd *cmd = (struct fw_control_cmd *)req;
+    struct ionic_fw_control_cmd *cmd = (struct ionic_fw_control_cmd *)req;
     status_code_t status = IONIC_RC_SUCCESS;
     int err;
     char buf[512] = {0};
@@ -962,7 +962,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     admin_qstate_t aq_state;
     intr_state_t intr_st;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_HANG_NOTIFY", hal_lif_info_.name);
+    NIC_LOG_DEBUG("{}: IONIC_CMD_HANG_NOTIFY", hal_lif_info_.name);
 
     if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
@@ -1059,17 +1059,17 @@ EthLif::_CmdQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union q_identity *ident = (union q_identity *)resp_data;
+    union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
     // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
     struct q_identify_comp *comp = (struct q_identify_comp *)resp;
 
-    memset(ident, 0, sizeof(union q_identity));
+    memset(ident, 0, sizeof(union ionic_q_identity));
 
     ident->version = 0;
     ident->supported = 1;
     ident->features = IONIC_QIDENT_F_CQ;
-    ident->desc_sz = sizeof(struct admin_cmd);
-    ident->comp_sz = sizeof(struct admin_comp);
+    ident->desc_sz = sizeof(struct ionic_admin_cmd);
+    ident->comp_sz = sizeof(struct ionic_admin_comp);
 
     comp->ver = ident->version;
 
@@ -1079,16 +1079,16 @@ EthLif::AdminQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::NotifyQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union q_identity *ident = (union q_identity *)resp_data;
+    union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
     // struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
     struct q_identify_comp *comp = (struct q_identify_comp *)resp;
 
-    memset(ident, 0, sizeof(union q_identity));
+    memset(ident, 0, sizeof(union ionic_q_identity));
 
     ident->version = 0;
     ident->supported = 1;
     ident->features = 0;
-    ident->desc_sz = sizeof(struct notifyq_event);
+    ident->desc_sz = sizeof(struct ionic_notifyq_event);
 
     comp->ver = ident->version;
 
@@ -1098,17 +1098,17 @@ EthLif::NotifyQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union q_identity *ident = (union q_identity *)resp_data;
+    union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
     struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
     struct q_identify_comp *comp = (struct q_identify_comp *)resp;
 
-    memset(ident, 0, sizeof(union q_identity));
+    memset(ident, 0, sizeof(union ionic_q_identity));
 
     ident->supported = 0x3;
     ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
-    ident->desc_sz = sizeof(struct rxq_desc);
-    ident->comp_sz = sizeof(struct rxq_comp);
-    ident->sg_desc_sz = sizeof(struct rxq_sg_desc);
+    ident->desc_sz = sizeof(struct ionic_rxq_desc);
+    ident->comp_sz = sizeof(struct ionic_rxq_comp);
+    ident->sg_desc_sz = sizeof(struct ionic_rxq_sg_desc);
     ident->max_sg_elems = IONIC_RX_MAX_SG_ELEMS;
     ident->sg_desc_stride = IONIC_RX_MAX_SG_ELEMS;
 
@@ -1130,37 +1130,37 @@ EthLif::RxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::TxQIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union q_identity *ident = (union q_identity *)resp_data;
+    union ionic_q_identity *ident = (union ionic_q_identity *)resp_data;
     struct q_identify_cmd *cmd = (struct q_identify_cmd *)req;
     struct q_identify_comp *comp = (struct q_identify_comp *)resp;
 
-    memset(ident, 0, sizeof(union q_identity));
+    memset(ident, 0, sizeof(union ionic_q_identity));
 
     ident->supported = 0x7;
     ident->features = IONIC_QIDENT_F_CQ | IONIC_QIDENT_F_SG;
-    ident->desc_sz = sizeof(struct txq_desc);
-    ident->comp_sz = sizeof(struct txq_comp);
+    ident->desc_sz = sizeof(struct ionic_txq_desc);
+    ident->comp_sz = sizeof(struct ionic_txq_comp);
 
     if (cmd->ver == 1) {
         ident->version = 1;
-        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->sg_desc_sz = sizeof(struct ionic_txq_sg_desc_v1);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
     } else if (cmd->ver == 2) {
         ident->version = 2;
         ident->features |= IONIC_QIDENT_F_EQ;
-        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->sg_desc_sz = sizeof(struct ionic_txq_sg_desc_v1);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
     } else if (cmd->ver == 3) {
         ident->version = 3;
         ident->features |= (IONIC_QIDENT_F_EQ | IONIC_QIDENT_F_CMB);
-        ident->sg_desc_sz = sizeof(struct txq_sg_desc_v1);
+        ident->sg_desc_sz = sizeof(struct ionic_txq_sg_desc_v1);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS_V1;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE_V1;
     } else {
         ident->version = 0;
-        ident->sg_desc_sz = sizeof(struct txq_sg_desc);
+        ident->sg_desc_sz = sizeof(struct ionic_txq_sg_desc);
         ident->max_sg_elems = IONIC_TX_MAX_SG_ELEMS;
         ident->sg_desc_stride = IONIC_TX_SG_DESC_STRIDE;
     }
@@ -1174,7 +1174,7 @@ status_code_t
 EthLif::_CmdQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     status_code_t ret = IONIC_RC_ERROR;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
 
     switch (cmd->type) {
     case IONIC_QTYPE_ADMINQ:
@@ -1205,8 +1205,8 @@ status_code_t
 EthLif::EQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
+    struct ionic_q_init_comp *comp = (struct ionic_q_init_comp *)resp;
     eth_eq_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
@@ -1292,8 +1292,8 @@ status_code_t
 EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
+    struct ionic_q_init_comp *comp = (struct ionic_q_init_comp *)resp;
     eth_tx_co_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG(
@@ -1415,12 +1415,12 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.tx.sta.color = 1;
 
-    qstate.tx.lg2_desc_sz = log2(sizeof(struct txq_desc));
-    qstate.tx.lg2_cq_desc_sz = log2(sizeof(struct txq_comp));
+    qstate.tx.lg2_desc_sz = log2(sizeof(struct ionic_txq_desc));
+    qstate.tx.lg2_cq_desc_sz = log2(sizeof(struct ionic_txq_comp));
     if (cmd->ver == 0) {
-        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc));
+        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct ionic_txq_sg_desc));
     } else {
-        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct txq_sg_desc_v1));
+        qstate.tx.lg2_sg_desc_sz = log2(sizeof(struct ionic_txq_sg_desc_v1));
     }
 
     if (spec->host_dev) {
@@ -1466,8 +1466,8 @@ status_code_t
 EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
+    struct ionic_q_init_comp *comp = (struct ionic_q_init_comp *)resp;
     eth_rx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG(
@@ -1608,9 +1608,9 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         qstate.intr_index_or_eq_addr = res->intr_base + cmd->intr_index;
     }
 
-    qstate.lg2_desc_sz = log2(sizeof(struct rxq_desc));
-    qstate.lg2_cq_desc_sz = log2(sizeof(struct rxq_comp));
-    qstate.lg2_sg_desc_sz = log2(sizeof(struct rxq_sg_desc));
+    qstate.lg2_desc_sz = log2(sizeof(struct ionic_rxq_desc));
+    qstate.lg2_cq_desc_sz = log2(sizeof(struct ionic_rxq_comp));
+    qstate.lg2_sg_desc_sz = log2(sizeof(struct ionic_rxq_sg_desc));
     qstate.sg_max_elems = IONIC_RX_MAX_SG_ELEMS;
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
@@ -1629,8 +1629,8 @@ status_code_t
 EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
+    struct ionic_q_init_comp *comp = (struct ionic_q_init_comp *)resp;
 
     NIC_LOG_INFO("{}: {}: "
                  "type {} ver {} index {} ring_base {:#x} ring_size {} intr_index {} "
@@ -1707,7 +1707,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     else
         host_ring_base = cmd->ring_base;
     qstate.host_ring_base =
-        roundup(host_ring_base + (sizeof(notifyq_comp) << cmd->ring_size), 4096);
+        roundup(host_ring_base + (sizeof(union ionic_notifyq_comp) << cmd->ring_size), 4096);
     qstate.host_ring_size = cmd->ring_size;
     if (cmd->flags & IONIC_QINIT_F_IRQ)
         qstate.host_intr_assert_index = res->intr_base + cmd->intr_index;
@@ -1732,8 +1732,8 @@ status_code_t
 EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr, nicmgr_qstate_addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
+    struct ionic_q_init_cmd *cmd = (struct ionic_q_init_cmd *)req;
+    struct ionic_q_init_comp *comp = (struct ionic_q_init_comp *)resp;
 
     NIC_LOG_DEBUG("{}: {}: "
                   "type {} ver {} index {} ring_base {:#x} ring_size {} intr_index {} "
@@ -1844,17 +1844,21 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
-    struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;
+    struct ionic_lif_setattr_cmd *cmd = (struct ionic_lif_setattr_cmd *)req;
+    struct ionic_lif_setattr_comp *comp = (struct ionic_lif_setattr_comp *)resp;
     sdk_ret_t ret = SDK_RET_OK;
 
     NIC_LOG_DEBUG(
         "{}: wanted "
         "vlan_strip {} vlan_insert {} rx_csum {} tx_csum {} rx_hash {} tx_sg {} rx_sg {}",
-        hal_lif_info_.name, (cmd->features & ETH_HW_VLAN_RX_STRIP) ? 1 : 0,
-        (cmd->features & ETH_HW_VLAN_TX_TAG) ? 1 : 0, (cmd->features & ETH_HW_RX_CSUM) ? 1 : 0,
-        (cmd->features & ETH_HW_TX_CSUM) ? 1 : 0, (cmd->features & ETH_HW_RX_HASH) ? 1 : 0,
-        (cmd->features & ETH_HW_TX_SG) ? 1 : 0, (cmd->features & ETH_HW_RX_SG) ? 1 : 0);
+        hal_lif_info_.name,
+        (cmd->features & IONIC_ETH_HW_VLAN_RX_STRIP) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_VLAN_TX_TAG) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_RX_CSUM) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_TX_CSUM) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_RX_HASH) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_TX_SG) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_RX_SG) ? 1 : 0);
 
     if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
@@ -1864,12 +1868,19 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
     DEVAPI_CHECK
 
     comp->status = 0;
-    comp->features = (ETH_HW_VLAN_RX_STRIP | ETH_HW_VLAN_TX_TAG | ETH_HW_VLAN_RX_FILTER |
-                      ETH_HW_RX_CSUM | ETH_HW_TX_CSUM | ETH_HW_RX_HASH | ETH_HW_TX_SG |
-                      ETH_HW_RX_SG | ETH_HW_TSO | ETH_HW_TSO_IPV6);
+    comp->features = (IONIC_ETH_HW_VLAN_RX_STRIP |
+                      IONIC_ETH_HW_VLAN_TX_TAG |
+                      IONIC_ETH_HW_VLAN_RX_FILTER |
+                      IONIC_ETH_HW_RX_CSUM |
+                      IONIC_ETH_HW_TX_CSUM |
+                      IONIC_ETH_HW_RX_HASH |
+                      IONIC_ETH_HW_TX_SG |
+                      IONIC_ETH_HW_RX_SG |
+                      IONIC_ETH_HW_TSO |
+                      IONIC_ETH_HW_TSO_IPV6);
 
-    bool vlan_strip = cmd->features & comp->features & ETH_HW_VLAN_RX_STRIP;
-    bool vlan_insert = cmd->features & comp->features & ETH_HW_VLAN_TX_TAG;
+    bool vlan_strip = cmd->features & comp->features & IONIC_ETH_HW_VLAN_RX_STRIP;
+    bool vlan_insert = cmd->features & comp->features & IONIC_ETH_HW_VLAN_TX_TAG;
 
     ret = dev_api->lif_upd_vlan_offload(hal_lif_info_.lif_id, vlan_strip, vlan_insert);
     if (ret != SDK_RET_OK) {
@@ -1887,8 +1898,8 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct lif_getattr_cmd *cmd = (struct lif_getattr_cmd *)req;
-    struct lif_getattr_comp *comp = (struct lif_getattr_comp *)resp;
+    struct ionic_lif_getattr_cmd *cmd = (struct ionic_lif_getattr_cmd *)req;
+    struct ionic_lif_getattr_comp *comp = (struct ionic_lif_getattr_comp *)resp;
     uint64_t mac_addr;
 
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str((cmd_opcode_t)cmd->opcode),
@@ -1927,7 +1938,7 @@ EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
+    struct ionic_lif_setattr_cmd *cmd = (struct ionic_lif_setattr_cmd *)req;
     union {
         eth_qstate_cfg_t eth;
     } cfg = {0};
@@ -2004,12 +2015,12 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         return RssConfig(req, req_data, resp, resp_data);
     case IONIC_LIF_ATTR_STATS_CTRL:
         switch (cmd->stats_ctl) {
-        case STATS_CTL_RESET:
+        case IONIC_STATS_CTL_RESET:
             MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-            p4plus_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats),
+            p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
                                     P4PLUS_CACHE_INVALIDATE_BOTH);
-            p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
-            p4_invalidate_cache(lif_stats_addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
+            p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
+            p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
             break;
         default:
             NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_LIF_ATTR_STATS_CTRL", hal_lif_info_.name,
@@ -2029,7 +2040,7 @@ status_code_t
 EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr, off;
-    struct q_control_cmd *cmd = (struct q_control_cmd *)req;
+    struct ionic_q_control_cmd *cmd = (struct ionic_q_control_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
     union {
         eth_qstate_cfg_t eth;
@@ -2193,18 +2204,18 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct rx_mode_set_cmd *cmd = (struct rx_mode_set_cmd *)req;
+    struct ionic_rx_mode_set_cmd *cmd = (struct ionic_rx_mode_set_cmd *)req;
     // rx_mode_set_comp *comp = (rx_mode_set_comp *)resp;
     sdk_ret_t ret = SDK_RET_OK;
 
     NIC_LOG_DEBUG("{}: {}: rx_mode {} {}{}{}{}{}{}", hal_lif_info_.name,
                   opcode_to_str((cmd_opcode_t)cmd->opcode), cmd->rx_mode,
-                  cmd->rx_mode & RX_MODE_F_UNICAST ? 'u' : '-',
-                  cmd->rx_mode & RX_MODE_F_MULTICAST ? 'm' : '-',
-                  cmd->rx_mode & RX_MODE_F_BROADCAST ? 'b' : '-',
-                  cmd->rx_mode & RX_MODE_F_PROMISC ? 'p' : '-',
-                  cmd->rx_mode & RX_MODE_F_ALLMULTI ? 'a' : '-',
-                  cmd->rx_mode & RX_MODE_F_RDMA_SNIFFER ? 'r' : '-');
+                  cmd->rx_mode & IONIC_RX_MODE_F_UNICAST ? 'u' : '-',
+                  cmd->rx_mode & IONIC_RX_MODE_F_MULTICAST ? 'm' : '-',
+                  cmd->rx_mode & IONIC_RX_MODE_F_BROADCAST ? 'b' : '-',
+                  cmd->rx_mode & IONIC_RX_MODE_F_PROMISC ? 'p' : '-',
+                  cmd->rx_mode & IONIC_RX_MODE_F_ALLMULTI ? 'a' : '-',
+                  cmd->rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER ? 'r' : '-');
 
     if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
@@ -2215,9 +2226,9 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
 
     DEVAPI_CHECK
 
-    bool broadcast = cmd->rx_mode & RX_MODE_F_BROADCAST;
-    bool all_multicast = cmd->rx_mode & RX_MODE_F_ALLMULTI;
-    bool promiscuous = cmd->rx_mode & RX_MODE_F_PROMISC;
+    bool broadcast = cmd->rx_mode & IONIC_RX_MODE_F_BROADCAST;
+    bool all_multicast = cmd->rx_mode & IONIC_RX_MODE_F_ALLMULTI;
+    bool promiscuous = cmd->rx_mode & IONIC_RX_MODE_F_PROMISC;
 
     ret = dev_api->lif_upd_rx_mode(hal_lif_info_.lif_id, broadcast, all_multicast, promiscuous);
     if (ret != SDK_RET_OK) {
@@ -2225,7 +2236,7 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    bool rdma_sniffer_en = cmd->rx_mode & RX_MODE_F_RDMA_SNIFFER;
+    bool rdma_sniffer_en = cmd->rx_mode & IONIC_RX_MODE_F_RDMA_SNIFFER;
     ret = dev_api->lif_upd_rdma_sniff(hal_lif_info_.lif_id, rdma_sniffer_en);
     if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to update rdma sniffer mode", hal_lif_info_.name);
@@ -2242,8 +2253,8 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     uint64_t mac_addr;
     uint16_t vlan;
     uint32_t filter_id = 0;
-    struct rx_filter_add_cmd *cmd = (struct rx_filter_add_cmd *)req;
-    struct rx_filter_add_comp *comp = (struct rx_filter_add_comp *)resp;
+    struct ionic_rx_filter_add_cmd *cmd = (struct ionic_rx_filter_add_cmd *)req;
+    struct ionic_rx_filter_add_comp *comp = (struct ionic_rx_filter_add_comp *)resp;
     sdk_ret_t ret = SDK_RET_OK;
 
     if (!IsLifInitialized()) {
@@ -2253,7 +2264,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 
     DEVAPI_CHECK
 
-    if (cmd->match == RX_FILTER_MATCH_MAC) {
+    if (cmd->match == IONIC_RX_FILTER_MATCH_MAC) {
 
         memcpy((uint8_t *)&mac_addr, (uint8_t *)&cmd->mac.addr, sizeof(cmd->mac.addr));
         mac_addr = be64toh(mac_addr) >> (8 * sizeof(mac_addr) - 8 * sizeof(cmd->mac.addr));
@@ -2276,7 +2287,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
             return (IONIC_RC_ERROR);
         }
         mac_addrs[filter_id] = mac_addr;
-    } else if (cmd->match == RX_FILTER_MATCH_VLAN) {
+    } else if (cmd->match == IONIC_RX_FILTER_MATCH_VLAN) {
         vlan = cmd->vlan.vlan;
 
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_VLAN vlan {}", hal_lif_info_.name, vlan);
@@ -2334,7 +2345,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     sdk_ret_t ret;
     uint64_t mac_addr;
     uint16_t vlan;
-    struct rx_filter_del_cmd *cmd = (struct rx_filter_del_cmd *)req;
+    struct ionic_rx_filter_del_cmd *cmd = (struct ionic_rx_filter_del_cmd *)req;
     // struct rx_filter_del_comp *comp = (struct rx_filter_del_comp *)resp;
     indexer::status rs;
 
@@ -2384,8 +2395,8 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
-    // struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;z
+    struct ionic_lif_setattr_cmd *cmd = (struct ionic_lif_setattr_cmd *)req;
+    // struct ionic_lif_setattr_comp *comp = (struct ionic_lif_setattr_comp *)resp;z
     bool posted;
 
     if (!IsLifInitialized()) {
@@ -2454,7 +2465,7 @@ status_code_t
 EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
 {
     uint64_t addr;
-    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *)req;
+    struct ionic_rdma_queue_cmd *cmd = (struct ionic_rdma_queue_cmd *)req;
     uint64_t lif_id = hal_lif_info_.lif_id + cmd->lif_index;
 
     NIC_LOG_DEBUG("{}: {}: lif {} ", hal_lif_info_.name, opcode_to_str((cmd_opcode_t)cmd->opcode),
@@ -2532,7 +2543,7 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *)req;
+    struct ionic_rdma_queue_cmd *cmd = (struct ionic_rdma_queue_cmd *)req;
     eqcb_t eqcb;
     int64_t addr;
     uint64_t lif_id = hal_lif_info_.lif_id + cmd->lif_index;
@@ -2573,7 +2584,7 @@ EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *)req;
+    struct ionic_rdma_queue_cmd *cmd = (struct ionic_rdma_queue_cmd *)req;
     uint32_t num_cq_wqes, cqwqe_size;
     cqcb_t cqcb;
     uint8_t offset;
@@ -2649,7 +2660,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *)req;
+    struct ionic_rdma_queue_cmd *cmd = (struct ionic_rdma_queue_cmd *)req;
     int ret;
     aqcb_t aqcb;
     uint8_t offset;
@@ -2744,13 +2755,13 @@ EthLif::LinkEventHandler(port_status_t *evd)
     // drop the event if the lif is not initialized
     if (!IsLifInitialized()) {
         NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state),
-                     (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
+                     (evd->status == IONIC_PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
                      lif_state_to_str(state));
         return;
     }
 
     enum eth_lif_state next_state =
-        (evd->status == PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
+        (evd->status == IONIC_PORT_OPER_STATUS_UP) ? LIF_STATE_UP : LIF_STATE_DOWN;
 
     // Update local lif status
     lif_status->link_status = evd->status;
@@ -2758,16 +2769,16 @@ EthLif::LinkEventHandler(port_status_t *evd)
     ++lif_status->eid;
     if (state == LIF_STATE_UP && next_state == LIF_STATE_DOWN)
         ++lif_status->link_down_count;
-    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
+    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
 
     // Update host lif status
     if (host_lif_status_addr != 0) {
         edmaq->Post(spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                    lif_status_addr, host_lif_status_addr, sizeof(struct lif_status), NULL);
+                    lif_status_addr, host_lif_status_addr, sizeof(struct ionic_lif_status), NULL);
     }
 
     NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state),
-                 (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
+                 (evd->status == IONIC_PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
                  lif_state_to_str(next_state));
 
     state = next_state;
@@ -2783,15 +2794,15 @@ EthLif::LinkEventHandler(port_status_t *evd)
     asic_db_addr_t db_addr = { 0 };
 
     // Send the link event notification
-    struct link_change_event msg = {
+    struct ionic_link_change_event msg = {
         .eid = lif_status->eid,
-        .ecode = EVENT_OPCODE_LINK_CHANGE,
+        .ecode = IONIC_EVENT_LINK_CHANGE,
         .link_status = evd->status,
         .link_speed = evd->speed,
     };
 
-    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
-    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
+    addr = notify_ring_base + notify_ring_head * sizeof(union ionic_notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union ionic_notifyq_comp), 0);
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
@@ -2833,13 +2844,13 @@ EthLif::XcvrEventHandler(port_status_t *evd)
     ++lif_status->eid;
 
     // Send the xcvr notification
-    struct xcvr_event msg = {
+    struct ionic_xcvr_event msg = {
         .eid = lif_status->eid,
-        .ecode = EVENT_OPCODE_XCVR,
+        .ecode = IONIC_EVENT_XCVR,
     };
 
-    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
-    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
+    addr = notify_ring_base + notify_ring_head * sizeof(union ionic_notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union ionic_notifyq_comp), 0);
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
@@ -2869,12 +2880,12 @@ EthLif::SendFWDownEvent()
     lif_status->link_status = 0;
     lif_status->link_speed = 0;
     ++lif_status->eid;
-    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
+    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
 
     // Update host lif status
     if (host_lif_status_addr != 0) {
         edmaq->Post(spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                    lif_status_addr, host_lif_status_addr, sizeof(struct lif_status), NULL);
+                    lif_status_addr, host_lif_status_addr, sizeof(struct ionic_lif_status), NULL);
     }
 
     if (notify_enabled == 0) {
@@ -2886,15 +2897,15 @@ EthLif::SendFWDownEvent()
     asic_db_addr_t db_addr = { 0 };
 
     // Send the link event notification
-    struct reset_event msg = {
+    struct ionic_reset_event msg = {
         .eid = lif_status->eid,
-        .ecode = EVENT_OPCODE_RESET,
+        .ecode = IONIC_EVENT_RESET,
         .reset_code = 0, // FIXME: not sure what to program here
         .state = 1,      // reset complete
     };
 
-    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
-    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
+    addr = notify_ring_base + notify_ring_head * sizeof(union ionic_notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union ionic_notifyq_comp), 0);
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
@@ -2935,7 +2946,7 @@ EthLif::StatsUpdate(void *obj)
     if (eth->lif_stats_addr != 0 && eth->host_lif_stats_addr != 0) {
         auto posted = eth->edmaq_async->Post(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->lif_stats_addr, eth->host_lif_stats_addr, sizeof(struct lif_stats), &ctx);
+            eth->lif_stats_addr, eth->host_lif_stats_addr, sizeof(struct ionic_lif_stats), &ctx);
         if (posted)
             evutil_timer_stop(eth->loop, &eth->stats_timer);
     }

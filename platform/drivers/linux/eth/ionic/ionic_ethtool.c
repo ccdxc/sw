@@ -132,27 +132,27 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 
 	switch (le16_to_cpu(idev->port_info->status.xcvr.pid)) {
 		/* Copper */
-	case XCVR_PID_QSFP_100G_CR4:
+	case IONIC_XCVR_PID_QSFP_100G_CR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     100000baseCR4_Full);
 		copper_seen++;
 		break;
-	case XCVR_PID_QSFP_40GBASE_CR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_CR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     40000baseCR4_Full);
 		copper_seen++;
 		break;
 #ifdef HAVE_ETHTOOL_25G_BITS
-	case XCVR_PID_SFP_25GBASE_CR_S:
-	case XCVR_PID_SFP_25GBASE_CR_L:
-	case XCVR_PID_SFP_25GBASE_CR_N:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_S:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_L:
+	case IONIC_XCVR_PID_SFP_25GBASE_CR_N:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     25000baseCR_Full);
 		copper_seen++;
 		break;
 #endif
-	case XCVR_PID_SFP_10GBASE_AOC:
-	case XCVR_PID_SFP_10GBASE_CU:
+	case IONIC_XCVR_PID_SFP_10GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_10GBASE_CU:
 #ifdef HAVE_ETHTOOL_NEW_10G_BITS
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseCR_Full);
@@ -164,73 +164,73 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		break;
 
 		/* Fibre */
-	case XCVR_PID_QSFP_100G_SR4:
-	case XCVR_PID_QSFP_100G_AOC:
+	case IONIC_XCVR_PID_QSFP_100G_SR4:
+	case IONIC_XCVR_PID_QSFP_100G_AOC:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     100000baseSR4_Full);
 		break;
-	case XCVR_PID_QSFP_100G_CWDM4:
-	case XCVR_PID_QSFP_100G_PSM4:
-	case XCVR_PID_QSFP_100G_LR4:
+	case IONIC_XCVR_PID_QSFP_100G_CWDM4:
+	case IONIC_XCVR_PID_QSFP_100G_PSM4:
+	case IONIC_XCVR_PID_QSFP_100G_LR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     100000baseLR4_ER4_Full);
 		break;
-	case XCVR_PID_QSFP_100G_ER4:
+	case IONIC_XCVR_PID_QSFP_100G_ER4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     100000baseLR4_ER4_Full);
 		break;
-	case XCVR_PID_QSFP_40GBASE_SR4:
-	case XCVR_PID_QSFP_40GBASE_AOC:
+	case IONIC_XCVR_PID_QSFP_40GBASE_SR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_AOC:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     40000baseSR4_Full);
 		break;
-	case XCVR_PID_QSFP_40GBASE_LR4:
+	case IONIC_XCVR_PID_QSFP_40GBASE_LR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     40000baseLR4_Full);
 		break;
 #ifdef HAVE_ETHTOOL_25G_BITS
-	case XCVR_PID_SFP_25GBASE_SR:
-	case XCVR_PID_SFP_25GBASE_AOC:
-	case XCVR_PID_SFP_25GBASE_ACC:
+	case IONIC_XCVR_PID_SFP_25GBASE_SR:
+	case IONIC_XCVR_PID_SFP_25GBASE_AOC:
+	case IONIC_XCVR_PID_SFP_25GBASE_ACC:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     25000baseSR_Full);
 		break;
 #endif
 #ifdef HAVE_ETHTOOL_NEW_10G_BITS
-	case XCVR_PID_SFP_10GBASE_SR:
+	case IONIC_XCVR_PID_SFP_10GBASE_SR:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseSR_Full);
 		break;
-	case XCVR_PID_SFP_10GBASE_LR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LR:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseLR_Full);
 		break;
-	case XCVR_PID_SFP_10GBASE_LRM:
+	case IONIC_XCVR_PID_SFP_10GBASE_LRM:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseLRM_Full);
 		break;
-	case XCVR_PID_SFP_10GBASE_ER:
+	case IONIC_XCVR_PID_SFP_10GBASE_ER:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseER_Full);
 		break;
 #else
-	case XCVR_PID_SFP_10GBASE_SR:
-	case XCVR_PID_SFP_10GBASE_LR:
-	case XCVR_PID_SFP_10GBASE_LRM:
-	case XCVR_PID_SFP_10GBASE_ER:
+	case IONIC_XCVR_PID_SFP_10GBASE_SR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LR:
+	case IONIC_XCVR_PID_SFP_10GBASE_LRM:
+	case IONIC_XCVR_PID_SFP_10GBASE_ER:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
 						     10000baseT_Full);
 		break;
 #endif
-	case XCVR_PID_QSFP_100G_ACC:
-	case XCVR_PID_QSFP_40GBASE_ER4:
-	case XCVR_PID_SFP_25GBASE_LR:
-	case XCVR_PID_SFP_25GBASE_ER:
+	case IONIC_XCVR_PID_QSFP_100G_ACC:
+	case IONIC_XCVR_PID_QSFP_40GBASE_ER4:
+	case IONIC_XCVR_PID_SFP_25GBASE_LR:
+	case IONIC_XCVR_PID_SFP_25GBASE_ER:
 		dev_info(lif->ionic->dev, "no decode bits for xcvr type pid=%d / 0x%x\n",
 			 idev->port_info->status.xcvr.pid,
 			 idev->port_info->status.xcvr.pid);
 		break;
-	case XCVR_PID_UNKNOWN:
+	case IONIC_XCVR_PID_UNKNOWN:
 		/* This means there's no module plugged in */
 		if (ionic_is_mnic(lif->ionic))
 			ethtool_link_ksettings_add_link_mode(ks, supported,
@@ -247,9 +247,9 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		    __ETHTOOL_LINK_MODE_MASK_NBITS);
 
 #ifdef ETHTOOL_FEC_NONE
-	if (idev->port_info->config.fec_type == PORT_FEC_TYPE_FC)
+	if (idev->port_info->config.fec_type == IONIC_PORT_FEC_TYPE_FC)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_BASER);
-	else if (idev->port_info->config.fec_type == PORT_FEC_TYPE_RS)
+	else if (idev->port_info->config.fec_type == IONIC_PORT_FEC_TYPE_RS)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_RS);
 #endif
 
@@ -260,9 +260,10 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 
 	ethtool_link_ksettings_add_link_mode(ks, supported, Pause);
 
-	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER || copper_seen)
+	if (idev->port_info->status.xcvr.phy == IONIC_PHY_TYPE_COPPER ||
+	    copper_seen)
 		ks->base.port = PORT_DA;
-	else if (idev->port_info->status.xcvr.phy == PHY_TYPE_FIBER)
+	else if (idev->port_info->status.xcvr.phy == IONIC_PHY_TYPE_FIBER)
 		ks->base.port = PORT_FIBRE;
 	else if (ionic_is_mnic(lif->ionic))
 		ks->base.port = PORT_OTHER;
@@ -359,7 +360,7 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 		return -EOPNOTSUPP;
 
 	/* change both at the same time */
-	requested_pause = PORT_PAUSE_TYPE_LINK;
+	requested_pause = IONIC_PORT_PAUSE_TYPE_LINK;
 	if (pause->rx_pause)
 		requested_pause |= IONIC_PAUSE_F_RX;
 	if (pause->tx_pause)
@@ -385,13 +386,13 @@ static int ionic_get_fecparam(struct net_device *netdev,
 	struct ionic_lif *lif = netdev_priv(netdev);
 
 	switch (lif->ionic->idev.port_info->config.fec_type) {
-	case PORT_FEC_TYPE_NONE:
+	case IONIC_PORT_FEC_TYPE_NONE:
 		fec->active_fec = ETHTOOL_FEC_OFF;
 		break;
-	case PORT_FEC_TYPE_RS:
+	case IONIC_PORT_FEC_TYPE_RS:
 		fec->active_fec = ETHTOOL_FEC_RS;
 		break;
-	case PORT_FEC_TYPE_FC:
+	case IONIC_PORT_FEC_TYPE_FC:
 		fec->active_fec = ETHTOOL_FEC_BASER;
 		break;
 	}
@@ -418,16 +419,16 @@ static int ionic_set_fecparam(struct net_device *netdev,
 
 	switch (fec->fec) {
 	case ETHTOOL_FEC_NONE:
-		fec_type = PORT_FEC_TYPE_NONE;
+		fec_type = IONIC_PORT_FEC_TYPE_NONE;
 		break;
 	case ETHTOOL_FEC_OFF:
-		fec_type = PORT_FEC_TYPE_NONE;
+		fec_type = IONIC_PORT_FEC_TYPE_NONE;
 		break;
 	case ETHTOOL_FEC_RS:
-		fec_type = PORT_FEC_TYPE_RS;
+		fec_type = IONIC_PORT_FEC_TYPE_RS;
 		break;
 	case ETHTOOL_FEC_BASER:
-		fec_type = PORT_FEC_TYPE_FC;
+		fec_type = IONIC_PORT_FEC_TYPE_FC;
 		break;
 	case ETHTOOL_FEC_AUTO:
 	default:
@@ -463,7 +464,7 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	struct identity *ident;
+	struct ionic_identity *ident;
 	struct ionic_qcq *qcq;
 	unsigned int i;
 	u32 coal;
@@ -509,7 +510,7 @@ static int ionic_set_coalesce(struct net_device *netdev,
 	coal = ionic_coal_usec_to_hw(lif->ionic, coalesce->rx_coalesce_usecs);
 	if (!coal && coalesce->rx_coalesce_usecs)
 		coal = 1;
-	if (coal > INTR_CTRL_COAL_MAX)
+	if (coal > IONIC_INTR_CTRL_COAL_MAX)
 		return -ERANGE;
 
 	/* Save the new value */
@@ -791,7 +792,7 @@ static int ionic_get_module_info(struct net_device *netdev,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct xcvr_status *xcvr;
+	struct ionic_xcvr_status *xcvr;
 
 	if (ionic_is_mnic(lif->ionic))
 		return -EOPNOTSUPP;
@@ -824,7 +825,7 @@ static int ionic_get_module_eeprom(struct net_device *netdev,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
-	struct xcvr_status *xcvr;
+	struct ionic_xcvr_status *xcvr;
 	char tbuf[sizeof(xcvr->sprom)];
 	int count = 10;
 	u32 len;
@@ -864,11 +865,11 @@ static int ionic_nway_reset(struct net_device *netdev)
 
 	mutex_lock(&ionic->dev_cmd_lock);
 
-	ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_DOWN);
+	ionic_dev_cmd_port_state(&ionic->idev, IONIC_PORT_ADMIN_STATE_DOWN);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 
 	if (!err) {
-		ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_UP);
+		ionic_dev_cmd_port_state(&ionic->idev, IONIC_PORT_ADMIN_STATE_UP);
 		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	}
 

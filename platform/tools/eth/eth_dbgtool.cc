@@ -1872,7 +1872,7 @@ mpart_cfg_path()
 void
 eth_stats(uint16_t lif)
 {
-    struct lif_stats stats;
+    struct ionic_lif_stats stats;
 
     std::string mpart_json = mpart_cfg_path();
     mpartition *mp_ = mpartition::factory(mpart_json.c_str());
@@ -1881,7 +1881,7 @@ eth_stats(uint16_t lif)
     uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
 
     printf("\naddr: 0x%lx\n\n", addr);
-    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct lif_stats));
+    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct ionic_lif_stats));
 
     printf("rx_ucast_bytes              : %lu\n", stats.rx_ucast_bytes);
     printf("rx_ucast_packets            : %lu\n", stats.rx_ucast_packets);
@@ -1990,19 +1990,19 @@ eth_stats_reset(uint16_t lif)
     uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
 
     printf("\naddr: 0x%lx\n\n", addr);
-    sdk::lib::pal_mem_set(addr, 0, sizeof(struct lif_stats), 0);
-    p4plus_invalidate_cache(addr, sizeof(struct lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
-    p4_invalidate_cache(addr, sizeof(struct lif_stats), P4_TBL_CACHE_INGRESS);
-    p4_invalidate_cache(addr, sizeof(struct lif_stats), P4_TBL_CACHE_EGRESS);
+    sdk::lib::pal_mem_set(addr, 0, sizeof(struct ionic_lif_stats), 0);
+    p4plus_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
+    p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
+    p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
 }
 
 void
 port_config(uint64_t addr)
 {
-    uint8_t *buf = (uint8_t *)calloc(1, sizeof(union port_config));
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(union ionic_port_config));
     assert(buf != NULL);
-    sdk::lib::pal_mem_read(addr, buf, sizeof(union port_config));
-    union port_config *config = (union port_config *)buf;
+    sdk::lib::pal_mem_read(addr, buf, sizeof(union ionic_port_config));
+    union ionic_port_config *config = (union ionic_port_config *)buf;
 
     printf("\n");
     printf("port_config:\n");
@@ -2021,10 +2021,10 @@ port_config(uint64_t addr)
 void
 port_status(uint64_t addr)
 {
-    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct port_status));
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct ionic_port_status));
     assert(buf != NULL);
-    sdk::lib::pal_mem_read(addr, buf, sizeof(struct port_status));
-    struct port_status *status = (struct port_status *)buf;
+    sdk::lib::pal_mem_read(addr, buf, sizeof(struct ionic_port_status));
+    struct ionic_port_status *status = (struct ionic_port_status *)buf;
 
     printf("\n");
     printf("port_status:\n");
@@ -2053,10 +2053,10 @@ port_status(uint64_t addr)
 void
 lif_status(uint64_t addr)
 {
-    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct lif_status));
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct ionic_lif_status));
     assert(buf != NULL);
-    sdk::lib::pal_mem_read(addr, buf, sizeof(struct lif_status));
-    struct lif_status *status = (struct lif_status *)buf;
+    sdk::lib::pal_mem_read(addr, buf, sizeof(struct ionic_lif_status));
+    struct ionic_lif_status *status = (struct ionic_lif_status *)buf;
 
     printf("\n");
     printf("lif_status:\n");

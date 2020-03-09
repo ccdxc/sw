@@ -96,7 +96,7 @@ void ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 }
 
 static void identity_show_qtype(struct seq_file *seq, const char *name,
-				struct lif_logical_qtype *qtype)
+				struct ionic_lif_logical_qtype *qtype)
 {
 	seq_printf(seq, "%s_qtype:\t%d\n", name, qtype->qtype);
 	seq_printf(seq, "%s_count:\t%d\n", name, qtype->qid_count);
@@ -106,7 +106,7 @@ static void identity_show_qtype(struct seq_file *seq, const char *name,
 static int identity_show(struct seq_file *seq, void *v)
 {
 	struct ionic *ionic = seq->private;
-	struct identity *ident;
+	struct ionic_identity *ident;
 	struct ionic_dev *idev;
 
 	ident = &ionic->ident;
@@ -392,7 +392,7 @@ DEFINE_SHOW_ATTRIBUTE(netdev);
 
 static int lif_identity_show(struct seq_file *seq, void *v)
 {
-	union lif_identity *lid = seq->private;
+	union ionic_lif_identity *lid = seq->private;
 
 	seq_printf(seq, "capabilities:      0x%llx\n", lid->capabilities);
 	seq_printf(seq, "eth-version:       0x%x\n", lid->eth.version);

@@ -11,8 +11,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
                              vmk_PktHandle *pkt)
 {
-        struct rxq_desc *old = desc_info->desc;
-        struct rxq_desc *new = q->head->desc;
+        struct ionic_rxq_desc *old = desc_info->desc;
+        struct ionic_rxq_desc *new = q->head->desc;
 
         new->addr = old->addr;
         new->len = old->len;
@@ -26,8 +26,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
         struct ionic_en_uplink_handle *uplink_handle;
-        struct rxq_desc *desc = desc_info->desc;
-        struct rxq_comp *comp = cq_info->cq_desc;
+        struct ionic_rxq_desc *desc = desc_info->desc;
+        struct ionic_rxq_comp *comp = cq_info->cq_desc;
         vmk_PktHandle *pkt = cb_arg;
         struct qcq *qcq = q_to_qcq(q);
         struct rx_stats *stats = q_to_rx_stats(q);
@@ -84,24 +84,24 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 stats->bytes += comp->len;
         }
 
-        if (priv_data->uplink_handle.hw_features & ETH_HW_RX_HASH) {
+        if (priv_data->uplink_handle.hw_features & IONIC_ETH_HW_RX_HASH) {
                 switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
-                case PKT_TYPE_IPV4:
+                case IONIC_PKT_TYPE_IPV4:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4;
                         break;
-                case PKT_TYPE_IPV6:
+                case IONIC_PKT_TYPE_IPV6:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6;
                         break;
-                case PKT_TYPE_IPV4_TCP:
+                case IONIC_PKT_TYPE_IPV4_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_TCP;
                         break;
-                case PKT_TYPE_IPV6_TCP:
+                case IONIC_PKT_TYPE_IPV6_TCP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_TCP;
                         break;
-                case PKT_TYPE_IPV4_UDP:
+                case IONIC_PKT_TYPE_IPV4_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4_UDP;
                         break;
-                case PKT_TYPE_IPV6_UDP:
+                case IONIC_PKT_TYPE_IPV6_UDP:
                         hash_type = VMK_PKT_RSS_TYPE_IPV6_UDP;
                         break;
                 default:
@@ -113,7 +113,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-        if (uplink_handle->hw_features & ETH_HW_RX_CSUM) {
+        if (uplink_handle->hw_features & IONIC_ETH_HW_RX_CSUM) {
                 if ((comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_BAD) ||
                     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD) ||
                     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)) {
@@ -127,7 +127,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 stats->no_csum++;
         }
 
-        if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) {
+        if (uplink_handle->hw_features & IONIC_ETH_HW_VLAN_RX_STRIP) {
                 if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN) {
                         vmk_PktVlanIDSet(pkt, comp->vlan_tci & IONIC_VLAN_MASK);
                         vmk_PktPrioritySet(pkt,
@@ -155,7 +155,7 @@ ionic_rx_service(struct cq *cq,
                  struct cq_info *cq_info,
                  void *cb_arg)
 {
-        struct rxq_comp *comp = cq_info->cq_desc;
+        struct ionic_rxq_comp *comp = cq_info->cq_desc;
 
         if (!color_match(comp->pkt_type_color, cq->done_color))
                 return VMK_FALSE;
@@ -239,7 +239,7 @@ ionic_rx_fill(struct queue *q)
 {
         struct ionic_en_uplink_handle *uplink_handle;
         struct qcq *qcq = q_to_qcq(q);
-        struct rxq_desc *desc;
+        struct ionic_rxq_desc *desc;
         vmk_PktHandle *pkt;
         unsigned int i, len;
         dma_addr_t dma_addr = 0;
@@ -269,7 +269,7 @@ ionic_rx_fill(struct queue *q)
                 desc = q->head->desc;
                 desc->addr = dma_addr;
                 desc->len = len;
-                desc->opcode = RXQ_DESC_OPCODE_SIMPLE;
+                desc->opcode = IONIC_RXQ_DESC_OPCODE_SIMPLE;
 
                 ring_doorbell = ((q->head->index + 1) &
                                 RX_RING_DOORBELL_STRIDE) == 0;
@@ -282,7 +282,7 @@ void ionic_rx_refill(struct queue *q)
 {
         struct ionic_en_uplink_handle *uplink_handle;
         struct desc_info *cur = q->tail;
-        struct rxq_desc *desc;
+        struct ionic_rxq_desc *desc;
         vmk_PktHandle *pkt;
         unsigned int len;
         dma_addr_t dma_addr = 0;
@@ -319,7 +319,7 @@ void ionic_rx_refill(struct queue *q)
 void ionic_rx_empty(struct queue *q)
 {
         struct desc_info *cur = q->tail;
-        struct rxq_desc *desc;
+        struct ionic_rxq_desc *desc;
 
         while (cur != q->head) {
                 desc = cur->desc;
@@ -428,9 +428,9 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 {
         struct qcq *qcq = q_to_qcq(q);
         struct ionic_en_tx_ring *tx_ring = qcq->ring;
-        struct txq_desc *desc = desc_info->desc;
-        struct txq_sg_desc *sg_desc = desc_info->sg_desc;
-        struct txq_sg_elem *elem = sg_desc->elems;
+        struct ionic_txq_desc *desc = desc_info->desc;
+        struct ionic_txq_sg_desc *sg_desc = desc_info->sg_desc;
+        struct ionic_txq_sg_elem *elem = sg_desc->elems;
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_PktHandle *pkt = (vmk_PktHandle *) cb_arg;
         unsigned int i;
@@ -478,9 +478,9 @@ ionic_tx_service(struct cq *cq,
                  struct cq_info *cq_info,
                  void *cb_arg)
 {
-        struct txq_comp *comp = cq_info->cq_desc;
+        struct ionic_txq_comp *comp = cq_info->cq_desc;
 
-	if (!color_match(comp->color, cq->done_color))
+        if (!color_match(comp->color, cq->done_color))
                 return VMK_FALSE;
 
         ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -542,7 +542,7 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         return poll_again;
 }
 
-static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
+static void ionic_tx_tso_post(struct queue *q, struct ionic_txq_desc *desc,
                               vmk_PktHandle *pkt,
                               dma_addr_t addr, u8 nsge, u16 len,
                               unsigned int hdrlen, unsigned int mss,
@@ -570,11 +570,11 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
         }
 }
 
-static struct txq_desc *ionic_tx_tso_next(struct queue *q,
-                                          struct txq_sg_elem **elem)
+static struct ionic_txq_desc *ionic_tx_tso_next(struct queue *q,
+                                                struct ionic_txq_sg_elem **elem)
 {
-        struct txq_desc *desc = q->head->desc;
-        struct txq_sg_desc *sg_desc = q->head->sg_desc;
+        struct ionic_txq_desc *desc = q->head->desc;
+        struct ionic_txq_sg_desc *sg_desc = q->head->sg_desc;
 
         *elem = sg_desc->elems;
         return desc;
@@ -588,8 +588,8 @@ ionic_tx_tso(struct queue *q,
         struct tx_stats *stats = q_to_tx_stats(q);
         struct desc_info *abort = q->head;
         struct desc_info *rewind = abort;
-        struct txq_desc *desc;
-        struct txq_sg_elem *elem;
+        struct ionic_txq_desc *desc;
+        struct ionic_txq_sg_elem *elem;
         const vmk_SgElem *frag;
         dma_addr_t desc_addr;
         u16 desc_len;
@@ -740,7 +740,7 @@ ionic_tx_calc_csum(struct queue *q,
                    vmk_PktHandle *pkt,
                    ionic_tx_ctx *ctx)
 {
-        struct txq_desc *desc = q->head->desc;
+        struct ionic_txq_desc *desc = q->head->desc;
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_Bool is_insert_vlan;
         dma_addr_t addr;
@@ -786,7 +786,7 @@ ionic_tx_calc_no_csum(struct queue *q,
                       vmk_PktHandle *pkt,
                       ionic_tx_ctx *ctx)
 {
-        struct txq_desc *desc = q->head->desc;
+        struct ionic_txq_desc *desc = q->head->desc;
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_Bool is_insert_vlan;
         dma_addr_t addr;
@@ -832,8 +832,8 @@ static int ionic_tx_pkt_frags(struct queue *q,
         struct tx_stats *stats = q_to_tx_stats(q);
         const vmk_SgElem *sg_elem;
         unsigned int len_left = ctx->frame_len - ctx->mapped_len;
-        struct txq_sg_desc *sg_desc = q->head->sg_desc;
-        struct txq_sg_elem *elem = sg_desc->elems;
+        struct ionic_txq_sg_desc *sg_desc = q->head->sg_desc;
+        struct ionic_txq_sg_elem *elem = sg_desc->elems;
         dma_addr_t dma_addr;
         vmk_uint32 i, sg_elem_len, nr_frags = ctx->nr_frags;
 
@@ -1144,7 +1144,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         ctx.offload_flags |= vmk_PktIsLargeTcpPacket(pkt) ? IONIC_TX_TSO : 0;
         ctx.offload_flags |= vmk_PktIsMustCsum(pkt) ? IONIC_TX_CSO : 0;
 
-        if (uplink_handle->hw_features & ETH_HW_VLAN_TX_TAG) {
+        if (uplink_handle->hw_features & IONIC_ETH_HW_VLAN_TX_TAG) {
                 if (vmk_PktMustVlanTag(pkt)) {
                         ctx.offload_flags |= IONIC_TX_VLAN;
                         ctx.vlan_id    = vmk_PktVlanIDGet(pkt);

@@ -439,7 +439,7 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
 	struct device *hwdev;
-	const union lif_identity *ident;
+	const union ionic_lif_identity *ident;
 #ifdef __FreeBSD__
 	struct sysctl_oid *dbg_ctx;
 #else

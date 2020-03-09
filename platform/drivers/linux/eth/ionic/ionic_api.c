@@ -114,7 +114,8 @@ struct dentry *ionic_api_get_debug_ctx(void *handle)
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debug_ctx);
 
-const union lif_identity *ionic_api_get_identity(void *handle, int *lif_index)
+const union ionic_lif_identity *ionic_api_get_identity(void *handle,
+						       int *lif_index)
 {
 	struct ionic_lif *lif = handle;
 

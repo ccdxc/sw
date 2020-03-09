@@ -55,7 +55,7 @@ struct ionic_lif;
 #define IONIC_MAX_TSO_SEGMENTS	(64)
 
 
-#define QUEUE_NAME_MAX_SZ	8
+#define IONIC_QUEUE_NAME_MAX_SZ	8
 MALLOC_DECLARE(M_IONIC);
 
 #ifndef IONIC_NDEBUG
@@ -156,7 +156,7 @@ struct ionic_dev;
 
 struct ionic_qos {
 	int max_tcs;
-	enum qos_class_type class_type;
+	enum ionic_qos_class_type class_type;
 	/* Per TC value. */
 	uint8_t dwrr_bw_perc[IONIC_QOS_TC_MAX];
 	uint8_t enable_flag[IONIC_QOS_TC_MAX];
@@ -178,12 +178,12 @@ struct ionic {
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	struct ionic_dma_info port_dma;
 	unsigned int num_bars;
-	struct identity ident;
+	struct ionic_identity ident;
 	struct list_head lifs;
 	bool is_mgmt_nic;
 
 	struct sx sx;
-	char sx_name[QUEUE_NAME_MAX_SZ];
+	char sx_name[IONIC_QUEUE_NAME_MAX_SZ];
 	unsigned int nnqs_per_lif;
 	unsigned int nrdma_eqs_per_lif;
 	unsigned int ntxqs_per_lif;
@@ -196,7 +196,7 @@ struct ionic {
 
 	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
 	DECLARE_BITMAP(ethbits, IONIC_LIFS_MAX);
-	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
+	DECLARE_BITMAP(intrs, IONIC_INTR_CTRL_REGS_MAX);
 };
 
 #define IONIC_DEV_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
@@ -232,10 +232,10 @@ void ionic_set_port_state(struct ionic *ionic, uint8_t state);
 int ionic_qos_class_identify(struct ionic *ionic);
 int ionic_qos_init(struct ionic *ionic);
 int ionic_qos_class_init(struct ionic *ionic, uint8_t group,
-    union qos_config *config);
+    union ionic_qos_config *config);
 int ionic_qos_class_reset(struct ionic *ionic, uint8_t group);
 int ionic_qos_class_type_update(struct ionic_lif *lif,
-    enum qos_class_type class);
+    enum ionic_qos_class_type class);
 int ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable);
 int ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop);
 int ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos);

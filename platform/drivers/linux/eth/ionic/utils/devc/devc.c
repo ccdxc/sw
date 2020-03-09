@@ -84,7 +84,7 @@ static void dump_regs()
 static void nop(int argc, char **argv)
 {
 	union dev_cmd cmd = {
-		.nop.opcode = CMD_OPCODE_NOP,
+		.nop.opcode = IONIC_CMD_NOP,
 	};
 	union dev_cmd_comp comp;
 
@@ -98,7 +98,7 @@ static void nop(int argc, char **argv)
 static void reset(int argc, char **argv)
 {
 	union dev_cmd cmd = {
-		.reset.opcode = CMD_OPCODE_RESET,
+		.reset.opcode = IONIC_CMD_RESET,
 	};
 	union dev_cmd_comp comp;
 
@@ -112,7 +112,7 @@ static void reset(int argc, char **argv)
 static void identify(int argc, char **argv)
 {
 	union dev_cmd cmd = {
-		.identify.opcode = CMD_OPCODE_IDENTIFY,
+		.identify.opcode = IONIC_CMD_IDENTIFY,
 		.identify.ver = IONIC_IDENTITY_VERSION_1,
 	};
 	union dev_cmd_comp comp;
@@ -152,7 +152,7 @@ static void identify(int argc, char **argv)
 static void port_state(int argc, char **argv)
 {
 	union dev_cmd cmd = {
-		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
+		.port_setattr.opcode = IONIC_CMD_PORT_SETATTR,
 		.port_setattr.attr = IONIC_PORT_ATTR_STATE,
 	};
 	union dev_cmd_comp comp;
@@ -176,7 +176,7 @@ static void port_state(int argc, char **argv)
 static void lif_init(int argc, char **argv)
 {
 	union dev_cmd cmd = {
-		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
+		.lif_init.opcode = IONIC_CMD_LIF_INIT,
 	};
 	union dev_cmd_comp comp;
 
@@ -247,9 +247,9 @@ static void vf_attr(int argc, char **argv)
 	}
 
 	if (set)
-		cmd.vf_setattr.opcode = CMD_OPCODE_VF_SETATTR;
+		cmd.vf_setattr.opcode = IONIC_CMD_VF_SETATTR;
 	else
-		cmd.vf_setattr.opcode = CMD_OPCODE_VF_GETATTR;
+		cmd.vf_setattr.opcode = IONIC_CMD_VF_GETATTR;
 
 	if (!go(&cmd, &comp))
 		return;
