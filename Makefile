@@ -84,7 +84,7 @@ UPGRADE_TARGETS ?= ws-tools pull-assets-venice gen upgrade-build
 UPGRADE_BUILD_CMD ?= bash -c  "make ${UPGRADE_TARGETS}"
 PENCTL_BUILD_CMD ?= bash -c  "cd penctl && make"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
-E2E_CP_CONFIG ?= test/e2e/cluster/tb_config_cp.json
+E2E_CP_CONFIG ?= test/e2e/cloud/tb_config_cp.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --tags --dirty --always)
@@ -638,9 +638,9 @@ e2e:
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
-e2e-cp:
+cloud-e2e:
 	if [ -z ${BYPASS_CLOUD_SIM} ]; then \
-		${MAKE} -C nic docker/naples-sim; \
+		PIPELINE=apulu FLAVOR=-venice IGNORE_BUILD_PIPELINE=1 ${MAKE} -C nic docker/naples-sim; \
 		tar xvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/; \
 		docker load -i nic/obj/images/naples-docker-v1.tgz; \
 	fi
@@ -648,11 +648,13 @@ e2e-cp:
 		$(MAKE) -C nic docker/pegasus; \
 	fi
 	$(MAKE) dind-cluster-cp
-	$(MAKE) e2e-cp-test
+	$(MAKE) cloud-e2e-test
 
-e2e-cp-test:
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CP_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
+cloud-e2e-test:
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cloud -configFile=/import/src/github.com/pensando/sw/${E2E_CP_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 
+cloud-e2e-retest:
+	docker exec -it node0 sh -c 'PENS_SKIP_BOOTSTRAP=1 PENS_SKIP_AUTH=1 E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cloud -configFile=/import/src/github.com/pensando/sw/${E2E_CP_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 # this assumes that venice is already compiled and starts with cluster creation
 e2e-ci:
 	docker load -i bin/tars/pen-netagent.tar
