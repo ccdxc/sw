@@ -658,12 +658,6 @@ cloud-e2e-test:
 
 cloud-e2e-retest:
 	docker exec -it node0 sh -c 'PENS_SKIP_BOOTSTRAP=1 PENS_SKIP_AUTH=1 E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cloud -configFile=/import/src/github.com/pensando/sw/${E2E_CP_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
-
-cloud-e2e-ci:
-	docker load -i nic/obj/images/naples-docker-v1.tgz
-	./test/e2e/dind/do.py -configFile ${E2E_CP_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
-	$(MAKE) cloud-e2e-test
-
 # this assumes that venice is already compiled and starts with cluster creation
 e2e-ci:
 	docker load -i bin/tars/pen-netagent.tar
