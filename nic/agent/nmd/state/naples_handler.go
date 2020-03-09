@@ -438,10 +438,6 @@ func (n *NMD) runAdmissionControlLoop() {
 		isEmulation = true
 	}
 
-	if err := n.PersistState(isEmulation); err != nil {
-		log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
-	}
-
 	spec := n.config.Spec
 	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
 		log.Info("Performing singleton static admission")
@@ -458,6 +454,10 @@ func (n *NMD) runAdmissionControlLoop() {
 		if err := n.triggerAdmissionEvents(); err == nil {
 			return
 		}
+	}
+
+	if err := n.PersistState(isEmulation); err != nil {
+		log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
 	}
 
 	for {
