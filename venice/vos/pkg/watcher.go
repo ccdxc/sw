@@ -158,9 +158,9 @@ ESTAB:
 					log.Infof("received event [%+v]", ev.Records[i])
 					evType, obj := w.makeEvent(ev.Records[i])
 					path := w.bucket + ":" + ev.Records[i].S3.Object.Key
-					log.Infof("sending watch event [%v][%v][%+v]", path, evType, obj)
 					qs := w.watchPrefixes.Get(path)
 					for j := range qs {
+						log.Infof("sending watch event [%v][%v][%+v]", path, evType, obj)
 						err := qs[j].Enqueue(evType, obj, nil)
 						if err != nil {
 							log.Errorf("unable to enqueue the event (%s)", err)

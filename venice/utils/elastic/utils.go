@@ -94,11 +94,14 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 	currentDay := time.Now().Local().Format("2006-01-02")
 
 	switch dtype {
+	case globals.FwLogs:
+		hour := getClockHourTimeForIndex(time.Now(), 6)
+		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, GetDocType(dtype), hour))
 	case globals.FwLogsObjects:
-		return strings.ToLower(fmt.Sprintf("%s.%s", ExternalIndexPrefix, GetDocType(dtype)))
+		return strings.ToLower(fmt.Sprintf("%s.%s", InternalIndexPrefix, GetDocType(dtype)))
 	case globals.Configs:
 		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype)))
-	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs, globals.FwLogs:
+	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs:
 		if !utils.IsEmpty(tenant) {
 			return strings.ToLower(fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay))
 		}
@@ -191,4 +194,30 @@ func GetAuditRetention() time.Duration {
 	}
 
 	return AuditLogsIndexRetentionPeriod
+}
+
+func getClockHourTimeForIndex(t time.Time, hoursapart int) string {
+	y, m, d := t.Date()
+	h, _, _ := t.Clock()
+	var fh int
+	start := 0
+	end := hoursapart
+	for {
+		if end >= 24 {
+			fh = start
+			break
+		}
+
+		if h >= start && h <= end {
+			fh = start
+			break
+		}
+
+		start = end
+		end = end + hoursapart
+	}
+
+	temp := time.Date(y, m, d, fh, 0, 0, 0, time.UTC)
+	currentTime := temp.Format(time.RFC3339)
+	return strings.TrimSuffix(currentTime, "Z")
 }

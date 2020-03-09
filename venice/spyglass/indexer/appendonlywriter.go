@@ -35,7 +35,7 @@ func (idr *Indexer) startAppendOnlyWriter(id,
 		// read Index Request from Request Channel
 		case req, more := <-idr.reqChan[id]:
 			if more == false {
-				idr.logger.Debugf("Writer: %d Request channel is closed, Done", id)
+				idr.logger.Infof("Writer: %d Request channel is closed, Done", id)
 				return
 			}
 

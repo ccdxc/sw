@@ -2,6 +2,7 @@ package indexer
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -115,26 +117,40 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 		idr.requests[id] = append(idr.requests[id], request)
 	}
 
+	// Getting the object, unzipping it and reading the data should happen in a loop
+	// until no errors are found. Example: Connection to VOS goes down.
 	// Create bulk requests for raw fwlogs and directly feed them into elastic
-	objReader, err := idr.vosFwLogsHTTPClient.GetObject(idr.ctx, key)
-	if err != nil {
-		idr.logger.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
-		return fmt.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
-	}
-	defer objReader.Close()
+	waitIntvl := time.Second * 20
+	maxRetries := 15
+	output, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		objReader, err := idr.vosFwLogsHTTPClient.GetObject(idr.ctx, key)
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
+		}
+		defer objReader.Close()
 
-	zipReader, err := gzip.NewReader(objReader)
+		zipReader, err := gzip.NewReader(objReader)
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
+		}
+
+		rd := csv.NewReader(zipReader)
+		data, err := rd.ReadAll()
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
+		}
+
+		return data, err
+	}, waitIntvl, maxRetries)
+
 	if err != nil {
-		idr.logger.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
-		return fmt.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
+		return err
 	}
 
-	rd := csv.NewReader(zipReader)
-	data, err := rd.ReadAll()
-	if err != nil {
-		idr.logger.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
-		return fmt.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
-	}
+	data := output.([][]string)
 
 	// For testing, dont check versions
 	if meta["Csvversion"] == "v1" || idr.VosTest {
