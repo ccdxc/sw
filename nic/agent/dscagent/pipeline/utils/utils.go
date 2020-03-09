@@ -83,7 +83,7 @@ func waitForHAL(portEnvVar string, defaultPort string) (rpcClient *grpc.ClientCo
 	}
 }
 
-// check if HAL is up given its URL
+// IsHalUp checks if HAL is up given its URL
 func IsHalUp() bool {
 	var rpcClient *rpckit.RPCClient
 

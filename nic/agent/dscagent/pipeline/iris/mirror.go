@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
 	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
-	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -47,10 +46,6 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
 		// Create collector
 		col := buildCollector(mirror.Name, mirror.Spec.VrfName, dstIP, mirror.Spec.PacketSize)
-		if _, err := validator.ValidateCollector(infraAPI, col, types.Create); err != nil {
-			log.Error(err)
-			return err
-		}
 		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 			return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)

@@ -20,15 +20,15 @@ import (
 )
 
 const (
-	MetricsTablePort     = "Port"
-	MetricsTableMgmtPort = "MgmtPort"
-	MetricsTableHostIf   = "HostIf"
+	metricsTablePort     = "Port"
+	metricsTableMgmtPort = "MgmtPort"
+	metricsTableHostIf   = "HostIf"
 )
 
 var metricsTables = []string{
-	MetricsTablePort,
-	MetricsTableMgmtPort,
-	MetricsTableHostIf,
+	metricsTablePort,
+	metricsTableMgmtPort,
+	metricsTableHostIf,
 }
 
 var tsdbObjs = map[string]tsdb.Obj{}
@@ -57,11 +57,11 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 		metricsGetRequest.Key = uid.Bytes()
 		switch intf.Spec.Type {
 		case netproto.InterfaceSpec_UPLINK_ETH.String():
-			metricsGetRequest.Name = MetricsTablePort
+			metricsGetRequest.Name = metricsTablePort
 		case netproto.InterfaceSpec_UPLINK_MGMT.String():
-			metricsGetRequest.Name = MetricsTableMgmtPort
+			metricsGetRequest.Name = metricsTableMgmtPort
 		case netproto.InterfaceSpec_HOST_PF.String():
-			metricsGetRequest.Name = MetricsTableHostIf
+			metricsGetRequest.Name = metricsTableHostIf
 		default:
 			// statistics on other types of interfaces are not supported
 			continue

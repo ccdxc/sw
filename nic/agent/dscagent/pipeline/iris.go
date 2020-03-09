@@ -1553,7 +1553,11 @@ func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) 
 	defer log.Infof("Collector: %v | Op: %s | %s", col, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	vrf, err := validator.ValidateCollector(i.InfraAPI, col, oper)
+	uniqueCollectors := map[string]bool{}
+	for dest := range iris.MirrorDestToIDMapping {
+		uniqueCollectors[dest] = true
+	}
+	vrf, err := validator.ValidateCollector(i.InfraAPI, col, oper, uniqueCollectors)
 	if err != nil {
 		log.Error(err)
 		return nil, err

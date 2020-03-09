@@ -65,6 +65,59 @@ func TestValidateEndpoint(t *testing.T) {
 	}
 }
 
+func TestValidateCollector(t *testing.T) {
+	col := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testCollector",
+		},
+		Spec: netproto.CollectorSpec{
+			VrfName:     "default",
+			Destination: "192.168.100.109",
+		},
+	}
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	dat, _ := vrf.Marshal()
+
+	if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+	uniqueCollectors := map[string]bool{
+		"default-192.168.100.101": true,
+		"default-192.168.100.102": true,
+		"default-192.168.100.103": true,
+		"default-192.168.100.104": true,
+		"default-192.168.100.105": true,
+		"default-192.168.100.106": true,
+		"default-192.168.100.107": true,
+		"default-192.168.100.108": true,
+	}
+	// Make sure creates do not exceed the max mirror session limit
+	_, err := ValidateCollector(infraAPI, col, types.Create, uniqueCollectors)
+	if err == nil {
+		t.Fatalf("Must return an error. %v", err)
+	}
+
+	col.Spec.Destination = "192.168.100.108"
+	// Make sure create is allowed
+	_, err = ValidateCollector(infraAPI, col, types.Create, uniqueCollectors)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestValidateFlowExportPolicy(t *testing.T) {
 	netflow := netproto.FlowExportPolicy{
 		TypeMeta: api.TypeMeta{Kind: "Netflow"},

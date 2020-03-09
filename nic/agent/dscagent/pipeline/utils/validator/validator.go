@@ -275,9 +275,9 @@ func ValidateTunnel(i types.InfraAPI, tunnel netproto.Tunnel) (vrf netproto.Vrf,
 }
 
 // ValidateCollector performs named reference validation on vrf and max mirror session check
-func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Operation) (vrf netproto.Vrf, err error) {
-	dat, _ := i.List(col.Kind)
-	if len(dat) == types.MaxMirrorSessions && oper == types.Create {
+func ValidateCollector(i types.InfraAPI, col netproto.Collector, oper types.Operation, uniqueCollectors map[string]bool) (vrf netproto.Vrf, err error) {
+	_, existing := uniqueCollectors[utils.BuildDestKey(col.Spec.VrfName, col.Spec.Destination)]
+	if len(uniqueCollectors) == types.MaxMirrorSessions && oper == types.Create && !existing {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured))
 		return vrf, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrMaxMirrorSessionsConfigured)
 	}

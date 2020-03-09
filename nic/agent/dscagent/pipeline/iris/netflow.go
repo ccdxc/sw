@@ -35,6 +35,8 @@ type netflowIDs struct {
 var netflowSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
 
 var templateContextMap = map[*halapi.CollectorKeyHandle]context.CancelFunc{}
+
+// CollectorToNetflow maps the unique collector to netflowID
 var CollectorToNetflow = map[string]*netflowIDs{}
 
 // HandleFlowExportPolicy handles crud operations on netflow session
