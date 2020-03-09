@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 	rdebug "runtime/debug"
 	"strings"
@@ -64,13 +65,23 @@ func reportStats(node string, dbpath string, br *broker.Broker) {
 				continue
 			}
 
+			du := int64(0)
+			if err := filepath.Walk(dbpath, func(path string, info os.FileInfo, err error) error {
+				if err == nil {
+					du += info.Size()
+				}
+				return err
+			}); err != nil {
+				log.Errorf("failed check disk size %v", err)
+				continue
+			}
+
 			points, err := models.NewPoint("ctstats", models.NewTags(map[string]string{
-				"node": node,
-				"path": dbpath,
+				"reporterID": node,
 			}), map[string]interface{}{
-				"disk_usedpercent": f.UsedPercent,
-				"disk_used":        f.Used >> 20,
-				"disk_free":        f.Free >> 20,
+				"disk_citadel": du >> 10,
+				"disk_used":    f.Used >> 10,
+				"disk_free":    f.Free >> 10,
 			}, time.Now())
 			if err != nil {
 				log.Errorf("failed to parse disk stats, %v", err)
