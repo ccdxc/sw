@@ -194,7 +194,8 @@ header_type aq_tx_aqcb_to_sqcb_t {
         rnr_retry_count     :  3;
         rnr_timer_valid     :  1;
         rnr_retry_valid     :  1;
-        pad                 : 65;
+        dcqcn_cfg_id        :  4;
+        pad                 : 61;
     }
 }
 
@@ -477,7 +478,10 @@ action aq_tx_sqcb0_process () {
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.rrq_depth_log2, t2_s2s_sqcb2_to_sqcb0_info.rrq_depth_log2);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.rrq_base_addr, t2_s2s_sqcb2_to_sqcb0_info.rrq_base_addr);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.rrq_valid, t2_s2s_sqcb2_to_sqcb0_info.rrq_valid);
+    modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.dcqcn_cfg_id, t2_s2s_sqcb2_to_sqcb0_info.dcqcn_cfg_id);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.pad, t2_s2s_sqcb2_to_sqcb0_info.pad);
+
+    modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.dcqcn_cfg_id, t2_s2s_wqe2_to_sqcb2_info.dcqcn_cfg_id);
 }
 
 action aq_tx_rqcb0_process_s3 () {

@@ -122,10 +122,12 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 ttl     : 64
+                tos     : 192
             ipv6:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
                 hlim    : 64
+                tc      : 192
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport

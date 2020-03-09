@@ -15,6 +15,7 @@ struct req_tx_s0_t0_k k;
 #define SQCB_WRITE_BACK_P t2_s2s_sqcb_write_back_info
 #define WQE_TO_FRPMR_LKEY_T0 t0_s2s_sqwqe_to_lkey_frpmr_info
 #define WQE_TO_FRPMR_LKEY_T1 t1_s2s_sqwqe_to_lkey_frpmr_info
+#define SQCB_TO_DCQCN_CFG_P t3_s2s_dcqcn_config_info
 
 #define SPEC_LEN 32
 #define LOG_SPEC_LEN 5
@@ -43,6 +44,7 @@ struct req_tx_s0_t0_k k;
     .param    req_tx_credits_process
     .param    req_tx_bktrack_sqcb2_process
     .param    req_tx_sqcb2_cnp_process
+    .param    req_tx_dcqcn_config_load_process
     .param    req_tx_timer_expiry_process
     .param    req_tx_sq_drain_feedback_process
     .param    req_tx_sqcb2_fence_process
@@ -511,11 +513,14 @@ restart_timer:
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0
         
+        // should be passed from sqcb0, no space (dcqcn_cfg_id 5, rsvd 3)
+        phvwr          CAPRI_PHV_FIELD(SQCB_TO_DCQCN_CFG_P, dcqcn_config_id), d.dcqcn_cfg_id
+        phvwr          CAPRI_PHV_FIELD(SQCB_TO_DCQCN_CFG_P,header_template_addr), d.header_template_addr
+
         tblwr          CNP_C_INDEX, CNP_P_INDEX
         add            r1, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (CB_UNIT_SIZE_BYTES * 2)
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_cnp_process, r1)
-        nop.e
-        nop
+        CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_config_load_process, r0)
 
     .brcase        MAX_SQ_DOORBELL_RINGS
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, pad.req_tx.spec_cindex, SPEC_SQ_C_INDEX)

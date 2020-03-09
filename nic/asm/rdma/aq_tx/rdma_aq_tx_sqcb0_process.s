@@ -12,6 +12,7 @@ struct aq_tx_s6_t2_k k;
 
 #define IN_P t2_s2s_sqcb2_to_sqcb0_info
 #define IN_TO_S_P to_s6_info
+#define WQE2_TO_SQCB2_P t2_s2s_wqe2_to_sqcb2_info
     
 #define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_dscp_sbit0_ebit3, local_ack_timeout_or_dscp_sbit4_ebit4)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
@@ -19,6 +20,7 @@ struct aq_tx_s6_t2_k k;
 #define K_Q_KEY_TM_IQ CAPRI_KEY_RANGE(IN_TO_S_P, q_key_or_tm_iq_sbit0_ebit1, q_key_or_tm_iq_sbit26_ebit31)
 #define K_TX_PSN CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_sbit0_ebit3, tx_psn_sbit20_ebit23)
 #define K_CONGESTION_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable)
+#define K_DCQCN_CFG_ID CAPRI_KEY_RANGE(WQE2_TO_SQCB2_P, dcqcn_cfg_id_sbit0_ebit0, dcqcn_cfg_id_sbit1_ebit3)
 
 %%
 
@@ -34,6 +36,7 @@ rdma_aq_tx_sqcb0_process:
     // Update cos(tm_iq) in qstate.
     tblwr       d.intrinsic.cosB, K_Q_KEY_TM_IQ
     tblwr       d.congestion_mgmt_type, K_CONGESTION_ENABLE
+    tblwr       d.dcqcn_cfg_id, K_DCQCN_CFG_ID
     
 timeout:
     bbne        K_LOCAL_ACK_TIMEOUT_VALID, 1, pmtu

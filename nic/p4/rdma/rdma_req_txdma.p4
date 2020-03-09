@@ -61,9 +61,9 @@
 #define tx_table_s2_t0_action  req_tx_sqwqe_process
 #define tx_table_s2_t0_action1 req_tx_bktrack_sqwqe_process_s2
 #define tx_table_s2_t0_action4 req_tx_bktrack_sqpt_process
-#define tx_table_s2_t0_action6 req_tx_dcqcn_cnp_process
 #define tx_table_s2_t1_action  req_tx_bktrack_sqcb1_write_back_process
 #define tx_table_s2_t2_action req_tx_sqsge_iterate_process_s2
+#define tx_table_s2_t3_action req_tx_dcqcn_config_load_process_s2
 
 #define tx_table_s3_t0_action  req_tx_sqsge_process 
 #define tx_table_s3_t0_action1 req_tx_bktrack_sqwqe_process_s3
@@ -71,6 +71,7 @@
 #define tx_table_s3_t0_action4 req_tx_sqlkey_invalidate_process_s3
 #define tx_table_s3_t2_action  req_tx_dcqcn_enforce_process_s3
 #define tx_table_s3_t3_action1 req_tx_load_ah_size_process
+#define tx_table_s3_t3_action req_tx_dcqcn_config_load_process_s3
 
 #define tx_table_s4_t0_action  req_tx_sqlkey_process_t0
 #define tx_table_s4_t0_action1 req_tx_bktrack_sqwqe_process_s4
@@ -83,6 +84,7 @@
 #define tx_table_s4_t1_action1 req_tx_sqlkey_invalidate_process_t1
 #define tx_table_s4_t1_action2 req_tx_frpmr_sqlkey_process_t1
 #define tx_table_s4_t2_action  req_tx_dcqcn_enforce_process_s4
+#define tx_table_s4_t3_action req_tx_dcqcn_cnp_add_header_process
 
 #define tx_table_s5_t0_action  req_tx_sqptseg_process_t0
 #define tx_table_s5_t0_action1 req_tx_bktrack_sqwqe_process_s5
@@ -234,6 +236,16 @@ header_type req_tx_to_stage_bt_wb_info_t {
     fields {
         wqe_addr                         :   64;
         wqe_start_psn                    :   24;
+    }
+}
+
+header_type req_tx_sqcb_to_dcqcn_cfg_info_t {
+    fields {
+        rsvd                             :   34;
+        dcqcn_config_id                  :    4;
+        header_template_addr             :   32;
+        np_cnp_dscp                      :    6;
+        pad                              :   85;
     }
 }
 
@@ -503,7 +515,9 @@ header_type req_tx_to_stage_sqwqe_info_t {
         header_template_addr             :   32;
         fast_reg_rsvd_lkey_enable        :    1;
         log_page_size                    :    5;
-        pad                              :   17;
+        ipv6_flag                        :    1;
+        ipv6_tag                         :    1;
+        pad                              :   15;
         // These fields are written in tx_stage0_load_params. Do not move.
         log_num_kt_entries               :    5;
         log_num_dcqcn_profiles           :    4;
@@ -765,7 +779,7 @@ metadata req_tx_to_stage_bt_info_t to_s2_bt_info;
 metadata req_tx_to_stage_bt_info_t to_s2_bt_info_scr;
 
 //To-Stage-3
-@pragma pa_header_union ingress to_stage_3 to_s3_sqsge_info to_s3_bt_info
+@pragma pa_header_union ingress to_stage_3 to_s3_sqsge_info to_s3_bt_info to_s3_sqwqe_info
 
 metadata req_tx_to_stage_bt_info_t to_s3_bt_info;
 @pragma scratch_metadata
@@ -774,6 +788,10 @@ metadata req_tx_to_stage_bt_info_t to_s3_bt_info_scr;
 metadata req_tx_to_stage_sqsge_info_t to_s3_sqsge_info;
 @pragma scratch_metadata
 metadata req_tx_to_stage_sqsge_info_t to_s3_sqsge_info_scr;
+
+metadata req_tx_to_stage_sqwqe_info_t to_s3_sqwqe_info;
+@pragma scratch_metadata
+metadata req_tx_to_stage_sqwqe_info_t to_s3_sqwqe_info_scr;
 
 //To-Stage-4
 @pragma pa_header_union ingress to_stage_4 to_s4_dcqcn_bind_mw_info to_s4_bt_info to_s4_frpmr_sqlkey_info
@@ -830,7 +848,7 @@ metadata req_tx_to_stage_stats_info_t to_s7_stats_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info t0_s2s_sqwqe_to_lkey_mw_info t0_s2s_sqlkey_to_rkey_mw_info t0_s2s_sqwqe_to_lkey_frpmr_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_sqcb_to_wqe_info t0_s2s_sqcb_to_pt_info t0_s2s_sqcb0_to_sqcb2_info t0_s2s_wqe_to_sge_info t0_s2s_sq_bktrack_info t0_s2s_sqcb_write_back_info t0_s2s_sge_to_lkey_info t0_s2s_lkey_to_ptseg_info t0_s2s_sqwqe_to_lkey_inv_info t0_s2s_sqwqe_to_lkey_mw_info t0_s2s_sqlkey_to_rkey_mw_info t0_s2s_sqwqe_to_lkey_frpmr_info 
 
 metadata req_tx_sqcb_to_wqe_info_t t0_s2s_sqcb_to_wqe_info;
 @pragma scratch_metadata
@@ -881,7 +899,7 @@ metadata req_tx_sqwqe_to_lkey_frpmr_info_t t0_s2s_sqwqe_to_lkey_frpmr_info;
 metadata req_tx_sqwqe_to_lkey_frpmr_info_t t0_s2s_sqwqe_to_lkey_frpmr_info_scr;
 
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info t1_s2s_sqwqe_to_lkey_inv_info t1_s2s_sqwqe_to_lkey_frpmr_info
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_bktrack_sqcb2_write_back_info t1_s2s_sge_to_lkey_info t1_s2s_lkey_to_ptseg_info t1_s2s_bktrack_sqcb1_write_back_info t1_s2s_sqwqe_to_lkey_inv_info t1_s2s_sqwqe_to_lkey_frpmr_info 
 
 metadata req_tx_bktrack_sqcb2_write_back_info_t t1_s2s_bktrack_sqcb2_write_back_info;
 @pragma scratch_metadata
@@ -906,7 +924,6 @@ metadata req_tx_sqwqe_to_lkey_inv_info_t t1_s2s_sqwqe_to_lkey_inv_info_scr;
 metadata req_tx_sqwqe_to_lkey_frpmr_info_t t1_s2s_sqwqe_to_lkey_frpmr_info;
 @pragma scratch_metadata
 metadata req_tx_sqwqe_to_lkey_frpmr_info_t t1_s2s_sqwqe_to_lkey_frpmr_info_scr;
-
 
 //Table-2
 @pragma pa_header_union ingress common_t2_s2s t2_s2s_wqe_to_sge_info t2_s2s_sqcb_write_back_info t2_s2s_sqcb_write_back_info_rd t2_s2s_sqcb_write_back_info_send_wr t2_s2s_frpmr_write_back_info
@@ -933,7 +950,7 @@ metadata req_tx_frpmr_lkey_to_wb_info_t t2_s2s_frpmr_write_back_info_scr;
 
 
 //Table-3
-@pragma pa_header_union ingress common_t3_s2s  t3_s2s_add_hdr_info t3_s2s_stats_info
+@pragma pa_header_union ingress common_t3_s2s  t3_s2s_add_hdr_info t3_s2s_stats_info t3_s2s_dcqcn_config_info
 
 metadata req_tx_add_hdr_info_t t3_s2s_add_hdr_info;
 @pragma scratch_metadata
@@ -942,6 +959,10 @@ metadata req_tx_add_hdr_info_t t3_s2s_add_hdr_info_scr;
 metadata req_tx_stats_info_t t3_s2s_stats_info;
 @pragma scratch_metadata
 metadata req_tx_stats_info_t t3_s2s_stats_info_scr;
+
+metadata req_tx_sqcb_to_dcqcn_cfg_info_t t3_s2s_dcqcn_config_info;
+@pragma scratch_metadata
+metadata req_tx_sqcb_to_dcqcn_cfg_info_t t3_s2s_dcqcn_config_info_scr;
 
 /*
  * Stage 0 table 0 recirc action
@@ -1383,6 +1404,41 @@ action req_tx_sqcb2_cnp_process () {
     // stage to stage
 
 }
+
+action req_tx_dcqcn_cnp_add_header_process() {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+
+    // stage to stage
+    modify_field(t3_s2s_dcqcn_config_info_scr.np_cnp_dscp, t3_s2s_dcqcn_config_info.np_cnp_dscp);
+}
+
+action req_tx_dcqcn_config_load_process_s2() {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s2_sqwqe_info_scr.log_num_kt_entries, to_s2_sqwqe_info.log_num_kt_entries);
+
+    // stage to stage
+}
+
+action req_tx_dcqcn_config_load_process_s3() {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s3_sqwqe_info_scr.ipv6_flag, to_s3_sqwqe_info.ipv6_flag);
+    modify_field(to_s3_sqwqe_info_scr.ipv6_tag, to_s3_sqwqe_info.ipv6_tag);
+    modify_field(to_s3_sqwqe_info_scr.log_num_kt_entries, to_s3_sqwqe_info.log_num_kt_entries);
+
+    // stage to stage
+    modify_field(t3_s2s_dcqcn_config_info_scr.dcqcn_config_id, t3_s2s_dcqcn_config_info.dcqcn_config_id);
+    modify_field(t3_s2s_dcqcn_config_info_scr.header_template_addr, t3_s2s_dcqcn_config_info.header_template_addr);
+}
+
 
 action req_tx_sqlkey_process_t0 () {
     // from ki global

@@ -225,6 +225,17 @@ struct rdma_cnp_rsvd_t {
     rsvd        : 128;
 };  
 
+struct rdma_cnp_tos_t {
+    dscp        : 6;
+    ecn         : 2;
+};
+
+struct rdma_cnp_ipv6_header_template {
+    version     : 4;
+    struct rdma_cnp_tos_t cnp_tc;
+    flow_label  : 4;
+};
+
 struct rdma_aeth_t {
     syndrome    : 8;
     msn         : 24;
@@ -1444,6 +1455,17 @@ struct dcqcn_cb_t {
     // For model testing only.
     num_sched_drop: 8; // Number of times packet was scheduled and dropped due to insufficient tokens.
     cur_timestamp:  32; // For debugging on Model since model doesnt have timestamps
+};
+
+struct dcqcn_cnp_add_header_t {
+    // for DMA tc field in ipv6 header only, ipv4 header fields are 8 bits aligned 
+    // in ipv6 header, version(4 bits) + tc(8 bits) + flow_label(20 bits)
+    // all DMA commands are 8 bits aligned, in order to DMA a new value of tc,
+    // we have to read the first whole 32 bits and DMA them all 
+    version     : 4;
+    tc          : 8;
+    flow_label  : 4;
+    pad         : 496;
 };
 
 // ROME CB on sender side

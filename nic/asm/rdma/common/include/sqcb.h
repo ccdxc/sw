@@ -66,7 +66,8 @@ struct sqcb0_t {
     struct capri_intrinsic_ring_t ring2;
     struct capri_intrinsic_ring_t ring3;
     sqd_cindex                    : 16; // RO S0, WO S5
-    rsvd1                         :  8;
+    rsvd1                         :  4;
+    dcqcn_cfg_id                  :  4;
 
     union {
         struct {

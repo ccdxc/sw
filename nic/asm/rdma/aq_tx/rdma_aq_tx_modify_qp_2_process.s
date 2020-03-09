@@ -90,6 +90,7 @@ hdr_update:
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, congestion_mgmt_enable), 1
     phvwr       p.rdma_feedback.modify_qp.congestion_mgmt_enable, 1
     phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, congestion_mgmt_enable), 1
+    phvwr       CAPRI_PHV_FIELD(WQE2_TO_SQCB2_P, dcqcn_cfg_id), r4
 
     // r5 holds ah_addr
     add         r5, r5, AH_ENTRY_T_SIZE_BYTES

@@ -51,7 +51,6 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 hlim    : 64
-                #tc      : 192 # TODO add IPv6 related stuff here
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
@@ -118,10 +117,12 @@ packets:
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
+                tos     : 192
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/rdmasession/session/initiator/addr
                 dst     : ref://testcase/config/rdmasession/session/responder/addr
+                tc      : 192
                 hlim    : 64
             udp:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport

@@ -27,6 +27,12 @@
 #define REQ_TX_DMA_CMD_START_FLIT_CMD_ID 2
 #define TOTAL_DMA_CMD_BITS 16 * 16 * 8 // (cmds * dma_cmd_size * bits_per_byte) 
 
+// DMA commands design for CNP 
+#define REQ_TX_DMA_CMD_CNP_HEADER_TEMPLATE_1 3
+#define REQ_TX_DMA_CMD_CNP_HEADER_TEMPLATE_2 4
+#define REQ_TX_DMA_CMD_CNP_HEADER_TEMPLATE_3 5
+#define REQ_TX_DMA_CMD_CNP_RDMA_HEADERS 6
+
 #define BTH_DST_QP              p.bth.dst_qp
 #define BTH_PSN                 p.bth.psn
 #define BTH_ACK_REQ             p.bth.a
@@ -76,6 +82,25 @@
 
 #define ROCE_OPT_LEN_MSS  4
 #define ROCE_OPT_LEN_TS  10
+
+// DCQCN CNP dscp/pcp value related definitions
+#define IPV4_HEADER_TEMPLATE_LEN_UNTAG  42
+#define IPV4_HEADER_TEMPLATE_LEN_TAG    46
+#define CNP_IPV4_HEADER_TEMPLATE_1_LEN_UNTAG 15
+#define CNP_IPV4_HEADER_TEMPLATE_1_LEN_TAG 19
+#define CNP_IPV4_HEADER_TEMPLATE_2_LEN  1
+#define CNP_IPV4_HEADER_TEMPLATE_3_LEN  26
+#define CNP_IPV4_HEADER_TEMPLATE_3_ADDR_OFFSET_UNTAG CNP_IPV4_HEADER_TEMPLATE_1_LEN_UNTAG + CNP_IPV4_HEADER_TEMPLATE_2_LEN
+#define CNP_IPV4_HEADER_TEMPLATE_3_ADDR_OFFSET_TAG CNP_IPV4_HEADER_TEMPLATE_1_LEN_TAG + CNP_IPV4_HEADER_TEMPLATE_2_LEN
+
+#define IPV6_HEADER_TEMPLATE_LEN_UNTAG  62
+#define IPV6_HEADER_TEMPLATE_LEN_TAG    66
+#define CNP_IPV6_HEADER_TEMPLATE_1_LEN_UNTAG  14
+#define CNP_IPV6_HEADER_TEMPLATE_1_LEN_TAG  18
+#define CNP_IPV6_HEADER_TEMPLATE_2_LEN  2
+#define CNP_IPV6_HEADER_TEMPLATE_3_LEN  46
+#define CNP_IPV6_HEADER_TEMPLATE_3_ADDR_OFFSET_UNTAG CNP_IPV6_HEADER_TEMPLATE_1_LEN_UNTAG + CNP_IPV6_HEADER_TEMPLATE_2_LEN
+#define CNP_IPV6_HEADER_TEMPLATE_3_ADDR_OFFSET_TAG CNP_IPV6_HEADER_TEMPLATE_1_LEN_TAG + CNP_IPV6_HEADER_TEMPLATE_2_LEN
 
 //17 Bytes
 struct roce_options_t {
@@ -134,8 +159,13 @@ struct req_tx_phv_t {
     };
 
     /* flit 6 */
-    rsvd: 8;                                       // 1B
-    rrq_p_index: 8;                                //  1B
+    union {
+        struct {
+            struct rdma_cnp_tos_t cnp_tos;                 // 1B
+            rrq_p_index: 8;                                //  1B
+        };
+        struct rdma_cnp_ipv6_header_template cnp_ipv6_hdr;       // 2B
+    };
     struct p4plus_to_p4_header_t p4plus_to_p4;      // 20B
     lkey_state: 4;
     lkey_type: 4;
