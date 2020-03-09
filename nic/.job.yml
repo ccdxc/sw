@@ -438,7 +438,7 @@ targets:
   # feature:
 
   codesync:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make naples-firmware && make -C nic jobd/codesync"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make naples-firmware && ./tools/scripts/check-local-files.sh"]
     owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
