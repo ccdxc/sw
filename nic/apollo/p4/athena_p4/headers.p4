@@ -272,6 +272,7 @@ header_type p4i_to_p4e_header_t {
         index_type              : 1;
         pad0                    : 1;
         packet_len              : 16;
+        hash                    : 32;
         flow_miss               : 1;
         direction               : 1;
         update_checksum         : 1;

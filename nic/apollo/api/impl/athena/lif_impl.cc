@@ -210,7 +210,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
 
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.redir_type = NACL_REDIR_UPLINK;
+    data.nacl_redirect_action.redir_type = PACKET_ACTION_REDIR_UPLINK;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
@@ -237,7 +237,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
 
     data.action_id = NACL_NACL_REDIRECT_ID;
-    data.nacl_redirect_action.redir_type = NACL_REDIR_RXDMA;
+    data.nacl_redirect_action.redir_type = PACKET_ACTION_REDIR_RXDMA;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
     data.nacl_redirect_action.lif = id_;

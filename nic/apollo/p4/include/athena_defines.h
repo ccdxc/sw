@@ -48,10 +48,10 @@
 #define P4E_PACKET_OVERLAY_IPV6                 2
 
 /*****************************************************************************/
-/* NACL redirect types                                                       */
+/* Packet redirect types                                                     */
 /*****************************************************************************/
-#define NACL_REDIR_RXDMA                        0
-#define NACL_REDIR_UPLINK                       1
+#define PACKET_ACTION_REDIR_RXDMA               0
+#define PACKET_ACTION_REDIR_UPLINK              1
 
 /*****************************************************************************/
 /* drop reasons - these are bit positions to be used in ASM                  */

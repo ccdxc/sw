@@ -20,6 +20,20 @@ action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
         }
 
         if (control_metadata.direction == TX_FROM_HOST) {
+            if (control_metadata.l2_vnic == FALSE) {
+                if (h2s_session_rewrite_id != 0) {
+                    modify_field(control_metadata.session_rewrite_id, h2s_session_rewrite_id);
+                }
+                else {
+                    modify_field(control_metadata.flow_miss, TRUE);
+                }
+            }
+
+            if ((tcp.flags & h2s_slow_path_tcp_flags_match) != 0) {
+                modify_field(control_metadata.flow_miss, TRUE);
+            }
+            modify_field(scratch_metadata.tcp_flags, h2s_slow_path_tcp_flags_match);
+
             if (ethernet_1.srcAddr != smac) {
                 modify_field(control_metadata.flow_miss, TRUE);
             }
@@ -45,6 +59,9 @@ action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
                 modify_field(control_metadata.throttle_bw2_id_valid, TRUE);
             }
 
+            /* TODO: Stats ID and histogram IDs are likely shared across both directions, 
+                Confirm if this is true and if stats mask needs to be per-direction
+            */
             if (h2s_vnic_statistics_id != 0) {
                 modify_field(control_metadata.vnic_statistics_id, h2s_vnic_statistics_id);
                 modify_field(control_metadata.statistics_id_valid, TRUE);
@@ -60,25 +77,26 @@ action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
                 modify_field(control_metadata.histogram_latency_id_valid, TRUE);
             }
 
+            /* TODO: Egress action is determined by the pipeline and not the session info? */
+            modify_field(control_metadata.egress_action, h2s_egress_action);
+            modify_field(control_metadata.allowed_flow_state_bitmap, h2s_allowed_flow_state_bitmap);
+
+        }
+        if (control_metadata.direction == RX_FROM_SWITCH) {
             if (control_metadata.l2_vnic == FALSE) {
-                if (h2s_session_rewrite_id != 0) {
-                    modify_field(control_metadata.session_rewrite_id, h2s_session_rewrite_id);
+                if (s2h_session_rewrite_id != 0) {
+                    modify_field(control_metadata.session_rewrite_id, s2h_session_rewrite_id);
                 }
                 else {
                     modify_field(control_metadata.flow_miss, TRUE);
                 }
             }
 
-            if ((tcp.flags & h2s_slow_path_tcp_flags_match) != 0) {
+            if ((tcp.flags & s2h_slow_path_tcp_flags_match) != 0) {
                 modify_field(control_metadata.flow_miss, TRUE);
             }
-            modify_field(scratch_metadata.tcp_flags, h2s_slow_path_tcp_flags_match);
+            modify_field(scratch_metadata.tcp_flags, s2h_slow_path_tcp_flags_match);
 
-            modify_field(control_metadata.egress_action, h2s_egress_action);
-            modify_field(control_metadata.allowed_flow_state_bitmap, h2s_allowed_flow_state_bitmap);
-
-        }
-        if (control_metadata.direction == RX_FROM_SWITCH) {
             if (s2h_epoch_vnic_id != 0) {
                 modify_field(control_metadata.epoch1_id, s2h_epoch_vnic_id);
                 modify_field(control_metadata.epoch1_value, s2h_epoch_vnic_value);
@@ -113,19 +131,6 @@ action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
                 modify_field(control_metadata.histogram_latency_id, s2h_vnic_histogram_latency_id);
                 modify_field(control_metadata.histogram_latency_id_valid, TRUE);
             }
-            if (control_metadata.l2_vnic == FALSE) {
-                if (s2h_session_rewrite_id != 0) {
-                    modify_field(control_metadata.session_rewrite_id, s2h_session_rewrite_id);
-                }
-                else {
-                    modify_field(control_metadata.flow_miss, TRUE);
-                }
-            }
-
-            if ((tcp.flags & s2h_slow_path_tcp_flags_match) != 0) {
-                modify_field(control_metadata.flow_miss, TRUE);
-            }
-            modify_field(scratch_metadata.tcp_flags, s2h_slow_path_tcp_flags_match);
 
             modify_field(control_metadata.egress_action, s2h_egress_action);
             modify_field(control_metadata.allowed_flow_state_bitmap, s2h_allowed_flow_state_bitmap);
@@ -159,6 +164,8 @@ table session_info{
 
 action session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS) {
     if (valid_flag == TRUE) {
+
+        /* TODO: Confirm the required semantics for these flags */
 
         if (strip_l2_header_flag == TRUE) {
             remove_header(ethernet_1);
@@ -334,7 +341,7 @@ action session_rewrite_encap_l2(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
 }
 
 action session_rewrite_encap_mplsoudp(SESSION_REWRITE_ENCAP_COMMON_FIELDS,      \
-                    ipv4_da, ipv4_sa,                                           \
+                    ipv4_sa, ipv4_da,                                           \
                     udp_sport, udp_dport,                                       \
                     mpls_label1, mpls_label2, mpls_label3) {
     session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS);
@@ -345,6 +352,7 @@ action session_rewrite_encap_mplsoudp(SESSION_REWRITE_ENCAP_COMMON_FIELDS,      
 
     modify_field(udp_0.srcPort, udp_sport);
     modify_field(udp_0.dstPort, udp_dport);
+    modify_field(udp_0.srcPort, p4i_to_p4e_header.hash);
     add_header(udp_0);
     
     modify_field(scratch_metadata.mpls_label, mpls_label1);
@@ -356,7 +364,7 @@ action session_rewrite_encap_mplsoudp(SESSION_REWRITE_ENCAP_COMMON_FIELDS,      
 }
 
 action session_rewrite_encap_geneve(SESSION_REWRITE_ENCAP_COMMON_FIELDS,        \
-                    ipv4_da, ipv4_sa,                                           \
+                    ipv4_sa, ipv4_da,                                           \
                     udp_sport, udp_dport,                                       \
                     vni, source_slot_id, destination_slot_id,                   \
                     sg_id1, sg_id2, sg_id3, sg_id4, sg_id5, sg_id6,             \
@@ -403,6 +411,8 @@ table session_rewrite_encap {
 control session_info_lookup {
     if (control_metadata.flow_miss == FALSE) {
         apply(session_info);
+    }
+    if (control_metadata.session_rewrite_id_valid == TRUE) {
         apply(session_rewrite);
         apply(session_rewrite_encap);
     }

@@ -56,6 +56,7 @@ header_type control_metadata_t {
         add_vlan_tag_flag                   : 1;
         skip_flow_log                       : 1;
         l2_vnic                             : 1;
+        session_rewrite_id_valid            : 1;
         nat_type                            : 2;
         encap_type                          : 2;
         mpls_label_b20_b4                   : 16;
