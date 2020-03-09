@@ -65,7 +65,7 @@ def Trigger(tc):
                     mani_partnumber = data["bitfiles"][counter]["partnumber"][pcounter]
                     if mani_partnumber in naples_partnum:
                         mani_revision = data["bitfiles"][counter]["version"]
-                        if mani_revision == int(naples_revision):
+                        if mani_revision == int(naples_revision, 16):
                             cpld_latest = True
         if cpld_latest == False:
             api.Logger.error("Naples doesnt have the latest cpld.")

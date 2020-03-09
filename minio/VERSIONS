@@ -3,7 +3,7 @@ third_party_libs 1.1.177
 lkl_libs 1.1.11
 vpp 5f179bc5a1953e1c81fefe6a24d54cf1a4065579
 openssl_libs 1.1.0.2
-platform_libs 0.0.40
+platform_libs 0.0.42
 storage_libs 0.0.1
 asic_libs fd7c20fce138741f08565dba9615e9e33aa1ddb9
 ncc_tools fd7c20fce138741f08565dba9615e9e33aa1ddb9
@@ -14,7 +14,7 @@ iota 1.0.2
 host_tools 1.0.30
 delphi_lib 1.0.9
 pensando_firmware 1.0.20
-buildroot 7bafc159d63a10f7102cc281a0a1ea17315a733d
+buildroot d6be8a2581c0dfdd234624ae294b0f7945765c6e
 platform_drivers 1.0.2
 venice_base_iso  0.0.10
 venice_web_app_framework 0.0.12

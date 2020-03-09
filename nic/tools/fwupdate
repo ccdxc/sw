@@ -2202,7 +2202,7 @@ do_list_firmware()
 
 do_list_cpld()
 {
-    local cpld_rev=`printf "%d" \`cpldapp -r 0x0\``
+    local cpld_rev=`printf "0x%x" \`cpldapp -r 0x0\``
     cat << EOF
     $JFPREF "cpld": {
         "bitfile": {
