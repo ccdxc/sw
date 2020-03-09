@@ -183,7 +183,7 @@ func (sm *SysModel) VerifyBGPCluster() error {
 			verfied := false
 			ip := strings.Split(np.LoopbackIP, "/")[0]
 			for _, item := range data {
-				if ip == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+				if ip == item.Spec.PeerAddr && item.Status.Status == "ESTABLISHED" {
 					verfied = true
 					break
 				}
@@ -199,7 +199,7 @@ func (sm *SysModel) VerifyBGPCluster() error {
 			verfied := false
 			ip := strings.Split(np.LoopbackIP, "/")[0]
 			for _, item := range data {
-				if ip == item.Spec.PeerAddr && item.Status.Status == "BGP_PEER_STATE_ESTABLISHED" {
+				if ip == item.Spec.PeerAddr && item.Status.Status == "ESTABLISHED" {
 					verfied = true
 					break
 				}
