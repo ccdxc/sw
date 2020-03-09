@@ -2029,7 +2029,7 @@ qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac)
     HAL_TRACE_DEBUG("invoked SWM queue init for uplink port {} dmac {}", 
                     swm_uplink_port, dmac);
 
-    // PD Call to init SWM queue
+   // PD Call to init SWM queue
     pd_qos_swm_args.swm_uplink_port = swm_uplink_port-1;  // change to 0 based
     pd_qos_swm_args.dmac = dmac;
     pd_func_args.pd_qos_swm_queue_init = &pd_qos_swm_args;

@@ -410,6 +410,12 @@ public:
 
     uint64_t mgmt_if_mac(platform_type_t platform);
 
+    bool swm_qos_en(void) const { return swm_qos_en_; }
+    void set_swm_qos_en(bool en) { swm_qos_en_ = en; }
+
+    uint32_t swm_qos_port_num(void) const { return swm_qos_port_num_; }
+    void set_swm_qos_port_num(uint32_t port) { swm_qos_port_num_ = port; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -520,6 +526,8 @@ private:
     PolicyMode    policy_mode_;
     vrf_id_t      customer_default_vrf_;
     hal_handle_t  inb_bond_active_uplink_hdl_;
+    bool          swm_qos_en_;
+    uint32_t      swm_qos_port_num_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -905,6 +913,13 @@ public:
     vrf_id_t customer_default_vrf(void) { return oper_db_->customer_default_vrf(); }
 
     uint64_t mgmt_if_mac(void) { return oper_db_->mgmt_if_mac(platform_); }
+
+    void set_swm_qos_en(bool en) { oper_db_->set_swm_qos_en(en); }
+    bool swm_qos_en(void) { return oper_db_->swm_qos_en(); }
+
+    void set_swm_qos_port_num(uint32_t port) { oper_db_->set_swm_qos_port_num(port); }
+    uint32_t swm_qos_port_num(void) { return oper_db_->swm_qos_port_num(); }
+
 
 private:
     // following come from shared memory or non-linux HBM memory

@@ -453,6 +453,48 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+endpoint_uninstall_swm_qos (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = qos_swm_queue_deinit(g_hal_state->swm_qos_port_num());
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to denit qos swm for port: {}. ret: {}",
+                      g_hal_state->swm_qos_port_num(), ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("SWM Qos de-programmed for port: {}",
+                    g_hal_state->swm_qos_port_num());
+    g_hal_state->set_swm_qos_en(false);
+    g_hal_state->set_swm_qos_port_num(0);
+
+end:
+    return ret;
+}
+
+hal_ret_t
+endpoint_install_swm_qos (ep_t *ep, if_t *uplink_if)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint32_t log_port = 0;
+
+    log_port = g_hal_state->catalog()->ifindex_to_logical_port(uplink_if->fp_port_num);
+    ret = qos_swm_queue_init(log_port, MAC_TO_UINT64(ep->l2_key.mac_addr));
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to swm qos init. ret: {}", ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("SWM Qos programmed for port: {}, mac: {}",
+                    log_port, macaddr2str(ep->l2_key.mac_addr));
+
+    g_hal_state->set_swm_qos_en(true);
+    g_hal_state->set_swm_qos_port_num(log_port);
+
+end:
+    return ret;
+}
+
 //------------------------------------------------------------------------------
 // PD Call to allocate PD resources and HW programming
 //------------------------------------------------------------------------------
@@ -466,6 +508,8 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_t                    *ep        = NULL;
     ep_create_app_ctxt_t    *app_ctxt  = NULL;
     pd::pd_func_args_t      pd_func_args = {0};
+    if_t                    *uplink_if = NULL;
+    uint32_t                log_port = 0;
 
     SDK_ASSERT(cfg_ctxt != NULL);
 
@@ -488,6 +532,35 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create ep pd, err : {}", ret);
     }
+
+    // Create qos for SWM EP
+    if (app_ctxt->hal_if->if_type == intf::IF_TYPE_ENIC && 
+        enicif_is_swm(app_ctxt->hal_if)) {
+
+        if (g_hal_state->swm_qos_en()) {
+            // Remove the qos configuration
+            ret = endpoint_uninstall_swm_qos();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to denit qos swm for port: {}. ret: {}",
+                              g_hal_state->swm_qos_port_num(), ret);
+                goto end;
+            }
+        }
+        ret = if_enicif_get_pinned_if(app_ctxt->hal_if, &uplink_if);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to get pinned if for enic: {}",
+                          app_ctxt->hal_if->if_id);
+            goto end;
+        }
+        // Add new qos configuration
+        ret = endpoint_install_swm_qos(ep, uplink_if);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to swm qos init. ret: {}", ret);
+            goto end;
+        }
+    }
+
+end:
     return ret;
 }
 
@@ -2310,6 +2383,8 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
     ep_t                        *ep = NULL;
+    if_t                        *hal_if = NULL, *uplink_if = NULL;
+    uint32_t                    log_port = 0;
     pd::pd_func_args_t          pd_func_args = {0};
 
     SDK_ASSERT(cfg_ctxt != NULL);
@@ -2338,6 +2413,30 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
         return ret;
     }
 
+    hal_if = find_if_by_handle(ep->if_handle);
+    if (hal_if && hal_if->if_type == intf::IF_TYPE_ENIC && 
+        enicif_is_swm(hal_if)) {
+        ret = if_enicif_get_pinned_if(hal_if, &uplink_if);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to get pinned if for enic: {}",
+                          hal_if->if_id);
+            goto end;
+        }
+        log_port = g_hal_state->catalog()->ifindex_to_logical_port(uplink_if->fp_port_num);
+        if (g_hal_state->swm_qos_en()) {
+            if (log_port == g_hal_state->swm_qos_port_num()) {
+                // Remove the qos configuration
+                ret = endpoint_uninstall_swm_qos();
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to denit qos swm for port: {}. ret: {}",
+                                  g_hal_state->swm_qos_port_num(), ret);
+                    goto end;
+                }
+            }
+        }
+    }
+
+end:
     return ret;
 }
 
