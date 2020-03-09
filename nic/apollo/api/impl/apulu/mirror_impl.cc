@@ -162,7 +162,6 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         mirror_data.action_id = MIRROR_ERSPAN_ID;
         vpc = vpc_find(&spec->erspan_spec.vpc);
-        mirror_data.erspan_action.truncate_len = spec->snap_len;
         if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
             // lookup the destination TEP
             tep = tep_find(&spec->erspan_spec.tep);
@@ -180,11 +179,21 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
                               spec->erspan_spec.mapping.str());
                 return SDK_RET_INVALID_ARG;
             }
-            mirror_data.erspan_action.nexthop_type =
-                ((mapping_impl *)(mapping->impl()))->nexthop_type();
-            mirror_data.erspan_action.nexthop_id =
-                ((mapping_impl *)(mapping->impl()))->nexthop_id();
+            if (mapping->is_local()) {
+                mirror_data.erspan_action.nexthop_type =
+                    ((mapping_impl *)(mapping->impl()))->nexthop_type();
+                mirror_data.erspan_action.nexthop_id =
+                    ((mapping_impl *)(mapping->impl()))->nexthop_id();
+            } else {
+                // for remote mappings, there is lot more programming needed
+                SDK_ASSERT(FALSE);
+            }
+            // TODO:
+            // we need to soft delete mapping thats built
         }
+        mirror_data.erspan_action.truncate_len = spec->snap_len;
+        mirror_data.erspan_action.span_id = spec->erspan_spec.span_id;
+        mirror_data.erspan_action.dscp = spec->erspan_spec.dscp;
         break;
 
     default:

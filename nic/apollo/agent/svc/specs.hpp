@@ -3228,8 +3228,6 @@ pds_mirror_session_api_spec_to_proto (pds::MirrorSessionSpec *proto_spec,
             pds::ERSpanSpec *proto_erspan = proto_spec->mutable_erspanspec();
             proto_erspan->set_tunnelid(api_spec->erspan_spec.tep.id,
                                        PDS_MAX_KEY_LEN);
-            ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_srcip(),
-                                          &api_spec->erspan_spec.src_ip);
             proto_erspan->set_dscp(api_spec->erspan_spec.dscp);
             proto_erspan->set_spanid(api_spec->erspan_spec.span_id);
             proto_erspan->set_vpcid(api_spec->erspan_spec.vpc.id,
@@ -3300,16 +3298,9 @@ pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         pds_obj_key_proto_to_api_spec(&api_spec->rspan_spec.interface,
                                       proto_spec.rspanspec().interface());
     } else if (proto_spec.has_erspanspec()) {
-        if (!proto_spec.erspanspec().has_srcip()) {
-            PDS_TRACE_ERR("Source IP missing in mirror session {} spec",
-                          api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
-        }
-        types::IPAddress srcip = proto_spec.erspanspec().srcip();
         api_spec->type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
         pds_obj_key_proto_to_api_spec(&api_spec->erspan_spec.tep,
                                       proto_spec.erspanspec().tunnelid());
-        ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.src_ip, srcip);
         api_spec->erspan_spec.dscp = proto_spec.erspanspec().dscp();
         api_spec->erspan_spec.span_id = proto_spec.erspanspec().spanid();
         pds_obj_key_proto_to_api_spec(&api_spec->erspan_spec.vpc,

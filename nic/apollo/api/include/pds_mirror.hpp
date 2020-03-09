@@ -28,6 +28,10 @@ typedef struct pds_rspan_spec_s {
 } __PACK__ pds_rspan_spec_t;
 
 /// \brief    ERSPAN configuration
+/// \remark    source IP used in the ERSPAN packet is either:
+///            1. subnet VR IP in case DstIP is in a VPC of type VPC_TYPE_TENANT
+///            2. local TEP (MyTEP) IP in case DstIP is in VPC  of type
+///               VPC_TYPE_UNDERLAY
 typedef struct pds_erspan_spec_s {
     pds_obj_key_t vpc;                ///< vpc of the destination IP
     union {
@@ -38,7 +42,6 @@ typedef struct pds_erspan_spec_s {
         ///< overlay IP in this case)
         pds_obj_key_t mapping;
     };
-    ip_addr_t src_ip;                 ///< IP address of ERSPAN source
     uint32_t dscp;                    ///< DSCP value to use in the packet
     uint32_t span_id;                 ///< SPAN ID used in ERSPAN header
 } __PACK__ pds_erspan_spec_t;

@@ -111,7 +111,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             memcpy(mirror_data.erspan_action.smac,
                    device_db()->find()->mac(), ETH_ADDR_LEN);
             mirror_data.erspan_action.sip =
-                spec->erspan_spec.src_ip.addr.v4_addr;
+                device_db()->find()->ip_addr().addr.v4_addr;
             mirror_data.erspan_action.dip = tep->ip().addr.v4_addr;
             mirror_data.erspan_action.truncate_len = spec->snap_len;
         } else {
@@ -212,7 +212,6 @@ mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     case MIRROR_ERSPAN_ID:
         minfo->spec.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
         minfo->spec.snap_len = mirror_data.erspan_action.truncate_len;
-        minfo->spec.erspan_spec.src_ip.addr.v4_addr = mirror_data.erspan_action.sip;
         // minfo->spec.erspan_spec.dst_ip.addr.v4_addr = mirror_data.erspan_action.dip;
         break;
 

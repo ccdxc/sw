@@ -110,15 +110,15 @@ func printMirrorSessionRspanHeader() {
 }
 
 func printMirrorSessionErspanHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 64)
 	erspanLine := strings.Repeat(" ", 22)
 	erspanLine += "ERSPAN  SESSIONS"
 	erspanLine += strings.Repeat(" ", 22)
 	fmt.Println(hdrLine)
 	fmt.Println(erspanLine)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
-		"ID", "SpanType", "snapLen", "SrcIP", "ERSpanDst")
+	fmt.Printf("%-6s%-10s%-10s%-36s\n",
+		"ID", "SpanType", "snapLen", "ERSpanDst")
 	fmt.Println(hdrLine)
 }
 
@@ -148,9 +148,8 @@ func printErspanMirrorSession(ms *pds.MirrorSession) {
 		spanTypeStr += "ERSPAN"
 	}
 	if spanTypeStr == "ERSPAN" {
-		fmt.Printf("%-6d%-10s%-10d%-16s%-16d\n",
+		fmt.Printf("%-6d%-10s%-10d%-36s\n",
 			spec.GetId(), spanTypeStr, spec.GetSnapLen(),
-			utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIP()),
 			spec.GetErspanSpec().GetTunnelId())
 	}
 }

@@ -7,7 +7,6 @@ package apulu
 import (
 	"context"
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
@@ -89,7 +88,6 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, client halapi.MirrorSvc
 
 func convertMirrorSession(infraAPI types.InfraAPI, mirror netproto.MirrorSession, vpcID uint64) *halapi.MirrorSessionRequest {
 	var mirrorSpecs []*halapi.MirrorSessionSpec
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	// TODO: we need to create uuid on the fly here !!
 	for _, c := range mirror.Spec.Collectors {
 		m := &halapi.MirrorSessionSpec{
@@ -101,7 +99,6 @@ func convertMirrorSession(infraAPI types.InfraAPI, mirror netproto.MirrorSession
 					Erspandst: &halapi.ERSpanSpec_DstIP{
 						DstIP: utils.ConvertIPAddresses(c.ExportCfg.Destination)[0],
 					},
-					SrcIP:  utils.ConvertIPAddresses(mgmtIP.String())[0],
 					SpanId: uint32(mirror.Status.MirrorSessionID),
 				},
 			},
