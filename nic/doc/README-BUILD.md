@@ -146,13 +146,6 @@ New     : make ARCH=aarch64
 
 Outputs : nic.tar / nic.tgz (Equivalent to 'make package' in old-infra.)
 
-Build HAPS Debug (aarch64) Image (IRIS):
------------------------------------------
-Old     : make ARCH=aarch64 -C hal/iris package-haps-dbg
-New     : make ARCH=aarch64 package-haps-dbg
-
-Outputs : nic.tar / nic.tgz
-
 Build GFT Image:
 ----------------------------------------------------
 Old     : make gft

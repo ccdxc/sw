@@ -15,7 +15,6 @@
 #MODULE_LDLIBS   = ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
                   ${${PIPELINE}_GTEST_COMMON_LDLIBS} \
                   AAPL edit ncurses lmdb
-#MODULE_INCS     = ${NIC_CSR_INCS}
-#MODULE_FLAGS    = ${NIC_CSR_FLAGS}
-#MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
-#include ${MKDEFS}/post.mk
+MODULE_FLAGS    = ${NIC_CSR_FLAGS}
+MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
+include ${MKDEFS}/post.mk

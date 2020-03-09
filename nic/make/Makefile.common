@@ -113,12 +113,6 @@ package-sim: package-clean
 		cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target sim --no-strip
     endif
 
-package-arm-dev: package-clean
-	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target arm-dev --no-strip
-
-package-haps-dbg: package-clean
-	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target haps-dbg
-
 package-clean-host:
 	@rm -rf $(TOPDIR)/../fake_root_target/x86_64
 	@rm -f  $(TOPDIR)/host.tgz
@@ -130,9 +124,6 @@ package-host: package-clean-host
 package-clean-debug:
 	@rm -f  $(TOPDIR)/debug.tgz
 	@rm -f  $(TOPDIR)/debug.tar
-
-package-debug: package-clean-debug
-	cd $(TOPDIR)/../ && python $(TOPDIR)/tools/package/package.py --target debug --no-strip
 
 release:
     ifneq ($(ARCH),aarch64)

@@ -6,7 +6,7 @@ import argparse
 pwd          = os.getcwd()
 
 # common files for both x86_64 and aarch64
-files        = [ ]#'nic/tools/package/pack_common.txt' ]
+files        = [ ]
 
 # default is aarch64 packaging and strip the libs and binaries
 arch         = 'aarch64'
@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--target', dest='target',
                     default='haps',
-                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm, gold, pegasus')
+                    help='Package for sim, haps, zebu, debug, debug-arm, gold, pegasus')
 
 # Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
@@ -96,8 +96,10 @@ if args.target == 'sim':
         files.append('nic/tools/package/pack_gft16.txt')
     elif args.pipeline == 'athena':
         files.append('nic/tools/package/pack_athena.txt')
+    elif args.pipeline == 'iris':
+        files.append('nic/tools/package/pack_sim_iris.txt')
     else:
-        files.append('nic/tools/package/pack_sim.txt')
+        raise Exception("Invalid Pipeline")
 elif args.target == 'zebu':
     print ("Packaging for zebu")
     arm_pkg     = 0
@@ -106,15 +108,6 @@ elif args.target == 'zebu':
     arch = 'x86_64'
     output_dir  = pwd + '/fake_root_target/x86_64'
     files.append('nic/tools/package/pack_zebu.txt')
-elif args.target == 'arm-dev':
-    print ("Packaging for arm-dev")
-    files.append('nic/tools/package/pack_arm_dev.txt')
-    files.append('nic/tools/package/pack_debug.txt')
-elif args.target == 'haps-dbg':
-    print ("Packaging for haps-dbg")
-    files.append('nic/tools/package/pack_haps.txt')
-    files.append('nic/tools/package/pack_haps_dbg.txt')
-    files.append('nic/tools/package/pack_debug.txt')
 elif args.target == 'host':
     print ("Packaging for host")
     arm_pkg     = 0
@@ -135,20 +128,6 @@ elif args.target == 'test-utils':
     tar_name    = 'test-utils'
     files = []
     files.append('nic/tools/package/pack_test_utils.txt')
-elif args.target == 'debug' or args.target == 'debug-arm':
-    print ("Packaging for debug")
-    if args.target == 'debug-arm':
-        arch = 'aarch64'
-    else:
-        arch = 'x86_64'
-        arm_pkg = 0
-        objcopy_bin = 'objcopy'
-        strip_bin   = 'strip'
-    output_dir  = pwd + '/pack_tmp'
-    rm_out_dir  = 1
-    tar_name    = 'debug_' + arch + '_' +  args.pipeline
-    files = []
-    files.append('nic/tools/package/pack_debug.txt')
 elif args.target == 'pegasus':
     print ("Packaging for pegasus")
     arm_pkg     = 0
@@ -159,8 +138,10 @@ elif args.target == 'pegasus':
     tar_name    = 'pegasus'
     files = []
     files.append('nic/tools/package/pack_pegasus.txt')
+elif args.target == 'gold':
+    files.append('nic/tools/package/pack_gold.txt')
 else:
-    print ("Packaging for haps")
+    print ("Packaging for hardware")
 
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
@@ -178,17 +159,15 @@ else:
         files.append('nic/tools/package/pack_gft.txt')
     elif args.pipeline == 'athena':
         files.append('nic/tools/package/pack_athena.txt')
+    elif args.pipeline == 'iris':
+        files.append('nic/tools/package/pack_iris.txt')
     else:
-        if args.target == 'gold':
-            files.append('nic/tools/package/pack_haps_gold.txt')
-        else:
-            files.append('nic/tools/package/pack_haps.txt')
-        # skip platform for apollo
-        files.append('nic/tools/package/pack_platform.txt')
+       raise Exception("Invalid Pipeline")
 
     if args.feature == 'ipsec':
         files.append('nic/tools/package/pack_ipsec.txt')
 
+    # P4ctl cli
     files.append('nic/tools/package/pack_debug.txt')
 
 if args.no_strip == True:

@@ -50,24 +50,10 @@ package-pegasus: package-clean-pegasus pegasus
 	 cd $(NICDIR)/../ && python $(NICDIR)/tools/package/package.py \
 		--target pegasus --pipeline apulu --no-strip
 
-package-debug: package-clean-debug
-	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target debug --no-strip
-
-package-debug-arm: package-clean-debug-arm
-	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target debug-arm --no-strip
-
 package-zebu: package-clean ${PKG_PREREQS}
 ifneq ($(ARCH),aarch64)
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target zebu --no-strip
 endif
-
-package-arm-dev: package-clean ${PKG_PREREQS}
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
-	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
-
-package-haps-dbg: package-clean ${PKG_PREREQS}
-	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
-	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target haps-dbg
 
 .PHONY: package-storage-offload
 package-storage-offload:

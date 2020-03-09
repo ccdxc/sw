@@ -1,2 +1,2 @@
 # package host specific files
-nic/build/x86_64/iris/bin/penctl*                     /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/penctl*                     /nic/bin/

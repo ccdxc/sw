@@ -46,7 +46,6 @@ MODULE_SRCS     := ${MODULE_SRCS} \
                    ${MODULE_SRC_DIR}/internal/tlscb_pd.cc \
                    ${MODULE_SRC_DIR}/internal/copp_pd.cc
 endif
-MODULE_INCS     = ${NIC_CSR_INCS} \
-                  ${BLD_PROTOGEN_DIR}
+MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 MODULE_SOLIBS   = ${NIC_FTL_LIBS}
 include ${MKDEFS}/post.mk
