@@ -1878,7 +1878,7 @@ static inline sdk_ret_t
 pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                                          uint32_t rule_id, uint8_t af,
                                          rule_match_t *match,
-                                         const pds::SecurityRule &proto_rule)
+                                         const pds::SecurityRuleInfo &proto_rule)
 {
     if (unlikely(proto_rule.priority() > PDS_MAX_RULE_PRIORITY)) {
         PDS_TRACE_ERR("Security policy {}, rule {} priority {} is invalid, "
@@ -2040,7 +2040,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
         return SDK_RET_OOM;
     }
     for (uint32_t i = 0; i < num_rules; i++) {
-        const pds::SecurityRule &proto_rule = proto_spec.rules(i);
+        const pds::SecurityRuleInfo &proto_rule = proto_spec.rules(i);
         api_spec->rules[i].priority = proto_rule.priority();
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
@@ -2085,7 +2085,7 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         SDK_ASSERT(FALSE);
     }
     for (uint32_t i = 0; i < api_spec->num_rules; i++) {
-        pds::SecurityRule *proto_rule = proto_spec->add_rules();
+        pds::SecurityRuleInfo *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rules[i];
         proto_rule->set_priority(api_rule->priority);
         proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));

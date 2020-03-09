@@ -193,12 +193,13 @@ message RouteResponse {
 // route get request
 message RouteGetRequest {
   // id/key of the route
-  bytes Id = 1;
+  bytes Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route get response
 message RouteGetResponse {
   types.ApiStatus ApiStatus = 1;
+  // route information
   RouteInfo       Response  = 2;
 }
 

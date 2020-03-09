@@ -17,15 +17,15 @@ import (
 
 // ############# Hal conversion Routines  ##############
 
-func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) []*halapi.SecurityRule {
-	var fwRules []*halapi.SecurityRule
+func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) []*halapi.SecurityRuleInfo {
+	var fwRules []*halapi.SecurityRuleInfo
 	for idx, r := range nsp.Spec.Rules {
 		ruleMatches, err := buildHALRuleMatches(r.Src, r.Dst, ruleIDToAppMapping, &idx)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
 		}
 		for _, match := range ruleMatches {
-			rule := &halapi.SecurityRule{
+			rule := &halapi.SecurityRuleInfo{
 				Stateful: true,
 				Match:    match,
 				Action:   convertRuleAction(r.Action),

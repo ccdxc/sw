@@ -73,7 +73,7 @@
 		DeviceGetResponse
 		DeviceDeleteRequest
 		DeviceDeleteResponse
-		SecurityRule
+		SecurityRuleInfo
 		SecurityPolicySpec
 		SecurityPolicyStatus
 		SecurityPolicyStats
@@ -84,6 +84,16 @@
 		SecurityPolicyGetResponse
 		SecurityPolicyDeleteRequest
 		SecurityPolicyDeleteResponse
+		SecurityRuleSpec
+		SecurityRuleStatus
+		SecurityRuleStats
+		SecurityRule
+		SecurityRuleRequest
+		SecurityRuleResponse
+		SecurityRuleGetRequest
+		SecurityRuleGetResponse
+		SecurityRuleDeleteRequest
+		SecurityRuleDeleteResponse
 		SecurityProfileSpec
 		SecurityProfileStatus
 		SecurityProfileStats
