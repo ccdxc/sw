@@ -161,24 +161,28 @@
         {
             "name": "session_info",
             "size": "256M",
+            "reset": true,
             "cache": "p4eg",
             "_comment": "4M * 64"
         },
         {
             "name": "session_rewrite",
             "size": "128M",
+            "reset": true,
             "cache": "p4eg",
             "_comment": "4M * 32B"
         },
         {
             "name": "session_rewrite_encap",
             "size": "256M",
+            "reset": true,
             "cache": "p4eg",
             "_comment": "4M * 64B"
         },
         {
             "name": "conntrack",
             "size": "4M",
+            "reset": true,
             "cache": "p4ig",
             "_comment": "4M * 1B"
         },

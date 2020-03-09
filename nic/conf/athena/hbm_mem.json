@@ -58,16 +58,25 @@
         },
         {
             "name": "devcmd",
-            "size": "32768K"
+            "size": "32M"
+        },
+        {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "32M",
+            "cache": "p4plus-all"
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "32768K",
+            "size": "32M",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgr",
-            "size" : "32768K"
+            "size" : "32M"
         },
         {
             "name": "fwupdate",
@@ -114,16 +123,80 @@
             "_comment": "1K descriptors of size 64B"
         },
         {
-            "name": "flow",
-            "size": "512M",
+            "name": "vlan_to_vnic",
+            "size": "8K",
             "cache": "p4ig",
-            "_comment": "8M * 64B"
+            "_comment": "4K * 2B"
         },
         {
-            "name": "flow_ohash",
+            "name": "mpls_label_to_vnic",
+            "size": "32M",
+            "cache": "p4ig",
+            "_comment": "16M * 2B"
+        },
+        {
+            "name": "dnat",
+            "size": "1M",
+            "cache": "p4ig",
+            "_comment": "16K * 64B"
+        },
+        {
+            "name": "dnat_ohash",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "4K * 64B"
+        },
+        {
+            "name": "flow",
             "size": "256M",
             "cache": "p4ig",
             "_comment": "4M * 64B"
+        },
+        {
+            "name": "flow_ohash",
+            "size": "64M",
+            "cache": "p4ig",
+            "_comment": "1M * 64B"
+        },
+        {
+            "name": "session_info",
+            "size": "256M",
+            "reset": true,
+            "cache": "p4eg",
+            "_comment": "4M * 64"
+        },
+        {
+            "name": "session_rewrite",
+            "size": "128M",
+            "reset": true,
+            "cache": "p4eg",
+            "_comment": "4M * 32B"
+        },
+        {
+            "name": "session_rewrite_encap",
+            "size": "256M",
+            "reset": true,
+            "cache": "p4eg",
+            "_comment": "4M * 64B"
+        },
+        {
+            "name": "conntrack",
+            "size": "4M",
+            "reset": true,
+            "cache": "p4ig",
+            "_comment": "4M * 1B"
+        },
+        {
+            "name": "config1",
+            "size": "2M",
+            "cache": "p4ig",
+            "_comment": "1M * 2B"
+        },
+        {
+            "name": "config2",
+            "base_region": "config1",
+            "size": "2M",
+            "_comment": "Alias of the config1 table"
         },
         {
             "name": "qos-hbm-fifo",

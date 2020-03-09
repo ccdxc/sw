@@ -2,10 +2,10 @@ nic/conf/init_bins                                                /nic/conf/init
 nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
 nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
-nic/conf/$PIPELINE/8g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/8g/
-nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
-nic/conf/$PIPELINE/4g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/4g/
+nic/conf/$PIPELINE/hbm_mem.json                                   /nic/conf/$PIPELINE/4g/
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
+nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
+nic/conf/$PIPELINE/operd.json                                     /nic/conf/
 
 # HW catalog files
 nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
@@ -31,11 +31,11 @@ nic/conf/serdes_68-0007.json                                      /nic/conf/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevent_thread.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkeventmgr.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenipc.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
@@ -74,6 +74,8 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblmdb.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libkvstore_lmdb.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcapisa.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/
@@ -99,6 +101,8 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevice.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
@@ -138,9 +142,9 @@ nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
 
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
-nic/apollo/tools/sysinit.sh                                       /nic/tools/
-nic/apollo/tools/syskill.sh                                       /nic/tools/
-nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
+nic/apollo/tools/$PIPELINE/sysinit.sh                             /nic/tools/
+nic/apollo/tools/$PIPELINE/syskill.sh                             /nic/tools/
+nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs.sh                    /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
@@ -214,11 +218,11 @@ nic/conf/captrace/sample-conf.json                                /nic/conf/capt
 nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 
 # agent specific files
-nic/apollo/tools/start-agent.sh                                   /nic/tools/
+nic/apollo/tools/athena/start-agent.sh                            /nic/tools/
 nic/apollo/tools/start-nmd.sh                                     /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/athena_app                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/athena_app                          /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
 
 # Drivers
@@ -236,3 +240,21 @@ nic/apollo/tools/run_cron.sh                                      /nic/tools/
 
 # init config profiles
 nic/conf/profiles/qos_profile_default.json                        /nic/conf/profiles/
+
+# dhcp server
+#nic/tools/dhcp-server/S80dhcp-server-disable                      /etc/init.d/S80dhcp-server
+#nic/tools/dhcp-server/S80dhcp-server                              /nic/tools/start-dhcpd.sh
+#nic/dhcp-server/dhcpd                                             /etc/default/dhcpd
+#nic/conf/dhcp-server/dhcpd.conf                                   /etc/dhcp/dhcpd.conf
+#nic/sdk/third-party/dhcp-server-pkg/$ARCH/bin/omshell             /usr/bin/
+#nic/sdk/third-party/dhcp-server-pkg/$ARCH/bin/dhcpd               /usr/sbin/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libdhcpctl.so.0     /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libdhcp.so.0        /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libomapi.so.0       /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libdns.so.1107      /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisc.so.1104      /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libirs.so.161       /usr/lib/
+nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisccfg.so.163    /usr/lib/
+
+
+

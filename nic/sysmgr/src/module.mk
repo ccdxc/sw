@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = sysmgr.bin
-MODULE_PIPELINE = iris apollo apulu artemis
+MODULE_PIPELINE = iris apollo apulu artemis athena
 ifeq (${PIPELINE}, iris)
 MODULE_SOLIBS   = pal operd delphisdk eventproto eventtypes events_recorder
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread z dl

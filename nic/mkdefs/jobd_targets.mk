@@ -302,7 +302,7 @@ jobd/offload: ${JOBD_PREREQS}
 
 .PHONY: jobd/athena_app/session_aging_sim_simple
 jobd/athena_app/session_aging_sim_simple: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --modellogs --athena_app --athena_app_test session_aging_sim_simple.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_simple.txt
 
 .PHONY: jobd/athena_app/session_aging_sim_medium
 jobd/athena_app/session_aging_sim_medium: ${JOBD_PREREQS}
