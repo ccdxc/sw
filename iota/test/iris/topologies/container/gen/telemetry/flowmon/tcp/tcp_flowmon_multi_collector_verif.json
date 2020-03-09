@@ -1,0 +1,18 @@
+[
+    {
+        "protocol": "tcp", 
+        "src_ip": "192.168.101.104",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.102",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "tcp", 
+        "src_ip": "192.168.101.102",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.104",
+        "collector": "flowmon", 
+        "port": "120"
+    }
+]

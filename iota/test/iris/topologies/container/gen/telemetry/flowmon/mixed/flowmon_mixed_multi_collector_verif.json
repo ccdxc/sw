@@ -1,0 +1,50 @@
+[
+    {
+        "protocol": "udp", 
+        "src_ip": "192.168.100.101",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.102",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "udp", 
+        "src_ip": "192.168.100.102",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.101",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "tcp", 
+        "src_ip": "192.168.100.102",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.104",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "tcp", 
+        "src_ip": "192.168.100.104",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.102",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "icmp", 
+        "src_ip": "192.168.101.102",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.104",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "icmp", 
+        "src_ip": "192.168.101.104",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.102",
+        "collector": "flowmon", 
+        "port": "120"
+    }
+]

@@ -2,28 +2,51 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.config.netagent.api as agent_api
+import iota.test.iris.config.netagent.hw_sec_ip_config as sec_ip_api
 import iota.test.iris.testcases.telemetry.utils as utils
 import pdb
+from collections import defaultdict
 
+is_wl_type_bm = False
+wl_sec_ip_info = defaultdict(lambda: dict())
 
 def Setup(tc):
+    global is_wl_type_bm
+    global wl_sec_ip_info
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
     tc.workloads = api.GetWorkloads()
 
-    #agent_api.DeleteMirrors()
+    for wl in tc.workloads:
+        wl_sec_ip_info[wl.workload_name] = []
+        # for BM type set untag collector
+        if api.IsBareMetalWorkloadType(wl.node_name):
+            is_wl_type_bm = True
+        sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(wl, True, 2)
+        wl_sec_ip_info[wl.workload_name] = sec_ip_list
+
+    #for wl in tc.workloads:
+    #    for sec_ip in wl_sec_ip_info[wl.workload_name]:
+    #        api.Logger.info("Node: {} WL: {} Sec IP: {}".format(wl.node_name, wl.workload_name, sec_ip))
+
+    #tc.skip = True
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    #if tc.skip: return api.types.status.SUCCESS
+
     policies = utils.GetTargetJsons('flowmon', tc.iterators.proto)
-    mirror_json_obj = None
     result = api.types.status.SUCCESS
     
     count = 0
     ret_count = 0
+    export_cfg = []
+    collector_wl = []
     for policy_json in policies:
-        collector_dest = None
+        export_cfg.clear()
+        collector_wl.clear()
         #pdb.set_trace()
         verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
+        api.Logger.info("Using policy_json = {}".format(policy_json))
         newObjects = agent_api.AddOneConfig(policy_json)
         if len (newObjects) == 0:
             api.Logger.error("Adding new objects to store failed")
@@ -35,18 +58,24 @@ def Trigger(tc):
 
         # Get collector to find the workload
         for obj in newObjects:
-            collector_dest = obj.spec.exports[0].destination
-            api.Logger.info("export-dest: {} ".format(collector_dest))
+            for obj_export_cfg in obj.spec.exports:
+                export_cfg.append(obj_export_cfg)
+                api.Logger.info("export-dest: {} proto: {} port: {}".format(obj_export_cfg.destination, 
+                            obj_export_cfg.proto_port.protocol, obj_export_cfg.proto_port.port))
 
-        # Get collector
-        for wl in tc.workloads:
-            if collector_dest == wl.ip_address:
-                collector_wl = wl
-                break
-        ret = utils.RunAll(collector_wl, verif_json, tc, 'flowmon')
+        for coll_dst in export_cfg:
+            for wl in tc.workloads:
+                if (wl.ip_address == coll_dst.destination) or (coll_dst.destination in wl_sec_ip_info[wl.workload_name]):
+                    collector_wl.append(wl)
+
+        api.Logger.info("collect_dest len: {} ".format(len(export_cfg)))
+        api.Logger.info("collect_wl len: {} ".format(len(collector_wl)))
+
+        ret = utils.RunAll(collector_wl, verif_json, tc, 'flowmon', export_cfg, is_wl_type_bm)
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count
+
         agent_api.DeleteConfigObjects(newObjects)
         agent_api.RemoveConfigObjects(newObjects)
         api.Logger.info("policy_json = {}, count = {}, total_count = {}".format(policy_json, ret_count, count))
@@ -54,6 +83,8 @@ def Trigger(tc):
             api.Logger.info("policy_json = {}, Encountered FAILURE, stopping".format(policy_json))
             break
     tc.SetTestCount(count)
+    export_cfg.clear()
+    collector_wl.clear()
     return result
 
 def Verify(tc):
@@ -62,5 +93,8 @@ def Verify(tc):
 
 def Teardown(tc):
     api.Logger.info("Tearing down ...")
+    for wl in tc.workloads:
+        sec_ip_api.ConfigWorkloadSecondaryIp(wl, False, 2)
+        wl_sec_ip_info[wl.workload_name].clear()
     return api.types.status.SUCCESS
 

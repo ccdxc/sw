@@ -1,0 +1,91 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "FlowExportPolicy", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "flow-export-ipfix-0", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "template-interval": "5m", 
+                "exports": [
+                    {
+                        "destination": "10.255.0.2",
+                        "proto-port": {
+                            "protocol": "udp", 
+                            "port": "5055"
+                        }
+                    },
+                    {
+                        "destination": "10.255.0.4",
+                        "proto-port": {
+                            "protocol": "udp", 
+                            "port": "5056"
+                        }
+                    },
+                    {
+                        "destination": "10.255.0.2",
+                        "proto-port": {
+                            "protocol": "udp", 
+                            "port": "5057"
+                        }
+                    },
+                    {
+                        "destination": "10.255.0.4",
+                        "proto-port": {
+                            "protocol": "udp", 
+                            "port": "5058"
+                        }
+                    }
+                ], 
+                "interval": "1s", 
+                "match-rules": [
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.4.0.2"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "tcp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.4.0.1"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "11.4.0.1"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "tcp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "11.4.0.2"
+                            ]
+                        }
+                    }
+                ], 
+                "format": "IPFIX"
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/telemetry/flowexports/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

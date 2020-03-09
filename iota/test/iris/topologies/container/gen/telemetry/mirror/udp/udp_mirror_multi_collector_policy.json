@@ -1,0 +1,72 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "MirrorSession", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "mirror-2", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "match-rules": [
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.101.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.101.103"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.101.103"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.101.104"
+                            ]
+                        }
+                    }
+                ], 
+                "collectors": [
+                    {
+                        "export-config": {
+                            "destination": "192.168.100.104"
+                        }, 
+                        "type": "erspan"
+                    },
+                    {
+                        "export-config": {
+                            "destination": "192.168.100.102"
+                        }, 
+                        "type": "erspan"
+                    }
+                ]
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/mirror/sessions/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

@@ -1,0 +1,44 @@
+[
+    {
+        "src_ip": "192.168.101.101",
+        "dst_ip": "192.168.101.102",
+        "protocol": "udp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.101.102",
+        "dst_ip": "192.168.101.101",
+        "protocol": "udp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.101.103",
+        "dst_ip": "192.168.101.104",
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.101.104",
+        "dst_ip": "192.168.101.103",
+        "protocol": "tcp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.101.102",
+        "dst_ip": "192.168.101.101",
+        "protocol": "icmp", 
+        "port": "0", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "192.168.101.101",
+        "dst_ip": "192.168.101.102",
+        "protocol": "icmp", 
+        "port": "0", 
+        "result": "mirror"
+    }
+]

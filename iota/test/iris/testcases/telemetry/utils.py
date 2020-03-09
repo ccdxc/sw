@@ -16,6 +16,10 @@ import ipaddress as ipaddr
 from datetime import datetime
 
 uplink_vlan = 0
+# for local work loads, the packet vlan may not be wire encap vlan.
+# its hard to predict which lif the local wl's are mapped to.
+# ignore vlan check for that case
+local_wls_ignore_vlan_check = False
 
 def GetProtocolDirectory(feature, proto):
     return api.GetTopologyDirectory() + "/gen/telemetry/{}/{}".format(feature, proto)
@@ -40,19 +44,13 @@ def GetTcpDumpCmd(intf, protocol = None, port = 0):
 
     return cmd
 
-def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port, is_wl_bm_type = False):
+def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
     if protocol == 'tcp':
         cmd = "hping3 -S -p {} -c 1 {} -I {}".format(int(destination_port), destination_ip, src_wl.interface)
     elif protocol == 'udp':
         cmd = "hping3 --{} -p {} -c 1 {} -I {}".format(protocol.lower(), int(destination_port), destination_ip, src_wl.interface)
     else:
-        # Workaround for hping issue on BM workload over VLAN tagged sub-if;
-        # hping sends local host addr as source IP for hping on tagged sub-if;
-        # hence using ping instead of hping on BM.
-        if is_wl_bm_type:
-            cmd = "ping -c 1 {} ".format(destination_ip)
-        else:
-            cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
+        cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
         
     return cmd
 
@@ -78,10 +76,10 @@ def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", coun
 def GetVerifJsonFromPolicyJson(policy_json):
     return policy_json.replace("_policy", "_verif")
 
-def VerifyVlan():
+def VerifyVlan(pcap_file_name):
     result = api.types.status.SUCCESS
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    mirrorscapy = dir_path + '/' + "mirror.pcap"
+    mirrorscapy = dir_path + '/' + pcap_file_name
     api.Logger.info("File Name: %s" % (mirrorscapy))
     pkts = rdpcap(mirrorscapy)
     spanpktsfound = False
@@ -90,12 +88,12 @@ def VerifyVlan():
             spanpktsfound = True
             inner=Ether(pkt['Raw'].load[20:])
             #api.Logger.info("Pkt: {}".format(pkt))
-            #api.Logger.info("Inner Pkt: {}".format(inner))
+            api.Logger.info("Inner Pkt: {}".format(inner))
             if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
                 result = api.types.status.FAILURE
                 api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan: {} ".format(uplink_vlan, inner['Dot1Q'].vlan))
                 api.Logger.info("Inner Pkt: {}".format(inner))
-            elif (inner.haslayer('Dot1Q') and inner['Dot1Q'].vlan != uplink_vlan):
+            elif ((local_wls_ignore_vlan_check == False) and inner.haslayer('Dot1Q') and (inner['Dot1Q'].vlan != uplink_vlan)):
                 result = api.types.status.FAILURE
                 api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan id: {}".format(uplink_vlan, inner['Dot1Q'].vlan))
                 api.Logger.info("Inner Pkt: {}".format(inner))
@@ -104,11 +102,11 @@ def VerifyVlan():
        api.Logger.info("VerifyVlan Failed: spanpkts not found ")
     return result
 
-def VerifyTimeStamp(command):
+def VerifyTimeStamp(command, pcap_file_name):
     global g_time
     result = api.types.status.SUCCESS
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    mirrorscapy = dir_path + '/' + "mirror.pcap"
+    mirrorscapy = dir_path + '/' + pcap_file_name
     api.Logger.info("File Name: %s" % (mirrorscapy))
     pkts = rdpcap(mirrorscapy)
     spanpktsfound = False
@@ -138,19 +136,20 @@ def VerifyTimeStamp(command):
        result = api.types.status.FAILURE
     return result
 
-def VerifyCmd(cmd, action, feature):
+def VerifyCmd(cmd, action, feature, pcap_file_name, export_cfg_port=2055):
     api.PrintCommandResults(cmd)
     result = api.types.status.SUCCESS
     if 'tcpdump' in cmd.command:
         if feature == 'mirror':
             if 'pcap' in cmd.command:
-                if VerifyVlan() == api.types.status.FAILURE:
+                if VerifyVlan(pcap_file_name) == api.types.status.FAILURE:
                     result = api.types.status.FAILURE
                     api.Logger.info("VerifyVlan failed")
-                if VerifyTimeStamp(cmd) == api.types.status.FAILURE:
+                if VerifyTimeStamp(cmd, pcap_file_name) == api.types.status.FAILURE:
                     result = api.types.status.FAILURE
         elif feature == 'flowmon':
-            matchObj = re.search( r'(.*)2055: UDP, length(.*)', cmd.stdout, 0)
+            search_str = r'(.*)%s: UDP, length(.*)'%export_cfg_port
+            matchObj = re.search(search_str, cmd.stdout, 0)
             if matchObj is None:
                 result = api.types.status.FAILURE
     return result
@@ -164,27 +163,39 @@ def GetDestPort(port):
         return '3000'
     return port 
 
-def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, action, feature):
+def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_w, collector_ip, action, feature, is_wl_type_bm=False):
     backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
     
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     # Add the ping commands from collector to source and dest workload
     # to avoid flooding on the vswitch
-    if (collector_w.node_name != src_wl.node_name):
-        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                                   "ping -c 1 %s " % (src_wl.ip_address))
-    if (collector_w.node_name != dest_wl.node_name):
-        api.Trigger_AddCommand(req, collector_w.node_name, collector_w.workload_name,
-                                   "ping -c 1 %s " % (destination_ip))
-    if feature == 'mirror':
-        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
-                               "tcpdump -c 10 -nnSXi %s ip proto gre -w mirror.pcap" % (collector_w.interface), background=True)
-        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
-                               "tcpdump -c 10 -nni %s ip proto gre" % (collector_w.interface), background=True)
-    elif feature == 'flowmon':
-        api.Trigger_AddCommand(backgroun_req, collector_w.node_name, collector_w.workload_name,
-                               "tcpdump -c 10 -nni %s udp and dst port 2055" % (collector_w.interface), background=True)
+    api.Trigger_AddCommand(req, collector_w[0].node_name, collector_w[0].workload_name,
+                           "ping -c 1 %s " % (src_wl.ip_address), timeout=2)
+    api.Trigger_AddCommand(req, collector_w[0].node_name, collector_w[0].workload_name,
+                           "ping -c 1 %s " % (destination_ip), timeout=2)
+    trig_resp = api.Trigger(req)
+
+    collector_list_len = len(collector_ip)
+
+    coll_idx = 0
+    while coll_idx < collector_list_len:
+        coll_wl = collector_w[coll_idx]
+        coll_ip = collector_ip[coll_idx]
+
+        if feature == 'mirror':
+            api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
+                                   "tcpdump -c 10 -nnSXi %s  ip proto gre and dst %s -w mirror-%d.pcap" %
+                                   (coll_wl.interface, coll_ip, coll_idx), background=True, timeout=15)
+            api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
+                                   "tcpdump -c 10 -nni %s ip proto gre and dst %s" %
+                                   (coll_wl.interface, coll_ip), background=True, timeout=15)
+        elif feature == 'flowmon':
+            api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
+                                   "tcpdump -c 10 -nni %s udp and dst port %s and dst host %s"%
+                                   (coll_wl.interface, coll_ip.proto_port.port, coll_ip.destination),
+                                   background=True, timeout=15)
+        coll_idx += 1
 
     background_trig_resp = api.Trigger(backgroun_req)
 
@@ -194,12 +205,17 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     if feature == 'mirror':
         time.sleep(2)
 
-    if api.IsBareMetalWorkloadType(src_wl.node_name):
+    # Workaround for hping issue on BM workload over VLAN tagged sub-if,
+    # when there are more than 16 interfaces in the system.
+    # hping sends local host addr as source IP for hping on tagged sub-if;
+    # hence using ping instead of hping on BM.
+    if is_wl_type_bm:
         cmd = GetNpingCmd(protocol, destination_ip, destination_port)
     else:
-        cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port, False)
+        cmd = GetHping3Cmd(protocol, src_wl, destination_ip, destination_port)
 
-    api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd)
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddCommand(req, src_wl.node_name, src_wl.workload_name, cmd, timeout=3)
     api.Logger.info("Running from src_wl_ip {} COMMAND {}".format(src_wl.ip_address, cmd))
 
     trig_resp = api.Trigger(req)
@@ -220,27 +236,41 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     #for cmd in background_resp.commands:
     #    api.PrintCommandResults(cmd)
 
-    #resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    coll_idx = 0
+    while coll_idx < collector_list_len:
+        coll_wl = collector_w[coll_idx]
+        coll_ip = collector_ip[coll_idx]
+        pcap_file_name = None
+        proto_port = None
+        cmd_resp_idx = coll_idx
+        if feature == 'mirror':
+            pcap_file_name = ('mirror-%d.pcap'%coll_idx)
+            api.CopyFromWorkload(coll_wl.node_name, coll_wl.workload_name, [pcap_file_name], dir_path)
+            # For mirror feature, 2 commands are sent to WL.
+            # Only the first command has tcpdump pcap file.
+            cmd_resp_idx = coll_idx*2
+        elif feature == 'flowmon':
+            proto_port = coll_ip.proto_port.port
 
-    if feature == 'mirror':
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        api.CopyFromWorkload(collector_w.node_name, collector_w.workload_name, ['mirror.pcap'], dir_path)
-
-    for cmd in background_resp.commands:
-        result = VerifyCmd(cmd, action, feature)
+        cmd = background_resp.commands[cmd_resp_idx]
+        result = VerifyCmd(cmd, action, feature, pcap_file_name, proto_port)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
             break
+        coll_idx += 1
 
     return result
 
 def GetSourceWorkload(verif, tc):
     global uplink_vlan
+    global local_wls_ignore_vlan_check
     workloads = api.GetWorkloads()
     sip = verif['src_ip']
     src_wl = None
+    uplink_vlan = 0
+    local_wls_ignore_vlan_check = False
     for wl in workloads:
-        api.Logger.info("Uplink vlan: {}".format(wl.uplink_vlan))
         if (wl.uplink_vlan != 0):
             uplink_vlan = wl.uplink_vlan
         if '/24' in sip or 'any' in sip:
@@ -260,6 +290,7 @@ def GetSourceWorkload(verif, tc):
     return src_wl
 
 def GetDestWorkload(verif, tc, src_w):
+    global local_wls_ignore_vlan_check
     workloads = api.GetWorkloads()
     dip = verif['dst_ip']
     dst_wl = None
@@ -289,9 +320,15 @@ def GetDestWorkload(verif, tc, src_w):
             if dip == wl.ip_address:
                 dst_wl = wl
                 break
+
+    # ignore wire encap vlan check in packet validation if src & dst are chosen from same node
+    if dst_wl is not None and dst_wl.node_name == src_w.node_name:
+        local_wls_ignore_vlan_check = True
+
+    api.Logger.info("Uplink vlan: {} local_wls_ignore_vlan_check: {}".format(uplink_vlan,local_wls_ignore_vlan_check))
     return dst_wl
 
-def RunAll(collector_w, verif_json, tc, feature):
+def RunAll(collector_w, verif_json, tc, feature, collector_ip, is_wl_type_bm=False):
     res = api.types.status.SUCCESS
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
 
@@ -316,13 +353,13 @@ def RunAll(collector_w, verif_json, tc, feature):
         if not src_w.IsNaples():
             if not dest_w.IsNaples():
                 continue
-        if api.IsBareMetalWorkloadType(collector_w.node_name):
+        if is_wl_type_bm:
             if (dest_w.node_name == src_w.node_name):
                 api.Logger.info("Source and Dest workloads are same {}".format(dest_w.node_name))
                 continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
-        res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port, collector_w, action, feature)
+        res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port, collector_w, collector_ip, action, feature, is_wl_type_bm)
         if (res == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!!")
             break;

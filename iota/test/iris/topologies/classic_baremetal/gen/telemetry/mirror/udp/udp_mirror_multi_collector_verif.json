@@ -1,0 +1,16 @@
+[
+    {
+        "src_ip": "11.5.0.2", 
+        "dst_ip": "11.5.0.1", 
+        "protocol": "udp", 
+        "port": "120", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "11.5.0.1", 
+        "dst_ip": "11.5.0.2", 
+        "protocol": "udp", 
+        "port": "120", 
+        "result": "mirror"
+    }
+]

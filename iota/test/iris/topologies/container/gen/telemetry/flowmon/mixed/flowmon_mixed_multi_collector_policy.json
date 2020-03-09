@@ -1,0 +1,149 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "FlowExportPolicy", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "flow-export-ipfix-0", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "template-interval": "5m", 
+                "exports": [
+                    {
+                        "destination": "192.168.100.103",
+                        "proto-port": {
+                            "protocol": "udp",
+                            "port": "12001"
+                        }
+                    },
+                    {
+                        "destination": "192.168.100.104",
+                        "proto-port": {
+                            "protocol": "udp",
+                            "port": "12002"
+                        }
+                    }
+                ], 
+                "interval": "1s", 
+                "match-rules": [
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.100.101"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.102"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "udp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.101"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.100.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "tcp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.104"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.100.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "tcp", 
+                                    "port": "120"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.100.102"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.101.102"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.101.104"
+                            ]
+                        }
+                    }, 
+                    {
+                        "source": {
+                            "addresses": [
+                                "192.168.101.104"
+                            ]
+                        }, 
+                        "destination": {
+                            "proto-ports": [
+                                {
+                                    "protocol": "icmp", 
+                                    "port": "0"
+                                }
+                            ], 
+                            "addresses": [
+                                "192.168.101.102"
+                            ]
+                        }
+                    }
+                ], 
+                "format": "IPFIX"
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/telemetry/flowexports/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

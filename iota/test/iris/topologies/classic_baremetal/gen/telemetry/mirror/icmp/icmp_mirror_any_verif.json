@@ -3,14 +3,14 @@
         "src_ip": "any", 
         "dst_ip": "any", 
         "protocol": "icmp", 
-        "port": "120", 
+        "port": "0",
         "result": "mirror"
     }, 
     {
         "src_ip": "any", 
         "dst_ip": "any", 
         "protocol": "icmp", 
-        "port": "120", 
+        "port": "0",
         "result": "mirror"
     }
 ]

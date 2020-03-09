@@ -1,0 +1,16 @@
+[
+    {
+        "protocol": "icmp", 
+        "src_ip": "192.168.100.103",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.101",
+        "port": "0"
+    }, 
+    {
+        "protocol": "icmp", 
+        "src_ip": "192.168.100.101",
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.103",
+        "port": "0"
+    }
+]

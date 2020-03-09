@@ -1,0 +1,18 @@
+[
+    {
+        "protocol": "udp", 
+        "src_ip": "192.168.101.101",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.104",
+        "collector": "flowmon", 
+        "port": "120"
+    }, 
+    {
+        "protocol": "udp", 
+        "src_ip": "192.168.101.104",
+        "result": "flowmon", 
+        "dst_ip": "192.168.101.101",
+        "collector": "flowmon", 
+        "port": "120"
+    }
+]

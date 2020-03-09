@@ -1,0 +1,16 @@
+[
+    {
+        "protocol": "icmp", 
+        "src_ip": "11.3.0.2",
+        "result": "flowmon", 
+        "dst_ip": "11.3.0.1",
+        "port": "0"
+    }, 
+    {
+        "protocol": "icmp", 
+        "src_ip": "11.3.0.1",
+        "result": "flowmon", 
+        "dst_ip": "11.3.0.2",
+        "port": "0"
+    }
+]
