@@ -66,6 +66,39 @@ func (h Hal) InterfaceDelete(ctx context.Context, req *apuluproto.InterfaceDelet
 	}, nil
 }
 
+// SecurityRuleCreate stubbed out
+func (h Hal) SecurityRuleCreate(ctx context.Context, req *apuluproto.SecurityRuleRequest) (*apuluproto.SecurityRuleResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityRuleCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityRuleResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityRuleUpdate stubbed out
+func (h Hal) SecurityRuleUpdate(ctx context.Context, req *apuluproto.SecurityRuleRequest) (*apuluproto.SecurityRuleResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityRuleUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityRuleResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// SecurityRuleDelete stubbed out
+func (h Hal) SecurityRuleDelete(ctx context.Context, req *apuluproto.SecurityRuleDeleteRequest) (*apuluproto.SecurityRuleDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityRuleDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.SecurityRuleDeleteResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
 // SecurityProfileCreate stubbed out
 func (h Hal) SecurityProfileCreate(ctx context.Context, req *apuluproto.SecurityProfileRequest) (*apuluproto.SecurityProfileResponse, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

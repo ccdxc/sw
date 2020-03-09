@@ -13,6 +13,15 @@ import (
 
 // ##########################n HAL methods stubed out to satisfy interface
 
+// SecurityRuleGet stubbed out
+func (h Hal) SecurityRuleGet(ctx context.Context, req *apuluproto.SecurityRuleGetRequest) (*apuluproto.SecurityRuleGetResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SecurityRuleGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
 // SecurityProfileGet stubbed out
 func (h Hal) SecurityProfileGet(ctx context.Context, req *apuluproto.SecurityProfileGetRequest) (*apuluproto.SecurityProfileGetResponse, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")
