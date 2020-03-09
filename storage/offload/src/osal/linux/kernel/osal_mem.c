@@ -33,15 +33,18 @@ void* osal_aligned_alloc(size_t alignment, size_t size)
 
 void *osal_contig_alloc(size_t alignment, size_t size)
 {
-	size_t block_count;
-
-	alignment = alignment ? alignment : 1;
-	block_count = (size + alignment - 1)/alignment;
 #ifdef __FreeBSD__
-	return contigmalloc(block_count*alignment, M_KMALLOC, GFP_KERNEL,
+	alignment = alignment ? alignment : 8;
+	return contigmalloc(size, M_KMALLOC, GFP_KERNEL,
 			0, ~0ull, alignment, 0);
 #else
-	return kmalloc(block_count*alignment, GFP_KERNEL);
+	/*
+	 * TODO: need to find and use the api that deterministically returns
+	 * the contiguous physical memory in linux, but for now rely on
+	 * kmalloc()
+	 *
+	 */
+	return osal_aligned_alloc(alignment, size);
 #endif
 }
 
