@@ -29,3 +29,13 @@ venice-iso:
 		-v ${TOPDIR}/nic:/nic \
 		-v ${TOPDIR}/tools:/tools \
 		registry.test.pensando.io:5000/pens-vinstall:v0.1  /pen/add-venice-iso.sh
+
+venice-apulu-iso:
+	echo commit: ${GIT_COMMIT} > PEN-VERSION
+	echo version: ${GIT_VERSION} >> PEN-VERSION
+	echo build-date: ${BUILD_DATE} >> PEN-VERSION
+	docker run --rm --privileged  -v ${CURDIR}:/pen \
+		-v ${TOPDIR}/bin:/venice-bin \
+		-v ${TOPDIR}/nic:/nic \
+		-v ${TOPDIR}/tools:/tools \
+		registry.test.pensando.io:5000/pens-vinstall:v0.1  /pen/add-venice-iso.sh apulu

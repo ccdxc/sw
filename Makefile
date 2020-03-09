@@ -391,6 +391,9 @@ clean:
 ova:
 	$(MAKE) -C tools/docker-files/ova
 
+apulu-ova:
+	$(MAKE) -C tools/docker-files/ova venice-apulu-ova
+
 helper-containers:
 	@cd tools/docker-files/pens-base; docker build -t ${REGISTRY_URL}/pens-base:v0.9 .
 	@cd tools/docker-files/pens-base-2; docker build -t ${REGISTRY_URL}/pens-base-2:v0.5 .
@@ -901,6 +904,11 @@ venice-iso:
 	mkdir -p bin/venice-install
 	mkdir -p bin/pxe
 	$(MAKE) -C tools/docker-files/vinstall venice-iso
+
+venice-apulu-iso:
+	mkdir -p bin/venice-install
+	mkdir -p bin/pxe
+	$(MAKE) -C tools/docker-files/vinstall venice-apulu-iso
 
 bundle-image:
 	cd bin/venice-install && tar -cf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz

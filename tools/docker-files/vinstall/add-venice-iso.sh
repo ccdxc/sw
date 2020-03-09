@@ -8,6 +8,24 @@ set -o pipefail
 #   mainly useful for kickstarting and clean installation of the venice installations
 #   on fresh new machines
 
+if [ $# -eq 1 -a "$1" == "apulu" ]; then
+  echo "building venice install iso for apulu pipeline"
+  VENICE_FILE=venice.apulu.tgz
+  FW_FILE=naples_fw_venice.tar
+  OUT_FILE=pen-install.apulu.iso
+else
+  echo "building venice install iso for iris pipeline"
+  VENICE_FILE=venice.tgz
+  FW_FILE=naples_fw.tar
+  OUT_FILE=pen-install.iso
+fi
+
+if [ ! -f /venice-bin/$VENICE_FILE -o ! -f /nic/$FW_FILE ]; then
+  echo "all required files are not found"
+  echo "expect venice install file /venice-bin/$VENICE_FILE"
+  echo "expect naples firmware file /nic/$FW_FILE"
+  exit 1
+fi
 
 #expected files
 #   /pen/venice.tgz : venice binaries
@@ -67,19 +85,19 @@ mksquashfs /t/squashfs-root /iso/LiveOS/squashfs.img -comp xz
 
 #create a temp iso to be used for pxe bootable image
 cd /iso
-mkisofs -o /venice-bin/pen-install.iso \
+mkisofs -o /venice-bin/$OUT_FILE \
   -J -r -hide-rr-moved -hide-joliet-trans-tbl -V pen-install \
   -b isolinux/isolinux.bin -c isolinux/boot.cat \
   -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e isolinux/efiboot.img -no-emul-boot  \
   -eltorito-alt-boot -e isolinux/macboot.img -no-emul-boot  \
   /iso
-/usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
+/usr/bin/isohybrid -u -m /venice-bin/$OUT_FILE
 
 # creation of PXE bootable installer image
 rm -fr /venice-bin/pxe
 mkdir -p /venice-bin/pxe
 cd /venice-bin/pxe
-livecd-iso-to-pxeboot /venice-bin/pen-install.iso
+livecd-iso-to-pxeboot /venice-bin/$OUT_FILE
 
 # PXE bootable minimal image is done. Once booted, it copies 
 #  squashfs etc from the below location to the harddisk and makes it bootable
@@ -97,18 +115,18 @@ cp /pen/grub-efi.cfg /iso/EFI/BOOT/grub.cfg || :
 cp /pen/venice-cleaninstall.sh /iso/LiveOS/venice-cleaninstall.sh || :
 # this creates a full-fledged installation dvd with venice and naples
 cp /pen/PEN-VERSION /iso/LiveOS/PEN-VERSION || :
-cp /venice-bin/venice.tgz /iso/LiveOS/venice.tgz || :
-cp /nic/naples_fw.tar /iso/LiveOS/naples_fw.tar || :
+cp /venice-bin/$VENICE_FILE /iso/LiveOS/venice.tgz || :
+cp /nic/$FW_FILE /iso/LiveOS/naples_fw.tar || :
 
 #create the iso with all our contents and our custom isolinux and grub
 cd /iso
-mkisofs -o /venice-bin/pen-install.iso \
+mkisofs -o /venice-bin/$OUT_FILE \
   -J -r -hide-rr-moved -hide-joliet-trans-tbl -V pen-install \
   -b isolinux/isolinux.bin -c isolinux/boot.cat \
   -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e isolinux/efiboot.img -no-emul-boot  \
   -eltorito-alt-boot -e isolinux/macboot.img -no-emul-boot  \
   /iso
-/usr/bin/isohybrid -u -m /venice-bin/pen-install.iso
+/usr/bin/isohybrid -u -m /venice-bin/$OUT_FILE
 
 chmod -R 777 /venice-bin
 

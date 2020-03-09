@@ -8,7 +8,13 @@ yum -y install qemu-img
 # Build the OVA and download it using buildit tool
 build_id=`/t/buildit b -i /t/pen-install.iso pensando/e2e-images/venice/venice.yaml | grep 'Build ID: ' | uniq | sed 's/Build ID: //'`
 # Directory to keep the output of the build
-dir="output"
+if [ $# -eq 1 -a "$1" == "apulu" ]; then
+    echo "building ova and qcow2 for apulu venice"
+    dir="output-apulu"
+else
+    echo "building ova and qcow2 for iris venice"
+    dir="output"
+fi
 mkdir $dir
 ./buildit i p -o $dir/venice.ova $build_id
 # Untar the OVA so we can modify the .ovf file and repackage it
