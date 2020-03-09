@@ -528,9 +528,11 @@ pd_tunnelif_get_rw_idx (pd_func_args_t *pd_func_args)
     pd_tunnelif_get_rw_idx_args_t *args = pd_func_args->pd_tunnelif_get_rw_idx;
     pd_tunnelif_t *pd_tif = (pd_tunnelif_t *)args->hal_if->pd_if;
 
-    if (!pd_tif)
+    if (!pd_tif) {
         args->tnnl_rw_idx = -1;
-    args->tnnl_rw_idx = pd_tif->tunnel_rw_idx;
+    } else {
+        args->tnnl_rw_idx = pd_tif->tunnel_rw_idx;
+    }
     return HAL_RET_OK;
 }
 

@@ -16,7 +16,7 @@ struct pd_tunnelif_s {
     uint32_t imt_idx[3];                 // Input mapping tunneled table idx
     uint32_t tunnel_rw_idx;              // Tunnel rewrite table idx
     uint32_t vf_prop_idx;                // VF properties table idx
-    // vrf_id_t tid;
+    pd_tnnl_rw_entry_key_t key;
 
     void        *pi_if;                  // PI ptr
 } __PACK__;
@@ -55,7 +55,7 @@ pd_tunnelif_init (pd_tunnelif_t *tunnelif)
         tunnelif->imn_idx[i] = -1;
         tunnelif->imt_idx[i] = -1;
     }
-    tunnelif->tunnel_rw_idx = -1;
+    tunnelif->tunnel_rw_idx = 0;
     return tunnelif;
 }
 
@@ -98,13 +98,13 @@ pd_tunnelif_delink_pi_pd(pd_tunnelif_t *pd_tunnelif, if_t *pi_if)
     if_set_pd_if(pi_if, NULL);
 }
 
-hal_ret_t pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
-                                 pd_tunnelif_t *pd_tif);
+hal_ret_t pd_tunnelif_form_data(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
+                                pd_tunnelif_t *pd_tif, bool ep_valid, ep_t *rtep_ep);
 hal_ret_t pd_tunnelif_alloc_res(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif,
                                  bool is_upgrade = false);
-hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif,
-                                             bool is_upgrade = false);
+hal_ret_t pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade,
+                                             bool ep_valid, ep_t *rtep_ep);
 hal_ret_t pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif,
                                                  int tunnel_type,
@@ -116,7 +116,6 @@ hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
 hal_ret_t pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif);
 hal_ret_t pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
                                            p4pd_table_id tbl_id);
-hal_ret_t pd_tunnelif_del_tunnel_rw_table_entry(pd_tunnelif_t *pd_tif);
 hal_ret_t pd_tunnelif_cleanup(pd_tunnelif_t *pd_tunnelif);
 
 hal_ret_t pd_tunnelif_create(pd_if_create_args_t *args);

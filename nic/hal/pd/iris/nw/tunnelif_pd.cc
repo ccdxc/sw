@@ -21,7 +21,7 @@ namespace pd {
 hal_ret_t
 pd_tunnelif_create(pd_if_create_args_t *args)
 {
-    hal_ret_t            ret = HAL_RET_OK;;
+    hal_ret_t            ret = HAL_RET_OK;
     pd_tunnelif_t        *pd_tunnelif;
 
     HAL_TRACE_DEBUG("Creating pd state for Tunnelif: {}",
@@ -329,7 +329,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
     hal_if = (if_t *) pd_tunnelif->pi_if;
     SDK_ASSERT(hal_if != NULL);
 
-    ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif, is_upgrade);
+    ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif, is_upgrade, false, NULL);
     if (ret != HAL_RET_OK)
         goto fail_flag;
 
@@ -675,44 +675,22 @@ hal_ret_t
 pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd_tnnl_rw_entry_key_t      key = { 0 };
 
-    ret = pd_tunnelif_form_data(&key, pd_tif);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    if (pd_tif->tunnel_rw_idx == 0) {
+        HAL_TRACE_DEBUG("tnnl_rw_idx: 0. Nothing to depgm");
+        return ret;
+    }
 
-    ret = tnnl_rw_entry_delete(&key);
+    ret = tnnl_rw_entry_delete(&pd_tif->key);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram tnnl rw table: ret:{}", ret);
     } else {
         HAL_TRACE_DEBUG("deprogrammed tnnl rw table. index:{}",
                         pd_tif->tunnel_rw_idx);
     }
-    pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
+    memset(&pd_tif->key, 0, sizeof(pd_tnnl_rw_entry_key_t));
+    pd_tif->tunnel_rw_idx = 0;
 
-    return ret;
-}
-
-hal_ret_t
-pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-    sdk_ret_t   sdk_ret;
-    directmap   *dm;
-
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    SDK_ASSERT(dm != NULL);
-    SDK_ASSERT(pd_tif != NULL);
-
-    // remove the entry
-    if (pd_tif->tunnel_rw_idx != INVALID_INDEXER_INDEX) {
-        sdk_ret = dm->remove(pd_tif->tunnel_rw_idx);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("tunnel rewrite table write failure, err : {}", ret);
-            return ret;
-        }
-        pd_tif->tunnel_rw_idx = INVALID_INDEXER_INDEX;
-    }
     return ret;
 }
 
@@ -732,9 +710,13 @@ pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
     return TUNNEL_REWRITE_NOP_ID;
 }
 
+/*
+ * Caller should always pass only valid rtep_ep, if ep_valid is set
+ */
 hal_ret_t
 pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
-                       pd_tunnelif_t *pd_tif)
+                       pd_tunnelif_t *pd_tif, 
+                       bool ep_valid, ep_t *rtep_ep) 
 {
     hal_ret_t   ret            = HAL_RET_OK;
     if_t        *pi_if         = NULL;
@@ -742,7 +724,6 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     if_t        *ep_if         = NULL;
     mac_addr_t  *mac           = NULL;
     mac_addr_t  smac;
-    ep_t        *rtep_ep = NULL;
     uint8_t     actionid;
     uint8_t     vlan_v;
     uint16_t    vlan_id;
@@ -750,25 +731,28 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     memset(tnnl_rw_key, 0, sizeof(pd_tnnl_rw_entry_key_t));
 
     pi_if = (if_t *) pd_tif->pi_if;
-    HAL_ABORT_TRACE(pi_if, "PD should always have PI");
 
     actionid = pd_tunnelif_get_p4pd_encap_action_id(pi_if->encap_type);
     tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en) actionid;
 
     if ((actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) ||
         (actionid == TUNNEL_REWRITE_ENCAP_ERSPAN_ID)) {
-        rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
-        HAL_ABORT_TRACE(rtep_ep, "ABORT:should have caught in PI");
+        if (!ep_valid) {
+            rtep_ep = tunnel_if_get_remote_tep_ep(pi_if);
+            if (!rtep_ep) {
+                HAL_TRACE_ERR("Never happen. No remote EP found for tunnel: {}",
+                              pi_if->if_id);
+                return ret;
+            }
+        }
+
+        // rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
     
         l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
-        HAL_ABORT_TRACE(l2seg, "ABORT: EP should not exist with no l2seg");
     
         ep_if = find_if_by_handle(rtep_ep->if_handle);
-        HAL_ABORT_TRACE(ep_if, "ABORT: EP should not exist with no IF");
     
         ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
-        HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT: EP presence means "
-                        "l2seg should be UP on IF");
         
         /* MAC DA */
         mac = ep_get_mac_addr(rtep_ep);
@@ -828,24 +812,52 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     return ret;
 }
 
+hal_ret_t
+pd_tunnel_if_update_rtep (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    pd_tunnelif_t        *pd_tunnelif;
+    pd_tunnel_if_update_rtep_args_t *args = pd_func_args->pd_tunnel_if_update_rtep;
+
+    pd_tunnelif = (pd_tunnelif_t *)args->hal_if->pd_if;
+
+    ret = pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif);
+
+    ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif, false, true, args->rtep_ep);
+
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Forms the data and call lib which shares the entries
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
+pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade,
+                                   bool ep_valid, ep_t *rtep_ep)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    pd_tnnl_rw_entry_key_t      key = { 0 };
     pd_tnnl_rw_entry_info_t     rw_info{};
+    if_t                        *pi_if = NULL;
 
-    ret = pd_tunnelif_form_data(&key, pd_tif);
+    pi_if = (if_t *) pd_tif->pi_if;
+    if (!ep_valid) {
+        rtep_ep = tunnel_if_get_remote_tep_ep(pi_if);
+    }
+    if (!rtep_ep) {
+        HAL_TRACE_DEBUG("No remote EP found for tunnel: {}",
+                        pi_if->if_id);
+        pd_tif->tunnel_rw_idx = 0;
+        goto end;
+    }
+
+    ret = pd_tunnelif_form_data(&pd_tif->key, pd_tif, ep_valid, rtep_ep);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to form tunnelif data: ret {}", ret);
         return ret;
     }
 
     if (!is_upgrade) {
-        ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
+        ret = tnnl_rw_entry_find_or_alloc(&pd_tif->key, (uint32_t *)&pd_tif->tunnel_rw_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("unable to program tnnl rw table: ret:{}", ret);
         } else {
@@ -854,7 +866,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
         }
     } else {
         rw_info.with_id = true;
-        ret = tnnl_rw_entry_alloc(&key, &rw_info,
+        ret = tnnl_rw_entry_alloc(&pd_tif->key, &rw_info,
                                   (uint32_t *)&pd_tif->tunnel_rw_idx);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("tunnel rewrite table write failure, idx : {}, err : {}",
@@ -864,6 +876,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
 
     }
 
+end:
     return ret;
 }
 #if 0

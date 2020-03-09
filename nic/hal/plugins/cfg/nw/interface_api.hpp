@@ -10,6 +10,7 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "gen/proto/interface.pb.h"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 namespace hal {
@@ -61,8 +62,10 @@ hal_ret_t if_enicif_get_native_l2seg_clsc_vlan(if_t *pi_if,
 if_t * inband_mgmt_get_active_if(void);
 
 //TODO Remove this when the above function works for all cases.
-uint32_t
-if_enicif_get_host_pinned_uplink(if_t *pi_if);
+uint32_t if_enicif_get_host_pinned_uplink(if_t *pi_if);
+ep_t *tunnel_if_get_remote_tep_ep(if_t *pi_if);
+hal_ret_t tunnel_if_update_rtep_ep(if_t *hal_if, ep_t *ep);
+hal_ret_t tunnel_if_rtep_ep_change(ip_addr_t *ip, ep_t *ep);
 
 } // namespace hal
 #endif // __INTERFACE_API_HPP__

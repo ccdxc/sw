@@ -8,6 +8,8 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/test/hal_calls/hal_calls.hpp"
+#include "nic/hal/test/utils/hal_base_test.hpp"
 
 #include "gen/proto/telemetry.grpc.pb.h"
 

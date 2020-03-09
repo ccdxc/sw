@@ -272,6 +272,34 @@ find_if_by_handle (hal_handle_t handle)
 #endif
 }
 
+if_t *
+find_tnnlif_by_dst_ip (IfTunnelEncapType encap_type, ip_addr_t *ip)
+{
+    tnnlif_walk_ctxt_t ctxt;
+    ctxt.encap_type = encap_type;
+    ctxt.ip = ip;
+    ctxt.hal_if = NULL;
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        tnnlif_walk_ctxt_t *ctx = (tnnlif_walk_ctxt_t *)ctxt;
+        if_t *hal_if = NULL;
+
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        if (hal_if->if_type == intf::IF_TYPE_TUNNEL &&
+            hal_if->encap_type == ctx->encap_type &&
+            !memcmp(&hal_if->gre_dest, ctx->ip, sizeof(ip_addr_t))) {
+            ctx->hal_if = hal_if;
+            return true;
+        }
+        return false;
+    };
+
+    g_hal_state->if_id_ht()->walk(walk_cb, &ctxt);
+
+    return ctxt.hal_if;
+}
+
 lif_t *
 find_lif_by_if_handle (hal_handle_t if_handle)
 {
@@ -531,6 +559,19 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_CREATE,  &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create if pd, err : {}", ret);
+        goto end;
+    }
+
+    if (hal_if->if_type == intf::IF_TYPE_TUNNEL) {
+        if (hal_if->encap_type ==
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE) {
+            // Update mirror sessions to point to tunnel's rw_idx
+            ret = mirror_session_change(&hal_if->gre_dest,
+                                        true, hal_if, 
+                                        false, NULL,
+                                        false, NULL);
+
+        }
     }
 
 end:
@@ -1434,6 +1475,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         goto end;
     }
 
+#if 0
     if ((hal_if->if_type == intf::IF_TYPE_TUNNEL) &&
             (hal_if->encap_type == TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE)) {
         ep_t *ep;
@@ -1460,6 +1502,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
         HAL_TRACE_DEBUG("GRE tunnelif {} added to EP vrfId {}",
                 spec.key_or_handle().interface_id(), hal_if->tid);
     }
+#endif
 
     // Extract Mirror-info from ifSpec
     mirror_spec.tx_sessions_count = spec.txmirrorsessions_size();
@@ -3786,6 +3829,62 @@ end:
     return ret;
 }
 
+hal_ret_t
+tunnel_if_rtep_ep_change (ip_addr_t *ip, ep_t *ep)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    if_t *hal_if = NULL;
+
+    hal_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE, ip);
+    if (hal_if != NULL) {
+
+        HAL_TRACE_DEBUG("Tunnel if {} change. Changing ep to: {}",
+                        hal_if->if_id, ep ? ep_l2_key_to_str(ep) : "NULL");
+
+        ret = tunnel_if_update_rtep_ep(hal_if, ep);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update EP of tunnel if: {}", 
+                          hal_if->if_id);
+            goto end;
+        }
+        // Update mirror sessions
+        ret = mirror_session_change(ip,
+                                    false, NULL,
+                                    false, NULL,
+                                    true, ep);
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+tunnel_if_update_rtep_ep (if_t *hal_if, ep_t *ep)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_tunnel_if_update_rtep_args_t upd_args;
+    pd::pd_func_args_t              pd_func_args = {0};
+
+    if (ep) {
+        hal_if->rtep_ep_handle = ep->hal_handle;
+    } else {
+        hal_if->rtep_ep_handle = HAL_HANDLE_INVALID;
+    }
+
+    upd_args.hal_if = hal_if;
+    upd_args.rtep_ep = ep;
+    pd_func_args.pd_tunnel_if_update_rtep = &upd_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TUNNEL_IF_RTEP_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update rtep ep for tunnel {}. ret: {}",
+                      hal_if->if_id, ret);
+        goto end;
+    }
+
+end:
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Given a tunnel, get the remote TEP EP
 // ----------------------------------------------------------------------------
@@ -3965,17 +4064,12 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
     }
 
     // Get remote tep EP
+    hal_if->rtep_ep_handle = HAL_HANDLE_INVALID;
     if (hal_if->encap_type != TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
         rtep_ep = tunnel_if_get_remote_tep_ep(hal_if);
-        if (!rtep_ep) {
-            ret = HAL_RET_IF_INFO_INVALID;
-            HAL_TRACE_ERR("Unable to find rtep ep for IP : {}, ret : {}",
-                          hal_if->encap_type == TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN ?
-                          ipaddr2str(&hal_if->vxlan_rtep) :
-                          ipaddr2str(&hal_if->gre_dest), ret);
-            goto end;
+        if (rtep_ep) {
+            hal_if->rtep_ep_handle = rtep_ep->hal_handle;
         }
-        hal_if->rtep_ep_handle = rtep_ep->hal_handle;
     }
 
 end:
@@ -4335,6 +4429,18 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         (intf->if_type == intf::IF_TYPE_UPLINK_PC)) {
         g_num_uplink_ifs--;
         g_uplink_if_ids.erase(std::remove(g_uplink_if_ids.begin(), g_uplink_if_ids.end(), intf->if_id), g_uplink_if_ids.end());
+    }
+
+    if (intf->if_type == intf::IF_TYPE_TUNNEL) {
+        if (intf->encap_type ==
+            TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_GRE) {
+            // Update mirror sessions to point to DROP
+            ret = mirror_session_change(&intf->gre_dest,
+                                        true, NULL,
+                                        false, NULL,
+                                        false, NULL);
+
+        }
     }
 
     // a. Remove from if id hash table

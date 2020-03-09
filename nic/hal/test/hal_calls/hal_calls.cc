@@ -2,9 +2,11 @@
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "gen/proto/interface.pb.h"
 #include "gen/proto/l2segment.pb.h"
+#include "gen/proto/telemetry.pb.h"
 #include "gen/proto/vrf.pb.h"
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/endpoint.pb.h"
@@ -44,6 +46,8 @@ using multicast::MulticastEntrySpec;
 using multicast::MulticastEntryResponse;
 using multicast::MulticastEntryDeleteRequest;
 using multicast::MulticastEntryDeleteResponse;
+using telemetry::MirrorSessionSpec;
+using telemetry::MirrorSessionResponse;
 
 
 hal_ret_t
@@ -89,7 +93,69 @@ update_uplink(uint32_t if_id, uint32_t port,
 }
 
 hal_ret_t
-create_vrf(uint32_t vrf_id, types::VrfType type, uint32_t des_if_id)
+create_tunnel(uint32_t if_id, uint32_t vrf, uint32_t src_ip, uint32_t dst_ip)
+{
+    hal_ret_t            ret;
+    InterfaceSpec       spec;
+    InterfaceResponse   rsp;
+
+    spec.set_type(intf::IF_TYPE_TUNNEL);
+
+    spec.mutable_key_or_handle()->set_interface_id(if_id);  
+    spec.mutable_if_tunnel_info()->mutable_vrf_key_handle()->set_vrf_id(vrf);
+    spec.mutable_if_tunnel_info()->set_encap_type(intf::IF_TUNNEL_ENCAP_TYPE_GRE);
+    spec.mutable_if_tunnel_info()->mutable_gre_info()->mutable_source()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_if_tunnel_info()->mutable_gre_info()->mutable_source()->set_v4_addr(src_ip);
+    spec.mutable_if_tunnel_info()->mutable_gre_info()->mutable_destination()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_if_tunnel_info()->mutable_gre_info()->mutable_destination()->set_v4_addr(dst_ip);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+create_collector (uint32_t cid, uint32_t vrf, uint32_t l2seg, 
+                  uint32_t src_ip, uint32_t dst_ip)
+{
+    hal_ret_t            ret;
+    CollectorSpec        spec;
+    CollectorResponse    rsp;
+
+    spec.mutable_key_or_handle()->set_collector_id(cid);
+    spec.mutable_vrf_key_handle()->set_vrf_id(vrf);
+    spec.mutable_l2seg_key_handle()->set_segment_id(l2seg);
+    spec.mutable_src_ip()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_src_ip()->set_v4_addr(src_ip);
+    spec.mutable_dest_ip()->set_ip_af(types::IP_AF_INET);
+    spec.mutable_dest_ip()->set_v4_addr(dst_ip);
+    spec.set_protocol(types::IPPROTO_UDP);
+    spec.set_dest_port(1000);
+    spec.set_export_interval(10);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::collector_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+delete_interface (uint32_t if_id)
+{
+    hal_ret_t               ret;
+    InterfaceDeleteRequest  req;
+    InterfaceDeleteResponse rsp;
+
+    req.mutable_key_or_handle()->set_interface_id(if_id);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_delete(req, &rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+create_vrf (uint32_t vrf_id, types::VrfType type, uint32_t des_if_id)
 {
     hal_ret_t ret;
     VrfSpec spec;
@@ -237,6 +303,54 @@ create_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t mac)
 }
 
 hal_ret_t
+create_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t mac,
+          uint32_t ip[], uint32_t ip_count)
+{
+    hal_ret_t ret;
+    EndpointSpec             ep_spec;
+    EndpointResponse         ep_rsp;
+
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
+    for (int i = 0; i < ip_count; i++) {
+        ep_spec.mutable_endpoint_attrs()->add_ip_address();
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_ip_af(types::IP_AF_INET);
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_v4_addr(ip[i]);
+    }
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_create(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+update_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t mac,
+          uint32_t ip[], uint32_t ip_count)
+{
+    hal_ret_t ret;
+    EndpointUpdateRequest    ep_spec;
+    EndpointResponse         ep_rsp;
+
+    ep_spec.mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
+    ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
+    ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
+    for (int i = 0; i < ip_count; i++) {
+        ep_spec.mutable_endpoint_attrs()->add_ip_address();
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_ip_af(types::IP_AF_INET);
+        ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_v4_addr(ip[i]);
+    }
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::endpoint_update(ep_spec, &ep_rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+
+
+hal_ret_t
 delete_ep (uint32_t vrf_id, uint32_t l2seg_id, uint64_t mac)
 {
     hal_ret_t ret;
@@ -284,4 +398,26 @@ delete_mcast (uint32_t l2seg_id, uint64_t mac)
     hal::hal_cfg_db_close();
     return ret;
 }
+
+hal_ret_t
+create_mirror (uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip) 
+{
+    hal_ret_t ret;
+    MirrorSessionSpec spec;
+    MirrorSessionResponse rsp;
+
+    spec.mutable_vrf_key_handle()->set_vrf_id(vrf_id);
+    spec.mutable_key_or_handle()->set_mirrorsession_id(session_id);
+    spec.mutable_erspan_spec()->mutable_src_ip()->set_ip_af(::types::IP_AF_INET);
+    spec.mutable_erspan_spec()->mutable_src_ip()->set_v4_addr(sip);
+    spec.mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
+    spec.mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(dip);
+    spec.mutable_erspan_spec()->set_span_id(session_id);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::mirror_session_create(spec, &rsp);
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
 

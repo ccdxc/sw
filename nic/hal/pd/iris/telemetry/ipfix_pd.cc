@@ -13,9 +13,12 @@
 #include "nic/hal/iris/datapath/p4/include/table_sizes.h"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "lib/periodic/periodic.hpp"
+#include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 
 namespace hal {
 namespace pd {
+
+extern telemetry_export_dest_t export_destinations[TELEMETRY_NUM_EXPORT_DEST];
 
 #define HAL_IPFIX_DOORBELL_TIMER_INTVL        (1 * TIME_MSECS_PER_SEC)
 
@@ -221,10 +224,18 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t qtype = 0, pid = 0, ring_id = 0, p_index = 0;
     uint32_t timev;
     lif_id_t lif_id = SERVICE_LIF_IPFIX;
+    uint16_t coll_id = 0;
     ipfix_qstate_t  qstate = { 0 };
+    telemetry_export_dest_t *dst;
 
     // qid is equal to the exporter id which is encoded in the timer_id
-    qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
+    coll_id = qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
+    dst = &export_destinations[coll_id];
+    if (dst->skip_doorbell) {
+        HAL_TRACE_DEBUG("Skipping doorbell for collector id: {}", coll_id);
+        goto end;
+    }
+
     address = DB_ADDR_BASE + (upd << DB_UPD_SHFT) +
         (SERVICE_LIF_IPFIX << DB_LIF_SHFT) + (qtype << DB_TYPE_SHFT);
     data = (pid << DB_PID_SHFT) | (qid << DB_QID_SHFT) |
@@ -241,6 +252,8 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x} time: {}",
                     address, data, timev);
     sdk::asic::asic_ring_doorbell(address, data);
+
+end:
     return;
 }
 

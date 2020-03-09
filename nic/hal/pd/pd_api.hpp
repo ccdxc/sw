@@ -1978,6 +1978,9 @@ pd_telemetry_cleanup_args_init (pd_telemetry_cleanup_args_t *args)
 typedef struct pd_mirror_session_create_args_s {
     mirror_session_t *session;
     mirror_session_id_t hw_id;
+    if_t *tunnel_if;
+    if_t *dst_if;
+    ep_t *rtep_ep;
 } __PACK__ pd_mirror_session_create_args_t;
 
 static inline void
@@ -1988,6 +1991,9 @@ pd_mirror_session_create_args_init (pd_mirror_session_create_args_t *args)
 
 typedef struct pd_mirror_session_update_args_s {
     mirror_session_t *session;
+    if_t *tunnel_if;
+    if_t *dst_if;
+    ep_t *rtep_ep;
 } __PACK__ pd_mirror_session_update_args_t;
 
 static inline void
@@ -2104,6 +2110,7 @@ pd_drop_monitor_rule_get_args_init (pd_drop_monitor_rule_get_args_t *args)
 // collector
 typedef struct pd_collector_create_args_s {
     collector_config_t *cfg;
+    ep_t *ep;
 } __PACK__ pd_collector_create_args_t;
 
 static inline void
@@ -2111,6 +2118,11 @@ pd_collector_create_args_init (pd_collector_create_args_t *args)
 {
     args->cfg = NULL;
 }
+
+typedef struct pd_collector_ep_update_args_s {
+    ip_addr_t *ip;
+    ep_t *ep;
+} __PACK__ pd_collector_ep_update_args_t;
 
 // collector delete
 typedef struct pd_collector_delete_args_s {
@@ -2549,6 +2561,11 @@ typedef struct pd_tunnelif_get_rw_idx_args_s {
     if_t *hal_if;
     uint32_t tnnl_rw_idx;
 } __PACK__ pd_tunnelif_get_rw_idx_args_t;
+
+typedef struct pd_tunnel_if_update_rtep_args_s {
+    if_t *hal_if;
+    ep_t *rtep_ep;
+} __PACK__ pd_tunnel_if_update_rtep_args_t;
 
 // TCP rings APIs
 typedef struct pd_tcp_rings_ctxt_init_args_s {
@@ -3694,10 +3711,12 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_UPLINK_ERSPAN_DISABLE,      341, "PD_FUNC_ID_UPLINK_ERSPAN_DISABLE")\
     ENTRY(PD_FUNC_ID_TEL_L2SEG_UPDATE,           342, "PD_FUNC_ID_TEL_L2SEG_UPDATE")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP, 343, "PD_FUNC_ID_QOS_CLASS_INIT_TC_TO_IQ_MAP")  \
-    ENTRY(PD_FUNC_ID_SET_CLOCK_MULTIPLIER,       344, "PD_FUNC_ID_SET_CLOCK_MULTIPLIER")\
-    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_INIT,         345, "PD_FUNC_ID_QOS_SWM_QUEUE_INIT")  \
-    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       346, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
-    ENTRY(PD_FUNC_ID_MAX,                        347, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_TUNNEL_IF_RTEP_UPDATE,      344, "PD_FUNC_ID_TUNNEL_IF_RTEP_UPDATE")  \
+    ENTRY(PD_FUNC_ID_COLL_EP_UPDATE,             345, "PD_FUNC_ID_COLL_EP_UPDATE")  \
+    ENTRY(PD_FUNC_ID_SET_CLOCK_MULTIPLIER,       346, "PD_FUNC_ID_SET_CLOCK_MULTIPLIER")\
+    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_INIT,         347, "PD_FUNC_ID_QOS_SWM_QUEUE_INIT")  \
+    ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       348, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
+    ENTRY(PD_FUNC_ID_MAX,                        349, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3934,6 +3953,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_collector_create);
         PD_UNION_ARGS_FIELD(pd_collector_delete);
         PD_UNION_ARGS_FIELD(pd_collector_get);
+        PD_UNION_ARGS_FIELD(pd_collector_ep_update);
 
         // mc entry
         PD_UNION_ARGS_FIELD(pd_mc_entry_get);
@@ -4013,6 +4033,7 @@ typedef struct pd_func_args_s {
 
         // if
         PD_UNION_ARGS_FIELD(pd_tunnelif_get_rw_idx);
+        PD_UNION_ARGS_FIELD(pd_tunnel_if_update_rtep);
 
         // cpu
         PD_UNION_ARGS_FIELD(pd_cpupkt_ctxt_alloc_init);
@@ -4439,6 +4460,7 @@ PD_FUNCP_TYPEDEF(pd_drop_monitor_rule_get);
 PD_FUNCP_TYPEDEF(pd_collector_create);
 PD_FUNCP_TYPEDEF(pd_collector_delete);
 PD_FUNCP_TYPEDEF(pd_collector_get);
+PD_FUNCP_TYPEDEF(pd_collector_ep_update);
 
 // mc entry
 PD_FUNCP_TYPEDEF(pd_mc_entry_get);
@@ -4520,6 +4542,7 @@ PD_FUNCP_TYPEDEF(pd_oif_list_clr_honor_ingress);
 
 // if
 PD_FUNCP_TYPEDEF(pd_tunnelif_get_rw_idx);
+PD_FUNCP_TYPEDEF(pd_tunnel_if_update_rtep);
 
 // cpu
 PD_FUNCP_TYPEDEF(pd_cpupkt_ctxt_alloc_init);

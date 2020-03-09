@@ -118,7 +118,7 @@ typedef struct ep_s {
     hal_handle_t         nw_handle;            // network this EP belongs to
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
     hal_handle_t         if_handle;            // interface endpoint is attached to
-    hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
+    // hal_handle_t         gre_if_handle;        // Set if there is a GRE tunnel destined to this EP.
     // hal_handle_t         pinned_if_handle;     // interface endpoint is attached to
     hal_handle_t         vrf_handle;           // vrf handle
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint

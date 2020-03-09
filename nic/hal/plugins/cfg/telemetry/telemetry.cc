@@ -160,31 +160,82 @@ mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 }
 
 hal_ret_t
-mirror_session_update_uplink (mirror_session_t *session)
+mirror_session_update_pd (mirror_session_t *session,
+                          if_t *dest_if, if_t *tnnl_if, ep_t *rtep_ep)
 {
     hal_ret_t                       ret = HAL_RET_OK;
     pd::pd_func_args_t              pd_func_args = {0};
-    pd_mirror_session_update_args_t args;
-    mirror_session_id_t session_id;
-    
+    pd_mirror_session_update_args_t args = {0};
+
+    args.session = session;
+    args.dst_if = dest_if;
+    args.rtep_ep = rtep_ep;
+    args.tunnel_if = tnnl_if;
+    pd_func_args.pd_mirror_session_update = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Update failed for session id {}, ret {}",
+                       session->sw_id, ret);
+    } else {
+        HAL_TRACE_DEBUG("Update Succeeded for session id {}", session->sw_id);
+    }
+    return ret;
+}
+
+#if 0
+hal_ret_t
+mirror_session_update_ifs (mirror_session_t *session, 
+                           bool dst_if_change, if_t *dest_if,
+                           bool tunnel_if_change, if_t *tunnel_if)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd_mirror_session_update_args_t args = {0};
+
+#if 0
+    dest_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+    tunnel_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE,
+                                      &session->mirror_destination_u.er_span_dest.ip_da);
+#endif
+
+    if (dst_if_change) {
+        args.dst_if_change = true;
+        args.dst_if = dest_if;
+    }
+    if (tunnel_if_change) {
+        args.tunnel_if_change = true;
+        args.tunnel_if = tunnel_if;
+    }
+
     args.session = session;
     pd_func_args.pd_mirror_session_update = &args;
-
     // Update mirror session
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Update failed for session id {}, ret {}",
-                       session_id, ret);
+                       session->sw_id, ret);
     } else {
-        HAL_TRACE_DEBUG("Update Succeeded for session id {}", session_id);
+        HAL_TRACE_DEBUG("Update Succeeded for session id {}", session->sw_id);
     }
     return ret;
 }
+#endif
 
 hal_ret_t
 telemetry_mirror_session_handle_repin ()
 {
     hal_ret_t   ret = HAL_RET_OK;
+
+    ret = mirror_session_change(NULL, false, NULL, false, NULL, false, NULL);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to repin mirror sessions: ret: {}", ret);
+        goto end;
+    }
+
+end:
+    return ret;
+
+#if 0
     auto ms_ht = g_hal_state->mirror_session_ht();
 
     auto walk_func = [](void *entry, void *ctxt) {
@@ -193,7 +244,8 @@ telemetry_mirror_session_handle_repin ()
         if_t *sess_if = session->dest_if;
         if_t *new_dif = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
         session->dest_if = new_dif;
-        auto ret = mirror_session_update_uplink(session);
+        auto ret = mirror_session_update_ifs(session, true, new_dif,
+                                             false, NULL);
         if (ret != HAL_RET_OK) {
             // we have failed to update the newuplink, restore the old dest if.
             session->dest_if = sess_if;
@@ -209,11 +261,25 @@ telemetry_mirror_session_handle_repin ()
     }
 
     return ret;
+#endif
 }
 
 static if_t *
-telemetry_mirror_pick_dest_if (if_t *dest_if)
+telemetry_mirror_pick_dest_if ()
 {
+    if_t *dst_if = NULL;
+
+    HAL_TRACE_DEBUG("Choosing active dest-if");
+    if (hal::is_platform_type_sim()) {
+        dst_if = telemetry_get_active_uplink(); // Only for gtest
+    } else {
+        dst_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+    }
+    HAL_TRACE_DEBUG("Active bond dest-if id {}", 
+                    dst_if ? if_keyhandle_to_str(dst_if) : "NULL");
+
+    return dst_if;
+#if 0
     // No change to dest_if for sim mode
     if (hal::is_platform_type_sim()) {
         return dest_if;
@@ -235,6 +301,7 @@ telemetry_mirror_pick_dest_if (if_t *dest_if)
     }
 
     return dest_if;
+#endif
 }
 
 hal_ret_t
@@ -248,7 +315,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     kh::InterfaceKeyHandle ifid;
     hal_ret_t ret;
     auto ms_ht = g_hal_state->mirror_session_ht();
-    if_t *id;
+    if_t *id, *dest_if;
 
     HAL_TRACE_INFO("Create Mirror session ID {}, snaplen {}",
                    spec.key_or_handle().mirrorsession_id(), spec.snaplen());
@@ -330,57 +397,29 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
                                          "Unknown ERSPAN dest AF {}",
                                          dst_addr->af);
         }
-        if (ep == NULL) {
-            TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
-                                         rsp, HAL_RET_INVALID_ARG,
-                                         "Unknown ERSPAN dest {}, vrfId {}",
-                                         ipaddr2str(dst_addr),
-                                         spec.vrf_key_handle().vrf_id());
+#if 0
+        if (ep) {
+            // Known EP
+            dest_if = find_if_by_handle(ep->if_handle);
+            if (dest_if == NULL) {
+                TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
+                                             rsp, HAL_RET_INVALID_ARG,
+                                             "Could not find if ERSPAN dest {}",
+                                             ipaddr2str(dst_addr));
+            }
+            HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
+                            dest_if->if_type, dest_if->if_op_status,
+                            dest_if->if_id);
         }
-        auto dest_if = find_if_by_handle(ep->if_handle);
-        if (dest_if == NULL) {
-            TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
-                                         rsp, HAL_RET_INVALID_ARG,
-                                         "Could not find if ERSPAN dest {}",
-                                         ipaddr2str(dst_addr));
-        }
-        HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
-                        dest_if->if_type, dest_if->if_op_status,
-                        dest_if->if_id);
-        auto ift = find_if_by_handle(ep->gre_if_handle);
-        if (ift == NULL) {
-            TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
-                                         rsp, HAL_RET_INVALID_ARG,
-                                         "Could not find ERSPAN tunnel dest if {}",
-                                         ipaddr2str(dst_addr));
-        }
-        if (ift->if_type != intf::IF_TYPE_TUNNEL) {
-            TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
-                                         rsp, HAL_RET_INVALID_ARG,
-                                         "No tunnel to ERSPAN dest {}",
-                                         ipaddr2str(dst_addr));
-        }
-        if (!is_if_type_tunnel(ift)) {
-            TELEMETRY_FREE_RSP_RET_TRACE(mirror_session_free, session,
-                                         rsp, HAL_RET_INVALID_ARG,
-                                         "Not GRE tunnel to ERSPAN dest {}",
-                                         ipaddr2str(dst_addr));
-        }
-        session->mirror_destination_u.er_span_dest.tunnel_if = ift;
+#endif
+        dest_if = telemetry_mirror_pick_dest_if();
+        auto ift = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE, 
+                                         dst_addr);
         session->type = hal::MIRROR_DEST_ERSPAN;
         session->dest_if = dest_if;
-        auto ndest_if = telemetry_mirror_pick_dest_if(dest_if);
-        HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",
-                        ndest_if->if_type, ndest_if->if_op_status,
-                        ndest_if->if_id);
-        if (session->dest_if != ndest_if) {
-            // Update EP's hal handle
-            session->dest_if = ndest_if;
-            ep->if_handle = ndest_if->hal_handle;
-            // Update the if to ep backptr also
-            if_del_ep(session->dest_if, ep);
-            if_add_ep(ndest_if, ep);
-        }
+        args.tunnel_if = ift; 
+        args.dst_if = dest_if;
+        args.rtep_ep = ep;
         break;
     }
     default: {
@@ -560,6 +599,123 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     return ret;
 }
 
+/*
+ * ip: NULL: Change all sessions
+ */
+hal_ret_t
+mirror_session_change (ip_addr_t *ip,
+                       bool tnnl_if_valid, if_t *tnnl_if,
+                       bool dest_if_valid, if_t *dest_if,
+                       bool rtep_ep_valid, ep_t *rtep_ep)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    mirror_session_change_ctxt_t ctxt;
+
+    if (dest_if_valid) {
+        ctxt.dest_if = dest_if;
+    } else {
+        ctxt.dest_if = telemetry_mirror_pick_dest_if();
+    }
+
+    ctxt.ip = ip;
+    ctxt.tnnl_if_valid = tnnl_if_valid;
+    ctxt.tnnl_if = tnnl_if;
+    ctxt.rtep_ep_valid = rtep_ep_valid;
+    ctxt.rtep_ep = rtep_ep;
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+        mirror_session_t *session = (mirror_session_t *)ht_entry;
+        mirror_session_change_ctxt_t *ctx = (mirror_session_change_ctxt_t *)ctxt;
+        if_t *tnnl_if = NULL;
+        ep_t *rtep_ep = NULL;
+        HAL_TRACE_DEBUG("Processing mirror sesssion: {} with IP: {}, for tunnel tnnl_ip: {}",
+                        session->sw_id, 
+                        ipaddr2str(&session->mirror_destination_u.er_span_dest.ip_da),
+                        ctx->ip ? ipaddr2str(ctx->ip) : "ALL");
+
+        if (!ctx->ip || !memcmp(ctx->ip, &session->mirror_destination_u.er_span_dest.ip_da,
+                                sizeof(ip_addr_t))) {
+            if (ctx->tnnl_if_valid) {
+                tnnl_if = ctx->tnnl_if;
+            } else {
+                tnnl_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE, 
+                                                        &session->mirror_destination_u.er_span_dest.ip_da);
+            }
+
+            if (ctx->rtep_ep_valid) {
+                rtep_ep = ctx->rtep_ep;
+            } else {
+                rtep_ep = find_ep_by_v4_key(session->mirror_destination_u.er_span_dest.vrf_id,
+                                            session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
+            }
+            ret = mirror_session_update_pd(session,
+                                           ctx->dest_if,
+                                           tnnl_if, rtep_ep);
+
+        }
+        return false;
+    };
+
+    g_hal_state->mirror_session_ht()->walk_safe(walk_cb, &ctxt);
+}
+
+#if 0
+hal_ret_t
+mirror_session_if_change (ip_addr_t *ip, 
+                          bool tunnel_if_change,
+                          if_t *tunnel_if,
+                          bool dest_if_change,
+                          if_t *dest_if,
+                          bool rtep_ep_change,
+                          bool rtep_ep_exists)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    mirror_session_if_change_ctxt_t ctxt;
+
+    ctxt.ip = ip;
+    ctxt.tunnel_if_change = tunnel_if_change;
+    ctxt.tunnel_if = tunnel_if;
+    ctxt.dest_if_change = dest_if_change;
+    ctxt.dest_if = dest_if;
+    ctxt.rtep_ep_change = rtep_ep_change;
+    ctxt.rtep_ep_exists = rtep_ep_exists;
+
+    if (rtep_ep_change && rtep_ep_exists) {
+        ctxt.dest_if_change = true;
+        ctxt.dest_if = telemetry_mirror_pick_dest_if();
+    }
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+        mirror_session_t *session = (mirror_session_t *)ht_entry;
+        mirror_session_if_change_ctxt_t *ctx = (mirror_session_if_change_ctxt_t *)ctxt;
+        HAL_TRACE_DEBUG("Processing mirror sesssion: {} with IP: {}, for tunnel tnnl_ip: {}",
+                        session->sw_id, 
+                        ipaddr2str(&session->mirror_destination_u.er_span_dest.ip_da),
+                        ipaddr2str(ctx->ip));
+
+        if (!memcmp(ctx->ip, &session->mirror_destination_u.er_span_dest.ip_da,
+                    sizeof(ip_addr_t))) {
+            if (ctx->rtep_ep_change) {
+                session->rtep_ep_exists = ctx->rtep_ep_exists;
+            }
+            ret = mirror_session_update_ifs(session,
+                                            ctx->dest_if_change,
+                                            ctx->dest_if,
+                                            ctx->tunnel_if_change,
+                                            ctx->tunnel_if);
+            return true;
+        }
+        return false;
+    };
+
+    g_hal_state->mirror_session_ht()->walk_safe(walk_cb, &ctxt);
+
+    return ret;
+}
+#endif
+
 hal_ret_t
 collector_create (CollectorSpec &spec, CollectorResponse *rsp)
 {
@@ -572,7 +728,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     uint64_t mgmt_mac = 0;
     uint32_t id;
     encap_t  encap;
-    if_t     *dest_if = NULL, *ndest_if = NULL;
+    // if_t     *dest_if = NULL, *ndest_if = NULL;
 
     collector_spec_dump(spec);
     // Get free collector id
@@ -597,6 +753,11 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     ip_addr_spec_to_ip_addr(&cfg.src_ip, spec.src_ip());
     ip_addr_spec_to_ip_addr(&cfg.dst_ip, spec.dest_ip());
     auto ep = find_ep_by_v4_key(spec.vrf_key_handle().vrf_id(), cfg.dst_ip.addr.v4_addr);
+    if (!ep) {
+        HAL_TRACE_DEBUG("Unable to find ep for ip: {}",
+                        ipaddr2str(&cfg.dst_ip));
+    }
+#if 0
     if (ep == NULL) {
         HAL_TRACE_ERR("PI-Collector: Unknown endpoint {} : {}",
             spec.vrf_key_handle().vrf_id(), ipaddr2str(&cfg.dst_ip));
@@ -604,15 +765,6 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         ret = HAL_RET_INVALID_ARG;
         goto cleanup;
     }
-    dest_if = find_if_by_handle(ep->if_handle);
-    if (dest_if == NULL) {
-        HAL_TRACE_ERR("Could not find if IPFIX dest if");
-        ret = HAL_RET_INVALID_ARG;
-        goto cleanup;
-    }
-    HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
-                     dest_if->if_type, dest_if->if_op_status,
-                     dest_if->if_id);
     if (!dest_if->is_oob_management &&
         endpoint_is_remote(ep)) {
         ndest_if = telemetry_get_active_bond_uplink();
@@ -634,6 +786,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     /* MAC DA */
     mac = ep_get_mac_addr(ep);
     memcpy(cfg.dest_mac, mac, sizeof(mac_addr_t));
+#endif
 
     cfg.template_id = spec.template_id();
     cfg.export_intvl = spec.export_interval();
@@ -685,6 +838,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     }
 
     args.cfg = &cfg;
+    args.ep = ep;
     pd_func_args.pd_collector_create = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
@@ -771,6 +925,28 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponse *response,
         response->set_api_status(types::API_STATUS_INVALID_ARG);
     }
     response->set_api_status(types::API_STATUS_OK);
+    return ret;
+}
+
+hal_ret_t
+collector_ep_update (ip_addr_t *ip, ep_t *ep)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    pd::pd_func_args_t                  pd_func_args = {0};
+    pd::pd_collector_ep_update_args_t   upd_args;
+
+    upd_args.ip = ip;
+    upd_args.ep = ep;
+    pd_func_args.pd_collector_ep_update = &upd_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLL_EP_UPDATE, 
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to update IP for collector: {}",
+                        ipaddr2str(ip));
+        goto end;
+    }
+
+end:
     return ret;
 }
 

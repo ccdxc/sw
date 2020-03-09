@@ -322,7 +322,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
     sdk_ret_t                   sdk_ret;
     ep_l3_entry_t               *entry;
 
-    HAL_TRACE_DEBUG("Adding to ep l2 hash table");
+    HAL_TRACE_DEBUG("Adding to ep l3 hash table");
     // allocate an entry to establish mapping from l3key to its handle
     entry = (ep_l3_entry_t *)g_hal_state->ep_l3_entry_slab()->alloc();
     if (entry == NULL) {
@@ -339,7 +339,7 @@ ep_add_to_l3_db (ep_l3_key_t *l3_key, ep_ip_entry_t *ep_ip,
                                                        entry, &entry->ht_ctxt);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (sdk_ret != sdk::SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to add l2 key to handle mapping, err : {}", ret);
+        HAL_TRACE_ERR("Failed to add l3 key to handle mapping, err : {}", ret);
         hal::delay_delete_to_slab(HAL_SLAB_EP_L3_ENTRY, entry);
     }
 
@@ -474,6 +474,30 @@ end:
 }
 
 hal_ret_t
+endpoint_update_tunnel_if (dllist_ctxt_t *list_head, ep_t *ep, bool add)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    dllist_for_each(lnode, list_head) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("For IP {}, updating tunnels", 
+                        ipaddr2str(&(pi_ip_entry->ip_addr)));
+        ret = tunnel_if_rtep_ep_change(&pi_ip_entry->ip_addr,
+                                       add ? ep : NULL);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update tunnel for EP IP: {}",
+                          ipaddr2str(&(pi_ip_entry->ip_addr)));
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
 endpoint_install_swm_qos (ep_t *ep, if_t *uplink_if)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -490,6 +514,30 @@ endpoint_install_swm_qos (ep_t *ep, if_t *uplink_if)
 
     g_hal_state->set_swm_qos_en(true);
     g_hal_state->set_swm_qos_port_num(log_port);
+
+end:
+    return ret;
+}
+
+hal_ret_t
+endpoint_update_collector (dllist_ctxt_t *list_head, ep_t *ep, bool add)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    dllist_ctxt_t   *lnode = NULL;
+    ep_ip_entry_t   *pi_ip_entry = NULL;
+
+    dllist_for_each(lnode, list_head) {
+        pi_ip_entry = dllist_entry(lnode, ep_ip_entry_t, ep_ip_lentry);
+        HAL_TRACE_DEBUG("For IP {}, updating collectors", 
+                        ipaddr2str(&(pi_ip_entry->ip_addr)));
+        ret = collector_ep_update(&pi_ip_entry->ip_addr,
+                                  add ? ep : NULL);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update collector for EP IP: {}",
+                          ipaddr2str(&(pi_ip_entry->ip_addr)));
+            goto end;
+        }
+    }
 
 end:
     return ret;
@@ -531,6 +579,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_CREATE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to create ep pd, err : {}", ret);
+        goto end;
     }
 
     // Create qos for SWM EP
@@ -558,6 +607,22 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
             HAL_TRACE_ERR("Unable to swm qos init. ret: {}", ret);
             goto end;
         }
+    }
+
+    // Update mirror sessions
+    ret = endpoint_update_tunnel_if(&ep->ip_list_head, ep, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to update tunnel ifs for ep: {}",
+                        ep_l2_key_to_str(ep));
+        goto end;
+    }
+
+    // Update collectors
+    ret = endpoint_update_collector(&ep->ip_list_head, ep, true);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to update collectors for ep: {}",
+                        ep_l2_key_to_str(ep));
+        goto end;
     }
 
 end:
@@ -1478,6 +1543,36 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, &pd_func_args);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to update ep pd, err : {}", ret);
+        }
+
+        if (pd_ep_args.iplist_change) {
+            // Update mirror sessions
+            ret = endpoint_update_tunnel_if(pd_ep_args.del_iplist, NULL, false);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to update tunnel ifs for del ip list for ep: {}",
+                              ep_l2_key_to_str(ep));
+                goto end;
+            }
+            ret = endpoint_update_tunnel_if(pd_ep_args.add_iplist, ep, true);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to update tunnel ifs for add ip list for ep: {}",
+                              ep_l2_key_to_str(ep));
+                goto end;
+            }
+
+            // Update collectors
+            ret = endpoint_update_collector(pd_ep_args.del_iplist, NULL, false);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to update collectors for del ip list for ep: {}",
+                              ep_l2_key_to_str(ep));
+                goto end;
+            }
+            ret = endpoint_update_collector(pd_ep_args.add_iplist, ep, true);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to update collectors for add ip list for ep: {}",
+                              ep_l2_key_to_str(ep));
+                goto end;
+            }
         }
     }
 
@@ -2405,6 +2500,20 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_DELETE, &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to delete ep pd, err : {}", ret);
+    }
+
+    // Update mirror sessions
+    ret = endpoint_update_tunnel_if(&ep->ip_list_head, NULL, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to update tunnel ifs for ep: {}",
+                        ep_l2_key_to_str(ep));
+    }
+
+    // Update collectors
+    ret = endpoint_update_collector(&ep->ip_list_head, NULL, false);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to update collectors for ep: {}",
+                        ep_l2_key_to_str(ep));
     }
 
     ret = g_hal_state->get_vmotion()->vmotion_handle_ep_del(ep);

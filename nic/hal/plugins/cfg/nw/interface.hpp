@@ -313,6 +313,12 @@ typedef struct if_port_timer_ctxt_s {
     uint32_t           num_lanes;
 } __PACK__ if_port_timer_ctxt_t;
 
+typedef struct tnnlif_walk_ctxt_s {
+    IfTunnelEncapType encap_type;
+    ip_addr_t         *ip;
+    if_t              *hal_if;
+} __PACK__ tnnlif_walk_ctxt_t;
+
 static inline void
 if_lock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
@@ -438,6 +444,7 @@ hal_ret_t enicif_update_host_prom(bool add);
 hal_ret_t hal_if_reprogram_telemetry_l2seg(void);
 hal_ret_t hal_if_pick_inb_bond_active(bool *changed);
 hal_ret_t hal_if_inb_bond_active_changed(void);
+if_t *find_tnnlif_by_dst_ip(IfTunnelEncapType encap_type, ip_addr_t *ip);
 
 }    // namespace hal
 

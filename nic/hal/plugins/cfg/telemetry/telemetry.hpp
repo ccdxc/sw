@@ -108,6 +108,27 @@ typedef struct telemetry_active_port_get_cb_ctxt_t_ {
     if_t *hal_if;
 } telemetry_active_port_get_cb_ctxt_t;
 
+typedef struct mirror_session_change_ctxt_s {
+    ip_addr_t *ip;
+    if_t *dest_if;
+    bool tnnl_if_valid;
+    if_t *tnnl_if;
+    bool rtep_ep_valid;
+    ep_t *rtep_ep;
+} __PACK__ mirror_session_change_ctxt_t;
+
+#if 0
+typedef struct mirror_session_if_change_ctxt_s {
+    ip_addr_t *ip;
+    bool tunnel_if_change;
+    if_t *tunnel_if;
+    bool dest_if_change;
+    if_t *dest_if;
+    bool rtep_ep_change;
+    bool rtep_ep_exists;
+} __PACK__ mirror_session_if_change_ctxt_t;
+#endif
+
 // New reason codes must be added here and in the corresponding PD
 typedef struct drop_reason_codes_s {
     bool    drop_malformed_pkt;
@@ -203,7 +224,6 @@ typedef struct mirror_session_s {
     if_t *dest_if;
     union {
         struct er_span_dest_ {
-            if_t *tunnel_if;
             uint32_t tnnl_rw_idx;
             ip_addr_t ip_sa;
             ip_addr_t ip_da;
@@ -469,11 +489,22 @@ hal_ret_t mirror_session_delete(MirrorSessionDeleteRequest &spec, MirrorSessionD
 hal_ret_t mirror_session_get(MirrorSessionGetRequest &req, MirrorSessionGetResponseMsg *rsp);
 hal_ret_t mirror_session_get_hw_id(mirror_session_id_t sw_id, mirror_session_id_t *hw_id);
 hal_ret_t telemetry_mirror_session_handle_repin();
+#if 0
+hal_ret_t mirror_session_if_change(ip_addr_t *ip, bool tunnel_if_change, 
+                                   if_t *tunnel_if, bool dest_if_change,
+                                   if_t *dest_if, bool rtep_ep_change,
+                                   bool rtep_ep_exists);
+#endif
+hal_ret_t mirror_session_change(ip_addr_t *ip,
+                                bool tnnl_if_valid, if_t *tnnl_if,
+                                bool dest_if_valid, if_t *dest_if,
+                                bool rtep_ep_valid, ep_t *rtep_ep);
 
 hal_ret_t collector_create(CollectorSpec &spec, CollectorResponse *rsp);
 hal_ret_t collector_update(CollectorSpec &spec, CollectorResponse *rsp);
 hal_ret_t collector_delete(CollectorDeleteRequest &req, CollectorDeleteResponse *rsp);
 hal_ret_t collector_get(CollectorGetRequest &req, CollectorGetResponseMsg *rsp);
+hal_ret_t collector_ep_update(ip_addr_t *ip, ep_t *ep);
 
 hal_ret_t flow_monitor_rule_create(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);
 hal_ret_t flow_monitor_rule_update(FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rsp);

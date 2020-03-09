@@ -307,6 +307,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_CREATE, pd_collector_create);
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_DELETE, pd_collector_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_COLLECTOR_GET, pd_collector_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_COLL_EP_UPDATE, pd_collector_ep_update);
 
     // mc entry
     PD_FUNC_LOAD(PD_FUNC_ID_MC_ENTRY_GET,    pd_mc_entry_get);
@@ -388,6 +389,7 @@ hal_pd_load_symbols (void)
 
     // tnnl if
     PD_FUNC_LOAD(PD_FUNC_ID_TNNL_IF_GET_RW_IDX, pd_tunnelif_get_rw_idx);
+    PD_FUNC_LOAD(PD_FUNC_ID_TUNNEL_IF_RTEP_UPDATE, pd_tunnel_if_update_rtep);
 
     // tcp
     PD_FUNC_LOAD(PD_FUNC_ID_TCP_RINGS_CTXT_INIT, pd_tcp_rings_ctxt_init);

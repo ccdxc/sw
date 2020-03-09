@@ -923,7 +923,8 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                src             : 02:22:22:11:11:11
+                #src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
@@ -961,7 +962,8 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                #src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=2
+                src             : 02:22:22:11:11:11
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
@@ -990,7 +992,8 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                #src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                src             : 02:22:22:11:11:11
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0
@@ -1028,7 +1031,8 @@ packets:
             - ref://factory/packets/id=ENCAP_QTAG
         headers     :
             eth     :
-                src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                #src             : callback://telemetry/callbacks/GetCollectorSrcMac/sessionid=3
+                src             : 02:22:22:11:11:11
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0

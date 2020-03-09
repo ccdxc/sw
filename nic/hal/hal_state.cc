@@ -1577,6 +1577,10 @@ uint64_t
 hal_oper_db::mgmt_if_mac(platform_type_t platform) {
     hal_ret_t hal_ret;
 
+    if (platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        return PENSANDO_NIC_MAC;
+    }
+
     if (platform == platform_type_t::PLATFORM_TYPE_HW &&
         mgmt_if_mac_ == 0) {
         hal_ret = hal_get_if_mac(g_mgmt_if_name, &mgmt_if_mac_);

@@ -21,6 +21,7 @@
 using sdk::lib::indexer;
 
 namespace hal {
+extern int telemetry_collector_id_db[HAL_MAX_TELEMETRY_COLLECTORS];
 namespace pd {
 
 telemetry_export_dest_t export_destinations[TELEMETRY_NUM_EXPORT_DEST];
@@ -32,7 +33,6 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     hal_ret_t           ret = HAL_RET_OK;
     sdk_ret_t           sdk_ret;
     directmap           *session = NULL;
-    p4pd_error_t        p4_err;
     char                buff[4096] = {0};
 
     session = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
@@ -55,9 +55,12 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
             }
         }
     } else {
+#if 0
+        p4pd_error_t        p4_err;
         p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
                 action_data, buff, sizeof(buff));
         SDK_ASSERT(p4_err == P4PD_SUCCESS);
+#endif
         HAL_TRACE_DEBUG("{}: programmed session {}: {}",
                 __FUNCTION__, id, buff);
     }
@@ -67,23 +70,31 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
 hal_ret_t
 pd_mirror_session_update (pd_func_args_t *pd_func_args)
 {
-    uint32_t                                dst_lport;
+    uint32_t                                dst_lport, tnnl_rw_idx;
     hal_ret_t                               ret = HAL_RET_OK;
     p4pd_error_t                            pdret;
     mirror_actiondata_t                     action_data;
     pd_mirror_session_update_args_t         *args = pd_func_args->pd_mirror_session_update;
+    pd_func_args_t                          pd_func_args1 = {0};
+    hal::pd::pd_tunnelif_get_rw_idx_args_t  tif_args = { 0 };
 
     if ((args == NULL) || (args->session == NULL) || (args->session->pd == NULL)) {
         HAL_TRACE_ERR(" NULL argument");
         return HAL_RET_INVALID_ARG;
     }
 
+    HAL_TRACE_DEBUG("dst_if: {}, tnnl_if: {}, rtep_ep: {}",
+                    args->dst_if ? if_keyhandle_to_str(args->dst_if) : "NULL",
+                    args->tunnel_if ? if_keyhandle_to_str(args->tunnel_if) : "NULL",
+                    args->rtep_ep ? ep_l2_key_to_str(args->rtep_ep) : "NULL");
+
     mirror_session_pd_t *session_pd = (mirror_session_pd_t *)args->session->pd;
     auto hw_id = session_pd->hw_id;
 
     SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
 
-    HAL_TRACE_DEBUG("Update call for session {}", args->session->sw_id);
+    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}", 
+                    args->session->sw_id, hw_id);
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, hw_id, NULL,
                             NULL, (void *)&action_data);
     if (pdret != P4PD_SUCCESS) {
@@ -92,15 +103,109 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
                       pdret);
         return HAL_RET_ERR;
     }
+
+    if (args->dst_if) {
+        dst_lport = if_get_lport_id(args->dst_if);
+    } else {
+        dst_lport = 0;
+    }
+    if (args->tunnel_if) {
+        tif_args.hal_if = args->tunnel_if;
+        pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
+        hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
+        tnnl_rw_idx = tif_args.tnnl_rw_idx;
+    } else {
+        // Tunnel If not present.
+        dst_lport = 0;
+        tnnl_rw_idx = 0;
+    }
+    if (!args->rtep_ep) {
+        dst_lport = 0;
+    }
+    action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+    action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index = tnnl_rw_idx;
+
     // Update the dest_if
-    dst_lport = if_get_lport_id(args->session->dest_if);
     if (action_data.action_id == MIRROR_ERSPAN_MIRROR_ID) {
-        action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
         ret = pd_mirror_update_hw(hw_id, &action_data);
     }
 
     return ret;
 }
+
+#if 0
+hal_ret_t
+pd_mirror_session_update (pd_func_args_t *pd_func_args)
+{
+    uint32_t                                dst_lport;
+    hal_ret_t                               ret = HAL_RET_OK;
+    p4pd_error_t                            pdret;
+    mirror_actiondata_t                     action_data;
+    pd_mirror_session_update_args_t         *args = pd_func_args->pd_mirror_session_update;
+    pd_func_args_t                          pd_func_args1 = {0};
+    hal::pd::pd_tunnelif_get_rw_idx_args_t  tif_args = { 0 };
+
+    if ((args == NULL) || (args->session == NULL) || (args->session->pd == NULL)) {
+        HAL_TRACE_ERR(" NULL argument");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_DEBUG("dst_if_change: {}, dst_if: {}, tunnel_if_change: {}, tnnl_if: {}, "
+                    "rtep_ep_exists: {}",
+                    args->dst_if_change, 
+                    args->dst_if ? if_keyhandle_to_str(args->dst_if) : "NULL",
+                    args->tunnel_if_change,
+                    args->tunnel_if ? if_keyhandle_to_str(args->tunnel_if) : "NULL",
+                    args->session->rtep_ep_exists);
+
+    mirror_session_pd_t *session_pd = (mirror_session_pd_t *)args->session->pd;
+    auto hw_id = session_pd->hw_id;
+
+    SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
+
+    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}", 
+                    args->session->sw_id, hw_id);
+    pdret = p4pd_entry_read(P4TBL_ID_MIRROR, hw_id, NULL,
+                            NULL, (void *)&action_data);
+    if (pdret != P4PD_SUCCESS) {
+        HAL_TRACE_ERR("Session id {} read from hw id {} failed {}",
+                      args->session->sw_id, hw_id,
+                      pdret);
+        return HAL_RET_ERR;
+    }
+
+    if (args->dst_if_change) {
+        if (args->dst_if) {
+            dst_lport = if_get_lport_id(args->dst_if);
+        } else {
+            dst_lport = 0;
+        } 
+        action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+    }
+    if (args->tunnel_if_change) {
+        if (args->tunnel_if) {
+            tif_args.hal_if = args->tunnel_if;
+            pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
+            hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
+            action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+                tif_args.tnnl_rw_idx;
+        } else {
+            action_data.action_u.mirror_erspan_mirror.dst_lport = 0;
+            action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index = 0;
+        }
+    }
+    if (!args->session->rtep_ep_exists) {
+        action_data.action_u.mirror_erspan_mirror.dst_lport = 0;
+    }
+
+    // Update the dest_if
+    if (action_data.action_id == MIRROR_ERSPAN_MIRROR_ID) {
+        ret = pd_mirror_update_hw(hw_id, &action_data);
+    }
+
+    return ret;
+}
+#endif
 
 hal_ret_t
 pd_mirror_session_create (pd_func_args_t *pd_func_args)
@@ -156,12 +261,25 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     case MIRROR_DEST_ERSPAN: {
         action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
         action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
+        if (args->dst_if) {
+            dst_lport = if_get_lport_id(args->dst_if);
+        } else {
+            dst_lport = 0;
+        }
+        if (args->tunnel_if) {
+            tif_args.hal_if = args->tunnel_if;
+            pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
+            hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
+            action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index =
+                tif_args.tnnl_rw_idx;
+        } else {
+            // Tunnel If not present.
+            dst_lport = 0;
+        }
+        if (!args->rtep_ep) {
+            dst_lport = 0;
+        }
         action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
-        tif_args.hal_if = args->session->mirror_destination_u.er_span_dest.tunnel_if;
-        pd_func_args1.pd_tunnelif_get_rw_idx = &tif_args;
-        hal::pd::pd_tunnelif_get_rw_idx(&pd_func_args1);
-        action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index =
-            tif_args.tnnl_rw_idx;
         break;
     }
     default:
@@ -262,6 +380,7 @@ telemetry_export_dest_init(telemetry_export_dest_t *d)
 {
     HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, d->id);
     uint64_t hbm_start = get_mem_addr(JP4_IPFIX);
+    d->skip_doorbell = false;
     d->base_addr = hbm_start + (d->id * TELEMETRY_IPFIX_BUFSIZE);
     d->buf_hdr.packet_start = sizeof(telemetry_pd_export_buf_header_t);
     d->buf_hdr.payload_start = sizeof(telemetry_pd_export_buf_header_t) + sizeof(telemetry_pd_ipfix_header_t);
@@ -366,6 +485,81 @@ telemetry_export_dest_commit(telemetry_export_dest_t *d)
     return HAL_RET_OK;
 }
 
+hal_ret_t 
+pd_collector_ep_update (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                        ret = HAL_RET_OK;
+    pd_collector_ep_update_args_t    *args = pd_func_args->pd_collector_ep_update;
+    ep_t                             *ep;
+    telemetry_export_dest_t          *dst;
+    collector_config_t               cfg;
+    bool                             skip_doorbell = false;
+    mac_addr_t                       *dmac = NULL;
+
+    ep = args->ep;
+    if (ep) {
+        dmac = ep_get_mac_addr(ep);
+    } else {
+        skip_doorbell = true;
+    }
+
+    for (int i = 0; i < HAL_MAX_TELEMETRY_COLLECTORS; i++) {
+        if (telemetry_collector_id_db[i] > 0) {
+            dst = &export_destinations[i];
+            telemetry_export_dest_get_ip(dst, &cfg, false);
+            HAL_TRACE_DEBUG("Processing collector: {}, EP: {}", 
+                            ipaddr2str(&cfg.dst_ip), ipaddr2str(args->ip));
+            if (!memcmp(&cfg.dst_ip, args->ip, sizeof(ip_addr_t))) {
+                HAL_TRACE_DEBUG("Updating collector: {}, skip_doorbell: {}", 
+                                ipaddr2str(args->ip), skip_doorbell);
+                dst->skip_doorbell = skip_doorbell;
+                if (!skip_doorbell) {
+                    telemetry_export_dest_set_mac(dst, *dmac, false);
+                    telemetry_export_dest_commit(dst);
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+hal_ret_t
+pd_collector_populate_export_info (collector_config_t *cfg, 
+                                   ep_t *ep, 
+                                   telemetry_export_dest_t *dst)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    mac_addr_t *dmac = NULL;
+
+    dst->ipfix_hdr.vlan.vlan_tag = htons(cfg->vlan);
+    dst->ipfix_hdr.iphdr.tos = 0;
+    dst->ipfix_hdr.iphdr.ttl = 64;
+    // Total len will be updated correctly in the P4 datapath
+    dst->ipfix_hdr.iphdr.tot_len = htons(0xFFFF);
+    dst->ipfix_hdr.udphdr.sport = htons(UDP_SRC_PORT_TELEMETRY);
+    dst->ipfix_hdr.udphdr.dport = htons(cfg->dport);
+    dst->template_id = cfg->template_id;
+    dst->export_intvl = cfg->export_intvl;
+    dst->valid = true;
+    if (ep) {
+        dmac = ep_get_mac_addr(ep);
+    } else {
+        dst->skip_doorbell = true;
+    }
+    
+    telemetry_export_dest_set_ip(dst, cfg->src_ip, true);
+    telemetry_export_dest_set_ip(dst, cfg->dst_ip, false);
+    telemetry_export_dest_set_mac(dst, cfg->src_mac, true);
+    if (dmac) {
+        telemetry_export_dest_set_mac(dst, *dmac, false);
+    }
+    telemetry_export_dest_commit(dst);
+
+end:
+    return ret;
+}
+
 hal_ret_t
 pd_collector_create(pd_func_args_t *pd_func_args)
 {
@@ -403,6 +597,9 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     }
     HAL_TRACE_DEBUG("{}: CPU VLAN {}", __FUNCTION__, cfg->vlan);
 
+    pd_collector_populate_export_info(cfg, c_args->ep, d);
+
+#if 0
     d->ipfix_hdr.vlan.vlan_tag = htons(cfg->vlan);
     d->ipfix_hdr.iphdr.tos = 0;
     d->ipfix_hdr.iphdr.ttl = 64;
@@ -419,6 +616,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
+#endif
     
     hal_cfg = g_hal_state_pd->hal_cfg();
     SDK_ASSERT(hal_cfg);
