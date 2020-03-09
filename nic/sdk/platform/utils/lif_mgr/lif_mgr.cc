@@ -425,6 +425,26 @@ end:
     return ret;
 }
 
+#define QSTATE_INFO(QID) \
+    qstate->type[QID].qtype_info.entries, qstate->type[QID].qtype_info.size
+
+sdk_ret_t
+lif_mgr::read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    if (!qstate) {
+        return SDK_RET_INVALID_ARG;
+    }
+
+    qstate->lif_id = lif_id;
+    LIF_MGR_API_START_LOCK();
+    ret = asic_pd_qstate_map_read(qstate);
+    LIF_MGR_API_END_UNLOCK();
+
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // - Clear qstate
 //-----------------------------------------------------------------------------

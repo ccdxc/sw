@@ -56,6 +56,7 @@ public:
                            uint8_t *buf, uint32_t bufsize);
     sdk_ret_t read_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
                           uint8_t *buf, uint32_t bufsize);
+    sdk_ret_t read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate);
     sdk_ret_t enable(uint32_t lif_id);
     sdk_ret_t disable(uint32_t lif_id);
     lif_qstate_t *get_lif_qstate(uint32_t lif_id);

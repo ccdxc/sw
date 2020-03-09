@@ -77,6 +77,12 @@ capri_set_qstate_map(lif_qstate_t *qstate, T *entry, uint8_t enable)
     entry->write();
 }
 
+#define CAPRI_READ_ASSERT_MAP_ENTRY(QID) \
+    SDK_ASSERT(qstate->type[QID].qtype_info.entries == \
+               rqstate.type[QID].qtype_info.entries); \
+    SDK_ASSERT(qstate->type[QID].qtype_info.size == \
+               rqstate.type[QID].qtype_info.size);
+
 void
 capri_program_qstate_map (lif_qstate_t *qstate, uint8_t enable)
 {
@@ -89,6 +95,9 @@ capri_program_qstate_map (lif_qstate_t *qstate, uint8_t enable)
     auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     capri_set_qstate_map(qstate, pr_entry, enable);
 }
+
+#define QSTATE_INFO(QID) \
+    qstate->type[QID].qtype_info.entries, qstate->type[QID].qtype_info.size
 
 #define CAPRI_GET_QSTATE_MAP_ENTRY(QID)                                     \
     qstate->type[QID].qtype_info.entries = (uint8_t)entry->length ## QID(); \
@@ -109,17 +118,37 @@ capri_get_qstate_map (lif_qstate_t *qstate, T *entry)
     CAPRI_GET_QSTATE_MAP_ENTRY(5);
     CAPRI_GET_QSTATE_MAP_ENTRY(6);
     CAPRI_GET_QSTATE_MAP_ENTRY(7);
+
+    SDK_TRACE_DEBUG("Lif: %lu, Qstate map: hbm_addr: %llu, hint_cos: %lu, "
+                    "e0: %u,%u, e1: %u,%u, e2: %u,%u, e3: %u,%u, "
+                    "e4: %u,%u, e5: %u,%u, e6: %u,%u, e7: %u,%u",
+                    qstate->lif_id, qstate->hbm_address, qstate->hint_cos,
+                    QSTATE_INFO(0), QSTATE_INFO(1), QSTATE_INFO(2),
+                    QSTATE_INFO(3), QSTATE_INFO(4), QSTATE_INFO(5),
+                    QSTATE_INFO(6), QSTATE_INFO(7));
 }
 
 void
 capri_read_qstate_map (lif_qstate_t *qstate)
 {
+    uint32_t lif_id = qstate->lif_id;
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
-    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     // Since content is going to be same in ASIC across all 3 blocks -
     // reading from one is enough ??
+    auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
+    capri_get_qstate_map(qstate, wa_entry);
+
+    memset(qstate, 0, sizeof(lif_qstate_t));
+    qstate->lif_id = lif_id;
+    auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     capri_get_qstate_map(qstate, psp_entry);
+
+    memset(qstate, 0, sizeof(lif_qstate_t));
+    qstate->lif_id = lif_id;
+    auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    capri_get_qstate_map(qstate, pr_entry);
+
 }
 
 void

@@ -54,16 +54,13 @@ program_cpu_lif(void)
     pd::pd_lif_get_lport_id_args_t    args = { 0 };
     pd::pd_func_args_t                pd_func_args = {0};
 
-    // if(lif_manager()->LIFRangeAlloc(HAL_LIF_CPU, 1) <= 0)
     sret = lif_manager()->reserve_id(HAL_LIF_CPU, 1);
     if (sret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to reserve service LIF");
         return HAL_RET_NO_RESOURCE;
     }
 
-
     lif_spec.Clear();
-
     lif_spec.mutable_key_or_handle()->set_lif_id(HAL_LIF_CPU);
     lif_spec.set_admin_status(intf::IF_STATUS_UP);
     lif_spec.set_name("HAL_LIF_CPU");

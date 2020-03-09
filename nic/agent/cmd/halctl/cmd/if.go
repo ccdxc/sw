@@ -1388,9 +1388,7 @@ func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
 		return fmt.Sprintf("Enic-%d",
 			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 	case halproto.IfType_IF_TYPE_UPLINK:
-		return fmt.Sprintf("Uplink-%d",
-			// resp.GetSpec().GetIfUplinkInfo().GetPortNum())
-			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+		return utils.IfIndexToStr(uint32(resp.GetSpec().GetKeyOrHandle().GetInterfaceId()))
 	case halproto.IfType_IF_TYPE_UPLINK_PC:
 		return fmt.Sprintf("UplinkPC-%d",
 			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
