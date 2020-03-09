@@ -16,6 +16,7 @@
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
@@ -46,7 +47,7 @@
 #define PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2     1
 
 // policer refresh interval in micro seconds
-#define PDS_POLICER_DEFAULT_REFRESH_INTERVAL   250
+#define PDS_POLICER_DEFAULT_REFRESH_INTERVAL   2000
 
 // max policer token per interval
 #define PDS_POLICER_MAX_TOKENS_PER_INTERVAL    ((1ull << 39) -1 )
@@ -403,9 +404,17 @@ do {                                          \
                                     PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
                                     &rate_tokens, &burst_tokens);              \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
-        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.burst, burst_tokens); \
-        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.rate, rate_tokens);   \
-        POLICER_WRITE_HW_ENTRY(tbl ## _data.tbl ## _info.tbkt, burst_tokens);  \
+        PDS_TRACE_DEBUG("burst %lu, rate %lu, tbkt %u", burst_tokens,          \
+                        rate_tokens, burst_tokens);                            \
+        memcpy(tbl ## _data.tbl ## _info.burst, &burst_tokens,                 \
+                std::min(sizeof(tbl ## _data.tbl ## _info.burst),              \
+                                sizeof(burst_tokens)));                        \
+        memcpy(tbl ## _data.tbl ## _info.rate, &rate_tokens,                   \
+               std::min(sizeof(tbl ## _data.tbl ## _info.rate),                \
+                        sizeof(rate_tokens)));                                 \
+        memcpy(tbl ## _data.tbl ## _info.tbkt, &burst_tokens,                  \
+               std::min(sizeof(tbl ## _data.tbl ## _info.tbkt),                \
+                        sizeof(burst_tokens)));                                \
     }                                                                          \
     if (upd) {                                                                 \
         memset(&tbl ## _data_mask.tbl ## _info, 0xFF,                          \
@@ -432,8 +441,13 @@ do {                                          \
 static inline sdk_ret_t
 program_copp_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
-    PROGRAM_POLICER_TABLE_ENTRY(policer, copp, P4TBL_ID_COPP,
-                                COPP_COPP_ID, idx, upd);
+    // skip policer programming in non-h/w platforms as the token refresh logic
+    // is not activated in those platforms
+    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        PROGRAM_POLICER_TABLE_ENTRY(policer, copp, P4TBL_ID_COPP,
+                                    COPP_COPP_ID, idx, upd);
+    }
+    return SDK_RET_OK;
 }
 #undef copp_info
 

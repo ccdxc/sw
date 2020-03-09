@@ -72,6 +72,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     id_ht_ctxt_.reset();
 }
 
+// TODO: usage of SDK_DEFAULT_POLICER_REFRESH_INTERVAL is broken ??
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
 lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
