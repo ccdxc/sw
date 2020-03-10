@@ -340,10 +340,7 @@ class _Testbed:
                 if GlobalOptions.pipeline in [ "apulu" ]:
                     cmd.extend(["--no-mgmt"])
 
-                if GlobalOptions.pipeline in [ "apulu" ]:
-                    cmd.extend(["--naples", "equinix"])
-                else:
-                    cmd.extend(["--naples", "capri"])
+                cmd.extend(["--naples", GlobalOptions.naples_type])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
