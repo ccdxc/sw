@@ -18,6 +18,7 @@ import policy_pb2_grpc as policy_pb2_grpc
 import mirror_pb2_grpc as mirror_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
 import nh_pb2_grpc as nh_pb2_grpc
+import dhcp_pb2_grpc as dhcp_pb2_grpc
 
 import logging
 console = logging.StreamHandler()
@@ -54,7 +55,8 @@ class ObjectTypes(enum.IntEnum):
     INTERFACE = 11
     LIF = 12
     NH = 13
-    MAX = 14
+    DHCP_POLICY = 14
+    MAX = 15
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -149,6 +151,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'SecurityPolicy')
         self.__stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
                                                       self.__channel, 'MirrorSession')
+        self.__stubs[ObjectTypes.DHCP_POLICY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
+                                                   self.__channel, 'DHCPPolicy')
         return
 
     def Create(self, objtype, objs):

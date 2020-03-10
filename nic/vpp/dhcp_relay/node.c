@@ -935,17 +935,35 @@ pds_dhcp_extract_circ_id_callback (vlib_main_t * vm, vlib_buffer_t *b,
     return 0;
 }
 
-static clib_error_t *
-pds_dhcp_relay_init (vlib_main_t * vm)
+int
+pds_dhcp_set_internal_proxy_server(void)
 {
-    int no_threads = vec_len(vlib_worker_threads);
+    ip46_address_t svr_addr = { 0 };
+    ip46_address_t src_addr = { 0 };
 
-    clib_memset(&dhcp_relay_main, 0, sizeof(dhcp_relay_main_t));
-    vec_validate_init_empty(dhcp_relay_main.inject_fds, (no_threads - 1), -1);
+    svr_addr.ip4.as_u32 = clib_host_to_net_u32(PDS_LOCAL_DHCP_SERVER_ADDR);
+    src_addr.ip4.as_u32 = clib_host_to_net_u32(PDS_LOCAL_DHCP_AGENT_ADDR);
 
-    pds_dhcp_relay_pipeline_init();
+    return dhcp4_proxy_set_server(&svr_addr, &src_addr, 0, 0, 0);
+}
 
-    dhcp_register_server_next_node_tx(vm, (u8 *) "pds-dhcp-relay-linux-inject");
+int
+pds_dhcp_relay_init_cb (bool external_server)
+{
+    vlib_main_t *vm;
+    static bool inited;
+
+    ASSERT(inited == false);
+
+    inited = true;
+
+    vm = vlib_get_main();
+
+    if (external_server) {
+        dhcp_register_server_next_node_tx(vm, (u8 *) "pds-dhcp-relay-linux-inject");
+    } else {
+        pds_dhcp_set_internal_proxy_server();
+    }
 
     dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
 
@@ -954,6 +972,19 @@ pds_dhcp_relay_init (vlib_main_t * vm)
     dhcp_register_custom_client_hdr_cb(&pds_dhcp_client_hdr_callback);
 
     dhcp_register_extract_circ_id_cb(&pds_dhcp_extract_circ_id_callback);
+
+    return 0;
+}
+
+static clib_error_t *
+pds_dhcp_relay_init (vlib_main_t *vm)
+{
+    int no_threads = vec_len(vlib_worker_threads);
+
+    clib_memset(&dhcp_relay_main, 0, sizeof(dhcp_relay_main_t));
+    vec_validate_init_empty(dhcp_relay_main.inject_fds, (no_threads - 1), -1);
+
+    pds_dhcp_relay_pipeline_init();
 
     pds_dhcp_relay_cfg_init();
 

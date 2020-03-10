@@ -17,6 +17,8 @@ int pds_dhcp4_relay_config_update(uint32_t server_ip,
                                   uint32_t agent_ip,
                                   bool del);
 
+int pds_dhcp_relay_init_cb(bool external_server);
+
 #ifdef __cplusplus
 }
 #endif

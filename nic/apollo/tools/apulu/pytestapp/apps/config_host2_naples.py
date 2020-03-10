@@ -8,6 +8,7 @@ import tunnel
 import route
 import vnic
 import mapping
+import dhcp
 import subnet
 import policy
 import mirror
@@ -75,7 +76,7 @@ tunnel_nhid=2
 ipv4_subnet1='2.1.0.0/24'
 ipv6_subnet1='2001::2:1:0:0/112'
 # The host_if_idx is an encoding for PF1
-host_if_idx='0x8000004f'
+host_if_idx='0x80000048'
 fabric_encap=202
 v4_router_ip='2.1.0.0'
 v6_router_ip='2001::2:1:0:2'
@@ -88,6 +89,8 @@ local_vnic_mac='00:ae:cd:00:00:0a'
 remote_vnic_mac='00:ae:cd:00:08:11'
 local_host_ip='2.1.0.3'
 remote_host_ip='2.1.0.2'
+subnet_gw_ip='2.1.0.1'
+subnet_gw_ip_addr=ipaddress.IPv4Address('2.1.0.1')
 
 # Initialize objects.
 
@@ -122,6 +125,8 @@ nh2 = nh.NexthopObject( 2, 'underlay', 2, intf2_underlay_mac, vpc2_id )
 # id, vpcid, localip, remoteip, macaddr, encaptype, vnid, nhid
 tunnel1 = tunnel.TunnelObject( 1,vpc1_id, tunnel_local_ip, tunnel_remote_ip,tunnel_mac, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid,tunnel_nhid) 
 
+# Create DHCP Policy
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet_gw_ip_addr, mtu=9216,  gateway_ip=subnet_gw_ip_addr)
 
 # Create Subnets
 # id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1
@@ -157,6 +162,7 @@ api.client.Create(api.ObjectTypes.NH, [nh2.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.TUNNEL, [tunnel1.GetGrpcCreateMessage()])
 
+api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [subnet1.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VNIC, [vnic1.GetGrpcCreateMessage()])

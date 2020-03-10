@@ -23,6 +23,9 @@
 #define PDS_IP4_PREFIX_LEN                  4
 #define PDS_VNIC_ID_LEN                     2
 
+#define PDS_LOCAL_DHCP_SERVER_ADDR          0xa9fe0002
+#define PDS_LOCAL_DHCP_AGENT_ADDR           0xa9fe0003
+
 // clfy node related defines
 #define foreach_dhcp_relay_clfy_counter                     \
     _(TO_SERVER, "Sent to Server " )                        \

@@ -7,10 +7,11 @@ import subnet_pb2 as subnet_pb2
 import types_pb2 as types_pb2
 
 class SubnetObject():
-    def __init__(self, id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1, node_uuid=None):
+    def __init__(self, id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1, node_uuid=None, dhcp_policy_id=None):
         super().__init__()
         self.id    = id
         self.vpcid = vpcid
+        self.dhcp_policy_id = dhcp_policy_id
         self.uuid = utils.PdsUuid(self.id)
         self.v4prefix = v4prefix
         self.v6prefix = v6prefix
@@ -38,6 +39,8 @@ class SubnetObject():
         spec = grpcmsg.Request.add()
         spec.Id = self.uuid.GetUuid()
         spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.vpcid)
+        if self.dhcp_policy_id:
+            spec.DHCPPolicyId = utils.PdsUuid.GetUUIDfromId(self.dhcp_policy_id)
         spec.V4Prefix.Len = self.v4prefix.prefixlen
         #print(spec.V4Prefix.Addr)
         spec.V4Prefix.Addr = int( self.v4prefix.network_address)

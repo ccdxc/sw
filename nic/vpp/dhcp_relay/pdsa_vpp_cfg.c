@@ -13,6 +13,15 @@ pds_dhcp4_relay_config_update (uint32_t server_ip,
     ip46_address_t svr_addr;
     ip46_address_t src_addr;
     u32 *svr_ip = NULL;
+    static bool dhcp_relay_initialized;
+
+    if (!dhcp_relay_initialized) {
+        /*
+         * Initialize relay to relay to external server
+         */
+        pds_dhcp_relay_init_cb(true);
+        dhcp_relay_initialized = true;
+    }
 
     memset(&svr_addr, 0x0, sizeof(ip46_address_t));
     memset(&src_addr, 0x0, sizeof(ip46_address_t));

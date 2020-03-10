@@ -48,6 +48,35 @@ pdsa_dhcp_relay_cfg_del (const pds_cfg_msg_t *msg) {
     }
 }
 
+static sdk::sdk_ret_t
+pdsa_dhcp_proxy_policy_cfg_set (const pds_cfg_msg_t *msg)
+{
+    static bool dhcp_relay_initialized;
+
+    /*
+     * Not currently storing this policy. Init dhcp proxy if needed, otherwise
+     * do nothing
+     */
+    if (!dhcp_relay_initialized) {
+        /*
+         * Initialize relay to internal DHCP proxy server
+         */
+        if (pds_dhcp_relay_init_cb(false) != 0) {
+            return SDK_RET_ERR;
+        }
+        dhcp_relay_initialized = true;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+static sdk::sdk_ret_t
+pdsa_dhcp_proxy_policy_cfg_del (const pds_cfg_msg_t *msg)
+{
+    // For now, nothing to do
+    return SDK_RET_OK;
+}
+
 void
 pds_dhcp_relay_cfg_init (void) {
     // initialize callbacks for cfg/oper messages received from pds-agent
@@ -55,5 +84,10 @@ pds_dhcp_relay_cfg_init (void) {
     pds_cfg_register_callbacks(OBJ_ID_DHCP_RELAY,
                                pdsa_dhcp_relay_cfg_set, 
                                pdsa_dhcp_relay_cfg_del,
+                               NULL);
+
+    pds_cfg_register_callbacks(OBJ_ID_DHCP_POLICY,
+                               pdsa_dhcp_proxy_policy_cfg_set, 
+                               pdsa_dhcp_proxy_policy_cfg_del,
                                NULL);
 }
