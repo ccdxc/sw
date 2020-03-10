@@ -415,6 +415,69 @@ func (h Hal) PortCreate(ctx context.Context, req *irisproto.PortRequestMsg) (*ir
 	}, nil
 }
 
+// PortUpdate stubbed out
+func (h Hal) PortUpdate(ctx context.Context, req *irisproto.PortRequestMsg) (*irisproto.PortResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got PortUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.PortResponseMsg{
+		Response: []*irisproto.PortResponse{
+			{
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
+}
+
+// PortDelete stubbed out
+func (h Hal) PortDelete(ctx context.Context, req *irisproto.PortDeleteRequestMsg) (*irisproto.PortDeleteResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got PortDelete Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.PortDeleteResponseMsg{
+		Response: []*irisproto.PortDeleteResponse{
+			{
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
+}
+
+// PortGet stubbed out
+func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*irisproto.PortGetResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got PortGet Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.PortGetResponseMsg{
+		Response: []*irisproto.PortGetResponse{
+			{
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+			},
+		},
+	}, nil
+}
+
+// StartAacsServer stubbed out
+func (h Hal) StartAacsServer(ctx context.Context, req *irisproto.AacsRequestMsg) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got StartAacsServer Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.Empty{}, nil
+}
+
+// StopAacsServer stubbed out
+func (h Hal) StopAacsServer(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got StopAacsServer Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.Empty{}, nil
+}
+
 // SecurityProfileCreate stubbed out
 func (h Hal) SecurityProfileCreate(ctx context.Context, req *irisproto.SecurityProfileRequestMsg) (*irisproto.SecurityProfileResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

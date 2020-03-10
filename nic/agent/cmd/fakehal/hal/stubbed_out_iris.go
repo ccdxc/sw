@@ -238,51 +238,6 @@ func (h Hal) FilterGet(ctx context.Context, req *irisproto.FilterGetRequestMsg) 
 	return nil, nil
 }
 
-// PortUpdate stubbed out
-func (h Hal) PortUpdate(ctx context.Context, req *irisproto.PortRequestMsg) (*irisproto.PortResponseMsg, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got PortUpdate Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
-// PortDelete stubbed out
-func (h Hal) PortDelete(ctx context.Context, req *irisproto.PortDeleteRequestMsg) (*irisproto.PortDeleteResponseMsg, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got PortDelete Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
-// PortGet stubbed out
-func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*irisproto.PortGetResponseMsg, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got PortGet Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
-// StartAacsServer stubbed out
-func (h Hal) StartAacsServer(ctx context.Context, req *irisproto.AacsRequestMsg) (*irisproto.Empty, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got StartAacsServer Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
-// StopAacsServer stubbed out
-func (h Hal) StopAacsServer(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got StopAacsServer Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
 // CollectorUpdate Stubbed out
 func (h Hal) CollectorUpdate(ctx context.Context, req *irisproto.CollectorRequestMsg) (*irisproto.CollectorResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")
