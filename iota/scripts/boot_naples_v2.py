@@ -625,17 +625,22 @@ class NaplesManagement(EntityManagement):
 
     def ReadExternalIP(self):
         self.__run_dhclient()
-        output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
-        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-        x = re.findall(ifconfig_regexp, output)
-        if len(x) > 0:
-            self.ipaddr = x[0]
-            print("Read OOB IP {0}".format(self.ipaddr))
-            self.SSHPassInit()
+        for _ in range(5):
+            output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
+            ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+            x = re.findall(ifconfig_regexp, output)
+            if len(x) > 0:
+                self.ipaddr = x[0]
+                print("Read OOB IP {0}".format(self.ipaddr))
+                self.SSHPassInit()
+                return
+            else:
+                print("Did not Read OOB IP  {0}".format(self.ipaddr))
+        raise Exception("Not able read OOB IP")
 
     #if oob is not available read internal IP
     def ReadInternalIP(self):
-        for _ in range(3):
+        for _ in range(5):
             output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
             ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
             x = re.findall(ifconfig_regexp, output)
