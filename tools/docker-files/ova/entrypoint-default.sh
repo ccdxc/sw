@@ -4,7 +4,13 @@ set -x
 set -e
 umask 000
 echo | ./VMware-ovftool-4.3.0-13981069-lin.x86_64.bundle --eulas-agreed
-yum -y install qemu-img
+which qemu-img
+if [ $? -eq 0 ]
+then
+    echo "qemu-image is exist, not need install"
+else
+    yum -y install qemu-img
+fi
 # Build the OVA and download it using buildit tool
 build_id=`/t/buildit b -i /t/pen-install.iso pensando/e2e-images/venice/venice.yaml | grep 'Build ID: ' | uniq | sed 's/Build ID: //'`
 # Directory to keep the output of the build

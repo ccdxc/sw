@@ -143,13 +143,17 @@ latest dependencies image. However, if you are *building* the image this pull
 will overwrite your changes. Therefore the tasks below were created to ease up
 this problem a little bit. None of the below tasks invoke `docker pull` at all.
 
+Version need to be bumpped when new image is built. Two places need to be changed:
+* `NIC_CONTAINER_VERSION` in nic/mkdefs/docker.mk
+* `tag "pensando/nic:1.<version>"` in nic/box-deps.rb
+
 These make targets were created for testing:
 
-* `make deps` - makes a *test* dependencies image named `srv1.pensando.io/pensando/nic:dependencies`
-* `make deps-test-shell` - just like `make shell`, but tests against your freshly-built image.
-* `make deps-release` - makes a *release* dependencies image tagged with the
+* `make docker/deps` - makes a *test* dependencies image named `srv1.pensando.io/pensando/nic:dependencies`
+* `make docker/deps-test-shell` - just like `make shell`, but tests against your freshly-built image.
+* `make docker/deps-release` - makes a *release* dependencies image tagged with the
   same name.  This image is flattened to reduce size.
-* `make deps-test-build` - just like `make build`.
+* `make docker/deps-test-build` - just like `make build`.
 
 Once you're done testing, and you have a **RELEASE** image (replace 'x' below with the corresponding version):
 

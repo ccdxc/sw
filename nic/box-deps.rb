@@ -13,12 +13,10 @@ run "yum -y install softhsm libtool-ltdl-devel"
 run "ln -sf /usr/bin/python3.6 /usr/bin/python3"
 run "ln -sf /usr/bin/pip3.6 /usr/bin/pip3"
 run "yum install -y epel-release"
-run "yum install -y nfs-utils nfs-utils-lib"
 run "yum install -y epel-release.noarch bash-completion.noarch" # For halctl bash-completion
 run "yum install -y centos-release-scl" # Needed by buildroot for newer "make" installed by devtoolset-7
 run "yum install -y numactl-devel libuuid-devel libaio-devel CUnit-devel" # For storage/offload
 run "yum install -y patch libedit2 libedit-devel" # For platform
-run "yum install -y tcpdump"
 
 PIP2_PACKAGES = %w[
   ply==3.9
@@ -109,6 +107,11 @@ PACKAGES = %w[
   devtoolset-7-make.x86_64
   jq
   perl-Archive-Zip
+  tcpdump
+  qemu-img
+  clang
+  nfs-utils
+  nfs-utils-lib
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"
@@ -116,8 +119,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 # otherwise protobuf.pc will end up in the wrong spot, required for building protobuf-c
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
-# Install go 1.13.4
-run "curl -sSL https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz | tar xz -C /usr/local"
+# Install go 1.12.9
+run "curl -sSL https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
 run "yum install epel-release"
@@ -319,7 +322,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.40"
+tag "pensando/nic:1.41"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
