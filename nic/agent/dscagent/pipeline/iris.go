@@ -217,6 +217,8 @@ func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus
 	}
 	iris.ArpClient = client
 	iris.MgmtLink = mgmtLink
+	log.Infof("Starting the ARP watch loop")
+	go iris.ResolveWatch()
 }
 
 // RegisterControllerAPI ensures the handles for controller API is appropriately set up

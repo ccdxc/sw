@@ -15,11 +15,8 @@ import (
 	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
-	//	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	//	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
-	//	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -380,8 +377,7 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp did not resolve ")
 	}
@@ -485,8 +481,7 @@ func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -603,8 +598,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1069,8 +1063,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorIP(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1226,8 +1219,7 @@ func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1375,8 +1367,7 @@ func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
 
 	AssertEquals(t, epCountAfter1stCreate, epCountAfter2ndCreate, "For idempotent netflow session creates, EP count must remain same")
 
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1485,8 +1476,7 @@ func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
 	AssertEquals(t, epCountAfter1stCreate, epCountAfter2ndCreate, "For idempotent mirror session creates, EP count must remain same")
 	AssertEquals(t, tunnelCountAfter1stCreate, tunnelCountAfter2ndCreate, "For idempotent mirror session creates, EP count must remain same")
 
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1563,8 +1553,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
 
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1670,8 +1659,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithoutTunnel(t *testing.T) {
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1832,6 +1820,90 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 	GwCache = map[string]string{}
 }
 
+func TestFailedARPResolutionRetry(t *testing.T) {
+	// Usage of netlink requires CAP_SYSADMIN. If this is not set, there is no point running the tests. Test for this here
+	if shouldSkip() {
+		t.Skip("Needs CAP_SYSADMIN set for netlink. Either unsupported platform or don't have enough privs to run.")
+	}
+	ms := &netproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "tc_drop_fw",
+		},
+		Spec: netproto.MirrorSessionSpec{
+			Collectors: []netproto.MirrorCollector{
+				{
+					//Type: "erspan",
+					ExportCfg: netproto.MirrorExportConfig{Destination: destIPOutSideSubnet}},
+			},
+		},
+	}
+
+	mgmtIP, mgmtLink, mgmtIntf, err := findMgmtIP("127.0.0.1")
+	AssertOk(t, err, "failed to find the mgmt IP.")
+
+	client, err := arp.Dial(mgmtIntf)
+	AssertOk(t, err, "Failed to initiate an ARP client")
+	ArpClient = client
+	MgmtLink = mgmtLink
+
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	AssertOk(t, err, "Creating lateral objects must succeed.")
+	mac, ok := destIPToMAC.Load(destIPOutSideSubnet)
+	if ok {
+		Assert(t, mac == "", "Lateral object creates must fail on failed arp resolutions %v", mac)
+	}
+	// Make corrections so that ARP resolution goes through
+	ArpClient.Close()
+
+	mgmtIP, mgmtLink, mgmtIntf, err = findMgmtIP(destIPOutSideSubnet)
+	AssertOk(t, err, "failed to find the mgmt IP.")
+
+	client, err = arp.Dial(mgmtIntf)
+	AssertOk(t, err, "Failed to initiate an ARP client")
+	ArpClient = client
+	MgmtLink = mgmtLink
+	defer ArpClient.Close()
+
+	// Wait for next loop to run
+	time.Sleep(time.Second * 70)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
+	if ok {
+		Assert(t, dmac != "", "Arp Not resolved ")
+	}
+	lateralObjMeta := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      fmt.Sprintf("_internal-%s", dmac),
+	}
+
+	tunnelObjMeta := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      fmt.Sprintf("_internal-%s", destIPOutSideSubnet),
+	}
+
+	// Ensure all lateral objects are created
+	_, err = infraAPI.Read("Endpoint", getKey(lateralObjMeta))
+	AssertOk(t, err, "Lateral endpoint obj not found")
+
+	_, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
+	AssertOk(t, err, "Lateral endpoint obj not found")
+
+	// Call delete objs
+	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	AssertOk(t, err, "Deleting lateral objects must succeed.")
+
+	dat, err := infraAPI.Read("Endpoint", getKey(lateralObjMeta))
+	Assert(t, err != nil, "Lateral endpoint obj found, when it is not expected to be created. Found: %v", dat)
+
+	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
+	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
+	GwCache = map[string]string{}
+}
+
 func TestFailedARPResolution(t *testing.T) {
 	// Usage of netlink requires CAP_SYSADMIN. If this is not set, there is no point running the tests. Test for this here
 	if shouldSkip() {
@@ -1862,8 +1934,15 @@ func TestFailedARPResolution(t *testing.T) {
 	MgmtLink = mgmtLink
 	defer ArpClient.Close()
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, "127.0.0.1", true)
-	Assert(t, err != nil, "Lateral object creates must fail on failed arp resolutions")
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	AssertOk(t, err, "Creating lateral objects must succeed.")
+	mac, ok := destIPToMAC.Load(destIPOutSideSubnet)
+	if ok {
+		Assert(t, mac == "", "Lateral object creates must fail on failed arp resolutions %v", mac)
+	}
+	// Call delete objs
+	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	AssertOk(t, err, "Deleting lateral objects must succeed.")
 	GwCache = map[string]string{}
 }
 
@@ -1919,8 +1998,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorMac(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet]
-	dmac, ok := arpCache.Load(gwIP)
+	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -1937,8 +2015,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorMac(t *testing.T) {
 		Name:      fmt.Sprintf("_internal-%s", destIPOutSideSubnet),
 	}
 
-	gwIP1 := GwCache[destIPOutSideSubnet1]
-	dmac1, ok := arpCache.Load(gwIP1)
+	dmac1, ok := destIPToMAC.Load(destIPOutSideSubnet1)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}
@@ -2046,8 +2123,7 @@ func TestTwoMirrorSessionCreatesWithSameIP(t *testing.T) {
 
 	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
-	gwIP := GwCache[destIPOutSideSubnet1]
-	dmac1, ok := arpCache.Load(gwIP)
+	dmac1, ok := destIPToMAC.Load(destIPOutSideSubnet1)
 	if !ok {
 		Assert(t, ok, "Arp Not resolved")
 	}

@@ -110,6 +110,7 @@ func TestMain(m *testing.M) {
 	}
 	ArpClient = client
 	MgmtLink = mgmtLink
+	go ResolveWatch()
 
 	epClient = halapi.NewEndpointClient(conn)
 	intfClient = halapi.NewInterfaceClient(conn)
