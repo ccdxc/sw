@@ -444,6 +444,9 @@ func (n *NMD) runAdmissionControlLoop() {
 		if err := n.triggerAdmissionEvents(); err != nil {
 			log.Errorf("Failed to trigger admission events for static IPConfig: %v", err)
 		}
+		if err := n.PersistState(isEmulation); err != nil {
+			log.Errorf("Failed to persist config during admission control loop. Err: %v", errInternalServer(err))
+		}
 		return
 	}
 	ticker := time.NewTicker(ipif.AdmissionRetryDuration)
