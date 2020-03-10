@@ -28,6 +28,10 @@ import (
 
 var configFile string
 
+const (
+	insertionFWProfileName = "InsertionFWProfile"
+)
+
 func init() {
 	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file describing testbed")
 	flag.Parse()
@@ -70,6 +74,23 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	if s := os.Getenv("PENS_SKIP_BOOTSTRAP"); s == "" && ts.tu.FirstNaplesIP != "" { // create netagent REST clients
+		// Create a DSC profile for firewall
+		insertionFWProfile := &cluster.DSCProfile{}
+		insertionFWProfile.Defaults("all")
+		insertionFWProfile.Name = insertionFWProfileName
+		insertionFWProfile.Spec.FwdMode = cluster.DSCProfileSpec_INSERTION.String()
+		insertionFWProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_ENFORCED.String()
+		Eventually(func() bool {
+			ctx, cancel := context.WithTimeout(ts.loggedInCtx, 10*time.Second)
+			_, err := ts.restSvc.ClusterV1().DSCProfile().Create(ctx, insertionFWProfile)
+			cancel()
+			if err != nil {
+				By(fmt.Sprintf("failed to create firewall profile, err: %v", err))
+				return false
+			}
+			return true
+		}, 90, 10).Should(BeTrue(), "Failed to create firewall profile")
+
 		agIP := net.ParseIP(ts.tu.FirstNaplesIP).To4()
 		Expect(len(agIP)).ShouldNot(Equal(0))
 		for idx := 0; idx < ts.tu.NumNaplesHosts; idx++ {
@@ -135,6 +156,19 @@ var _ = BeforeSuite(func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			_, err = http.Post(nmdURL, "application/json", bytes.NewReader(out))
 			Expect(err).ShouldNot(HaveOccurred())
+
+			// Point the DSC to firewall profile
+			// The DSC object must have been created, but we don't need to wait until the card is admitted.
+			Eventually(func() bool {
+				ctx, cancel := context.WithTimeout(ts.loggedInCtx, 30*time.Second)
+				err := ts.tu.SetDSCProfile(ctx, &api.ObjectMeta{Name: naples.Status.Fru.MacStr}, insertionFWProfileName)
+				cancel()
+				if err != nil {
+					By(fmt.Sprintf("Error setting profile %s for DSC object %s: %v", insertionFWProfile, naples.Spec.ID, err))
+					return false
+				}
+				return true
+			}, 90, 10).Should(BeTrue(), fmt.Sprintf("Error setting profile for DSC %s", naples.Spec.ID))
 
 			agIP[3]++
 		}
