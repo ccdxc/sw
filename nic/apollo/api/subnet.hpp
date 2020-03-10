@@ -287,36 +287,38 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;                    ///< subnet key
-    pds_obj_key_t vpc_;                       ///< vpc of this subnet
-    pds_encap_t fabric_encap_;                ///< fabric encap of this subnet
+    pds_obj_key_t key_;               ///< subnet key
+    pds_obj_key_t vpc_;               ///< vpc of this subnet
+    pds_encap_t fabric_encap_;        ///< fabric encap of this subnet
     pds_obj_key_t v4_route_table_;    ///< IPv4 route table id
     pds_obj_key_t v6_route_table_;    ///< IPv6 route table id
-    ///< number of ingress IPv4 policies
+    /// number of ingress IPv4 policies
     uint8_t num_ing_v4_policy_;
-    ///< ingress IPv4 policies
+    /// ingress IPv4 policies
     pds_obj_key_t ing_v4_policy_[PDS_MAX_SUBNET_POLICY];
-    ///< number of ingress IPv6 policies
+    /// number of ingress IPv6 policies
     uint8_t num_ing_v6_policy_;
-    ///< ingress IPv6 policies
+    /// ingress IPv6 policies
     pds_obj_key_t ing_v6_policy_[PDS_MAX_SUBNET_POLICY];
-    ///< number of egress IPv4 policies
+    /// number of egress IPv4 policies
     uint8_t num_egr_v4_policy_;
-    ///< egress IPv4 policies
+    /// egress IPv4 policies
     pds_obj_key_t egr_v4_policy_[PDS_MAX_SUBNET_POLICY];
-    ///< number of egress IPv6 policies
+    /// number of egress IPv6 policies
     uint8_t num_egr_v6_policy_;
-    ///< egress IPv6 policies
+    /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
-    mac_addr_t vr_mac_;                       ///< virtual router MAC
-    pds_obj_key_t host_if_;                   ///< PF/VF attached to this subnet
+    mac_addr_t vr_mac_;               ///< virtual router MAC
+    pds_obj_key_t host_if_;           ///< PF/VF attached to this subnet
 
-    ht_ctxt_t ht_ctxt_;                       ///< hash table context
+    /// operational state
+    ht_ctxt_t ht_ctxt_;               ///< hash table context
 
     // P4 datapath specific state
-    uint32_t hw_id_;              ///< hardware id
-    impl_base *impl_;             ///< impl object instance
-    friend class subnet_state;    ///< subnet_state is friend of subnet_entry
+    uint32_t hw_id_;                  ///< hardware id
+    impl_base *impl_;                 ///< impl object instance
+    /// subnet_state is friend of subnet_entry
+    friend class subnet_state;
 } __PACK__;
 
 /// \@}    // end of PDS_SUBNET_ENTRY

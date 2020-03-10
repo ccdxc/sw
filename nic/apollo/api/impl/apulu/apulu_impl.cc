@@ -15,6 +15,7 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
@@ -47,6 +48,8 @@ extern sdk_ret_t service_lif_upg_verify(uint32_t lif_id, const char *cfg_path);
 
 using ftlite::internal::ipv6_entry_t;
 using ftlite::internal::ipv4_entry_t;
+
+mac_addr_t g_zero_mac;
 
 namespace api {
 namespace impl {
@@ -868,8 +871,8 @@ apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
 
 #define lif_action              action_u.lif_lif_info
 sdk_ret_t
-program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
-                   vpc_hw_id, uint16_t bd_hw_id, uint16_t vnic_hw_id,
+program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t vpc_hw_id,
+                   uint16_t bd_hw_id, uint16_t vnic_hw_id, mac_addr_t vr_mac,
                    bool learn_en)
 {
     sdk_ret_t ret;
@@ -878,7 +881,7 @@ program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
 
     PDS_TRACE_DEBUG("Programming LIF table at idx %u, vpc hw id %u, "
                     "bd hw id %u, vnic hw id %u", lif_hw_id, vpc_hw_id,
-                    bd_hw_id, vnic_hw_id);
+                    bd_hw_id, vnic_hw_id, macaddr2str(vr_mac));
 
     // program the LIF table
     lif_data.action_id = LIF_LIF_INFO_ID;
@@ -887,6 +890,7 @@ program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t
     lif_data.lif_action.vnic_id = vnic_hw_id;
     lif_data.lif_action.bd_id = bd_hw_id;
     lif_data.lif_action.vpc_id = vpc_hw_id;
+    sdk::lib::memrev(lif_data.lif_action.vrmac, vr_mac, ETH_ADDR_LEN);
     lif_data.lif_action.learn_enabled = learn_en ? TRUE : FALSE;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, lif_hw_id,
                                        NULL, NULL, &lif_data);

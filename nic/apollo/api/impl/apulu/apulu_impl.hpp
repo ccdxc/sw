@@ -69,6 +69,8 @@
 #define PDS_IMPL_NACL_BLOCK_LEARN_MAX                23
 #define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              24
 
+extern mac_addr_t g_zero_mac;
+
 namespace api {
 namespace impl {
 
@@ -357,11 +359,13 @@ private:
 /// \param[in] vpc_hw_id    hw id of the vpc for this lif
 /// \param[in] bd_hw_id     hw id of the BD for this lif
 /// \param[in] vnic_hw_id   hw id of the vnic for this lif
+/// \param[in] vr_mac       VR MAC of the subnet corresponding to this lif
 /// \param[in] learn_en     enable or disable learning on this lif
 /// \return SDK_RET_OK on success, failure status code on error
 sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                             uint16_t vpc_hw_id, uint16_t bd_hw_id,
-                            uint16_t vnic_hw_id, bool learn_en);
+                            uint16_t vnic_hw_id, mac_addr_t vr_mac,
+                            bool learn_en);
 
 #define POLICER_WRITE_HW_ENTRY(hw, val)       \
 do {                                          \
