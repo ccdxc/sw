@@ -2815,6 +2815,10 @@ func (r *EndpointsSecurityV1RestClient) updateHTTPHeader(ctx context.Context, he
 	if ok {
 		header.Add("Authorization", val)
 	}
+	val, ok = loginctx.ExtRequestIDHeaderFromContext(ctx)
+	if ok {
+		header.Add("Pensando-Psm-External-Request-Id", val)
+	}
 }
 func (r *EndpointsSecurityV1RestClient) getHTTPRequest(ctx context.Context, in interface{}, method, path string) (*http.Request, error) {
 	target, err := url.Parse(r.instance)

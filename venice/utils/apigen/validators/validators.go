@@ -59,6 +59,11 @@ var RegexpList = map[string]regexpEntry{
 		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9_\+\-\.]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,4}$`), // http://regexlib.com/Search.aspx?k=email
 		HelpStr: "must be a valid email",
 	},
+	"alphanumdash": {
+		Str:     `^[a-zA-Z0-9\-]+$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9\-]+$`),
+		HelpStr: "must be alpha numeric and can have -",
+	},
 }
 
 func populateGroupMap() {

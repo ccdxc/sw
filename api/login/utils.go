@@ -84,6 +84,10 @@ func login(ctx context.Context, apiGW string, in *auth.PasswordCredential) (*htt
 	if err != nil {
 		return nil, err
 	}
+	extReqID, ok := loginctx.ExtRequestIDHeaderFromContext(ctx)
+	if ok {
+		req.Header.Set("Pensando-Psm-External-Request-Id", extReqID)
+	}
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{

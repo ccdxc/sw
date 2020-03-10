@@ -75,6 +75,8 @@ var typesMapAudit = map[string]*api.Struct{
 			"ServiceName": api.Field{Name: "ServiceName", CLITag: api.CLIInfo{ID: "service-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"Data": api.Field{Name: "Data", CLITag: api.CLIInfo{ID: "data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "data", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"ExternalID": api.Field{Name: "ExternalID", CLITag: api.CLIInfo{ID: "external-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"audit.AuditEventList": &api.Struct{
@@ -131,6 +133,8 @@ var typesMapAudit = map[string]*api.Struct{
 			"ServiceName": api.Field{Name: "ServiceName", CLITag: api.CLIInfo{ID: "service-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "service-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Data": api.Field{Name: "Data", CLITag: api.CLIInfo{ID: "data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "data", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"ExternalID": api.Field{Name: "ExternalID", CLITag: api.CLIInfo{ID: "external-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"audit.EventAttributes.DataEntry": &api.Struct{

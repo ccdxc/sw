@@ -1,6 +1,10 @@
 package apigw
 
-import "github.com/pensando/grpc-gateway/runtime"
+import (
+	"github.com/pensando/grpc-gateway/runtime"
+
+	"github.com/pensando/sw/venice/utils/audit"
+)
 
 // Grpc Metadata Options used by the API GW to annotate requests sent
 //  to the API Server.
@@ -11,6 +15,8 @@ const (
 	GrpcMDRequestTenant      = "Grpc-Metadata-Req-Tenant"
 	GrpcMDReplaceStatusField = "Grpc-Metadata-Replace-Status-Field"
 	GrpcMDStagingBufferID    = "Grpc-Metadata-Staging-Buffer-Id"
+	GrpcMDAuditRequestURI    = "Grpc-Metadata-Audit-Req-Uri"
+	GrpcMDExtRequestID       = audit.GrpcMDExtRequestID
 )
 
 // Authentication related constants used by the API GW and Login service
@@ -37,4 +43,9 @@ const (
 
 	// GrpcMDAuthorizationHeader is authorization header with value 'Bearer <token>'. It contains the JWT for non-browser requests.
 	GrpcMDAuthorizationHeader = runtime.MetadataPrefix + "Authorization"
+)
+
+const (
+	// ExtRequestIDHeader contains an external ID attached to a request by caller of the API. It is saved in audit logs.
+	ExtRequestIDHeader = audit.ExtRequestIDHeader
 )

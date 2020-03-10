@@ -570,6 +570,7 @@ func TestRegExp(t *testing.T) {
 	alphaErrMsg := "Value must be only alphabets"
 	numErrMsg := "Value must be only numerics"
 	emailErrMsg := "Value must be a valid email"
+	alphanumdashErrMsg := "Value must be alpha numeric and can have -"
 
 	cases := []struct {
 		exp    string
@@ -596,6 +597,10 @@ func TestRegExp(t *testing.T) {
 		{exp: "email", val: "", errMsg: emailErrMsg},
 		{exp: "email", val: "test@pensando.io", errMsg: ""},
 		{exp: "email", val: "test+email@bbc.co.uk", errMsg: ""},
+		{exp: "alphanumdash", val: "Anda-daa98", errMsg: ""},
+		{exp: "alphanumdash", val: "12Anda-daa98-", errMsg: ""},
+		{exp: "alphanumdash", val: "Anda_daa98", errMsg: alphanumdashErrMsg},
+		{exp: "alphanumdash", val: "Anda#daa98", errMsg: alphanumdashErrMsg},
 	}
 	for i, c := range cases {
 		err := RegExp(c.val, []string{c.exp})

@@ -119,6 +119,9 @@ message EventAttributes {
     // Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in
     // JWS compact serialization format in this map. Data in this map will not be signed.
     map<string, string> Data  = 14 [(gogoproto.jsontag) = "data,omitempty"];
+
+    // ID passed in by an external application to link audit event to the request. It should be AlphaNumeric and can contain -. Maximum length supported is 64
+    string ExternalID         = 15 [(venice.check) = "EmptyOr(StrLen(0,64))", (venice.check) = "EmptyOr(RegExp(alphanumdash))", (gogoproto.jsontag) = "external-id,omitempty"];
 }
 
 // Request for an audit event

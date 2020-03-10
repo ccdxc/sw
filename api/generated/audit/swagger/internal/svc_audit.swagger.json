@@ -416,6 +416,12 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "external-id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9\\-]+$",
+          "description": "Length of string should be between 0 and 64. Must be alpha numeric and can have -."
         }
       }
     },
@@ -516,6 +522,12 @@
             "type": "string"
           },
           "description": "Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed."
+        },
+        "external-id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9\\-]+$",
+          "description": "ID passed in by an external application to link audit event to the request. It should be AlphaNumeric and can contain -. Maximum length supported is 64. Length of string should be between 0 and 64. Must be alpha numeric and can have -."
         }
       },
       "description": "Attributes contains all the audit log attributes."

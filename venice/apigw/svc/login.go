@@ -184,12 +184,12 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 		}
 		// remove user password
 		user.Spec.Password = ""
-		s.audit(user, getClientIPs(req), req.RequestURI)
+		extReqID := getExternalRequestID(req)
+		s.audit(user, getClientIPs(req), req.RequestURI, extReqID)
 		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
 		// set cookie
 		http.SetCookie(w, createCookie(sessionToken, exp))
 		w.WriteHeader(http.StatusOK)
-
 		if err := json.NewEncoder(w).Encode(user); err != nil {
 			s.logger.Errorf("failed to send user json: %v", err)
 			return
@@ -333,7 +333,7 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	return user, nil
 }
 
-func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI string) {
+func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI, reqID string) {
 	var err error
 	apiGateway := apigwpkg.MustGetAPIGateway()
 	auditor := apiGateway.GetAuditor()
@@ -371,6 +371,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 			GatewayNode: os.Getenv("HOSTNAME"),
 			GatewayIP:   addrStr,
 			Data:        make(map[string]string),
+			ExternalID:  reqID,
 		},
 	}
 	defer func() {
@@ -453,4 +454,14 @@ func getClientIPs(req *http.Request) []string {
 		}
 	}
 	return clientIPs
+}
+
+func getExternalRequestID(req *http.Request) string {
+	ids, ok := req.Header[apigw.ExtRequestIDHeader]
+	if ok {
+		if len(ids) > 0 {
+			return ids[0]
+		}
+	}
+	return ""
 }

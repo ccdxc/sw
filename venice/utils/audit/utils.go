@@ -1,12 +1,16 @@
 package audit
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"reflect"
 	"strings"
+
+	"google.golang.org/grpc/metadata"
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/audit"
@@ -20,6 +24,10 @@ import (
 const (
 	// APIErrorKey in audit event data map to save API error
 	APIErrorKey = "error"
+	// ExtRequestIDHeader contains an external ID attached to a request by caller of the API. It is saved in audit logs.
+	ExtRequestIDHeader = "Pensando-Psm-External-Request-Id"
+	// GrpcMDExtRequestID contains an external ID attached to a request by caller of the API. It is saved in audit logs.
+	GrpcMDExtRequestID = "Grpc-Metadata-Pensando-Psm-External-Request-Id"
 )
 
 // NewRequestObjectPopulator populates audit event with request object. This will body from http request if API Gateway acts as a reverse proxy for instance for object store
@@ -134,6 +142,24 @@ func NewErrorPopulator(apierr error) EventPopulator {
 	}
 }
 
+// NewMetadataContextPopulator extracts request headers from context and populates audit event
+func NewMetadataContextPopulator(ctx context.Context) EventPopulator {
+	return func(event *audit.AuditEvent) error {
+		if ctx == nil {
+			return nil
+		}
+		// Get metadata from context
+		md, ok := metadata.FromOutgoingContext(ctx)
+		if ok {
+			ids, ok := md[strings.ToLower(ExtRequestIDHeader)]
+			if ok && (len(ids) != 0) {
+				event.ExternalID = ids[0]
+			}
+		}
+		return nil
+	}
+}
+
 type policyChecker struct{}
 
 func (p *policyChecker) PopulateEvent(event *audit.AuditEvent, populators ...EventPopulator) (bool, bool, error) {
@@ -160,6 +186,11 @@ func (p *policyChecker) PopulateEvent(event *audit.AuditEvent, populators ...Eve
 		if err != nil {
 			return false, failOp, err
 		}
+	}
+	// validate audit event
+	errs := event.Validate("all", "", true, false)
+	if err := k8serrors.NewAggregate(errs); err != nil {
+		return false, failOp, err
 	}
 	return true, failOp, nil
 }

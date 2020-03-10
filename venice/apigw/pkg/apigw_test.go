@@ -35,6 +35,7 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
+	auditutils "github.com/pensando/sw/venice/utils/audit"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
@@ -485,7 +486,7 @@ func TestHandleRequest(t *testing.T) {
 	a.authzMgr = authzmgr.NewAlwaysAllowAuthorizer()
 	// create authenticated context
 	ctx := metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(strings.ToLower(fmt.Sprintf("%s%s", runtime.MetadataPrefix, apigw.CookieHeader)), login.SessionID+"=jwt",
-		"req-method", "GET"))
+		"req-method", "GET", "audit-req-uri", "/configs/security/v1/tenant/default/roles"))
 	// context with authz operations
 	mock.retAuthzCtx = NewContextWithOperations(ctx, authz.NewOperation(authz.NewResource(
 		globals.DefaultTenant,
@@ -1047,6 +1048,7 @@ func TestAudit(t *testing.T) {
 	tests := []struct {
 		name     string
 		user     *auth.User
+		ctx      context.Context
 		reqObj   interface{}
 		respObj  interface{}
 		ops      []authz.Operation
@@ -1054,6 +1056,7 @@ func TestAudit(t *testing.T) {
 		stage    audit.Stage
 		outcome  audit.Outcome
 		apierr   error
+		reqURI   string
 		eventStr string
 		err      error
 	}{
@@ -1122,6 +1125,7 @@ func TestAudit(t *testing.T) {
 			stage:    audit.Stage_RequestAuthorization,
 			outcome:  audit.Outcome_Success,
 			apierr:   nil,
+			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "request-object=\"" + sgPolicyStr + "\"",
 			err:      nil,
 		},
@@ -1148,6 +1152,7 @@ func TestAudit(t *testing.T) {
 			stage:    audit.Stage_RequestProcessing,
 			outcome:  audit.Outcome_Success,
 			apierr:   nil,
+			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "response-object=\"" + sgPolicyStr + "\"",
 			err:      nil,
 		},
@@ -1173,6 +1178,7 @@ func TestAudit(t *testing.T) {
 			stage:    audit.Stage_RequestProcessing,
 			outcome:  audit.Outcome_Failure,
 			apierr:   apierrors.ToGrpcError("duplicate policy", []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil),
+			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "duplicate policy",
 			err:      nil,
 		},
@@ -1202,6 +1208,34 @@ func TestAudit(t *testing.T) {
 			eventStr: "",
 			err:      nil,
 		},
+		{
+			name: "log external request id",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			ctx:    metadata.NewOutgoingContext(context.TODO(), metadata.Pairs(auditutils.ExtRequestIDHeader, "corr-id-1")),
+			reqObj: sgPolicy,
+			ops: []authz.Operation{authz.NewOperation(
+				authz.NewResource(sgPolicy.Tenant, string(apiclient.GroupSecurity), sgPolicy.Kind, sgPolicy.Namespace, sgPolicy.Name),
+				auth.Permission_Create.String())},
+			level:    audit.Level_Request,
+			stage:    audit.Stage_RequestAuthorization,
+			outcome:  audit.Outcome_Success,
+			apierr:   nil,
+			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
+			eventStr: "external-id=corr-id-1",
+			err:      nil,
+		},
 	}
 	_ = MustGetAPIGateway()
 
@@ -1214,7 +1248,7 @@ func TestAudit(t *testing.T) {
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit("event1", test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, "")
+		err := a.audit(test.ctx, "event1", test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)
@@ -1320,7 +1354,7 @@ func TestAuditErrorTruncation(t *testing.T) {
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit("event1", user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "")
+		err := a.audit(context.TODO(), "event1", user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "/configs/security/v1/tenant/testTenant/networksecuritypolicies")
 		AssertOk(t, err, "unexpected error logging audit event")
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)

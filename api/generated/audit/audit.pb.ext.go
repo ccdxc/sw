@@ -313,6 +313,28 @@ func init() {
 	validatorMapAudit["EventAttributes"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "64")
+
+		if err := validators.EmptyOr(validators.StrLen, m.ExternalID, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"ExternalID", err.Error())
+		}
+		return nil
+	})
+	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
+		m := i.(*EventAttributes)
+		args := make([]string, 0)
+		args = append(args, "alphanumdash")
+
+		if err := validators.EmptyOr(validators.RegExp, m.ExternalID, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"ExternalID", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapAudit["EventAttributes"]["all"] = append(validatorMapAudit["EventAttributes"]["all"], func(path string, i interface{}) error {
+		m := i.(*EventAttributes)
 
 		if _, ok := Level_vvalue[m.Level]; !ok {
 			vals := []string{}

@@ -167,6 +167,9 @@ func (a *apiGw) GetService(name string) apigw.APIGatewayService {
 // and subsequently used by the API server.
 func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// capturing req URI for auditing
+		r.Header.Set(apigw.GrpcMDAuditRequestURI, r.URL.Path)
+
 		// All URIs are of the form /<category>/<service>/<version>/<resource>
 		// If the URI is for staging, Ignore we will get back here for the recirced request
 		stagingPrefix := "/" + globals.StagingURIPrefix + "/"
@@ -174,6 +177,7 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
+
 		p := strings.SplitN(r.URL.Path, "/", 5)
 		if len(p) > 3 && p[3] != "" {
 			r.Header.Set(apigw.GrpcMDRequestVersion, p[3])
@@ -186,6 +190,12 @@ func (a *apiGw) extractHdrInfo(next http.Handler) http.Handler {
 		r.Header.Set(apigw.GrpcMDRequestMethod, r.Method)
 		// Set the Ignore Status field flag since the request is from external REST.
 		r.Header.Set(apigw.GrpcMDReplaceStatusField, "true")
+		// set external request correlation id if present
+		if r.Header.Get(apigw.ExtRequestIDHeader) != "" {
+			r.Header.Set(apigw.GrpcMDExtRequestID, r.Header.Get(apigw.ExtRequestIDHeader))
+			// set the header in response
+			w.Header().Set(apigw.ExtRequestIDHeader, r.Header.Get(apigw.ExtRequestIDHeader))
+		}
 		next.ServeHTTP(w, r)
 	})
 }
@@ -694,7 +704,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			ok, err := a.authzMgr.IsAuthorized(user, operations...)
 			if !ok || err != nil {
 				apierr := apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil)
-				a.audit(auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+				a.audit(nctx, auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 				a.logger.ErrorLog("method", "HandleRequest", "msg", "Not authorized", "operations", authz.PrintOperations(operations), "user", user.Name, "tenant", user.Tenant)
 				return nil, apierr
 			}
@@ -703,7 +713,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	}
 	auditTime := time.Now()
 	// audit before making the call
-	if err := a.audit(auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
+	if err := a.audit(nctx, auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		return nil, apierrors.ToGrpcError("Auditing failed, call aborted", []string{err.Error()}, int32(codes.Unavailable), "", nil)
 	}
 	hdr.Record("apigw.PreCallAudit", time.Since(auditTime))
@@ -722,7 +732,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			} else {
 				apierr = apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			}
-			a.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			a.audit(nctx, auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
 		skipCall = skip || skipCall
@@ -731,7 +741,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	if !skipCall {
 		out, err = call(nctx, i)
 		if err != nil {
-			a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, err, clientIPs, reqURI)
+			a.audit(nctx, auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, err, clientIPs, reqURI)
 			return nil, err
 		}
 	}
@@ -746,7 +756,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			} else {
 				apierr = apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			}
-			a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			a.audit(nctx, auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
 	}
@@ -754,7 +764,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	a.copyToOutgoingContext(nctx, ctx)
 	hdr.Record("apigw.CallTime", time.Since(callTime))
 	auditTime = time.Now()
-	if err := a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
+	if err := a.audit(nctx, auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		return out, apierrors.ToGrpcError("Auditing failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 	}
 	hdr.Record("apigw.PostCallAudit", time.Since(auditTime))
@@ -831,7 +841,7 @@ func (a *apiGw) isRequestAuthenticated(ctx context.Context) (*auth.User, bool) {
 	return user, true
 }
 
-func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resObj interface{}, ops []authz.Operation, level auditapi.Level, stage auditapi.Stage, outcome auditapi.Outcome, apierr error, clientIPs []string, reqURI string) error {
+func (a *apiGw) audit(ctx context.Context, eventID string, user *auth.User, reqObj interface{}, resObj interface{}, ops []authz.Operation, level auditapi.Level, stage auditapi.Stage, outcome auditapi.Outcome, apierr error, clientIPs []string, reqURI string) error {
 	if user == nil {
 		a.logger.InfoLog("method", "audit", "msg", "no user to audit")
 		return nil
@@ -874,6 +884,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 	}
 	// policy checker checks whether to log audit event and populates it based on policy
 	ok, failOp, err := audit.NewPolicyChecker().PopulateEvent(event,
+		audit.NewMetadataContextPopulator(ctx),
 		audit.NewRequestObjectPopulator(reqObj, true),
 		audit.NewResponseObjectPopulator(resObj, true),
 		audit.NewErrorPopulator(apierr))
@@ -1025,7 +1036,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ok, err := p.apiGw.authzMgr.IsAuthorized(user, operations...)
 			if !ok || err != nil {
 				apierr := apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil)
-				p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+				p.apiGw.audit(nctx, auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 				p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "not authorized for operations", "user", user.Name, "tenant", user.Tenant, "operation", authz.PrintOperations(operations))
 				p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
 				return
@@ -1034,7 +1045,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// audit before making the call
-	if err := p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
+	if err := p.apiGw.audit(nctx, auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed, call aborted", int(codes.Unavailable))
 		return
 	}
@@ -1046,7 +1057,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nctx, _, skip, err = h(nctx, r)
 		if err != nil {
 			apierr := apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
-			p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			p.apiGw.audit(nctx, auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "Precall Hook failed", "error", err)
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Pre condition failed", int(codes.Aborted))
 			return
@@ -1061,7 +1072,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		statusCode, err := sw.GetStatusCode()
 		if err != nil || !strings.HasPrefix(strconv.Itoa(statusCode), "2") {
 			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{fmt.Sprintf("status code: %d", statusCode)}, int32(codes.Aborted), "", nil)
-			p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			p.apiGw.audit(nctx, auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", fmt.Sprintf("Operation failed to complete with status code: %d", statusCode), "error", err)
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))
 			return
@@ -1072,13 +1083,13 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nctx, _, err = h(nctx, w)
 		if err != nil {
 			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
-			p.apiGw.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
+			p.apiGw.audit(nctx, auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "Postcall Hook failed", "error", err)
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))
 			return
 		}
 	}
-	if err := p.apiGw.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
+	if err := p.apiGw.audit(nctx, auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed", int(codes.Aborted))
 		return
 	}
@@ -1194,7 +1205,7 @@ func getRequestURI(ctx context.Context) string {
 	// Get metadata from context
 	md, ok := metadata.FromOutgoingContext(ctx)
 	if ok {
-		uris, ok := md["req-uri"]
+		uris, ok := md["audit-req-uri"]
 		if ok && (len(uris) != 0) {
 			uri = uris[0]
 		}

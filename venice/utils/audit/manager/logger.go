@@ -39,7 +39,8 @@ func (s *logger) ProcessEvents(events ...*auditapi.AuditEvent) error {
 			"gateway-node", event.GatewayNode,
 			"gateway-ip", event.GatewayIP,
 			"service-name", event.ServiceName,
-			"creation-time", types.TimestampString(&event.CreationTime.Timestamp))
+			"creation-time", types.TimestampString(&event.CreationTime.Timestamp),
+			"external-id", event.ExternalID)
 	}
 	return nil
 }

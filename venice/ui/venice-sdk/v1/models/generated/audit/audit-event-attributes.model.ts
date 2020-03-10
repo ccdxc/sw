@@ -27,6 +27,7 @@ export interface IAuditEventAttributes {
     'gateway-ip'?: string;
     'service-name'?: string;
     'data'?: object;
+    'external-id'?: string;
     '_ui'?: any;
 }
 
@@ -62,6 +63,8 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     'service-name': string = null;
     /** Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed. */
     'data': object = null;
+    /** ID passed in by an external application to link audit event to the request. It should be AlphaNumeric and can contain -. Maximum length supported is 64. Length of string should be between 0 and 64. Must be alpha numeric and can have -. */
+    'external-id': string = null;
     public static propInfo: { [prop in keyof IAuditEventAttributes]: PropInfoItem } = {
         'stage': {
             enum: AuditEventAttributes_stage,
@@ -139,6 +142,11 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
             description:  `Data is unstructured key value map stored with audit log that may be set by hooks in API Gateway. We can store Signature in JWS compact serialization format in this map. Data in this map will not be signed.`,
             required: false,
             type: 'object'
+        },
+        'external-id': {
+            description:  `ID passed in by an external application to link audit event to the request. It should be AlphaNumeric and can contain -. Maximum length supported is 64. Length of string should be between 0 and 64. Must be alpha numeric and can have -.`,
+            required: false,
+            type: 'string'
         },
     }
 
@@ -273,6 +281,13 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         } else {
             this['data'] = null
         }
+        if (values && values['external-id'] != null) {
+            this['external-id'] = values['external-id'];
+        } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('external-id')) {
+            this['external-id'] = AuditEventAttributes.propInfo['external-id'].default;
+        } else {
+            this['external-id'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -294,6 +309,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
                 'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditEventAttributes.propInfo['gateway-ip']),
                 'service-name': CustomFormControl(new FormControl(this['service-name']), AuditEventAttributes.propInfo['service-name']),
                 'data': CustomFormControl(new FormControl(this['data']), AuditEventAttributes.propInfo['data']),
+                'external-id': CustomFormControl(new FormControl(this['external-id'], [maxLengthValidator(64), patternValidator('^[a-zA-Z0-9\\-]+$', 'ID passed in by an external application to link audit event to the request. It should be AlphaNumeric and can contain -. Maximum length supported is 64. Length of string should be between 0 and 64. Must be alpha numeric and can have -.'), ]), AuditEventAttributes.propInfo['external-id']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('user') as FormGroup).controls).forEach(field => {
@@ -329,6 +345,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
             this._formGroup.controls['gateway-ip'].setValue(this['gateway-ip']);
             this._formGroup.controls['service-name'].setValue(this['service-name']);
             this._formGroup.controls['data'].setValue(this['data']);
+            this._formGroup.controls['external-id'].setValue(this['external-id']);
         }
     }
 }

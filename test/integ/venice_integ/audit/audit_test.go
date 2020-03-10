@@ -216,14 +216,17 @@ func TestAuditLogs(t *testing.T) {
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
 
-	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	const reqID = "abc-123"
+	superAdminCtx := loginctx.NewContextWithExtRequestIDHeader(context.TODO(), reqID)
+	superAdminCtx, err = NewLoggedInContext(superAdminCtx, ti.apiGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	// test audit log for successful login
 	loginEventObj := &auditapi.AuditEvent{}
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(auth.KindUser)),
 			es.NewTermQuery("action.keyword", svc.LoginAction),
-			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Success.String()))
+			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Success.String()),
+			es.NewTermQuery("external-id.keyword", reqID))
 		resp, err := ti.esClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
@@ -269,7 +272,8 @@ func TestAuditLogs(t *testing.T) {
 	defer DeleteTenant(ti.apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
-			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))))
+			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
+			es.NewTermQuery("external-id.keyword", reqID))
 		resp, err := ti.esClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
