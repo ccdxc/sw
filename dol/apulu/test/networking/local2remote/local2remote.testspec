@@ -15,7 +15,9 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : ref://testcase/config/remotemapping/IP
@@ -46,6 +48,8 @@ packets:
                 id      : 0
             vxlan:
                 vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
+            eth:
+                src     : callback://networking/packets/GetSrcMac/direction=TX
 
 buffers:
     - buffer:

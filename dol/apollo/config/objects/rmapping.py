@@ -15,7 +15,7 @@ import apollo.config.topo as topo
 import ipaddress
 
 class RemoteMappingObject(base.ConfigObjectBase):
-    def __init__(self, node, parent, spec, tunobj, ipversion, count):
+    def __init__(self, node, parent, spec, tunobj, ipversion, count, l2=False):
         super().__init__(api.ObjectTypes.RMAPPING, node)
         parent.AddChild(self)
         if hasattr(spec, 'origin'):
@@ -30,6 +30,10 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.GID('RemoteMapping%d'%self.MappingId)
         self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.SUBNET = parent
+        if l2:
+            self.TypeL2 = True
+        else:
+            self.TypeL2 = False
         if (hasattr(spec, 'rmacaddr')):
             self.MACAddr = spec.rmacaddr
         else:
@@ -76,9 +80,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|TEP: %s |TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
+        logger.info("- IPAddr:%s|TEP: %s |TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s|L2:%s" %\
                 (str(self.IPAddr), self.TUNNEL.UUID, str(self.TUNNEL.RemoteIPAddr), self.MACAddr,
-                self.MplsSlot, self.Vnid, self.ProviderIPAddr))
+                self.MplsSlot, self.Vnid, self.ProviderIPAddr, self.TypeL2))
         return
 
     def IsFilterMatch(self, selectors):
@@ -91,8 +95,12 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        spec.IPKey.VPCId = self.SUBNET.VPC.GetKey()
-        utils.GetRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr)
+        if self.TypeL2:
+            spec.MACKey.MACAddr = self.MACAddr.getnum()
+            spec.MACKey.SubnetId = self.SUBNET.GetKey()
+        else:
+            spec.IPKey.VPCId = self.SUBNET.VPC.GetKey()
+            utils.GetRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr)
         spec.SubnetId = self.SUBNET.GetKey()
         spec.TunnelId = self.TUNNEL.GetKey()
         spec.MACAddr = self.MACAddr.getnum()
@@ -178,6 +186,7 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             tunnelAllocator = ResmgrClient[node].RemoteMplsVnicTunAllocator
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
+            l2 = getattr(rmap_spec_obj, "l2", False)
             c = 0
             v6c = 0
             v4c = 0
@@ -193,6 +202,9 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
                     self.Objs[node].update({obj.MappingId: obj})
                     c = c + 1
                     v4c = v4c + 1
+                    if l2:
+                        obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c, l2=True)
+                        self.Objs[node].update({obj.MappingId: obj})
         return
 
     def ReadObjects(self, node):

@@ -478,6 +478,10 @@ jobd/apulu/metaswitch_store_test: ${JOBD_PREREQS}
 jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo hostvxlan --feature networking
 
+.PHONY: jobd/dol/apulu/l2
+jobd/dol/apulu/l2: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo l2_hostvxlan --feature networking --dry
+
 .PHONY: jobd/dol/apulu/rfc
 jobd/dol/apulu/rfc: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint,ipv4_ingress_disjoint

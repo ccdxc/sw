@@ -183,6 +183,9 @@ class DeviceObject(base.ConfigObjectBase):
     def IsOverlayRoutingEnabled(self):
         return self.OverlayRoutingEn
 
+    def IsBridgingEnabled(self):
+        return self.BridgingEnabled
+
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:
             return True

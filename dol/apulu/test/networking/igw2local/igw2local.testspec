@@ -40,7 +40,7 @@ packets:
                 tos     : 0
                 id      : 0
             vxlan:
-                vni     : ref://testcase/config/route/VPC/Vnid
+                vni     : callback://networking/packets/GetVNId
             eth:
                 src     : ref://testcase/config/route/TUNNEL/MACAddr
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr

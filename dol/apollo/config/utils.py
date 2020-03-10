@@ -934,3 +934,6 @@ def GetNodeUnderlayNexthop(node, intf_name):
     if nexthop:
         return(ipaddress.IPv4Address(nexthop))
     return None
+
+def IsBridgingEnabled(node):
+    return EzAccessStoreClient[node].IsBridgingEnabled()

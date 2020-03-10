@@ -13,7 +13,7 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
+                dst     : callback://networking/packets/GetDstMac/direction=TX
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
@@ -37,7 +37,7 @@ packets:
         headers     :
             eth:
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping/direction=TX
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0

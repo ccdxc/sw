@@ -11,8 +11,8 @@ packets:
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=ICMP
         headers     :
             eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                dst     : callback://networking/packets/GetDstMac/direction=RX
+                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping/direction=RX
             ipv4:
                 dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP

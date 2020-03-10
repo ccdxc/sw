@@ -1007,7 +1007,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, subnet_entry *subnet,
 }
 
 sdk_ret_t
-mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
+mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
+                                  pds_mapping_info_t *info) {
     sdk_ret_t               ret;
     local_mapping_swkey_t   local_mapping_key;
     local_mapping_appdata_t local_mapping_data;
@@ -1018,7 +1019,7 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     p4pd_error_t            p4pd_ret;
 
     // first read the remote mapping, it can provide all the info except vnic id
-    ret = read_remote_mapping_(vpc, NULL, info);
+    ret = read_remote_mapping_(vpc, subnet, info);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -1072,7 +1073,7 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         vpc = vpc_find(&vpc_key);
     }
     if (mapping->is_local()) {
-        ret = read_local_mapping_(vpc, minfo);
+        ret = read_local_mapping_(vpc, subnet, minfo);
     } else {
         ret = read_remote_mapping_(vpc, subnet, minfo);
     }

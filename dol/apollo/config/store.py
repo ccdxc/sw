@@ -100,6 +100,9 @@ class EzAccessStore:
     def IsDeviceLearningEnabled(self):
         return self.device.IsLearningEnabled()
 
+    def IsBridgingEnabled(self):
+        return self.device.IsBridgingEnabled()
+
     def IsDeviceOverlayRoutingEnabled(self):
         if self.device is None:
             return False

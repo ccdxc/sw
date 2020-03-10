@@ -712,3 +712,44 @@ def GetDstIpForARP(testcase, packet, args=None):
         return nextpfx
     else:
         return testcase.config.remotemapping.IP
+
+def GetDstMac(testcase, packet, args=None):
+    lobj = testcase.config.localmapping
+    robj = testcase.config.remotemapping
+    fwdmode = testcase.config.root.FwdMode
+    if testcase.config.devicecfg.BridgingEnabled:
+        if fwdmode == 'L2L':
+            if lobj.VNIC.SUBNET.SubnetId != robj.VNIC.SUBNET.SubnetId:
+                if args.direction == 'TX':
+                    return robj.SUBNET.VirtualRouterMACAddr
+            return robj.VNIC.MACAddr
+        else:
+            if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:
+                if args.direction == 'TX':
+                    return robj.SUBNET.VirtualRouterMACAddr
+                elif args.direction == 'RX':
+                    return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+                else:
+                    logger.error("Direction not provided")
+                    assert(0)
+            return robj.MACAddr
+    else:
+        if fwdmode == 'L2L':
+            return robj.VNIC.MACAddr
+        else:
+            return robj.MACAddr
+
+def GetSrcMac(testcase, packet, args=None):
+    lobj = testcase.config.localmapping
+    robj = testcase.config.remotemapping
+    fwdmode = testcase.config.root.FwdMode
+    if testcase.config.devicecfg.BridgingEnabled:
+        if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:
+            return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+    return lobj.VNIC.MACAddr
+
+def GetVNId(testcase, args=None):
+    if utils.IsBridgingEnabled(testcase.config.localmapping.Node):
+        return testcase.config.localmapping.VNIC.SUBNET.Vnid
+    else:
+        return testcase.config.localmapping.VNIC.SUBNET.VPC.Vnid
