@@ -176,9 +176,21 @@ func (sma *SmVirtualRouter) OnVirtualRouterUpdate(oldvr *ctkit.VirtualRouter, ne
 		return nil
 	}
 
+	// find the vr state
+	vr, err := VirtualRouterStateFromObj(oldvr)
+	if err != nil {
+		log.Errorf("Can't find virtual router for updating {%+v}. Err: {%v}", oldvr.ObjectMeta, err)
+		return fmt.Errorf("Can not find virtual router")
+	}
+
 	// update old state
 	oldvr.ObjectMeta = newvr.ObjectMeta
 	oldvr.Spec = newvr.Spec
+
+	err = sma.sm.mbus.UpdateObjectWithReferences(newvr.MakeKey(string(apiclient.GroupNetwork)), convertVirtualRouter(vr), references(newvr))
+	if err != nil {
+		log.Errorf("could not add VirtualRouter to DB (%s)", err)
+	}
 
 	log.Info("OnVirtualRouterUpdate: found virtual router: ", oldvr.VirtualRouter.Spec)
 	return nil

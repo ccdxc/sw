@@ -15,6 +15,7 @@ import (
 	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -447,8 +448,22 @@ func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) err
 		nw.ObjectMeta = nnw.ObjectMeta
 		return nil
 	}
+
+	// find the network state
+	nwState, err := NetworkStateFromObj(nw)
+	if err != nil {
+		log.Errorf("Can't find network for updating {%+v}. Err: {%v}", nw.ObjectMeta, err)
+		return fmt.Errorf("Can not find network")
+	}
+
 	nw.ObjectMeta = nnw.ObjectMeta
 	nw.Spec = nnw.Spec
+
+	err = sm.mbus.UpdateObjectWithReferences(nnw.MakeKey(string(apiclient.GroupNetwork)), convertNetwork(nwState), references(nnw))
+	if err != nil {
+		log.Errorf("could not add Network to DB (%s)", err)
+	}
+
 	return nil
 }
 
