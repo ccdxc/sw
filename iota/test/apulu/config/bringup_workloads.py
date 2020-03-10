@@ -32,7 +32,7 @@ def _add_exposed_ports(wl_msg):
         udp_port.Proto = "udp"      
 
 
-def __add_workloads():
+def __add_workloads(redirect_port):
 
     req = topo_svc.WorkloadMsg()
     req.workload_op = topo_svc.ADD
@@ -53,7 +53,8 @@ def __add_workloads():
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
-        _add_exposed_ports(wl_msg)
+        if redirect_port:
+            _add_exposed_ports(wl_msg)
         api.Logger.info(f"Workload {wl_msg.workload_name} Node {wl_msg.node_name} Intf {wl_msg.interface} IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address}")
 
     if len(req.workloads):
@@ -116,9 +117,13 @@ def ReAddWorkloads(node):
     __delete_classic_workloads(node)
     __readd_classic_workloads(node)
 
-def Main(step):
+def Main(args):
     api.Logger.info("Adding Workloads")
-    __add_workloads()
+    if args != None and hasattr(args, 'trex'):
+        redirect_port = args.trex
+    else:
+        redirect_port = False
+    __add_workloads(redirect_port)
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

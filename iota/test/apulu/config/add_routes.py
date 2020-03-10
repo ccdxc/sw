@@ -28,7 +28,7 @@ def __add_routes():
         for vnic_route in vnic_routes:
             for route in vnic_route.routes:
                 route_cmd = __get_route_add_cmd(route, vnic_route.gw)
-                api.Trigger_AddHostCommand(req, vnic_route.node_name, route_cmd)
+                api.Trigger_AddCommand(req, vnic_route.node_name, vnic_route.wload_name, route_cmd)
 
     resp = api.Trigger(req)
 

@@ -29,6 +29,8 @@ setup:
              spec : 2naples_container_static_node2.cfgyml
              node : node2
         - step : config.bringup_workloads
+          args :
+             trex : True
 
 common:
     verifs:

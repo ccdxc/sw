@@ -247,7 +247,7 @@ class SubnetObject(base.ConfigObjectBase):
                             "prefix-len": self.IPPrefix[1]._prefixlen,
                             "address": {
                                 "type": 1,
-                                "v4-address": int.from_bytes(self.IPPrefix[1].network_address.packed, byteorder='big')
+                                "v4-address": int.from_bytes(self.VirtualRouterIPAddr[1].packed, byteorder='big')
                                 }
                             }
                         ],

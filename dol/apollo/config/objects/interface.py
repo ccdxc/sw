@@ -119,11 +119,7 @@ class InterfaceObject(base.ConfigObjectBase):
             self.Status = InterfaceStatus()
             self.GID(spec_json['meta']['name'])
             uuid_str = spec_json['meta']['uuid']
-            if hasattr(spec_json['status'], 'id'):
-                self.HostIfIdx = spec_json['status']['id']
-            else:
-                self.HostIfIdx = 0
-                logger.error("Host PF interface status does not have id", spec_json)
+            self.HostIfIdx = spec_json['status']['id']
             self.UUID = utils.PdsUuid(bytes.fromhex(uuid_str.replace('-','')),\
                     self.ObjType)
             self.DeriveOperInfo()
@@ -308,7 +304,8 @@ class InterfaceObject(base.ConfigObjectBase):
             if self.HostIfIdx == subnet.HostIfIdx:
                 self.IfInfo.VrfName = subnet.VPC.GID()
                 self.IfInfo.Network = subnet.GID()
-        return
+                return True
+        return False
 
 class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
@@ -479,6 +476,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return None
 
     def UpdateHostInterfaces(self, node, subnets):
+        if GlobalOptions.dryrun:
+            return 
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         if not resp:
             return None
@@ -489,11 +488,10 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 ifspec.origin = 'fixed'
                 obj = InterfaceObject(None, ifspec, spec_json=r, node=node, \
                                       type=topo.InterfaceTypes.ETH)
-                obj.UpdateVrfAndNetwork(subnets)
                 self.Objs[node].update({obj.InterfaceId: obj})
-                obj.Show()
-                api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
-                return #TODO remove once 8 subnets are created
+                if obj.UpdateVrfAndNetwork(subnets):
+                    obj.Show()
+                    api.client[node].Update(api.ObjectTypes.INTERFACE, [obj])
         print("after update pf")
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         for r in resp:

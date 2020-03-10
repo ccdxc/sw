@@ -20,11 +20,11 @@ setup:
         - step : config.set_max_mtu
         - step : config.topology
           args :
-             spec : 2naples_bm_equinix_node1.cfgyml
+             spec : 2naples_container_equinix_node1.cfgyml
              node : node1
         - step : config.topology
           args :
-             spec : 2naples_bm_equinix_node2.cfgyml
+             spec : 2naples_container_equinix_node2.cfgyml
              node : node2
         - step : config.bringup_workloads
         - step : config.add_routes
@@ -46,8 +46,7 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/underlay.testbundle
         - api_crud/netagent_api_crud.testbundle
-        #- networking/h2h_arp.testbundle
-        #- networking/h2h_dhcp.testbundle
+        #- networking/h2h.testbundle
         #- networking/h2n.testbundle
 
     regression:

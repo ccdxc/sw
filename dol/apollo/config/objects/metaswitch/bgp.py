@@ -94,6 +94,8 @@ class BgpObject(base.ConfigObjectBase):
                       "router-id": ipaddress.ip_address(0).exploded,
                       "as-number": self.LocalASN,
                       "neighbors" :  peers,
+                      "keepalive-interval" : 60,
+                      "holdtime" : 180,
                   }
               }
             }

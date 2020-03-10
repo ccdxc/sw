@@ -1,0 +1,26 @@
+meta:
+    name    : h2h
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: local_only
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64, 128, 256, 512, 1024 ]
+
+    #-   name    : Ping_Remote_Workloads
+    #    testcase: testcases.networking.ping
+    #    stress  : True
+    #    args    :
+    #        type: remote_only
+    #    iterators :
+    #        type    : nested
+    #        ipaf    : [ ipv4 ]
+    #        pktsize : [ 64, 128, 256, 512, 1024 ]

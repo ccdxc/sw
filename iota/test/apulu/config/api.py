@@ -28,10 +28,15 @@ class VnicRoute:
         self.routes = vnic_inst.RemoteRoutes
         self.gw = vnic_inst.SUBNET.VirtualRouterIPAddr[1]
         self.node_name = vnic_inst.Node
+        wload = FindWorkloadByVnic(vnic_inst)
+        self.wload_name = wload.workload_name
         if ip_addresses:
             self.vnic_ip = ip_addresses[0]
         else:
             self.vnic_ip = None
+
+def FindWorkloadByVnic(vnic_inst):
+    return __findWorkloadByVnic(vnic_inst)
 
 def GetEndpoints():
     naplesHosts = api.GetNaplesHostnames()
@@ -95,16 +100,10 @@ def __getWorkloadPairsBy(wl_pair_type):
                 continue
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and vnic1.Node == vnic2.Node:
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and\
+                 ((vnic1.Node == vnic2.Node) or vnic1.IgwVnic or vnic2.IgwVnic):
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_ONLY and not __vnics_are_local_to_igw_pair(vnic1, vnic2):
-                continue
-
-            find_in_same_segment = \
-                    (wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY or \
-                    wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
-            # TODO: do we need this here?
-            if find_in_same_segment and not __vnics_in_same_segment(vnic1, vnic2):
                 continue
 
             w1 = __findWorkloadByVnic(vnic1)

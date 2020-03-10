@@ -13,7 +13,7 @@ import (
 	"os"
 )
 
-var CmdSocket string = "/var/run/cmd_server_sock"
+var CmdSocket string = "/var/run/pds_svc_server_sock"
 var vppUdsPath string = "/run/vpp/pds.sock"
 
 type PrintObject interface {

@@ -1,0 +1,360 @@
+# Equinix 2node baremetal topology specification
+meta:
+    id: EQUINIX_HOST_MODE
+
+device:
+    id          : 1
+    mode        : host
+    stack       : ipv4
+    bridging    : false
+    learning    : true
+    overlay     : false
+    ipaddress   : '18.18.18.18'
+    gateway     : '1.0.0.1'
+    macaddress  : macaddr/0000.bbbb.bbb1
+    encap       : vxlan
+    origin      : implicitly-created
+    learningagetimeout : 36000
+
+uplink:
+    - entry:
+        id      : uplink0
+        port    : 1
+        mode    : switch
+        status  : UP
+        origin  : implicitly-created
+    - entry:
+        id      : uplink1
+        port    : 2
+        mode    : switch
+        status  : UP
+        origin  : implicitly-created
+
+vpc:
+    - id         : 100
+      stack      : ipv4
+      count      : 1
+      type       : underlay
+      origin     : implicitly-created
+
+      interface:
+        - iid           : 1
+          iftype        : l3
+          ifadminstatus : UP
+          ipprefix      : '1.1.0.103\24'
+          macaddress    : macaddr/00ae.cd00.14ce
+          portid        : 1
+          encap         : none
+          origin        : implicitly-created
+        - iid           : 2
+          iftype        : l3
+          ifadminstatus : UP
+          ipprefix      : '1.2.0.103\24'
+          macaddress    : macaddr/00ae.cd00.14cd
+          portid        : 2
+          encap         : none
+          origin        : implicitly-created
+        - iid           : 3
+          iftype        : loopback
+          ifadminstatus : UP
+          ipprefix      : '18.18.18.18\32'
+          macaddress    : macaddr/0000.0000.0000
+          portid        : 0
+          encap         : none
+          origin        : implicitly-created
+          updateneeded  : true
+
+      nexthop:
+        - id         : 1
+          count      : 1
+          type       : underlay
+          l3intfid   : 1
+          macaddress : macaddr/00ae.cd00.4fde
+          origin     : implicitly-created
+        - id         : 2
+          count      : 1
+          type       : underlay
+          l3intfid   : 2
+          macaddress : macaddr/00ae.cd00.4fdd
+          origin     : implicitly-created
+
+      bgpglobal:
+        - localasn      : 100
+          routerid      : 18.18.18.18
+
+      bgppeer:
+        # if interface is specified, ip addresses are overriden from
+        # testbed json
+        - peeraddr      : 18.1.0.2  # underlay bgp peer 1
+          localaddr     : 18.1.0.1
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink0"
+          remoteasn     : 600
+          holdtime      : 180
+          keepalive     : 60
+          bgppeeraf:
+              afi       : ipv4
+              safi      : unicast
+        - peeraddr      : 18.2.0.2  # underlay bgp peer 2
+          localaddr     : 18.2.0.1
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink1"
+          remoteasn     : 600
+          holdtime      : 180
+          keepalive     : 60
+          bgppeeraf:
+              afi       : ipv4
+              safi      : unicast
+        - peeraddr      : 50.50.50.1  # overlay bgp peer 1
+          localaddr     : 18.18.18.18
+          # specify interface to override ip addresses from testbed json
+          interface     : "Loopback0"
+          remoteasn     : 100
+          holdtime      : 180
+          keepalive     : 60
+          bgppeeraf:
+              afi       : l2vpn
+              safi      : evpn
+
+    - id         : 1
+      stack      : ipv4
+      count      : 1
+      type       : tenant
+
+      tunnel:
+        - id         : 1
+          count      : 1
+          type       : underlay
+          srcaddr    : '1.0.0.3'
+          dstaddr    : '1.0.0.2'
+          macaddress : macaddr/0000.bbbb.bbb1
+          encap      : vxlan
+          nhid       : 1
+
+      subnet:
+        - id               : 1
+          count            : 1
+          v4prefixlen      : 24
+          v6prefixlen      : 64
+          v4prefix         : '2.1.0.0\24'
+          hostifidx        : 0x80000048
+          fabricencap      : vxlan
+          fabricencapvalue : 202
+          v4routerip       : '2.1.0.0'
+          vroutermac       : macaddr/0055.0100.0001
+          evpnevi:
+            - id     : 1
+              rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - id     : 1
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - id     : 2
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - id        : 1
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.000a
+              hostifidx : 0x80000048
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : '2.1.0.0\16'
+              ipcount   : 1             # Local IP mapping per vnic
+
+              lmap:
+                - id       : 1
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.000a
+                  lipaddr  : '2.1.0.3'
+                  origin   : discovered
+
+          rmap:                         # Remote IP mappings per subnet
+            - id       : 1
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.0811
+              ripaddr  : '2.1.0.2'
+              tunnelid : 1
+              origin   : discovered
+
+        - id               : 2
+          count            : 1
+          v4prefixlen      : 24
+          v6prefixlen      : 64
+          v4prefix         : '2.1.1.0\24'
+          hostifidx        : 0x80000049
+          fabricencap      : vxlan
+          fabricencapvalue : 203
+          v4routerip       : '2.1.1.0'
+          vroutermac       : macaddr/0055.0100.0101
+          evpnevi:
+            - id     : 2
+              rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - id     : 3
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - id     : 4
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - id        : 2
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.010a
+              hostifidx : 0x80000049
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : '2.1.0.0\16'
+              ipcount   : 1             # Local IP mapping per vnic
+
+              lmap:
+                - id       : 2
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.010a
+                  lipaddr  : '2.1.1.3'
+                  origin   : discovered
+
+          rmap:                         # Remote IP mappings per subnet
+            - id       : 2
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.0911
+              ripaddr  : '2.1.1.2'
+              tunnelid : 1
+              origin   : discovered
+
+        - id               : 3
+          count            : 1
+          v4prefixlen      : 24
+          v4prefix         : '2.1.2.0\24'
+          hostifidx        : 0x8000004a
+          fabricencap      : vxlan
+          fabricencapvalue : 204
+          v4routerip       : '2.1.2.0'
+          vroutermac       : macaddr/0055.0100.0201
+          evpnevi:
+            - id     : 3
+              rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - id     : 5
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - id     : 6
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - id        : 3
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.020a
+              hostifidx : 0x8000004a
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : '2.1.0.0\16'
+              ipcount   : 1             # Local IP mapping per vnic
+
+              lmap:
+                - id       : 3
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.020a
+                  lipaddr  : '2.1.2.3'
+                  origin   : discovered
+
+          rmap:                         # Remote IP mappings per subnet
+            - id       : 3
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.0a11
+              ripaddr  : '2.1.2.2'
+              tunnelid : 1
+              origin   : discovered
+
+        - id               : 4
+          count            : 1
+          v4prefixlen      : 24
+          v4prefix         : '2.1.3.0\24'
+          hostifidx        : 0x8000004b
+          fabricencap      : vxlan
+          fabricencapvalue : 205
+          v4routerip       : '2.1.3.0'
+          vroutermac       : macaddr/0055.0100.0301
+          evpnevi:
+            - id     : 4
+              rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - id     : 7
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - id     : 8
+              rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - id        : 4
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.030a
+              hostifidx : 0x8000004b
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : '2.1.0.0\16'
+              ipcount   : 1             # Local IP mapping per vnic
+
+              lmap:
+                - id       : 4
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.030a
+                  lipaddr  : '2.1.3.3'
+                  origin   : discovered
+
+          rmap:                         # Remote IP mappings per subnet
+            - id       : 4
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.0b11
+              ripaddr  : '2.1.3.2'
+              tunnelid : 1
+              origin   : discovered
+
+      nexthop:
+        - id         : 3
+          type       : overlay
+          count      : 1
+          tunnelid   : 1
+          origin     : discovered
+
+      routetbl:
+        - type      : specific
+          count     : 1
+          routetype : disjoint
+          teptype   : underlay
+          v4routes  :
+            - '10.10.0.0\16'
+            - '50.5.0.0\16'
+
+      policy:
+        - type       : specific
+          policytype : default
+          direction  : bidir
