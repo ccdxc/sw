@@ -2679,10 +2679,10 @@ pds_nat_port_block_api_info_to_proto (const pds_nat_port_block_info_t *api_info,
 {
     pds::NatPortBlockGetResponse *proto_rsp =
         (pds::NatPortBlockGetResponse *)ctxt;
-    auto dhcp = proto_rsp->add_response();
-    pds::NatPortBlockSpec *proto_spec = dhcp->mutable_spec();
-    pds::NatPortBlockStatus *proto_status = dhcp->mutable_status();
-    pds::NatPortBlockStats *proto_stats = dhcp->mutable_stats();
+    auto nat = proto_rsp->add_response();
+    pds::NatPortBlockSpec *proto_spec = nat->mutable_spec();
+    pds::NatPortBlockStatus *proto_status = nat->mutable_status();
+    pds::NatPortBlockStats *proto_stats = nat->mutable_stats();
 
     pds_nat_port_block_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_nat_port_block_api_status_to_proto(proto_status, &api_info->status);

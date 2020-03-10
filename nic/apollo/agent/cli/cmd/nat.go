@@ -44,63 +44,52 @@ func init() {
 }
 
 func natShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS running?\n")
+		return
+	}
+
+	defer c.Close()
+
+	client := pds.NewNatSvcClient(c)
+	var req *pds.NatPortBlockGetRequest
+
 	if cmd != nil && cmd.Flags().Changed("id") {
-		// Connect to PDS
-		c, err := utils.CreateNewGRPCClient()
-		if err != nil {
-			fmt.Printf("Could not connect to the PDS. Is PDS running?\n")
-			return
-		}
-
-		defer c.Close()
-
-		client := pds.NewNatSvcClient(c)
-		var req *pds.NatPortBlockGetRequest
-
 		req = &pds.NatPortBlockGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(natPbId).Bytes()},
 		}
-
-		// PDS call
-		respMsg, err := client.NatPortBlockGet(context.Background(), req)
-		if err != nil {
-			fmt.Printf("Getting NAT port block failed. %v\n", err)
-			return
+	} else {
+		req = &pds.NatPortBlockGetRequest{
+			Id: [][]byte{},
 		}
+	}
 
-		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
-			return
-		}
+	// PDS call
+	respMsg, err := client.NatPortBlockGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting NAT port block failed. %v\n", err)
+		return
+	}
 
-		if (cmd != nil) && cmd.Flags().Changed("yaml") {
-			for _, resp := range respMsg.Response {
-				respType := reflect.ValueOf(resp)
-				b, _ := yaml.Marshal(respType.Interface())
-				fmt.Println(string(b))
-				fmt.Println("---")
-			}
-		} else {
-			// Print NAT Port Blocks
-			printNatPbHeader()
-			for _, resp := range respMsg.Response {
-				printNatPb(resp)
-			}
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	if (cmd != nil) && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
 		}
 	} else {
-		var cmdCtxt *pds.CommandCtxt
-
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_NAT_PB_DUMP,
-		}
-
-		natPb := myNatPortBlock{}
-		msg := pds.NatPortBlock{}
-		natPb.msg = &msg
-		err := HandleUdsShowObject(cmdCtxt, natPb)
-		if err != nil {
-			fmt.Printf("Error %v\n", err)
+		// Print NAT Port Blocks
+		printNatPbHeader()
+		for _, resp := range respMsg.Response {
+			printNatPb(resp)
 		}
 	}
 }
@@ -126,10 +115,10 @@ func printNatPb(nat *pds.NatPortBlock) {
 		ipv4prefix.Addr = spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetAddr().GetV4Addr()
 		ipv4prefix.Len = spec.GetNatAddress().GetPrefix().GetIPv4Subnet().GetLen()
 	}
-	fmt.Printf("%-40s%-20s%-10d%-10d%-10d%-10d%-10d\n",
+	fmt.Printf("%-40s%-20s%-10s%-10d%-10d%-10d%-10d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		utils.IPv4PrefixToStr(&ipv4prefix),
-		spec.GetProtocol(),
+		utils.IPPrototoStr(spec.GetProtocol()),
 		spec.GetPorts().GetPortLow(),
 		spec.GetPorts().GetPortHigh(),
 		stats.GetInUseCount(),

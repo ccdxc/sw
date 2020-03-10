@@ -19,9 +19,15 @@ static std::map<int, const void *> g_cb_ctx;
 // message rx counters for debugging
 static unsigned int g_type_count[PDS_MSG_TYPE_MAX] = {0};
 
+typedef struct cmd_cbs_s {
+    pds_cmd_cb cmd_hdl_cb;
+    pds_cmd_cb ctxt_init_cb;
+    pds_cmd_cb ctxt_destroy_cb;
+} cmd_cbs_t;
+
 // List of callbacks registered for processing VPP commands received from PDS
 // agent
-static std::map<int, pds_cmd_cb> g_cmd_cbs;
+static std::map<int, cmd_cbs_t> g_cmd_cbs;
 
 // called from VPP main poll loop, whenere data is available on the zmq
 // IPC file descriptor. Calls the SDK IPC library to read messages and
@@ -92,15 +98,19 @@ pds_ipc_invalid_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
 // register callbacks from plugins for command messages
 int
-pds_ipc_register_cmd_callbacks (pds_msg_id_t msg_id, pds_cmd_cb cb_fn) 
+pds_ipc_register_cmd_callbacks (pds_msg_id_t msg_id, pds_cmd_cb cmd_hdl_cb,
+                                pds_cmd_cb ctxt_init_cb, pds_cmd_cb ctxt_destroy_cb)
 {
-    if (cb_fn == NULL) {
+    if (cmd_hdl_cb == NULL) {
         ipc_log_error("Registration request for msg id %d has invalid function"
                       "pointer", msg_id);
         return -1;
     }
 
-    g_cmd_cbs[msg_id] = cb_fn;
+    g_cmd_cbs[msg_id].cmd_hdl_cb = cmd_hdl_cb;
+    g_cmd_cbs[msg_id].ctxt_init_cb = ctxt_init_cb;
+    g_cmd_cbs[msg_id].ctxt_destroy_cb = ctxt_destroy_cb;
+
     return 0;
 }
 
@@ -148,15 +158,35 @@ error:
     sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk::sdk_ret_t));
 }
 
+// function for IPC respond
+static void
+cb_ipc_respond (sdk::ipc::ipc_msg_ptr ipc_msg, pds_msg_id_t id,
+                pds_cmd_ctxt_t *ctxt, sdk::sdk_ret_t ret) {
+    switch (id) {
+    case PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL:
+        {
+            auto resp = ctxt->nat_ctxt;
+            sdk::ipc::respond(ipc_msg, (const void *)resp,
+                              sizeof(uint16_t) + (resp->num_entries *
+                              sizeof(pds_nat_port_block_cfg_msg_t)));
+        }
+        break;
+    default:
+        sdk::ipc::respond(ipc_msg, (const void *)&ret,
+                          sizeof(sdk::sdk_ret_t));
+        break;
+    }
+}
+
 // handler for PDS IPC command call. command callbacks will have more than a
 // return code, so instead they return a pds_msg_t pointer
 static void
 pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     pds_msg_t *msg, response;
-    sdk::sdk_ret_t retcode;
+    sdk::sdk_ret_t retcode = sdk::SDK_RET_OK;
     auto config_data = vpp_config_data::get();
     auto config_batch = vpp_config_batch::get();
-    std::map<int, pds_cmd_cb>::iterator cb_fun_it;
+    std::map<int, cmd_cbs_t>::iterator cb_fun_it;
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
 
@@ -174,10 +204,25 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     cb_fun_it = g_cmd_cbs.find(msg->id);
     if (cb_fun_it != g_cmd_cbs.end()) {
-        auto cb_fun = cb_fun_it->second;
-        retcode = cb_fun(&msg->cmd_msg);
-        sdk::ipc::respond(ipc_msg, (const void *)&retcode, 
-                          sizeof(sdk::sdk_ret_t));
+        auto cb_funs = cb_fun_it->second;
+        pds_cmd_ctxt_t ctxt = { 0 };
+        // ctxt init
+        if (cb_funs.ctxt_init_cb) {
+            retcode = cb_funs.ctxt_init_cb(&msg->cmd_msg, &ctxt);
+            if (retcode != sdk::SDK_RET_OK) {
+                goto error;
+            }
+        }
+        // call back
+        if (cb_funs.cmd_hdl_cb) {
+            retcode = cb_funs.cmd_hdl_cb(&msg->cmd_msg, &ctxt);
+        }
+        // respond ipc
+        cb_ipc_respond(ipc_msg, msg->id, &ctxt, retcode);
+        // ctxt destroy
+        if (cb_funs.ctxt_destroy_cb) {
+            cb_funs.ctxt_destroy_cb(&msg->cmd_msg, &ctxt);
+        }
         return;
     }
 

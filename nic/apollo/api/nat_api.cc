@@ -15,6 +15,7 @@
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/nat.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
 
 static sdk_ret_t
 pds_nat_port_block_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
@@ -92,10 +93,48 @@ pds_nat_port_block_read (_In_ pds_obj_key_t *key,
     return SDK_RET_OK;
 }
 
+typedef struct pds_nat_pb_real_all_cb_params_s {
+    nat_port_block_read_cb_t cb;
+    void *ctxt;
+} pds_nat_pb_real_all_cb_params_t;
+
+void
+pds_nat_pb_from_ipc_response (sdk::ipc::ipc_msg_ptr msg, const void *cookie)
+{
+    pds_nat_port_block_cmd_ctxt_t *reply = (pds_nat_port_block_cmd_ctxt_t *)msg->data();
+    pds_nat_pb_real_all_cb_params_t *params = (pds_nat_pb_real_all_cb_params_t *)cookie;
+    uint16_t num_pb = reply->num_entries;
+    pds_nat_port_block_cfg_msg_t *pb;
+    pds_nat_port_block_info_t info;
+
+    for (uint16_t i = 0; i < num_pb; i ++) {
+        pb = &reply->cfg[i];
+        info.spec = pb->spec;       
+        info.status = pb->status;       
+        info.stats = pb->stats;
+        params->cb(&info, params->ctxt);
+    }
+}
+
 sdk_ret_t
 pds_nat_port_block_read_all (nat_port_block_read_cb_t cb, void *ctxt)
 {
-    return SDK_RET_INVALID_OP;
+    pds_msg_t request;
+    pds_nat_pb_real_all_cb_params_t params;
+
+    memset(&request, 0, sizeof(request));
+
+    request.id = PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL;
+    request.cfg_msg.op = API_OP_NONE;
+    request.cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
+
+    params.cb = cb;
+    params.ctxt = ctxt;
+
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                      sizeof(pds_msg_t), pds_nat_pb_from_ipc_response, &params);
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

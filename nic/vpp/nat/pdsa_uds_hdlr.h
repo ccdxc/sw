@@ -11,7 +11,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 //
 // data structures
 //
@@ -19,11 +18,12 @@ extern "C" {
 // Forward declaration
 typedef struct pds_nat_iterate_params_s pds_nat_iterate_params_t;
 
-typedef void (*pds_nat_iterate_t)(pds_nat_iterate_params_t *params);
+typedef bool (*pds_nat_iterate_t)(pds_nat_iterate_params_t *params);
 
 typedef struct pds_nat_iterate_params_s {
     pds_nat_iterate_t itercb;
     pds_nat_port_block_export_t *pb;
+    void *ctxt;
     int fd;
 } pds_nat_iterate_params_t;
 
@@ -36,6 +36,7 @@ void pds_nat_dump_init(void);
 
 // nat44.c
 void nat_pb_iterate(pds_nat_iterate_params_t *params);
+uint16_t nat_pb_count(void);
 
 #ifdef __cplusplus
 }

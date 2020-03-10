@@ -9,6 +9,20 @@ import (
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
 
+// IPPrototoStr converts ip proto to string
+func IPPrototoStr(proto uint32) string {
+	switch proto {
+	case 1:
+		return "ICMP"
+	case 6:
+		return "TCP"
+	case 17:
+		return "UDP"
+	default:
+		return fmt.Sprint(proto)
+	}
+}
+
 // MactoStr converts a uint64 to a MAC string
 func MactoStr(mac uint64) string {
 	var bytes [6]byte

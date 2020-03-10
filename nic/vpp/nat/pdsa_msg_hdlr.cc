@@ -3,6 +3,8 @@
 //
 
 #include "nic/vpp/infra/cfg/pdsa_db.hpp"
+#include "nic/vpp/nat/pdsa_uds_hdlr.h"
+#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
 #include "nat_api.h"
 
 extern "C" {
@@ -190,6 +192,80 @@ pds_nat_cfg_get(pds_cfg_msg_t *cfg_msg) {
     return SDK_RET_OK;
 }
 
+bool
+pds_nat_iterate_cb(pds_nat_iterate_params_t *params)
+{
+    static uint16_t curr_count = 0;
+    pds_nat_port_block_cmd_ctxt_t *ctxt = (pds_nat_port_block_cmd_ctxt_t *)params->ctxt;
+    pds_nat_port_block_export_t *pb = params->pb;
+    pds_nat_port_block_cfg_msg_t *msg = &ctxt->cfg[curr_count];
+    pds_nat_port_block_spec_t *spec = &msg->spec;
+    pds_nat_port_block_stats_t *stats = &msg->stats;
+
+    if (curr_count >= ctxt->num_entries) {
+        curr_count = 0;
+        return true;
+    }
+
+    memcpy(&spec->key.id, pb->id, PDS_MAX_KEY_LEN);
+    if (pb->address_type == NAT_ADDR_TYPE_INFRA) {
+        spec->address_type = ADDR_TYPE_SERVICE;
+    } else if (pb->address_type == NAT_ADDR_TYPE_INTERNET) {
+        spec->address_type = ADDR_TYPE_PUBLIC;
+    }
+    spec->ip_proto = pb->protocol;
+    spec->nat_ip_range.af = IP_AF_IPV4;
+    spec->nat_ip_range.ip_lo.v4_addr = pb->addr;
+    spec->nat_ip_range.ip_hi.v4_addr = pb->addr;
+    spec->nat_port_range.port_lo = pb->start_port;
+    spec->nat_port_range.port_hi = pb->end_port;
+
+    stats->in_use_count = pb->in_use_cnt;
+    stats->session_count = pb->session_cnt;
+    curr_count ++;
+    return false;
+}
+
+static sdk::sdk_ret_t
+pdsa_nat_cfg_get_all(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+{
+    pds_nat_port_block_export_t pb;
+    pds_nat_iterate_params_t params;
+
+    params.itercb = pds_nat_iterate_cb;
+    params.pb = &pb;
+    params.ctxt = ctxt->nat_ctxt;
+    memset(pb.id, 0, sizeof(pb.id));
+
+    nat_pb_iterate(&params);
+    return sdk::SDK_RET_OK;
+}
+
+static sdk::sdk_ret_t
+pdsa_nat_cfg_ctxt_init(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+{
+    uint16_t num_port_blocks = nat_pb_count();
+    ctxt->nat_ctxt = (pds_nat_port_block_cmd_ctxt_t *)
+                     calloc(1, sizeof(uint16_t) +
+                            (num_port_blocks *
+                            sizeof(pds_nat_port_block_cmd_ctxt_t)));
+    if (ctxt->nat_ctxt == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    ctxt->nat_ctxt->num_entries = num_port_blocks;
+    return sdk::SDK_RET_OK;
+}
+
+static sdk::sdk_ret_t
+pdsa_nat_cfg_ctxt_destroy(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+{
+    if (ctxt->nat_ctxt) {
+        free(ctxt->nat_ctxt);
+        ctxt->nat_ctxt = 0;
+    }
+    return sdk::SDK_RET_OK;
+}
+
 // initialize callbacks for NAT configuration
 //
 // Note: This is called from C code, and must have C linkage
@@ -201,6 +277,10 @@ pds_nat_cfg_init(void) {
                                pds_nat_cfg_del,
                                pds_nat_cfg_act,
                                pds_nat_cfg_get);
+    pds_ipc_register_cmd_callbacks(PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL,
+                                   pdsa_nat_cfg_get_all,
+                                   pdsa_nat_cfg_ctxt_init,
+                                   pdsa_nat_cfg_ctxt_destroy);
 }
 
 } // extern "C"

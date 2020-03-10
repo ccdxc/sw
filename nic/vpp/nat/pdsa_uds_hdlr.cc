@@ -8,7 +8,7 @@
 #include "nic/vpp/infra/ipc/uds_internal.h"
 #include "pdsa_uds_hdlr.h"
 
-void
+bool
 vpp_uds_nat_iterate(pds_nat_iterate_params_t *params)
 {
     pds_nat_port_block_export_t *pb = params->pb;
@@ -33,6 +33,7 @@ vpp_uds_nat_iterate(pds_nat_iterate_params_t *params)
     stats->set_inusecount(pb->in_use_cnt);
     stats->set_sessioncount(pb->session_cnt);
     nat_msg.SerializeToFileDescriptor(params->fd);
+    return false;
 }
 
 // Callback to dump NAT entries via UDS

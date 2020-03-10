@@ -913,7 +913,7 @@ nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices)
 //
 // Get SNAT usage
 //
-void
+bool
 nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
                                   nat_addr_type_t nat_addr_type,
                                   pds_nat_iterate_params_t *params)
@@ -944,8 +944,24 @@ nat_pb_iterate_for_proto_and_type(u32 vpc_id, nat_proto_t nat_proto,
         pb_out->in_use_cnt = clib_bitmap_count_set_bits(pb->port_bitmap);
         pb_out->session_cnt = pb->num_flow_alloc;
 
-        params->itercb(params);
+        if (params->itercb(params)) {
+            goto end;
+        }
     }));
+
+    return false;
+
+end:
+    return true;
+}
+
+uint16_t
+nat_pb_count() {
+    uint16_t count = 0;
+    for (int i = 0; i < PDS_MAX_VPC; i++) {
+        count += nat_main.vpc_config[i].num_port_blocks;
+    }
+    return count;
 }
 
 //
@@ -958,18 +974,30 @@ nat_pb_iterate(pds_nat_iterate_params_t *params)
         if (nat_main.vpc_config[i].num_port_blocks == 0) {
             continue;
         }
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INTERNET,
-                                          params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INTERNET,
-                                          params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INTERNET,
-                                          params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INFRA,
-                                          params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INFRA,
-                                          params);
-        nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INFRA,
-                                          params);
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INTERNET,
+                                              params)) {
+            break;
+        }
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INTERNET,
+                                              params)) {
+            break;
+        }
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INTERNET,
+                                              params)) {
+            break;
+        }
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_UDP, NAT_ADDR_TYPE_INFRA,
+                                              params)) {
+            break;
+        }
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_TCP, NAT_ADDR_TYPE_INFRA,
+                                              params)) {
+            break;
+        }
+        if (nat_pb_iterate_for_proto_and_type(i, NAT_PROTO_ICMP, NAT_ADDR_TYPE_INFRA,
+                                              params)) {
+            break;
+        }
     }
     return;
 }
