@@ -30,7 +30,7 @@ svc_mapping_state::svc_mapping_state() {
                                   sizeof(pds_svc_mapping_key_t));
     SDK_ASSERT(svc_mapping_ht_ != NULL);
     svc_mapping_slab_ = slab::factory("svc-mapping", PDS_SLAB_ID_SVC_MAPPING,
-                                      sizeof(svc_mapping), 64, true,
+                                      sizeof(svc_mapping), 64, true, true,
                                       true, NULL);
     SDK_ASSERT(svc_mapping_slab_ != NULL);
 }

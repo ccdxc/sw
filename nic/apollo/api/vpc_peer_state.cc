@@ -20,7 +20,7 @@ namespace api {
 
 vpc_peer_state::vpc_peer_state() {
     vpc_peer_slab_ = slab::factory("vpc-peer", PDS_SLAB_ID_VPC_PEER,
-                                   sizeof(vpc_peer_entry), 16,
+                                   sizeof(vpc_peer_entry), 16, true,
                                    true, true, NULL);
     SDK_ASSERT(vpc_peer_slab_ != NULL);
 }

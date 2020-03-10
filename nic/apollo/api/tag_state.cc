@@ -26,7 +26,7 @@ tag_state::tag_state() {
     SDK_ASSERT(tag_ht_ != NULL);
 
     tag_slab_ = slab::factory("tag", PDS_SLAB_ID_TAG, sizeof(tag_entry), 16,
-                              true, true, NULL);
+                              true, true, true, NULL);
     SDK_ASSERT(tag_slab_ != NULL);
 }
 

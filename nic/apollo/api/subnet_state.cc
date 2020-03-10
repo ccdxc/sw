@@ -24,7 +24,8 @@ subnet_state::subnet_state() {
     subnet_idxr_ = indexer::factory(PDS_MAX_SUBNET + 1);
     SDK_ASSERT(subnet_idxr() != NULL);
     subnet_slab_ = slab::factory("subnet", PDS_SLAB_ID_SUBNET,
-                                 sizeof(subnet_entry), 16, true, true, NULL);
+                                 sizeof(subnet_entry), 16, true,
+                                 true, true, NULL);
     SDK_ASSERT(subnet_slab_ != NULL);
 }
 

@@ -24,7 +24,7 @@ nexthop_state::nexthop_state() {
                               sizeof(pds_obj_key_t));
     SDK_ASSERT(nexthop_ht_ != NULL);
     nexthop_slab_ = slab::factory("nexthop", PDS_SLAB_ID_NEXTHOP,
-                                  sizeof(nexthop), 256, true, true, NULL);
+                                  sizeof(nexthop), 256, true, true, true, NULL);
     SDK_ASSERT(nexthop_slab_ != NULL);
 }
 

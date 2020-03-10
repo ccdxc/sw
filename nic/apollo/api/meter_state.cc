@@ -26,7 +26,7 @@ meter_state::meter_state() {
     SDK_ASSERT(meter_ht() != NULL);
 
     meter_slab_ = slab::factory("meter", PDS_SLAB_ID_METER, sizeof(meter_entry),
-                                16, true, true, NULL);
+                                16, true, true, true, NULL);
     SDK_ASSERT(meter_slab() != NULL);
 }
 

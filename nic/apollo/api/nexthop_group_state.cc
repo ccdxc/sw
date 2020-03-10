@@ -26,7 +26,7 @@ nexthop_group_state::nexthop_group_state() {
     SDK_ASSERT(nexthop_group_ht_ != NULL);
     nexthop_group_slab_ =
         slab::factory("nexthop-group", PDS_SLAB_ID_NEXTHOP_GROUP,
-                      sizeof(nexthop_group), 256, true, true, NULL);
+                      sizeof(nexthop_group), 256, true, true, true, NULL);
     SDK_ASSERT(nexthop_group_slab_ != NULL);
 }
 

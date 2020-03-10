@@ -24,7 +24,8 @@ namespace impl {
 mirror_impl_state::mirror_impl_state(pds_state *state) {
     session_bmap_ = 0;
     mirror_impl_slab_ = slab::factory("mirror-impl", PDS_SLAB_ID_MIRROR_IMPL,
-                                      sizeof(mirror_impl), 8, true, true);
+                                      sizeof(mirror_impl), 8, true, true,
+                                      true, NULL);
     SDK_ASSERT(mirror_impl_slab_ != NULL);
 }
 

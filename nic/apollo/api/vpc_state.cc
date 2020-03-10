@@ -30,7 +30,7 @@ vpc_state::vpc_state() {
     // reserve one id for reserved (service tunnel vpc)
     vpc_idxr_->alloc_withid(0);
     vpc_slab_ = slab::factory("vpc", PDS_SLAB_ID_VPC, sizeof(vpc_entry), 16,
-                              true, true, NULL);
+                              true, true, true, NULL);
     SDK_ASSERT(vpc_slab_ != NULL);
 }
 

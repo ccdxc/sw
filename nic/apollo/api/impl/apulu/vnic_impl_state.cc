@@ -32,7 +32,7 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
     // create a slab for vnic impl entries
     vnic_impl_slab_ =
         slab::factory("vnic-impl", PDS_SLAB_ID_VNIC_IMPL,
-                      sizeof(vnic_impl), 16, true, true);
+                      sizeof(vnic_impl), 16, true, true, true, NULL);
     SDK_ASSERT(vnic_impl_slab_ != NULL);
 }
 

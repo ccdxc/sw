@@ -32,7 +32,7 @@ svc_mapping_impl_state::svc_mapping_impl_state(pds_state *state) {
     svc_mapping_impl_slab_ = slab::factory("svc-mapping-impl",
                                            PDS_SLAB_ID_SVC_MAPPING_IMPL,
                                            sizeof(svc_mapping_impl), 128,
-                                           true, true);
+                                           true, true, true, NULL);
     SDK_ASSERT(svc_mapping_impl_slab_!= NULL);
 
     // instantiate P4 svc mappping table instance for bookkeeping

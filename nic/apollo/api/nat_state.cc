@@ -24,7 +24,7 @@ nat_state::nat_state() {
     nat_port_block_slab_ = slab::factory("nat-port-block",
                                          PDS_SLAB_ID_NAT_PORT_BLOCK,
                                          sizeof(nat_port_block),
-                                         16, true, true, NULL);
+                                         16, true, true, true, NULL);
     SDK_ASSERT(nat_port_block_slab_ != NULL);
 }
 

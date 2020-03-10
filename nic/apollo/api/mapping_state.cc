@@ -37,7 +37,7 @@ mapping_state::mapping_state(sdk::lib::kvstore *kvs) {
     SDK_ASSERT(mapping_skey_ht_ != NULL);
     mapping_slab_ = slab::factory("mapping", PDS_SLAB_ID_MAPPING,
                                   sizeof(mapping_entry),
-                                  8192, true, true, NULL);
+                                  8192, true, true, true, NULL);
     SDK_ASSERT(mapping_slab_ != NULL);
 }
 
