@@ -42,8 +42,9 @@ sdk_ret_t
 lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
 {
     stack<itable_stack_elem_t>    s;
-    itable_stack_elem_t           elem = {}, end = {};
+    itable_stack_elem_t           elem = {}, end = {}, top = {};
     uint32_t                      num_intervals = 0;
+    bool                          rollback;
 
     PDS_TRACE_DEBUG("Building Interval Table: route count %u, "
                     "default nh %u, max routes %u", route_table->num_routes,
@@ -61,15 +62,14 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     }
 
     /**< this elem would provide the catch all nh id */
-    end.fallback_nhid = route_table->default_nhid;
+    end.fallback_data = route_table->default_nhid;
     /**< which will have the lowest priority */
-    end.priority = 0xFFFFFFFF;
+    end.fallback_prio = 0xFFFFFFFF;
     /**< push this elem to the stack */
     s.push(end);
 
     for (uint32_t i = 0; i < route_table->num_routes; i++) {
         /**< create the interval corresponding to the start of the prefix */
-        elem.priority = route_table->routes[i].prio;
         elem.interval.data = route_table->routes[i].nhid;
         ip_prefix_ip_low(&route_table->routes[i].prefix, &elem.interval.ipaddr);
         /**
@@ -88,10 +88,36 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
             s.pop();
         }
 
+        /**
+         * if stack top is same as current, this route is adjacent to the one on
+         * the stack. e.g. route1 = 10.10.0.0/16 and route2 = 10.11.0.0/16
+         * while processing route1, 10.11.0.0 is pushed to top of the stack.
+         * When processing route2, we see 10.11.0.0 at the top of the stack.
+         * We don't need that interval as we have actual user configured route2
+         * for it. So pop it.
+         */
+        SDK_ASSERT(s.empty() == false);
+        if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
+            /** But save the interval temporarily in case we end up not installing
+             * route2 because of priority evaluation below, in which case we nee to
+             * roll back this pop */
+            rollback = true;
+            top = s.top();
+            s.pop();
+        } else {
+            rollback = false;
+        }
+
         /** If the priority of this prefix is lower than that of the stack
          * top, skip this prefix because this prefix is shadowed by a shorter
          * prefix with a higher priority */
-        if (s.top().priority < route_table->routes[i].prio) {
+        SDK_ASSERT(s.empty() == false);
+        if (s.top().fallback_prio < route_table->routes[i].prio) {
+            /** Roll back pop done above */
+            if (rollback) {
+                s.push(top);
+            }
+
             continue;
         }
 
@@ -113,29 +139,15 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
             itable->nodes[num_intervals++] = elem.interval;
         }
 
-        /**
-         * if stack top is same as current, pop it since we already emitted this
-         * interval. we hit this case, when this route is adjacent to the one on
-         * the stack
-         * e.g. route1 = 10.10.0.0/16 and route2 = 10.11.0.0/16
-         * while processing route1, 10.11.0.0 is pushed to top of the stack
-         * but when 10.11.0.0/16 is seen, we don't need that interval as we have
-         * actual user configured route for it
-         */
-        SDK_ASSERT(s.empty() == false);
-        if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
-            s.pop();
-        }
-
         /** create the interval corresponding to the IP after the end of the
          * prefix */
         ip_prefix_ip_next(&route_table->routes[i].prefix, &elem.interval.ipaddr);
         /**< nexthop for the IPs beyond this prefix is the fallback nexthop */
-        elem.interval.data = s.top().fallback_nhid;
-        /**< priority within the current prefix is this route's priority */
-        elem.priority = route_table->routes[i].prio;
+        elem.interval.data = s.top().fallback_data;
         /**< fallback nexthop within the current prefix is this route's nexthop */
-        elem.fallback_nhid = route_table->routes[i].nhid;
+        elem.fallback_data = route_table->routes[i].nhid;
+        /**< fallback priority within the current prefix is this route's priority */
+        elem.fallback_prio = route_table->routes[i].prio;
 
         /**
          * if stack top is same as the interval's end node, update its fallback
@@ -149,8 +161,8 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
          */
         SDK_ASSERT(s.empty() == false);
         if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
-            s.top().fallback_nhid = route_table->routes[i].nhid;
-            s.top().priority = route_table->routes[i].prio;
+            s.top().fallback_data = route_table->routes[i].nhid;
+            s.top().fallback_prio = route_table->routes[i].prio;
         } else {
             /**< push this interval's end node to stack */
             s.push(elem);

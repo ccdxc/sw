@@ -284,9 +284,10 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_TUNNEL,
                                         ((tep_impl *)(tep->impl()))->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s -> TEP %s, "
+            PDS_TRACE_DEBUG("Processing route table %s, route %s prio: %u -> TEP %s, "
                             "nh id 0x%x", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].prio,
                             tep->key2str().c_str(), nh_val);
             break;
 

@@ -27,8 +27,8 @@
 /**< temporary stack elements maintained while building the interval table */
 typedef struct itable_stack_elem_s {
     lpm_inode_t    interval;         /**< interval table node (to be emitted) */
-    uint32_t       fallback_nhid;    /**< fallback nexthop */
-    uint32_t       priority;         /**< Priority */
+    uint32_t       fallback_data;    /**< fallback data */
+    uint32_t       fallback_prio;    /**< fallback priority */
 } itable_stack_elem_t;
 
 /**

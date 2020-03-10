@@ -42,7 +42,7 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
-                src     : callback://networking/packets/GetUplinkPortMac
+                src     : callback://networking/packets/GetUplinkPortMacFromRoute/direction=TX,ipkt=FROM_HOST_PKT
                 dst     : callback://networking/packets/GetUnderlayRemoteMacFromRoute/direction=TX,ipkt=FROM_HOST_PKT
             outeripv4:
                 src     : ref://testcase/config/devicecfg/IP

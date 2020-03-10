@@ -574,11 +574,20 @@ def __get_tunnel_from_route(tc, args):
 
 def GetTunnelIPFromRoute(tc, pkt, args=None):
     tep = __get_tunnel_from_route(tc, args)
+    tc.config.tunnel = tep
     return str(tep.RemoteIPAddr)
 
 def GetTunnelMacFromRoute(tc, pkt, args=None):
     tep = __get_tunnel_from_route(tc, args)
     return tep.MACAddr
+
+def GetUplinkPortMacFromRoute(tc, pkt, args=None):
+    tep = __get_tunnel_from_route(tc, args)
+    if tep.IsUnderlay():
+        nh = tep.NEXTHOP
+    l3if = nh.L3Interface
+    mac = l3if.IfInfo.macaddr.get()
+    return mac
 
 def GetUnderlayRemoteMacFromRoute(tc, pkt, args=None):
     tep = __get_tunnel_from_route(tc, args)
