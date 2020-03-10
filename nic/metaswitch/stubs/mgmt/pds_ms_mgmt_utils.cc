@@ -4,6 +4,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 
 #define SHARED_DATA_TYPE CSS_LOCAL
 using namespace types;
@@ -126,6 +127,26 @@ pds_ms_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_
     auto str = (const unsigned char*) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
+    }
+}
+
+NBB_VOID
+pds_ms_validate_byte_array (string in_str, string in_msg, string in_field,
+                            int min_len, int max_len)
+{
+    if (in_str.length() == 0) {
+        // null string. no need to validate. if this is required field, let
+        // metaswitch detect it
+        return;
+    }
+
+    if (in_str.length() < min_len || in_str.length() > max_len) {
+        throw pds_ms::Error (in_msg.append(".").append(in_field).
+                             append(" length should be between ").
+                             append(std::to_string(min_len)).append(" and ").
+                             append(std::to_string(max_len)),
+                             SDK_RET_INVALID_ARG);
+
     }
 }
 

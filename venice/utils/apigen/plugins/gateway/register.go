@@ -591,6 +591,7 @@ type pdsaFieldOpt struct {
 	GetKeyOidLenIndex      string
 	CppDataType            string
 	FieldLen               int
+	FieldMinLen            int
 	FieldHasLen            bool
 	IgnoreIfEmpty          bool
 	IsZeroIPValid          bool
@@ -712,6 +713,23 @@ func getFieldLenFromCam(cam *CamInfo, table string, field string) int {
 	return 0
 }
 
+func getFieldMinLenFromCam(cam *CamInfo, table string, field string) int {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == field && fieldInfo.MinLength != "" {
+					val, err := strconv.Atoi(fieldInfo.MinLength)
+					if err != nil {
+						glog.Fatalf("unable to convert to int")
+					}
+					return val
+				}
+			}
+		}
+	}
+	return 0
+}
+
 func fieldHasCodeLengthName(cam *CamInfo, table string, field string) bool {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
@@ -819,6 +837,7 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 			ret.FieldHasLen = true
 		}
 		ret.FieldLen = getFieldLenFromCam(cam, table, o.Field)
+		ret.FieldMinLen = getFieldMinLenFromCam(cam, table, o.Field)
 		ret.IsKey = getFieldIsKeyFromCam(cam, table, o.Field)
 		ret.IsReadOnly = getFieldIsReadOnlyFromCam(cam, table, o.Field)
 		ret.SetFieldIdx = getFieldIdxFromCam(cam, table, o.Field)
@@ -827,6 +846,12 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 	return ret, err
 }
 
+func getPdsaCastValidateFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type) string {
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES {
+		return "pds_ms_validate_byte_array"
+	}
+	return ""
+}
 func getPdsaCastPrintFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type) string {
 	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BYTES {
 		return "pds_ms_print_byte_array"
@@ -4015,6 +4040,7 @@ func init() {
 	reg.RegisterFunc("getPdsaCastSetFunc", getPdsaCastSetFunc)
 	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
 	reg.RegisterFunc("getPdsaCastPrintFunc", getPdsaCastPrintFunc)
+	reg.RegisterFunc("getPdsaCastValidateFunc", getPdsaCastValidateFunc)
 	reg.RegisterFunc("getCppTypeFieldFromProto", getCppTypeFieldFromProto)
 	reg.RegisterFunc("getRowStatusOid", getRowStatusOid)
 	reg.RegisterFunc("isRepeatedField", isRepeatedField)

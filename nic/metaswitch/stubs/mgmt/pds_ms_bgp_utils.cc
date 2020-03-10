@@ -18,8 +18,9 @@ bgp_peer_hard_reset (BGPPeerSpec& req)
 {
     BGPPeerResetSpec proto_req;
 
-    // start CTM transaction
-    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+    // if peer is already disabled, hard reset enables the peer
+    // to trigger peer reset, disable the peer first and enable it
+    // in a different CTM transaciton
 
     // populate Reset spec from Peer spec
     proto_req.set_entindex(PDS_MS_BGP_RM_ENT_INDEX);
@@ -30,7 +31,8 @@ bgp_peer_hard_reset (BGPPeerSpec& req)
     paddr->set_af(req.peeraddr().af());
     paddr->set_v4addr(req.peeraddr().v4addr());
 
-    // if peer is already disabled, hard reset enables the peer
+    // start CTM transaction to disable peer
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // disable peer
     proto_req.set_state(ADMIN_STATE_DISABLE);
@@ -38,11 +40,26 @@ bgp_peer_hard_reset (BGPPeerSpec& req)
                                               PDS_MS_CTM_GRPC_CORRELATOR,
                                               false, false);
 
+    // end CTM transaction
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    auto ret = pds_ms::mgmt_state_t::ms_response_wait();
+    if (ret != API_STATUS_OK) {
+        PDS_TRACE_ERR ("Hard reset: Failed to disable peer");
+        // disabling the peer failed
+        return ret;
+    }
+
+    // start CTM transaction to enable peer
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
     // enable peer
     proto_req.set_state(ADMIN_STATE_ENABLE);
     pds_ms_set_bgppeerresetspec_amb_bgp_peer (proto_req, AMB_ROW_ACTIVE,
                                               PDS_MS_CTM_GRPC_CORRELATOR,
                                               false, false);
+
     // end CTM transaction
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 

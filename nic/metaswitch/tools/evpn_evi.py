@@ -42,7 +42,8 @@ def create_req():
     req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.AutoRD = autord
     req_msg.AutoRT = autort
-    req_msg.RD = rd_str
+    if not autord:
+        req_msg.RD = rd_str
     req_msg.RTType = rttype
     resp = stub.EvpnEviCreate(req)     
     process_response(req, resp)
@@ -55,7 +56,8 @@ def update_req():
     req_msg.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.AutoRD = autord
     req_msg.AutoRT = autort
-    req_msg.RD = rd_str
+    if not autord:
+        req_msg.RD = rd_str
     req_msg.RTType = rttype
     resp = stub.EvpnEviUpdate(req)     
     process_response(req, resp)

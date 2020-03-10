@@ -99,6 +99,9 @@ message EvpnEviStatus {
 
   // in use route-distinguisher of the EVI
   bytes RD = 1 [(venice.pdsaFields) = {Field:"rd"}];
+
+  // Internal only
+  uint32 EVIId = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", IsInternalField: true}];
 }
 
 // EVPN EVI object

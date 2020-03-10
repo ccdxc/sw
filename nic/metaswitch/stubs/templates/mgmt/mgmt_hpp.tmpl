@@ -43,6 +43,7 @@ extern "C" {
       {{$mib    := $param.Mib}}
       {{if not (eq $oidLen "")}}
     /*===== Set helpers for MS Table: {{$struct}} =====*/
+    NBB_VOID pds_ms_validate_{{$msgName | ToLower}}({{$pkgName}}::{{$msgName}} &req);
     typedef void (*pre_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
     typedef void (*post_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_func_type)({{$pkgName}}::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, NBB_VOID* kh, bool);
     NBB_VOID pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,

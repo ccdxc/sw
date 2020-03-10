@@ -4477,6 +4477,12 @@ func TestApis(t *testing.T) {
 	if getFieldLenFromCam(cam, "AMB_BGP_RM_ENT", "index") != 0 {
 		t.Errorf("Got wrong value")
 	}
+	if getFieldLenFromCam(cam, "AMB_BGP_PEER", "password") == 0 {
+		t.Errorf("Got wrong value")
+	}
+	if getFieldMinLenFromCam(cam, "AMB_EVPN_EVI", "cfg_rd") != 8 {
+		t.Errorf("Got wrong value")
+	}
 	if getFieldIsReadOnlyFromCam(cam, "AMB_BGP_RM_ENT", "index") == true {
 		t.Errorf("Got wrong value")
 	}
@@ -4546,6 +4552,12 @@ func TestApis(t *testing.T) {
 		t.Errorf("Got wrong value")
 	}
 	if getPdsaCastPrintFunc(gogoproto.FieldDescriptorProto_TYPE_BYTES) != "pds_ms_print_byte_array" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastValidateFunc(gogoproto.FieldDescriptorProto_TYPE_BYTES) != "pds_ms_validate_byte_array" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastValidateFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL) == "pds_ms_validate_byte_array" {
 		t.Errorf("Got wrong value")
 	}
 	if addStr("a", "b") != "ab" {

@@ -3633,6 +3633,7 @@ operational status of EVPN EVI, if any
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | RD | [bytes](#bytes) |  | in use route-distinguisher of the EVI |
+| EVIId | [uint32](#uint32) |  | Internal only |
 
 
 

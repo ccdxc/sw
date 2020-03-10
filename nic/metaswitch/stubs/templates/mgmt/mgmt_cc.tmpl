@@ -60,6 +60,22 @@
     {{$mib    := $param.Mib}}
     {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
+    /*===== Validate {{$msgName}} =====*/
+    NBB_VOID pds_ms_validate_{{$msgName | ToLower}}({{$pkgName}}::{{$msgName}} &req) {
+    {{$fields := .Fields}}
+    {{range $fields}}
+      {{if hasExtension "venice.pdsaFields" .}}
+        {{$isFldInTbl := (isPdsaFieldInTable . $cam $struct)}}
+        {{if (eq $isFldInTbl true)}}
+          {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+          {{$castFn := getPdsaCastValidateFunc .Type}}
+          {{if (eq $castFn "pds_ms_validate_byte_array")}}
+        {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}", {{$fieldOpt.FieldMinLen}}, {{$fieldOpt.FieldLen}});
+          {{end}}
+        {{end}}
+      {{end}}
+    {{end}}
+    }
     /*===== Set MS Table: {{$struct}} =====*/
     NBB_VOID pds_ms_set_{{$msgName | ToLower}}_{{$struct | ToLower}}_oid({{$pkgName}}::{{$msgName}} &req,
                                        NBB_ULONG *oid) {

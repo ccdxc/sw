@@ -134,6 +134,8 @@ pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field,
                                        NBB_ULONG *len,
                                        string in_str);
 
+NBB_VOID pds_ms_validate_byte_array (string in_str, string in_msg,
+                                     string in_field, int min_len, int max_len);
 NBB_VOID  pds_ms_print_byte_array (string in_str, string in_msg,
                                    string in_field);
 
