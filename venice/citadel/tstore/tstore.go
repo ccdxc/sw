@@ -9,6 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/influxdata/influxdb/toml"
+
+	"github.com/influxdata/influxdb/cmd/influxd/run"
+	"github.com/influxdata/influxdb/services/continuous_querier"
+
 	"github.com/influxdata/influxdb/services/retention"
 
 	"github.com/influxdata/influxdb/coordinator"
@@ -24,7 +29,7 @@ import (
 
 // Tstore is a timeseries store instance
 type Tstore struct {
-	service       *retention.Service             // tsdb services
+	services      []run.Service                  // tsdb services
 	dbPath        string                         // directory where files are stored
 	tsdb          *tsdb.Store                    // tsdb store instance
 	stmtExecutor  *coordinator.StatementExecutor // statement executor
@@ -79,7 +84,6 @@ func NewTstore(dbPath string) (*Tstore, error) {
 }
 
 func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
-	svc := retention.NewService(retention.NewConfig())
 
 	// local meta
 	cfg := meta.NewConfig()
@@ -117,9 +121,19 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 	qEx := query.NewQueryExecutor()
 	qEx.StatementExecutor = &stEx
 
+	ret := retention.NewService(retention.NewConfig())
+	ret.TSDBStore = ts
+	ret.MetaClient = localMeta
+
+	cqCfg := continuous_querier.NewConfig()
+	cqCfg.RunInterval = toml.Duration(time.Minute)
+	cq := continuous_querier.NewService(cqCfg)
+	cq.QueryExecutor = qEx
+	cq.MetaClient = localMeta
+
 	// create a tstore instance
-	s := Tstore{
-		service:       svc,
+	svc := Tstore{
+		services:      []run.Service{ret, cq},
 		dbPath:        dbPath,
 		tsdb:          ts,
 		stmtExecutor:  &stEx,
@@ -127,14 +141,14 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 		pointsWriter:  pwr,
 		metaClient:    localMeta,
 	}
-	svc.TSDBStore = ts
-	svc.MetaClient = localMeta
 
-	if err := s.service.Open(); err != nil {
-		return nil, fmt.Errorf("open service: %s", err)
+	for _, s := range svc.services {
+		if err := s.Open(); err != nil {
+			return nil, fmt.Errorf("failed to open service: %s", err)
+		}
 	}
 
-	return &s, nil
+	return &svc, nil
 }
 
 // CreateDatabase creates a database
@@ -323,9 +337,13 @@ func (ta *tstoreAuth) AuthorizeSeriesWrite(database string, measurement []byte, 
 
 // Close closes the tstore
 func (ts *Tstore) Close() error {
-	if ts.service != nil {
-		ts.service.Close()
+
+	for _, s := range ts.services {
+		if s != nil {
+			s.Close()
+		}
 	}
+
 	if ts.pointsWriter != nil {
 		ts.pointsWriter.Close()
 	}

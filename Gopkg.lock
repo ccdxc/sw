@@ -2986,6 +2986,7 @@
     "github.com/influxdata/influxdb/coordinator",
     "github.com/influxdata/influxdb/models",
     "github.com/influxdata/influxdb/query",
+    "github.com/influxdata/influxdb/services/continuous_querier",
     "github.com/influxdata/influxdb/services/httpd",
     "github.com/influxdata/influxdb/services/meta",
     "github.com/influxdata/influxdb/services/retention",
