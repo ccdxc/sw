@@ -434,6 +434,8 @@ func LearnPktDropReasonToStr(reason pds.LearnPktDropReason) string {
 		reasonStr = "Internal packet buffer errors"
 	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_TX_FAIL:
 		reasonStr = "Tx failures"
+	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_ARP_REPLY:
+		reasonStr = "ARP replies"
 	default:
 		reasonStr = "Unknown"
 	}

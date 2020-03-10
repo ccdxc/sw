@@ -468,6 +468,23 @@ add_tx_pkt_hdr (void *mbuf, local_learn_ctxt_t *ctxt)
     return SDK_RET_OK;
 }
 
+static sdk_ret_t
+reinject_pkt_to_p4 (void *mbuf, local_learn_ctxt_t *ctxt)
+{
+    // check if packet needs to be dropped
+    if (ctxt->impl_info.hints & LEARN_HINT_ARP_REPLY) {
+        ctxt->pkt_drop_reason = PKT_DROP_REASON_ARP_REPLY;
+        return SDK_RET_ERR;
+    }
+
+    // reinject packet to p4
+    if (likely(add_tx_pkt_hdr(mbuf, ctxt) == SDK_RET_OK)) {
+        learn_lif_send_pkt(mbuf);
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ERR;
+}
+
 void
 process_learn_pkt (void *mbuf)
 {
@@ -527,14 +544,15 @@ process_learn_pkt (void *mbuf)
 
     // apis executed successfully, update sw state and notify cp
     ret = update_ep(&ctxt);
-    if (likely(ret == SDK_RET_OK)) {
-        // send the packet to its nexthop
-        if (unlikely(add_tx_pkt_hdr(mbuf, &ctxt) != SDK_RET_OK)) {
-            goto error;
-        }
-        learn_lif_send_pkt(mbuf);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto error;
+    }
+
+    // reinject the packet to p4 if needed
+    if (reinject_pkt_to_p4(mbuf, &ctxt) == SDK_RET_OK) {
         return;
     }
+    // packet not reinjected, drop it
 
 error:
 

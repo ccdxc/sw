@@ -61,6 +61,7 @@ enum LearnPktDropReason {
   LEARN_PKTDROP_REASON_RES_ALLOC_FAIL = 2;
   LEARN_PKTDROP_REASON_MBUF_ERR       = 3;
   LEARN_PKTDROP_REASON_TX_FAIL        = 4;
+  LEARN_PKTDROP_REASON_ARP_REPLY      = 5;
 }
 
 message LearnPktDropStats {

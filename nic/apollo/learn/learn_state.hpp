@@ -31,6 +31,7 @@ enum {
     PKT_DROP_REASON_API_FAIL,       ///< api call failed
     PKT_DROP_REASON_MBUF_ERR,       ///< mbuf manipulation error
     PKT_DROP_REASON_TX_FAIL,        ///< unable to tx the packet
+    PKT_DROP_REASON_ARP_REPLY,      ///< arp reply for probe
     PKT_DROP_REASON_MAX,
 };
 

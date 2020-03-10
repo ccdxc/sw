@@ -89,6 +89,7 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     bool vlan_valid = false;
     p4_rx_cpu_hdr_t *p4_rx_hdr = (p4_rx_cpu_hdr_t *)pkt;
 
+    info->hints = 0;
     info->lif = p4_rx_hdr->lif;
     info->subnet = bdid_to_subnet(p4_rx_hdr->ingress_bd_id);
     info->l2_offset = APULU_P4_TO_ARM_HDR_SZ;
@@ -107,8 +108,11 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     // infer pkt type from from nacl data field
     switch (p4_rx_hdr->nacl_data) {
     case NACL_DATA_ID_L2_MISS_ARP:
+        info->pkt_type = PKT_TYPE_ARP;
+        break;
     case NACL_DATA_ID_ARP_REPLY:
         info->pkt_type = PKT_TYPE_ARP;
+        info->hints |= LEARN_HINT_ARP_REPLY;
         break;
     case NACL_DATA_ID_L2_MISS_DHCP:
         info->pkt_type = PKT_TYPE_DHCP;
@@ -123,9 +127,6 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
         }
         // TODO: NDP
     }
-
-    // no hint flags currently
-    info->hints = 0;
     return SDK_RET_OK;
 }
 
