@@ -40,6 +40,14 @@ interface ChartData {
   datasets: { [key: string]: any }[];
 }
 
+ interface DSCUiModel {
+  associatedConditionStatus?: {
+    dscCondStr: string;
+    dscNeedReboot: boolean
+  };
+  associatedWorkloads?: WorkloadWorkload[];
+}
+
 @Component({
   selector: 'app-naples',
   encapsulation: ViewEncapsulation.None,
@@ -70,9 +78,6 @@ interface ChartData {
  */
 
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
-
-  public static NAPLES_FIELD_WORKLOADS: string = 'associatedWorkloads';
-  public static NAPLES_FIELD_CONDITIONSTATUS: string = 'associatedConditionStatus';
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
@@ -194,7 +199,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   top10CardChartOptions: { [key: string]: any }[];
   chosenCardMac: string;
   chosenCard: ClusterDistributedServiceCard;
-  ASSOCIATED_WORKLOADS: string = NaplesComponent.NAPLES_FIELD_WORKLOADS;
+
 
   dscprofilesEventUtility: HttpEventUtility<ClusterDSCProfile>;
   dscprofileOptions: SelectItem[] = [];
@@ -292,7 +297,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
               this.chosenCardMac !== chartData.labels[index]) {
               this.chosenCardMac = chartData.labels[index];
               const card: ClusterDistributedServiceCard =
-                this.dataObjects.find(item => item.spec.id === this.chosenCardMac);
+                this.dataObjects.find( (item: ClusterDistributedServiceCard ) => (item.spec.id === this.chosenCardMac) || (item.meta.name === this.chosenCardMac) );
               if (card) {
                 this.chosenCard = card;
                 if (this.top10CardTelemetryData) {
@@ -478,7 +483,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     if (myworkloads && dscs) {
       this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(myworkloads, dscs);
       this.dataObjects.map(naple => {
-        naple._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
+        ((naple._ui) as DSCUiModel).associatedWorkloads = this.getDSCWorkloads(naple);
       });
     }
   }
@@ -585,11 +590,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
           break;
       }
-      naple._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] = {
+      const uiData: DSCUiModel = {};
+      uiData.associatedConditionStatus = {
         dscCondStr: dscHealthCond.condition.toLowerCase(),
         dscNeedReboot: dscHealthCond.rebootNeeded
       };
-      naple._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
+      uiData.associatedWorkloads = this.getDSCWorkloads(naple);
+      naple._ui = uiData;
     }
     this.searchObject['status.conditions'] = this.conditionNaplesMap;
     this.tryGenCharts();
@@ -616,26 +623,23 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   isNICHealthy(data: ClusterDistributedServiceCard): boolean {
-    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-      === NaplesConditionValues.HEALTHY;
+    const uiData: DSCUiModel = data._ui;
+    return uiData.associatedConditionStatus && uiData.associatedConditionStatus.dscCondStr === NaplesConditionValues.HEALTHY;
   }
 
   isNICUnhealthy(data: ClusterDistributedServiceCard): boolean {
-    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-      === NaplesConditionValues.UNHEALTHY;
+    const uiData: DSCUiModel = data._ui;
+    return uiData.associatedConditionStatus && uiData.associatedConditionStatus.dscCondStr === NaplesConditionValues.UNHEALTHY;
   }
 
   isNICHealthUnknown(data: ClusterDistributedServiceCard): boolean {
-    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-      === NaplesConditionValues.UNKNOWN;
+    const uiData: DSCUiModel = data._ui;
+    return uiData.associatedConditionStatus && uiData.associatedConditionStatus.dscCondStr === NaplesConditionValues.UNKNOWN;
   }
 
   isNicNeedReboot(data: ClusterDistributedServiceCard): boolean {
-    return data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
-      data._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
+    const uiData: DSCUiModel = data._ui;
+    return uiData.associatedConditionStatus && uiData.associatedConditionStatus.dscNeedReboot;
   }
 
   displayReasons(data: ClusterDistributedServiceCard): any {
@@ -964,12 +968,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const observables: Observable<any>[] = [];
     for (const naplesObject of updatedNaples) {
       const name = naplesObject.meta.name;
-      if (naplesObject._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS]) {  // remove UI fields
-        delete naplesObject._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS];
-      }
-      if (naplesObject._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS]) {  // remove UI fields
-        delete naplesObject._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
-      }
       const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
       observables.push(sub);
     }
@@ -1047,7 +1045,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   buildMoreWorkloadTooltip(dsc: ClusterDistributedServiceCard): string {
     const wltips = [];
-    const workloads = dsc._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+    const workloads = (dsc._ui as DSCUiModel).associatedWorkloads;
     for (let i = 0; i < workloads.length; i++) {
       if (i >= this.maxWorkloadsPerRow) {
         const workload = workloads[i];
@@ -1140,7 +1138,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   searchWorkloads(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const workloads = data[i]._ui[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+      const workloads = (data[i]._ui as DSCUiModel).associatedWorkloads;
       // workloads[i] is a full object
       for (let k = 0; k < workloads.length; k++) {
         const recordValue = _.get(workloads[k], ['meta', 'name']);
@@ -1165,8 +1163,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       const conditions = data[i].status.conditions;
       for (let k = 0; k < conditions.length; k++) {
         // datat[i].associatedConditionStatus is  {dscCondStr: "healthy", dscNeedReboot: true}
-        const recordValueStr = data[i]._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr;
-        const recordValueReboot = data[i]._ui[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
+        const uiData: DSCUiModel = data[i]._ui;
+        const recordValueStr = uiData.associatedConditionStatus.dscCondStr ;
+        const recordValueReboot = uiData.associatedConditionStatus.dscNeedReboot;
         const searchValues = requirement.values;
         let operator = String(requirement.operator);
         operator = TableUtility.convertOperator(operator);

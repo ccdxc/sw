@@ -19,17 +19,20 @@
     </div>
     <div fxLayout="row wrap" fxLayoutAlign="start stretch" *roleGuard="'metrics_read'">
       <div fxFlex="nogrow" fxLayout="column" class="naples-chart-container"
-           *ngIf="hasDSC && top10CardChartData && top10CardChartData.length > 1">
-        <p-chart type="bar" [data]="top10CardChartData[0]" [options]="top10CardChartOptions[0]">
+           *ngIf="hasDSC && top10CardChartData && top10CardChartData.length > 0">
+        <p-chart type="bar" [data]="top10CardChartData[0]" [options]="top10CardChartOptions[0]"
+                 *ngIf="top10CardChartData[0]">
         </p-chart>
-        <p-chart type="bar" [data]="top10CardChartData[1]" [options]="top10CardChartOptions[1]">
+        <p-chart type="bar" [data]="top10CardChartData[1]" [options]="top10CardChartOptions[1]"
+                 *ngIf="top10CardChartData[1]">
         </p-chart>
       </div>
       <div fxFlex class="naples-card-workloads-container" *ngIf="chosenCard">
         <div *roleGuard="'workloadworkload_read'" class="naples-card-workloads-title">
           <a routerLink="./{{ chosenCard.meta.name }}">{{ chosenCard.spec.id }}</a>
         </div>
-        <p-table styleClass="naples-card-workloads-table" [value]="chosenCard[ASSOCIATED_WORKLOADS]"
+        <p-table styleClass="naples-card-workloads-table"
+                 [value]="chosenCard._ui.associatedWorkloads"
                  *roleGuard="'workloadworkload_read'">
           <ng-template pTemplate="header">
             <tr>

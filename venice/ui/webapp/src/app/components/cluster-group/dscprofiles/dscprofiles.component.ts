@@ -11,6 +11,12 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile, ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
+import { SortEvent } from 'primeng/components/common/api';
+
+interface DSCProfileUiModel {
+  associatedDSCS: ClusterDistributedServiceCard[];
+  associatedDSCSPercentile: Number;
+}
 
 /**
  * This DscprofilesComponent is for DSC unified mode feature.
@@ -32,9 +38,7 @@ import { Observable } from 'rxjs';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, OnDestroy {
-  public static DSCPROFILE_FIELD_DSCS: string = 'associatedDSCS';
-
+export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, OnDestroy {
   dataObjects: ReadonlyArray<ClusterDSCProfile> = [];
 
   naplesList: ClusterDistributedServiceCard[] = [];
@@ -68,8 +72,9 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
     { field: 'spec.dscs', header: 'Associated DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 25 },
-    { field: 'spec.fwd-mode', header: 'FWD Mode', class: 'dscprofiles-column-fwd-mode', sortable: true, width: 15 },
-    { field: 'spec.policy-mode', header: 'Policy Mode', class: 'dscprofiles-column-policy-mode', sortable: true, width: 15 },
+    { field: 'utilization', header: 'Utilization', class: 'dscprofiles-column-utilization', sortable: false, width: 10 },
+    { field: 'spec.fwd-mode', header: 'FWD Mode', class: 'dscprofiles-column-fwd-mode', sortable: true, width: 10 },
+    { field: 'spec.policy-mode', header: 'Policy Mode', class: 'dscprofiles-column-policy-mode', sortable: true, width: 10 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
   ];
@@ -100,7 +105,6 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
     });
   }
   postNgInit(): void {
-    // this.buildAdvSearchCols();  // TODO: add advance search,  profiles percentage distribution.  profile-1 has 25% of total DSCs,  profile-2 has 75% of DSCs
     this.watchDSCProfiles();
     this.watchNaples();
   }
@@ -137,20 +141,24 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
   handleDataReady() {
     // When naplesList and dataObjects (dscprofiles) are ready, build profile-dscs
     if (this.naplesList && this.dataObjects) {
-      for (let i = 0 ; i < this.dataObjects.length; i ++ ) {
-          const dscProfile: ClusterDSCProfile = this.dataObjects[i];
-          const dscsnames = [];
-          for (let j = 0 ;  j < this.naplesList.length; j ++ ) {
-             const dsc: ClusterDistributedServiceCard = this.naplesList[j];
-             if (dscProfile.meta.name  === dsc.spec.dscprofile) {
-              dscsnames.push(dsc);
-             }
+      for (let i = 0; i < this.dataObjects.length; i++) {
+        const dscProfile: ClusterDSCProfile = this.dataObjects[i];
+        const dscsnames = [];
+        for (let j = 0; j < this.naplesList.length; j++) {
+          const dsc: ClusterDistributedServiceCard = this.naplesList[j];
+          if (dscProfile.meta.name === dsc.spec.dscprofile) {
+            dscsnames.push(dsc);
           }
-          // this if block is temporary, once DSCProfile.proto bug fix, we don't need it.
-          if (!dscProfile._ui) {
-            dscProfile._ui = {};
-          }
-          dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS] = dscsnames;
+        }
+        // this if block is temporary, once DSCProfile.proto bug fix, we don't need it.
+        if (!dscProfile._ui) {
+          dscProfile._ui = {};
+        }
+        const dscProfileUiModel: DSCProfileUiModel = {
+          associatedDSCS: dscsnames,
+          associatedDSCSPercentile: (dscsnames.length / this.naplesList.length)
+        };
+        dscProfile._ui = dscProfileUiModel;
       }
     }
   }
@@ -160,7 +168,7 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
     return this.constructor.name;
   }
 
-  deleteRecord(object: ClusterDSCProfile): Observable<{ body: IClusterDSCProfile |IApiStatus | Error, statusCode: number; }> {
+  deleteRecord(object: ClusterDSCProfile): Observable<{ body: IClusterDSCProfile | IApiStatus | Error, statusCode: number; }> {
     return this.clusterService.DeleteDSCProfile(object.meta.name);
   }
   generateDeleteConfirmMsg(object: ClusterDSCProfile): string {
@@ -171,11 +179,11 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
   }
 
   areSelectedRowsDeletable(): boolean {
-    if (! this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_update)) {
+    if (!this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_update)) {
       return false;
     }
     const selectedRows = this.getSelectedDataObjects();
-    if (selectedRows.length  === 0  ) {
+    if (selectedRows.length === 0) {
       return false;
     }
     return true;
@@ -187,13 +195,14 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
    */
   buildMoreDSCsTooltip(dscprofile: ClusterDSCProfile): string {
     const dscTips = [];
-    const dscs = dscprofile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS];
+    const uiData: DSCProfileUiModel = dscprofile._ui as DSCProfileUiModel;
+    const dscs = uiData.associatedDSCS;
     for (let i = 0; i < dscs.length; i++) {
       if (i >= this.maxDSCsPerRow) {
         const dsc = dscs[i];
-        if (i <=  2 * this.maxDSCsPerRow) {
-             // We don't want to lood too much records to tooltip. Just load another maxDSCsPerRow. Say maxDSCsPerRow=10, we list first 10 records in table. Tooltip text contains 11-20th records
-            dscTips.push(dsc.meta.name);
+        if (i <= 2 * this.maxDSCsPerRow) {
+          // We don't want to lood too much records to tooltip. Just load another maxDSCsPerRow. Say maxDSCsPerRow=10, we list first 10 records in table. Tooltip text contains 11-20th records
+          dscTips.push(dsc.meta.name);
         }
       }
     }
@@ -205,8 +214,9 @@ export class DscprofilesComponent  extends TablevieweditAbstract<IClusterDSCProf
    * @param dscProfile:ClusterDSCProfile
    */
   showDeleteButton(dscProfile: ClusterDSCProfile): boolean {
-      // If dscProfile has associated DSC, we can not delete this dscProfile
-      return (dscProfile._ui && dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS] &&  dscProfile._ui[DscprofilesComponent.DSCPROFILE_FIELD_DSCS].length > 0) ? false : true;
+    // If dscProfile has associated DSC, we can not delete this dscProfile
+    const uiData: DSCProfileUiModel = dscProfile._ui as DSCProfileUiModel;
+    return (uiData && uiData.associatedDSCS && uiData.associatedDSCS.length > 0) ? false : true;
   }
 
 }

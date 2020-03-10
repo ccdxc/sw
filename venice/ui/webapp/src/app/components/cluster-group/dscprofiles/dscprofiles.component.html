@@ -59,7 +59,7 @@
     </ng-container>
     <ng-container *ngSwitchCase="'spec.dscs'">
       <div *ngFor="let w of rowData._ui['associatedDSCS'] let i=index"
-           class="clusterdscprofile-dsc-div">
+           class="dscprofile-dsc-div">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.meta.name}}"
              [matTooltip]="'Jump to DSC page'">{{w?.spec.id}}</a>
@@ -69,6 +69,12 @@
         </ng-container>
       </div>
     </ng-container>
+    <ng-container *ngSwitchCase="'utilization'">
+      <div class="dscprofile-dsc-div-utilization"
+           [matTooltip]="'Assigned to ' + rowData._ui['associatedDSCS'].length + ' DSCs'">
+        {{rowData._ui['associatedDSCSPercentile'] | percent}} </div>
+    </ng-container>
+
     <ng-container *ngSwitchDefault>
       {{displayColumn(rowData, col)}}
     </ng-container>

@@ -208,43 +208,38 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     );
   }
 
+  /**
+   * This function find all NetworkInterfaces (NIs) belong to this.selectedObj (currrent DSC)
+   */
   getDSCNetworkInterfaces() {
     const list: NetworkNetworkInterface[] = [];
-    this.allNetworkInterfaces.forEach( ( networkNetworkInterface: NetworkNetworkInterface) => {
-      if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
-        list.push(networkNetworkInterface);
-      }
-    });
+    if (this.allNetworkInterfaces) {
+      this.allNetworkInterfaces.forEach((networkNetworkInterface: NetworkNetworkInterface) => {
+        if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
+          list.push(networkNetworkInterface);
+        }
+      });
+    }
     this.networkInterfaces = list;
   }
 
+  /**
+   * Retrieve network interfaces objects ( whole list of NIs)
+   */
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
-       // /*  This block is for test only
-       // https://10.30.2.173/configs/network/v1/networkinterfaces
-       // {"kind":"NetworkInterfaceList","api-version":"v1","list-meta":{},"items":[{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-lif2","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-lif2"}},{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-uplink128","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-uplink128"}}]}
-       // use aaaa.bbbb.0014-lif2 and  aaaa.bbbb.0014-uplink128 to find mapping between DSC and interface (LIF or uplink)
-       this.networkService.ListNetworkInterface().subscribe(
+      // https://10.30.2.173/configs/network/v1/networkinterfaces
+      // {"kind":"NetworkInterfaceList","api-version":"v1","list-meta":{},"items":[{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-lif2","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-lif2"}},{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-uplink128","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-uplink128"}}]}
+      // use aaaa.bbbb.0014-lif2 and  aaaa.bbbb.0014-uplink128 to find mapping between DSC and interface (LIF or uplink)
+      this.networkService.ListNetworkInterface().subscribe(
         (response) => {
-            console.log('get NetworkNetworkInterface list', response);
-            const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
-            this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
-            if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0 ) {
-               this.getDSCNetworkInterfaces();
-            }
+          const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
+          this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
+          if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0) {
+            this.getDSCNetworkInterfaces();  // find all NIs belong to current DSC
+          }
         }
       );
-      /*
-      this.networkInterfacesEventUtility = new HttpEventUtility<NetworkNetworkInterface>();
-      this.networkInterfaces = this.networkInterfacesEventUtility.array;
-      const subscription = this.networkService.WatchNetworkInterface().subscribe(
-        (response) => {
-          this.networkInterfacesEventUtility.processEvents(response);
-        },
-        this._controllerService.webSocketErrorHandler('Failed to get NetworkInterfaces')
-      );
-      this.subscriptions.push(subscription);
-      // */
     }
   }
 
@@ -319,7 +314,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           let hostNameInList: string;
           for (let j = 0; j < keys.length; j++) {
             const objItem = responselistObject[keys[j]];
-            if (objItem.uri === browserBrowseResponseList.responselist[i]['root-uri'] && objItem.kind === 'Host' ) {
+            if (objItem.uri === browserBrowseResponseList.responselist[i]['root-uri'] && objItem.kind === 'Host') {
               hostNameInList = objItem.meta.name;
               hostWorkloadMap[hostNameInList] = [];
             } else if (objItem.kind === 'Workload') {
@@ -399,7 +394,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         }
         if (this.selectedObj) {
           // When we first get the DSC object. We try to user browser API to populate DSC's workload array.
-          if ( !this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
+          if (!this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
             this.browseDSCWorkload();
           }
           this.getDSCNetworkInterfaces();

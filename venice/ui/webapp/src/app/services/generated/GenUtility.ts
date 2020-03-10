@@ -18,6 +18,18 @@ export interface ServerEvent<T> {
   connIsErrorState: boolean;
 }
 
+// VS-1306 experimental code. See if we can preserve data to re-run createDataCache() if ListXXXCache() fails
+export interface CreateCacheConfig {
+  constructor: any;
+  key: string;
+  listFn: () => Observable<VeniceResponse>;
+  watchFn: (query: any) => Observable<VeniceResponse>;
+}
+
+export interface CreateCacheConfigMap {
+  [key: string]: CreateCacheConfig;
+}
+
 /**
  * This class is the core component of invoking REST API.  All *.service.ts use this class.
  * (e.g. see src/app/services/generated/auth.service.ts this.serviceUtility = new GenServiceUtility(..) ...  this.serviceUtility.setId(this.getClassName());)
@@ -52,6 +64,8 @@ export class GenServiceUtility {
   logoutSubscription: Subscription = null;
 
   id: string = null;
+
+  _createCacheConfigMap: CreateCacheConfigMap;
 
   constructor(http: HttpClient, ajaxStartCallback, ajaxEndCallback, useWebSockets = true) {
     this._http = http;
@@ -250,7 +264,29 @@ export class GenServiceUtility {
    *
    *  See hosts.component.ts for example
    */
-  public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+  public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>): Observable<ServerEvent<any>> {
+    // preserve input parameter
+
+     // service (eg cluser-service) class may have multiple keys
+    if (!this._createCacheConfigMap) {
+      // case-1, this._createCacheConfigMap is not initialized
+      this._createCacheConfigMap = {
+        key: {
+          constructor: constructor,
+          key: key,
+          listFn: listFn,
+          watchFn: watchFn
+        }
+      };
+    } else {
+      // case-2, set the key entry
+      this._createCacheConfigMap[key] =  {
+        constructor: constructor,
+        key: key,
+        listFn: listFn,
+        watchFn: watchFn
+      };
+    }
     let observer = new ReplaySubject<ServerEvent<T>>(1);
     if (this.cacheMap[key] != null) {
       // Fetch same observable that we have given out
@@ -272,32 +308,32 @@ export class GenServiceUtility {
             object: item,
           };
         });
-        eventUtility.processEvents({events: events});
+        eventUtility.processEvents({ events: events });
       }
-        observer.next({
-          data: eventUtility.array,
-          events: [],
-          connIsErrorState: false,
-        });
-        const watchBody = {};
-        // comment out this block in order to have a  quick fix for https://pensando.atlassian.net/browse/VS-1296. WE MUST REVISIT THIS.
-        /* if (resVersion > 0) {
-          watchBody['O.resource-version'] = (resVersion + 1).toString();
-        } */
+      observer.next({
+        data: eventUtility.array,
+        events: [],
+        connIsErrorState: false,
+      });
+      const watchBody = {};
+      // comment out this block in order to have a  quick fix for https://pensando.atlassian.net/browse/VS-1296. WE MUST REVISIT THIS.
+      /* if (resVersion > 0) {
+        watchBody['O.resource-version'] = (resVersion + 1).toString();
+      } */
 
-        // TODO: the retry should be replaced with an observable retry
-        const watchMethod = () => {
-          const watchSub = watchFn(watchBody).subscribe(watchResp => {
-            const evts = (<any>watchResp).events;
-            eventUtility.processEvents({
-              events: evts,
-            });
-            observer.next({
-              data: eventUtility.array,
-              events: evts,
-              connIsErrorState: false,
-            });
-          },
+      // TODO: the retry should be replaced with an observable retry
+      const watchMethod = () => {
+        const watchSub = watchFn(watchBody).subscribe(watchResp => {
+          const evts = (<any>watchResp).events;
+          eventUtility.processEvents({
+            events: evts,
+          });
+          observer.next({
+            data: eventUtility.array,
+            events: evts,
+            connIsErrorState: false,
+          });
+        },
           (error) => {
             const controller = Utility.getInstance().getControllerService();
             controller.webSocketErrorHandler('Failed to get ' + key)(error);
@@ -310,34 +346,39 @@ export class GenServiceUtility {
               watchMethod();
             }, 5000);
           });
-          this.subscriptions.push(watchSub);
-        };
-        watchMethod();
+        this.subscriptions.push(watchSub);
+      };
+      watchMethod();
     },
-    (error) => {
-      const controller = Utility.getInstance().getControllerService();
-      controller.invokeRESTErrorToaster('Error', 'Failed to get ' + key);
-      observer.next({
-        data: eventUtility.array,
-        events: [],
-        connIsErrorState: true,
+      (error) => {
+        const controller = Utility.getInstance().getControllerService();
+        controller.invokeRESTErrorToaster('Error', 'Failed to get ' + key);
+        observer.next({
+          data: eventUtility.array,
+          events: [],
+          connIsErrorState: true,
+        });
+        setTimeout(() => {
+          // Rerun cache
+          this.createDataCache(constructor, key, listFn, watchFn);
+        }, 5000);
       });
-      setTimeout(() => {
-        // Rerun cache
-        this.createDataCache(constructor, key, listFn, watchFn);
-      }, 5000);
-    });
     this.subscriptions.push(sub);
     this.cacheMap[key] = observer;
+    return observer;
   }
 
   public handleListFromCache(key: string): Observable<ServerEvent<any>> {
-    return this.cacheMap[key];
+    if (this.cacheMap[key]) {
+      return this.cacheMap[key];
+    } else {
+      console.error('GenUtility.ts handleListFromCache() re-run createDataCache()');  // VS-1306.
+      return this.createDataCache(this._createCacheConfigMap.AUTH_KEY.constructor, this._createCacheConfigMap.key.key, this._createCacheConfigMap.key.listFn, this._createCacheConfigMap.key.watchFn);
+    }
   }
 
   /**
-   * If no watch connection exists for the given method, we create a new one and
-   * return the observable.
+   * If no watch connection exists for the given method, we create a new one and return the observable.
    * If one exists, we return the observable. Since we use a replay subject, and late
    * subscribers will receive all events that have happened in the connection.
    *
@@ -357,7 +398,7 @@ export class GenServiceUtility {
         const observer = new WebSocketSubject({
           url: url,
         });
-         // In this code block, we use a timer to invoke _observer.next() in order to keep UI page which subscribes to watch response active. (prevent browser closes ws due to ws idle)
+        // In this code block, we use a timer to invoke _observer.next() in order to keep UI page which subscribes to watch response active. (prevent browser closes ws due to ws idle)
         const pingServerTimer = setInterval(() => {
           const _observer = this.urlWsMap[url];
           if (_observer != null) {
@@ -365,9 +406,9 @@ export class GenServiceUtility {
               // for debug: // console.log('GenUtil.handleWatchRequest() ping server timer ' + this.id + ' ' + url);
               _observer.next(true);  // fire up observer to keep ws active
             } else {
-                // for debug // console.log('GenUtil.handleWatchRequest() ping server timer/logout ' + this.id + ' ' + url);
-                // if user is logout, we teardown everything.
-                this.teardown();
+              // for debug // console.log('GenUtil.handleWatchRequest() ping server timer/logout ' + this.id + ' ' + url);
+              // if user is logout, we teardown everything.
+              this.teardown();
             }
           } else {
             this.clearOneTimer(this.pingServerTimerMap[url]);
