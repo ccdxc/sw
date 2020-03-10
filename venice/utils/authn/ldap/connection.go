@@ -28,6 +28,12 @@ type connection interface {
 
 // getConnection is of type connectionGetter that uses LDAP library to get connection
 func getConnection(addr string, tlsOptions *auth.TLSOptions) (connection, error) {
+	addr, err := AddDefaultPort(addr) // ldap referral URL might not have port specified
+	if err != nil {
+		log.Errorf("Unable to add default port to ldap address: %v, err: %v", addr, err)
+		return nil, err
+	}
+
 	conn, err := ldap.Dial("tcp", addr)
 	if err != nil {
 		log.Errorf("Unable to establish ldap connection with [%q], Err: %v", addr, err)

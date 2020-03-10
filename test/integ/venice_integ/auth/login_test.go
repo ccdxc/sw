@@ -553,7 +553,6 @@ func TestLdapLogin(t *testing.T) {
 }
 
 func TestUsernameConflict(t *testing.T) {
-	t.Skip()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
@@ -640,7 +639,6 @@ func TestUsernameConflict(t *testing.T) {
 }
 
 func TestLdapChecks(t *testing.T) {
-	t.Skip()
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
 		Domains: []*auth.LdapDomain{
