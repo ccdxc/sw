@@ -5,22 +5,15 @@ meta:
     nics    : [ pensando ]
 
 testcases:
-    -   name    : Ping_Local_Workloads
-        testcase: testcases.networking.ping
+    -   name    : Workload_Connectivity
+        testcase: testcases.networking.connectivity
         stress  : True
-        args    :
-            type: local_only
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
             pktsize : [ 64, 128, 256, 512, 1024 ]
-
-    #-   name    : Ping_Remote_Workloads
-    #    testcase: testcases.networking.ping
-    #    stress  : True
-    #    args    :
-    #        type: remote_only
-    #    iterators :
-    #        type    : nested
-    #        ipaf    : [ ipv4 ]
-    #        pktsize : [ 64, 128, 256, 512, 1024 ]
+            workload_type : [ remote ]
+            # workload_type : [ local, remote ] # enable when L2L works
+            workload_scope : [ intra ]
+            # workload_scope : [ intra, inter ] # enable when inter subnet works

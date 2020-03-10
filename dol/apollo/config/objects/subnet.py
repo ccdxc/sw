@@ -258,15 +258,15 @@ class SubnetObject(base.ConfigObjectBase):
                         "rt-export": [
                             {
                                 "type": "type2",
-                                "admin-value": 101,
-                                "assigned-value": 101
+                                "admin-value": self.Vnid,
+                                "assigned-value": self.Vnid
                                 }
                             ],
                         "rt-import": [
                             {
                                 "type": "type2",
-                                "admin-value": 101,
-                                "assigned-value": 101
+                                "admin-value": self.Vnid,
+                                "assigned-value": self.Vnid
                                 }
                             ]
                         }

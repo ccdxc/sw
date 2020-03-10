@@ -14,6 +14,9 @@ WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
 WORKLOAD_PAIR_TYPE_IGW_ONLY      = 3
 
+WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
+WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
+
 class Endpoint:
     def __init__(self, vnic_inst, ip_addresses):
         self.name = vnic_inst.GID()
@@ -87,7 +90,7 @@ def __findWorkloadByVnic(vnic_inst):
             return wload
     return None
 
-def __getWorkloadPairsBy(wl_pair_type):
+def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA_SUBNET):
     wl_pairs = []
     naplesHosts = api.GetNaplesHostnames()
     vnics = []
@@ -97,6 +100,10 @@ def __getWorkloadPairsBy(wl_pair_type):
     for vnic1 in vnics:
         for vnic2 in vnics:
             if vnic1 == vnic2:
+                continue
+            if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTRA_SUBNET and not __vnics_in_same_segment(vnic1, vnic2):
+                continue
+            if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTER_SUBNET and __vnics_in_same_segment(vnic1, vnic2):
                 continue
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue
@@ -115,6 +122,9 @@ def __getWorkloadPairsBy(wl_pair_type):
 
 def GetPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_REMOTE_ONLY):
     return __getWorkloadPairsBy(wl_pair_type=wl_pair_type)
+
+def GetWorkloadPairs(wl_pair_type, wl_pair_scope):
+    return __getWorkloadPairsBy(wl_pair_type, wl_pair_scope)
 
 def __getObjects(objtype):
     objs = list()

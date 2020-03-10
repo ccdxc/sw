@@ -1,0 +1,30 @@
+#! /usr/bin/python3
+import iota.harness.api as api
+import iota.test.utils.traffic as traffic_utils
+
+def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
+    cmd_cookies = []
+    resp = None
+    if proto == 'icmp':
+        cmd_cookies, resp = traffic_utils.pingWorkloads(workload_pairs, af, pktsize)
+    else:
+        api.Logger.error("Proto %s unsupported" % proto)
+    return cmd_cookies, resp
+
+def VerifyConnectivityTest(proto, cmd_cookies, resp):
+    if proto == 'icmp':
+        if traffic_utils.verifyPing(cmd_cookies, resp) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
+# CRUD test cases can call this, since we want to execute CRUD and verify all combinations.
+# Having proto, pktsize as iterators in CRUD testcase, will make CRUD happen once per proto which is an overkill.
+def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list):
+    cmd_cookies = []
+    resp = None
+    for af in ipaf_list:
+        for proto in proto_list:
+            for pktsize in pktsize_list:
+                cmd_cookies, resp = TriggerConnectivityTest(workload_pairs, proto, af, pktsize)
+                return VerifyConnectivityTest(proto, cmd_cookies, resp)
+    return api.types.status.SUCCESS
