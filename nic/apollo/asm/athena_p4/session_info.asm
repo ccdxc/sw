@@ -75,11 +75,8 @@ session_info_h2s_l2_vnic:
 
     phvwr           p.control_metadata_allowed_flow_state_bitmap, d.session_info_d.h2s_allowed_flow_state_bitmap
 
-    phvwr           p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
+    phvwr.e         p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
     phvwr           p.control_metadata_redir_oport, TM_PORT_UPLINK_1
-
-
-    
 
 session_info_s2h:
     seq             c1, k.control_metadata_l2_vnic, TRUE
@@ -126,11 +123,8 @@ session_info_s2h_l2_vnic:
 
     phvwr           p.control_metadata_allowed_flow_state_bitmap, d.session_info_d.s2h_allowed_flow_state_bitmap
 
-    phvwr           p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
+    phvwr.e         p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
     phvwr           p.control_metadata_redir_oport, TM_PORT_UPLINK_0
-
-    nop.e
-    nop
 
 session_info_slow_path:
     phvwr.e         p.control_metadata_flow_miss, TRUE

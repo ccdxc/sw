@@ -3,10 +3,10 @@
 /*****************************************************************************/
 @pragma capi appdatafields index index_type
 @pragma capi hwfields_access_api
-action flow_hash(entry_valid, index, index_type, pad,
+action flow_hash(index, index_type, pad,
                 hash1, hint1, hash2, hint2, hash3, hint3,
                 hash4, hint4, hash5, hint5,
-                more_hashes, more_hints) {
+                more_hashes, more_hints, entry_valid) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);

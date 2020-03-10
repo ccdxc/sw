@@ -54,7 +54,7 @@ label_flow_miss:
 
 label_flow_hit:
     phvwr.e     p.ingress_recirc_header_dnat_done, TRUE
-    phvwr       p.key_metadata_dst, d.dnat_hash_d.addr
+    phvwr       p.key_metadata_src, d.dnat_hash_d.addr
 
 
 label_flow_hash_hit:

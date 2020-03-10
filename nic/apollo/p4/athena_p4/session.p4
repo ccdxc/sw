@@ -1,4 +1,4 @@
-action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
+action session_info(skip_flow_log, conntrack_id, timestamp, smac,
                     h2s_epoch_vnic_value, h2s_epoch_vnic_id, h2s_epoch_mapping_value, h2s_epoch_mapping_id,
                     h2s_throttle_bw1_id, h2s_throttle_bw2_id,
                     h2s_vnic_statistics_id, h2s_vnic_statistics_mask,
@@ -10,7 +10,8 @@ action session_info(valid_flag, skip_flow_log, conntrack_id, timestamp, smac,
                     s2h_vnic_statistics_id, s2h_vnic_statistics_mask,
                     s2h_vnic_histogram_packet_len_id, s2h_vnic_histogram_latency_id,
                     s2h_slow_path_tcp_flags_match, s2h_session_rewrite_id, s2h_egress_action,
-                    s2h_allowed_flow_state_bitmap
+                    s2h_allowed_flow_state_bitmap,
+                    valid_flag
                     ) {
     if (valid_flag == TRUE) {
         modify_field(control_metadata.skip_flow_log, skip_flow_log);
@@ -159,8 +160,8 @@ table session_info{
     size : SESSION_TABLE_SIZE;
 }
 
-#define SESSION_REWRITE_COMMON_FIELDS       valid_flag,                                 \
-                    strip_outer_encap_flag, strip_l2_header_flag, strip_vlan_tag_flag
+#define SESSION_REWRITE_COMMON_FIELDS       strip_outer_encap_flag, \
+                    strip_l2_header_flag, strip_vlan_tag_flag, valid_flag
 
 action session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS) {
     if (valid_flag == TRUE) {
@@ -210,8 +211,8 @@ action session_rewrite(SESSION_REWRITE_COMMON_FIELDS) {
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 }
 
-action session_rewrite_ipv4_snat(SESSION_REWRITE_COMMON_FIELDS,
-                    ipv4_addr_snat) {
+action session_rewrite_ipv4_snat(ipv4_addr_snat,
+                        SESSION_REWRITE_COMMON_FIELDS) {
     
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 
@@ -223,8 +224,8 @@ action session_rewrite_ipv4_snat(SESSION_REWRITE_COMMON_FIELDS,
     }
 }
 
-action session_rewrite_ipv4_dnat(SESSION_REWRITE_COMMON_FIELDS,
-                    ipv4_addr_dnat) {
+action session_rewrite_ipv4_dnat(ipv4_addr_dnat, 
+                        SESSION_REWRITE_COMMON_FIELDS) {
     
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 
@@ -236,8 +237,8 @@ action session_rewrite_ipv4_dnat(SESSION_REWRITE_COMMON_FIELDS,
     }
 }
 
-action session_rewrite_ipv4_pat(SESSION_REWRITE_COMMON_FIELDS,
-                    ipv4_addr_spat, ipv4_addr_dpat, l4_port_spat, l4_port_dpat) {
+action session_rewrite_ipv4_pat( ipv4_addr_spat, ipv4_addr_dpat, l4_port_spat,
+                                l4_port_dpat, SESSION_REWRITE_COMMON_FIELDS) {
     
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 
@@ -265,8 +266,8 @@ action session_rewrite_ipv4_pat(SESSION_REWRITE_COMMON_FIELDS,
     }
 }
 
-action session_rewrite_ipv6_snat(SESSION_REWRITE_COMMON_FIELDS,
-                    ipv6_addr_snat) {
+action session_rewrite_ipv6_snat(ipv6_addr_snat,
+                    SESSION_REWRITE_COMMON_FIELDS) {
     
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 
@@ -278,8 +279,8 @@ action session_rewrite_ipv6_snat(SESSION_REWRITE_COMMON_FIELDS,
     }
 }
 
-action session_rewrite_ipv6_dnat(SESSION_REWRITE_COMMON_FIELDS,
-                    ipv6_addr_dnat) {
+action session_rewrite_ipv6_dnat(ipv6_addr_dnat, 
+                    SESSION_REWRITE_COMMON_FIELDS) {
     
     session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS);
 
@@ -310,8 +311,8 @@ table session_rewrite {
     }
     size : SESSION_TABLE_SIZE;
 }
-#define SESSION_REWRITE_ENCAP_COMMON_FIELDS       valid_flag,                   \
-                    add_vlan_tag_flag, dmac, smac, vlan
+#define SESSION_REWRITE_ENCAP_COMMON_FIELDS add_vlan_tag_flag, dmac, smac, \
+                                            vlan, valid_flag
 
 action session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
     if (valid_flag == TRUE) {
@@ -340,10 +341,11 @@ action session_rewrite_encap_l2(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
     session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS);
 }
 
-action session_rewrite_encap_mplsoudp(SESSION_REWRITE_ENCAP_COMMON_FIELDS,      \
+action session_rewrite_encap_mplsoudp(
                     ipv4_sa, ipv4_da,                                           \
                     udp_sport, udp_dport,                                       \
-                    mpls_label1, mpls_label2, mpls_label3) {
+                    mpls_label1, mpls_label2, mpls_label3,                      \
+                    SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
     session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS);
 
     modify_field(ipv4_0.dstAddr, ipv4_da);
@@ -363,13 +365,13 @@ action session_rewrite_encap_mplsoudp(SESSION_REWRITE_ENCAP_COMMON_FIELDS,      
     add_header(mpls_label3_0);
 }
 
-action session_rewrite_encap_geneve(SESSION_REWRITE_ENCAP_COMMON_FIELDS,        \
+action session_rewrite_encap_geneve(
                     ipv4_sa, ipv4_da,                                           \
                     udp_sport, udp_dport,                                       \
                     vni, source_slot_id, destination_slot_id,                   \
                     sg_id1, sg_id2, sg_id3, sg_id4, sg_id5, sg_id6,             \
-                    originator_physical_ip                                      \
-                    ) {
+                    originator_physical_ip,                                     \
+                    SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
     session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS);
 
     modify_field(ipv4_0.dstAddr, ipv4_da);

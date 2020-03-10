@@ -33,7 +33,8 @@
 #include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_info.h"
+#include "nic/apollo/api/include/athena//pds_flow_session_rewrite.h"
 
 namespace core {
 // number of trace files to keep
@@ -128,13 +129,6 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 }
 } // namespace core
 
-#if 0
-using sdk::table::sdk_table_api_params_t;
-using sdk::table::sdk_table_api_stats_t;
-using sdk::table::sdk_table_stats_t;
-using sdk::table::sdk_table_factory_params_t;
-#endif
-
 sdk_ret_t
 flow_table_init(void)
 {
@@ -195,6 +189,7 @@ sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_
 uint8_t     g_h2s_port = TM_PORT_UPLINK_0;
 uint8_t     g_s2h_port = TM_PORT_UPLINK_1;
 uint32_t    g_session_index = 1;
+uint32_t    g_session_rewrite_index = 1;
 
 /*
  * Host to Switch: Flow-miss
@@ -251,140 +246,147 @@ uint8_t g_snd_pkt_h2s[] = {
  */
 uint32_t    g_h2s_vlan = 0x0001;
 
-#if 0
 sdk_ret_t
-create_h2s_v4_session_info(uint32_t session_index)
-{
-    p4pd_error_t                p4pd_ret;
-    uint32_t                    tableid = P4TBL_ID_SESSION_INFO;
-    session_info_actiondata_t   actiondata;
-
-    memset(&actiondata, 0, sizeof(session_info_actiondata_t));
-    actiondata.action_id = SESSION_INFO_SESSION_INFO_ID;
-
-    actiondata.action_u.session_info_session_info.valid_flag = 0x01;
-    actiondata.action_u.session_info_session_info.pop_hdr_flag = 0x01;
-
-    p4pd_ret = p4pd_global_entry_write(
-                        tableid, session_index, NULL, NULL, &actiondata);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("Failed to create session info index %u",
-                      session_index);
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-create_h2s_v4_session_info_rewrite(uint32_t session_index,
-        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
-        uint16_t substrate_vlan, uint32_t substrate_sip,
-        uint32_t substrate_dip, uint8_t substrate_ip_ttl,
-        uint16_t substrate_udp_sport, uint16_t substrate_udp_dport,
-        uint32_t mpls1_label, uint32_t mpls2_label)
-{
-    p4pd_error_t                        p4pd_ret;
-    uint32_t                            tableid = P4TBL_ID_SESSION_INFO_REWRITE;
-    session_info_rewrite_actiondata_t   actiondata;
-
-    memset(&actiondata, 0, sizeof(session_info_rewrite_actiondata_t));
-    actiondata.action_id = SESSION_INFO_REWRITE_SESSION_INFO_REWRITE_ID;
-
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.valid_flag = 0x01;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.user_pkt_rewrite_type = L3REWRITE_NONE;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.encap_type = REWRITE_ENCAP_MPLSOUDP;
-    sdk::lib::memrev(actiondata.action_u.session_info_rewrite_session_info_rewrite.dmac,
-            (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(actiondata.action_u.session_info_rewrite_session_info_rewrite.smac,
-            (uint8_t*)substrate_smac, sizeof(mac_addr_t));
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.vlan = substrate_vlan;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.ip_ttl = substrate_ip_ttl;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.ip_saddr = substrate_sip;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.ip_daddr = substrate_dip;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.udp_sport = substrate_udp_sport;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.udp_dport = substrate_udp_dport;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.mpls1_label = mpls1_label;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.mpls2_label = mpls2_label;
-
-    p4pd_ret = p4pd_global_entry_write(
-                        tableid, session_index, NULL, NULL, &actiondata);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("Failed to create session info rewrite index %u",
-                      session_index);
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-#else
-
-#if 0
-sdk_ret_t
-create_v4_session_info_h2s(uint32_t session_index,
-#endif
-sdk_ret_t
-create_v4_session_info_all(uint32_t session_index,
-                    mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac, uint16_t substrate_vlan,
-                    uint32_t substrate_sip, uint32_t substrate_dip,
-                    uint16_t substrate_udp_sport, uint16_t substrate_udp_dport,
-                    uint32_t mpls1_label, uint32_t mpls2_label,
-                    mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan)
-
-{
-    sdk_ret_t                       ret = SDK_RET_OK;
-    pds_flow_session_spec_t         spec;
+create_s2h_v4_session_rewrite(uint32_t session_rewrite_id,
+        mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
-    spec.key.session_info_id = session_index;
-    spec.key.direction = (HOST_TO_SWITCH | SWITCH_TO_HOST);
+    spec.key.session_rewrite_id = session_rewrite_id;
 
-    /* Host to Switch */
-    spec.data.host_to_switch_flow_info.rewrite_info.strip_l2_header = TRUE;
-    spec.data.host_to_switch_flow_info.rewrite_info.strip_vlan_tag = TRUE;
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
 
-    spec.data.host_to_switch_flow_info.rewrite_info.user_packet_rewrite_type = REWRITE_TYPE_NONE;
+    spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
 
-    spec.data.host_to_switch_flow_info.rewrite_info.encap_type = ENCAP_TYPE_MPLSOUDP;
+    spec.data.encap_type = ENCAP_TYPE_L2;
+    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
+    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
-    sdk::lib::memrev(spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.dmac,
-            (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.smac,
-            (uint8_t*)substrate_smac, sizeof(mac_addr_t));
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite s2h info : %u\n", ret);
+    }
 
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
+    return ret;
+}
 
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_dport = substrate_udp_dport;
+sdk_ret_t
+create_h2s_v4_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+        uint32_t mpls1_label, uint32_t mpls2_label)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
 
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls1_label = mpls1_label;
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls2_label = mpls2_label;
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
 
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
 
-    /* Switch to Host */
-    spec.data.switch_to_host_flow_info.rewrite_info.strip_encap_header = TRUE;
+    spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
 
-    spec.data.switch_to_host_flow_info.rewrite_info.user_packet_rewrite_type = REWRITE_TYPE_NONE;
+    spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
 
-    spec.data.switch_to_host_flow_info.rewrite_info.encap_type = ENCAP_TYPE_L2;
+    spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
-    sdk::lib::memrev(spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.dmac,
-            (uint8_t*)ep_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.smac,
-            (uint8_t*)ep_smac, sizeof(mac_addr_t));
-    spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.insert_vlan_tag = TRUE;
-    spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.vlan_id = vnic_vlan;
+    spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
+    spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+create_v4_session_info_all(uint32_t session_id, uint32_t conntrack_id,
+                uint8_t skip_flow_log, mac_addr_t *host_mac,
+                uint16_t h2s_epoch_vnic, uint32_t h2s_epoch_vnic_id,
+                uint16_t h2s_epoch_mapping, uint32_t h2s_epoch_mapping_id,
+                uint16_t h2s_policer_bw1_id, uint16_t h2s_policer_bw2_id,
+                uint16_t h2s_vnic_stats_id, uint8_t *h2s_vnic_stats_mask,
+                uint16_t h2s_vnic_histogram_latency_id, uint16_t h2s_vnic_histogram_packet_len_id,
+                uint8_t h2s_tcp_flags_bitmap,
+                uint32_t h2s_session_rewrite_id,
+                uint16_t h2s_allowed_flow_state_bitmask,
+                pds_egress_action_t h2s_egress_action,
+
+                uint16_t s2h_epoch_vnic, uint32_t s2h_epoch_vnic_id,
+                uint16_t s2h_epoch_mapping, uint32_t s2h_epoch_mapping_id,
+                uint16_t s2h_policer_bw1_id, uint16_t s2h_policer_bw2_id,
+                uint16_t s2h_vnic_stats_id, uint8_t *s2h_vnic_stats_mask,
+                uint16_t s2h_vnic_histogram_latency_id, uint16_t s2h_vnic_histogram_packet_len_id,
+                uint8_t s2h_tcp_flags_bitmap,
+                uint32_t s2h_session_rewrite_id,
+                uint16_t s2h_allowed_flow_state_bitmask,
+                pds_egress_action_t s2h_egress_action)
+{
+    sdk_ret_t                               ret = SDK_RET_OK;
+    pds_flow_session_spec_t                 spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_info_id = session_id;
+    spec.key.direction = (SWITCH_TO_HOST | HOST_TO_SWITCH);
+
+    spec.data.conntrack_id = conntrack_id;
+    spec.data.skip_flow_log = skip_flow_log;
+    sdk::lib::memrev(spec.data.host_mac, (uint8_t*)host_mac, sizeof(mac_addr_t));
+
+    /* Host-to-switch */
+    spec.data.host_to_switch_flow_info.epoch_vnic = h2s_epoch_vnic;
+    spec.data.host_to_switch_flow_info.epoch_vnic_id = h2s_epoch_vnic_id;
+    spec.data.host_to_switch_flow_info.epoch_mapping = h2s_epoch_mapping;
+    spec.data.host_to_switch_flow_info.policer_bw1_id = h2s_policer_bw1_id;
+    spec.data.host_to_switch_flow_info.policer_bw2_id = h2s_policer_bw2_id;
+    spec.data.host_to_switch_flow_info.vnic_stats_id = h2s_vnic_stats_id;
+    sdk::lib::memrev(spec.data.host_to_switch_flow_info.vnic_stats_mask,
+            h2s_vnic_stats_mask, PDS_FLOW_STATS_MASK_LEN);
+    spec.data.host_to_switch_flow_info.vnic_histogram_latency_id = h2s_vnic_histogram_latency_id;
+    spec.data.host_to_switch_flow_info.vnic_histogram_packet_len_id = h2s_vnic_histogram_packet_len_id;
+    spec.data.host_to_switch_flow_info.tcp_flags_bitmap = h2s_tcp_flags_bitmap;
+    spec.data.host_to_switch_flow_info.rewrite_id = h2s_session_rewrite_id;
+    spec.data.host_to_switch_flow_info.allowed_flow_state_bitmask = h2s_allowed_flow_state_bitmask;
+    spec.data.host_to_switch_flow_info.egress_action = h2s_egress_action;
+
+    /* Switch-to-host */
+    spec.data.switch_to_host_flow_info.epoch_vnic = s2h_epoch_vnic;
+    spec.data.switch_to_host_flow_info.epoch_vnic_id = s2h_epoch_vnic_id;
+    spec.data.switch_to_host_flow_info.epoch_mapping = s2h_epoch_mapping;
+    spec.data.switch_to_host_flow_info.policer_bw1_id = s2h_policer_bw1_id;
+    spec.data.switch_to_host_flow_info.policer_bw2_id = s2h_policer_bw2_id;
+    spec.data.switch_to_host_flow_info.vnic_stats_id = s2h_vnic_stats_id;
+    sdk::lib::memrev(spec.data.switch_to_host_flow_info.vnic_stats_mask,
+            s2h_vnic_stats_mask, PDS_FLOW_STATS_MASK_LEN);
+    spec.data.switch_to_host_flow_info.vnic_histogram_latency_id = s2h_vnic_histogram_latency_id;
+    spec.data.switch_to_host_flow_info.vnic_histogram_packet_len_id = s2h_vnic_histogram_packet_len_id;
+    spec.data.switch_to_host_flow_info.tcp_flags_bitmap = s2h_tcp_flags_bitmap;
+    spec.data.switch_to_host_flow_info.rewrite_id = s2h_session_rewrite_id;
+    spec.data.switch_to_host_flow_info.allowed_flow_state_bitmask = s2h_allowed_flow_state_bitmask;
+    spec.data.switch_to_host_flow_info.egress_action = s2h_egress_action;
 
     ret = pds_flow_session_info_create(&spec);
     if (ret != SDK_RET_OK) {
-        printf("Failed to program session info : %u\n", ret);
+        printf("Failed to program session s2h info : %u\n", ret);
     }
     return ret;
 }
-#endif
-
+                            
 sdk_ret_t
 create_v4_flow (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
         uint8_t proto, uint16_t sport, uint16_t dport,
@@ -475,63 +477,6 @@ uint8_t g_snd_pkt_s2h[] = {
 uint32_t    g_s2h_mpls1_label = 0x12345;
 uint32_t    g_s2h_mpls2_label = 0x6789a;
 
-#if 0
-sdk_ret_t
-create_s2h_v4_session_info(uint32_t session_index, uint32_t substrate_sip)
-{
-    p4pd_error_t                p4pd_ret;
-    uint32_t                    tableid = P4TBL_ID_SESSION_INFO;
-    session_info_actiondata_t   actiondata;
-
-    memset(&actiondata, 0, sizeof(session_info_actiondata_t));
-    actiondata.action_id = SESSION_INFO_SESSION_INFO_ID;
-
-    actiondata.action_u.session_info_session_info.valid_flag = 0x01;
-    actiondata.action_u.session_info_session_info.pop_hdr_flag = 0x01;
-    actiondata.action_u.session_info_session_info.config_substrate_src_ip = substrate_sip;
-
-    p4pd_ret = p4pd_global_entry_write(
-                        tableid, session_index, NULL, NULL, &actiondata);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("Failed to create session info index %u",
-                      session_index);
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-create_s2h_v4_session_info_rewrite(uint32_t session_index,
-        mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan)
-{
-    p4pd_error_t                        p4pd_ret;
-    uint32_t                            tableid = P4TBL_ID_SESSION_INFO_REWRITE;
-    session_info_rewrite_actiondata_t   actiondata;
-
-    memset(&actiondata, 0, sizeof(session_info_rewrite_actiondata_t));
-    actiondata.action_id = SESSION_INFO_REWRITE_SESSION_INFO_REWRITE_ID;
-
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.valid_flag = 0x01;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.user_pkt_rewrite_type = L3REWRITE_NONE;
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.encap_type = REWRITE_ENCAP_L2;
-    sdk::lib::memrev(actiondata.action_u.session_info_rewrite_session_info_rewrite.dmac,
-            (uint8_t*)ep_dmac, sizeof(mac_addr_t));
-    sdk::lib::memrev(actiondata.action_u.session_info_rewrite_session_info_rewrite.smac,
-            (uint8_t*)ep_smac, sizeof(mac_addr_t));
-    actiondata.action_u.session_info_rewrite_session_info_rewrite.vlan = vnic_vlan;
-
-    p4pd_ret = p4pd_global_entry_write(
-                        tableid, session_index, NULL, NULL, &actiondata);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("Failed to create session info rewrite index %u",
-                      session_index);
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
-}
-
-#endif
-
 /*
  * Session info rewrite
  */
@@ -564,6 +509,10 @@ sdk_ret_t
 setup_flow(void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
+    mac_addr_t      host_mac;
+    uint8_t         vnic_stats_mask[PDS_FLOW_STATS_MASK_LEN];
+    uint32_t        s2h_session_rewrite_id;
+    uint32_t        h2s_session_rewrite_id;
 
     // Setup VNIC Mappings
     ret = vlan_to_vnic_map(g_h2s_vlan, g_h2s_vnic_id);
@@ -577,13 +526,43 @@ setup_flow(void)
         return ret;
     }
 
+    s2h_session_rewrite_id = g_session_rewrite_index++;
 
-    ret = create_v4_session_info_all(g_session_index,
-                    &substrate_dmac, &substrate_smac, substrate_vlan,
-                    substrate_sip, substrate_dip,
-                    substrate_udp_sport, substrate_udp_dport,
-                    mpls1_label, mpls2_label,
+    ret = create_s2h_v4_session_rewrite(s2h_session_rewrite_id,
                     (mac_addr_t*)ep_dmac, (mac_addr_t*)ep_smac, vnic_vlan);
+
+    h2s_session_rewrite_id = g_session_rewrite_index++;
+
+    ret = create_h2s_v4_session_rewrite_mplsoudp(h2s_session_rewrite_id,
+        &substrate_dmac, &substrate_smac,
+        substrate_vlan,
+        substrate_sip, substrate_dip,
+        mpls1_label, mpls2_label);
+
+    memset(&host_mac, 0, sizeof(host_mac));
+    ret = create_v4_session_info_all(g_session_index, /*conntrack_id*/0,
+                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
+
+                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
+                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
+                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
+                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
+                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
+                /*h2s_tcp_flags_bitmap*/0,
+                /*h2s_session_rewrite_id*/ h2s_session_rewrite_id,
+                /*h2s_allowed_flow_state_bitmask*/0,
+                /*h2s_egress_action*/EGRESS_ACTION_NONE,
+
+                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
+                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
+                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
+                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
+                /*s2h_tcp_flags_bitmap*/0,
+                /*s2h_session_rewrite_id*/ s2h_session_rewrite_id,
+                /*s2h_allowed_flow_state_bitmask*/0,
+                /*s2h_egress_action*/EGRESS_ACTION_NONE
+                );
 
     // Setup Normalized Flow entry
     ret = create_v4_flow(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
@@ -730,7 +709,7 @@ main (int argc, char **argv)
 
     // wait forver
     printf("Initialization done ...\n");
-    send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
+    //send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
     send_packet("h2s pkt", g_snd_pkt_h2s, sizeof(g_snd_pkt_h2s), g_h2s_port, NULL, 0, 0);
 
     send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);

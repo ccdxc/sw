@@ -25,7 +25,8 @@ extern "C" {
 #define PDS_FLOW_SESSION_INFO_ID_MAX    (4 * 1024 * 1024)
 
 // Statistics mask length
-#define PDS_FLOW_STATS_MASK_LEN         (104 / 8)    ///< 104 Counters
+//#define PDS_FLOW_STATS_MASK_LEN         (104 / 8)    ///< 104 Counters
+#define PDS_FLOW_STATS_MASK_LEN         (32 / 8)    ///< truncated bitmap for now
 
 // Flow direction bitmask
 #define HOST_TO_SWITCH    0x1    ///< Host to Switch

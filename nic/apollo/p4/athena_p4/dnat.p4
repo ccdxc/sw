@@ -11,7 +11,7 @@ action dnat_hash(entry_valid, pad, addr_type, addr,
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.dnat_done, TRUE);
-        modify_field(key_metadata.dst, addr);
+        modify_field(key_metadata.src, addr);
 
 
         // if hardware register indicates miss, compare hashes with r1

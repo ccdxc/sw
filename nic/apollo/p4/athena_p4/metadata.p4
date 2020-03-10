@@ -142,7 +142,7 @@ header_type scratch_metadata_t {
         mac                 : 48;
         ipv4                : 32;
 
-        flow_data_pad       : 5;
+        flow_data_pad       : 6;
 
         // Session info
         timestamp           : 18;
