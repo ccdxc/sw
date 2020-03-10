@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
@@ -405,7 +405,8 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		eviRtReq := &msTypes.EvpnEviRtDeleteRequest{}
 		for _, rt := range curNw.Spec.RouteImportExport.ExportRTs {
 			key := &msTypes.EvpnEviRtKey{
-				RT: utils.RTToBytes(rt),
+				SubnetId: uid.Bytes(),
+				RT:       utils.RTToBytes(rt),
 			}
 			evirt := msTypes.EvpnEviRtKeyHandle{
 				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
@@ -415,7 +416,8 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		}
 		for _, rt := range curNw.Spec.RouteImportExport.ImportRTs {
 			key := &msTypes.EvpnEviRtKey{
-				RT: utils.RTToBytes(rt),
+				SubnetId: uid.Bytes(),
+				RT:       utils.RTToBytes(rt),
 			}
 			evirt := msTypes.EvpnEviRtKeyHandle{
 				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
