@@ -1,8 +1,8 @@
 /******************************************************************************/
 /* LIF info                                                                   */
 /******************************************************************************/
-action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, learn_enabled,
-                pinned_nexthop_type, pinned_nexthop_id) {
+action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, vrmac,
+                learn_enabled, pinned_nexthop_type, pinned_nexthop_id) {
     modify_field(control_metadata.rx_packet, direction);
     modify_field(p4i_i2e.rx_packet, direction);
     modify_field(control_metadata.lif_type, lif_type);
@@ -17,6 +17,7 @@ action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, learn_enabled,
     modify_field(p4i_i2e.nexthop_type, pinned_nexthop_type);
     modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
     modify_field(control_metadata.learn_enabled, learn_enabled);
+    modify_field(vnic_metadata.vrmac, vrmac);
 }
 
 @pragma stage 0
@@ -49,15 +50,17 @@ action vlan_info(vnic_id, bd_id, vpc_id, rmac) {
         modify_field(vnic_metadata.vnic_id, vnic_id);
     }
     if (bd_id != 0) {
+        modify_field(scratch_metadata.mac, rmac);
         modify_field(vnic_metadata.bd_id, bd_id);
         if (arm_to_p4i.flow_lkp_id_override == FALSE) {
             modify_field(key_metadata.flow_lkp_id, bd_id);
         }
+    } else {
+        modify_field(scratch_metadata.mac, vnic_metadata.vrmac);
     }
     if (vpc_id != 0) {
         modify_field(vnic_metadata.vpc_id, vpc_id);
     }
-    modify_field(scratch_metadata.mac, rmac);
 
     // keys for local mapping lookup
     if (control_metadata.rx_packet == FALSE) {

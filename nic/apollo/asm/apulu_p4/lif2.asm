@@ -21,6 +21,7 @@ lif_info:
     seq             c1, k.arm_to_p4i_flow_lkp_id_override, FALSE
     phvwr.c1        p.key_metadata_flow_lkp_id, d.lif_info_d.bd_id
     phvwr.!c1       p.key_metadata_flow_lkp_id, k.arm_to_p4i_flow_lkp_id
+    phvwr           p.vnic_metadata_vrmac, d.lif_info_d.vrmac
     phvwr.e         p.p4i_i2e_nexthop_type, d.lif_info_d.pinned_nexthop_type
     phvwr.f         p.p4i_i2e_nexthop_id, d.lif_info_d.pinned_nexthop_id
 

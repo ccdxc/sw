@@ -37,6 +37,7 @@ header_type vnic_metadata_t {
         egress_bd_id    : 16;
         vpc_id          : 16;
         binding_id      : 16;
+        vrmac           : 48;
     }
 }
 

@@ -14,6 +14,7 @@ vlan_info:
     phvwr.c1        p.vnic_metadata_vnic_id, d.vlan_info_d.vnic_id
     sne             c1, d.vlan_info_d.bd_id, r0
     phvwr.c1        p.vnic_metadata_bd_id, d.vlan_info_d.bd_id
+    cmov            r5, c1, d.vlan_info_d.rmac, k.vnic_metadata_vrmac
     cmov            r6, c1, d.vlan_info_d.bd_id, k.vnic_metadata_bd_id
     seq.c1          c1, k.arm_to_p4i_flow_lkp_id_override, FALSE
     phvwr.c1        p.key_metadata_flow_lkp_id, d.vlan_info_d.bd_id
@@ -51,7 +52,7 @@ vlan_local_mapping_key_rx_non_ipv4:
 
 vlan_mapping_key:
     seq             c1, k.control_metadata_l2_enabled, FALSE
-    seq.c7          c7, d.vlan_info_d.rmac, k.ethernet_1_dstAddr
+    seq.c7          c7, r5, k.ethernet_1_dstAddr
     orcf            c1, [c7]
     bcf             [!c1], vlan_mapping_key_non_ipv4
     phvwr.c1        p.p4i_i2e_mapping_lkp_type, KEY_TYPE_IPV4

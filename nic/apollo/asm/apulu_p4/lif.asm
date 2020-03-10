@@ -18,6 +18,7 @@ lif_info:
     phvwr           p.{vnic_metadata_bd_id,vnic_metadata_vpc_id}, \
                         d.{lif_info_d.bd_id,lif_info_d.vpc_id}
     phvwr           p.key_metadata_flow_lkp_id, d.lif_info_d.bd_id
+    phvwr           p.vnic_metadata_vrmac, d.lif_info_d.vrmac
     phvwr.e         p.p4i_i2e_nexthop_type, d.lif_info_d.pinned_nexthop_type
     phvwr.f         p.p4i_i2e_nexthop_id, d.lif_info_d.pinned_nexthop_id
 
