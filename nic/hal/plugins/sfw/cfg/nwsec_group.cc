@@ -2024,7 +2024,7 @@ securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key, session::Fl
             acl::ref_t *rc;
             rc = get_rule_data((acl_rule_t *) rule);
             nwsec_rule = (hal::nwsec_rule_t *)RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
-            HAL_TRACE_DEBUG("Rule id : {} rule action: {} session action: {}", nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, action);
+            //HAL_TRACE_DEBUG("Rule id : {} rule action: {} session action: {}", nwsec_rule->rule_id, nwsec_rule->fw_rule_action.sec_action, action);
             if (nwsec_rule->fw_rule_action.sec_action != (nwsec::SecurityAction)action) {
                 if (acl_ctx) {
                     acl_deref(acl_ctx);
