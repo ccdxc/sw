@@ -432,6 +432,13 @@ bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data)
     return false;
 }
 
+// API to verify whether BGP rm ent can be displayed to user or not
+bool
+bgp_rm_ent_pre_fill_get (amb_bgp_rm_ent *data)
+{
+    return (data->admin_status == AMB_BGP_ADMIN_STATUS_UP);
+}
+
 NBB_VOID
 bgp_peer_afi_safi_pre_get(BGPPeerAfSpec &req,
                           BGPPeerAfGetResponse* resp,

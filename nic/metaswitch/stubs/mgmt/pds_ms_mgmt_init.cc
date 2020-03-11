@@ -123,6 +123,7 @@ nbase_init ()
     pds_ms_reg_pre_get_bgppeerafspec_amb_bgp_peer_afi_safi(bgp_peer_afi_safi_pre_get);
     pds_ms_reg_pre_fill_get_bgppeerafspec_amb_bgp_peer_afi_safi(
         bgp_peer_afi_safi_pre_fill_get);
+    pds_ms_reg_pre_fill_get_bgpspec_amb_bgp_rm_ent(bgp_rm_ent_pre_fill_get);
     pds_ms_reg_pre_set_liminterfaceaddrspec_amb_lim_l3_if_addr(lim_l3_if_addr_pre_set);
     pds_ms_reg_pre_set_cpstaticroutespec_amb_cipr_rtm_static_rt(cp_route_pre_set);
 

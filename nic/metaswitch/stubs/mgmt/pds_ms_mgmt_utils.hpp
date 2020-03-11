@@ -197,6 +197,7 @@ NBB_VOID bgp_peer_pre_get(BGPPeerSpec &req, BGPPeerGetResponse* resp, NBB_VOID* 
 NBB_VOID bgp_peer_afi_safi_pre_get(BGPPeerAfSpec &req,
                                    BGPPeerAfGetResponse* resp,
                                    NBB_VOID* kh);
+bool bgp_rm_ent_pre_fill_get (amb_bgp_rm_ent *data);
 bool bgp_peer_afi_safi_pre_fill_get (amb_bgp_peer_afi_safi *data);
 NBB_VOID bgp_peer_status_get_fill_func (BGPPeerSpec& req,
                                         NBB_ULONG*          oid);
