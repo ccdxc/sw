@@ -1009,8 +1009,7 @@ func TestPasswordReset(t *testing.T) {
 }
 
 func TestAuthOrder(t *testing.T) {
-	t.Skip()
-	radiusConfig := getACSConfig()
+	radiusConfig := getFreeRadiusConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
@@ -1020,7 +1019,7 @@ func TestAuthOrder(t *testing.T) {
 		Domains: []*auth.RadiusDomain{
 			{
 				Servers: []*auth.RadiusServer{{
-					Url:        "10.11.100.101:1812",
+					Url:        radiusConfig.URL,
 					Secret:     "incorrect",
 					AuthMethod: auth.Radius_PAP.String(),
 				}},
