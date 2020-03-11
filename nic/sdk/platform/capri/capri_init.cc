@@ -150,7 +150,10 @@ capri_asm_init (capri_cfg_t *cfg)
        }
    }
 
-    sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
+    // Taking too much time
+    if (unlikely(cfg->platform == platform_type_t::PLATFORM_TYPE_SIM)) {
+        sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
+    }
 
    return SDK_RET_OK;
 }

@@ -150,10 +150,10 @@ param_check(p4_param_info_t *symbols, int num_symbols, std::string param, uint64
  */
 sdk_ret_t
 p4_load_mpu_programs (const char *handle,
-                         char *pathname, uint64_t hbm_base_addr,
-                         p4_param_info_t *prog_param_info,
-                         int num_prog_params, mpu_pgm_sort_t sort_func,
-                         bool is_slave)
+                      char *pathname, uint64_t hbm_base_addr,
+                      p4_param_info_t *prog_param_info,
+                      int num_prog_params, mpu_pgm_sort_t sort_func,
+                      bool is_slave)
 {
     int i, j;
     p4_loader_ctx_t *ctx;
@@ -162,6 +162,7 @@ p4_load_mpu_programs (const char *handle,
     uint64_t val;
     sdk_ret_t rv;
     MpuSymbolTable global_labels;
+    sdk::platform::utils::program_info  *prog_info;
 
     /* ISA library initialization */
     if (libcapisa_init() < 0) {
@@ -181,6 +182,8 @@ p4_load_mpu_programs (const char *handle,
         SDK_TRACE_ERR("Programs already loaded!");
         SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
+
+    prog_info = program_info::factory();
 
     /* Allocate context */
     ctx = new p4_loader_ctx_t;
@@ -223,6 +226,11 @@ p4_load_mpu_programs (const char *handle,
         /* Save the base address and size */
         program_info[i].base_addr = ctx->prog_hbm_base_addr;
         program_info[i].size = program_info[i].prog.text.size()*sizeof(uint64_t);
+
+        prog_info->add_program(program_info[i].name, program_info[i].base_addr,
+                               (((program_info[i].base_addr + program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1));
+
+
         /* Dump program specific info and the symbol table */
         //SDK_TRACE_DEBUG("MPU Program %s loaded, valid %d, "
                         //"complete %d, number of symbols %lu, "
@@ -276,6 +284,9 @@ p4_load_mpu_programs (const char *handle,
                     program_info[i].labels.add(
                              MpuSymbol(symbol->name.c_str(),
                                        symbol->type, symbol->val));
+
+                prog_info->add_symbol(program_info[i].name, symbol->name, symbol->val);
+
                 /* Symbol type not known */
                 } else {
                     /* Other symbol types are not supported at the moment*/
@@ -558,7 +569,10 @@ p4_dump_program_info (const char *cfg_path)
     pt::ptree                           root, programs, program;
     MpuSymbol                           *symbol;
     char                                numbuf[32];
-    sdk::platform::utils::program_info  *prog_info;
+
+    if (!loader_instances.size()) {
+        return SDK_RET_ERR;
+    }
 
     if (!cfg_path) {
         // write in the current dir
@@ -586,17 +600,12 @@ p4_dump_program_info (const char *cfg_path)
         prog_info_file = gen_dir + std::string("/") + std::string(LDD_INFO_FILE_NAME);
     }
 
-    prog_info = program_info::factory();
-
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
             SDK_TRACE_DEBUG("Listing programs for handle name %s", it->first.c_str());
             program_info = ctx->program_info;
             for (int i = 0; i < ctx->num_programs; i++) {
                 pt::ptree    symbols;
-                prog_info->add_program(program_info[i].name, program_info[i].base_addr,
-                                       (((program_info[i].base_addr + program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1));
-
                 program.put("name", program_info[i].name.c_str());
                 program.put("base_addr", program_info[i].base_addr);
                 snprintf(numbuf, sizeof(numbuf), "0x%lx",
@@ -613,7 +622,6 @@ p4_dump_program_info (const char *cfg_path)
                     pt::ptree    sym;
                     symbol = program_info[i].prog.symtab.get_byid(j);
                     if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL)) {
-                        prog_info->add_symbol(program_info[i].name, symbol->name, symbol->val);
                         sym.put("name", symbol->name.c_str());
                         sym.put("addr", symbol->val);
                         snprintf(numbuf, sizeof(numbuf), "0x%lx",

@@ -90,6 +90,7 @@ sdk_spinlock_t          g_flow_telemetry_slock;
 flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
 flow_telemetry_state_t *g_flow_telemetry_state_age_tail_p;
 uint16_t                g_age_timer_ticks;
+bool                    g_mpu_prog_gen_done = false;
 
 //atomic state to indicate if session stats update in progress or not.
 volatile uint8_t g_session_stats_updt_locked_ = 0;
@@ -3565,6 +3566,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint64_t              bucket = (uint64_t)(ctxt);
     timespec_t            ctime;
     hal_ret_t             ret = HAL_RET_OK;
+    sdk_ret_t             sret = SDK_RET_OK;
     uint8_t               fte_id = 0;
     uint32_t              num_sessions = 0, bucket_no = 0;
     flow_telemetry_state_t *flow_telemetry_state_p;
@@ -3587,6 +3589,14 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
    ret = hal_if_pick_inb_bond_active(&inb_bond_active_changed);
    if (inb_bond_active_changed) {
        ret = hal_if_inb_bond_active_changed();
+   }
+
+   if (!g_mpu_prog_gen_done) {
+        sret = sdk::p4::p4_dump_program_info(hal::g_hal_cfg.cfg_path.c_str()); 
+        if (sret == SDK_RET_OK) {
+            HAL_TRACE_DEBUG("Generated mpu_prog_info");
+            g_mpu_prog_gen_done = true;
+        }
    }
 
     //

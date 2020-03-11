@@ -96,6 +96,10 @@ program_info::factory(const char *program_info_file, shmmgr *mmgr)
     void            *mem;
     program_info    *new_program_info;
 
+    if (pinfo_) {
+        return pinfo_;
+    }
+
     if (program_info_file == nullptr) {
         return NULL;
     }
@@ -104,10 +108,6 @@ program_info::factory(const char *program_info_file, shmmgr *mmgr)
         SDK_TRACE_ERR("File %s doesn't exist or not accessible",
                       program_info_file);
         return NULL;
-    }
-
-    if (pinfo_) {
-        return pinfo_;
     }
 
     if (mmgr) {
