@@ -9,6 +9,8 @@
 #include "nic/apollo/upgrade/core/logger.hpp"
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
 #include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "nic/apollo/upgrade/core/fsm.hpp"
+#include "nic/apollo/upgrade/core/ipc/notify_endpoint.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -27,39 +29,10 @@ print_usage (char **argv)
     fprintf(stdout, "Usage : ");
 }
 
-static void
-upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie, const void *ctxt)
-{
-    upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
-
-    g_upg_log->debug("Received UPG IPC event stageid %s, status %s, thread %s, thread_id %u\n",
-           upg_stage2str(event->stage), upg_status2str(event->rsp_status),
-           event->rsp_thread_name, event->rsp_thread_id);
-
-    // send the next event based on current status
-    // for testing. TODO : fit actual code
-    if (event->stage == UPG_STAGE_COMPAT_CHECK) {
-        upg_event_msg_t next_event;
-
-        next_event.stage = UPG_STAGE_START;
-        sdk::ipc::request(event->rsp_thread_id, PDS_IPC_MSG_ID_UPGRADE,
-                          &next_event, sizeof(next_event), NULL);
-    }
-}
-
 void
 upg_event_thread_init (void *ctxt)
 {
-    upg_event_msg_t event;
-
-    // subscribe for upgrade event responses from clients
-    sdk::ipc::reg_response_handler(PDS_IPC_MSG_ID_UPGRADE, upg_event_handler, NULL);
-
-    // send compat check. only this messages will be broadcasted.
-    // all other messages will be unicasted based on serial/parallel mode
-    event.stage = UPG_STAGE_COMPAT_CHECK;
-    sdk::ipc::broadcast(PDS_IPC_MSG_ID_UPGRADE, &event, sizeof(event));
-    return;
+    upg::init();
 }
 
 void

@@ -8,6 +8,8 @@ MODULE_INCS          = /usr/local/include \
                        ${BLD_PROTOGEN_DIR}/ \
                        ${TOPDIR}/nic/apollo/upgrade/include
 MODULE_PREREQS       = upgrade.upgfsmgen
+
+MODULE_SOLIBS        = evutils pal pdsupgipc
 MODULE_LDLIBS        = stdc++ m
 MODULE_FLAGS         = -O3
 MODULE_EXCLUDE_FLAGS = -O2

@@ -62,7 +62,12 @@ namespace upg {
     script_t::script_t(std::string path) {
         path_ = path;
     };
+
     script_t::~script_t(void){};
+
+    std::string script_t::path(void) {
+        return path_;
+    };
 
     stage_t::stage_t(void) {
         svc_rsp_timeout_       = DEFAULT_RSP_TIMEOUT ;

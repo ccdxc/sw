@@ -2,13 +2,11 @@
   "svc": {
     "event_sequence": "parallel",
     "names": [
-      "sysmgr",
-      "pdsagent",
-      "vpp"
+      "pdsagent"
     ]
   },
   "stages": {
-    "compatibility_check": {
+    "compatcheck": {
       "rsp_timeout": "100ms",
       "events": [
         {

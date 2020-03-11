@@ -266,7 +266,7 @@ class GenerateStateMachine(object):
 
     def __load_stages__(self):
         """ Initialize constants key-value pair of stages and enum """
-        self.stage_name_to_id["compatibility_check"] = "STAGE_ID_COMPAT_CHECK"
+        self.stage_name_to_id["compatcheck"] = "STAGE_ID_COMPAT_CHECK"
         self.stage_name_to_id["start"] = "STAGE_ID_START"
         self.stage_name_to_id["prepare"] = "STAGE_ID_PREPARE"
         self.stage_name_to_id["backup"] = "STAGE_ID_BACKUP"
