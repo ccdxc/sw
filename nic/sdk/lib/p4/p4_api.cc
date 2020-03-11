@@ -49,6 +49,7 @@
 #define JSON_KEY_NUM_BUCKETS        "num_buckets"
 #define JSON_KEY_THREAD_TBL_IDS     "thread_tbl_ids"
 #define JSON_KEY_NUM_THREADS        "num_threads"
+#define JSON_KEY_TOKEN_REFRESH_RATE "token_refresh_rate"
 
 static p4pd_table_max_cfg_t  p4table_max_cfg;
 /*
@@ -377,6 +378,8 @@ p4pd_tbl_packing_json_parse (p4pd_cfg_t *p4pd_cfg)
         tbl->stage = p4_tbl.second.get<int>(JSON_KEY_STAGE);
         tbl->stage_tableid = p4_tbl.second.get<int>(JSON_KEY_STAGE_TBL_ID);
         tbl->tabledepth = p4_tbl.second.get<int>(JSON_KEY_NUM_ENTRIES);
+        tbl->token_refresh_rate = p4_tbl.second.get<int>(
+                                            JSON_KEY_TOKEN_REFRESH_RATE, 0);
 
         // set pipeline
         if (tbl->gress == P4_GRESS_INGRESS) {

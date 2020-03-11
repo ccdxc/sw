@@ -151,6 +151,7 @@ typedef struct p4pd_table_properties_ {
     bool                    read_thru_mode; /* Pipeline table read thru mode */
     uint8_t                 table_thread_count; /* Number of table execution threads. Min 1 */
     uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
+    uint64_t                token_refresh_rate; // token refresh rate
 } p4pd_table_properties_t;
 
 

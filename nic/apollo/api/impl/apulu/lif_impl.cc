@@ -27,11 +27,11 @@
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
 
-#define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    4096    // 256
-#define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   4096    // 256
-#define COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS   4096    // 256
-#define COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS  4096    // 256
-#define COPP_ARP_FROM_ARM_PPS                   4096    // 256
+#define COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS    256
+#define COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS   256
+#define COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS   256
+#define COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS  256
+#define COPP_ARP_FROM_ARM_PPS                   256
 
 namespace api {
 namespace impl {

@@ -389,7 +389,8 @@ do {                                          \
     (val) |= (hw)[3] << 24;                   \
 } while(0)
 
-#define PROGRAM_POLICER_TABLE_ENTRY(policer, tbl, tid, aid, idx, upd)          \
+#define PROGRAM_POLICER_TABLE_ENTRY(policer, tbl, tid, aid, idx, upd,          \
+                                    refresh_interval)                          \
 {                                                                              \
     sdk_ret_t ret;                                                             \
     p4pd_error_t p4pd_ret;                                                     \
@@ -405,7 +406,7 @@ do {                                          \
             tbl ## _data.tbl ## _info.pkt_rate = 1;                            \
         }                                                                      \
         ret = policer_to_token_rate(policer,                                   \
-                                    PDS_POLICER_DEFAULT_REFRESH_INTERVAL,      \
+                                    refresh_interval,                          \
                                     PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
                                     &rate_tokens, &burst_tokens);              \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
@@ -446,11 +447,15 @@ do {                                          \
 static inline sdk_ret_t
 program_copp_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
+    p4pd_table_properties_t tbl_props = { 0 };
+
     // skip policer programming in non-h/w platforms as the token refresh logic
     // is not activated in those platforms
     if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        p4pd_table_properties_get(P4TBL_ID_COPP, &tbl_props);
         PROGRAM_POLICER_TABLE_ENTRY(policer, copp, P4TBL_ID_COPP,
-                                    COPP_COPP_ID, idx, upd);
+                                    COPP_COPP_ID, idx, upd,
+                                    tbl_props.token_refresh_rate);
     }
     return SDK_RET_OK;
 }

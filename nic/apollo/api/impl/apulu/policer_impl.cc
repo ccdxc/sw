@@ -31,17 +31,25 @@ namespace impl {
 static inline sdk_ret_t
 program_vnic_policer_rx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
+    p4pd_table_properties_t tbl_props = { 0 };
+
+    p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
     PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_rx,
                                 P4TBL_ID_VNIC_POLICER_RX,
-                                VNIC_POLICER_RX_VNIC_POLICER_RX_ID, idx, upd);
+                                VNIC_POLICER_RX_VNIC_POLICER_RX_ID, idx, upd,
+                                tbl_props.token_refresh_rate);
 }
 
 static inline sdk_ret_t
 program_vnic_policer_tx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
+    p4pd_table_properties_t tbl_props = { 0 };
+
+    p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
     PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_tx,
                                 P4TBL_ID_VNIC_POLICER_TX,
-                                VNIC_POLICER_TX_VNIC_POLICER_TX_ID, idx, upd);
+                                VNIC_POLICER_TX_VNIC_POLICER_TX_ID, idx, upd,
+                                tbl_props.token_refresh_rate);
 }
 
 policer_impl *
