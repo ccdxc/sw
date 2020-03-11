@@ -54,7 +54,7 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 		return errors.Wrap(err, stdout)
 	}
 
-	setHostname := []string{"hostnamectl", "set-hostname", " --static", hostname}
+	setHostname := []string{"hostnamectl", "set-hostname", "--static", hostname}
 	if _, stdout, err := utils.Run(setHostname, 0, false, false, nil); err != nil {
 		venice.logger.Println("Setting hostname failed")
 		return errors.Wrap(err, stdout)
