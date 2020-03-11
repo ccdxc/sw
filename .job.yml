@@ -179,10 +179,10 @@ jobs:
 #    labels: ["compat-esx"]
 #  iota/test/standalone/cnic_swm:
 #    labels: ["hourly"]
-#  iota/test/standalone/sanity/swm:
-#    labels: ["precommit", "2xhourly"]
-#  iota/test/standalone/regression/swm:
-#    labels: ["daily"]
+  iota/test/standalone/sanity/swm:
+    labels: ["precommit", "2xhourly"]
+  iota/test/standalone/regression/swm:
+    labels: ["daily"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
@@ -308,7 +308,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
-      #    - reference: iota/test/standalone/sanity/swm
+    - reference: iota/test/standalone/sanity/swm
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
