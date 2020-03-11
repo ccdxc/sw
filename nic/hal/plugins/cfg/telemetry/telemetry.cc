@@ -608,7 +608,6 @@ mirror_session_change (ip_addr_t *ip,
                        bool dest_if_valid, if_t *dest_if,
                        bool rtep_ep_valid, ep_t *rtep_ep)
 {
-    hal_ret_t ret = HAL_RET_OK;
     mirror_session_change_ctxt_t ctxt;
 
     if (dest_if_valid) {
@@ -658,6 +657,7 @@ mirror_session_change (ip_addr_t *ip,
     };
 
     g_hal_state->mirror_session_ht()->walk_safe(walk_cb, &ctxt);
+    return HAL_RET_OK;
 }
 
 #if 0
@@ -1218,7 +1218,8 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
     bool                mirror_action = false;
     hal_ret_t           ret = HAL_RET_OK;
     uint64_t            vrf_id;
-    int                 rule_id;
+    int                 id;
+    rule_key_t          rule_id = (~0);
     flow_monitor_rule_t *rule = NULL;
     const acl_ctx_t     *flowmon_acl_ctx = NULL;
     const acl_ctx_t    *flowmon_acl_ctx_p = NULL;
@@ -1230,8 +1231,10 @@ flow_monitor_rule_delete (FlowMonitorRuleDeleteRequest &req, FlowMonitorRuleDele
         ret = HAL_RET_INVALID_ARG;
         goto end;
     }
-    rule_id = telemetry_flow_monitor_rule_get_id(
+
+    id = telemetry_flow_monitor_rule_get_id(
                         req.key_or_handle().flowmonitorrule_id());
+    rule_id = id;
     if (rule_id < 0) {
         HAL_TRACE_ERR("Rule not found for id {}",
                         req.key_or_handle().flowmonitorrule_id());

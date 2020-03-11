@@ -998,6 +998,10 @@ rule_match_rule_del (const acl_ctx_t   **acl_ctx,
     rule_cfg_t           *rule_cfg = NULL;
     rule_ctr_t           *ctr = NULL;
     rule_data_t          *rule_data = NULL;
+    dst_port_new.port_range.port_lo = INVALID_TCP_UDP_PORT;
+    dst_port_new.port_range.port_hi = INVALID_TCP_UDP_PORT;
+    src_port_new.port_range.port_lo = INVALID_TCP_UDP_PORT;
+    src_port_new.port_range.port_hi = INVALID_TCP_UDP_PORT;
 
     rule_cfg = (rule_cfg_t *)g_rule_cfg_ht->lookup((void *) (*acl_ctx)->name());
     if (rule_cfg == NULL) {
