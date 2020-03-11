@@ -504,7 +504,7 @@ jobd/dol/apulu/lpm: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/apulu/learn
 jobd/dol/apulu/learn: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo learn --feature networking --sub learn
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo learn --feature learn
 
 .PHONY: jobd/athena/gtests
 jobd/athena/gtests: ${JOBD_PREREQS}

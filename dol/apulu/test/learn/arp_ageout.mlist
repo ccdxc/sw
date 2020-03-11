@@ -1,0 +1,35 @@
+# Feature learn endpoints
+
+feature:
+    id          : learn
+    sub         : aging
+    package     : test.learn
+    module      : learn_arp
+    runorder    : 50
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : LEARN_MAC_IP_WITH_ARP
+        spec    : learn_mac_ip_arp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : RECV_ARP_PROBE_AND_REPLY
+        spec    : probe_reply.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : RECV_ARP_PROBES_AND_TIMEOUT_MAC_IP
+        spec    : probe_timeout.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_MAC_IP_WITH_ARP_1
+        spec    : learn_mac_ip_arp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING

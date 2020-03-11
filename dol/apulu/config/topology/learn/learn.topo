@@ -22,14 +22,15 @@ node:
         lif         : ref://store/specs/id=LIF_ETH
 
     device:
-        mode        : host # bitw (default), host
-        stack       : ipv4 # ipv4 (default), ipv6
-        bridging    : true # false (default), true
-        learning    : true # false (default), true
-        ipaddress   : None # Taken from resmgr
-        gateway     : None # Taken from resmgr
-        encap       : vxlan # vxlan or mplsodup
-        tunnel      :
+        mode                : host # bitw (default), host
+        stack               : ipv4 # ipv4 (default), ipv6
+        bridging            : true # false (default), true
+        learning            : true # false (default), true
+        learningagetimeout  : 30
+        ipaddress           : None # Taken from resmgr
+        gateway             : None # Taken from resmgr
+        encap               : vxlan # vxlan or mplsodup
+        tunnel              :
             - count : 16
               type  : underlay
             - count : 16

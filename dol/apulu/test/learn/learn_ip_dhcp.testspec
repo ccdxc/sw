@@ -11,6 +11,12 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_IPV4_UDP_DHCP
         headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : callback://networking/dhcp/GetDhcpBroadcastMAC
+            ipv4:
+                src     : callback://networking/dhcp/GetDhcpClientSrcIp
+                dst     : callback://networking/dhcp/GetDhcpBroadcastIp
             bootp:
                 op       : const/1
                 xid      : callback://networking/dhcp/GetDhcpXid
@@ -18,38 +24,25 @@ packets:
                 sname    : callback://networking/dhcp/GetDhcpSname
                 file     : callback://networking/dhcp/GetDhcpFile
     - packet:
-        id          : FROM_HOST_DISCOVER_PKT
+        id          : FROM_HOST_REQUEST_PKT
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
-                src     : 00:11:22:00:00:33
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : callback://networking/dhcp/GetDhcpBroadcastMAC
             ipv4:
                 src     : callback://networking/dhcp/GetDhcpClientSrcIp
                 dst     : callback://networking/dhcp/GetDhcpBroadcastIp
             bootp:
-                options  : callback://networking/dhcp/GetDhcpOptions
-    - packet:
-        id          : TO_SERVER_DISCOVER_PKT
-        clone       : ref://testcase/packets/id=BASE_PKT
-        headers     :
-            eth:
-                src     : callback://networking/packets/GetUplinkPortMac
-                dst     : callback://networking/dhcp/GetDhcpServerMAC
-            ipv4:
-                src     : ref://testcase/config/devicecfg/IP
-                dst     : callback://networking/dhcp/GetDhcpServerIp
-            bootp:
-                giaddr   : ref://testcase/config/devicecfg/IP
-                options  : callback://networking/dhcp/GetDhcpOptions
+                options  : callback://networking/dhcp/GetDhcpOptions/req_addr=lmap_srcip
 buffers:
     - buffer:
         id      : BUF1
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind : True
-            size : ref://testcase/packets/id=FROM_HOST_DISCOVER_PKT/size
-            data : ref://testcase/packets/id=FROM_HOST_DISCOVER_PKT/rawbytes
+            size : ref://testcase/packets/id=FROM_HOST_REQUEST_PKT/size
+            data : ref://testcase/packets/id=FROM_HOST_REQUEST_PKT/rawbytes
 
 descriptors:
     - descriptor:
@@ -74,10 +67,6 @@ session:
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
         expect:
             delay    :    1
-            packets:
-                - packet:
-                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SERVER_DISCOVER_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2

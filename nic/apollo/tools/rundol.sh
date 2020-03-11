@@ -112,7 +112,7 @@ if [ $DRYRUN == 0 ]; then
 fi
 
 # TODO Remove this once agent code is fixed
-# Create dummy device.conf - agent is trying to update it when device object is updated. 
+# Create dummy device.conf - agent is trying to update it when device object is updated.
 # Without this, pdsagent crashes since config file is not found.
 mkdir -p "/sysconfig/config0/"
 touch "/sysconfig/config0/device.conf"

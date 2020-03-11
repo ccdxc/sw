@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import pdb
-from functools import reduce 
+from functools import reduce
 import infra.api.api as infra_api
 import infra.penscapy.penscapy as penscapy
 import struct
@@ -19,7 +19,7 @@ def GetDhcpBroadcastMAC(testcase, packet):
 
 def GetDhcpChaddr(testcase, packet):
     chaddr = "aa:bb:cc:dd:ee:ff"
-    return  reduce(lambda x,y: x + y , [bytes.fromhex(x) for x in chaddr.split(":")]) 
+    return  reduce(lambda x,y: x + y , [bytes.fromhex(x) for x in chaddr.split(":")])
 
 def GetAssignedIp(testcase, packet):
     return "10.1.1.2"
@@ -28,7 +28,7 @@ def GetDhcpSubnetIp(testcase, packet):
     #fetch it from vnic and send
     return "10.1.1.1"
 
-def GetDhcpOptions(testcase, packet):
+def GetDhcpOptions(testcase, packet, args = None):
     #get bd vnid, subnet prefix and subnet ip, vpc vnid ready
     subnet_prefix = "1.1.1.0"
     subnet_ip = "1.1.1.1"
@@ -40,7 +40,7 @@ def GetDhcpOptions(testcase, packet):
     # byte 1 -- suboption length
     # byte 2+ -- suboption data then repeat until all suboptions done
 
-    option82 = struct.pack('BB', 1, 5);  
+    option82 = struct.pack('BB', 1, 5);
     # TODO suboption 1 data 3 byte VNID and 2 byte vnicId  - total 5
     # get this vnid from subnet and fill 2 bytes from lifid (where to get this from ?)
     bd_vni = 0xffff01 #fill this with true vnid
@@ -67,7 +67,7 @@ def GetDhcpOptions(testcase, packet):
     option82 += struct.pack('BBB', 1, 2, 4 )
     option82 += struct.pack('I', 0)
 
-    #suboption 152 
+    #suboption 152
     option82 += struct.pack('BB', 152, 0)
 
     # TODO add end option
@@ -96,16 +96,20 @@ def GetDhcpOptions(testcase, packet):
                          "end"
                          ]
     elif "REQUEST" in packet.GID():
+        if args and args.req_addr == "lmap_srcip":
+            req_addr = testcase.config.localmapping.IP
+        else:
+            req_addr = "10.1.1.2"
         if "HOST" in packet.GID():
             dhcp_options = [("message-type","request"),
                             ("server_id", "1.1.1.1"),
-                            ("requested_addr", "10.1.1.2"),
+                            ("requested_addr", req_addr),
                              "end"
                             ]
         elif "SERVER" in packet.GID():
             dhcp_options = [("message-type","request"),
                             ("server_id", "1.1.1.1"),
-                            ("requested_addr", "10.1.1.2"),
+                            ("requested_addr", req_addr),
                             ("relay_agent_Information", option82),
                              "end"
                             ]
@@ -117,7 +121,7 @@ def GetDhcpOptions(testcase, packet):
                         ("lease_time", 2000),
                         ("server_id", "1.1.1.1"),
                          "end"
-                         ]        
+                         ]
     return penscapy.DHCP(options=dhcp_options)
 
 

@@ -1,0 +1,13 @@
+# Test Spec - no trigger, expect is done via module.py
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
+
+session:
+    - step:
+        trigger:
+            delay    :    1
+        expect:
+            delay    :    1

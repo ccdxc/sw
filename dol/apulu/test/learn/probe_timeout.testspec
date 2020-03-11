@@ -1,0 +1,121 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
+
+packets:
+    - packet:
+        id          : TO_HOST_ARP_PROBE_PKT
+        payloadsize : 18
+        template    : ref://factory/packets/id=ETH_ARP
+        encaps      : callback://networking/packets/GetEncapForARP
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            outerqtag:
+                vlan    : 0
+                prio    : 0
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            arp:
+                op      : 1 # ARP_REQ
+                hwsrc   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                hwdst   : 00:00:00:00:00:00
+                psrc    : 0.0.0.0
+                pdst    : ref://testcase/config/localmapping/IP
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+buffers:
+    - buffer:
+        id       : BUF1  # Expected Buffer
+        template : ref://factory/templates/id=ETH_BUFFER
+        fields   :
+            bind : False
+            size : ref://testcase/packets/id=TO_HOST_ARP_PROBE_PKT/size
+            data : ref://testcase/packets/id=TO_HOST_ARP_PROBE_PKT/rawbytes
+
+    - buffer:
+        id          : BUF2  # Input Buffer
+        template    : ref://factory/templates/id=ETH_BUFFER
+        fields      :
+            bind    : True
+            size    : 1518
+            data    : None
+
+descriptors:
+    - descriptor:
+        id          : DESC1 # Input Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF2
+            addr    : ref://testcase/buffers/id=BUF2/addr
+            len     : ref://testcase/buffers/id=BUF2/size
+
+    - descriptor:
+        id          : DESC2 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF1
+            len     : ref://testcase/buffers/id=BUF1/size
+
+session:
+    - step:                 # step_id 0, ARP probe 1
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+        expect:
+            delay: callback://networking/learn/GetLearnDelay/delay_type=age
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step:                 # step_id 1, ARP probe 2
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+        expect:
+            delay: callback://networking/learn/GetLearnDelay/delay_type=probe
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step:                 # step_id 2 ARP probe 3
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+        expect:
+            delay: callback://networking/learn/GetLearnDelay/delay_type=probe
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step:                 # step_id 3 IP timeout
+        trigger:
+            delay: callback://networking/learn/GetLearnDelay/delay_type=probe
+                            # no trigger
+        expect:
+            delay: 3
+                            # verify IP timeout
+
+    - step:                 # step_id 4 MAC time out
+        trigger:
+            delay: callback://networking/learn/GetLearnDelay/delay_type=age
+                            # no trigger
+        expect:
+            delay: 3

@@ -50,6 +50,10 @@ def ExecutePdsctlShowCommand(cmd, args=None, yaml=True):
     cmd = __CMDTYPE_SHOW + cmd
     return ExecutePdsctlCommand(cmd, args, yaml)
 
+def ExecutePdsctlClearCommand(cmd, args=None):
+    cmd = __CMDTYPE_CLEAR + cmd
+    return ExecutePdsctlCommand(cmd, args, False)
+
 def GetObjects(node, objtype):
     # TODO: as part of container support, need to make sure this runs on appropriate node
     # get object name

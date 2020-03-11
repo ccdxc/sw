@@ -1,0 +1,59 @@
+# Feature learn endpoints
+
+feature:
+    id          : learn
+    sub         : dhcp
+    package     : test.learn
+    module      : learn_dhcp
+    runorder    : 40
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : LEARN_MAC_FROM_DHCP
+        spec    : learn_mac_dhcp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_IP_FROM_DHCP
+        spec    : learn_ip_dhcp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : CLEAR_IP_THEN_MAC
+        spec    : clear.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_MAC_FROM_DHCP_1
+        spec    : learn_mac_dhcp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_IP_FROM_DHCP_1
+        spec    : learn_ip_dhcp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : CLEAR_IP_ALL
+        spec    : clear.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_IP_FROM_DHCP_2
+        spec    : learn_ip_dhcp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : CLEAR_MAC_ALL
+        spec    : clear.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
