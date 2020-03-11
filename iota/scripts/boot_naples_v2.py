@@ -623,7 +623,25 @@ class NaplesManagement(EntityManagement):
             raise Exception(msg)
 
 
+    def IsOOBUP(self):
+        for _ in range(5):
+            output = self.RunCommandOnConsoleWithOutput("ip link | grep " + GlobalOptions.mgmt_intf)
+            ifconfig_regexp='state (.+?) mode'
+            x = re.findall(ifconfig_regexp, output)
+            if len(x) > 0:
+                if x[0] == "UP":
+                    return True
+                if x[0] == "DOWN":
+                    return False
+            else:
+                print("Not able to read oob link state")
+        return False
+
     def ReadExternalIP(self):
+        if not self.IsOOBUP():
+            print("OOB is not up, not reading external IP")
+            return
+
         self.__run_dhclient()
         for _ in range(5):
             output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
