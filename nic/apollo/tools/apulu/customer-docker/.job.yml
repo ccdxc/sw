@@ -3,7 +3,7 @@ version: 2.0
 targets:
  apollo/tools/apulu/gtest_a:
   commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_1"]
-  owners: ["email:bimtal@pensando.io"]
+  owners: ["email:bmital@pensando.io"]
   area:
   sub-area:
   feature:

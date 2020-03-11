@@ -38,6 +38,9 @@ copy_files() {
     pkgf+='nic/tools/package/pack_debug.txt nic/tools/upgrade_version.sh nic/tools/gen_version.py '
     pkgf+='nic/tools/package/pack_test_utils.txt nic/tools/hal/mem_parser.py nic/hal/module_memrgns.mk '
 
+    vppd='nic/vpp '
+    operd='nic/operd '
+
     apollod='nic/apollo '
 
     if [ "$pipeline" == "apulu" ];then
@@ -59,7 +62,6 @@ copy_files() {
         nicf+='nic/hal/pd/pd.hpp '
         p4d+='nic/asm/ftl_dev nic/p4/ftl_dev '
     fi
-
 
     utilsd='nic/utils/ftlite '
 
@@ -95,7 +97,7 @@ copy_files() {
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 
-    files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf $metaswitch"
+    files="$nicd $nicf $p4d $pkgf $utilsd $apollod $apollof $pack_apollo $pack_debug $miscd $protobuf $metaswitch $vppd $operd"
 
 
     cd /sw
