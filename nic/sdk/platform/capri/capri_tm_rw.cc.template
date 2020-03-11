@@ -1964,8 +1964,11 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
 
     num_qs = tm_cfg_profile()->num_qs[port_type];
     if (port_type == TM_PORT_TYPE_UPLINK) {
+        //num_qs =
+        //  1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
         num_qs =
-            1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
+            CAPRI_TM_NUM_BMC_QUEUES + 
+                (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
     }
 
     reserved_mtus = tm_asic_profile()->port[port_type].reserved_mtus;
@@ -2182,7 +2185,15 @@ iq_disabled (tm_port_t port, uint32_t iq)
         case TM_PORT_TYPE_UPLINK:
             if (port == TM_PORT_NCSI) {
                 // On the BMC port, only one pg is supported
-                num_iqs = 1;
+                //num_iqs = 1;
+                // On the BMC port, two PGs are supported
+                num_iqs = CAPRI_TM_NUM_BMC_QUEUES;
+
+                if ( (iq != QOS_QUEUE_DEFAULT) && (iq != QOS_SWM_CAM_NCSI_COS) ) {
+                    disabled = true;
+                }
+                break;
+
             } else if (!is_active_uplink_port(port)) {
                 disabled = true;
             }

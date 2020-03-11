@@ -557,7 +557,6 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_create_app_ctxt_t    *app_ctxt  = NULL;
     pd::pd_func_args_t      pd_func_args = {0};
     if_t                    *uplink_if = NULL;
-    uint32_t                log_port = 0;
 
     SDK_ASSERT(cfg_ctxt != NULL);
 

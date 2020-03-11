@@ -97,6 +97,7 @@ using sdk::lib::indexer;
 #define CAPRI_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (CAPRI_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1)
 
 // SWM related defines
+#define CAPRI_TM_NUM_BMC_QUEUES                 2   // NCSI and Pass-through Qs
 #define CAPRI_TM_P4_SWM_NCSI_QUEUE              29
 #define CAPRI_TM_P4_SWM_UC_QUEUE                CAPRI_TM_P4_CPU_COPY_QUEUE  // 30
 #define CAPRI_TM_P4_SWM_UC_QUEUE_REPLACEMENT    CAPRI_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  // 16

@@ -2037,7 +2037,6 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-#if 0
     // reserve NCSI queue for SWM
     ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE, true);
     if(ret != HAL_RET_OK) {
@@ -2053,7 +2052,6 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
         }
         return ret;
     }
-#endif
 
     // nothing to reserve, just program BMC Flood queue for SWM
     ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
@@ -2069,14 +2067,12 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
                           "ret {}",
                           CAPRI_TM_P4_SWM_UC_QUEUE, ret);
         }
-#if 0
         if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE,
                                                         false) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
                           "ret {}",
                           CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
         }
-#endif
         return ret;
     }
 
@@ -2093,23 +2089,19 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
                           "ret {}",
                           CAPRI_TM_P4_SWM_UC_QUEUE, ret);
         }
-#if 0
         if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE,
                                                         false) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
                           "ret {}",
                           CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
         }
-#endif
         return ret;
     }
 
-#if 0
     ret = pd_qos_program_uplink_for_swm(TM_PORT_NCSI, 0, true);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program HW ret {}", ret);
     }
-#endif
 
     HAL_TRACE_DEBUG("Done programming the uplinks to pick the allocated queues "
                     "for SWM traffic!");
@@ -2141,7 +2133,6 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
                       CAPRI_TM_P4_SWM_UC_QUEUE, ret);
     }
 
-#if 0
     // free NCSI queue for SWM
     ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE, 
                                                 false); 
@@ -2149,7 +2140,6 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} ret {}",
                       CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
     }
-#endif
 
     // deprogram BMC Flood queue for SWM
     ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
@@ -2167,13 +2157,11 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to deprogram HW ret {}", ret);
     }
 
-#if 0
     // reset programming on mgmt port
     ret = pd_qos_program_uplink_for_swm(TM_PORT_NCSI, 0, false);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program HW ret {}", ret);
     }
-#endif
 
     HAL_TRACE_DEBUG("Done de-programming HW for SWM config!");
 
