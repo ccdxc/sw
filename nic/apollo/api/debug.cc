@@ -132,6 +132,7 @@ pds_handle_cmd (cmd_ctxt_t *ctxt)
 {
     switch (ctxt->cmd) {
     case CLI_CMD_MAPPING_DUMP:
+    case CLI_CMD_NACL_DUMP:
         return impl_base::pipeline_impl()->handle_cmd(ctxt);
     case CLI_CMD_INTR_DUMP:
         dump_interrupts(ctxt->fd);

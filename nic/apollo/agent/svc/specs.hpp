@@ -705,6 +705,8 @@ pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
     switch (proto_cmd) {
     case pds::CMD_MAPPING_DUMP:
         return CLI_CMD_MAPPING_DUMP;
+    case pds::CMD_NACL_DUMP:
+        return CLI_CMD_NACL_DUMP;
     case pds::CMD_INTR_DUMP:
         return CLI_CMD_INTR_DUMP;
     case pds::CMD_INTR_CLEAR:

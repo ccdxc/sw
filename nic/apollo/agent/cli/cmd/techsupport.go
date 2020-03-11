@@ -39,7 +39,7 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n=== System last level cache statistics ===\n")
 	llcShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== System table statistics ===\n")
-	tableShowCmdHandler(nil, nil)
+	systemTableShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Device information ===\n")
 	deviceShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Memory information ===\n")

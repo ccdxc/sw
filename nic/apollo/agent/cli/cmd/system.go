@@ -109,11 +109,11 @@ var pbDetailShowCmd = &cobra.Command{
 	Run:   pbDetailShowCmdHandler,
 }
 
-var tableShowCmd = &cobra.Command{
+var systemTableShowCmd = &cobra.Command{
 	Use:   "table",
 	Short: "show system table statistics",
 	Long:  "show system table statistics",
-	Run:   tableShowCmdHandler,
+	Run:   systemTableShowCmdHandler,
 }
 
 func init() {
@@ -145,8 +145,8 @@ func init() {
 	systemShowCmd.AddCommand(systemStatsShowCmd)
 	systemStatsShowCmd.AddCommand(llcShowCmd)
 	llcShowCmd.Flags().Bool("yaml", true, "Output in yaml")
-	systemStatsShowCmd.AddCommand(tableShowCmd)
-	tableShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	systemStatsShowCmd.AddCommand(systemTableShowCmd)
+	systemTableShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 	systemStatsShowCmd.AddCommand(pbShowCmd)
 	pbShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
@@ -832,7 +832,7 @@ func blankLine(num int) {
 	fmt.Printf("%c\n", 65372) // Vert. bar
 }
 
-func tableShowCmdHandler(cmd *cobra.Command, args []string) {
+func systemTableShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {

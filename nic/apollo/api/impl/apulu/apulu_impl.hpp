@@ -70,6 +70,7 @@
 #define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              24
 
 extern mac_addr_t g_zero_mac;
+extern ip_addr_t g_zero_ip;
 
 namespace api {
 namespace impl {

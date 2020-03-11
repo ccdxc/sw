@@ -53,6 +53,7 @@ public:
     rte_indexer *copp_idxr(void) { return copp_idxr_; }
     rte_indexer *nat_idxr(void) { return nat_idxr_; }
     rte_indexer *dnat_idxr(void) { return dnat_idxr_; }
+    sdk_ret_t nacl_dump(int fd);
 
     friend class apulu_impl;            ///< friend of apulu_impl_state
 

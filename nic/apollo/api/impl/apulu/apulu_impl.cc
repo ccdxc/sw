@@ -49,7 +49,8 @@ extern sdk_ret_t service_lif_upg_verify(uint32_t lif_id, const char *cfg_path);
 using ftlite::internal::ipv6_entry_t;
 using ftlite::internal::ipv4_entry_t;
 
-mac_addr_t g_zero_mac;
+mac_addr_t g_zero_mac = { 0 };
+ip_addr_t g_zero_ip = { 0 };
 
 namespace api {
 namespace impl {
@@ -859,8 +860,11 @@ sdk_ret_t
 apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
     switch (ctxt->cmd) {
     case CLI_CMD_MAPPING_DUMP:
-        g_pds_impl_state.mapping_impl_db()->mapping_dump(ctxt->fd,
-                    (ctxt->args.valid == true) ? &ctxt->args : NULL);
+        mapping_impl_db()->mapping_dump(ctxt->fd,
+            (ctxt->args.valid == true) ? &ctxt->args : NULL);
+        break;
+    case CLI_CMD_NACL_DUMP:
+        apulu_impl_db()->nacl_dump(ctxt->fd);
         break;
     default:
         return SDK_RET_INVALID_ARG;

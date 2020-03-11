@@ -401,6 +401,7 @@ enum Command {
   CMD_FLOW_DUMP             = 5;
   CMD_STORE_STATS_DUMP      = 6;
   CMD_NAT_PB_DUMP           = 7;
+  CMD_NACL_DUMP             = 8;
 }
 
 enum MappingDumpType {
