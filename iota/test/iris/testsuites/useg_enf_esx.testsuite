@@ -59,7 +59,6 @@ testbundles:
         - networking/connectivity.testbundle
         - flowlog/flowlog.testbundle
         - networking/cps.testbundle
-        - flowstats/flowstats.testbundle
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle
         #- networking/expanded_telemetry.testbundle
