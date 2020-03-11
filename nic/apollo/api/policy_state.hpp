@@ -60,6 +60,16 @@ public:
     /// \param[in] policy_key security policy key
     policy *find_policy(pds_obj_key_t *policy_key) const;
 
+    /// \brief      persist the given security policy
+    /// \param[in]  spec    policy to be persisted
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t persist(pds_policy_spec_t *spec);
+
+    /// \brief      destroy any persisted state of the given security policy
+    /// \param[in]  key    key of the policy to be removed from persistent database
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t perish(pds_obj_key_t *key);
+
     /// \brief    allocate memory required for a security profile instance
     /// \return    pointer to the allocated security profile instance,
     ///            or NULL if no memory

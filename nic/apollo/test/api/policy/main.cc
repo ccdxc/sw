@@ -32,7 +32,7 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
-        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_VERBOSE;
         // the scale number should be based on memory profile
         if (apulu()) {
             // for 4G profile, we can only support 64

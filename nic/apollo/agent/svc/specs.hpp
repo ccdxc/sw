@@ -2028,29 +2028,30 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     sdk_ret_t ret;
 
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.addrfamily());
-    if (unlikely(ret != SDK_RET_OK)) {
-        return ret;
-    }
     num_rules = proto_spec.rules_size();
-    api_spec->num_rules = num_rules;
-    api_spec->rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                           sizeof(rule_t) * num_rules);
-    if (unlikely(api_spec->rules == NULL)) {
+    api_spec->rule_info =
+        (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                  POLICY_RULE_SET_SIZE(num_rules));
+    if (unlikely(api_spec->rule_info == NULL)) {
         PDS_TRACE_ERR("Failed to allocate memory for security policy {}",
                       api_spec->key.id);
         return SDK_RET_OOM;
     }
+    ret = pds_af_proto_spec_to_api_spec(&api_spec->rule_info->af,
+                                        proto_spec.addrfamily());
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    api_spec->rule_info->num_rules = num_rules;
     for (uint32_t i = 0; i < num_rules; i++) {
         const pds::SecurityRuleInfo &proto_rule = proto_spec.rules(i);
-        api_spec->rules[i].priority = proto_rule.priority();
-        api_spec->rules[i].stateful = proto_rule.stateful();
-        api_spec->rules[i].action_data.fw_action.action =
-                                      pds_proto_action_to_rule_action(proto_rule.action());
+        api_spec->rule_info->rules[i].priority = proto_rule.priority();
+        api_spec->rule_info->rules[i].stateful = proto_rule.stateful();
+        api_spec->rule_info->rules[i].action_data.fw_action.action =
+            pds_proto_action_to_rule_action(proto_rule.action());
         ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key, i + 1,
-                                                      api_spec->af,
-                                                      &api_spec->rules[i].match,
-                                                      proto_rule);
+                  api_spec->rule_info->af, &api_spec->rule_info->rules[i].match,
+                  proto_rule);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed converting policy {} spec, err {}",
                           api_spec->key.id, ret);
@@ -2062,9 +2063,9 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
 
 cleanup :
 
-    if (api_spec->rules) {
-        SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rules);
-        api_spec->rules = NULL;
+    if (api_spec->rule_info) {
+        SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rule_info);
+        api_spec->rule_info = NULL;
     }
     return ret;
 }
@@ -2079,16 +2080,19 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
     }
 
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
-    if (api_spec->af == IP_AF_IPV4) {
+    if (api_spec->rule_info == NULL) {
+        return;
+    }
+    if (api_spec->rule_info->af == IP_AF_IPV4) {
         proto_spec->set_addrfamily(types::IP_AF_INET);
-    } else if (api_spec->af == IP_AF_IPV6) {
+    } else if (api_spec->rule_info->af == IP_AF_IPV6) {
         proto_spec->set_addrfamily(types::IP_AF_INET6);
     } else {
         SDK_ASSERT(FALSE);
     }
-    for (uint32_t i = 0; i < api_spec->num_rules; i++) {
+    for (uint32_t i = 0; i < api_spec->rule_info->num_rules; i++) {
         pds::SecurityRuleInfo *proto_rule = proto_spec->add_rules();
-        rule_t *api_rule = &api_spec->rules[i];
+        rule_t *api_rule = &api_spec->rule_info->rules[i];
         proto_rule->set_priority(api_rule->priority);
         proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));
         proto_rule->set_stateful(api_rule->stateful);
@@ -2147,7 +2151,6 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(api_rule->match.l4_match.dport_range.port_lo);
         proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(api_rule->match.l4_match.dport_range.port_hi);
     }
-
     return;
 }
 

@@ -18,7 +18,7 @@
 #include "nic/apollo/api/policy_state.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 
-static sdk_ret_t
+static inline sdk_ret_t
 pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                        pds_obj_key_t *key, pds_policy_spec_t *spec)
 {
@@ -118,10 +118,47 @@ pds_policy_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 }
 
 //----------------------------------------------------------------------------
+// Policy Rule API entry point implementation
+//----------------------------------------------------------------------------
+
+static inline sdk_ret_t
+pds_policy_rule_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
+                            pds_obj_key_t *key, pds_policy_rule_spec_t *spec)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_policy_rule_create (_In_ pds_policy_rule_spec_t *spec,
+                        _In_ pds_batch_ctxt_t bctxt)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_policy_rule_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_policy_rule_update (_In_ pds_policy_rule_spec_t *spec,
+                        _In_ pds_batch_ctxt_t bctxt)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+pds_policy_rule_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+//----------------------------------------------------------------------------
 // Security Profile API entry point implementation
 //----------------------------------------------------------------------------
 
-static sdk_ret_t
+static inline sdk_ret_t
 pds_security_profile_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
                                  pds_obj_key_t *key,
                                  pds_security_profile_spec_t *spec)

@@ -121,7 +121,7 @@ policy::init_config(api_ctxt_t *api_ctxt) {
     pds_policy_spec_t    *spec;
 
     spec = &api_ctxt->api_params->policy_spec;
-    this->af_ = spec->af;
+    this->af_ = spec->rule_info->af;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     return SDK_RET_OK;
 }
@@ -289,10 +289,11 @@ policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
 void
 policy::fill_spec_(pds_policy_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
-    spec->af = af_;
-    spec->num_rules = 0;
-    // rules are not stored anywhere
-    spec->rules = NULL;
+    if (spec->rule_info) {
+        spec->rule_info->af = af_;
+        spec->rule_info->num_rules = 0;
+        // rules are not stored anywhere yet
+    }
 }
 
 sdk_ret_t

@@ -74,10 +74,10 @@ struct pds_route_table_spec_s {
     uint32_t      num_routes; ///< number of routes in the list
     pds_route_t   *routes;    ///< list or route rules
 
-    // constructor
+    /// constructor
     pds_route_table_spec_s() { routes = NULL; }
 
-    // destructor
+    /// destructor
     ~pds_route_table_spec_s() {
         if (routes) {
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);

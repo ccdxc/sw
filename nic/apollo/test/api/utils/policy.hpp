@@ -18,6 +18,8 @@ class policy_feeder : public feeder {
 public:
     // Test params
     pds_policy_spec_t spec;
+    uint8_t af;
+    uint32_t num_rules;
     uint16_t stateful_rules;
     std::string cidr_str;
 
@@ -25,11 +27,11 @@ public:
     policy_feeder() { };
     policy_feeder(policy_feeder& feeder) {
         init(feeder.spec.key, feeder.stateful_rules,
-             feeder.spec.af, feeder.cidr_str, feeder.num_obj);
+             feeder.af, feeder.cidr_str, feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_obj_key_t key, uint16_t num_rules, uint8_t af,
+    void init(pds_obj_key_t key, uint16_t stateful_rules, uint8_t af,
               std::string cidr_str, uint32_t num_policy = 1);
 
     // Iterate helper routines
@@ -50,8 +52,8 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const pds_policy_spec_t *spec) {
     os << &spec->key
-       << " af: " << (uint32_t)spec->af
-       << " num rules: " << spec->num_rules;
+       << " af: " << (spec->rule_info ? (uint32_t)spec->rule_info->af : 0)
+       << " num rules: " << (spec->rule_info ? spec->rule_info->num_rules : 0);
     return os;
 }
 

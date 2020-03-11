@@ -33,10 +33,10 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
 
     case OBJ_ID_POLICY:
         if ((api_op == API_OP_CREATE) || (api_op == API_OP_UPDATE)) {
-            if (api_params->policy_spec.rules) {
+            if (api_params->policy_spec.rule_info) {
                 SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY,
-                         api_params->policy_spec.rules);
-                api_params->policy_spec.rules = NULL;
+                         api_params->policy_spec.rule_info);
+                api_params->policy_spec.rule_info = NULL;
             }
         }
         break;

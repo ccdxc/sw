@@ -68,13 +68,13 @@ security_policy_impl::reserve_resources(api_base *api_obj,
     //       this will ensure that proper release of resources will happen
     api_obj->set_rsvd_rsc();
     // allocate available block for this security policy
-    if (security_policy_impl_db()->security_policy_idxr(spec->af)->alloc(
+    if (security_policy_impl_db()->security_policy_idxr(spec->rule_info->af)->alloc(
             &policy_block_id) != SDK_RET_OK) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     security_policy_root_addr_ =
-        security_policy_impl_db()->security_policy_region_addr(spec->af) +
-            (security_policy_impl_db()->security_policy_table_size(spec->af) *
+        security_policy_impl_db()->security_policy_region_addr(spec->rule_info->af) +
+            (security_policy_impl_db()->security_policy_table_size(spec->rule_info->af) *
                  policy_block_id);
     return SDK_RET_OK;
 }
@@ -109,15 +109,15 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->policy_spec;
 
     memset(&policy, 0, sizeof(policy));
-    policy.af = spec->af;
+    policy.af = spec->rule_info->af;
     policy.max_rules =
         (policy.af ==IP_AF_IPV4) ? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
                                    PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
-    policy.num_rules = spec->num_rules;
-    policy.rules = spec->rules;
+    policy.num_rules = spec->rule_info->num_rules;
+    policy.rules = &spec->rule_info->rules[0];
     PDS_TRACE_DEBUG("Processing security policy %s", spec->key.str());
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
-              security_policy_impl_db()->security_policy_table_size(spec->af));
+              security_policy_impl_db()->security_policy_table_size(spec->rule_info->af));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC policy table, err %u", ret);
     }

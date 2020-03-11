@@ -100,18 +100,25 @@ typedef struct rule_s {
     rule_action_data_t    action_data;    ///< action and related information
 } __PACK__ rule_t;
 
+/// \brief rule info contains all rule specific information
+typedef struct rule_info_s {
+    uint8_t     af;           ///< address family
+    uint32_t    num_rules;    ///< number of rules in the list
+    rule_t      rules[0];     ///< list or rules
+} rule_info_t;
+#define POLICY_RULE_SET_SIZE(rule_count)    \
+            (sizeof(rule_info_t) + (rule_count) * sizeof(rule_t))
+
 /// \brief    generic policy specification
 typedef struct pds_policy_spec_s    pds_policy_spec_t;
 struct pds_policy_spec_s {
-    pds_obj_key_t       key;            ///< policy key
-    uint8_t             af;             ///< Address family
-    uint32_t            num_rules;      ///< Number of rules in the list
-    rule_t              *rules;         ///< List or rules
+    pds_obj_key_t   key;           ///< policy key
+    rule_info_t     *rule_info;    ///< rule set of this policy
 
-    pds_policy_spec_s() { rules = NULL; }
+    pds_policy_spec_s() { rule_info = NULL; }
     ~pds_policy_spec_s() {
-        if (rules) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
+        if (rule_info) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
         }
     }
     /// assignment operator
@@ -120,16 +127,16 @@ struct pds_policy_spec_s {
         if (this == &policy) {
             return *this;
         }
-        key = policy.key;
-        af = policy.af;
-        num_rules = policy.num_rules;
-        if (rules) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
+        if (rule_info) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
         }
-        rules =
-            (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                 num_rules * sizeof(rule_t));
-        memcpy(rules, policy.rules, num_rules * sizeof(rule_t));
+        rule_info =
+            (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                               POLICY_RULE_SET_SIZE(policy.rule_info->num_rules));
+        SDK_ASSERT(rule_info != NULL);
+        key = policy.key;
+        memcpy(rule_info, policy.rule_info,
+               POLICY_RULE_SET_SIZE(policy.rule_info->num_rules));
         return *this;
     }
 } __PACK__;

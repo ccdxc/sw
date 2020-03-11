@@ -51,9 +51,9 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = core::policy_create(&key, &api_spec, bctxt);
-        if (api_spec.rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rules);
-            api_spec.rules = NULL;
+        if (api_spec.rule_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
+            api_spec.rule_info = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -118,9 +118,9 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = core::policy_update(&key, &api_spec, bctxt);
-        if (api_spec.rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rules);
-            api_spec.rules = NULL;
+        if (api_spec.rule_info->rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info->rules);
+            api_spec.rule_info = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -210,6 +210,7 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
         return Status::OK;
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
+        memset(&info, 0, sizeof(info));
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::policy_get(&key, &info);
         if (ret != SDK_RET_OK) {
