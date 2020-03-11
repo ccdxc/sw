@@ -51,11 +51,7 @@ const (
 	indexBatchSize                      = 100
 	indexBatchIntvl                     = 5 * time.Second
 	indexRefreshIntvl                   = 60 * time.Second
-	maxOrderedWriters                   = 8
-	maxAppendOnlyWriters                = 1                                        // Used for firewall logs
-	maxWriters                          = maxOrderedWriters + maxAppendOnlyWriters // Max concurrent writers
-	indexMaxBuffer                      = maxWriters * indexBatchSize
-	fwLogsElasticBatchSize              = 50
+	fwLogsElasticBatchSize              = 100
 	fwLogsElasticWriteWorkerSize        = 10
 	fwLogsElasticWriterWorkerBufferSize = 1000
 )
@@ -141,6 +137,12 @@ type Indexer struct {
 	// Policy cache
 	cache cache.Interface
 
+	// Limits
+	maxOrderedWriters    int
+	maxAppendOnlyWriters int // Used for firewall logs
+	maxWriters           int // Max concurrent writers
+	indexMaxBuffer       int
+
 	// Whether or not to watch VOS objects
 	watchVos       bool
 	WatchAPIServer bool // exported because its set using Option closure.
@@ -167,6 +169,13 @@ func DisableVOSWatcher() Option {
 	}
 }
 
+// DisableApiserverWatcher disables indexing APIServer objects
+func DisableApiserverWatcher() Option {
+	return func(idr *Indexer) {
+		idr.WatchAPIServer = false
+	}
+}
+
 // WatchHandler is handler func for watch events on API-server objects
 type WatchHandler func(et kvstore.WatchEventType, obj interface{})
 
@@ -185,26 +194,28 @@ type writerMapEntry struct {
 // NewIndexer instantiates a new indexer
 func NewIndexer(ctx context.Context,
 	apiServerAddr string, rsr resolver.Interface, cache cache.Interface,
-	logger log.Logger, opts ...Option) (Interface, error) {
-
-	logger.Infof("Creating Indexer, apiserver-addr: %s", apiServerAddr)
-
+	logger log.Logger, maxOrderedWriters int, maxAppendOnlyWriters int,
+	opts ...Option) (Interface, error) {
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
-		ctx:               newCtx,
-		cancelFunc:        cancelFunc,
-		apiServerAddr:     apiServerAddr,
-		logger:            logger,
-		batchSize:         indexBatchSize,
-		indexIntvl:        indexBatchIntvl,
-		indexRefreshIntvl: indexRefreshIntvl,
-		doneCh:            make(chan error),
-		count:             0,
-		cache:             cache,
-		watchVos:          true,
-		WatchAPIServer:    true,
-		VosTest:           false,
-		VosTestGrpcURL:    "", // 127.0.0.1:9051
+		ctx:                  newCtx,
+		cancelFunc:           cancelFunc,
+		apiServerAddr:        apiServerAddr,
+		logger:               logger,
+		batchSize:            indexBatchSize,
+		indexIntvl:           indexBatchIntvl,
+		indexRefreshIntvl:    indexRefreshIntvl,
+		doneCh:               make(chan error),
+		count:                0,
+		cache:                cache,
+		maxOrderedWriters:    maxOrderedWriters,
+		maxAppendOnlyWriters: maxAppendOnlyWriters,
+		maxWriters:           maxOrderedWriters + maxAppendOnlyWriters,
+		indexMaxBuffer:       (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
+		watchVos:             true,
+		WatchAPIServer:       true,
+		VosTest:              false,
+		VosTestGrpcURL:       "", // 127.0.0.1:9051
 	}
 
 	for _, opt := range opts {
@@ -212,6 +223,9 @@ func NewIndexer(ctx context.Context,
 			opt(&indexer)
 		}
 	}
+
+	logger.Infof("Creating Indexer, apiserver-addr: %s, watchAPIServer %d, watchVos %d",
+		apiServerAddr, indexer.WatchAPIServer, indexer.watchVos)
 
 	if indexer.elasticClient == nil {
 		// Initialize elastic client
@@ -298,17 +312,17 @@ func (idr *Indexer) Start() error {
 
 	k := 0
 	idr.reqChan = make(map[int]chan *indexRequest)
-	for i := 0; i < maxOrderedWriters; i++ {
-		idr.reqChan[k] = make(chan *indexRequest, indexMaxBuffer)
+	for i := 0; i < idr.maxOrderedWriters; i++ {
+		idr.reqChan[k] = make(chan *indexRequest, idr.indexMaxBuffer)
 		k++
 	}
-	for i := 0; i < maxAppendOnlyWriters; i++ {
-		idr.reqChan[k] = make(chan *indexRequest, indexMaxBuffer)
+	for i := 0; i < idr.maxAppendOnlyWriters; i++ {
+		idr.reqChan[k] = make(chan *indexRequest, idr.indexMaxBuffer)
 		k++
 	}
 
-	idr.requests = make([][]*elastic.BulkRequest, maxWriters)
-	idr.resVersionUpdater = make([]func(), maxWriters)
+	idr.requests = make([][]*elastic.BulkRequest, idr.maxWriters)
+	idr.resVersionUpdater = make([]func(), idr.maxWriters)
 
 	go func() {
 		idr.Add(1)
@@ -317,8 +331,8 @@ func (idr *Indexer) Start() error {
 
 	// start the Elastic Writer Pool
 	k = 0
-	idr.logger.Infof("Starting ordered %d writers", maxOrderedWriters)
-	for i := 0; i < maxOrderedWriters; i++ {
+	idr.logger.Infof("Starting ordered %d writers", idr.maxOrderedWriters)
+	for i := 0; i < idr.maxOrderedWriters; i++ {
 		idr.Add(1)
 		go func(id int) {
 			defer idr.Done()
@@ -328,8 +342,8 @@ func (idr *Indexer) Start() error {
 	}
 
 	// start append only writers
-	idr.logger.Infof("Starting append only %d writers", maxAppendOnlyWriters)
-	for i := 0; i < maxAppendOnlyWriters; i++ {
+	idr.logger.Infof("Starting append only %d writers", idr.maxAppendOnlyWriters)
+	for i := 0; i < idr.maxAppendOnlyWriters; i++ {
 		idr.Add(1)
 		go func(id int) {
 			defer idr.Done()
@@ -545,25 +559,29 @@ func (idr *Indexer) GetRunningStatus() bool {
 // Initialize the searchDB with indices
 // required for Venice search
 func (idr *Indexer) initSearchDB() error {
-	// Delete current index since we may have missed delete events while spyglass was down
-	if err := idr.deleteIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
-		return err
+	if idr.WatchAPIServer {
+		// Delete current index since we may have missed delete events while spyglass was down
+		if err := idr.deleteIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
+			return err
+		}
+
+		// Create index and mapping for Policy objects
+		if err := idr.createIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
+			return err
+		}
 	}
 
-	// Create index and mapping for Policy objects
-	if err := idr.createIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
-		return err
-	}
+	if idr.watchVos {
+		// Create index and mapping for Firewall logs
+		if err :=
+			idr.createIndexHelper(globals.FwLogs, globals.ReservedFwLogsTenantName); err != nil && !elastic.IsIndexExists(err) {
+			return err
+		}
 
-	// Create index and mapping for Firewall logs
-	if err :=
-		idr.createIndexHelper(globals.FwLogs, globals.ReservedFwLogsTenantName); err != nil && !elastic.IsIndexExists(err) {
-		return err
-	}
-
-	// Create index and mapping for Firewall logs
-	if err := idr.createIndexHelper(globals.FwLogsObjects, ""); err != nil && !elastic.IsIndexExists(err) {
-		return err
+		// Create index and mapping for Firewall logs
+		if err := idr.createIndexHelper(globals.FwLogsObjects, ""); err != nil && !elastic.IsIndexExists(err) {
+			return err
+		}
 	}
 
 	return nil

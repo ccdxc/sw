@@ -29,6 +29,7 @@ var _ listerwatcher.WatcherClient
 var Buckets_normal = map[string]string{
 	"auditevents": "auditevents",
 	"events":      "events",
+	"fwlogs":      "fwlogs",
 	"images":      "images",
 	"snapshots":   "snapshots",
 	"techsupport": "techsupport",
@@ -40,6 +41,7 @@ var Buckets_vname = map[int32]string{
 	2: "snapshots",
 	3: "events",
 	4: "auditevents",
+	5: "fwlogs",
 }
 
 var Buckets_vvalue = map[string]int32{
@@ -48,6 +50,7 @@ var Buckets_vvalue = map[string]int32{
 	"snapshots":   2,
 	"events":      3,
 	"auditevents": 4,
+	"fwlogs":      5,
 }
 
 func (x Buckets) String() string {

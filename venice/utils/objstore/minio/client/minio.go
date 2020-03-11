@@ -49,8 +49,27 @@ func NewClient(url, accessID, secretKey string, tlsConfig *tls.Config, bucketNam
 		mc.SetCustomTransport(tr)
 	}
 
-	if _, err := mc.ListBuckets(); err != nil {
-		return nil, fmt.Errorf("list buckets err: %s", err)
+	// Current minio-go client does not support ListBucketsWithContext, upgrade it.
+	// This code may leak the goroutine internally started by ListBuckets.
+	// Once minio-go client is upgraded, remove this code.
+	output := make(chan error)
+	go func() {
+		if _, err = mc.ListBuckets(); err != nil {
+			output <- fmt.Errorf("list buckets err: %s", err)
+		}
+		output <- nil
+	}()
+
+	ctxNew, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	select {
+	case <-ctxNew.Done():
+		return nil, fmt.Errorf("connect: listbuckets context timed out")
+	case err := <-output:
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	c := &Client{

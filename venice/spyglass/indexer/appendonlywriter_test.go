@@ -102,6 +102,8 @@ func setupIndexer(t *testing.T,
 			resolver,
 			cache.NewCache(logger),
 			logger,
+			8,
+			1,
 			IndexerSetTest)
 
 		AssertOk(t, err, "failed to add indexer")

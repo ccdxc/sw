@@ -262,11 +262,15 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 
 		fwlogs = append(fwlogs, request)
 
-		if len(fwlogs) >= fwLogsElasticBatchSize {
+		// send the whole file in one batch, rate 10/s, 1 min  = 600 log lines
+		if len(fwlogs) >= fwLogsElasticBatchSize*10 {
 			output = append(output, fwlogs)
 			fwlogs = []*elastic.BulkRequest{}
 		}
 	}
+
+	// Append the last batch
+	output = append(output, fwlogs)
 	return output, nil
 }
 

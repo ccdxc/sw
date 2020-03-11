@@ -547,7 +547,7 @@ func TestSpyglass(t *testing.T) {
 				indexer.DisableVOSWatcher()(idr)
 				indexer.WithElasticClient(tInfo.esClient)(idr)
 			}
-			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, spyglassOpts)
+			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, 8, 0, spyglassOpts)
 			if err != nil {
 				t.Logf("Error creating indexer: %v", err)
 				return false, nil

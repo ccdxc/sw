@@ -83,14 +83,17 @@ func main() {
 		log.Fatalf("Failed to start finder, err: %v", err)
 	}
 
-	// Create the indexer
-	go func() {
+	startIndexer := func(maxOrderedWriters, maxAppendonlyWriters int, opts ...indexer.Option) {
 		for {
 			idxer, err := indexer.NewIndexer(ctx,
 				*apiServerAddr,
 				rslr,
 				cache,
-				logger)
+				logger,
+				maxOrderedWriters,
+				maxAppendonlyWriters,
+				opts...,
+			)
 
 			if err != nil || idxer == nil {
 				log.Fatalf("Failed to create indexer, err: %v", err)
@@ -100,7 +103,10 @@ func main() {
 				log.Errorf("Indexer failed with err, err: %v", err)
 			}
 		}
-	}()
+	}
+	// Create the indexers
+	go startIndexer(8, 0, indexer.DisableVOSWatcher())
+	go startIndexer(8, 1, indexer.DisableApiserverWatcher())
 
 	router := mux.NewRouter()
 

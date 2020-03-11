@@ -11,7 +11,7 @@ import (
 // Start the Bulk/Batch writer to Elasticsearch
 // It doesnt maintain any order for sending data to Elastic.
 // Its supposed to be used for append only usecases like logs.
-func (idr *Indexer) startAppendOnlyWriter(id,
+func (idr *Indexer) startAppendOnlyWriter(id int,
 	batchSize,
 	elasticWorkersSize,
 	workersBufferSize int,

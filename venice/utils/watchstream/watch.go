@@ -365,7 +365,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 	sendevent := func(e *list.Element) {
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
-		if obj.version != 0 && obj.version < startVer {
+		if obj.version != 0 && obj.version < startVer && startVer != math.MaxUint64 {
 			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ResVersion", obj.version, "peer", peer)
 			return
 		}
@@ -479,7 +479,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 			return
 		}
 		// ignore events older than startVer
-		for item != nil && obj != nil && obj.version < startVer {
+		for item != nil && obj != nil && startVer != math.MaxUint64 && obj.version < startVer {
 			item = item.Next()
 			if item != nil {
 				obj = item.Value.(*watchEvent)
@@ -498,7 +498,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 			}
 		}
 	} else {
-		if fromver != 0 {
+		if fromver != 0 && fromver != math.MaxUint64 {
 			// fromVer specified but there is nothing in the queue.
 			errmsg := api.Status{
 				Result:  api.StatusResultExpired,

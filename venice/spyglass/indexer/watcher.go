@@ -91,30 +91,28 @@ func (idr *Indexer) createWatchers() error {
 	// Objstore currently does not support resource version
 	// There is a possibility of missing a delete if this watch connection goes down briefly.
 	// TODO: Add resource version
-	if !idr.watchVos {
-		idr.logger.Infof("Skipping VOS watchers")
-		return nil
-	}
-	for _, bucket := range objstore.Buckets_name {
-		key := fmt.Sprintf("objstore-%s", bucket)
-		opts := api.ListWatchOptions{}
+	if idr.watchVos {
+		for _, bucket := range objstore.Buckets_name {
+			key := fmt.Sprintf("objstore-%s", bucket)
+			opts := api.ListWatchOptions{}
 
-		opts.Tenant = globals.DefaultTenant
+			opts.Tenant = globals.DefaultTenant
 
-		if bucket == fwlogsBucketName {
-			opts.Tenant = globals.ReservedFwLogsTenantName
-		}
+			if bucket == fwlogsBucketName {
+				opts.Tenant = globals.ReservedFwLogsTenantName
+			}
 
-		// To watch on a bucket, bucket name must be provided as the namespace
-		opts.Namespace = bucket
-		watch, err := idr.vosClient.ObjstoreV1().Object().Watch(idr.ctx, &opts)
-		err = idr.addWatcher(key, watch, err)
-		if err != nil {
-			// VOS does not support restarting a watch currently. Indexer should shutdown and recreate our index
-			// incase we missed delete events
-			idr.stopWatchersHelper()
-			idr.doneCh <- err
-			return err
+			// To watch on a bucket, bucket name must be provided as the namespace
+			opts.Namespace = bucket
+			watch, err := idr.vosClient.ObjstoreV1().Object().Watch(idr.ctx, &opts)
+			err = idr.addWatcher(key, watch, err)
+			if err != nil {
+				// VOS does not support restarting a watch currently. Indexer should shutdown and recreate our index
+				// incase we missed delete events
+				idr.stopWatchersHelper()
+				idr.doneCh <- err
+				return err
+			}
 		}
 	}
 
@@ -172,17 +170,17 @@ func (idr *Indexer) startWatchers() {
 			cases[i] = reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(ch)}
 			apiGroupMappings[i] = key
 			if strings.Contains(key, "fwlogs") {
-				idr.logger.Infof("Assinging writer %d to key %s", maxOrderedWriters, "fwlogs")
+				idr.logger.Infof("Assinging writer %d to key %s", idr.maxOrderedWriters, "fwlogs")
 				// fwlogs go to append only writer
 				idr.writerMap[key] = &writerMapEntry{
 					// the appendOnlyWriterStartId is the end of maxOrderedWritersId,
 					// its 8 today
-					writerID: maxOrderedWriters,
+					writerID: idr.maxOrderedWriters,
 				}
 			} else {
-				idr.logger.Infof("Assinging writer %d to key %s", (i-2)%maxOrderedWriters, key)
+				idr.logger.Infof("Assinging writer %d to key %s", (i-2)%idr.maxOrderedWriters, key)
 				idr.writerMap[key] = &writerMapEntry{
-					writerID: (i - 2) % maxOrderedWriters,
+					writerID: (i - 2) % idr.maxOrderedWriters,
 				}
 			}
 			i++
@@ -289,9 +287,9 @@ func (idr *Indexer) handleWatcherEvent(apiGroup string, et kvstore.WatchEventTyp
 // Start the Bulk/Batch writer to Elasticsearch
 func (idr *Indexer) startOrderedWriter(id int) {
 	// input validation
-	if id < 0 || id >= maxOrderedWriters {
+	if id < 0 || id >= idr.maxOrderedWriters {
 		idr.logger.Debugf("argID: %d out of range [%d .. %d]",
-			id, 0, maxOrderedWriters)
+			id, 0, idr.maxOrderedWriters)
 		return
 	}
 
