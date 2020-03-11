@@ -535,6 +535,9 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		} else {
 			var sns *cache.SmartNICState
 			sns, err = s.stateMgr.CreateSmartNIC(nicObj, true)
+			if err != nil || sns == nil {
+				return intErrResp, errors.Wrapf(err, "Error creating smartNIC object")
+			}
 			sns.Lock()
 			defer sns.Unlock()
 		}
