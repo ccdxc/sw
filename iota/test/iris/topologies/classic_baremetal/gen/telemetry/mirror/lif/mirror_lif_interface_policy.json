@@ -1,0 +1,40 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "Interface", 
+            "meta": {
+                "name": "uplink-1", 
+                "tenant": "default",
+                "namespace": "default", 
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z"
+            }, 
+            "spec": {
+                "type": "UPLINK_ETH",
+                "TxCollectors": ["lif-collector"],
+                "RxCollectors": ["lif-collector"]
+            }
+        },
+        {
+            "status": {}, 
+            "kind": "Interface",
+            "meta": {
+                "name": "uplink-2",
+                "tenant": "default",
+                "namespace": "default", 
+                "creation-time": "1970-01-01T00:00:00Z",
+                "mod-time": "1970-01-01T00:00:00Z"
+            }, 
+            "spec": {
+                "type": "UPLINK_ETH",
+                "TxCollectors": ["lif-collector"],
+                "RxCollectors": ["lif-collector"]
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/interfaces/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}
+

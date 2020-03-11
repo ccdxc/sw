@@ -1,0 +1,22 @@
+{
+    "objects": [
+        {
+            "status": {}, 
+            "kind": "Collector", 
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z", 
+                "mod-time": "1970-01-01T00:00:00Z", 
+                "namespace": "default", 
+                "name": "lif-collector", 
+                "tenant": "default"
+            }, 
+            "spec": {
+                "packet-size": 128,
+                "destination": "192.168.100.101"
+            }
+        }
+    ], 
+    "type": "netagent", 
+    "rest-endpoint": "api/collectors/", 
+    "object-key": "meta.tenant/meta.namespace/meta.name"
+}

@@ -62,6 +62,7 @@ testbundles:
         - flowstats/flowstats.testbundle
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle
+        #- networking/expanded_telemetry.testbundle
         - linktest/linktest.testbundle
         - firewall/policy.testbundle
         - aging/aging.testbundle

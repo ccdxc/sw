@@ -1,0 +1,26 @@
+#
+# This test-bundle provides LIF ERSPAN / FLOW ERSPAN / NETFLOW ERSPAN 
+# testing support as part of Expanded-Telemetry in Hostpin and
+# Transparent-Flowaware modes
+#
+meta:
+    name              : expanded_telemetry
+    nics              : [ pensando, mellanox, intel, broadcom ]
+    os                : [ linux, esx, freebsd ]
+    targetcount       : 1
+
+testcases:
+    -   name          : LifErspanInbandCollector
+        testcase      : testcases.expanded_telemetry.lif_erspan_collector
+        iterators     :
+            type      : nested
+            pktsize   : [128]
+            peer      : [remote]
+            collector : [local, remote, all]
+            vlan      : [native, tag]
+            iftype    : [uplink]
+            direction : [ingress, egress, both]
+            ccount    : [1, 8]
+        args          :
+            type      : sanity
+
