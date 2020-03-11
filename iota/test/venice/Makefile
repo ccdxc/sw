@@ -45,7 +45,9 @@ vcenter-e2e:
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/vchub -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Vcenter
 
-#venice-e2e-basenet: TODO Reenebale this tests once jobd inband changes go in.
+venice-e2e-basenet:
+	echo "Skipped temporarily till inband changes are in JOBD"
+#   TODO Reenebale this tests once jobd inband changes go in.
 #	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 #	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 #	cd ../../ && make
