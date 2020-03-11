@@ -194,6 +194,12 @@ var scaleCfgenParams = &Cfgen{
 			IPAddress:             "0.0.0.0",
 			EnableAddressFamilies: []string{"ipv4-unicast"},
 		},
+		OverlayBgpNeihbourTemplate: &network.BGPNeighbor{
+			RemoteAS:              600, //Static testbed has this AS number
+			MultiHop:              10,
+			IPAddress:             "0.0.0.0",
+			EnableAddressFamilies: []string{"evpn"},
+		},
 	},
 
 	TenantConfigParams: TenantConfigParams{

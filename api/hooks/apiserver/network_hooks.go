@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -70,6 +71,82 @@ func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatu
 		ret = append(ret, fmt.Errorf("maximum of 2 egress security policies are allowed"))
 	}
 	return ret
+}
+
+func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
+	var ret []error
+	in, ok := i.(network.RoutingConfig)
+	if !ok {
+		return nil
+	}
+	if in.Spec.BGPConfig == nil {
+		return nil
+	}
+	var autoCfg, evpn, ipv4 bool
+	rip := net.ParseIP(in.Spec.BGPConfig.RouterId)
+	if rip.IsUnspecified() {
+		autoCfg = true
+	}
+
+	peerMap := make(map[string]bool)
+	for _, n := range in.Spec.BGPConfig.Neighbors {
+		if n.IPAddress == "0.0.0.0" {
+			if len(n.EnableAddressFamilies) != 1 {
+				ret = append(ret, fmt.Errorf("exactly one address family allowed with auto config peering %v", n.EnableAddressFamilies))
+				continue
+			}
+			switch n.EnableAddressFamilies[0] {
+			case network.BGPAddressFamily_EVPN.String():
+				if evpn {
+					ret = append(ret, fmt.Errorf("only one auto-config peer per address family [l2vpn-evpn] allowed"))
+				} else {
+					evpn = true
+				}
+				if n.RemoteAS != in.Spec.BGPConfig.ASNumber {
+					ret = append(ret, fmt.Errorf("EVPN auto-peering allowed only for iBGP peers"))
+				}
+			case network.BGPAddressFamily_IPv4Unicast.String():
+				if !autoCfg {
+					ret = append(ret, fmt.Errorf("auto-config peer only allowed when Router ID is also 0.0.0.0"))
+				}
+				if ipv4 {
+					ret = append(ret, fmt.Errorf("only one auto-config peer per address family [ipv4-unicast] allowed"))
+				} else {
+					ipv4 = true
+				}
+				if n.RemoteAS == in.Spec.BGPConfig.ASNumber {
+					ret = append(ret, fmt.Errorf("ipv4-unicast auto-peering allowed only for eBGP peers"))
+				}
+			}
+		} else {
+			if _, ok := peerMap[n.IPAddress]; ok {
+				ret = append(ret, fmt.Errorf("duplicate peer in spec [%v]", n.IPAddress))
+			}
+			peerMap[n.IPAddress] = true
+		}
+	}
+	return ret
+}
+
+// Checks that for any orch info deletion, no workloads from the orch info are using this network
+func (h *networkHooks) routingConfigPreCommit(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	in, ok := i.(network.RoutingConfig)
+	if !ok {
+		h.logger.ErrorLog("method", "routingConfigPreCommit", "msg", fmt.Sprintf("invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+
+	existingObj := &network.RoutingConfig{}
+	err := kv.Get(ctx, key, existingObj)
+	if err != nil {
+		return i, true, fmt.Errorf("Failed to get existing object: %s", err)
+	}
+	if existingObj.Spec.BGPConfig != nil && in.Spec.BGPConfig != nil {
+		if existingObj.Spec.BGPConfig.ASNumber != in.Spec.BGPConfig.ASNumber {
+			return i, true, fmt.Errorf("Change in local ASN not allowed, delete and recreate")
+		}
+	}
+	return i, true, nil
 }
 
 // Checks that for any orch info deletion, no workloads from the orch info are using this network
@@ -269,6 +346,8 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
+	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
+	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
 }
 
 func init() {

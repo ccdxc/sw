@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-type snic struct {
+type snicT struct {
 	name   string
 	phase  string
 	ip     string
@@ -27,14 +27,15 @@ type snic struct {
 // ServiceHandlers holds all the servies to be supported
 type ServiceHandlers struct {
 	sync.Mutex
-	updated       bool
-	pegasusURL    string
-	cfgWatcherSvc types.CfgWatcherService
-	pegasusClient pdstypes.BGPSvcClient
-	ifClient      pdstypes.IfSvcClient
-	routeSvc      pdstypes.CPRouteSvcClient
-	apiclient     apiclient.Services
-	snicMap       map[string]snic
+	updated        bool
+	pegasusURL     string
+	cfgWatcherSvc  types.CfgWatcherService
+	pegasusClient  pdstypes.BGPSvcClient
+	ifClient       pdstypes.IfSvcClient
+	routeSvc       pdstypes.CPRouteSvcClient
+	apiclient      apiclient.Services
+	snicMap        map[string]*snicT
+	naplesTemplate *network.BGPNeighbor
 }
 
 // NewServiceHandlers returns a Service Handler
@@ -46,7 +47,7 @@ func NewServiceHandlers() *ServiceHandlers {
 	m.cfgWatcherSvc.SetNetworkInterfaceEventHandler(m.HandleNetworkInterfaceEvent)
 	m.cfgWatcherSvc.SetRoutingConfigEventHandler(m.HandleRoutingConfigEvent)
 	m.cfgWatcherSvc.SetNodeConfigEventHandler(m.HandleNodeConfigEvent)
-	m.snicMap = make(map[string]snic)
+	m.snicMap = make(map[string]*snicT)
 	m.pegasusURL = globals.Localhost + ":" + globals.PegasusGRPCPort
 	m.connectToPegasus()
 	m.setupLBIf()
@@ -58,13 +59,11 @@ var CfgAsn uint32
 
 func (m *ServiceHandlers) configurePeers() {
 	for _, nic := range m.snicMap {
-		if nic.pushed == false {
-			m.configurePeer(nic, false)
-		}
+		m.configurePeer(nic, false)
 	}
 }
 
-func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
+func (m *ServiceHandlers) configurePeer(nic *snicT, deleteOp bool) {
 	log.Infof("configurePeer snic %+v CfgAsn %d", nic, CfgAsn)
 	if nic.phase != "admitted" || nic.ip == "" || nic.uuid == "" || CfgAsn == 0 {
 		// wait for all information to be right
@@ -75,26 +74,29 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 	}
 	keepalive, holdtime := cache.getTimers()
 	uid := cache.getUUID()
-	// call grpc api to configure ms
-	peerReq := pdstypes.BGPPeerRequest{}
-	peer := pdstypes.BGPPeerSpec{
-		Id:           uid,
-		PeerAddr:     ip2PDSType(nic.ip),
-		LocalAddr:    ip2PDSType(""),
-		RemoteASN:    CfgAsn,
-		State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
-		SendComm:     true,
-		SendExtComm:  true,
-		ConnectRetry: 5,
-		KeepAlive:    keepalive,
-		HoldTime:     holdtime,
-		RRClient:     pdstypes.BGPPeerRRClient_BGP_PEER_RR_CLIENT,
-	}
-	log.Infof("Add create peer [%+v]", peer)
-	peerReq.Request = append(peerReq.Request, &peer)
-
 	ctx := context.TODO()
 	if deleteOp != true {
+		// call grpc api to configure ms
+		peerReq := pdstypes.BGPPeerRequest{}
+		peer := pdstypes.BGPPeerSpec{
+			Id:           uid,
+			PeerAddr:     ip2PDSType(nic.ip),
+			LocalAddr:    ip2PDSType(""),
+			RemoteASN:    CfgAsn,
+			State:        pdstypes.AdminState_ADMIN_STATE_ENABLE,
+			SendComm:     true,
+			SendExtComm:  true,
+			ConnectRetry: 5,
+			KeepAlive:    keepalive,
+			HoldTime:     holdtime,
+			RRClient:     pdstypes.BGPPeerRRClient_BGP_PEER_RR_CLIENT,
+		}
+		if m.naplesTemplate != nil {
+			peer.Password = []byte(m.naplesTemplate.Password)
+			peer.TTL = m.naplesTemplate.MultiHop
+		}
+		log.Infof("Add create peer [%+v]", peer)
+		peerReq.Request = append(peerReq.Request, &peer)
 		if nic.pushed {
 			presp, err := m.pegasusClient.BGPPeerUpdate(ctx, &peerReq)
 			if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
@@ -110,16 +112,22 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 
 	} else {
 		if nic.pushed {
+			unkLocal := &pdstypes.IPAddress{
+				Af: pdstypes.IPAF_IP_AF_INET,
+			}
 			peerDReq := pdstypes.BGPPeerDeleteRequest{}
 			peer := pdstypes.BGPPeerKeyHandle{
-				IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip)}},
+				IdOrKey: &pdstypes.BGPPeerKeyHandle_Key{Key: &pdstypes.BGPPeerKey{PeerAddr: ip2PDSType(nic.ip), LocalAddr: unkLocal}},
 			}
-			log.Infof("Add create peer [%+v]", peer)
+			log.Infof("Add Delete peer [%+v]", peer)
 			peerDReq.Request = append(peerDReq.Request, &peer)
 			presp, err := m.pegasusClient.BGPPeerDelete(ctx, &peerDReq)
 			if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
 				log.Errorf("Peer delete Request returned (%v)[%+v]", err, presp)
+			} else {
+				log.Infof("Peer delete request succeeded (%s)[%v]", err, presp.ApiStatus)
 			}
+
 			nic.pushed = false
 		}
 	}
@@ -143,32 +151,16 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 			log.Errorf("Peer AF create Request returned (%v)[%+v]", err, presp)
 		}
 		nic.pushed = true
-	} else {
-		peerAfReq := pdstypes.BGPPeerAfDeleteRequest{
-			Request: []*pdstypes.BGPPeerAfKeyHandle{
-				{
-					IdOrKey: &pdstypes.BGPPeerAfKeyHandle_Key{Key: &pdstypes.BGPPeerAfKey{PeerAddr: ip2PDSType(nic.ip), LocalAddr: ip2PDSType(""), Afi: pdstypes.BGPAfi_BGP_AFI_L2VPN, Safi: pdstypes.BGPSafi_BGP_SAFI_EVPN}},
-				},
-			},
-		}
-		presp, err := m.pegasusClient.BGPPeerAfDelete(ctx, &peerAfReq)
-
-		if err != nil || presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-
-			log.Errorf("Peer AF delete Request returned (%v)[%+v]", err, presp)
-
-		}
-		nic.pushed = false
-		log.Infof("Del Peer AF [%+v]", peerAfReq.Request[0])
 	}
 
 	m.updated = true
-	pReq = peerReq
-	once.Do(m.pollStatus)
 }
 
 func (m *ServiceHandlers) handleCreateUpdateSmartNICObject(evtNIC *cmd.DistributedServiceCard) {
-	snic := m.snicMap[evtNIC.ObjectMeta.Name]
+	snic, ok := m.snicMap[evtNIC.ObjectMeta.Name]
+	if !ok {
+		snic = &snicT{}
+	}
 	snic.name = evtNIC.ObjectMeta.Name
 	snic.phase = evtNIC.Status.AdmissionPhase
 	snic.uuid = evtNIC.UUID
@@ -181,7 +173,10 @@ func (m *ServiceHandlers) handleDeleteSmartNICObject(evtNIC *cmd.DistributedServ
 }
 
 func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.NetworkInterface) {
-	snic := m.snicMap[evtIntf.Status.DSC]
+	snic, ok := m.snicMap[evtIntf.Status.DSC]
+	if !ok {
+		snic = &snicT{}
+	}
 	snic.name = evtIntf.Status.DSC
 	snic.pushed = false
 	if evtIntf.Spec.IPConfig != nil {

@@ -583,8 +583,8 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
 		cfg := a.InfraAPI.GetConfig()
 		if cfg.LoopbackIP != oldLoopbackIf {
-			log.Infof("BGP RID change detected, deleting and recreating BGP config and updating Device")
-			apulu.UpdateBGPLoopbackConfig(a.InfraAPI, a.RoutingClient)
+			log.Infof("BGP RID change detected[%v->%v], deleting and recreating BGP config and updating Device", oldLoopbackIf, cfg.LoopbackIP)
+			apulu.UpdateBGPLoopbackConfig(a.InfraAPI, a.RoutingClient, oldLoopbackIf, cfg.LoopbackIP)
 
 			if cfg.LoopbackIP != "" {
 				lbip := apuluutils.ConvertIPAddress(cfg.LoopbackIP)
@@ -1186,7 +1186,7 @@ func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.Rout
 		rtcfg = existingRtcfg
 	}
 	log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg, oper, types.InfoHandleObjBegin)
-	defer log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg, oper, types.InfoHandleObjEnd)
+	defer log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg.Name, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	err = validator.ValidateRoutingConfig(a.InfraAPI, rtcfg)

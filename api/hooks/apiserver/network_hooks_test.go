@@ -45,6 +45,7 @@ func TestIPAMPolicyConfig(t *testing.T) {
 	service.AddMethod("VirtualRouter", meth)
 	service.AddMethod("NetworkInterface", meth)
 	service.AddMethod("IPAMPolicy", meth)
+	service.AddMethod("RoutingConfig", meth)
 
 	s := &networkHooks{
 		svc:    service,
@@ -190,6 +191,44 @@ func TestValidateHooks(t *testing.T) {
 	errs = nh.validateNetworkIntfConfig(nwif, "v1", false, false)
 	Assert(t, len(errs) != 0, "expecting to fail")
 
+	rtcfg := network.RoutingConfig{
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				RouterId: "1.1.1.1",
+				ASNumber: 1000,
+				Neighbors: []*network.BGPNeighbor{
+					{
+						IPAddress:             "0.0.0.0",
+						EnableAddressFamilies: []string{"evpn"},
+						RemoteAS:              1000,
+					},
+					{
+						IPAddress:             "0.0.0.0",
+						EnableAddressFamilies: []string{"ipv4-unicast"},
+						RemoteAS:              1000,
+					},
+				},
+			},
+		},
+	}
+	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
+	rtcfg.Spec.BGPConfig.RouterId = "0.0.0.0"
+	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
+	rtcfg.Spec.BGPConfig.Neighbors[1].RemoteAS = 2000
+	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+	Assert(t, len(errs) == 0, "found errors %s", errs)
+	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, &network.BGPNeighbor{
+		IPAddress:             "0.0.0.0",
+		EnableAddressFamilies: []string{"ipv4-unicast"},
+		RemoteAS:              1000,
+	})
+	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
+	rtcfg.Spec.BGPConfig.Neighbors[2].EnableAddressFamilies = []string{"evpn"}
+	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
 }
 
 func TestPrecommitHooks(t *testing.T) {
@@ -226,6 +265,34 @@ func TestPrecommitHooks(t *testing.T) {
 	Assert(t, kvw, "Expecting kv write to be true")
 	Assert(t, len(txn.Cmps) == 0, "expecting no comparator to be added to txn")
 	Assert(t, len(txn.Ops) == 1, "expecting one operation to be added to txn")
+
+	existingrtcfg := network.RoutingConfig{
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				RouterId: "1.1.1.1",
+				ASNumber: 1000,
+			},
+		},
+	}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		r := into.(*network.RoutingConfig)
+		*r = existingrtcfg
+		return nil
+	}
+	rtCfg := network.RoutingConfig{
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				RouterId: "1.1.1.1",
+				ASNumber: 1000,
+			},
+		},
+	}
+	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, rtCfg)
+	AssertOk(t, err, "expecting to succeed (%v)", err)
+	rtCfg.Spec.BGPConfig.ASNumber = 2000
+	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, rtCfg)
+	Assert(t, err != nil, "expecting to fail (%v)", err)
+
 }
 
 func TestNetworkOrchestratorRemoval(t *testing.T) {

@@ -108,7 +108,23 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 	sm.mbus.AddObject(agentNetif)
 
 	// trigger the create in ctkit, which adds the objec to apiserer
-	return sm.ctrler.NetworkInterface().Create(netif)
+	// retry till it succeeds
+	now := time.Now()
+	retries := 0
+	for {
+		err := sm.ctrler.NetworkInterface().Create(netif)
+		if err == nil {
+			break
+		}
+		if time.Since(now) > time.Second*2 {
+			log.Errorf("create interface failed (%s)", err)
+			now = time.Now()
+		}
+		retries++
+		time.Sleep(100 * time.Millisecond)
+
+	}
+	return nil
 }
 
 // OnInterfaceUpdateReq gets called when agent sends update request

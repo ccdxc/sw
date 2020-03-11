@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -66,7 +67,6 @@ func RoutingConfigStateFromObj(obj runtime.Object) (*RoutingConfigState, error) 
 }
 
 func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
-	neighbor := &netproto.BGPNeighbor{}
 	meta := api.ObjectMeta{
 		Tenant:          globals.DefaultTenant,
 		Namespace:       globals.DefaultNamespace,
@@ -98,6 +98,7 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 		}
 
 		for _, nbr := range rtcfg.RoutingConfig.Spec.BGPConfig.Neighbors {
+			neighbor := new(netproto.BGPNeighbor)
 			neighbor.Shutdown = nbr.Shutdown
 			neighbor.IPAddress = nbr.IPAddress
 			neighbor.RemoteAS = nbr.RemoteAS
@@ -154,7 +155,11 @@ func (sma *SmRoute) OnRoutingConfigCreate(obj *ctkit.RoutingConfig) error {
 	log.Info("OnRoutingConfigCreate created: ", rtcfg.RoutingConfig)
 
 	// store it in local DB
-	err = sma.sm.AddObject(convertRoutingConfig(rtcfg))
+	err = sma.sm.mbus.AddObjectWithReferences(rtcfg.RoutingConfig.MakeKey(string(apiclient.GroupNetwork)), convertRoutingConfig(rtcfg), references(obj))
+	if err != nil {
+		log.Errorf("could not add RoutingConfig to nimbus (%s)", err)
+		return err
+	}
 	return nil
 }
 
@@ -180,6 +185,11 @@ func (sma *SmRoute) OnRoutingConfigUpdate(oldcfg *ctkit.RoutingConfig, newcfg *n
 		return fmt.Errorf("Can not find routingconfig state")
 	}
 
+	err = sma.sm.mbus.UpdateObjectWithReferences(newcfg.MakeKey(string(apiclient.GroupNetwork)), convertRoutingConfig(rtcfg), references(newcfg))
+	if err != nil {
+		log.Errorf("could not update RoutingConfig to nimbus (%s)", err)
+		return err
+	}
 	log.Info("OnRoutingConfigUpdate, found: ", rtcfg.RoutingConfig)
 
 	return nil
@@ -197,6 +207,10 @@ func (sma *SmRoute) OnRoutingConfigDelete(obj *ctkit.RoutingConfig) error {
 	}
 
 	log.Info("OnRoutingConfigDelete, found: ", rtcfg.RoutingConfig)
-
+	err = sma.sm.mbus.DeleteObjectWithReferences(rtcfg.RoutingConfig.MakeKey(string(apiclient.GroupNetwork)), convertRoutingConfig(rtcfg), references(obj))
+	if err != nil {
+		log.Errorf("could not delete RoutingConfig to nimbus (%s)", err)
+		return err
+	}
 	return nil
 }

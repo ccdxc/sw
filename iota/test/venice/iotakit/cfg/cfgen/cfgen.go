@@ -113,6 +113,7 @@ type UnderlayRoutingConfigParams struct {
 	NumUnderlayNeighbors          int
 	UnderlayRoutingConfigTemplate *network.RoutingConfig
 	UnderlayBgpNeihbourTemplate   *network.BGPNeighbor
+	OverlayBgpNeihbourTemplate    *network.BGPNeighbor
 }
 
 //TenantConfigParams to create tenants
@@ -251,8 +252,9 @@ func (cfgen *Cfgen) genUnderlayRoutingConfig() []*network.RoutingConfig {
 		tNetwork := netCtx.transform(n).(*network.RoutingConfig)
 		for jj := 0; jj < cfgen.UnderlayRoutingConfigParams.NumUnderlayNeighbors; jj++ {
 			tNeigbor := neigCtx.transform(cfgen.UnderlayRoutingConfigParams.UnderlayBgpNeihbourTemplate).(*network.BGPNeighbor)
+			oNeigbor := neigCtx.transform(cfgen.UnderlayRoutingConfigParams.UnderlayBgpNeihbourTemplate).(*network.BGPNeighbor)
 			tNetwork.Spec.BGPConfig.Neighbors = append(tNetwork.Spec.BGPConfig.Neighbors, tNeigbor)
-
+			tNetwork.Spec.BGPConfig.Neighbors = append(tNetwork.Spec.BGPConfig.Neighbors, oNeigbor)
 		}
 		configs = append(configs, tNetwork)
 	}
