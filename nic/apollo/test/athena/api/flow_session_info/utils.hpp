@@ -9,16 +9,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <cinttypes>
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 
-#define CREATE            (0)
-#define COMMON_UPDATE     (1)
-#define REWRITE_UPDATE    (2)
-#define ALL_UPDATE        (3)
+#define CREATE    (0)
+#define UPDATE    (1)
 
-void fill_key(pds_flow_session_key_t *key, uint32_t index, uint8_t direction);
+void fill_key(pds_flow_session_key_t *key, uint32_t index,
+              uint8_t direction);
 
 void fill_data(pds_flow_session_data_t *data, uint32_t index,
-               uint8_t direction, uint8_t update_mode);
+               uint8_t direction, bool update);
 
 #endif // __UTILS_HPP__

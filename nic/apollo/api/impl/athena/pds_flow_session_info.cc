@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// athena flow session implementation
+/// athena flow session info implementation
 ///
 //----------------------------------------------------------------------------
 
@@ -90,6 +90,77 @@ flow_session_info_spec_fill (pds_flow_session_spec_t *spec,
     return;
 }
 
+// Helper function to fill actiondata with direction specific session info
+static void
+flow_session_info_actiondata_fill (session_info_session_info_t *session_info,
+                                   pds_flow_session_spec_t *spec,
+                                   uint8_t direction)
+{
+    if (direction & HOST_TO_SWITCH) {
+        session_info->h2s_epoch_vnic_value =
+            spec->data.host_to_switch_flow_info.epoch_vnic;
+        session_info->h2s_epoch_vnic_id =
+            spec->data.host_to_switch_flow_info.epoch_vnic_id;
+        session_info->h2s_epoch_mapping_value =
+            spec->data.host_to_switch_flow_info.epoch_mapping;
+        session_info->h2s_epoch_mapping_id =
+            spec->data.host_to_switch_flow_info.epoch_mapping_id;
+        session_info->h2s_throttle_bw1_id =
+            spec->data.host_to_switch_flow_info.policer_bw1_id;
+        session_info->h2s_throttle_bw2_id =
+            spec->data.host_to_switch_flow_info.policer_bw2_id;
+        session_info->h2s_vnic_statistics_id =
+            spec->data.host_to_switch_flow_info.vnic_stats_id;
+        // FIXME: Truncated copy, will fix later after P4 changes
+        memcpy((uint8_t *)&session_info->h2s_vnic_statistics_mask,
+               spec->data.host_to_switch_flow_info.vnic_stats_mask, 4);
+        session_info->h2s_vnic_histogram_latency_id =
+            spec->data.host_to_switch_flow_info.vnic_histogram_latency_id;
+        session_info->h2s_vnic_histogram_packet_len_id =
+            spec->data.host_to_switch_flow_info.vnic_histogram_packet_len_id;
+        session_info->h2s_slow_path_tcp_flags_match =
+            spec->data.host_to_switch_flow_info.tcp_flags_bitmap;
+        session_info->h2s_session_rewrite_id =
+            spec->data.host_to_switch_flow_info.rewrite_id;
+        session_info->h2s_allowed_flow_state_bitmap =
+            spec->data.host_to_switch_flow_info.allowed_flow_state_bitmask;
+        session_info->h2s_egress_action =
+            spec->data.host_to_switch_flow_info.egress_action;
+    }
+    if (direction & SWITCH_TO_HOST) {
+        session_info->s2h_epoch_vnic_value =
+            spec->data.switch_to_host_flow_info.epoch_vnic;
+        session_info->s2h_epoch_vnic_id =
+            spec->data.switch_to_host_flow_info.epoch_vnic_id;
+        session_info->s2h_epoch_mapping_value =
+            spec->data.switch_to_host_flow_info.epoch_mapping;
+        session_info->s2h_epoch_mapping_id =
+            spec->data.switch_to_host_flow_info.epoch_mapping_id;
+        session_info->s2h_throttle_bw1_id =
+            spec->data.switch_to_host_flow_info.policer_bw1_id;
+        session_info->s2h_throttle_bw2_id =
+            spec->data.switch_to_host_flow_info.policer_bw2_id;
+        session_info->s2h_vnic_statistics_id =
+            spec->data.switch_to_host_flow_info.vnic_stats_id;
+        // FIXME: Truncated copy, will fix later after P4 changes
+        memcpy((uint8_t *)&session_info->s2h_vnic_statistics_mask,
+               spec->data.switch_to_host_flow_info.vnic_stats_mask, 4);
+        session_info->s2h_vnic_histogram_latency_id =
+            spec->data.switch_to_host_flow_info.vnic_histogram_latency_id;
+        session_info->s2h_vnic_histogram_packet_len_id =
+            spec->data.switch_to_host_flow_info.vnic_histogram_packet_len_id;
+        session_info->s2h_slow_path_tcp_flags_match =
+            spec->data.switch_to_host_flow_info.tcp_flags_bitmap;
+        session_info->s2h_session_rewrite_id =
+            spec->data.switch_to_host_flow_info.rewrite_id;
+        session_info->s2h_allowed_flow_state_bitmap =
+            spec->data.switch_to_host_flow_info.allowed_flow_state_bitmask;
+        session_info->s2h_egress_action =
+            spec->data.switch_to_host_flow_info.egress_action;
+    }
+    return;
+}
+
 static sdk_ret_t
 pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
 {
@@ -98,6 +169,8 @@ pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
     session_info_actiondata_t session_actiondata = { 0 };
     session_info_actiondata_t rd_session_actiondata = { 0 };
     session_info_session_info_t *session_info, *rd_session_info;
+    session_info =
+        &session_actiondata.action_u.session_info_session_info;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -135,77 +208,20 @@ pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
         spec->data.conntrack_id = rd_session_info->conntrack_id;
         spec->data.skip_flow_log = rd_session_info->skip_flow_log;
         memcpy(spec->data.host_mac, rd_session_info->smac, ETH_ADDR_LEN);
-        if (spec->key.direction & HOST_TO_SWITCH)
+        if (spec->key.direction & HOST_TO_SWITCH) {
             flow_session_info_spec_fill(spec, rd_session_info, SWITCH_TO_HOST);
-        else
+            flow_session_info_actiondata_fill(session_info, spec, SWITCH_TO_HOST);
+        } else {
             flow_session_info_spec_fill(spec, rd_session_info, HOST_TO_SWITCH);
+            flow_session_info_actiondata_fill(session_info, spec, HOST_TO_SWITCH);
+        }
     }
 
     session_actiondata.action_id = SESSION_INFO_SESSION_INFO_ID;
-    session_info =
-        &session_actiondata.action_u.session_info_session_info;
-    if (spec->key.direction & HOST_TO_SWITCH) {
-        session_info->h2s_epoch_vnic_value =
-            spec->data.host_to_switch_flow_info.epoch_vnic;
-        session_info->h2s_epoch_vnic_id =
-            spec->data.host_to_switch_flow_info.epoch_vnic_id;
-        session_info->h2s_epoch_mapping_value =
-            spec->data.host_to_switch_flow_info.epoch_mapping;
-        session_info->h2s_epoch_mapping_id =
-            spec->data.host_to_switch_flow_info.epoch_mapping_id;
-        session_info->h2s_throttle_bw1_id =
-            spec->data.host_to_switch_flow_info.policer_bw1_id;
-        session_info->h2s_throttle_bw2_id =
-            spec->data.host_to_switch_flow_info.policer_bw2_id;
-        session_info->h2s_vnic_statistics_id =
-            spec->data.host_to_switch_flow_info.vnic_stats_id;
-        // FIXME: Truncated copy, will fix later after P4 changes
-        memcpy((uint8_t *)&session_info->h2s_vnic_statistics_mask,
-               spec->data.host_to_switch_flow_info.vnic_stats_mask, 4);
-        session_info->h2s_vnic_histogram_latency_id =
-            spec->data.host_to_switch_flow_info.vnic_histogram_latency_id;
-        session_info->h2s_vnic_histogram_packet_len_id =
-            spec->data.host_to_switch_flow_info.vnic_histogram_packet_len_id;
-        session_info->h2s_slow_path_tcp_flags_match =
-            spec->data.host_to_switch_flow_info.tcp_flags_bitmap;
-        session_info->h2s_session_rewrite_id =
-            spec->data.host_to_switch_flow_info.rewrite_id;
-        session_info->h2s_allowed_flow_state_bitmap =
-            spec->data.host_to_switch_flow_info.allowed_flow_state_bitmask;
-        session_info->h2s_egress_action =
-            spec->data.host_to_switch_flow_info.egress_action;
-    }
-    if (spec->key.direction & SWITCH_TO_HOST) {
-        session_info->s2h_epoch_vnic_value =
-            spec->data.switch_to_host_flow_info.epoch_vnic;
-        session_info->s2h_epoch_vnic_id =
-            spec->data.switch_to_host_flow_info.epoch_vnic_id;
-        session_info->s2h_epoch_mapping_value =
-            spec->data.switch_to_host_flow_info.epoch_mapping;
-        session_info->s2h_epoch_mapping_id =
-            spec->data.switch_to_host_flow_info.epoch_mapping_id;
-        session_info->s2h_throttle_bw1_id =
-            spec->data.switch_to_host_flow_info.policer_bw1_id;
-        session_info->s2h_throttle_bw2_id =
-            spec->data.switch_to_host_flow_info.policer_bw2_id;
-        session_info->s2h_vnic_statistics_id =
-            spec->data.switch_to_host_flow_info.vnic_stats_id;
-        // FIXME: Truncated copy, will fix later after P4 changes
-        memcpy((uint8_t *)&session_info->s2h_vnic_statistics_mask,
-               spec->data.switch_to_host_flow_info.vnic_stats_mask, 4);
-        session_info->s2h_vnic_histogram_latency_id =
-            spec->data.switch_to_host_flow_info.vnic_histogram_latency_id;
-        session_info->s2h_vnic_histogram_packet_len_id =
-            spec->data.switch_to_host_flow_info.vnic_histogram_packet_len_id;
-        session_info->s2h_slow_path_tcp_flags_match =
-            spec->data.switch_to_host_flow_info.tcp_flags_bitmap;
-        session_info->s2h_session_rewrite_id =
-            spec->data.switch_to_host_flow_info.rewrite_id;
-        session_info->s2h_allowed_flow_state_bitmap =
-            spec->data.switch_to_host_flow_info.allowed_flow_state_bitmask;
-        session_info->s2h_egress_action =
-            spec->data.switch_to_host_flow_info.egress_action;
-    }
+    if (spec->key.direction & HOST_TO_SWITCH)
+            flow_session_info_actiondata_fill(session_info, spec, HOST_TO_SWITCH);
+    if (spec->key.direction & SWITCH_TO_HOST)
+            flow_session_info_actiondata_fill(session_info, spec, SWITCH_TO_HOST);
     session_info->valid_flag = 1;
     session_info->conntrack_id = spec->data.conntrack_id;
     session_info->skip_flow_log = spec->data.skip_flow_log;

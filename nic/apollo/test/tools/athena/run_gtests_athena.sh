@@ -17,7 +17,7 @@ fi
 run_gtest athena_vnic
 run_gtest conntrack
 run_gtest flow_cache
-run_gtest flow_session
+run_gtest flow_session_info
 
 # end of script
 clean_exit
