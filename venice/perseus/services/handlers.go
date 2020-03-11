@@ -5,8 +5,6 @@ import (
 	"net"
 	"sync"
 
-	"github.com/satori/go.uuid"
-
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
@@ -75,16 +73,12 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		log.Infof("ignoring configure peer")
 		return
 	}
-	uid, err := uuid.FromString(nic.uuid)
-	if err != nil {
-		log.Errorf("failed to parse UUID (%v)", err)
-		return
-	}
 	keepalive, holdtime := cache.getTimers()
+	uid := cache.getUUID()
 	// call grpc api to configure ms
 	peerReq := pdstypes.BGPPeerRequest{}
 	peer := pdstypes.BGPPeerSpec{
-		Id:           uid.Bytes(),
+		Id:           uid,
 		PeerAddr:     ip2PDSType(nic.ip),
 		LocalAddr:    ip2PDSType(""),
 		RemoteASN:    CfgAsn,
@@ -134,7 +128,7 @@ func (m *ServiceHandlers) configurePeer(nic snic, deleteOp bool) {
 		peerAfReq := pdstypes.BGPPeerAfRequest{
 			Request: []*pdstypes.BGPPeerAfSpec{
 				{
-					Id:          uid.Bytes(),
+					Id:          uid,
 					PeerAddr:    ip2PDSType(nic.ip),
 					LocalAddr:   ip2PDSType(""),
 					NexthopSelf: false,

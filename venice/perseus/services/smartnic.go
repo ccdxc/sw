@@ -200,6 +200,16 @@ func (c *configCache) getTimers() (keepalive, holdtime uint32) {
 	return 60, 180
 }
 
+func (c *configCache) getUUID() []byte {
+	if c.config != nil {
+		uid, err := uuid.FromString(c.config.UUID)
+		if err == nil {
+			return uid.Bytes()
+		}
+	}
+	return nil
+}
+
 func ip2uint32(ipstr string) uint32 {
 	ip := net.ParseIP(ipstr).To4()
 	if len(ip) == 0 {
