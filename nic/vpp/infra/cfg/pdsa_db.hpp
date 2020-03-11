@@ -76,7 +76,7 @@ public:
 // executed once all entries are created.
 class vpp_config_batch {
     std::list<batch_op_t> batch_op;
-    std::map<obj_id_t, size_t> pool_sz;
+    std::vector<size_t> pool_sz;
 
     static std::list<object_cbs_t> object_cbs;
     static vpp_config_batch singleton;

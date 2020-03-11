@@ -19,7 +19,9 @@ export LOG_DIR=$NON_PERSISTENT_LOGDIR
 
 export CAPRI_MOCK_MODE=1
 export CAPRI_MOCK_MEMORY_MODE=1
-export VPP_IPC_MOCK_MODE=1
+if [ $PIPELINE != 'apulu' ]; then
+    export VPP_IPC_MOCK_MODE=1
+fi
 
 #GDB='gdb --args'
 #VALGRIND='valgrind --leak-check=full --show-leak-kinds=all --gen-suppressions=all --error-limit=no --verbose --log-file=valgrind-out.txt --track-origins=yes'

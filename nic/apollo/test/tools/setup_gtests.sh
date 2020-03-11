@@ -16,6 +16,9 @@ function finish () {
     ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
     rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json
     sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
+    if [ $PIPELINE == 'apulu' ]; then
+        sudo pkill -9 vpp
+    fi
 }
 trap finish EXIT
 
@@ -24,6 +27,16 @@ function setup () {
     rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json
     sudo rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
     ln -s ${PDSPKG_TOPDIR}/conf/${PIPELINE}/pipeline.json ${PDSPKG_TOPDIR}/conf/pipeline.json
+
+    if [ $PIPELINE == 'apulu' ]; then
+        echo "Starting VPP"
+        sudo ${PDSPKG_TOPDIR}/vpp/tools/start-vpp-mock.sh --pipeline apulu
+        if [[ $? != 0 ]]; then
+            echo "Failed to bring up VPP"
+            exit -1
+        fi
+    fi
+
 }
 
 function run_gtest () {

@@ -6,6 +6,8 @@
 #include <arpa/inet.h>
 #include "pdsa_vpp_cfg.h"
 
+dhcp_relay_cfg_main_t dhcp_relay_cfg_main;
+
 int
 pds_dhcp4_relay_config_update (uint32_t server_ip,
                                uint32_t agent_ip,
@@ -30,19 +32,20 @@ pds_dhcp4_relay_config_update (uint32_t server_ip,
 
     // maintain server ip list for all the config objects
     if (!del) {
-        pool_get(svr_ip_list, svr_ip);
+        pool_get(dhcp_relay_cfg_main.svr_ip_list, svr_ip);
+        if (svr_ip == NULL) {
+            return 1;
+        }
         *svr_ip = svr_addr.ip4.as_u32;
     } else {
         //TODO do pool_put
-        pool_foreach(svr_ip, svr_ip_list, ({
+        pool_foreach(svr_ip, dhcp_relay_cfg_main.svr_ip_list, ({
             if(*svr_ip == svr_addr.ip4.as_u32) {
+                pool_put(dhcp_relay_cfg_main.svr_ip_list, svr_ip);
                 break;
             }
         }));
 
-        if(svr_ip) {
-            pool_put(svr_ip_list, svr_ip);
-        }
     }
 
     return dhcp4_proxy_set_server(&svr_addr, &src_addr, 0, 0, del ? 1 : 0);

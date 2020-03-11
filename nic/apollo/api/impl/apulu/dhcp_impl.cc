@@ -88,6 +88,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     nacl_actiondata_t data = { 0 };
     nacl_swkey_mask_t mask = { 0 };
     pds_dhcp_relay_spec_t *spec;
+    lif_impl *lif;
 
     switch (api_op) {
     case API_OP_CREATE:
@@ -126,8 +127,12 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         mask.key_metadata_dport_mask = ~0;
         data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
         data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-        data.nacl_redirect_to_arm_action.nexthop_id =
-             lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_CPU)->nh_idx();
+        lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_CPU);
+        if (lif == NULL) {
+            PDS_TRACE_WARN("LIF_TYPE_MNIC_CPU doesn't exist.");
+        } else {
+            data.nacl_redirect_to_arm_action.nexthop_id = lif->nh_idx();
+        }
         //data.nacl_redirect_to_arm_action.copp_policer_id = idx;
         data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP;
         p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,

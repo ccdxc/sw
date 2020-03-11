@@ -118,7 +118,7 @@ pds_dhcp_relay_server_found(u32 server_ip)
     bool svr_found = false;
     u32 *svr_ip;
 
-    pool_foreach(svr_ip, svr_ip_list, ({
+    pool_foreach(svr_ip, dhcp_relay_cfg_main.svr_ip_list, ({
         if(*svr_ip == server_ip) {
             svr_found = true;
             return svr_found;

@@ -160,12 +160,29 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
 size_t
 vpp_config_batch::maxsize (obj_id_t obj_id) {
     switch(obj_id) {
-#define _(obj, data)                    \
-    case OBJ_ID_##obj:                  \
-        return PDS_MAX_##obj;
+    case OBJ_ID_DEVICE:
+        return PDS_MAX_DEVICE;
 
-        foreach_config_data_element
-#undef _
+    case OBJ_ID_VPC:
+        return PDS_MAX_VPC + 1;
+
+    case OBJ_ID_VNIC:
+        return PDS_MAX_VNIC;
+
+    case OBJ_ID_SUBNET:
+        return PDS_MAX_SUBNET + 1;
+
+    case OBJ_ID_DHCP_RELAY:
+        return PDS_MAX_DHCP_RELAY;
+
+    case OBJ_ID_DHCP_POLICY:
+        return PDS_MAX_DHCP_POLICY;
+
+    case OBJ_ID_NAT_PORT_BLOCK:
+        return PDS_MAX_NAT_PORT_BLOCK;
+
+    case OBJ_ID_SECURITY_PROFILE:
+        return PDS_MAX_SECURITY_PROFILE;
 
     default:
         assert(false);
@@ -177,7 +194,7 @@ vpp_config_batch::maxsize (obj_id_t obj_id) {
 void
 vpp_config_batch::init (void) {
     vpp_config_data &vpp_config = vpp_config_data::get();
-
+    pool_sz.resize(OBJ_ID_MAX);
 #define _(obj, data)                                        \
     pool_sz[OBJ_ID_##obj] = vpp_config.size(OBJ_ID_##obj);
 
@@ -383,6 +400,8 @@ sdk::sdk_ret_t
 vpp_config_batch::create (const pds_msg_list_t *msglist) {
     uint32_t rsv_count;
     sdk::sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    init();
 
     for (rsv_count = 0; rsv_count < msglist->num_msgs; rsv_count++) {
         const pds_msg_t *msg = &msglist->msgs[rsv_count];
