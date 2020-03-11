@@ -14,6 +14,7 @@ import glob
 import iota.harness.api as api
 import ipaddress as ipaddr
 from datetime import datetime
+from iota.test.iris.testcases.telemetry.erspan import *
 
 uplink_vlan = 0
 # for local work loads, the packet vlan may not be wire encap vlan.
@@ -84,19 +85,16 @@ def VerifyVlan(pcap_file_name):
     pkts = rdpcap(mirrorscapy)
     spanpktsfound = False
     for pkt in pkts:
-        if pkt.haslayer('GRE'):
+        if pkt.haslayer(ERSPAN_III):
             spanpktsfound = True
-            inner=Ether(pkt['Raw'].load[20:])
-            #api.Logger.info("Pkt: {}".format(pkt))
-            api.Logger.info("Inner Pkt: {}".format(inner))
-            if (uplink_vlan == 0 and inner.haslayer('Dot1Q')):
+            if (uplink_vlan == 0 and pkt.haslayer(Dot1Q)):
                 result = api.types.status.FAILURE
-                api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan: {} ".format(uplink_vlan, inner['Dot1Q'].vlan))
-                api.Logger.info("Inner Pkt: {}".format(inner))
-            elif ((local_wls_ignore_vlan_check == False) and inner.haslayer('Dot1Q') and (inner['Dot1Q'].vlan != uplink_vlan)):
+                api.Logger.error("Vlan verification Failed: uplink_vlan: {} Pkt Vlan: {} ".format(uplink_vlan, pkt[Dot1Q].vlan))
+                pkt.show()
+            elif ((local_wls_ignore_vlan_check == False) and pkt.haslayer(Dot1Q) and (pkt[Dot1Q].vlan != uplink_vlan)):
                 result = api.types.status.FAILURE
-                api.Logger.info("VerifyVlan Failed: uplink_vlan: {} Inner Vlan id: {}".format(uplink_vlan, inner['Dot1Q'].vlan))
-                api.Logger.info("Inner Pkt: {}".format(inner))
+                api.Logger.erorr("Vlan verfication Failed: uplink_vlan: {} Pkt Vlan id: {}".format(uplink_vlan, pkt[Dot1Q].vlan))
+                pkt.show()
     if spanpktsfound == False:
        result = api.types.status.FAILURE
        api.Logger.info("VerifyVlan Failed: spanpkts not found ")
@@ -113,14 +111,13 @@ def VerifyTimeStamp(command, pcap_file_name):
     g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
     api.Logger.info("Current Global time {}".format(g_time))
     for pkt in pkts:
-        if pkt.haslayer('GRE'):
+        if pkt.haslayer(ERSPAN_III):
             spanpktsfound = True
-            # Read raw bytes to interpret time
-            p1 = pkt['Raw'].load[4:8]
-            p2 = pkt['Raw'].load[16:20]
-            p3 = (int.from_bytes(p2, byteorder='big', signed=False) << 32) | (int.from_bytes(p1, byteorder='big', signed=False))
-            api.Logger.info("Timestamp from the packet: %s" % (p3)) 
-            pkttime=p3/1000000000
+            l_ts = pkt[ERSPAN_III].timestamp
+            u_ts = pkt[PlatformSpecific].timestamp
+            pkttime = u_ts << 32 | l_ts
+            api.Logger.info("Timestamp from the packet: %s" % (pkttime)) 
+            pkttime /= 1000000000
             pkttimestamp = datetime.fromtimestamp(pkttime)
             if g_time > pkttimestamp:
                tdelta = g_time-pkttimestamp
