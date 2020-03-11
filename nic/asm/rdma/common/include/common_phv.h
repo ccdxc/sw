@@ -81,6 +81,11 @@ struct phv_to_stage_t {
     EQCB_BASE_ADDR_GET(_r, _tmp_r, _cqcb_base_addr_hi, _log_cq_entries); \
     add _r, _r, _eqid, LOG_SIZEOF_EQCB_T
 
+#define SQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(_r, _tmp_r, _log_kt_entries)   \
+    KT_BASE_ADDR_GET2(_r, _tmp_r);                      \
+    sllv   _tmp_r, 1, _log_kt_entries;             \
+    add    _r, _r, _tmp_r, LOG_SIZEOF_KEY_ENTRY_T
+
 #define PHV_GLOBAL_COMMON_T struct phv_global_common_t
 struct phv_global_common_t {
     lif: 11;

@@ -21,11 +21,6 @@ struct req_tx_s3_t3_k k;
 #define K_IPV6_FLAG CAPRI_KEY_FIELD(TO_S3_SQWQE_P, ipv6_flag)
 #define K_IPV6_TAG CAPRI_KEY_FIELD(TO_S3_SQWQE_P, ipv6_tag)
 #define K_LOG_NUM_KT_ENTRIES CAPRI_KEY_RANGE(TO_S3_SQWQE_P, log_num_kt_entries_sbit0_ebit0, log_num_kt_entries_sbit1_ebit4)
-#define SQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(_r, _tmp_r)   \
-    KT_BASE_ADDR_GET2(_r, _tmp_r);                      \
-    sllv   _tmp_r, 1, K_LOG_NUM_KT_ENTRIES;             \
-    add    _r, _r, _tmp_r, LOG_SIZEOF_KEY_ENTRY_T
-
 #define DMA_CMD_BASE        r1
 
 %%
@@ -58,18 +53,8 @@ ipv4:
     // invoke stats as mpu only, branch to dcqcn_cnp_sent in req_tx_stats
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_CNP_HEADER_TEMPLATE_2)
-    phvwr     p.cnp_tos.dscp, r3
-    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, cnp_tos, cnp_tos)
-
-    // For PAD and ICRC
-    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
-    // dma_cmd[0] : addr1 - pad/icrc
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, immeth, immeth, 1)
-    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
-    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
-
-    phvwr.e   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_cnp_sent), 1 
-    phvwr     CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, np_cnp_sent), 1
+    phvwr.e     p.cnp_tos.dscp, r3
+    DMA_PHV2PKT_SETUP(DMA_CMD_BASE, cnp_tos, cnp_tos) //BD Slot
 
 ipv6:
     // if ipv6 and DSCP(tos), the whole header_template will be also separated into 3 parts
@@ -82,7 +67,7 @@ ipv6:
     CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_16_BITS, req_tx_dcqcn_cnp_add_header_process, r1)
 
 config_load:
-    SQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r2, r4)
+    SQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r2, r4, K_LOG_NUM_KT_ENTRIES)
     add         r2, r2, K_DCQCN_CFG_ID, LOG_SIZEOF_DCQCN_CONFIG_T
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_TBL_ADDR_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, r2)
     nop

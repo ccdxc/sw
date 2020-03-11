@@ -113,6 +113,16 @@ add_bth_header:
     // Update partition key in CNP packet
     phvwr       p.bth.pkey, DEFAULT_PKEY
 
+    // For PAD and ICRC
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_PAD_ICRC)
+    // dma_cmd[0] : addr1 - pad/icrc
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(DMA_CMD_BASE, immeth, immeth, 1)
+    
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, DMA_CMD_BASE)
+
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, np_cnp_sent), 1
+    phvwr   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dcqcn_cnp_sent), 1
     CAPRI_SET_TABLE_0_VALID(0)
 
 handle_lif_stats:
