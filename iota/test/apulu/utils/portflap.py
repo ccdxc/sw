@@ -69,6 +69,26 @@ def switchPortFlap(tc):
     sleep(2) #give a short gap before printing status
     return api.types.status.SUCCESS
 
+def setDataPortStatePerUplink(naples_nodes, oper, id):
+    uplink_list = []
+    if id == 0:
+        uplink_list.append(UPLINK_PREFIX1)
+    else :
+        uplink_list.append(UPLINK_PREFIX2)
+
+    for node in naples_nodes:
+        node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
+        #node_uuid = 750763714960
+        for uplink in uplink_list:
+            intf_uuid = uplink % node_uuid  
+            cmd = ("debug port --admin-state %s --port "+intf_uuid) % oper
+            ret, resp = pdsctl.ExecutePdsctlCommand(node, cmd, yaml=False)
+            if ret != True:
+                api.Logger.error("oper:%s uplink failed at node %s : %s" %(oper, node, resp))
+                return api.types.status.FAILURE      
+        sleep(1) #give a short gap before printing status
+        pdsctl.ExecutePdsctlShowCommand(node, "port status", yaml=False)
+    return api.types.status.SUCCESS
 
 def setDataPortState(naples_nodes, oper):
     for node in naples_nodes:
@@ -81,7 +101,7 @@ def setDataPortState(naples_nodes, oper):
             if ret != True:
                 api.Logger.error("oper:%s uplink failed at node %s : %s" %(oper, node, resp))
                 return api.types.status.FAILURE      
-        sleep(5) #give a short gap before printing status
+        sleep(3) #give a short gap before printing status
         pdsctl.ExecutePdsctlShowCommand(node, "port status", yaml=False)
     return api.types.status.SUCCESS
 
