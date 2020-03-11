@@ -13,6 +13,7 @@ typedef struct pds_nat_cfg_cmd_ctxt_s {
 } pds_nat_port_block_cmd_ctxt_t;
 
 typedef struct pds_cmd_ctxt_s {
+    uint16_t curr_count;
     union {
         pds_nat_port_block_cmd_ctxt_t *nat_ctxt;
     };

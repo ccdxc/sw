@@ -58,7 +58,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.POLICY.name.lower()] = PolicyClient
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient
     ObjectInfo[APIObjTypes.DHCP_RELAY.name.lower()] = DHCPRelayClient
-    ObjectInfo[APIObjTypes.NAT_PB.name.lower()] = NATPbClient
+    ObjectInfo[APIObjTypes.NAT.name.lower()] = NATPbClient
     ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
     ObjectInfo[APIObjTypes.BGP.name.lower()] = BGPClient
     ObjectInfo[APIObjTypes.BGP_PEER.name.lower()] = BGPPeerClient

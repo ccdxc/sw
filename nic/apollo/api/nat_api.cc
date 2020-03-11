@@ -15,6 +15,7 @@
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/nat.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
 
 static sdk_ret_t
@@ -131,8 +132,10 @@ pds_nat_port_block_read_all (nat_port_block_read_cb_t cb, void *ctxt)
     params.cb = cb;
     params.ctxt = ctxt;
 
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                      sizeof(pds_msg_t), pds_nat_pb_from_ipc_response, &params);
+    if (api::g_pds_state.vpp_ipc_mock() == false) {
+        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                          sizeof(pds_msg_t), pds_nat_pb_from_ipc_response, &params);
+    }
 
     return SDK_RET_OK;
 }

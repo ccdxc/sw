@@ -195,15 +195,13 @@ pds_nat_cfg_get(pds_cfg_msg_t *cfg_msg) {
 bool
 pds_nat_iterate_cb(pds_nat_iterate_params_t *params)
 {
-    static uint16_t curr_count = 0;
-    pds_nat_port_block_cmd_ctxt_t *ctxt = (pds_nat_port_block_cmd_ctxt_t *)params->ctxt;
+    pds_cmd_ctxt_t *ctxt = (pds_cmd_ctxt_t *)params->ctxt;
     pds_nat_port_block_export_t *pb = params->pb;
-    pds_nat_port_block_cfg_msg_t *msg = &ctxt->cfg[curr_count];
+    pds_nat_port_block_cfg_msg_t *msg = &ctxt->nat_ctxt->cfg[ctxt->curr_count];
     pds_nat_port_block_spec_t *spec = &msg->spec;
     pds_nat_port_block_stats_t *stats = &msg->stats;
 
-    if (curr_count >= ctxt->num_entries) {
-        curr_count = 0;
+    if (ctxt->curr_count >= ctxt->nat_ctxt->num_entries) {
         return true;
     }
 
@@ -222,7 +220,7 @@ pds_nat_iterate_cb(pds_nat_iterate_params_t *params)
 
     stats->in_use_count = pb->in_use_cnt;
     stats->session_count = pb->session_cnt;
-    curr_count ++;
+    ctxt->curr_count ++;
     return false;
 }
 
@@ -234,7 +232,7 @@ pdsa_nat_cfg_get_all(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
 
     params.itercb = pds_nat_iterate_cb;
     params.pb = &pb;
-    params.ctxt = ctxt->nat_ctxt;
+    params.ctxt = ctxt;
     memset(pb.id, 0, sizeof(pb.id));
 
     nat_pb_iterate(&params);
@@ -248,7 +246,7 @@ pdsa_nat_cfg_ctxt_init(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
     ctxt->nat_ctxt = (pds_nat_port_block_cmd_ctxt_t *)
                      calloc(1, sizeof(uint16_t) +
                             (num_port_blocks *
-                            sizeof(pds_nat_port_block_cmd_ctxt_t)));
+                            sizeof(pds_nat_port_block_cfg_msg_t)));
     if (ctxt->nat_ctxt == NULL) {
         return sdk::SDK_RET_OOM;
     }

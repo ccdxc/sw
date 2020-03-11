@@ -85,7 +85,7 @@ class ObjectTypes(enum.IntEnum):
     TAG = 15
     INTERFACE = 16
     DHCP_RELAY = 17
-    NAT_PB = 18
+    NAT = 18
     RMAPPING = 19
     POLICER = 20
     BGP = 21
@@ -309,7 +309,7 @@ class ApolloAgentClient:
                                                       self.__channel, 'Meter')
         self.__stubs[ObjectTypes.DHCP_RELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
                                                       self.__channel, 'DHCPRelay')
-        self.__stubs[ObjectTypes.NAT_PB] = ClientStub(nat_pb2_grpc.NatSvcStub,
+        self.__stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                       self.__channel, 'NatPortBlock')
         self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
                                                       self.__channel, 'Policer')
@@ -348,7 +348,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
         self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
-        self.__msgreqs[ObjectTypes.NAT_PB] = ClientModule(nat_pb2, 'NatPortBlock')
+        self.__msgreqs[ObjectTypes.NAT] = ClientModule(nat_pb2, 'NatPortBlock')
         self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
         self.__msgreqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')
         self.__msgreqs[ObjectTypes.BGP_PEER] = ClientModule(bgp_pb2, 'BGPPeer')

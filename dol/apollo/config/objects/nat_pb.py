@@ -18,7 +18,7 @@ import nat_pb2 as nat_pb2
 
 class NatPbObject(base.ConfigObjectBase):
     def __init__(self, node, parent, addr, port_lo, port_hi, proto, addr_type):
-        super().__init__(api.ObjectTypes.NAT_PB, node)
+        super().__init__(api.ObjectTypes.NAT, node)
         self.Id = next(ResmgrClient[node].NatPoolIdAllocator)
         self.GID('NatPortBlock%d'%self.Id)
         self.UUID = utils.PdsUuid(self.Id, self.ObjType)
@@ -60,9 +60,20 @@ class NatPbObject(base.ConfigObjectBase):
             return False
         return True
 
+    def ValidateYamlSpec(self, spec):
+        if  utils.PdsUuid(spec['id']).GetUuid() != self.GetKey():
+            return False
+        if spec['protocol'] != self.ProtoNum:
+            return False
+        if spec['ports']['portlow'] != self.PortLo:
+            return False
+        if spec['ports']['porthigh'] != self.PortHi:
+            return False
+        return True
+
 class NatPbObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.NAT_PB, Resmgr.MAX_NAT_PB)
+        super().__init__(api.ObjectTypes.NAT, Resmgr.MAX_NAT_PB)
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         nat_spec = vpc_spec_obj.nat
@@ -90,18 +101,6 @@ class NatPbObjectClient(base.ConfigClientBase):
                     obj = NatPbObject(node, parent, addr_infra, port_lo, \
                         port_hi, proto, utils.NAT_ADDR_TYPE_SERVICE)
                     self.Objs[node].update({obj.Id : obj})
-
-    def PdsctlRead(self, node):
-        # pdsctl show not supported for nat port blocks
-        return
-
-    def GrpcRead(self, node):
-        # grpc read not supported for nat port blocks
-        return
-
-    def ValidateGrpcRead(self, node, getResp):
-        # read not supported, return true for now
-        return True
 
 client = NatPbObjectClient()
 
