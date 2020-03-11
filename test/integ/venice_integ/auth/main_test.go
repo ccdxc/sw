@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"os"
 	"testing"
 
 	"google.golang.org/grpc/grpclog"
@@ -155,6 +156,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to setup test, err: %v", err)
 	}
 
-	defer tinfo.teardown()
-	m.Run()
+	ret := m.Run()
+	tinfo.teardown()
+	os.Exit(ret)
 }

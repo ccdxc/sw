@@ -961,8 +961,8 @@ func TestLabelAuthorization(t *testing.T) {
 
 	// labeling role should succeed now
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := tinfo.restcl.AuthV1().Role().Label(ctx, &api.Label{ObjectMeta: api.ObjectMeta{Name: "UserUpdateRole", Tenant: globals.DefaultTenant, Labels: map[string]string{"label": "value"}}})
-		return err == nil, nil
+		_, err = tinfo.restcl.AuthV1().Role().Label(ctx, &api.Label{ObjectMeta: api.ObjectMeta{Name: "UserUpdateRole", Tenant: globals.DefaultTenant, Labels: map[string]string{"label": "value"}}})
+		return err == nil, err
 	}, fmt.Sprintf("error while labeling role: %v", err))
 }
 

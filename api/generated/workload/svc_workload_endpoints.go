@@ -1308,8 +1308,7 @@ func makeURIWorkloadV1AutoLabelEndpointLabelOper(in *api.Label) string {
 
 //
 func makeURIWorkloadV1AutoLabelWorkloadLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name, "/label")
 }
 
 //
@@ -1517,7 +1516,24 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, 
 
 // AutoLabelWorkload label method for Workload
 func (r *EndpointsWorkloadV1RestClient) AutoLabelWorkload(ctx context.Context, in *api.Label) (*Workload, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIWorkloadV1AutoLabelWorkloadLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespWorkloadV1AutoLabelWorkload(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
 }
 
 // AutoGetWorkload CRUD method for Workload

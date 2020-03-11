@@ -37,27 +37,27 @@ service NetworkV1 {
 
     option (venice.apiRestService) = {
          Object: "Network"
-         Method: [ "post", "put", "delete", "get", "list", "watch" ]
+         Method: [ "post", "put", "delete", "get", "list", "watch", "label" ]
     };
 
     option (venice.apiRestService) = {
          Object: "NetworkInterface"
-         Method: [ "put", "get", "list", "watch" ]
+         Method: [ "put", "get", "list", "watch", "label" ]
     };
 
     option (venice.apiRestService) = {
          Object: "IPAMPolicy"
-         Method: [ "post", "put", "delete", "get", "list", "watch" ]
+         Method: [ "post", "put", "delete", "get", "list", "watch", "label" ]
     };
 
     option (venice.apiRestService) = {
          Object: "VirtualRouter"
-         Method: [ "post", "put", "delete", "get", "list", "watch" ]
+         Method: [ "post", "put", "delete", "get", "list", "watch", "label" ]
     };
 
     option (venice.apiRestService) = {
          Object: "RoutingConfig"
-         Method: [ "post", "put", "delete", "get", "list", "watch" ]
+         Method: [ "post", "put", "delete", "get", "list", "watch", "label" ]
     };
 
     // only allow reading Route Table for now. In the future user could create route tables.

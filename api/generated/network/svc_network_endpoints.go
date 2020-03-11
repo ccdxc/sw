@@ -3855,8 +3855,7 @@ func makeURINetworkV1AutoGetVirtualRouterGetOper(in *VirtualRouter) string {
 
 //
 func makeURINetworkV1AutoLabelIPAMPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/ipam-policies/", in.Name, "/label")
 }
 
 //
@@ -3867,14 +3866,12 @@ func makeURINetworkV1AutoLabelLbPolicyLabelOper(in *api.Label) string {
 
 //
 func makeURINetworkV1AutoLabelNetworkLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name, "/label")
 }
 
 //
 func makeURINetworkV1AutoLabelNetworkInterfaceLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/networkinterfaces/", in.Name, "/label")
 }
 
 //
@@ -3885,8 +3882,7 @@ func makeURINetworkV1AutoLabelRouteTableLabelOper(in *api.Label) string {
 
 //
 func makeURINetworkV1AutoLabelRoutingConfigLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/routing-config/", in.Name, "/label")
 }
 
 //
@@ -3897,8 +3893,7 @@ func makeURINetworkV1AutoLabelServiceLabelOper(in *api.Label) string {
 
 //
 func makeURINetworkV1AutoLabelVirtualRouterLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/virtualrouters/", in.Name, "/label")
 }
 
 //
@@ -4080,7 +4075,24 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in
 
 // AutoLabelNetwork label method for Network
 func (r *EndpointsNetworkV1RestClient) AutoLabelNetwork(ctx context.Context, in *api.Label) (*Network, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoLabelNetworkLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoLabelNetwork(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Network), err
 }
 
 // AutoGetNetwork CRUD method for Network
@@ -4399,7 +4411,24 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateVirtualRouter(ctx context.Conte
 
 // AutoLabelVirtualRouter label method for VirtualRouter
 func (r *EndpointsNetworkV1RestClient) AutoLabelVirtualRouter(ctx context.Context, in *api.Label) (*VirtualRouter, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoLabelVirtualRouterLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoLabelVirtualRouter(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*VirtualRouter), err
 }
 
 // AutoGetVirtualRouter CRUD method for VirtualRouter
@@ -4545,7 +4574,24 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetworkInterface(ctx context.Co
 
 // AutoLabelNetworkInterface label method for NetworkInterface
 func (r *EndpointsNetworkV1RestClient) AutoLabelNetworkInterface(ctx context.Context, in *api.Label) (*NetworkInterface, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoLabelNetworkInterfaceLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoLabelNetworkInterface(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkInterface), err
 }
 
 // AutoGetNetworkInterface CRUD method for NetworkInterface
@@ -4691,7 +4737,24 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateIPAMPolicy(ctx context.Context,
 
 // AutoLabelIPAMPolicy label method for IPAMPolicy
 func (r *EndpointsNetworkV1RestClient) AutoLabelIPAMPolicy(ctx context.Context, in *api.Label) (*IPAMPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoLabelIPAMPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoLabelIPAMPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*IPAMPolicy), err
 }
 
 // AutoGetIPAMPolicy CRUD method for IPAMPolicy
@@ -4854,7 +4917,24 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateRoutingConfig(ctx context.Conte
 
 // AutoLabelRoutingConfig label method for RoutingConfig
 func (r *EndpointsNetworkV1RestClient) AutoLabelRoutingConfig(ctx context.Context, in *api.Label) (*RoutingConfig, error) {
-	return nil, errors.New("not allowed")
+	path := makeURINetworkV1AutoLabelRoutingConfigLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespNetworkV1AutoLabelRoutingConfig(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoutingConfig), err
 }
 
 // AutoGetRoutingConfig CRUD method for RoutingConfig

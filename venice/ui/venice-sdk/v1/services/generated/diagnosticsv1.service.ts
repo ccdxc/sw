@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IDiagnosticsModuleList,DiagnosticsModuleList,IApiStatus,ApiStatus,IDiagnosticsModule,DiagnosticsModule,IDiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsRequest,IDiagnosticsDiagnosticsRequest,IDiagnosticsAutoMsgModuleWatchHelper,DiagnosticsAutoMsgModuleWatchHelper } from '../../models/generated/diagnostics';
+import { IDiagnosticsModuleList,DiagnosticsModuleList,IApiStatus,ApiStatus,IDiagnosticsModule,DiagnosticsModule,IDiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsRequest,IDiagnosticsDiagnosticsRequest,ApiLabel,IApiLabel,IDiagnosticsAutoMsgModuleWatchHelper,DiagnosticsAutoMsgModuleWatchHelper } from '../../models/generated/diagnostics';
 
 @Injectable()
 export class Diagnosticsv1Service extends AbstractService {
@@ -89,6 +89,26 @@ export class Diagnosticsv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new DiagnosticsDiagnosticsRequest(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IDiagnosticsDiagnosticsResponse | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Module object */
+  public LabelModule(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/diagnostics/v1/modules/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelModule',
+      objType: 'DiagnosticsModule',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IDiagnosticsModule | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Module objects. Supports WebSockets or HTTP long poll */

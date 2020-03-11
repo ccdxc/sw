@@ -1488,6 +1488,14 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.GetOper)
 
+	e.svcProf["AutoLabelApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelNetworkSecurityPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkSecurityPolicy", "security", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.CreateOper)
+
 	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AppList", "security", apiintf.ListOper)
 
 	e.svcProf["AutoListFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfileList", "security", apiintf.ListOper)

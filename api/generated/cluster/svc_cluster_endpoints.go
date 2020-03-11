@@ -5038,44 +5038,37 @@ func makeURIClusterV1AutoGetVersionGetOper(in *Version) string {
 
 //
 func makeURIClusterV1AutoLabelClusterLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/label")
 }
 
 //
 func makeURIClusterV1AutoLabelConfigurationSnapshotLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/config-snapshot/label")
 }
 
 //
 func makeURIClusterV1AutoLabelDSCProfileLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/dscprofiles/", in.Name, "/label")
 }
 
 //
 func makeURIClusterV1AutoLabelDistributedServiceCardLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/distributedservicecards/", in.Name, "/label")
 }
 
 //
 func makeURIClusterV1AutoLabelHostLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/hosts/", in.Name, "/label")
 }
 
 //
 func makeURIClusterV1AutoLabelLicenseLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/licenses/label")
 }
 
 //
 func makeURIClusterV1AutoLabelNodeLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/nodes/", in.Name, "/label")
 }
 
 //
@@ -5086,8 +5079,7 @@ func makeURIClusterV1AutoLabelSnapshotRestoreLabelOper(in *api.Label) string {
 
 //
 func makeURIClusterV1AutoLabelTenantLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name, "/label")
 }
 
 //
@@ -5305,7 +5297,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateCluster(ctx context.Context, in
 
 // AutoLabelCluster label method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoLabelCluster(ctx context.Context, in *api.Label) (*Cluster, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelClusterLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelCluster(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Cluster), err
 }
 
 // AutoGetCluster CRUD method for Cluster
@@ -5476,7 +5485,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateNode(ctx context.Context, in *N
 
 // AutoLabelNode label method for Node
 func (r *EndpointsClusterV1RestClient) AutoLabelNode(ctx context.Context, in *api.Label) (*Node, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelNodeLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelNode(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Node), err
 }
 
 // AutoGetNode CRUD method for Node
@@ -5639,7 +5665,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *H
 
 // AutoLabelHost label method for Host
 func (r *EndpointsClusterV1RestClient) AutoLabelHost(ctx context.Context, in *api.Label) (*Host, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelHostLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelHost(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Host), err
 }
 
 // AutoGetHost CRUD method for Host
@@ -5785,7 +5828,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateDistributedServiceCard(ctx cont
 
 // AutoLabelDistributedServiceCard label method for DistributedServiceCard
 func (r *EndpointsClusterV1RestClient) AutoLabelDistributedServiceCard(ctx context.Context, in *api.Label) (*DistributedServiceCard, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelDistributedServiceCardLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelDistributedServiceCard(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*DistributedServiceCard), err
 }
 
 // AutoGetDistributedServiceCard CRUD method for DistributedServiceCard
@@ -5948,7 +6008,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateTenant(ctx context.Context, in 
 
 // AutoLabelTenant label method for Tenant
 func (r *EndpointsClusterV1RestClient) AutoLabelTenant(ctx context.Context, in *api.Label) (*Tenant, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelTenantLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelTenant(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Tenant), err
 }
 
 // AutoGetTenant CRUD method for Tenant
@@ -6206,7 +6283,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateConfigurationSnapshot(ctx conte
 
 // AutoLabelConfigurationSnapshot label method for ConfigurationSnapshot
 func (r *EndpointsClusterV1RestClient) AutoLabelConfigurationSnapshot(ctx context.Context, in *api.Label) (*ConfigurationSnapshot, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelConfigurationSnapshotLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelConfigurationSnapshot(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*ConfigurationSnapshot), err
 }
 
 // AutoGetConfigurationSnapshot CRUD method for ConfigurationSnapshot
@@ -6489,7 +6583,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateLicense(ctx context.Context, in
 
 // AutoLabelLicense label method for License
 func (r *EndpointsClusterV1RestClient) AutoLabelLicense(ctx context.Context, in *api.Label) (*License, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelLicenseLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelLicense(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*License), err
 }
 
 // AutoGetLicense CRUD method for License
@@ -6618,7 +6729,24 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateDSCProfile(ctx context.Context,
 
 // AutoLabelDSCProfile label method for DSCProfile
 func (r *EndpointsClusterV1RestClient) AutoLabelDSCProfile(ctx context.Context, in *api.Label) (*DSCProfile, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIClusterV1AutoLabelDSCProfileLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoLabelDSCProfile(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*DSCProfile), err
 }
 
 // AutoGetDSCProfile CRUD method for DSCProfile

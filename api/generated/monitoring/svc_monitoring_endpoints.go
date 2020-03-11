@@ -4829,20 +4829,17 @@ func makeURIMonitoringV1AutoGetTroubleshootingSessionGetOper(in *Troubleshooting
 
 //
 func makeURIMonitoringV1AutoLabelAlertLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alerts/", in.Name, "/label")
 }
 
 //
 func makeURIMonitoringV1AutoLabelAlertDestinationLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertDestinations/", in.Name, "/label")
 }
 
 //
 func makeURIMonitoringV1AutoLabelAlertPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/alertPolicies/", in.Name, "/label")
 }
 
 //
@@ -4853,26 +4850,22 @@ func makeURIMonitoringV1AutoLabelArchiveRequestLabelOper(in *api.Label) string {
 
 //
 func makeURIMonitoringV1AutoLabelEventPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/event-policy/", in.Name, "/label")
 }
 
 //
 func makeURIMonitoringV1AutoLabelFlowExportPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/flowExportPolicy/", in.Name, "/label")
 }
 
 //
 func makeURIMonitoringV1AutoLabelFwlogPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/fwlogPolicy/", in.Name, "/label")
 }
 
 //
 func makeURIMonitoringV1AutoLabelMirrorSessionLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/MirrorSession/", in.Name, "/label")
 }
 
 //
@@ -4883,8 +4876,7 @@ func makeURIMonitoringV1AutoLabelTechSupportRequestLabelOper(in *api.Label) stri
 
 //
 func makeURIMonitoringV1AutoLabelTroubleshootingSessionLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name, "/label")
 }
 
 //
@@ -5097,7 +5089,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateEventPolicy(ctx context.Cont
 
 // AutoLabelEventPolicy label method for EventPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoLabelEventPolicy(ctx context.Context, in *api.Label) (*EventPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelEventPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelEventPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*EventPolicy), err
 }
 
 // AutoGetEventPolicy CRUD method for EventPolicy
@@ -5260,7 +5269,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFwlogPolicy(ctx context.Cont
 
 // AutoLabelFwlogPolicy label method for FwlogPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoLabelFwlogPolicy(ctx context.Context, in *api.Label) (*FwlogPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelFwlogPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelFwlogPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FwlogPolicy), err
 }
 
 // AutoGetFwlogPolicy CRUD method for FwlogPolicy
@@ -5423,7 +5449,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFlowExportPolicy(ctx context
 
 // AutoLabelFlowExportPolicy label method for FlowExportPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoLabelFlowExportPolicy(ctx context.Context, in *api.Label) (*FlowExportPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelFlowExportPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelFlowExportPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FlowExportPolicy), err
 }
 
 // AutoGetFlowExportPolicy CRUD method for FlowExportPolicy
@@ -5569,7 +5612,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlert(ctx context.Context, i
 
 // AutoLabelAlert label method for Alert
 func (r *EndpointsMonitoringV1RestClient) AutoLabelAlert(ctx context.Context, in *api.Label) (*Alert, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelAlertLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelAlert(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Alert), err
 }
 
 // AutoGetAlert CRUD method for Alert
@@ -5715,7 +5775,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertPolicy(ctx context.Cont
 
 // AutoLabelAlertPolicy label method for AlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoLabelAlertPolicy(ctx context.Context, in *api.Label) (*AlertPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelAlertPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelAlertPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AlertPolicy), err
 }
 
 // AutoGetAlertPolicy CRUD method for AlertPolicy
@@ -5878,7 +5955,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertDestination(ctx context
 
 // AutoLabelAlertDestination label method for AlertDestination
 func (r *EndpointsMonitoringV1RestClient) AutoLabelAlertDestination(ctx context.Context, in *api.Label) (*AlertDestination, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelAlertDestinationLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelAlertDestination(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AlertDestination), err
 }
 
 // AutoGetAlertDestination CRUD method for AlertDestination
@@ -6041,7 +6135,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateMirrorSession(ctx context.Co
 
 // AutoLabelMirrorSession label method for MirrorSession
 func (r *EndpointsMonitoringV1RestClient) AutoLabelMirrorSession(ctx context.Context, in *api.Label) (*MirrorSession, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelMirrorSessionLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelMirrorSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*MirrorSession), err
 }
 
 // AutoGetMirrorSession CRUD method for MirrorSession
@@ -6204,7 +6315,24 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx c
 
 // AutoLabelTroubleshootingSession label method for TroubleshootingSession
 func (r *EndpointsMonitoringV1RestClient) AutoLabelTroubleshootingSession(ctx context.Context, in *api.Label) (*TroubleshootingSession, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIMonitoringV1AutoLabelTroubleshootingSessionLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespMonitoringV1AutoLabelTroubleshootingSession(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*TroubleshootingSession), err
 }
 
 // AutoGetTroubleshootingSession CRUD method for TroubleshootingSession

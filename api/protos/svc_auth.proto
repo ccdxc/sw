@@ -27,7 +27,7 @@ service AuthV1 {
 
     option (venice.apiRestService) = {
         Object: "User"
-        Method: [ "get", "put", "delete", "post", "list", "watch" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
     };
     // Action to change user password
     option (venice.apiAction) = {
@@ -55,11 +55,11 @@ service AuthV1 {
     };
     option (venice.apiRestService) = {
         Object: "AuthenticationPolicy"
-        Method: [ "get", "put", "post", "watch" ]
+        Method: [ "get", "put", "post", "watch", "label" ]
     };
     option (venice.apiRestService) = {
         Object: "UserPreference"
-        Method: [ "get", "put", "watch"]
+        Method: [ "get", "put", "watch", "label"]
     };
     // Action to test ldap connection with the passed in AuthenticationPolicy object. It doesn't test ldap config in AuthenticationPolicy
     // already saved in API server. If user wants to test saved config, then user will have to fetch it first and use it with this action.
@@ -89,10 +89,10 @@ service AuthV1 {
     };
     option (venice.apiRestService) = {
         Object: "Role"
-        Method: [ "get", "put", "delete", "post", "list", "watch" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
     };
     option (venice.apiRestService) = {
         Object: "RoleBinding"
-        Method: [ "get", "put", "delete", "post", "list", "watch" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
     };
 }

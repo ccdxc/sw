@@ -647,7 +647,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelCluster = srv.AddMethod("AutoLabelCluster",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Cluster"], "cluster", "AutoLabelCluster")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.Cluster{}
 			if i == nil {
@@ -675,7 +675,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelConfigurationSnapshot = srv.AddMethod("AutoLabelConfigurationSnapshot",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.ConfigurationSnapshot"], "cluster", "AutoLabelConfigurationSnapshot")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/config-snapshot"), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.ConfigurationSnapshot{}
 			if i == nil {
@@ -703,7 +703,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelDSCProfile = srv.AddMethod("AutoLabelDSCProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.DSCProfile"], "cluster", "AutoLabelDSCProfile")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/dscprofiles/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.DSCProfile{}
 			if i == nil {
@@ -731,7 +735,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelDistributedServiceCard = srv.AddMethod("AutoLabelDistributedServiceCard",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.DistributedServiceCard"], "cluster", "AutoLabelDistributedServiceCard")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/distributedservicecards/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.DistributedServiceCard{}
 			if i == nil {
@@ -759,7 +767,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelHost = srv.AddMethod("AutoLabelHost",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Host"], "cluster", "AutoLabelHost")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/hosts/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.Host{}
 			if i == nil {
@@ -787,7 +799,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelLicense = srv.AddMethod("AutoLabelLicense",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.License"], "cluster", "AutoLabelLicense")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/licenses"), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.License{}
 			if i == nil {
@@ -815,7 +827,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelNode = srv.AddMethod("AutoLabelNode",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Node"], "cluster", "AutoLabelNode")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/nodes/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.Node{}
 			if i == nil {
@@ -871,7 +887,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsClusterV1.fnAutoLabelTenant = srv.AddMethod("AutoLabelTenant",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["cluster.Tenant"], "cluster", "AutoLabelTenant")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := cluster.Tenant{}
 			if i == nil {

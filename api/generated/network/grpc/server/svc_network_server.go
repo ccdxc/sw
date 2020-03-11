@@ -576,7 +576,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoLabelIPAMPolicy = srv.AddMethod("AutoLabelIPAMPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.IPAMPolicy"], "network", "AutoLabelIPAMPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/ipam-policies/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := network.IPAMPolicy{}
 			if i == nil {
@@ -632,7 +636,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoLabelNetwork = srv.AddMethod("AutoLabelNetwork",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.Network"], "network", "AutoLabelNetwork")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/networks/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := network.Network{}
 			if i == nil {
@@ -660,7 +668,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoLabelNetworkInterface = srv.AddMethod("AutoLabelNetworkInterface",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.NetworkInterface"], "network", "AutoLabelNetworkInterface")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/networkinterfaces/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := network.NetworkInterface{}
 			if i == nil {
@@ -716,7 +728,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoLabelRoutingConfig = srv.AddMethod("AutoLabelRoutingConfig",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.RoutingConfig"], "network", "AutoLabelRoutingConfig")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/routing-config/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := network.RoutingConfig{}
 			if i == nil {
@@ -772,7 +788,11 @@ func (s *snetworkSvc_networkBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsNetworkV1.fnAutoLabelVirtualRouter = srv.AddMethod("AutoLabelVirtualRouter",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["network.VirtualRouter"], "network", "AutoLabelVirtualRouter")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "network/v1/tenant/", in.Tenant, "/virtualrouters/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := network.VirtualRouter{}
 			if i == nil {

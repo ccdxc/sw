@@ -23,6 +23,6 @@ service OrchestratorV1 {
 
     option (venice.apiRestService) = {
         Object: "Orchestrator"
-        Method: ["put", "get", "delete", "post", "list", "watch"]
+        Method: ["put", "get", "delete", "post", "list", "watch", "label"]
     };
 }

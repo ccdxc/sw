@@ -745,7 +745,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelAlert = srv.AddMethod("AutoLabelAlert",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.Alert"], "monitoring", "AutoLabelAlert")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alerts/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.Alert{}
 			if i == nil {
@@ -773,7 +777,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelAlertDestination = srv.AddMethod("AutoLabelAlertDestination",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoLabelAlertDestination")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertDestinations/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.AlertDestination{}
 			if i == nil {
@@ -801,7 +809,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelAlertPolicy = srv.AddMethod("AutoLabelAlertPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoLabelAlertPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/alertPolicies/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.AlertPolicy{}
 			if i == nil {
@@ -857,7 +869,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelEventPolicy = srv.AddMethod("AutoLabelEventPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoLabelEventPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/event-policy/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.EventPolicy{}
 			if i == nil {
@@ -885,7 +901,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelFlowExportPolicy = srv.AddMethod("AutoLabelFlowExportPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoLabelFlowExportPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/flowExportPolicy/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.FlowExportPolicy{}
 			if i == nil {
@@ -913,7 +933,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelFwlogPolicy = srv.AddMethod("AutoLabelFwlogPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoLabelFwlogPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/fwlogPolicy/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.FwlogPolicy{}
 			if i == nil {
@@ -941,7 +965,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelMirrorSession = srv.AddMethod("AutoLabelMirrorSession",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoLabelMirrorSession")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.MirrorSession{}
 			if i == nil {
@@ -997,7 +1025,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoLabelTroubleshootingSession = srv.AddMethod("AutoLabelTroubleshootingSession",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoLabelTroubleshootingSession")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/TroubleshootingSession/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := monitoring.TroubleshootingSession{}
 			if i == nil {

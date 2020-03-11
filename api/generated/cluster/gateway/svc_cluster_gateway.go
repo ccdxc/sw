@@ -2486,6 +2486,22 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Version", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoLabelCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelConfigurationSnapshot"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ConfigurationSnapshot", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfile", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCard", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelLicense"] = apigwpkg.NewServiceProfile(e.defSvcProf, "License", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
+
 	e.svcProf["AutoListDSCProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DSCProfileList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoListDistributedServiceCard"] = apigwpkg.NewServiceProfile(e.defSvcProf, "DistributedServiceCardList", "cluster", apiintf.ListOper)

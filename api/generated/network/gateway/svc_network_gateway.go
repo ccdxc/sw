@@ -1940,6 +1940,16 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.GetOper)
 
+	e.svcProf["AutoLabelIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicy", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelNetworkInterface"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkInterface", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelRoutingConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoutingConfig", "network", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelVirtualRouter"] = apigwpkg.NewServiceProfile(e.defSvcProf, "VirtualRouter", "network", apiintf.CreateOper)
+
 	e.svcProf["AutoListIPAMPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "IPAMPolicyList", "network", apiintf.ListOper)
 
 	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkList", "network", apiintf.ListOper)

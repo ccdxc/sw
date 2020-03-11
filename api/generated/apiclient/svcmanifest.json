@@ -19,7 +19,8 @@
               "get",
               "put",
               "post",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "LdapConnectionCheck",
@@ -38,7 +39,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/auth/v1/roles"
           },
@@ -52,7 +54,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/auth/v1/role-bindings"
           },
@@ -66,7 +69,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "PasswordChange",
@@ -82,7 +86,8 @@
             "RestMethods": [
               "get",
               "put",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/auth/v1/user-preferences"
           }
@@ -211,7 +216,8 @@
             "RestMethods": [
               "put",
               "get",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "AuthBootstrapComplete",
@@ -228,7 +234,8 @@
               "get",
               "delete",
               "post",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "save"
@@ -245,7 +252,8 @@
               "get",
               "delete",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/cluster/v1/dscprofiles"
           },
@@ -258,7 +266,8 @@
               "get",
               "delete",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/cluster/v1/distributedservicecards"
           },
@@ -272,7 +281,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/cluster/v1/hosts"
           },
@@ -283,7 +293,8 @@
             "RestMethods": [
               "post",
               "put",
-              "get"
+              "get",
+              "label"
             ],
             "URI": "/configs/cluster/v1/licenses"
           },
@@ -297,7 +308,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/cluster/v1/nodes"
           },
@@ -323,7 +335,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/cluster/v1/tenants"
           },
@@ -361,7 +374,8 @@
               "get",
               "put",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "Debug"
@@ -400,7 +414,8 @@
               "list",
               "put",
               "get",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/alerts"
           },
@@ -414,7 +429,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/alertDestinations"
           },
@@ -428,7 +444,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/alertPolicies"
           },
@@ -458,7 +475,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/event-policy"
           },
@@ -472,7 +490,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/flowExportPolicy"
           },
@@ -486,7 +505,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/fwlogPolicy"
           },
@@ -500,7 +520,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/MirrorSession"
           },
@@ -526,7 +547,8 @@
               "put",
               "delete",
               "post",
-              "list"
+              "list",
+              "label"
             ],
             "URI": "/configs/monitoring/v1/TroubleshootingSession"
           }
@@ -565,7 +587,8 @@
               "delete",
               "get",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/network/v1/ipam-policies"
           },
@@ -585,7 +608,8 @@
               "delete",
               "get",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/network/v1/networks"
           },
@@ -597,7 +621,8 @@
               "put",
               "get",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/network/v1/networkinterfaces"
           },
@@ -622,7 +647,8 @@
               "delete",
               "get",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/network/v1/routing-config"
           },
@@ -642,7 +668,8 @@
               "delete",
               "get",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/network/v1/virtualrouters"
           }
@@ -708,7 +735,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/orchestration/v1/orchestrator"
           }
@@ -781,7 +809,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/security/v1/apps"
           },
@@ -799,7 +828,8 @@
               "get",
               "put",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/security/v1/firewallprofiles"
           },
@@ -813,7 +843,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/security/v1/networksecuritypolicies"
           },
@@ -827,7 +858,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "URI": "/configs/security/v1/security-groups"
           },
@@ -906,7 +938,8 @@
               "delete",
               "post",
               "list",
-              "watch"
+              "watch",
+              "label"
             ],
             "Actions": [
               "StartMigration",

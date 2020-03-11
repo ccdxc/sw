@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserPreferenceWatchHelper,AuthAutoMsgUserPreferenceWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,ApiLabel,IApiLabel,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserPreferenceWatchHelper,AuthAutoMsgUserPreferenceWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -130,6 +130,25 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label AuthenticationPolicy object */
+  public LabelAuthenticationPolicy(body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/authn-policy/label';
+    const opts = {
+      eventID: 'LabelAuthenticationPolicy',
+      objType: 'AuthAuthenticationPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List RoleBinding objects */
   public ListRoleBinding_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthRoleBindingList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings';
@@ -216,6 +235,26 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label RoleBinding object */
+  public LabelRoleBinding_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/role-bindings/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelRoleBinding_1',
+      objType: 'AuthRoleBinding',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List Role objects */
   public ListRole_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthRoleList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles';
@@ -300,6 +339,26 @@ export class Authv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Role object */
+  public LabelRole_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/roles/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelRole_1',
+      objType: 'AuthRole',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List RoleBinding objects */
@@ -393,6 +452,27 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label RoleBinding object */
+  public LabelRoleBinding(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/role-bindings/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelRoleBinding',
+      objType: 'AuthRoleBinding',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRoleBinding | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List Role objects */
   public ListRole(queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthRoleList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles';
@@ -484,6 +564,27 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label Role object */
+  public LabelRole(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/roles/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelRole',
+      objType: 'AuthRole',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthRole | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Get UserPreference object */
   public GetUserPreference(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/user-preferences/{O.Name}';
@@ -520,6 +621,27 @@ export class Authv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label UserPreference object */
+  public LabelUserPreference(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/user-preferences/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelUserPreference',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List User objects */
@@ -676,6 +798,27 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label User object */
+  public LabelUser(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelUser',
+      objType: 'AuthUser',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Get UserPreference object */
   public GetUserPreference_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/user-preferences/{O.Name}';
@@ -710,6 +853,26 @@ export class Authv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label UserPreference object */
+  public LabelUserPreference_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/user-preferences/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelUserPreference_1',
+      objType: 'AuthUserPreference',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUserPreference | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List User objects */
@@ -854,6 +1017,26 @@ export class Authv1Service extends AbstractService {
     body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label User object */
+  public LabelUser_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelUser_1',
+      objType: 'AuthUser',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }

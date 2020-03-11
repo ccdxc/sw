@@ -2870,32 +2870,27 @@ func makeURIAuthV1AutoGetUserPreferenceGetOper(in *UserPreference) string {
 
 //
 func makeURIAuthV1AutoLabelAuthenticationPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/label")
 }
 
 //
 func makeURIAuthV1AutoLabelRoleLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/roles/", in.Name, "/label")
 }
 
 //
 func makeURIAuthV1AutoLabelRoleBindingLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/role-bindings/", in.Name, "/label")
 }
 
 //
 func makeURIAuthV1AutoLabelUserLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name, "/label")
 }
 
 //
 func makeURIAuthV1AutoLabelUserPreferenceLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/user-preferences/", in.Name, "/label")
 }
 
 //
@@ -3057,7 +3052,24 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUser(ctx context.Context, in *User
 
 // AutoLabelUser label method for User
 func (r *EndpointsAuthV1RestClient) AutoLabelUser(ctx context.Context, in *api.Label) (*User, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIAuthV1AutoLabelUserLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoLabelUser(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*User), err
 }
 
 // AutoGetUser CRUD method for User
@@ -3283,7 +3295,24 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateAuthenticationPolicy(ctx context.C
 
 // AutoLabelAuthenticationPolicy label method for AuthenticationPolicy
 func (r *EndpointsAuthV1RestClient) AutoLabelAuthenticationPolicy(ctx context.Context, in *api.Label) (*AuthenticationPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIAuthV1AutoLabelAuthenticationPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoLabelAuthenticationPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AuthenticationPolicy), err
 }
 
 // AutoGetAuthenticationPolicy CRUD method for AuthenticationPolicy
@@ -3475,7 +3504,24 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role
 
 // AutoLabelRole label method for Role
 func (r *EndpointsAuthV1RestClient) AutoLabelRole(ctx context.Context, in *api.Label) (*Role, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIAuthV1AutoLabelRoleLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoLabelRole(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Role), err
 }
 
 // AutoGetRole CRUD method for Role
@@ -3638,7 +3684,24 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, i
 
 // AutoLabelRoleBinding label method for RoleBinding
 func (r *EndpointsAuthV1RestClient) AutoLabelRoleBinding(ctx context.Context, in *api.Label) (*RoleBinding, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIAuthV1AutoLabelRoleBindingLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoLabelRoleBinding(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RoleBinding), err
 }
 
 // AutoGetRoleBinding CRUD method for RoleBinding
@@ -3784,7 +3847,24 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUserPreference(ctx context.Context
 
 // AutoLabelUserPreference label method for UserPreference
 func (r *EndpointsAuthV1RestClient) AutoLabelUserPreference(ctx context.Context, in *api.Label) (*UserPreference, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIAuthV1AutoLabelUserPreferenceLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1AutoLabelUserPreference(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*UserPreference), err
 }
 
 // AutoGetUserPreference CRUD method for UserPreference

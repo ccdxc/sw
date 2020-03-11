@@ -2451,6 +2451,22 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiintf.GetOper)
 
+	e.svcProf["AutoLabelAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Alert", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestination", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertPolicy", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelEventPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EventPolicy", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelFlowExportPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FlowExportPolicy", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiintf.CreateOper)
+
 	e.svcProf["AutoListAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertList", "monitoring", apiintf.ListOper)
 
 	e.svcProf["AutoListAlertDestination"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AlertDestinationList", "monitoring", apiintf.ListOper)

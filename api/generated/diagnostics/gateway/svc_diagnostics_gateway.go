@@ -363,6 +363,8 @@ func (e *sDiagnosticsV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetModule"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Module", "diagnostics", apiintf.GetOper)
 
+	e.svcProf["AutoLabelModule"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Module", "diagnostics", apiintf.CreateOper)
+
 	e.svcProf["AutoListModule"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ModuleList", "diagnostics", apiintf.ListOper)
 
 	e.svcProf["AutoUpdateModule"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Module", "diagnostics", apiintf.UpdateOper)

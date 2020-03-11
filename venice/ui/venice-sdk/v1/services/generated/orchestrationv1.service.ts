@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IOrchestrationOrchestratorList,OrchestrationOrchestratorList,IApiStatus,ApiStatus,IOrchestrationOrchestrator,OrchestrationOrchestrator,IOrchestrationAutoMsgOrchestratorWatchHelper,OrchestrationAutoMsgOrchestratorWatchHelper } from '../../models/generated/orchestration';
+import { IOrchestrationOrchestratorList,OrchestrationOrchestratorList,IApiStatus,ApiStatus,IOrchestrationOrchestrator,OrchestrationOrchestrator,ApiLabel,IApiLabel,IOrchestrationAutoMsgOrchestratorWatchHelper,OrchestrationAutoMsgOrchestratorWatchHelper } from '../../models/generated/orchestration';
 
 @Injectable()
 export class Orchestrationv1Service extends AbstractService {
@@ -104,6 +104,26 @@ export class Orchestrationv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new OrchestrationOrchestrator(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Orchestrator object */
+  public LabelOrchestrator(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/orchestration/v1/orchestrator/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelOrchestrator',
+      objType: 'OrchestrationOrchestrator',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IOrchestrationOrchestrator | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch Orchestrator objects. Supports WebSockets or HTTP long poll */

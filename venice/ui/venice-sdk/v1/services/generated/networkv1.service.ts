@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { INetworkIPAMPolicyList,NetworkIPAMPolicyList,IApiStatus,ApiStatus,INetworkIPAMPolicy,NetworkIPAMPolicy,INetworkNetworkInterfaceList,NetworkNetworkInterfaceList,INetworkNetworkInterface,NetworkNetworkInterface,INetworkNetworkList,NetworkNetworkList,INetworkNetwork,NetworkNetwork,INetworkRouteTableList,NetworkRouteTableList,INetworkRouteTable,NetworkRouteTable,INetworkRoutingConfigList,NetworkRoutingConfigList,INetworkRoutingConfig,NetworkRoutingConfig,INetworkVirtualRouterList,NetworkVirtualRouterList,INetworkVirtualRouter,NetworkVirtualRouter,INetworkAutoMsgIPAMPolicyWatchHelper,NetworkAutoMsgIPAMPolicyWatchHelper,INetworkAutoMsgNetworkInterfaceWatchHelper,NetworkAutoMsgNetworkInterfaceWatchHelper,INetworkAutoMsgNetworkWatchHelper,NetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgRouteTableWatchHelper,NetworkAutoMsgRouteTableWatchHelper,INetworkAutoMsgRoutingConfigWatchHelper,NetworkAutoMsgRoutingConfigWatchHelper,INetworkAutoMsgVirtualRouterWatchHelper,NetworkAutoMsgVirtualRouterWatchHelper } from '../../models/generated/network';
+import { INetworkIPAMPolicyList,NetworkIPAMPolicyList,IApiStatus,ApiStatus,INetworkIPAMPolicy,NetworkIPAMPolicy,ApiLabel,IApiLabel,INetworkNetworkInterfaceList,NetworkNetworkInterfaceList,INetworkNetworkInterface,NetworkNetworkInterface,INetworkNetworkList,NetworkNetworkList,INetworkNetwork,NetworkNetwork,INetworkRouteTableList,NetworkRouteTableList,INetworkRouteTable,NetworkRouteTable,INetworkRoutingConfigList,NetworkRoutingConfigList,INetworkRoutingConfig,NetworkRoutingConfig,INetworkVirtualRouterList,NetworkVirtualRouterList,INetworkVirtualRouter,NetworkVirtualRouter,INetworkAutoMsgIPAMPolicyWatchHelper,NetworkAutoMsgIPAMPolicyWatchHelper,INetworkAutoMsgNetworkInterfaceWatchHelper,NetworkAutoMsgNetworkInterfaceWatchHelper,INetworkAutoMsgNetworkWatchHelper,NetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgRouteTableWatchHelper,NetworkAutoMsgRouteTableWatchHelper,INetworkAutoMsgRoutingConfigWatchHelper,NetworkAutoMsgRoutingConfigWatchHelper,INetworkAutoMsgVirtualRouterWatchHelper,NetworkAutoMsgVirtualRouterWatchHelper } from '../../models/generated/network';
 
 @Injectable()
 export class Networkv1Service extends AbstractService {
@@ -106,6 +106,26 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label IPAMPolicy object */
+  public LabelIPAMPolicy_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/ipam-policies/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelIPAMPolicy_1',
+      objType: 'NetworkIPAMPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List NetworkInterface objects */
   public ListNetworkInterface(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkNetworkInterfaceList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces';
@@ -155,6 +175,26 @@ export class Networkv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label NetworkInterface object */
+  public LabelNetworkInterface(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/networkinterfaces/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelNetworkInterface',
+      objType: 'NetworkNetworkInterface',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetworkInterface | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Network objects */
@@ -241,6 +281,26 @@ export class Networkv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Network object */
+  public LabelNetwork_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/networks/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelNetwork_1',
+      objType: 'NetworkNetwork',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List RouteTable objects */
@@ -360,6 +420,26 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label RoutingConfig object */
+  public LabelRoutingConfig(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/routing-config/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelRoutingConfig',
+      objType: 'NetworkRoutingConfig',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkRoutingConfig | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List IPAMPolicy objects */
   public ListIPAMPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkIPAMPolicyList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/ipam-policies';
@@ -451,6 +531,27 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label IPAMPolicy object */
+  public LabelIPAMPolicy(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/ipam-policies/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelIPAMPolicy',
+      objType: 'NetworkIPAMPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkIPAMPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List Network objects */
   public ListNetwork(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkNetworkList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks';
@@ -540,6 +641,27 @@ export class Networkv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Network object */
+  public LabelNetwork(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/networks/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelNetwork',
+      objType: 'NetworkNetwork',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkNetwork | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List RouteTable objects */
@@ -666,6 +788,27 @@ export class Networkv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label VirtualRouter object */
+  public LabelVirtualRouter(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/tenant/{O.Tenant}/virtualrouters/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelVirtualRouter',
+      objType: 'NetworkVirtualRouter',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List VirtualRouter objects */
   public ListVirtualRouter_1(queryParam: any = null, stagingID: string = ""):Observable<{body: INetworkVirtualRouterList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/network/v1/virtualrouters';
@@ -750,6 +893,26 @@ export class Networkv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label VirtualRouter object */
+  public LabelVirtualRouter_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/network/v1/virtualrouters/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelVirtualRouter_1',
+      objType: 'NetworkVirtualRouter',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: INetworkVirtualRouter | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch IPAMPolicy objects. Supports WebSockets or HTTP long poll */

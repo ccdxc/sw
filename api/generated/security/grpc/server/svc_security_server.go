@@ -458,7 +458,11 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoLabelApp = srv.AddMethod("AutoLabelApp",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.App"], "security", "AutoLabelApp")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/apps/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := security.App{}
 			if i == nil {
@@ -514,7 +518,11 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoLabelFirewallProfile = srv.AddMethod("AutoLabelFirewallProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.FirewallProfile"], "security", "AutoLabelFirewallProfile")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := security.FirewallProfile{}
 			if i == nil {
@@ -542,7 +550,11 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoLabelNetworkSecurityPolicy = srv.AddMethod("AutoLabelNetworkSecurityPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.NetworkSecurityPolicy"], "security", "AutoLabelNetworkSecurityPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := security.NetworkSecurityPolicy{}
 			if i == nil {
@@ -570,7 +582,11 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoLabelSecurityGroup = srv.AddMethod("AutoLabelSecurityGroup",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["security.SecurityGroup"], "security", "AutoLabelSecurityGroup")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/security-groups/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := security.SecurityGroup{}
 			if i == nil {

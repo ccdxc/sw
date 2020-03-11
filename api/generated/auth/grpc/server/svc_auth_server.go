@@ -411,7 +411,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoLabelAuthenticationPolicy = srv.AddMethod("AutoLabelAuthenticationPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoLabelAuthenticationPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := auth.AuthenticationPolicy{}
 			if i == nil {
@@ -439,7 +439,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoLabelRole = srv.AddMethod("AutoLabelRole",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.Role"], "auth", "AutoLabelRole")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/roles/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := auth.Role{}
 			if i == nil {
@@ -467,7 +471,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoLabelRoleBinding = srv.AddMethod("AutoLabelRoleBinding",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.RoleBinding"], "auth", "AutoLabelRoleBinding")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/role-bindings/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := auth.RoleBinding{}
 			if i == nil {
@@ -495,7 +503,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoLabelUser = srv.AddMethod("AutoLabelUser",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.User"], "auth", "AutoLabelUser")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := auth.User{}
 			if i == nil {
@@ -523,7 +535,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 
 		s.endpointsAuthV1.fnAutoLabelUserPreference = srv.AddMethod("AutoLabelUserPreference",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["auth.UserPreference"], "auth", "AutoLabelUserPreference")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/user-preferences/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := auth.UserPreference{}
 			if i == nil {

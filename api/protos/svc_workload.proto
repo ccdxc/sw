@@ -31,7 +31,7 @@ service WorkloadV1 {
     option (venice.apiGrpcCrudService) = "Workload";
     option (venice.apiRestService) = {
         Object: "Workload"
-        Method: [ "get", "put", "delete", "post", "list", "watch" ]
+        Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
     };
 
     // Action to start migration.

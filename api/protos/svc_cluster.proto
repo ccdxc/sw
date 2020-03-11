@@ -38,7 +38,7 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "Cluster"
-        Method: ["put", "get", "watch"]
+        Method: ["put", "get", "watch", "label"]
     };
 
     option (venice.apiRestService) = {
@@ -66,27 +66,27 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "Node"
-        Method: ["put", "get", "delete", "post", "list", "watch"]
+        Method: ["put", "get", "delete", "post", "list", "watch", "label"]
     };
 
     option (venice.apiRestService) = {
         Object: "Host"
-        Method: ["put", "get", "delete", "post", "list", "watch"]
+        Method: ["put", "get", "delete", "post", "list", "watch", "label"]
     };
 
     option (venice.apiRestService) = {
         Object: "DistributedServiceCard"
-        Method: ["put", "get", "delete", "list", "watch"]
+        Method: ["put", "get", "delete", "list", "watch", "label"]
     };
 
     option (venice.apiRestService) = {
         Object: "DSCProfile"
-        Method: ["post", "put", "get", "delete", "list", "watch"]
+        Method: ["post", "put", "get", "delete", "list", "watch", "label"]
     };
 
     option (venice.apiRestService) = {
         Object: "Tenant"
-        Method: ["get", "put", "delete", "post", "list" , "watch"]
+        Method: ["get", "put", "delete", "post", "list" , "watch", "label"]
     };
 
     option (venice.apiRestService) = {
@@ -96,7 +96,7 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "ConfigurationSnapshot"
-        Method : ["put", "get", "delete", "post", "watch"]
+        Method : ["put", "get", "delete", "post", "watch", "label"]
     };
 
     option (venice.apiAction) = {
@@ -117,6 +117,6 @@ service ClusterV1 {
 
     option (venice.apiRestService) = {
         Object: "License"
-        Method : ["post", "put", "get"]
+        Method : ["post", "put", "get", "label"]
     };
 }

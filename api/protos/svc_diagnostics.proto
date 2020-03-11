@@ -23,7 +23,7 @@ service DiagnosticsV1 {
 
     option (venice.apiRestService) = {
         Object: "Module"
-        Method: [ "get", "put", "list", "watch"]
+        Method: [ "get", "put", "list", "watch", "label"]
     };
     // Action to request diagnostic information
     option (venice.apiAction) = {

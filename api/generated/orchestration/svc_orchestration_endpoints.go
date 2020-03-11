@@ -9,7 +9,6 @@ package orchestration
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -639,8 +638,7 @@ func makeURIOrchestratorV1AutoGetOrchestratorGetOper(in *Orchestrator) string {
 
 //
 func makeURIOrchestratorV1AutoLabelOrchestratorLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/orchestration/v1", "/orchestrator/", in.Name, "/label")
 }
 
 //
@@ -710,7 +708,24 @@ func (r *EndpointsOrchestratorV1RestClient) AutoUpdateOrchestrator(ctx context.C
 
 // AutoLabelOrchestrator label method for Orchestrator
 func (r *EndpointsOrchestratorV1RestClient) AutoLabelOrchestrator(ctx context.Context, in *api.Label) (*Orchestrator, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIOrchestratorV1AutoLabelOrchestratorLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespOrchestratorV1AutoLabelOrchestrator(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Orchestrator), err
 }
 
 // AutoGetOrchestrator CRUD method for Orchestrator

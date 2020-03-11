@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { ISecurityAppList,SecurityAppList,IApiStatus,ApiStatus,ISecurityApp,SecurityApp,ISecurityFirewallProfileList,SecurityFirewallProfileList,ISecurityFirewallProfile,SecurityFirewallProfile,ISecurityNetworkSecurityPolicyList,SecurityNetworkSecurityPolicyList,ISecurityNetworkSecurityPolicy,SecurityNetworkSecurityPolicy,ISecuritySecurityGroupList,SecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecurityAutoMsgAppWatchHelper,SecurityAutoMsgAppWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,SecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgNetworkSecurityPolicyWatchHelper,SecurityAutoMsgNetworkSecurityPolicyWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,SecurityAutoMsgSecurityGroupWatchHelper } from '../../models/generated/security';
+import { ISecurityAppList,SecurityAppList,IApiStatus,ApiStatus,ISecurityApp,SecurityApp,ApiLabel,IApiLabel,ISecurityFirewallProfileList,SecurityFirewallProfileList,ISecurityFirewallProfile,SecurityFirewallProfile,ISecurityNetworkSecurityPolicyList,SecurityNetworkSecurityPolicyList,ISecurityNetworkSecurityPolicy,SecurityNetworkSecurityPolicy,ISecuritySecurityGroupList,SecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecurityAutoMsgAppWatchHelper,SecurityAutoMsgAppWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,SecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgNetworkSecurityPolicyWatchHelper,SecurityAutoMsgNetworkSecurityPolicyWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,SecurityAutoMsgSecurityGroupWatchHelper } from '../../models/generated/security';
 
 @Injectable()
 export class Securityv1Service extends AbstractService {
@@ -106,6 +106,26 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label App object */
+  public LabelApp_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/apps/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelApp_1',
+      objType: 'SecurityApp',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List FirewallProfile objects */
   public ListFirewallProfile_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles';
@@ -155,6 +175,26 @@ export class Securityv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label FirewallProfile object */
+  public LabelFirewallProfile_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelFirewallProfile_1',
+      objType: 'SecurityFirewallProfile',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List NetworkSecurityPolicy objects */
@@ -243,6 +283,26 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label NetworkSecurityPolicy object */
+  public LabelNetworkSecurityPolicy_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/networksecuritypolicies/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelNetworkSecurityPolicy_1',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List SecurityGroup objects */
   public ListSecurityGroup_1(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySecurityGroupList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups';
@@ -327,6 +387,26 @@ export class Securityv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label SecurityGroup object */
+  public LabelSecurityGroup_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/security-groups/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelSecurityGroup_1',
+      objType: 'SecuritySecurityGroup',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List App objects */
@@ -420,6 +500,27 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label App object */
+  public LabelApp(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/apps/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelApp',
+      objType: 'SecurityApp',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityApp | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List FirewallProfile objects */
   public ListFirewallProfile(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles';
@@ -472,6 +573,27 @@ export class Securityv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label FirewallProfile object */
+  public LabelFirewallProfile(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelFirewallProfile',
+      objType: 'SecurityFirewallProfile',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List NetworkSecurityPolicy objects */
@@ -565,6 +687,27 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label NetworkSecurityPolicy object */
+  public LabelNetworkSecurityPolicy(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/networksecuritypolicies/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelNetworkSecurityPolicy',
+      objType: 'SecurityNetworkSecurityPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** List SecurityGroup objects */
   public ListSecurityGroup(queryParam: any = null, stagingID: string = ""):Observable<{body: ISecuritySecurityGroupList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups';
@@ -654,6 +797,27 @@ export class Securityv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }
     return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label SecurityGroup object */
+  public LabelSecurityGroup(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/security-groups/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelSecurityGroup',
+      objType: 'SecuritySecurityGroup',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISecuritySecurityGroup | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch App objects. Supports WebSockets or HTTP long poll */

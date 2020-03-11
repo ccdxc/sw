@@ -35,22 +35,22 @@ service SecurityV1 {
 
  option (venice.apiRestService) = {
    Object: "SecurityGroup"
-   Method: [ "get", "put", "delete", "post", "list", "watch" ]
+   Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
  };
 
  option (venice.apiRestService) = {
      Object: "NetworkSecurityPolicy"
-     Method: [ "get", "put", "delete", "post", "list", "watch" ]
+     Method: [ "get", "put", "delete", "post", "list", "watch", "label" ]
  };
 
  option (venice.apiRestService) = {
    Object: "App"
-   Method: ["get", "put", "delete", "post", "list", "watch" ]
+   Method: ["get", "put", "delete", "post", "list", "watch", "label" ]
  };
 
  option (venice.apiRestService) = {
    Object: "FirewallProfile"
-   Method: ["get", "put", "list", "watch" ]
+   Method: ["get", "put", "list", "watch", "label" ]
  };
  
 }

@@ -707,8 +707,7 @@ func makeURIDiagnosticsV1AutoGetModuleGetOper(in *Module) string {
 
 //
 func makeURIDiagnosticsV1AutoLabelModuleLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/diagnostics/v1", "/modules/", in.Name, "/label")
 }
 
 //
@@ -766,7 +765,24 @@ func (r *EndpointsDiagnosticsV1RestClient) AutoUpdateModule(ctx context.Context,
 
 // AutoLabelModule label method for Module
 func (r *EndpointsDiagnosticsV1RestClient) AutoLabelModule(ctx context.Context, in *api.Label) (*Module, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIDiagnosticsV1AutoLabelModuleLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespDiagnosticsV1AutoLabelModule(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Module), err
 }
 
 // AutoGetModule CRUD method for Module

@@ -340,6 +340,8 @@ func (e *sOrchestratorV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.GetOper)
 
+	e.svcProf["AutoLabelOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.CreateOper)
+
 	e.svcProf["AutoListOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "OrchestratorList", "orchestration", apiintf.ListOper)
 
 	e.svcProf["AutoUpdateOrchestrator"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Orchestrator", "orchestration", apiintf.UpdateOper)

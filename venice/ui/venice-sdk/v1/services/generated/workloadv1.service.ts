@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IWorkloadEndpointList,WorkloadEndpointList,IApiStatus,ApiStatus,IWorkloadEndpoint,WorkloadEndpoint,IWorkloadWorkloadList,WorkloadWorkloadList,IWorkloadWorkload,WorkloadWorkload,IWorkloadAutoMsgEndpointWatchHelper,WorkloadAutoMsgEndpointWatchHelper,IWorkloadAutoMsgWorkloadWatchHelper,WorkloadAutoMsgWorkloadWatchHelper } from '../../models/generated/workload';
+import { IWorkloadEndpointList,WorkloadEndpointList,IApiStatus,ApiStatus,IWorkloadEndpoint,WorkloadEndpoint,IWorkloadWorkloadList,WorkloadWorkloadList,IWorkloadWorkload,WorkloadWorkload,ApiLabel,IApiLabel,IWorkloadAutoMsgEndpointWatchHelper,WorkloadAutoMsgEndpointWatchHelper,IWorkloadAutoMsgWorkloadWatchHelper,WorkloadAutoMsgWorkloadWatchHelper } from '../../models/generated/workload';
 
 @Injectable()
 export class Workloadv1Service extends AbstractService {
@@ -238,6 +238,27 @@ export class Workloadv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Label Workload object */
+  public LabelWorkload(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/label';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelWorkload',
+      objType: 'WorkloadWorkload',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch Endpoint objects. Supports WebSockets or HTTP long poll */
   public WatchEndpoint_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IWorkloadAutoMsgEndpointWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/watch/endpoints';
@@ -442,6 +463,26 @@ export class Workloadv1Service extends AbstractService {
     body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Label Workload object */
+  public LabelWorkload_1(O_Name, body: IApiLabel, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads/{O.Name}/label';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'LabelWorkload_1',
+      objType: 'WorkloadWorkload',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }

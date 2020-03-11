@@ -655,6 +655,8 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.GetOper)
 
+	e.svcProf["AutoLabelWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
+
 	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EndpointList", "workload", apiintf.ListOper)
 
 	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "WorkloadList", "workload", apiintf.ListOper)

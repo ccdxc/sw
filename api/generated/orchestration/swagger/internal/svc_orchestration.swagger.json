@@ -612,6 +612,75 @@
         ]
       }
     },
+    "/configs/orchestration/v1/orchestrator/{O.Name}/label": {
+      "post": {
+        "summary": "Label Orchestrator object",
+        "operationId": "LabelOrchestrator",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/orchestrationOrchestrator"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiLabel"
+            }
+          }
+        ],
+        "tags": [
+          "orchestration/v1"
+        ]
+      }
+    },
     "/configs/orchestration/v1/watch/orchestrator": {
       "get": {
         "summary": "Watch Orchestrator objects. Supports WebSockets or HTTP long poll",

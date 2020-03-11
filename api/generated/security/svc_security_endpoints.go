@@ -2937,8 +2937,7 @@ func makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in *TrafficEncryptio
 
 //
 func makeURISecurityV1AutoLabelAppLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/apps/", in.Name, "/label")
 }
 
 //
@@ -2949,20 +2948,17 @@ func makeURISecurityV1AutoLabelCertificateLabelOper(in *api.Label) string {
 
 //
 func makeURISecurityV1AutoLabelFirewallProfileLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/firewallprofiles/", in.Name, "/label")
 }
 
 //
 func makeURISecurityV1AutoLabelNetworkSecurityPolicyLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/networksecuritypolicies/", in.Name, "/label")
 }
 
 //
 func makeURISecurityV1AutoLabelSecurityGroupLabelOper(in *api.Label) string {
-	return ""
-
+	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/security-groups/", in.Name, "/label")
 }
 
 //
@@ -3119,7 +3115,24 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSecurityGroup(ctx context.Cont
 
 // AutoLabelSecurityGroup label method for SecurityGroup
 func (r *EndpointsSecurityV1RestClient) AutoLabelSecurityGroup(ctx context.Context, in *api.Label) (*SecurityGroup, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoLabelSecurityGroupLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespSecurityV1AutoLabelSecurityGroup(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*SecurityGroup), err
 }
 
 // AutoGetSecurityGroup CRUD method for SecurityGroup
@@ -3282,7 +3295,24 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateNetworkSecurityPolicy(ctx cont
 
 // AutoLabelNetworkSecurityPolicy label method for NetworkSecurityPolicy
 func (r *EndpointsSecurityV1RestClient) AutoLabelNetworkSecurityPolicy(ctx context.Context, in *api.Label) (*NetworkSecurityPolicy, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoLabelNetworkSecurityPolicyLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespSecurityV1AutoLabelNetworkSecurityPolicy(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*NetworkSecurityPolicy), err
 }
 
 // AutoGetNetworkSecurityPolicy CRUD method for NetworkSecurityPolicy
@@ -3445,7 +3475,24 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *A
 
 // AutoLabelApp label method for App
 func (r *EndpointsSecurityV1RestClient) AutoLabelApp(ctx context.Context, in *api.Label) (*App, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoLabelAppLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespSecurityV1AutoLabelApp(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*App), err
 }
 
 // AutoGetApp CRUD method for App
@@ -3591,7 +3638,24 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateFirewallProfile(ctx context.Co
 
 // AutoLabelFirewallProfile label method for FirewallProfile
 func (r *EndpointsSecurityV1RestClient) AutoLabelFirewallProfile(ctx context.Context, in *api.Label) (*FirewallProfile, error) {
-	return nil, errors.New("not allowed")
+	path := makeURISecurityV1AutoLabelFirewallProfileLabelOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespSecurityV1AutoLabelFirewallProfile(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*FirewallProfile), err
 }
 
 // AutoGetFirewallProfile CRUD method for FirewallProfile

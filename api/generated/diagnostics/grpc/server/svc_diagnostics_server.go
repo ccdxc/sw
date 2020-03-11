@@ -142,7 +142,11 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regSvcsFunc(ctx context.Context, lo
 
 		s.endpointsDiagnosticsV1.fnAutoLabelModule = srv.AddMethod("AutoLabelModule",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["diagnostics.Module"], "diagnostics", "AutoLabelModule")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "diagnostics/v1/modules/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := diagnostics.Module{}
 			if i == nil {

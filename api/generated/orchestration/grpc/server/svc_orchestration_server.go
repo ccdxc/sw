@@ -149,7 +149,11 @@ func (s *sorchestrationSvc_orchestrationBackend) regSvcsFunc(ctx context.Context
 
 		s.endpointsOrchestratorV1.fnAutoLabelOrchestrator = srv.AddMethod("AutoLabelOrchestrator",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["orchestration.Orchestrator"], "orchestration", "AutoLabelOrchestrator")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "orchestration/v1/orchestrator/", in.Name), nil
 		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
 			new := orchestration.Orchestrator{}
 			if i == nil {

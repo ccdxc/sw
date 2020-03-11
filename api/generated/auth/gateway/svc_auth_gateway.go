@@ -1424,6 +1424,16 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetUserPreference"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserPreference", "auth", apiintf.GetOper)
 
+	e.svcProf["AutoLabelAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
+
+	e.svcProf["AutoLabelUserPreference"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserPreference", "auth", apiintf.CreateOper)
+
 	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleList", "auth", apiintf.ListOper)
 
 	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBindingList", "auth", apiintf.ListOper)
