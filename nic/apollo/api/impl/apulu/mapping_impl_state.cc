@@ -161,6 +161,11 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     data = (local_mapping_appdata_t *)(params->appdata);
     vpc_id = key->key_metadata_local_mapping_lkp_id;
 
+    // skip l2 mappings
+    if (key->key_metadata_local_mapping_lkp_type == KEY_TYPE_MAC) {
+        return;
+    }
+
     // read remote mapping
     mapping_key.p4e_i2e_mapping_lkp_id = key->key_metadata_local_mapping_lkp_id;
     mapping_key.p4e_i2e_mapping_lkp_type = key->key_metadata_local_mapping_lkp_type;
@@ -246,6 +251,10 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
     if (mapping_key->p4e_i2e_mapping_lkp_type == KEY_TYPE_MAC) {
         return;
     }
+    // skip local mappings
+    if (mapping_data->nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
+        return;
+    }
 
     vpc_id = mapping_key->p4e_i2e_mapping_lkp_id;
     private_ip.af = (mapping_key->p4e_i2e_mapping_lkp_type == KEY_TYPE_IPV6) ?
@@ -311,6 +320,10 @@ remote_l2_mapping_dump_cb (sdk_table_api_params_t *params)
 
     // skip l3 mappings
     if (mapping_key->p4e_i2e_mapping_lkp_type != KEY_TYPE_MAC) {
+        return;
+    }
+    // skip local mappings
+    if (mapping_data->nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
         return;
     }
 
