@@ -88,7 +88,7 @@ pds_state::init(string pipeline, string cfg_file) {
 
     // create persistent store
     if (platform_type_ == platform_type_t::PLATFORM_TYPE_HW) {
-        kvstore_ = sdk::lib::kvstore::factory("/data/pdsagent.db", (1UL << 31));
+        path = "/data/";
     } else {
         path = std::string(getenv("PDSPKG_TOPDIR"));
         if (path.empty()) {
@@ -96,9 +96,9 @@ pds_state::init(string pipeline, string cfg_file) {
         } else {
             path += "/";
         }
-        kvstore_ = sdk::lib::kvstore::factory((path + "pdsagent.db").c_str(),
-                                              (1UL << 31));
     }
+    path += "pdsagent.db";
+    kvstore_ = sdk::lib::kvstore::factory(path, (1UL << 31));
     if (kvstore_ == NULL) {
         return SDK_RET_ERR;
     }
@@ -141,6 +141,9 @@ pds_state::destroy(pds_state *ps) {
         if (ps->state_[i]) {
             delete ps->state_[i];
         }
+    }
+    if (ps->kvstore_) {
+        sdk::lib::kvstore::destroy(ps->kvstore_);
     }
 }
 

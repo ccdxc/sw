@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include <string.h>
+#include <unistd.h>
 #include "include/sdk/mem.hpp"
 #include "lib/kvstore/kvstore_lmdb.hpp"
 
@@ -19,27 +20,46 @@ thread_local MDB_txn *kvstore_lmdb::t_txn_hdl_ = NULL;
 thread_local MDB_dbi kvstore_lmdb::db_dbi_;
 
 sdk_ret_t
-kvstore_lmdb::init(const char *dbpath, size_t size) {
+kvstore_lmdb::init(string dbpath, size_t size) {
     int rv;
+    const char *db = dbpath.c_str();
+
+    // remove the kvstore file, if it exists
+    unlink(db);
+    unlink((dbpath + "-db.lock").c_str());
 
      rv = mdb_env_create(&env_);
      if (likely(rv == 0)) {
          rv = mdb_env_set_mapsize(env_, size);
          if (likely(rv == 0)) {
-             rv = mdb_env_open(env_, dbpath, MDB_NOSUBDIR | MDB_WRITEMAP,
+             rv = mdb_env_open(env_, db, MDB_NOSUBDIR | MDB_WRITEMAP,
                                S_IRUSR | S_IWUSR);
              if (likely(rv == 0)) {
+                 // everything went through
                  return SDK_RET_OK;
+             } else {
+                 mdb_env_close(env_);
+                 SDK_TRACE_ERR("kvstore %s (size %lu) env open failed,  err %d",
+                               db, size, rv);
+             goto end;
              }
-             mdb_env_close(env_);
+         } else {
+             SDK_TRACE_ERR("kvstore %s (size %lu) env set failed, err %d",
+                           db, size, rv);
+             goto end;
          }
+     } else {
+         SDK_TRACE_ERR("kvstore %s (size %lu) env create failed, err %d",
+                       db, size, rv);
      }
-     SDK_TRACE_ERR("kvstore init with %s failed, err %d", dbpath, rv);
+
+end:
+
      return SDK_RET_ERR;
 }
 
 kvstore *
-kvstore_lmdb::factory(const char *dbpath, size_t size) {
+kvstore_lmdb::factory(string dbpath, size_t size) {
     void *mem;
     kvstore_lmdb *kvs;
 

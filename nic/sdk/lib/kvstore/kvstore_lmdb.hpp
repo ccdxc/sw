@@ -20,7 +20,7 @@ namespace lib {
 
 class kvstore_lmdb : public kvstore {
 public:
-    static kvstore *factory(const char *dbpath, size_t size);
+    static kvstore *factory(std::string dbpath, size_t size);
     static void destroy(kvstore *kvs);
     virtual sdk_ret_t txn_start(txn_type_t txn_type) override;
     virtual sdk_ret_t txn_commit(void) override;
@@ -37,7 +37,7 @@ private:
         t_txn_hdl_ = NULL;
     }
     ~kvstore_lmdb() {}
-    sdk_ret_t init(const char *dbpath, size_t size);
+    sdk_ret_t init(std::string dbpath, size_t size);
 
 private:
     MDB_env *env_;
