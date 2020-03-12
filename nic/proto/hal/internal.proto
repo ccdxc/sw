@@ -7,6 +7,7 @@ syntax = "proto3";
 import "types.proto";
 import "fwlog.proto";
 import "session.proto";
+import "interface.proto";
 
 package internal;
 option go_package="halproto";
@@ -100,6 +101,9 @@ service Internal {
   rpc TestClockSyncReq (TestClockSyncRequestMsg) returns (TestClockSyncResponseMsg) {}
 
   rpc FlowHashGet (FlowHashGetRequestMsg) returns (FlowHashGetResponseMsg) {}
+
+  // Internal (Marvell) port status
+  rpc InternalPortGet (InternalPortRequestMsg) returns (InternalPortResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -1796,3 +1800,38 @@ message FlowHashGetRequest {
 message FlowHashGetRequestMsg {
   repeated FlowHashGetRequest request = 1;
 }
+
+enum IntPortSpeed {
+    SPEED_10M       = 0;
+    SPEED_100M      = 1;
+    SPEED_1G        = 2;
+    SPEED_RESVD     = 3;    // Unknown
+}
+
+enum IntPortDplxMode {
+    HALF_DUPLEX     = 0;
+    FULL_DUPLEX     = 1;
+}
+
+message InternalPortResponse {
+    uint32              port_number     = 1;        // Port number
+    string              port_descr      = 2;        // Port Description
+    intf.IfStatus       port_status     = 3;        // Status
+    IntPortSpeed        port_speed      = 4;
+    IntPortDplxMode     port_mode       = 5;
+    bool                port_tx_paused  = 6;
+    bool                port_flow_ctrl  = 7;
+}
+
+message InternalPortResponseMsg {
+    repeated InternalPortResponse response = 1;
+}
+
+message InternalPortRequest {
+    uint32  port_number     = 1;        
+}
+
+message InternalPortRequestMsg {
+    repeated InternalPortRequest  request = 1;
+}
+

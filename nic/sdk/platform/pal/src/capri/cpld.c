@@ -634,7 +634,6 @@ pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
 {
     int rc = CPLD_FAIL;
     rc = cpld_mdio_rd(marvell_addr, data, phy);
-    *data =  (*data >> 11) & 0x1;
     return rc;
 }
 

@@ -170,6 +170,9 @@ hal_ret_t flow_hash_get(internal::FlowHashGetRequest& req,
 hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
                           internal::TestClockSyncResponse *rsp);
 
+hal_ret_t internal_port_get(internal::InternalPortRequest& req,
+                            internal::InternalPortResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

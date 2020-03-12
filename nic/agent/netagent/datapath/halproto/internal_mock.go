@@ -1779,6 +1779,24 @@ func (mr *MockInternalClientMockRecorder) FlowHashGet(ctx, in interface{}, opts 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlowHashGet", reflect.TypeOf((*MockInternalClient)(nil).FlowHashGet), varargs...)
 }
 
+// InternalPortGet mocks base method
+func (m *MockInternalClient) InternalPortGet(ctx context.Context, in *InternalPortRequestMsg, opts ...grpc.CallOption) (*InternalPortResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "InternalPortGet", varargs...)
+	ret0, _ := ret[0].(*InternalPortResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InternalPortGet indicates an expected call of InternalPortGet
+func (mr *MockInternalClientMockRecorder) InternalPortGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InternalPortGet", reflect.TypeOf((*MockInternalClient)(nil).InternalPortGet), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -2515,6 +2533,19 @@ func (m *MockInternalServer) FlowHashGet(arg0 context.Context, arg1 *FlowHashGet
 // FlowHashGet indicates an expected call of FlowHashGet
 func (mr *MockInternalServerMockRecorder) FlowHashGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlowHashGet", reflect.TypeOf((*MockInternalServer)(nil).FlowHashGet), arg0, arg1)
+}
+
+// InternalPortGet mocks base method
+func (m *MockInternalServer) InternalPortGet(arg0 context.Context, arg1 *InternalPortRequestMsg) (*InternalPortResponseMsg, error) {
+	ret := m.ctrl.Call(m, "InternalPortGet", arg0, arg1)
+	ret0, _ := ret[0].(*InternalPortResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InternalPortGet indicates an expected call of InternalPortGet
+func (mr *MockInternalServerMockRecorder) InternalPortGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InternalPortGet", reflect.TypeOf((*MockInternalServer)(nil).InternalPortGet), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

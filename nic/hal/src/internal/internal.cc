@@ -13,6 +13,8 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -178,6 +180,68 @@ hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
     pd_func_args.pd_clock_trigger_sync = &clock_args;
     pd::hal_pd_call(pd::PD_FUNC_ID_CLOCK_TRIGGER_SYNC, &pd_func_args);
 
+    return HAL_RET_OK;
+}
+
+static void
+populate_port_info (uint8_t port_num, uint16_t status,
+                    internal::InternalPortResponseMsg *rsp)
+{
+    bool is_up, full_duplex, txpause, fctrl;
+    uint8_t speed;
+
+    sdk::linkmgr::marvell_get_status_updown(status, &is_up);
+    sdk::linkmgr::marvell_get_status_duplex(status, &full_duplex);
+    sdk::linkmgr::marvell_get_status_speed(status, &speed);
+    sdk::linkmgr::marvell_get_status_txpause(status, &txpause);
+    sdk::linkmgr::marvell_get_status_flowctrl(status, &fctrl);
+
+    internal::InternalPortResponse *response = rsp->add_response();
+    response->set_port_number(port_num + 1);
+    response->set_port_descr(sdk::linkmgr::marvell_get_descr(port_num));
+    if (is_up) {
+        response->set_port_status(intf::IF_STATUS_UP);
+    } else {
+        response->set_port_status(intf::IF_STATUS_DOWN);
+    }
+    response->set_port_speed(::internal::IntPortSpeed(speed));
+    if (full_duplex) {
+        response->set_port_mode(::internal::FULL_DUPLEX);
+    } else{
+        response->set_port_mode(::internal::HALF_DUPLEX);
+    }
+    response->set_port_tx_paused(txpause);
+    response->set_port_flow_ctrl(fctrl);
+}
+
+hal_ret_t
+internal_port_get (internal::InternalPortRequest& req,
+                   internal::InternalPortResponseMsg *rsp)
+{
+    bool    has_port_num;
+    uint8_t port_num;
+    uint16_t data;
+
+    port_num = (uint8_t)req.port_number();
+    has_port_num = (port_num != 0);
+    port_num = port_num - 1;
+    
+    if (has_port_num) {
+        if (port_num < MARVELL_NPORTS) {
+            sdk::lib::marvell_link_status(MARVELL_PORT_STATUS_REG, &data,
+                                          MARVELL_PORT0 + port_num);
+            populate_port_info(port_num, data, rsp);
+        } else {
+            HAL_TRACE_ERR("Port No must be between 0-7");
+            return HAL_RET_INVALID_ARG;
+        }
+    } else {
+        for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
+            sdk::lib::marvell_link_status(MARVELL_PORT_STATUS_REG, &data,
+                                          MARVELL_PORT0 + port_num);
+            populate_port_info(port_num, data, rsp);
+        }
+    }
     return HAL_RET_OK;
 }
 

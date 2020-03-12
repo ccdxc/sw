@@ -13,6 +13,13 @@
 #define TIME_STR_SIZE 30
 
 #define MARVELL_PORT0           0x10  // marvell port connected to Asic
+#define MARVELL_PORT1           0x11
+#define MARVELL_PORT2           0x12
+#define MARVELL_PORT3           0x13
+#define MARVELL_PORT4           0x14
+#define MARVELL_PORT5           0x15
+#define MARVELL_PORT6           0x16
+#define MARVELL_NPORTS          7     // number of ports in the marvell switch
 
 #define MARVELL_PORT_STATUS_REG 0x0
 #define MARVELL_PORT_CTRL_REG   0x1
@@ -22,6 +29,21 @@
 #define MARVELL_PORT_CTRL_DPX_OFFSET       0x3   // duplex value
 #define MARVELL_PORT_CTRL_FORCEDFC_OFFSET  0x6   // force flow contrl
 #define MARVELL_PORT_CTRL_FC_OFFSET        0x7   // flow control value
+
+#define MARVELL_PORT_UPDOWN_SHIFT   11          // Single bit
+#define MARVELL_PORT_UPDOWN_MASK    0x1
+
+#define MARVELL_PORT_DUPLEX_SHIFT   10          // Single bit
+#define MARVELL_PORT_DUPLEX_MASK    0x1
+
+#define MARVELL_PORT_SPEED_SHIFT    8           // Two bit data
+#define MARVELL_PORT_SPEED_MASK     0x3
+
+#define MARVELL_PORT_TXPAUSE_SHIFT  5           // Single bit
+#define MARVELL_PORT_TXPAUSE_MASK   0x1
+
+#define MARVELL_PORT_FCTRL_SHIFT    4           // Single bit
+#define MARVELL_PORT_FCTRL_MASK     0x1
 
 namespace sdk {
 namespace linkmgr {
@@ -129,6 +151,60 @@ marvell_port_cfg_1g (void) {
            (0x1 << MARVELL_PORT_CTRL_FORCEDDPX_OFFSET) |
            (0x2 << MARVELL_PORT_CTRL_SPEED_OFFSET);
 }
+
+static inline const char *
+marvell_get_descr(uint8_t port)
+{
+    switch (port) {
+        case 0:
+            return "Connected to Asic";
+            break;
+        case 1:
+            return "SGMII to MTP";
+            break;
+        case 3:
+            return "Out of band Management";
+            break;
+        case 5:
+            return "BMC";
+            break;
+        // fall through
+    }
+    return "Unused";
+}
+
+static inline void
+marvell_get_status_updown (uint16_t status, bool *up)
+{
+    *up = (status >> MARVELL_PORT_UPDOWN_SHIFT) & MARVELL_PORT_UPDOWN_MASK;
+}
+
+static inline void
+marvell_get_status_duplex (uint16_t status, bool *fullduplex)
+{
+    *fullduplex = (status >> MARVELL_PORT_DUPLEX_SHIFT) &
+                  MARVELL_PORT_DUPLEX_MASK;
+}
+
+static inline void
+marvell_get_status_speed (uint16_t status, uint8_t *speed)
+{
+    *speed = (status >> MARVELL_PORT_SPEED_SHIFT) & MARVELL_PORT_SPEED_MASK;
+}
+
+static inline void
+marvell_get_status_txpause (uint16_t status, bool *txpause)
+{
+    *txpause = (status >> MARVELL_PORT_TXPAUSE_SHIFT) &
+               MARVELL_PORT_TXPAUSE_MASK;
+}
+
+static inline void
+marvell_get_status_flowctrl (uint16_t status, bool *fctrl)
+{
+    *fctrl = (status >> MARVELL_PORT_FCTRL_SHIFT) & MARVELL_PORT_FCTRL_MASK;
+}
+
 
 }    // namespace linkmgr
 }    // namespace sdk

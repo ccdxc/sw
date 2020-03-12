@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -59,6 +60,20 @@ var portStatusShowCmd = &cobra.Command{
 	Short: "show port status",
 	Long:  "show port status",
 	Run:   portStatusShowCmdHandler,
+}
+
+var portInternalShowCmd = &cobra.Command{
+	Use:   "internal",
+	Short: "show internal port information",
+	Long:  "show information about the ports on the Marvell switch",
+	Run:   portInternalCmdHandler,
+}
+
+var portInternalStatsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show internal port statistics",
+	Long:  "show statistics about the ports on the Marvell switch",
+	Run:   portInternalStatsCmdHandler,
 }
 
 var portStatsShowCmd = &cobra.Command{
@@ -112,12 +127,15 @@ func init() {
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portShowCmd.AddCommand(portShowXcvrCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
+	portShowCmd.AddCommand(portInternalShowCmd)
+
+	portInternalShowCmd.AddCommand(portInternalStatsCmd)
 
 	portShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	portShowCmd.PersistentFlags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
+	portShowCmd.PersistentFlags().StringVar(&portNum, "port", "eth1/1", "Specify port number (1-7 for internal ports)")
 
 	clearCmd.AddCommand(portClearStatsCmd)
-	portClearStatsCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Speficy port number")
+	portClearStatsCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
 
 	debugCmd.AddCommand(portDebugCmd)
 	portDebugCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
@@ -297,6 +315,78 @@ func portStatusPrintHeader() {
 	fmt.Printf("%-10s%-12s%-10s%-14s\n",
 		"PortNum", "AdminState", "OperState", "Transceiver")
 	fmt.Println(hdrLine)
+}
+
+func portInternalCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+	if cmd.Flags().Changed("yaml") {
+		fmt.Printf("yaml option not supported for internal ports")
+		return
+	}
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	// HAL call
+	client := halproto.NewInternalClient(c)
+
+	var req *halproto.InternalPortRequest
+	var intPortNum uint64
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		intPortNum, err = strconv.ParseUint(portNum, 10, 8)
+		if (err != nil) || (intPortNum > 7) {
+			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
+			return
+		}
+		// Get port info for specified port
+		req = &halproto.InternalPortRequest{
+			PortNumber: uint32(intPortNum),
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.InternalPortRequest{}
+	}
+
+	reqMsg := &halproto.InternalPortRequestMsg{
+		Request: []*halproto.InternalPortRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InternalPortGet(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Getting Internal port status failed. %v\n", err)
+		return
+	}
+
+	hdrLine := strings.Repeat("-", 90)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-25s%-15s%-10s%-12s%-10s%-10s\n", "PortNo", "Descr", "Status", "Speed", "Mode", "Pause", "FlowCtrl")
+	fmt.Println(hdrLine)
+
+	// Print Result
+	for _, resp := range respMsg.Response {
+		fmt.Printf("%-10d%-25s%-15s%-10s%-12s%-10v%-10v\n",
+			resp.GetPortNumber(), resp.GetPortDescr(),
+			strings.TrimPrefix(resp.GetPortStatus().String(), "IF_STATUS_"),
+			strings.TrimPrefix(resp.GetPortSpeed().String(), "SPEED_"),
+			strings.TrimSuffix(resp.GetPortMode().String(), "_DUPLEX"),
+			resp.GetPortTxPaused(), resp.GetPortFlowCtrl())
+	}
+}
+
+func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
 }
 
 func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
