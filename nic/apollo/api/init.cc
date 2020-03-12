@@ -206,24 +206,10 @@ pds_init (pds_init_params_t *params)
     register_trace_cb(params->trace_cb);
 
     // do state initialization
-    SDK_ASSERT(api::g_pds_state.init() == SDK_RET_OK);
+    SDK_ASSERT(api::g_pds_state.init(params->pipeline, params->cfg_file) ==
+                   SDK_RET_OK);
     api::g_pds_state.set_event_cb(params->event_cb);
 
-    if (getenv("VPP_IPC_MOCK_MODE")) {
-        api::g_pds_state.set_vpp_ipc_mock(true);
-    }
-
-    // parse global configuration
-    SDK_ASSERT(std::getenv("CONFIG_PATH"));
-    api::g_pds_state.set_cfg_path(std::string(std::getenv("CONFIG_PATH")));
-    if (api::g_pds_state.cfg_path().empty()) {
-        api::g_pds_state.set_cfg_path(std::string("./"));
-    } else {
-        api::g_pds_state.set_cfg_path(api::g_pds_state.cfg_path() + "/");
-    }
-    ret = core::parse_global_config(params->pipeline, params->cfg_file,
-                                    &api::g_pds_state);
-    SDK_ASSERT(ret == SDK_RET_OK);
     if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
         sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
         mac_str_to_addr((char *)mac_str.c_str(), mac_addr);

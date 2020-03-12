@@ -2,6 +2,7 @@
 
 set -e
 export NICDIR=`pwd`
+export PDSPKG_TOPDIR=$NICDIR
 export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1

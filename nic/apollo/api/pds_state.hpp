@@ -9,6 +9,8 @@
 #ifndef __PDS_STATE_HPP__
 #define __PDS_STATE_HPP__
 
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
@@ -39,6 +41,7 @@
 #include "nic/apollo/learn/learn_state.hpp"
 
 using std::string;
+using boost::property_tree::ptree;
 
 namespace api {
 
@@ -104,11 +107,9 @@ class pds_state : public state_base {
 public:
     pds_state();
     ~pds_state();
-    sdk_ret_t init(void);
+    sdk_ret_t init(string pipeline, string cfg_file);
     static void destroy(pds_state *ps);
-    void set_cfg_path(string cfg_path) { cfg_path_ = cfg_path; }
     string cfg_path(void) const { return cfg_path_; }
-    void set_pipeline(string pipeline) { pipeline_ = pipeline; }
     string pipeline(void) const { return pipeline_; }
     void set_catalog(catalog *catalog) { catalog_ = catalog; }
     catalog *catalogue(void) const { return catalog_; }
@@ -118,7 +119,6 @@ public:
     string mempartition_cfg(void) { return mpart_cfg_; }
     void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
     program_info *prog_info(void) const { return pginfo_; }
-    void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
     sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
     sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
@@ -127,7 +127,6 @@ public:
     }
     sdk::lib::kvstore *kvstore(void) const { return kvstore_; }
     pds_scale_profile_t scale_profile(void) const { return scale_profile_; }
-    void set_vpp_ipc_mock(bool mock) { vpp_ipc_mock_ = mock; }
     bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
@@ -224,6 +223,10 @@ public:
 
     // bootype. TODO: returning true now. need to fix.
     bool cold_boot(void) { return true; }
+
+private:
+    sdk_ret_t parse_global_config_(string pipeline, string cfg_file);
+
 private:
     string                  cfg_path_;
     string                  pipeline_;

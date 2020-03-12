@@ -19,9 +19,13 @@ namespace lib {
 
 class kvstore {
 public:
-    static kvstore *factory(const char *dbpath);
+    typedef enum txn_type_e {
+        TXN_TYPE_READ_ONLY,
+        TXN_TYPE_READ_WRITE,
+    } txn_type_t;
+    static kvstore *factory(const char *dbpath, size_t size);
     static void destroy(kvstore *kvs);
-    virtual sdk_ret_t txn_start(void) = 0;
+    virtual sdk_ret_t txn_start(txn_type_t txn_type) = 0;
     virtual sdk_ret_t txn_commit(void) = 0;
     virtual sdk_ret_t txn_abort(void) = 0;
     virtual sdk_ret_t find(_Out_ void *key, _In_ size_t key_sz,

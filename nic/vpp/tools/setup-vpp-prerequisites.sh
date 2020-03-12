@@ -1,6 +1,7 @@
 #!/bin/sh
 
 NICDIR=$1
+export PDSPKG_TOPDIR=$NICDIR
 PIPELINE=$2
 
 #set -x

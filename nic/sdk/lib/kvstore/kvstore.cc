@@ -15,8 +15,8 @@ namespace sdk {
 namespace lib {
 
 kvstore *
-kvstore::factory(const char *dbpath) {
-    return kvstore_lmdb::factory(dbpath);
+kvstore::factory(const char *dbpath, size_t size) {
+    return kvstore_lmdb::factory(dbpath, size);
 }
 
 void

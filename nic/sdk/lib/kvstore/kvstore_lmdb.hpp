@@ -20,9 +20,9 @@ namespace lib {
 
 class kvstore_lmdb : public kvstore {
 public:
-    static kvstore *factory(const char *dbpath);
+    static kvstore *factory(const char *dbpath, size_t size);
     static void destroy(kvstore *kvs);
-    virtual sdk_ret_t txn_start(void) override;
+    virtual sdk_ret_t txn_start(txn_type_t txn_type) override;
     virtual sdk_ret_t txn_commit(void) override;
     virtual sdk_ret_t txn_abort(void) override;
     virtual sdk_ret_t find(_Out_ void *key, _In_ size_t key_sz,
@@ -34,15 +34,15 @@ public:
 private:
     kvstore_lmdb() {
         env_ = NULL;
-        txn_hdl_ = NULL;
+        t_txn_hdl_ = NULL;
     }
     ~kvstore_lmdb() {}
-    sdk_ret_t init(const char *dbpath);
+    sdk_ret_t init(const char *dbpath, size_t size);
 
 private:
     MDB_env *env_;
-    MDB_txn *txn_hdl_;
-    MDB_dbi db_dbi_;
+    static thread_local MDB_txn *t_txn_hdl_;
+    static thread_local MDB_dbi db_dbi_;
 };
 
 }    // namespace lib

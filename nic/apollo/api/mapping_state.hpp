@@ -93,7 +93,7 @@ public:
     /// \brief API to begin database/remote transactions, if any
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t transaction_begin(void) {
-        return kvstore_->txn_start();
+        return kvstore_->txn_start(sdk::lib::kvstore::TXN_TYPE_READ_WRITE);
     }
 
     /// \brief API to end database/remote transactions, if any

@@ -1,6 +1,7 @@
 #! /bin/bash -x
 TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
+export PDSPKG_TOPDIR=$NICDIR
 DOLDIR=`readlink -f $NICDIR/../dol/`
 
 echo $NICDIR

@@ -48,7 +48,7 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
-
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         if (apulu()) {
             g_encap_type = PDS_ENCAP_TYPE_VXLAN;
             g_encap_val = pdsobjkey2int(k_subnet_key) + 512;

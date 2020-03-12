@@ -25,6 +25,18 @@ pds_state::pds_state() {
     memset(state_, 0, sizeof(state_));
     event_cb_ = nullptr;
     memset(&system_mac_, 0, sizeof(system_mac_));
+    // set vpp mock mode as needed
+    if (getenv("VPP_IPC_MOCK_MODE")) {
+        vpp_ipc_mock_ = true;
+    }
+    // set the config path
+    SDK_ASSERT(std::getenv("CONFIG_PATH"));
+    cfg_path_ = std::string(std::getenv("CONFIG_PATH"));
+    if (cfg_path_.empty()) {
+        cfg_path_ = std::string("./");
+    } else {
+        cfg_path_ += std::string("/");
+    }
 }
 
 /**< @brief    destructor */
@@ -32,8 +44,61 @@ pds_state::~pds_state() {
 }
 
 sdk_ret_t
-pds_state::init(void) {
-    kvstore_ = sdk::lib::kvstore::factory("/tmp/pdsagent.db");
+pds_state::parse_global_config_(string pipeline, string cfg_file)
+{
+    ptree     pt;
+
+    cfg_file = cfg_path_ + pipeline + "/" + cfg_file;
+    // make sure global config file exists
+    if (access(cfg_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
+                cfg_file.c_str());
+        return SDK_RET_ERR;
+    }
+    // parse the config now
+    std::ifstream json_cfg(cfg_file.c_str());
+    read_json(json_cfg, pt);
+    try {
+        std::string mode = pt.get<std::string>("mode");
+        if (mode == "sim") {
+            platform_type_ = platform_type_t::PLATFORM_TYPE_SIM;
+        } else if (mode == "hw") {
+            platform_type_ = platform_type_t::PLATFORM_TYPE_HW;
+        } else if (mode == "rtl") {
+            platform_type_ = platform_type_t::PLATFORM_TYPE_RTL;
+        } else if (mode == "haps") {
+            platform_type_ = platform_type_t::PLATFORM_TYPE_HAPS;
+        } else if (mode == "mock") {
+            platform_type_ = platform_type_t::PLATFORM_TYPE_MOCK;
+        }
+    } catch (std::exception const& e) {
+        std::cerr << e.what() << std::endl;
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+pds_state::init(string pipeline, string cfg_file) {
+    string path("");
+
+    // parse and store global configuration
+    pipeline_ = pipeline;
+    SDK_ASSERT(parse_global_config_(pipeline, cfg_file) == SDK_RET_OK);
+
+    // create persistent store
+    if (platform_type_ == platform_type_t::PLATFORM_TYPE_HW) {
+        kvstore_ = sdk::lib::kvstore::factory("/data/pdsagent.db", (1UL << 31));
+    } else {
+        path = std::string(getenv("PDSPKG_TOPDIR"));
+        if (path.empty()) {
+            path = "./";
+        } else {
+            path += "/";
+        }
+        kvstore_ = sdk::lib::kvstore::factory((path + "pdsagent.db").c_str(),
+                                              (1UL << 31));
+    }
     if (kvstore_ == NULL) {
         return SDK_RET_ERR;
     }
@@ -103,14 +168,14 @@ pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
 
 sdk_ret_t
 pds_state::transaction_begin(void) {
-    return SDK_RET_OK;
     //return mapping_db()->transaction_begin();
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 pds_state::transaction_end(bool abort) {
-    return SDK_RET_OK;
     //return mapping_db()->transaction_end(abort);
+    return SDK_RET_OK;
 }
 
 /** * @} */    // end of PDS_STATE

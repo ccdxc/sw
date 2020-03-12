@@ -79,46 +79,6 @@ parse_pipeline_config (string pipeline, pds_state *state)
     std::ifstream json_cfg(cfg_file.c_str());
     read_json(json_cfg, pt);
     parse_cores_config(pt, state);
-
-    // save pipeline
-    state->set_pipeline(pipeline);
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-parse_global_config (string pipeline, string cfg_file, pds_state *state)
-{
-    ptree     pt;
-
-    cfg_file = state->cfg_path() + pipeline + "/" + cfg_file;
-
-    // make sure global config file exists
-    if (access(cfg_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "Config file %s doesn't exist or not accessible\n",
-                cfg_file.c_str());
-        return SDK_RET_ERR;
-    }
-
-    // parse the config now
-    std::ifstream json_cfg(cfg_file.c_str());
-    read_json(json_cfg, pt);
-    try {
-        std::string mode = pt.get<std::string>("mode");
-        if (mode == "sim") {
-            state->set_platform_type(platform_type_t::PLATFORM_TYPE_SIM);
-        } else if (mode == "hw") {
-            state->set_platform_type(platform_type_t::PLATFORM_TYPE_HW);
-        } else if (mode == "rtl") {
-            state->set_platform_type(platform_type_t::PLATFORM_TYPE_RTL);
-        } else if (mode == "haps") {
-            state->set_platform_type(platform_type_t::PLATFORM_TYPE_HAPS);
-        } else if (mode == "mock") {
-            state->set_platform_type(platform_type_t::PLATFORM_TYPE_MOCK);
-        }
-    } catch (std::exception const& e) {
-        std::cerr << e.what() << std::endl;
-        return sdk::SDK_RET_INVALID_ARG;
-    }
     return SDK_RET_OK;
 }
 

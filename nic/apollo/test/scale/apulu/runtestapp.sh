@@ -2,6 +2,7 @@
 
 TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
+export PDSPKG_TOPDIR=$NICDIR
 # for mock runs, point obfl logging to /tmp
 export PERSISTENT_LOG_DIR=/tmp/
 #export VPP_IPC_MOCK_MODE=1
