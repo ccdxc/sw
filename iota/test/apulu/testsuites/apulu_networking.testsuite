@@ -57,4 +57,4 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
-    #-   step    : verif.utils.collect_techsupport
+    -   step    : verif.utils.collect_techsupport

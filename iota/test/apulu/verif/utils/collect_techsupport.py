@@ -77,4 +77,6 @@ def __collect_techsupport(testcase):
 
 def Main(tc):
     api.Logger.verbose("Collecting TechSupport")
-    return __collect_techsupport(tc)
+    res = __collect_techsupport(tc)
+    api.Logger.verbose(f"Collecting TechSupport - result {res}")
+    return res

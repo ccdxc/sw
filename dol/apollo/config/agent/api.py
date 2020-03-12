@@ -4,6 +4,7 @@ import pdb
 import grpc
 import enum
 import requests
+import time
 
 import oper_pb2_grpc as oper_pb2_grpc
 import batch_pb2_grpc as batch_pb2_grpc
@@ -51,6 +52,8 @@ import policer_pb2 as policer_pb2
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
+# Connection timeout - 3mins
+MAX_CONNECT_TIMEOUT = 180
 # RPC Timeout - 20mins
 MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64
@@ -222,12 +225,53 @@ class ClientStub:
             resps.append(rpc(obj, timeout=MAX_GRPC_WAIT))
         return resps
 
+class RetryOnFailureInterceptors(grpc.UnaryUnaryClientInterceptor,
+                                 grpc.StreamUnaryClientInterceptor):
+    def __init__(self):
+        self.__backoff_timeout = 5
+        self.__max_retries = 5
+        self.__status_codes2retry = [grpc.StatusCode.UNAVAILABLE]
+
+    def __continue_rpc(self, continuation, call_info, req):
+        res = continuation(call_info, req)
+        if not isinstance(res, grpc.RpcError):
+            # return if this is not error case
+            return res
+        # get the error code
+        rc = res.code()
+        if rc not in self.__status_codes2retry:
+            # return if there is no need to retry for this error code
+            return res
+        # need to retry for this error
+        return None
+
+    def __intercept_rpc(self, continuation, call_info, req):
+        for __retry in range(self.__max_retries):
+            res = self.__continue_rpc(continuation, call_info, req)
+            if res is not None:
+                # return in case of success / uninterested responses
+                return res
+            logger.info(f"sleeping for {self.__backoff_timeout}s before rpc retry")
+            time.sleep(self.__backoff_timeout)
+        logger.error("Max rpc retries elapsed")
+        return res
+
+    def intercept_unary_unary(self, continuation, client_call_details, request):
+        # Intercepts a unary-unary invocation asynchronously
+        return self.__intercept_rpc(continuation, client_call_details, request)
+
+    def intercept_stream_unary(self, continuation, client_call_details, request_iterator):
+        # Intercepts a stream-unary invocation asynchronously
+        return self.__intercept_rpc(continuation, client_call_details, request_iterator)
+
 class ApolloAgentClientRequest:
     def __init__(self, stub, req,):
         self.__stub = stub
         return
 
 class ApolloAgentClient:
+    rpcinterceptors = (RetryOnFailureInterceptors(),)
+
     def __init__(self, ip = None):
         self.__channel = None
         self.__stubs = [None] * ObjectTypes.MAX
@@ -239,7 +283,9 @@ class ApolloAgentClient:
             self.agentip = ip
         self.agentport = self.__get_agent_port()
         self.__create_msgreq_table()
-        self.__connect()
+        self.__create_channel()
+        if not self.__connect():
+            assert(0)
         self.__create_stubs()
         self.__create_restreq_table()
         return
@@ -258,16 +304,22 @@ class ApolloAgentClient:
             agentip = 'localhost'
         return agentip
 
+    def __create_channel(self):
+        endpoint = "%s:%s" % (self.agentip, self.agentport)
+        logger.info(f"Agent info %s" % endpoint)
+        channel = grpc.insecure_channel(endpoint)
+        self.__channel = grpc.intercept_channel(channel, *ApolloAgentClient.rpcinterceptors)
 
     def __connect(self):
-        if GlobalOptions.dryrun: return
-        endpoint = "%s:%s" % (self.agentip, self.agentport)
-        logger.info("Connecting to Agent %s" % endpoint)
-        self.__channel = grpc.insecure_channel(endpoint)
+        if GlobalOptions.dryrun: return True
         logger.info("Waiting for Agent to be ready ...")
-        grpc.channel_ready_future(self.__channel).result()
+        try:
+            grpc.channel_ready_future(self.__channel).result(MAX_CONNECT_TIMEOUT)
+        except:
+            logger.error("Error in establishing connection to Agent")
+            return False
         logger.info("Connected to Agent!")
-        return
+        return True
 
     def __create_stubs(self):
         if GlobalOptions.dryrun: return
