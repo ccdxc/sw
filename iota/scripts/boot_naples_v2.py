@@ -654,7 +654,7 @@ class NaplesManagement(EntityManagement):
                 return
             else:
                 print("Did not Read OOB IP  {0}".format(self.ipaddr))
-        raise Exception("Not able read OOB IP")
+        print("Not able read OOB IP after 5 retries")
 
     #if oob is not available read internal IP
     def ReadInternalIP(self):
