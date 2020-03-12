@@ -804,6 +804,10 @@ pds_ms_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
         data->max_ebgp_ecmp_routes = 2;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_MAX_EXT_ECMP_RTS);
 
+        // Enable 4 byte ASN
+        data->as_size = AMB_BGP_FOUR_OCTET;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_AS_SIZE);
+
         // Enable ORF support
         data->orf_supported  = AMB_TRUE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ORF_SUPPORTED);
