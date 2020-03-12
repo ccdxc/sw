@@ -513,7 +513,7 @@ func (it *veniceIntegSuite) TestNetworkSecurityPolicyRuleWithMultipleApps(c *C) 
 
 func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 	const numIterations = 2
-	const numStagingApps = 100
+	const numStagingApps = 600
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
