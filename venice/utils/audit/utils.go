@@ -28,6 +28,8 @@ const (
 	ExtRequestIDHeader = "Pensando-Psm-External-Request-Id"
 	// GrpcMDExtRequestID contains an external ID attached to a request by caller of the API. It is saved in audit logs.
 	GrpcMDExtRequestID = "Grpc-Metadata-Pensando-Psm-External-Request-Id"
+	// ModuleSuffix is used to identify audit module
+	ModuleSuffix = "-audit"
 )
 
 // NewRequestObjectPopulator populates audit event with request object. This will body from http request if API Gateway acts as a reverse proxy for instance for object store

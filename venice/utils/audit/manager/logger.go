@@ -45,7 +45,7 @@ func (s *logger) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	return nil
 }
 
-func (s *logger) Run(stopCh <-chan struct{}) error {
+func (s *logger) Run() error {
 	return nil
 }
 

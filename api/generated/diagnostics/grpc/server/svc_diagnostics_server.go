@@ -241,6 +241,9 @@ func (s *sdiagnosticsSvc_diagnosticsBackend) regWatchersFunc(ctx context.Context
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(diagnostics.DiagnosticsV1_AutoWatchModuleServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

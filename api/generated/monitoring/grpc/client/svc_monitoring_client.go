@@ -86,6 +86,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddArchiveRequest")(lAutoAddArchiveRequestEndpoint)
 	}
+	var lAutoAddAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoAddAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoAddAuditPolicy",
+			monitoring.EncodeGrpcReqAuditPolicy,
+			monitoring.DecodeGrpcRespAuditPolicy,
+			&monitoring.AuditPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddAuditPolicy")(lAutoAddAuditPolicyEndpoint)
+	}
 	var lAutoAddEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoAddEventPolicyEndpoint = grpctransport.NewClient(
@@ -225,6 +239,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteArchiveRequest")(lAutoDeleteArchiveRequestEndpoint)
+	}
+	var lAutoDeleteAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoDeleteAuditPolicy",
+			monitoring.EncodeGrpcReqAuditPolicy,
+			monitoring.DecodeGrpcRespAuditPolicy,
+			&monitoring.AuditPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteAuditPolicy")(lAutoDeleteAuditPolicyEndpoint)
 	}
 	var lAutoDeleteEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -366,6 +394,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetArchiveRequest")(lAutoGetArchiveRequestEndpoint)
 	}
+	var lAutoGetAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoGetAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoGetAuditPolicy",
+			monitoring.EncodeGrpcReqAuditPolicy,
+			monitoring.DecodeGrpcRespAuditPolicy,
+			&monitoring.AuditPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetAuditPolicy")(lAutoGetAuditPolicyEndpoint)
+	}
 	var lAutoGetEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoGetEventPolicyEndpoint = grpctransport.NewClient(
@@ -505,6 +547,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoLabelArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelArchiveRequest")(lAutoLabelArchiveRequestEndpoint)
+	}
+	var lAutoLabelAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoLabelAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoLabelAuditPolicy",
+			monitoring.EncodeGrpcReqLabel,
+			monitoring.DecodeGrpcRespAuditPolicy,
+			&monitoring.AuditPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoLabelAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoLabelAuditPolicy")(lAutoLabelAuditPolicyEndpoint)
 	}
 	var lAutoLabelEventPolicyEndpoint endpoint.Endpoint
 	{
@@ -646,6 +702,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoListArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListArchiveRequest")(lAutoListArchiveRequestEndpoint)
 	}
+	var lAutoListAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoListAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoListAuditPolicy",
+			monitoring.EncodeGrpcReqListWatchOptions,
+			monitoring.DecodeGrpcRespAuditPolicyList,
+			&monitoring.AuditPolicyList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListAuditPolicy")(lAutoListAuditPolicyEndpoint)
+	}
 	var lAutoListEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListEventPolicyEndpoint = grpctransport.NewClient(
@@ -786,6 +856,20 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateArchiveRequestEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateArchiveRequest")(lAutoUpdateArchiveRequestEndpoint)
 	}
+	var lAutoUpdateAuditPolicyEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateAuditPolicyEndpoint = grpctransport.NewClient(
+			conn,
+			"monitoring.MonitoringV1",
+			"AutoUpdateAuditPolicy",
+			monitoring.EncodeGrpcReqAuditPolicy,
+			monitoring.DecodeGrpcRespAuditPolicy,
+			&monitoring.AuditPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateAuditPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateAuditPolicy")(lAutoUpdateAuditPolicyEndpoint)
+	}
 	var lAutoUpdateEventPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateEventPolicyEndpoint = grpctransport.NewClient(
@@ -891,6 +975,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoAddAlertDestinationEndpoint:          lAutoAddAlertDestinationEndpoint,
 		AutoAddAlertPolicyEndpoint:               lAutoAddAlertPolicyEndpoint,
 		AutoAddArchiveRequestEndpoint:            lAutoAddArchiveRequestEndpoint,
+		AutoAddAuditPolicyEndpoint:               lAutoAddAuditPolicyEndpoint,
 		AutoAddEventPolicyEndpoint:               lAutoAddEventPolicyEndpoint,
 		AutoAddFlowExportPolicyEndpoint:          lAutoAddFlowExportPolicyEndpoint,
 		AutoAddFwlogPolicyEndpoint:               lAutoAddFwlogPolicyEndpoint,
@@ -901,6 +986,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteAlertDestinationEndpoint:       lAutoDeleteAlertDestinationEndpoint,
 		AutoDeleteAlertPolicyEndpoint:            lAutoDeleteAlertPolicyEndpoint,
 		AutoDeleteArchiveRequestEndpoint:         lAutoDeleteArchiveRequestEndpoint,
+		AutoDeleteAuditPolicyEndpoint:            lAutoDeleteAuditPolicyEndpoint,
 		AutoDeleteEventPolicyEndpoint:            lAutoDeleteEventPolicyEndpoint,
 		AutoDeleteFlowExportPolicyEndpoint:       lAutoDeleteFlowExportPolicyEndpoint,
 		AutoDeleteFwlogPolicyEndpoint:            lAutoDeleteFwlogPolicyEndpoint,
@@ -911,6 +997,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetAlertDestinationEndpoint:          lAutoGetAlertDestinationEndpoint,
 		AutoGetAlertPolicyEndpoint:               lAutoGetAlertPolicyEndpoint,
 		AutoGetArchiveRequestEndpoint:            lAutoGetArchiveRequestEndpoint,
+		AutoGetAuditPolicyEndpoint:               lAutoGetAuditPolicyEndpoint,
 		AutoGetEventPolicyEndpoint:               lAutoGetEventPolicyEndpoint,
 		AutoGetFlowExportPolicyEndpoint:          lAutoGetFlowExportPolicyEndpoint,
 		AutoGetFwlogPolicyEndpoint:               lAutoGetFwlogPolicyEndpoint,
@@ -921,6 +1008,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoLabelAlertDestinationEndpoint:        lAutoLabelAlertDestinationEndpoint,
 		AutoLabelAlertPolicyEndpoint:             lAutoLabelAlertPolicyEndpoint,
 		AutoLabelArchiveRequestEndpoint:          lAutoLabelArchiveRequestEndpoint,
+		AutoLabelAuditPolicyEndpoint:             lAutoLabelAuditPolicyEndpoint,
 		AutoLabelEventPolicyEndpoint:             lAutoLabelEventPolicyEndpoint,
 		AutoLabelFlowExportPolicyEndpoint:        lAutoLabelFlowExportPolicyEndpoint,
 		AutoLabelFwlogPolicyEndpoint:             lAutoLabelFwlogPolicyEndpoint,
@@ -931,6 +1019,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListAlertDestinationEndpoint:         lAutoListAlertDestinationEndpoint,
 		AutoListAlertPolicyEndpoint:              lAutoListAlertPolicyEndpoint,
 		AutoListArchiveRequestEndpoint:           lAutoListArchiveRequestEndpoint,
+		AutoListAuditPolicyEndpoint:              lAutoListAuditPolicyEndpoint,
 		AutoListEventPolicyEndpoint:              lAutoListEventPolicyEndpoint,
 		AutoListFlowExportPolicyEndpoint:         lAutoListFlowExportPolicyEndpoint,
 		AutoListFwlogPolicyEndpoint:              lAutoListFwlogPolicyEndpoint,
@@ -941,6 +1030,7 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateAlertDestinationEndpoint:       lAutoUpdateAlertDestinationEndpoint,
 		AutoUpdateAlertPolicyEndpoint:            lAutoUpdateAlertPolicyEndpoint,
 		AutoUpdateArchiveRequestEndpoint:         lAutoUpdateArchiveRequestEndpoint,
+		AutoUpdateAuditPolicyEndpoint:            lAutoUpdateAuditPolicyEndpoint,
 		AutoUpdateEventPolicyEndpoint:            lAutoUpdateEventPolicyEndpoint,
 		AutoUpdateFlowExportPolicyEndpoint:       lAutoUpdateFlowExportPolicyEndpoint,
 		AutoUpdateFwlogPolicyEndpoint:            lAutoUpdateFwlogPolicyEndpoint,
@@ -3051,6 +3141,214 @@ func (a *restObjMonitoringV1ArchiveRequest) Cancel(ctx context.Context, in *moni
 	return a.endpoints.CancelArchiveRequest(ctx, in)
 }
 
+type grpcObjMonitoringV1AuditPolicy struct {
+	logger log.Logger
+	client monitoring.ServiceMonitoringV1Client
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Create(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddAuditPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Update(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAuditPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) UpdateStatus(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateAuditPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "label")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoLabelAuditPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.AuditPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetAuditPolicy(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.AuditPolicy{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteAuditPolicy(nctx, &in)
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.AuditPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListAuditPolicy(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuditPolicy", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchAuditPolicy(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(monitoring.MonitoringV1_AutoWatchAuditPolicyClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "err", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjMonitoringV1AuditPolicy) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjMonitoringV1AuditPolicy struct {
+	endpoints monitoring.EndpointsMonitoringV1RestClient
+	instance  string
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Create(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddAuditPolicy(ctx, in)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Update(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateAuditPolicy(ctx, in)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) UpdateStatus(ctx context.Context, in *monitoring.AuditPolicy) (*monitoring.AuditPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Label(ctx context.Context, in *api.Label) (*monitoring.AuditPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoLabelAuditPolicy(ctx, in)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AuditPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.AuditPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetAuditPolicy(ctx, &in)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AuditPolicy, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := monitoring.AuditPolicy{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteAuditPolicy(ctx, &in)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.AuditPolicy, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListAuditPolicy(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchAuditPolicy(ctx, options)
+}
+
+func (a *restObjMonitoringV1AuditPolicy) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return true
+	case apiintf.UpdateOper:
+		return true
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientMonitoringV1 struct {
 	logger log.Logger
 	client monitoring.ServiceMonitoringV1Client
@@ -3065,6 +3363,7 @@ type crudClientMonitoringV1 struct {
 	grpcTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
 	grpcTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
 	grpcArchiveRequest         monitoring.MonitoringV1ArchiveRequestInterface
+	grpcAuditPolicy            monitoring.MonitoringV1AuditPolicyInterface
 }
 
 // NewGrpcCrudClientMonitoringV1 creates a GRPC client for the service
@@ -3084,6 +3383,7 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		grpcTroubleshootingSession: &grpcObjMonitoringV1TroubleshootingSession{client: client, logger: logger},
 		grpcTechSupportRequest:     &grpcObjMonitoringV1TechSupportRequest{client: client, logger: logger},
 		grpcArchiveRequest:         &grpcObjMonitoringV1ArchiveRequest{client: client, logger: logger},
+		grpcAuditPolicy:            &grpcObjMonitoringV1AuditPolicy{client: client, logger: logger},
 	}
 }
 
@@ -3125,6 +3425,10 @@ func (a *crudClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV1Tec
 
 func (a *crudClientMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
 	return a.grpcArchiveRequest
+}
+
+func (a *crudClientMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditPolicyInterface {
+	return a.grpcAuditPolicy
 }
 
 func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -3180,6 +3484,7 @@ type crudRestClientMonitoringV1 struct {
 	restTroubleshootingSession monitoring.MonitoringV1TroubleshootingSessionInterface
 	restTechSupportRequest     monitoring.MonitoringV1TechSupportRequestInterface
 	restArchiveRequest         monitoring.MonitoringV1ArchiveRequestInterface
+	restAuditPolicy            monitoring.MonitoringV1AuditPolicyInterface
 }
 
 // NewRestCrudClientMonitoringV1 creates a REST client for the service.
@@ -3200,6 +3505,7 @@ func NewRestCrudClientMonitoringV1(url string, httpClient *http.Client) monitori
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
 		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
 		restArchiveRequest:         &restObjMonitoringV1ArchiveRequest{endpoints: endpoints, instance: url},
+		restAuditPolicy:            &restObjMonitoringV1AuditPolicy{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -3221,6 +3527,7 @@ func NewStagedRestCrudClientMonitoringV1(url string, id string, httpClient *http
 		restTroubleshootingSession: &restObjMonitoringV1TroubleshootingSession{endpoints: endpoints, instance: url},
 		restTechSupportRequest:     &restObjMonitoringV1TechSupportRequest{endpoints: endpoints, instance: url},
 		restArchiveRequest:         &restObjMonitoringV1ArchiveRequest{endpoints: endpoints, instance: url},
+		restAuditPolicy:            &restObjMonitoringV1AuditPolicy{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -3262,6 +3569,10 @@ func (a *crudRestClientMonitoringV1) TechSupportRequest() monitoring.MonitoringV
 
 func (a *crudRestClientMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
 	return a.restArchiveRequest
+}
+
+func (a *crudRestClientMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditPolicyInterface {
+	return a.restAuditPolicy
 }
 
 func (a *crudRestClientMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

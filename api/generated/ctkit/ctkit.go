@@ -180,6 +180,7 @@ type Controller interface {
 	TroubleshootingSession() TroubleshootingSessionAPI   // return TroubleshootingSession API interface
 	TechSupportRequest() TechSupportRequestAPI           // return TechSupportRequest API interface
 	ArchiveRequest() ArchiveRequestAPI                   // return ArchiveRequest API interface
+	AuditPolicy() AuditPolicyAPI                         // return AuditPolicy API interface
 	Network() NetworkAPI                                 // return Network API interface
 	Service() ServiceAPI                                 // return Service API interface
 	LbPolicy() LbPolicyAPI                               // return LbPolicy API interface
@@ -504,6 +505,9 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "ArchiveRequest":
 		obj := archiverequestAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AuditPolicy":
+		obj := auditpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Network":
 		obj := networkAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -678,6 +682,9 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "ArchiveRequest":
 		obj := archiverequestAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "AuditPolicy":
+		obj := auditpolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "Network":
 		obj := networkAPI{}

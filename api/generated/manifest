@@ -3,6 +3,7 @@ alerts.proto monitoring true
 app.proto security true
 archive.proto monitoring true
 audit.proto audit true
+auditpolicy.proto monitoring true
 auth.proto auth true
 browser.proto browser true
 cluster.proto cluster true

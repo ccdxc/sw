@@ -14,6 +14,7 @@ func registerMonitoringHooks(svc apiserver.Service, l log.Logger) {
 	registerFlowExpPolicyHooks(svc, l)
 	registerArchiveHooks(svc, l)
 	registerTechSupportRequestHooks(svc, l)
+	registerAuditPolicyHooks(svc, l)
 }
 
 func init() {

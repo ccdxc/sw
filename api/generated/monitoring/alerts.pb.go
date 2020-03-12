@@ -9,6 +9,7 @@
 	It is generated from these files:
 		alerts.proto
 		archive.proto
+		auditpolicy.proto
 		eventpolicy.proto
 		export.proto
 		mirror.proto
@@ -39,6 +40,10 @@
 		ArchiveRequestSpec
 		ArchiveRequestStatus
 		CancelArchiveRequest
+		AuditPolicy
+		AuditPolicySpec
+		AuditPolicyStatus
+		SyslogAuditor
 		EventPolicy
 		EventPolicySpec
 		EventPolicyStatus
@@ -61,10 +66,12 @@
 		AlertList
 		AlertPolicyList
 		ArchiveRequestList
+		AuditPolicyList
 		AutoMsgAlertDestinationWatchHelper
 		AutoMsgAlertPolicyWatchHelper
 		AutoMsgAlertWatchHelper
 		AutoMsgArchiveRequestWatchHelper
+		AutoMsgAuditPolicyWatchHelper
 		AutoMsgEventPolicyWatchHelper
 		AutoMsgFlowExportPolicyWatchHelper
 		AutoMsgFwlogPolicyWatchHelper

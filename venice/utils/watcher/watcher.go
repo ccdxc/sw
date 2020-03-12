@@ -243,6 +243,12 @@ func (w *Watcher) watch(ctx context.Context, apicl apiclient.Services, kind *Kin
 		}
 		// archive request watcher
 		watcher, err = apicl.MonitoringV1().ArchiveRequest().Watch(ctx, kind.Options)
+	case string(monitoring.KindAuditPolicy):
+		if kind.Options == nil {
+			kind.Options = &api.ListWatchOptions{}
+		}
+		// audit policy watcher
+		watcher, err = apicl.MonitoringV1().AuditPolicy().Watch(ctx, kind.Options)
 	default:
 		return nil, fmt.Errorf("unsupported kind: %s", kind)
 	}

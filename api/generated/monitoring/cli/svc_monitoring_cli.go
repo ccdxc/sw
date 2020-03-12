@@ -843,6 +843,95 @@ func restPutArchiveRequest(hostname, token string, obj interface{}) error {
 	return fmt.Errorf("put operation not supported for ArchiveRequest object")
 }
 
+func restGetAuditPolicy(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.AuditPolicy); ok {
+		nv, err := restcl.MonitoringV1().AuditPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*monitoring.AuditPolicyList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.MonitoringV1().AuditPolicy().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteAuditPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.AuditPolicy); ok {
+		nv, err := restcl.MonitoringV1().AuditPolicy().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostAuditPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.AuditPolicy); ok {
+		nv, err := restcl.MonitoringV1().AuditPolicy().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutAuditPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.AuditPolicy); ok {
+		nv, err := restcl.MonitoringV1().AuditPolicy().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -896,5 +985,10 @@ func init() {
 	cl.AddRestDeleteFunc("monitoring.ArchiveRequest", "v1", restDeleteArchiveRequest)
 
 	cl.AddRestGetFunc("monitoring.ArchiveRequest", "v1", restGetArchiveRequest)
+
+	cl.AddRestPostFunc("monitoring.AuditPolicy", "v1", restPostAuditPolicy)
+	cl.AddRestDeleteFunc("monitoring.AuditPolicy", "v1", restDeleteAuditPolicy)
+	cl.AddRestPutFunc("monitoring.AuditPolicy", "v1", restPutAuditPolicy)
+	cl.AddRestGetFunc("monitoring.AuditPolicy", "v1", restGetAuditPolicy)
 
 }

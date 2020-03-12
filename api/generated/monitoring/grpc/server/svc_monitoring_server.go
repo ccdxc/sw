@@ -54,6 +54,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoAddAlertDestination          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddAlertPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddArchiveRequest            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddAuditPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddEventPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddFlowExportPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddFwlogPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
@@ -64,6 +65,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoDeleteAlertDestination       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteAlertPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteArchiveRequest         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteAuditPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteEventPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteFlowExportPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteFwlogPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -74,6 +76,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoGetAlertDestination          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetAlertPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetArchiveRequest            func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetAuditPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetEventPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetFlowExportPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetFwlogPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
@@ -84,6 +87,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoLabelAlertDestination        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelAlertPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelArchiveRequest          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoLabelAuditPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelEventPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelFlowExportPolicy        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoLabelFwlogPolicy             func(ctx context.Context, t interface{}) (interface{}, error)
@@ -94,6 +98,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoListAlertDestination         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAlertPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListArchiveRequest           func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListAuditPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListEventPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListFlowExportPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListFwlogPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
@@ -104,6 +109,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoUpdateAlertDestination       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateAlertPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateArchiveRequest         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateAuditPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateEventPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateFlowExportPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateFwlogPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
@@ -122,6 +128,7 @@ type eMonitoringV1Endpoints struct {
 	fnAutoWatchTroubleshootingSession func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchTechSupportRequest     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchArchiveRequest         func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchAuditPolicy            func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
@@ -256,10 +263,43 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			r := i.(monitoring.ArchiveRequestList)
 			return &r
 		}),
+		"monitoring.AuditPolicyList": apisrvpkg.NewMessage("monitoring.AuditPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := monitoring.AuditPolicyList{}
+			into.Kind = "AuditPolicyList"
+			r := monitoring.AuditPolicy{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+
+			if options.Tenant == "" {
+				if strings.HasSuffix(key, "//") {
+					key = key[:len(key)-1]
+				}
+			}
+
+			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.AuditPolicy")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(monitoring.AuditPolicyList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(monitoring.AuditPolicyList)
+			return &r
+		}),
 		"monitoring.AutoMsgAlertDestinationWatchHelper":       apisrvpkg.NewMessage("monitoring.AutoMsgAlertDestinationWatchHelper"),
 		"monitoring.AutoMsgAlertPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgAlertPolicyWatchHelper"),
 		"monitoring.AutoMsgAlertWatchHelper":                  apisrvpkg.NewMessage("monitoring.AutoMsgAlertWatchHelper"),
 		"monitoring.AutoMsgArchiveRequestWatchHelper":         apisrvpkg.NewMessage("monitoring.AutoMsgArchiveRequestWatchHelper"),
+		"monitoring.AutoMsgAuditPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgAuditPolicyWatchHelper"),
 		"monitoring.AutoMsgEventPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgEventPolicyWatchHelper"),
 		"monitoring.AutoMsgFlowExportPolicyWatchHelper":       apisrvpkg.NewMessage("monitoring.AutoMsgFlowExportPolicyWatchHelper"),
 		"monitoring.AutoMsgFwlogPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgFwlogPolicyWatchHelper"),
@@ -513,6 +553,15 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/archive-requests/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsMonitoringV1.fnAutoAddAuditPolicy = srv.AddMethod("AutoAddAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AuditPolicy"], pkgMessages["monitoring.AuditPolicy"], "monitoring", "AutoAddAuditPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(monitoring.AuditPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/audit-policy"), nil
+		}).HandleInvocation
+
 		s.endpointsMonitoringV1.fnAutoAddEventPolicy = srv.AddMethod("AutoAddEventPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoAddEventPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
@@ -597,6 +646,15 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/archive-requests/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoDeleteAuditPolicy = srv.AddMethod("AutoDeleteAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AuditPolicy"], pkgMessages["monitoring.AuditPolicy"], "monitoring", "AutoDeleteAuditPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(monitoring.AuditPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/audit-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteEventPolicy = srv.AddMethod("AutoDeleteEventPolicy",
@@ -687,6 +745,15 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/archive-requests/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoGetAuditPolicy = srv.AddMethod("AutoGetAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AuditPolicy"], pkgMessages["monitoring.AuditPolicy"], "monitoring", "AutoGetAuditPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(monitoring.AuditPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/audit-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetEventPolicy = srv.AddMethod("AutoGetEventPolicy",
@@ -859,6 +926,34 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 				return "", fmt.Errorf("Expected type to be api.Label")
 			}
 			cur := monitoring.ArchiveRequest{}
+			cur.ObjectMeta = label.ObjectMeta
+			key := cur.MakeKey(prefix)
+			if err := kvs.Get(ctx, key, &cur); err != nil {
+				return nil, err
+			}
+			return cur, nil
+		}).HandleInvocation
+
+		s.endpointsMonitoringV1.fnAutoLabelAuditPolicy = srv.AddMethod("AutoLabelAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.Label"], pkgMessages["monitoring.AuditPolicy"], "monitoring", "AutoLabelAuditPolicy")).WithOper(apiintf.LabelOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).WithMethDbKey(func(i interface{}, prefix string) (string, error) {
+			new := monitoring.AuditPolicy{}
+			if i == nil {
+				return new.MakeKey(prefix), nil
+			}
+			in, ok := i.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			new.ObjectMeta = in.ObjectMeta
+			return new.MakeKey(prefix), nil
+		}).WithResponseWriter(func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+			label, ok := resp.(api.Label)
+			if !ok {
+				return "", fmt.Errorf("Expected type to be api.Label")
+			}
+			cur := monitoring.AuditPolicy{}
 			cur.ObjectMeta = label.ObjectMeta
 			key := cur.MakeKey(prefix)
 			if err := kvs.Get(ctx, key, &cur); err != nil {
@@ -1091,6 +1186,11 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/archive-requests/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsMonitoringV1.fnAutoListAuditPolicy = srv.AddMethod("AutoListAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AuditPolicyList"], "monitoring", "AutoListAuditPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsMonitoringV1.fnAutoListEventPolicy = srv.AddMethod("AutoListEventPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.EventPolicyList"], "monitoring", "AutoListEventPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -1177,6 +1277,15 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
+		s.endpointsMonitoringV1.fnAutoUpdateAuditPolicy = srv.AddMethod("AutoUpdateAuditPolicy",
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AuditPolicy"], pkgMessages["monitoring.AuditPolicy"], "monitoring", "AutoUpdateAuditPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(monitoring.AuditPolicy)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/audit-policy"), nil
+		}).HandleInvocation
+
 		s.endpointsMonitoringV1.fnAutoUpdateEventPolicy = srv.AddMethod("AutoUpdateEventPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoUpdateEventPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
@@ -1256,6 +1365,8 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoWatchArchiveRequest = pkgMessages["monitoring.ArchiveRequest"].WatchFromKv
 
+		s.endpointsMonitoringV1.fnAutoWatchAuditPolicy = pkgMessages["monitoring.AuditPolicy"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"monitoring.MonitoringV1": srv,
 		}
@@ -1263,7 +1374,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		endpoints := monitoring.MakeMonitoringV1ServerEndpoints(s.endpointsMonitoringV1, logger)
 		server := monitoring.MakeGRPCServerMonitoringV1(ctx, endpoints, logger)
 		monitoring.RegisterMonitoringV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"EventPolicy", "FwlogPolicy", "FlowExportPolicy", "Alert", "AlertPolicy", "AlertDestination", "MirrorSession", "TroubleshootingSession", "TechSupportRequest", "ArchiveRequest"}
+		svcObjs := []string{"EventPolicy", "FwlogPolicy", "FlowExportPolicy", "Alert", "AlertPolicy", "AlertDestination", "MirrorSession", "TroubleshootingSession", "TechSupportRequest", "ArchiveRequest", "AuditPolicy"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("monitoring", "MonitoringV1", svcObjs)
 	}
 }
@@ -1295,6 +1406,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchEventPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1396,6 +1510,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchFwlogPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1495,6 +1612,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchFlowExportPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1596,6 +1716,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchAlertServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1695,6 +1818,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchAlertPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1796,6 +1922,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchAlertDestinationServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1895,6 +2024,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchMirrorSessionServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1996,6 +2128,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchTroubleshootingSessionServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -2095,6 +2230,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchTechSupportRequestServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -2196,6 +2334,9 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(monitoring.MonitoringV1_AutoWatchArchiveRequestServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -2290,6 +2431,109 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 			}
 		})
 
+		pkgMessages["monitoring.AuditPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := monitoring.AuditPolicy{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
+			wstream := stream.(monitoring.MonitoringV1_AutoWatchAuditPolicyServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.AuditPolicy")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.AuditPolicy")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "monitoring.AuditPolicy")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &monitoring.AutoMsgAuditPolicyWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "monitoring.AuditPolicy")
+					return err
+				}
+				events = &monitoring.AutoMsgAuditPolicyWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.AuditPolicy")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.AuditPolicy")
+						return nil
+					}
+					evin, ok := ev.Object.(*monitoring.AuditPolicy)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*monitoring.AuditPolicy)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
+
+					strEvent := &monitoring.AutoMsgAuditPolicyWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received AuditPolicy watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "AuditPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "monitoring.AuditPolicy")
+							break
+						}
+						strEvent.Object = i.(*monitoring.AuditPolicy)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "monitoring.AuditPolicy")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -2339,6 +2583,14 @@ func (e *eMonitoringV1Endpoints) AutoAddArchiveRequest(ctx context.Context, t mo
 		return r.(monitoring.ArchiveRequest), err
 	}
 	return monitoring.ArchiveRequest{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoAddAuditPolicy(ctx context.Context, t monitoring.AuditPolicy) (monitoring.AuditPolicy, error) {
+	r, err := e.fnAutoAddAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicy), err
+	}
+	return monitoring.AuditPolicy{}, err
 
 }
 func (e *eMonitoringV1Endpoints) AutoAddEventPolicy(ctx context.Context, t monitoring.EventPolicy) (monitoring.EventPolicy, error) {
@@ -2421,6 +2673,14 @@ func (e *eMonitoringV1Endpoints) AutoDeleteArchiveRequest(ctx context.Context, t
 	return monitoring.ArchiveRequest{}, err
 
 }
+func (e *eMonitoringV1Endpoints) AutoDeleteAuditPolicy(ctx context.Context, t monitoring.AuditPolicy) (monitoring.AuditPolicy, error) {
+	r, err := e.fnAutoDeleteAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicy), err
+	}
+	return monitoring.AuditPolicy{}, err
+
+}
 func (e *eMonitoringV1Endpoints) AutoDeleteEventPolicy(ctx context.Context, t monitoring.EventPolicy) (monitoring.EventPolicy, error) {
 	r, err := e.fnAutoDeleteEventPolicy(ctx, t)
 	if err == nil {
@@ -2499,6 +2759,14 @@ func (e *eMonitoringV1Endpoints) AutoGetArchiveRequest(ctx context.Context, t mo
 		return r.(monitoring.ArchiveRequest), err
 	}
 	return monitoring.ArchiveRequest{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoGetAuditPolicy(ctx context.Context, t monitoring.AuditPolicy) (monitoring.AuditPolicy, error) {
+	r, err := e.fnAutoGetAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicy), err
+	}
+	return monitoring.AuditPolicy{}, err
 
 }
 func (e *eMonitoringV1Endpoints) AutoGetEventPolicy(ctx context.Context, t monitoring.EventPolicy) (monitoring.EventPolicy, error) {
@@ -2581,6 +2849,14 @@ func (e *eMonitoringV1Endpoints) AutoLabelArchiveRequest(ctx context.Context, t 
 	return monitoring.ArchiveRequest{}, err
 
 }
+func (e *eMonitoringV1Endpoints) AutoLabelAuditPolicy(ctx context.Context, t api.Label) (monitoring.AuditPolicy, error) {
+	r, err := e.fnAutoLabelAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicy), err
+	}
+	return monitoring.AuditPolicy{}, err
+
+}
 func (e *eMonitoringV1Endpoints) AutoLabelEventPolicy(ctx context.Context, t api.Label) (monitoring.EventPolicy, error) {
 	r, err := e.fnAutoLabelEventPolicy(ctx, t)
 	if err == nil {
@@ -2661,6 +2937,14 @@ func (e *eMonitoringV1Endpoints) AutoListArchiveRequest(ctx context.Context, t a
 	return monitoring.ArchiveRequestList{}, err
 
 }
+func (e *eMonitoringV1Endpoints) AutoListAuditPolicy(ctx context.Context, t api.ListWatchOptions) (monitoring.AuditPolicyList, error) {
+	r, err := e.fnAutoListAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicyList), err
+	}
+	return monitoring.AuditPolicyList{}, err
+
+}
 func (e *eMonitoringV1Endpoints) AutoListEventPolicy(ctx context.Context, t api.ListWatchOptions) (monitoring.EventPolicyList, error) {
 	r, err := e.fnAutoListEventPolicy(ctx, t)
 	if err == nil {
@@ -2739,6 +3023,14 @@ func (e *eMonitoringV1Endpoints) AutoUpdateArchiveRequest(ctx context.Context, t
 		return r.(monitoring.ArchiveRequest), err
 	}
 	return monitoring.ArchiveRequest{}, err
+
+}
+func (e *eMonitoringV1Endpoints) AutoUpdateAuditPolicy(ctx context.Context, t monitoring.AuditPolicy) (monitoring.AuditPolicy, error) {
+	r, err := e.fnAutoUpdateAuditPolicy(ctx, t)
+	if err == nil {
+		return r.(monitoring.AuditPolicy), err
+	}
+	return monitoring.AuditPolicy{}, err
 
 }
 func (e *eMonitoringV1Endpoints) AutoUpdateEventPolicy(ctx context.Context, t monitoring.EventPolicy) (monitoring.EventPolicy, error) {
@@ -2827,6 +3119,9 @@ func (e *eMonitoringV1Endpoints) AutoWatchTechSupportRequest(in *api.ListWatchOp
 }
 func (e *eMonitoringV1Endpoints) AutoWatchArchiveRequest(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchArchiveRequestServer) error {
 	return e.fnAutoWatchArchiveRequest(in, stream, "monitoring")
+}
+func (e *eMonitoringV1Endpoints) AutoWatchAuditPolicy(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchAuditPolicyServer) error {
+	return e.fnAutoWatchAuditPolicy(in, stream, "monitoring")
 }
 func (e *eMonitoringV1Endpoints) AutoWatchSvcMonitoringV1(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchSvcMonitoringV1Server) error {
 	return e.fnAutoWatchSvcMonitoringV1(in, stream, "")

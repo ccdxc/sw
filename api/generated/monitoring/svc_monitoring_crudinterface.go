@@ -146,6 +146,19 @@ type MonitoringV1ArchiveRequestInterface interface {
 	Cancel(ctx context.Context, in *CancelArchiveRequest) (*ArchiveRequest, error)
 }
 
+// MonitoringV1AuditPolicyInterface exposes the CRUD methods for AuditPolicy
+type MonitoringV1AuditPolicyInterface interface {
+	Create(ctx context.Context, in *AuditPolicy) (*AuditPolicy, error)
+	Update(ctx context.Context, in *AuditPolicy) (*AuditPolicy, error)
+	UpdateStatus(ctx context.Context, in *AuditPolicy) (*AuditPolicy, error)
+	Label(ctx context.Context, in *api.Label) (*AuditPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AuditPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AuditPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*AuditPolicy, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	EventPolicy() MonitoringV1EventPolicyInterface
@@ -158,5 +171,6 @@ type MonitoringV1Interface interface {
 	TroubleshootingSession() MonitoringV1TroubleshootingSessionInterface
 	TechSupportRequest() MonitoringV1TechSupportRequestInterface
 	ArchiveRequest() MonitoringV1ArchiveRequestInterface
+	AuditPolicy() MonitoringV1AuditPolicyInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

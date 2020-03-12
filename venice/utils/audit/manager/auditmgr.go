@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/audit/elastic"
+	"github.com/pensando/sw/venice/utils/audit/syslog"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -19,11 +20,12 @@ type auditManager struct {
 	auditors          []audit.Auditor
 	logger            log.Logger
 	techsupportLogger log.Logger
+	policyGetter      audit.PolicyGetter
 }
 
 // NewAuditManager creates audit logs in configured auditor backends. Currently we support auditors that synchronously
 // logs to Elastic Server and file
-func NewAuditManager(rslver resolver.Interface, logger log.Logger) audit.Auditor {
+func NewAuditManager(name, apiServer string, rslver resolver.Interface, logger log.Logger) audit.Auditor {
 	var tLogger log.Logger // audit logger for tech support collection
 	{
 		techsupportLogConfig := &log.Config{
@@ -43,13 +45,16 @@ func NewAuditManager(rslver resolver.Interface, logger log.Logger) audit.Auditor
 		}
 		tLogger = log.GetNewLogger(techsupportLogConfig)
 	}
+	policyGetter := audit.GetPolicyGetter(name, apiServer, rslver, logger)
 	return &auditManager{
 		auditors: []audit.Auditor{
 			elastic.NewSynchAuditor("", rslver, logger),
 			NewLogAuditor(context.Background(), tLogger),
+			syslog.NewSynchAuditor(rslver, logger, syslog.WithPolicyGetter(policyGetter)),
 		},
 		logger:            logger,
 		techsupportLogger: tLogger,
+		policyGetter:      policyGetter,
 	}
 }
 
@@ -80,9 +85,9 @@ func (a *auditManager) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	return k8serrors.NewAggregate(errlist)
 }
 
-func (a *auditManager) Run(stopCh <-chan struct{}) error {
+func (a *auditManager) Run() error {
 	for _, auditor := range a.auditors {
-		if err := auditor.Run(stopCh); err != nil {
+		if err := auditor.Run(); err != nil {
 			return err
 		}
 	}
@@ -92,8 +97,5 @@ func (a *auditManager) Run(stopCh <-chan struct{}) error {
 func (a *auditManager) Shutdown() {
 	for _, auditor := range a.auditors {
 		auditor.Shutdown()
-	}
-	if a.techsupportLogger != nil {
-		a.techsupportLogger.Close()
 	}
 }

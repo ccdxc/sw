@@ -403,7 +403,8 @@
           "MirrorSession",
           "TroubleshootingSession",
           "TechSupportRequest",
-          "ArchiveRequest"
+          "ArchiveRequest",
+          "AuditPolicy"
         ],
         "Properties": {
           "Alert": {
@@ -464,6 +465,19 @@
               "Cancel"
             ],
             "URI": "/configs/monitoring/v1/archive-requests"
+          },
+          "AuditPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "watch"
+            ],
+            "URI": "/configs/monitoring/v1/audit-policy"
           },
           "EventPolicy": {
             "Scopes": [

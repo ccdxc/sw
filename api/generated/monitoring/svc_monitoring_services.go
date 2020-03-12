@@ -23,6 +23,7 @@ type ServiceMonitoringV1Client interface {
 	AutoAddAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
 	AutoAddAlertPolicy(ctx context.Context, t *AlertPolicy) (*AlertPolicy, error)
 	AutoAddArchiveRequest(ctx context.Context, t *ArchiveRequest) (*ArchiveRequest, error)
+	AutoAddAuditPolicy(ctx context.Context, t *AuditPolicy) (*AuditPolicy, error)
 	AutoAddEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoAddFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoAddFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
@@ -33,6 +34,7 @@ type ServiceMonitoringV1Client interface {
 	AutoDeleteAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
 	AutoDeleteAlertPolicy(ctx context.Context, t *AlertPolicy) (*AlertPolicy, error)
 	AutoDeleteArchiveRequest(ctx context.Context, t *ArchiveRequest) (*ArchiveRequest, error)
+	AutoDeleteAuditPolicy(ctx context.Context, t *AuditPolicy) (*AuditPolicy, error)
 	AutoDeleteEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoDeleteFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoDeleteFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
@@ -43,6 +45,7 @@ type ServiceMonitoringV1Client interface {
 	AutoGetAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
 	AutoGetAlertPolicy(ctx context.Context, t *AlertPolicy) (*AlertPolicy, error)
 	AutoGetArchiveRequest(ctx context.Context, t *ArchiveRequest) (*ArchiveRequest, error)
+	AutoGetAuditPolicy(ctx context.Context, t *AuditPolicy) (*AuditPolicy, error)
 	AutoGetEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoGetFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoGetFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
@@ -53,6 +56,7 @@ type ServiceMonitoringV1Client interface {
 	AutoLabelAlertDestination(ctx context.Context, t *api.Label) (*AlertDestination, error)
 	AutoLabelAlertPolicy(ctx context.Context, t *api.Label) (*AlertPolicy, error)
 	AutoLabelArchiveRequest(ctx context.Context, t *api.Label) (*ArchiveRequest, error)
+	AutoLabelAuditPolicy(ctx context.Context, t *api.Label) (*AuditPolicy, error)
 	AutoLabelEventPolicy(ctx context.Context, t *api.Label) (*EventPolicy, error)
 	AutoLabelFlowExportPolicy(ctx context.Context, t *api.Label) (*FlowExportPolicy, error)
 	AutoLabelFwlogPolicy(ctx context.Context, t *api.Label) (*FwlogPolicy, error)
@@ -63,6 +67,7 @@ type ServiceMonitoringV1Client interface {
 	AutoListAlertDestination(ctx context.Context, t *api.ListWatchOptions) (*AlertDestinationList, error)
 	AutoListAlertPolicy(ctx context.Context, t *api.ListWatchOptions) (*AlertPolicyList, error)
 	AutoListArchiveRequest(ctx context.Context, t *api.ListWatchOptions) (*ArchiveRequestList, error)
+	AutoListAuditPolicy(ctx context.Context, t *api.ListWatchOptions) (*AuditPolicyList, error)
 	AutoListEventPolicy(ctx context.Context, t *api.ListWatchOptions) (*EventPolicyList, error)
 	AutoListFlowExportPolicy(ctx context.Context, t *api.ListWatchOptions) (*FlowExportPolicyList, error)
 	AutoListFwlogPolicy(ctx context.Context, t *api.ListWatchOptions) (*FwlogPolicyList, error)
@@ -73,6 +78,7 @@ type ServiceMonitoringV1Client interface {
 	AutoUpdateAlertDestination(ctx context.Context, t *AlertDestination) (*AlertDestination, error)
 	AutoUpdateAlertPolicy(ctx context.Context, t *AlertPolicy) (*AlertPolicy, error)
 	AutoUpdateArchiveRequest(ctx context.Context, t *ArchiveRequest) (*ArchiveRequest, error)
+	AutoUpdateAuditPolicy(ctx context.Context, t *AuditPolicy) (*AuditPolicy, error)
 	AutoUpdateEventPolicy(ctx context.Context, t *EventPolicy) (*EventPolicy, error)
 	AutoUpdateFlowExportPolicy(ctx context.Context, t *FlowExportPolicy) (*FlowExportPolicy, error)
 	AutoUpdateFwlogPolicy(ctx context.Context, t *FwlogPolicy) (*FwlogPolicy, error)
@@ -91,6 +97,7 @@ type ServiceMonitoringV1Client interface {
 	AutoWatchTroubleshootingSession(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTroubleshootingSessionClient, error)
 	AutoWatchTechSupportRequest(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchTechSupportRequestClient, error)
 	AutoWatchArchiveRequest(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchArchiveRequestClient, error)
+	AutoWatchAuditPolicy(ctx context.Context, in *api.ListWatchOptions) (MonitoringV1_AutoWatchAuditPolicyClient, error)
 }
 
 // ServiceMonitoringV1Server is the server interface for the service.
@@ -101,6 +108,7 @@ type ServiceMonitoringV1Server interface {
 	AutoAddAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
 	AutoAddAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)
 	AutoAddArchiveRequest(ctx context.Context, t ArchiveRequest) (ArchiveRequest, error)
+	AutoAddAuditPolicy(ctx context.Context, t AuditPolicy) (AuditPolicy, error)
 	AutoAddEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoAddFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoAddFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
@@ -111,6 +119,7 @@ type ServiceMonitoringV1Server interface {
 	AutoDeleteAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
 	AutoDeleteAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)
 	AutoDeleteArchiveRequest(ctx context.Context, t ArchiveRequest) (ArchiveRequest, error)
+	AutoDeleteAuditPolicy(ctx context.Context, t AuditPolicy) (AuditPolicy, error)
 	AutoDeleteEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoDeleteFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoDeleteFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
@@ -121,6 +130,7 @@ type ServiceMonitoringV1Server interface {
 	AutoGetAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
 	AutoGetAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)
 	AutoGetArchiveRequest(ctx context.Context, t ArchiveRequest) (ArchiveRequest, error)
+	AutoGetAuditPolicy(ctx context.Context, t AuditPolicy) (AuditPolicy, error)
 	AutoGetEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoGetFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoGetFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
@@ -131,6 +141,7 @@ type ServiceMonitoringV1Server interface {
 	AutoLabelAlertDestination(ctx context.Context, t api.Label) (AlertDestination, error)
 	AutoLabelAlertPolicy(ctx context.Context, t api.Label) (AlertPolicy, error)
 	AutoLabelArchiveRequest(ctx context.Context, t api.Label) (ArchiveRequest, error)
+	AutoLabelAuditPolicy(ctx context.Context, t api.Label) (AuditPolicy, error)
 	AutoLabelEventPolicy(ctx context.Context, t api.Label) (EventPolicy, error)
 	AutoLabelFlowExportPolicy(ctx context.Context, t api.Label) (FlowExportPolicy, error)
 	AutoLabelFwlogPolicy(ctx context.Context, t api.Label) (FwlogPolicy, error)
@@ -141,6 +152,7 @@ type ServiceMonitoringV1Server interface {
 	AutoListAlertDestination(ctx context.Context, t api.ListWatchOptions) (AlertDestinationList, error)
 	AutoListAlertPolicy(ctx context.Context, t api.ListWatchOptions) (AlertPolicyList, error)
 	AutoListArchiveRequest(ctx context.Context, t api.ListWatchOptions) (ArchiveRequestList, error)
+	AutoListAuditPolicy(ctx context.Context, t api.ListWatchOptions) (AuditPolicyList, error)
 	AutoListEventPolicy(ctx context.Context, t api.ListWatchOptions) (EventPolicyList, error)
 	AutoListFlowExportPolicy(ctx context.Context, t api.ListWatchOptions) (FlowExportPolicyList, error)
 	AutoListFwlogPolicy(ctx context.Context, t api.ListWatchOptions) (FwlogPolicyList, error)
@@ -151,6 +163,7 @@ type ServiceMonitoringV1Server interface {
 	AutoUpdateAlertDestination(ctx context.Context, t AlertDestination) (AlertDestination, error)
 	AutoUpdateAlertPolicy(ctx context.Context, t AlertPolicy) (AlertPolicy, error)
 	AutoUpdateArchiveRequest(ctx context.Context, t ArchiveRequest) (ArchiveRequest, error)
+	AutoUpdateAuditPolicy(ctx context.Context, t AuditPolicy) (AuditPolicy, error)
 	AutoUpdateEventPolicy(ctx context.Context, t EventPolicy) (EventPolicy, error)
 	AutoUpdateFlowExportPolicy(ctx context.Context, t FlowExportPolicy) (FlowExportPolicy, error)
 	AutoUpdateFwlogPolicy(ctx context.Context, t FwlogPolicy) (FwlogPolicy, error)
@@ -169,4 +182,5 @@ type ServiceMonitoringV1Server interface {
 	AutoWatchTroubleshootingSession(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTroubleshootingSessionServer) error
 	AutoWatchTechSupportRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchTechSupportRequestServer) error
 	AutoWatchArchiveRequest(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchArchiveRequestServer) error
+	AutoWatchAuditPolicy(in *api.ListWatchOptions, stream MonitoringV1_AutoWatchAuditPolicyServer) error
 }

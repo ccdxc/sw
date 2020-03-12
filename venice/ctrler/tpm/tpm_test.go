@@ -150,6 +150,10 @@ func (m *mockMonitoringV1) ArchiveRequest() telemetry.MonitoringV1ArchiveRequest
 	return nil
 }
 
+func (m *mockMonitoringV1) AuditPolicy() telemetry.MonitoringV1AuditPolicyInterface {
+	return nil
+}
+
 type mockClusterV1 struct {
 	mTnt cluster.ClusterV1TenantInterface
 }

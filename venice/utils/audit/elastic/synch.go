@@ -90,7 +90,7 @@ func (a *synchAuditor) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	return err
 }
 
-func (a *synchAuditor) Run(stopCh <-chan struct{}) error {
+func (a *synchAuditor) Run() error {
 	if a.elasticClient == nil {
 		// Initialize elastic client
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {

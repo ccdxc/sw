@@ -493,6 +493,9 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regWatchersFunc(ctx context.Context, l
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.({{$pkgname}}.{{$svcname}}_AutoWatch{{.}}Server)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

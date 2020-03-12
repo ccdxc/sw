@@ -65,6 +65,16 @@ func (m *ArchiveRequestList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AuditPolicyList) MakeKey(prefix string) string {
+	obj := AuditPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *AuditPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *EventPolicyList) MakeKey(prefix string) string {
 	obj := EventPolicy{}
 	return obj.MakeKey(prefix)
@@ -145,6 +155,12 @@ func (m *AutoMsgAlertWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgArchiveRequestWatchHelper) MakeKey(prefix string) string {
 	obj := ArchiveRequest{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgAuditPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := AuditPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -265,6 +281,27 @@ func (m *ArchiveRequestList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ArchiveRequestList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AuditPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *AuditPolicyList
+	var ok bool
+	if into == nil {
+		out = &AuditPolicyList{}
+	} else {
+		out, ok = into.(*AuditPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AuditPolicyList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuditPolicyList) Defaults(ver string) bool {
 	return false
 }
 
@@ -433,6 +470,48 @@ func (m *AutoMsgArchiveRequestWatchHelper_WatchEvent) Clone(into interface{}) (i
 
 // Default sets up the defaults for the object
 func (m *AutoMsgArchiveRequestWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAuditPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAuditPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAuditPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgAuditPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgAuditPolicyWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAuditPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgAuditPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgAuditPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgAuditPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgAuditPolicyWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
 	return false
 }
 
@@ -950,6 +1029,36 @@ func (m *ArchiveRequestList) Normalize() {
 
 }
 
+func (m *AuditPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AuditPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AuditPolicyList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
 func (m *AutoMsgAlertDestinationWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1210,6 +1319,66 @@ func (m *AutoMsgArchiveRequestWatchHelper_WatchEvent) Validate(ver, path string,
 }
 
 func (m *AutoMsgArchiveRequestWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()

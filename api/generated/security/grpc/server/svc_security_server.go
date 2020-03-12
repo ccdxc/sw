@@ -784,6 +784,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(security.SecurityV1_AutoWatchSecurityGroupServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -883,6 +886,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(security.SecurityV1_AutoWatchNetworkSecurityPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -984,6 +990,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(security.SecurityV1_AutoWatchAppServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1083,6 +1092,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(security.SecurityV1_AutoWatchFirewallProfileServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1184,6 +1196,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(security.SecurityV1_AutoWatchCertificateServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1283,6 +1298,9 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(security.SecurityV1_AutoWatchTrafficEncryptionPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())

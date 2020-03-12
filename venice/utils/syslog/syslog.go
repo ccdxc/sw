@@ -85,3 +85,13 @@ func ValidateFacility(p Priority) error {
 	}
 	return nil
 }
+
+// WriterConfig is a wrapper that includes syslog config for writer
+type WriterConfig struct {
+	Format     string
+	Network    string
+	RemoteAddr string
+	Priority   Priority
+	Tag        string
+	Writer     Writer
+}

@@ -257,6 +257,9 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(staging.StagingV1_AutoWatchBufferServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

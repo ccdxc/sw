@@ -735,6 +735,9 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(auth.AuthV1_AutoWatchUserServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -841,6 +844,9 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(auth.AuthV1_AutoWatchAuthenticationPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -949,6 +955,9 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(auth.AuthV1_AutoWatchRoleServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1049,6 +1058,9 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(auth.AuthV1_AutoWatchRoleBindingServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1148,6 +1160,9 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(auth.AuthV1_AutoWatchUserPreferenceServer)
 			nctx, cancel := context.WithCancel(wstream.Context())

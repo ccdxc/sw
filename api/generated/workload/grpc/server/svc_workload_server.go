@@ -378,6 +378,9 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(workload.WorkloadV1_AutoWatchEndpointServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -477,6 +480,9 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(workload.WorkloadV1_AutoWatchWorkloadServer)
 			nctx, cancel := context.WithCancel(wstream.Context())

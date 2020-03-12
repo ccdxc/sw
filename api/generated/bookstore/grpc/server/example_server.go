@@ -3234,6 +3234,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchOrderServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -3333,6 +3336,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchBookServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -3434,6 +3440,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchPublisherServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -3533,6 +3542,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchStoreServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -3634,6 +3646,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchCouponServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -3733,6 +3748,9 @@ func (s *sbookstoreExampleBackend) regWatchersFunc(ctx context.Context, logger l
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(bookstore.BookstoreV1_AutoWatchCustomerServer)
 			nctx, cancel := context.WithCancel(wstream.Context())

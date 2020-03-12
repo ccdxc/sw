@@ -26,6 +26,7 @@ import (
 
 const (
 	defaultTokenExpiry = "144h" // default to 6 days
+	policyKey          = "AuthenticationPolicy"
 )
 
 var (
@@ -73,7 +74,7 @@ func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 func (ug *defaultAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPolicy, error) {
 	// fetch authentication policy
 	objMeta := &api.ObjectMeta{
-		Name: "AuthenticationPolicy",
+		Name: policyKey,
 	}
 	val, err := ug.cache.FindObject("AuthenticationPolicy", objMeta)
 	if err != nil {
@@ -210,11 +211,13 @@ func (ug *defaultAuthGetter) addObj(kind auth.ObjKind, objMeta *api.ObjectMeta) 
 			return nil, err
 		}
 	case auth.KindAuthenticationPolicy:
-		val, err = apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
+		policy, err := apicl.AuthV1().AuthenticationPolicy().Get(context.Background(), objMeta)
 		if err != nil {
 			ug.logger.Errorf("Error getting authentication policy [%s] from API server: %v", objMeta.Name, err)
 			return nil, err
 		}
+		policy.Name = policyKey
+		val = policy
 	}
 	err = ug.cache.AddObject(val)
 	if err != nil {

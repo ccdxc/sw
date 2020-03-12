@@ -1,9 +1,12 @@
 package audit
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
+	"strings"
 
+	"github.com/jeromer/syslogparser"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
@@ -20,8 +23,10 @@ import (
 	archexp "github.com/pensando/sw/venice/utils/archive/exporter"
 	archmock "github.com/pensando/sw/venice/utils/archive/mock"
 	archsvc "github.com/pensando/sw/venice/utils/archive/service"
+	"github.com/pensando/sw/venice/utils/audit"
 	elasticauditor "github.com/pensando/sw/venice/utils/audit/elastic"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
+	syslogauditor "github.com/pensando/sw/venice/utils/audit/syslog"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -32,6 +37,7 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 	mockresolver "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/syslog"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 
@@ -71,6 +77,16 @@ type tInfo struct {
 	restcl            apiclient.Services
 	apicl             apiclient.Services
 	objstorecl        objstore.Client
+	syslogBSDInfo     *syslogInfo
+	syslogRFC5424Info *syslogInfo
+}
+
+type syslogInfo struct {
+	addr   string
+	ip     string
+	port   string
+	ch     chan syslogparser.LogParts
+	cancel context.CancelFunc
 }
 
 // setupElastic helper function starts elasticsearch and creates elastic client
@@ -160,11 +176,19 @@ func (t *tInfo) startAPIServer() error {
 
 func (t *tInfo) startAPIGateway() error {
 	// start API gateway
+	elasticAuditor := elasticauditor.NewSynchAuditor(t.elasticSearchAddr, t.rslvr, t.logger, elasticauditor.WithElasticClient(t.esClient))
+	if err := elasticAuditor.Run(); err != nil {
+		return err
+	}
+	syslogAuditor := syslogauditor.NewSynchAuditor(t.rslvr, t.logger, syslogauditor.WithPolicyGetter(audit.GetPolicyGetter("AuditIntegTest", t.apiServerAddr, t.rslvr, t.logger)))
+	if err := syslogAuditor.Run(); err != nil {
+		return err
+	}
 	var err error
 	t.apiGw, t.apiGwAddr, err = testutils.StartAPIGatewayWithAuditor(":0", false,
 		map[string]string{},
 		[]string{"telemetry_query", "objstore", "tokenauth"},
-		[]string{}, t.rslvr, t.logger, auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(t.elasticSearchAddr, t.rslvr, t.logger, elasticauditor.WithElasticClient(t.esClient))))
+		[]string{}, t.rslvr, t.logger, auditmgr.WithAuditors(elasticAuditor, syslogAuditor))
 	if err != nil {
 		return err
 	}
@@ -214,4 +238,48 @@ func (t *tInfo) teardownElastic() {
 	}
 	testutils.StopElasticsearch(t.elasticSearchName, t.elasticSearchDir)
 	testutils.CleanupIntegTLSProvider()
+}
+
+func (t *tInfo) startSyslogServers() error {
+	ctx, cancel := context.WithCancel(context.TODO())
+	addr, ch, err := syslog.Server(ctx, ":0", monitoring.MonitoringExportFormat_SYSLOG_BSD.String(), "udp")
+	if err != nil {
+		t.logger.Errorf("failed to start BSD syslog server: %v", err)
+		cancel()
+		return err
+	}
+	s := strings.Split(addr, ":")
+	t.syslogBSDInfo = &syslogInfo{
+		addr:   addr,
+		ip:     "127.0.0.1",
+		port:   s[len(s)-1],
+		cancel: cancel,
+		ch:     ch,
+	}
+	t.logger.Infof("bsd syslog server started at addr: %v", addr)
+	addr, ch, err = syslog.Server(ctx, ":0", monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(), "udp")
+	if err != nil {
+		t.logger.Errorf("failed to start RFC5424 syslog server: %v", err)
+		cancel()
+		return err
+	}
+	s = strings.Split(addr, ":")
+	t.syslogRFC5424Info = &syslogInfo{
+		addr:   addr,
+		ip:     "127.0.0.1",
+		port:   s[len(s)-1],
+		cancel: cancel,
+		ch:     ch,
+	}
+	t.logger.Infof("rfc5424 syslog server started at addr: %v", addr)
+	return nil
+}
+
+func (t *tInfo) stopSyslogServers() {
+	if t.syslogBSDInfo != nil {
+		t.syslogBSDInfo.cancel()
+	}
+	if t.syslogRFC5424Info != nil {
+		t.syslogRFC5424Info.cancel()
+	}
 }

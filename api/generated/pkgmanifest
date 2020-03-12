@@ -6,7 +6,7 @@ true browser browser.proto svc_browser.proto
 true cluster cluster.proto dscprofile.proto license.proto smartnic.proto snapshot.proto svc_cluster.proto tenant.proto 
 true diagnostics module.proto svc_diagnostics.proto 
 true events events.proto svc_events.proto 
-true monitoring alerts.proto archive.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 
+true monitoring alerts.proto archive.proto auditpolicy.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 
 true network ipam.proto lb.proto network.proto networkinterface.proto route.proto service.proto svc_network.proto vrf.proto 
 true objstore objstore.proto svc_objstore.proto 
 true orchestration orchestration.proto svc_orchestration.proto 

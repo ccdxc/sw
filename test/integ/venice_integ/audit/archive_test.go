@@ -766,7 +766,7 @@ func deleteArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 
 func createAuditLogs(t *testing.T, ti tInfo, count int) int {
 	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
-	err := auditor.Run(make(<-chan struct{}))
+	err := auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	var success int
 	for i := 0; i < count; i++ {

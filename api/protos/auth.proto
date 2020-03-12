@@ -6,7 +6,6 @@ package auth;
 
 // Mandatory imports.
 import "google/api/annotations.proto";
-import "google/protobuf/any.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";

@@ -135,7 +135,7 @@ func TestAuditManager(t *testing.T) {
 		},
 	}
 	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
-	err = auditor.Run(make(<-chan struct{}))
+	err = auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	defer auditor.Shutdown()
 
@@ -165,7 +165,7 @@ func TestElasticServerDown(t *testing.T) {
 	AssertOk(t, err, "setupElastic failed")
 	defer ti.teardownElastic()
 	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
-	err = auditor.Run(make(<-chan struct{}))
+	err = auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	// shutdown elastic server and test ProcessEvents
 	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
@@ -314,6 +314,7 @@ func TestAuditLogs(t *testing.T) {
 		Password: testPassword,
 		Tenant:   testTenant,
 	})
+	AssertOk(t, err, "error creating logged in context for user in testtenant")
 	_, err = ti.restcl.ClusterV1().Tenant().Create(unauthzCtx, tenant)
 	Assert(t, err != nil, "user should be unauthorized to create tenant")
 	AssertEventually(t, func() (bool, interface{}) {
@@ -747,6 +748,7 @@ func TestAPIServerNotAvailable(t *testing.T) {
 	defer ti.fdr.Stop()
 	err = ti.startAPIServer()
 	AssertOk(t, err, "failed to start API server")
+	defer ti.apiServer.Stop()
 	err = ti.startAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
 	defer ti.apiGw.Stop()
@@ -759,7 +761,6 @@ func TestAPIServerNotAvailable(t *testing.T) {
 	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, userCred, ti.logger); err != nil {
 		t.Fatalf("auth setup failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, userCred, ti.logger)
 	_, err = NewLoggedInContext(context.TODO(), ti.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	ti.apiServer.Stop()
@@ -770,6 +771,136 @@ func TestAPIServerNotAvailable(t *testing.T) {
 		}
 		return false, err
 	}, "unexpected error when API server is unreachable")
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	CleanupAuth(ti.apiServerAddr, true, false, userCred, ti.logger)
+}
+
+func TestSyslogAuditor(t *testing.T) {
+	ti := tInfo{}
+	err := ti.setupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	defer ti.teardownElastic()
+	err = ti.startSyslogServers()
+	AssertOk(t, err, "failed to start syslog server")
+	defer ti.stopSyslogServers()
+	err = ti.startSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.fdr.Stop()
+	err = ti.startAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	defer ti.apiServer.Stop()
+	err = ti.startAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.apiGw.Stop()
+
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+
+	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context")
+	bsdPolicy := &monitoring.AuditPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: string(monitoring.KindAuditPolicy),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "audit-policy-1",
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: monitoring.AuditPolicySpec{
+			Syslog: &monitoring.SyslogAuditor{
+				Enabled: true,
+				Format:  monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+				Targets: []*monitoring.ExportConfig{
+
+					{
+						Destination: ti.syslogBSDInfo.ip,
+						Transport:   fmt.Sprintf("%s/%s", "UDP", ti.syslogBSDInfo.port),
+					},
+				},
+				SyslogConfig: &monitoring.SyslogExportConfig{
+					FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					Prefix:           "pen-audit-events",
+				},
+			},
+		},
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err := ti.restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, bsdPolicy)
+		if err != nil {
+			return false, err
+		}
+		return true, policy
+	}, "failed to create BSD syslog audit policy")
+	defer ti.apicl.MonitoringV1().AuditPolicy().Delete(superAdminCtx, &bsdPolicy.ObjectMeta)
+	rfcPolicy := &monitoring.AuditPolicy{}
+	bsdPolicy.Clone(rfcPolicy)
+	rfcPolicy.Name = "audit-policy-2"
+	rfcPolicy.Spec.Syslog.Format = monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String()
+	_, err = ti.restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, rfcPolicy)
+	Assert(t, err != nil, "no error in creating duplicate audit policy")
+	// create syslog
+	AssertEventually(t, func() (bool, interface{}) {
+		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+		if err != nil {
+			return false, err
+		}
+		select {
+		case logparts := <-ti.syslogBSDInfo.ch:
+			val, ok := logparts["content"]
+			if !ok {
+				return false, fmt.Errorf("no message field: %+v", logparts)
+			}
+			msg := val.(string)
+			if !strings.Contains(msg, "\"res-kind\":\"User\"") {
+				return false, fmt.Errorf("unexpected syslog message %v", msg)
+			}
+			return true, nil
+		case <-time.After(time.Second):
+			return false, fmt.Errorf("failed to receive any syslog message")
+		}
+	}, "failed to receive any BSD syslog audit message for user login", "1s", "10s")
+	// update audit policy to point to rfc5424 syslog server
+	bsdPolicy.Spec.Syslog.Format = monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String()
+	bsdPolicy.Spec.Syslog.Targets[0].Destination = ti.syslogRFC5424Info.ip
+	bsdPolicy.Spec.Syslog.Targets[0].Transport = fmt.Sprintf("%s/%s", "UDP", ti.syslogRFC5424Info.port)
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err := ti.restcl.MonitoringV1().AuditPolicy().Update(superAdminCtx, bsdPolicy)
+		if err != nil {
+			return false, err
+		}
+		return true, policy
+	}, "failed to update syslog audit policy")
+	// create rfc5424 syslog
+	AssertEventually(t, func() (bool, interface{}) {
+		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+		if err != nil {
+			return false, err
+		}
+		select {
+		case logparts := <-ti.syslogRFC5424Info.ch:
+			val, ok := logparts["structured_data"]
+			if !ok {
+				return false, fmt.Errorf("no message field: %+v", logparts)
+			}
+			msg := val.(string)
+			if !strings.Contains(msg, "res-kind=\"User\"") {
+				return false, fmt.Errorf("unexpected syslog message %v", msg)
+			}
+			return true, nil
+		case <-time.After(time.Second):
+			return false, fmt.Errorf("failed to receive any syslog message")
+		}
+	}, "failed to receive any rfc5424 syslog audit message for user login", "1s", "10s")
 }
 
 // BenchmarkProcessEvents1Rule/auditor.ProcessEvents()-8         	     500	   6800263 ns/op
@@ -800,7 +931,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 	}
 	defer ti.teardownElastic()
 	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
-	err = auditor.Run(make(<-chan struct{}))
+	err = auditor.Run()
 	if err != nil {
 		panic(fmt.Sprintf("error starting elastic auditor: %v", err))
 	}

@@ -239,6 +239,9 @@ func (s *sorchestrationSvc_orchestrationBackend) regWatchersFunc(ctx context.Con
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(orchestration.OrchestratorV1_AutoWatchOrchestratorServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()

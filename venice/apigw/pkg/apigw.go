@@ -477,8 +477,8 @@ Loop:
 	}
 	// create auditor if it is not already initialized by passed in options
 	if a.auditor == nil {
-		a.auditor = auditmgr.NewAuditManager(a.rslver, a.logger)
-		if err := a.auditor.Run(make(<-chan struct{})); err != nil {
+		a.auditor = auditmgr.NewAuditManager(globals.APIGw, grpcaddr, a.rslver, a.logger)
+		if err := a.auditor.Run(); err != nil {
 			panic(fmt.Sprintf("Failed to create auditor (%v)", err))
 		}
 	}

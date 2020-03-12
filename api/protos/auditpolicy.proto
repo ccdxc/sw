@@ -1,0 +1,52 @@
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package monitoring;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "export.proto";
+
+// ------------------------------- AuditEvent Policy --------------------------------
+
+// AuditPolicy represents the policy definition for Audit Events.
+message AuditPolicy {
+    option (venice.objectPrefix) = {Singleton: "audit-policy", Path: "/{O.Tenant}"};
+
+    api.TypeMeta T           = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O         = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Spec contains the configuration of an audit event policy.
+    AuditPolicySpec Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+
+    // Status contains the current state of an audit event policy.
+    AuditPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// AuditPolicySpec is the specification of an AuditEvent Policy.
+message AuditPolicySpec {
+    SyslogAuditor Syslog = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "syslog-auditor,omitempty"];
+}
+
+message SyslogAuditor {
+    // flag to enable sending audit events to syslog
+    bool Enabled                               = 1 [(gogoproto.jsontag) = "enabled"];
+
+    // audit event export format, SYSLOG_BSD default
+    string Format                              = 2 [(venice.check) = "StrEnum(MonitoringExportFormat)", (gogoproto.jsontag) = "format, omitempty"];
+
+    // export target ip/port/protocol
+    repeated monitoring.ExportConfig Targets   = 3 [(gogoproto.jsontag) = "targets,omitempty"];
+
+    // once we support other formats, it should be one of the supported configs
+    // syslog specific configuration
+    monitoring.SyslogExportConfig SyslogConfig = 4 [(gogoproto.jsontag) = "config,omitempty"];
+}
+
+// AuditPolicyStatus
+message AuditPolicyStatus {
+}

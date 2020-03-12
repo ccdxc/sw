@@ -143,6 +143,11 @@ export enum MonitoringSNMPTrapServer_version {
     'v3' = "v3",
 }
 
+export enum MonitoringSyslogAuditor_format {
+    'syslog-bsd' = "syslog-bsd",
+    'syslog-rfc5424' = "syslog-rfc5424",
+}
+
 export enum MonitoringSyslogExport_format {
     'syslog-bsd' = "syslog-bsd",
     'syslog-rfc5424' = "syslog-rfc5424",
@@ -285,6 +290,11 @@ export enum MonitoringMirrorSessionStatus_schedule_state_uihint {
     'stopped' = "Stopped",
 }
 
+export enum MonitoringSyslogAuditor_format_uihint {
+    'syslog-bsd' = "BSD",
+    'syslog-rfc5424' = "RFC5424",
+}
+
 export enum MonitoringSyslogExport_format_uihint {
     'syslog-bsd' = "BSD",
     'syslog-rfc5424' = "RFC5424",
@@ -370,6 +380,7 @@ export class AllEnums {
     MonitoringMirrorSessionStatus_schedule_state = MonitoringMirrorSessionStatus_schedule_state;
     MonitoringPrivacyConfig_algo = MonitoringPrivacyConfig_algo;
     MonitoringSNMPTrapServer_version = MonitoringSNMPTrapServer_version;
+    MonitoringSyslogAuditor_format = MonitoringSyslogAuditor_format;
     MonitoringSyslogExport_format = MonitoringSyslogExport_format;
     MonitoringSyslogExportConfig_facility_override = MonitoringSyslogExportConfig_facility_override;
     MonitoringTechSupportNodeResult_status = MonitoringTechSupportNodeResult_status;
@@ -389,6 +400,7 @@ export class AllEnums {
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;
     MonitoringMirrorSessionStatus_schedule_state_uihint = MonitoringMirrorSessionStatus_schedule_state_uihint;
+    MonitoringSyslogAuditor_format_uihint = MonitoringSyslogAuditor_format_uihint;
     MonitoringSyslogExport_format_uihint = MonitoringSyslogExport_format_uihint;
     MonitoringSyslogExportConfig_facility_override_uihint = MonitoringSyslogExportConfig_facility_override_uihint;
     MonitoringTroubleshootingSessionStatus_state_uihint = MonitoringTroubleshootingSessionStatus_state_uihint;

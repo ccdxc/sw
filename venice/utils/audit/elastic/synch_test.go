@@ -131,7 +131,7 @@ func TestProcessEvents(t *testing.T) {
 		maxElasticRetries: 3,
 	}
 	auditor.elasticClient = ec
-	err = auditor.Run(make(<-chan struct{}))
+	err = auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	defer auditor.Shutdown()
 
@@ -159,13 +159,13 @@ func TestRunWithUnreachableElasticServer(t *testing.T) {
 		elasticWaitIntvl:  10 * time.Millisecond,
 		maxElasticRetries: 1,
 	}
-	err := auditor.Run(make(<-chan struct{}))
+	err := auditor.Run()
 	Assert(t, err != nil, "elastic auditor should fail because TLS credentials are not set")
 	ec, err := elastic.NewClient(elasticSrv.GetElasticURL(), rslvr, logger)
 	AssertOk(t, err, "failed to create elastic client")
 	auditor.elasticClient = ec
 	shutdown()
-	err = auditor.Run(make(<-chan struct{}))
+	err = auditor.Run()
 	Assert(t, err != nil, "elastic auditor should fail to run if elastic server is down")
 }
 

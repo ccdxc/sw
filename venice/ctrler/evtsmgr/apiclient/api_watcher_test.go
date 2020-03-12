@@ -61,6 +61,10 @@ func (m *mockMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveReques
 	return nil
 }
 
+func (m *mockMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditPolicyInterface {
+	return nil
+}
+
 // TestAPIWatchEvents test API server watch on alert policy and alert objects
 func TestAPIWatchEvents(t *testing.T) {
 	ctrl := gomock.NewController(t)

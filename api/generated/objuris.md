@@ -5,6 +5,7 @@
 | AlertPolicy | /configs/monitoring/v1/alertPolicies |
 | App | /configs/security/v1/apps |
 | ArchiveRequest | /configs/monitoring/v1/archive-requests |
+| AuditPolicy | /configs/monitoring/v1/audit-policy |
 | AuthenticationPolicy | /configs/auth/v1/authn-policy |
 | Bucket | /configs/v1/buckets |
 | Buffer | /configs/staging/v1/buffers |

@@ -1160,6 +1160,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchClusterServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1267,6 +1270,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchNodeServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1366,6 +1372,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchHostServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1467,6 +1476,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchDistributedServiceCardServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1566,6 +1578,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchTenantServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1667,6 +1682,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchVersionServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1766,6 +1784,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchConfigurationSnapshotServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1867,6 +1888,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchSnapshotRestoreServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1967,6 +1991,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchLicenseServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -2066,6 +2093,9 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(cluster.ClusterV1_AutoWatchDSCProfileServer)
 			nctx, cancel := context.WithCancel(wstream.Context())

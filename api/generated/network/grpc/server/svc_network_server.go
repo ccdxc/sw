@@ -998,6 +998,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(network.NetworkV1_AutoWatchNetworkServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1097,6 +1100,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(network.NetworkV1_AutoWatchServiceServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1198,6 +1204,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(network.NetworkV1_AutoWatchLbPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1297,6 +1306,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(network.NetworkV1_AutoWatchVirtualRouterServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1398,6 +1410,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(network.NetworkV1_AutoWatchNetworkInterfaceServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1498,6 +1513,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
 			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
+			}
 			wstream := stream.(network.NetworkV1_AutoWatchIPAMPolicyServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
 			defer cancel()
@@ -1597,6 +1615,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(network.NetworkV1_AutoWatchRoutingConfigServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
@@ -1704,6 +1725,9 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 			key := o.MakeKey(svcprefix)
 			if strings.HasSuffix(key, "//") {
 				key = strings.TrimSuffix(key, "/")
+			}
+			if strings.HasSuffix(key, "//Singleton") {
+				key = strings.TrimSuffix(key, "/Singleton")
 			}
 			wstream := stream.(network.NetworkV1_AutoWatchRouteTableServer)
 			nctx, cancel := context.WithCancel(wstream.Context())
