@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pensando/sw/api"
@@ -196,7 +197,14 @@ func TestNodeObject(t *testing.T) {
 		}
 		return nil
 	}
-
+	kvs.Updatefn = func(ctx context.Context, key string, into runtime.Object) error {
+		switch into.(type) {
+		case *cluster.DistributedServiceCard:
+			in0 := into.(*cluster.DistributedServiceCard)
+			nic = *in0
+		}
+		return nil
+	}
 	nd := cluster.Node{
 		Spec: cluster.NodeSpec{
 			RoutingConfig: "xyz",
@@ -207,6 +215,12 @@ func TestNodeObject(t *testing.T) {
 	AssertOk(t, err, "expecting to succeed")
 	Assert(t, kvw, "expecging kvwrite to be true")
 	Assert(t, len(txn.Cmps) == 1, "expecting one comparator on the treansaction [%v]", txn.Cmps)
+	dscKey := nic.MakeKey(string(apiclient.GroupCluster))
+	_ = kvs.Getfn(ctx, dscKey, &nic)
+	Assert(t, &nic != nil, "Object must be available")
+	if &nic != nil {
+		Assert(t, nic.Spec.DSCProfile == "InsertionFWProfile", nic.Spec.DSCProfile)
+	}
 }
 
 func TestClusterObject(t *testing.T) {
