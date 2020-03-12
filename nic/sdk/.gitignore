@@ -24,5 +24,6 @@ third-party/gmp
 third-party/ncurses
 third-party/edit
 platform/capri/capri_tm_rw.cc
-third-party/liblmdb/
+third-party/liblmdb/aarch64
+third-party/liblmdb/x86_64
 third-party/libz/

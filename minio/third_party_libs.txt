@@ -40,7 +40,8 @@ nic/third-party/liblzma/*
 nic/third-party/libicuuc/*
 nic/third-party/rocksdb/*
 
-nic/sdk/third-party/liblmdb/*
+nic/sdk/third-party/liblmdb/aarch64/*
+nic/sdk/third-party/liblmdb/x86_64/*
 nic/sdk/third-party/libz/*
 
 nic/third-party/libconfig/OBJS/x86_64/include/*
