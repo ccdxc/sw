@@ -13,7 +13,7 @@ images:
     naples: nic/naples_fw_venice.tar
 
 setup:
-    topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
+    topology: test/apulu/topologies/classic_baremetal/vm.topology
     config  :
         #- step : utils.naples_workloads
         - step : verif.config.verify_oob
@@ -28,6 +28,7 @@ setup:
              node : node2
         - step : config.bringup_workloads
         - step : config.add_routes
+        - step : config.learn_endpoints
 
 common:
     verifs:
@@ -44,9 +45,9 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
+        - networking/h2h.testbundle
         - networking/underlay.testbundle
         - api_crud/netagent_api_crud.testbundle
-        #- networking/h2h.testbundle
         #- networking/h2n.testbundle
 
     regression:

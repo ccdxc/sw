@@ -2,16 +2,14 @@
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.pdsctl as pdsctl
+import iota.test.apulu.utils.config.utils as conf_utils
+import iota.test.apulu.utils.misc as misc_utils
 import time
 
 def __learn_endpoints(args):
     # Enabling Max age for all endpoints
-    nodes = api.GetNaplesHostnames()
-    for node in nodes:
-        ret, resp = pdsctl.ExecutePdsctlCommand(node, "debug device", "--learn-age-timeout 86400", yaml=False)
-        if ret != True:
-            api.Logger.error("Failed to execute debug device at node %s : %s" %(node, resp))
-            return api.types.status.FAILURE
+    if not conf_utils.SetDeviceLearnTimeout(86400):
+        return api.types.status.FAILURE
 
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
@@ -60,7 +58,7 @@ def Main(args):
     # sleep for some time to let metaswitch advertise these local mappings to other naples.
     # TODO: have to find out if there is any event to wait on
     api.Logger.debug("Sleeping for sometime letting remote mappings to get programmed")
-    time.sleep(40)
+    misc_utils.Sleep(40)
     return result
 
 if __name__ == '__main__':

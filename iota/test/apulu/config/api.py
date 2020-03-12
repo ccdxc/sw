@@ -16,6 +16,7 @@ WORKLOAD_PAIR_TYPE_IGW_ONLY      = 3
 
 WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
 WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
+WORKLOAD_PAIR_SCOPE_INTER_VPC    = 3
 
 class Endpoint:
     def __init__(self, vnic_inst, ip_addresses):
@@ -74,6 +75,11 @@ def __vnics_in_same_segment(vnic1, vnic2):
         return True
     return False
 
+def __vnics_in_same_vpc(vnic1, vnic2):
+    if vnic1.SUBNET.VPC.GID() == vnic2.SUBNET.VPC.GID():
+        return True
+    return False
+
 def __vnics_are_local_to_igw_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
@@ -103,7 +109,8 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
                 continue
             if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTRA_SUBNET and not __vnics_in_same_segment(vnic1, vnic2):
                 continue
-            if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTER_SUBNET and __vnics_in_same_segment(vnic1, vnic2):
+            if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTER_SUBNET and\
+               (__vnics_in_same_segment(vnic1, vnic2) or not __vnics_in_same_vpc(vnic1, vnic2)) :
                 continue
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue

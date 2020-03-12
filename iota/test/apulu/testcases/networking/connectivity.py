@@ -27,8 +27,12 @@ def __get_workload_scope(tc):
 
     if not hasattr(tc.iterators, 'workload_scope'):
         return scope
-    if tc.iterators.workload_scope == 'inter':
+    if tc.iterators.workload_scope == 'intra-subnet':
+        scope = config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET
+    elif tc.iterators.workload_scope == 'inter-subnet':
         scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET
+    elif tc.iterators.workload_scope == 'inter-vpc':
+        scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_VPC
 
     return scope
 

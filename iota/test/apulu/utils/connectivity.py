@@ -17,8 +17,8 @@ def VerifyConnectivityTest(proto, cmd_cookies, resp):
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-# CRUD test cases can call this, since we want to execute CRUD and verify all combinations.
-# Having proto, pktsize as iterators in CRUD testcase, will make CRUD happen once per proto which is an overkill.
+# Testcases which want to test connectivity after a trigger, through
+# different protocol packets with multiple packet sizes can use this API.
 def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list):
     cmd_cookies = []
     resp = None

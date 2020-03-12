@@ -19,13 +19,10 @@ def __verify_response(resp, oper):
 
 def __set_state_all_host_intfs(oper):
     req = api.Trigger_CreateExecuteCommandsRequest()
-    nodes = api.GetNaplesHostnames()
-    for node in nodes:
-        intf_list = api.GetNaplesHostInterfaces(node)
-        api.Logger.info("Host port admin state  %s %s in %s" % (oper, intf_list, node))
-        for intf in intf_list:
-            flap_cmd = __get_flap_cfg_cmd(intf, oper)
-            api.Trigger_AddHostCommand(req, node, flap_cmd)
+    for wl in api.GetWorkloads():
+        flap_cmd = __get_flap_cfg_cmd(wl.parent_interface, oper)
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, flap_cmd)
+ 
     resp = api.Trigger(req)
     return __verify_response(resp, oper)
 
