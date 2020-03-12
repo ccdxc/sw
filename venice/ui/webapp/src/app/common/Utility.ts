@@ -2234,6 +2234,7 @@ export class Utility {
    */
   onRESTSample(request: any, response: any) {
     // We don't use 'Features.apiCapture' here to avoid circular importing. We have to hard-code 'apiCapture' string
+    response = _.cloneDeep(response);
     if (! (this.getUIConfigsService() && this.getUIConfigsService().isFeatureEnabled('apiCapture'))) {
       return;
       // Capturing API REST request-response content consumes resources. We should just let it by-pass by default
