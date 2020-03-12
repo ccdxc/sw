@@ -170,7 +170,12 @@ _process (struct rte_mbuf *m, struct lcore_conf *qconf,
 {
     uint16_t dst_port;
 
-    fte_flow_prog(m);
+    if (fte_flow_prog(m) != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_prog failed..\n");
+        // TODO: Unsupported traffic should be dropped?
+        rte_pktmbuf_free(m);
+        return;
+    }
 
     dst_port = (portid ? 0 : 1);
     send_single_packet(qconf, m, dst_port);

@@ -15,7 +15,7 @@ namespace fte_ath {
 
 void fte_init(void);
 
-void fte_flow_prog(struct rte_mbuf *m);
+sdk_ret_t fte_flow_prog(struct rte_mbuf *m);
 void fte_ftl_set_core_id(unsigned int core_id);
 sdk_ret_t fte_ftl_init(void);
 
