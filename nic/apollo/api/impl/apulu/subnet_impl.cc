@@ -322,8 +322,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     }
 
     if (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_HOST_IFINDEX) {
-        // host ifindex has changed
         if (spec->host_if != k_pds_obj_key_invalid) {
+            // host ifindex has changed to a new new lif
             lif = lif_impl_db()->find(&spec->host_if);
             ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
@@ -336,7 +336,22 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
                               spec->key.str(), ret);
                 return ret;
             }
+        } else {
+            // cleanup previous lif entry as lif and subnet are disassociated
+            lif_key = orig_subnet->host_if();
+            lif = lif_impl_db()->find(&lif_key);
+            ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
+                                    PDS_IMPL_RSVD_VPC_HW_ID,
+                                    PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
+                                    g_zero_mac, false);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to reset lif %s on subnet %s update, "
+                              "err %u", orig_subnet->host_if().str(),
+                              spec->key.str(), ret);
+                return ret;
+            }
         }
+        // cleanup previous entry as the lif is not associated with this subnet
         if (orig_subnet->host_if() != k_pds_obj_key_invalid) {
             // we need to reset the previous lif table entry
             lif_key = orig_subnet->host_if();
@@ -344,8 +359,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
                                     PDS_IMPL_RSVD_VPC_HW_ID,
                                     PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
-                                    g_zero_mac,
-                                    false);
+                                    g_zero_mac, false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reset lif %s on subnet %s update, "
                               "err %u", orig_subnet->host_if().str(),
