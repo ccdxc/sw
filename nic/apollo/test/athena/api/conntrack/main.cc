@@ -73,6 +73,12 @@ TEST_F(conntrack_test, conntrack_crud) {
     SDK_ASSERT(info.spec.data.flow_type == 0);
 
     memset(&spec, 0, sizeof(spec)); 
+    spec.key.conntrack_id = 0;
+    spec.data.flow_state = UNESTABLISHED;
+    spec.data.flow_type = PDS_FLOW_TYPE_UDP;
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_INVALID_ARG);
+
+    memset(&spec, 0, sizeof(spec)); 
     spec.key.conntrack_id = PDS_CONNTRACK_ID_MAX;
     spec.data.flow_state = UNESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_UDP;

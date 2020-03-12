@@ -20,18 +20,11 @@ extern "C" {
 /// @{
 
 /// \brief Maximum epoch index
-#define PDS_EPOCH_ID_MAX    (64 * 1024)
-
-/// \brief Epoch config
-typedef enum pds_epoch_config_e {
-    CONFIG_EPOCH1 = 0,    ///< Epoch 1
-    CONFIG_EPOCH2         ///< Epoch 2
-} pds_epoch_config_t;
+#define PDS_EPOCH_ID_MAX    (1 * 1024 * 1024)
 
 /// \brief Epoch key
 typedef struct pds_epoch_key_s {
-    pds_epoch_config_t    config;      ///< Epoch config
-    uint16_t              epoch_id;    ///< Epoch id
+    uint16_t    epoch_id;    ///< Epoch id
 } __PACK__ pds_epoch_key_t;
 
 /// \brief Epoch data

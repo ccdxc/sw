@@ -16,6 +16,7 @@ fi
 
 run_gtest athena_vnic
 run_gtest conntrack
+run_gtest epoch
 run_gtest flow_cache
 run_gtest flow_session_info
 run_gtest flow_session_rewrite

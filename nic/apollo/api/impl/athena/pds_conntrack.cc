@@ -31,7 +31,7 @@ pds_conntrack_state_create (pds_conntrack_spec_t *spec)
         return SDK_RET_INVALID_ARG;
     }
     conntrack_id = spec->key.conntrack_id;
-    if (conntrack_id >= PDS_CONNTRACK_ID_MAX) {
+    if (conntrack_id == 0 || conntrack_id >= PDS_CONNTRACK_ID_MAX) {
         PDS_TRACE_ERR("conntrack id %u is beyond range", conntrack_id);
         return SDK_RET_INVALID_ARG;
     }
@@ -65,7 +65,7 @@ pds_conntrack_state_read (pds_conntrack_key_t *key,
         return SDK_RET_INVALID_ARG;
     }
     conntrack_id = key->conntrack_id;
-    if (conntrack_id >= PDS_CONNTRACK_ID_MAX) {
+    if (conntrack_id == 0 || conntrack_id >= PDS_CONNTRACK_ID_MAX) {
         PDS_TRACE_ERR("conntrack id %u is beyond range", conntrack_id);
         return SDK_RET_INVALID_ARG;
     }
@@ -104,7 +104,7 @@ pds_conntrack_state_delete (pds_conntrack_key_t *key)
         return SDK_RET_INVALID_ARG;
     }
     conntrack_id = key->conntrack_id;
-    if (conntrack_id >= PDS_CONNTRACK_ID_MAX) {
+    if (conntrack_id == 0 || conntrack_id >= PDS_CONNTRACK_ID_MAX) {
         PDS_TRACE_ERR("conntrack id %u is beyond range", conntrack_id);
         return SDK_RET_INVALID_ARG;
     }
