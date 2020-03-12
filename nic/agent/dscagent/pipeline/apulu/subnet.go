@@ -282,11 +282,21 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	if newRts == nil {
 		newRts = &netproto.RDSpec{}
 	}
-	var rtDelReq, rtAddReq msTypes.EvpnEviRtRequest
-	for _, r := range curRts.ExportRTs {
+
+	var rtAddReq msTypes.EvpnEviRtRequest
+	var rtDelReq msTypes.EvpnEviRtDeleteRequest
+
+	isEqual := func(a, b *netproto.RouteDistinguisher) bool {
+		return a.Type == b.Type && a.AssignedValue == b.AssignedValue && a.AdminValue == b.AdminValue
+	}
+
+	curImportRts, curExportRts, curImportExportRts := classifyRouteTargets(curRts)
+	newImportRts, newExportRts, newImportExportRts := classifyRouteTargets(newRts)
+
+	for _, r := range newExportRts {
 		found := false
-		for _, r1 := range newRts.ExportRTs {
-			if r == r1 {
+		for _, r1 := range curExportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -301,28 +311,30 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			log.Infof("add EVI RT export [%v]", ert)
 		}
 	}
-	for _, r := range newRts.ExportRTs {
+	for _, r := range curExportRts {
 		found := false
-		for _, r1 := range curRts.ExportRTs {
-			if r == r1 {
+		for _, r1 := range newExportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
 		if !found {
-			ert := msTypes.EvpnEviRtSpec{
-				Id:       uid.Bytes(),
+			key := &msTypes.EvpnEviRtKey{
 				SubnetId: uid.Bytes(),
 				RT:       utils.RTToBytes(r),
-				RTType:   msTypes.EvpnRtType_EVPN_RT_EXPORT,
+			}
+
+			ert := msTypes.EvpnEviRtKeyHandle{
+				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
 			}
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 			log.Infof("del EVI RT export [%v]", ert)
 		}
 	}
-	for _, r := range curRts.ImportRTs {
+	for _, r := range newImportRts {
 		found := false
-		for _, r1 := range newRts.ImportRTs {
-			if r == r1 {
+		for _, r1 := range curImportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -337,10 +349,31 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			log.Infof("add EVI RT import [%v]", ert)
 		}
 	}
-	for _, r := range newRts.ImportRTs {
+	for _, r := range curImportRts {
 		found := false
-		for _, r1 := range curRts.ImportRTs {
-			if r == r1 {
+		for _, r1 := range newImportRts {
+			if isEqual(r, r1) {
+				found = true
+			}
+		}
+		if !found {
+			key := &msTypes.EvpnEviRtKey{
+				SubnetId: uid.Bytes(),
+				RT:       utils.RTToBytes(r),
+			}
+
+			ert := msTypes.EvpnEviRtKeyHandle{
+				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
+			}
+			rtDelReq.Request = append(rtDelReq.Request, &ert)
+			log.Infof("del EVI RT import [%v]", ert)
+		}
+	}
+
+	for _, r := range newImportExportRts {
+		found := false
+		for _, r1 := range curImportExportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -349,10 +382,30 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 				Id:       uid.Bytes(),
 				SubnetId: uid.Bytes(),
 				RT:       utils.RTToBytes(r),
-				RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT,
+				RTType:   msTypes.EvpnRtType_EVPN_RT_IMPORT_EXPORT,
+			}
+			rtAddReq.Request = append(rtAddReq.Request, &ert)
+			log.Infof("add EVI RT import_export [%v]", ert)
+		}
+	}
+	for _, r := range curImportExportRts {
+		found := false
+		for _, r1 := range newImportExportRts {
+			if isEqual(r, r1) {
+				found = true
+			}
+		}
+		if !found {
+			key := &msTypes.EvpnEviRtKey{
+				SubnetId: uid.Bytes(),
+				RT:       utils.RTToBytes(r),
+			}
+
+			ert := msTypes.EvpnEviRtKeyHandle{
+				IdOrKey: &msTypes.EvpnEviRtKeyHandle_Key{key},
 			}
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
-			log.Infof("del EVI RT import [%v]", ert)
+			log.Infof("del EVI RT import_export [%v]", ert)
 		}
 	}
 
@@ -366,15 +419,15 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	}
 	log.Infof("subnet update [%v/%v] RT create  got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 
-	evrtresp, err = msc.EvpnEviRtCreate(ctx, &rtDelReq)
+	evrtdelresp, err := msc.EvpnEviRtDelete(ctx, &rtDelReq)
 	if err != nil {
-		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+		log.Errorf("failed to delete EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
 	}
-	if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
+	if evrtdelresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+		log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtdelresp.ApiStatus)
 		return err
 	}
-	log.Infof("subnet update [%v/%v] delete RT got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
+	log.Infof("subnet update [%v/%v] delete RT got response [%v] for ", nw.Tenant, nw.Name, evrtdelresp.ApiStatus)
 
 	dat, _ := nw.Marshal()
 

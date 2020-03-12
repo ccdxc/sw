@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
@@ -288,10 +288,17 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	if newRts == nil {
 		newRts = &netproto.RDSpec{}
 	}
-	for _, r := range curRts.ExportRTs {
+
+	isEqual := func(a, b *netproto.RouteDistinguisher) bool {
+		return a.Type == b.Type && a.AssignedValue == b.AssignedValue && a.AdminValue == b.AdminValue
+	}
+
+	curImportRts, curExportRts, curImportExportRts := classifyRouteTargets(curRts)
+	newImportRts, newExportRts, newImportExportRts := classifyRouteTargets(newRts)
+	for _, r := range newExportRts {
 		found := false
-		for _, r1 := range newRts.ExportRTs {
-			if r == r1 {
+		for _, r1 := range curExportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -302,14 +309,14 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				RT:     utils.RTToBytes(r),
 				RTType: msTypes.EvpnRtType_EVPN_RT_EXPORT,
 			}
-			log.Infof("adding RT to req [%v]", ert)
+			log.Infof("adding export add RT to req [%v]", ert)
 			rtAddReq.Request = append(rtAddReq.Request, &ert)
 		}
 	}
-	for _, r := range newRts.ExportRTs {
+	for _, r := range curExportRts {
 		found := false
-		for _, r1 := range curRts.ExportRTs {
-			if r == r1 {
+		for _, r1 := range newExportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -322,15 +329,15 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
 			}
 
-			log.Infof("adding RT to req [%v]", ert)
+			log.Infof("adding export del RT to req [%v]", ert)
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 		}
 	}
 
-	for _, r := range curRts.ImportRTs {
+	for _, r := range newImportRts {
 		found := false
-		for _, r1 := range newRts.ImportRTs {
-			if r == r1 {
+		for _, r1 := range curImportRts {
+			if isEqual(r, r1) {
 				found = true
 			}
 		}
@@ -341,14 +348,14 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				RT:     utils.RTToBytes(r),
 				RTType: msTypes.EvpnRtType_EVPN_RT_IMPORT,
 			}
-			log.Infof("adding RT to req [%v]", ert)
+			log.Infof("adding import add RT to req [%v]", ert)
 			rtAddReq.Request = append(rtAddReq.Request, &ert)
 		}
 	}
-	for _, r := range newRts.ImportRTs {
+	for _, r := range curImportRts {
 		found := false
-		for _, r1 := range curRts.ImportRTs {
-			if r == r1 {
+		for _, r1 := range newImportRts {
+			if isEqual(r, r1) {
 
 				found = true
 			}
@@ -361,10 +368,49 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			ert := msTypes.EvpnIpVrfRtKeyHandle{
 				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
 			}
-			log.Infof("adding RT to req [%v]", ert)
+			log.Infof("adding import del RT to req [%v]", ert)
 			rtDelReq.Request = append(rtDelReq.Request, &ert)
 		}
 	}
+
+	for _, r := range newImportExportRts {
+		found := false
+		for _, r1 := range curImportExportRts {
+			if isEqual(r, r1) {
+				found = true
+			}
+		}
+		if !found {
+			ert := msTypes.EvpnIpVrfRtSpec{
+				Id:     uid.Bytes(),
+				VPCId:  uid.Bytes(),
+				RT:     utils.RTToBytes(r),
+				RTType: msTypes.EvpnRtType_EVPN_RT_IMPORT_EXPORT,
+			}
+			log.Infof("adding import_export add RT to req [%v]", ert)
+			rtAddReq.Request = append(rtAddReq.Request, &ert)
+		}
+	}
+	for _, r := range curImportExportRts {
+		found := false
+		for _, r1 := range newImportExportRts {
+			if isEqual(r, r1) {
+				found = true
+			}
+		}
+		if !found {
+			key := &msTypes.EvpnIpVrfRtKey{
+				VPCId: uid.Bytes(),
+				RT:    utils.RTToBytes(r),
+			}
+			ert := msTypes.EvpnIpVrfRtKeyHandle{
+				IdOrKey: &msTypes.EvpnIpVrfRtKeyHandle_Key{key},
+			}
+			log.Infof("adding import_export del RT to req [%v]", ert)
+			rtDelReq.Request = append(rtDelReq.Request, &ert)
+		}
+	}
+
 	eVrfRTResp, err := msc.EvpnIpVrfRtCreate(ctx, &rtAddReq)
 	if err != nil {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%+v]", err, eVrfRTResp)
@@ -544,4 +590,45 @@ func convertVrfToVPC(infraAPI types.InfraAPI, vrf netproto.Vrf) (*halapi.VPCRequ
 			},
 		},
 	}, nil
+}
+
+func classifyRouteTargets(vrfrt *netproto.RDSpec) (importRts, exportRts, importExportRts []*netproto.RouteDistinguisher) {
+	var rts []*rtImpExp
+	isEqual := func(a, b *netproto.RouteDistinguisher) bool {
+		return a.Type == b.Type && a.AssignedValue == b.AssignedValue && a.AdminValue == b.AdminValue
+	}
+
+outerLoop1:
+	for _, rt := range vrfrt.ExportRTs {
+		for _, r := range rts {
+			if isEqual(r.rt, rt) {
+				r.exp = true
+				continue outerLoop1
+			}
+		}
+		rts = append(rts, &rtImpExp{rt: rt, exp: true})
+	}
+
+outerLoop2:
+	for _, rt := range vrfrt.ImportRTs {
+		for _, r := range rts {
+			if isEqual(r.rt, rt) {
+				r.imp = true
+				continue outerLoop2
+			}
+		}
+		rts = append(rts, &rtImpExp{rt: rt, imp: true})
+	}
+
+	for _, rt := range rts {
+		switch {
+		case rt.imp && rt.exp:
+			importExportRts = append(importExportRts, rt.rt)
+		case rt.exp:
+			exportRts = append(exportRts, rt.rt)
+		case rt.imp:
+			importRts = append(importRts, rt.rt)
+		}
+	}
+	return
 }
