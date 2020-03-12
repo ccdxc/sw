@@ -9,12 +9,13 @@ from scapy.utils import *
 from scapy.utils import rdpcap
 from scapy.utils import wrpcap
 from scapy import packet
-from scapy.all import Ether
+from scapy.all import Dot1Q
 import glob
 import iota.harness.api as api
 import ipaddress as ipaddr
 from datetime import datetime
-from iota.test.iris.testcases.telemetry.erspan import *
+from iota.test.utils.erspan import ERSPAN_III
+from iota.test.utils.erspan import PlatformSpecific
 
 uplink_vlan = 0
 # for local work loads, the packet vlan may not be wire encap vlan.
@@ -93,7 +94,7 @@ def VerifyVlan(pcap_file_name):
                 pkt.show()
             elif ((local_wls_ignore_vlan_check == False) and pkt.haslayer(Dot1Q) and (pkt[Dot1Q].vlan != uplink_vlan)):
                 result = api.types.status.FAILURE
-                api.Logger.erorr("Vlan verfication Failed: uplink_vlan: {} Pkt Vlan id: {}".format(uplink_vlan, pkt[Dot1Q].vlan))
+                api.Logger.error("Vlan verfication Failed: uplink_vlan: {} Pkt Vlan id: {}".format(uplink_vlan, pkt[Dot1Q].vlan))
                 pkt.show()
     if spanpktsfound == False:
        result = api.types.status.FAILURE

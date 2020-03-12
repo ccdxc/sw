@@ -127,6 +127,8 @@ def Trigger(tc):
 
     try:
         for policy_json in policies:
+            if "REJECT" in policy_json:
+                continue
             newObjects = agent_api.AddOneConfig(policy_json)
             api.Logger.info("Created new object for %s"%policy_json)
             tc.ret = agent_api.PushConfigObjects(newObjects)
