@@ -184,6 +184,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "uplink if index 0x%x", name_, pinned_if_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // install NACL for ARM to uplink traffic (all vlans)
@@ -202,6 +205,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "uplink 0x%x", id_, pinned_if_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // TODO: fix this once block indexer starts working
@@ -243,7 +249,11 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
                       "oob lif %u", pinned_if_idx_, key_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
+
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
                     nh_idx_, nexthop_info_entry.lif,
@@ -343,6 +353,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                       "uplink if index 0x%x", name_, pinned_if_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // install NACL for ARM to uplink traffic (all vlans)
@@ -361,6 +374,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                       "uplink 0x%x", id_, pinned_if_idx_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP, nh_idx_,
@@ -407,6 +423,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
                       "lif %u", pinned_if_idx_, id_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
     PDS_TRACE_DEBUG("nacl lif %u -> nh type %u, idx %u, nh lif %u, port %u",
                     key.capri_intrinsic_lif, NEXTHOP_TYPE_NEXTHOP,
@@ -531,6 +550,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "(flow miss, ARP requests from host) -> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // cap DHCP requests from host lifs to 256/sec
@@ -572,6 +594,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "-> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // install NACL entry for DHCP responses going to vpp
@@ -606,6 +631,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "-> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // dhcpd seems to be using dest port 67
@@ -617,6 +645,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "-> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // allocate and program copp table entry for flow miss
@@ -652,6 +683,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped TCP");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // redirect flow miss encapped UDP traffic from uplinks to s/w datapath lif
@@ -662,6 +696,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped UDP");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // redirect flow miss encapped ICMP traffic from uplinks to s/w datapath lif
@@ -672,6 +709,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         PDS_TRACE_ERR("Failed to program NACL entry to redirect encapped ICMP");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // drop all flow miss non-TCP/UDP/ICMP encapped traffic from uplinks
@@ -694,6 +734,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "encapped traffic");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // flow miss packet coming back from txdma to s/w datapath
@@ -717,6 +760,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "arm lif %u", id_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // allocate vnic h/w id for this lif
@@ -826,6 +872,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
                       host_mgmt_lif->id(), int_mgmt_lif->id());
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // TOOD: fix this once block indexer starts working
@@ -868,6 +917,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
                       int_mgmt_lif->id(), host_mgmt_lif->id(), ret);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // allocate vnic h/w ids for these lifs
@@ -1013,6 +1065,9 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
                       "requests from host) -> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // install NACL entry to direct ARP replies to learn lif
@@ -1046,6 +1101,9 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
                       "replies from host) -> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
 
     // cap DHCP requests from host lifs to 256/sec
@@ -1091,6 +1149,9 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
                       "(host lif, DHCP req) -> lif %s", name_);
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
     }
     SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_BLOCK_GENERIC_MIN);
 

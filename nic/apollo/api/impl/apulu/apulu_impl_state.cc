@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
@@ -82,6 +83,23 @@ apulu_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
+static void
+nacl_dump_header(int fd)
+{
+    dprintf(fd, "LE  - Learn enable             FM  - Flow Miss\n"
+                "RP  - Rx packet                TP  - Tunnel Pkt\n"
+                "NhV - ARM to P4 Nexthop Valid  LMM - Local mapping miss\n"
+                "KT  - Key type\n");
+    dprintf(fd, "%s\n", std::string(160, '-').c_str());
+    dprintf(fd, "%-4s%-5s%-6s%-3s%-3s%-3s%-3s%-3s%-4s%-4s"
+            "%-18s%-6s%-40s%-40s%-6s%-6s%-6s\n",
+            "Idx", "Type", "Lif", "LE",
+            "FM", "RP", "TP", "KT", "NhV", "LMM",
+            "DMAC", "Proto", "SIP", "DIP", "SPort", "DPort",
+            "VnicID");
+    dprintf(fd, "%s\n", std::string(160, '-').c_str());
+}
+
 sdk_ret_t
 apulu_impl_state::nacl_dump(int fd) {
     nacl_swkey_t key;
@@ -89,106 +107,125 @@ apulu_impl_state::nacl_dump(int fd) {
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
 
+    nacl_dump_header(fd);
     for (uint32_t i = 0; i < nacl_idxr_->size(); i++) {
         if (nacl_idxr_->is_index_allocated(i)) {
             p4pd_ret = p4pd_entry_read(P4TBL_ID_NACL, i, &key, &mask, &data);
             if (p4pd_ret == P4PD_SUCCESS) {
-                dprintf(fd, "%-3u. ", i);
+                dprintf(fd, "%-4u", i);
                 if (mask.control_metadata_lif_type_mask) {
-                    dprintf(fd, "lif type - %u",
+                    dprintf(fd, "%-5u",
                             key.control_metadata_lif_type);
                 } else {
-                    dprintf(fd, "lif type - *");
+                    dprintf(fd, "%-5s", "*");
                 }
                 if (mask.capri_intrinsic_lif_mask) {
-                    dprintf(fd, ", lif - %u", key.capri_intrinsic_lif);
+                    dprintf(fd, "%-6u", key.capri_intrinsic_lif);
                 } else {
-                    dprintf(fd, ", lif - *");
+                    dprintf(fd, "%-6s", "*");
                 }
                 if (mask.control_metadata_learn_enabled_mask) {
-                    dprintf(fd, ", learn en - %u",
+                    dprintf(fd, "%-3u",
                             key.control_metadata_learn_enabled);
                 } else {
-                    dprintf(fd, ", learn en - *");
+                    dprintf(fd, "%-3s", "*");
                 }
                 if (mask.control_metadata_flow_miss_mask) {
-                    dprintf(fd, ", flow miss - %u",
+                    dprintf(fd, "%-3u",
                             key.control_metadata_flow_miss);
                 } else {
-                    dprintf(fd, ", flow miss - *");
+                    dprintf(fd, "%-3s", "*");
                 }
                 if (mask.control_metadata_rx_packet_mask) {
-                    dprintf(fd, ", rx - %u", key.control_metadata_rx_packet);
+                    dprintf(fd, "%-3u", key.control_metadata_rx_packet);
                 } else {
-                    dprintf(fd, ", rx - *");
+                    dprintf(fd, "%-3s", "*");
                 }
                 if (mask.control_metadata_tunneled_packet_mask) {
-                    dprintf(fd, ", tunneled pkt - %u",
+                    dprintf(fd, "%-3u",
                             key.control_metadata_tunneled_packet);
                 } else {
-                    dprintf(fd, ", tunneled pkt - *");
+                    dprintf(fd, "%-3s", "*");
                 }
                 if (mask.key_metadata_ktype_mask) {
                     if (key.key_metadata_ktype == KEY_TYPE_IPV4) {
-                        dprintf(fd, ", key type - v4");
+                        dprintf(fd, "%-3s", "V4");
                     } else if (key.key_metadata_ktype == KEY_TYPE_IPV6) {
-                        dprintf(fd, ", key type - v6");
+                        dprintf(fd, "%-3s", "V6");
                     } else if (key.key_metadata_ktype == KEY_TYPE_MAC) {
-                        dprintf(fd, ", key type - mac");
+                        dprintf(fd, "%-3s", "L2");
+                    } else {
+                        dprintf(fd, "%-3s", "NA");
                     }
                 } else {
-                    dprintf(fd, ", key type - *");
+                    dprintf(fd, "%-3s", "*");
                 }
                 if (mask.arm_to_p4i_nexthop_valid_mask) {
-                    dprintf(fd, ", arm -> p4 nh valid - %u",
+                    dprintf(fd, "%-4u",
                             key.arm_to_p4i_nexthop_valid);
                 } else {
-                    dprintf(fd, ", arm -> p4 nh valid - *");
+                    dprintf(fd, "%-4s", "*");
                 }
                 if (mask.control_metadata_local_mapping_miss_mask) {
-                    dprintf(fd, ", local_mapping_miss - %u",
+                    dprintf(fd, "%-4u",
                             key.control_metadata_local_mapping_miss);
                 } else {
-                    dprintf(fd, ", local_mapping_miss - *");
+                    dprintf(fd, "%-4s", "*");
                 }
                 if (memcmp(mask.ethernet_1_dstAddr_mask, &g_zero_mac,
                            sizeof(mask.ethernet_1_dstAddr_mask))) {
-                    dprintf(fd, ", dmac - %s",
+                    dprintf(fd, "%-18s",
                             macaddr2str(key.ethernet_1_dstAddr));
                 } else {
-                    dprintf(fd, ", dmac - *");
+                    dprintf(fd, "%-18s", "*");
                 }
                 if (mask.key_metadata_proto_mask) {
-                    dprintf(fd, ", proto - %u", key.key_metadata_proto);
+                    dprintf(fd, "%-6u", key.key_metadata_proto);
                 } else {
-                    dprintf(fd, ", proto - *");
+                    dprintf(fd, "%-6s", "*");
                 }
                 if (memcmp(mask.key_metadata_src_mask, &g_zero_ip.addr,
                            sizeof(mask.key_metadata_src_mask))) {
-                   // TODO: print DIP based on key type
+                    if (key.key_metadata_ktype == KEY_TYPE_IPV4) {
+                        dprintf(fd, "%-40s", ipv4addr2str(*(uint32_t *)key.key_metadata_src));
+                    } else if (key.key_metadata_ktype == KEY_TYPE_IPV6) {
+                        ipv6_addr_t v6_addr;
+                        sdk::lib::memrev(v6_addr.addr8, key.key_metadata_src, IP6_ADDR8_LEN);
+                        dprintf(fd, "%-40s", ipv6addr2str(v6_addr));
+                    } else {
+                        dprintf(fd, "%-40s", "NA");
+                    }
                 } else {
-                    dprintf(fd, ", sip - *");
+                    dprintf(fd, "%-40s", "*");
                 }
                 if (memcmp(mask.key_metadata_dst_mask, &g_zero_ip.addr,
                            sizeof(mask.key_metadata_dst_mask))) {
-                   // TODO: print DIP based on key type
+                    if (key.key_metadata_ktype == KEY_TYPE_IPV4) {
+                        dprintf(fd, "%-40s", ipv4addr2str(*(uint32_t *)key.key_metadata_dst));
+                    } else if (key.key_metadata_ktype == KEY_TYPE_IPV6) {
+                        ipv6_addr_t v6_addr;
+                        sdk::lib::memrev(v6_addr.addr8, key.key_metadata_dst, IP6_ADDR8_LEN);
+                        dprintf(fd, "%-40s", ipv6addr2str(v6_addr));
+                    } else {
+                        dprintf(fd, "%-40s", "N/A");
+                    }
                 } else {
-                    dprintf(fd, ", dip - *");
+                    dprintf(fd, "%-40s", "*");
                 }
                 if (mask.key_metadata_sport_mask) {
-                    dprintf(fd, ", sport - %u", key.key_metadata_sport);
+                    dprintf(fd, "%-6u", key.key_metadata_sport);
                 } else {
-                    dprintf(fd, ", sport - *");
+                    dprintf(fd, "%-6s", "*");
                 }
                 if (mask.key_metadata_dport_mask) {
-                    dprintf(fd, ", dport - %u", key.key_metadata_sport);
+                    dprintf(fd, "%-6u", key.key_metadata_dport);
                 } else {
-                    dprintf(fd, ", dport - *");
+                    dprintf(fd, "%-6s", "*");
                 }
                 if (mask.vnic_metadata_vnic_id_mask) {
-                    dprintf(fd, ", vnic id - %u", key.vnic_metadata_vnic_id);
+                    dprintf(fd, "%-6u", key.vnic_metadata_vnic_id);
                 } else {
-                    dprintf(fd, ", vnic id - *");
+                    dprintf(fd, "%-6s", "*");
                 }
                 dprintf(fd, "\n");
             } else {

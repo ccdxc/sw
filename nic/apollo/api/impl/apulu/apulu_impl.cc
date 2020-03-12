@@ -281,6 +281,10 @@ apulu_impl::nacl_init_(void) {
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program NACL entry for ipv6 drop");
         return sdk::SDK_RET_HW_PROGRAM_ERR;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        idx - 1, key.key_metadata_ktype,
+                        key.capri_intrinsic_lif);
     }
 
 #if 0
@@ -338,6 +342,10 @@ apulu_impl::nacl_init_(void) {
                       "host lifs");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        idx - 1, key.key_metadata_ktype,
+                        key.capri_intrinsic_lif);
     }
 
     // install a NACL to use nexthop information from the ARM header for packets
@@ -354,6 +362,10 @@ apulu_impl::nacl_init_(void) {
                       "from s/w datapath");
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+                        idx - 1, key.key_metadata_ktype,
+                        key.capri_intrinsic_lif);
     }
     // make sure we stayed with in the global entry range in the TCAM table
     SDK_ASSERT(idx <= PDS_IMPL_NACL_BLOCK_LEARN_MIN);
