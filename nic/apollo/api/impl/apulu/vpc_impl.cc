@@ -186,7 +186,7 @@ vpc_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_data.action_id = VPC_VPC_INFO_ID;
     vpc_data.vpc_info.vni = spec->fabric_encap.val.vnid;
     vpc_data.vpc_info.tos = spec->tos;
-    memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -231,7 +231,7 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     // update the contents of that entry
     vpc_data.vpc_info.vni = spec->fabric_encap.val.vnid;
     vpc_data.vpc_info.tos = spec->tos;
-    memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_TRACE_DEBUG("Updating VPC table at %u with vni %u",
                     hw_id_, vpc_data.vpc_info.vni);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, hw_id_,
@@ -260,7 +260,7 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the data
     vni_data.vni_info.bd_id = bd_hw_id_;
     vni_data.vni_info.vpc_id = hw_id_;
-    memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     vni_data.vni_info.is_l3_vnid = TRUE;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -292,7 +292,7 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
     // fill the data
     vni_data.vni_info.bd_id = bd_hw_id_;
     vni_data.vni_info.vpc_id = hw_id_;
-    memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     vni_data.vni_info.is_l3_vnid = TRUE;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -385,7 +385,7 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         return sdk::SDK_RET_HW_READ_ERR;
     }
     spec->fabric_encap.val.vnid = vpc_data.vpc_info.vni;
-    memcpy(spec->vr_mac, vpc_data.vpc_info.vrmac, ETH_ADDR_LEN);
+    sdk::lib::memrev(spec->vr_mac, vpc_data.vpc_info.vrmac, ETH_ADDR_LEN);
     spec->tos = vpc_data.vpc_info.tos;
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,

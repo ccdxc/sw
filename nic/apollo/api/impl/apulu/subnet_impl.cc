@@ -9,6 +9,8 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -19,7 +21,6 @@
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 
 #define vni_info    action_u.vni_vni_info
 
@@ -165,7 +166,7 @@ subnet_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     bd_data.action_id = BD_BD_INFO_ID;
     bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
     bd_data.bd_info.tos = spec->tos;
-    memcpy(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_TRACE_DEBUG("Programming BD table at %u with vni %u",
                     hw_id_, bd_data.bd_info.vni);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_BD, hw_id_,
@@ -224,7 +225,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     vni_data.action_id = VNI_VNI_INFO_ID;
     vni_data.vni_info.bd_id = hw_id_;
     vni_data.vni_info.vpc_id = ((vpc_impl *)vpc->impl())->hw_id();
-    memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
     // program the VNI table
@@ -309,7 +310,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     vni_data.action_id = VNI_VNI_INFO_ID;
     vni_data.vni_info.bd_id = hw_id_;
     vni_data.vni_info.vpc_id = ((vpc_impl *)vpc->impl())->hw_id();
-    memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
     // update the VNI table
@@ -411,7 +412,7 @@ subnet_impl::fill_spec_(pds_subnet_spec_t *spec) {
     }
     spec->fabric_encap.val.vnid = bd_data.bd_info.vni;
     spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    memcpy(spec->vr_mac, bd_data.bd_info.vrmac, ETH_ADDR_LEN);
+    sdk::lib::memrev(spec->vr_mac, bd_data.bd_info.vrmac, ETH_ADDR_LEN);
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, handle_t::null());

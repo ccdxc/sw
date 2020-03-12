@@ -331,6 +331,7 @@ class RouteTableObject(base.ConfigObjectBase):
 
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
+        obj.remotemapping = None
         obj.route = self
         obj.tunnel = self.TUNNEL
         obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()

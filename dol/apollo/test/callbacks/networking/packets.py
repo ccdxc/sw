@@ -489,6 +489,32 @@ def GetHostPacketEncapFromVnic(testcase, packet, args=None):
         vnic = testcase.config.remotemapping.VNIC
     return __get_host_packet_encap_impl(vnic)
 
+def __get_packet_srcmac(fwdmode, robj, lobj):
+    local_subnet = lobj.VNIC.SUBNET
+    if fwdmode == 'L2L':
+        remote_subnet = robj.VNIC.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return robj.VNIC.SUBNET.VirtualRouterMACAddr
+        else:
+            return lobj.VNIC.MACAddr
+    elif fwdmode == 'L2R':
+        remote_subnet = robj.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return robj.SUBNET.VirtualRouterMACAddr
+        else:
+            return lobj.VNIC.MACAddr
+    elif fwdmode == 'R2L':
+        return lobj.SUBNET.VirtualRouterMACAddr
+    elif fwdmode == 'L2N':
+        return lobj.VNIC.SUBNET.VPC.VirtualRouterMACAddr
+    elif fwdmode == 'N2L':
+        return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+
+def GetPacketSrcMacFromMapping(tc, packet, args=None):
+    return __get_packet_srcmac(args.Fwdmode,
+            tc.config.remotemapping,
+            tc.config.localmapping)
+
 def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
     if dobj.IsEncapTypeMPLS():
         if fwdmode == 'L2':
@@ -510,6 +536,43 @@ def GetPacketSrcMacAddrFromMapping(testcase, packet, args=None):
     return __get_packet_srcmac_impl(testcase.config.root.FwdMode,
             testcase.config.devicecfg, testcase.config.remotemapping,
             testcase.config.localmapping, args)
+
+def __get_packet_ttl(fwdmode, robj, lobj, ttl):
+    local_subnet = lobj.VNIC.SUBNET
+    if fwdmode == 'L2L':
+        remote_subnet = robj.VNIC.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return ttl - 1
+        else:
+            return ttl
+    elif fwdmode == 'L2R':
+        remote_subnet = robj.SUBNET
+        if local_subnet.SubnetId != remote_subnet.SubnetId:
+            return ttl - 1
+        else:
+            return ttl
+    elif fwdmode == 'R2L':
+        return ttl
+    elif fwdmode == 'L2N' or fwdmode == 'N2L':
+        return ttl - 1
+
+def GetPacketTtl(tc, packet, args=None):
+    pkt = tc.packets.Get(args.ipkt).GetScapyPacket()
+    if IP in pkt:
+        ttl = pkt[IP].ttl
+    else:
+        assert 0
+    return __get_packet_ttl(args.Fwdmode,
+            tc.config.remotemapping,
+            tc.config.localmapping, ttl)
+
+def GetUsableICMPId(tc, packet, args=None):
+    if GetUsableICMPId.count < 65535 and GetUsableICMPId.count >= 10000:
+        GetUsableICMPId.count += 1
+    else:
+        GetUsableICMPId.count = 10000
+    return GetUsableICMPId.count
+GetUsableICMPId.count = 10000
 
 def GetTunnelIPFromMapping(testcase, packet, args=None):
     return str(testcase.config.remotemapping.TUNNEL.RemoteIPAddr)
@@ -730,7 +793,7 @@ def GetDstMac(testcase, packet, args=None):
         if fwdmode == 'L2L':
             if lobj.VNIC.SUBNET.SubnetId != robj.VNIC.SUBNET.SubnetId:
                 if args.direction == 'TX':
-                    return robj.SUBNET.VirtualRouterMACAddr
+                    return robj.VNIC.SUBNET.VirtualRouterMACAddr
             return robj.VNIC.MACAddr
         else:
             if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:

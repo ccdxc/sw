@@ -55,11 +55,13 @@ packets:
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=N2L
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0
+            ipv4        :
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=N2L,ipkt=FROM_SWITCH_PKT
 
 buffers                 :
     - buffer            :

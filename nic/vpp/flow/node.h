@@ -31,6 +31,7 @@
         _(IP4_NAT, "NAPT flow packets" )                            \
         _(MAX_EXCEEDED, "Session count exceeded packets")           \
         _(VNIC_NOT_FOUND, "Unknown vnic")                           \
+        _(VPC_NOT_FOUND, "Unknown vpc")                             \
         _(UNKOWN, "Unknown flow packets")                           \
 
 #define foreach_flow_prog_next                                      \
@@ -158,6 +159,11 @@ typedef struct pds_flow_session_id_thr_local_pool_s {
     u32             session_ids[PDS_FLOW_SESSION_POOL_COUNT_MAX];
 } pds_flow_session_id_thr_local_pool_t;
 
+typedef struct pds_flow_rewrite_flags_s {
+    u16 tx_rewrite;
+    u16 rx_rewrite;
+} pds_flow_rewrite_flags_t;
+
 typedef struct pds_flow_main_s {
     u64 no_threads;
     volatile u32 *flow_prog_lock;
@@ -165,12 +171,32 @@ typedef struct pds_flow_main_s {
     ftlv6 *table6;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
-    u16 *nh_flags;
+    pds_flow_rewrite_flags_t *rewrite_flags;
     u32 max_sessions;
     u32 *flow_idle_timeout;
     char *stats_buf;
     u8 *rx_vxlan_template;
 } pds_flow_main_t;
+
+typedef enum {
+    PDS_FLOW_L2L_INTRA_SUBNET = 0,
+    PDS_FLOW_L2L_INTER_SUBNET,
+    PDS_FLOW_L2R_INTRA_SUBNET,
+    PDS_FLOW_L2R_INTER_SUBNET,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_EN,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_DIS,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT,
+    PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT,
+    PDS_FLOW_R2L_INTRA_SUBNET,
+    PDS_FLOW_R2L_INTER_SUBNET,
+    PDS_FLOW_N2L_OVERLAY_ROUTE_EN,
+    PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT,
+    PDS_FLOW_N2L_OVERLAY_ROUTE_DIS,
+    PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT,
+    PDS_FLOW_PKT_TYPE_MAX,
+} pds_flow_pkt_type;
 
 extern pds_flow_main_t pds_flow_main;
 

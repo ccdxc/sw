@@ -272,6 +272,7 @@ class PolicyObject(base.ConfigObjectBase):
 
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
+        obj.remotemapping = None
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.tunnel = obj.route.TUNNEL

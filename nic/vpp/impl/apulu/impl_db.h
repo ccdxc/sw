@@ -16,6 +16,7 @@ extern "C" {
 
 #define PDS_VPP_MAX_SUBNET  BD_TABLE_SIZE
 #define PDS_VPP_MAX_VNIC    VNIC_INFO_TABLE_SIZE
+#define PDS_VPP_MAX_VPC     VPC_TABLE_SIZE
 
 typedef enum {
     PDS_ETH_ENCAP_NO_VLAN,
@@ -26,7 +27,7 @@ typedef enum {
 typedef struct {
     mac_addr_t mac;                 // vnic mac
     u32 max_sessions;               // max number of sessions from this vnic
-    u32 active_session_count;       // currently active sessions on the vnic
+    volatile u32 active_ses_count;  // currently active sessions on the vnic
     u16 subnet_hw_id;               // subnet hwid to index subnet store in infra
     u8 flow_log_en : 1;             // flag indicating flow logging enabled
     u8 reserve : 7;
@@ -44,14 +45,19 @@ typedef struct {
 } pds_impl_db_subnet_entry_t;
 
 typedef struct {
+    u16 hw_bd_id;                   // vpc's bd id
+} pds_impl_db_vpc_entry_t;
+
+typedef struct {
     mac_addr_t device_mac;          // device MAC address
     ip46_address_t device_ip;       // device IP address
-    u8 bridging_en;                 // layer2 enabled flag
+    u8 overlay_routing_en;          // overlay Routing enabled or not
 } pds_impl_db_device_entry_t;
 
 #define foreach_impl_db_element                         \
  _(uint16_t, subnet)                                    \
  _(uint16_t, vnic)                                      \
+ _(uint16_t, vpc)                                       \
 
 typedef struct {
 #define _(type, obj)                                    \

@@ -147,12 +147,6 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0, u8 is_ip4, u8 iflow)
     return;
 }
 
-always_inline void
-pds_flow_nh_flags_add (void)
-{
-    return;
-}
-
 always_inline int
 pds_flow_classify_get_advance_offset (vlib_buffer_t *b)
 {
@@ -302,6 +296,12 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 always_inline void
 pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
                      u8 *miss_hit, u32 ses_id)
+{
+    return;
+}
+
+always_inline void
+pds_flow_rewrite_flags_init (void)
 {
     return;
 }

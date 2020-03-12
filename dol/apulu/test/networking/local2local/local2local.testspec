@@ -36,11 +36,13 @@ packets:
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping/direction=TX
+                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2L
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_HOST_PKT
 
 buffers:
     - buffer:

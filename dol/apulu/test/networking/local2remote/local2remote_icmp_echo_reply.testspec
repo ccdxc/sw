@@ -23,7 +23,7 @@ packets:
             icmp:
                 code    : 0
                 type    : 0
-                id      : 10000
+                id      : callback://networking/packets/GetUsableICMPId
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -44,7 +44,9 @@ packets:
             vxlan:
                 vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
             eth:
-                src     : callback://networking/packets/GetSrcMac/direction=TX
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2R
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2R,ipkt=FROM_HOST_PKT
 
 buffers:
     - buffer:

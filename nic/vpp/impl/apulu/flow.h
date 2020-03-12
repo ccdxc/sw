@@ -51,96 +51,68 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     p4_rx_cpu_hdr_t *ses_info1 = vlib_buffer_get_current(b1);
     session_actiondata_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
-    u16 tx_rewrite_flags0 = 0, tx_rewrite_flags1 = 0;
+    pds_flow_rewrite_flags_t *rewrite_flags;
 
+    if (vnet_buffer(b0)->pds_flow_data.flags &
+        VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID) {
+        goto skip_prog0;
+    }
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     if (vnet_buffer(b0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
-        // NAPT - rewrite both ip and port
-        tx_rewrite_flags0 =
-            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-             (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
-        // rewrite dmaci from nexthop, since there will be no mapping
-        // lookup in rx direction
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
-        // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
-        tx_rewrite_flags0 =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
-    } else {
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
     }
-    actiondata.action_u.session_session_info.tx_rewrite_flags =
-        tx_rewrite_flags0 |
-        vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_flow_data.nexthop) >> 16);
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b0)->pds_flow_data.packet_type));
+    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
         *next0 = SESSION_PROG_NEXT_DROP;
     } else {
+skip_prog0:
         *next0 = SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b0)->pds_flow_data.lif = ses_info0->lif;
     }
+
+    if (vnet_buffer(b1)->pds_flow_data.flags &
+        VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID) {
+        goto skip_prog1;
+    }
     clib_memset(&actiondata, 0, sizeof(actiondata));
     if (vnet_buffer(b1)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
-        // NAPT - rewrite both ip and port
-        tx_rewrite_flags1 =
-            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-             (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
-        // rewrite dmaci from nexthop, since there will be no mapping
-        // lookup in rx direction
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
-        // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
-        tx_rewrite_flags1 =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
-    } else {
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
     }
-    actiondata.action_u.session_session_info.tx_rewrite_flags =
-        tx_rewrite_flags1 |
-        vec_elt(fm->nh_flags, (vnet_buffer(b1)->pds_flow_data.nexthop) >> 16);
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b1)->pds_flow_data.packet_type));
+    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         *next1 = SESSION_PROG_NEXT_DROP;
     } else {
+skip_prog1:
         *next1 = SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b1)->pds_flow_data.lif = ses_info1->lif;
     }
 
     vlib_buffer_advance(b0, pds_session_get_advance_offset());
     vlib_buffer_advance(b1, pds_session_get_advance_offset());
+    return;
 }
 
 always_inline void
@@ -150,48 +122,33 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     p4_rx_cpu_hdr_t *ses_info0 = vlib_buffer_get_current(b);
     session_actiondata_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
-    u16 tx_rewrite_flags = 0;
+    pds_flow_rewrite_flags_t *rewrite_flags;
 
+    if (vnet_buffer(b)->pds_flow_data.flags &
+        VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID) {
+        goto skip_prog;
+    }
     actiondata.action_id = SESSION_SESSION_INFO_ID;
     if (vnet_buffer(b)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
-        // NAPT - rewrite both ip and port
-        tx_rewrite_flags =
-            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
-             (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
-        // rewrite dmaci from nexthop, since there will be no mapping
-        // lookup in rx direction
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
-             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
-             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b)->pds_nat_data.xlate_idx) {
-        // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
-        tx_rewrite_flags =
-            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
-             (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx + 1;
-    } else {
-        actiondata.action_u.session_session_info.rx_rewrite_flags =
-            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
     }
-    actiondata.action_u.session_session_info.tx_rewrite_flags =
-        tx_rewrite_flags |
-        vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_flow_data.nexthop) >> 16);
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
+    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
         next[0] = SESSION_PROG_NEXT_DROP;
     } else {
+skip_prog:
         next[0] = SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b)->pds_flow_data.lif = ses_info0->lif;
     }
@@ -446,29 +403,142 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
     }
 }
 
-always_inline void
-pds_flow_nh_flags_add (void)
-{
-    pds_flow_main_t *fm = &pds_flow_main;
-    u16 encap, mapping, nexthop, tunnel;
-
-    encap = (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
-    nexthop = 0;
-    mapping = (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START);
-    tunnel = (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START);
-    fm->nh_flags = vec_new(u16, NEXTHOP_TYPE_MAX);
-    vec_elt(fm->nh_flags, NEXTHOP_TYPE_VPC) = mapping | encap;
-    vec_elt(fm->nh_flags, NEXTHOP_TYPE_ECMP) = nexthop | encap;
-    vec_elt(fm->nh_flags, NEXTHOP_TYPE_TUNNEL) = tunnel | encap;
-    vec_elt(fm->nh_flags, NEXTHOP_TYPE_NEXTHOP) = nexthop | encap;
-    vec_elt(fm->nh_flags, NEXTHOP_TYPE_NAT) = mapping | encap;
-}
-
 always_inline int
 pds_flow_classify_get_advance_offset (vlib_buffer_t *b)
 {
     return (VPP_P4_TO_ARM_HDR_SZ +
             (vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset));
+}
+
+void
+pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
+                             u16 flags, u16 *next, u32 *counter)
+{
+    u16 xlate_id;
+    u8 intra_subnet = 0;
+    u8 pkt_type;
+    pds_impl_db_device_entry_t *dev = pds_impl_db_device_get();
+
+    vnet_buffer(p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
+
+    if (!hdr->rx_packet) {
+        if (hdr->ingress_bd_id == hdr->egress_bd_id) {
+            intra_subnet = 1;
+        }
+        if (hdr->mapping_hit) {
+            // assume l2l traffic is handled by vswitch on host
+            if (PREDICT_FALSE(hdr->is_local)) {
+                vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
+                if (intra_subnet) {
+                    pkt_type = PDS_FLOW_L2L_INTRA_SUBNET;
+                } else {
+                    pkt_type = PDS_FLOW_L2L_INTER_SUBNET;
+                }
+            } else {
+                // since mapping hit, remote side will send vnid of local mapping
+                vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->ingress_bd_id;
+                if (intra_subnet) {
+                    pkt_type = PDS_FLOW_L2R_INTRA_SUBNET;
+                } else {
+                    pkt_type = PDS_FLOW_L2R_INTER_SUBNET;
+                }
+            }
+        } else {
+            // route hit case
+            if (dev->overlay_routing_en) {
+                // remote end knows subnet VNI
+                vnet_buffer(p)->pds_flow_data.egress_lkp_id =
+                        hdr->ingress_bd_id;
+                pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN;
+            } else {
+                // remote end knows VNI of VPC, not subnet
+                pds_impl_db_vpc_entry_t *vpc = pds_impl_db_vpc_get(hdr->vpc_id);
+                if (PREDICT_FALSE(!vpc)) {
+                    *next = FLOW_CLASSIFY_NEXT_DROP;
+                    counter[FLOW_CLASSIFY_COUNTER_VPC_NOT_FOUND] += 1;
+                    return;
+                }
+                vnet_buffer(p)->pds_flow_data.egress_lkp_id = vpc->hw_bd_id;
+                pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS;
+            }
+            if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
+                /* only from host supported for now */
+                /* Try static NAT first */
+                if (hdr->mapping_xlate_id != 0) {
+                    u32 ip;
+                    u16 port;
+                    xlate_id = hdr->mapping_xlate_id;
+                    pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
+                    vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
+                    vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
+                    if (dev->overlay_routing_en) {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT;
+                    } else {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT;
+                    }
+                } else {
+                    /* nat44 */
+                    if (flags & VPP_CPU_FLAGS_IPV4_1_VALID) {
+                        vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
+                        if (hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
+                            vnet_buffer(p)->pds_flow_data.flags |=
+                                    VPP_CPU_FLAGS_NAPT_SVC_VALID;
+                        }
+                        *next = FLOW_CLASSIFY_NEXT_IP4_NAT;
+                        counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
+                    } else {
+                        *next = FLOW_CLASSIFY_NEXT_DROP;
+                        counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                        return;
+                    }
+                    if (dev->overlay_routing_en) {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT;
+                    } else {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT;
+                    }
+                }
+
+            }
+        }
+    } else {
+        vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
+        if (!hdr->drop && hdr->nexthop_id) {
+            // rflow is not mapping hit, its route hit.
+            // ingress bd id will be VPC bd id
+            if (dev->overlay_routing_en) {
+                pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN;
+            } else {
+                pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS;
+            }
+            if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
+                /* Only static nat should be valid here */
+                /* TODO : From network pkt */
+                *next = FLOW_CLASSIFY_NEXT_DROP;
+                counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                // Enable once we handle Dnat cases
+#if 0
+                if (dev->overlay_routing_en) {
+                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT;
+                } else {
+                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
+                }
+#endif
+                return;
+            }
+        } else {
+            // we cant make out r2l inter/intra subnet cases,
+            // so we rely on remote end to make that decision.
+            // only if VNI is l3 vnid then we consider it as
+            // across subnets which will not happen normally
+            if (PREDICT_FALSE(hdr->is_l3_vnid)) {
+                pkt_type = PDS_FLOW_R2L_INTER_SUBNET;
+            } else {
+                pkt_type = PDS_FLOW_R2L_INTRA_SUBNET;
+            }
+        }
+    }
+    vnet_buffer(p)->pds_flow_data.packet_type = pkt_type;
+    return;
 }
 
 always_inline void
@@ -479,9 +549,10 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
     u8 flag_orig0, flag_orig1;
     u32 nexthop;
-    u16 xlate_id0, xlate_id1;
     u8 next_determined = 0;
     pds_impl_db_vnic_entry_t *vnic0, *vnic1;
+
+    *next0 = *next1 = FLOW_CLASSIFY_N_NEXT;
 
     flag_orig0 = hdr0->flags;
     flag_orig1 = hdr1->flags;
@@ -501,7 +572,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     } else {
         vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
         vnet_buffer(p0)->pds_flow_data.ses_id = hdr0->session_id;
-        vnet_buffer(p0)->pds_flow_data.flags = flag_orig0 |
+        if (0 != hdr0->session_id) {
+            vnet_buffer(p0)->pds_flow_data.flags |=
+                    VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
+        }
+        vnet_buffer(p0)->pds_flow_data.flags |= flag_orig0 |
             (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr0->rx_packet) && hdr0->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
@@ -519,29 +594,24 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
         vnet_buffer(p0)->l4_hdr_offset =
                 hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-        vnet_buffer(p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
-        if (!hdr0->rx_packet) {
-            if (hdr0->mapping_hit) {
-                vnet_buffer(p0)->pds_flow_data.egress_lkp_id = hdr0->egress_bd_id;
-            } else {
-                // dest is a route hit but p4 doesn't fill in egress_bd_id
-                vnet_buffer(p0)->pds_flow_data.egress_lkp_id = hdr0->vpc_id;
-            }
-        } else {
-            vnet_buffer(p0)->pds_flow_data.egress_lkp_id = hdr0->egress_bd_id;
-        }
         vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
         vnet_buffer2(p0)->pds_nat_data.vnic_id = hdr0->vnic_id;
         if (PREDICT_FALSE(vnic0->max_sessions &&
-                (vnic0->active_session_count >= vnic0->max_sessions))) {
+                (vnic0->active_ses_count >= vnic0->max_sessions))) {
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
             next_determined |= 0x1;
-        } else {
-            vnic0->active_session_count++;
+            goto next_pak;
+        }
+        vnic0->active_ses_count++;
+        pds_flow_packet_type_derive(p0, hdr0, flags0, next0, counter);
+        if (FLOW_CLASSIFY_N_NEXT != *next0) {
+            next_determined |= 0x1;
+            goto next_pak;
         }
     }
 
+next_pak:
     vnic1 = pds_impl_db_vnic_get(hdr1->vnic_id);
     if (!vnic1) {
         *next1 = FLOW_CLASSIFY_NEXT_DROP;
@@ -550,7 +620,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     } else {
         vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
         vnet_buffer(p1)->pds_flow_data.ses_id = hdr1->session_id;
-        vnet_buffer(p1)->pds_flow_data.flags = flag_orig1 |
+        if (0 != hdr1->session_id) {
+            vnet_buffer(p1)->pds_flow_data.flags |=
+                    VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
+        }
+        vnet_buffer(p1)->pds_flow_data.flags |= flag_orig1 |
             (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr1->rx_packet) && hdr1->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
@@ -567,108 +641,26 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
         vnet_buffer(p1)->l4_hdr_offset =
                 hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-        vnet_buffer(p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
-        if (!hdr1->rx_packet) {
-            if (hdr1->mapping_hit) {
-                vnet_buffer(p1)->pds_flow_data.egress_lkp_id = hdr1->egress_bd_id;
-            } else {
-                // dest is a route hit but p4 doesn't fill in egress_bd_id
-                vnet_buffer(p1)->pds_flow_data.egress_lkp_id = hdr1->vpc_id;
-            }
-        } else {
-            vnet_buffer(p1)->pds_flow_data.egress_lkp_id = hdr1->egress_bd_id;
-        }
         vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
         vnet_buffer2(p1)->pds_nat_data.vnic_id = hdr1->vnic_id;
         if (PREDICT_FALSE(vnic1->max_sessions &&
-            (vnic1->active_session_count >= vnic1->max_sessions))) {
+            (vnic1->active_ses_count >= vnic1->max_sessions))) {
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
             next_determined |= 0x2;
-        } else {
-            vnic1->active_session_count++;
+            goto pak_done;
+        }
+        vnic1->active_ses_count++;
+        pds_flow_packet_type_derive(p1, hdr1, flags1, next1, counter);
+        if (FLOW_CLASSIFY_N_NEXT != *next1) {
+            next_determined |= 0x2;
+            goto pak_done;
         }
     }
 
+pak_done:
     vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
     vlib_buffer_advance(p1, pds_flow_classify_get_advance_offset(p1));
-
-    if (((next_determined & 0x1) == 0) &&
-        (hdr0->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE)) {
-        if (!hdr0->rx_packet) {
-            /* only from host supported for now */
-            /* Try static NAT first */
-            if (hdr0->mapping_xlate_id != 0) {
-                u32 ip;
-                u16 port;
-                xlate_id0 = hdr0->mapping_xlate_id;
-                pds_snat_tbl_read_ip4(xlate_id0, &ip, &port);
-                vnet_buffer2(p0)->pds_nat_data.xlate_idx = xlate_id0;
-                vnet_buffer2(p0)->pds_nat_data.xlate_addr = ip;
-            } else {
-                /* nat44 */
-                if (flags0 & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer(p0)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
-                    if (hdr0->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer(p0)->pds_flow_data.flags |=
-                            VPP_CPU_FLAGS_NAPT_SVC_VALID;
-                    }
-                    *next0 = FLOW_CLASSIFY_NEXT_IP4_NAT;
-                    counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
-                } else {
-                    *next0 = FLOW_CLASSIFY_NEXT_DROP;
-                    counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                    vnic0->active_session_count--;
-                }
-                next_determined |= 0x1;
-            }
-        } else {
-            /* Only static nat should be valid here */
-            /* TODO : From network pkt */
-            *next0 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            next_determined |= 0x1;
-            vnic0->active_session_count--;
-        }
-    }
-    if (((next_determined & 0x2) == 0) &&
-        (hdr1->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE)) {
-        if (!hdr1->rx_packet) {
-            /* only from host supported for now */
-            /* Try static NAT first */
-            if (hdr1->mapping_xlate_id != 0) {
-                u32 ip;
-                u16 port;
-                xlate_id1 = hdr1->mapping_xlate_id;
-                pds_snat_tbl_read_ip4(xlate_id1, &ip, &port);
-                vnet_buffer2(p1)->pds_nat_data.xlate_idx = xlate_id1;
-                vnet_buffer2(p1)->pds_nat_data.xlate_addr = ip;
-            } else {
-                /* nat44 */
-                if (flags1 & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer(p1)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
-                    if (hdr1->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer(p1)->pds_flow_data.flags |=
-                            VPP_CPU_FLAGS_NAPT_SVC_VALID;
-                    }
-                    *next1 = FLOW_CLASSIFY_NEXT_IP4_NAT;
-                    counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
-                } else {
-                    *next1 = FLOW_CLASSIFY_NEXT_DROP;
-                    counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                    vnic1->active_session_count--;
-                }
-                next_determined |= 0x2;
-            }
-        } else {
-            /* Only static nat should be valid here */
-            /* TODO : From network pkt */
-            *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            next_determined |= 0x2;
-            vnic1->active_session_count--;
-        }
-    }
 
     if ((flags0 == flags1) && !next_determined) {
         if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
@@ -686,8 +678,8 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 2;
-            vnic0->active_session_count--;
-            vnic1->active_session_count--;
+            vnic0->active_ses_count--;
+            vnic1->active_ses_count--;
         }
         return;
     }
@@ -708,7 +700,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            vnic0->active_session_count--;
+            vnic0->active_ses_count--;
         }
     }
 
@@ -728,7 +720,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            vnic1->active_session_count--;
+            vnic1->active_ses_count--;
         }
     }
 }
@@ -739,9 +731,9 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     u8 flag_orig;
     u32 nexthop;
-    u16 xlate_id;
     pds_impl_db_vnic_entry_t *vnic;
 
+    *next = FLOW_CLASSIFY_N_NEXT;
     flag_orig = hdr->flags;
     u8 flags = flag_orig &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
@@ -754,8 +746,11 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         return;
     }
     vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;
+    if (0 != hdr->session_id) {
+        vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
+    }
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
-    vnet_buffer(p)->pds_flow_data.flags = flag_orig |
+    vnet_buffer(p)->pds_flow_data.flags |= flag_orig |
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
         (((!hdr->rx_packet) && hdr->is_local) << VPP_CPU_FLAGS_FLOW_L2L_POS) |
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
@@ -771,65 +766,21 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
             hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
     vnet_buffer(p)->l4_hdr_offset =
             hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
-
-    vnet_buffer(p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
-    if (!hdr->rx_packet) {
-        if (hdr->mapping_hit) {
-            vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
-        } else {
-            // dest is a route hit but p4 doesn't fill in egress_bd_id
-            vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->vpc_id;
-        }
-    } else {
-        vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
-    }
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
     vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p));
     if (PREDICT_FALSE(vnic->max_sessions &&
-        (vnic->active_session_count >= vnic->max_sessions))) {
+        (vnic->active_ses_count >= vnic->max_sessions))) {
         *next = FLOW_CLASSIFY_NEXT_DROP;
         counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
-        return;
+        goto end;
     }
-    vnic->active_session_count++;
+    vnic->active_ses_count++;
 
-    if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
-        if (!hdr->rx_packet) {
-            /* only from host supported for now */
-            /* Try static NAT first */
-            if (hdr->mapping_xlate_id != 0) {
-                u32 ip;
-                u16 port;
-                xlate_id = hdr->mapping_xlate_id;
-                pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
-                vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
-                vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
-            } else {
-                /* nat44 */
-                if (flags & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
-                    if (hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer(p)->pds_flow_data.flags |=
-                            VPP_CPU_FLAGS_NAPT_SVC_VALID;
-                    }
-                    *next = FLOW_CLASSIFY_NEXT_IP4_NAT;
-                    counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
-                    return;
-                } else {
-                    *next = FLOW_CLASSIFY_NEXT_DROP;
-                    counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                    goto err;
-                }
-            }
-        } else {
-            /* Only static nat should be valid here */
-            /* TODO : From network pkt */
-            *next = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            goto err;
-        }
+    pds_flow_packet_type_derive(p, hdr, flags, next, counter);
+    if (FLOW_CLASSIFY_N_NEXT != *next) {
+        goto end;
     }
 
     if ((flags == VPP_CPU_FLAGS_IPV4_1_VALID)) {
@@ -850,9 +801,10 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         goto err;
     }
 
+end:
     return;
 err:
-    vnic->active_session_count--;
+    vnic->active_ses_count--;
     return;
 }
 
@@ -870,6 +822,198 @@ pds_flow_handle_l2l (vlib_buffer_t *p0, u8 flow_exists,
         fm->session_index_pool[ses_id].ingress_bd =
                 vnet_buffer(p0)->sw_if_index[VLIB_TX];
     }
+}
+
+always_inline void
+pds_flow_rewrite_flags_init (void)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    pds_flow_rewrite_flags_t *rewrite_flags;
+
+    vec_validate(fm->rewrite_flags, PDS_FLOW_PKT_TYPE_MAX);
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2L_INTRA_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2L_INTER_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2R_INTRA_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2R_INTER_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is bridging not routing as it will come with VNI of subnet
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is bridging not routing as it will come with VNI of subnet
+    // rewrite dmaci from nexthop, since there will be no mapping
+    // lookup in rx direction
+    rewrite_flags->rx_rewrite =
+             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
+             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is bridging not routing as it will come with VNI of subnet
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC.
+    // rewrite dmaci from nexthop, since there will be no mapping
+    // lookup in rx direction
+    rewrite_flags->rx_rewrite =
+             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
+             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
+             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+             (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_R2L_INTRA_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_R2L_INTER_SUBNET);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_EN);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is bridging not routing as it will come with VNI of subnet
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is bridging not routing as it will come with VNI of subnet
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    return;
 }
 
 always_inline void

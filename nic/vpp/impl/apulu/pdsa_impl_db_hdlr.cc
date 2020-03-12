@@ -96,6 +96,34 @@ pds_cfg_db_vnic_del_cb (const pds_cfg_msg_t *msg)
 }
 
 static sdk::sdk_ret_t
+pds_cfg_db_vpc_set_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+
+    rc = pds_impl_db_vpc_set(msg->vpc.status.hw_id, msg->vpc.status.bd_hw_id);
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
+static sdk::sdk_ret_t
+pds_cfg_db_vpc_del_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+
+    rc = pds_impl_db_vpc_del(msg->vpc.status.hw_id);
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
+static sdk::sdk_ret_t
 pds_cfg_db_device_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
@@ -104,7 +132,7 @@ pds_cfg_db_device_set_cb (const pds_cfg_msg_t *msg)
     rc = pds_impl_db_device_set(msg->device.spec.spec.device_mac_addr,
                                 (const uint8_t *) &spec->device_ip_addr.addr,
                                 (spec->device_ip_addr.af == IP_AF_IPV4) ? 1:0,
-                                spec->bridging_en);
+                                spec->overlay_routing_en);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;
@@ -138,6 +166,7 @@ pds_impl_db_cb_register (void)
 
     _(VNIC, vnic)
     _(SUBNET, subnet)
+    _(VPC, vpc)
     _(DEVICE, device)
 #undef _
 

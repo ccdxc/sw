@@ -49,7 +49,9 @@ packets:
             vxlan:
                 vni     : ref://testcase/config/remotemapping/SUBNET/Vnid
             eth:
-                src     : callback://networking/packets/GetSrcMac/direction=TX
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2R
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2R,ipkt=FROM_HOST_PKT
 
 buffers:
     - buffer:

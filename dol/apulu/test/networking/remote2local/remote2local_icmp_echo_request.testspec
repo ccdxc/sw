@@ -20,7 +20,7 @@ packets:
             icmp:
                 code    : 0
                 type    : 8
-                id      : 10000
+                id      : callback://networking/packets/GetUsableICMPId
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -48,10 +48,11 @@ packets:
         headers     :
             eth:
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
                 prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=R2L,ipkt=FROM_SWITCH_PKT
 
 buffers                 :
     - buffer            :

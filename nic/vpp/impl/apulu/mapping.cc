@@ -111,20 +111,6 @@ pds_mapping_dmac_get (mac_addr_t mac_addr, uint32_t dst_addr,
     return 0;
 }
 
-#define data action_u.bd_bd_info
-static inline int
-pds_bd_vr_mac_get (mac_addr_t mac_addr, uint16_t bd_id)
-{
-    p4pd_error_t p4pd_ret;
-    bd_actiondata_t bd_data;
-
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, bd_id, NULL, NULL,
-                                      &bd_data);
-    memcpy(mac_addr, bd_data.data.vrmac, 6);
-
-    return (p4pd_ret == P4PD_SUCCESS ? 0 : -1);
-}
-
 // Based on the config, we get either the dst mac from remote mapping table
 // or subnet's vr mac from bd table
 int
@@ -136,12 +122,8 @@ pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
 
     bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
 
-    if (pds_impl_db_bridging_en_get()) {
-        vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
-        ret = pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id, bd_id);
-    } else {
-        ret = pds_bd_vr_mac_get(mac_addr, bd_id);
-    }
+    vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
+    ret = pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id, bd_id);
     return ret;
 }
 

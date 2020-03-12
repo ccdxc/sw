@@ -22,7 +22,7 @@ packets:
             icmp:
                 code    : 0
                 type    : 8
-                id      : 6000
+                id      : callback://networking/packets/GetUsableICMPId
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
@@ -53,13 +53,14 @@ packets:
                 id      : 0
             vxlan:
                 vni     : ref://testcase/config/route/VPC/Vnid
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2N
+                dst     : ref://testcase/config/route/TUNNEL/MACAddr
             ipv4:
                 src     : callback://networking/packets/GetIPFromLocalMapping
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2N,ipkt=FROM_HOST_PKT
             ipv6:
                 src     : callback://networking/packets/GetIPFromLocalMapping
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : ref://testcase/config/route/TUNNEL/MACAddr
 
 buffers:
     - buffer:

@@ -5,8 +5,8 @@ feature:
     package     : test.networking
     module      : networking
     runorder    : 500
-    enable      : False
-    ignore      : True
+    enable      : True
+    ignore      : False
 
 modules:
 
@@ -32,6 +32,7 @@ modules:
     - module:
         name    : L2L_VNIC_IPV6_TCP_QTAG
         spec    : local2local.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
 
@@ -45,6 +46,7 @@ modules:
     - module:
         name    : L2L_VPC_IPV6_TCP_QTAG
         spec    : local2local.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
 
