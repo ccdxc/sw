@@ -79,6 +79,13 @@ func TestCfgenPolicyGen(t *testing.T) {
 			ofile.WriteString("\n")
 		}
 	}
+	for _, o := range cfg.ConfigItems.TenantWorkloads {
+		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
+			ofile.Write(j)
+			ofile.WriteString("\n")
+		}
+	}
+
 	for _, o := range cfg.ConfigItems.Apps {
 		if j, err := json.MarshalIndent(o, "", "  "); err == nil {
 			ofile.Write(j)

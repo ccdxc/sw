@@ -265,8 +265,13 @@ func (sm *SysModel) BringupWorkloads() error {
 			sm.WorkloadsSayHelloToDataPath()
 		}
 	} else {
+		err := wc.AllocateHostInterfaces(sm.Tb)
+		if err != nil {
+			log.Errorf("Error allocating interfaces %v", err)
+			return err
+		}
 		// bringup the.Workloads
-		err := wc.Bringup(sm.Tb)
+		err = wc.Bringup(sm.Tb)
 		if err != nil {
 			return err
 		}

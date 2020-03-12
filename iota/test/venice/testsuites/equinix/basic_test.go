@@ -20,8 +20,13 @@ var _ = Describe("Equinx Bring up", func() {
 
 	Context("Push config Tests", func() {
 
-		It("Delete & Add Config", func() {
+		It("Basic traffic tests", func() {
+			workloads := ts.model.WorkloadPairs().WithinNetwork()
+			Expect(len(workloads.Pairs) != 0).Should(BeTrue())
+			Expect(ts.model.TCPSession(workloads, 8000)).Should(Succeed())
+		})
 
+		It("Delete & Add Config", func() {
 			Expect(ts.model.CleanupAllConfig()).Should(Succeed())
 			err := ts.model.SetupDefaultConfig(context.Background(), ts.scaleData, ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())

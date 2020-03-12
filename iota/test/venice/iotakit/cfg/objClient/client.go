@@ -35,6 +35,8 @@ type ObjClient interface {
 	ListHost() (objs []*cluster.Host, err error)
 	DeleteHost(wrkld *cluster.Host) error
 
+	ListTenant() (objs []*cluster.Tenant, err error)
+
 	CreateNetwork(obj *network.Network) error
 	ListNetwork(string) (objs []*network.Network, err error)
 	DeleteNetwork(obj *network.Network) error
@@ -46,6 +48,7 @@ type ObjClient interface {
 	UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
 	ListNetworkInterfaces() (objs []*network.NetworkInterface, err error)
+	ListNetowrkInterfacesByFilter(string) (objs []*network.NetworkInterface, err error)
 	UpdateNetworkInterface(sgp *network.NetworkInterface) error
 	CreateDscProfile(dscProfile *cluster.DSCProfile) error
 	GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCProfile, err error)
@@ -453,6 +456,21 @@ func (r *Client) ListNetworkInterfaces() (objs []*network.NetworkInterface, err 
 func (r *Client) ListNetworkLoopbackInterfaces() (objs []*network.NetworkInterface, err error) {
 
 	opts := api.ListWatchOptions{FieldSelector: fmt.Sprintf("spec.type=loopback-tep")}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().NetworkInterface().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// ListNetowrkInterfacesByFilter lists by filter
+func (r *Client) ListNetowrkInterfacesByFilter(filter string) (objs []*network.NetworkInterface, err error) {
+
+	opts := api.ListWatchOptions{FieldSelector: fmt.Sprintf(filter)}
 
 	for _, restcl := range r.restcls {
 		objs, err = restcl.NetworkV1().NetworkInterface().List(r.ctx, &opts)

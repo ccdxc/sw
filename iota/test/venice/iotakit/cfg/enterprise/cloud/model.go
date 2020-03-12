@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/cfgen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
@@ -79,7 +80,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 	cl.Cfg.NumNeighbors = 2 + len(params.Dscs) //2 Ecx and from 3rd, naples
 
 	if params.Scale {
-		cl.Cfg.NumOfTenants = 2
+		cl.Cfg.NumOfTenants = 1
 		cl.Cfg.NumOfVRFsPerTenant = 50
 		cl.Cfg.NumOfSubnetsPerVpc = 20
 		cl.Cfg.NumOfIPAMPsPerTenant = 1
@@ -87,9 +88,9 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
 
 	} else {
-		cl.Cfg.NumOfTenants = 2
-		cl.Cfg.NumOfVRFsPerTenant = 2
-		cl.Cfg.NumOfSubnetsPerVpc = 2
+		cl.Cfg.NumOfTenants = 1
+		cl.Cfg.NumOfVRFsPerTenant = 1
+		cl.Cfg.NumOfSubnetsPerVpc = 8
 		cl.Cfg.NumOfIPAMPsPerTenant = 1
 		cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
 		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr
@@ -187,6 +188,32 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 		return err
 	}
 
+	dscs, err := rClient.ListSmartNIC()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
+	for _, dsc := range dscs {
+		filter := fmt.Sprintf("spec.type=host-pf,status.dsc=%v", dsc.Status.PrimaryMAC)
+		hostNwIntfs, err := rClient.ListNetowrkInterfacesByFilter(filter)
+		if err != nil {
+			return err
+		}
+
+		for _, nwIntf := range hostNwIntfs {
+			nwIntf.Spec.AttachNetwork = ""
+			nwIntf.Spec.AttachTenant = ""
+
+			err = rClient.UpdateNetworkInterface(nwIntf)
+			if err != nil {
+				log.Errorf("updating interface failed %v", err.Error())
+				return err
+			}
+		}
+
+	}
+
 	for _, ten := range tenants {
 		if ten.Name == globals.DefaultTenant {
 			continue
@@ -251,6 +278,17 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 
 	return nil
 
+}
+
+//Cloud mode we don't allow to create workloads, so return from cache
+func (cl *CloudCfg) ListWorkload() (objs []*workload.Workload, err error) {
+
+	wloads := []*workload.Workload{}
+	for _, wl := range cl.Cfg.ConfigItems.TenantWorkloads {
+		wloads = append(wloads, wl)
+	}
+
+	return wloads, nil
 }
 
 func (cl *CloudCfg) setupLoopbacks() error {

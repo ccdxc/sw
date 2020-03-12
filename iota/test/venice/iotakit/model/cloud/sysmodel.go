@@ -5,13 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
+	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	baseModel "github.com/pensando/sw/iota/test/venice/iotakit/model/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -148,6 +151,161 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 	*/
 }
 
+//SetupWorkloadsOnHost sets up workload on host
+func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadCollection, error) {
+
+	wc := objects.NewWorkloadCollection(sm.ObjClient(), sm.Tb)
+
+	filter := fmt.Sprintf("spec.type=host-pf,status.dsc=%v", h.Naples.SmartNic.Status.PrimaryMAC)
+	hostNwIntfs, err := sm.ObjClient().ListNetowrkInterfacesByFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	hostIntfs := sm.Tb.GetHostIntfs(h.GetIotaNode().Name)
+	numNetworks := len(sm.Tb.GetHostIntfs(h.GetIotaNode().Name))
+
+	if len(hostNwIntfs) != numNetworks {
+		msg := fmt.Sprintf("Number of host Nw interfaces (%v) is not equal to actual host interfaces (%v) ",
+			len(hostNwIntfs), numNetworks)
+		log.Errorf(msg)
+		return nil, errors.New(msg)
+	}
+
+	wloads, err := sm.ListWorkloadsOnHost(h.VeniceHost)
+	if err != nil {
+		log.Error("Error finding real.Workloads on hosts.")
+		return nil, err
+	}
+
+	// List tenant
+	tenants, err := sm.ObjClient().ListTenant()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return nil, err
+	}
+
+	nws := []*network.Network{}
+	for _, ten := range tenants {
+		if ten.Name == globals.DefaultTenant {
+			continue
+		}
+
+		nws, err = sm.ListNetwork(ten.Name)
+		if err != nil {
+			log.Error("Error finding networks")
+			return nil, err
+		}
+		//Pick the first tenant
+		break
+	}
+
+	if len(nws) < numNetworks {
+		msg := fmt.Sprintf("Number of Networks (%v) is less than actual interfaces(%v) ",
+			len(nws), numNetworks)
+		log.Errorf(msg)
+		return nil, errors.New(msg)
+	}
+
+	sort.SliceStable(hostNwIntfs, func(i, j int) bool {
+		return hostNwIntfs[i].Name < hostNwIntfs[j].Name
+	})
+
+	sort.SliceStable(hostIntfs, func(i, j int) bool {
+		return hostIntfs[i] < hostIntfs[j]
+	})
+
+	//Lets attach network host intefaces
+	for index, nwIntf := range hostNwIntfs {
+		nwIntf.Spec.AttachNetwork = nws[index].Name
+		nwIntf.Spec.AttachTenant = nws[index].Tenant
+		err := sm.ObjClient().UpdateNetworkInterface(nwIntf)
+		if err != nil {
+			log.Errorf("Error attaching network to interface")
+			return nil, err
+		}
+		for _, wload := range wloads {
+			if wload.GetSpec().Interfaces[0].Network == nws[index].Name {
+				//Set to 0 so that we don't create sub-interfaces
+				wload.Spec.Interfaces[0].MicroSegVlan = 0
+				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", nws[index].Name)
+				sm.WorkloadsObjs[wload.Name].SetParentInterface(hostIntfs[index])
+				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+				//Just 1 workload per network
+				break
+			}
+		}
+	}
+
+	return wc, nil
+
+}
+
+//BringupWorkloads bring up.Workloads on host
+func (sm *SysModel) BringupWorkloads() error {
+
+	wc := objects.NewWorkloadCollection(sm.ObjClient(), sm.Tb)
+
+	for _, wload := range sm.WorkloadsObjs {
+		wc.Workloads = append(wc.Workloads, wload)
+	}
+
+	skipSetup := os.Getenv("SKIP_SETUP")
+	// if we are skipping setup we dont need to bringup the workload
+	if skipSetup != "" {
+		// first get a list of all existing.Workloads from iota
+		gwlm := &iota.WorkloadMsg{
+			ApiResponse: &iota.IotaAPIResponse{},
+			WorkloadOp:  iota.Op_GET,
+		}
+		topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+		getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
+		log.Debugf("Got get workload resp: %+v, err: %v", getResp, err)
+		if err != nil {
+			log.Errorf("Failed to instantiate Apps. Err: %v", err)
+			return fmt.Errorf("Error creating IOTA workload. err: %v", err)
+		} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			log.Errorf("Failed to instantiate Apps. resp: %+v.", getResp.ApiResponse)
+			return fmt.Errorf("Error creating IOTA workload. Resp: %+v", getResp.ApiResponse)
+		}
+
+		getResp.WorkloadOp = iota.Op_DELETE
+		delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
+		log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
+		if err != nil {
+			log.Errorf("Failed to delete old Apps. Err: %v", err)
+			return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
+		}
+	}
+
+	// bringup the.Workloads
+	err := wc.Bringup(sm.Tb)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//SetupWorkloads bring up.Workloads on host
+func (sm *SysModel) SetupWorkloads(scale bool) error {
+
+	hosts, err := sm.ListRealHosts()
+	if err != nil {
+		log.Error("Error finding real hosts to run traffic tests")
+		return err
+	}
+
+	for _, h := range hosts {
+		_, err := sm.SetupWorkloadsOnHost(h)
+		if err != nil {
+			return err
+		}
+	}
+
+	return sm.BringupWorkloads()
+}
+
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 
@@ -171,7 +329,7 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 		}
 	}
 	//Setup any default objects
-	return nil
+	return sm.SetupWorkloads(scale)
 }
 
 //DefaultNetworkSecurityPolicy no default policies

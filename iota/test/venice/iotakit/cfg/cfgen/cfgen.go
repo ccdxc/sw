@@ -41,8 +41,9 @@ type HostParams struct {
 
 // WorkloadParams workload attributes
 type WorkloadParams struct {
-	WorkloadsPerHost int // specifies number of workloads to be created per host
-	WorkloadTemplate *workload.Workload
+	WorkloadsPerHost   int // specifies number of workloads to be created per host
+	WorkloadsPerTenant int // specifies number of workloads to be created per tenant
+	WorkloadTemplate   *workload.Workload
 }
 
 // WPair workload pairs
@@ -148,6 +149,7 @@ type CfgItems struct {
 	Networks            []*network.Network                `json:"Networks"`
 	Hosts               []*cluster.Host                   `json:"Hosts"`
 	Workloads           []*workload.Workload              `json:"Workloads"`
+	TenantWorkloads     []*workload.Workload              `json:"TenantWorkloads"`
 	SGPolicies          []*security.NetworkSecurityPolicy `json:"SGPolicies"`
 	Apps                []*security.App                   `json:"Apps"`
 	RouteConfig         []*network.RoutingConfig          `json:"RouteConfig"`
@@ -208,6 +210,7 @@ func (cfgen *Cfgen) Do() {
 	cfgen.ConfigItems.IPAMPs = cfgen.genIPAMPolicy()
 	cfgen.ConfigItems.VRFs = cfgen.genVPCs()
 	cfgen.ConfigItems.Subnets = cfgen.genSubnets()
+	cfgen.ConfigItems.TenantWorkloads = cfgen.genTenantWorkloads()
 
 }
 
@@ -376,10 +379,42 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 			tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
 			tWorkload.Spec.Interfaces[0].MicroSegVlan = (uint32)(jj + 1)
 			tWorkload.Spec.Interfaces[0].ExternalVlan = cfgen.ConfigItems.Networks[netIdx].Spec.VlanID
+			tWorkload.Spec.Interfaces[0].Network = cfgen.ConfigItems.Networks[netIdx].Name
 
 			workloads = append(workloads, tWorkload)
 		}
 	}
+	return workloads
+}
+
+func (cfgen *Cfgen) genTenantWorkloads() []*workload.Workload {
+	workloads := []*workload.Workload{}
+
+	subnets := make([]string, len(cfgen.ConfigItems.Subnets))
+	nIters := make([]*iterContext, len(cfgen.ConfigItems.Subnets))
+	for netIdx, n := range cfgen.ConfigItems.Subnets {
+		subnet := strings.Split(n.Spec.IPv4Subnet, "/")[0]
+		subnets[netIdx] = "ipv4:" + strings.Replace(subnet, ".0", ".x", -1)
+		nIters[netIdx] = newIterContext()
+	}
+
+	w := cfgen.WorkloadParams.WorkloadTemplate
+	wCtx := newIterContext()
+	for netIdx := range cfgen.ConfigItems.Subnets {
+		for tenID := range cfgen.ConfigItems.Tenants {
+			for ii := 0; ii < len(cfgen.Smartnics); ii++ {
+				h := cfgen.ConfigItems.Hosts[ii]
+				w.Spec.HostName = h.ObjectMeta.Name
+				tWorkload := wCtx.transform(w).(*workload.Workload)
+				tWorkload.ObjectMeta.Name = fmt.Sprintf("workload-%s-%d-%d-w%d", w.Spec.HostName, tenID, netIdx, ii)
+				tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
+				tWorkload.Spec.Interfaces[0].Network = cfgen.ConfigItems.Subnets[netIdx].Name
+				workloads = append(workloads, tWorkload)
+			}
+			break
+		}
+	}
+
 	return workloads
 }
 

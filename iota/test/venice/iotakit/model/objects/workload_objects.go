@@ -83,6 +83,10 @@ func (w *Workload) SetInterface(intf string) {
 	w.iotaWorkload.Interface = intf
 }
 
+func (w *Workload) SetParentInterface(intf string) {
+	w.iotaWorkload.ParentInterface = intf
+}
+
 func (w *Workload) SetIotaWorkload(wl *iota.Workload) {
 	w.iotaWorkload = wl
 }
@@ -191,7 +195,8 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 	newCollection := WorkloadPairCollection{}
 
 	for _, pair := range wpc.Pairs {
-		if pair.First.iotaWorkload.UplinkVlan == pair.Second.iotaWorkload.UplinkVlan {
+		if pair.First.iotaWorkload.UplinkVlan == pair.Second.iotaWorkload.UplinkVlan ||
+			(pair.First.iotaWorkload.NetworkName != "" && pair.First.iotaWorkload.NetworkName == pair.Second.iotaWorkload.NetworkName) {
 			newCollection.Pairs = append(newCollection.Pairs, pair)
 		}
 	}
@@ -349,8 +354,8 @@ func (wpc *WorkloadPairCollection) ReversePairs() *WorkloadPairCollection {
 	return &newWpc
 }
 
-// Bringup brings up all Workloads in the collection
-func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
+func (wc *WorkloadCollection) AllocateHostInterfaces(tb *testbed.TestBed) error {
+
 	var Workloads []*iota.Workload
 	type hostIntAlloc struct {
 		intfs    []string
@@ -380,6 +385,21 @@ func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
 		hostAlloc, _ := hostIntfMap[wrk.NodeName]
 		wrk.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
 		hostAlloc.curIndex++
+	}
+	return nil
+}
+
+// Bringup brings up all Workloads in the collection
+func (wc *WorkloadCollection) Bringup(tb *testbed.TestBed) error {
+	var Workloads []*iota.Workload
+	// if there are no Workloads, nothing to do
+	if len(wc.Workloads) == 0 {
+		return nil
+	}
+
+	// build workload list
+	for _, wrk := range wc.Workloads {
+		Workloads = append(Workloads, wrk.iotaWorkload)
 	}
 
 	// send workload add message

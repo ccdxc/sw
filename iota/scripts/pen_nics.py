@@ -69,7 +69,7 @@ def __get_nics_output_linux():
 
 
 
-def __get_devices_linux(mac_hint):
+def __get_devices_linux(mac_hint, physical=True):
     children = []
     def populateChildren(entry, children):
         children.append(entry)
@@ -84,31 +84,37 @@ def __get_devices_linux(mac_hint):
         if child.get("id") == "network" and ("serial" in child) and ("businfo" in child) and ("logicalname" in child):
             if MacInRange(child["serial"], mac_hint):
                 addr=str(child["businfo"].split(":")[1])
-                devs.append((child["logicalname"], int(addr, 16)))
+                physical_link = child["capabilities"].get("fibre", None)
+                if physical and physical_link:
+                    devs.append((child["logicalname"], int(addr, 16)))
+                elif not physical and not physical_link:
+                    devs.append((child["logicalname"], int(addr, 16)))
+
+
 
     devs.sort(key = lambda x: x[1])
     return devs
 
 
 def __print_intfs_linux(mac_hint, intf_type):
-    devs = __get_devices_linux(mac_hint)
     if intf_type == "data-nic":
-        if len(devs) < 2:
+        devs = __get_devices_linux(mac_hint, physical=True)
+        if len(devs) == 0:
             print("Not able to find Naples Data ports", file=sys.stderr)
             return 1
-        devs.pop()
         for dev in devs:
             print(dev[0])
     else:
+        devs = __get_devices_linux(mac_hint, physical=False)
         if len(devs) == 0:
             print("Not able to find Naples OOB port", file=sys.stderr)
             return 1
-        print(devs[-1][0])
+        print(devs[0][0])
 
 
 def __print_mnic_ip_linux(mac_hint, intf_type):
-    devs=__get_devices_linux(mac_hint)
-    print("169.254.{}.1".format(devs[-1][1]))
+    devs=__get_devices_linux(mac_hint, physical=False)
+    print("169.254.{}.1".format(devs[0][1]))
 
 
 def __get_devices_freebsd(mac_hint):
