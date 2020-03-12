@@ -126,7 +126,7 @@ jobd/dol/parser: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/telemetry
 jobd/dol/telemetry: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo telemetry --feature telemetry
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo telemetry --feature telemetry --microseg-enable
 
 .PHONY: jobd/dol/p4pt
 jobd/dol/p4pt: ${JOBD_PREREQS}

@@ -39,43 +39,43 @@ class spanSessionData:
                 ],
             "XSPAN_UPLINK_PC_ING_EG": [
                 (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
-                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink2", 0),
-                (3, "ingress", "ERSPAN", "ERSPAN_PKT1", "UplinkPc1", 0),
+                (2, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink1", 0),
                 (1, "egress", "ERSPAN", "EG_ERSPAN_PKT1", "Uplink1", 0),
-                (2, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink2", 0),
-                (3, "egress", "LOCAL", "EG_SPAN_PKT1", "UplinkPc1", 0)
+                (2, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 0),
+                (3, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 0)
                 ],
             "XSPAN2_UPLINK_PC_ING_EG": [
                 (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 0),
-                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink2", 0),
-                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 0),
+                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink1", 0),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),
                 (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 0),
-                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink2", 0),
-                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 0),
+                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink1", 0),
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 0),
                 ],
             "XSPAN2_UPLINK_PC_ING_EG_SNAP32": [
                 (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 36),
-                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink2", 32),
-                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 32),
+                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink1", 32),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 32),
                 (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 32),
-                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink2", 32),
-                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 32)
+                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink1", 32),
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 32)
                 ],
             "XSPAN2_UPLINK_PC_ING_EG_SNAP64": [
                 (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 64),
-                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink2", 64),
-                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 64),
+                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink1", 64),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 64),
                 (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 64),
-                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink2", 64),
-                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 64)
+                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink1", 64),
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 64)
                 ],
             "XSPAN2_UPLINK_PC_ING_EG_SNAP1000": [
                 (1, "ingress", "RSPAN", "RSPAN_PKT1", "Uplink1", 1000),
-                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink2", 1000),
-                (3, "ingress", "LOCAL", "SPAN_PKT1", "UplinkPc1", 1000),
+                (2, "ingress", "ERSPAN", "ERSPAN_PKT1", "Uplink1", 1000),
+                (3, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 1000),
                 (1, "egress", "LOCAL", "EG_SPAN_PKT1", "Uplink1", 1000),
-                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink2", 1000),
-                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "UplinkPc1", 1000)
+                (2, "egress", "ERSPAN", "EG_ERSPAN_PKT2", "Uplink1", 1000),
+                (3, "egress", "RSPAN", "EG_RSPAN_PKT1", "Uplink1", 1000)
                 ],
             "L3_SPAN_UPLINK_PC_ING_EG": [
                 (1, "ingress", "LOCAL", "SPAN_PKT1", "Uplink1", 0),

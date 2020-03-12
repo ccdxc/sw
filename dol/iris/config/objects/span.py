@@ -22,7 +22,7 @@ class SpanSessionObject(base.ConfigObjectBase):
         super().__init__()
         self.Clone(Store.templates.Get('SPAN_SESSION'))
         return
-        
+
     def Init(self, tenant, spec):
         self.tenant = tenant
         self.segment = tenant.GetSpanSegment()
@@ -89,10 +89,10 @@ class SpanSessionObject(base.ConfigObjectBase):
             if self.IsRspan():
                 reqspec.rspan_spec.intf.if_handle = self.intf.hal_handle
                 if self.segment.IsFabEncapVxlan():
-                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_VXLAN 
+                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_VXLAN
                     reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vxlan_id
                 else:
-                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q 
+                    reqspec.rspan_spec.rspan_encap.encap_type = haldefs.common.ENCAP_TYPE_DOT1Q
                     reqspec.rspan_spec.rspan_encap.encap_value = self.segment.vlan_id
             if self.IsErspan():
                 reqspec.erspan_spec.src_ip.ip_af = haldefs.common.IP_AF_INET
@@ -120,10 +120,10 @@ class SpanSessionObjectHelper:
         return
 
     def Configure(self):
-        logger.info("Configuring %d Span Sessions." % len(self.span_ssns)) 
+        logger.info("Configuring %d Span Sessions." % len(self.span_ssns))
         halapi.ConfigureSpanSessions(self.span_ssns)
         return
-        
+
     def Generate(self, tenant, topospec):
         tnls = []
         for tnl in Store.objects.GetAllByClass(tunnel.TunnelObject):

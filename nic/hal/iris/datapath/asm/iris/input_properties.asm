@@ -32,9 +32,7 @@ input_properties:
                     d.input_properties_d.rewrite_index
   phvwr         p.rewrite_metadata_tunnel_rewrite_index, \
                     d.input_properties_d.tunnel_rewrite_index
-  or            r1, d.input_properties_d.bounce_vnid_sbit19_ebit23, \
-                    d.input_properties_d.bounce_vnid_sbit0_ebit18, 5
-  phvwr         p.rewrite_metadata_tunnel_vnid, r1
+  phvwr         p.rewrite_metadata_tunnel_vnid, d.input_properties_d.bounce_vnid
   phvwr         p.{control_metadata_mirror_on_drop_en, \
                    control_metadata_mirror_on_drop_session_id}, \
                     d.{input_properties_d.mirror_on_drop_en, \

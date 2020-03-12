@@ -115,24 +115,7 @@ def GetTruncatePacketPayload(testcase, pkt, args):
     return pktslicer.GetPacketSlice(testcase, retpkt, args)
 
 def GetTunnelSrcMac(testcase, pkt, args):
-    id = (args.id)
-    if args.dir == "egress":
-        id = id + 3
-    tnl = None
-    logger.info("getting tunnel source for ", id)
-    obj = telemetry.data.getLocalSessionBySession(id)
-    if obj is not None:
-        if 'remote_ep' in obj.__dict__:
-            logger.info("getting tunnel source is Tunnel ", id)
-            tnl = obj
-    if tnl is None:
-        tnl = telemetry.data.getErspanSession(id)
-       
-    if tnl is not None:
-        logger.info("returning Tunnel Src mac ", tnl.remote_ep.segment.macaddr.get())
-        return tnl.remote_ep.segment.macaddr
-    return None
-
+    return "02:22:22:11:11:11"
 
 def GetTunnelDstMac(testcase, pkt, args):
     id = (args.id)
@@ -332,9 +315,9 @@ def GetErspanSessionid(testcase, inpkt, args):
     for (id, direc, spantype, pkt, intf, pktlen) in ssns:
         if pkt == args.pktid:
             if direc == "ingress":
-                sessionid = id
+                sessionid = id - 1
             else:
-                sessionid = id + 3
+                sessionid = id - 1 + 3
             break
     return sessionid
 

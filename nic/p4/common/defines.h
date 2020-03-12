@@ -210,7 +210,8 @@
 /* GRE services                                                              */
 /*****************************************************************************/
 #define GRE_PROTO_NVGRE                0x20006558
-#define GRE_PROTO_ERSPAN_T3            0x22EB   /* Type III version 2 */
+#define GRE_PROTO_ERSPAN               0x88BE
+#define GRE_PROTO_ERSPAN_T3            0x22EB
 
 /*****************************************************************************/
 /* Queue types                                                               */

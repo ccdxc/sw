@@ -588,10 +588,10 @@ class FlowObject(base.ConfigObjectBase):
         #req_spec.flow_data.flow_info.egress_mirror_session = self.__span.hal_handle
         for ssn in self.ing_mirror_sessions:
             ssn_spec = req_spec.flow_data.flow_info.ing_mirror_sessions.add()
-            ssn_spec.mirrorsession_id = ssn.id
+            ssn_spec.mirrorsession_id = ssn.id - 1
         for ssn in self.egr_mirror_sessions:
             ssn_spec = req_spec.flow_data.flow_info.egr_mirror_sessions.add()
-            ssn_spec.mirrorsession_id = ssn.id
+            ssn_spec.mirrorsession_id = ssn.id - 1
         return
 
     def Summary(self):

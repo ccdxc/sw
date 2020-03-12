@@ -11,11 +11,11 @@ segments:
 
 tunnels:
     - spec  : ref://store/specs/id=TUNNEL_GRE
-      local : False 
+      local : False
     - spec  : ref://store/specs/id=TUNNEL_GRE
-      local : False 
+      local : False
     - spec  : ref://store/specs/id=TUNNEL_GRE
-      local : False 
+      local : False
     - spec  : ref://store/specs/id=TUNNEL_GRE
       local : True
     - spec  : ref://store/specs/id=TUNNEL_GRE

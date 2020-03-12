@@ -9,6 +9,7 @@ header_type rewrite_metadata_t {
         entropy_hash         : 32;
         flags                : 8;
         tunnel_ip            : 32;
+        erspan_type          : 2;
     }
 }
 

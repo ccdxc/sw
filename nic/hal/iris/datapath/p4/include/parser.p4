@@ -139,6 +139,8 @@ header icrc_t icrc;
 
 header gre_t gre;
 header nvgre_t nvgre;
+header gre_opt_seq_t gre_opt_seq;
+header erspan_t2_t erspan_t2;
 header erspan_t3_t erspan_t3;
 header erspan_t3_opt_t erspan_t3_opt;
 
@@ -1479,45 +1481,22 @@ parser parse_udp {
 
 parser parse_gre {
     extract(gre);
-    return select(latest.C, latest.R, latest.K, latest.S, latest.s,
-                  latest.recurse, latest.flags, latest.ver, latest.proto) {
-        GRE_PROTO_NVGRE : parse_nvgre;
-        ETHERTYPE_IPV4 : parse_gre_ipv4;
-        ETHERTYPE_IPV6 : parse_gre_ipv6;
-        GRE_PROTO_ERSPAN_T3 : parse_erspan_t3;
-        default: ingress;
+    return select(latest.proto) {
+        default : ingress;
+        0x1 mask 0x0 : deparse_gre;
     }
 }
 
-parser parse_gre_ipv4 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_GRE);
-    return parse_inner_ipv4;
-}
-
-parser parse_gre_ipv6 {
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_GRE);
-    return parse_inner_ipv6;
-}
-
-parser parse_nvgre {
-    extract(nvgre);
-    set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_NVGRE);
-    set_metadata(tunnel_metadata.tunnel_vni, latest.tni);
-    return parse_inner_ethernet;
-}
-
-parser parse_erspan_t3 {
+@pragma xgress egress
+@pragma deparse_only
+parser deparse_gre {
+    extract(gre_opt_seq);
+    extract(erspan_t2);
     extract(erspan_t3);
-    return select(latest.options) {
-        0 : parse_inner_ethernet;
-        default : parse_erspan_t3_opt;
-    }
-}
-
-parser parse_erspan_t3_opt {
     extract(erspan_t3_opt);
     return parse_inner_ethernet;
 }
+
 
 parser parse_vxlan {
     extract(vxlan);

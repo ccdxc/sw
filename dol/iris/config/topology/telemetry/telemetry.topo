@@ -50,7 +50,6 @@ uplinkpc: None
 
 acls: None
 
-#security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 security_profiles: ref://store/specs/id=SECURITY_PROFILES_ACTIVE
 security_policy: ref://store/specs/id=SECURITY_POLICY_DEFAULT
 

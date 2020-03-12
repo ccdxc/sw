@@ -42,7 +42,8 @@ input_properties_mac_vlan:
   phvwr         p.control_metadata_dst_lport, d.input_properties_mac_vlan_d.dst_lport
   phvwr         p.control_metadata_src_lport, d.input_properties_mac_vlan_d.src_lport
   phvwr         p.flow_lkp_metadata_lkp_vrf, d.input_properties_mac_vlan_d.vrf
-  phvwr         p.control_metadata_src_lif, k.capri_intrinsic_lif
+  or            r1, k.capri_intrinsic_lif_s3_e10, k.capri_intrinsic_lif_s0_e2, 8
+  phvwr         p.control_metadata_src_lif, r1
   phvwr         p.capri_intrinsic_tm_replicate_ptr, \
                     d.input_properties_mac_vlan_d.flow_miss_idx
   phvwr         p.control_metadata_ipsg_enable, \

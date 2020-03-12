@@ -1070,7 +1070,9 @@ def cleanup(keep_logs=True):
     if not os.path.exists(lock_file):
         return
     lock = open(lock_file, "r")
-    for pid in lock:
+    pidlist = lock.readlines()
+    pidlist.reverse()
+    for pid in pidlist:
         if is_running(int(pid)):
             print "Sending SIGTERM to process %d" % int(pid)
             try:

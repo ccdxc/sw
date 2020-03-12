@@ -393,10 +393,29 @@ header_type gre_t {
     }
 }
 
+header_type gre_opt_seq_t {
+    fields {
+        seq_num : 32;
+    }
+}
+
 header_type nvgre_t {
     fields {
         tni : 24;
         flow_id : 8;
+    }
+}
+
+header_type erspan_t2_t {
+    fields {
+        version : 4;
+        vlan : 12;
+        cos : 3;
+        encap_type : 2;
+        truncated : 1;
+        span_id : 10;
+        reserved : 12;
+        port_id : 20;
     }
 }
 
