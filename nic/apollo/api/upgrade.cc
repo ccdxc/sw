@@ -20,7 +20,7 @@ upg_ev_compat_check (upg_event_ctxt_t *upg_ev_ctxt)
 static sdk_ret_t
 upg_ev_backup (upg_event_ctxt_t *upg_ev_ctxt)
 {
-    return impl_base::pipeline_impl()->upg_backup();
+    return impl_base::pipeline_impl()->upgrade_backup();
 }
 
 static sdk_ret_t
@@ -44,7 +44,7 @@ upg_ev_restore (upg_event_ctxt_t *upg_ev_ctxt)
 static sdk_ret_t
 upg_ev_switchover (upg_event_ctxt_t *upg_ev_ctxt)
 {
-    return impl_base::pipeline_impl()->upg_switchover();
+    return impl_base::pipeline_impl()->upgrade_switchover();
 }
 
 static sdk_ret_t

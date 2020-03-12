@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 
@@ -55,7 +56,7 @@
 #define IPADDR_TO_P4_IPADDR(p4_ip_, ip_, af_)                                \
 {                                                                            \
     if ((af_) == IP_AF_IPV6) {                                               \
-        sdk::lib::memrev(p4_ip_, (ip_)->addr.v6_addr.addr8, IP6_ADDR8_LEN);    \
+        sdk::lib::memrev(p4_ip_, (ip_)->addr.v6_addr.addr8, IP6_ADDR8_LEN);  \
     } else {                                                                 \
         memcpy((p4_ip_), &(ip_)->addr.v4_addr, IP4_ADDR8_LEN);               \
     }                                                                        \
@@ -107,52 +108,51 @@ private:
 /// \brief pipeline implementation
 class pipeline_impl_base : public obj_base {
 public:
-    /// \brief Factory method to instantiate pipeline impl instance
-    ///
+    /// \brief factory method to instantiate pipeline impl instance
     /// \param[in] pipeline_cfg Pipeline configuration information
     /// \return new instance of pipeline impl or NULL, in case of error
     static pipeline_impl_base *factory(pipeline_cfg_t *pipeline_cfg);
 
-    /// \brief Destory method to free pipeline impl instance
-    ///
+    /// \brief destroy method to free pipeline impl instance
     /// \param[in] impl pipeline impl instance
     static void destroy(pipeline_impl_base *impl);
 
-    /// \brief Initialize program configuration
-    ///
-    /// \param[in] init_params Initialization time parameters passed by app
+    /// \brief initialize program configuration
+    /// \param[in] init_params initialization time parameters passed by app
     /// \param[in] asic_cfg ASIC configuration to be populated with program info
     virtual void program_config_init(pds_init_params_t *init_params,
                                      asic_cfg_t *asic_cfg) { }
 
     /// \brief initialize asm configuration
-    ///
     /// \param[in] init_params initialization time parameters passed by app
     /// \param[in] asic_cfg asic configuration to be populated with asm info
     virtual void asm_config_init(pds_init_params_t *init_params,
                                  asic_cfg_t *asic_cfg) { }
 
     /// \brief initialize ring configuration
-    ///
     /// \param[in] asic_cfg asic configuration to be populated with rings info
     virtual void ring_config_init(asic_cfg_t *asic_cfg) { }
 
-    ///
-    /// \brief Init routine to initialize the pipeline
-    ///
+    /// \brief init routine to initialize the pipeline
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) { return sdk::SDK_RET_ERR; }
 
-    /// \brief Routine to backup the pipeline configs during upgrade
+    /// \brief helper to dump the MPU program info
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upg_backup(void) { return sdk::SDK_RET_ERR; }
+    virtual sdk_ret_t program_info_dump(std::string path) {
+        SDK_ASSERT(sdk::p4::p4_dump_program_info(path.c_str()) == SDK_RET_OK);
+        return SDK_RET_OK;
+    }
 
-    /// \brief Routine to switchover the pipeline configs during upgrade
+    /// \brief routine to backup the pipeline configs during upgrade
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upg_switchover(void) { return sdk::SDK_RET_ERR; }
+    virtual sdk_ret_t upgrade_backup(void) { return sdk::SDK_RET_ERR; }
 
-    /// \brief Generic API to write to rxdma tables
-    ///
+    /// \brief routine to switchover the pipeline configs during upgrade
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t upgrade_switchover(void) { return sdk::SDK_RET_ERR; }
+
+    /// \brief generic API to write to rxdma tables
     /// \param[in] addr Memory address to write the data to
     /// \param[in] tableid Table id
     /// \param[in] action_id Action id to write
@@ -164,8 +164,7 @@ public:
         return SDK_RET_ERR;
     }
 
-    /// \brief Generic API to write to txdma tables
-    ///
+    /// \brief generic API to write to txdma tables
     /// \param[in] addr Memory address to write the data to
     /// \param[in] tableid Table id
     /// \param[in] action_id Action id to write
@@ -178,14 +177,12 @@ public:
     }
 
     /// \brief API to begin transaction over all table mgmt library instances
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t transaction_begin(void) {
         return SDK_RET_ERR;
     }
 
     /// \brief API to end transaction over all table mgmt library instances
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t transaction_end(void) {
         return SDK_RET_ERR;
@@ -218,7 +215,7 @@ public:
         return SDK_RET_ERR;
     }
 
-    /// \brief      Meter Stats Get
+    /// \brief      get statistics from meter table
     /// \param[in]  cb      Callback
     /// \param[in]  lowidx  Low Index for stats to be read
     /// \param[in]  highidx High Index for stats to be read
@@ -257,7 +254,8 @@ public:
     /// \param[in]  walk_cb     callback to be called on slab
     /// \param[in]  ctxt        opaque context to be passed to callback
     /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t impl_state_slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    virtual sdk_ret_t impl_state_slab_walk(state_walk_cb_t walk_cb,
+                                           void *ctxt) {
         return SDK_RET_ERR;
     }
 

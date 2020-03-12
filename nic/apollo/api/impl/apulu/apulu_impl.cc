@@ -616,7 +616,7 @@ apulu_impl::pipeline_init(void) {
 // keep this code very minimum to reduce the traffic hit duration.
 // avoid TRACES.
 sdk_ret_t
-apulu_impl::upg_switchover(void) {
+apulu_impl::upgrade_switchover(void) {
     sdk_ret_t ret;
     p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
                                P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
@@ -672,7 +672,7 @@ apulu_impl::upg_switchover(void) {
 //          : B(switchover_failure) -> rollback -> B2A(switchover) -> success/failure
 // B2A(switchover_failure) cannot be recovered
 sdk_ret_t
-apulu_impl::upg_backup(void) {
+apulu_impl::upgrade_backup(void) {
     p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
                                P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
     p4_tbl_eng_cfg_t *cfg;

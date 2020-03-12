@@ -207,11 +207,11 @@ public:
 
     /// \brief  routine to backup the states during the pipeline upgrade
     /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upg_backup(void) override;
+    virtual sdk_ret_t upgrade_backup(void) override;
 
     /// \brief  routine to switchover during the pipeline upgrade
     /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upg_switchover(void) override;
+    virtual sdk_ret_t upgrade_switchover(void) override;
 
     /// \brief     generic API to write to rxdma tables
     /// \param[in] addr        memory address to write the data to
