@@ -289,6 +289,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         session_rewrite_session_rewrite_t *session_rewrite;
         session_rewrite =
             &session_rewrite_actiondata.action_u.session_rewrite_session_rewrite;
+        // FIXME: How to distinguish between invalid no encap and no entry case?
         if (!session_rewrite->valid_flag) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
@@ -300,6 +301,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_rewrite->strip_l2_header_flag;
         info->spec.data.strip_vlan_tag =
             session_rewrite->strip_vlan_tag_flag;
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
     } else if (session_rewrite_actiondata.action_id ==
                SESSION_REWRITE_SESSION_REWRITE_IPV4_SNAT_ID) {
         session_rewrite_session_rewrite_ipv4_snat_t *session_rewrite_ipv4_snat;
@@ -318,6 +320,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_rewrite_ipv4_snat->strip_vlan_tag_flag;
         info->spec.data.nat_info.u.ipv4_addr =
             session_rewrite_ipv4_snat->ipv4_addr_snat;
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_IPV4_SNAT;
     } else if (session_rewrite_actiondata.action_id ==
                SESSION_REWRITE_SESSION_REWRITE_IPV4_DNAT_ID) {
         session_rewrite_session_rewrite_ipv4_dnat_t *session_rewrite_ipv4_dnat;
@@ -336,6 +339,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_rewrite_ipv4_dnat->strip_vlan_tag_flag;
         info->spec.data.nat_info.u.ipv4_addr =
             session_rewrite_ipv4_dnat->ipv4_addr_dnat;
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_IPV4_DNAT;
     } else if (session_rewrite_actiondata.action_id ==
                SESSION_REWRITE_SESSION_REWRITE_IPV4_PAT_ID) {
         session_rewrite_session_rewrite_ipv4_pat_t *session_rewrite_ipv4_pat;
@@ -360,6 +364,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_rewrite_ipv4_pat->l4_port_spat;
         info->spec.data.nat_info.u.pat.l4_dport =
             session_rewrite_ipv4_pat->l4_port_dpat;
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_IPV4_SDPAT;
     } else if (session_rewrite_actiondata.action_id ==
                SESSION_REWRITE_SESSION_REWRITE_IPV6_SNAT_ID) {
         session_rewrite_session_rewrite_ipv6_snat_t *session_rewrite_ipv6_snat;
@@ -379,6 +384,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         memcpy(info->spec.data.nat_info.u.ipv6_addr,
                session_rewrite_ipv6_snat->ipv6_addr_snat,
                IP6_ADDR8_LEN);
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_IPV6_SNAT;
     } else if (session_rewrite_actiondata.action_id ==
                SESSION_REWRITE_SESSION_REWRITE_IPV6_DNAT_ID) {
         session_rewrite_session_rewrite_ipv6_dnat_t *session_rewrite_ipv6_dnat;
@@ -398,6 +404,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         memcpy(info->spec.data.nat_info.u.ipv6_addr,
                session_rewrite_ipv6_dnat->ipv6_addr_dnat,
                IP6_ADDR8_LEN);
+        info->spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_IPV6_DNAT;
     } else {
         PDS_TRACE_ERR("Invalid action/entry in session rewrite table"
                       " at index %u", session_rewrite_id);
@@ -432,6 +439,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         memcpy(info->spec.data.u.l2_encap.smac,
                session_encap_l2->smac,
                ETH_ADDR_LEN);
+        info->spec.data.encap_type = ENCAP_TYPE_L2;
     } else if (session_encap_actiondata.action_id ==
         SESSION_REWRITE_ENCAP_SESSION_REWRITE_ENCAP_MPLSOUDP_ID) {
         session_rewrite_encap_session_rewrite_encap_mplsoudp_t *session_encap_mplsoudp =
@@ -465,6 +473,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_encap_mplsoudp->mpls_label2;
         info->spec.data.u.mplsoudp_encap.mpls3_label =
             session_encap_mplsoudp->mpls_label3;
+        info->spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
     } else if (session_encap_actiondata.action_id ==
         SESSION_REWRITE_ENCAP_SESSION_REWRITE_ENCAP_GENEVE_ID) {
         session_rewrite_encap_session_rewrite_encap_geneve_t *session_encap_geneve =
@@ -512,6 +521,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
             session_encap_geneve->sg_id6;
         info->spec.data.u.geneve_encap.originator_physical_ip =
             session_encap_geneve->originator_physical_ip;
+        info->spec.data.encap_type = ENCAP_TYPE_GENEVE;
     } else {
         PDS_TRACE_ERR("Invalid action/entry in session encap table"
                       " at index %u", session_rewrite_id);
