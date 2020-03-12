@@ -6,7 +6,7 @@ config INFINIBAND_IONIC
 	depends on NETDEVICES && ETHERNET && PCI && INET && 64BIT
 	select NET_VENDOR_PENSANDO
 	select IONIC
-	---help---
+	help
 	  This enables RDMA/RoCE support for the Pensando family of Distributed
 	  Services Cards (DSCs).
 

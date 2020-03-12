@@ -54,40 +54,43 @@ static u64 ionic_v1_stat_val(struct ionic_v1_stat *stat,
 			     void *vals_buf, size_t vals_len)
 {
 	int type = ionic_v1_stat_type(stat);
-	unsigned off = ionic_v1_stat_off(stat);
+	unsigned int off = ionic_v1_stat_off(stat);
 
-#define __ionic_v1_stat_validate(__type) do {		\
-		if (off + sizeof(__type) > vals_len)	\
-			goto err;			\
-		if (!IS_ALIGNED(off, sizeof(__type)))	\
-			goto err;			\
-	} while (0)
+#define __ionic_v1_stat_validate(__type)		\
+	((off + sizeof(__type) <= vals_len) &&		\
+	 (IS_ALIGNED(off, sizeof(__type))))
 
 	switch (type) {
 	case IONIC_V1_STAT_TYPE_8:
-		__ionic_v1_stat_validate(u8);
-		return *(u8 *)(vals_buf + off);
+		if (__ionic_v1_stat_validate(u8))
+			return *(u8 *)(vals_buf + off);
+		break;
 	case IONIC_V1_STAT_TYPE_LE16:
-		__ionic_v1_stat_validate(__le16);
-		return le16_to_cpu(*(__le16 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__le16))
+			return le16_to_cpu(*(__le16 *)(vals_buf + off));
+		break;
 	case IONIC_V1_STAT_TYPE_LE32:
-		__ionic_v1_stat_validate(__le32);
-		return le32_to_cpu(*(__le32 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__le32))
+			return le32_to_cpu(*(__le32 *)(vals_buf + off));
+		break;
 	case IONIC_V1_STAT_TYPE_LE64:
-		__ionic_v1_stat_validate(__le64);
-		return le64_to_cpu(*(__le64 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__le64))
+			return le64_to_cpu(*(__le64 *)(vals_buf + off));
+		break;
 	case IONIC_V1_STAT_TYPE_BE16:
-		__ionic_v1_stat_validate(__be16);
-		return be16_to_cpu(*(__be16 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__be16))
+			return be16_to_cpu(*(__be16 *)(vals_buf + off));
+		break;
 	case IONIC_V1_STAT_TYPE_BE32:
-		__ionic_v1_stat_validate(__be32);
-		return be32_to_cpu(*(__be32 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__be32))
+			return be32_to_cpu(*(__be32 *)(vals_buf + off));
+		break;
 	case IONIC_V1_STAT_TYPE_BE64:
-		__ionic_v1_stat_validate(__be64);
-		return be64_to_cpu(*(__be64 *)(vals_buf + off));
+		if (__ionic_v1_stat_validate(__be64))
+			return be64_to_cpu(*(__be64 *)(vals_buf + off));
+		break;
 	}
 
-err:
 	return ~0ull;
 #undef __ionic_v1_stat_validate
 }

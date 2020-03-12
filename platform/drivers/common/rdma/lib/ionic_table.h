@@ -75,8 +75,9 @@ struct ionic_tbl_root {
 	struct ionic_tbl_node	*free_node;
 };
 
-/** ionic_tbl_init - Initialize a table.
- * @tbl:	Table root.
+/**
+ * ionic_tbl_init() - Initialize a table
+ * @tbl:	Table root
  */
 static inline void ionic_tbl_init(struct ionic_tbl_root *tbl)
 {
@@ -90,8 +91,9 @@ static inline void ionic_tbl_init(struct ionic_tbl_root *tbl)
 	}
 }
 
-/** ionic_tbl_init - Destroy the table, which should be empty.
- * @tbl:	Table root.
+/**
+ * ionic_tbl_init() - Destroy the table, which should be empty
+ * @tbl:	Table root
  */
 static inline void ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 {
@@ -126,9 +128,10 @@ static inline void ionic_tbl_destroy(struct ionic_tbl_root *tbl)
 	free(tbl->free_node);
 }
 
-/** ionic_tbl_lookup - Lookup value for key in the table.
- * @tbl:	Table root.
- * @key:	Key for lookup.
+/**
+ * ionic_tbl_lookup() - Lookup value for key in the table
+ * @tbl:	Table root
+ * @key:	Key for lookup
  *
  * Synopsis:
  *
@@ -138,7 +141,7 @@ static inline void ionic_tbl_destroy(struct ionic_tbl_root *tbl)
  *     my_val_routine(val);
  * pthread_spin_unlock(&my_table_lock);
  *
- * Return: Value for key.
+ * Return: Value for key
  */
 static inline void *ionic_tbl_lookup(struct ionic_tbl_root *tbl, uint32_t key)
 {
@@ -153,12 +156,13 @@ static inline void *ionic_tbl_lookup(struct ionic_tbl_root *tbl, uint32_t key)
 	return tbl->node[node_i]->val[key & TBL_NODE_MASK];
 }
 
-/** ionic_tbl_alloc_node - Allocate the free node prior to insertion.
- * @tbl:	Table root.
+/**
+ * ionic_tbl_alloc_node() - Allocate the free node prior to insertion
+ * @tbl:	Table root
  *
  * This should be called before inserting.
  *
- * Synopsis: see ionic_tbl_insert().
+ * Synopsis: see ionic_tbl_insert()
  */
 static inline void ionic_tbl_alloc_node(struct ionic_tbl_root *tbl)
 {
@@ -166,12 +170,13 @@ static inline void ionic_tbl_alloc_node(struct ionic_tbl_root *tbl)
 		tbl->free_node = calloc(1, sizeof(*tbl->free_node));
 }
 
-/** ionic_tbl_free_node - Free the free node prior to deletion.
- * @tbl:	Table root.
+/**
+ * ionic_tbl_free_node() - Free the free node prior to deletion
+ * @tbl:	Table root
  *
  * This should be called before deleting.
  *
- * Synopsis: see ionic_tbl_delete().
+ * Synopsis: see ionic_tbl_delete()
  */
 static inline void ionic_tbl_free_node(struct ionic_tbl_root *tbl)
 {
@@ -179,10 +184,11 @@ static inline void ionic_tbl_free_node(struct ionic_tbl_root *tbl)
 	tbl->free_node = NULL;
 }
 
-/** ionic_tbl_insert - Insert a value for key in the table.
- * @tbl:	Table root.
- * @val:	Value to insert.
- * @key:	Key to insert.
+/**
+ * ionic_tbl_insert() - Insert a value for key in the table
+ * @tbl:	Table root
+ * @val:	Value to insert
+ * @key:	Key to insert
  *
  * The tbl->free_node must not be null when inserting.
  *
@@ -229,10 +235,11 @@ static inline void ionic_tbl_insert(struct ionic_tbl_root *tbl,
 	++tbl->refcount[node_i];
 }
 
-/** ionic_tbl_delete - Delete the value for key in the table.
- * @tbl:	Table root.
- * @val:	Value to insert.
- * @key:	Key to insert.
+/**
+ * ionic_tbl_delete() - Delete the value for key in the table
+ * @tbl:	Table root
+ * @val:	Value to insert
+ * @key:	Key to insert
  *
  * The tbl->free_node must be null when deleting.
  *

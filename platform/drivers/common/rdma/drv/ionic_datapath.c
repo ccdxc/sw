@@ -69,6 +69,7 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
 		return false;
 
+	/* Prevent out-of-order reads of the CQE */
 	rmb();
 
 #ifdef NOT_UPSTREAM
@@ -1131,11 +1132,11 @@ static int ionic_prep_reg(struct ionic_qp *qp,
 	int flags;
 
 	if (wr->wr.send_flags & (IB_SEND_SOLICITED | IB_SEND_INLINE))
-		return EINVAL;
+		return -EINVAL;
 
 	/* must call ib_map_mr_sg before posting reg wr */
 	if (!mr->buf.tbl_pages)
-		return EINVAL;
+		return -EINVAL;
 
 	meta = &qp->sq_meta[qp->sq.prod];
 	wqe = ionic_queue_at_prod(&qp->sq);

@@ -114,6 +114,7 @@ static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
 		return false;
 
+	/* Prevent out-of-order reads of the CQE */
 	rmb();
 
 	ibdev_dbg(&dev->ibdev, "poll admin cq %u prod %u\n",
@@ -779,6 +780,7 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 	if (eq->q.cons != color)
 		return false;
 
+	/* Prevent out-of-order reads of the EQE */
 	rmb();
 
 	ibdev_dbg(&eq->dev->ibdev, "poll eq prod %u\n", eq->q.prod);

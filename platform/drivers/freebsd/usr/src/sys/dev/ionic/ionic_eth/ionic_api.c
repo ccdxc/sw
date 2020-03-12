@@ -43,23 +43,20 @@ ionic_get_handle_from_netdev(struct net_device *netdev,
 	struct ionic_lif *lif;
 
 	if (strcmp(api_version, IONIC_API_VERSION))
-		return (NULL);
+		return (ERR_PTR(-EINVAL));
 
 	lif = ionic_netdev_lif(netdev);
-	if (!lif)
-		return (NULL);
-
-	if (lif->ionic->is_mgmt_nic)
-		return (NULL);
+	if (!lif || !lif->nrdma_eqs_avail)
+		return (ERR_PTR(-ENXIO));
 
 	/* TODO: Rework if supporting more than one slave */
 	if (lif->slave_lif_cfg.prsn != IONIC_PRSN_NONE &&
 	    lif->slave_lif_cfg.prsn != prsn)
-		return (NULL);
+		return (ERR_PTR(-EBUSY));
 
 	return (lif);
 }
-EXPORT_SYMBOL_GPL(ionic_get_handle_from_netdev);
+EXPORT_SYMBOL(ionic_get_handle_from_netdev);
 
 bool
 ionic_api_stay_registered(void *handle)
@@ -68,7 +65,7 @@ ionic_api_stay_registered(void *handle)
 
 	return (lif->stay_registered);
 }
-EXPORT_SYMBOL_GPL(ionic_api_stay_registered);
+EXPORT_SYMBOL(ionic_api_stay_registered);
 
 void
 ionic_api_request_reset(void *handle)
@@ -77,7 +74,7 @@ ionic_api_request_reset(void *handle)
 
 	netdev_warn(lif->netdev, "request_reset: not implemented\n");
 }
-EXPORT_SYMBOL_GPL(ionic_api_request_reset);
+EXPORT_SYMBOL(ionic_api_request_reset);
 
 void *
 ionic_api_get_private(void *handle, enum ionic_api_prsn prsn)
@@ -89,7 +86,7 @@ ionic_api_get_private(void *handle, enum ionic_api_prsn prsn)
 
 	return (lif->slave_lif_cfg.priv);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_private);
+EXPORT_SYMBOL(ionic_api_get_private);
 
 int
 ionic_api_set_private(void *handle, void *priv, void (*reset_cb)(void *priv),
@@ -119,7 +116,7 @@ ionic_api_set_private(void *handle, void *priv, void (*reset_cb)(void *priv),
 
 	return (0);
 }
-EXPORT_SYMBOL_GPL(ionic_api_set_private);
+EXPORT_SYMBOL(ionic_api_set_private);
 
 struct device *
 ionic_api_get_device(void *handle)
@@ -128,7 +125,7 @@ ionic_api_get_device(void *handle)
 
 	return (lif->ionic->dev);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_device);
+EXPORT_SYMBOL(ionic_api_get_device);
 
 const struct ionic_devinfo *
 ionic_api_get_devinfo(void *handle)
@@ -137,7 +134,7 @@ ionic_api_get_devinfo(void *handle)
 
 	return (&lif->ionic->idev.dev_info);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_devinfo);
+EXPORT_SYMBOL(ionic_api_get_devinfo);
 
 struct sysctl_oid *
 ionic_api_get_debug_ctx(void *handle)
@@ -146,7 +143,7 @@ ionic_api_get_debug_ctx(void *handle)
 
 	return (lif->sysctl_ifnet);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_debug_ctx);
+EXPORT_SYMBOL(ionic_api_get_debug_ctx);
 
 const union ionic_lif_identity *
 ionic_api_get_identity(void *handle, int *lif_index)
@@ -159,7 +156,7 @@ ionic_api_get_identity(void *handle, int *lif_index)
 	/* TODO: Do all LIFs have the same ident? */
 	return (&lif->ionic->ident.lif);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_identity);
+EXPORT_SYMBOL(ionic_api_get_identity);
 
 int
 ionic_api_get_intr(void *handle, int *irq)
@@ -188,7 +185,7 @@ ionic_api_get_intr(void *handle, int *irq)
 	*irq = err;
 	return (intr_obj.index);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_intr);
+EXPORT_SYMBOL(ionic_api_get_intr);
 
 void
 ionic_api_put_intr(void *handle, int intr)
@@ -202,7 +199,7 @@ ionic_api_put_intr(void *handle, int intr)
 
 	lif->nrdma_eqs_avail++;
 }
-EXPORT_SYMBOL_GPL(ionic_api_put_intr);
+EXPORT_SYMBOL(ionic_api_put_intr);
 
 int
 ionic_api_get_cmb(void *handle, uint32_t *pgid, phys_addr_t *pgaddr, int order)
@@ -224,7 +221,7 @@ ionic_api_get_cmb(void *handle, uint32_t *pgid, phys_addr_t *pgaddr, int order)
 
 	return (0);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_cmb);
+EXPORT_SYMBOL(ionic_api_get_cmb);
 
 void
 ionic_api_put_cmb(void *handle, uint32_t pgid, int order)
@@ -236,7 +233,7 @@ ionic_api_put_cmb(void *handle, uint32_t pgid, int order)
 	bitmap_release_region(idev->cmb_inuse, pgid, order);
 	mutex_unlock(&idev->cmb_inuse_lock);
 }
-EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
+EXPORT_SYMBOL(ionic_api_put_cmb);
 
 void
 ionic_api_kernel_dbpage(void *handle, struct ionic_intr __iomem **intr_ctrl,
@@ -249,7 +246,7 @@ ionic_api_kernel_dbpage(void *handle, struct ionic_intr __iomem **intr_ctrl,
 	*dbid = lif->kern_pid;
 	*dbpage = lif->kern_dbpage;
 }
-EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
+EXPORT_SYMBOL(ionic_api_kernel_dbpage);
 
 int
 ionic_api_get_dbid(void *handle, uint32_t *dbid, phys_addr_t *addr)
@@ -276,7 +273,7 @@ ionic_api_get_dbid(void *handle, uint32_t *dbid, phys_addr_t *addr)
 
 	return (0);
 }
-EXPORT_SYMBOL_GPL(ionic_api_get_dbid);
+EXPORT_SYMBOL(ionic_api_get_dbid);
 
 void
 ionic_api_put_dbid(void *handle, int dbid)
@@ -285,7 +282,7 @@ ionic_api_put_dbid(void *handle, int dbid)
 
 	clear_bit(dbid, lif->dbid_inuse);
 }
-EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
+EXPORT_SYMBOL(ionic_api_put_dbid);
 
 /* External users: post commands using dev_cmds */
 #define IONIC_API_ADMINQ_WAIT_SEC 10
@@ -329,4 +326,4 @@ err_out:
 
 	return (err);
 }
-EXPORT_SYMBOL_GPL(ionic_api_adminq_post);
+EXPORT_SYMBOL(ionic_api_adminq_post);

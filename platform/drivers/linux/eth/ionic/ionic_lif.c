@@ -209,7 +209,7 @@ int ionic_intr_alloc(struct ionic *ionic, struct ionic_intr_info *intr)
 	index = find_first_zero_bit(ionic->intrs, ionic->nintrs);
 	if (index == ionic->nintrs) {
 		dev_warn(ionic->dev, "%s: no intr, index=%d nintrs=%d\n",
-			    __func__, index, ionic->nintrs);
+			 __func__, index, ionic->nintrs);
 		return -ENOSPC;
 	}
 

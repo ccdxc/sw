@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Copyright(c) 2017 - 2019 Pensando Systems, Inc */
+/* Copyright (c) 2017-2020 Pensando Systems, Inc. All rights reserved. */
 
 #include <linux/kernel.h>
 
@@ -16,19 +16,16 @@ void *ionic_get_handle_from_netdev(struct net_device *netdev,
 	struct ionic_lif *lif;
 
 	if (strcmp(api_version, IONIC_API_VERSION))
-		return NULL;
+		return ERR_PTR(-EINVAL);
 
 	lif = ionic_netdev_lif(netdev);
-	if (!lif)
-		return NULL;
-
-	if (lif->ionic->is_mgmt_nic)
-		return NULL;
+	if (!lif || !lif->nrdma_eqs_avail)
+		return ERR_PTR(-ENXIO);
 
 	/* TODO: Rework if supporting more than one slave */
 	if (lif->slave_lif_cfg.prsn != IONIC_PRSN_NONE &&
 	    lif->slave_lif_cfg.prsn != prsn)
-		return NULL;
+		return ERR_PTR(-EBUSY);
 
 	return lif;
 }
@@ -94,7 +91,7 @@ struct device *ionic_api_get_device(void *handle)
 {
 	struct ionic_lif *lif = handle;
 
-	return (lif->netdev->dev.parent);
+	return lif->netdev->dev.parent;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_device);
 

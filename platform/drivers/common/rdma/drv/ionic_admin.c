@@ -159,6 +159,7 @@ static bool ionic_admin_next_cqe(struct ionic_cq *cq,
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
 		return false;
 
+	/* Prevent out-of-order reads of the CQE */
 	rmb();
 
 #ifdef NOT_UPSTREAM
@@ -836,6 +837,7 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 	if (eq->q.cons != color)
 		return false;
 
+	/* Prevent out-of-order reads of the EQE */
 	rmb();
 
 #ifdef NOT_UPSTREAM

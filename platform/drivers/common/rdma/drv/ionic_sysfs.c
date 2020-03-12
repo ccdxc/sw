@@ -14,7 +14,7 @@
 /* Global per-module config knobs */
 bool ionic_dbg_enable = true;
 int ionic_sqcmb_order = 5; /* 32 pages */
-bool ionic_sqcmb_inline = false;
+bool ionic_sqcmb_inline;
 int ionic_rqcmb_order = 5; /* 32 pages */
 u16 ionic_aq_depth = 63;
 int ionic_aq_count = 4;
@@ -23,7 +23,7 @@ u16 ionic_eq_isr_budget = 10;
 u16 ionic_eq_work_budget = 1000;
 int ionic_max_pd = 1024;
 #ifdef NOT_UPSTREAM
-static bool ionic_nosupport = false;
+static bool ionic_nosupport;
 #endif
 int ionic_spec = IONIC_SPEC_HIGH;
 
@@ -116,7 +116,7 @@ static ssize_t ionic_rdma_description_show(struct config_item *item, char *pg)
 #ifdef NOT_UPSTREAM
 "nosupport       Enable unsupported config values\n"
 #endif
-"spec            Max SGEs to speculatively load\n");
+"spec            Max SGEs per WR for speculation\n");
 }
 
 CONFIGFS_ATTR(ionic_rdma_, dbg_enable);
@@ -204,7 +204,7 @@ MODULE_PARM_DESC(max_pd, "Max number of PDs.");
 
 #ifdef NOT_UPSTREAM
 module_param_named(nosupport, ionic_nosupport, bool, 0644);
-MODULE_PARM_DESC(nosupport, "Enable unsupported config values");
+MODULE_PARM_DESC(nosupport, "Enable unsupported config values.");
 
 #endif
 /* Special handling for spec */
@@ -237,7 +237,7 @@ static const struct kernel_param_ops ionic_spec_ops = {
 	.get = param_get_int,
 };
 module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
-MODULE_PARM_DESC(spec, "Max SGEs to speculatively load.");
+MODULE_PARM_DESC(spec, "Max SGEs per WR for speculation.");
 #endif /* HAVE_CONFIGFS */
 
 static void ionic_umem_show(struct seq_file *s, const char *w,

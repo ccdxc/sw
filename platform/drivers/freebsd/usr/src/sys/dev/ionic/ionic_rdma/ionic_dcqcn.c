@@ -592,8 +592,9 @@ static ssize_t dcqcn_store_rules(struct kobject *kobj,
 	/* assign new rules */
 
 	if (rules_count) {
-		dcqcn->rules = kmalloc_array(sizeof(*dcqcn->rules),
-					     rules_count, GFP_KERNEL);
+		dcqcn->rules = kmalloc_array(rules_count,
+					     sizeof(*dcqcn->rules),
+					     GFP_KERNEL);
 		if (!dcqcn->rules)
 			return -ENOMEM;
 
@@ -774,8 +775,9 @@ int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count)
 	if (rc)
 		goto err_prof_kobj;
 
-	dev->dcqcn->profiles = kcalloc(sizeof(*dev->dcqcn->profiles),
-				       prof_count, GFP_KERNEL);
+	dev->dcqcn->profiles = kcalloc(prof_count,
+				       sizeof(*dev->dcqcn->profiles),
+				       GFP_KERNEL);
 	if (!dev->dcqcn->profiles) {
 		rc = -ENOMEM;
 		goto err_prof_alloc;

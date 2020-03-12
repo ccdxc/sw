@@ -364,10 +364,10 @@ static inline void ionic_dbg_xdump(struct ionic_ctx *ctx, const char *str,
 #define IONIC_STATS_OPS	256
 
 /**
- * struct ionic_stats: Counters incremented by driver.
- * @ring_cq_dbell:	Times rang cq doorbell to advance index.
- * @arm_cq_any:		Times rang cq doorbell to arm any event.
- * @arm_cq_sol:		Times rang cq doorbell to arm solicited only.
+ * struct ionic_stats - Counters incremented by driver
+ * @ring_cq_dbell:	Times rang cq doorbell to advance index
+ * @arm_cq_any:		Times rang cq doorbell to arm any event
+ * @arm_cq_sol:		Times rang cq doorbell to arm solicited only
  * @poll_cq:		Times called poll_cq
  * @poll_cq_err:	Times returned error
  * @poll_cq_wc:		Total wc polled
@@ -536,13 +536,13 @@ static inline void ionic_stats_print(FILE *file, struct ionic_stats *stats)
 #define IONIC_LATS_OUTLIER	4
 
 /**
- * struct ionic_latstat: One dimension of latency statistics.
- * @min:		Mininum latency seen.
- * @max:		Maximum latency seen after warmup.
- * @accum:		Accumulated latency after warmup.
- * @count:		Number of samples after warmup, for averaging.
- * @warmup:		Number of samples discarded for warmup.
- * @hist:		Histogram of samples, log scale.
+ * struct ionic_latstat - One dimension of latency statistics
+ * @min:		Mininum latency seen
+ * @max:		Maximum latency seen after warmup
+ * @accum:		Accumulated latency after warmup
+ * @count:		Number of samples after warmup, for averaging
+ * @warmup:		Number of samples discarded for warmup
+ * @hist:		Histogram of samples, log scale
  */
 struct ionic_latstat {
 	unsigned long		min;
@@ -554,7 +554,7 @@ struct ionic_latstat {
 };
 
 /**
- * struct ionic_latencies: Latency statistics.
+ * struct ionic_latencies - Latency statistics
  * @overhead:		Overhead per trace
  * @stamp:		Most recent timestamp
  * @application:	Duration between calls

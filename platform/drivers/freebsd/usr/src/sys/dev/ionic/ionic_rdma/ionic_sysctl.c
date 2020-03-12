@@ -115,7 +115,7 @@ static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 }
 int ionic_spec = IONIC_SPEC_HIGH;
 SYSCTL_PROC(_hw_ionic_rdma, OID_AUTO, spec, CTLFLAG_RWTUN | CTLTYPE_INT,
-    &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs to speculatively load");
+    &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs per WR for speculation");
 
 static struct sysctl_oid *ionic_node(struct sysctl_ctx_list *ctx,
 				     struct sysctl_oid_list *parent,

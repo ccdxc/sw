@@ -51,6 +51,8 @@
 
 #define FW_INFO "[Firmware Info]: "
 
+#define PTR_ERR_OR_ZERO(p) PTR_ERR(p)
+
 #if __FreeBSD_version < 1200518
 static inline int
 sysfs_create_group_check_name(struct kobject *kobj,

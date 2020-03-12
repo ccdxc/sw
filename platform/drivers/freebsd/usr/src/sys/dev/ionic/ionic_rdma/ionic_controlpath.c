@@ -516,9 +516,8 @@ static void ionic_set_ah_attr(struct ionic_ibdev *dev,
 	}
 
 	memset(ah_attr, 0, sizeof(*ah_attr));
-	if (hdr->eth_present) {
+	if (hdr->eth_present)
 		memcpy(&ah_attr->dmac, &hdr->eth.dmac_h, ETH_ALEN);
-	}
 	rdma_ah_set_sl(ah_attr, vlan >> 13);
 	rdma_ah_set_port_num(ah_attr, 1);
 	rdma_ah_set_grh(ah_attr, NULL, flow_label, sgid_index, ttl, tos);
