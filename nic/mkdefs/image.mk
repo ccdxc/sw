@@ -140,7 +140,6 @@ endif
 ifneq ($(CUSTOMDOCKERCONTEXT), 1)
 	OUT_DIR=output/${ASIC} FLAVOR=-venice NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=${ASIC} make -C . firmware-normal
 	mv naples_fw_.tar naples_fw_venice.tar
-	${MAKE} ARCH=x86_64 package-pegasus
 endif
 endif
 	OUT_DIR=output/${ASIC} NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=${ASIC} make -C . firmware-normal
