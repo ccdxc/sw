@@ -593,16 +593,19 @@ def __getTunObject(nh_type, id):
 def __get_matching_route(routetbl, addr):
     addr = ipaddress.ip_address(addr)
     matching_route = None
+    matching_masklen = 0
     if routetbl.PriorityType:
         min_priority = topo.MIN_ROUTE_PRIORITY + 1
         routes = routetbl.routes
         for route in routes.values():
-            routePriority = route.Priority
-            if routePriority == 0: assert 0
+            if route.Priority == 0: assert 0
             if addr in route.ipaddr:
-                if routePriority < min_priority:
-                    min_priority = routePriority
+                if route.Priority  < min_priority or \
+                  (route.Priority == min_priority and \
+                   route.ipaddr.prefixlen > matching_masklen):
+                    matching_masklen = route.ipaddr.prefixlen
                     matching_route = route
+                    min_priority = route.Priority
     else:
         #TODO: move everything to above model
         assert(0)
