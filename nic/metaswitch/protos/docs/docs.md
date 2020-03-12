@@ -343,6 +343,7 @@
     - [EvpnMacIpStatus](#pds_ms.EvpnMacIpStatus)
   
     - [EvpnCfg](#pds_ms.EvpnCfg)
+    - [EvpnOperStatus](#pds_ms.EvpnOperStatus)
     - [EvpnRtType](#pds_ms.EvpnRtType)
     - [EvpnSource](#pds_ms.EvpnSource)
   
@@ -3633,6 +3634,7 @@ operational status of EVPN EVI, if any
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | RD | [bytes](#bytes) |  | in use route-distinguisher of the EVI |
+| Status | [EvpnOperStatus](#pds_ms.EvpnOperStatus) |  | oper status |
 | EVIId | [uint32](#uint32) |  | Internal only |
 
 
@@ -4089,6 +4091,28 @@ EVPN RD/RT config types - manual or auto-generated
 | EVPN_CFG_NONE | 0 |  |
 | EVPN_CFG_MANUAL | 1 |  |
 | EVPN_CFG_AUTO | 2 |  |
+
+
+
+<a name="pds_ms.EvpnOperStatus"/>
+
+### EvpnOperStatus
+EVPN operational status
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| EVPN_OPER_STATUS_NONE | 0 |  |
+| EVPN_OPER_STATUS_UP | 1 |  |
+| EVPN_OPER_STATUS_DOWN | 2 |  |
+| EVPN_OPER_STATUS_GOING_UP | 3 |  |
+| EVPN_OPER_STATUS_GOING_DOWN | 4 |  |
+| EVPN_OPER_STATUS_ACT_FAILED | 5 |  |
+| EVPN_OPER_STATUS_QUIESCING | 6 |  |
+| EVPN_OPER_STATUS_NOT_READY | 7 |  |
+| EVPN_OPER_STATUS_FAILED | 8 |  |
+| EVPN_OPER_STATUS_PRNT_FAILD | 9 |  |
+| EVPN_OPER_STATUS_FAILD_PERM | 10 |  |
+| EVPN_OPER_STATUS_FAILING | 11 |  |
 
 
 

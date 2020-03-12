@@ -402,3 +402,213 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		BGPNLRIPrefixStatus: in,
 	}
 }
+
+//
+// ShadowEvpnIpVrf
+//
+
+// ShadowEvpnIpVrfSpec shadows the EvpnIpVrfSpec for CLI purposes
+type ShadowEvpnIpVrfSpec struct {
+	Id        string
+	VPCId     string
+	RD        string
+	*pds.EvpnIpVrfSpec
+}
+
+func NewEvpnIpVrfSpec(in *pds.EvpnIpVrfSpec) ShadowEvpnIpVrfSpec {
+	uid, err := uuid.FromBytes(in.Id)
+	uidstr := ""
+	if err == nil {
+		uidstr = uid.String()
+	}
+	return ShadowEvpnIpVrfSpec{
+		Id:            uidstr,
+		VPCId:         string(in.VPCId),
+		RD:            printRD(in.RD),
+		EvpnIpVrfSpec: in,
+	}
+}
+
+// ShadowEvpnIpVrfStatus shadows the EvpnIpVrfStatus for CLI purposes
+type ShadowEvpnIpVrfStatus struct {
+	*pds.EvpnIpVrfStatus
+}
+
+func NewEvpnIpVrfStatus(in *pds.EvpnIpVrfStatus) ShadowEvpnIpVrfStatus {
+	return ShadowEvpnIpVrfStatus{
+		EvpnIpVrfStatus: in,
+	}
+}
+
+// ShadowEvpnIpVrf shadows the EvpnIpVrf for CLI purposes
+type ShadowEvpnIpVrf struct {
+	Spec   ShadowEvpnIpVrfSpec
+	Status ShadowEvpnIpVrfStatus
+}
+
+func NewEvpnIpVrf(in *pds.EvpnIpVrf) *ShadowEvpnIpVrf {
+	return &ShadowEvpnIpVrf{
+		Spec:   NewEvpnIpVrfSpec(in.Spec),
+		Status: NewEvpnIpVrfStatus(in.Status),
+	}
+}
+
+//
+// ShadowEvpnIpVrfRt
+//
+
+// ShadowEvpnIpVrfRtSpec shadows the EvpnIpVrfRtSpec for CLI purposes
+type ShadowEvpnIpVrfRtSpec struct {
+	Id        string
+	VPCId     string
+	RT        string
+    RTType    string
+	*pds.EvpnIpVrfRtSpec
+}
+
+func NewEvpnIpVrfRtSpec(in *pds.EvpnIpVrfRtSpec) ShadowEvpnIpVrfRtSpec {
+	uid, err := uuid.FromBytes(in.Id)
+	uidstr := ""
+	if err == nil {
+		uidstr = uid.String()
+	}
+	return ShadowEvpnIpVrfRtSpec{
+		Id:            uidstr,
+		VPCId:         string(in.VPCId),
+		RT:            dumpBytes(in.RT),
+		RTType:        strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		EvpnIpVrfRtSpec: in,
+	}
+}
+
+// ShadowEvpnIpVrfRtStatus shadows the EvpnIpVrfRtStatus for CLI purposes
+type ShadowEvpnIpVrfRtStatus struct {
+	*pds.EvpnIpVrfRtStatus
+}
+
+func NewEvpnIpVrfRtStatus(in *pds.EvpnIpVrfRtStatus) ShadowEvpnIpVrfRtStatus {
+	return ShadowEvpnIpVrfRtStatus{
+		EvpnIpVrfRtStatus: in,
+	}
+}
+
+// ShadowEvpnIpVrfRt shadows the EvpnIpVrfRt for CLI purposes
+type ShadowEvpnIpVrfRt struct {
+	Spec   ShadowEvpnIpVrfRtSpec
+	Status ShadowEvpnIpVrfRtStatus
+}
+
+func NewEvpnIpVrfRt(in *pds.EvpnIpVrfRt) *ShadowEvpnIpVrfRt {
+	return &ShadowEvpnIpVrfRt{
+		Spec:   NewEvpnIpVrfRtSpec(in.Spec),
+		Status: NewEvpnIpVrfRtStatus(in.Status),
+	}
+}
+
+//
+// ShadowEvpnEvi
+//
+
+// ShadowEvpnEviSpec shadows the EvpnEviSpec for CLI purposes
+type ShadowEvpnEviSpec struct {
+	Id         string
+	SubnetId   string
+	RD         string
+    RTType     string
+	*pds.EvpnEviSpec
+}
+
+func NewEvpnEviSpec(in *pds.EvpnEviSpec) ShadowEvpnEviSpec {
+	uid, err := uuid.FromBytes(in.Id)
+	uidstr := ""
+	if err == nil {
+		uidstr = uid.String()
+	}
+	return ShadowEvpnEviSpec{
+		Id:             uidstr,
+		SubnetId:       string(in.SubnetId),
+		RD:             printRD(in.RD),
+		RTType:         strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		EvpnEviSpec:    in,
+	}
+}
+
+// ShadowEvpnEviStatus shadows the EvpnEviStatus for CLI purposes
+type ShadowEvpnEviStatus struct {
+    RD         string
+    Status     string
+	*pds.EvpnEviStatus
+}
+
+func NewEvpnEviStatus(in *pds.EvpnEviStatus) ShadowEvpnEviStatus {
+	return ShadowEvpnEviStatus{
+		RD:               printRD(in.RD),
+		Status:           strings.TrimPrefix(in.Status.String(), "EVPN_OPER_STATUS_"),
+		EvpnEviStatus:    in,
+	}
+}
+
+// ShadowEvpnEvi shadows the EvpnEvi for CLI purposes
+type ShadowEvpnEvi struct {
+	Spec   ShadowEvpnEviSpec
+	Status ShadowEvpnEviStatus
+}
+
+func NewEvpnEvi(in *pds.EvpnEvi) *ShadowEvpnEvi {
+	return &ShadowEvpnEvi{
+		Spec:   NewEvpnEviSpec(in.Spec),
+		Status: NewEvpnEviStatus(in.Status),
+	}
+}
+
+//
+// ShadowEvpnEviRt
+//
+
+// ShadowEvpnEviRtSpec shadows the EvpnEviRtSpec for CLI purposes
+type ShadowEvpnEviRtSpec struct {
+	Id         string
+	SubnetId   string
+	RT         string
+    RTType     string
+	*pds.EvpnEviRtSpec
+}
+
+func NewEvpnEviRtSpec(in *pds.EvpnEviRtSpec) ShadowEvpnEviRtSpec {
+	uid, err := uuid.FromBytes(in.Id)
+	uidstr := ""
+	if err == nil {
+		uidstr = uid.String()
+	}
+	return ShadowEvpnEviRtSpec{
+		Id:               uidstr,
+		SubnetId:         string(in.SubnetId),
+		RT:               dumpBytes(in.RT),
+		RTType:           strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		EvpnEviRtSpec:    in,
+	}
+}
+
+// ShadowEvpnEviRtStatus shadows the EvpnEviRtStatus for CLI purposes
+type ShadowEvpnEviRtStatus struct {
+	*pds.EvpnEviRtStatus
+}
+
+func NewEvpnEviRtStatus(in *pds.EvpnEviRtStatus) ShadowEvpnEviRtStatus {
+	return ShadowEvpnEviRtStatus{
+		EvpnEviRtStatus:    in,
+	}
+}
+
+// ShadowEvpnEviRt shadows the EvpnEviRt for CLI purposes
+type ShadowEvpnEviRt struct {
+	Spec   ShadowEvpnEviRtSpec
+	Status ShadowEvpnEviRtStatus
+}
+
+func NewEvpnEviRt(in *pds.EvpnEviRt) *ShadowEvpnEviRt {
+	return &ShadowEvpnEviRt{
+		Spec:   NewEvpnEviRtSpec(in.Spec),
+		Status: NewEvpnEviRtStatus(in.Status),
+	}
+}

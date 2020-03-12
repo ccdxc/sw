@@ -54,6 +54,22 @@ enum EvpnSource {
     EVPN_SOURCE_REMOTE  = 2;
 }
 
+// EVPN operational status
+enum EvpnOperStatus {
+    EVPN_OPER_STATUS_NONE       = 0;
+    EVPN_OPER_STATUS_UP         = 1;
+    EVPN_OPER_STATUS_DOWN       = 2;
+    EVPN_OPER_STATUS_GOING_UP   = 3;
+    EVPN_OPER_STATUS_GOING_DOWN = 4;
+    EVPN_OPER_STATUS_ACT_FAILED = 5;
+    EVPN_OPER_STATUS_QUIESCING  = 6;
+    EVPN_OPER_STATUS_NOT_READY  = 7;
+    EVPN_OPER_STATUS_FAILED     = 8;
+    EVPN_OPER_STATUS_PRNT_FAILD = 9;
+    EVPN_OPER_STATUS_FAILD_PERM = 10;
+    EVPN_OPER_STATUS_FAILING    = 11;
+}
+
 // EVPN EVI configuration
 message EvpnEviSpec {
   // unique key/identifier of EVPN EVI
@@ -74,7 +90,9 @@ message EvpnEviSpec {
 // operational status of EVPN EVI, if any
 message EvpnEviStatus {
   // in use route-distinguisher of the EVI
-  bytes RD = 1;
+  bytes          RD     = 1;
+  // oper status
+  EvpnOperStatus Status = 2;
 }
 
 // EVPN EVI object

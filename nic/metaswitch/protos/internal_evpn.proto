@@ -55,6 +55,23 @@ enum EvpnSource {
     EVPN_SOURCE_REMOTE  = 2;
 }
 
+
+// EVPN operational status
+enum EvpnOperStatus {
+    EVPN_OPER_STATUS_NONE       = 0;
+    EVPN_OPER_STATUS_UP         = 1;
+    EVPN_OPER_STATUS_DOWN       = 2;
+    EVPN_OPER_STATUS_GOING_UP   = 3;
+    EVPN_OPER_STATUS_GOING_DOWN = 4;
+    EVPN_OPER_STATUS_ACT_FAILED = 5;
+    EVPN_OPER_STATUS_QUIESCING  = 6;
+    EVPN_OPER_STATUS_NOT_READY  = 7;
+    EVPN_OPER_STATUS_FAILED     = 8;
+    EVPN_OPER_STATUS_PRNT_FAILD = 9;
+    EVPN_OPER_STATUS_FAILD_PERM = 10;
+    EVPN_OPER_STATUS_FAILING    = 11;
+}
+
 // EVPN EVI configuration
 message EvpnEviSpec {
   option (venice.pdsaSetGlobOpts) = {
@@ -99,6 +116,9 @@ message EvpnEviStatus {
 
   // in use route-distinguisher of the EVI
   bytes RD = 1 [(venice.pdsaFields) = {Field:"rd"}];
+
+  // oper status
+  EvpnOperStatus Status = 2 [(venice.pdsaFields) = {Field:"oper_status"}];
 
   // Internal only
   uint32 EVIId = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", IsInternalField: true}];
