@@ -78,8 +78,7 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
            event->rsp_thread_id);
 
     if (event->stage == upg_stage_id(id)) {
-        fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status)
-                                                );
+        fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status));
         if ( fsm_states.is_current_stage_over()) {
             if (fsm_states.current_stage() ==
                 fsm_states.end_stage()) {

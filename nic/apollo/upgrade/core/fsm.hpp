@@ -85,7 +85,7 @@ static fsm fsm_states;
 
 sdk_ret_t do_switchover(void);
 sdk_ret_t register_callback(stage_callback_t cb_type, stage_id_t cb_stage,
-                                void *(*callback)(void *), void *arg);
+                            void *(*callback)(void *), void *arg);
 
 }
 #endif    //  __UPG_FSM_HPP__

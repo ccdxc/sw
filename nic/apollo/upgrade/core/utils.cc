@@ -217,18 +217,18 @@ svc_rsp_code (upg_status_t id)
 {
     svc_rsp_code_t svc_rsp_id = SVC_RSP_NONE;
     switch (id) {
-        case UPG_STATUS_OK:
-            svc_rsp_id = SVC_RSP_OK;
-            break;
-        case UPG_STATUS_FAIL:
-            svc_rsp_id = SVC_RSP_FAIL;
-            break;
-        case UPG_STATUS_CRITICAL:
-            svc_rsp_id = SVC_RSP_CRIT;
-            break;
-        default:
-            svc_rsp_id = SVC_RSP_NONE;
-            break;
+    case UPG_STATUS_OK:
+        svc_rsp_id = SVC_RSP_OK;
+        break;
+    case UPG_STATUS_FAIL:
+        svc_rsp_id = SVC_RSP_FAIL;
+        break;
+    case UPG_STATUS_CRITICAL:
+        svc_rsp_id = SVC_RSP_CRIT;
+        break;
+    default:
+        svc_rsp_id = SVC_RSP_NONE;
+        break;
     }
     return svc_rsp_id;
 };
@@ -240,36 +240,36 @@ upg_stage_id (stage_id_t id)
     upg_stage_t upg_stage_id = UPG_STAGE_NONE;
 
     switch(id) {
-        case STAGE_ID_COMPAT_CHECK:
-            upg_stage_id = UPG_STAGE_COMPAT_CHECK;
-            break;
-        case STAGE_ID_START:
-            upg_stage_id = UPG_STAGE_START;
-            break;
-        case STAGE_ID_BACKUP :
-        case STAGE_ID_PREPARE:
-            upg_stage_id = UPG_STAGE_PREPARE;
-            break;
-        case STAGE_ID_SWITCHOVER:
-            upg_stage_id = UPG_STAGE_SWITCHOVER;
-            break;
-        case STAGE_ID_FINISH:
-        case STAGE_ID_VERIFY:
-            upg_stage_id = UPG_STAGE_INIT;
-            break;
-        case STAGE_ID_ABORT:
-            upg_stage_id = UPG_STAGE_ABORT;
-            break;
-        case STAGE_ID_ROLLBACK:
-            upg_stage_id = UPG_STAGE_ROLLBACK;
-            break;
-        case STAGE_ID_CRITICAL:
-        case STAGE_ID_EXIT:
-            upg_stage_id = UPG_STAGE_EXIT;
-            break;
-        default:
-            upg_stage_id = UPG_STAGE_NONE;
-            break;
+    case STAGE_ID_COMPAT_CHECK:
+        upg_stage_id = UPG_STAGE_COMPAT_CHECK;
+        break;
+    case STAGE_ID_START:
+        upg_stage_id = UPG_STAGE_START;
+        break;
+    case STAGE_ID_BACKUP :
+    case STAGE_ID_PREPARE:
+        upg_stage_id = UPG_STAGE_PREPARE;
+        break;
+    case STAGE_ID_SWITCHOVER:
+        upg_stage_id = UPG_STAGE_SWITCHOVER;
+        break;
+    case STAGE_ID_FINISH:
+    case STAGE_ID_VERIFY:
+        upg_stage_id = UPG_STAGE_INIT;
+        break;
+    case STAGE_ID_ABORT:
+        upg_stage_id = UPG_STAGE_ABORT;
+        break;
+    case STAGE_ID_ROLLBACK:
+        upg_stage_id = UPG_STAGE_ROLLBACK;
+        break;
+    case STAGE_ID_CRITICAL:
+    case STAGE_ID_EXIT:
+        upg_stage_id = UPG_STAGE_EXIT;
+        break;
+    default:
+        upg_stage_id = UPG_STAGE_NONE;
+        break;
     }
     return upg_stage_id;
 };
