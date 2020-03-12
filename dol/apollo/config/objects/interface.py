@@ -171,6 +171,8 @@ class InterfaceObject(base.ConfigObjectBase):
             return
         # We need to read info from naples and update the DS
         resp = api.client[self.Node].GetHttp(self.ObjType)
+        if not resp:
+            return
         for ifinst in resp:
             if self.Type == topo.InterfaceTypes.L3:
                 if (not ifinst['spec']['type'] == 'L3'):
@@ -418,8 +420,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
 
     def __read_agent_loopback(self, node):
         resp = self.ReadAgentInterfaces(node)
-        #if utils.IsDryRun():
-            #return
+        if utils.IsDryRun():
+            return
         if not resp:
             return None
         for r in resp:
@@ -434,12 +436,13 @@ class InterfaceObjectClient(base.ConfigClientBase):
         for ifspec in iflist:
             if ifspec.iftype != 'loopback':
                 continue
+            rdata = None
             if GlobalOptions.netagent:
                 rdata = self.__read_agent_loopback(node)
                 if rdata:
                     spec.id = rdata['meta']['name']
-            else:
-                rdata = None
+            if not rdata:
+                # if netagent read fail, or we're in pds agent mode, use allocator
                 spec.id = 'Loopback%d' % next(ResmgrClient[node].LoopbackIfIdAllocator)
 
             spec.status = ifspec.ifadminstatus
@@ -482,7 +485,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         if not resp:
             return None
         for r in resp:
-            if r['spec']['type'] == 'HOST_PF':
+            if r['spec']['type'] == 'HOST_PF' and hasattr(r['status'], 'id'):
                 ifspec = InterfaceSpec_()
                 ifinfo = InterfaceSpec_()
                 ifspec.origin = 'fixed'
@@ -531,7 +534,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return resp
 
     def ReadAgentInterfaces(self, node):
-        #if utils.IsDryRun(): return
+        if utils.IsDryRun(): return
         if not GlobalOptions.netagent:
             return
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)

@@ -112,6 +112,7 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 		"/api/mode/":                  c.addVeniceCoordinateRoutes,
 		"/api/debug/":                 c.addDebugRoutes,
 		"/api/mapping/":               c.addAPIMappingRoutes,
+		"/api/ipam-policies/":         agServer.AddIPAMPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

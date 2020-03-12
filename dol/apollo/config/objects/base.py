@@ -478,6 +478,8 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def ReadObjects(self, node):
         logger.info(f"Reading {self.ObjType.name} Objects from {node}")
+        if GlobalOptions.dryrun:
+            return True
         if not self.GrpcRead(node):
             return False
         if not self.PdsctlRead(node):

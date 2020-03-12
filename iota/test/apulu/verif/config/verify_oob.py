@@ -103,6 +103,8 @@ def __teardown(tc):
     return result
 
 def __verify_oob():
+    if GlobalOptions.dryrun:
+       return api.types.status.SUCCESS
     tc = __TCData()
     if __setup(tc) is False or __trigger(tc) is False or\
        __verify(tc) is False or __teardown(tc) is False:

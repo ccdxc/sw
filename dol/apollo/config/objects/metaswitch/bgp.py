@@ -82,8 +82,8 @@ class BgpObject(base.ConfigObjectBase):
               "kind": "RoutingConfig",
               "meta": {
                 "name": self.GID(),
-                "tenant": "default",
-                "namespace": "default",
+                "tenant": self.Tenant,
+                "namespace": self.Namespace,
                 "uuid": self.UUID.UuidStr,
                 "labels": {
                     "CreatedBy": "Venice"

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 __MAX_MTU = 9100
 
@@ -44,6 +45,8 @@ def __config_max_mtu_on_workload_intfs():
     return __verify_response(resp)
 
 def __config_max_mtu():
+    if GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
     if __config_max_mtu_on_host_intfs() == False or\
        __config_max_mtu_on_workload_intfs() == False:
         return api.types.status.FAILURE

@@ -197,8 +197,8 @@ class RouteTableObject(base.ConfigObjectBase):
             "kind": "RouteTable",
             "meta": {
                 "name": self.GID(),
-                "namespace": "default",
-                "tenant": self.VPC.GID(),
+                "namespace": self.Namespace,
+                "tenant": self.Tenant,
                 "uuid" : self.UUID.UuidStr,
                 "labels": {
                     "CreatedBy": "Venice"

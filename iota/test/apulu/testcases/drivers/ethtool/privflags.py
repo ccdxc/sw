@@ -152,6 +152,7 @@ def Trigger(tc):
     hosts = api.GetNaplesHostnames()
     intfs = api.GetNaplesHostInterfaces(tc.nodes[0])
 
+    ret = api.types.status.SUCCESS
     for i in intfs:
         ret = __checkDebugStatsDefault(hosts[0], i)
         if ret == api.types.status.SUCCESS:

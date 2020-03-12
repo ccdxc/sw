@@ -143,11 +143,14 @@ class ClientRESTModule:
                 logger.info("Invalid Post Data from object %s"%obj.GID())
                 continue
             logger.info("PostData: %s"%pdata)
-            rdata = requests.post(self.url, pdata)
-            if rdata.status_code != 200:
-                logger.error("Obj:%s POST FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
+            if not GlobalOptions.dryrun:
+                rdata = requests.post(self.url, pdata)
+                if rdata.status_code != 200:
+                    logger.error("Obj:%s POST FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
+                else:
+                    resps.append(rdata)
             else:
-                resps.append(rdata)
+                resps.append(True)
         return resps
 
     def Update(self, objs):
@@ -160,11 +163,14 @@ class ClientRESTModule:
                 logger.info("Invalid Put Data from object %s"%obj.GID())
                 continue
             logger.info("PutData: %s"%pdata)
-            rdata = requests.put(url, pdata)
-            if rdata.status_code != 200:
-                logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, url))
+            if not GlobalOptions.dryrun:
+                rdata = requests.put(url, pdata)
+                if rdata.status_code != 200:
+                    logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, url))
+                else:
+                    resps.append(rdata)
             else:
-                resps.append(rdata)
+                resps.append(True)
         return resps
 
     def Get(self):
@@ -179,11 +185,14 @@ class ClientRESTModule:
         for obj in objs:
             url = "%s%s"%(self.url, obj.GetRESTPath())
             logger.info("Obj:%s Delete URL %s"%(obj.GID(), url))
-            rdata = requests.delete(url)
-            if rdata.status_code != 200:
-                logger.error("Obj:%s DELETE FAILED [%d] URL %s"%(obj.GID(), rdata.status_code, url))
+            if not GlobalOptions.dryrun:
+                rdata = requests.delete(url)
+                if rdata.status_code != 200:
+                    logger.error("Obj:%s DELETE FAILED [%d] URL %s"%(obj.GID(), rdata.status_code, url))
+                else:
+                    resps.append(rdata)
             else:
-                resps.append(rdata)
+                resps.append(True)
         return resps
 
 class ClientStub:
@@ -428,7 +437,7 @@ class ApolloAgentClient:
             if not self.__restreqs[objtype]:
                 return # unsupported object
             return self.__restreqs[objtype].Create(objs)
-        if GlobalOptions.dryrun: return
+        if GlobalOptions.dryrun: return True
         return self.__stubs[objtype].Rpc(ApiOps.CREATE, objs)
 
     def Delete(self, objtype, objs):
@@ -436,7 +445,7 @@ class ApolloAgentClient:
             if not self.__restreqs[objtype]:
                 return # unsupported object
             return self.__restreqs[objtype].Delete(objs)
-        if GlobalOptions.dryrun: return
+        if GlobalOptions.dryrun: return True
         return self.__stubs[objtype].Rpc(ApiOps.DELETE, objs)
 
     def Update(self, objtype, objs):
@@ -444,7 +453,7 @@ class ApolloAgentClient:
             if not self.__restreqs[objtype]:
                 return # unsupported object
             return self.__restreqs[objtype].Update(objs)
-        if GlobalOptions.dryrun: return
+        if GlobalOptions.dryrun: return True
         return self.__stubs[objtype].Rpc(ApiOps.UPDATE, objs)
 
     def GetGrpc(self, objtype, objs):
@@ -452,6 +461,7 @@ class ApolloAgentClient:
         return self.__stubs[objtype].Rpc(ApiOps.GET, objs)
 
     def GetHttp(self, objtype):
+        if GlobalOptions.dryrun: return None
         if not self.__restreqs[objtype]:
             return None # unsupported object
         return self.__restreqs[objtype].Get()

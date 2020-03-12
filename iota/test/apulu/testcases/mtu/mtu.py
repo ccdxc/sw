@@ -21,6 +21,8 @@ def verifyMTUchange(tc):
     expected_mtu = tc.new_mtu
     node_name = tc.naples_node
     workloads = api.GetWorkloads()
+    if api.IsDryrun():
+        return result
     for w in workloads:
         configured_mtu = host_utils.getInterfaceMTU(w.node_name, w.interface)
         if node_name != w.node_name:
@@ -34,6 +36,8 @@ def verifyMTUchange(tc):
 
 def changeWorkloadIntfMTU(new_mtu, node_name=None):
     result = api.types.status.SUCCESS
+    if api.IsDryrun():
+        return result
     workloads = api.GetWorkloads()
     for w in workloads:
         if node_name is not None:
@@ -111,6 +115,8 @@ def verifyMTUPings(tc):
     final_result = api.types.status.SUCCESS
     new_mtu = tc.new_mtu
     global __IS_FREEBSD
+
+    if api.IsDryrun(): return final_result
 
     # Verify ping with exact MTU is successful
     result = traffic_utils.verifyPing(tc.cmd_cookies_1, tc.resp_1)

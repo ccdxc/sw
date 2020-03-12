@@ -44,7 +44,7 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    if tc.skip:
+    if tc.skip or api.IsDryrun():
         return api.types.status.SUCCESS
 
     result = api.types.status.SUCCESS
@@ -156,7 +156,7 @@ def Trigger(tc):
     return result
 
 def Verify(tc):
-    if tc.skip: return api.types.status.SUCCESS
+    if tc.skip or api.IsDryrun(): return api.types.status.SUCCESS
     if tc.resp is None:
         return api.types.status.FAILURE
 
@@ -209,6 +209,8 @@ def Verify(tc):
 
 def Teardown(tc):
     result = api.types.status.SUCCESS
+    if api.IsDryrun():
+        return result
 
     # Rollback to original flag values
     for wl in api.GetWorkloads():

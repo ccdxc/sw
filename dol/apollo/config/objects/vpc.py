@@ -252,7 +252,7 @@ class VpcObject(base.ConfigObjectBase):
         self.Tos += 1
 
     def RollbackAttributes(self):
-        attrlist = ["VirtualRouterMACAddr", "Tos"]
+        attrlist = ["VirtualRouterMACAddr", "Tos", "Vnid"]
         self.RollbackMany(attrlist)
 
     def PopulateKey(self, grpcmsg):
@@ -278,8 +278,8 @@ class VpcObject(base.ConfigObjectBase):
                 "kind": "Vrf",
                 "meta": {
                     "name": self.GID(),
-                    "namespace": "default",
-                    "tenant": self.GID(),
+                    "namespace": self.Namespace,
+                    "tenant": self.Tenant,
                     "uuid" : self.UUID.UuidStr,
                 },
                 "spec": {
@@ -291,8 +291,8 @@ class VpcObject(base.ConfigObjectBase):
                 "kind": "Vrf",
                 "meta": {
                     "name": self.GID(),
-                    "namespace": "default",
-                    "tenant": self.GID(),
+                    "namespace": self.Namespace,
+                    "tenant": self.Tenant,
                     "uuid" : self.UUID.UuidStr,
                     "labels": {
                         "CreatedBy": "Venice"

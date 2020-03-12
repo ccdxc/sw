@@ -235,6 +235,8 @@ class MacAddress(FrameworkFieldObject):
     def update(self, macincr):
         self.value.update(macincr)
 
+    def __str__(self):
+        return self.value.get()
 
 
 class MacAddressStep(FrameworkFieldObject):

@@ -3,6 +3,7 @@ import iota.harness.api as api
 from time import *
 from apollo.config.store import client as EzAccessStoreClient
 import iota.test.apulu.utils.pdsctl as pdsctl
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 UPLINK_PREFIX1 = "01000111-0000-0000-4242-00%x"
 UPLINK_PREFIX2 = "01000211-0000-0000-4242-00%x"
@@ -15,6 +16,8 @@ verifyRetry = 120 #no of seconds to retry for
 
 def verifyDataPortState(naples_nodes, admin, oper):
     ret = api.types.status.SUCCESS
+    if GlobalOptions.dryrun:
+        return ret
     retry_remaining = verifyRetry
     ret = verifyDataPortStateHelper(naples_nodes, admin, oper)
     while api.types.status.FAILURE == ret and retry_remaining > 0:
@@ -28,7 +31,8 @@ def verifyDataPortStateHelper(naples_nodes, admin, oper):
     ret = api.types.status.SUCCESS
     for node in naples_nodes:
         node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
-        #node_uuid = 750763714960
+        #if not node_uuid:
+        #     node_uuid = int(''.join(filter(str.isdigit, node)))
         for uplink in [UPLINK_PREFIX1, UPLINK_PREFIX2]:
             intf_uuid = uplink % node_uuid 
             cmd = "port status -p "+intf_uuid
