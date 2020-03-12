@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import time
+import json
 import threading
 from collections import defaultdict
 
@@ -129,6 +130,14 @@ def ReloadNodes(req):
 def IpmiNodeAction(req):
     Logger.debug("IpmiNodeAction:")
     return __rpc(req, gl_topo_svc_stub.IpmiNodeAction)
+
+def SaveNodes(req):
+    Logger.debug("Saving Nodes:")
+    return __rpc(req, gl_topo_svc_stub.SaveNodes)
+
+def RestoreNodes(req):
+    Logger.debug("Restore Nodes:")
+    return __rpc(req, gl_topo_svc_stub.RestoreNodes)
 
 def DoSwitchOperation(req):
     Logger.debug("Doing Switch operation:")
@@ -948,6 +957,12 @@ def IpmiNodes(nodes, ipmiMethod, useNcsi=False):
 def ReinitForTestsuite():
     return store.GetTestbed().InitForTestsuite()
 
+def SaveIotaAgentState(nodes):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().SaveNodes(nodes)
+
+def RestoreIotaAgentState(nodes):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestoreNodes(nodes)
+
 def GetCoverageFiles(src_cov_file, dst_dir):
     for node in GetNaplesHostnames():
         resp = CopyFromNaples(node, [src_cov_file], dst_dir)
@@ -982,14 +997,19 @@ def DownloadAssets(asset_name, parent_dir, release_version):
     req.parent_dir = parent_dir
     return __rpc(req, gl_topo_svc_stub.DownloadAssets)
 
-def ReInstallImage(req_json):
+def ReInstallImage(fw_version=None, dr_version=None):
     """
-    API to re-image testbed given version & artifact.
-    req json-str: "{ "FirmwareVersion" : "latest", "DriverVersion" : "latest" }"
     """
     # FIXME: Eventually, this will invoke gl_topo_svc_stub.InstallImage
     # for now, piggy-backing on existing py-harness impl
-    return store.GetTestbed().ReImageTestbed(req_json)
+    req = { 
+            'InstallFirmware' : fw_version != None,
+            'FirmwareVersion' : fw_version,
+            'InstallDriver'   : dr_version != None,
+            'DriverVersion'   : dr_version,
+            'TestCaseName'    : 'test'
+    }
+    return store.GetTestbed().ReImageTestbed(json.dumps(req))
 
 def RunSubTestCase(tc, sub_testcase, parallel=False):
     testcase = loader.Import(sub_testcase, tc.GetPackage())

@@ -309,6 +309,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.ProvisionedNodes = make(map[string]testbed.TestNodeInterface)
 	ts.Nodes = make(map[string]testbed.TestNodeInterface)
 	// split init nodes into pools of upto 'n' each
+        restoreAgentFiles := false
 	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
 		poolNodes := []*iota.TestBedNode{}
 		for nodeIdx < len(req.Nodes) {
@@ -354,7 +355,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 			pool.Go(func() error {
 				n := n
-				return n.InitNode(req.RebootNodes, ts.SSHConfig, commonCopyArtifacts)
+				return n.InitNode(req.RebootNodes, restoreAgentFiles, ts.SSHConfig, commonCopyArtifacts)
 			})
 		}
 		err = pool.Wait()
@@ -399,6 +400,7 @@ func (ts *TopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg)
 func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNodesMsg) error {
 	pool, ctx := errgroup.WithContext(ctx)
 
+        restoreAgentFiles := false
 	for _, node := range req.GetNodes() {
 
 		nodeInfo := testbed.NodeInfo{
@@ -432,7 +434,7 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNode
 
 		pool.Go(func() error {
 			n := n
-			return n.InitNode(req.RebootNodes, ts.SSHConfig, commonCopyArtifacts)
+			return n.InitNode(req.RebootNodes, restoreAgentFiles, ts.SSHConfig, commonCopyArtifacts)
 		})
 	}
 	if err := pool.Wait(); err != nil {
@@ -1288,6 +1290,105 @@ func (ts *TopologyService) MoveWorkloads(ctx context.Context, req *iota.Workload
 	}
 
 	return node.MoveWorkloads(ctx, req)
+}
+
+// SaveNodes to save and download context to local fs
+func (ts *TopologyService) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
+    defer log.Infof("TOPO SVC | DEBUG | SaveNodes Returned: %v", req)
+
+    // - Call SaveNodes Agent API
+    rNodes := []testbed.TestNodeInterface{}
+    for _, node := range req.Nodes {
+        n, ok := ts.ProvisionedNodes[node.Name]
+        if !ok {
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
+            return req, nil
+        } 
+        rNodes = append(rNodes, n)
+    }
+
+    saveNodes := func(ctx context.Context) error {
+        pool, ctx := errgroup.WithContext(ctx)
+
+        for _, node := range rNodes {
+            node := node
+            pool.Go(func() error {
+                return node.SaveNode(ts.SSHConfig)
+            })
+        }
+        return pool.Wait()
+    }
+    err := saveNodes(context.Background())
+    if err != nil {
+        log.Errorf("TOPO SVC | SaveNodes | SaveNodes Call failed. %v", err)
+        req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+        req.ApiResponse.ErrorMsg = err.Error()
+    }
+    req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
+    return req, nil
+}
+
+// RestoreNodes is to initNode after external/unknown reboot event 
+func (ts *TopologyService) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
+    defer log.Infof("TOPO SVC | DEBUG | RestoreNodes Returned: %v", req)
+
+    pool, ctx := errgroup.WithContext(ctx)
+
+    rNodes := []testbed.TestNodeInterface{}
+    for _, node := range req.Nodes {
+        n, ok := ts.ProvisionedNodes[node.Name]
+        if !ok {
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+            req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
+            return req, nil
+        }
+        rNodes = append(rNodes, n)
+    }
+    reboot := false
+    restoreAgentFiles := true
+    // - Prepare to upload the required files from local fs to remote node
+    for _, node := range rNodes {
+            // Assumption that node is alive and reachable
+            commonCopyArtifacts := []string{
+                    ts.tbInfo.resp.VeniceImage,
+                    ts.tbInfo.resp.NaplesImage,
+                    ts.tbInfo.resp.NaplesSimImage,
+            }
+            pool.Go(func() error {
+                    node := node
+                    node.InitNode(reboot, restoreAgentFiles, ts.SSHConfig, commonCopyArtifacts)
+                    svcName := node.GetNodeInfo().Name
+
+                    agentURL, err := node.GetAgentURL()
+                    if err != nil {
+                            log.Errorf("TOPO SVC | RestoreNodes | Failed obtain AgentURL for Node: %v. Err: %v", svcName, err)
+                            return err
+                    }
+
+                    c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
+                    if err != nil {
+                            log.Errorf("TOPO SVC | RestoreNodes | CreateNewGRPCClient call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
+                            return err
+                    }
+                    node.SetNodeAgent(iota.NewIotaAgentApiClient(c.Client))
+                    resp, err := node.GetNodeAgent().ReloadNode(ctx, node.GetNodeMsg(node.GetNodeInfo().Name))
+                    log.Infof("TOPO SVC | RestoreNodes | ReloadNode Agent . Received Response Msg: %v", resp)
+                    if err != nil {
+                            log.Errorf("Reload node %v failed. Err: %v", node.GetNodeInfo().Name, err)
+                            return err
+                    }
+                    return nil
+            })
+    }
+    if err := pool.Wait(); err != nil {
+            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+            return req, nil
+    }
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
 }
 
 // DownlaodAssets pulls assets

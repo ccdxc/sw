@@ -123,7 +123,7 @@ type EsxNode struct {
 
 //TestNodeInterface interface for all node operations
 type TestNodeInterface interface {
-	InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []string) error
+	InitNode(reboot, restoreAgentFiles bool, c *ssh.ClientConfig, commonArtifacts []string) error
 	CleanUpNode(cfg *ssh.ClientConfig, reboot bool) error
 	CopyTo(cfg *ssh.ClientConfig, entity string, files []string) error
 	CopyFrom(cfg *ssh.ClientConfig, dstDir string, files []string) error
@@ -166,6 +166,9 @@ type TestNodeInterface interface {
 	MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error)
 
 	RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error)
+	SaveNode(cfg *ssh.ClientConfig) error 
+	AgentDBGobFiles() []string
+	SavedDBGobFiles() []string
 }
 
 //ManagedNodeInterface represent interface for a managed node

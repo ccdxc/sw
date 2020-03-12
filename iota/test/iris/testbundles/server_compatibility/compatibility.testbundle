@@ -7,6 +7,16 @@ meta:
 testcases:
 # assuming 14min per reboot
 
+    -   name    : pxe-install
+        testcase: testcases.server.pxeinstall
+        disable : False
+        ignore  : True
+        stress  : True
+        args    :
+            timeout: 360000
+            type: host
+            install_iterations: 1
+
     -   name    : APC-Reboot
         testcase: testcases.server.reboot
         disable : False

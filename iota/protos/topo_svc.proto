@@ -51,6 +51,12 @@ service TopologyApi {
     // GetNodes returns the topology information of all the nodes.
     rpc GetNodes (NodeMsg) returns (NodeMsg) {};
 
+    // SaveNodes saves node and download state from host to runner/localhost
+    rpc SaveNodes (NodeMsg) returns (NodeMsg) {};
+
+    // Upload node-state from  runner/localhost to remote host/node
+    rpc RestoreNodes (NodeMsg) returns (NodeMsg) {};
+
     // AddWorkloads brings up a workload type on a given node
     rpc AddWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
 
@@ -85,6 +91,8 @@ enum Op {
         ADD     = 1;
         DELETE  = 2;
         GET     = 3;
+        SAVE    = 4;
+        RESTORE = 5;
 }
 
 // NodeInfo encapsulates all topology information for a given iota-server invocation

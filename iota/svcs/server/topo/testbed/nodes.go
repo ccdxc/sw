@@ -496,13 +496,24 @@ func (n *TestNode) RestartNode(method string, useNcsi bool) error {
 	return nil
 }
 
-// ReloadNode saves and reboots the nodes.
-func (n *TestNode) ReloadNode(name string, restoreState bool, method string, useNcsi bool) error {
-	var agentBinary string
+func (n *TestNode) AgentDBGobFiles() []string {
+        agentDBFiles := []string{
+                constants.DstIotaDBDir + n.Node.Name + ".gob",
+                constants.DstIotaDBDir + n.Node.Name + "_workloads" + ".gob",
+        }
+        return agentDBFiles
+}
 
-	if n.Node == nil {
-		n.Node = &iota.Node{}
-	}
+func (n *TestNode) SavedDBGobFiles() []string {
+        agentDBFiles := []string{
+                constants.LocalAgentDBFolder + n.Node.Name + ".gob",
+                constants.LocalAgentDBFolder + n.Node.Name + "_workloads" + ".gob",
+        }
+        return agentDBFiles
+}
+
+// SaveNode saves and downloads the node-context to local-fs
+func (n *TestNode) SaveNode(cfg *ssh.ClientConfig) error {
 	resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
 	log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v",
 		n.Node.GetName(), n.Node.IpAddress, resp)
@@ -510,8 +521,37 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 		log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
+        // Download agent context to local-fs
+	log.Infof("TOPO SVC | SaveNode | Downloading IotaAgent DB for %v", n.Node.Name)
 
-	if err = n.RestartNode(method, useNcsi); err != nil {
+	if err := n.CopyFrom(cfg, constants.LocalAgentDBFolder, n.AgentDBGobFiles()); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to download agent db from TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+		return err
+	}
+
+        return nil
+}
+
+// ReloadNode saves and reboots the nodes.
+func (n *TestNode) ReloadNode(name string, restoreState bool, method string, useNcsi bool) error {
+	var agentBinary string
+
+	if n.Node == nil {
+		n.Node = &iota.Node{}
+	}
+
+	var sshCfg *ssh.ClientConfig
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	} else {
+		sshCfg = n.info.SSHCfg
+	}
+
+        if err := n.SaveNode(sshCfg); err != nil {
+		return err
+        }
+
+	if err := n.RestartNode(method, useNcsi); err != nil {
 		log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
@@ -522,7 +562,6 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 		agentBinary = constants.IotaAgentBinaryPathLinux
 	}
 
-	var sshCfg *ssh.ClientConfig
 	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
 	} else {
@@ -531,7 +570,7 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 	ip, _ := n.GetNodeIP()
 	log.Infof("TOPO SVC | ReloadNode | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.Node.Name, ip)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
-	if err = n.StartAgent(sudoAgtCmd, sshCfg); err != nil {
+	if err := n.StartAgent(sudoAgtCmd, sshCfg); err != nil {
 		log.Errorf("TOPO SVC | RestartNode | Failed to start agent binary: %v, on TestNode: %v, at IPAddress: %v", agentBinary, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
@@ -550,7 +589,7 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	if restoreState {
-		resp, err = n.AgentClient.ReloadNode(ctx, n.Node)
+		resp, err := n.AgentClient.ReloadNode(ctx, n.Node)
 		log.Infof("TOPO SVC | ReloadNode | ReloadNode Agent . Received Response Msg: %v", resp)
 		if err != nil {
 			log.Errorf("Reload node %v failed. Err: %v", n.Node.Name, err)

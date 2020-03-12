@@ -1,0 +1,20 @@
+meta:
+    name    : iota
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 1
+
+testcases:
+    -   name    : SaveReImageRestoreNodes
+        testcase: testcases.iota.save_reimage_restore_test
+
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: local_only
+        iterators :
+            type    : nested
+            pktsize : [ 64 ]
+            ipaf    : [ ipv4 ]
+

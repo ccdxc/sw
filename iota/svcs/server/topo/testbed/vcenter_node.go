@@ -204,7 +204,7 @@ func (n *VcenterNode) CheckHealth(ctx context.Context, health *iota.NodeHealth) 
 }
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
-func (n *VcenterNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []string) error {
+func (n *VcenterNode) InitNode(reboot, restoreAgentFiles bool, c *ssh.ClientConfig, commonArtifacts []string) error {
 
 	if err := n.cleanUpVcenter(); err != nil {
 		return errors.Wrap(err, "Clean up venter failed")

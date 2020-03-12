@@ -23,7 +23,7 @@ e2e-targets:
        count: 1
        resources:
          servers:
-         - type: server-smc-1114S 
+         - type: compat-smc-1114S 
          nic-type: naples
    provision:
        username: vm
@@ -34,8 +34,8 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  
- compat-ucs220-skylake-linux:
-   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
+ compat-ucs220-cascade-linux:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
    owners: ["email:dbarsky@pensando.io"]
    area:
    sub-area:
@@ -49,7 +49,7 @@ e2e-targets:
        count: 1
        resources:
          servers:
-         - type: server-d
+         - type: compat-ucs-c220-M5
          nic-type: naples
    provision:
        username: vm
@@ -75,7 +75,7 @@ e2e-targets:
        count: 1
        resources:
          servers:
-         - type: server-dell-r6525
+         - type: compat-dell-r6525
          nic-type: naples
    provision:
        username: vm
@@ -86,8 +86,8 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  
- compat-HPE-DL325-linux:
-   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
+ compat-Dell-R6415-linux:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
    owners: ["email:dbarsky@pensando.io"]
    area:
    sub-area:
@@ -101,7 +101,59 @@ e2e-targets:
        count: 1
        resources:
          servers:
-         - type: server-hpe-dl325
+         - type: compat-dell-r6415
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+# compat-HPE-DL325-linux:
+#   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
+#   owners: ["email:dbarsky@pensando.io"]
+#   area:
+#   sub-area:
+#   feature:
+#   max-duration: 72h
+#   build-dependencies:
+#     - build-iris-arm
+#     - build-iota
+#   clusters:
+#     - image: build-9
+#       count: 1
+#       resources:
+#         servers:
+#         - type: compat-hpe-dl325
+#         nic-type: naples
+#   provision:
+#       username: vm
+#       password: vm
+#       vars:
+#          BmOs: linux
+#          VmOs: linux
+#          EsxUsername: root
+#          EsxPassword: Pen0trl!
+
+ compat-HPE-DL360-linux:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-9
+       count: 1
+       resources:
+         servers:
+         - type: compat-hpe-dl360
          nic-type: naples
    provision:
        username: vm

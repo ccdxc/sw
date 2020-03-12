@@ -170,6 +170,20 @@ func (ts *StubTopologyService) DoSwitchOperation(ctx context.Context, req *iota.
 	return req, nil
 }
 
+func (ts *StubTopologyService) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
+
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
+}
+
+func (ts *StubTopologyService) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+    log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
+
+    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+    return req, nil
+}
+
 // DownloadAssets pulls assets
 func (ts *StubTopologyService) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
     log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)

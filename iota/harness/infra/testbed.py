@@ -335,6 +335,8 @@ class _Testbed:
 
                 if firmware_reimage_only: 
                     cmd.extend(["--naples-only-setup"])
+                elif driver_reimage_only:
+                    cmd.extend(["--only-init"])
 
                 # XXX workaround: remove when host mgmt interface works for apulu
                 if GlobalOptions.pipeline in [ "apulu" ]:
@@ -508,10 +510,11 @@ class _Testbed:
             new_img_manifest = json.loads(fh.read())
         manifest_file = self.image_manifest_file
         self.__fw_upgrade_done = False
-        reimage_driver = False
-        reimage_firmware = False
+        reimage_driver = getattr(reimg_req, 'InstallDriver', False)
+        reimage_firmware = getattr(reimg_req, 'InstallFirmware', False)
+
         # pick the non-latest versions
-        if reimg_req.DriverVersion != "latest":
+        if reimage_driver:
             # driver image to be changed
             new_img_manifest["Drivers"] = None
             dr_img_manifest_file = os.path.join(GlobalOptions.topdir, 
@@ -519,9 +522,8 @@ class _Testbed:
             with open(dr_img_manifest_file, "r") as fh:
                 dr_img_manifest = json.loads(fh.read())
             new_img_manifest["Drivers"] = dr_img_manifest["Drivers"]
-            reimage_driver = True
 
-        if reimg_req.FirmwareVersion != "latest":
+        if reimage_firmware:
             # Firmware image to be changed
             new_img_manifest["Firmwares"] = None
             fw_img_manifest_file = os.path.join(GlobalOptions.topdir, 
@@ -529,7 +531,6 @@ class _Testbed:
             with open(fw_img_manifest_file, "r") as fh:
                 fw_img_manifest = json.loads(fh.read())
             new_img_manifest["Firmwares"] = fw_img_manifest["Firmwares"]
-            reimage_firmware = True
 
         if reimage_driver or reimage_firmware:
             new_img_manifest["Version"] = "NA" # TODO
@@ -542,11 +543,13 @@ class _Testbed:
             with open(manifest_file, "w") as fh:
                 fh.write(json.dumps(new_img_manifest, indent=2))
 
-        # Call API to reimage testbed : restrict for naples nodes only
-        self.__recover_testbed(manifest_file, 
-                               driver_reimage_only=reimage_driver and not reimage_firmware, 
-                               firmware_reimage_only=reimage_firmware and not reimage_driver, 
-                               naples_host_only=True)
+            # Call API to reimage testbed : restrict for naples nodes only
+            GlobalOptions.only_reboot = False
+            GlobalOptions.skip_firmware_upgrade = False
+            self.__recover_testbed(manifest_file, 
+                                   driver_reimage_only=reimage_driver and not reimage_firmware, 
+                                   firmware_reimage_only=reimage_firmware and not reimage_driver, 
+                                   naples_host_only=True)
         return types.status.SUCCESS
 
     def InitForTestsuite(self, ts=None):

@@ -129,6 +129,16 @@ func (ms *mockIotaServer) CleanNodes(ctx context.Context, req *iota.TestNodesMsg
 	return nil, nil
 }
 
+// SaveNodes to save and download context to local fs
+func (ms *mockIotaServer) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	return nil, nil
+}
+
+// RestoreNodes is to initNode after external/unknown reboot event 
+func (ms *mockIotaServer) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	return nil, nil
+}
+
 // VeniceRestClient returns the REST client for venice
 func (ms *mockIotaServer) VeniceRestClient() ([]apiclient.Services, error) {
 	var restcls []apiclient.Services

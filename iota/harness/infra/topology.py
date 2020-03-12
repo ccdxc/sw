@@ -844,6 +844,42 @@ class Topology(object):
 
         return types.status.SUCCESS
 
+    def SaveNodes(self, node_names):
+        Logger.info("Saving Nodes:")
+        req = topo_pb2.NodeMsg()
+        req.node_op = topo_pb2.SAVE
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found" % node_name)
+                return types.status.FAILURE
+            node = self.__nodes[node_name]
+            msg = req.nodes.add()
+            msg.name = node_name
+
+        resp = api.SaveNodes(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
+    def RestoreNodes(self, node_names):
+        Logger.info("Restoring Nodes:")
+        req = topo_pb2.NodeMsg()
+        req.node_op = topo_pb2.RESTORE
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found" % node_name)
+                return types.status.FAILURE
+            node = self.__nodes[node_name]
+            msg = req.nodes.add()
+            msg.name = node_name
+
+        resp = api.RestoreNodes(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
     def Switches(self):
         switch_ips = {}
         req = topo_pb2.SwitchMsg()

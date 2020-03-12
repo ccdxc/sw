@@ -28,7 +28,7 @@ parser.add_argument('--coverage-dir', dest='coverage_dir',
 
 #parser.add_argument('--svcport', dest='svcport', default=60000,
 #                    help='IOTA Service Port.')
-parser.add_argument('--testbed', dest='testbed_json', default="/warmd.json",
+parser.add_argument('--testbed', dest='testbed_json', default="warmd.json",
                     help='Testbed JSON file')
 parser.add_argument('--no-keep-going', dest='no_keep_going',
                     action='store_true', help='Stop on first error.')

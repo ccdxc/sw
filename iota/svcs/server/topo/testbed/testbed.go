@@ -228,7 +228,7 @@ func (n *TestNode) initEsxNode() error {
 }
 
 // InitNode initializes an iota test node. It copies over IOTA Agent binary and starts it on the remote node
-func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []string) error {
+func (n *TestNode) InitNode(reboot, restoreAgentFiles bool, c *ssh.ClientConfig, commonArtifacts []string) error {
 	var agentBinary string
 
 	if reboot {
@@ -290,6 +290,14 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []
 		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to TestNode: %v, at IPAddress: %v", constants.NicFinderScript, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
+ 
+        if restoreAgentFiles {
+	    log.Infof("TOPO SVC | InitTestBed | Upload IOTA Agent SavedState on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+            // Copy Agent state gob files to the remote node
+            if err := n.CopyTo(c, constants.DstIotaDBDir, n.SavedDBGobFiles()); err != nil {
+                    log.Errorf("TOPO SVC | InitTestBed | Failed to copy common artifacts, to TestNode: %v, at IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+            }
+        }
 
 	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.GetNodeInfo().Name, n.GetNodeInfo().IPAddress)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)

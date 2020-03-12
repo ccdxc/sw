@@ -50,7 +50,7 @@ const (
 	DstIotaEntitiesDir = DstIotaAgentDir + "/entities"
 
 	// DstIotaDBDir has persistance for db.
-	DstIotaDBDir = DstIotaAgentDir + "/db"
+	DstIotaDBDir = DstIotaAgentDir + "/db/"
 
 	//MakeClusterTimeout waits for 5 minutes for the cluster to be up
 	MakeClusterTimeout = time.Duration(time.Minute * 5)
@@ -211,6 +211,9 @@ var (
 
 	// BuildItBinary
 	BuildItBinary = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images/buildit", os.Getenv("GOPATH"))
+
+        // Runner/LocalFS location to store iota-agent DB
+        LocalAgentDBFolder = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/agentdb/", os.Getenv("GOPATH"))
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{
