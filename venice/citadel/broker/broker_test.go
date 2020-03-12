@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/citadel/broker/continuous_query"
+
 	"github.com/influxdata/influxdb/models"
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
@@ -20,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/data"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/citadel/tstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -92,6 +95,10 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		return true, nil
 	}, "nodes have invalid number of shards", "1s", "20s")
 
+	// database for mocking continuous query
+	err = brokers[0].CreateDatabase(context.Background(), "default")
+	AssertOk(t, err, "Error creating database")
+
 	// create the database
 	err = brokers[0].CreateDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error creating database")
@@ -110,11 +117,11 @@ func TestBrokerTstoreBasic(t *testing.T) {
 			return false, err
 		}
 
-		if len(dbList) != 1 {
+		if len(dbList) != 2 {
 			return false, fmt.Errorf("invalid number of dbs, %+v", dbList)
 		}
 		for _, db := range dbList {
-			if db.Name != "db0" {
+			if db.Name != "db0" && db.Name != "default" {
 				return false, fmt.Errorf("invalid db name, %+v", db)
 			}
 		}
@@ -255,6 +262,8 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	// delete the database
 	err = brokers[0].DeleteDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error deleting database")
+	err = brokers[0].DeleteDatabase(context.Background(), "default")
+	AssertOk(t, err, "Error deleting database")
 
 	// stop all brokers and data nodes
 	for idx := 0; idx < numNodes; idx++ {
@@ -279,6 +288,187 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	Assert(t, err != nil, "query database didn't fail")
 	_, err = brokers[0].ExecuteShowCmd(context.Background(), "db0", "SHOW mesurements")
 	Assert(t, err != nil, "show commands didn't fail")
+
+	// verify no node is a leader
+	AssertEventually(t, func() (bool, interface{}) {
+		for idx := 0; idx < numNodes; idx++ {
+			return !dnodes[idx].IsLeader(), nil
+		}
+		return true, nil
+	}, "Node is still a leader after stopping", "300ms", "30s")
+
+	log.Infof("--------------Stopped all data nodes -------------")
+
+	// delete the old cluster state
+	err = meta.DestroyClusterState(meta.DefaultClusterConfig(), meta.ClusterTypeTstore)
+	AssertOk(t, err, "Error deleting cluster state")
+	err = meta.DestroyClusterState(meta.DefaultClusterConfig(), meta.ClusterTypeKstore)
+	AssertOk(t, err, "Error deleting cluster state")
+}
+
+func TestBrokerTstoreContinuousQuery(t *testing.T) {
+	const numNodes = 4
+	dnodes := make([]*data.DNode, numNodes)
+	brokers := make([]*broker.Broker, numNodes)
+	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
+
+	// create nodes
+	tstore.SetUintTestCQRunInterval()
+	for idx := 0; idx < numNodes; idx++ {
+		// create a temp dir
+		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
+		AssertOk(t, err, "Error creating tmp dir")
+		defer os.RemoveAll(path)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), logger)
+		AssertOk(t, err, "Error creating nodes")
+	}
+
+	// create the brokers
+	for idx := 0; idx < numNodes; idx++ {
+		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
+		AssertOk(t, err, "Error creating broker")
+	}
+
+	// wait till all the shards are created
+	AssertEventually(t, func() (bool, interface{}) {
+		if len(brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes {
+			return false, nil
+		}
+		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap {
+			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
+				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeTstore), nd}
+			}
+		}
+		return true, nil
+	}, "nodes have invalid number of shards", "1s", "20s")
+
+	// dataabse for mocking continuous query
+	err = brokers[0].CreateDatabase(context.Background(), "default")
+	AssertOk(t, err, "Error creating database")
+
+	// create the database
+	err = brokers[0].CreateDatabase(context.Background(), "cqdb")
+	AssertOk(t, err, "Error creating database")
+
+	// check retention policy in database
+	rpList, err := brokers[0].GetRetentionPolicy(context.Background(), "default")
+	AssertOk(t, err, "Failed to get retention policy for default database")
+	Assert(t, len(rpList) == 1+len(cq.RetentionPolicyMap), "Invalid number of retention policy. Get %v, expect %v", len(rpList), 1+len(cq.RetentionPolicyMap))
+
+	// create continuous query
+	cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+				BEGIN 
+					SELECT mean("value") AS "mean_value" INTO "cqdb"."default"."cpu_5seconds" 
+					FROM "cpu" 
+					GROUP BY time(5s), type 
+				END`
+	// In order to pass the cq measurement name validation
+	cq.RetentionPolicyMap["5seconds"] = cq.ContinuousQueryRetentionSpec{
+		Name:    "default",
+		Hours:   7 * 24,
+		GroupBy: "5s",
+	}
+	err = brokers[0].CreateContinuousQuery(context.Background(), "cqdb", "testcq", "default", 7*24, cqQuery)
+	AssertOk(t, err, "Error creating continuous query")
+
+	// read databases
+	AssertEventually(t, func() (bool, interface{}) {
+		dbList, err := brokers[0].ReadDatabases(context.Background())
+		if err != nil {
+			return false, err
+		}
+
+		if len(dbList) != 2 {
+			return false, fmt.Errorf("invalid number of dbs, %+v", dbList)
+		}
+		for _, db := range dbList {
+			if db.Name != "cqdb" && db.Name != "default" {
+				return false, fmt.Errorf("invalid db name, %+v", db)
+			}
+		}
+
+		return true, nil
+	}, "Error reading database")
+
+	// write some points
+	log.Infof("Writing data for 30s on each broker to test continunous query")
+	for i := 0; i < 30; i++ {
+		data := fmt.Sprintf("cpu,type=numType%d,host=serverB,svc=nginx value=%d\n", i%2, i)
+		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
+		AssertOk(t, err, "Error parsing points")
+		err = brokers[0].WritePoints(context.Background(), "cqdb", points)
+		AssertOk(t, err, "Error writing points")
+		time.Sleep(1 * time.Second)
+	}
+
+	// Check continuous query result
+	targetShard, err := brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("cqdb", "cpu", "")
+	AssertOk(t, err, "Failed to get target shard for written points. Error: %v", err)
+	checkQuery := "SELECT * FROM \"cqdb\".\"default\".\"cpu_5seconds\""
+	results, err := brokers[0].ExecuteQueryShard(context.Background(), "cqdb", checkQuery, uint(targetShard.ShardID)-1)
+	AssertOk(t, err, "Error executing query")
+	Assert(t, len(results[0].Series[0].Values) >= 10 && len(results[0].Series[0].Values) <= 14,
+		"Invalid number of continuous query result. Get %v Expect 5, 6 or 7", len(results[0].Series[0].Values))
+
+	// For test coverage
+	targetShard, err = brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("default", "Node", "")
+	AssertOk(t, err, "Failed to get target shard for written points. Error: %v", err)
+	checkQuery = "SELECT * FROM \"default\".\"default\".\"Node_5minutes\""
+	results, err = brokers[0].ExecuteQueryShard(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1)
+	AssertOk(t, err, "Error executing query")
+
+	// make call get continuous query
+	cqList, err := brokers[0].GetContinuousQuery(context.Background(), "cqdb", "")
+	AssertOk(t, err, "Error getting continuous query")
+	Assert(t, len(cqList) == 1, "Invalid number of continuous query. Get %v Expect 1", len(cqList))
+	Assert(t, cqList[0] == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0])
+
+	// make call delete continuous query
+	err = brokers[0].DeleteContinuousQuery(context.Background(), "cqdb", "testcq", "cpu")
+	AssertOk(t, err, "Error deleting continuous query")
+
+	// make call delete retention policy
+	for _, rpSpec := range cq.RetentionPolicyMap {
+		err = brokers[0].DeleteRetentionPolicy(context.Background(), "cqdb", rpSpec.Name)
+		AssertOk(t, err, fmt.Sprintf("Failed to delete retention policy %v for database cqdb", rpSpec.Name))
+	}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		dbList, err := brokers[0].ReadDatabases(context.Background())
+		if err != nil {
+			return false, err
+		}
+		if len(dbList) != 2 {
+			return false, fmt.Errorf("invalid number of dbs, %+v", dbList)
+		}
+		for _, db := range dbList {
+			if db.Name != "cqdb" && db.Name != "default" {
+				return false, fmt.Errorf("invalid db name, %+v", db)
+			}
+		}
+		if len(dbList[0].ContinuousQueries) != 0 {
+			return false, fmt.Errorf("Continuous Query still exist after deleting operation. Get %+v", dbList[0].ContinuousQueries)
+		}
+		return true, nil
+	}, "Error reading database")
+
+	// delete the database
+	err = brokers[0].DeleteDatabase(context.Background(), "db0")
+	AssertOk(t, err, "Error deleting database")
+
+	err = brokers[0].DeleteDatabase(context.Background(), "default")
+	AssertOk(t, err, "Error deleting database")
+
+	// stop all brokers and data nodes
+	for idx := 0; idx < numNodes; idx++ {
+		err = dnodes[idx].Stop()
+		AssertOk(t, err, "Error stopping data node")
+		Assert(t, brokers[idx].IsStopped() == false, "Incorrect broker state")
+		err = brokers[idx].Stop()
+		AssertOk(t, err, "Error stopping broker")
+		Assert(t, brokers[idx].IsStopped() == true, "Incorrect broker state")
+	}
 
 	// verify no node is a leader
 	AssertEventually(t, func() (bool, interface{}) {
@@ -588,6 +778,10 @@ func TestBrokerBenchmark(t *testing.T) {
 		return true, nil
 	}, "nodes have invalid number of shards", "1s", "30s")
 
+	// database for mocking continuous query
+	err = broker.CreateDatabase(context.Background(), "default")
+	AssertOk(t, err, "Error creating database")
+
 	// create the database
 	err = broker.CreateDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error creating database")
@@ -630,6 +824,9 @@ func TestBrokerBenchmark(t *testing.T) {
 
 	// delete the database
 	err = broker.DeleteDatabase(context.Background(), "db0")
+	AssertOk(t, err, "Error deleting database")
+
+	err = broker.DeleteDatabase(context.Background(), "default")
 	AssertOk(t, err, "Error deleting database")
 
 	// delete non-exisiting database

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -55,7 +56,7 @@ func TestTstoreBasic(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 
 	// read db
 	dbs := ts.ReadDatabases()
@@ -139,7 +140,7 @@ func TestTstoreBackupRetry(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 
 	// parse some points
 	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
@@ -219,7 +220,7 @@ func TestTstoreWithConfig(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 
 	// parse some points
 	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
@@ -294,7 +295,7 @@ func TestTstoreBackupRestore(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 
 	// parse some points
 	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 \n" +
@@ -415,7 +416,7 @@ func tstoreBebchmark(t *testing.T, ts *Tstore) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 
 	// measure how long it takes to parse the points
 	points := make([]models.Points, numIterations)
@@ -500,7 +501,7 @@ func TestRetentionPolicy(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &duration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 	dbs := ts.ReadDatabases()
 	Assert(t, len(dbs) == 1, "invalid database", dbs)
 
@@ -514,7 +515,7 @@ func TestRetentionPolicy(t *testing.T) {
 		Name:     meta.DefaultRetentionPolicyName,
 		Duration: &defaultDuration,
 	})
-	AssertOk(t, err, "Error creatung the database")
+	AssertOk(t, err, "Error creating the database")
 	defer ts.DeleteDatabase("db1")
 
 	// read db
@@ -525,4 +526,182 @@ func TestRetentionPolicy(t *testing.T) {
 		Assert(t, db.Name == "db1", "invalid db", db)
 		Assert(t, db.RetentionPolicies[0].Duration == time.Duration(meta.DefaultRetentionPeriod), "invalid duration", db.RetentionPolicies)
 	}
+}
+
+func TestTstoreContinuousQuery(t *testing.T) {
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create a new tstore
+	SetUintTestCQRunInterval()
+	ts, err := NewTstore(path)
+	AssertOk(t, err, "Error creating tstore")
+	defer ts.Close()
+
+	// create the database
+	err = ts.CreateDatabase("cqdb", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
+	AssertOk(t, err, "Error creating the database")
+
+	// read db
+	dbs := ts.ReadDatabases()
+	Assert(t, len(dbs) == 1, "invalid database", dbs)
+
+	for _, db := range dbs {
+		log.Infof("found db: %+v", db)
+		Assert(t, db.Name == "cqdb", "invalid db", db)
+	}
+
+	cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+				BEGIN 
+					SELECT mean("value") INTO "cqdb"."default"."average_value_five_seconds" 
+					FROM "cpu" 
+					GROUP BY time(5s) 
+				END`
+	err = ts.CreateContinuousQuery("cqdb", "testcq", "default", cqQuery)
+	AssertOk(t, err, "Failed to create continuous query")
+
+	log.Infof("Writing data for 1 min to test continunous query")
+	for idx := 0; idx < 60; idx++ {
+		data := "cpu,host=serverB,svc=nginx value=" + strconv.Itoa(idx) + "\n"
+		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
+		AssertOk(t, err, "Error parsing points")
+		// write the points
+		err = ts.WritePoints("cqdb", points)
+		AssertOk(t, err, "Error writing points")
+		time.Sleep(1 * time.Second)
+	}
+
+	ch, err := ts.ExecuteQuery("SELECT * FROM \"cqdb\".\"default\".\"average_value_five_seconds\"", "cqdb")
+	results := ReadAllResults(ch)
+	Assert(t, len(results) == 1, "Invalid number of result. Get %+v Expect %+v", len(results), 1)
+	Assert(t, len(results[0].Series) > 0, "Invalid number of data points obtained")
+	Assert(t, len(results[0].Series[0].Values) >= 11 && len(results[0].Series[0].Values) <= 13, "Invalid number of continuous query result. Get %+v Expect 11, 12 or 13", len(results[0].Series[0].Values))
+
+	existed, err := ts.CheckContinuousQuery("cqdb", "testcq")
+	AssertOk(t, err, "Error failed to check existence of continuous query in database")
+	Assert(t, existed, "Error failed to get expected continuous query in database")
+
+	cqs, err := ts.GetContinuousQuery("cqdb")
+	AssertOk(t, err, "Error failed to get continuous query. Err: %v", err)
+	Assert(t, len(cqs) == 1, "Invalid number of existed continuous query. Get %v Expect %v", len(cqs), 1)
+	Assert(t, cqs[0] == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0], "testcq")
+
+	err = ts.DeleteContinuousQuery("cqdb", "testcq")
+	AssertOk(t, err, "Error failed to delete continuous query. Err: %v", err)
+	dbInfo := ts.metaClient.Database("cqdb")
+	Assert(t, dbInfo != nil, "Unable to get database after deleting continuous query")
+	Assert(t, len(dbInfo.ContinuousQueries) == 0, "Continuous query still exist after deleting operation")
+
+	// Check previous continuous query result after deleting operation
+	ch, err = ts.ExecuteQuery("SELECT * FROM \"cqdb\".\"default\".\"average_value_five_seconds\"", "cqdb")
+	results = ReadAllResults(ch)
+	Assert(t, len(results) == 1, "Invalid number of result. Get %+v Expect %+v", len(results), 1)
+	Assert(t, len(results[0].Series[0].Values) >= 11 && len(results[0].Series[0].Values) <= 13, "Invalid number of continuous query result. Get %+v Expect 11, 12 or 13", len(results[0].Series[0].Values))
+
+	// delete the database
+	err = ts.DeleteDatabase("cqdb")
+	AssertOk(t, err, "Error deleting database")
+}
+
+func TestTstoreContinuousQueryWithNewRetentionPolicy(t *testing.T) {
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create a new tstore
+	ts, err := NewTstore(path)
+	AssertOk(t, err, "Error creating tstore")
+	defer ts.Close()
+
+	// create the database
+	err = ts.CreateDatabase("cqdb", &meta2.RetentionPolicySpec{
+		Name:     meta.DefaultRetentionPolicyName,
+		Duration: &defaultDuration,
+	})
+	AssertOk(t, err, "Error creating the database")
+
+	// read db
+	dbs := ts.ReadDatabases()
+	Assert(t, len(dbs) == 1, "invalid database", dbs)
+
+	for _, db := range dbs {
+		log.Infof("found db: %+v", db)
+		Assert(t, db.Name == "cqdb", "invalid db", db)
+	}
+
+	cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+				BEGIN 
+					SELECT mean("value") INTO "cqdb"."new_rp"."average_value_five_seconds" 
+					FROM "cpu" 
+					GROUP BY time(5s) 
+				END`
+	err = ts.CreateContinuousQuery("cqdb", "testcq", "new_rp", cqQuery)
+	Assert(t, err != nil, "Failed to raise error for creating continuous query on non-existed retention policy")
+
+	// create new retention policy and make call on related api
+	err = ts.CreateRetentionPolicy("cqdb", "new_rp", 7*24)
+	AssertOk(t, err, "Failed to create retention policy for continuous query")
+	rpList, err := ts.GetRetentionPolicy("cqdb")
+	AssertOk(t, err, "Failed to get retention policy on database cqdb")
+	Assert(t, len(rpList) == 2, "Invalid number of retention policy. Get %v, expect 2.", len(rpList))
+	for _, rpName := range rpList {
+		Assert(t, rpName == "default" || rpName == "new_rp", "Invalid name of obtained retention policy name. Get %v, expect default or new_rp", rpName)
+	}
+	existed, err := ts.CheckRetentionPolicy("cqdb", "new_rp")
+	AssertOk(t, err, "Failed to get retention policy in database")
+	Assert(t, existed, "Failed to get new retention policy in database")
+
+	// create continuous query after creating related retention policy
+	err = ts.CreateContinuousQuery("cqdb", "testcq", "new_rp", cqQuery)
+	AssertOk(t, err, "Failed to create continuous query after creating related retention policy")
+
+	log.Infof("Writing data for 1 min to test continunous query")
+	for idx := 0; idx < 60; idx++ {
+		data := "cpu,host=serverB,svc=nginx value=" + strconv.Itoa(idx) + "\n"
+		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
+		AssertOk(t, err, "Error parsing points")
+		// write the points
+		err = ts.WritePoints("cqdb", points)
+		AssertOk(t, err, "Error writing points")
+		time.Sleep(1 * time.Second)
+	}
+
+	ch, err := ts.ExecuteQuery("SELECT * FROM \"cqdb\".\"new_rp\".\"average_value_five_seconds\"", "cqdb")
+	results := ReadAllResults(ch)
+	Assert(t, len(results) == 1, "Invalid number of result. Get %+v Expect %+v", len(results), 1)
+	Assert(t, len(results[0].Series[0].Values) >= 11 && len(results[0].Series[0].Values) <= 13, "Invalid number of continuous query result. Get %+v Expect 11, 12 or 13", len(results[0].Series[0].Values))
+
+	cqs, err := ts.GetContinuousQuery("cqdb")
+	AssertOk(t, err, "Error failed to get continuous query. Err: %v", err)
+	Assert(t, len(cqs) == 1, "Invalid number of existed continuous query. Get %v Expect %v", len(cqs), 1)
+	Assert(t, cqs[0] == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0], "testcq")
+
+	err = ts.DeleteContinuousQuery("cqdb", "testcq")
+	AssertOk(t, err, "Error failed to delete continuous query. Err: %v", err)
+	err = ts.DeleteRetentionPolicy("cqdb", "new_rp")
+	AssertOk(t, err, "Error failed to delete retention policy. Err: %v", err)
+	dbInfo := ts.metaClient.Database("cqdb")
+	Assert(t, dbInfo != nil, "Unable to get database after deleting continuous query")
+	Assert(t, len(dbInfo.ContinuousQueries) == 0, "Continuous query still exist after deleting operation")
+	Assert(t, len(dbInfo.RetentionPolicies) == 1, "Only default retention policy should remain in database")
+
+	// delete the database
+	err = ts.DeleteDatabase("cqdb")
+	AssertOk(t, err, "Error deleting database")
+
+	// Mock error for retention policy related api
+	err = ts.CreateRetentionPolicy("unknowndb", "new_rp", 7*24)
+	Assert(t, err != nil, "Failed to raise error for creating retention policy on non-existed database")
+	rpList, err = ts.GetRetentionPolicy("unknowndb")
+	Assert(t, rpList == nil && err != nil, "Failed to raise error for trying to get retention policy on non-existed database")
+	existed, err = ts.CheckRetentionPolicy("uknowndb", "new_rp")
+	Assert(t, err != nil, "Failed to raise error for checking retention policy on non-existed database")
+	err = ts.DeleteRetentionPolicy("unknowndb", "new_rp")
+	Assert(t, err != nil, "Failed to raise error for deleting retention policy on non-existed database")
 }

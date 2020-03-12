@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"expvar"
 	"fmt"
 	"io/ioutil"
@@ -62,6 +63,12 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dn *data.DNode, dbg 
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("POST")
 	r.HandleFunc("/dnode", hsrv.dnodeReqHandler).Methods("GET")
 	r.HandleFunc("/ping", hsrv.pingReqHandler).Methods("GET")
+	r.HandleFunc("/cq", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createcqReqHandler))).Methods("POST")
+	r.HandleFunc("/cq", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readcqReqHandler))).Methods("GET")
+	r.HandleFunc("/cq", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletecqReqHandler))).Methods("DELETE")
+	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createrpReqHandler))).Methods("POST")
+	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readrpReqHandler))).Methods("GET")
+	r.HandleFunc("/rp", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deleterpReqHandler))).Methods("DELETE")
 	r.HandleFunc("/healthz", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.healthReqHandler))).Methods("GET")
 
 	// kv apis
@@ -164,6 +171,144 @@ func (hsrv *HTTPServer) deletedbReqHandler(r *http.Request) (interface{}, error)
 	err := hsrv.broker.DeleteDatabase(context.Background(), database)
 	if err != nil {
 		log.Errorf("Error deleting the database %s. Err: %v", database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// createcqReqHandler creates continuous query
+func (hsrv *HTTPServer) createcqReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, fmt.Errorf("empty db for database name")
+	}
+	cq := r.URL.Query().Get("cq")
+	if cq == "" {
+		return nil, fmt.Errorf("empty cq for continuous query name")
+	}
+	query := r.URL.Query().Get("query")
+	if query == "" {
+		return nil, fmt.Errorf("empty query for query string")
+	}
+	retentionName := r.URL.Query().Get("rp")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rp for retention policy name")
+	}
+	retentionPeriod := r.URL.Query().Get("rptime")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rptime for retention policy period")
+	}
+
+	// create db
+	period, err := strconv.ParseUint(retentionPeriod, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("Error parse input retention period to uint64")
+	}
+	err = hsrv.broker.CreateContinuousQuery(context.Background(), database, cq, retentionName, period, query)
+	if err != nil {
+		log.Errorf("Error creating the continuous query %+v in database %+v. Err: %v", cq, database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// readcqReqHandler reads all databases
+func (hsrv *HTTPServer) readcqReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, fmt.Errorf("empty db for database name")
+	}
+	replicaID := r.URL.Query().Get("replica")
+	result, err := hsrv.broker.GetContinuousQuery(context.Background(), database, replicaID)
+	if err != nil {
+		log.Errorf("Error reading continuous queries. Err: %v", err)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// deletecqReqHandler deletes a database
+func (hsrv *HTTPServer) deletecqReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, fmt.Errorf("empty db for database name")
+	}
+	cq := r.URL.Query().Get("cq")
+	if cq == "" {
+		return nil, fmt.Errorf("empty cq for continuous query name")
+	}
+	measurement := r.URL.Query().Get("measurement")
+
+	// create db
+	err := hsrv.broker.DeleteContinuousQuery(context.Background(), database, cq, measurement)
+	if err != nil {
+		log.Errorf("Error deleting the continuous query %s in database %s. Err: %v", cq, database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// createrpReqHandler creates retention policy
+func (hsrv *HTTPServer) createrpReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, fmt.Errorf("empty db for database name")
+	}
+	retentionName := r.URL.Query().Get("rp")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rp for retention policy name")
+	}
+	retentionPeriod := r.URL.Query().Get("rptime")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rptime for retention policy period")
+	}
+
+	period, err := strconv.ParseUint(retentionPeriod, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("Error parse input retention period to uint64")
+	}
+	err = hsrv.broker.CreateRetentionPolicy(context.Background(), database, retentionName, period)
+	if err != nil {
+		log.Errorf("Error creating the retention policy %+v in database %+v. Err: %v", retentionName, database, err)
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+// readrpReqHandler reads retention policy
+func (hsrv *HTTPServer) readrpReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, errors.New("empty db for database name")
+	}
+	result, err := hsrv.broker.GetRetentionPolicy(context.Background(), database)
+	if err != nil {
+		log.Errorf("Error reading continuous queries. Err: %v", err)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// deleterpReqHandler deletes retention policy
+func (hsrv *HTTPServer) deleterpReqHandler(r *http.Request) (interface{}, error) {
+	database := r.URL.Query().Get("db")
+	if database == "" {
+		return nil, errors.New("empty db for database name")
+	}
+	retentionName := r.URL.Query().Get("rp")
+	if retentionName == "" {
+		return nil, fmt.Errorf("empty rp for retention policy name")
+	}
+
+	err := hsrv.broker.DeleteRetentionPolicy(context.Background(), database, retentionName)
+	if err != nil {
+		log.Errorf("Error deleting retention policy %s in database %s. Err: %v", retentionName, database, err)
 		return nil, err
 	}
 

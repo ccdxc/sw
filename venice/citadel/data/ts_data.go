@@ -425,3 +425,157 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 
 	return &resp, nil
 }
+
+// CreateRetentionPolicy create retention policy
+func (dn *DNode) CreateRetentionPolicy(ctx context.Context, req *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received CreateRetentionPolicy req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
+		dn.logger.Errorf("Nodemap: %s", jstr)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	existed, err := shard.store.CheckRetentionPolicy(req.Database, req.RetentionName)
+	if err != nil {
+		dn.logger.Errorf("Error check retention policy in database. Error: %+v", err)
+		return nil, err
+	}
+
+	if !existed {
+		err := shard.store.CreateRetentionPolicy(req.Database, req.RetentionName, req.RetentionPeriod)
+		if err != nil {
+			dn.logger.Errorf("Error create retention policy. Error: %+v", err)
+			return nil, err
+		}
+	}
+
+	return &resp, nil
+}
+
+// GetRetentionPolicy get retention policy from specific database
+func (dn *DNode) GetRetentionPolicy(ctx context.Context, req *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received GetRetentionPolicy req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
+		dn.logger.Errorf("Nodemap: %s", jstr)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	rpList, err := shard.store.GetRetentionPolicy(req.Database)
+	if err != nil {
+		dn.logger.Errorf("Error get retention policy. Error: %+v", err)
+		return nil, err
+	}
+	resp.Status = strings.Join(rpList, " ")
+	return &resp, nil
+}
+
+// DeleteRetentionPolicy delete retention policy
+func (dn *DNode) DeleteRetentionPolicy(ctx context.Context, req *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received DeleteRetentionPolicy req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
+		dn.logger.Errorf("Nodemap: %s", jstr)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	err := shard.store.DeleteRetentionPolicy(req.Database, req.RetentionName)
+	if err != nil {
+		dn.logger.Errorf("Error delete retention policy. Error: %+v", err)
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// CreateContinuousQuery create continuous query
+func (dn *DNode) CreateContinuousQuery(ctx context.Context, req *tproto.ContinuousQueryReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received CreateContinuousQuery req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	existed, err := shard.store.CheckRetentionPolicy(req.Database, req.ContinuousQueryName)
+	if err != nil {
+		dn.logger.Errorf("Error check continuous query existence in database. Error: %+v", err)
+		return nil, err
+	}
+
+	if !existed {
+		err := shard.store.CreateContinuousQuery(req.Database, req.ContinuousQueryName, req.RetentionName, req.Query)
+		if err != nil {
+			dn.logger.Errorf("Error create continuous query. Error: %+v", err)
+			return nil, err
+		}
+	}
+
+	return &resp, nil
+}
+
+// GetContinuousQuery reads all continuous queries
+func (dn *DNode) GetContinuousQuery(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received GetContinuousQuery req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	cqs, err := shard.store.GetContinuousQuery(req.Database)
+	if err != nil {
+		dn.logger.Errorf("Failed to get continuous query because error: %v", err)
+		return &resp, err
+	}
+	resp.Status = strings.Join(cqs, " ")
+	return &resp, nil
+}
+
+// DeleteContinuousQuery deletes a database
+func (dn *DNode) DeleteContinuousQuery(ctx context.Context, req *tproto.ContinuousQueryReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	dn.logger.Infof("%s Received DeleteContinuousQuery req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		dn.logger.Errorf("Shard %+v not found for cluster %+v", req.ReplicaID, req.ClusterType)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	err := shard.store.DeleteContinuousQuery(req.Database, req.ContinuousQueryName)
+	return &resp, err
+}

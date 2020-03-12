@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	influxmeta "github.com/influxdata/influxdb/services/meta"
 	"github.com/influxdata/influxql"
 
+	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
@@ -83,6 +85,12 @@ func (br *Broker) CreateDatabaseWithRetention(ctx context.Context, database stri
 				return err
 			}
 		}
+	}
+
+	err := br.RunContinuousQueries(ctx)
+	if err != nil {
+		br.logger.Errorf("Error launching continuous query for database %v. Err: %v", database, err)
+		return err
 	}
 
 	return nil
@@ -381,8 +389,22 @@ func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry s
 					return nil, errors.New("fwlogs not supported")
 				}
 
+				originMeasurementName := measurement.Name
+				if cq.IsContinuousQueryMeasurement(measurement.Name) {
+					originMeasurementName = strings.Split(measurement.Name, "_")[0]
+					suffix := strings.Split(measurement.Name, "_")[1]
+					// lookup whether it is a valid CQ suffix or not
+					_, ok := cq.RetentionPolicyMap[suffix]
+					if !ok {
+						br.logger.Errorf("Error using invalid suffix %v to query continuous query table. Err: %v", suffix, err)
+						return nil, err
+					}
+					measurement.Database = database
+					measurement.RetentionPolicy = cq.RetentionPolicyMap[suffix].Name
+				}
+
 				if shardIn == nil {
-					shard, err = cl.ShardMap.GetShardForPoint(database, measurement.Name, "")
+					shard, err = cl.ShardMap.GetShardForPoint(database, originMeasurementName, "")
 					if err != nil {
 						br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
 						return nil, err
@@ -547,4 +569,427 @@ func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry strin
 	}
 	result.Series = series
 	return []*query.Result{&result}, nil
+}
+
+// createRetentionPolicyInReplica create retention policy in replica
+func (br *Broker) createRetentionPolicyInReplica(ctx context.Context, database string, rpName string, rpPeriod uint64, repl *meta.Replica) error {
+	var err error
+
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       repl.ReplicaID,
+			ShardID:         repl.ShardID,
+			Database:        database,
+			RetentionName:   rpName,
+			RetentionPeriod: rpPeriod,
+		}
+
+		// make create retention policy call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.CreateRetentionPolicy(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>created the retention policy in database %+v on node %+v.", database, repl.NodeUUID)
+			if resp.Status != "" {
+				br.logger.Infof("Receive response status: %+v", resp.Status)
+			}
+			return nil
+		}
+
+		br.logger.Warnf("Error creating the retention policy on node %+v. Err: %+v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return err
+}
+
+// CreateRetentionPolicy creates retention policy in database
+func (br *Broker) CreateRetentionPolicy(ctx context.Context, database string, rpName string, rpPeriod uint64) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("Shard map is empty")
+	}
+
+	// walk all shards
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			err := br.createRetentionPolicyInReplica(ctx, database, rpName, rpPeriod, repl)
+			if err != nil {
+				br.logger.Errorf("Error creating retention policy in replica %v. Err: %v", repl, err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// getRetentionPolicyInReplica create retention policy in replica
+func (br *Broker) getRetentionPolicyInReplica(ctx context.Context, database string, repl *meta.Replica) ([]string, error) {
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return nil, cerr
+		}
+
+		// req message
+		req := tproto.RetentionPolicyReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+			Database:    database,
+		}
+
+		// make create retention policy call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.GetRetentionPolicy(ctx, &req)
+		if err == nil {
+			if resp.Status != "" {
+				br.logger.Infof("Receive response status: %+v", resp.Status)
+			}
+			return strings.Split(resp.Status, " "), nil
+		}
+
+		br.logger.Warnf("Error getting the retention policy on node %+v. Err: %+v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return nil, errors.New("Broker reaches max retry times")
+}
+
+// GetRetentionPolicy creates retention policy in database
+func (br *Broker) GetRetentionPolicy(ctx context.Context, database string) ([]string, error) {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("Shard map is empty")
+	}
+
+	// select random shard
+	shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
+	// read from primary
+	repl, ok := shard.Replicas[shard.PrimaryReplica]
+	if !ok {
+		return nil, fmt.Errorf("Error getting primary replica for shard %v", shard)
+	}
+	rpList, err := br.getRetentionPolicyInReplica(ctx, database, repl)
+	if err != nil {
+		br.logger.Errorf("Error getting retention policy in replica %v. Err: %v", repl, err)
+		return nil, err
+	}
+	return rpList, nil
+}
+
+// deleteRetentionPolicyInReplica delete retention policy in replica
+func (br *Broker) deleteRetentionPolicyInReplica(ctx context.Context, database string, rpName string, repl *meta.Replica) error {
+	var err error
+
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.RetentionPolicyReq{
+			ClusterType:   meta.ClusterTypeTstore,
+			ReplicaID:     repl.ReplicaID,
+			ShardID:       repl.ShardID,
+			Database:      database,
+			RetentionName: rpName,
+		}
+
+		// make create retention policy call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.DeleteRetentionPolicy(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>deleted the retention policy in database %+v on node %+v.", database, repl.NodeUUID)
+			if resp.Status != "" {
+				br.logger.Infof("Receive response status: %+v", resp.Status)
+			}
+			return nil
+		}
+
+		br.logger.Warnf("Error deleting the retention policy on node %+v. Err: %+v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return err
+}
+
+// DeleteRetentionPolicy delete retention policy in database
+func (br *Broker) DeleteRetentionPolicy(ctx context.Context, database string, rpName string) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("Shard map is empty")
+	}
+
+	// walk all shards
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			err := br.deleteRetentionPolicyInReplica(ctx, database, rpName, repl)
+			if err != nil {
+				br.logger.Errorf("Error deleting retention policy in replica %v. Err: %v", repl, err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// createContinuousQueryInReplica creates the continuous query in replica
+func (br *Broker) createContinuousQueryInReplica(ctx context.Context, database string, cqName string, rpName string, rpPeriod uint64, query string, repl *meta.Replica) error {
+	var err error
+
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.ContinuousQueryReq{
+			ClusterType:         meta.ClusterTypeTstore,
+			ReplicaID:           repl.ReplicaID,
+			ShardID:             repl.ShardID,
+			Database:            database,
+			ContinuousQueryName: cqName,
+			RetentionName:       rpName,
+			Query:               query,
+		}
+
+		// make create continuous query call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.CreateContinuousQuery(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>created the continuous query in database %+v on node %+v.", database, repl.NodeUUID)
+			if resp.Status != "" {
+				br.logger.Infof("Receive response status: %+v", resp.Status)
+			}
+			return nil
+		}
+
+		br.logger.Warnf("Error creating the continuous query on node %+v. Err: %+v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return err
+}
+
+// CreateContinuousQuery creates continuous query in database
+func (br *Broker) CreateContinuousQuery(ctx context.Context, database string, cqName string, rpName string, rpPeriod uint64, query string) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("Shard map is empty")
+	}
+
+	parser := influxql.NewParser(strings.NewReader(query))
+	stmt, err := parser.ParseStatement()
+	if err != nil {
+		return fmt.Errorf("Failed to parse query. Error: %v", err)
+	}
+	if st, ok := stmt.(*influxql.CreateContinuousQueryStatement); ok {
+		measurement := strings.Trim(st.Source.Sources[0].String(), `"`)
+		parsedSource := strings.Split(measurement, ".")
+		if len(parsedSource) > 1 {
+			measurement = parsedSource[len(parsedSource)-1]
+		}
+		shard, err := cl.ShardMap.GetShardForPoint(st.Database, measurement, "")
+		if err != nil {
+			return fmt.Errorf("Error get shard for creating continuous query")
+		}
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			err := br.createContinuousQueryInReplica(ctx, database, cqName, rpName, rpPeriod, query, repl)
+			if err != nil {
+				br.logger.Errorf("Error creating the continuous query in replica %v. Err: %v", repl, err)
+				return err
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("Error receive invalid query for create continuous query api")
+}
+
+// getContinuousQueryInReplica reads cotinuous queries in replica
+func (br *Broker) getContinuousQueryInReplica(ctx context.Context, database string, repl *meta.Replica) ([]string, error) {
+	// retry read if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("context cancelled %s", ctx.Err())
+		}
+
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return nil, cerr
+		}
+
+		// req message
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+			Database:    database,
+		}
+
+		// read database call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.GetContinuousQuery(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>get continuous queries from database on node %+v", repl.NodeUUID)
+			if resp.Status != "" {
+				return strings.Split(resp.Status, " "), nil
+			}
+			// If there is no continuous query in the replica, just return nil
+			return nil, nil
+		}
+
+		br.logger.Warnf("failed reading databases on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+	return nil, fmt.Errorf("failed reading continuous queries")
+}
+
+// GetContinuousQuery reads all continuous queries
+func (br *Broker) GetContinuousQuery(ctx context.Context, database string, replicaID string) ([]string, error) {
+
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("shard map is empty")
+	}
+
+	cqMap := map[string]bool{}
+	// walk all shards
+	for _, shard := range cl.ShardMap.Shards {
+		for _, repl := range shard.Replicas {
+			// if there is no replica specified, only query primary replica
+			if replicaID == "" && !repl.IsPrimary {
+				continue
+			}
+			// if there is replica specified, query expected replica
+			if replicaID != "" && strconv.FormatUint(repl.ReplicaID, 10) != replicaID {
+				continue
+			}
+			br.logger.Infof("reading continuous queries from shard %+v primary replica %+v", repl.ShardID, repl.ReplicaID)
+			result, err := br.getContinuousQueryInReplica(ctx, database, repl)
+			if err != nil {
+				br.logger.Errorf("Error getting continuous query in the database in replica %v. Err: %v", repl, err)
+				return nil, err
+			}
+			if result != nil {
+				for _, cq := range result {
+					cqMap[cq] = true
+				}
+			}
+		}
+	}
+	allCQ := []string{}
+	for k := range cqMap {
+		allCQ = append(allCQ, k)
+	}
+
+	return allCQ, nil
+}
+
+// deleteContinuousQueryInReplica deletes the continuous query in replica
+func (br *Broker) deleteContinuousQueryInReplica(ctx context.Context, database string, cq string, repl *meta.Replica) error {
+	var err error
+
+	// retry creation if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return cerr
+		}
+
+		// req message
+		req := tproto.ContinuousQueryReq{
+			ClusterType:         meta.ClusterTypeTstore,
+			ReplicaID:           repl.ReplicaID,
+			ShardID:             repl.ShardID,
+			Database:            database,
+			ContinuousQueryName: cq,
+		}
+
+		// delete database call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		_, err = dnclient.DeleteContinuousQuery(ctx, &req)
+		if err == nil {
+			br.logger.Infof("=>deleted the continuous query %+v in database %+v on node %+v.", cq, database, repl.NodeUUID)
+			return nil
+		}
+
+		br.logger.Warnf("Error deleting the continuous query on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return err
+}
+
+// DeleteContinuousQuery drops the continuous query
+func (br *Broker) DeleteContinuousQuery(ctx context.Context, database string, cq string, targetMeasurement string) error {
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return errors.New("shard map is empty")
+	}
+
+	shard, err := cl.ShardMap.GetShardForPoint(database, targetMeasurement, "")
+	if err != nil {
+		return fmt.Errorf("Error get shard for deleting continuous query")
+	}
+	// walk all replicas in the shard
+	for _, repl := range shard.Replicas {
+		err := br.deleteContinuousQueryInReplica(ctx, database, cq, repl)
+		if err != nil {
+			br.logger.Errorf("Error deleting the database in replica %v. Err: %v", repl, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// RunContinuousQueries Run continuous query through existed broker
+func (br *Broker) RunContinuousQueries(ctx context.Context) error {
+	// create corresponded continuous query for database
+	for _, rpSpec := range cq.RetentionPolicyMap {
+		err := br.CreateRetentionPolicy(ctx, "default", rpSpec.Name, rpSpec.Hours)
+		if err != nil {
+			br.logger.Errorf("Error creating retention policy for database default. Err: %v", err)
+			return err
+		}
+	}
+	cqMap := cq.BuildContinuousSpecMap()
+	for _, cqSpec := range cqMap {
+		err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
+			cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
+		if err != nil {
+			return fmt.Errorf("Error creating continuous query %v. Err: %v", cqSpec.CQName, err)
+		}
+	}
+	return nil
 }

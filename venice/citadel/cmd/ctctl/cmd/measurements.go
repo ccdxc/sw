@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
+
+	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 
 	"github.com/influxdata/influxdb/query"
 	"github.com/spf13/cobra"
@@ -71,6 +74,12 @@ func measurementCmdHandler(cmd *cobra.Command, args []string) {
 	w.Init(os.Stdout, 0, 8, 1, '\t', 0)
 
 	for _, m := range args {
+		// check continuous query
+		if cq.IsContinuousQueryMeasurement(m) {
+			rp := cq.RetentionPolicyMap[strings.Split(m, "_")[1]].Name
+			m = `"default"."` + rp + `"."` + m + `"`
+		}
+
 		resp, err := cmd2.QueryPoints(addr, fmt.Sprintf("SELECT * FROM %s ORDER BY time DESC", m))
 		if err != nil {
 			fmt.Println(err)

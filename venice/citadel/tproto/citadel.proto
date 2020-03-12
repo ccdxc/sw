@@ -47,6 +47,25 @@ message DatabaseReq {
     uint64 RetentionPeriod = 5;  // how long TSDB keeps the data, min 1 Hr
 }
 
+message RetentionPolicyReq {
+    string ClusterType     = 1;  // cluster type
+    uint64 ReplicaID       = 2;  // replica id
+    uint64 ShardID         = 3;  // shard id
+    string Database        = 4; // database name
+    string RetentionName   = 5; // retention policy name
+    uint64 RetentionPeriod = 6; // how long TSDB keeps the data, min 1 Hr
+}
+
+message ContinuousQueryReq {
+    string ClusterType         = 1;  // cluster type
+    uint64 ReplicaID           = 2;  // replica id
+    uint64 ShardID             = 3;  // shard id
+    string Database            = 4;  // database name
+    string RetentionName       = 5;  // retention policy name
+    string ContinuousQueryName = 6;  // continuous query name
+    string Query               = 7;  // query to run
+}
+
 // execute query req
 message QueryReq {
     string ClusterType = 1;  // cluster type
@@ -166,6 +185,12 @@ service DataNode {
     rpc PointsReplicate (PointsWriteReq) returns (StatusResp) {};
     rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
     rpc ExecuteQuery(QueryReq) returns (QueryResp) {};
+    rpc CreateRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
+    rpc GetRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
+    rpc DeleteRetentionPolicy(RetentionPolicyReq) returns (StatusResp) {};
+    rpc CreateContinuousQuery(ContinuousQueryReq) returns (StatusResp) {};
+    rpc GetContinuousQuery(DatabaseReq) returns (StatusResp) {};
+    rpc DeleteContinuousQuery(ContinuousQueryReq) returns (StatusResp) {};
 
     // key-value messages
     rpc ReadReq(KeyMsg) returns (KeyValueMsg) {};

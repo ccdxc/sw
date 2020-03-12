@@ -3,6 +3,7 @@
 package tstore
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -40,6 +41,13 @@ type Tstore struct {
 
 // number of times to retru backup operation if it fails transiently..
 const numBackupRetries = 5
+
+var continuousQueryRunInterval = time.Minute
+
+// SetUintTestCQRunInterval set cq run interval for uint test env
+func SetUintTestCQRunInterval() {
+	continuousQueryRunInterval = time.Second
+}
 
 // NewTstoreWithConfig returns a new tstore instance with the custom engine config
 func NewTstoreWithConfig(dbPath string, cfg tsdb.Config) (*Tstore, error) {
@@ -126,7 +134,7 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 	ret.MetaClient = localMeta
 
 	cqCfg := continuous_querier.NewConfig()
-	cqCfg.RunInterval = toml.Duration(time.Minute)
+	cqCfg.RunInterval = toml.Duration(continuousQueryRunInterval)
 	cq := continuous_querier.NewService(cqCfg)
 	cq.QueryExecutor = qEx
 	cq.MetaClient = localMeta
@@ -358,4 +366,118 @@ func (ts *Tstore) Close() error {
 		ts.tsdb.Close()
 	}
 	return nil
+}
+
+// CreateRetentionPolicy create retention policy
+func (ts *Tstore) CreateRetentionPolicy(database string, rpName string, durationInHours uint64) error {
+	duration := time.Duration(durationInHours) * time.Hour
+	rpSpec := &meta.RetentionPolicySpec{
+		Name:     rpName,
+		Duration: &duration,
+	}
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return fmt.Errorf("Cannot find database %v", database)
+	}
+	_, err := ts.metaClient.CreateRetentionPolicy(database, rpSpec, false)
+	if err != nil {
+		log.Errorf("Error creating retention policy %s. Err: %v", rpName, err)
+	}
+	return err
+}
+
+// GetRetentionPolicy get retention policy for a specific database
+func (ts *Tstore) GetRetentionPolicy(database string) ([]string, error) {
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return nil, fmt.Errorf("Error find database named %v", database)
+	}
+	rpList := []string{}
+	for _, rpInfo := range dbInfo.RetentionPolicies {
+		rpList = append(rpList, rpInfo.Name)
+	}
+	return rpList, nil
+}
+
+// CheckRetentionPolicy check the existence of retention policy in specific database
+func (ts *Tstore) CheckRetentionPolicy(database, rpName string) (bool, error) {
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return false, fmt.Errorf("Error find database named %v", database)
+	}
+	rpInfo, err := ts.metaClient.RetentionPolicy(database, rpName)
+	if err != nil {
+		return false, err
+	}
+	if rpInfo == nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+// DeleteRetentionPolicy drop retention policy
+func (ts *Tstore) DeleteRetentionPolicy(database, rpName string) error {
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return fmt.Errorf("Error find database named %v", database)
+	}
+	return ts.metaClient.DropRetentionPolicy(database, rpName)
+}
+
+// CreateContinuousQuery create continuous query
+func (ts *Tstore) CreateContinuousQuery(database string, cq string, rpName string, query string) error {
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return errors.New("Cannot find database")
+	}
+
+	// If the retention policy does not exist, throw out an error
+	existed, err := ts.CheckRetentionPolicy(database, rpName)
+	if err != nil {
+		return fmt.Errorf("Error check retention policy on database %v", database)
+	}
+	if !existed {
+		return fmt.Errorf("Error retention policy %v not existed in database %v", rpName, database)
+	}
+
+	err = ts.metaClient.CreateContinuousQuery(database, cq, query)
+	if err != nil {
+		return fmt.Errorf("Error create continuous query for metaclient. Error: %v", err)
+	}
+	return nil
+}
+
+// CheckContinuousQuery check whether a CQ existed in a database or not
+func (ts *Tstore) CheckContinuousQuery(database string, cqName string) (bool, error) {
+	// read continuous queries
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return false, fmt.Errorf("Database %+v doesn't exist", database)
+	}
+	for _, cq := range dbInfo.ContinuousQueries {
+		if cq.Name == cqName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// GetContinuousQuery reads all CQs in the database
+func (ts *Tstore) GetContinuousQuery(database string) ([]string, error) {
+	result := []string{}
+	// read continuous queries
+	dbInfo := ts.metaClient.Database(database)
+	if dbInfo == nil {
+		return result, fmt.Errorf("Database %+v doesn't exist", database)
+	}
+	for _, cq := range dbInfo.ContinuousQueries {
+		result = append(result, cq.Name)
+	}
+	return result, nil
+}
+
+// DeleteContinuousQuery deletes the database
+func (ts *Tstore) DeleteContinuousQuery(database string, cq string) error {
+	// delete it from local metadata
+	return ts.metaClient.DropContinuousQuery(database, cq)
 }

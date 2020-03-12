@@ -114,6 +114,26 @@ func (f *fakeDataNode) DelReplicate(context.Context, *tproto.KeyMsg) (*tproto.St
 	return nil, nil
 }
 
+func (f *fakeDataNode) CreateContinuousQuery(context.Context, *tproto.ContinuousQueryReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+func (f *fakeDataNode) GetContinuousQuery(context.Context, *tproto.DatabaseReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+func (f *fakeDataNode) DeleteContinuousQuery(context.Context, *tproto.ContinuousQueryReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+
+func (f *fakeDataNode) CreateRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+func (f *fakeDataNode) GetRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+func (f *fakeDataNode) DeleteRetentionPolicy(context.Context, *tproto.RetentionPolicyReq) (*tproto.StatusResp, error) {
+	return nil, nil
+}
+
 // creates a fake node
 func createNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL string) (*meta.Watcher, *meta.Node, *rpckit.RPCServer, error) {
 	// create watcher

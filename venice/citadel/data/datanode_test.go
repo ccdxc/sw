@@ -9,11 +9,14 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
 
+	"github.com/influxdata/influxdb/query"
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
@@ -23,6 +26,7 @@ import (
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/citadel/tstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -295,6 +299,283 @@ func TestDataNodeBasic(t *testing.T) {
 
 		_, err := dnclient.DelReq(context.Background(), &req)
 		AssertOk(t, err, "Error deleting the keys")
+	}
+}
+
+func TestDataNodeWithContinuousQuery(t *testing.T) {
+	const numNodes = 3
+	dnodes := make([]*DNode, numNodes)
+	clients := make([]*rpckit.RPCClient, numNodes)
+	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
+
+	// create a temp dir
+	tstore.SetUintTestCQRunInterval()
+	path, err := ioutil.TempDir("", "kstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	defer memkv.DeleteClusters()
+	// create nodes
+
+	for idx := 0; idx < numNodes; idx++ {
+		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), logger)
+		AssertOk(t, err, "Error creating nodes")
+		defer dnodes[idx].Stop()
+	}
+
+	// create rpc client
+	for idx := 0; idx < numNodes; idx++ {
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
+		AssertOk(t, err, "Error connecting to grpc server")
+		defer clients[idx].Close()
+	}
+
+	// make create shard api call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.ShardReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			IsPrimary:   true,
+		}
+
+		// create tstore shard
+		resp, err := dnclient.CreateShard(context.Background(), &req)
+		AssertOk(t, err, "Error making the create shard call")
+		Assert(t, resp.Status == "", "Invalid resp to create shard req", resp)
+
+		// create kstore shard
+		req.ClusterType = meta.ClusterTypeKstore
+		_, err = dnclient.CreateShard(context.Background(), &req)
+		AssertOk(t, err, "Error making the create shard call")
+	}
+
+	// make create database call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "cqdb",
+		}
+
+		_, err := dnclient.CreateDatabase(context.Background(), &req)
+		AssertOk(t, err, "Error making the create database call")
+
+		var dbInfo []*influxmeta.DatabaseInfo
+		AssertEventually(t, func() (bool, interface{}) {
+			resp, err := dnclient.ReadDatabases(context.Background(), &req)
+			if err != nil {
+				return false, err
+			}
+			if err = json.Unmarshal([]byte(resp.Status), &dbInfo); err != nil {
+				return false, err
+			}
+			if len(dbInfo) != 1 {
+				return false, dbInfo
+			}
+
+			for _, db := range dbInfo {
+				if db.Name != "cqdb" {
+					return false, db
+				}
+			}
+			return true, nil
+		}, "failed to read db")
+
+		cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+					BEGIN 
+						SELECT mean("value") INTO "cqdb"."new_rp"."average_value_five_seconds" 
+						FROM "cpu" 
+						GROUP BY time(5s) 
+					END`
+		cqRequest := &tproto.ContinuousQueryReq{
+			ClusterType:         meta.ClusterTypeTstore,
+			ReplicaID:           uint64(idx + 1),
+			Database:            "cqdb",
+			RetentionName:       "new_rp",
+			ContinuousQueryName: "testcq",
+			Query:               cqQuery,
+		}
+		_, err = dnclient.CreateContinuousQuery(context.Background(), cqRequest)
+		Assert(t, err != nil, "Failed to raise error for creating continuous query on non-existed retention policy")
+
+		rpReq := &tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       uint64(idx + 1),
+			Database:        "cqdb",
+			RetentionName:   "new_rp",
+			RetentionPeriod: 7 * 24,
+		}
+		_, err = dnclient.CreateRetentionPolicy(context.Background(), rpReq)
+		AssertOk(t, err, "Failed to create new retention policy for continuous query")
+
+		_, err = dnclient.CreateContinuousQuery(context.Background(), cqRequest)
+		AssertOk(t, err, "Failed to create continuous query")
+	}
+
+	// write some points
+	log.Infof("Writing data for 30s on each node to test continuous query...")
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+		for i := 0; i < 30; i++ {
+			data := "cpu,host=serverB,svc=nginx value=" + strconv.Itoa(i) + "\n"
+			req := tproto.PointsWriteReq{
+				ClusterType: meta.ClusterTypeTstore,
+				ReplicaID:   uint64(idx + 1),
+				Database:    "cqdb",
+				Points:      data,
+			}
+			_, err := dnclient.PointsWrite(context.Background(), &req)
+			AssertOk(t, err, "Error writing points")
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	// execute some query
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.QueryReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "cqdb",
+			TxnID:       uint64(idx + 1),
+			Query:       "SELECT * FROM \"cqdb\".\"new_rp\".\"average_value_five_seconds\"",
+		}
+
+		resp, err := dnclient.ExecuteQuery(context.Background(), &req)
+		AssertOk(t, err, "Error executing query. Err: %v", err)
+		log.Infof("Got query resp: %+v", resp)
+		result := &query.Result{}
+		err = json.Unmarshal(resp.Result[0].Data, result)
+		AssertOk(t, err, "Failed to unmarshal response for continuous query")
+		Assert(t, len(result.Series[0].Values) >= 5 && len(result.Series[0].Values) <= 7, "Invalid number of continuous query result for 30s. Get %v Expect 5, 6 or 7.", len(resp.Result[0].Data))
+	}
+
+	// make get retention policy call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+		rpReq := &tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       uint64(idx + 1),
+			Database:        "cqdb",
+			RetentionName:   "new_rp",
+			RetentionPeriod: 7 * 24,
+		}
+		resp, err := dnclient.GetRetentionPolicy(context.Background(), rpReq)
+		AssertOk(t, err, "Error get retention policy. Err: %v", err)
+		rpList := strings.Split(resp.Status, " ")
+		Assert(t, len(rpList) == 2, "Invalid number of retention policy. Get %v, expect 2", len(rpList))
+		for _, rpName := range rpList {
+			Assert(t, rpName == "default" || rpName == "new_rp", "Invalid retention policy name. Get %v, expect default or new_rp", rpName)
+		}
+	}
+
+	// make get continuous query call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "cqdb",
+		}
+
+		resp, err := dnclient.GetContinuousQuery(context.Background(), &req)
+		AssertOk(t, err, "Error executing query")
+		log.Infof("Got query resp: %+v", resp)
+		cqList := strings.Split(resp.Status, " ")
+		Assert(t, len(cqList) == 1, "Invalid number of continuous query obtained. Get %v Expect 1", len(cqList))
+		Assert(t, cqList[0] == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0])
+	}
+
+	// make delete continuous query call
+	for idx := 0; idx < numNodes; idx++ {
+		var dbInfo []*influxmeta.DatabaseInfo
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.ContinuousQueryReq{
+			ClusterType:         meta.ClusterTypeTstore,
+			ReplicaID:           uint64(idx + 1),
+			Database:            "cqdb",
+			ContinuousQueryName: "testcq",
+		}
+
+		resp, err := dnclient.DeleteContinuousQuery(context.Background(), &req)
+		AssertOk(t, err, "Error executing query")
+		log.Infof("Got query resp: %+v", resp)
+
+		dbreq := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "cqdb",
+		}
+
+		// check continuous query after deleting operation
+		resp, err = dnclient.ReadDatabases(context.Background(), &dbreq)
+		AssertOk(t, err, "Error executing query")
+		log.Infof("Got query resp: %+v", resp)
+
+		err = json.Unmarshal([]byte(resp.Status), &dbInfo)
+		AssertOk(t, err, "Failed to unmarshal response for continuous query")
+		Assert(t, len(dbInfo) == 1, "Invalid number of dnInfo. Get %v Expect 1", len(dbInfo))
+		Assert(t, len(dbInfo[0].ContinuousQueries) == 0,
+			"Invalid number of continuous query after deleting operation. Get %v Expect 0", len(dbInfo[0].ContinuousQueries))
+	}
+
+	// make delete retention policy call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+		rpReq := &tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       uint64(idx + 1),
+			Database:        "cqdb",
+			RetentionName:   "new_rp",
+			RetentionPeriod: 7 * 24,
+		}
+		_, err := dnclient.DeleteRetentionPolicy(context.Background(), rpReq)
+		AssertOk(t, err, "Error delete retention policy. Err: %v", err)
+
+		resp, err := dnclient.GetRetentionPolicy(context.Background(), rpReq)
+		AssertOk(t, err, "Error get retention policy. Err: %v", err)
+		rpList := strings.Split(resp.Status, " ")
+		Assert(t, len(rpList) == 1, "Invalid number of retention policy. Get %v, expect 1", len(rpList))
+	}
+
+	// make delete database call
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   uint64(idx + 1),
+			Database:    "cqdb",
+		}
+
+		_, err := dnclient.DeleteDatabase(context.Background(), &req)
+		AssertOk(t, err, "Error making the delete database call")
+	}
+
+	// mock error
+	for idx := 0; idx < numNodes; idx++ {
+		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
+		rpReq := &tproto.RetentionPolicyReq{
+			ClusterType:     meta.ClusterTypeTstore,
+			ReplicaID:       uint64(idx + 1),
+			Database:        "unknowndb",
+			RetentionName:   "new_rp",
+			RetentionPeriod: 7 * 24,
+		}
+		_, err := dnclient.CreateRetentionPolicy(context.Background(), rpReq)
+		Assert(t, err != nil, "Failed to raise error for trying to create retention policy on non-existed database")
+		_, err = dnclient.GetRetentionPolicy(context.Background(), rpReq)
+		Assert(t, err != nil, "Failed to raise error for trying to get retention policy on non-existed database")
+		_, err = dnclient.DeleteRetentionPolicy(context.Background(), rpReq)
+		Assert(t, err != nil, "Failed to raise error for trying to delete retention policy on non-existed database")
 	}
 }
 
