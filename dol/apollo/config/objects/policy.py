@@ -321,6 +321,23 @@ class PolicyObjectClient(base.ConfigClientBase):
     def GetPolicyObject(self, node, policyid):
         return self.GetObjectByKey(node, policyid)
 
+    def IsValidConfig(self, node):
+        v4count = sum(list(map(lambda x: len(x), self.__v4ingressobjs[node].values())))
+        v4count += sum(list(map(lambda x: len(x), self.__v4egressobjs[node].values())))
+        if  v4count > self.Maxlimit:
+            return False, f"V4 Security Policy count {v4count} exceeds allowed limit of {self.Maxlimit}"
+        elif v4count != 0 and not self.__supported:
+            return False, f"IPv4 {self.ObjType.name} is unsupported - {v4count} found in {node}"
+        logger.info(f"Generated {v4count} IPv4 {self.ObjType.name} Objects in {node}")
+        v6count = sum(list(map(lambda x: len(x), self.__v6ingressobjs[node].values())))
+        v6count += sum(list(map(lambda x: len(x), self.__v6egressobjs[node].values())))
+        if  v6count > self.Maxlimit:
+            return False, f"V6 Security Policy count {v6count} exceeds allowed limit of {self.Maxlimit}"
+        elif v6count != 0 and not self.__v6supported:
+            return False, f"IPv6 {self.ObjType.name} is unsupported - {v6count} found in {node}"
+        logger.info(f"Generated {v6count} IPv6 {self.ObjType.name} Objects in {node}")
+        return True, ""
+
     def ModifyPolicyRules(self, node, policyid, subnetobj):
         if utils.IsPipelineApollo():
             # apollo does not support both sip & dip match in rules
