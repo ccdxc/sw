@@ -30,10 +30,12 @@ action session_info(skip_flow_log, conntrack_id, timestamp, smac,
                 }
             }
 
-            if ((tcp.flags & h2s_slow_path_tcp_flags_match) != 0) {
-                modify_field(control_metadata.flow_miss, TRUE);
+            if (tcp.valid == TRUE) {
+                if ((tcp.flags & h2s_slow_path_tcp_flags_match) != 0) {
+                    modify_field(control_metadata.flow_miss, TRUE);
+                }
+                modify_field(scratch_metadata.tcp_flags, h2s_slow_path_tcp_flags_match);
             }
-            modify_field(scratch_metadata.tcp_flags, h2s_slow_path_tcp_flags_match);
 
             if (ethernet_1.srcAddr != smac) {
                 modify_field(control_metadata.flow_miss, TRUE);

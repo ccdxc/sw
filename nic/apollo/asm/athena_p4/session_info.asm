@@ -35,8 +35,9 @@ session_info_h2s:
 
 session_info_h2s_l2_vnic:
     
-    and             r1, k.tcp_flags, d.session_info_d.h2s_slow_path_tcp_flags_match
-    bne             r1, r0, session_info_slow_path
+    seq             c1, k.tcp_valid, TRUE
+    and.c1          r1, k.tcp_flags, d.session_info_d.h2s_slow_path_tcp_flags_match
+    bne.c1          r1, r0, session_info_slow_path
 
     sne             c1, d.session_info_d.smac, r0
     sne.c1          c1, k.ethernet_1_srcAddr, d.session_info_d.smac

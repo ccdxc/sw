@@ -26,11 +26,9 @@ typedef int p4pd_error_t;
 static uint32_t
 table_size_get(uint32_t table_id)
 {
-    if (table_id == P4TBL_ID_FLOW ||
-        table_id == P4TBL_ID_IPV4_FLOW) {
+    if (table_id == P4TBL_ID_FLOW) {
         return 4*1024*1024;
-    } else if (table_id == P4TBL_ID_FLOW_OHASH ||
-               table_id == P4TBL_ID_IPV4_FLOW_OHASH) {
+    } else if (table_id == P4TBL_ID_FLOW_OHASH) {
         return 1024*1024;
     }
     return 0;
@@ -46,12 +44,6 @@ ftl_mock_init ()
     mocktables[P4TBL_ID_FLOW_OHASH].entries =
         (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_OHASH), flow_hash_entry_t::entry_size());
     assert(mocktables[P4TBL_ID_FLOW_OHASH].entries);
-
-    mocktables[P4TBL_ID_IPV4_FLOW].entries = mocktables[P4TBL_ID_FLOW].entries;
-    assert(mocktables[P4TBL_ID_IPV4_FLOW].entries);
-
-    mocktables[P4TBL_ID_IPV4_FLOW_OHASH].entries = mocktables[P4TBL_ID_FLOW_OHASH].entries;
-    assert(mocktables[P4TBL_ID_IPV4_FLOW_OHASH].entries);
 }
 
 void
@@ -90,14 +82,8 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
         props->tablename = (char *) "Ipv6FlowTable";
         props->has_oflow_table = 1;
         props->oflow_table_id = P4TBL_ID_FLOW_OHASH;
-    } else if (table_id == P4TBL_ID_IPV4_FLOW) {
-        props->tablename = (char *) "Ipv4FlowTable";
-        props->has_oflow_table = 1;
-        props->oflow_table_id = P4TBL_ID_IPV4_FLOW_OHASH;
     } else if (table_id == P4TBL_ID_FLOW_OHASH) {
         props->tablename = (char *) "Ipv6FlowOhashTable";
-    } else if (table_id == P4TBL_ID_IPV4_FLOW_OHASH) {
-        props->tablename = (char *) "Ipv4FlowOhashTable";
     } else {
         assert(0);
     }

@@ -209,6 +209,9 @@ def run_model(args):
         elif args.athena_app:
             os.system("%s/tools/merge_model_debug.py --pipeline athena --p4 athena --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/gen/p4gen/athena/dbg_out/combined_model_debug.json")
+        elif args.athena_gtests:
+            os.system("%s/tools/merge_model_debug.py --pipeline athena --p4 athena --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/gen/p4gen/athena/dbg_out/combined_model_debug.json")
         elif args.apulu_gtest:
             os.system("%s/tools/merge_model_debug.py --pipeline apulu --p4 apulu --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
             model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apulu/gen/p4gen/apulu/dbg_out/combined_model_debug.json")
@@ -240,6 +243,8 @@ def run_model(args):
     elif args.apulu_gtest:
         bin_dir = nic_dir + '/build/x86_64/apulu/bin/'
     elif args.athena_app:
+        bin_dir = nic_dir + '/build/x86_64/athena/bin/'
+    elif args.athena_gtests:
         bin_dir = nic_dir + '/build/x86_64/athena/bin/'
     elif args.l2switch_gtest:
         bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
@@ -664,6 +669,40 @@ def run_athena_app(args):
     print 'Executing command [%s]' % ', '.join(map(str, cmd))
     p = Popen(cmd)
     print "* Starting athena_app: pid (" + str(p.pid) + ")"
+
+    lock = open(lock_file, "a+")
+    lock.write(str(p.pid) + "\n")
+    lock.close()
+
+    time.sleep(10)
+    return check_for_completion(p, None, model_process, None, args)
+
+# Run athena gtests
+def run_athena_gtests(args):
+    bin_dir = nic_dir + "/../nic/build/x86_64/athena/bin"
+    os.environ["LOG_DIR"] = nic_dir + '/'
+    os.environ["PERSISTENT_LOG_DIR"] = nic_dir + '/'
+    os.environ["CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
+    os.environ["PDSPKG_TOPDIR"] = nic_dir
+
+    #Huge-pages for DPDK
+    os.system("echo 2048 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages")
+    os.system("mkdir -p /dev/hugepages")
+    os.system("mount -t hugetlbfs nodev /dev/hugepages")
+
+    os.chdir(nic_dir)
+    try:
+        os.remove(nic_dir + "/conf/pipeline.json")
+    except:
+        pass
+    os.symlink(nic_dir + "/conf/athena/pipeline.json", nic_dir + "/conf/pipeline.json")
+    cmd = ['./athena_gtests', '-c', 'hal.json']
+    os.chdir(bin_dir)
+
+    print 'Executing command [%s]' % ', '.join(map(str, cmd))
+    p = Popen(cmd)
+    print "* Starting athena_gtests: pid (" + str(p.pid) + ")"
 
     lock = open(lock_file, "a+")
     lock.write(str(p.pid) + "\n")
@@ -1321,6 +1360,8 @@ def main():
                         help='Run offload dol as well.')
     parser.add_argument('--athena_app', dest='athena_app', action="store_true",
                         help='Run athena_app dol as well.')
+    parser.add_argument('--athena_gtests', dest='athena_gtests', action="store_true",
+                        help='Run athena_gtests as well.')
     parser.add_argument('--nicmgr', dest='nicmgr', action="store_true",
                         help='Run nicmgr standalone.')
     parser.add_argument('--nicmgr_platform_model_server', dest='nicmgr_platform_model_server', action="store_true",
@@ -1531,6 +1572,7 @@ def main():
                 args.apollo_scale_test is False and \
                 args.apollo_scale_vxlan_test is False and \
                 args.athena_app is False and \
+                args.athena_gtests is False and \
                 args.l2switch_gtest is False and \
                 args.elektra_gtest is False and \
                 args.gft16_gtest is False and \
@@ -1575,6 +1617,10 @@ def main():
         status = run_athena_app(args)
         if status != 0:
             print "- Athena test failed, status=", status
+    elif args.athena_gtests:
+        status = run_athena_gtests(args)
+        if status != 0:
+            print "- Athena gtests failed, status=", status
     elif args.apulu_gtest:
         status = run_apulu_test(args)
         if status != 0:

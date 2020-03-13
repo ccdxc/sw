@@ -48,7 +48,6 @@ header_type control_metadata_t {
         histogram_packet_len_id_valid       : 1;
         histogram_latency_id_valid          : 1;
         update_checksum                     : 1;
-        launch_v4                           : 1; // Dummy - never set
         vnic_type                           : 1;
         strip_outer_encap_flag              : 1;
         strip_l2_header_flag                : 1;
@@ -146,7 +145,7 @@ header_type scratch_metadata_t {
 
         // Session info
         timestamp           : 18;
-        config_epoch        : 32;
+        config_epoch        : 16;
 
         // Session info - substrate encap to switch
         encap_type          : 3;
