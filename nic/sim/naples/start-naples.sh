@@ -9,7 +9,7 @@ export PLATFORM_DIR=/naples/platform
 export LOG_DIR=/naples/data/logs
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export NON_PERSISTENT_LOGDIR=$LOG_DIR
-export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/plugins/lif:$HAL_CONFIG_PATH/linkmgr:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib::$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$NIC_DIR/lib64:$NIC_DIR/lib:$HAL_CONFIG_PATH/plugins/lif:$HAL_CONFIG_PATH/linkmgr:$HAL_CONFIG_PATH/sdk:$HAL_CONFIG_PATH/sdk/external:usr/local/lib:/usr/lib::$LD_LIBRARY_PATH
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk:$LD_LIBRARY_PATH
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 unset MODEL_ZMQ_TYPE_TCP

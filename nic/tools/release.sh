@@ -13,15 +13,9 @@ fi
 case "$1" in
     'apulu-venice')
         echo "Proceeding to build docker image for apulu-venice pipeline"
-        ln -f nic_venice.tgz apollo/tools/apulu/docker/nic.tgz
-        cd apollo/tools/apulu/docker
-        SUPPORT_FILES=""
-        ;;
-    'apulu')
-        echo "Proceeding to build docker image for apulu pipeline"
-        ln -f nic.tgz apollo/tools/apulu/docker
-        cd apollo/tools/apulu/docker
-        SUPPORT_FILES=""
+        ln -f nic_venice.tgz sim/naples/nic.tgz
+        cd sim/naples
+        SUPPORT_FILES="README Vagrantfile naples_vm_bringup.py"
         ;;
     *)
         echo "Proceeding to build docker image for iris pipeline"

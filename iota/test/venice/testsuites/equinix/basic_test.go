@@ -16,6 +16,9 @@ var _ = Describe("Equinx Bring up", func() {
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		Eventually(func() error {
+			return ts.model.VerifyClusterStatus()
+		}).Should(Succeed())
 	})
 
 	Context("Push config Tests", func() {

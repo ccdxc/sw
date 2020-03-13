@@ -386,8 +386,8 @@ def __bringup_naples_container(args):
     __wait_for_naples_sim_to_be_up()
     print "Wating for agent server to be up"
     time.sleep(20)
-    __wait_for_agent_to_be_up()
-    __wait_for_nmd_to_be_up()
+    #__wait_for_agent_to_be_up()
+    #__wait_for_nmd_to_be_up()
     print "Nic container bring up was successfull"
 
 
