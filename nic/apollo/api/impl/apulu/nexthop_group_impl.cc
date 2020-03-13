@@ -148,16 +148,16 @@ nexthop_group_impl::populate_ecmp_tep_info_(pds_nexthop_group_spec_t *spec,
         tep = (tep_impl *)tep_db()->find(&spec->nexthops[i].tep)->impl();
         switch (i) {
         case 0:
-            ecmp_data->ecmp_info.tunnel_id1 = tep->hw_id();
+            ecmp_data->ecmp_info.tunnel_id1 = tep->hw_id1();
             break;
         case 1:
-            ecmp_data->ecmp_info.tunnel_id2 = tep->hw_id();
+            ecmp_data->ecmp_info.tunnel_id2 = tep->hw_id1();
             break;
         case 2:
-            ecmp_data->ecmp_info.tunnel_id3 = tep->hw_id();
+            ecmp_data->ecmp_info.tunnel_id3 = tep->hw_id1();
             break;
         case 3:
-            ecmp_data->ecmp_info.tunnel_id4 = tep->hw_id();
+            ecmp_data->ecmp_info.tunnel_id4 = tep->hw_id1();
             break;
         default:
             PDS_TRACE_ERR("Unexpected nexthop count %u in nexthop group %s",

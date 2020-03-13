@@ -83,12 +83,12 @@ sdk_ret_t
 dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                              pds_epoch_t epoch, api_op_t api_op,
                              api_obj_ctxt_t *obj_ctxt) {
+    lif_impl *lif;
     p4pd_error_t p4pd_ret;
     nacl_swkey_t key = { 0 };
+    pds_dhcp_relay_spec_t *spec;
     nacl_actiondata_t data = { 0 };
     nacl_swkey_mask_t mask = { 0 };
-    pds_dhcp_relay_spec_t *spec;
-    lif_impl *lif;
 
     switch (api_op) {
     case API_OP_CREATE:

@@ -165,12 +165,15 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
         if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
             // lookup the destination TEP
             tep = tep_find(&spec->erspan_spec.tep);
-            // TODO: what if this TEP is local TEP itself ?
-            //       - check this in init_config()
-            mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
-            mirror_data.erspan_action.nexthop_id =
-                ((tep_impl *)(tep->impl()))->hw_id();
-            // TODO: what to do with dscp value ?
+            if (tep) {
+                // TODO: what if this TEP is local TEP itself ?
+                //       - check this in init_config()
+                mirror_data.erspan_action.nexthop_type = NEXTHOP_TYPE_TUNNEL;
+                mirror_data.erspan_action.nexthop_id =
+                    ((tep_impl *)(tep->impl()))->hw_id1();
+            } else {
+                // TODO: route lookup in the underlay route table
+            }
         } else {
             // mirror destination is either local or remote mapping
             mapping = mapping_entry::build(&spec->erspan_spec.mapping);
