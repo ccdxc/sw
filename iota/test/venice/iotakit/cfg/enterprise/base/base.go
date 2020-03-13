@@ -113,6 +113,7 @@ func (gs *EntBaseCfg) createNetwork(nw *network.Network) error {
 //CfgObjects config objects genereted
 type CfgObjects struct {
 	Networks   []*network.Network                // subnets
+	Workloads  []*workload.Workload              // workloads
 	SgPolicies []*security.NetworkSecurityPolicy // simulated security policies
 	Apps       []*security.App                   // simulated apps
 
@@ -941,5 +942,6 @@ func (gs *EntBaseCfg) GetCfgObjects() CfgObjects {
 		objects.SgPolicies = append(objects.SgPolicies, pol.VenicePolicy)
 	}
 
+	objects.Workloads = gs.Cfg.ConfigItems.Workloads
 	return objects
 }

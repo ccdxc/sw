@@ -556,6 +556,18 @@ func getThirdPartyNic(name, mac string) *cluster.DistributedServiceCard {
 	}
 }
 
+func (sm *SysModel) modifyConfig() error {
+
+	cfgObjects := sm.GetCfgObjects()
+
+	//Remove all network references from workload
+	for _, workload := range cfgObjects.Workloads {
+		workload.Spec.Interfaces[0].Network = ""
+	}
+
+	return nil
+}
+
 // InitConfig sets up a default config for the system
 func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	skipSetup := os.Getenv("SKIP_SETUP")
@@ -602,6 +614,11 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 
 	if skipConfig == "" {
 		err = sm.CleanupAllConfig()
+		if err != nil {
+			return err
+		}
+
+		err = sm.modifyConfig()
 		if err != nil {
 			return err
 		}
