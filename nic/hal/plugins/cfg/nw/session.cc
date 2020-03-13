@@ -730,6 +730,8 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     response->mutable_status()->set_session_syncing(session->syncing_session);
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id((vrf)?vrf->vrf_id:0);
     response->mutable_spec()->set_conn_track_en(session->conn_track_en);
+    response->mutable_spec()->set_tcp_aging_enqueued(session->aging_enqueued);
+    response->mutable_spec()->set_deleting(session->deleting);
 
     flow_to_flow_resp(session->iflow,
                       response->mutable_spec()->mutable_initiator_flow(),
@@ -2672,6 +2674,8 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->skip_sfw_reval = args->session->skip_sfw_reval;
     session->sfw_rule_id = args->session->sfw_rule_id;
     session->sfw_action = args->session->sfw_action;
+    session->aging_enqueued = 0;
+    session->deleting = 0;
 
     if (args->stats) {
         session_status_proto_to_session_state(session, args->spec, args->status,
