@@ -106,8 +106,7 @@ nat_err_t nat_flow_alloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport,
                          nat_hw_index_t *xlate_idx,
                          nat_hw_index_t *xlate_idx_rflow);
 nat_err_t nat_flow_dealloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport, u8 protocol,
-                           ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
-                           u16 pvt_port, nat_addr_type_t nat_addr_type);
+                           ip4_address_t sip, u16 sport);
 nat_err_t nat_usage(u32 vpc_hw_id, u8 protocol, nat_addr_type_t nat_addr_type,
                     u32 *num_ports_total, u32 *num_ports_alloc,
                     u32 *num_flows_alloc);

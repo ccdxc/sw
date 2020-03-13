@@ -178,8 +178,7 @@ test_nat_del_flow (vlib_main_t *vm,
         goto done;
     }
 
-    ret = nat_flow_dealloc(vpc_id, dip, dport, proto, sip, sport, pvt_ip,
-                           pvt_port, NAT_ADDR_TYPE_INTERNET);
+    ret = nat_flow_dealloc(vpc_id, dip, dport, proto, sip, sport);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat flow del failed! ret = %d\n", ret);
     } else {

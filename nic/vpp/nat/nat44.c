@@ -73,6 +73,7 @@ typedef struct nat_vpc_config_s {
     u64 dealloc_fail;
 } nat_vpc_config_t;
 
+// Flow hash table maps <nat_flow_key_t> to <nat_rx_hw_index, addr_type, proto>
 typedef struct nat_flow_key_s {
     ip4_address_t dip;
     ip4_address_t sip;
@@ -81,6 +82,14 @@ typedef struct nat_flow_key_s {
     u8 protocol;
     u8 pad[3];
 } nat_flow_key_t;
+
+#define NAT_FLOW_HT_MAKE_VAL(nat_rx_hw_index, addr_type, nat_proto) \
+    ((((uword)nat_rx_hw_index) << 32) | (((uword) addr_type << 16)) | ((uword) nat_proto))
+
+#define NAT_FLOW_HT_GET_VAL(data, nat_rx_hw_index, addr_type, nat_proto) \
+    nat_proto = (data) & 0xff; \
+    addr_type = ((data) >> 16) & 0xff; \
+    nat_rx_hw_index = ((data) >> 32) & 0xffffffff;
 
 
 // Endpoint hash table maps <pvt_ip, pvt_port> to <public_ip, public_port>
@@ -543,7 +552,8 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
                       ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
                       u16 pvt_port, nat_flow_key_t *flow_key,
                       nat_hw_index_t *xlate_idx,
-                      nat_hw_index_t *xlate_idx_rflow)
+                      nat_hw_index_t *xlate_idx_rflow,
+                      nat_addr_type_t nat_addr_type, nat_proto_t nat_proto)
 {
     u8 *tx_hw_index_ptr = NULL, *rx_hw_index_ptr;
     nat_hw_index_t rx_hw_index;
@@ -584,7 +594,8 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
     pb->num_flow_alloc++;
 
     // Add to the flow hash table
-    hash_set_mem_alloc(&vpc->nat_flow_ht, flow_key, rx_hw_index);
+    hash_set_mem_alloc(&vpc->nat_flow_ht, flow_key,
+                       NAT_FLOW_HT_MAKE_VAL(rx_hw_index, nat_addr_type, nat_proto));
 
     // Add to the src endpoint hash table
     nat_flow_set_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip, sport);
@@ -601,7 +612,8 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
                       ip4_address_t *sip, u16 *sport,
                       nat_port_block_t *pb, nat_vpc_config_t *vpc,
                       u8 protocol, nat_hw_index_t *xlate_idx,
-                      nat_hw_index_t *xlate_idx_rflow)
+                      nat_hw_index_t *xlate_idx_rflow,
+                      nat_addr_type_t nat_addr_type, nat_proto_t nat_proto)
 {
     u16 num_ports;
     nat_flow_key_t key = { 0 };
@@ -631,7 +643,8 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
             *sport = try_sport;
 
             nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                  &key, xlate_idx, xlate_idx_rflow);
+                                  &key, xlate_idx, xlate_idx_rflow,
+                                  nat_addr_type, nat_proto);
 
             return NAT_ERR_OK;
         }
@@ -726,7 +739,8 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
         }
         if (pb) {
             ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip, pvt_port,
-                    sip, sport, pb, vpc, protocol, xlate_idx, xlate_idx_rflow);
+                    sip, sport, pb, vpc, protocol, xlate_idx, xlate_idx_rflow,
+                    nat_addr_type, nat_proto);
         }
         if (!pb || ret != NAT_ERR_OK) {
             // random pool did not work, try all pools
@@ -737,7 +751,8 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
                 ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip,
                                             pvt_port, sip, sport, pb, vpc,
                                             protocol, xlate_idx,
-                                            xlate_idx_rflow);
+                                            xlate_idx_rflow, nat_addr_type,
+                                            nat_proto);
                 if (ret == NAT_ERR_OK) allocated = 1;
             }));
         }
@@ -753,7 +768,8 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
             key.dport = dport;
             key.protocol = protocol;
             nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                  &key, xlate_idx, xlate_idx_rflow);
+                                  &key, xlate_idx, xlate_idx_rflow,
+                                  nat_addr_type, nat_proto);
         }
     }
     clib_spinlock_unlock(&vpc->lock);
@@ -803,15 +819,17 @@ nat_flow_dealloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
 //
 nat_err_t
 nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
-                 ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
-                 u16 pvt_port, nat_addr_type_t nat_addr_type)
+                 ip4_address_t sip, u16 sport)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
     nat_flow_key_t key = { 0 };
     nat_err_t ret = NAT_ERR_NOT_FOUND;
-    uword *hw_index_ptr, hw_index;
+    uword *data, hw_index;
     nat_proto_t nat_proto;
+    nat_addr_type_t nat_addr_type;
+    ip4_address_t pvt_ip;
+    u16 pvt_port;
 
     ASSERT(vpc_id < PDS_MAX_VPC);
     vpc = &nat_main.vpc_config[vpc_id];
@@ -822,21 +840,19 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
     key.sport = sport;
     key.protocol = protocol;
 
-    nat_proto = get_nat_proto_from_proto(protocol);
-    if (PREDICT_FALSE(nat_proto == NAT_PROTO_UNKNOWN)) {
-        return NAT_ERR_INVALID_PROTOCOL;
-    }
-
     clib_spinlock_lock(&vpc->lock);
 
-    nat_flow_get_and_del_src_endpoint_mapping(vpc, pvt_ip, pvt_port);
-
-    hw_index_ptr = hash_get_mem(vpc->nat_flow_ht, &key);
-    if (PREDICT_FALSE(!hw_index_ptr)) {
+    data = hash_get_mem(vpc->nat_flow_ht, &key);
+    if (PREDICT_FALSE(!data)) {
         clib_spinlock_unlock(&vpc->lock);
         return NAT_ERR_NOT_FOUND;
     }
-    hw_index = *hw_index_ptr;
+    NAT_FLOW_HT_GET_VAL(*data, hw_index, nat_addr_type, nat_proto)
+
+    pds_snat_tbl_read_ip4(hw_index, &pvt_ip.as_u32, &pvt_port);
+
+    nat_flow_get_and_del_src_endpoint_mapping(vpc, pvt_ip, pvt_port);
+
     hash_unset_mem_free(&vpc->nat_flow_ht, &key);
     hash_unset_mem_free(&vpc->nat_pvt_ip_ht, &pvt_ip);
 
@@ -1001,3 +1017,150 @@ nat_pb_iterate(pds_nat_iterate_params_t *params)
     }
     return;
 }
+
+//
+// Iterate over NAT flows
+//
+typedef void *(*nat_flow_iter_cb_t)(void *ctxt, u32 vpc_id,
+                                    nat_flow_key_t *key, u64 val);
+
+void *
+nat_flow_iterate(void *ctxt, nat_flow_iter_cb_t iter_cb)
+{
+    nat_vpc_config_t *vpc;
+    nat_flow_key_t *key;
+    u64 value;
+
+    for (int vpc_id = 0; vpc_id < PDS_MAX_VPC; vpc_id++) {
+        vpc = &nat_main.vpc_config[vpc_id];
+        if (vpc->num_port_blocks == 0) {
+            continue;
+        }
+        hash_foreach_mem(key, value, vpc->nat_flow_ht,
+        ({
+            ctxt = iter_cb(ctxt, vpc_id, key, value);
+        }));
+    }
+
+    return ctxt;
+}
+
+static void *
+nat_cli_show_flow_cb(void *ctxt, u32 vpc_id, nat_flow_key_t *key, u64 val)
+{
+    u32 hw_index;
+    nat_proto_t nat_proto;
+    nat_addr_type_t nat_addr_type;
+    ip4_address_t sip, dip, pvt_ip;
+    u16 sport, dport, pvt_port;
+    vlib_main_t *vm = (vlib_main_t *)ctxt;
+
+    NAT_FLOW_HT_GET_VAL(val, hw_index, nat_addr_type, nat_proto)
+    (void)nat_proto;
+
+    pds_snat_tbl_read_ip4(hw_index, &pvt_ip.as_u32, &pvt_port);
+
+    sip.as_u32 = clib_host_to_net_u32(key->sip.as_u32);
+    dip.as_u32 = clib_host_to_net_u32(key->dip.as_u32);
+    sport = clib_host_to_net_u16(key->sport);
+    dport = clib_host_to_net_u16(key->dport);
+    pvt_ip.as_u32 = clib_host_to_net_u32(pvt_ip.as_u32);
+    pvt_port = clib_host_to_net_u16(pvt_port);
+    vlib_cli_output(vm, "%-10U%-10U%-10U%-10U%-10U%-10d%-10d%-10U%-10U\n",
+                    format_ip4_address, &sip,
+                    format_ip4_address, &dip,
+                    format_tcp_udp_port, sport,
+                    format_tcp_udp_port, dport,
+                    format_ip_protocol, key->protocol,
+                    hw_index, nat_addr_type,
+                    format_ip4_address, &pvt_ip,
+                    format_tcp_udp_port, pvt_port);
+
+    return vm;
+}
+
+typedef struct nat_clear_cb_s {
+    nat_flow_key_t key;
+    u64 val;
+    u32 vpc_id;
+} nat_clear_cb_t;
+
+static void *
+nat_cli_clear_flow_cb(void *ctxt, u32 vpc_id, nat_flow_key_t *key, u64 val)
+{
+    nat_clear_cb_t *clear_flow_pool = (nat_clear_cb_t *)ctxt;
+    nat_clear_cb_t *elem;
+
+    pool_get(clear_flow_pool, elem);
+    elem->key = *key;
+    elem->val = val;
+    elem->vpc_id = vpc_id;
+
+    return clear_flow_pool;
+}
+
+static clib_error_t *
+nat_cli_show_flow(vlib_main_t *vm,
+                  unformat_input_t *input,
+                  vlib_cli_command_t *cmd)
+{
+    vlib_cli_output(vm, "%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+                    "SIP", "DIP", "SPORT", "DPORT", "PROTO", "HW INDEX", "ADDR TYPE", "PVT IP", "PVT PORT");
+    (void)nat_flow_iterate((void *)vm, &nat_cli_show_flow_cb);
+
+    return 0;
+}
+
+static clib_error_t *
+nat_clear_flow_helper(bool vpp_cli, vlib_main_t *vm)
+{
+    nat_clear_cb_t *clear_flow_pool = NULL;
+    nat_clear_cb_t *elem;
+    nat_err_t nat_ret;
+
+    clear_flow_pool = nat_flow_iterate((void *)clear_flow_pool, &nat_cli_clear_flow_cb);
+
+    pool_foreach (elem, clear_flow_pool,
+    ({
+        nat_ret = nat_flow_dealloc(elem->vpc_id, elem->key.dip,
+                                   elem->key.dport, elem->key.protocol,
+                                   elem->key.sip, elem->key.sport);
+        if (nat_ret != NAT_ERR_OK) {
+            if (vpp_cli) {
+                vlib_cli_output(vm, "NAT flow delete failed %d", nat_ret);
+            }
+        }
+    }));
+
+    pool_free(clear_flow_pool);
+    return 0;
+}
+
+static clib_error_t *
+nat_cli_clear_all_flows(vlib_main_t *vm,
+                        unformat_input_t *input,
+                        vlib_cli_command_t *cmd)
+{
+    return nat_clear_flow_helper(true, vm);
+}
+
+int
+nat_clear_all_flows(void)
+{
+    nat_clear_flow_helper(false, NULL);
+    return 0;
+}
+
+VLIB_CLI_COMMAND(nat_cli_show_flow_command, static) =
+{
+    .path = "show nat flow",
+    .short_help = "show nat flow",
+    .function = nat_cli_show_flow,
+};
+
+VLIB_CLI_COMMAND(nat_cli_clear_flow_command, static) =
+{
+    .path = "clear nat flow",
+    .short_help = "clear nat flow",
+    .function = nat_cli_clear_all_flows,
+};
