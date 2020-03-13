@@ -44,9 +44,7 @@ input_properties:
   phvwr         p.control_metadata_src_if_label, d.input_properties_d.src_if_label
   phvwr         p.control_metadata_mseg_bm_bc_repls, d.input_properties_d.mseg_bm_bc_repls
   phvwr         p.control_metadata_mseg_bm_mc_repls, d.input_properties_d.mseg_bm_mc_repls
-  seq           c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
-  phvwr.c1      p.flow_lkp_metadata_lkp_reg_mac_vrf, d.input_properties_d.reg_mac_vrf
-  phvwr.!c1     p.flow_lkp_metadata_lkp_reg_mac_vrf, d.input_properties_d.vrf
+  phvwr         p.flow_lkp_metadata_lkp_reg_mac_vrf, d.input_properties_d.reg_mac_vrf
   phvwr         p.control_metadata_flow_learn, d.input_properties_d.flow_learn
   phvwr.e       p.control_metadata_uuc_fl_pe_sup_en, d.input_properties_d.uuc_fl_pe_sup_en
   phvwr.f       p.control_metadata_has_prom_host_lifs, d.input_properties_d.has_prom_host_lifs

@@ -574,6 +574,9 @@ l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg)
             }
             l2seg_pd->inp_prop_tbl_idx[if_idx] = INVALID_INDEXER_INDEX;
             l2seg_pd->inp_prop_tbl_idx_pri[if_idx] = INVALID_INDEXER_INDEX;
+
+            // De-program Cust. EPs classic reg mac entries
+            ret = l2seg_program_cust_eps_reg_mac(shared_l2seg, l2seg, false, if_idx, TABLE_OPER_REMOVE);
         }
     } else {
         for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
@@ -1222,12 +1225,25 @@ l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     // - Get customer l2seg and program EPs into reg. mac
     if (l2seg_is_mgmt(l2seg)) {
         l2seg_cust = l2seg_pd_get_shared_mgmt_l2seg(l2seg, NULL);
+        if (l2seg_cust) {
+            // Customter => Mgmt
+            // - Walk through Cust. EPs and program classic reg_mac entries
+            ret = l2seg_program_cust_eps_reg_mac(l2seg_cust, l2seg, false, 0, TABLE_OPER_INSERT);
+        }
+#if 0
         if (l2seg_cust && l2seg_num_attached_l2segs(l2seg_cust) == 1) {
-            HAL_TRACE_DEBUG("l2seg mgmt:{} <-> cust:{} is becoming attached. No-op", 
+            HAL_TRACE_DEBUG("l2seg mgmt:{} <-> cust:{} is becoming attached."
+                            "Installing reg mac entries for WL EPs", 
                             l2seg->seg_id, l2seg_cust->seg_id);
+            // Customter => Mgmt
+            // - Walk through Cust. EPs and program classic reg_mac entries
+            ret = l2seg_program_cust_eps_reg_mac(l2seg_cust, l2seg, false, 0, TABLE_OPER_INSERT);
+
+
             // Cust. EPs are always programmed. No need to program 
             // ret = l2seg_program_eps_reg_mac(l2seg_cust, TABLE_OPER_INSERT);
         }
+#endif
     } else {
         // TOOD: Customer L2seg creation. 
         // If there are mgmt attached l2segs:
@@ -1289,6 +1305,41 @@ l2seg_repgm_mgmt_enics_eps (l2seg_t *l2seg, l2seg_t *hp_l2seg)
                 pd_ep = (pd_ep_t *)ep->pd;
                 pd_ep_pgm_registered_mac(pd_ep, NULL, hp_l2seg,
                                          TABLE_OPER_UPDATE);
+            }
+        }
+    }
+    return ret;
+}
+
+hal_ret_t
+l2seg_program_cust_eps_reg_mac (l2seg_t *l2seg_cust, l2seg_t *l2seg_mgmt, 
+                                bool orig, uint32_t uplink_if_idx,
+                                table_oper_t oper)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL, *p_hdl = NULL;
+    if_t            *hal_if = NULL;
+    ep_t            *ep = NULL;
+    pd_ep_t         *pd_ep = NULL;
+
+    // walk-thru enics
+    for (const void *ptr : *l2seg_cust->if_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        HAL_TRACE_DEBUG("Processing if: {}, type: {}", 
+                        hal_if->if_id, hal_if->if_type);
+        // walk-thru eps
+        if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+            for (const void *ptr : *(hal_if->ep_list)) {
+                p_hdl = (hal_handle_t *)ptr;
+                ep = find_ep_by_handle(*p_hdl);
+                HAL_TRACE_DEBUG("Processing EP: {}", ep_l2_key_to_str(ep));
+                pd_ep = (pd_ep_t *)ep->pd;
+                if (oper == TABLE_OPER_INSERT) {
+                    pd_ep_pgm_registered_mac(pd_ep, NULL, l2seg_mgmt, oper);
+                } else {
+                    ep_pd_uninstall_reg_mac(pd_ep, orig, uplink_if_idx);
+                }
             }
         }
     }
@@ -1424,6 +1475,7 @@ l2seg_cpu_inp_prop_form_data (pd_l2seg_t *l2seg_pd,
 
     inp_prop.dir                        = FLOW_DIR_FROM_DMA;
     inp_prop.vrf                        = l2seg_pd->l2seg_fl_lkup_id;
+    inp_prop.reg_mac_vrf                = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.l4_profile_idx             = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
     inp_prop.ipsg_enable                = 0;
     inp_prop.src_lport                  = 0;
@@ -2108,7 +2160,7 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
 
     if (cl_l2seg && hp_l2seg) {
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
-        inp_prop.reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
+        inp_prop.reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(hp_l2seg);
         inp_prop.flow_miss_idx = l2seg_base_oifl_id(cl_l2seg, NULL);
         inp_prop.src_if_label = pd_uplinkif_if_label(hal_if);

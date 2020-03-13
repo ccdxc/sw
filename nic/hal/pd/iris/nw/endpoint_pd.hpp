@@ -13,7 +13,8 @@ namespace pd {
 
 struct pd_ep_s {
     uint32_t                rw_tbl_idx[REWRITE_MAX_ID];
-    uint32_t                reg_mac_tbl_idx;         // Only in classic mode
+    uint32_t                reg_mac_tbl_idx;         
+    uint32_t                reg_mac_tbl_cl_idx[HAL_MAX_UPLINKS];
     acl_tcam_entry_handle_t ep_quiesce_src_nacl_hdl; // EP Quiesce source NACL Handle
     acl_tcam_entry_handle_t ep_quiesce_dst_nacl_hdl; // EP Quiesce destination NACL Handle
     acl_tcam_entry_handle_t ep_normalization_src_nacl_hdl; // EP Normalization source NACL Handle
@@ -54,11 +55,14 @@ ep_pd_init (pd_ep_t *ep)
     }
 
     // Set here if you want to initialize any fields
-    ep->reg_mac_tbl_idx = INVALID_INDEXER_INDEX;
     ep->ep_quiesce_src_nacl_hdl       = INVALID_INDEXER_INDEX;
     ep->ep_quiesce_dst_nacl_hdl       = INVALID_INDEXER_INDEX;
     ep->ep_normalization_src_nacl_hdl = INVALID_INDEXER_INDEX;
     ep->ep_normalization_dst_nacl_hdl = INVALID_INDEXER_INDEX;
+    ep->reg_mac_tbl_idx               = INVALID_INDEXER_INDEX;
+    for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+        ep->reg_mac_tbl_cl_idx[i] = INVALID_INDEXER_INDEX;
+    }
 
     return ep;
 }
@@ -186,6 +190,13 @@ hal_ret_t pd_ep_reg_mac_info(l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l
                              registered_macs_swkey_t &key,
                              registered_macs_otcam_swkey_mask_t &key_mask,
                              registered_macs_actiondata_t &data);
+hal_ret_t
+pd_ep_install_reg_mac(ep_t *pi_ep, pd_ep_t *pd_ep, if_t *pi_if, 
+                      registered_macs_swkey_t *key, 
+                      registered_macs_otcam_swkey_mask_t *key_mask,
+                      registered_macs_actiondata_t *data,
+                      table_oper_t oper, bool orig, uint32_t uplink_if_idx);
+hal_ret_t ep_pd_uninstall_reg_mac(pd_ep_t *pd_ep, bool orig, uint32_t uplink_if_idx);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_ENDPOINT_PD_HPP__

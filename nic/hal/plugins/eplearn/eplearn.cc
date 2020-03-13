@@ -144,11 +144,13 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
 
        //Remember the ep handle as we are updating.
       ep_handle = sep->hal_handle;
+#if 0
       ret = hal::endpoint_update_if(sep, new_hal_if);
       if (ret != HAL_RET_OK) {
           HAL_TRACE_ERR("Endpoint interface update failed!");
           goto end;
       }
+#endif
 
       // Open the cfg db as it could be closed
       // in update if

@@ -896,7 +896,7 @@ pd_ep_ipsg_change (pd_func_args_t *pd_func_args)
 
 hal_ret_t
 pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, 
-                    if_t *ep_if, if_t *uplink_if, lif_t *enic_lif,
+                    if_t *ep_if, if_t *uplink_if, lif_t *enic_lif, bool orig,
                     registered_macs_swkey_t &key,
                     registered_macs_otcam_swkey_mask_t &key_mask,
                     registered_macs_actiondata_t &data)
@@ -908,7 +908,11 @@ pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
     cl_l2seg_pd = cl_l2seg ? (pd_l2seg_t *)cl_l2seg->pd : NULL;
     hp_l2seg_pd = hp_l2seg ? (pd_l2seg_t *)hp_l2seg->pd : NULL;
     if (cl_l2seg && hp_l2seg) {
-        key.flow_lkp_metadata_lkp_reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
+        if (orig) {
+            key.flow_lkp_metadata_lkp_reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
+        } else {
+            key.flow_lkp_metadata_lkp_reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
+        }
         reg_mac.multicast_en = 0;
         reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
         reg_mac.flow_learn = (ep_l2seg == hp_l2seg) ? 1 : 0;
@@ -948,6 +952,81 @@ pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
         reg_mac.tunnel_rewrite_index = repl_data.tunnel_rewrite_index;
     }
 
+    return ret;
+}
+
+hal_ret_t
+pd_ep_install_reg_mac (ep_t *pi_ep, pd_ep_t *pd_ep, if_t *pi_if, 
+                       registered_macs_swkey_t *key, 
+                       registered_macs_otcam_swkey_mask_t *key_mask,
+                       registered_macs_actiondata_t *data,
+                       table_oper_t oper, bool orig, uint32_t uplink_if_idx)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    sdk_ret_t                           sdk_ret;
+    mac_addr_t                          *mac = NULL;
+    registered_macs_otcam_swkey_mask_t  *key_mask_p = NULL; 
+    uint32_t                            hash_idx = INVALID_INDEXER_INDEX;
+    sdk_hash                            *reg_mac_tbl = NULL;
+
+    HAL_TRACE_DEBUG("Installing reg mac");
+
+    reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
+    SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+
+    // lkp_mac
+    mac = ep_get_mac_addr(pi_ep);
+    memcpy(key->flow_lkp_metadata_lkp_dstMacAddr, *mac, 6);
+    memrev(key->flow_lkp_metadata_lkp_dstMacAddr, 6);
+
+    // dst_lport
+    data->action_id = REGISTERED_MACS_REGISTERED_MACS_ID;
+    data->action_u.registered_macs_registered_macs.dst_lport =
+        if_get_lport_id(pi_if);
+
+    if (oper == TABLE_OPER_INSERT) {
+        // Insert
+        sdk_ret = reg_mac_tbl->insert(key, data, &hash_idx, key_mask_p, false);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program for ep:{}, ret: {}",
+                          ep_l2_key_to_str(pi_ep), ret);
+            if (ret == HAL_RET_ENTRY_EXISTS) {
+                // If hash lib returns entry exists, return hw prog error. Otherwise
+                // entry exists means that vrf was already created.
+                ret = HAL_RET_HW_PROG_ERR;
+            }
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed for ep:{} at hash_idx:{}",
+                            ep_l2_key_to_str(pi_ep), hash_idx);
+        }
+
+        if (orig) {
+            pd_ep->reg_mac_tbl_idx = hash_idx;
+        } else {
+            pd_ep->reg_mac_tbl_cl_idx[uplink_if_idx] = hash_idx;
+        }
+    } else {
+        if (orig) {
+            hash_idx = pd_ep->reg_mac_tbl_idx;
+        } else {
+            hash_idx = pd_ep->reg_mac_tbl_cl_idx[uplink_if_idx];
+        }
+        // Update
+        sdk_ret = reg_mac_tbl->update(hash_idx, data);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to reprogram for ep:{} at: {}",
+                          ep_l2_key_to_str(pi_ep), hash_idx);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("reprogrammed for ep:{} at: {}",
+                            ep_l2_key_to_str(pi_ep), hash_idx);
+        }
+    }
+
+end:
     return ret;
 }
 
@@ -1005,7 +1084,47 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
         }
         if (l2seg_is_cust(l2seg)) {
             hp_l2seg = l2seg;
-            cl_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, uplink_if);
+            if (!attached_l2seg) {
+                // Install / Update 3 entries
+                // Host entry
+                ret = pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, 
+                                         uplink_if, lif, true,
+                                         key, key_mask, data);
+
+                ret = pd_ep_install_reg_mac(pi_ep, pd_ep, pi_if,
+                                            &key, &key_mask, &data, 
+                                            oper, true, 0);
+
+                for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+                    if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID) {
+                        cl_l2seg = l2seg_lookup_by_handle(l2seg->other_shared_mgmt_l2seg_hdl[i]);
+                            ret = pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, 
+                                                     uplink_if, lif, false,
+                                                     key, key_mask, data);
+
+                            ret = pd_ep_install_reg_mac(pi_ep, pd_ep, pi_if,
+                                                        &key, &key_mask, &data, 
+                                                        oper, false, i);
+                    }
+                }
+            } else {
+                for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+                    if (l2seg->other_shared_mgmt_l2seg_hdl[i] != HAL_HANDLE_INVALID &&
+                        l2seg->other_shared_mgmt_l2seg_hdl[i] == attached_l2seg->hal_handle) {
+                        HAL_TRACE_DEBUG("Processing l2seg hdl: {}, att_l2seg hdl: {}", 
+                                        l2seg->other_shared_mgmt_l2seg_hdl[i], 
+                                        attached_l2seg ? attached_l2seg->hal_handle : 0);
+                        ret = pd_ep_reg_mac_info(l2seg, attached_l2seg, hp_l2seg, pi_if, 
+                                                 uplink_if, lif, false,
+                                                 key, key_mask, data);
+
+                        ret = pd_ep_install_reg_mac(pi_ep, pd_ep, pi_if,
+                                                    &key, &key_mask, &data, 
+                                                    oper, false, i);
+                    }
+                }
+            }
+            // cl_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, uplink_if);
         } else {
             cl_l2seg = l2seg;
             if (attached_l2seg) {
@@ -1013,9 +1132,13 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
             } else {
                 hp_l2seg = l2seg_pd_get_shared_mgmt_l2seg(l2seg, uplink_if);
             }
+            ret = pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, 
+                                     lif, true,
+                                     key, key_mask, data);
+            ret = pd_ep_install_reg_mac(pi_ep, pd_ep, pi_if,
+                                        &key, &key_mask, &data, 
+                                        oper, true, 0);
         }
-        pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, lif, 
-                           key, key_mask, data);
     } else {
         if (l2seg_is_cust(l2seg)) {
             hp_l2seg = l2seg;
@@ -1023,27 +1146,14 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
             cl_l2seg = l2seg;
         }
         // only in gtests as there are no EPs on uplinks
-        pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, lif, 
+        pd_ep_reg_mac_info(l2seg, cl_l2seg, hp_l2seg, pi_if, uplink_if, lif, true,
                            key, key_mask, data);
+        ret = pd_ep_install_reg_mac(pi_ep, pd_ep, pi_if,
+                                    &key, &key_mask, &data, 
+                                    oper, true, 0);
     }
 
 #if 0
-    // lkp_vrf
-    SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
-    key.flow_lkp_metadata_lkp_classic_vrf = 
-        ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
-    if (l2seg_is_shared_mgmt_attached(l2seg) && l2seg_is_cust(l2seg)) {
-        data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_SMART;
-        direct_to_otcam = true;
-        memset(&key_mask, ~0, sizeof(key_mask));
-        memset(&key_mask.flow_lkp_metadata_lkp_classic_vrf_mask, 0, 
-               sizeof(key_mask.flow_lkp_metadata_lkp_classic_vrf_mask));
-        key_mask_p = &key_mask;
-    } else {
-        data.action_u.registered_macs_registered_macs.nic_mode = NIC_MODE_CLASSIC;
-    }
-#endif
-
     // lkp_mac
     mac = ep_get_mac_addr(pi_ep);
     memcpy(key.flow_lkp_metadata_lkp_dstMacAddr, *mac, 6);
@@ -1088,6 +1198,51 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
                             ep_l2_key_to_str(pi_ep), hash_idx);
         }
     }
+#endif
+end:
+    return ret;
+}
+
+hal_ret_t
+ep_pd_uninstall_reg_mac (pd_ep_t *pd_ep, bool orig, uint32_t uplink_if_idx)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
+    registered_macs_swkey_t     key;
+    registered_macs_actiondata_t  data;
+    sdk_hash                    *reg_mac_tbl = NULL;
+    uint32_t                    *tbl_idx = NULL;
+
+    if (orig) {
+        tbl_idx = &pd_ep->reg_mac_tbl_idx;
+    } else {
+        tbl_idx = &pd_ep->reg_mac_tbl_cl_idx[uplink_if_idx];
+    }
+
+    if (*tbl_idx == INVALID_INDEXER_INDEX) {
+        HAL_TRACE_DEBUG("Skipping as it was never programmed");
+        goto end;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+
+    reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
+    SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+
+    sdk_ret = reg_mac_tbl->remove(*tbl_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("classic: Unable to deprogram for: {}. ret:{}",
+                      *tbl_idx, ret);
+        goto end;
+    } else {
+        // Getting trace from hash lib. This is redundant.
+        HAL_TRACE_VERBOSE("classic: DeProgrammed at: {} ",
+                          *tbl_idx);
+    }
+    *tbl_idx = INVALID_INDEXER_INDEX;
+
 end:
     return ret;
 }
@@ -1098,6 +1253,27 @@ end:
 hal_ret_t
 ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = ep_pd_uninstall_reg_mac(pd_ep, true, 0);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall orig reg_mac. ret: {}", ret);
+        goto end;
+    }
+
+    for (int i = 0; i < HAL_MAX_UPLINKS; i++) {
+        if (pd_ep->reg_mac_tbl_cl_idx[i] != INVALID_INDEXER_INDEX) {
+            ret = ep_pd_uninstall_reg_mac(pd_ep, false, i);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to uninstall cl reg_mac. ret: {}", ret);
+                goto end;
+            }
+        }
+    }
+
+end:
+    return ret;
+#if 0
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     registered_macs_swkey_t     key;
@@ -1130,6 +1306,7 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
 
 end:
     return ret;
+#endif
 }
 
 // ----------------------------------------------------------------------------

@@ -1215,9 +1215,7 @@ func ifGetStrFromID(ifID []uint64) (int, []string) {
 			return -1, nil
 		}
 
-		ifStr = append(ifStr, fmt.Sprintf("%s-%d",
-			strings.ToLower(ifTypeToStr(resp.GetSpec().GetType())),
-			ifID[index]))
+		ifStr = append(ifStr, fmt.Sprintf("%s", ifRespToStr(resp)))
 	}
 
 	return 0, ifStr

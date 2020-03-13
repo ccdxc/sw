@@ -373,7 +373,7 @@ func epShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("#IPs         : Endpoint's IPs                          IPs     : Endpoint's IPs\n")
 	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-12s%-24s%-10s%-10s%-5s%-10s%-20s\n",
+	fmt.Printf("%-10s%-10s%-21s%-15s%-10s%-5s%-5s%-20s\n",
 		"Handle", "L2SegID", "Mac", "IfId", "IsLocal", "Vlan", "#IPs", "IPs")
 	fmt.Println(hdrLine)
 }
@@ -399,7 +399,7 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 	ifIDStr = append(ifIDStr, "-")
 	_, ifIDStr = ifGetStrFromID(ifID)
 
-	fmt.Printf("%-12d%-12d%-24s%-10s%-10t%-5d%-10d%-20s\n",
+	fmt.Printf("%-10d%-10d%-21s%-15s%-10t%-5d%-5d%-20s\n",
 		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
 		resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId(),
 		macStr,

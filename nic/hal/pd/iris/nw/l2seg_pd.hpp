@@ -191,6 +191,9 @@ hal_ret_t l2seg_pd_upd_cpu_inp_prop_tbl(pd_l2seg_t *l2seg_pd);
 hal_ret_t l2seg_cpu_inp_prop_form_data(pd_l2seg_t *l2seg_pd,
                                        input_properties_actiondata_t &data);
 hal_ret_t l2seg_repgm_mgmt_enics_eps(l2seg_t *l2seg, l2seg_t *hp_l2seg);
+hal_ret_t l2seg_program_cust_eps_reg_mac(l2seg_t *l2seg_cust, l2seg_t *l2seg_mgmt, 
+                                         bool orig, uint32_t uplink_if_idx,
+                                         table_oper_t oper);
 }   // namespace pd
 }   // namespace hal
 
