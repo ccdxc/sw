@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -1772,4 +1773,9 @@ func (i *FakeAgentAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 // HandleCollector handles CRUD Methods for Collector Object
 func (i *FakeAgentAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	return nil, nil
+}
+
+// HandletechSupport stubbed out
+func (i *FakeAgentAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
+	return "", errors.Wrapf(types.ErrNotImplemented, "Handle Tech Support not implemented by Iris Pipeline")
 }

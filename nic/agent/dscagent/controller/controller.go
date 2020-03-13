@@ -10,10 +10,16 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	export "github.com/pensando/sw/venice/utils/techsupport/exporter"
+
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
+	"github.com/pensando/sw/venice/globals"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -351,6 +357,106 @@ func (c *API) WatchObjects(kinds []string) {
 		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 	}
 	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, kinds)
+}
+
+// WatchTechSupport watches for TechSupportRequests. This is called only in Cloud Pipeline.
+func (c *API) WatchTechSupport() {
+	if c.WatchCtx == nil {
+		log.Info("Controller API: WatchCtx is not set")
+		return
+	}
+
+	if c.ResolverClient == nil {
+		log.Info("Controller API: Resolver client is not set.")
+		return
+	}
+
+	techSupportClient, err := rpckit.NewRPCClient(c.InfraAPI.GetDscName(), globals.Tsm, rpckit.WithBalancer(balancer.New(c.ResolverClient)))
+	if err != nil || techSupportClient == nil {
+		log.Error(errors.Wrapf(types.ErrTechSupportClientInit, "Controller API: %s", err))
+		return
+	}
+
+	techSupportAPIHandler := tsproto.NewTechSupportApiClient(techSupportClient.ClientConn)
+
+	stream, err := techSupportAPIHandler.WatchTechSupportRequests(c.WatchCtx, &tsproto.WatchTechSupportRequestsParameters{
+		NodeName: c.InfraAPI.GetDscName(),
+		NodeKind: "DistributedServiceCard",
+	})
+
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrTechSupportWatch, "Controller API: %s", err))
+		return
+	}
+
+	for {
+		evt, err := stream.Recv()
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrTechSupportWatchExited, "Controller API: %s", err))
+			return
+		}
+		// We don't need to handle multiple Tech Support Events in the same context here. So using the first entry
+		log.Infof("Controller API: %s | Evt: %v", types.InfoTechSupportWatchReceived, evt.Events[0].EventType)
+		req := *evt.Events[0].Request
+		techSupportArtifact, err := c.PipelineAPI.HandleTechSupport(req)
+		if err != nil || len(techSupportArtifact) == 0 {
+			// TODO Raise an event here to Venice once evts infra is available
+			log.Error(errors.Wrapf(types.ErrTechSupportCollection, "Controller API: %s", err))
+			continue
+		}
+
+		if _, err := os.Stat(techSupportArtifact); err != nil {
+			// TODO Raise an event here to Venice once evts infra is available
+			log.Error(errors.Wrapf(types.ErrTechSupportArtifactsMissing, "Controller API: %s", err))
+			continue
+		}
+
+		// generate the URI for VOS
+		idSplit := strings.Split(req.Spec.InstanceID, "-")
+		targetID := fmt.Sprintf("%s-%s-%s-%s", req.ObjectMeta.Name, idSplit[0], "DistributedServiceCard", c.InfraAPI.GetDscName())
+		vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
+		vosUri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
+		// Upload the artifact to Venice
+		if err := export.SendToVenice(c.ResolverClient, techSupportArtifact, vosTarget); err != nil {
+			// TODO Raise an event here to Venice once evts infra is available
+			log.Error(errors.Wrapf(types.ErrTechSupportVeniceExport, "Controller API: %s", err))
+			continue
+		}
+
+		// Default remove it from DSC only if it has been successfully uploaded to Venice
+		if err := os.Remove(techSupportArtifact); err != nil {
+			log.Error(errors.Wrapf(types.ErrTechSupportArtifactCleanup, "Controller API: %s", err))
+		}
+
+		// send update to tsm
+		// TODO: send updates in above error cases
+		update := &tsproto.TechSupportRequest{
+			TypeMeta: api.TypeMeta{
+				Kind: "TechSupportRequest",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: req.ObjectMeta.Name,
+			},
+			Spec: tsproto.TechSupportRequestSpec{
+				InstanceID: req.Spec.InstanceID,
+			},
+			Status: tsproto.TechSupportRequestStatus{
+				Status: tsproto.TechSupportRequestStatus_Completed,
+			},
+		}
+
+		// set uri for the artifact
+		update.Status.URI = vosUri
+
+		updParams := &tsproto.UpdateTechSupportResultParameters{
+			NodeName: c.InfraAPI.GetDscName(),
+			NodeKind: "DistributedServiceCard",
+			Request:  update,
+		}
+
+		techSupportAPIHandler.UpdateTechSupportResult(c.WatchCtx, updParams)
+		log.Infof("Controller API: uploaded techsupport to %s", vosUri)
+	}
 }
 
 // Stop cancels all watchers and closes all clients to venice controllers

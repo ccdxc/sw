@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
+
 	"github.com/gogo/protobuf/proto"
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
@@ -159,6 +161,22 @@ func (a *ApuluAPI) PipelineInit() error {
 		}
 
 	}()
+
+	// Start a tech support watcher. Ideally this should be handled via nimbus aggregate watch. In such a case we could have
+	// reused the above code. Tech Support has a separate controller which prevents us from doing this.
+	go func() {
+		for {
+			if a.ControllerAPI == nil {
+				// Wait till Controller API is correctly registered
+				time.Sleep(time.Minute)
+				continue
+			}
+			log.Info("Staring Tech Support Watch")
+			a.ControllerAPI.WatchTechSupport() // This blocks only on stream.Recv
+			time.Sleep(time.Minute)
+		}
+	}()
+
 	return nil
 }
 
@@ -1117,10 +1135,6 @@ func (a *ApuluAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto
 	return nil, errors.Wrapf(types.ErrNotImplemented, "Mirror Session not implemented by Apulu Pipeline")
 }
 
-//func (a *ApuluAPI)HandleTelemetry(oper types.Operation, tm *netproto.Telemetry) ([]*netproto.Telemetry, error) {
-//	return nil, errors.Wrapf(types.ErrNotImplemented, "Telemetry %s is not implemented by Apulu Pipeline",  oper)
-//}
-
 // HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
 func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.RoutingConfig) (rtcfgs []netproto.RoutingConfig, err error) {
 	a.Lock()
@@ -1285,6 +1299,13 @@ func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto
 	}
 
 	return
+}
+
+// HandleTechSupport unimplemented
+func (a *ApuluAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
+	a.Lock()
+	defer a.Unlock()
+	return apulu.HandleTechSupport(a.OperClient, obj.Spec.SkipCores, obj.Spec.InstanceID)
 }
 
 // ReplayConfigs replays last known configs from boltDB

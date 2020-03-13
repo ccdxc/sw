@@ -131,6 +131,13 @@ const (
 	ErrMetricsRecv                           = Error("ErrMetricsRecv")
 	ErrMaxCollectorsPerFlowExceeded          = Error("ErrMaxCollectorsPerFlowExceeded")
 	ErrMaxCollectorsExceeded                 = Error("ErrMaxCollectorsExceeded")
+	ErrTechSupportClientInit                 = Error("ErrTechSupportClientInit")
+	ErrTechSupportWatch                      = Error("ErrTechSupportWatch")
+	ErrTechSupportWatchExited                = Error("ErrTechSupportWatchExited")
+	ErrTechSupportCollection                 = Error("ErrTechSupportCollection")
+	ErrTechSupportArtifactsMissing           = Error("ErrTechSupportArtifactsMissing")
+	ErrTechSupportVeniceExport               = Error("ErrTechSupportVeniceExport")
+	ErrTechSupportArtifactCleanup            = Error("ErrTechSupportArtifactCleanup")
 )
 
 // Const Info
@@ -174,4 +181,5 @@ const (
 	InfoTemplateSendStart               = Info("InfoTemplateSendStart")
 	InfoTemplateSendStop                = Info("InfoTemplateSendStop")
 	InfoMirrorNotDeletedStillReferenced = Info("InfoMirrorNotDeletedStillReferenced")
+	InfoTechSupportWatchReceived        = Info("InfoTechSupportWatchReceived")
 )

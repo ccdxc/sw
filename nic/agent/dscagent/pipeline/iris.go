@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
+
 	"github.com/mdlayher/arp"
 
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
@@ -1932,6 +1934,11 @@ func (i *IrisAPI) initLifStream(uid string) {
 // HandleCPRoutingConfig unimplemented
 func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+}
+
+// HandleTechSupport unimplemented
+func (i *IrisAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
+	return "", errors.Wrapf(types.ErrNotImplemented, "Tech Support Capture not implemented by Iris Pipeline")
 }
 
 // TODO Remove PortCreates once the linkmgr changes are stable

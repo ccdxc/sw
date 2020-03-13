@@ -3,6 +3,8 @@ package types
 import (
 	"context"
 
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
+
 	"github.com/pensando/sw/venice/utils/emstore"
 
 	"github.com/pensando/sw/api"
@@ -15,6 +17,7 @@ type ControllerAPI interface {
 	Start(ctx context.Context) error
 	Stop() error
 	WatchObjects(kinds []string)
+	WatchTechSupport()
 }
 
 // InfraAPI implements all infra APIs that are common across pipelines
@@ -125,4 +128,7 @@ type PipelineAPI interface {
 
 	// HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
 	HandleDSCL3Interface(obj DSCInterfaceIP) error
+
+	// HandleTechSupport captures tech support from DSC and uploads it to Venice
+	HandleTechSupport(obj tsproto.TechSupportRequest) (techSupportArtifact string, err error)
 }

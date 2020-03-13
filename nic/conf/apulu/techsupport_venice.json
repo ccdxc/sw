@@ -20,8 +20,7 @@
       "/nic/bin/pcieutil hdrt",
       "/nic/bin/pcieutil aximst",
       "/nic/bin/pcieutil dberr",
-      "/nic/bin/pdsctl show techsupport",
-      "curl localhost:9007/api/mirror/sessions/ | jq ."
+      "/nic/bin/pdsctl show techsupport"
     ],
   "cores": [
       "/data/core/"
