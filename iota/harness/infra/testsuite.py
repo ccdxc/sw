@@ -44,10 +44,13 @@ class TestSuiteResults(object):
             self.SHATitle = shaTitle
         else:
             self.SHATitle = os.getenv("")
-        if targetId:
-            self.TargetID = targetId
-        else:
-            self.TargetID = os.getenv("TARGET_ID")
+        try: 
+          if targetId:
+              self.TargetID = int(targetId)
+          else:
+              self.TargetID = int(os.getenv("TARGET_ID"))
+        except ValueError:
+            print("targetID is not an integer")
         self.Testcases = []
 
     def addTestcase(self, tc):

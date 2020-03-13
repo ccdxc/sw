@@ -42,3 +42,4 @@ logfiles:
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
   - /sw/iota/all_corefiles.tgz
+  - /testcase_result_export/testsuite_useg_enf_esx_results.json

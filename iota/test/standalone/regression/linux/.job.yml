@@ -193,3 +193,4 @@ logfiles:
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /testcase_result_export/testsuite_transparent_basenet_results.json

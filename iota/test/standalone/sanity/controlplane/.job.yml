@@ -35,3 +35,4 @@ e2e-targets:
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/all_corefiles.tgz
+  - /testcase_result_export/testsuite_controlplane_results.json

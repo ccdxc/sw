@@ -34,6 +34,7 @@ class TestCaseResult(object):
         self.FinishTime = None
         self.Duration = 0
         self.Detail = ""
+        self.LogURL = ""
 
     def closeResult(self, result, finishTime, duration, detail):
         if result == 0:
@@ -41,7 +42,7 @@ class TestCaseResult(object):
         else:
             self.Result = -1
         self.FinishTime = finishTime
-        self.Duration = duration
+        self.Duration = int(round(duration + 0.5))
         self.Detail = detail
 
 
@@ -192,7 +193,7 @@ class TestBundle:
                     api.CurrentTestcase = tc
                     tcResId = "TB:{0}_TC:{1}_SELECTED:{2}_COUNT:{3}".format(self.Name(), tc.Name(), selected, _i)
                     tcResult = TestCaseResult(tcId=tcResId, name=tc.Name(), desc="", owner=owner,
-                                              area="", subArea="", feature="")
+                                              area="na", subArea="", feature="")
                     self.addTcResult(tcResult)
                     tc.SetSelected(selected)
                     tc.SetBundleStore(self.GetStore())
