@@ -8,24 +8,24 @@ testcases:
     -   name    : Promiscuous_Flap
         testcase: testcases.rx_mode.promisc_flap
         disable : False
-        ignore  : False
+        ignore  : True
 
     -   name    : UUC_Single_Promiscuous
         testcase: testcases.rx_mode.uuc_single_promiscuous
         disable : False
-        ignore  : False
+        ignore  : True
 
     -   name    : UUC_all_promisc
         testcase: testcases.rx_mode.uuc_all_generic
         disable : False
-        ignore  : False
+        ignore  : True
         args    :
             mode: promiscuous
 
     -   name    : UUC_all_non_promisc
         testcase: testcases.rx_mode.uuc_all_generic
         disable : False
-        ignore  : False
+        ignore  : True
         args    :
             mode: non-promiscuous
 
@@ -39,20 +39,20 @@ testcases:
     -   name    : KUC_all_non_promisc
         testcase: testcases.rx_mode.known_unicast
         disable : False
-        ignore  : False
+        ignore  : True
         args    :
             mode: non-promiscuous
 
     -   name    : all_multi_off
         testcase: testcases.rx_mode.allmulti
         disable : False
-        ignore  : False
+        ignore  : True
         args    :
             mode: disable_allmulti
 
     -   name    : all_multi_on
         testcase: testcases.rx_mode.allmulti
         disable : False
-        ignore  : False
+        ignore  : True
         args    :
             mode: enable_allmulti
