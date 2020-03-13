@@ -20,21 +20,8 @@ std::ostream& operator<<(std::ostream& os, const ether_addr& val)
 {
     return os << macaddr2str(val.ether_addr_octet);
 }
-namespace session {
-std::ostream& operator<<(std::ostream& os, session::FlowAction val)
-{
-    switch(val) {
-    case session::FLOW_ACTION_DROP: return os << "drop";
-    case session::FLOW_ACTION_ALLOW: return os << "allow";
-    case session::FLOW_ACTION_NONE: return os << "none";
-    default: return os;
-    }
-}
-}
 
 namespace fte {
-
-
 //------------------------------------------------------------------------------
 // Returns flow key of the specified flow
 //------------------------------------------------------------------------------
