@@ -2,7 +2,6 @@ package firewall_test
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -48,7 +47,8 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 	// to the bucket.
 	Context("tags:type=basic;datapath=true;duration=short;store=objectstore verify fwlog on traffic ", func() {
 		It("tags:sanity=true should push fwlog to objectstore", func() {
-			Skip("Disabling the test case till the api gets fixed")
+			Skip("reenable test case after local testing")
+
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -57,33 +57,21 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 
-			t := time.Now()
-			y, m, dt := t.Date()
-			h, _, _ := t.Clock()
-			timestamp := time.Date(y, m, dt, h, 0, 0, 0, time.UTC)
-
 			// Get the naples id from the workload
 			workloadA := workloadPairs.Pairs[0].First
 			workloadB := workloadPairs.Pairs[0].Second
 			naplesAMac := workloadA.NaplesMAC()
 			naplesBMac := workloadB.NaplesMAC()
 
-			bucketAName :=
-				naplesAMac + "-" +
-					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
-			bucketBName :=
-				naplesBMac + "-" +
-					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
-
-			By(fmt.Sprintf("bucketAName %s bucketBName %s", bucketPrefix+"."+bucketAName, bucketPrefix+"."+bucketBName))
-
-			currentObjectCountBucketA, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketAName)
+			currentObjectCountNaplesA, err :=
+				ts.model.GetFwLogObjectCount("fwlogs", "fwlogs", naplesAMac)
 			Expect(err).ShouldNot(HaveOccurred())
-			currentObjectCountBucketB, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketBName)
+			currentObjectCountNaplesB, err :=
+				ts.model.GetFwLogObjectCount("fwlogs", "fwlogs", naplesBMac)
 			Expect(err).ShouldNot(HaveOccurred())
 
-			By(fmt.Sprintf("currentObjectCountBucketA %d, currentObjectCountBucketB %d",
-				currentObjectCountBucketA, currentObjectCountBucketB))
+			By(fmt.Sprintf("currentObjectCountNaplesA %d, currentObjectCountNaplesB %d",
+				currentObjectCountNaplesA, currentObjectCountNaplesB))
 
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
@@ -101,13 +89,16 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 
 			// check object count
 			Eventually(func() bool {
-				newObjectCountBucketA, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketAName)
+				newObjectCountNaplesA, err :=
+					ts.model.GetFwLogObjectCount("fwlogs", "fwlogs", naplesAMac)
 				Expect(err).ShouldNot(HaveOccurred())
-				newObjectCountBucketB, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketBName)
+				newObjectCountNaplesB, err :=
+					ts.model.GetFwLogObjectCount("fwlogs", "fwlogs", naplesBMac)
 				Expect(err).ShouldNot(HaveOccurred())
-				By(fmt.Sprintf("newObjectCountBucketA %d, newObjectCountBucketB %d",
-					newObjectCountBucketA, newObjectCountBucketB))
-				return newObjectCountBucketA > currentObjectCountBucketA && newObjectCountBucketB > currentObjectCountBucketB
+
+				By(fmt.Sprintf("newObjectCountNaplesA %d, newObjectCountNaplesB %d",
+					newObjectCountNaplesA, newObjectCountNaplesB))
+				return newObjectCountNaplesA > currentObjectCountNaplesA && newObjectCountNaplesB > currentObjectCountNaplesB
 			}, time.Second*100).Should(BeTrue())
 		})
 	})

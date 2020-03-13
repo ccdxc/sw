@@ -77,6 +77,9 @@ type ESClient interface {
 
 	// IndexNames returns name of indices currently present in elastic search
 	IndexNames() ([]string, error)
+
+	// GetRawClient - used for testing purposes only
+	GetRawClient() *es.Client
 }
 
 // Scroller provides io.Reader interface to scrolling in Elastic. This is not thread safe.

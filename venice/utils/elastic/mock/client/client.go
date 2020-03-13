@@ -231,3 +231,8 @@ func (e *mockClient) GetClusterHealth(indices []string) (*es.ClusterHealthRespon
 func (e *mockClient) IndexNames() ([]string, error) {
 	panic("not implemented")
 }
+
+// GetRawClient - used for testing purposes only
+func (e *mockClient) GetRawClient() *es.Client {
+	return nil
+}

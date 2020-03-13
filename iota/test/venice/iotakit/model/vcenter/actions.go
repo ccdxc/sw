@@ -218,7 +218,7 @@ func (sm *VcenterSysModel) MoveWorkloads(wc *objects.WorkloadCollection, hc *obj
 }
 
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
-func (sm *VcenterSysModel) GetFwLogObjectCount(tenantName string, bucketName string) (int, error) {
+func (sm *VcenterSysModel) GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
 

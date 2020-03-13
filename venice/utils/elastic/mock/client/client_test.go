@@ -237,4 +237,6 @@ func TestESMockFunctions(t *testing.T) {
 
 	_, err = mc.GetNodesInfo(ctx, []string{"test"})
 	AssertOk(t, err, "failed get node info")
+
+	Assert(t, mc.GetRawClient() == nil, "raw client is not nil")
 }

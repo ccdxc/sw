@@ -1165,3 +1165,8 @@ func getElasticSearchURLs(scheme string, resolverClient resolver.Interface) ([]s
 
 	return elasticAddrs, nil
 }
+
+// GetRawClient returns raw client. Only used for testing.
+func (e *Client) GetRawClient() *es.Client {
+	return e.esClient
+}
