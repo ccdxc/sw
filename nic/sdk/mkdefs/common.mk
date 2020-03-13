@@ -75,4 +75,41 @@ export NIC_CSR_INCS := ${ASIC_INCL_DIR}/capri/model/cap_top \
     ${ASIC_INCL_DIR}/capri/design/common/gen \
     ${ASIC_INCL_DIR}/capri/verif/apis \
     ${SDKDIR}/model_sim/include \
-    ${ASIC_INCL_DIR}/capri/model/cap_top/csr_defines
+    ${ASIC_INCL_DIR}/capri/model/cap_top/csr_defines \
+    ${ASIC_INCL_DIR}/elba/model/elb_top \
+    ${ASIC_INCL_DIR}/elba/model/utils \
+    ${ASIC_INCL_DIR}/elba/model/elb_prd \
+    ${ASIC_INCL_DIR}/elba/model/elb_top \
+    ${ASIC_INCL_DIR}/elba/model/elb_is/readonly \
+    ${ASIC_INCL_DIR}/elba/model/elb_psp \
+    ${ASIC_INCL_DIR}/elba/model/elb_ppa \
+    ${ASIC_INCL_DIR}/elba/model/elb_phb \
+    ${ASIC_INCL_DIR}/elba/model/elb_te \
+    ${ASIC_INCL_DIR}/elba/model/elb_mpu \
+    ${ASIC_INCL_DIR}/elba/model/elb_pic \
+    ${ASIC_INCL_DIR}/elba/model/elb_pcie \
+    ${ASIC_INCL_DIR}/elba/model/elb_txs \
+    ${ASIC_INCL_DIR}/elba/model/elb_pb \
+    ${ASIC_INCL_DIR}/elba/model/elb_wa \
+    ${ASIC_INCL_DIR}/elba/model/elb_ms \
+    ${ASIC_INCL_DIR}/elba/model/elb_ptd \
+    ${ASIC_INCL_DIR}/elba/model/elb_mm \
+    ${ASIC_INCL_DIR}/elba/model/elb_em \
+    ${ASIC_INCL_DIR}/elba/model/elb_mc \
+    ${ASIC_INCL_DIR}/elba/model/elb_he \
+    ${ASIC_INCL_DIR}/elba/model/elb_dpa \
+    ${ASIC_INCL_DIR}/elba/model/elb_sema \
+    ${ASIC_INCL_DIR}/elba/model/elb_intr \
+    ${ASIC_INCL_DIR}/elba/model/elb_mx \
+    ${ASIC_INCL_DIR}/elba/model/elb_bx \
+    ${ASIC_INCL_DIR}/elba/model/elb_ap \
+    ${ASIC_INCL_DIR}/elba/model/elb_soc \
+    ${ASIC_INCL_DIR}/elba/model/elb_dm \
+    ${ASIC_INCL_DIR}/elba/model/elb_xd \
+    ${ASIC_INCL_DIR}/elba/model/elb_ca \
+    ${ASIC_INCL_DIR}/elba/model/elb_nx \
+    ${ASIC_INCL_DIR}/elba/model/elb_he/readonly \
+    ${ASIC_INCL_DIR}/elba/design/common/gen \
+    ${ASIC_INCL_DIR}/elba/verif/apis \
+    ${ASIC_INCL_DIR}/elba/model/elb_top/csr_defines
+

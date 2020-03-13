@@ -271,6 +271,8 @@
 ./elba/verif/apis/elb_txs_api.h
 ./elba/verif/apis/elb_wa_api.h
 ./elba/verif/apis/elb_base_api.h
+./elba/verif/apis/elb_ns_soc_ip.h
+./elba/verif/apis/elb_pic_defs.h
 ./elba/verif/apis/elb_csr_util_api.h
 ./elba/verif/apis/elb_csr_util_api.h
 ./ip/verif/pcpp/pen_blk_reg_model.h

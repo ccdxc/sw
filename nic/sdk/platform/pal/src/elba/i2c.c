@@ -150,3 +150,9 @@ int smbus_read(const uint8_t *buffer, uint32_t size,
 {
     return -1;
 }
+
+int pal_qsfp_dom_read(const uint8_t *buffer, uint32_t size,
+                      uint32_t offset, uint32_t nretry, uint32_t port)
+{
+    return 0;
+}
