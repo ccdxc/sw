@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,18 +674,35 @@ type RolloutAPI interface {
 	Watch(handler RolloutHandler) error
 	StopWatch(handler RolloutHandler) error
 	CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalCreateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	SyncCreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalSyncCreateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalUpdateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	SyncUpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalSyncUpdateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	StopRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalStopRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	SyncStopRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalSyncStopRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalRemoveRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 	SyncRemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RegisterLocalSyncRemoveRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error))
 }
 
 // dummy struct that implements RolloutAPI
 type rolloutAPI struct {
 	ct *ctrlerCtx
+
+	localCreateRolloutHandler     func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localSyncCreateRolloutHandler func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localUpdateRolloutHandler     func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localSyncUpdateRolloutHandler func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localStopRolloutHandler       func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localSyncStopRolloutHandler   func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localRemoveRolloutHandler     func(obj *rollout.Rollout) (*rollout.Rollout, error)
+	localSyncRemoveRolloutHandler func(obj *rollout.Rollout) (*rollout.Rollout, error)
 }
 
 // Create creates Rollout object
@@ -718,7 +738,7 @@ func (api *rolloutAPI) SyncCreate(obj *rollout.Rollout) error {
 		}
 
 		newObj, writeErr = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -727,11 +747,6 @@ func (api *rolloutAPI) SyncCreate(obj *rollout.Rollout) error {
 	if writeErr == nil {
 		api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -863,6 +878,9 @@ func (api *rolloutAPI) CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 
 		return apicl.RolloutV1().Rollout().CreateRollout(context.Background(), obj)
 	}
+	if api.localCreateRolloutHandler != nil {
+		return api.localCreateRolloutHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -886,7 +904,18 @@ func (api *rolloutAPI) SyncCreateRollout(obj *rollout.Rollout) (*rollout.Rollout
 		}
 		return ret, err
 	}
+	if api.localSyncCreateRolloutHandler != nil {
+		return api.localSyncCreateRolloutHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *rolloutAPI) RegisterLocalCreateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localCreateRolloutHandler = fn
+}
+
+func (api *rolloutAPI) RegisterLocalSyncCreateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localSyncCreateRolloutHandler = fn
 }
 
 // UpdateRollout is an API action
@@ -899,6 +928,9 @@ func (api *rolloutAPI) UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 		}
 
 		return apicl.RolloutV1().Rollout().UpdateRollout(context.Background(), obj)
+	}
+	if api.localUpdateRolloutHandler != nil {
+		return api.localUpdateRolloutHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -923,7 +955,18 @@ func (api *rolloutAPI) SyncUpdateRollout(obj *rollout.Rollout) (*rollout.Rollout
 		}
 		return ret, err
 	}
+	if api.localSyncUpdateRolloutHandler != nil {
+		return api.localSyncUpdateRolloutHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *rolloutAPI) RegisterLocalUpdateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localUpdateRolloutHandler = fn
+}
+
+func (api *rolloutAPI) RegisterLocalSyncUpdateRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localSyncUpdateRolloutHandler = fn
 }
 
 // StopRollout is an API action
@@ -936,6 +979,9 @@ func (api *rolloutAPI) StopRollout(obj *rollout.Rollout) (*rollout.Rollout, erro
 		}
 
 		return apicl.RolloutV1().Rollout().StopRollout(context.Background(), obj)
+	}
+	if api.localStopRolloutHandler != nil {
+		return api.localStopRolloutHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -960,7 +1006,18 @@ func (api *rolloutAPI) SyncStopRollout(obj *rollout.Rollout) (*rollout.Rollout, 
 		}
 		return ret, err
 	}
+	if api.localSyncStopRolloutHandler != nil {
+		return api.localSyncStopRolloutHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *rolloutAPI) RegisterLocalStopRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localStopRolloutHandler = fn
+}
+
+func (api *rolloutAPI) RegisterLocalSyncStopRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localSyncStopRolloutHandler = fn
 }
 
 // RemoveRollout is an API action
@@ -973,6 +1030,9 @@ func (api *rolloutAPI) RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, er
 		}
 
 		return apicl.RolloutV1().Rollout().RemoveRollout(context.Background(), obj)
+	}
+	if api.localRemoveRolloutHandler != nil {
+		return api.localRemoveRolloutHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -997,12 +1057,28 @@ func (api *rolloutAPI) SyncRemoveRollout(obj *rollout.Rollout) (*rollout.Rollout
 		}
 		return ret, err
 	}
+	if api.localSyncRemoveRolloutHandler != nil {
+		return api.localSyncRemoveRolloutHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *rolloutAPI) RegisterLocalRemoveRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localRemoveRolloutHandler = fn
+}
+
+func (api *rolloutAPI) RegisterLocalSyncRemoveRolloutHandler(fn func(*rollout.Rollout) (*rollout.Rollout, error)) {
+	api.localSyncRemoveRolloutHandler = fn
 }
 
 // Rollout returns RolloutAPI
 func (ct *ctrlerCtx) Rollout() RolloutAPI {
-	return &rolloutAPI{ct: ct}
+	kind := "Rollout"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &rolloutAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*rolloutAPI)
 }
 
 // RolloutAction is a wrapper object that implements additional functionality
@@ -1151,7 +1227,9 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1688,7 +1766,7 @@ func (api *rolloutactionAPI) SyncCreate(obj *rollout.RolloutAction) error {
 		}
 
 		newObj, writeErr = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1697,11 +1775,6 @@ func (api *rolloutactionAPI) SyncCreate(obj *rollout.RolloutAction) error {
 	if writeErr == nil {
 		api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRolloutActionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1824,5 +1897,10 @@ func (api *rolloutactionAPI) StopWatch(handler RolloutActionHandler) error {
 
 // RolloutAction returns RolloutActionAPI
 func (ct *ctrlerCtx) RolloutAction() RolloutActionAPI {
-	return &rolloutactionAPI{ct: ct}
+	kind := "RolloutAction"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &rolloutactionAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*rolloutactionAPI)
 }

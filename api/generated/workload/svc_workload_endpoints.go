@@ -56,6 +56,7 @@ type EndpointsWorkloadV1Client struct {
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
 	AutoUpdateWorkloadEndpoint endpoint.Endpoint
+	FinalSyncMigrationEndpoint endpoint.Endpoint
 	FinishMigrationEndpoint    endpoint.Endpoint
 	StartMigrationEndpoint     endpoint.Endpoint
 }
@@ -83,6 +84,7 @@ type EndpointsWorkloadV1RestClient struct {
 	AutoWatchEndpointEndpoint      endpoint.Endpoint
 	AutoWatchSvcWorkloadV1Endpoint endpoint.Endpoint
 	AutoWatchWorkloadEndpoint      endpoint.Endpoint
+	FinalSyncMigrationEndpoint     endpoint.Endpoint
 	FinishMigrationEndpoint        endpoint.Endpoint
 	StartMigrationEndpoint         endpoint.Endpoint
 }
@@ -107,6 +109,7 @@ type EndpointsWorkloadV1Server struct {
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
 	AutoUpdateWorkloadEndpoint endpoint.Endpoint
+	FinalSyncMigrationEndpoint endpoint.Endpoint
 	FinishMigrationEndpoint    endpoint.Endpoint
 	StartMigrationEndpoint     endpoint.Endpoint
 
@@ -292,6 +295,20 @@ func (e EndpointsWorkloadV1Client) AutoUpdateWorkload(ctx context.Context, in *W
 }
 
 type respWorkloadV1AutoUpdateWorkload struct {
+	V   Workload
+	Err error
+}
+
+// FinalSyncMigration is endpoint for FinalSyncMigration
+func (e EndpointsWorkloadV1Client) FinalSyncMigration(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.FinalSyncMigrationEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1FinalSyncMigration struct {
 	V   Workload
 	Err error
 }
@@ -624,6 +641,28 @@ func MakeWorkloadV1AutoUpdateWorkloadEndpoint(s ServiceWorkloadV1Server, logger 
 	return trace.ServerEndpoint("WorkloadV1:AutoUpdateWorkload")(f)
 }
 
+// FinalSyncMigration implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) FinalSyncMigration(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.FinalSyncMigrationEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1FinalSyncMigrationEndpoint creates  FinalSyncMigration endpoints for the service
+func MakeWorkloadV1FinalSyncMigrationEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.FinalSyncMigration(ctx, *req)
+		return respWorkloadV1FinalSyncMigration{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:FinalSyncMigration")(f)
+}
+
 // FinishMigration implementation on server Endpoint
 func (e EndpointsWorkloadV1Server) FinishMigration(ctx context.Context, in Workload) (Workload, error) {
 	resp, err := e.FinishMigrationEndpoint(ctx, in)
@@ -724,6 +763,7 @@ func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger)
 		AutoListWorkloadEndpoint:   MakeWorkloadV1AutoListWorkloadEndpoint(s, logger),
 		AutoUpdateEndpointEndpoint: MakeWorkloadV1AutoUpdateEndpointEndpoint(s, logger),
 		AutoUpdateWorkloadEndpoint: MakeWorkloadV1AutoUpdateWorkloadEndpoint(s, logger),
+		FinalSyncMigrationEndpoint: MakeWorkloadV1FinalSyncMigrationEndpoint(s, logger),
 		FinishMigrationEndpoint:    MakeWorkloadV1FinishMigrationEndpoint(s, logger),
 		StartMigrationEndpoint:     MakeWorkloadV1StartMigrationEndpoint(s, logger),
 
@@ -929,6 +969,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateWorkload(ctx context.Contex
 		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AutoUpdateWorkload", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) FinalSyncMigration(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "FinalSyncMigration", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.FinalSyncMigration(ctx, in)
 	return
 }
 func (m loggingWorkloadV1MiddlewareClient) FinishMigration(ctx context.Context, in *Workload) (resp *Workload, err error) {
@@ -1168,6 +1221,19 @@ func (m loggingWorkloadV1MiddlewareServer) AutoUpdateWorkload(ctx context.Contex
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareServer) FinalSyncMigration(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "FinalSyncMigration", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.FinalSyncMigration(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareServer) FinishMigration(ctx context.Context, in Workload) (resp Workload, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1346,6 +1412,11 @@ func makeURIWorkloadV1AutoWatchSvcWorkloadV1WatchOper(in *api.ListWatchOptions) 
 //
 func makeURIWorkloadV1AutoWatchWorkloadWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/workload/v1", "/watch/tenant/", in.Tenant, "/workloads")
+}
+
+//
+func makeURIWorkloadV1FinalSyncMigrationCreateOper(in *Workload) string {
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name, "/FinalSyncMigration")
 }
 
 //
@@ -1665,6 +1736,27 @@ func (r *EndpointsWorkloadV1RestClient) StartMigrationWorkload(ctx context.Conte
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1StartMigration(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+func (r *EndpointsWorkloadV1RestClient) FinalSyncMigrationWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIWorkloadV1FinalSyncMigrationCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespWorkloadV1FinalSyncMigration(ctx, resp)
 	if err != nil {
 		return nil, err
 	}

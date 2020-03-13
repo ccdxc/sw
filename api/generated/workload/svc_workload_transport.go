@@ -38,6 +38,7 @@ type grpcServerWorkloadV1 struct {
 	AutoListWorkloadHdlr   grpctransport.Handler
 	AutoUpdateEndpointHdlr grpctransport.Handler
 	AutoUpdateWorkloadHdlr grpctransport.Handler
+	FinalSyncMigrationHdlr grpctransport.Handler
 	FinishMigrationHdlr    grpctransport.Handler
 	StartMigrationHdlr     grpctransport.Handler
 }
@@ -139,6 +140,13 @@ func MakeGRPCServerWorkloadV1(ctx context.Context, endpoints EndpointsWorkloadV1
 			DecodeGrpcReqWorkload,
 			EncodeGrpcRespWorkload,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateWorkload", logger)))...,
+		),
+
+		FinalSyncMigrationHdlr: grpctransport.NewServer(
+			endpoints.FinalSyncMigrationEndpoint,
+			DecodeGrpcReqWorkload,
+			EncodeGrpcRespWorkload,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("FinalSyncMigration", logger)))...,
 		),
 
 		FinishMigrationHdlr: grpctransport.NewServer(
@@ -383,6 +391,24 @@ func (s *grpcServerWorkloadV1) AutoUpdateWorkload(ctx oldcontext.Context, req *W
 }
 
 func decodeHTTPrespWorkloadV1AutoUpdateWorkload(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Workload
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerWorkloadV1) FinalSyncMigration(ctx oldcontext.Context, req *Workload) (*Workload, error) {
+	_, resp, err := s.FinalSyncMigrationHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respWorkloadV1FinalSyncMigration).V
+	return &r, resp.(respWorkloadV1FinalSyncMigration).Err
+}
+
+func decodeHTTPrespWorkloadV1FinalSyncMigration(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

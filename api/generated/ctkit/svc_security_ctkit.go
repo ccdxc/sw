@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleSecurityGroupEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *securitygroupAPI) SyncCreate(obj *security.SecurityGroup) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *securitygroupAPI) SyncCreate(obj *security.SecurityGroup) error {
 	if writeErr == nil {
 		api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,7 +844,12 @@ func (api *securitygroupAPI) StopWatch(handler SecurityGroupHandler) error {
 
 // SecurityGroup returns SecurityGroupAPI
 func (ct *ctrlerCtx) SecurityGroup() SecurityGroupAPI {
-	return &securitygroupAPI{ct: ct}
+	kind := "SecurityGroup"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &securitygroupAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*securitygroupAPI)
 }
 
 // NetworkSecurityPolicy is a wrapper object that implements additional functionality
@@ -995,7 +998,9 @@ func (ct *ctrlerCtx) handleNetworkSecurityPolicyEventNoResolver(evt *kvstore.Wat
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1532,7 +1537,7 @@ func (api *networksecuritypolicyAPI) SyncCreate(obj *security.NetworkSecurityPol
 		}
 
 		newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1541,11 +1546,6 @@ func (api *networksecuritypolicyAPI) SyncCreate(obj *security.NetworkSecurityPol
 	if writeErr == nil {
 		api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleNetworkSecurityPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1668,7 +1668,12 @@ func (api *networksecuritypolicyAPI) StopWatch(handler NetworkSecurityPolicyHand
 
 // NetworkSecurityPolicy returns NetworkSecurityPolicyAPI
 func (ct *ctrlerCtx) NetworkSecurityPolicy() NetworkSecurityPolicyAPI {
-	return &networksecuritypolicyAPI{ct: ct}
+	kind := "NetworkSecurityPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &networksecuritypolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*networksecuritypolicyAPI)
 }
 
 // App is a wrapper object that implements additional functionality
@@ -1817,7 +1822,9 @@ func (ct *ctrlerCtx) handleAppEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2354,7 +2361,7 @@ func (api *appAPI) SyncCreate(obj *security.App) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().App().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().App().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2363,11 +2370,6 @@ func (api *appAPI) SyncCreate(obj *security.App) error {
 	if writeErr == nil {
 		api.ct.handleAppEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAppEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2490,7 +2492,12 @@ func (api *appAPI) StopWatch(handler AppHandler) error {
 
 // App returns AppAPI
 func (ct *ctrlerCtx) App() AppAPI {
-	return &appAPI{ct: ct}
+	kind := "App"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &appAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*appAPI)
 }
 
 // FirewallProfile is a wrapper object that implements additional functionality
@@ -2639,7 +2646,9 @@ func (ct *ctrlerCtx) handleFirewallProfileEventNoResolver(evt *kvstore.WatchEven
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3176,7 +3185,7 @@ func (api *firewallprofileAPI) SyncCreate(obj *security.FirewallProfile) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3185,11 +3194,6 @@ func (api *firewallprofileAPI) SyncCreate(obj *security.FirewallProfile) error {
 	if writeErr == nil {
 		api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3312,7 +3316,12 @@ func (api *firewallprofileAPI) StopWatch(handler FirewallProfileHandler) error {
 
 // FirewallProfile returns FirewallProfileAPI
 func (ct *ctrlerCtx) FirewallProfile() FirewallProfileAPI {
-	return &firewallprofileAPI{ct: ct}
+	kind := "FirewallProfile"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &firewallprofileAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*firewallprofileAPI)
 }
 
 // Certificate is a wrapper object that implements additional functionality
@@ -3461,7 +3470,9 @@ func (ct *ctrlerCtx) handleCertificateEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3998,7 +4009,7 @@ func (api *certificateAPI) SyncCreate(obj *security.Certificate) error {
 		}
 
 		newObj, writeErr = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4007,11 +4018,6 @@ func (api *certificateAPI) SyncCreate(obj *security.Certificate) error {
 	if writeErr == nil {
 		api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4134,7 +4140,12 @@ func (api *certificateAPI) StopWatch(handler CertificateHandler) error {
 
 // Certificate returns CertificateAPI
 func (ct *ctrlerCtx) Certificate() CertificateAPI {
-	return &certificateAPI{ct: ct}
+	kind := "Certificate"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &certificateAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*certificateAPI)
 }
 
 // TrafficEncryptionPolicy is a wrapper object that implements additional functionality
@@ -4283,7 +4294,9 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEventNoResolver(evt *kvstore.W
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4820,7 +4833,7 @@ func (api *trafficencryptionpolicyAPI) SyncCreate(obj *security.TrafficEncryptio
 		}
 
 		newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4829,11 +4842,6 @@ func (api *trafficencryptionpolicyAPI) SyncCreate(obj *security.TrafficEncryptio
 	if writeErr == nil {
 		api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4956,5 +4964,10 @@ func (api *trafficencryptionpolicyAPI) StopWatch(handler TrafficEncryptionPolicy
 
 // TrafficEncryptionPolicy returns TrafficEncryptionPolicyAPI
 func (ct *ctrlerCtx) TrafficEncryptionPolicy() TrafficEncryptionPolicyAPI {
-	return &trafficencryptionpolicyAPI{ct: ct}
+	kind := "TrafficEncryptionPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &trafficencryptionpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*trafficencryptionpolicyAPI)
 }

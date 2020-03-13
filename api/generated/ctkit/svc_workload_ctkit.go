@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleEndpointEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *endpointAPI) SyncCreate(obj *workload.Endpoint) error {
 		}
 
 		newObj, writeErr = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *endpointAPI) SyncCreate(obj *workload.Endpoint) error {
 	if writeErr == nil {
 		api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleEndpointEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,7 +844,12 @@ func (api *endpointAPI) StopWatch(handler EndpointHandler) error {
 
 // Endpoint returns EndpointAPI
 func (ct *ctrlerCtx) Endpoint() EndpointAPI {
-	return &endpointAPI{ct: ct}
+	kind := "Endpoint"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &endpointAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*endpointAPI)
 }
 
 // Workload is a wrapper object that implements additional functionality
@@ -995,7 +998,9 @@ func (ct *ctrlerCtx) handleWorkloadEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1493,16 +1498,35 @@ type WorkloadAPI interface {
 	Watch(handler WorkloadHandler) error
 	StopWatch(handler WorkloadHandler) error
 	StartMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalStartMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 	SyncStartMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalSyncStartMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
+	FinalSyncMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalFinalSyncMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
+	SyncFinalSyncMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalSyncFinalSyncMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 	FinishMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalFinishMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 	SyncFinishMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalSyncFinishMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 	AbortMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalAbortMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 	SyncAbortMigration(obj *workload.Workload) (*workload.Workload, error)
+	RegisterLocalSyncAbortMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error))
 }
 
 // dummy struct that implements WorkloadAPI
 type workloadAPI struct {
 	ct *ctrlerCtx
+
+	localStartMigrationHandler         func(obj *workload.Workload) (*workload.Workload, error)
+	localSyncStartMigrationHandler     func(obj *workload.Workload) (*workload.Workload, error)
+	localFinalSyncMigrationHandler     func(obj *workload.Workload) (*workload.Workload, error)
+	localSyncFinalSyncMigrationHandler func(obj *workload.Workload) (*workload.Workload, error)
+	localFinishMigrationHandler        func(obj *workload.Workload) (*workload.Workload, error)
+	localSyncFinishMigrationHandler    func(obj *workload.Workload) (*workload.Workload, error)
+	localAbortMigrationHandler         func(obj *workload.Workload) (*workload.Workload, error)
+	localSyncAbortMigrationHandler     func(obj *workload.Workload) (*workload.Workload, error)
 }
 
 // Create creates Workload object
@@ -1538,7 +1562,7 @@ func (api *workloadAPI) SyncCreate(obj *workload.Workload) error {
 		}
 
 		newObj, writeErr = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1547,11 +1571,6 @@ func (api *workloadAPI) SyncCreate(obj *workload.Workload) error {
 	if writeErr == nil {
 		api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1683,6 +1702,9 @@ func (api *workloadAPI) StartMigration(obj *workload.Workload) (*workload.Worklo
 
 		return apicl.WorkloadV1().Workload().StartMigration(context.Background(), obj)
 	}
+	if api.localStartMigrationHandler != nil {
+		return api.localStartMigrationHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -1706,7 +1728,69 @@ func (api *workloadAPI) SyncStartMigration(obj *workload.Workload) (*workload.Wo
 		}
 		return ret, err
 	}
+	if api.localSyncStartMigrationHandler != nil {
+		return api.localSyncStartMigrationHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *workloadAPI) RegisterLocalStartMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localStartMigrationHandler = fn
+}
+
+func (api *workloadAPI) RegisterLocalSyncStartMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localSyncStartMigrationHandler = fn
+}
+
+// FinalSyncMigration is an API action
+func (api *workloadAPI) FinalSyncMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.WorkloadV1().Workload().FinalSyncMigration(context.Background(), obj)
+	}
+	if api.localFinalSyncMigrationHandler != nil {
+		return api.localFinalSyncMigrationHandler(obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncFinalSyncMigration is an API action. Cache will be updated
+func (api *workloadAPI) SyncFinalSyncMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.WorkloadV1().Workload().FinalSyncMigration(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.WorkloadV1().Workload().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleWorkloadEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	if api.localSyncFinalSyncMigrationHandler != nil {
+		return api.localSyncFinalSyncMigrationHandler(obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *workloadAPI) RegisterLocalFinalSyncMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localFinalSyncMigrationHandler = fn
+}
+
+func (api *workloadAPI) RegisterLocalSyncFinalSyncMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localSyncFinalSyncMigrationHandler = fn
 }
 
 // FinishMigration is an API action
@@ -1719,6 +1803,9 @@ func (api *workloadAPI) FinishMigration(obj *workload.Workload) (*workload.Workl
 		}
 
 		return apicl.WorkloadV1().Workload().FinishMigration(context.Background(), obj)
+	}
+	if api.localFinishMigrationHandler != nil {
+		return api.localFinishMigrationHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1743,7 +1830,18 @@ func (api *workloadAPI) SyncFinishMigration(obj *workload.Workload) (*workload.W
 		}
 		return ret, err
 	}
+	if api.localSyncFinishMigrationHandler != nil {
+		return api.localSyncFinishMigrationHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *workloadAPI) RegisterLocalFinishMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localFinishMigrationHandler = fn
+}
+
+func (api *workloadAPI) RegisterLocalSyncFinishMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localSyncFinishMigrationHandler = fn
 }
 
 // AbortMigration is an API action
@@ -1756,6 +1854,9 @@ func (api *workloadAPI) AbortMigration(obj *workload.Workload) (*workload.Worklo
 		}
 
 		return apicl.WorkloadV1().Workload().AbortMigration(context.Background(), obj)
+	}
+	if api.localAbortMigrationHandler != nil {
+		return api.localAbortMigrationHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1780,10 +1881,26 @@ func (api *workloadAPI) SyncAbortMigration(obj *workload.Workload) (*workload.Wo
 		}
 		return ret, err
 	}
+	if api.localSyncAbortMigrationHandler != nil {
+		return api.localSyncAbortMigrationHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *workloadAPI) RegisterLocalAbortMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localAbortMigrationHandler = fn
+}
+
+func (api *workloadAPI) RegisterLocalSyncAbortMigrationHandler(fn func(*workload.Workload) (*workload.Workload, error)) {
+	api.localSyncAbortMigrationHandler = fn
 }
 
 // Workload returns WorkloadAPI
 func (ct *ctrlerCtx) Workload() WorkloadAPI {
-	return &workloadAPI{ct: ct}
+	kind := "Workload"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &workloadAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*workloadAPI)
 }

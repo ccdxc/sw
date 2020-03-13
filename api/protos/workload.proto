@@ -119,9 +119,10 @@ message WorkloadMigrationStatus {
     enum MigrationStage {
         MIGRATION_NONE            	= 0 [(venice.enumValueStr) = "migration-none"];
         MIGRATION_START           	= 1 [(venice.enumValueStr) = "migration-start"];
-        MIGRATION_DONE            	= 2 [(venice.enumValueStr) = "migration-done"];
-        MIGRATION_ABORT           	= 3 [(venice.enumValueStr) = "migration-abort"];
-        MIGRATION_FROM_NON_PEN_HOST = 4 [(venice.enumValueStr) = "migration-from-non-pen-host"];
+        MIGRATION_FINAL_SYNC        	= 2 [(venice.enumValueStr) = "migration-final-sync"];
+        MIGRATION_DONE            	= 3 [(venice.enumValueStr) = "migration-done"];
+        MIGRATION_ABORT           	= 4 [(venice.enumValueStr) = "migration-abort"];
+        MIGRATION_FROM_NON_PEN_HOST     = 5 [(venice.enumValueStr) = "migration-from-non-pen-host"];
     }
 
     enum DataplaneStatus {

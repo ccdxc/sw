@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleBufferEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,14 +674,23 @@ type BufferAPI interface {
 	Watch(handler BufferHandler) error
 	StopWatch(handler BufferHandler) error
 	Commit(obj *staging.CommitAction) (*staging.CommitAction, error)
+	RegisterLocalCommitHandler(fn func(*staging.CommitAction) (*staging.CommitAction, error))
 	SyncCommit(obj *staging.CommitAction) (*staging.CommitAction, error)
+	RegisterLocalSyncCommitHandler(fn func(*staging.CommitAction) (*staging.CommitAction, error))
 	Clear(obj *staging.ClearAction) (*staging.ClearAction, error)
+	RegisterLocalClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error))
 	SyncClear(obj *staging.ClearAction) (*staging.ClearAction, error)
+	RegisterLocalSyncClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error))
 }
 
 // dummy struct that implements BufferAPI
 type bufferAPI struct {
 	ct *ctrlerCtx
+
+	localCommitHandler     func(obj *staging.CommitAction) (*staging.CommitAction, error)
+	localSyncCommitHandler func(obj *staging.CommitAction) (*staging.CommitAction, error)
+	localClearHandler      func(obj *staging.ClearAction) (*staging.ClearAction, error)
+	localSyncClearHandler  func(obj *staging.ClearAction) (*staging.ClearAction, error)
 }
 
 // Create creates Buffer object
@@ -714,7 +726,7 @@ func (api *bufferAPI) SyncCreate(obj *staging.Buffer) error {
 		}
 
 		newObj, writeErr = apicl.StagingV1().Buffer().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.StagingV1().Buffer().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -723,11 +735,6 @@ func (api *bufferAPI) SyncCreate(obj *staging.Buffer) error {
 	if writeErr == nil {
 		api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -859,6 +866,9 @@ func (api *bufferAPI) Commit(obj *staging.CommitAction) (*staging.CommitAction, 
 
 		return apicl.StagingV1().Buffer().Commit(context.Background(), obj)
 	}
+	if api.localCommitHandler != nil {
+		return api.localCommitHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -882,7 +892,18 @@ func (api *bufferAPI) SyncCommit(obj *staging.CommitAction) (*staging.CommitActi
 		}
 		return ret, err
 	}
+	if api.localSyncCommitHandler != nil {
+		return api.localSyncCommitHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *bufferAPI) RegisterLocalCommitHandler(fn func(*staging.CommitAction) (*staging.CommitAction, error)) {
+	api.localCommitHandler = fn
+}
+
+func (api *bufferAPI) RegisterLocalSyncCommitHandler(fn func(*staging.CommitAction) (*staging.CommitAction, error)) {
+	api.localSyncCommitHandler = fn
 }
 
 // Clear is an API action
@@ -895,6 +916,9 @@ func (api *bufferAPI) Clear(obj *staging.ClearAction) (*staging.ClearAction, err
 		}
 
 		return apicl.StagingV1().Buffer().Clear(context.Background(), obj)
+	}
+	if api.localClearHandler != nil {
+		return api.localClearHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -919,10 +943,26 @@ func (api *bufferAPI) SyncClear(obj *staging.ClearAction) (*staging.ClearAction,
 		}
 		return ret, err
 	}
+	if api.localSyncClearHandler != nil {
+		return api.localSyncClearHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *bufferAPI) RegisterLocalClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error)) {
+	api.localClearHandler = fn
+}
+
+func (api *bufferAPI) RegisterLocalSyncClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error)) {
+	api.localSyncClearHandler = fn
 }
 
 // Buffer returns BufferAPI
 func (ct *ctrlerCtx) Buffer() BufferAPI {
-	return &bufferAPI{ct: ct}
+	kind := "Buffer"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &bufferAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*bufferAPI)
 }

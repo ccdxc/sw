@@ -307,6 +307,19 @@ func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) StartMigration(ctx, in in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartMigration", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).StartMigration), ctx, in)
 }
 
+// FinalSyncMigration mocks base method
+func (m *MockWorkloadV1WorkloadInterface) FinalSyncMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	ret := m.ctrl.Call(m, "FinalSyncMigration", ctx, in)
+	ret0, _ := ret[0].(*workload.Workload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FinalSyncMigration indicates an expected call of FinalSyncMigration
+func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) FinalSyncMigration(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinalSyncMigration", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).FinalSyncMigration), ctx, in)
+}
+
 // FinishMigration mocks base method
 func (m *MockWorkloadV1WorkloadInterface) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
 	ret := m.ctrl.Call(m, "FinishMigration", ctx, in)

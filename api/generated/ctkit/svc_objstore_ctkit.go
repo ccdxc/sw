@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *bucketAPI) SyncCreate(obj *objstore.Bucket) error {
 		}
 
 		newObj, writeErr = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *bucketAPI) SyncCreate(obj *objstore.Bucket) error {
 	if writeErr == nil {
 		api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleBucketEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,7 +844,12 @@ func (api *bucketAPI) StopWatch(handler BucketHandler) error {
 
 // Bucket returns BucketAPI
 func (ct *ctrlerCtx) Bucket() BucketAPI {
-	return &bucketAPI{ct: ct}
+	kind := "Bucket"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &bucketAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*bucketAPI)
 }
 
 // Object is a wrapper object that implements additional functionality
@@ -995,7 +998,9 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1532,7 +1537,7 @@ func (api *objectAPI) SyncCreate(obj *objstore.Object) error {
 		}
 
 		newObj, writeErr = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1541,11 +1546,6 @@ func (api *objectAPI) SyncCreate(obj *objstore.Object) error {
 	if writeErr == nil {
 		api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleObjectEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1668,5 +1668,10 @@ func (api *objectAPI) StopWatch(handler ObjectHandler) error {
 
 // Object returns ObjectAPI
 func (ct *ctrlerCtx) Object() ObjectAPI {
-	return &objectAPI{ct: ct}
+	kind := "Object"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &objectAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*objectAPI)
 }

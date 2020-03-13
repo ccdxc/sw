@@ -14,6 +14,8 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
+const networkKind = "Network"
+
 func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
 	v.Log.Infof("Handling network event nw %v", nw)
 	v.syncLock.RLock()

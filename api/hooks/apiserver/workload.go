@@ -5,13 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"sort"
-	"strconv"
 	"strings"
-	"time"
 
-	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/api/hooks/apiserver/utils"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
@@ -19,20 +16,6 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
-)
-
-var (
-	// shorthand names for migration stages and status
-	stageMigrationNone  = workload.WorkloadMigrationStatus_MIGRATION_NONE.String()
-	stageMigrationStart = workload.WorkloadMigrationStatus_MIGRATION_START.String()
-	stageMigrationDone  = workload.WorkloadMigrationStatus_MIGRATION_DONE.String()
-	stageMigrationAbort = workload.WorkloadMigrationStatus_MIGRATION_ABORT.String()
-	// Dataplane Status
-	statusNone     = workload.WorkloadMigrationStatus_NONE.String()
-	statusStarted  = workload.WorkloadMigrationStatus_STARTED.String()
-	statusDone     = workload.WorkloadMigrationStatus_DONE.String()
-	statusFailed   = workload.WorkloadMigrationStatus_FAILED.String()
-	statusTimedOut = workload.WorkloadMigrationStatus_TIMED_OUT.String()
 )
 
 type workloadHooks struct {
@@ -78,15 +61,6 @@ func (s *workloadHooks) validateIPAddressHook(ctx context.Context, kvs kvstore.I
 	return i, true, nil
 }
 
-func isMigrationInProgress(wlObj *workload.Workload) bool {
-	if wlObj.Status.MigrationStatus != nil && wlObj.Status.MigrationStatus.Stage != stageMigrationNone &&
-		wlObj.Status.MigrationStatus.Status != statusDone && wlObj.Status.MigrationStatus.Status != statusTimedOut &&
-		wlObj.Status.MigrationStatus.Status != statusFailed {
-		return true
-	}
-	return false
-}
-
 func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	wl, ok := i.(workload.Workload)
 	if !ok {
@@ -101,79 +75,7 @@ func (s *workloadHooks) processStartMigration(ctx context.Context, kvs kvstore.I
 		if !ok {
 			return oldObj, errors.New("invalid object type")
 		}
-		if isMigrationInProgress(wlObj) {
-			return oldObj, errors.New("Migration already in progress, cannot start another one now")
-		}
-		// Check that interfaces do not change as part of migration
-		if len(wl.Spec.Interfaces) != len(wlObj.Spec.Interfaces) {
-			return oldObj, errors.New("Number of interface cannot change during migration")
-		}
-		specIfs := map[string]int{}
-		for i, intf := range wlObj.Spec.Interfaces {
-			specIfs[intf.MACAddress] = i
-		}
-		for _, intf := range wl.Spec.Interfaces {
-			if _, ok := specIfs[intf.MACAddress]; !ok {
-				return oldObj, errors.New("Interface MAC addr cannot change during migration")
-			}
-		}
-		// copy Spec to Status
-		if wlObj.Status.MigrationStatus == nil {
-			wlObj.Status.MigrationStatus = &workload.WorkloadMigrationStatus{}
-		}
-		wlObj.Status.MigrationStatus.Stage = stageMigrationStart
-		if wlObj.Status.MigrationStatus.StartedAt == nil {
-			wlObj.Status.MigrationStatus.StartedAt = &api.Timestamp{}
-		}
-		wlObj.Status.MigrationStatus.StartedAt.SetTime(time.Now())
-		wlObj.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
-		wlObj.Status.MigrationStatus.Status = statusNone
-		wlObj.Status.HostName = wlObj.Spec.HostName
-		// record exsting interfaces
-		statusIfs := map[string]int{}
-		for i, intf := range wlObj.Status.Interfaces {
-			if intf.MACAddress == "" {
-				continue
-			}
-			statusIfs[intf.MACAddress] = i
-		}
-		// Cannot reinit status interfaces[] as it has more information like endpoints etc which is
-		// not in the spec, remove any interfaces in status that are no-more in the spec
-		newStatusIfs := []workload.WorkloadIntfStatus{}
-		for _, intf := range wlObj.Spec.Interfaces {
-			if i, ok := statusIfs[intf.MACAddress]; ok {
-				statusIntf := wlObj.Status.Interfaces[i]
-				statusIntf.MicroSegVlan = intf.MicroSegVlan
-				newStatusIfs = append(newStatusIfs, statusIntf)
-			} else {
-				newStatusIfs = append(newStatusIfs, workload.WorkloadIntfStatus{
-					MicroSegVlan: intf.MicroSegVlan,
-					ExternalVlan: intf.ExternalVlan,
-					MACAddress:   intf.MACAddress,
-					IpAddresses:  intf.IpAddresses,
-				})
-			}
-		}
-		// sort it to keep the same order between spec and status (for common intfs)
-		sort.Slice(newStatusIfs, func(i, j int) bool {
-			return newStatusIfs[i].MACAddress < newStatusIfs[j].MACAddress
-		})
-		wlObj.Status.Interfaces = newStatusIfs
-
-		wlObj.Spec.HostName = wl.Spec.HostName
-		sort.Slice(wl.Spec.Interfaces, func(i, j int) bool {
-			return wl.Spec.Interfaces[i].MACAddress < wl.Spec.Interfaces[j].MACAddress
-		})
-		wlObj.Spec.Interfaces = wl.Spec.Interfaces
-
-		genID, err := strconv.ParseInt(wlObj.GenerationID, 10, 64)
-		if err != nil {
-			s.logger.Errorf("error parsing generation ID: %v", err)
-			genID = 2
-		}
-		wlObj.GenerationID = fmt.Sprintf("%d", genID+1)
-
-		return oldObj, nil
+		return utils.ProcessStartMigration(s.logger, wlObj, &wl)
 	}); err != nil {
 		s.logger.Errorf("Error Stating Migration on workload %s : %v", wl.Name, err)
 		return nil, false, err
@@ -201,45 +103,32 @@ func (s *workloadHooks) processAbortMigration(ctx context.Context, kvs kvstore.I
 		if !ok {
 			return oldObj, errors.New("invalid object type")
 		}
-		if wlObj.Status.MigrationStatus == nil || wlObj.Status.MigrationStatus.Stage != stageMigrationStart {
-			return oldObj, errors.New("Migration not in progress, cannot abort")
-		}
-		wlObj.Status.MigrationStatus.Stage = stageMigrationAbort
-		// copy from Status to Spec
-		wlObj.Spec.HostName = wlObj.Status.HostName
-		// record existing interfaces
-		specIfs := map[string]int{}
-		for i, intf := range wlObj.Spec.Interfaces {
-			specIfs[intf.MACAddress] = i
-		}
-		for _, intf := range wlObj.Status.Interfaces {
-			if i, ok := specIfs[intf.MACAddress]; ok {
-				wlObj.Spec.Interfaces[i].MicroSegVlan = intf.MicroSegVlan
-			} else {
-				s.logger.Errorf("Interface changes during migration are unexpected")
-				wlObj.Spec.Interfaces = append(wlObj.Spec.Interfaces, workload.WorkloadIntfSpec{
-					MACAddress:   intf.MACAddress,
-					MicroSegVlan: intf.MicroSegVlan,
-					ExternalVlan: intf.ExternalVlan,
-					IpAddresses:  intf.IpAddresses,
-				})
-			}
-		}
-		// sort it to keep the same order between spec and status (for common intfs)
-		sort.Slice(wlObj.Spec.Interfaces, func(i, j int) bool {
-			return wlObj.Spec.Interfaces[i].MACAddress < wlObj.Spec.Interfaces[j].MACAddress
-		})
-
-		genID, err := strconv.ParseInt(wlObj.GenerationID, 10, 64)
-		if err != nil {
-			s.logger.Errorf("error parsing generation ID: %v", err)
-			genID = 2
-		}
-		wlObj.GenerationID = fmt.Sprintf("%d", genID+1)
-
-		return oldObj, nil
+		return utils.ProcessAbortMigration(s.logger, wlObj, &wl)
 	}); err != nil {
 		s.logger.Errorf("Error Aborting Migration on workload %s : %v", wl.Name, err)
+		return nil, false, err
+	}
+	return wl, false, nil
+}
+
+func (s *workloadHooks) processFinalSyncMigration(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	wl, ok := i.(workload.Workload)
+	if !ok {
+		return i, false, fmt.Errorf("invalid object type %T. Expecting Workload", i)
+	}
+	if ctx == nil || kvs == nil {
+		return i, false, fmt.Errorf("processFinishMigration called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+	}
+	// create empty object
+	cur := &workload.Workload{}
+	if err := kvs.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+		wlObj, ok := oldObj.(*workload.Workload)
+		if !ok {
+			return oldObj, errors.New("invalid object type")
+		}
+		return utils.ProcessFinalSyncMigration(s.logger, wlObj, &wl)
+	}); err != nil {
+		s.logger.Errorf("Error Completing Migration on workload %s : %v", wl.Name, err)
 		return nil, false, err
 	}
 	return wl, false, nil
@@ -260,12 +149,7 @@ func (s *workloadHooks) processFinishMigration(ctx context.Context, kvs kvstore.
 		if !ok {
 			return oldObj, errors.New("invalid object type")
 		}
-		if wlObj.Status.MigrationStatus == nil ||
-			wlObj.Status.MigrationStatus.Stage != stageMigrationStart {
-			return oldObj, errors.New("Migration is not in progress, cannot be completed")
-		}
-		wlObj.Status.MigrationStatus.Stage = stageMigrationDone
-		return oldObj, nil
+		return utils.ProcessFinishMigration(s.logger, wlObj, &wl)
 	}); err != nil {
 		s.logger.Errorf("Error Completing Migration on workload %s : %v", wl.Name, err)
 		return nil, false, err
@@ -287,6 +171,7 @@ func registerWorkloadHooks(svc apiserver.Service, logger log.Logger) {
 
 	svc.GetMethod("StartMigration").WithPreCommitHook(r.processStartMigration)
 	svc.GetMethod("FinishMigration").WithPreCommitHook(r.processFinishMigration)
+	svc.GetMethod("FinalSyncMigration").WithPreCommitHook(r.processFinalSyncMigration)
 	svc.GetMethod("AbortMigration").WithPreCommitHook(r.processAbortMigration)
 }
 

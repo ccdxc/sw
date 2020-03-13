@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
@@ -108,10 +109,17 @@ func (v *VCHub) startEventsListener() {
 			v.processVeniceEventsLock.Lock()
 			processEvent := v.processVeniceEvents
 			v.processVeniceEventsLock.Unlock()
+			v.Log.Errorf("Received API event")
 
 			if ok && processEvent {
-				nw := evt.Object.(*network.Network)
-				v.handleNetworkEvent(evt.Type, nw)
+				switch obj := evt.Object.(type) {
+				case *network.Network:
+					v.Log.Infof("Processing network event %s", obj.Name)
+					v.handleNetworkEvent(evt.Type, obj)
+				case *workload.Workload:
+					v.Log.Infof("Processing workload event %s", obj.Name)
+					v.handleWorkloadEvent(evt.Type, obj)
+				}
 			}
 		}
 	}
@@ -123,7 +131,7 @@ func (v *VCHub) handleVCEvent(m defs.VCEventMsg) {
 	defer v.syncLock.RUnlock()
 	switch m.VcObject {
 	case defs.VirtualMachine:
-		v.handleWorkload(m)
+		v.handleVM(m)
 	case defs.HostSystem:
 		v.handleHost(m)
 	case defs.DistributedVirtualPortgroup:

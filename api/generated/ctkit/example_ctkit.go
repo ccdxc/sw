@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleOrderEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,14 +674,23 @@ type OrderAPI interface {
 	Watch(handler OrderHandler) error
 	StopWatch(handler OrderHandler) error
 	Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	RegisterLocalApplydiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error))
 	SyncApplydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	RegisterLocalSyncApplydiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error))
 	Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	RegisterLocalCleardiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error))
 	SyncCleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	RegisterLocalSyncCleardiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error))
 }
 
 // dummy struct that implements OrderAPI
 type orderAPI struct {
 	ct *ctrlerCtx
+
+	localApplydiscountHandler     func(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	localSyncApplydiscountHandler func(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	localCleardiscountHandler     func(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	localSyncCleardiscountHandler func(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
 }
 
 // Create creates Order object
@@ -714,7 +726,7 @@ func (api *orderAPI) SyncCreate(obj *bookstore.Order) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Order().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Order().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -723,11 +735,6 @@ func (api *orderAPI) SyncCreate(obj *bookstore.Order) error {
 	if writeErr == nil {
 		api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -859,6 +866,9 @@ func (api *orderAPI) Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.
 
 		return apicl.BookstoreV1().Order().Applydiscount(context.Background(), obj)
 	}
+	if api.localApplydiscountHandler != nil {
+		return api.localApplydiscountHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -882,7 +892,18 @@ func (api *orderAPI) SyncApplydiscount(obj *bookstore.ApplyDiscountReq) (*bookst
 		}
 		return ret, err
 	}
+	if api.localSyncApplydiscountHandler != nil {
+		return api.localSyncApplydiscountHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *orderAPI) RegisterLocalApplydiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error)) {
+	api.localApplydiscountHandler = fn
+}
+
+func (api *orderAPI) RegisterLocalSyncApplydiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error)) {
+	api.localSyncApplydiscountHandler = fn
 }
 
 // Cleardiscount is an API action
@@ -895,6 +916,9 @@ func (api *orderAPI) Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.
 		}
 
 		return apicl.BookstoreV1().Order().Cleardiscount(context.Background(), obj)
+	}
+	if api.localCleardiscountHandler != nil {
+		return api.localCleardiscountHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -919,12 +943,28 @@ func (api *orderAPI) SyncCleardiscount(obj *bookstore.ApplyDiscountReq) (*bookst
 		}
 		return ret, err
 	}
+	if api.localSyncCleardiscountHandler != nil {
+		return api.localSyncCleardiscountHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *orderAPI) RegisterLocalCleardiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error)) {
+	api.localCleardiscountHandler = fn
+}
+
+func (api *orderAPI) RegisterLocalSyncCleardiscountHandler(fn func(*bookstore.ApplyDiscountReq) (*bookstore.Order, error)) {
+	api.localSyncCleardiscountHandler = fn
 }
 
 // Order returns OrderAPI
 func (ct *ctrlerCtx) Order() OrderAPI {
-	return &orderAPI{ct: ct}
+	kind := "Order"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &orderAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*orderAPI)
 }
 
 // Book is a wrapper object that implements additional functionality
@@ -1073,7 +1113,9 @@ func (ct *ctrlerCtx) handleBookEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1571,12 +1613,17 @@ type BookAPI interface {
 	Watch(handler BookHandler) error
 	StopWatch(handler BookHandler) error
 	Restock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
+	RegisterLocalRestockHandler(fn func(*bookstore.RestockRequest) (*bookstore.RestockResponse, error))
 	SyncRestock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
+	RegisterLocalSyncRestockHandler(fn func(*bookstore.RestockRequest) (*bookstore.RestockResponse, error))
 }
 
 // dummy struct that implements BookAPI
 type bookAPI struct {
 	ct *ctrlerCtx
+
+	localRestockHandler     func(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
+	localSyncRestockHandler func(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
 }
 
 // Create creates Book object
@@ -1612,7 +1659,7 @@ func (api *bookAPI) SyncCreate(obj *bookstore.Book) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Book().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Book().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1621,11 +1668,6 @@ func (api *bookAPI) SyncCreate(obj *bookstore.Book) error {
 	if writeErr == nil {
 		api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleBookEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1757,6 +1799,9 @@ func (api *bookAPI) Restock(obj *bookstore.RestockRequest) (*bookstore.RestockRe
 
 		return apicl.BookstoreV1().Book().Restock(context.Background(), obj)
 	}
+	if api.localRestockHandler != nil {
+		return api.localRestockHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -1780,12 +1825,28 @@ func (api *bookAPI) SyncRestock(obj *bookstore.RestockRequest) (*bookstore.Resto
 		}
 		return ret, err
 	}
+	if api.localSyncRestockHandler != nil {
+		return api.localSyncRestockHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *bookAPI) RegisterLocalRestockHandler(fn func(*bookstore.RestockRequest) (*bookstore.RestockResponse, error)) {
+	api.localRestockHandler = fn
+}
+
+func (api *bookAPI) RegisterLocalSyncRestockHandler(fn func(*bookstore.RestockRequest) (*bookstore.RestockResponse, error)) {
+	api.localSyncRestockHandler = fn
 }
 
 // Book returns BookAPI
 func (ct *ctrlerCtx) Book() BookAPI {
-	return &bookAPI{ct: ct}
+	kind := "Book"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &bookAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*bookAPI)
 }
 
 // Publisher is a wrapper object that implements additional functionality
@@ -1934,7 +1995,9 @@ func (ct *ctrlerCtx) handlePublisherEventNoResolver(evt *kvstore.WatchEvent) err
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2471,7 +2534,7 @@ func (api *publisherAPI) SyncCreate(obj *bookstore.Publisher) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2480,11 +2543,6 @@ func (api *publisherAPI) SyncCreate(obj *bookstore.Publisher) error {
 	if writeErr == nil {
 		api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2607,7 +2665,12 @@ func (api *publisherAPI) StopWatch(handler PublisherHandler) error {
 
 // Publisher returns PublisherAPI
 func (ct *ctrlerCtx) Publisher() PublisherAPI {
-	return &publisherAPI{ct: ct}
+	kind := "Publisher"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &publisherAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*publisherAPI)
 }
 
 // Store is a wrapper object that implements additional functionality
@@ -2756,7 +2819,9 @@ func (ct *ctrlerCtx) handleStoreEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3254,12 +3319,17 @@ type StoreAPI interface {
 	Watch(handler StoreHandler) error
 	StopWatch(handler StoreHandler) error
 	AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error)
+	RegisterLocalAddOutageHandler(fn func(*bookstore.OutageRequest) (*bookstore.Store, error))
 	SyncAddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error)
+	RegisterLocalSyncAddOutageHandler(fn func(*bookstore.OutageRequest) (*bookstore.Store, error))
 }
 
 // dummy struct that implements StoreAPI
 type storeAPI struct {
 	ct *ctrlerCtx
+
+	localAddOutageHandler     func(obj *bookstore.OutageRequest) (*bookstore.Store, error)
+	localSyncAddOutageHandler func(obj *bookstore.OutageRequest) (*bookstore.Store, error)
 }
 
 // Create creates Store object
@@ -3295,7 +3365,7 @@ func (api *storeAPI) SyncCreate(obj *bookstore.Store) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Store().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Store().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3304,11 +3374,6 @@ func (api *storeAPI) SyncCreate(obj *bookstore.Store) error {
 	if writeErr == nil {
 		api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3440,6 +3505,9 @@ func (api *storeAPI) AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, 
 
 		return apicl.BookstoreV1().Store().AddOutage(context.Background(), obj)
 	}
+	if api.localAddOutageHandler != nil {
+		return api.localAddOutageHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -3463,12 +3531,28 @@ func (api *storeAPI) SyncAddOutage(obj *bookstore.OutageRequest) (*bookstore.Sto
 		}
 		return ret, err
 	}
+	if api.localSyncAddOutageHandler != nil {
+		return api.localSyncAddOutageHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *storeAPI) RegisterLocalAddOutageHandler(fn func(*bookstore.OutageRequest) (*bookstore.Store, error)) {
+	api.localAddOutageHandler = fn
+}
+
+func (api *storeAPI) RegisterLocalSyncAddOutageHandler(fn func(*bookstore.OutageRequest) (*bookstore.Store, error)) {
+	api.localSyncAddOutageHandler = fn
 }
 
 // Store returns StoreAPI
 func (ct *ctrlerCtx) Store() StoreAPI {
-	return &storeAPI{ct: ct}
+	kind := "Store"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &storeAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*storeAPI)
 }
 
 // Coupon is a wrapper object that implements additional functionality
@@ -3617,7 +3701,9 @@ func (ct *ctrlerCtx) handleCouponEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4154,7 +4240,7 @@ func (api *couponAPI) SyncCreate(obj *bookstore.Coupon) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4163,11 +4249,6 @@ func (api *couponAPI) SyncCreate(obj *bookstore.Coupon) error {
 	if writeErr == nil {
 		api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4290,7 +4371,12 @@ func (api *couponAPI) StopWatch(handler CouponHandler) error {
 
 // Coupon returns CouponAPI
 func (ct *ctrlerCtx) Coupon() CouponAPI {
-	return &couponAPI{ct: ct}
+	kind := "Coupon"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &couponAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*couponAPI)
 }
 
 // Customer is a wrapper object that implements additional functionality
@@ -4439,7 +4525,9 @@ func (ct *ctrlerCtx) handleCustomerEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4976,7 +5064,7 @@ func (api *customerAPI) SyncCreate(obj *bookstore.Customer) error {
 		}
 
 		newObj, writeErr = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4985,11 +5073,6 @@ func (api *customerAPI) SyncCreate(obj *bookstore.Customer) error {
 	if writeErr == nil {
 		api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -5112,5 +5195,10 @@ func (api *customerAPI) StopWatch(handler CustomerHandler) error {
 
 // Customer returns CustomerAPI
 func (ct *ctrlerCtx) Customer() CustomerAPI {
-	return &customerAPI{ct: ct}
+	kind := "Customer"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &customerAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*customerAPI)
 }

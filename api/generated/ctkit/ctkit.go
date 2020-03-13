@@ -137,6 +137,7 @@ type ctrlerCtx struct {
 	stats       tsdb.Obj                            // ctkit stats
 	diagSvc     diag.Service
 	objResolver *objResolver.ObjectResolver // obj resolver for ctkit
+	apiInfMap   map[string]interface{}      // Kind API Objects
 }
 
 // Controller is the main interface provided by controller instance
@@ -232,6 +233,7 @@ func NewController(name string, rpcServer *rpckit.RPCServer, apisrvURL string, r
 		workPools:   make(map[string]*shardworkers.WorkerPool),
 		stats:       tsdbObj,
 		diagSvc:     diagsvc.GetDiagnosticsService(name, utils.GetHostname(), diagnostics.ModuleStatus_Venice, logger),
+		apiInfMap:   make(map[string]interface{}),
 	}
 
 	if resolveObjects {

@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *orchestratorAPI) SyncCreate(obj *orchestration.Orchestrator) error {
 		}
 
 		newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *orchestratorAPI) SyncCreate(obj *orchestration.Orchestrator) error {
 	if writeErr == nil {
 		api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleOrchestratorEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,5 +844,10 @@ func (api *orchestratorAPI) StopWatch(handler OrchestratorHandler) error {
 
 // Orchestrator returns OrchestratorAPI
 func (ct *ctrlerCtx) Orchestrator() OrchestratorAPI {
-	return &orchestratorAPI{ct: ct}
+	kind := "Orchestrator"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &orchestratorAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*orchestratorAPI)
 }

@@ -32,6 +32,7 @@ type ServiceWorkloadV1Client interface {
 	AutoListWorkload(ctx context.Context, t *api.ListWatchOptions) (*WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 	AutoUpdateWorkload(ctx context.Context, t *Workload) (*Workload, error)
+	FinalSyncMigration(ctx context.Context, t *Workload) (*Workload, error)
 	FinishMigration(ctx context.Context, t *Workload) (*Workload, error)
 	StartMigration(ctx context.Context, t *Workload) (*Workload, error)
 
@@ -56,6 +57,7 @@ type ServiceWorkloadV1Server interface {
 	AutoListWorkload(ctx context.Context, t api.ListWatchOptions) (WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 	AutoUpdateWorkload(ctx context.Context, t Workload) (Workload, error)
+	FinalSyncMigration(ctx context.Context, t Workload) (Workload, error)
 	FinishMigration(ctx context.Context, t Workload) (Workload, error)
 	StartMigration(ctx context.Context, t Workload) (Workload, error)
 

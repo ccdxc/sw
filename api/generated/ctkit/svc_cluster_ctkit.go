@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleClusterEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,14 +674,23 @@ type ClusterAPI interface {
 	Watch(handler ClusterHandler) error
 	StopWatch(handler ClusterHandler) error
 	AuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
+	RegisterLocalAuthBootstrapCompleteHandler(fn func(*cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error))
 	SyncAuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
+	RegisterLocalSyncAuthBootstrapCompleteHandler(fn func(*cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error))
 	UpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)
+	RegisterLocalUpdateTLSConfigHandler(fn func(*cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error))
 	SyncUpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)
+	RegisterLocalSyncUpdateTLSConfigHandler(fn func(*cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error))
 }
 
 // dummy struct that implements ClusterAPI
 type clusterAPI struct {
 	ct *ctrlerCtx
+
+	localAuthBootstrapCompleteHandler     func(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
+	localSyncAuthBootstrapCompleteHandler func(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
+	localUpdateTLSConfigHandler           func(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)
+	localSyncUpdateTLSConfigHandler       func(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)
 }
 
 // Create creates Cluster object
@@ -714,7 +726,7 @@ func (api *clusterAPI) SyncCreate(obj *cluster.Cluster) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -723,11 +735,6 @@ func (api *clusterAPI) SyncCreate(obj *cluster.Cluster) error {
 	if writeErr == nil {
 		api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -859,6 +866,9 @@ func (api *clusterAPI) AuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRe
 
 		return apicl.ClusterV1().Cluster().AuthBootstrapComplete(context.Background(), obj)
 	}
+	if api.localAuthBootstrapCompleteHandler != nil {
+		return api.localAuthBootstrapCompleteHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -882,7 +892,18 @@ func (api *clusterAPI) SyncAuthBootstrapComplete(obj *cluster.ClusterAuthBootstr
 		}
 		return ret, err
 	}
+	if api.localSyncAuthBootstrapCompleteHandler != nil {
+		return api.localSyncAuthBootstrapCompleteHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *clusterAPI) RegisterLocalAuthBootstrapCompleteHandler(fn func(*cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)) {
+	api.localAuthBootstrapCompleteHandler = fn
+}
+
+func (api *clusterAPI) RegisterLocalSyncAuthBootstrapCompleteHandler(fn func(*cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)) {
+	api.localSyncAuthBootstrapCompleteHandler = fn
 }
 
 // UpdateTLSConfig is an API action
@@ -895,6 +916,9 @@ func (api *clusterAPI) UpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) (*cl
 		}
 
 		return apicl.ClusterV1().Cluster().UpdateTLSConfig(context.Background(), obj)
+	}
+	if api.localUpdateTLSConfigHandler != nil {
+		return api.localUpdateTLSConfigHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -919,12 +943,28 @@ func (api *clusterAPI) SyncUpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) 
 		}
 		return ret, err
 	}
+	if api.localSyncUpdateTLSConfigHandler != nil {
+		return api.localSyncUpdateTLSConfigHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *clusterAPI) RegisterLocalUpdateTLSConfigHandler(fn func(*cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)) {
+	api.localUpdateTLSConfigHandler = fn
+}
+
+func (api *clusterAPI) RegisterLocalSyncUpdateTLSConfigHandler(fn func(*cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)) {
+	api.localSyncUpdateTLSConfigHandler = fn
 }
 
 // Cluster returns ClusterAPI
 func (ct *ctrlerCtx) Cluster() ClusterAPI {
-	return &clusterAPI{ct: ct}
+	kind := "Cluster"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &clusterAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*clusterAPI)
 }
 
 // Node is a wrapper object that implements additional functionality
@@ -1073,7 +1113,9 @@ func (ct *ctrlerCtx) handleNodeEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1610,7 +1652,7 @@ func (api *nodeAPI) SyncCreate(obj *cluster.Node) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Node().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Node().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1619,11 +1661,6 @@ func (api *nodeAPI) SyncCreate(obj *cluster.Node) error {
 	if writeErr == nil {
 		api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1746,7 +1783,12 @@ func (api *nodeAPI) StopWatch(handler NodeHandler) error {
 
 // Node returns NodeAPI
 func (ct *ctrlerCtx) Node() NodeAPI {
-	return &nodeAPI{ct: ct}
+	kind := "Node"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &nodeAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*nodeAPI)
 }
 
 // Host is a wrapper object that implements additional functionality
@@ -1895,7 +1937,9 @@ func (ct *ctrlerCtx) handleHostEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2432,7 +2476,7 @@ func (api *hostAPI) SyncCreate(obj *cluster.Host) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Host().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Host().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2441,11 +2485,6 @@ func (api *hostAPI) SyncCreate(obj *cluster.Host) error {
 	if writeErr == nil {
 		api.ct.handleHostEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleHostEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2568,7 +2607,12 @@ func (api *hostAPI) StopWatch(handler HostHandler) error {
 
 // Host returns HostAPI
 func (ct *ctrlerCtx) Host() HostAPI {
-	return &hostAPI{ct: ct}
+	kind := "Host"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &hostAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*hostAPI)
 }
 
 // DistributedServiceCard is a wrapper object that implements additional functionality
@@ -2717,7 +2761,9 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventNoResolver(evt *kvstore.Wa
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3254,7 +3300,7 @@ func (api *distributedservicecardAPI) SyncCreate(obj *cluster.DistributedService
 		}
 
 		newObj, writeErr = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3263,11 +3309,6 @@ func (api *distributedservicecardAPI) SyncCreate(obj *cluster.DistributedService
 	if writeErr == nil {
 		api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleDistributedServiceCardEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3390,7 +3431,12 @@ func (api *distributedservicecardAPI) StopWatch(handler DistributedServiceCardHa
 
 // DistributedServiceCard returns DistributedServiceCardAPI
 func (ct *ctrlerCtx) DistributedServiceCard() DistributedServiceCardAPI {
-	return &distributedservicecardAPI{ct: ct}
+	kind := "DistributedServiceCard"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &distributedservicecardAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*distributedservicecardAPI)
 }
 
 // Tenant is a wrapper object that implements additional functionality
@@ -3539,7 +3585,9 @@ func (ct *ctrlerCtx) handleTenantEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4076,7 +4124,7 @@ func (api *tenantAPI) SyncCreate(obj *cluster.Tenant) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4085,11 +4133,6 @@ func (api *tenantAPI) SyncCreate(obj *cluster.Tenant) error {
 	if writeErr == nil {
 		api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4212,7 +4255,12 @@ func (api *tenantAPI) StopWatch(handler TenantHandler) error {
 
 // Tenant returns TenantAPI
 func (ct *ctrlerCtx) Tenant() TenantAPI {
-	return &tenantAPI{ct: ct}
+	kind := "Tenant"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &tenantAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*tenantAPI)
 }
 
 // Version is a wrapper object that implements additional functionality
@@ -4361,7 +4409,9 @@ func (ct *ctrlerCtx) handleVersionEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4898,7 +4948,7 @@ func (api *versionAPI) SyncCreate(obj *cluster.Version) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().Version().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().Version().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4907,11 +4957,6 @@ func (api *versionAPI) SyncCreate(obj *cluster.Version) error {
 	if writeErr == nil {
 		api.ct.handleVersionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleVersionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -5034,7 +5079,12 @@ func (api *versionAPI) StopWatch(handler VersionHandler) error {
 
 // Version returns VersionAPI
 func (ct *ctrlerCtx) Version() VersionAPI {
-	return &versionAPI{ct: ct}
+	kind := "Version"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &versionAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*versionAPI)
 }
 
 // ConfigurationSnapshot is a wrapper object that implements additional functionality
@@ -5183,7 +5233,9 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventNoResolver(evt *kvstore.Wat
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -5681,12 +5733,17 @@ type ConfigurationSnapshotAPI interface {
 	Watch(handler ConfigurationSnapshotHandler) error
 	StopWatch(handler ConfigurationSnapshotHandler) error
 	Save(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
+	RegisterLocalSaveHandler(fn func(*cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error))
 	SyncSave(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
+	RegisterLocalSyncSaveHandler(fn func(*cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error))
 }
 
 // dummy struct that implements ConfigurationSnapshotAPI
 type configurationsnapshotAPI struct {
 	ct *ctrlerCtx
+
+	localSaveHandler     func(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
+	localSyncSaveHandler func(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
 }
 
 // Create creates ConfigurationSnapshot object
@@ -5722,7 +5779,7 @@ func (api *configurationsnapshotAPI) SyncCreate(obj *cluster.ConfigurationSnapsh
 		}
 
 		newObj, writeErr = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -5731,11 +5788,6 @@ func (api *configurationsnapshotAPI) SyncCreate(obj *cluster.ConfigurationSnapsh
 	if writeErr == nil {
 		api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleConfigurationSnapshotEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -5867,6 +5919,9 @@ func (api *configurationsnapshotAPI) Save(obj *cluster.ConfigurationSnapshotRequ
 
 		return apicl.ClusterV1().ConfigurationSnapshot().Save(context.Background(), obj)
 	}
+	if api.localSaveHandler != nil {
+		return api.localSaveHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -5890,12 +5945,28 @@ func (api *configurationsnapshotAPI) SyncSave(obj *cluster.ConfigurationSnapshot
 		}
 		return ret, err
 	}
+	if api.localSyncSaveHandler != nil {
+		return api.localSyncSaveHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *configurationsnapshotAPI) RegisterLocalSaveHandler(fn func(*cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)) {
+	api.localSaveHandler = fn
+}
+
+func (api *configurationsnapshotAPI) RegisterLocalSyncSaveHandler(fn func(*cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)) {
+	api.localSyncSaveHandler = fn
 }
 
 // ConfigurationSnapshot returns ConfigurationSnapshotAPI
 func (ct *ctrlerCtx) ConfigurationSnapshot() ConfigurationSnapshotAPI {
-	return &configurationsnapshotAPI{ct: ct}
+	kind := "ConfigurationSnapshot"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &configurationsnapshotAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*configurationsnapshotAPI)
 }
 
 // SnapshotRestore is a wrapper object that implements additional functionality
@@ -6044,7 +6115,9 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventNoResolver(evt *kvstore.WatchEven
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -6542,12 +6615,17 @@ type SnapshotRestoreAPI interface {
 	Watch(handler SnapshotRestoreHandler) error
 	StopWatch(handler SnapshotRestoreHandler) error
 	Restore(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
+	RegisterLocalRestoreHandler(fn func(*cluster.SnapshotRestore) (*cluster.SnapshotRestore, error))
 	SyncRestore(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
+	RegisterLocalSyncRestoreHandler(fn func(*cluster.SnapshotRestore) (*cluster.SnapshotRestore, error))
 }
 
 // dummy struct that implements SnapshotRestoreAPI
 type snapshotrestoreAPI struct {
 	ct *ctrlerCtx
+
+	localRestoreHandler     func(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
+	localSyncRestoreHandler func(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
 }
 
 // Create creates SnapshotRestore object
@@ -6583,7 +6661,7 @@ func (api *snapshotrestoreAPI) SyncCreate(obj *cluster.SnapshotRestore) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -6592,11 +6670,6 @@ func (api *snapshotrestoreAPI) SyncCreate(obj *cluster.SnapshotRestore) error {
 	if writeErr == nil {
 		api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleSnapshotRestoreEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -6728,6 +6801,9 @@ func (api *snapshotrestoreAPI) Restore(obj *cluster.SnapshotRestore) (*cluster.S
 
 		return apicl.ClusterV1().SnapshotRestore().Restore(context.Background(), obj)
 	}
+	if api.localRestoreHandler != nil {
+		return api.localRestoreHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -6751,12 +6827,28 @@ func (api *snapshotrestoreAPI) SyncRestore(obj *cluster.SnapshotRestore) (*clust
 		}
 		return ret, err
 	}
+	if api.localSyncRestoreHandler != nil {
+		return api.localSyncRestoreHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *snapshotrestoreAPI) RegisterLocalRestoreHandler(fn func(*cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)) {
+	api.localRestoreHandler = fn
+}
+
+func (api *snapshotrestoreAPI) RegisterLocalSyncRestoreHandler(fn func(*cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)) {
+	api.localSyncRestoreHandler = fn
 }
 
 // SnapshotRestore returns SnapshotRestoreAPI
 func (ct *ctrlerCtx) SnapshotRestore() SnapshotRestoreAPI {
-	return &snapshotrestoreAPI{ct: ct}
+	kind := "SnapshotRestore"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &snapshotrestoreAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*snapshotrestoreAPI)
 }
 
 // License is a wrapper object that implements additional functionality
@@ -6905,7 +6997,9 @@ func (ct *ctrlerCtx) handleLicenseEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -7442,7 +7536,7 @@ func (api *licenseAPI) SyncCreate(obj *cluster.License) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().License().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().License().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -7451,11 +7545,6 @@ func (api *licenseAPI) SyncCreate(obj *cluster.License) error {
 	if writeErr == nil {
 		api.ct.handleLicenseEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleLicenseEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -7578,7 +7667,12 @@ func (api *licenseAPI) StopWatch(handler LicenseHandler) error {
 
 // License returns LicenseAPI
 func (ct *ctrlerCtx) License() LicenseAPI {
-	return &licenseAPI{ct: ct}
+	kind := "License"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &licenseAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*licenseAPI)
 }
 
 // DSCProfile is a wrapper object that implements additional functionality
@@ -7727,7 +7821,9 @@ func (ct *ctrlerCtx) handleDSCProfileEventNoResolver(evt *kvstore.WatchEvent) er
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -8264,7 +8360,7 @@ func (api *dscprofileAPI) SyncCreate(obj *cluster.DSCProfile) error {
 		}
 
 		newObj, writeErr = apicl.ClusterV1().DSCProfile().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.ClusterV1().DSCProfile().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -8273,11 +8369,6 @@ func (api *dscprofileAPI) SyncCreate(obj *cluster.DSCProfile) error {
 	if writeErr == nil {
 		api.ct.handleDSCProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleDSCProfileEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -8400,5 +8491,10 @@ func (api *dscprofileAPI) StopWatch(handler DSCProfileHandler) error {
 
 // DSCProfile returns DSCProfileAPI
 func (ct *ctrlerCtx) DSCProfile() DSCProfileAPI {
-	return &dscprofileAPI{ct: ct}
+	kind := "DSCProfile"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &dscprofileAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*dscprofileAPI)
 }

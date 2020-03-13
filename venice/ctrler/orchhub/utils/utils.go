@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/venice/globals"
 )
@@ -20,8 +21,12 @@ var (
 
 // CreateGlobalKey creates a global key
 func CreateGlobalKey(orchID, namespace, objName string) string {
-	// TODO: Add in datacenter name
 	return fmt.Sprintf("%s%s%s%s%s", orchID, Delim, namespace, Delim, objName)
+}
+
+// ParseGlobalKey returns objName from globalKey
+func ParseGlobalKey(orchID, namespace, globalKey string) (key string) {
+	return strings.TrimPrefix(globalKey, CreateGlobalKey(orchID, namespace, ""))
 }
 
 // CreateGlobalKeyPrefix creates the key prefix

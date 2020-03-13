@@ -196,6 +196,27 @@ export class Workloadv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Initiates the final sync for the Workload Migration operation */
+  public FinalSyncMigration(O_Name, body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/FinalSyncMigration';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'FinalSyncMigration',
+      objType: 'WorkloadWorkload',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Finish Workload Migration operation */
   public FinishMigration(O_Name, body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/FinishMigration';
@@ -413,6 +434,26 @@ export class Workloadv1Service extends AbstractService {
     url = url.replace('{O.Name}', O_Name);
     const opts = {
       eventID: 'AbortMigration_1',
+      objType: 'WorkloadWorkload',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Initiates the final sync for the Workload Migration operation */
+  public FinalSyncMigration_1(O_Name, body: IWorkloadWorkload, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/workload/v1/workloads/{O.Name}/FinalSyncMigration';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'FinalSyncMigration_1',
       objType: 'WorkloadWorkload',
       isStaging: false,
     }

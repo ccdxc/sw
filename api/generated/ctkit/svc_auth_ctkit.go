@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,16 +674,29 @@ type UserAPI interface {
 	Watch(handler UserHandler) error
 	StopWatch(handler UserHandler) error
 	PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	RegisterLocalPasswordChangeHandler(fn func(*auth.PasswordChangeRequest) (*auth.User, error))
 	SyncPasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	RegisterLocalSyncPasswordChangeHandler(fn func(*auth.PasswordChangeRequest) (*auth.User, error))
 	PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error)
+	RegisterLocalPasswordResetHandler(fn func(*auth.PasswordResetRequest) (*auth.User, error))
 	SyncPasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error)
+	RegisterLocalSyncPasswordResetHandler(fn func(*auth.PasswordResetRequest) (*auth.User, error))
 	IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
+	RegisterLocalIsAuthorizedHandler(fn func(*auth.SubjectAccessReviewRequest) (*auth.User, error))
 	SyncIsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
+	RegisterLocalSyncIsAuthorizedHandler(fn func(*auth.SubjectAccessReviewRequest) (*auth.User, error))
 }
 
 // dummy struct that implements UserAPI
 type userAPI struct {
 	ct *ctrlerCtx
+
+	localPasswordChangeHandler     func(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	localSyncPasswordChangeHandler func(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	localPasswordResetHandler      func(obj *auth.PasswordResetRequest) (*auth.User, error)
+	localSyncPasswordResetHandler  func(obj *auth.PasswordResetRequest) (*auth.User, error)
+	localIsAuthorizedHandler       func(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
+	localSyncIsAuthorizedHandler   func(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
 }
 
 // Create creates User object
@@ -716,7 +732,7 @@ func (api *userAPI) SyncCreate(obj *auth.User) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().User().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().User().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -725,11 +741,6 @@ func (api *userAPI) SyncCreate(obj *auth.User) error {
 	if writeErr == nil {
 		api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleUserEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -861,6 +872,9 @@ func (api *userAPI) PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User,
 
 		return apicl.AuthV1().User().PasswordChange(context.Background(), obj)
 	}
+	if api.localPasswordChangeHandler != nil {
+		return api.localPasswordChangeHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -884,7 +898,18 @@ func (api *userAPI) SyncPasswordChange(obj *auth.PasswordChangeRequest) (*auth.U
 		}
 		return ret, err
 	}
+	if api.localSyncPasswordChangeHandler != nil {
+		return api.localSyncPasswordChangeHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *userAPI) RegisterLocalPasswordChangeHandler(fn func(*auth.PasswordChangeRequest) (*auth.User, error)) {
+	api.localPasswordChangeHandler = fn
+}
+
+func (api *userAPI) RegisterLocalSyncPasswordChangeHandler(fn func(*auth.PasswordChangeRequest) (*auth.User, error)) {
+	api.localSyncPasswordChangeHandler = fn
 }
 
 // PasswordReset is an API action
@@ -897,6 +922,9 @@ func (api *userAPI) PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, e
 		}
 
 		return apicl.AuthV1().User().PasswordReset(context.Background(), obj)
+	}
+	if api.localPasswordResetHandler != nil {
+		return api.localPasswordResetHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -921,7 +949,18 @@ func (api *userAPI) SyncPasswordReset(obj *auth.PasswordResetRequest) (*auth.Use
 		}
 		return ret, err
 	}
+	if api.localSyncPasswordResetHandler != nil {
+		return api.localSyncPasswordResetHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *userAPI) RegisterLocalPasswordResetHandler(fn func(*auth.PasswordResetRequest) (*auth.User, error)) {
+	api.localPasswordResetHandler = fn
+}
+
+func (api *userAPI) RegisterLocalSyncPasswordResetHandler(fn func(*auth.PasswordResetRequest) (*auth.User, error)) {
+	api.localSyncPasswordResetHandler = fn
 }
 
 // IsAuthorized is an API action
@@ -934,6 +973,9 @@ func (api *userAPI) IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.Us
 		}
 
 		return apicl.AuthV1().User().IsAuthorized(context.Background(), obj)
+	}
+	if api.localIsAuthorizedHandler != nil {
+		return api.localIsAuthorizedHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -958,12 +1000,28 @@ func (api *userAPI) SyncIsAuthorized(obj *auth.SubjectAccessReviewRequest) (*aut
 		}
 		return ret, err
 	}
+	if api.localSyncIsAuthorizedHandler != nil {
+		return api.localSyncIsAuthorizedHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *userAPI) RegisterLocalIsAuthorizedHandler(fn func(*auth.SubjectAccessReviewRequest) (*auth.User, error)) {
+	api.localIsAuthorizedHandler = fn
+}
+
+func (api *userAPI) RegisterLocalSyncIsAuthorizedHandler(fn func(*auth.SubjectAccessReviewRequest) (*auth.User, error)) {
+	api.localSyncIsAuthorizedHandler = fn
 }
 
 // User returns UserAPI
 func (ct *ctrlerCtx) User() UserAPI {
-	return &userAPI{ct: ct}
+	kind := "User"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &userAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*userAPI)
 }
 
 // AuthenticationPolicy is a wrapper object that implements additional functionality
@@ -1112,7 +1170,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1610,16 +1670,29 @@ type AuthenticationPolicyAPI interface {
 	Watch(handler AuthenticationPolicyHandler) error
 	StopWatch(handler AuthenticationPolicyHandler) error
 	LdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	RegisterLocalLdapConnectionCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error))
 	SyncLdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	RegisterLocalSyncLdapConnectionCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error))
 	LdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	RegisterLocalLdapBindCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error))
 	SyncLdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	RegisterLocalSyncLdapBindCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error))
 	TokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
+	RegisterLocalTokenSecretGenerateHandler(fn func(*auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error))
 	SyncTokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
+	RegisterLocalSyncTokenSecretGenerateHandler(fn func(*auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error))
 }
 
 // dummy struct that implements AuthenticationPolicyAPI
 type authenticationpolicyAPI struct {
 	ct *ctrlerCtx
+
+	localLdapConnectionCheckHandler     func(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	localSyncLdapConnectionCheckHandler func(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	localLdapBindCheckHandler           func(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	localSyncLdapBindCheckHandler       func(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	localTokenSecretGenerateHandler     func(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
+	localSyncTokenSecretGenerateHandler func(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
 }
 
 // Create creates AuthenticationPolicy object
@@ -1655,7 +1728,7 @@ func (api *authenticationpolicyAPI) SyncCreate(obj *auth.AuthenticationPolicy) e
 		}
 
 		newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1664,11 +1737,6 @@ func (api *authenticationpolicyAPI) SyncCreate(obj *auth.AuthenticationPolicy) e
 	if writeErr == nil {
 		api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1800,6 +1868,9 @@ func (api *authenticationpolicyAPI) LdapConnectionCheck(obj *auth.Authentication
 
 		return apicl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.Background(), obj)
 	}
+	if api.localLdapConnectionCheckHandler != nil {
+		return api.localLdapConnectionCheckHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -1823,7 +1894,18 @@ func (api *authenticationpolicyAPI) SyncLdapConnectionCheck(obj *auth.Authentica
 		}
 		return ret, err
 	}
+	if api.localSyncLdapConnectionCheckHandler != nil {
+		return api.localSyncLdapConnectionCheckHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalLdapConnectionCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)) {
+	api.localLdapConnectionCheckHandler = fn
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalSyncLdapConnectionCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)) {
+	api.localSyncLdapConnectionCheckHandler = fn
 }
 
 // LdapBindCheck is an API action
@@ -1836,6 +1918,9 @@ func (api *authenticationpolicyAPI) LdapBindCheck(obj *auth.AuthenticationPolicy
 		}
 
 		return apicl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.Background(), obj)
+	}
+	if api.localLdapBindCheckHandler != nil {
+		return api.localLdapBindCheckHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1860,7 +1945,18 @@ func (api *authenticationpolicyAPI) SyncLdapBindCheck(obj *auth.AuthenticationPo
 		}
 		return ret, err
 	}
+	if api.localSyncLdapBindCheckHandler != nil {
+		return api.localSyncLdapBindCheckHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalLdapBindCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)) {
+	api.localLdapBindCheckHandler = fn
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalSyncLdapBindCheckHandler(fn func(*auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)) {
+	api.localSyncLdapBindCheckHandler = fn
 }
 
 // TokenSecretGenerate is an API action
@@ -1873,6 +1969,9 @@ func (api *authenticationpolicyAPI) TokenSecretGenerate(obj *auth.TokenSecretReq
 		}
 
 		return apicl.AuthV1().AuthenticationPolicy().TokenSecretGenerate(context.Background(), obj)
+	}
+	if api.localTokenSecretGenerateHandler != nil {
+		return api.localTokenSecretGenerateHandler(obj)
 	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
@@ -1897,12 +1996,28 @@ func (api *authenticationpolicyAPI) SyncTokenSecretGenerate(obj *auth.TokenSecre
 		}
 		return ret, err
 	}
+	if api.localSyncTokenSecretGenerateHandler != nil {
+		return api.localSyncTokenSecretGenerateHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalTokenSecretGenerateHandler(fn func(*auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)) {
+	api.localTokenSecretGenerateHandler = fn
+}
+
+func (api *authenticationpolicyAPI) RegisterLocalSyncTokenSecretGenerateHandler(fn func(*auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)) {
+	api.localSyncTokenSecretGenerateHandler = fn
 }
 
 // AuthenticationPolicy returns AuthenticationPolicyAPI
 func (ct *ctrlerCtx) AuthenticationPolicy() AuthenticationPolicyAPI {
-	return &authenticationpolicyAPI{ct: ct}
+	kind := "AuthenticationPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &authenticationpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*authenticationpolicyAPI)
 }
 
 // Role is a wrapper object that implements additional functionality
@@ -2051,7 +2166,9 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2588,7 +2705,7 @@ func (api *roleAPI) SyncCreate(obj *auth.Role) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().Role().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().Role().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2597,11 +2714,6 @@ func (api *roleAPI) SyncCreate(obj *auth.Role) error {
 	if writeErr == nil {
 		api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2724,7 +2836,12 @@ func (api *roleAPI) StopWatch(handler RoleHandler) error {
 
 // Role returns RoleAPI
 func (ct *ctrlerCtx) Role() RoleAPI {
-	return &roleAPI{ct: ct}
+	kind := "Role"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &roleAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*roleAPI)
 }
 
 // RoleBinding is a wrapper object that implements additional functionality
@@ -2873,7 +2990,9 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3410,7 +3529,7 @@ func (api *rolebindingAPI) SyncCreate(obj *auth.RoleBinding) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3419,11 +3538,6 @@ func (api *rolebindingAPI) SyncCreate(obj *auth.RoleBinding) error {
 	if writeErr == nil {
 		api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3546,7 +3660,12 @@ func (api *rolebindingAPI) StopWatch(handler RoleBindingHandler) error {
 
 // RoleBinding returns RoleBindingAPI
 func (ct *ctrlerCtx) RoleBinding() RoleBindingAPI {
-	return &rolebindingAPI{ct: ct}
+	kind := "RoleBinding"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &rolebindingAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*rolebindingAPI)
 }
 
 // UserPreference is a wrapper object that implements additional functionality
@@ -3695,7 +3814,9 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4232,7 +4353,7 @@ func (api *userpreferenceAPI) SyncCreate(obj *auth.UserPreference) error {
 		}
 
 		newObj, writeErr = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4241,11 +4362,6 @@ func (api *userpreferenceAPI) SyncCreate(obj *auth.UserPreference) error {
 	if writeErr == nil {
 		api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleUserPreferenceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4368,5 +4484,10 @@ func (api *userpreferenceAPI) StopWatch(handler UserPreferenceHandler) error {
 
 // UserPreference returns UserPreferenceAPI
 func (ct *ctrlerCtx) UserPreference() UserPreferenceAPI {
-	return &userpreferenceAPI{ct: ct}
+	kind := "UserPreference"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &userpreferenceAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*userpreferenceAPI)
 }

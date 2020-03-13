@@ -162,6 +162,19 @@ func (mr *MockProbeInfMockRecorder) StartWatchForDC(dcName, dcID interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWatchForDC", reflect.TypeOf((*MockProbeInf)(nil).StartWatchForDC), dcName, dcID)
 }
 
+// GetVM mocks base method
+func (m *MockProbeInf) GetVM(vmID string) (mo.VirtualMachine, error) {
+	ret := m.ctrl.Call(m, "GetVM", vmID)
+	ret0, _ := ret[0].(mo.VirtualMachine)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVM indicates an expected call of GetVM
+func (mr *MockProbeInfMockRecorder) GetVM(vmID interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVM", reflect.TypeOf((*MockProbeInf)(nil).GetVM), vmID)
+}
+
 // AddPenDC mocks base method
 func (m *MockProbeInf) AddPenDC(dcName string, retry int) error {
 	ret := m.ctrl.Call(m, "AddPenDC", dcName, retry)

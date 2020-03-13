@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleNetworkEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *networkAPI) SyncCreate(obj *network.Network) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().Network().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().Network().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *networkAPI) SyncCreate(obj *network.Network) error {
 	if writeErr == nil {
 		api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,7 +844,12 @@ func (api *networkAPI) StopWatch(handler NetworkHandler) error {
 
 // Network returns NetworkAPI
 func (ct *ctrlerCtx) Network() NetworkAPI {
-	return &networkAPI{ct: ct}
+	kind := "Network"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &networkAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*networkAPI)
 }
 
 // Service is a wrapper object that implements additional functionality
@@ -995,7 +998,9 @@ func (ct *ctrlerCtx) handleServiceEventNoResolver(evt *kvstore.WatchEvent) error
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1532,7 +1537,7 @@ func (api *serviceAPI) SyncCreate(obj *network.Service) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().Service().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().Service().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1541,11 +1546,6 @@ func (api *serviceAPI) SyncCreate(obj *network.Service) error {
 	if writeErr == nil {
 		api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1668,7 +1668,12 @@ func (api *serviceAPI) StopWatch(handler ServiceHandler) error {
 
 // Service returns ServiceAPI
 func (ct *ctrlerCtx) Service() ServiceAPI {
-	return &serviceAPI{ct: ct}
+	kind := "Service"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &serviceAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*serviceAPI)
 }
 
 // LbPolicy is a wrapper object that implements additional functionality
@@ -1817,7 +1822,9 @@ func (ct *ctrlerCtx) handleLbPolicyEventNoResolver(evt *kvstore.WatchEvent) erro
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2354,7 +2361,7 @@ func (api *lbpolicyAPI) SyncCreate(obj *network.LbPolicy) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2363,11 +2370,6 @@ func (api *lbpolicyAPI) SyncCreate(obj *network.LbPolicy) error {
 	if writeErr == nil {
 		api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2490,7 +2492,12 @@ func (api *lbpolicyAPI) StopWatch(handler LbPolicyHandler) error {
 
 // LbPolicy returns LbPolicyAPI
 func (ct *ctrlerCtx) LbPolicy() LbPolicyAPI {
-	return &lbpolicyAPI{ct: ct}
+	kind := "LbPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &lbpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*lbpolicyAPI)
 }
 
 // VirtualRouter is a wrapper object that implements additional functionality
@@ -2639,7 +2646,9 @@ func (ct *ctrlerCtx) handleVirtualRouterEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3176,7 +3185,7 @@ func (api *virtualrouterAPI) SyncCreate(obj *network.VirtualRouter) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3185,11 +3194,6 @@ func (api *virtualrouterAPI) SyncCreate(obj *network.VirtualRouter) error {
 	if writeErr == nil {
 		api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleVirtualRouterEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3312,7 +3316,12 @@ func (api *virtualrouterAPI) StopWatch(handler VirtualRouterHandler) error {
 
 // VirtualRouter returns VirtualRouterAPI
 func (ct *ctrlerCtx) VirtualRouter() VirtualRouterAPI {
-	return &virtualrouterAPI{ct: ct}
+	kind := "VirtualRouter"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &virtualrouterAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*virtualrouterAPI)
 }
 
 // NetworkInterface is a wrapper object that implements additional functionality
@@ -3461,7 +3470,9 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventNoResolver(evt *kvstore.WatchEve
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3998,7 +4009,7 @@ func (api *networkinterfaceAPI) SyncCreate(obj *network.NetworkInterface) error 
 		}
 
 		newObj, writeErr = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4007,11 +4018,6 @@ func (api *networkinterfaceAPI) SyncCreate(obj *network.NetworkInterface) error 
 	if writeErr == nil {
 		api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleNetworkInterfaceEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4134,7 +4140,12 @@ func (api *networkinterfaceAPI) StopWatch(handler NetworkInterfaceHandler) error
 
 // NetworkInterface returns NetworkInterfaceAPI
 func (ct *ctrlerCtx) NetworkInterface() NetworkInterfaceAPI {
-	return &networkinterfaceAPI{ct: ct}
+	kind := "NetworkInterface"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &networkinterfaceAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*networkinterfaceAPI)
 }
 
 // IPAMPolicy is a wrapper object that implements additional functionality
@@ -4283,7 +4294,9 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventNoResolver(evt *kvstore.WatchEvent) er
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4820,7 +4833,7 @@ func (api *ipampolicyAPI) SyncCreate(obj *network.IPAMPolicy) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4829,11 +4842,6 @@ func (api *ipampolicyAPI) SyncCreate(obj *network.IPAMPolicy) error {
 	if writeErr == nil {
 		api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleIPAMPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4956,7 +4964,12 @@ func (api *ipampolicyAPI) StopWatch(handler IPAMPolicyHandler) error {
 
 // IPAMPolicy returns IPAMPolicyAPI
 func (ct *ctrlerCtx) IPAMPolicy() IPAMPolicyAPI {
-	return &ipampolicyAPI{ct: ct}
+	kind := "IPAMPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &ipampolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*ipampolicyAPI)
 }
 
 // RoutingConfig is a wrapper object that implements additional functionality
@@ -5105,7 +5118,9 @@ func (ct *ctrlerCtx) handleRoutingConfigEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -5642,7 +5657,7 @@ func (api *routingconfigAPI) SyncCreate(obj *network.RoutingConfig) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -5651,11 +5666,6 @@ func (api *routingconfigAPI) SyncCreate(obj *network.RoutingConfig) error {
 	if writeErr == nil {
 		api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRoutingConfigEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -5778,7 +5788,12 @@ func (api *routingconfigAPI) StopWatch(handler RoutingConfigHandler) error {
 
 // RoutingConfig returns RoutingConfigAPI
 func (ct *ctrlerCtx) RoutingConfig() RoutingConfigAPI {
-	return &routingconfigAPI{ct: ct}
+	kind := "RoutingConfig"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &routingconfigAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*routingconfigAPI)
 }
 
 // RouteTable is a wrapper object that implements additional functionality
@@ -5927,7 +5942,9 @@ func (ct *ctrlerCtx) handleRouteTableEventNoResolver(evt *kvstore.WatchEvent) er
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -6464,7 +6481,7 @@ func (api *routetableAPI) SyncCreate(obj *network.RouteTable) error {
 		}
 
 		newObj, writeErr = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -6473,11 +6490,6 @@ func (api *routetableAPI) SyncCreate(obj *network.RouteTable) error {
 	if writeErr == nil {
 		api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleRouteTableEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -6600,5 +6612,10 @@ func (api *routetableAPI) StopWatch(handler RouteTableHandler) error {
 
 // RouteTable returns RouteTableAPI
 func (ct *ctrlerCtx) RouteTable() RouteTableAPI {
-	return &routetableAPI{ct: ct}
+	kind := "RouteTable"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &routetableAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*routetableAPI)
 }

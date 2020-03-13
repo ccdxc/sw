@@ -40,6 +40,7 @@ type WorkloadV1WorkloadInterface interface {
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
 	StartMigration(ctx context.Context, in *Workload) (*Workload, error)
+	FinalSyncMigration(ctx context.Context, in *Workload) (*Workload, error)
 	FinishMigration(ctx context.Context, in *Workload) (*Workload, error)
 	AbortMigration(ctx context.Context, in *Workload) (*Workload, error)
 }

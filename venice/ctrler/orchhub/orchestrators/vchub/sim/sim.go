@@ -16,6 +16,7 @@ import (
 	// Set up simulator rest api
 	_ "github.com/vmware/govmomi/vapi/simulator"
 	"github.com/vmware/govmomi/vim25"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 )
@@ -415,17 +416,7 @@ func (v *Datacenter) AddVM(name string, hostName string, vnics []VNIC) (*simulat
 
 	// Create a vnic
 	for _, vnic := range vnics {
-		Backing := &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
-			VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
-			Port: types.DistributedVirtualSwitchPortConnection{
-				PortKey:      vnic.PortKey,
-				PortgroupKey: vnic.PortgroupKey,
-			},
-		}
-
-		vnicDevice, err := devices.CreateEthernetCard("e1000", Backing)
-		vnicDeviceCard := vnicDevice.(types.BaseVirtualEthernetCard)
-		vnicDeviceCard.GetVirtualEthernetCard().MacAddress = vnic.MacAddress
+		vnicDevice, err := createVnicDevice(vnic)
 		if err != nil {
 			return nil, err
 		}
@@ -472,6 +463,85 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	}
 
 	return nil, fmt.Errorf("VM create was successful but couldn't be found in inventory")
+}
+
+// AddVnic adds vnic info to the given vm
+func (v *Datacenter) AddVnic(vmSim *simulator.VirtualMachine, vnic VNIC) error {
+	vm := object.NewVirtualMachine(v.client, vmSim.Reference())
+	var devices object.VirtualDeviceList
+	// VirtualMachineConfigSpec
+	config := types.VirtualMachineConfigSpec{}
+	vnicDevice, err := createVnicDevice(vnic)
+	if err != nil {
+		return err
+	}
+	devices = append(devices, vnicDevice)
+
+	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
+	task, err := vm.Reconfigure(context.Background(), config)
+	if err != nil {
+		return err
+	}
+
+	err = task.Wait(context.Background())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RemoveVnic removes vnic info from the given vm
+func (v *Datacenter) RemoveVnic(vmSim *simulator.VirtualMachine, vnic VNIC) error {
+	vm := object.NewVirtualMachine(v.client, vmSim.Reference())
+	var devices object.VirtualDeviceList
+	// VirtualMachineConfigSpec
+	config := types.VirtualMachineConfigSpec{}
+	var vmMo mo.VirtualMachine
+	err := vm.Properties(context.Background(), vmSim.Reference(), []string{"config"}, &vmMo)
+	if err != nil {
+		return err
+	}
+	// Find vnic with matching spec
+	for _, d := range vmMo.Config.Hardware.Device {
+		vnicCard, ok := d.(types.BaseVirtualEthernetCard)
+		if ok && vnicCard.GetVirtualEthernetCard().MacAddress == vnic.MacAddress {
+			// remove
+			devices = append(devices, d)
+		}
+	}
+
+	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationRemove)
+	task, err := vm.Reconfigure(context.Background(), config)
+	if err != nil {
+		return err
+	}
+
+	err = task.Wait(context.Background())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createVnicDevice(vnic VNIC) (types.BaseVirtualDevice, error) {
+	var devices object.VirtualDeviceList
+	Backing := &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
+		VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
+		Port: types.DistributedVirtualSwitchPortConnection{
+			PortKey:      vnic.PortKey,
+			PortgroupKey: vnic.PortgroupKey,
+		},
+	}
+
+	vnicDevice, err := devices.CreateEthernetCard("e1000", Backing)
+	if err != nil {
+		return nil, err
+	}
+	vnicDeviceCard := vnicDevice.(types.BaseVirtualEthernetCard)
+	vnicDeviceCard.GetVirtualEthernetCard().MacAddress = vnic.MacAddress
+	return vnicDevice, nil
 }
 
 // UpdateVMHost updates the host for the virtual machine

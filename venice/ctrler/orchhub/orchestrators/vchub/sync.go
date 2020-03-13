@@ -459,7 +459,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 				},
 			},
 		}
-		v.handleWorkload(m)
+		v.handleVM(m)
 	}
 }
 

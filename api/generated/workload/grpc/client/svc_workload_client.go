@@ -212,6 +212,20 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoUpdateWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoUpdateWorkload")(lAutoUpdateWorkloadEndpoint)
 	}
+	var lFinalSyncMigrationEndpoint endpoint.Endpoint
+	{
+		lFinalSyncMigrationEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"FinalSyncMigration",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lFinalSyncMigrationEndpoint = trace.ClientEndPoint("WorkloadV1:FinalSyncMigration")(lFinalSyncMigrationEndpoint)
+	}
 	var lFinishMigrationEndpoint endpoint.Endpoint
 	{
 		lFinishMigrationEndpoint = grpctransport.NewClient(
@@ -256,6 +270,7 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		AutoListWorkloadEndpoint:   lAutoListWorkloadEndpoint,
 		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
 		AutoUpdateWorkloadEndpoint: lAutoUpdateWorkloadEndpoint,
+		FinalSyncMigrationEndpoint: lFinalSyncMigrationEndpoint,
 		FinishMigrationEndpoint:    lFinishMigrationEndpoint,
 		StartMigrationEndpoint:     lStartMigrationEndpoint,
 	}
@@ -600,6 +615,15 @@ func (a *grpcObjWorkloadV1Workload) StartMigration(ctx context.Context, in *work
 	return a.client.StartMigration(nctx, in)
 }
 
+func (a *grpcObjWorkloadV1Workload) FinalSyncMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{FinalSyncMigration Workload Workload}", "oper", "FinalSyncMigration")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.FinalSyncMigration(nctx, in)
+}
+
 func (a *grpcObjWorkloadV1Workload) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
 	a.logger.DebugLog("msg", "received call", "object", "{FinishMigration Workload Workload}", "oper", "FinishMigration")
 	if in == nil {
@@ -716,6 +740,12 @@ func (a *restObjWorkloadV1Workload) StartMigration(ctx context.Context, in *work
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.StartMigrationWorkload(ctx, in)
+}
+func (a *restObjWorkloadV1Workload) FinalSyncMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.FinalSyncMigrationWorkload(ctx, in)
 }
 func (a *restObjWorkloadV1Workload) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
 	if in == nil {

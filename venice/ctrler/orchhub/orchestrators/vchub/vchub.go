@@ -68,6 +68,13 @@ func WithMockProbe(v *VCHub) {
 	v.useMockProbe = true
 }
 
+// WithVcEventsCh listens to the supplied channel for vC notifcation events
+func WithVcEventsCh(ch chan defs.Probe2StoreMsg) Option {
+	return func(v *VCHub) {
+		v.vcEventCh = ch
+	}
+}
+
 // LaunchVCHub starts VCHub
 func LaunchVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
 	logger.Infof("VCHub instance for %s(orch-%d) is starting...", config.GetName(), config.Status.OrchID)
@@ -100,7 +107,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 			forceDCMap[dc] = true
 		}
 	}
-	orchID := fmt.Sprintf("orch-%d", config.Status.OrchID)
+	orchID := fmt.Sprintf("orch%d", config.Status.OrchID)
 	state := defs.State{
 		VcURL:        vcURL,
 		VcID:         config.GetName(),
@@ -285,4 +292,8 @@ func (v *VCHub) createHostName(namespace, objName string) string {
 func (v *VCHub) createVMWorkloadName(namespace, objName string) string {
 	// don't include namespace (DC name) in the workload name
 	return fmt.Sprintf("%s", utils.CreateGlobalKey(v.OrchID, "", objName))
+}
+
+func (v *VCHub) parseVMKeyFromWorkloadName(workloadName string) (vmKey string) {
+	return fmt.Sprintf("%s", utils.ParseGlobalKey(v.OrchID, "", workloadName))
 }

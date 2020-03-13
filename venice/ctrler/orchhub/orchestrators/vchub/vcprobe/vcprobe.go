@@ -56,6 +56,7 @@ type ProbeInf interface {
 	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 	StopWatchForDC(dcName, dcID string)
 	StartWatchForDC(dcName, dcID string)
+	GetVM(vmID string) (mo.VirtualMachine, error)
 
 	// datacenter.go functions
 	AddPenDC(dcName string, retry int) error
@@ -466,7 +467,7 @@ func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{},
 // ListVM returns a list of vms
 func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
 	var vms []mo.VirtualMachine
-	v.ListObj(defs.VirtualMachine, []string{"config", "name", "runtime", "overallStatus", "customValue"}, &vms, dcRef)
+	v.ListObj(defs.VirtualMachine, []string{"config", "name", "runtime"}, &vms, dcRef)
 	return vms
 }
 
@@ -497,6 +498,20 @@ func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 	var hosts []mo.HostSystem
 	v.ListObj(defs.HostSystem, []string{"config", "name"}, &hosts, dcRef)
 	return hosts
+}
+
+// GetVM fetches the given VM by ID
+func (v *VCProbe) GetVM(vmID string) (mo.VirtualMachine, error) {
+	client := v.GetClientWithRLock()
+	defer v.ReleaseClientsRLock()
+	vmRef := types.ManagedObjectReference{
+		Type:  string(defs.VirtualMachine),
+		Value: vmID,
+	}
+	var vm mo.VirtualMachine
+	objVM := object.NewVirtualMachine(client.Client, vmRef)
+	err := objVM.Properties(v.ClientCtx, vmRef, []string{"config", "name", "runtime"}, &vm)
+	return vm, err
 }
 
 // TagObjAsManaged tags the given ref with a Pensando managed tag

@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -671,12 +674,17 @@ type ModuleAPI interface {
 	Watch(handler ModuleHandler) error
 	StopWatch(handler ModuleHandler) error
 	Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
+	RegisterLocalDebugHandler(fn func(*diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error))
 	SyncDebug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
+	RegisterLocalSyncDebugHandler(fn func(*diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error))
 }
 
 // dummy struct that implements ModuleAPI
 type moduleAPI struct {
 	ct *ctrlerCtx
+
+	localDebugHandler     func(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
+	localSyncDebugHandler func(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
 }
 
 // Create creates Module object
@@ -712,7 +720,7 @@ func (api *moduleAPI) SyncCreate(obj *diagnostics.Module) error {
 		}
 
 		newObj, writeErr = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -721,11 +729,6 @@ func (api *moduleAPI) SyncCreate(obj *diagnostics.Module) error {
 	if writeErr == nil {
 		api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleModuleEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -857,6 +860,9 @@ func (api *moduleAPI) Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.D
 
 		return apicl.DiagnosticsV1().Module().Debug(context.Background(), obj)
 	}
+	if api.localDebugHandler != nil {
+		return api.localDebugHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -880,10 +886,26 @@ func (api *moduleAPI) SyncDebug(obj *diagnostics.DiagnosticsRequest) (*diagnosti
 		}
 		return ret, err
 	}
+	if api.localSyncDebugHandler != nil {
+		return api.localSyncDebugHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *moduleAPI) RegisterLocalDebugHandler(fn func(*diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)) {
+	api.localDebugHandler = fn
+}
+
+func (api *moduleAPI) RegisterLocalSyncDebugHandler(fn func(*diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)) {
+	api.localSyncDebugHandler = fn
 }
 
 // Module returns ModuleAPI
 func (ct *ctrlerCtx) Module() ModuleAPI {
-	return &moduleAPI{ct: ct}
+	kind := "Module"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &moduleAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*moduleAPI)
 }

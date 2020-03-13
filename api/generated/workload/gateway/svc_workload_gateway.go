@@ -414,6 +414,33 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	return ret.(*workload.Workload), err
 }
 
+func (a adapterWorkloadV1) FinalSyncMigration(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1FinalSyncMigration", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("FinalSyncMigration")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, "FinalSyncMigration"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.FinalSyncMigration(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) FinishMigration(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -666,6 +693,8 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEndpointWatchHelper", "workload", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgWorkloadWatchHelper", "workload", apiintf.WatchOper)
+
+	e.svcProf["FinalSyncMigration"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 
 	e.svcProf["FinishMigration"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 

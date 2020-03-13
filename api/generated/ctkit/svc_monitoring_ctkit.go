@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -173,7 +174,9 @@ func (ct *ctrlerCtx) handleEventPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -710,7 +713,7 @@ func (api *eventpolicyAPI) SyncCreate(obj *monitoring.EventPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -719,11 +722,6 @@ func (api *eventpolicyAPI) SyncCreate(obj *monitoring.EventPolicy) error {
 	if writeErr == nil {
 		api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -846,7 +844,12 @@ func (api *eventpolicyAPI) StopWatch(handler EventPolicyHandler) error {
 
 // EventPolicy returns EventPolicyAPI
 func (ct *ctrlerCtx) EventPolicy() EventPolicyAPI {
-	return &eventpolicyAPI{ct: ct}
+	kind := "EventPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &eventpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*eventpolicyAPI)
 }
 
 // FwlogPolicy is a wrapper object that implements additional functionality
@@ -995,7 +998,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -1532,7 +1537,7 @@ func (api *fwlogpolicyAPI) SyncCreate(obj *monitoring.FwlogPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -1541,11 +1546,6 @@ func (api *fwlogpolicyAPI) SyncCreate(obj *monitoring.FwlogPolicy) error {
 	if writeErr == nil {
 		api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -1668,7 +1668,12 @@ func (api *fwlogpolicyAPI) StopWatch(handler FwlogPolicyHandler) error {
 
 // FwlogPolicy returns FwlogPolicyAPI
 func (ct *ctrlerCtx) FwlogPolicy() FwlogPolicyAPI {
-	return &fwlogpolicyAPI{ct: ct}
+	kind := "FwlogPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &fwlogpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*fwlogpolicyAPI)
 }
 
 // FlowExportPolicy is a wrapper object that implements additional functionality
@@ -1817,7 +1822,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventNoResolver(evt *kvstore.WatchEve
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -2354,7 +2361,7 @@ func (api *flowexportpolicyAPI) SyncCreate(obj *monitoring.FlowExportPolicy) err
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -2363,11 +2370,6 @@ func (api *flowexportpolicyAPI) SyncCreate(obj *monitoring.FlowExportPolicy) err
 	if writeErr == nil {
 		api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -2490,7 +2492,12 @@ func (api *flowexportpolicyAPI) StopWatch(handler FlowExportPolicyHandler) error
 
 // FlowExportPolicy returns FlowExportPolicyAPI
 func (ct *ctrlerCtx) FlowExportPolicy() FlowExportPolicyAPI {
-	return &flowexportpolicyAPI{ct: ct}
+	kind := "FlowExportPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &flowexportpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*flowexportpolicyAPI)
 }
 
 // Alert is a wrapper object that implements additional functionality
@@ -2639,7 +2646,9 @@ func (ct *ctrlerCtx) handleAlertEventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3176,7 +3185,7 @@ func (api *alertAPI) SyncCreate(obj *monitoring.Alert) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -3185,11 +3194,6 @@ func (api *alertAPI) SyncCreate(obj *monitoring.Alert) error {
 	if writeErr == nil {
 		api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -3312,7 +3316,12 @@ func (api *alertAPI) StopWatch(handler AlertHandler) error {
 
 // Alert returns AlertAPI
 func (ct *ctrlerCtx) Alert() AlertAPI {
-	return &alertAPI{ct: ct}
+	kind := "Alert"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &alertAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*alertAPI)
 }
 
 // AlertPolicy is a wrapper object that implements additional functionality
@@ -3461,7 +3470,9 @@ func (ct *ctrlerCtx) handleAlertPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -3998,7 +4009,7 @@ func (api *alertpolicyAPI) SyncCreate(obj *monitoring.AlertPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4007,11 +4018,6 @@ func (api *alertpolicyAPI) SyncCreate(obj *monitoring.AlertPolicy) error {
 	if writeErr == nil {
 		api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4134,7 +4140,12 @@ func (api *alertpolicyAPI) StopWatch(handler AlertPolicyHandler) error {
 
 // AlertPolicy returns AlertPolicyAPI
 func (ct *ctrlerCtx) AlertPolicy() AlertPolicyAPI {
-	return &alertpolicyAPI{ct: ct}
+	kind := "AlertPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &alertpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*alertpolicyAPI)
 }
 
 // AlertDestination is a wrapper object that implements additional functionality
@@ -4283,7 +4294,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEventNoResolver(evt *kvstore.WatchEve
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -4820,7 +4833,7 @@ func (api *alertdestinationAPI) SyncCreate(obj *monitoring.AlertDestination) err
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -4829,11 +4842,6 @@ func (api *alertdestinationAPI) SyncCreate(obj *monitoring.AlertDestination) err
 	if writeErr == nil {
 		api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -4956,7 +4964,12 @@ func (api *alertdestinationAPI) StopWatch(handler AlertDestinationHandler) error
 
 // AlertDestination returns AlertDestinationAPI
 func (ct *ctrlerCtx) AlertDestination() AlertDestinationAPI {
-	return &alertdestinationAPI{ct: ct}
+	kind := "AlertDestination"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &alertdestinationAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*alertdestinationAPI)
 }
 
 // MirrorSession is a wrapper object that implements additional functionality
@@ -5105,7 +5118,9 @@ func (ct *ctrlerCtx) handleMirrorSessionEventNoResolver(evt *kvstore.WatchEvent)
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -5642,7 +5657,7 @@ func (api *mirrorsessionAPI) SyncCreate(obj *monitoring.MirrorSession) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -5651,11 +5666,6 @@ func (api *mirrorsessionAPI) SyncCreate(obj *monitoring.MirrorSession) error {
 	if writeErr == nil {
 		api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -5778,7 +5788,12 @@ func (api *mirrorsessionAPI) StopWatch(handler MirrorSessionHandler) error {
 
 // MirrorSession returns MirrorSessionAPI
 func (ct *ctrlerCtx) MirrorSession() MirrorSessionAPI {
-	return &mirrorsessionAPI{ct: ct}
+	kind := "MirrorSession"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &mirrorsessionAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*mirrorsessionAPI)
 }
 
 // TroubleshootingSession is a wrapper object that implements additional functionality
@@ -5927,7 +5942,9 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventNoResolver(evt *kvstore.Wa
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -6464,7 +6481,7 @@ func (api *troubleshootingsessionAPI) SyncCreate(obj *monitoring.Troubleshooting
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -6473,11 +6490,6 @@ func (api *troubleshootingsessionAPI) SyncCreate(obj *monitoring.Troubleshooting
 	if writeErr == nil {
 		api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -6600,7 +6612,12 @@ func (api *troubleshootingsessionAPI) StopWatch(handler TroubleshootingSessionHa
 
 // TroubleshootingSession returns TroubleshootingSessionAPI
 func (ct *ctrlerCtx) TroubleshootingSession() TroubleshootingSessionAPI {
-	return &troubleshootingsessionAPI{ct: ct}
+	kind := "TroubleshootingSession"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &troubleshootingsessionAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*troubleshootingsessionAPI)
 }
 
 // TechSupportRequest is a wrapper object that implements additional functionality
@@ -6749,7 +6766,9 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventNoResolver(evt *kvstore.WatchE
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -7286,7 +7305,7 @@ func (api *techsupportrequestAPI) SyncCreate(obj *monitoring.TechSupportRequest)
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -7295,11 +7314,6 @@ func (api *techsupportrequestAPI) SyncCreate(obj *monitoring.TechSupportRequest)
 	if writeErr == nil {
 		api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -7422,7 +7436,12 @@ func (api *techsupportrequestAPI) StopWatch(handler TechSupportRequestHandler) e
 
 // TechSupportRequest returns TechSupportRequestAPI
 func (ct *ctrlerCtx) TechSupportRequest() TechSupportRequestAPI {
-	return &techsupportrequestAPI{ct: ct}
+	kind := "TechSupportRequest"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &techsupportrequestAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*techsupportrequestAPI)
 }
 
 // ArchiveRequest is a wrapper object that implements additional functionality
@@ -7571,7 +7590,9 @@ func (ct *ctrlerCtx) handleArchiveRequestEventNoResolver(evt *kvstore.WatchEvent
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -8069,12 +8090,17 @@ type ArchiveRequestAPI interface {
 	Watch(handler ArchiveRequestHandler) error
 	StopWatch(handler ArchiveRequestHandler) error
 	Cancel(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
+	RegisterLocalCancelHandler(fn func(*monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error))
 	SyncCancel(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
+	RegisterLocalSyncCancelHandler(fn func(*monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error))
 }
 
 // dummy struct that implements ArchiveRequestAPI
 type archiverequestAPI struct {
 	ct *ctrlerCtx
+
+	localCancelHandler     func(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
+	localSyncCancelHandler func(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
 }
 
 // Create creates ArchiveRequest object
@@ -8110,7 +8136,7 @@ func (api *archiverequestAPI) SyncCreate(obj *monitoring.ArchiveRequest) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().ArchiveRequest().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().ArchiveRequest().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -8119,11 +8145,6 @@ func (api *archiverequestAPI) SyncCreate(obj *monitoring.ArchiveRequest) error {
 	if writeErr == nil {
 		api.ct.handleArchiveRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleArchiveRequestEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -8255,6 +8276,9 @@ func (api *archiverequestAPI) Cancel(obj *monitoring.CancelArchiveRequest) (*mon
 
 		return apicl.MonitoringV1().ArchiveRequest().Cancel(context.Background(), obj)
 	}
+	if api.localCancelHandler != nil {
+		return api.localCancelHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -8278,12 +8302,28 @@ func (api *archiverequestAPI) SyncCancel(obj *monitoring.CancelArchiveRequest) (
 		}
 		return ret, err
 	}
+	if api.localSyncCancelHandler != nil {
+		return api.localSyncCancelHandler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *archiverequestAPI) RegisterLocalCancelHandler(fn func(*monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)) {
+	api.localCancelHandler = fn
+}
+
+func (api *archiverequestAPI) RegisterLocalSyncCancelHandler(fn func(*monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)) {
+	api.localSyncCancelHandler = fn
 }
 
 // ArchiveRequest returns ArchiveRequestAPI
 func (ct *ctrlerCtx) ArchiveRequest() ArchiveRequestAPI {
-	return &archiverequestAPI{ct: ct}
+	kind := "ArchiveRequest"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &archiverequestAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*archiverequestAPI)
 }
 
 // AuditPolicy is a wrapper object that implements additional functionality

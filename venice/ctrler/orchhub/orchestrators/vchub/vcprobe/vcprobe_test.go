@@ -176,6 +176,9 @@ func TestListAndWatch(t *testing.T) {
 			AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
 		}
 	}
+	vm1, err := vcp.GetVM(vms[0].Self.Value)
+	AssertOk(t, err, "failed to get vm")
+	AssertEquals(t, vm1, vms[0], "VMs were not equal")
 
 	// Test host list
 	hosts := vcp.ListHosts(nil)

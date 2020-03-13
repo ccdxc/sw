@@ -43,6 +43,15 @@ service WorkloadV1 {
      Desc: "Start Workload Migration operation"
     };
 
+    // Action to initiate final sync for the migration.
+    option (venice.apiAction) = {
+     Object: "Workload"
+     Action: "FinalSyncMigration"
+     Request: "Workload"
+     Response: "Workload"
+     Desc: "Initiates the final sync for the Workload Migration operation"
+    };
+
     // Action to finish migration.
     option (venice.apiAction) = {
      Object: "Workload"

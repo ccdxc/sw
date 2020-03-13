@@ -32,6 +32,7 @@ var _ listerwatcher.WatcherClient
 var WorkloadMigrationStatus_MigrationStage_normal = map[string]string{
 	"migration-abort":             "migration-abort",
 	"migration-done":              "migration-done",
+	"migration-final-sync":        "migration-final-sync",
 	"migration-from-non-pen-host": "migration-from-non-pen-host",
 	"migration-none":              "migration-none",
 	"migration-start":             "migration-start",
@@ -40,17 +41,19 @@ var WorkloadMigrationStatus_MigrationStage_normal = map[string]string{
 var WorkloadMigrationStatus_MigrationStage_vname = map[int32]string{
 	0: "migration-none",
 	1: "migration-start",
-	2: "migration-done",
-	3: "migration-abort",
-	4: "migration-from-non-pen-host",
+	2: "migration-final-sync",
+	3: "migration-done",
+	4: "migration-abort",
+	5: "migration-from-non-pen-host",
 }
 
 var WorkloadMigrationStatus_MigrationStage_vvalue = map[string]int32{
 	"migration-none":              0,
 	"migration-start":             1,
-	"migration-done":              2,
-	"migration-abort":             3,
-	"migration-from-non-pen-host": 4,
+	"migration-final-sync":        2,
+	"migration-done":              3,
+	"migration-abort":             4,
+	"migration-from-non-pen-host": 5,
 }
 
 func (x WorkloadMigrationStatus_MigrationStage) String() string {

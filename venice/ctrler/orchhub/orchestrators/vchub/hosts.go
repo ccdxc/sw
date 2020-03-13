@@ -86,7 +86,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			}
 			v.Log.Infof("Adding display-name label %s on host %s", dispName, existingHost.Name)
 			addNameLabel(existingHost.Labels, dispName)
-			v.StateMgr.Controller().Host().Update(existingHost)
+			v.StateMgr.Controller().Host().SyncUpdate(existingHost)
 		}
 		v.Log.Debugf("No Config change for the host")
 		return
@@ -177,7 +177,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	if existingHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
-		err := v.StateMgr.Controller().Host().Create(hostObj)
+		err := v.StateMgr.Controller().Host().SyncCreate(hostObj)
 		if err != nil {
 			err = v.fixStaleHost(hostObj)
 		}
@@ -199,7 +199,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	if existingHost != nil {
 		v.Log.Infof("Updating host %s", hostObj.Name)
-		v.StateMgr.Controller().Host().Update(hostObj)
+		v.StateMgr.Controller().Host().SyncUpdate(hostObj)
 		// Revalidate kind call is not needed here.
 		// Only thing that can be updated in a host is the labels
 		// once it is written
@@ -246,7 +246,7 @@ searchHosts:
 		v.Log.Infof("Deleting host that belonged to another VC %s", vcID)
 	}
 	v.deleteHost(hostFound)
-	err = v.StateMgr.Controller().Host().Create(host)
+	err = v.StateMgr.Controller().Host().SyncCreate(host)
 	return err
 }
 

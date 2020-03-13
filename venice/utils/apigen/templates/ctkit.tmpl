@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -177,11 +178,13 @@ func (ct *ctrlerCtx) handle{{.}}EventNoResolver(evt *kvstore.WatchEvent) error {
 					return err
 				}
 			} else {
-                if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
-                    // Event already processed.
-                    ct.logger.Infof("Skipping update due to old resource version")
-                    return nil
-                }
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)	
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
+					// Event already processed.
+					ct.logger.Infof("Skipping update due to old resource version")
+					return nil
+				}
 				ctrlCtx := fobj.(*{{ToLower .}}Ctx)
 				ct.stats.Counter("{{.}}_Updated_Events").Inc()
 				ctrlCtx.Lock()
@@ -679,12 +682,17 @@ type {{.}}API interface {
 	Watch(handler {{.}}Handler) error
 	StopWatch(handler {{.}}Handler) error {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
   {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)
-  Sync{{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {{end}}
+  RegisterLocal{{.Name}}Handler(fn func(*{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error))
+  Sync{{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)
+  RegisterLocalSync{{.Name}}Handler(fn func(*{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)) {{end}}
 }
 
 // dummy struct that implements {{.}}API
 type {{ToLower .}}API struct {
 	ct *ctrlerCtx
+	{{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
+  local{{.Name}}Handler func(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)
+  localSync{{.Name}}Handler func(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {{end}}
 }
 
 // Create creates {{.}} object
@@ -720,7 +728,7 @@ func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
 		}
 
 		newObj, writeErr = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -729,11 +737,6 @@ func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
 	if writeErr == nil {
 		api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-    
-    if writeErr == nil {
-        api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -867,6 +870,9 @@ func (api *{{ToLower $obj}}API) {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$p
 
 		return apicl.{{$srvname}}().{{$obj}}().{{.Name}}(context.Background(), obj)
 	}
+	if api.local{{.Name}}Handler != nil {
+		return api.local{{.Name}}Handler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
@@ -890,13 +896,29 @@ func (api *{{ToLower $obj}}API) Sync{{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*
 		}
 		return ret, err
 	}
+	if api.localSync{{.Name}}Handler != nil {
+		return api.localSync{{.Name}}Handler(obj)
+	}
 	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *{{ToLower $obj}}API) RegisterLocal{{.Name}}Handler(fn func(*{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)) {
+	api.local{{.Name}}Handler = fn
+}
+
+func (api *{{ToLower $obj}}API) RegisterLocalSync{{.Name}}Handler(fn func(*{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error)) {
+	api.localSync{{.Name}}Handler = fn
 }
 
 {{end}}
 // {{.}} returns {{.}}API
 func (ct *ctrlerCtx) {{.}}() {{.}}API {
-	return &{{ToLower .}}API{ct: ct}
+	kind := "{{.}}"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &{{ToLower .}}API{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*{{ToLower .}}API)
 }
 
 {{end}}{{end}}{{end}}

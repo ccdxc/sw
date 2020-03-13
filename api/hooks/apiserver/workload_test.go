@@ -8,11 +8,28 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	// shorthand names for migration stages and status
+	stageMigrationNone           = workload.WorkloadMigrationStatus_MIGRATION_NONE.String()
+	stageMigrationStart          = workload.WorkloadMigrationStatus_MIGRATION_START.String()
+	stageMigrationDone           = workload.WorkloadMigrationStatus_MIGRATION_DONE.String()
+	stageMigrationFinalSync      = workload.WorkloadMigrationStatus_MIGRATION_FINAL_SYNC.String()
+	stageMigrationAbort          = workload.WorkloadMigrationStatus_MIGRATION_ABORT.String()
+	stageMigrationFromNonPenHost = workload.WorkloadMigrationStatus_MIGRATION_FROM_NON_PEN_HOST.String()
+	// Dataplane Status
+	statusNone     = workload.WorkloadMigrationStatus_NONE.String()
+	statusStarted  = workload.WorkloadMigrationStatus_STARTED.String()
+	statusDone     = workload.WorkloadMigrationStatus_DONE.String()
+	statusFailed   = workload.WorkloadMigrationStatus_FAILED.String()
+	statusTimedOut = workload.WorkloadMigrationStatus_TIMED_OUT.String()
 )
 
 func TestIPAddressEmptyInWorkload(t *testing.T) {
@@ -104,6 +121,10 @@ func TestIPAddressCheckInWorkload(t *testing.T) {
 	_, _, err = s.validateIPAddressHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.UpdateOper, false, work)
 	Assert(t, err == nil, "failed to create workload Error: %v", err)
 
+	// Delete should be successful
+	_, _, err = s.validateIPAddressHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.DeleteOper, false, work)
+	Assert(t, err == nil, "failed to create workload Error: %v", err)
+
 	work = workload.Workload{
 		TypeMeta: api.TypeMeta{Kind: "Workload"},
 		ObjectMeta: api.ObjectMeta{
@@ -139,6 +160,14 @@ func TestIPAddressCheckInWorkload(t *testing.T) {
 		},
 	}
 	_, _, err = s.validateIPAddressHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.UpdateOper, false, work)
+	Assert(t, err != nil, "Created workload Error: %v", err)
+
+	// test nil context
+	_, _, err = s.validateIPAddressHook(nil, kvs, kvs.NewTxn(), "", apiintf.UpdateOper, false, work)
+	Assert(t, err != nil, "Created workload Error: %v", err)
+
+	// wrong input type
+	_, _, err = s.validateIPAddressHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.UpdateOper, false, &work)
 	Assert(t, err != nil, "Created workload Error: %v", err)
 }
 
@@ -217,6 +246,22 @@ func initWorkLoadHooksAndKVStore(t *testing.T) (*workloadHooks, kvstore.Interfac
 	return s, kvs
 }
 
+// Raises test coverage
+func TestWorkloadRegistration(t *testing.T) {
+	s, _ := initWorkLoadHooksAndKVStore(t)
+	service := apisrvmocks.NewFakeService()
+	meth := apisrvmocks.NewFakeMethod(true)
+	msg := apisrvmocks.NewFakeMessage("test.test", "/test/path", false)
+	apisrvmocks.SetFakeMethodReqType(msg, meth)
+	service.AddMethod("Workload", meth)
+	service.AddMethod("StartMigration", meth)
+	service.AddMethod("FinishMigration", meth)
+	service.AddMethod("FinalSyncMigration", meth)
+	service.AddMethod("AbortMigration", meth)
+
+	registerWorkloadHooks(service, s.logger)
+}
+
 func TestMigration(t *testing.T) {
 	s, kvs := initWorkLoadHooksAndKVStore(t)
 	work := workload.Workload{
@@ -274,6 +319,12 @@ func TestMigration(t *testing.T) {
 	AssertEquals(t, newWl.Spec.HostName, "host-2", "Spec HostName is not updated")
 	AssertEquals(t, newWl.Spec.Interfaces[0].MicroSegVlan, uint32(2000), "Incorrect new useg vlan on interface 0")
 	AssertEquals(t, newWl.Spec.Interfaces[1].MicroSegVlan, uint32(2001), "Incorrect new useg vlan on interface 1")
+
+	// Final sync
+	s.logger.Infof("==== Final sync Migration1\n")
+	// finish migration
+	_, _, err = s.processFinalSyncMigration(context.Background(), kvs, kvs.NewTxn(), work.MakeKey("Workload"), apiintf.UpdateOper, false, work2)
+	AssertOk(t, err, "Failed to perform final sync")
 
 	s.logger.Infof("==== Finish Migration1\n")
 	// finish migration

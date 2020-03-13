@@ -63,6 +63,7 @@ type eWorkloadV1Endpoints struct {
 	fnAutoListWorkload   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateWorkload func(ctx context.Context, t interface{}) (interface{}, error)
+	fnFinalSyncMigration func(ctx context.Context, t interface{}) (interface{}, error)
 	fnFinishMigration    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnStartMigration     func(ctx context.Context, t interface{}) (interface{}, error)
 
@@ -309,6 +310,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsWorkloadV1.fnAutoUpdateWorkload = srv.AddMethod("AutoUpdateWorkload",
 			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoUpdateWorkload")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnFinalSyncMigration = srv.AddMethod("FinalSyncMigration",
+			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "FinalSyncMigration")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(workload.Workload)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -695,6 +705,14 @@ func (e *eWorkloadV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t workloa
 }
 func (e *eWorkloadV1Endpoints) AutoUpdateWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
 	r, err := e.fnAutoUpdateWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
+func (e *eWorkloadV1Endpoints) FinalSyncMigration(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnFinalSyncMigration(ctx, t)
 	if err == nil {
 		return r.(workload.Workload), err
 	}

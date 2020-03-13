@@ -123,12 +123,13 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 
 // Start starts instance manager
 func (w *InstanceManager) Start() {
+	w.waitGrp.Add(1)
 	go w.watchOrchestratorConfig()
-	go w.periodicSync()
+	// w.waitGrp.Add(1)
+	// go w.periodicSync()
 }
 
 func (w *InstanceManager) watchOrchestratorConfig() {
-	w.waitGrp.Add(1)
 	defer w.waitGrp.Done()
 
 	for {
@@ -178,7 +179,6 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 }
 
 func (w *InstanceManager) periodicSync() {
-	w.waitGrp.Add(1)
 	defer w.waitGrp.Done()
 
 	ticker := time.NewTicker(5 * time.Minute)
