@@ -301,7 +301,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		ret.GlobalOper = Delete
 		ret.DelGlobal.Request = &types.BGPKeyHandle{Id: oldCfg.uid}
 	default:
-		if oldCfg.routerID == newCfg.routerID && oldCfg.asn == newCfg.asn {
+		if oldCfg.routerID == newCfg.routerID && oldCfg.asn == newCfg.asn && oldCfg.keepalive == newCfg.keepalive && oldCfg.holdtime == newCfg.holdtime {
 			ret.GlobalOper = None
 		} else {
 			if oldCfg.asn != newCfg.asn {
@@ -316,6 +316,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			}
 			ret.Global = types.BGPRequest{
 				Request: &types.BGPSpec{
+					Id:       newCfg.uid,
 					LocalASN: newCfg.asn,
 					RouterId: rid,
 				},

@@ -267,6 +267,25 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 	k.logger.Infof("node config watcher established, client: %p", k.svcsClient)
 
+	// Init RoutingConfig watcher
+	k.routingConfigWatcher, err = k.svcsClient.NetworkV1().RoutingConfig().Watch(k.ctx, &api.ListWatchOptions{})
+	ii = 0
+	for err != nil {
+		select {
+		case <-time.After(time.Second):
+
+			k.routingConfigWatcher, err = k.svcsClient.NetworkV1().RoutingConfig().Watch(k.ctx, &api.ListWatchOptions{})
+			ii++
+			if ii%10 == 0 {
+				k.logger.Errorf("Waiting for RoutingConfig watch to succeed for %v seconds", ii)
+			}
+		case <-k.ctx.Done():
+			k.stopWatchers()
+			return
+		}
+	}
+	k.logger.Infof("RoutingConfig config watcher established, client: %p", k.svcsClient)
+
 	// Handle config watcher events
 	for {
 		select {
@@ -322,6 +341,24 @@ func (k *CfgWatcherService) runUntilCancel() {
 			}
 			if k.nodeConfigHandler != nil {
 				k.nodeConfigHandler(event.Type, node)
+			}
+
+		case event, ok := <-k.routingConfigWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				log.Errorf("Error receiving from routingConfigWatcher watch channel, restarting all watchers")
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("routingConfigWatcher Received %+v", event)
+			rtcfg, ok := event.Object.(*network.RoutingConfig)
+			if !ok {
+				k.logger.Infof("routingConfigWatcher failed to get Node Object")
+				break
+			}
+			if k.nodeConfigHandler != nil {
+				k.routingConfigHandler(event.Type, rtcfg)
 			}
 
 		case <-k.ctx.Done():

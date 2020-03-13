@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 
@@ -26,23 +27,30 @@ import (
 )
 
 type configCache struct {
+	sync.RWMutex
 	config *network.RoutingConfig
 }
 
 var cache configCache
 
 func (c *configCache) setConfig(in network.RoutingConfig) {
+	defer c.Unlock()
+	c.Lock()
 	cache.config = &in
 }
 
 func (c *configCache) getTimers() (keepalive, holdtime uint32) {
+	defer c.RUnlock()
+	c.RLock()
 	if c.config != nil && c.config.Spec.BGPConfig != nil {
-		return c.config.Spec.BGPConfig.KeepaliveInterval, c.config.Spec.BGPConfig.KeepaliveInterval
+		return c.config.Spec.BGPConfig.KeepaliveInterval, c.config.Spec.BGPConfig.Holdtime
 	}
 	return 60, 180
 }
 
 func (c *configCache) getUUID() []byte {
+	defer c.RUnlock()
+	c.RLock()
 	if c.config != nil {
 		uid, err := uuid.FromString(c.config.UUID)
 		if err == nil {
@@ -50,6 +58,15 @@ func (c *configCache) getUUID() []byte {
 		}
 	}
 	return nil
+}
+
+func (c *configCache) needUpdate(in *network.RoutingConfig) bool {
+	defer c.RUnlock()
+	c.RLock()
+	if c.config == nil || c.config.Name != in.Name {
+		return false
+	}
+	return true
 }
 
 func ip2uint32(ipstr string) uint32 {
@@ -168,35 +185,13 @@ func (m *ServiceHandlers) setupLBIf() {
 func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, evtRtConfig *network.RoutingConfig) {
 	log.Infof("HandleRoutingConfigEvent called: Intf: %+v event type: %v", *evtRtConfig, et)
 
-	uid, err := uuid.FromString(evtRtConfig.UUID)
-	if err != nil {
-		log.Errorf("failed to parse UUID (%v)", err)
+	if !cache.needUpdate(evtRtConfig) {
 		return
 	}
-	req := pdstypes.BGPRequest{
-		Request: &pdstypes.BGPSpec{
-			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,
-			Id:       uid.Bytes(),
-			RouterId: ip2uint32(evtRtConfig.Spec.BGPConfig.RouterId),
-		},
-	}
-	ctx := context.Background()
-	resp, err := m.pegasusClient.BGPCreate(ctx, &req)
-	log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
 
-	peerReq := pdstypes.BGPPeerRequest{}
-	for _, n := range evtRtConfig.Spec.BGPConfig.Neighbors {
-		peer := pdstypes.BGPPeerSpec{
-			Id:          uid.Bytes(),
-			State:       pdstypes.AdminState_ADMIN_STATE_ENABLE,
-			PeerAddr:    ip2PDSType(n.IPAddress),
-			RemoteASN:   n.RemoteAS,
-			SendComm:    true,
-			SendExtComm: true,
-			HoldTime:    evtRtConfig.Spec.BGPConfig.Holdtime,
-			KeepAlive:   evtRtConfig.Spec.BGPConfig.KeepaliveInterval,
-		}
-		peerReq.Request = append(peerReq.Request, &peer)
+	err := m.configureBGP(context.TODO(), evtRtConfig)
+	if err != nil {
+		log.Errorf("HandleRoutingConfigEvent: failed to apply config (%s)", err)
 	}
 	return
 }
@@ -225,6 +220,34 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.R
 	return ret
 }
 
+func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingConfig) error {
+	rtCfg := m.handleAutoConfig(in)
+	updCfg, err := clientutils.GetBGPConfiguration(cache.config, rtCfg, "0.0.0.0", "0.0.0.0")
+	if err != nil {
+		return errors.Wrap(err, "failed to construct pegasus config")
+	}
+
+	if updCfg.GlobalOper == clientutils.Delete {
+		m.handleBGPConfigDelete()
+		CfgAsn = 0
+	}
+	err = clientutils.UpdateBGPConfiguration(ctx, m.pegasusClient, updCfg)
+	if err != nil {
+		return errors.Wrap(err, "failed to apply config")
+	}
+	m.updated = true
+	cache.setConfig(*in)
+	switch updCfg.GlobalOper {
+	case clientutils.Create:
+		CfgAsn = updCfg.Global.Request.LocalASN
+		m.configurePeers()
+	case clientutils.Update:
+		CfgAsn = updCfg.Global.Request.LocalASN
+		m.handleBGPConfigChange()
+	}
+	return nil
+}
+
 // HandleNodeConfigEvent handles Node updates
 func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNodeConfig *cmd.Node) {
 	log.Infof("HandleNodeConfigEvent called: event type: %v : %+v ", et, *evtNodeConfig)
@@ -250,34 +273,10 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 		if err != nil {
 			log.Errorf("failed to get routing config [%v](%s)", evtNodeConfig.Spec.RoutingConfig, err)
 		}
-		rtCfg := m.handleAutoConfig(rtConfig)
-		updCfg, err := clientutils.GetBGPConfiguration(cache.config, rtCfg, "0.0.0.0", "0.0.0.0")
+		err = m.configureBGP(ctx, rtConfig)
 		if err != nil {
-			log.Errorf("failed to get pegasus config (%s)", err)
-			return
+			log.Errorf("HandleNodeConfigEvent| updating BGP Config failed (%s)", err)
 		}
-
-		if updCfg.GlobalOper == clientutils.Delete {
-			m.handleBGPConfigDelete()
-			CfgAsn = 0
-		}
-		err = clientutils.UpdateBGPConfiguration(ctx, m.pegasusClient, updCfg)
-		if err != nil {
-			log.Errorf("failed to update BGP config (%s)", err)
-			return
-		}
-		m.updated = true
-		cache.setConfig(*rtConfig)
-		switch updCfg.GlobalOper {
-		case clientutils.Create:
-			CfgAsn = updCfg.Global.Request.LocalASN
-			m.configurePeers()
-		case clientutils.Update:
-			CfgAsn = updCfg.Global.Request.LocalASN
-			m.handleBGPConfigChange()
-		}
-
-		once.Do(m.pollStatus)
 	} else {
 		if cache.config != nil {
 			log.Infof("deleteing BGP config from node")

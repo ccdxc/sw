@@ -192,6 +192,24 @@ def create_admin_role_binding():
     })
     return curl_send(**ctx)
 
+def enable_overlay_routing():
+    ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/licenses" }
+    ctx["postdata"] = json.dumps({
+    "kind": "License",
+    "api-version": "v1",
+    "meta": {
+        "name": "default-license"
+    },
+    "spec": {
+        "features": [
+            {
+                "feature-key": "OverlayRouting"
+            }
+        ]
+    }
+    })
+    return curl_send(**ctx)
+
 def complete_auth_bootstrap():
     ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/cluster/AuthBootstrapComplete" }
     ctx["postdata"] = json.dumps({})
@@ -213,6 +231,11 @@ def bootstrap_venice():
     write_log("* assigning super admin role to default admin user")
     if create_admin_role_binding() not in ( 200, 409 ):
         return False
+
+    if opts.enablerouting:
+        write_log("* enabling overlay routing")
+        if enable_overlay_routing() not in ( 200, 409 ):
+            return False
 
     write_log("* complete venice bootstraping process")
     if complete_auth_bootstrap() not in ( 200, 409 ):
@@ -236,6 +259,7 @@ parser.add_argument("-ntpservers", help="NTP servers (multiple needs to be separ
 parser.add_argument("-timeout", help="Total time to retry a transaction in seconds (default=300)", default=300, type=int)
 parser.add_argument("-waittime", help="Total time to wait between each retry in seconds (default=30)", default=30, type=int)
 parser.add_argument("-autoadmit", help="Auto admit DSC once it registers with Venice - 'True' or 'False' (default=True)", default="True", choices=["True", "False"], type=str)
+parser.add_argument("-enablerouting", help="Enable overlay routing on the cluster", action="store_true")
 parser.add_argument("-verbose", "-v", help="Verbose logging", action="count")
 parser.add_argument("-skip_create_cluster", "-s", help="Skip cluster creation step", action="store_true")
 opts = parser.parse_args()

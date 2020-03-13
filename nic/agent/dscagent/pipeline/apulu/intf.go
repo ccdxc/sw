@@ -172,6 +172,8 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 		ip, _, err := net.ParseCIDR(intf.Spec.IPAddress)
 		if err != nil {
 			log.Errorf("could not parse loopback IP (%s)", err)
+			// reset the loopback IP
+			cfg.LoopbackIP = ""
 		} else {
 			cfg.LoopbackIP = ip.String()
 		}
