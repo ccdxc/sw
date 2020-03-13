@@ -6,6 +6,8 @@ import (
 	"sync"
 	"testing"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -20,6 +22,7 @@ func TestHandleNetworkSecurityPolicy(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
@@ -93,6 +96,7 @@ func TestHandleNetworkSecurityPolicyInlineRulesDeny(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
@@ -161,6 +165,7 @@ func TestHandleNetworkSecurityPolicyInlineRulesReject(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
@@ -231,6 +236,7 @@ func TestHandleNetworkSecurityPolicyInlineRulesLog(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
@@ -316,6 +322,7 @@ func TestHandleNetworkSecurityPolicyICMPApp(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,
@@ -351,6 +358,7 @@ func TestHandleNetworkSecurityPolicyInfraFailures(t *testing.T) {
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
 		},
 		Spec: netproto.NetworkSecurityPolicySpec{
 			AttachTenant: true,

@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -35,12 +36,19 @@ func createNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 	c, _ := json.Marshal(nsp)
 	log.Infof("Create SGP Req to Agent: %v", string(c))
 
-	nspReqMsg := convertNetworkSecurityPolicy(infraAPI, nsp, ruleIDToAppMapping)
+	nspReqMsg, err := convertNetworkSecurityPolicy(infraAPI, nsp, ruleIDToAppMapping)
+	if err != nil {
+		return err
+	}
 	b, _ := json.Marshal(nspReqMsg)
 	log.Infof("Create SGP Req to Datapath: %s", string(b))
 
 	resp, err := client.SecurityPolicyCreate(context.Background(), nspReqMsg)
 	log.Infof("Datapath Create SGP Response: %v", resp)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Create failed | Err: %v", nsp.GetKey(), err))
+		return errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Create failed | Err: %v", nsp.GetKey(), err)
+	}
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", nsp.GetKind(), nsp.GetKey())); err != nil {
 			return err
@@ -59,11 +67,18 @@ func updateNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 	c, _ := json.Marshal(nsp)
 	log.Infof("Update SGP Req to Agent: %s", string(c))
 
-	nspReqMsg := convertNetworkSecurityPolicy(infraAPI, nsp, ruleIDToAppMapping)
+	nspReqMsg, err := convertNetworkSecurityPolicy(infraAPI, nsp, ruleIDToAppMapping)
+	if err != nil {
+		return err
+	}
 	b, _ := json.Marshal(nspReqMsg)
 	log.Infof("Update SGP Req to Datapath: %s", string(b))
 	resp, err := client.SecurityPolicyUpdate(context.Background(), nspReqMsg)
 	log.Infof("Datapath Update SGP Response: %v", resp)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Update failed | Err: %v", nsp.GetKey(), err))
+		return errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Update failed | Err: %v", nsp.GetKey(), err)
+	}
 
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", nsp.GetKind(), nsp.GetKey())); err != nil {
@@ -80,13 +95,20 @@ func updateNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 }
 
 func deleteNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.SecurityPolicySvcClient, nsp netproto.NetworkSecurityPolicy) error {
+	uid, err := uuid.FromString(nsp.UUID)
+	if err != nil {
+		log.Errorf("Policy: %s failed to parse uuid %s | Err: %v", nsp.GetKey(), nsp.UUID, err)
+		return err
+	}
 	nspDelReq := &halapi.SecurityPolicyDeleteRequest{
-		Id: [][]byte{
-			[]byte(nsp.UUID),
-		},
+		Id: [][]byte{uid.Bytes()},
 	}
 
 	resp, err := client.SecurityPolicyDelete(context.Background(), nspDelReq)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Delete failed | Err: %v", nsp.GetKey(), err))
+		return errors.Wrapf(types.ErrDatapathHandling, "NetworkSecurityPolicy: %s Delete failed | Err: %v", nsp.GetKey(), err)
+	}
 	if resp != nil {
 		if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("NetworkSecurityPolicy: %s", nsp.GetKey())); err != nil {
 			return err
@@ -100,19 +122,24 @@ func deleteNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 	return nil
 }
 
-func convertNetworkSecurityPolicy(infraAPI types.InfraAPI, nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) *halapi.SecurityPolicyRequest {
+func convertNetworkSecurityPolicy(infraAPI types.InfraAPI, nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) (*halapi.SecurityPolicyRequest, error) {
 	fwRules := convertHALFirewallRules(nsp, ruleIDToAppMapping)
 	for _, rule := range fwRules {
 		rule.Priority = uint32(infraAPI.AllocateID(types.SecurityRulePriority, 0))
 	}
+	uid, err := uuid.FromString(nsp.UUID)
+	if err != nil {
+		log.Errorf("Policy: %s failed to parse uuid %s | Err: %v", nsp.GetKey(), nsp.UUID, err)
+		return nil, err
+	}
 	return &halapi.SecurityPolicyRequest{
 		Request: []*halapi.SecurityPolicySpec{
 			{
-				Id:              []byte(nsp.UUID),
+				Id:              uid.Bytes(),
 				AddrFamily:      halapi.IPAF_IP_AF_INET,
 				DefaultFWAction: halapi.SecurityRuleAction_SECURITY_RULE_ACTION_ALLOW,
 				Rules:           fwRules,
 			},
 		},
-	}
+	}, nil
 }
