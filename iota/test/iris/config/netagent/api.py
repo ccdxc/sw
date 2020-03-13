@@ -114,8 +114,11 @@ def AddOneConfig(config_file):
 def ResetConfigs():
     cfg_api.ResetConfigs()
 
+def CloneConfigObjects(objects):
+    return cfg_api.CloneConfigObjects(objects)
+
 def PrintConfigObjects(objects):
-    cfg_api.PrintConfigsObjects()
+    cfg_api.PrintConfigsObjects(objects)
 
 def AddMirrors():
     return PushConfigObjects(cfg_api.QueryConfigs(kind='MirrorSession'))

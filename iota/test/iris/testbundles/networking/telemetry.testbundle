@@ -25,6 +25,17 @@ testcases:
             pktsize : [128]
             proto   : [tcp, udp, icmp, mixed]
 
+    -   name    : Mirror_Crud_Policy
+        testcase: testcases.telemetry.mirror_crud_policy
+        enable  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            num_collectors : [1, 3, 7]
+            num_mirror_sessions : [1, 4, 8]
+            proto   : [icmp, tcp, udp]
+
 #    -   name    : Ping_Mirror_Remote_Workloads
 #        testcase: testcases.telemetry.ping_mirror
 #        args    :

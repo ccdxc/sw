@@ -1,0 +1,16 @@
+[
+    {
+        "src_ip": "11.3.0.2", 
+        "dst_ip": "11.3.0.1", 
+        "protocol": "icmp", 
+        "port": "0", 
+        "result": "mirror"
+    }, 
+    {
+        "src_ip": "11.3.0.1", 
+        "dst_ip": "11.3.0.2", 
+        "protocol": "icmp", 
+        "port": "0", 
+        "result": "mirror"
+    }
+]
