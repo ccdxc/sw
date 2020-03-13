@@ -214,7 +214,7 @@ func (c *Copier) CopyFrom(ipPort, dstDir string, files []string) error {
 	defer sftpClient.Close()
 	// check if dst dir exists
 	if _, err := os.Lstat(dstDir); err != nil {
-		err = os.Mkdir(dstDir, 0755)
+		err = os.MkdirAll(dstDir, 0755)
 		if err != nil {
 			log.Errorf("Copier | CopyFrom failed to creating local directory. | Dir: %v,  Err: %v", dstDir, err)
 			return err
