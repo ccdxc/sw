@@ -3,8 +3,9 @@
 WS_TOP="/sw"
 TOPDIR="/sw/nic"
 BUILD_DIR=${TOPDIR}/build/x86_64/iris/
+TESTDIR=$(pwd)
 
-export OPERD_REGIONS="./operd-regions.json"
+export OPERD_REGIONS="${TESTDIR}/operd-regions.json"
 export PENLOG_LOCATION="."
 export NO_WATCHDOG=1
 
@@ -30,6 +31,8 @@ popd
 
 pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
 
+cd ${TESTDIR}
+
 runtest () {
     tm=$1
     shift
@@ -38,7 +41,7 @@ runtest () {
     lines=("$@")
     rm -rf *.log core.* /tmp/delphi* *.out.log* *.err.log* /dev/shm/*
     echo Running $json test
-    timeout -k $tm $tm ${BUILD_DIR}/bin/sysmgr $json .
+    timeout -k $tm $tm ${BUILD_DIR}/bin/sysmgr ${TESTDIR}/$json .
     ${BUILD_DIR}/bin/operdctl dump sysmgr > sysmgr.log
     cat *.log
     for ln in "${lines[@]}"
@@ -58,7 +61,8 @@ runtest () {
 runtest 10s test.json "Service example2 started"
 
 runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12" \
-        "ProcessStatus example2, .*, 4, Exited normally with code: 12"
+        "ProcessStatus example2, .*, 4, Exited normally with code: 12" \
+        "Service example3 exited normally"
 
 runtest 120s test-critical-watchdog.json "Service example2 timed out" \
         "System in fault mode" "Simulation Watchdog Expired"

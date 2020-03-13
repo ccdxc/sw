@@ -228,10 +228,8 @@ void Service::on_child(pid_t pid)
 
     std::string reason = parse_status(this->child_watcher->get_status());
 
-    if (this->spec->kind != SERVICE_ONESHOT) {
-        g_log->info("Service %s %s", this->spec->name.c_str(), reason.c_str());
-        g_events->ServiceStoppedEvent(this->spec->name);
-        run_debug(this->pid);
+    if (this->timer_watcher != nullptr) {
+        this->timer_watcher->stop();
     }
 
     // Remove specific cgroup membership of the PID.
@@ -243,6 +241,18 @@ void Service::on_child(pid_t pid)
     }
     if (spec->cpuset.length() != 0) {
         cg_reset(CG_CPUSET, this->pid);
+    }
+
+    if (is_exit_status_zero(this->child_watcher->get_status())) {
+        g_log->info("Service %s exited normally",
+                    this->spec->name.c_str());
+        return;
+    }
+    
+    if (this->spec->kind != SERVICE_ONESHOT) {
+        g_log->info("Service %s %s", this->spec->name.c_str(), reason.c_str());
+        g_events->ServiceStoppedEvent(this->spec->name);
+        run_debug(this->pid);
     }
 
     // SERVICE_CONFIG_STATE_OFF means we killed the process, don't worry about

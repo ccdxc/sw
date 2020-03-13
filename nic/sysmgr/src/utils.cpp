@@ -257,6 +257,12 @@ void switch_root()
     exit(-1);
 }
 
+bool
+is_exit_status_zero (int status)
+{
+    return (WIFEXITED(status) && (WEXITSTATUS(status) == 0));
+}
+
 std::string parse_status(int status)
 {
     if (WIFEXITED(status))

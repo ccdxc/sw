@@ -41,5 +41,6 @@ extern std::string get_logname_for_process(std::string name, int pid,
                                            std::string suffix);
 extern std::string get_main_config_file();
 extern void        run_debug(pid_t crashed_pid);
+extern bool        is_exit_status_zero(int status);
 
 #endif // __UTILS_HPP__

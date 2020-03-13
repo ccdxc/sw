@@ -1,7 +1,7 @@
 [{
     "name": "script",
     "kind": "oneshot",
-    "command": "ls",
+    "command": "./one-shot.sh",
     "dependencies": [],
     "flags": [],
     "timeout": 0.0

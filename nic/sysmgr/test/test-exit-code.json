@@ -30,4 +30,19 @@
     ],
     "flags": [],
     "timeout": 30.0
+}, {
+    "name": "example3",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example3 --exit 0",
+    "dependencies": [
+	{
+	    "kind": "service",
+	    "service-name": "delphi"
+	},
+	{
+	    "kind": "service",
+	    "service-name": "example1"
+	}
+    ],
+    "flags": [],
+    "timeout": 30.0
 }]
