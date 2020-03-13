@@ -6,8 +6,11 @@ nic/apollo/tools/$PIPELINE/start-nmd.sh                           /nic/tools/
 # global config files
 nic/conf/$PIPELINE/pipeline-venice.json                           /nic/conf/pipeline.json
 nic/sysmgr/src/$PIPELINE/pipeline-venice.json                     /nic/conf/sysmgr.json
-nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/conf/$PIPELINE/techsupport_venice.json                        /nic/conf/techsupport.json
+nic/conf/$PIPELINE/device-pf2.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf6.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf6.json                                /nic/conf/device.json
+nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/
 
 # system level tools
 nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bringup_mgmt_ifs.sh

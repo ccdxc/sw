@@ -1,8 +1,11 @@
 # global config files
 nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
 nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
-nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/conf/$PIPELINE/techsupport.json                               /nic/conf/
+nic/conf/$PIPELINE/device-pf2.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf6.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/device.json
 
 # system level tools
 nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs.sh                    /nic/tools/

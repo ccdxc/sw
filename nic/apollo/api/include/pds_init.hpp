@@ -55,6 +55,10 @@ typedef struct pds_init_params_s {
     std::string               pipeline;         ///< P4 program pipeline name
                                                 ///< only "apollo" supported now
     pds_scale_profile_t       scale_profile;    ///< scale profile for pipeline
+                                                ///< NOTE: memory carving config
+                                                ///<       is picked based on
+                                                ///<        this profile
+    std::string               device_profile;   ///< PF/VF device profile
     std::string               cfg_file;         ///< config files directory path
                                                 ///< all config files are present,
                                                 ///< files under \<cfg_path\>/pipeline/
