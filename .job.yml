@@ -155,6 +155,10 @@ jobs:
     labels: ["precommit"]
   iota/test/standalone/precheckin/esx:
     labels: ["precommit"]
+  iota/test/standalone/precheckin/linux:
+    labels: ["precommit"]
+  iota/test/standalone/precheckin/freebsd:
+    labels: ["precommit"]
   iota/test/standalone/sanity/freebsd:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/esx:
@@ -245,11 +249,11 @@ dependencies:
   iota:
     - reference: iota/test/venice
       exclude_dirs: ["harness", "test/iris", "test/apollo"]
-    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
       exclude_dirs: ["test/venice", "test/apollo","test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["test/venice", "test/iris"]
@@ -276,23 +280,23 @@ dependencies:
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
     - reference: api
     - reference: test/ci_targets/e2e
   nic/asm:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
   nic/buildroot:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/conf:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   nic/conf/apulu:
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
@@ -301,25 +305,25 @@ dependencies:
   nic/delphi:
     - reference: iota/test/standalone/sanity/linux
   nic/fte:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/precheckin/esx
   nic/hal:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/swm
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
 #   - reference: iota/test/standalone/sanity/apulu-networking
   nic/linkmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
   nic/metaswitch:
     - reference: nic/apollo
     - reference: iota/test/standalone/sanity/apulu-networking
@@ -327,37 +331,37 @@ dependencies:
   nic/p4-hlir:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
   nic/p4:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
   nic/proto:
     - reference: api
     - reference: venice/ui
     - reference: iota/test/standalone/precheckin/esx
   nic/sdk:
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
     - reference: nic/apollo
       #    - reference: iota/test/standalone/sanity/swm
   nic/sysmgr:
     - reference: iota/test/venice
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/precheckin/esx    # for testing upgrade support in sysmgr
   nic/third-party:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
   nic/tools:
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/venice
       exclude_dirs: ["arm_compiler","asic_sw_combined_sanity","client","gcov","hal","jenkins","ncc","package","server", "valgrind"]
   nic/tools/ncc:
@@ -368,7 +372,7 @@ dependencies:
   nic/upgrade_manager:
     - reference: iota/test/standalone/precheckin/esx
   nic/utils:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   nic/utils/ftl:
     - reference: iota/test/standalone/precheckin/esx
   nic/vpp:
@@ -395,50 +399,50 @@ dependencies:
   platform/drivers:
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["freebsd"]
-    - reference: iota/test/standalone/sanity/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
       exclude_dirs: ["linux","esxi"]
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["freebsd","esxi"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["freebsd","esxi"]
     - reference: iota/test/standalone/sanity/apulu-networking-scale
       exclude_dirs: ["freebsd","esxi"]
   platform/src/app/asicerrord:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/captrace:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/cpld:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/diag:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/fructl:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/nicmgrd:
     - reference: nic/apollo
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
       #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/nicmgr:
     - reference: nic/apollo
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/freebsd
-    - reference: iota/test/standalone/sanity/linux
+   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
       #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/devapi_iris:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
       #- reference: iota/test/standalone/sanity/swm
   platform/src/app/pciemgrd:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
     - reference: nic/apollo
   platform/src/app/pcieutil/src:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   platform/src/app/sysmond:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
  # platform:
  #   - reference: nic/apollo
  #     exclude_dirs: ["doc", "drivers"]
@@ -473,4 +477,4 @@ dependencies:
     - reference: test/ci_targets/e2e
   penctl:
     - reference: iota/test/standalone/precheckin/esx
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux

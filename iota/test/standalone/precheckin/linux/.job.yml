@@ -1,0 +1,80 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+rebase: true
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+ e2e-linux-bm:
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_basenet --precheckin --skip-sanity"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:tony@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+     - build-iris-arm-elba
+   clusters:
+     - image: build-17
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type can be naples, mellanox, or raw
+         nic-type: naples
+         # Required when RDMA is enabled
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ e2e-linux-bm-unified:
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_flowaware"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:tony@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-17
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type can be naples, mellanox, or raw
+         nic-type: naples
+         # Required when RDMA is enabled
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/all_corefiles.tgz
