@@ -357,6 +357,7 @@ Status
     }
 
   {{if (HasSuffix $rpc "Get") }}
+    pds_ms_dump_{{$respMsgName| ToLower}}(proto_resp);
     pds_ms_convert_{{$respMsgName | ToLower}}_ext_response (proto_resp, resp);
   {{end}}
     return Status::OK;

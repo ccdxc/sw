@@ -477,7 +477,7 @@
                     {{if (eq .GetTypeName ".types.IPAddress")}}
                     auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
                     types::IPAddress   res_{{$fieldOpt.Field}};
-                    ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}};
+                    ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}} = {0};
                       {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
                     pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
                                                           v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type,
