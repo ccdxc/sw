@@ -486,6 +486,7 @@ class ConfigClientBase(base.ConfigClientBase):
             return False
         if not self.HttpRead(node):
             return False
+        logger.info(f"Read & Validated {self.ObjType.name} Objects from {node}")
         return True
 
     #TODO: cleanup APIs & deprecate

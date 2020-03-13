@@ -245,6 +245,21 @@ tep_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
 void
 tep_entry::fill_spec_(pds_tep_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
+    spec->type = type_;
+    spec->remote_ip = remote_ip_;
+    spec->remote_svc = remote_svc_;
+    if (is_mac_set(mac_)) {
+        memcpy(spec->mac, mac_, ETH_ADDR_LEN);
+    }
+    spec->encap = fabric_encap_;
+    spec->nh_type = nh_type_;
+    if (nh_type_ == PDS_NH_TYPE_UNDERLAY) {
+        spec->nh = nh_;
+    } else if (nh_type_ == PDS_NH_TYPE_UNDERLAY_ECMP) {
+        spec->nh_group = nh_group_;
+    } else if (nh_type_ == PDS_NH_TYPE_OVERLAY) {
+        spec->tep = tep_;
+    }
 }
 
 sdk_ret_t

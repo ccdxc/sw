@@ -190,25 +190,28 @@ class TunnelObject(base.ConfigObjectBase):
             return False
         if utils.ValidateTunnelEncap(self.Node, self.EncapValue, spec.Encap) == False:
             return False
-        if utils.ValidateRpcIPAddr(self.LocalIPAddr, spec.LocalIP) == False:
-            return False
+        # TODO: LocalIP is optional & unused
+        # if utils.ValidateRpcIPAddr(self.LocalIPAddr, spec.LocalIP) == False:
+        #     return False
         if utils.ValidateRpcIPAddr(self.RemoteIPAddr, spec.RemoteIP) == False:
             return False
         if spec.Type != self.Type:
             return False
-        if spec.Nat != self.Nat:
-            return False
-        if not utils.IsPipelineApollo():
+        if utils.IsPipelineApollo():
+            if spec.Nat != self.Nat:
+                return False
+        else:
             if spec.MACAddress != self.MACAddr.getnum():
                 return False
         if utils.IsServiceTunnelSupported():
             if self.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and self.Remote is True:
                 if spec.RemoteService != self.Remote:
                     return False
-                if utils.ValidateRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP) == False:
-                    return False
-                if utils.ValidateTunnelEncap(self.Node, self.RemoteServiceEncap, spec.RemoteServiceEncap) == False:
-                    return False
+                # TODO: artemis
+                # if utils.ValidateRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP) == False:
+                #     return False
+                # if utils.ValidateTunnelEncap(self.Node, self.RemoteServiceEncap, spec.RemoteServiceEncap) == False:
+                #     return False
         return True
 
     def ValidateYamlSpec(self, spec):
