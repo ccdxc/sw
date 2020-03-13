@@ -101,6 +101,7 @@ testbundles:
         #- classic/rdma_reg.testbundle
         #- classic/rdma_stress.testbundle
         #- classic/rdma_longevity.testbundle
+        #- classic/rdma_reg_dcqcn.testbundle
         - tso/tso_regr.testbundle
         - rss/rss.testbundle
         - classic/driver-features.testbundle

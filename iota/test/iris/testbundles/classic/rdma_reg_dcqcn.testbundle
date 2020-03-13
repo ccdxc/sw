@@ -1,0 +1,451 @@
+meta:
+    name    : rdma_reg_dcqcn
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox ]
+    targetcount : 300
+
+testcases:
+    #=======================================
+    # Init
+    #=======================================
+    -   name    : Build_Rdma
+        testcase: testcases.rdma.build_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Insmod_Rdma
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Ping Pong
+    #=======================================
+    #-   name    : Rc_PingPong
+    #    testcase: testcases.rdma.rc_pingpong
+    #    args    :
+    #        type: remote_only
+
+    #-   name    : Ud_PingPong
+    #    testcase: testcases.rdma.ud_pingpong
+    #    args    :
+    #        type: remote_only
+
+    #=======================================
+    # Packet Sweep
+    #=======================================
+    -   name    : RC_TCPCM_Packet_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8, 64]
+            server   : [ 'yes', 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_TCPCM_127QPs
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [127]
+            server   : [ 'yes', 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_TCPCM_1KQPs
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            server   : [ 'yes', 'no']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_TCPCM_1KQPs_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_TCPCM_4KQPs_Send_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [10]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_4KQPs_Read_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            enable_dcqcn : ['yes']
+            command  : ['ib_read_bw']
+
+    -   name    : RC_TCPCM_4KQPs_Write_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            enable_dcqcn : ['yes']
+            command  : ['ib_write_bw']
+
+    -   name    : RC_RDMACM_Packet_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            rdma_cm  : [ 'yes']
+            server   : [ 'yes', 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['RC']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : UD_TCPCM_Packet_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8, 64, 127]
+            server   : [ 'yes', 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['UD']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+
+    -   name    : UD_RDMACM_Packet_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            rdma_cm  : [ 'yes']
+            server   : [ 'yes', 'no']
+            mtu      : [512, 1024, 2048, 4096]
+            transport: ['UD']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+
+    #=======================================
+    # Multi SGE test: Send
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Send_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8, 100]
+            bidir    : ['yes']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            transport: ['RC']
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Read
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Read_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 100]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            bidir    : ['yes']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            transport: ['RC']
+            enable_dcqcn : ['yes']
+            command  : ['ib_read_bw']
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Multi SGE test: Write
+    #=======================================
+    -   name    : Rc_Bw_MultiSges_Write_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [8]
+            server   : [ 'yes', 'no']
+            mtu      : [4096, 2048, 1024]
+            size     : [65536, 32768, 16384]
+            numsges  : [2, 4, 8, 16]
+            command  : ['ib_write_bw']
+            enable_dcqcn : ['yes']
+        args    :
+            type: remote_only
+
+    #===================================================================
+    # Goal is to trigger backtrack by keeping higer txdepth than rxdepth
+    # and also disable spec (with 16sges on spec =8 config)
+    #===================================================================
+    -   name    : RC_TCPCM_1KQPs_Send_BackTrack_wSpec
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            rxdepth  : [10]
+            txdepth  : [64]
+            size     : [65536, 1048576]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_1KQPs_Send_BackTrack_woSpec
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            rxdepth  : [10]
+            txdepth  : [64]
+            size     : [65536, 1048576]
+            numsges  : [16]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_1KQPs_Read_Write_BackTrack
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [64]
+            size     : [65536, 1048576]
+            numsges  : [16]
+            enable_dcqcn : ['yes']
+            command  : ['ib_read_bw', 'ib_write_bw']
+
+    #===================================================================
+    #TODO: Disable Pause and Test with Mellanox for Back Track coverage
+    #====================================================================
+
+    #===================================================================
+    #TODO: Disable spec (spec=0) and run the regular tests
+    #====================================================================
+
+    #=======================================
+    # RPing
+    #=======================================
+    -   name    : Rping
+        testcase: testcases.rdma.rping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            pktsize : [23, 32, 64, 65, 128, 256, 512, 1024, 1025, 2048, 4096, 8191, 8192, 9131, 16384, 65535]
+            server  : [ 'yes', 'no']
+
+    #=======================================
+    # KRping Sweep
+    #=======================================
+    -   name    : KRping_Sweep_Size
+        testcase: testcases.rdma.krping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes']
+            size: [64,128,256,512,700,801,1024,2048,4096,8192,16384,32768,65536,131072]
+            count: [1000,1501]
+            enable_dcqcn : ['yes']
+
+    -   name    : KRping_Sweep_TxDepth_Count
+        testcase: testcases.rdma.krping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes', 'no']
+            size: [4096]
+            txdepth: [256, 512, 1021]
+            count: [5,100,1500]
+            enable_dcqcn : ['yes']
+
+    -   name    : KRping_Bw
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            bw      : ['yes']
+            duplex  : ['yes']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            txdepth : [128,256,512]
+            count   : [1000000]
+            enable_dcqcn : ['yes']
+
+    -   name    : KRping_Wlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            wlat    : ['yes']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            txdepth : [128]
+            count   : [100000]
+            enable_dcqcn : ['yes']
+
+    -   name    : KRping_Rlat
+        testcase: testcases.rdma.krping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            rlat    : ['yes']
+            poll   : ['yes', 'no']
+            size    : [64,128,256,1024,4096,16384,65535,131072]
+            txdepth : [128]
+            count   : [100000]
+            enable_dcqcn : ['yes']
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Init spec = 16
+    #=======================================
+    -   name    : Insmod_Rdma_Spec
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+            spec: '16'
+            reload: '5'
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #==============================
+    # Multi Sge: 16x2 WQE format
+    #==============================
+    -   name    : Rc_Fml_9Sge_Server
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            mtu      : [4096]
+            size     : [9216, 18432, 18018, 63009]
+            count    : [1000]
+            numsges  : [9]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+
+    #==========================================
+    # 16 SGEs with size multiple of MTU and NOT
+    #==========================================
+    -   name    : Rc_Fml_16Sge_Size_Pow_Of_2
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            mtu      : [4096]
+            size     : [16384, 32768, 65536]
+            count    : [1000]
+            numsges  : [16]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+
+    -   name    : Rc_Bw_16Sge_Size_Not_Pow_Of_2
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            mtu      : [4096]
+            size     : [32000, 64000, 64512]
+            count    : [1000]
+            numsges  : [16]
+            enable_dcqcn : ['yes']
+            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Rmmod_Rdma_Spec
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+            reload: '5'
