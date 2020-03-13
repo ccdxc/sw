@@ -146,7 +146,7 @@
             "conntrack_burst_size" : 4096,
             "conntrack_burst_resched_time_us" : 10,
             "sw_pollers" : 4,
-            "sw_poller_qdepth" : 1024,
+            "sw_poller_qdepth" : 4096,
             "qos_group" : "DEFAULT"
         }
     ]

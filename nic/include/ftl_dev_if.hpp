@@ -368,6 +368,7 @@ typedef struct {
 } lif_attr_scanners_metrics_t;
 
 typedef struct {
+    uint64_t   total_num_qposts;
     uint64_t   total_num_qfulls;
 } lif_attr_pollers_metrics_t;
 

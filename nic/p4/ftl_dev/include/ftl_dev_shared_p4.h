@@ -245,18 +245,21 @@ header_type poller_cb_t {
         CAPRI_QSTATE_HEADER_RING(0)
         pi_0_shadow                     : 16;
         qdepth_shft                     : 8;
+        pad0                            : 8;
         wring_base_addr                 : 64;
+        num_qposts                      : 64;
         num_qfulls                      : 64;
     }
 }
 
 #define POLLER_CB_PRAGMA                                                        \
-@pragma little_endian pi_0 ci_0 pi_0_shadow wring_base_addr num_qfulls          \
+@pragma little_endian pi_0 ci_0 pi_0_shadow wring_base_addr                     \
+    num_qposts num_qfulls                                                       \
 
 #define POLLER_CB_DATA                                                          \
     pc_offset, rsvd, cosA, cosB, cos_sel, eval_last,                            \
     host, total, pid, pi_0, ci_0, pi_0_shadow,                                  \
-    qdepth_shft, wring_base_addr, num_qfulls                                    \
+    qdepth_shft, pad0, wring_base_addr, num_qposts, num_qfulls                  \
     
 #define POLLER_CB_USE(scratch)                                                  \
     modify_field(scratch.pc_offset, pc_offset);                                 \
@@ -272,7 +275,9 @@ header_type poller_cb_t {
     modify_field(scratch.ci_0, ci_0);                                           \
     modify_field(scratch.pi_0_shadow, pi_0_shadow);                             \
     modify_field(scratch.qdepth_shft, qdepth_shft);                             \
+    modify_field(scratch.pad0, pad0);                                           \
     modify_field(scratch.wring_base_addr, wring_base_addr);                     \
+    modify_field(scratch.num_qposts, num_qposts);                               \
     modify_field(scratch.num_qfulls, num_qfulls);                               \
     
 /*
@@ -301,54 +306,101 @@ header_type poller_slot_data_t {
  * Session info data -
  * TODO: how to get this structure from P4 code
  */
-#define session_info_d      session_info_common_d
-
-header_type session_info_common_d {
+header_type session_info_d {
     fields {
-        valid_flag                      : 1;
+        skip_flow_log                   : 1;
         conntrack_id                    : 22;
-        timestamp                       : 16;
-        h2s_throttle_pps_id             : 13;
-        h2s_throttle_bw_id              : 13;
+        timestamp                       : 18;
+        smac                            : 48;
+        h2s_epoch_vnic_value            : 16;
+        h2s_epoch_vnic_id               : 20;
+        h2s_epoch_mapping_value         : 16;
+        h2s_epoch_mapping_id            : 20;
+        h2s_throttle_bw1_id             : 13;
+        h2s_throttle_bw2_id             : 13;
         h2s_vnic_statistics_id          : 9;
-        h2s_vnic_statistics_mask        : 16;
-        h2s_vnic_histogram_id           : 9;
-        s2h_throttle_pps_id             : 13;
-        s2h_throttle_bw_id              : 13;
+        h2s_vnic_statistics_mask        : 32;
+        h2s_vnic_histogram_packet_len_id: 9;
+        h2s_vnic_histogram_latency_id   : 9;
+        h2s_slow_path_tcp_flags_match   : 8;
+        h2s_session_rewrite_id          : 22;
+        h2s_egress_action               : 3;
+        h2s_allowed_flow_state_bitmap   : 10;
+        s2h_epoch_vnic_value            : 16;
+        s2h_epoch_vnic_id               : 20;
+        s2h_epoch_mapping_value         : 16;
+        s2h_epoch_mapping_id            : 20;
+        s2h_throttle_bw1_id             : 13;
+        s2h_throttle_bw2_id             : 13;
         s2h_vnic_statistics_id          : 9;
-        s2h_vnic_statistics_mask        : 16;
-        s2h_vnic_histogram_id           : 9;
+        s2h_vnic_statistics_mask        : 32;
+        s2h_vnic_histogram_packet_len_id: 9;
+        s2h_vnic_histogram_latency_id   : 9;
+        s2h_slow_path_tcp_flags_match   : 8;
+        s2h_session_rewrite_id          : 22;
+        s2h_egress_action               : 3;
+        s2h_allowed_flow_state_bitmap   : 10;
+        valid_flag                      : 1;
     }
 }
 
 #define SESSION_INFO_DATA                                                       \
-    valid_flag, conntrack_id, timestamp,                                        \
-    h2s_throttle_pps_id, h2s_throttle_bw_id, h2s_vnic_statistics_id,            \
-    h2s_vnic_statistics_mask, h2s_vnic_histogram_id, s2h_throttle_pps_id,       \
-    s2h_throttle_bw_id, s2h_vnic_statistics_id, s2h_vnic_statistics_mask,       \
-    s2h_vnic_histogram_id                                                       \
+    skip_flow_log, conntrack_id, timestamp, smac,                               \
+    h2s_epoch_vnic_value, h2s_epoch_vnic_id, h2s_epoch_mapping_value,           \
+    h2s_epoch_mapping_id, h2s_throttle_bw1_id, h2s_throttle_bw2_id,             \
+    h2s_vnic_statistics_id, h2s_vnic_statistics_mask,                           \
+    h2s_vnic_histogram_packet_len_id, h2s_vnic_histogram_latency_id,            \
+    h2s_slow_path_tcp_flags_match, h2s_session_rewrite_id,                      \
+    h2s_egress_action, h2s_allowed_flow_state_bitmap,                           \
+    s2h_epoch_vnic_value, s2h_epoch_vnic_id,                                    \
+    s2h_epoch_mapping_value, s2h_epoch_mapping_id,                              \
+    s2h_throttle_bw1_id, s2h_throttle_bw2_id,                                   \
+    s2h_vnic_statistics_id, s2h_vnic_statistics_mask,                           \
+    s2h_vnic_histogram_packet_len_id, s2h_vnic_histogram_latency_id,            \
+    s2h_slow_path_tcp_flags_match, s2h_session_rewrite_id,                      \
+    s2h_egress_action, s2h_allowed_flow_state_bitmap, valid_flag                \
 
 #define SESSION_INFO_USE(scratch)                                               \
-    modify_field(scratch.valid_flag, valid_flag);                               \
+    modify_field(scratch.skip_flow_log, skip_flow_log);                         \
     modify_field(scratch.conntrack_id, conntrack_id);                           \
     modify_field(scratch.timestamp, timestamp);                                 \
-    modify_field(scratch.h2s_throttle_pps_id, h2s_throttle_pps_id);             \
-    modify_field(scratch.h2s_throttle_bw_id, h2s_throttle_bw_id);               \
+    modify_field(scratch.smac, smac);                                           \
+    modify_field(scratch.h2s_epoch_vnic_value, h2s_epoch_vnic_value);           \
+    modify_field(scratch.h2s_epoch_vnic_id, h2s_epoch_vnic_id);                 \
+    modify_field(scratch.h2s_epoch_mapping_value, h2s_epoch_mapping_value);     \
+    modify_field(scratch.h2s_epoch_mapping_id, h2s_epoch_mapping_id);           \
+    modify_field(scratch.h2s_throttle_bw1_id, h2s_throttle_bw1_id);             \
+    modify_field(scratch.h2s_throttle_bw2_id, h2s_throttle_bw2_id);             \
     modify_field(scratch.h2s_vnic_statistics_id, h2s_vnic_statistics_id);       \
     modify_field(scratch.h2s_vnic_statistics_mask, h2s_vnic_statistics_mask);   \
-    modify_field(scratch.h2s_vnic_histogram_id, h2s_vnic_histogram_id);         \
-    modify_field(scratch.s2h_throttle_pps_id, s2h_throttle_pps_id);             \
-    modify_field(scratch.s2h_throttle_bw_id, s2h_throttle_bw_id);               \
+    modify_field(scratch.h2s_vnic_histogram_packet_len_id, h2s_vnic_histogram_packet_len_id);\
+    modify_field(scratch.h2s_vnic_histogram_latency_id, h2s_vnic_histogram_latency_id);\
+    modify_field(scratch.h2s_slow_path_tcp_flags_match, h2s_slow_path_tcp_flags_match);\
+    modify_field(scratch.h2s_session_rewrite_id, h2s_session_rewrite_id);       \
+    modify_field(scratch.h2s_egress_action, h2s_egress_action);                 \
+    modify_field(scratch.h2s_allowed_flow_state_bitmap, h2s_allowed_flow_state_bitmap);\
+    modify_field(scratch.s2h_epoch_vnic_value, s2h_epoch_vnic_value);           \
+    modify_field(scratch.s2h_epoch_vnic_id, s2h_epoch_vnic_id);                 \
+    modify_field(scratch.s2h_epoch_mapping_value, s2h_epoch_mapping_value);     \
+    modify_field(scratch.s2h_epoch_mapping_id, s2h_epoch_mapping_id);           \
+    modify_field(scratch.s2h_throttle_bw1_id, s2h_throttle_bw1_id);             \
+    modify_field(scratch.s2h_throttle_bw2_id, s2h_throttle_bw2_id);             \
     modify_field(scratch.s2h_vnic_statistics_id, s2h_vnic_statistics_id);       \
     modify_field(scratch.s2h_vnic_statistics_mask, s2h_vnic_statistics_mask);   \
-    modify_field(scratch.s2h_vnic_histogram_id, s2h_vnic_histogram_id);         \
+    modify_field(scratch.s2h_vnic_histogram_packet_len_id, s2h_vnic_histogram_packet_len_id);\
+    modify_field(scratch.s2h_vnic_histogram_latency_id, s2h_vnic_histogram_latency_id);\
+    modify_field(scratch.s2h_slow_path_tcp_flags_match, s2h_slow_path_tcp_flags_match);\
+    modify_field(scratch.s2h_session_rewrite_id, s2h_session_rewrite_id);       \
+    modify_field(scratch.s2h_egress_action, s2h_egress_action);                 \
+    modify_field(scratch.s2h_allowed_flow_state_bitmap, s2h_allowed_flow_state_bitmap);\
+    modify_field(scratch.valid_flag, valid_flag);                               \
 
 header_type conntrack_info_d {
     fields {
         valid_flag                      : 1;
         flow_type                       : 2;
         flow_state                      : 4;
-        timestamp                       : 48;
+        timestamp                       : 18;
     }
 }
 

@@ -10,6 +10,8 @@
 
 #include "app_test_utils.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include <rte_atomic.h>
 
 namespace test {
 namespace athena_app {
@@ -106,7 +108,7 @@ test_param_t::num(uint32_t *ret_num,
 
     *ret_num = 0;
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Numeric token not found\n");
+        TEST_LOG_ERR("Numeric token not found\n");
     }
     return SDK_RET_ERR;
 }
@@ -122,7 +124,7 @@ test_param_t::str(std::string *ret_str,
 
     ret_str->clear();
     if (!suppress_err_log) {
-        TEST_LOG_INFO("String token not found\n");
+        TEST_LOG_ERR("String token not found\n");
     }
     return SDK_RET_ERR;
 }
@@ -150,7 +152,7 @@ test_param_t::bool_val(bool *ret_bool,
     default:
         *ret_bool = false;
         if (!suppress_err_log) {
-            TEST_LOG_INFO("Bool token not found\n");
+            TEST_LOG_ERR("Bool token not found\n");
         }
         return SDK_RET_ERR;
 
@@ -168,7 +170,7 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
     case TOKEN_TYPE_NUM:
         if (num_ > (uint32_t)PDS_FLOW_TYPE_OTHERS) {
             if (!suppress_err_log) {
-                TEST_LOG_INFO("Invalid flow type %u\n", num_);
+                TEST_LOG_ERR("Invalid flow type %u\n", num_);
             }
             return SDK_RET_ERR;
         }
@@ -179,7 +181,7 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
         const pds_flow_type_t *find_val = flowtype2num_find(str_);
         if (!find_val) {
             if (!suppress_err_log) {
-                TEST_LOG_INFO("Invalid flow type %s\n", str_.c_str());
+                TEST_LOG_ERR("Invalid flow type %s\n", str_.c_str());
             }
             return SDK_RET_ERR;
         }
@@ -189,7 +191,7 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
 
     default:
         if (!suppress_err_log) {
-            TEST_LOG_INFO("Flow type token not found\n");
+            TEST_LOG_ERR("Flow type token not found\n");
         }
         return SDK_RET_ERR;
 
@@ -207,7 +209,7 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
     case TOKEN_TYPE_NUM:
         if (num_ > (uint32_t)REMOVED) {
             if (!suppress_err_log) {
-                TEST_LOG_INFO("Invalid flow state %u\n", num_);
+                TEST_LOG_ERR("Invalid flow state %u\n", num_);
             }
             return SDK_RET_ERR;
         }
@@ -218,7 +220,7 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
         const pds_flow_state_t *find_val = flowstate2num_find(str_);
         if (!find_val) {
             if (!suppress_err_log) {
-                TEST_LOG_INFO("Invalid flow state %s\n", str_.c_str());
+                TEST_LOG_ERR("Invalid flow state %s\n", str_.c_str());
             }
             return SDK_RET_ERR;
         }
@@ -228,7 +230,7 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
 
     default:
         if (!suppress_err_log) {
-            TEST_LOG_INFO("Flow state token not found\n");
+            TEST_LOG_ERR("Flow state token not found\n");
         }
         return SDK_RET_ERR;
     }
@@ -246,7 +248,7 @@ test_param_t::tuple(test_param_tuple_t *ret_tuple,
 
     ret_tuple->clear();
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Tuple not found\n");
+        TEST_LOG_ERR("Tuple not found\n");
     }
     return SDK_RET_ERR;
 }
@@ -266,7 +268,7 @@ test_vparam_t::num(uint32_t idx,
 
     *ret_num = 0;
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Numeric token not found at index %u\n", idx);
+        TEST_LOG_ERR("Numeric token not found at index %u\n", idx);
     }
     return SDK_RET_ERR;
 }
@@ -283,7 +285,7 @@ test_vparam_t::str(uint32_t idx,
 
     ret_str->clear();
     if (!suppress_err_log) {
-        TEST_LOG_INFO("String token not found at index %u\n", idx);
+        TEST_LOG_ERR("String token not found at index %u\n", idx);
     }
     return SDK_RET_ERR;
 }
@@ -300,7 +302,7 @@ test_vparam_t::flowtype(uint32_t idx,
 
     *ret_flowtype = PDS_FLOW_TYPE_TCP;
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Flow type token not found at index %u\n", idx);
+        TEST_LOG_ERR("Flow type token not found at index %u\n", idx);
     }
     return SDK_RET_ERR;
 }
@@ -317,7 +319,7 @@ test_vparam_t::flowstate(uint32_t idx,
 
     *ret_flowstate = UNESTABLISHED;
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Flow state token not found at index %u\n", idx);
+        TEST_LOG_ERR("Flow state token not found at index %u\n", idx);
     }
     return SDK_RET_ERR;
 }
@@ -334,7 +336,7 @@ test_vparam_t::tuple(uint32_t idx,
 
     ret_tuple->clear();
     if (!suppress_err_log) {
-        TEST_LOG_INFO("Tuple not found at index %u\n", idx);
+        TEST_LOG_ERR("Tuple not found at index %u\n", idx);
     }
     return SDK_RET_ERR;
 }
@@ -511,6 +513,8 @@ aging_metrics_t::show(bool latest) const
     case ftl_dev_if::FTL_QTYPE_SCANNER_SESSION:
     case ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK:
 
+        TEST_LOG_INFO("\nScanners metrics:"
+                      "\n-----------------\n");
         TEST_LOG_INFO("total_cb_cfg_discards   : %" PRIu64 "\n", 
                       curr.scanners.total_cb_cfg_discards);
         TEST_LOG_INFO("total_scan_invocations  : %" PRIu64 "\n",
@@ -528,6 +532,11 @@ aging_metrics_t::show(bool latest) const
         break;
 
     case ftl_dev_if::FTL_QTYPE_POLLER:
+
+        TEST_LOG_INFO("\nPollers metrics:"
+                      "\n----------------\n");
+        TEST_LOG_INFO("total_num_qposts        : %" PRIu64 "\n", 
+                      curr.pollers.total_num_qposts);
         TEST_LOG_INFO("total_num_qfulls        : %" PRIu64 "\n", 
                       curr.pollers.total_num_qfulls);
         break;
@@ -574,13 +583,13 @@ aging_tmo_cfg_t::reset(void)
 
     failures.clear();
     ret = is_accel_tmo ?
-          pds_flow_age_accel_timeouts_set(&tmo_rec) :
-          pds_flow_age_normal_timeouts_set(&tmo_rec);
+          pds_flow_age_accel_timeouts_get(&tmo_rec) :
+          pds_flow_age_normal_timeouts_get(&tmo_rec);
 
     if (ret != SDK_RET_OK) {
-        TEST_LOG_INFO("Failed to set %s timeouts\n",
-                      is_accel_tmo ? "accelerated" : "normal");
-        failures.counters.set++;
+        TEST_LOG_ERR("Failed to get %s timeouts\n",
+                     is_accel_tmo ? "accelerated" : "normal");
+        failures.counters.get++;
     }
 }
 
@@ -621,7 +630,7 @@ aging_tmo_cfg_t::conntrack_tmo_set(pds_flow_type_t flowtype,
             tmo_rec.tcp_rst_tmo = tmo_val;
             break;
         default:
-            TEST_LOG_INFO("Invalid TCP flowstate %u\n", flowstate);
+            TEST_LOG_ERR("Invalid TCP flowstate %u\n", flowstate);
             errors++;
             break;
         }
@@ -637,7 +646,7 @@ aging_tmo_cfg_t::conntrack_tmo_set(pds_flow_type_t flowtype,
             tmo_rec.udp_est_tmo = tmo_val;
             break;
         default:
-            TEST_LOG_INFO("Invalid UDP flowstate %u\n", flowstate);
+            TEST_LOG_ERR("Invalid UDP flowstate %u\n", flowstate);
             errors++;
             break;
         }
@@ -652,7 +661,7 @@ aging_tmo_cfg_t::conntrack_tmo_set(pds_flow_type_t flowtype,
         break;
 
     default:
-        TEST_LOG_INFO("Invalid flowtype %u\n", flowtype);
+        TEST_LOG_ERR("Invalid flowtype %u\n", flowtype);
         errors++;
         break;
     }
@@ -741,8 +750,8 @@ aging_tmo_cfg_t::tmo_set(void)
           pds_flow_age_normal_timeouts_set(&tmo_rec);
 
     if (ret != SDK_RET_OK) {
-        TEST_LOG_INFO("Failed to set %s timeouts\n",
-                      is_accel_tmo ? "accelerated" : "normal");
+        TEST_LOG_ERR("Failed to set %s timeouts\n",
+                     is_accel_tmo ? "accelerated" : "normal");
         failures.counters.set++;
     }
 }
@@ -751,10 +760,11 @@ aging_tmo_cfg_t::tmo_set(void)
  * Aging results, with tolerance
  */
 void 
-aging_tolerance_t::reset(create_id_map_mode_t mode)
+aging_tolerance_t::reset(uint32_t ids_max)
 {
-    create_id_map_mode = mode;
+    num_ids_max = ids_max;
     create_count_ = 0;
+    erase_count_ = 0;
     expiry_count_ = 0;
     create_id_map.clear();
     failures.clear();
@@ -763,8 +773,15 @@ aging_tolerance_t::reset(create_id_map_mode_t mode)
 
     /*
      * Note: we don't reset accel_control to allow caller to test
-     * with whichever control is currently active.
+     * with whichever control is currently active. Neither do we
+     * reset tolerance_secs.
      */
+}
+
+void 
+aging_tolerance_t::tolerance_secs_set(uint32_t tolerance_secs)
+{
+    this->tolerance_secs = tolerance_secs;
 }
 
 void 
@@ -773,8 +790,8 @@ aging_tolerance_t::age_accel_control(bool enable_sense)
     if (pds_flow_age_accel_control(enable_sense) == SDK_RET_OK) {
         curr_tmo = enable_sense ? accel_tmo : normal_tmo;
     } else {
-        TEST_LOG_INFO("Failed to set accelerated aging control %u\n",
-                      enable_sense);
+        TEST_LOG_ERR("Failed to set accelerated aging control %u\n",
+                     enable_sense);
         failures.counters.accel_control++;
     }
 }
@@ -782,8 +799,10 @@ aging_tolerance_t::age_accel_control(bool enable_sense)
 void 
 aging_tolerance_t::create_id_map_insert(uint32_t id)
 {
-    if (create_id_map_mode == CREATE_ID_MAP_WITH_IDS) {
-         if (!create_id_map.insert(id)) {
+    if (create_map_with_ids()) {
+         if (create_id_map.insert(id)) {
+             create_count_++;
+         } else {
 
              /*
               * We can tolerate id_map insertion failure for 2 reasons:
@@ -792,7 +811,7 @@ aging_tolerance_t::create_id_map_insert(uint32_t id)
               * 2) A test using random IDs may end up getting same IDs
               *    randomly generated
               *
-             TEST_LOG_INFO("entry_id %u could not be added to id_map\n", id);
+             TEST_LOG_ERR("entry_id %u could not be added to id_map\n", id);
              failures.counters.create_add++;
              */
          }
@@ -809,15 +828,17 @@ aging_tolerance_t::create_id_map_insert(uint32_t id)
 void 
 aging_tolerance_t::create_id_map_find_erase(uint32_t id)
 {
-    if (create_id_map_mode == CREATE_ID_MAP_WITH_IDS) {
-        if (!create_id_map.find_erase(id)) {
-            TEST_LOG_INFO("entry_id %u was not created for this test\n", id);
+    if (create_map_with_ids()) {
+        if (create_id_map.find_erase(id)) {
+            erase_count_++;
+        } else {
+            TEST_LOG_ERR("entry_id %u was not created for this test\n", id);
             failures.counters.create_erase++;
         }
-    } else if (create_count_) {
-        create_count_--;
+    } else if (erase_count_ < create_count_) {
+        erase_count_++;
     } else {
-        TEST_LOG_INFO("entry_id %u not removable (empty id_map)\n", id);
+        TEST_LOG_ERR("entry_id %u not removable or already removed\n", id);
         failures.counters.create_erase++;
     }
 }
@@ -825,17 +846,22 @@ aging_tolerance_t::create_id_map_find_erase(uint32_t id)
 uint32_t 
 aging_tolerance_t::create_id_map_size(void)
 {
-    return create_id_map_mode == CREATE_ID_MAP_WITH_IDS ?
+    return create_map_with_ids() ?
            create_id_map.size() : create_count_;
 }
 
 void 
 aging_tolerance_t::create_id_map_empty_check(void)
 {
-    if (create_id_map_size()) {
-        TEST_LOG_INFO("Not all entries were aged out, remaining count: %u\n",
-                      create_id_map_size());
-        failures.counters.create_empty++;
+    uint32_t    rem_count;
+
+    rem_count = create_map_with_ids() ?
+                create_id_map.size() :
+                (create_count_ - erase_count_);
+    if (rem_count) {
+        TEST_LOG_ERR("Not all entries were aged out, remaining count: %u\n",
+                     rem_count);
+        failures.counters.empty_check++;
     }
 }
 
@@ -849,9 +875,11 @@ aging_tolerance_t::session_tmo_tolerance_check(uint32_t id)
     pds_flow_session_info_t info;
 
     /*
-     * Only HW has real timestamp applicable for tolerance check
+     * Only HW has real timestamp applicable for tolerance check.
+     * However, this involves a read which is very expensive
+     * so it is taken or skipped based on user configuration.
      */
-    if (hw()) {
+    if (hw() && tolerance_secs) {
         flow_session_key_init(&key);
         key.session_info_id = id;
         if (pds_flow_session_info_read(&key, &info) == SDK_RET_OK) {
@@ -874,9 +902,11 @@ aging_tolerance_t::conntrack_tmo_tolerance_check(uint32_t id)
     uint32_t                applic_tmo;
 
     /*
-     * Only HW has real timestamp applicable for tolerance check
+     * Only HW has real timestamp applicable for tolerance check.
+     * However, this involves a read which is very expensive
+     * so it is taken or skipped based on user configuration.
      */
-    if (hw()) {
+    if (hw() && tolerance_secs) {
         flow_conntrack_key_init(&key);
         key.conntrack_id = id;
         if (pds_conntrack_state_read(&key, &info) == SDK_RET_OK) {
@@ -899,13 +929,13 @@ aging_tolerance_t::tmo_tolerance_check(uint32_t id,
 
     delta_secs = mpu_timestamp2secs(curr_ts - entry_ts);
     if (delta_secs < applic_tmo_secs) {
-        TEST_LOG_INFO("entry_id %u aged out in less than timeout of %u seconds "
-                      "(actual: %u)\n", id, applic_tmo_secs, delta_secs);
+        TEST_LOG_ERR("entry_id %u aged out in less than timeout of %u seconds "
+                     "(actual: %u)\n", id, applic_tmo_secs, delta_secs);
         failures.counters.ts_tolerance++;
     } else if ((delta_secs - applic_tmo_secs) > tolerance_secs) {
-        TEST_LOG_INFO("entry_id %u took extra %u seconds to age out "
-                      "(tolerance is %u seconds)\n",
-                      id, delta_secs - applic_tmo_secs, tolerance_secs);
+        TEST_LOG_ERR("entry_id %u took extra %u seconds to age out "
+                     "(tolerance is %u seconds)\n",
+                     id, delta_secs - applic_tmo_secs, tolerance_secs);
         failures.counters.ts_tolerance++;
     }
 }
@@ -926,6 +956,28 @@ uint32_t
 mpu_timestamp2secs(uint32_t mpu_timestamp)
 {
     return mpu_timestamp / 100;
+}
+
+void
+mpu_tmr_wheel_update(void)
+{
+#if 0 //def __x86_64__
+
+    /*
+     * Should enable this code only for a cursory test to see if
+     * a LIF timer would trigger at least once. Otherwise, keep it
+     * disabled as model code can take excessively long to execute
+     * its timer wheels.
+     */
+    static rte_atomic32_t   slow_tmr_ctime = RTE_ATOMIC32_INIT(0);
+    static rte_atomic32_t   fast_tmr_ctime = RTE_ATOMIC32_INIT(0);
+
+    rte_atomic32_add(&slow_tmr_ctime, SCANNER_RANGE_EMPTY_RESCHED_TICKS);
+    step_tmr_wheel_update(false, (unsigned)rte_atomic32_read(&slow_tmr_ctime));
+
+    rte_atomic32_add(&fast_tmr_ctime, 10);
+    step_tmr_wheel_update(true, (unsigned)rte_atomic32_read(&fast_tmr_ctime));
+#endif
 }
 
 

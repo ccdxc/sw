@@ -32,7 +32,7 @@ script_parser_t::script_parser_t(const string& scripts_dir,
 
     file.open(full_fname.c_str());
     if (!file.is_open()) {
-        TEST_LOG_INFO("failed to open script file %s\n", full_fname.c_str());
+        TEST_LOG_ERR("failed to open script file %s\n", full_fname.c_str());
     }
 }
 

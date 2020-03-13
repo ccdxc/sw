@@ -101,6 +101,7 @@ typedef struct pds_flow_session_spec_s {
 
 /// \brief Session status
 typedef struct pds_flow_session_status_s {
+    uint32_t    timestamp;          ///< Current timestamp
 } __PACK__ pds_flow_session_status_t;
 
 /// \brief Session info

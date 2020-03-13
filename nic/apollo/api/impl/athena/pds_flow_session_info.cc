@@ -14,6 +14,13 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "gen/p4gen/athena/include/p4pd.h"
+#include "nic/sdk/asic/pd/pd.hpp"
+
+#define FLOW_SESSION_INFO_FASTER_DELETE
+
+#ifndef BITS_PER_BYTE
+#define BITS_PER_BYTE   8
+#endif
 
 using namespace sdk;
 
@@ -280,13 +287,17 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
     session_info =
         &session_actiondata.action_u.session_info_session_info;
     if (!session_info->valid_flag) {
-        PDS_TRACE_ERR("No entry in session info table at index %u",
-                      session_info_id);
+
+        // Reading an entry to see if it's valid is a normal action
+        // so no need to log.
+        // PDS_TRACE_ERR("No entry in session info table at index %u",
+        //               session_info_id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     info->spec.data.conntrack_id = session_info->conntrack_id;
     info->spec.data.skip_flow_log = session_info->skip_flow_log;
+    info->status.timestamp = session_info->timestamp;
     memcpy(info->spec.data.host_mac, session_info->smac, ETH_ADDR_LEN);
     flow_session_info_spec_fill(&info->spec, session_info, key->direction);
     return SDK_RET_OK;
@@ -297,6 +308,36 @@ pds_flow_session_info_update (pds_flow_session_spec_t *spec)
 {
     return pds_flow_session_info_write(spec, true);
 }
+
+#ifdef FLOW_SESSION_INFO_FASTER_DELETE
+static int
+flow_session_info_delete(uint32_t session_info_id,
+                         session_info_actiondata_t *null_actiondata)
+{
+    static p4pd_table_properties_t tbl_ctx;
+
+    if (!tbl_ctx.hbm_layout.entry_width) {
+        p4pd_global_table_properties_get(P4TBL_ID_SESSION_INFO, &tbl_ctx);
+        if (!tbl_ctx.hbm_layout.entry_width ||
+            (sizeof(session_info_actiondata_t) < tbl_ctx.hbm_layout.entry_width)) {
+            PDS_TRACE_ERR("Failed entry_width %u or sizeof unpacked "
+                          "session_info_actiondata_t %u error",
+                          tbl_ctx.hbm_layout.entry_width,
+                          (unsigned)sizeof(session_info_actiondata_t));
+            return SDK_RET_HW_PROGRAM_ERR;
+        }
+    }
+
+    // Preference is to write only the few bytes that contain valid_flag
+    // but there's no direct asicpd API to do that. The alternative is to
+    // break into separate calls to capri_hbm_table_entry_write() and
+    // capri_hbm_table_entry_cache_invalidate() but that's too much trouble.
+
+    return sdk::asic::pd::asicpd_hbm_table_entry_write(P4TBL_ID_SESSION_INFO,
+                          session_info_id, (uint8_t *)null_actiondata,
+                          tbl_ctx.hbm_layout.entry_width * BITS_PER_BYTE);
+}
+#endif
 
 sdk_ret_t
 pds_flow_session_info_delete (pds_flow_session_key_t *key)
@@ -320,10 +361,13 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
         PDS_TRACE_ERR("Direction %u is invalid", key->direction);
         return SDK_RET_INVALID_ARG;
     }
-
+#ifdef FLOW_SESSION_INFO_FASTER_DELETE
+    p4pd_ret = flow_session_info_delete(session_info_id, &session_actiondata);
+#else
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_SESSION_INFO,
                                        session_info_id, NULL, NULL,
                                        &session_actiondata);
+#endif
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to delete session info table at index %u",
                       session_info_id);

@@ -29,7 +29,7 @@
 #include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/include/ftl_dev_if.hpp"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x)   (sizeof(x) / sizeof((x)[0]))
@@ -37,6 +37,9 @@
 
 #define TEST_LOG_INFO(args...)                      \
     printf(args)
+
+#define TEST_LOG_ERR(args...)                       \
+    printf("ERROR: " args)
 
 
 namespace test {
@@ -159,7 +162,7 @@ public:
     bool zero_failures(void)
     { 
         if (fail_count) {
-            TEST_LOG_INFO("Tuple evaluation failed\n");
+            TEST_LOG_ERR("Tuple evaluation failed\n");
             return false;
         }
         return true;
@@ -282,7 +285,7 @@ public:
                counters.ts_tolerance    +
                counters.create_add      +
                counters.create_erase    +
-               counters.create_empty;
+               counters.empty_check;
     }
 
     friend class aging_tolerance_t;
@@ -295,14 +298,13 @@ private:
         uint32_t                ts_tolerance;
         uint32_t                create_add;
         uint32_t                create_erase;
-        uint32_t                create_empty;
+        uint32_t                empty_check;
     } counters;
 };
 
 /*
  * Aging result, with tolerance
  */
-#define AGING_TOLERANCE_DFLT                3   /* seconds */
 
 /*
  * Two modes of usage of create_id_map inside aging_tolerance_t:
@@ -310,27 +312,25 @@ private:
  * 2) Count only, suitable for large scale testing where it may not
  *    be memory efficient to store hundreds of thousands of IDs.
  */
-typedef enum {
-    CREATE_ID_MAP_WITH_IDS,
-    CREATE_ID_MAP_COUNT_ONLY,
-} create_id_map_mode_t;
+#define AGING_TOLERANCE_STORE_ID_THRESH     16384
 
 class aging_tolerance_t
 {
 public:
-    aging_tolerance_t(create_id_map_mode_t mode = CREATE_ID_MAP_WITH_IDS,
-                      uint32_t tolerance_secs = AGING_TOLERANCE_DFLT) :
+    aging_tolerance_t(uint32_t num_ids_max = AGING_TOLERANCE_STORE_ID_THRESH) :
         normal_tmo(false),
         accel_tmo(true),
         curr_tmo(normal_tmo),
-        create_id_map_mode(mode),
-        tolerance_secs(tolerance_secs),
+        num_ids_max(num_ids_max),
+        tolerance_secs(0),
         create_count_(0),
+        erase_count_(0),
         expiry_count_(0) {}
 
     ~aging_tolerance_t() { create_id_map.clear(); }
 
-    void reset(create_id_map_mode_t mode = CREATE_ID_MAP_WITH_IDS);
+    void reset(uint32_t ids_max = AGING_TOLERANCE_STORE_ID_THRESH);
+    void tolerance_secs_set(uint32_t tolerance_secs);
     void age_accel_control(bool enable_sense);
     void session_tmo_tolerance_check(uint32_t id);
     void conntrack_tmo_tolerance_check(uint32_t id);
@@ -341,7 +341,13 @@ public:
     void create_id_map_empty_check(void);
 
     void expiry_count_inc(void) { expiry_count_++; }
+    uint32_t create_count(void) { return create_count_; }
     uint32_t expiry_count(void) { return expiry_count_; }
+
+    bool create_map_with_ids(void)
+    {
+        return num_ids_max <= AGING_TOLERANCE_STORE_ID_THRESH;
+    }
 
     uint32_t fail_count(void)
     { 
@@ -362,12 +368,13 @@ private:
                              uint32_t applic_tmo_secs);
 
     aging_tmo_cfg_t&            curr_tmo;
-    create_id_map_mode_t        create_id_map_mode;
+    uint32_t                    num_ids_max;
     uint32_t                    tolerance_secs;
     tolerance_fail_count_t      failures;
 
     id_map_t                    create_id_map;
     uint32_t                    create_count_;
+    uint32_t                    erase_count_;
     uint32_t                    expiry_count_;
 };
 
@@ -414,12 +421,14 @@ private:
 #define USEC_PER_SEC    1000000L
 #endif
 
-#define APP_TIME_LIMIT_EXEC_SECS(s)         ((s) * USEC_PER_SEC)
+#define APP_TIME_LIMIT_EXEC_SECS(s)         ((uint64_t)(s) * USEC_PER_SEC)
 #ifdef __x86_64__
 #define APP_TIME_LIMIT_EXEC_DFLT            300 /* seconds */
 #else
-#define APP_TIME_LIMIT_EXEC_DFLT            120 /* seconds */
+#define APP_TIME_LIMIT_EXEC_DFLT            180 /* seconds */
 #endif
+
+#define APP_TIME_LIMIT_USLEEP_DFLT          10000 /* 10ms */
 
 static inline uint64_t
 timestamp(void)
@@ -427,8 +436,11 @@ timestamp(void)
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec * USEC_PER_SEC + tv.tv_usec);
+    return (((uint64_t)tv.tv_sec * USEC_PER_SEC) +
+            (uint64_t)tv.tv_usec);
 }
+
+void mpu_tmr_wheel_update(void);
 
 /**
  * Generic timestamp and expiry interval
@@ -455,13 +467,28 @@ public:
     }
 
     void time_limit_exec(time_limit_exec_fn_t fn,
-                         void *user_ctx = nullptr)
+                         void *user_ctx = nullptr,
+                         uint32_t sleep_us = APP_TIME_LIMIT_USLEEP_DFLT)
     {
         while (!time_expiry_check()) {
             if ((*fn)(user_ctx)) {
                 break;
             }
-            usleep(10000);
+
+            mpu_tmr_wheel_update();
+
+            /*
+             * Always need a sleep to yield on SIM platform;
+             * whereas it'll be up to the caller on HW platform.
+             */
+            if (hw()) {
+                if (sleep_us) {
+                    usleep(sleep_us);
+                }
+            } else {
+                usleep(sleep_us > APP_TIME_LIMIT_USLEEP_DFLT ?
+                       sleep_us : APP_TIME_LIMIT_USLEEP_DFLT);
+            }
         }
     }
 

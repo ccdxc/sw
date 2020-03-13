@@ -33,6 +33,7 @@ static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
  * Global tolerance for use across multiple linked tests
  */
 static aging_tolerance_t    glb_tolerance;
+static aging_metrics_t      conntrack_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
 
 static inline void
 conntrack_spec_init(pds_conntrack_spec_t *spec)
@@ -40,8 +41,16 @@ conntrack_spec_init(pds_conntrack_spec_t *spec)
     memset(spec, 0, sizeof(*spec));
 }
 
-static bool
-conntrack_clear_full(test_vparam_ref_t vparam)
+bool
+conntrack_aging_tolerance_secs_set(test_vparam_ref_t vparam)
+{
+    uint32_t secs = vparam.expected_num();
+    glb_tolerance.tolerance_secs_set(secs);
+    return true;
+}
+
+bool
+conntrack_aging_clear_full(test_vparam_ref_t vparam)
 {
     pds_conntrack_key_t key;
     uint32_t    depth;
@@ -52,7 +61,7 @@ conntrack_clear_full(test_vparam_ref_t vparam)
     TEST_LOG_INFO("Clearing %u conntrack entries\n", depth);
 
     flow_conntrack_key_init(&key);
-    for (key.conntrack_id = 0;
+    for (key.conntrack_id = 1;
          key.conntrack_id < depth;
          key.conntrack_id++) {
 
@@ -64,15 +73,17 @@ conntrack_clear_full(test_vparam_ref_t vparam)
     return CONNTRACK_DELETE_RET_VALIDATE(ret);
 }
 
-static bool
-conntrack_populate_simple(test_vparam_ref_t vparam,
-                          aging_tolerance_t& tolerance)
+bool
+conntrack_populate_simple(test_vparam_ref_t vparam)
 {
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
     sdk_ret_t               ret = SDK_RET_OK;
 
+    conntrack_metrics.baseline();
     conntrack_spec_init(&spec);
+
+    glb_tolerance.reset(vparam.size());
     for (uint32_t i = 0; i < vparam.size(); i++) {
 
         /*
@@ -90,24 +101,25 @@ conntrack_populate_simple(test_vparam_ref_t vparam,
         if (!CONNTRACK_CREATE_RET_VALIDATE(ret)) {
             break;
         }
-        tolerance.create_id_map_insert(spec.key.conntrack_id);
+        glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
     }
 
     TEST_LOG_INFO("Conntrack entries created: %d\n",
-                  tolerance.create_id_map_size());
+                  glb_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
-static bool
-conntrack_populate_random(test_vparam_ref_t vparam,
-                          aging_tolerance_t& tolerance)
+bool
+conntrack_populate_random(test_vparam_ref_t vparam)
 {
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
     uint32_t                start_idx;
-    uint32_t                count;
+    uint32_t                count = 0;
     bool                    randomize_typestate;
     sdk_ret_t               ret = SDK_RET_OK;
+
+    conntrack_metrics.baseline();
 
     /*
      * 3 possible different sets of parameters:
@@ -142,11 +154,12 @@ conntrack_populate_random(test_vparam_ref_t vparam,
         break;
 
     default:
-        TEST_LOG_INFO("Too many tuples specified, only a max of 2 needed\n");
+        TEST_LOG_ERR("Too many tuples specified, only a max of 2 needed\n");
         ret = SDK_RET_INVALID_ARG;
         break;
     }
 
+    glb_tolerance.reset(count);
     if (tuple_eval.zero_failures() && CONNTRACK_RET_VALIDATE(ret)) {
         TEST_LOG_INFO("start_idx: %u count: %u\n", start_idx, count);
         for (uint32_t i = 0; i < count; i++) {
@@ -158,31 +171,37 @@ conntrack_populate_random(test_vparam_ref_t vparam,
             if (randomize_typestate) {
                 spec.data.flow_type = (pds_flow_type_t)
                      randomize_max((uint32_t)PDS_FLOW_TYPE_OTHERS, true);
+                /*
+                 * Exclude REMOVED state as it would not be aged
+                 */
                 spec.data.flow_state = (pds_flow_state_t)
-                     randomize_max((uint32_t)REMOVED, true);
+                     randomize_max((uint32_t)RST_CLOSE, true);
             }
 
             ret = pds_conntrack_state_create(&spec);
             if (!CONNTRACK_CREATE_RET_VALIDATE(ret)) {
                 break;
             }
-            tolerance.create_id_map_insert(spec.key.conntrack_id);
+            if (spec.data.flow_state != REMOVED) {
+                glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
+            }
         }
     }
 
     TEST_LOG_INFO("Conntrack entries created: %u\n",
-                  tolerance.create_id_map_size());
+                  glb_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
-static bool
-conntrack_populate_full(test_vparam_ref_t vparam,
-                        aging_tolerance_t& tolerance)
+bool
+conntrack_populate_full(test_vparam_ref_t vparam)
 {
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
     uint32_t                depth;
     sdk_ret_t               ret = SDK_RET_OK;
+
+    conntrack_metrics.baseline();
 
     /*
      * Here we expect tuple of the form {flowtype flowstate depth}
@@ -191,6 +210,8 @@ conntrack_populate_full(test_vparam_ref_t vparam,
     spec.data.flow_type = tuple_eval.flowtype(0);
     spec.data.flow_state = tuple_eval.flowstate(1);
     depth = tuple_eval.num(2);
+
+    glb_tolerance.reset(depth);
     if (tuple_eval.zero_failures()) {
         conntrack_spec_init(&spec);
         depth = std::min(depth, conntrack_table_depth);
@@ -203,12 +224,12 @@ conntrack_populate_full(test_vparam_ref_t vparam,
             if (!CONNTRACK_CREATE_RET_VALIDATE(ret)) {
                 break;
             }
-            tolerance.create_id_map_insert(spec.key.conntrack_id);
+            glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
         }
     }
 
     TEST_LOG_INFO("Conntrack entries created: %u\n",
-                  tolerance.create_id_map_size());
+                  glb_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
@@ -219,10 +240,12 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
 {
     aging_tolerance_t   *tolerance;
 
-    tolerance = static_cast<aging_tolerance_t *>(user_ctx);
-    tolerance->expiry_count_inc();
-    tolerance->conntrack_tmo_tolerance_check(expiry_id);
-    tolerance->create_id_map_find_erase(expiry_id);
+    if (expiry_type == EXPIRY_TYPE_CONNTRACK) {
+        tolerance = static_cast<aging_tolerance_t *>(user_ctx);
+        tolerance->expiry_count_inc();
+        tolerance->conntrack_tmo_tolerance_check(expiry_id);
+        tolerance->create_id_map_find_erase(expiry_id);
+    }
     return (*aging_expiry_dflt_fn)(expiry_id, expiry_type, nullptr);
 }
                              
@@ -256,7 +279,8 @@ conntrack_aging_init(test_vparam_ref_t vparam)
     if (CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_hw_scanners_start();
     }
-    conntrack_table_depth = ftl_pollers_client::conntrack_table_depth_get();
+    conntrack_table_depth = std::min(ftl_pollers_client::conntrack_table_depth_get(),
+                                     (uint32_t)PDS_CONNTRACK_ID_MAX);
 
     return CONNTRACK_RET_VALIDATE(ret) && pollers_qcount && 
            conntrack_table_depth && aging_expiry_dflt_fn;
@@ -311,96 +335,23 @@ conntrack_aging_expiry_count_check(void *user_ctx)
 
     conntrack_aging_pollers_poll(user_ctx);
     tolerance = static_cast<aging_tolerance_t *>(user_ctx);
-    return tolerance->expiry_count() >= tolerance->create_id_map_size();
+    return tolerance->expiry_count() >= tolerance->create_count();
 }
 
 bool
-conntrack_aging_clear_full(test_vparam_ref_t vparam)
-{
-    return conntrack_clear_full(vparam);
-}
-
-bool
-conntrack_aging_simple(test_vparam_ref_t vparam)
+conntrack_aging_test(test_vparam_ref_t vparam)
 {
     test_timestamp_t    ts;
-    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
-    bool                success;
 
-    glb_tolerance.reset();
-    hw_metrics.baseline();
-    success = conntrack_populate_simple(vparam, glb_tolerance);
-    if (success) {
-        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        ts.time_limit_exec(conntrack_aging_expiry_count_check,
-                           (void *)&glb_tolerance);
-        TEST_LOG_INFO("Conntrack entries aged out: %u\n",
-                      glb_tolerance.expiry_count());
-        glb_tolerance.create_id_map_empty_check();
-        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
-        success = conntrack_aging_expiry_count_check((void *)&glb_tolerance) &&
-                  glb_tolerance.zero_failures();
-    }
-    return success;
-}
-
-bool
-conntrack_aging_random(test_vparam_ref_t vparam)
-{
-    test_timestamp_t    ts;
-    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
-    bool                success;
-
-    glb_tolerance.reset();
-    hw_metrics.baseline();
-    success = conntrack_populate_random(vparam, glb_tolerance);
-    if (success) {
-        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        ts.time_limit_exec(conntrack_aging_expiry_count_check,
-                           (void *)&glb_tolerance);
-        TEST_LOG_INFO("Conntrack entries aged out: %u\n",
-                      glb_tolerance.expiry_count());
-        glb_tolerance.create_id_map_empty_check();
-        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
-        success = conntrack_aging_expiry_count_check((void *)&glb_tolerance) &&
-                  glb_tolerance.zero_failures();
-    }
-
-    /*
-     * It was important to testing with random numbers but just in case
-     * there were any issues with the random number generator, we just
-     * log and return success until our confidence level increases.
-     */
-    if (!success && !vparam.size()) {
-        TEST_LOG_INFO("Error detected with random mode\n");
-        success = true;
-    }
-
-    return success;
-}
-
-bool
-conntrack_aging_full(test_vparam_ref_t vparam)
-{
-    test_timestamp_t    ts;
-    aging_metrics_t     hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
-    bool                success;
-
-    glb_tolerance.reset(CREATE_ID_MAP_COUNT_ONLY);
-    hw_metrics.baseline();
-    success = conntrack_populate_full(vparam, glb_tolerance);
-    if (success) {
-        ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-        ts.time_limit_exec(conntrack_aging_expiry_count_check,
-                           (void *)&glb_tolerance);
-        TEST_LOG_INFO("Conntrack entries aged out: %u\n",
-                      glb_tolerance.expiry_count());
-        glb_tolerance.create_id_map_empty_check();
-        hw_metrics.expiry_count_check(glb_tolerance.expiry_count());
-        success = conntrack_aging_expiry_count_check((void *)&glb_tolerance) &&
-                  glb_tolerance.zero_failures();
-    }
-    return success;
+    ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+    ts.time_limit_exec(conntrack_aging_expiry_count_check,
+                       (void *)&glb_tolerance, 0);
+    TEST_LOG_INFO("Conntrack entries aged out: %u\n",
+                  glb_tolerance.expiry_count());
+    glb_tolerance.create_id_map_empty_check();
+    conntrack_metrics.expiry_count_check(glb_tolerance.expiry_count());
+    return conntrack_aging_expiry_count_check((void *)&glb_tolerance) &&
+           glb_tolerance.zero_failures();
 }
 
 bool
@@ -478,9 +429,11 @@ conntrack_aging_accel_control(test_vparam_ref_t vparam)
 bool
 conntrack_aging_metrics_show(test_vparam_ref_t vparam)
 {
-    aging_metrics_t hw_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
+    aging_metrics_t scanner_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
+    aging_metrics_t poller_metrics(ftl_dev_if::FTL_QTYPE_POLLER);
 
-    hw_metrics.show();
+    scanner_metrics.show();
+    poller_metrics.show();
     return true;
 }
 

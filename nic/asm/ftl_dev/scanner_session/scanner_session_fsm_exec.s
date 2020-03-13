@@ -88,7 +88,7 @@ _switch0:
 
   .brcase SCANNER_STATE_RESTART_RANGE
   
-    tblwr       d.range_start_ts, r_timestamp
+    tblwr       d.range_start_ts, r_timestamp[47:0]
     tblwr       d.scan_id_next, d.scan_id_base
     add         r_scan_id_next, d.scan_id_base, r0
 
@@ -185,7 +185,7 @@ _endif2:
     tblwr       d.total_entries_scanned, r_total_entries_scanned
 
     // Calculate elapsed time at end of range
-    sub.c4      r_timestamp, r_timestamp, d.range_start_ts
+    sub.c4      r_timestamp, r_timestamp[47:0], d.range_start_ts
     phvwr.c4    p.session_kivec9_range_elapsed_ticks, r_timestamp
         
     add         r_expiry_map_entries_scanned, r_expiry_map_entries_scanned, \

@@ -54,6 +54,24 @@ name2fn_find(const string &token)
     return nullptr;
 }
 
+void
+timeval_delta(struct timeval& end,
+              const struct timeval& start)
+{
+    uint64_t end_us = ((uint64_t)end.tv_sec * USEC_PER_SEC) +
+                      (uint64_t)end.tv_usec;
+    uint64_t start_us = ((uint64_t)start.tv_sec * USEC_PER_SEC) +
+                        (uint64_t)start.tv_usec;
+
+    end.tv_sec = 0;
+    end.tv_usec = 0;
+    if (end_us > start_us) {
+        end_us -= start_us;
+        end.tv_sec = end_us / USEC_PER_SEC;
+        end.tv_usec = end_us % USEC_PER_SEC;
+    }
+}
+
 sdk_ret_t
 script_exec(const string& scripts_dir,
             const string& script_fname)
@@ -66,7 +84,7 @@ script_exec(const string& scripts_dir,
     test_param_tuple_t  tuple;
     token_type_t        token_type;
     struct timeval      start;
-    struct timeval      end;
+    struct timeval      delta;
     size_t              tcid;
     bool                in_tuple;
     bool                has_app_exit;
@@ -88,8 +106,8 @@ script_exec(const string& scripts_dir,
         if ((token_type != TOKEN_TYPE_STR) ||
             !script_parser->parse_str(&test_name)) {
 
-            TEST_LOG_INFO("Script line %u: first token must be a valid "
-                          "test function name\n", script_parser->line_no());
+            TEST_LOG_ERR("Script line %u: first token must be a valid "
+                         "test function name\n", script_parser->line_no());
             goto done;
         }
 
@@ -101,8 +119,8 @@ script_exec(const string& scripts_dir,
                 (token_type == TOKEN_TYPE_EOF)) {
 
                 if (in_tuple) {
-                    TEST_LOG_INFO("Script line %u: missing tuple terminator\n",
-                                  script_parser->line_no());
+                    TEST_LOG_ERR("Script line %u: missing tuple terminator\n",
+                                 script_parser->line_no());
                     goto done;
                 }
                 break;
@@ -112,8 +130,8 @@ script_exec(const string& scripts_dir,
 
             case TOKEN_TYPE_TUPLE_BEGIN: {
                 if (in_tuple) {
-                    TEST_LOG_INFO("Script line %u: tuple cannot be nested\n",
-                                  script_parser->line_no());
+                    TEST_LOG_ERR("Script line %u: tuple cannot be nested\n",
+                                 script_parser->line_no());
                     goto done;
                 }
                 in_tuple = true;
@@ -122,8 +140,8 @@ script_exec(const string& scripts_dir,
 
             case TOKEN_TYPE_TUPLE_END: {
                 if (!in_tuple) {
-                    TEST_LOG_INFO("Script line %u: out of place tuple terminator\n",
-                                  script_parser->line_no());
+                    TEST_LOG_ERR("Script line %u: out of place tuple terminator\n",
+                                 script_parser->line_no());
                     goto done;
                 }
                 vparam.push_back(test_param_t(tuple));
@@ -135,8 +153,8 @@ script_exec(const string& scripts_dir,
                 string      param_str;
 
                 if (!script_parser->parse_str(&param_str)) {
-                    TEST_LOG_INFO("Script line %u: invalid string parameter\n",
-                                  script_parser->line_no());
+                    TEST_LOG_ERR("Script line %u: invalid string parameter\n",
+                                 script_parser->line_no());
                     goto done;
                 }
                 if (in_tuple) {
@@ -151,8 +169,8 @@ script_exec(const string& scripts_dir,
                 uint32_t    param_num;
 
                 if (!script_parser->parse_num(&param_num)) {
-                    TEST_LOG_INFO("Script line %u: invalid numeric parameter\n",
-                                  script_parser->line_no());
+                    TEST_LOG_ERR("Script line %u: invalid numeric parameter\n",
+                                 script_parser->line_no());
                     goto done;
                 }
                 if (in_tuple) {
@@ -208,10 +226,12 @@ script_exec(const string& scripts_dir,
         test_entry.test_success = test_entry.test_fn ? 
                    test_entry.test_fn(test_entry.vparam) : true;
 
-        gettimeofday(&end, NULL);
-        TEST_LOG_INFO(" Finished test #: %d name: %s status %u time %u secs\n",
+        gettimeofday(&delta, NULL);
+        timeval_delta(delta, start);
+        TEST_LOG_INFO(" Finished test #: %d name: %s status %u time %u secs %u usecs\n",
                       (int)tcid, test_entry.test_name.c_str(),
-                      test_entry.test_success, (unsigned)(end.tv_sec - start.tv_sec));
+                      test_entry.test_success, (unsigned)delta.tv_sec,
+                      (unsigned)delta.tv_usec);
         overall_success &= test_entry.test_success;
     }
 

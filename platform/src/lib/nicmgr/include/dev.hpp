@@ -12,10 +12,7 @@
 #include <vector>
 
 #include "nic/include/globals.hpp"
-
-#ifndef __FTL_DEV_IMPL_HPP__
 #include "pal_compat.hpp"
-#endif
 
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"

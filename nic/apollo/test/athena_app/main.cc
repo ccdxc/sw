@@ -377,16 +377,16 @@ main (int argc, char **argv)
 
     pds_init(&init_params);
 
-#ifndef __x86_64__
+    if (hw()) {
 
-    /*
-     * On HW, delay until all initializations are done in nicmgr thread before
-     * launching probes from fte_init(). Failing this, the failure symptom
-     * would be a crash in DPDK ionic_dev_setup().
-     */
-    printf("Waiting for 40 seconds...\n");
-    sleep(40);
-#endif
+        /*
+         * On HW, delay until all initializations are done in nicmgr thread before
+         * launching probes from fte_init(). Failing this, the failure symptom
+         * would be a crash in DPDK ionic_dev_setup().
+         */
+        printf("Waiting for 60 seconds...\n");
+        sleep(60);
+    }
 
     fte_ath::fte_init();
 

@@ -50,8 +50,8 @@
 /*
  * Session Info (P4 session_info_t)
  */
-#define SESSION_INFO_BYTES                      32     // in bytes
-#define SESSION_INFO_BYTES_SHFT                 5      // log2(SESSION_INFO_BYTES)
+#define SESSION_INFO_BYTES                      64     // in bytes
+#define SESSION_INFO_BYTES_SHFT                 6      // log2(SESSION_INFO_BYTES)
  
 /*
  * Conntrack Info (P4 conntrack_info_t)
@@ -281,9 +281,11 @@ typedef struct {
     qstate_1ring_cb_t       qstate_1ring;
     uint16_t                pi_0_shadow;
     uint8_t                 qdepth_shft;
+    uint8_t                 pad0;
     uint64_t                wring_base_addr;
+    uint64_t                num_qposts;
     uint64_t                num_qfulls;
-    uint8_t                 pad[33];
+    uint8_t                 pad1[24];
 } __attribute__((packed)) poller_qstate_t;
 
 /**

@@ -845,12 +845,12 @@ _inner_label0:;                                                                 
     addi.!c1    r_db_addr, r0, CAPRI_MEM_FAST_TIMER_START;                      \
     add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
     
-#define SCANNER_DB_DATA_TIMER(_qid, _delta_time)                                \
-    add         r_db_data, r0, _qid, TIMER_QID_SHFT;                            \
+#define SCANNER_DB_DATA_TIMER(_qtype, _qid, _delta_time)                        \
+    add         r_db_data, _qtype, _qid, TIMER_QID_SHFT;                        \
     or          r_db_data, r_db_data, _delta_time, TIMER_DELTA_TIME_SHFT;       \
    
-#define SCANNER_DB_DATA_TIMER_WITH_RING(_type, _qid, _ring, _delta_time)        \
-    add         r_db_data, _type, _qid, TIMER_QID_SHFT;                         \
+#define SCANNER_DB_DATA_TIMER_WITH_RING(_qtype, _qid, _ring, _delta_time)       \
+    add         r_db_data, _qtype, _qid, TIMER_QID_SHFT;                        \
     or          r_db_data, r_db_data, _ring, TIMER_RING_SHFT;                   \
     or          r_db_data, r_db_data, _delta_time, TIMER_DELTA_TIME_SHFT;       \
         

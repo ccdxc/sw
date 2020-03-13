@@ -1,0 +1,27 @@
+#Note that the test infra knows the true size of the conntrack table
+#so it's fine to specify larger size parameters here. The infra will
+#automatically reduce it to the actual table size as needed.
+
+conntrack_aging_init
+conntrack_aging_sim_mode false
+conntrack_aging_clear_full 8388608
+conntrack_aging_normal_tmo_set {TCP synack_recv 2} {icmp unestablished 2} {tcp time_wait 2}
+conntrack_populate_full {tcp time_wait 8894304}
+conntrack_aging_test
+conntrack_populate_full {TCP synack_recv 2978152}
+conntrack_aging_test
+
+#random with specified {start_idx count} and random {flowtype flowstate}
+conntrack_populate_random {371 8651}
+conntrack_aging_test
+#random with specified {start_idx count} and specified {flowtype flowstate}
+conntrack_populate_random {526 39607} {tcp established}
+conntrack_aging_test
+#random everything
+conntrack_populate_random
+conntrack_aging_test
+
+conntrack_aging_metrics_show
+conntrack_aging_fini
+conntrack_aging_sim_mode false
+

@@ -342,6 +342,7 @@ private:
 
     void ftl_lif_state_machine(ftl_lif_event_t event);
     ftl_lif_event_t ftl_lif_null_action(ftl_lif_event_t event);
+    ftl_lif_event_t ftl_lif_null_no_log_action(ftl_lif_event_t event);
     ftl_lif_event_t ftl_lif_eagain_action(ftl_lif_event_t event);
     ftl_lif_event_t ftl_lif_reject_action(ftl_lif_event_t event);
     ftl_lif_event_t ftl_lif_create_action(ftl_lif_event_t event);

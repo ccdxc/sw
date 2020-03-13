@@ -33,28 +33,45 @@ session_poller_empty_post_eval:
     bbne        SESSION_KIVEC8_RANGE_HAS_POSTED, 0, session_poller_post
     CLEAR_TABLE0                                                // delay slot
 
-    // On SIM platform (debug capability enabled), let poller 
+#ifndef HW
+
+    // On SIM platform (debug capability enabled), even though
+    // step_tmr_wheel_update() appears to function correctly, it is
+    // rather funky (due to the model's handling of ctime) so let poller 
     // reschedule us rather than using a timer.
     or          r_scratch, SESSION_KIVEC0_FORCE_SESSION_EXPIRED_TS, \
                            SESSION_KIVEC0_FORCE_CONNTRACK_EXPIRED_TS
     bne         r_scratch, r0, session_poller_post
+#endif    
+    phvwri      p.fsm_state_next_state, SCANNER_STATE_RESTART_RANGE // delay slot
     
+    // DMA0 = update FSM state
+    
+    add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
+                SCANNER_SESSION_CB_TABLE_FSM_OFFSET + \
+                SCANNER_STRUCT_BYTE_OFFS(s1_tbl_session_fsm_exec_d, fsm_state)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
+                                r_qstate_addr,
+                                fsm_state_next_state,
+                                fsm_state_next_state)
+
     // When using timer, send an update eval to quiet the scheduler
     // (unless scheduling was already disabled prior).
     //
-    // DMA0 = scheduler update eval
+    // DMA1 = scheduler update eval
     
     SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
                                SESSION_KIVEC0_QTYPE)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_1_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
                                 db_data_no_index_data)
-    // DMA1 = Reschedule with a range empty delay
+
+    // DMA2 = Reschedule with a range empty delay
     
     SCANNER_DB_ADDR_TIMER(SCANNER_RANGE_EMPTY_RESCHED_TIMER,
                           SESSION_KIVEC7_LIF)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_1_dma_cmd,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_2_dma_cmd,
                                              r_db_addr,
                                              db_data_range_empty_ticks_data,
                                              db_data_range_empty_ticks_data)
@@ -95,6 +112,7 @@ _endif4:
                                       
     // Calculate slot address at which to write post data 
     
+    tbladd      d.num_qposts, 1
     tblmincri.f d.pi_0_shadow, d.qdepth_shft, 1
     phvwr       p.poller_posted_pi_pi, r_pi_shadow.hx
     mincr       r_pi_shadow, d.qdepth_shft, -1

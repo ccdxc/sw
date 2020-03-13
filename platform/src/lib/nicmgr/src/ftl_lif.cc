@@ -320,7 +320,7 @@ ftl_lif_state_event_t           FtlLif::lif_queues_init_transition_ev_table[] = 
     },
     {
         FTL_LIF_EV_SCANNERS_START_SINGLE,
-        &FtlLif::ftl_lif_null_action,
+        &FtlLif::ftl_lif_null_no_log_action,
         FTL_LIF_ST_SAME,
     },
     {
@@ -380,6 +380,11 @@ ftl_lif_state_event_t           FtlLif::lif_queues_stopping_ev_table[] = {
         FTL_LIF_ST_POST_INIT,
     },
     {
+        FTL_LIF_EV_SCANNERS_STOP,
+        &FtlLif::ftl_lif_scanners_quiesce_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
         FTL_LIF_EV_SCANNERS_QUIESCE,
         &FtlLif::ftl_lif_scanners_quiesce_action,
         FTL_LIF_ST_SAME,
@@ -391,7 +396,7 @@ ftl_lif_state_event_t           FtlLif::lif_queues_stopping_ev_table[] = {
     },
     {
         FTL_LIF_EV_SCANNERS_START_SINGLE,
-        &FtlLif::ftl_lif_null_action,
+        &FtlLif::ftl_lif_null_no_log_action,
         FTL_LIF_ST_SAME,
     },
     {
@@ -735,6 +740,13 @@ ftl_lif_event_t
 FtlLif::ftl_lif_null_action(ftl_lif_event_t event)
 {
     FTL_LIF_FSM_LOG();
+    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    return FTL_LIF_EV_NULL;
+}
+
+ftl_lif_event_t
+FtlLif::ftl_lif_null_no_log_action(ftl_lif_event_t event)
+{
     fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
     return FTL_LIF_EV_NULL;
 }
@@ -1177,7 +1189,11 @@ FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event)
     FTL_LIF_FSM_VERBOSE_LOG();
 
     fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
-    if (time_expiry_check(fsm_ctx.ts)) {
+    if (session_scanners_ctl.quiesce() && conntrack_scanners_ctl.quiesce()) {
+        quiesce_complete = true;
+    }
+
+    if (!quiesce_complete && time_expiry_check(fsm_ctx.ts)) {
         NIC_LOG_DEBUG("{}: scanners quiesce timed out", LifNameGet());
         NIC_LOG_DEBUG("    last session qid quiesced: {} qid_high: {}",
                       session_scanners_ctl.quiesce_qid(),
@@ -1185,10 +1201,6 @@ FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event)
         NIC_LOG_DEBUG("    last conntrack qid quiesced: {} qid_high: {}",
                       conntrack_scanners_ctl.quiesce_qid(),
                       conntrack_scanners_ctl.qid_high());
-        quiesce_complete = true;
-    }
-
-    if (session_scanners_ctl.quiesce() && conntrack_scanners_ctl.quiesce()) {
         quiesce_complete = true;
     }
 
@@ -2055,6 +2067,7 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
 
                 read_mem_small(qstate_addr, (uint8_t *)&poller_qstate,
                                sizeof(poller_qstate));
+                metrics->pollers.total_num_qposts += poller_qstate.num_qposts;
                 metrics->pollers.total_num_qfulls += poller_qstate.num_qfulls;
                 break;
             }

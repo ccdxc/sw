@@ -152,18 +152,15 @@ scanners_start(void)
     if (lif_init_done()) {
 
         /*
-         * Pre-lock and share the same devcmd block across all scanners start
+         * Scanners_start in nicmgr will start all scanner types (session and
+         * conntrack scanners) regardless of how it is invoked below.
          */
-        devcmd_t devcmd_start(ftl_lif, scanners_lock_all, scanners_unlock_all);
-        devcmd_start.owner_pre_lock();
-
-        ret = session_scanners() ? 
-              session_scanners()->start(&devcmd_start) : SDK_RET_OK;
-
-        if (conntrack_scanners() && (ret == SDK_RET_OK)) {
-            ret = conntrack_scanners()->start(&devcmd_start);
+        ret = SDK_RET_OK;
+        if (session_scanners()) {
+            ret = session_scanners()->start();
+        } else if (conntrack_scanners()) {
+            ret = conntrack_scanners()->start();
         }
-        devcmd_start.owner_pre_unlock();
     }
     return ret;
 }
@@ -174,16 +171,17 @@ scanners_stop(bool quiesce_check)
     sdk_ret_t       ret = SDK_RET_RETRY;
 
     if (lif_init_done()) {
-        devcmd_t devcmd_stop(ftl_lif, scanners_lock_all, scanners_unlock_all);
-        devcmd_stop.owner_pre_lock();
 
-        ret = session_scanners() ? 
-              session_scanners()->stop(quiesce_check, &devcmd_stop) : SDK_RET_OK;
-
-        if (conntrack_scanners() && (ret == SDK_RET_OK)) {
-            ret = conntrack_scanners()->stop(quiesce_check, &devcmd_stop);
+        /*
+         * Scanners_stop in nicmgr will stop all scanner types (session and
+         * conntrack scanners) regardless of how it is invoked below.
+         */
+        ret = SDK_RET_OK;
+        if (session_scanners()) {
+            ret = session_scanners()->stop(quiesce_check);
+        } else if (conntrack_scanners()) {
+            ret = conntrack_scanners()->stop(quiesce_check);
         }
-        devcmd_stop.owner_pre_unlock();
     }
     return ret;
 }

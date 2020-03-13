@@ -2,14 +2,17 @@
 #reduced session table size, probably not much larger than 1024 entries,
 #so the tests below should not try to do any more than that.
 session_aging_init
-session_aging_expiry_log_set TRUE
+#session_aging_expiry_log_set TRUE
 session_aging_sim_mode TRUE
 session_aging_clear_full 1024
-session_aging_full 1011
-session_aging_random_start_count 333 209
-session_aging_random_start_count
+session_populate_full 1011
+session_aging_test
+session_populate_random 333 209
+session_aging_test
+session_populate_random
+session_aging_test
+session_aging_metrics_show
 session_aging_sim_mode FALSE
 session_aging_fini
 session_aging_expiry_log_set FALSE
-session_aging_metrics_show
 app_test_exit

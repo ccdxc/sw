@@ -53,15 +53,18 @@ scanner_session_start:
     bcf         [c1], _scanner_cb_cfg_discard
     phvwr       p.poller_slot_data_scanner_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE // delay slot
     
-    SCANNER_DB_DATA_TIMER(r_qid, d.scan_resched_ticks)
+    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                          r_qid, d.scan_resched_ticks)
     phvwr       p.db_data_burst_ticks_data, r_db_data.dx
     phvwr       p.session_kivec8_resched_uses_slow_timer, \
                 d.resched_uses_slow_timer
     
-    SCANNER_DB_DATA_TIMER(r_qid, SCANNER_POLLER_QFULL_REPOST_TICKS)
+    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                          r_qid, SCANNER_POLLER_QFULL_REPOST_TICKS)
     phvwr       p.db_data_qfull_repost_ticks_data, r_db_data.dx
     
-    SCANNER_DB_DATA_TIMER(r_qid, SCANNER_RANGE_EMPTY_RESCHED_TICKS)
+    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                          r_qid, SCANNER_RANGE_EMPTY_RESCHED_TICKS)
     phvwr       p.db_data_range_empty_ticks_data, r_db_data.dx
     
     /*

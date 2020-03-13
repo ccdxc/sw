@@ -68,7 +68,7 @@ TEST_F(conntrack_test, conntrack_crud) {
 
     memset(&key, 0, sizeof(key));
     key.conntrack_id = 2;
-    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == SDK_RET_ENTRY_NOT_FOUND);
     SDK_ASSERT(info.spec.data.flow_state == 0);
     SDK_ASSERT(info.spec.data.flow_type == 0);
 
