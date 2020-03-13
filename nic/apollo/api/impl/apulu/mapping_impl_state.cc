@@ -441,8 +441,12 @@ mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec) {
     dhcpctl_data_string ipaddr = NULL;
     dhcpctl_data_string mac = NULL;
     dhcpctl_status waitstatus = 0;
-    struct ether_addr eth_addr = {};
     dhcpctl_handle host = NULL;
+
+    if (spec->skey.ip_addr.af != IP_AF_IPV4) {
+        // No V6 support for now
+        return SDK_RET_OK;
+    }
 
     if (!dhcp_connection_) {
         ret = dhcpctl_connect(&dhcp_connection_, k_dhcp_ctl_ip, k_dhcp_ctl_port,
@@ -477,18 +481,16 @@ mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec) {
         PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         return SDK_RET_OOM;
     }
-    memcpy(ipaddr->value, (const void *)&spec->skey.ip_addr.addr.v4_addr,
-           IP4_ADDR8_LEN);
+    sdk::lib::memrev(ipaddr->value, (uint8_t *)&spec->skey.ip_addr.addr.v4_addr, IP4_ADDR8_LEN);
     dhcpctl_set_value (host, ipaddr, "ip-address");
 
     memset(&mac, 0, sizeof(mac));
-    ret = omapi_data_string_new(&mac, sizeof(eth_addr), MDL);
+    ret = omapi_data_string_new(&mac, sizeof(spec->overlay_mac), MDL);
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
         return SDK_RET_OOM;
     }
-    ether_aton_r((const char *)spec->overlay_mac, &eth_addr);
-    memcpy(mac->value, &eth_addr, sizeof(eth_addr));
+    memcpy(mac->value, spec->overlay_mac, sizeof(spec->overlay_mac));
     dhcpctl_set_value(host, mac, "hardware-address");
 
     dhcpctl_set_string_value(host, spec->key.str(), "name");

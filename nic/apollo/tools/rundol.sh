@@ -3,6 +3,7 @@
 DRYRUN=0
 START_VPP=0
 NO_STOP=0
+START_DHCP_SERVER=0
 
 # set file size limit to 30GB so that model logs will not exceed that.
 ulimit -f $((30*1024*1024))
@@ -27,6 +28,10 @@ if [ $DRYRUN == 0 ] && [ $FEATURE == 'rfc' -o $PIPELINE == 'apulu' ]; then
     START_VPP=1
 fi
 
+if [ $DRYRUN == 0 ] && [ $PIPELINE == 'apulu' ]; then
+    START_DHCP_SERVER=1
+fi
+
 CUR_DIR=$( readlink -f $( dirname $0 ) )
 source $CUR_DIR/setup_env_sim.sh $PIPELINE
 
@@ -41,6 +46,7 @@ function stop_process () {
     pstack `pgrep pdsagent` &> $PDSPKG_TOPDIR/pdsagent_bt.log
     pkill agent
     pkill cap_model
+    pkill dhcpd
 }
 
 function start_vpp () {
@@ -54,9 +60,22 @@ function start_vpp () {
     fi
 }
 
+function start_dhcp_server() {
+    if [[ $START_DHCP_SERVER != 1 ]]; then
+        return
+    fi
+    echo "Starting DHCP server"
+    sudo $PDSPKG_TOPDIR/apollo/tools/$PIPELINE/start-dhcpd-sim.sh -p $PIPELINE
+    if [[ $? != 0 ]]; then
+        echo "Failed to start dhcpd!"
+        exit 1
+    fi
+}
+
 function start_process () {
     $PDSPKG_TOPDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
     $PDSPKG_TOPDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
+    start_dhcp_server
     start_vpp
 }
 

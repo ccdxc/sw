@@ -186,16 +186,20 @@ public:
     pds_device_oper_mode_t oper_mode(void) const { return oper_mode_; }
 
     /// \brief return true if L2 bridging is enabled or else false
-    /// \return    true of false based on whether bridging is enabled or not
+    /// \return    true or false based on whether bridging is enabled or not
     bool bridging_enabled(void) const { return bridging_en_; }
 
     /// \brief return true if learning is enabled or else false
-    /// \return    true of false based on whether learning is enabled or not
+    /// \return    true or false based on whether learning is enabled or not
     bool learning_enabled(void) const { return learning_en_; }
 
     /// \brief return the aging timeout for MAC or IP when learning is enabled
     /// \return    aging timeout value in seconds
     uint32_t learn_age_timeout(void) const { return learn_age_timeout_; }
+
+    /// \brief return true if control plane stack is enabled or else false
+    /// \return  true or false based on whether control plane stack is enabled or not
+    bool overlay_routing_enabled(void) const { return overlay_routing_en_; }
 
 private:
     /// \brief constructor
@@ -237,6 +241,8 @@ private:
     bool learning_en_;
     ///< aging timeout in seconds for learnt MAC or IP
     uint32_t learn_age_timeout_;
+    ///< true if control plane stack is enabled
+    bool overlay_routing_en_;
     ///< impl object instance
     impl_base *impl_;
 } __PACK__;

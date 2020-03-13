@@ -97,6 +97,7 @@ device_entry::init_config(api_ctxt_t *api_ctxt) {
     bridging_en_ = spec->bridging_en;
     learning_en_ = spec->learning_en;
     learn_age_timeout_ = spec->learn_age_timeout;
+    overlay_routing_en_ = spec->overlay_routing_en;
     return SDK_RET_OK;
 }
 
@@ -106,7 +107,8 @@ device_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
     if ((oper_mode_ != spec->dev_oper_mode) ||
         (bridging_en_ != spec->bridging_en) ||
-        (learning_en_ != spec->learning_en)) {
+        (learning_en_ != spec->learning_en) ||
+        (overlay_routing_en_ != spec->overlay_routing_en)) {
         PDS_TRACE_WARN("Some of the device obj's attribute changes will take "
                        "affect after next reboot");
     }

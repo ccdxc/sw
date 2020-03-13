@@ -18,6 +18,7 @@ function finish () {
     sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
     if [ $PIPELINE == 'apulu' ]; then
         sudo pkill -9 vpp
+        sudo pkill -9 dhcpd
     fi
 }
 trap finish EXIT
@@ -35,8 +36,14 @@ function setup () {
             echo "Failed to bring up VPP"
             exit -1
         fi
-    fi
 
+        echo "Starting dhcpd"
+        sudo ${PDSPKG_TOPDIR}/apollo/tools/apulu/start-dhcpd-sim.sh -p apulu
+        if [[ $? != 0 ]]; then
+            echo "Failed to bring up dhcpd"
+            exit -1
+        fi
+    fi
 }
 
 function run_gtest () {

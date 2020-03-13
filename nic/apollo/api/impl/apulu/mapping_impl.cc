@@ -784,6 +784,14 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.str());
     if (spec->is_local) {
+        if (!device_find()->overlay_routing_enabled()) {
+            if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+                ret = mapping_impl_db()->insert_dhcp_binding(spec);
+                if (ret != SDK_RET_OK) {
+                    return ret;
+                }
+            }
+        }
         ret = add_local_mapping_entries_(vpc, spec);
         if (ret != SDK_RET_OK) {
             goto error;
@@ -892,6 +900,12 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
             PDS_TRACE_ERR("Failed to delete remote mapping %s, err %u",
                           mapping->key2str().c_str(), ret);
             // continue cleanup !!
+        }
+        if (!device_find()->overlay_routing_enabled()) {
+            if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
+                ret = mapping_impl_db()->remove_dhcp_binding(
+                          mapping->key().str());
+           }
         }
     } else {
         PDS_TRACE_DEBUG("Deleting local mapping %s", mapping->key2str().c_str());
