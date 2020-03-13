@@ -46,9 +46,6 @@
 #define PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1     0
 #define PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2     1
 
-// policer refresh interval in micro seconds
-#define PDS_POLICER_DEFAULT_REFRESH_INTERVAL   2000
-
 // max policer token per interval
 #define PDS_POLICER_MAX_TOKENS_PER_INTERVAL    ((1ull << 39) -1 )
 

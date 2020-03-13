@@ -284,6 +284,7 @@ policer_impl::fill_status_(pds_policer_status_t *status) {
 sdk_ret_t
 policer_impl::fill_spec_(pds_policer_spec_t *spec) {
     p4pd_error_t p4pd_ret;
+    p4pd_table_properties_t tbl_props = { 0 };
     vnic_policer_rx_actiondata_t rx_data;
     vnic_policer_tx_actiondata_t tx_data;
     uint64_t rate, burst;
@@ -302,15 +303,16 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
         POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.rate, rate);
         POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.burst, burst);
 
+        p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
         if (rx_data.vnic_policer_rx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;
             sdk::policer_token_to_rate(rate, burst,
-                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       tbl_props.token_refresh_rate,
                                        &spec->pps, &spec->pps_burst);
         } else {
             spec->type = sdk::POLICER_TYPE_BPS;
             sdk::policer_token_to_rate(rate, burst,
-                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       tbl_props.token_refresh_rate,
                                        &spec->bps, &spec->bps_burst);
         }
     } else if (spec->dir == PDS_POLICER_DIR_EGRESS) {
@@ -323,15 +325,16 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
         POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.rate, rate);
         POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.burst, burst);
 
+        p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
         if (tx_data.vnic_policer_tx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;
             sdk::policer_token_to_rate(rate, burst,
-                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       tbl_props.token_refresh_rate,
                                        &spec->pps, &spec->pps_burst);
         } else {
             spec->type = sdk::POLICER_TYPE_BPS;
             sdk::policer_token_to_rate(rate, burst,
-                                       PDS_POLICER_DEFAULT_REFRESH_INTERVAL,
+                                       tbl_props.token_refresh_rate,
                                        &spec->bps, &spec->bps_burst);
         }
     }
