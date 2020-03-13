@@ -12,7 +12,17 @@ operDown = "down"
 adminUp = "up"
 adminDown = "down"
 verifyRetry = 120 #no of seconds to retry for
+uplinkDict = {UPLINK_PREFIX1: "Uplink0", UPLINK_PREFIX2: "Uplink1"}
 
+def getFirstOperDownPort(node):
+    sleep (3)
+    node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
+    for uplink in [UPLINK_PREFIX1, UPLINK_PREFIX2]:
+        intf_uuid = uplink % node_uuid
+        cmd = "port status -p "+intf_uuid
+        ret, resp = pdsctl.ExecutePdsctlShowCommand(node, cmd, yaml=False)
+        if ret == True and "UP          DOWN" in resp:
+            return uplinkDict[uplink]
 
 def verifyDataPortState(naples_nodes, admin, oper):
     ret = api.types.status.SUCCESS
@@ -38,7 +48,7 @@ def verifyDataPortStateHelper(naples_nodes, admin, oper):
             cmd = "port status -p "+intf_uuid
             ret, resp = pdsctl.ExecutePdsctlShowCommand(node, cmd, yaml=False)
             if ret != True:
-                api.Logger.error("oper:%s uplink verify failed at node %s : %s" %(admin, node, resp))
+                api.Logger.error("oper:%s uplink ret verify failed at node %s : %s" %(admin, node, resp))
                 return api.types.status.FAILURE
             else :
                 ret = api.types.status.SUCCESS #explicitly mark SUCCESS
@@ -59,7 +69,7 @@ def verifyDataPortStateHelper(naples_nodes, admin, oper):
  
 def switchPortFlap(tc):
     flap_count = 1
-    num_ports = 1
+    num_ports = 2
     interval = 2
     down_time  = 2
     naples_nodes = api.GetNaplesHostnames()
@@ -73,13 +83,36 @@ def switchPortFlap(tc):
     sleep(2) #give a short gap before printing status
     return api.types.status.SUCCESS
 
+def switchPortOp(naples_nodes, oper, id):
+    num_ports = 1
+    start_port_id = 1
+    if id == 'Switchport1':
+        start_port_id = 2
+    elif id == "Switchports":
+        num_ports = 2
+    api.Logger.info(f"Oper: {oper} for {id} on {naples_nodes} ...")
+    if oper == 'down':
+        ret = api.ShutDataPorts(naples_nodes, num_ports, start_port_id)
+    else:
+        ret = api.UnShutDataPorts(naples_nodes, num_ports, start_port_id)
+    
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error(f"Failed to bring {oper} : {id}")
+        return ret
+
+    return api.types.status.SUCCESS
+
+
 def setDataPortStatePerUplink(naples_nodes, oper, id):
     uplink_list = []
-    if id == 0:
+    if id == 'Uplink0':
         uplink_list.append(UPLINK_PREFIX1)
-    else :
+    elif id == 'Uplink1':
         uplink_list.append(UPLINK_PREFIX2)
-
+    else:
+        uplink_list.append(UPLINK_PREFIX1)
+        uplink_list.append(UPLINK_PREFIX2)
+        
     for node in naples_nodes:
         node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         #node_uuid = 750763714960

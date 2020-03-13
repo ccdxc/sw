@@ -9,12 +9,13 @@ testcases:
         testcase: testcases.underlay.ping
         stress  : True
         args    :
-            ping_count: 10
+            ping_count: 4
             ping_interval: 0.01
         iterators :
-            type    : nested
-            ipaf    : [ ipv4 ]
-            pktsize : [ 64, 128, 1024 ]
-            intf    : [ loopback, bgp_peer ]
-            shut    : [ none, Uplink0, none, Uplink1, none, both, none ] 
+            type            : nested
+            ipaf            : [ ipv4 ]
+            pktsize         : [ 64, 1024 ]
+            connectivity    : [ underlay_lb, bgp_peer ]
+            interface       : [ uplink0, uplink1, uplinks, switchport0, switchport1, switchports ]
+            port_status     : [ down, up ] 
 

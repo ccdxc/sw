@@ -416,7 +416,14 @@ def FlapDataPorts(nodes, num_ports_per_node = 1, down_time = 5,
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().FlapDataPorts(nodes,
         num_ports_per_node, down_time, flap_count, interval)
 
+def ShutDataPorts(nodes, num_ports_per_node = 1, start_port = 1):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().ShutDataPorts(nodes,
+        num_ports_per_node, start_port)
 
+def UnShutDataPorts(nodes, num_ports_per_node = 1, start_port = 1):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().UnShutDataPorts(nodes,
+        num_ports_per_node, start_port)
+   
 def PrintCommandResults(cmd):
     Logger.SetNode(cmd.node_name)
     Logger.header('COMMAND')

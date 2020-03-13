@@ -1005,6 +1005,78 @@ class Topology(object):
 
         return types.status.SUCCESS
 
+    def ShutDataPorts(self, node_names, num_ports_per_node = 1, start_port = 1):
+        req = topo_pb2.SwitchMsg()
+
+        req.op = topo_pb2.SHUT_PORTS
+        switch_ips = {}
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found to flap port" % node_name)
+                return types.status.FAILURE
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            ports_added = 0
+            port_num = 0
+            for nw in data_networks:
+                port_num = port_num + 1
+                if num_ports_per_node == 1 and port_num != start_port:
+                    #print(f"skip port {port_num} for {node_name}")
+                    continue
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+                #This should from testsuite eventually or each testcase should be able to set
+                ports_added = ports_added +  1
+                if ports_added >= num_ports_per_node:
+                    break
+
+        resp = api.DoSwitchOperation(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
+    def UnShutDataPorts(self, node_names, num_ports_per_node = 1, start_port = 1):
+        req = topo_pb2.SwitchMsg()
+
+        req.op = topo_pb2.NO_SHUT_PORTS
+        switch_ips = {}
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found to flap port" % node_name)
+                return types.status.FAILURE
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            ports_added = 0
+            port_num = 0
+            for nw in data_networks:
+                port_num = port_num + 1
+                if num_ports_per_node == 1 and port_num != start_port:
+                    #print(f"skip port {port_num} for {node_name}")
+                    continue
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+                #This should from testsuite eventually or each testcase should be able to set
+                ports_added = ports_added +  1
+                if ports_added >= num_ports_per_node:
+                    break
+
+        resp = api.DoSwitchOperation(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
+
 
     def Setup(self, testsuite):
         Logger.info("Adding Nodes:")

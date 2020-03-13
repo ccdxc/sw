@@ -8,6 +8,7 @@ import apollo.config.objects.metaswitch.bgp_peer as bgp_peer
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
 from iota.test.apulu.utils.portflap import *
+from iota.test.apulu.utils.hostflap import *
 import apollo.config.objects.device as device
 import apollo.config.utils as utils
 
@@ -24,19 +25,16 @@ def Trigger(tc):
     tc.cmd_cookies = []
     ping_count = getattr(tc.args, "ping_count", 20)
     interval = getattr(tc.args, "ping_interval", 0.01)
-    interface = tc.iterators.intf
+    connectivity = tc.iterators.connectivity
     naplesHosts = api.GetNaplesHostnames()
+    tc_intf = (tc.iterators.interface).capitalize()
+
+    if tc_intf in ['Uplink0', 'Uplink1', 'Uplinks']:
+       setDataPortStatePerUplink(naplesHosts, tc.iterators.port_status, tc_intf)   
+    if tc_intf in ['Switchport0', 'Switchport1', 'Switchports']:
+        switchPortOp(naplesHosts, tc.iterators.port_status, tc_intf)
     
-    if tc.iterators.shut == 'Uplink0':
-        setDataPortStatePerUplink(naplesHosts, "down", 0)
-    elif tc.iterators.shut == 'Uplink1':
-        setDataPortStatePerUplink(naplesHosts, "down", 1)
-    elif tc.iterators.shut == 'both':
-        setDataPortState(naplesHosts, "down")
-    elif tc.iterators.shut == 'none':    
-        setDataPortState(naplesHosts, "up")
-    
-    if interface == 'bgp_peer': 
+    if connectivity == 'bgp_peer': 
         for node in naplesHosts:
             for bgppeer in bgp_peer.client.Objects(node):
                 cmd_cookie = "%s --> %s" %\
@@ -77,15 +75,23 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
     
+    tc_intf = (tc.iterators.interface).capitalize()
     intersection_exists = 0
+    all_uplink_down = 0
     ip_list = [] #impacted underlay ip list
     naplesHosts = api.GetNaplesHostnames()
-    if tc.iterators.shut == "Uplink0" or tc.iterators.shut == "Uplink1":
+    if tc.iterators.port_status == 'down' and\
+        tc_intf in ['Uplink0', 'Uplink1', 'Switchport0', 'Switchport1']:
         for node in naplesHosts:
-            ip = utils.GetNodeUnderlayIp(node, tc.iterators.shut)
+            if tc_intf in ['Switchport0', 'Switchport1']:
+                shut_if = getFirstOperDownPort(node)
+            else:
+                shut_if = tc_intf
+            ip = utils.GetNodeUnderlayIp(node, shut_if)
             ip_list.append(ip)
 
-    if tc.iterators.shut == "both":
+    if tc.iterators.port_status == 'down' and tc_intf in ['Uplinks', 'Switchports']:
+        all_uplink_down = 1
         for node in naplesHosts:
             ip = utils.GetNodeUnderlayIp(node, "Uplink0")
             ip_list.append(ip)
@@ -108,7 +114,7 @@ def Verify(tc):
             intersection_exists = 0
 
         api.Logger.info(f"UNDERLAY_PING:ip pair {ip_pair} impacted ip {ip_list} intersect {intersection_exists}")
-        if cmd.exit_code != 0 and not intersection_exists and not tc.iterators.shut == "both":
+        if cmd.exit_code != 0 and not intersection_exists and not all_uplink_down == 1:
             api.Logger.info(f"UNDERLAY_PING: PING FAILURE {cmd.exit_code}")
             result = api.types.status.FAILURE
         if cmd.exit_code == 0 and (intersection_exists == 1):
@@ -121,6 +127,7 @@ def Verify(tc):
 def Teardown(tc):
     naples_nodes = api.GetNaplesHostnames()
     setDataPortState(naples_nodes, adminUp)
+    switchPortOp(naples_nodes, 'up', 'Switchports') 
     ret = verifyDataPortState(naples_nodes, adminUp, operUp)
     api.Logger.info("Reset post Teardown Complete")
     return ret
