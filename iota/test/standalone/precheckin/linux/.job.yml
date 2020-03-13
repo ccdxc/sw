@@ -41,7 +41,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-linux-bm-unified:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_flowaware"]
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_flowaware  --precheckin --skip-sanity"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:tony@pensando.io"]
    area:
