@@ -507,6 +507,7 @@ func (i *IrisAPI) HandleEndpoint(oper types.Operation, endpoint netproto.Endpoin
 		}
 
 	case types.Update:
+		log.Infof("Handling EP update for %v", endpoint)
 		// Get to ensure that the object exists
 		var existingEndpoint netproto.Endpoint
 		dat, err := i.InfraAPI.Read(endpoint.Kind, endpoint.GetKey())

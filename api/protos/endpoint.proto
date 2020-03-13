@@ -82,21 +82,16 @@ message EndpointMigrationStatus {
         // ui-hint: Start
         START = 1; // Start migration
         // ui-hint: Done
-	DONE = 2; // Migration is Done
+        DONE = 2; // Migration is Done
         // ui-hint: Failed
         FAILED = 3; // Abort Migration
         // ui-hint : Aborted
         ABORTED = 4; // Migration aborted
+        // ui-hint : Move from non pensando host
+        FROM_NON_PEN_HOST = 5; // Migration from non-pensando host
     }
 
     // Status of migration
     string Status                = 1 [(venice.check) = "StrEnum(EndpointMigrationStatus.MigrationState)",
                                         (gogoproto.jsontag) = "status, omitempty"];
-
-    // When the EP move was initiated
-    api.Timestamp StartedAt   = 2 [(gogoproto.jsontag) = "started-at"];
-    
-    // The timeout for migration
-    string MigrationTimeout = 3 [(gogoproto.jsontag) = "migration-timeout,omitempty", (venice.default)="3m", (venice.check) = "EmptyOr(Duration(0,0))"];
-
 }

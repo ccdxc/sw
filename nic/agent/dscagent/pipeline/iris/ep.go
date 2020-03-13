@@ -198,6 +198,11 @@ func convertEndpoint(endpoint netproto.Endpoint, mgmtIntf string, vrfID, network
 		ret.Request[0].EndpointAttrs.OldHomingHostIp = utils.ConvertIPAddresses([]string{endpoint.Spec.HomingHostAddr}...)[0]
 	}
 
+	if endpoint.Spec.Migration == netproto.MigrationState_FROM_NON_PEN_HOST.String() {
+		log.Infof("Migration status set to move from non pensando to pensando")
+		ret.Request[0].EndpointAttrs.VmotionState = halapi.MigrationState_COLD
+	}
+
 	return ret
 }
 

@@ -6739,9 +6739,11 @@ func TestWorkloadMigration(t *testing.T) {
 	err = stateMgr.ctrler.Workload().Update(&nwr)
 	AssertOk(t, err, "Could not update the workload")
 
+	time.Sleep(12 * time.Second)
+
 	AssertEventually(t, func() (bool, interface{}) {
 		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
-		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
+		if err == nil && ep.Endpoint.Spec.NodeUUID == ep.Endpoint.Status.NodeUUID {
 			return true, nil
 		}
 		return false, nil
@@ -6947,11 +6949,14 @@ func TestWorkloadMigrationAbort(t *testing.T) {
 	err = stateMgr.ctrler.Workload().Update(&nwr)
 	AssertOk(t, err, "Could not update the workload")
 
+	time.Sleep(12 * time.Second)
+
 	AssertEventually(t, func() (bool, interface{}) {
-		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
-		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_FAILED.String() {
+		_, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil {
 			return true, nil
 		}
+
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 
@@ -7137,11 +7142,11 @@ func TestWorkloadMigrationTimeout(t *testing.T) {
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
-		if err == nil && ep.Endpoint.Status.Migration == nil {
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.WorkloadMigrationStatus_DONE.String() {
 			return true, nil
 		}
 		return false, nil

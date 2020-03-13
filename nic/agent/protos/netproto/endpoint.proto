@@ -112,4 +112,6 @@ enum MigrationState {
   DONE = 2; // Migration Done
   // ui-hint: Abort
   ABORT = 3; // Abort Migration
+  // ui-hint: Migrate from non-pensando host
+  FROM_NON_PEN_HOST = 4; // Migrate from non pensando host 
 }

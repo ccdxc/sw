@@ -433,21 +433,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "migration.started-at",
-            "description": "When the EP move was initiated.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "migration.migration-timeout",
-            "description": "The timeout for migration. Should be a valid time duration.",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -867,21 +852,6 @@
           {
             "name": "migration.status",
             "description": "Status of migration.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "migration.started-at",
-            "description": "When the EP move was initiated.",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "migration.migration-timeout",
-            "description": "The timeout for migration. Should be a valid time duration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3843,7 +3813,8 @@
             "start",
             "done",
             "failed",
-            "aborted"
+            "aborted",
+            "from_non_pen_host"
           ],
           "default": "none",
           "x-ui-hints": {
@@ -3853,17 +3824,6 @@
             "start": "Start"
           },
           "description": "Status of migration."
-        },
-        "started-at": {
-          "type": "string",
-          "format": "date-time",
-          "description": "When the EP move was initiated."
-        },
-        "migration-timeout": {
-          "type": "string",
-          "default": "3m",
-          "example": "2h",
-          "description": "The timeout for migration. Should be a valid time duration."
         }
       }
     },

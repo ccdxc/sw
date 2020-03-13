@@ -24,6 +24,7 @@ export enum WorkloadEndpointMigrationStatus_status {
     'done' = "done",
     'failed' = "failed",
     'aborted' = "aborted",
+    'from_non_pen_host' = "from_non_pen_host",
 }
 
 export enum WorkloadWorkloadMigrationStatus_stage {

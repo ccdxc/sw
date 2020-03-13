@@ -30,11 +30,12 @@ var _ listerwatcher.WatcherClient
 
 // EndpointMigrationStatus_MigrationState_normal is a map of normalized values for the enum
 var EndpointMigrationStatus_MigrationState_normal = map[string]string{
-	"aborted": "aborted",
-	"done":    "done",
-	"failed":  "failed",
-	"none":    "none",
-	"start":   "start",
+	"aborted":           "aborted",
+	"done":              "done",
+	"failed":            "failed",
+	"from_non_pen_host": "from_non_pen_host",
+	"none":              "none",
+	"start":             "start",
 }
 
 var EndpointMigrationStatus_MigrationState_vname = map[int32]string{
@@ -43,14 +44,16 @@ var EndpointMigrationStatus_MigrationState_vname = map[int32]string{
 	2: "done",
 	3: "failed",
 	4: "aborted",
+	5: "from_non_pen_host",
 }
 
 var EndpointMigrationStatus_MigrationState_vvalue = map[string]int32{
-	"none":    0,
-	"start":   1,
-	"done":    2,
-	"failed":  3,
-	"aborted": 4,
+	"none":              0,
+	"start":             1,
+	"done":              2,
+	"failed":            3,
+	"aborted":           4,
+	"from_non_pen_host": 5,
 }
 
 func (x EndpointMigrationStatus_MigrationState) String() string {
@@ -120,7 +123,6 @@ func (m *EndpointMigrationStatus) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.MigrationTimeout = "3m"
 		m.Status = "none"
 	}
 	return ret
@@ -372,18 +374,6 @@ func init() {
 	validatorMapEndpoint = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapEndpoint["EndpointMigrationStatus"] = make(map[string][]func(string, interface{}) error)
-	validatorMapEndpoint["EndpointMigrationStatus"]["all"] = append(validatorMapEndpoint["EndpointMigrationStatus"]["all"], func(path string, i interface{}) error {
-		m := i.(*EndpointMigrationStatus)
-		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "0")
-
-		if err := validators.EmptyOr(validators.Duration, m.MigrationTimeout, args); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"MigrationTimeout", err.Error())
-		}
-		return nil
-	})
-
 	validatorMapEndpoint["EndpointMigrationStatus"]["all"] = append(validatorMapEndpoint["EndpointMigrationStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*EndpointMigrationStatus)
 

@@ -11,8 +11,6 @@ import { WorkloadEndpointMigrationStatus_status,  WorkloadEndpointMigrationStatu
 
 export interface IWorkloadEndpointMigrationStatus {
     'status': WorkloadEndpointMigrationStatus_status;
-    'started-at'?: Date;
-    'migration-timeout'?: string;
     '_ui'?: any;
 }
 
@@ -22,28 +20,12 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
     '_ui': any = {};
     /** Status of migration. */
     'status': WorkloadEndpointMigrationStatus_status = null;
-    /** When the EP move was initiated. */
-    'started-at': Date = null;
-    /** The timeout for migration. Should be a valid time duration. */
-    'migration-timeout': string = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointMigrationStatus]: PropInfoItem } = {
         'status': {
             enum: WorkloadEndpointMigrationStatus_status_uihint,
             default: 'none',
             description:  `Status of migration.`,
             required: true,
-            type: 'string'
-        },
-        'started-at': {
-            description:  `When the EP move was initiated.`,
-            required: false,
-            type: 'Date'
-        },
-        'migration-timeout': {
-            default: '3m',
-            description:  `The timeout for migration. Should be a valid time duration.`,
-            hint:  '2h',
-            required: false,
             type: 'string'
         },
     }
@@ -89,20 +71,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
         } else {
             this['status'] = null
         }
-        if (values && values['started-at'] != null) {
-            this['started-at'] = values['started-at'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('started-at')) {
-            this['started-at'] = WorkloadEndpointMigrationStatus.propInfo['started-at'].default;
-        } else {
-            this['started-at'] = null
-        }
-        if (values && values['migration-timeout'] != null) {
-            this['migration-timeout'] = values['migration-timeout'];
-        } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('migration-timeout')) {
-            this['migration-timeout'] = WorkloadEndpointMigrationStatus.propInfo['migration-timeout'].default;
-        } else {
-            this['migration-timeout'] = null
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -111,8 +79,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(WorkloadEndpointMigrationStatus_status), ]), WorkloadEndpointMigrationStatus.propInfo['status']),
-                'started-at': CustomFormControl(new FormControl(this['started-at']), WorkloadEndpointMigrationStatus.propInfo['started-at']),
-                'migration-timeout': CustomFormControl(new FormControl(this['migration-timeout']), WorkloadEndpointMigrationStatus.propInfo['migration-timeout']),
             });
         }
         return this._formGroup;
@@ -125,8 +91,6 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['status'].setValue(this['status']);
-            this._formGroup.controls['started-at'].setValue(this['started-at']);
-            this._formGroup.controls['migration-timeout'].setValue(this['migration-timeout']);
         }
     }
 }
