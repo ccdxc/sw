@@ -23,6 +23,7 @@ header_type key_metadata_t {
 
         parsed_sport    : 16;
         parsed_dport    : 16;
+        entry_valid     : 1;
 
         local_mapping_lkp_type  : 2;
         local_mapping_lkp_id    : 16;

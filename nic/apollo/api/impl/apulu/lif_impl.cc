@@ -163,11 +163,13 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = id_;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
@@ -193,7 +195,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = id_;
+    mask.key_metadata_entry_valid_mask= ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -237,7 +241,9 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     memset(&data, 0, sizeof(data));
     if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
     intf = (if_impl *)if_db()->find(&if_index)->impl();
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = intf->hw_id();
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -332,11 +338,13 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = id_;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
@@ -362,7 +370,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = id_;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -409,7 +419,9 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     memset(&data, 0, sizeof(data));
     if_index = ETH_IFINDEX_TO_UPLINK_IFINDEX(pinned_if_idx_);
     intf = (if_impl *)if_db()->find(&if_index)->impl();
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = intf->hw_id();
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     key.control_metadata_tunneled_packet = 0;
     mask.control_metadata_tunneled_packet_mask = ~0;
@@ -524,6 +536,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
@@ -531,6 +544,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 1;    // ARP request
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
@@ -566,6 +580,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
@@ -574,6 +589,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     key.key_metadata_dport = 67;
     key.key_metadata_sport = 68;
     key.key_metadata_proto = 17;    // UDP
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
@@ -603,6 +619,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 1;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
@@ -611,6 +628,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     key.key_metadata_dport = 68;
     key.key_metadata_sport = 67;
     key.key_metadata_proto = 17;    // UDP
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
@@ -660,12 +678,14 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 1;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
     key.control_metadata_flow_miss = 1;
     key.control_metadata_tunneled_packet = 1;
     key.key_metadata_proto = IP_PROTO_TCP;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
@@ -718,10 +738,12 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 1;
     key.control_metadata_lif_type = P4_LIF_TYPE_UPLINK;
     key.control_metadata_flow_miss = 1;
     key.control_metadata_tunneled_packet = 1;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
     mask.control_metadata_flow_miss_mask = ~0;
@@ -744,8 +766,10 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_local_mapping_miss = 0;
     key.control_metadata_flow_miss = 1;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_local_mapping_miss_mask = ~0;
     mask.control_metadata_flow_miss_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
@@ -859,7 +883,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program NACL for host mgmt lif to internal mgmt lif traffic
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = host_mgmt_lif->id();
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -904,7 +930,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.capri_intrinsic_lif = int_mgmt_lif->id();
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.capri_intrinsic_lif_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
@@ -1037,6 +1065,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_learn_enabled = 1;
@@ -1045,6 +1074,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 1;    // ARP request
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;
@@ -1075,6 +1105,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     key.control_metadata_learn_enabled = 1;
@@ -1082,6 +1113,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 2;    // ARP response
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;
@@ -1117,6 +1149,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_learn_enabled = 1;
@@ -1127,6 +1160,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     key.key_metadata_dport = 67;
     key.key_metadata_sport = 68;
     key.key_metadata_proto = 17;    // UDP
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_learn_enabled_mask = ~0;

@@ -12,6 +12,7 @@ action p4i_recirc() {
 
 action p4i_device_info(device_mac_addr1, device_mac_addr2,
                        device_ipv4_addr, device_ipv6_addr, l2_enabled) {
+    modify_field(key_metadata.entry_valid, 1);
     modify_field(scratch_metadata.mac, device_mac_addr1);
     modify_field(scratch_metadata.mac, device_mac_addr2);
     modify_field(scratch_metadata.ipv4_addr, device_ipv4_addr);

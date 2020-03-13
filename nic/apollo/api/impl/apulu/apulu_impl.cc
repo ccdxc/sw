@@ -274,7 +274,9 @@ apulu_impl::nacl_init_(void) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.key_metadata_ktype = KEY_TYPE_IPV6;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     data.action_id = NACL_NACL_DROP_ID;
     p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);
@@ -296,9 +298,11 @@ apulu_impl::nacl_init_(void) {
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_MAC;
     //key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_dport = ETH_TYPE_ARP;
     key.key_metadata_sport = 2;    // ARP response
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type = ~0;
@@ -323,12 +327,14 @@ apulu_impl::nacl_init_(void) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.control_metadata_rx_packet = 0;
     key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
     key.control_metadata_tunneled_packet = 0;
     key.key_metadata_sport = 67;
     key.key_metadata_proto = 17;    // UDP
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.control_metadata_rx_packet_mask = ~0;
     mask.key_metadata_ktype_mask = ~0;
     mask.control_metadata_lif_type_mask = ~0;
@@ -353,7 +359,9 @@ apulu_impl::nacl_init_(void) {
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
     key.arm_to_p4i_nexthop_valid = 1;
+    mask.key_metadata_entry_valid_mask = ~0;
     mask.arm_to_p4i_nexthop_valid_mask = ~0;
     data.action_id = NACL_NACL_REDIRECT_ID;
     p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, idx++, &key, &mask, &data);

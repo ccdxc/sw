@@ -10,6 +10,7 @@ struct phv_                 p;
 %%
 
 p4i_device_info:
+	phvwr			p.key_metadata_entry_valid, TRUE
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
     sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE

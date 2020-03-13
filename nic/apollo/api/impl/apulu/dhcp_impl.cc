@@ -95,6 +95,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     case API_OP_UPDATE:
         // install the NACL
         spec = &obj_ctxt->api_params->dhcp_relay_spec;
+        key.key_metadata_entry_valid = 1;
         key.control_metadata_rx_packet = 1;
         key.key_metadata_ktype = KEY_TYPE_IPV4;
         key.arm_to_p4i_nexthop_valid = 0;
@@ -110,6 +111,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         // dhcpd seems to be using dest port 67
         key.key_metadata_dport = 67;
 
+        mask.key_metadata_entry_valid_mask = ~0;
         mask.control_metadata_rx_packet_mask = ~0;
         mask.key_metadata_ktype_mask = ~0;
         mask.arm_to_p4i_nexthop_valid_mask = ~0;
@@ -166,6 +168,8 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
     case API_OP_DELETE:
         // clear the DHCP relay related NACLs
+        key.key_metadata_entry_valid = 0;
+        mask.key_metadata_entry_valid_mask = ~0;
         p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,
                                       PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1, &key,
                                       &mask, &data);
