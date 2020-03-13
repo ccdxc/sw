@@ -8,6 +8,7 @@ testcases:
     -   name    : Ping_Mirror_Policy
         testcase: testcases.telemetry.ping_mirror_policy
         enable  : True
+        ignore  : True
         args    :
             type: remote_only
         iterators :
@@ -18,6 +19,7 @@ testcases:
     -   name    : Flowmon_Policy
         testcase: testcases.telemetry.flowmon_policy
         enable  : True
+        ignore  : True
         args    :
             type: remote_only
         iterators :
