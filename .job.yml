@@ -248,11 +248,11 @@ dependencies:
     - reference: venice/ui
   iota:
     - reference: iota/test/venice
-      exclude_dirs: ["harness", "test/iris", "test/apollo"]
+      exclude_dirs: ["harness", "test/iris", "test/apulu", "test/apollo"]
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/venice", "test/apollo","test/iris/testcases/server"]
+      exclude_dirs: ["test/venice", "test/apulu", "test/apollo","test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
+      exclude_dirs: ["test/venice", "test/apulu", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/apulu-networking
