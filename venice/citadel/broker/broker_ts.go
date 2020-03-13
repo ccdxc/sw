@@ -25,6 +25,10 @@ import (
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
 
+func init() {
+	cq.InitContinuousQueryMap()
+}
+
 // createDatabaseInReplica creates the database in replica
 func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, retention uint64, repl *meta.Replica) error {
 	var err error
@@ -328,36 +332,45 @@ func (br *Broker) writePointsInReplica(ctx context.Context, nodeuuid string, req
 	return fmt.Errorf("retries exhaused for points write to %v, %+v", nodeuuid, req)
 }
 
+// sendQueryRequest sned query request for specific replica
+func (br *Broker) sendQueryRequest(ctx context.Context, database string, qry string, repl *meta.Replica) (*tproto.QueryResp, error) {
+	// get an rpc client
+	rpcClient, err := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+	if err != nil {
+		return nil, err
+	}
+
+	// rpc request
+	req := tproto.QueryReq{
+		ClusterType: meta.ClusterTypeTstore,
+		Database:    database,
+		ReplicaID:   repl.ReplicaID,
+		ShardID:     repl.ShardID,
+		Query:       qry,
+	}
+
+	// make the rpc call
+	dnclient := tproto.NewDataNodeClient(rpcClient)
+	resp, err := dnclient.ExecuteQuery(ctx, &req)
+	if err != nil {
+		br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // queryShard queries replicas in a shard till it gets a successful response
 func (br *Broker) queryShard(ctx context.Context, shard *meta.Shard, database, qry string) (*tproto.QueryResp, error) {
 	for _, repl := range shard.Replicas {
-		// get an rpc client
-		rpcClient, err := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		resp, err := br.sendQueryRequest(ctx, database, qry, repl)
 		if err != nil {
 			continue
 		}
-
-		// rpc request
-		req := tproto.QueryReq{
-			ClusterType: meta.ClusterTypeTstore,
-			Database:    database,
-			ReplicaID:   repl.ReplicaID,
-			ShardID:     repl.ShardID,
-			Query:       qry,
-		}
-
-		// make the rpc call
-		dnclient := tproto.NewDataNodeClient(rpcClient)
-		resp, err := dnclient.ExecuteQuery(ctx, &req)
-		if err != nil {
-			br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
-			continue
-		}
-
 		return resp, nil
 	}
 
-	return nil, errors.New("Query to allreplicas failed")
+	return nil, errors.New("Query to all replicas failed")
 }
 
 // ExecuteQuerySingle executes a query on data nodes
@@ -456,6 +469,129 @@ func (br *Broker) ExecuteQueryShard(ctx context.Context, database string, qry st
 	}
 
 	return br.ExecuteQuerySingle(ctx, database, qry, shard)
+}
+
+// queryReplica queries replicas in a replica till it gets a successful response
+func (br *Broker) queryReplica(ctx context.Context, shard *meta.Shard, database, qry string, isPrimary bool) (*tproto.QueryResp, error) {
+	if isPrimary {
+		// run query for primary replica
+		repl, ok := shard.Replicas[shard.PrimaryReplica]
+		if !ok {
+			return nil, fmt.Errorf("Error Failed to get primary replica for shard %v", shard)
+		}
+		return br.sendQueryRequest(ctx, database, qry, repl)
+	}
+	for _, repl := range shard.Replicas {
+		// only run query for non-primary replica
+		// return result for the first successful query on non-primary replica
+		if repl.ReplicaID != shard.PrimaryReplica {
+			resp, err := br.sendQueryRequest(ctx, database, qry, repl)
+			if err != nil {
+				continue
+			}
+			return resp, nil
+		}
+	}
+
+	return nil, errors.New("Query to all replicas failed")
+}
+
+// ExecuteQuerySingleReplica executes a query on data nodes
+func (br *Broker) ExecuteQuerySingleReplica(ctx context.Context, database string, qry string, shardIn *meta.Shard, isPrimary bool) ([]*query.Result, error) {
+	shard := shardIn
+	// parse the query
+	pq, err := influxql.ParseQuery(qry)
+	if err != nil {
+		return nil, err
+	}
+
+	// get the cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("Shard map is empty")
+	}
+
+	// parse each statement
+	var results []*query.Result
+	for i, stmt := range pq.Statements {
+		if selStmt, ok := stmt.(*influxql.SelectStatement); ok {
+			// get the measurement name
+			if len(selStmt.Sources.Measurements()) != 1 {
+				return nil, errors.New("Query must have only one measurement")
+			}
+
+			for _, measurement := range selStmt.Sources.Measurements() {
+				if measurement.Name == "Fwlogs" {
+					return nil, errors.New("fwlogs not supported")
+				}
+
+				originMeasurementName := measurement.Name
+				if cq.IsContinuousQueryMeasurement(measurement.Name) {
+					originMeasurementName = strings.Split(measurement.Name, "_")[0]
+					suffix := strings.Split(measurement.Name, "_")[1]
+					// lookup whether it is a valid CQ suffix or not
+					_, ok := cq.RetentionPolicyMap[suffix]
+					if !ok {
+						br.logger.Errorf("Error using invalid suffix %v to query continuous query table. Err: %v", suffix, err)
+						return nil, err
+					}
+					measurement.Database = database
+					measurement.RetentionPolicy = cq.RetentionPolicyMap[suffix].Name
+				}
+
+				if shardIn == nil {
+					shard, err = cl.ShardMap.GetShardForPoint(database, originMeasurementName, "")
+					if err != nil {
+						br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
+						return nil, err
+					}
+				}
+
+				resp, err := br.queryReplica(ctx, shard, database, selStmt.String(), isPrimary)
+				if err != nil {
+					br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+					return nil, err
+				}
+
+				// parse the response
+				for _, rs := range resp.Result {
+					rslt := query.Result{}
+					err := rslt.UnmarshalJSON(rs.Data)
+					if err != nil {
+						return nil, err
+					}
+					// Since we are making each query individually,
+					// we need to manually set the StatementID
+					rslt.StatementID = i
+					results = append(results, &rslt)
+				}
+			}
+		}
+	}
+
+	return results, nil
+}
+
+// ExecuteQueryReplica executes a query on replica, debug only
+func (br *Broker) ExecuteQueryReplica(ctx context.Context, database string, qry string, shardID uint, isPrimary bool) ([]*query.Result, error) {
+	// get the cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("shard map is empty")
+	}
+
+	sm := cl.ShardMap
+
+	if shardID >= uint(sm.NumShards) {
+		return nil, fmt.Errorf("invalid shard, valid range 1-%d", sm.NumShards)
+	}
+
+	shard := sm.Shards[shardID]
+	if shard == nil {
+		return nil, fmt.Errorf("shard %d not found", shardID)
+	}
+
+	return br.ExecuteQuerySingleReplica(ctx, database, qry, shard, isPrimary)
 }
 
 // ExecuteQuery executes a query on data nodes
@@ -983,8 +1119,8 @@ func (br *Broker) RunContinuousQueries(ctx context.Context) error {
 			return err
 		}
 	}
-	cqMap := cq.BuildContinuousSpecMap()
-	for _, cqSpec := range cqMap {
+
+	for _, cqSpec := range cq.ContinuousQueryMap {
 		err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
 			cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
 		if err != nil {

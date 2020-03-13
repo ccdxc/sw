@@ -310,7 +310,7 @@ func TestDataNodeWithContinuousQuery(t *testing.T) {
 	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create a temp dir
-	tstore.SetUintTestCQRunInterval()
+	tstore.ContinuousQueryRunInterval = time.Second
 	path, err := ioutil.TempDir("", "kstore-")
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)

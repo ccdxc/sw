@@ -35,24 +35,24 @@ var RetentionPolicyMap = map[string]ContinuousQueryRetentionSpec{
 	},
 }
 
-var continuousQueryMap = map[string]ContinuousQuerySpec{}
+// ContinuousQueryMap info for running continuous query on running service
+var ContinuousQueryMap = map[string]ContinuousQuerySpec{}
 
 // IsContinuousQueryMeasurement check whether a measurement is a continuous query measurement or not
 func IsContinuousQueryMeasurement(name string) bool {
-	_, ok := continuousQueryMap[name]
+	_, ok := ContinuousQueryMap[name]
 	return ok
 }
 
-// BuildContinuousSpecMap build ContinuousQuerySpec map in preparation of CreateContinuousQuery API
-func BuildContinuousSpecMap() map[string]ContinuousQuerySpec {
+// InitContinuousQueryMap build ContinuousQuerySpec map in preparation of CreateContinuousQuery API
+func InitContinuousQueryMap() {
 	for suffix, rpSpec := range RetentionPolicyMap {
-		generateContinuousQueryMap(continuousQueryMap, suffix, rpSpec)
+		generateContinuousQueryMap(suffix, rpSpec)
 	}
-	return continuousQueryMap
 }
 
-func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpec, suffix string, rpSpec ContinuousQueryRetentionSpec) {
-	continuousQueryMap["AsicFrequencyMetrics_"+suffix] = ContinuousQuerySpec{
+func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSpec) {
+	ContinuousQueryMap["AsicFrequencyMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "AsicFrequencyMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -66,7 +66,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["AsicPowerMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["AsicPowerMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "AsicPowerMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -82,7 +82,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["AsicTemperatureMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["AsicTemperatureMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "AsicTemperatureMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -104,7 +104,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["Cluster_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["Cluster_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "Cluster_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -124,7 +124,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["DistributedServiceCard_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["DistributedServiceCard_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "DistributedServiceCard_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -149,7 +149,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["DropMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["DropMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "DropMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -190,7 +190,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["EgressDropMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["EgressDropMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "EgressDropMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -209,7 +209,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["FteCPSMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["FteCPSMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "FteCPSMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -226,7 +226,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["LifMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["LifMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "LifMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -274,7 +274,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["SessionSummaryMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["SessionSummaryMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "SessionSummaryMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -304,7 +304,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["RuleMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["RuleMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "RuleMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -323,7 +323,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["Node_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["Node_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "Node_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -348,7 +348,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["MgmtMacMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["MgmtMacMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "MgmtMacMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
@@ -393,7 +393,7 @@ func generateContinuousQueryMap(continuousQueryMap map[string]ContinuousQuerySpe
 				END`,
 	}
 
-	continuousQueryMap["MacMetrics_"+suffix] = ContinuousQuerySpec{
+	ContinuousQueryMap["MacMetrics_"+suffix] = ContinuousQuerySpec{
 		CQName:                 "MacMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,

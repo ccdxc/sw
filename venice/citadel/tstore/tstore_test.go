@@ -535,7 +535,7 @@ func TestTstoreContinuousQuery(t *testing.T) {
 	defer os.RemoveAll(path)
 
 	// create a new tstore
-	SetUintTestCQRunInterval()
+	ContinuousQueryRunInterval = time.Second
 	ts, err := NewTstore(path)
 	AssertOk(t, err, "Error creating tstore")
 	defer ts.Close()

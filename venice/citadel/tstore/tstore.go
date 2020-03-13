@@ -42,12 +42,8 @@ type Tstore struct {
 // number of times to retru backup operation if it fails transiently..
 const numBackupRetries = 5
 
-var continuousQueryRunInterval = time.Minute
-
-// SetUintTestCQRunInterval set cq run interval for uint test env
-func SetUintTestCQRunInterval() {
-	continuousQueryRunInterval = time.Second
-}
+// ContinuousQueryRunInterval CQ service run interval
+var ContinuousQueryRunInterval = time.Minute
 
 // NewTstoreWithConfig returns a new tstore instance with the custom engine config
 func NewTstoreWithConfig(dbPath string, cfg tsdb.Config) (*Tstore, error) {
@@ -134,7 +130,7 @@ func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
 	ret.MetaClient = localMeta
 
 	cqCfg := continuous_querier.NewConfig()
-	cqCfg.RunInterval = toml.Duration(continuousQueryRunInterval)
+	cqCfg.RunInterval = toml.Duration(ContinuousQueryRunInterval)
 	cq := continuous_querier.NewService(cqCfg)
 	cq.QueryExecutor = qEx
 	cq.MetaClient = localMeta

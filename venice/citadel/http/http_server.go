@@ -59,6 +59,7 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dn *data.DNode, dbg 
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
 	r.HandleFunc("/shard", hsrv.queryShardReqHandler).Methods("POST")
 	r.HandleFunc("/shard", hsrv.queryShardReqHandler).Methods("GET")
+	r.HandleFunc("/replica", hsrv.queryReplicaReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("POST")
 	r.HandleFunc("/dnode", hsrv.dnodeReqHandler).Methods("GET")
@@ -417,6 +418,70 @@ func (hsrv *HTTPServer) queryShardReqHandler(w http.ResponseWriter, r *http.Requ
 
 	// execute the query
 	result, err := hsrv.broker.ExecuteQueryShard(context.Background(), database, qp, shardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// write 200 ok
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// loop thru each result
+	for _, res := range result {
+		var o struct {
+			Results []*query.Result `json:"results,omitempty"`
+			Err     string          `json:"error,omitempty"`
+		}
+		o.Results = []*query.Result{res}
+		// Send HTTP response as Json
+		content, err := json.Marshal(o)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(content)
+	}
+	return
+}
+
+// queryReplicaReqHandler handles query to a shard
+func (hsrv *HTTPServer) queryReplicaReqHandler(w http.ResponseWriter, r *http.Request) {
+	var shardID uint
+
+	// Attempt to read the form value from the "q" form value.
+	qp := strings.TrimSpace(r.FormValue("q"))
+	if qp == "" {
+		http.Error(w, `missing required parameter "q"`, http.StatusBadRequest)
+		return
+	}
+	database := r.FormValue("db")
+
+	shard := strings.TrimSpace(r.FormValue("shard"))
+	if shard != "" {
+		n, err := strconv.Atoi(shard)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		shardID = uint(n - 1) // convert to index
+	}
+
+	primary := strings.TrimSpace(r.FormValue("primary"))
+	if primary == "" {
+		http.Error(w, `missing required parameter "primary"`, http.StatusBadRequest)
+		return
+	}
+
+	isPrimary, err := strconv.ParseBool(primary)
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`cannot parse primary input value %v to boolean`, isPrimary), http.StatusBadRequest)
+		return
+	}
+
+	// execute the query
+	result, err := hsrv.broker.ExecuteQueryReplica(context.Background(), database, qp, shardID, isPrimary)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
 		return

@@ -314,7 +314,7 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create nodes
-	tstore.SetUintTestCQRunInterval()
+	tstore.ContinuousQueryRunInterval = time.Second
 	for idx := 0; idx < numNodes; idx++ {
 		// create a temp dir
 		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
@@ -416,6 +416,12 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	AssertOk(t, err, "Failed to get target shard for written points. Error: %v", err)
 	checkQuery = "SELECT * FROM \"default\".\"default\".\"Node_5minutes\""
 	results, err = brokers[0].ExecuteQueryShard(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1)
+	AssertOk(t, err, "Error executing query")
+	_, err = brokers[0].ExecuteQueryReplica(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1, true)
+	AssertOk(t, err, "Error executing query")
+	_, err = brokers[0].ExecuteQueryReplica(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1, false)
+	AssertOk(t, err, "Error executing query")
+	_, err = brokers[0].ExecuteQuerySingleReplica(context.Background(), "default", checkQuery, nil, false)
 	AssertOk(t, err, "Error executing query")
 
 	// make call get continuous query
