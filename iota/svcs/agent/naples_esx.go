@@ -363,6 +363,33 @@ func (node *esxHwNode) getNaplesMgmtIntf(hint string) (string, error) {
 
 }
 
+func (node *esxHwNode) getSSLThumbprint() (string, error) {
+
+	hostEntity, ok := node.entityMap.Load(node.esxHostEntityKey)
+	if !ok {
+		return "", errors.Errorf("Host entity not added : %s", node.esxHostEntityKey)
+	}
+
+	fullCmd := []string{"openssl x509 -in /etc/vmware/ssl/rui.crt -fingerprint -sha1 -noout"}
+
+	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, 0, false, true)
+	node.logger.Printf("SSL thumbprint command out %s", cmdResp.Stdout)
+	node.logger.Printf("SSL thumbprint command err %s", cmdResp.Stderr)
+	node.logger.Printf("SSL thumbprint command exit code %d", cmdResp.ExitCode)
+
+	if cmdResp.ExitCode != 0 {
+		return "", errors.Errorf("Running command failed : %s", cmdResp.Stdout)
+	}
+
+	splitString := strings.Split(cmdResp.Stdout, "=")
+
+	if len(splitString) < 2 {
+		return "", errors.Errorf("Invalid response for split string %v", cmdResp.Stdout)
+	}
+
+	return strings.Split(splitString[1], "\r\n")[0], nil
+}
+
 func (node *esxHwNode) createNaplesMgmtSwitch(inst int, hint string) error {
 
 	naplesMgmtIntf, err := node.getNaplesMgmtIntf(hint)
@@ -607,9 +634,9 @@ func (thirdParty *esxThirdPartyHwNode) setHostIntfs(in *iota.Node) error {
 
 //Init initalize node type
 func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
-	resp, err := naples.esxHwNode.Init(in)
+	in, err := naples.esxHwNode.Init(in)
 	if err != nil {
-		return resp, err
+		return in, err
 	}
 
 	for index, naplesConfig := range in.GetNaplesConfigs().GetConfigs() {
@@ -634,22 +661,24 @@ func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	}
 
 	newResp := &iota.Node{NodeStatus: apiSuccess,
-		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
-		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
+		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
+		EsxConfig: in.EsxConfig,
+		NodeInfo:  &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
 
 	if err = naples.setHostIntfs(newResp); err != nil {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 
 	}
+
 	return newResp, nil
 
 }
 
 //Init initalize node type
 func (naples *esxNaplesDvsHwNode) Init(in *iota.Node) (*iota.Node, error) {
-	resp, err := naples.esxHwNode.Init(in)
+	in, err := naples.esxHwNode.Init(in)
 	if err != nil {
-		return resp, err
+		return in, err
 	}
 
 	for index, naplesConfig := range in.GetNaplesConfigs().GetConfigs() {
@@ -663,22 +692,18 @@ func (naples *esxNaplesDvsHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		naplesConfig.NodeUuid = nodeUUID
 	}
 
-	newResp := &iota.Node{NodeStatus: apiSuccess,
-		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
-		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
-
-	if err = naples.setHostIntfs(newResp); err != nil {
+	if err = naples.setHostIntfs(in); err != nil {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 	}
-	return newResp, nil
+	return in, nil
 
 }
 
 // Init initalize node type
 func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
-	resp, err := thirdParty.esxHwNode.Init(in)
+	in, err := thirdParty.esxHwNode.Init(in)
 	if err != nil {
-		return resp, err
+		return in, err
 	}
 
 	if !in.Reload {
@@ -691,33 +716,25 @@ func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
 	}
 
-	newResp := &iota.Node{NodeStatus: apiSuccess,
-		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
-		NodeInfo: in.NodeInfo}
-
-	if err = thirdParty.setHostIntfs(newResp); err != nil {
+	if err = thirdParty.setHostIntfs(in); err != nil {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 
 	}
-	return newResp, nil
+	return in, nil
 }
 
 // Init initalize node type
 func (thirdParty *esxThirdPartyDvsHwNode) Init(in *iota.Node) (*iota.Node, error) {
-	resp, err := thirdParty.esxHwNode.Init(in)
+	in, err := thirdParty.esxHwNode.Init(in)
 	if err != nil {
-		return resp, err
+		return in, err
 	}
 
-	newResp := &iota.Node{NodeStatus: apiSuccess,
-		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
-		NodeInfo: in.NodeInfo}
-
-	if err = thirdParty.setHostIntfs(newResp); err != nil {
+	if err = thirdParty.setHostIntfs(in); err != nil {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 
 	}
-	return newResp, nil
+	return in, nil
 }
 
 // Init initalize node type
@@ -746,11 +763,15 @@ func (node *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
 
-	resp := &iota.Node{NodeStatus: apiSuccess,
-		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
+	sslThumbprint, err := node.getSSLThumbprint()
+	if err != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+	}
 
-	return resp, nil
+	in.EsxConfig.SslThumbprint = sslThumbprint
+	in.NodeStatus = apiSuccess
+
+	return in, nil
 }
 
 type triggerWrap struct {

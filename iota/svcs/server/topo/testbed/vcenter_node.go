@@ -102,8 +102,14 @@ func (n *VcenterNode) initVcenter() error {
 	//Connect hosts
 
 	for _, node := range n.managedNodes {
+
+		sslThumbprint, err := node.GetSSLThumbprint()
+		if err != nil {
+			log.Errorf("TOPO SVC | InitTestbed  | Failed to get ssl thumbprint %v", err.Error())
+			return err
+		}
 		err = cl.AddHost(node.GetNodeInfo().IPAddress, node.GetNodeInfo().Username,
-			node.GetNodeInfo().Password)
+			node.GetNodeInfo().Password, sslThumbprint)
 		if err != nil {
 			log.Errorf("TOPO SVC | InitTestbed  | Failed to add hosts to cluster %v", err.Error())
 			return err

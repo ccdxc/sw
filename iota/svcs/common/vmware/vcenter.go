@@ -289,7 +289,7 @@ func (dc *DataCenter) DestroyCluster(name string) error {
 }
 
 //AddHost adds host to cluster
-func (cl *Cluster) AddHost(ip, username, password string) error {
+func (cl *Cluster) AddHost(ip, username, password, sslKey string) error {
 	cl.dc.getClientWithRLock()
 	defer cl.dc.releaseClientRLock()
 
@@ -298,7 +298,7 @@ func (cl *Cluster) AddHost(ip, username, password string) error {
 		return errors.Wrapf(err, "Error setup datacenter")
 	}
 	spec := types.HostConnectSpec{HostName: ip,
-		Password: password, UserName: username, Force: true}
+		Password: password, UserName: username, Force: true, SslThumbprint: sslKey}
 
 	task, err := cl.ref.AddHost(cl.dc.vc.Ctx(), spec, true, &cl.dc.vc.Entity.License, nil)
 

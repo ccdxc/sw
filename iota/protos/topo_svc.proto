@@ -182,8 +182,11 @@ message VmwareESXConfig {
     // IP address of esx
     string ip_address = 3;
 
+    // ssl thumbprint
+    string ssl_thumbprint = 4;
+
     // name of esx node
-    string name = 4;
+    string name = 5;
 }
 
 message VcenterConfig {

@@ -463,6 +463,8 @@ def __add_workloads(target_node = None):
             sys.exit(1)
 
 def __recover_workloads(target_node = None):
+    objects = netagent_api.QueryConfigs(kind='Endpoint')
+    netagent_api.UpdateNodeUuidEndpoints(objects)
     req = topo_svc.WorkloadMsg()
     resp = api.RestoreWorkloads(req)
     if resp is None:

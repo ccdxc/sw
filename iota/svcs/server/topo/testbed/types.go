@@ -176,6 +176,8 @@ type ManagedNodeInterface interface {
 	TestNodeInterface
 
 	GetHostInterfaces() ([]string, error)
+
+	GetSSLThumbprint() (string, error)
 }
 
 //NodeInfo Encapsulates all node information

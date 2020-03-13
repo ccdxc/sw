@@ -633,8 +633,14 @@ func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string, 
 				//Readd all workloads in the node too
 				//TOOD
 
+				sslThumbprint, err := mn.GetSSLThumbprint()
+				if err != nil {
+					log.Errorf("TOPO SVC | InitTestbed  | Failed to get ssl thumbprint %v", err.Error())
+					return err
+				}
+
 				err = n.cl.AddHost(mn.GetNodeInfo().IPAddress,
-					mn.GetNodeInfo().Username, mn.GetNodeInfo().Password)
+					mn.GetNodeInfo().Username, mn.GetNodeInfo().Password, sslThumbprint)
 				if err != nil {
 					log.Errorf("TOPO SVC |  Reload Node | Failed to Add host to cluster after reboot %v", err.Error())
 					return err
@@ -922,6 +928,17 @@ func (n *TestNode) GetHostInterfaces() ([]string, error) {
 		return msg.GetThirdPartyNicConfig().HostIntfs, nil
 	}
 	return nil, errors.New("Invalid personality to get host interfaces")
+}
+
+//GetSSLThumbprint get ssl thumbprint
+func (n *TestNode) GetSSLThumbprint() (string, error) {
+	msg := n.GetNodeMsg(n.GetNodeInfo().Name)
+
+	if msg.EsxConfig != nil {
+		return msg.EsxConfig.SslThumbprint, nil
+	}
+
+	return "", errors.New("Invalid personality to get thumbprint")
 }
 
 //SetupNode setup node
