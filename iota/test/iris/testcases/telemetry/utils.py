@@ -197,7 +197,12 @@ def VerifyVlan(pcap_file_name):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     mirrorscapy = dir_path + '/' + pcap_file_name
     api.Logger.info("File Name: %s" % (mirrorscapy))
-    pkts = rdpcap(mirrorscapy)
+    try:
+        pkts = rdpcap(mirrorscapy)
+    except Exception as e:
+        api.Logger.error("VerifyVlan Failed: Exception {} in parsing pcap file."
+                "Possibly file size is 0 bytes.".format(str(e)))
+        return api.types.status.FAILURE
     spanpktsfound = False
     for pkt in pkts:
         if pkt.haslayer(ERSPAN_III):
@@ -221,7 +226,12 @@ def VerifyTimeStamp(command, pcap_file_name):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     mirrorscapy = dir_path + '/' + pcap_file_name
     api.Logger.info("File Name: %s" % (mirrorscapy))
-    pkts = rdpcap(mirrorscapy)
+    try:
+        pkts = rdpcap(mirrorscapy)
+    except Exception as e:
+        api.Logger.error("VerifyTimeStamp Failed: Exception {} in parsing pcap file."
+                "Possibly file size is 0 bytes.".format(str(e)))
+        return api.types.status.FAILURE
     spanpktsfound = False
     g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
     api.Logger.info("Current Global time {}".format(g_time))

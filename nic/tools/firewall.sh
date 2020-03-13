@@ -8,6 +8,9 @@
 # IPTables location - change accordingly
 IPT="/usr/sbin/iptables"
 
+# Sysctl location - change accordingly
+SYSCTL="/sbin/sysctl"
+
 # OOB Interface
 OOB_IFACE="oob_mnic0"
 
@@ -80,3 +83,12 @@ echo "Process INPUT chain ..."
 $IPT -A INPUT -p UDP -j udp_inbound
 #$IPT -A INPUT -p UDP -i $OOB_IFACE -j udp_inbound
 $IPT -A INPUT -p ICMP -j icmp_inbound
+
+
+###############################################################################
+#
+# System Control settings
+#
+
+# Enable Reverse path filtering to detect IP address spoofing
+$SYSCTL -w net.ipv4.conf.all.rp_filter=1
