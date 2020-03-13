@@ -158,9 +158,9 @@ jobs:
   iota/test/standalone/precheckin/linux:
     labels: ["precommit"]
   iota/test/standalone/precheckin/freebsd:
-    labels: ["precommit"]
+    labels: ["daily"]
   iota/test/standalone/sanity/freebsd:
-    labels: ["precommit", "2xhourly"]
+    labels: ["daily", "2xhourly"]
   iota/test/standalone/sanity/esx:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/linux:
@@ -256,9 +256,9 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/apulu-networking
-      exclude_dirs: ["test/venice", "test/iris"]
+      exclude_dirs: ["test/venice", "test/iris", "api/impl/athena", "test/athena"]
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-      exclude_dirs: ["test/venice", "test/iris"]
+      exclude_dirs: ["test/venice", "test/iris", "api/impl/athena", "test/athena"]
   metrics:
     - reference: api
     - reference: test/ci_targets/e2e
