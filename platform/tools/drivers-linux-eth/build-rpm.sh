@@ -15,7 +15,13 @@ fi
 
 TOPDIR=$(pwd)/rpmbuild
 
-VERSION=$(cat drivers/eth/ionic/ionic.h | grep VERSION | awk '{print $3}' | sed 's/"//g')
+VERSION_BASE=$(cat drivers/eth/ionic/ionic.h | grep VERSION | awk '{print $3}' | sed -e 's/"//g')
+VERSION=$(echo $VERSION_BASE | cut -d- -f1)
+BUILD=$(echo $VERSION_BASE | cut -s -d- -f2)
+
+if [ $BUILD_NUMBER -eq "1" -a -n "$BUILD" ] ; then
+        BUILD_NUMBER=$BUILD
+fi
 
 # update spec with current version
 
