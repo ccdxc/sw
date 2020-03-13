@@ -27,7 +27,6 @@ using namespace sdk::table;
 
 extern "C" {
 
-// Per thread address of table object
 static ftl_base *ftl_table;
 
 uint32_t ftl_entry_count;
@@ -37,6 +36,11 @@ typedef struct pds_flow_read_cbdata_s {
     pds_flow_key_t *key;
     pds_flow_info_t *info;
 } pds_flow_read_cbdata_t;
+
+typedef struct pds_flow_iterate_cbdata_s {
+    pds_flow_iter_cb_t        iter_cb;
+    pds_flow_iter_cb_arg_t    *iter_cb_arg;
+} pds_flow_iter_cbdata_t;
 
 static char *
 pds_flow6_key2str (void *key)
@@ -82,11 +86,7 @@ flow_cache_entry_setup_key (flow_hash_entry_t *entry,
         return SDK_RET_INVALID_ARG;
     }
 
-    if (key->ip_addr_family == IP_AF_IPV4) { 
-        ftlv6_set_key_ktype(entry, KEY_TYPE_IPV4);
-    } else {
-        ftlv6_set_key_ktype(entry, KEY_TYPE_IPV6);
-    }
+    ftlv6_set_key_ktype(entry, key->key_type);
     ftlv6_set_key_vnic_id(entry, key->vnic_id);
     ftlv6_set_key_dst_ip(entry, key->ip_daddr);
     ftlv6_set_key_src_ip(entry, key->ip_saddr);
@@ -136,6 +136,12 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
         PDS_TRACE_ERR("spec is null");
         return SDK_RET_INVALID_ARG;
     }
+    if (spec->key.key_type == KEY_TYPE_INVALID ||
+        spec->key.key_type >= KEY_TYPE_MAX) {
+        PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
+        return SDK_RET_INVALID_ARG;
+    }
+
     index = spec->data.index;
     index_type = spec->data.index_type;
     if (index > PDS_FLOW_SESSION_INFO_ID_MAX) {
@@ -159,16 +165,11 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
 {
     flow_hash_entry_t *hwentry = (flow_hash_entry_t *)params->entry;
     pds_flow_read_cbdata_t *cbdata = (pds_flow_read_cbdata_t *)params->cbdata;
-    uint16_t            vnic_id;
+    uint16_t vnic_id;
 
     // Iterate only when entry valid and if another entry is not found already
     if (hwentry->entry_valid && (ftl_entry_valid == false)) {
-        // TODO: Optimize this
-        if ((hwentry->key_metadata_ktype == KEY_TYPE_IPV6) &&
-            (cbdata->key->ip_addr_family == IP_AF_IPV4)) {
-            return;
-        } else if ((hwentry->key_metadata_ktype == KEY_TYPE_IPV4) &&
-            (cbdata->key->ip_addr_family == IP_AF_IPV6)) {
+        if (hwentry->key_metadata_ktype != cbdata->key->key_type) {
             return;
         }
         vnic_id = (hwentry->key_metadata_vnic_id_sbit0_ebit7 << 1) | hwentry->key_metadata_vnic_id_sbit8_ebit8;
@@ -200,6 +201,11 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
 
     if (!key || !info) {
         PDS_TRACE_ERR("key/info is null");
+        return SDK_RET_INVALID_ARG;
+    }
+    if (key->key_type == KEY_TYPE_INVALID ||
+        key->key_type >= KEY_TYPE_MAX) {
+        PDS_TRACE_ERR("Key type %u invalid", key->key_type);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -261,6 +267,55 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
     params.entry = &entry;
     params.entry_size = flow_hash_entry_t::entry_size();
     return ftl_table->remove(&params);
+}
+
+static void
+flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
+{
+    flow_hash_entry_t *hwentry = (flow_hash_entry_t *)params->entry;
+    pds_flow_iter_cbdata_t *cbdata = (pds_flow_iter_cbdata_t *)params->cbdata;
+    pds_flow_key_t *key;
+    pds_flow_data_t *data;
+
+    if (hwentry->entry_valid) {
+        ftl_entry_count++;
+        key = &cbdata->iter_cb_arg->flow_key;
+        data = &cbdata->iter_cb_arg->flow_appdata;
+        key->key_type = (pds_key_type_t)ftlv6_get_key_ktype(hwentry);
+        key->vnic_id = ftlv6_get_key_vnic_id(hwentry);
+        ftlv6_get_key_dst_ip(hwentry, key->ip_daddr);
+        ftlv6_get_key_src_ip(hwentry, key->ip_saddr);
+        key->ip_proto = ftlv6_get_key_proto(hwentry);
+        key->l4.tcp_udp.sport = ftlv6_get_key_sport(hwentry);
+        key->l4.tcp_udp.dport = ftlv6_get_key_dport(hwentry);
+        data->index = ftlv6_get_index(hwentry);
+        data->index_type =
+            (pds_flow_spec_index_type_t)ftlv6_get_index_type(hwentry);
+        cbdata->iter_cb(cbdata->iter_cb_arg);
+    }
+    return;
+}
+
+sdk_ret_t
+pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
+                              pds_flow_iter_cb_arg_t *iter_cb_arg)
+{
+    sdk_table_api_params_t params = { 0 };
+    pds_flow_iter_cbdata_t cbdata = { 0 };
+
+    if (iter_cb == NULL || iter_cb_arg == NULL) {
+        PDS_TRACE_ERR("itercb or itercb_arg is null");
+        return SDK_RET_INVALID_ARG;
+     }
+
+    cbdata.iter_cb = iter_cb;
+    cbdata.iter_cb_arg = iter_cb_arg;
+    params.itercb = flow_cache_entry_iterate_cb;
+    params.cbdata = &cbdata;
+    params.force_hwread = false;
+    params.entry_size = flow_hash_entry_t::entry_size();
+    ftl_entry_count = 0;
+    return ftl_table->iterate(&params);
 }
 
 }

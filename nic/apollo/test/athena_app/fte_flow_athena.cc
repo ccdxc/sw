@@ -227,7 +227,7 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         
         src_ip = rte_be_to_cpu_32(ip40->src_addr);
         dst_ip = rte_be_to_cpu_32(ip40->dst_addr);
-        key->ip_addr_family = IP_AF_IPV4;
+        key->key_type = KEY_TYPE_IPV4;
         memcpy(key->ip_saddr, &src_ip, sizeof(uint32_t));
         memcpy(key->ip_daddr, &dst_ip, sizeof(uint32_t));
         key->ip_proto = protocol;

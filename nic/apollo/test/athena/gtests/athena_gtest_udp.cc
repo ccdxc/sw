@@ -17,9 +17,7 @@ create_flow_v4_tcp_udp (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v
 
 
     spec.key.vnic_id = vnic_id;
-    spec.key.smac = 0;
-    spec.key.dmac = 0;
-    spec.key.ip_addr_family = IP_AF_IPV4;
+    spec.key.key_type = KEY_TYPE_IPV4;
     memset(spec.key.ip_saddr, 0, sizeof(spec.key.ip_saddr));
     memcpy(spec.key.ip_saddr, &v4_addr_sip, sizeof(ipv4_addr_t));
     memset(spec.key.ip_daddr, 0, sizeof(spec.key.ip_daddr));

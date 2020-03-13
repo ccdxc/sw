@@ -21,6 +21,15 @@ extern "C" {
 /// \defgroup PDS_FLOW_CACHE 
 /// @{
 
+/// \brief Key type
+typedef enum pds_key_type_e {
+    KEY_TYPE_INVALID = 0,
+    KEY_TYPE_IPV4,          ///< IPV4
+    KEY_TYPE_IPV6,          ///< IPV6
+    KEY_TYPE_L2,            ///< L2 flow
+    KEY_TYPE_MAX
+} pds_key_type_t;
+
 /// \brief TCP/UDP key fields
 typedef struct pds_flow_key_tcp_udp_s {
     uint16_t    sport;    ///< Src port
@@ -43,9 +52,7 @@ typedef union pds_flow_key_l4_s {
 /// \brief Generic flow key
 typedef struct pds_flow_key_s {
     uint16_t             vnic_id;                    ///< VNIC id
-    uint64_t             smac;                       ///< Src MAC addr
-    uint64_t             dmac;                       ///< Dest MAC addr
-    uint8_t              ip_addr_family;             ///< IP addr family
+    pds_key_type_t       key_type;                   ///< Key type
     uint8_t              ip_saddr[IP6_ADDR8_LEN];    ///< IP src addr
     uint8_t              ip_daddr[IP6_ADDR8_LEN];    ///< IP dest addr
     uint8_t              ip_proto;                   ///< IP protocol
@@ -80,6 +87,15 @@ typedef struct pds_flow_info_s {
     pds_flow_status_t    status;      ///< operational status
 } __PACK__ pds_flow_info_t;
 
+/// \brief Flow iterate callback arg
+typedef struct pds_flow_iter_cb_arg_s {
+    pds_flow_key_t     flow_key;
+    pds_flow_data_t    flow_appdata;
+} __PACK__ pds_flow_iter_cb_arg_t;
+
+/// \brief     Flow iterate callback function type
+/// \remark    This function needs to be defined by the application.
+typedef void (*pds_flow_iter_cb_t) (pds_flow_iter_cb_arg_t *);
 
 /// \brief     create flow cache table
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -118,6 +134,13 @@ sdk_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow key should be passed
 sdk_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
+
+/// \brief     iterate through flow cache table
+/// \param[in] iterate callback function
+//  \param[in] iterate callback argument
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
+                                       pds_flow_iter_cb_arg_t *iter_cb_arg);
 
 /// @}
 

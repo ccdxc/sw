@@ -16,4 +16,6 @@ void fill_key(uint32_t index, pds_flow_key_t *key);
 void fill_data(uint32_t index, pds_flow_spec_index_type_t index_type,
                pds_flow_data_t *data);
 
+void dump_flow(pds_flow_iter_cb_arg_t *iter_cb_arg);
+
 #endif // __UTILS_HPP__

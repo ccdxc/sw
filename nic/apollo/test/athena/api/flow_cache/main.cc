@@ -58,6 +58,7 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     pds_flow_spec_t spec = { 0 };
     pds_flow_key_t key = { 0 };
     pds_flow_info_t info = { 0 };
+    pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
 
     fill_key(1, &spec.key);
     fill_data(1, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
@@ -67,6 +68,13 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
     SDK_ASSERT(info.spec.data.index == 1);
+
+    SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
+               SDK_RET_OK);
+    SDK_ASSERT(memcmp(&iter_cb_arg.flow_key, &key,
+               sizeof(pds_flow_key_t)) == 0);
+    SDK_ASSERT(iter_cb_arg.flow_appdata.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
+    SDK_ASSERT(iter_cb_arg.flow_appdata.index == 1);
 
     memset(&spec, 0, sizeof(spec)); 
     fill_key(2, &spec.key);
@@ -78,6 +86,9 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_CONNTRACK);
     SDK_ASSERT(info.spec.data.index == 2);
+
+    SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
+               SDK_RET_OK);
 
     // Update seems to be not really updating the flow data
     // TODO: Need to verify and fix this
@@ -98,6 +109,9 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     fill_key(2, &key);
     SDK_ASSERT(pds_flow_cache_entry_delete(&key) == SDK_RET_OK);
     SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_ENTRY_NOT_FOUND);
+
+    SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
+               SDK_RET_OK);
 }
 
 /// @}
