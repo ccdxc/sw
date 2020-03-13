@@ -36,7 +36,7 @@ const (
 	ifSlotMask        = 0xF
 	ifParentPortMask  = 0xFF
 	ifChildPortMask   = 0xFF
-	ifNameDelimiter   = "-"
+	ifNameDelimiter   = "/"
 	invalidIfIndex    = 0xFFFFFFFF
 )
 
@@ -380,20 +380,64 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printPortStatusHeader() {
-	hdrLine := strings.Repeat("-", 98)
+	hdrLine := strings.Repeat("-", 196)
+	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes")
+	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-12s%-12s%-10s%-14s\n",
-		"Id", "Name", "IfIndex", "AdminState", "OperState", "Transceiver")
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-6s%-10s%-6s%-7s%-7s%-10s%-12s%-15s%-12s%-20s%-10s\n",
+		"Id", "Name", "IfIndex", "Speed", "MAC-Info", "FEC", "AutoNeg",
+		"MTU", "Pause", "Pause", "Debounce", "State",
+		"Transceiver", "NumLinkDown", "LinkSM", "Loopback")
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-6s%-10s%-6s%-7s%-7s%-10s%-12s%-15s%-12s%-20s%-10s\n",
+		"", "", "", "", "", "", "Cfg/Oper",
+		"", "Type", "Tx/Rx", "(msecs)", "Admin/Oper",
+		"", "", "", "")
 	fmt.Println(hdrLine)
 }
 
 func printPortStatus(resp *pds.Port) {
-	adminState := resp.GetSpec().GetAdminState()
-	operStatus := resp.GetStatus().GetLinkStatus().GetOperState()
-	xcvrStatus := resp.GetStatus().GetXcvrStatus()
+	spec := resp.GetSpec()
+	status := resp.GetStatus()
+	linkStatus := status.GetLinkStatus()
+	stats := resp.GetStats()
+
+	if spec == nil {
+		fmt.Printf("Error! Port spec cannot be nil\n")
+		return
+	}
+
+	if status == nil {
+		fmt.Printf("Error! Port status cannot be nil\n")
+		return
+	}
+
+	if linkStatus == nil {
+		fmt.Printf("Error! Port link status cannot be nil\n")
+		return
+	}
+
+	if stats == nil {
+		fmt.Printf("Error! Port stats cannot be nil\n")
+		return
+	}
+
+	adminState := spec.GetAdminState()
+	operStatus := linkStatus.GetOperState()
+	xcvrStatus := status.GetXcvrStatus()
+	speed := spec.GetSpeed()
+	fecType := spec.GetFECType()
+	mtu := spec.GetMtu()
+	debounce := spec.GetDeBounceTimeout()
 
 	adminStateStr := strings.Replace(adminState.String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(operStatus.String(), "PORT_OPER_STATUS_", "", -1)
+	speedStr := strings.Replace(speed.String(), "PORT_SPEED_", "", -1)
+	fecStr := strings.Replace(fecType.String(), "PORT_FEC_TYPE_", "", -1)
+	loopbackModeStr := strings.Replace(spec.GetLoopbackMode().String(), "PORT_LOOPBACK_MODE_", "", -1)
+	pauseStr := strings.Replace(spec.GetPauseType().String(), "PORT_PAUSE_TYPE_", "", -1)
+	macStr := fmt.Sprintf("%d/%d/%d", status.GetMacId(), status.GetMacCh(), linkStatus.GetNumLanes())
+	fsmStr := strings.Replace(status.GetFSMState().String(), "PORT_LINK_FSM_", "", -1)
+
 	xcvrPortNum := xcvrStatus.GetPort()
 	xcvrState := xcvrStatus.GetState()
 	xcvrPid := xcvrStatus.GetPid()
@@ -413,10 +457,17 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	fmt.Printf("%-40s%-10s0x%-12x%-12s%-10s%-14s\n",
-		uuid.FromBytesOrNil(resp.GetSpec().GetId()).String(),
-		ifIndexToPortIdStr(resp.GetStatus().GetIfIndex()),
-		resp.GetStatus().GetIfIndex(), adminStateStr, operStatusStr, xcvrStr)
+	outStr := fmt.Sprintf("%-40s%-10s0x%-10x%-7s%-10s%-6s",
+		uuid.FromBytesOrNil(spec.GetId()).String(),
+		ifIndexToPortIdStr(status.GetIfIndex()), status.GetIfIndex(),
+		speedStr, macStr, fecStr)
+	outStr += fmt.Sprintf("%2s/%-7s%-6d%-7s%2s/%-4s",
+		utils.BoolToString(spec.GetAutoNegEn()), utils.BoolToString(linkStatus.GetAutoNegEn()),
+		mtu, pauseStr, utils.BoolToString(spec.GetTxPauseEn()), utils.BoolToString(spec.GetRxPauseEn()))
+	outStr += fmt.Sprintf("%-10d%4s/%-7s%-15s%-12d%-20s%-10s",
+		debounce, adminStateStr, operStatusStr, xcvrStr, stats.GetNumLinkDown(),
+		fsmStr, loopbackModeStr)
+	fmt.Printf(outStr + "\n")
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {

@@ -1818,6 +1818,61 @@ pds_port_sdk_loopback_mode_to_proto_loopback_mode (
     }
 }
 
+static inline pds::PortLinkSM
+pds_fsmstate_to_proto (sdk::types::port_link_sm_t fsm_state)
+{
+    switch (fsm_state) {
+    case port_link_sm_t::PORT_LINK_SM_DISABLED:
+        return pds::PORT_LINK_FSM_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_ENABLED:
+        return pds::PORT_LINK_FSM_ENABLED;
+    case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+        return pds::PORT_LINK_FSM_AN_CFG;
+    case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
+        return pds::PORT_LINK_FSM_AN_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_AN_START:
+        return pds::PORT_LINK_FSM_AN_START;
+    case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
+        return pds::PORT_LINK_FSM_AN_WAIT_HCD;
+    case port_link_sm_t::PORT_LINK_SM_AN_COMPLETE:
+        return pds::PORT_LINK_FSM_AN_COMPLETE;
+    case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+        return pds::PORT_LINK_FSM_SERDES_CFG;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+        return pds::PORT_LINK_FSM_WAIT_SERDES_RDY;
+    case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+        return pds::PORT_LINK_FSM_MAC_CFG;
+    case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+        return pds::PORT_LINK_FSM_SIGNAL_DETECT;
+    case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
+        return pds::PORT_LINK_FSM_AN_DFE_TUNING;
+    case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+        return pds::PORT_LINK_FSM_DFE_TUNING;
+    case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+        return pds::PORT_LINK_FSM_DFE_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+        return pds::PORT_LINK_FSM_DFE_START_ICAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+        return pds::PORT_LINK_FSM_DFE_WAIT_ICAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+        return pds::PORT_LINK_FSM_DFE_START_PCAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+        return pds::PORT_LINK_FSM_DFE_WAIT_PCAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
+        return pds::PORT_LINK_FSM_DFE_PCAL_CONTINUOUS;
+    case port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS:
+        return pds::PORT_LINK_FSM_CLEAR_MAC_REMOTE_FAULTS;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+        return pds::PORT_LINK_FSM_WAIT_MAC_SYNC;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
+        return pds::PORT_LINK_FSM_WAIT_MAC_FAULTS_CLEAR;
+    case port_link_sm_t::PORT_LINK_SM_UP:
+        return pds::PORT_LINK_FSM_UP;
+    default:
+        return pds::PORT_LINK_FSM_DISABLED;
+    }
+}
+
 static inline void
 pds_port_proto_to_port_args (port_args_t *port_args,
                              const pds::PortSpec &spec)
@@ -3928,6 +3983,7 @@ pds_port_stats_to_proto (pds::PortStats *stats,
             macstats->set_count(port_info->stats_data[i]);
         }
     }
+    stats->set_numlinkdown(port_info->num_link_down);
 }
 
 static inline void
@@ -3968,6 +4024,8 @@ pds_port_spec_to_proto (pds::PortSpec *spec,
     spec->set_mtu(port_info->mtu);
     spec->set_pausetype(pds_port_sdk_pause_type_to_proto_pause_type
                                       (port_info->pause));
+    spec->set_txpauseen(port_info->tx_pause_enable);
+    spec->set_rxpauseen(port_info->rx_pause_enable);
     spec->set_loopbackmode(pds_port_sdk_loopback_mode_to_proto_loopback_mode(
                                      port_info->loopback_mode));
     spec->set_numlanes(port_info->num_lanes_cfg);
@@ -3981,6 +4039,9 @@ pds_port_status_to_proto (pds::PortStatus *status,
     auto xcvr_status = status->mutable_xcvrstatus();
 
     status->set_ifindex(port_info->port_num);
+    status->set_fsmstate(pds_fsmstate_to_proto(port_info->link_sm));
+    status->set_macid(port_info->mac_id);
+    status->set_macch(port_info->mac_ch);
     switch (port_info->oper_status) {
     case port_oper_status_t::PORT_OPER_STATUS_UP:
         link_status->set_operstate(pds::PORT_OPER_STATUS_UP);

@@ -103,3 +103,10 @@ func EncapToString(encap *pds.Encap) string {
 	}
 	return encapStr
 }
+
+func BoolToString(val bool) string {
+	if val {
+		return "T"
+	}
+	return "F"
+}
