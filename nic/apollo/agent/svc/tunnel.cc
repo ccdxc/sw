@@ -17,7 +17,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_tep_spec_t *api_spec;
+    pds_tep_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -41,17 +41,12 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
         batched_internally = true;
     }
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_tep_spec_t *)
-                    core::agent_state::state()->tep_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_tep_spec_t));
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        pds_tep_proto_to_api_spec(api_spec, request);
-        hooks::tunnel_create(api_spec);
-        ret = core::tep_create(&key, api_spec, bctxt);
+        pds_tep_proto_to_api_spec(&api_spec, request);
+        hooks::tunnel_create(&api_spec);
+        ret = core::tep_create(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -82,7 +77,7 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
     sdk_ret_t ret;
     pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
-    pds_tep_spec_t *api_spec;
+    pds_tep_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -106,16 +101,11 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec =
-            (pds_tep_spec_t *)core::agent_state::state()->tep_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_tep_spec_t));
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        pds_tep_proto_to_api_spec(api_spec, request);
-        ret = core::tep_update(&key, api_spec, bctxt);
+        pds_tep_proto_to_api_spec(&api_spec, request);
+        ret = core::tep_update(&key, &api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }

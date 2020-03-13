@@ -220,7 +220,7 @@ iprange_proto_spec_to_api_spec (ipvx_range_t *ip_range,
 //----------------------------------------------------------------------------
 // convert ip_addr_t to IP address proto spec
 //----------------------------------------------------------------------------
-static inline void
+static inline sdk_ret_t
 ipaddr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
                                const ip_addr_t *in_ipaddr)
 {
@@ -233,9 +233,9 @@ ipaddr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
                     std::string((const char *)&in_ipaddr->addr.v6_addr.addr8,
                                 IP6_ADDR8_LEN));
     } else {
-        SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
     }
-    return;
+    return SDK_RET_OK;
 }
 
 static inline void
@@ -260,8 +260,7 @@ ippfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
                               const ip_prefix_t *in_ippfx)
 {
     out_ippfx->set_len(in_ippfx->len);
-    ipaddr_api_spec_to_proto_spec(out_ippfx->mutable_addr(), &in_ippfx->addr);
-    return SDK_RET_OK;
+    return ipaddr_api_spec_to_proto_spec(out_ippfx->mutable_addr(), &in_ippfx->addr);
 }
 
 static inline sdk_ret_t
@@ -1516,7 +1515,7 @@ pds_tep_api_stats_to_proto (pds::TunnelStats *proto_stats,
 
 // populate proto buf from tep API info
 static inline void
-pds_tep_api_info_to_proto (const pds_tep_info_t *api_info, void *ctxt)
+pds_tep_api_info_to_proto (pds_tep_info_t *api_info, void *ctxt)
 {
     pds::TunnelGetResponse *proto_rsp = (pds::TunnelGetResponse *)ctxt;
     auto tep = proto_rsp->add_response();

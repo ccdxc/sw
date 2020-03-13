@@ -576,6 +576,10 @@ tep_impl::fill_spec_(pds_tep_spec_t *spec) {
     } else if (tep_data.tunnel_action.num_nexthops == PDS_NUM_NH_NO_ECMP) {
         spec->nh_type = PDS_NH_TYPE_UNDERLAY;
     }
+    if (tep_data.tunnel_action.vni) {
+        spec->encap.type = PDS_ENCAP_TYPE_VXLAN;
+        spec->encap.val.value = tep_data.tunnel_action.vni;
+    }
     return SDK_RET_OK;
 }
 

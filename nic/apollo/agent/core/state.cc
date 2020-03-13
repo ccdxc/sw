@@ -97,12 +97,6 @@ bool
 cfg_db::init(void) {
     void *mem;
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(tep_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    tep_map_ = new(mem) tep_db_t();
-
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_db_t));
     if (mem == NULL) {
         return false;
@@ -148,9 +142,6 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_SERVICE] =
         slab::factory("service", SLAB_ID_SERVICE, sizeof(pds_svc_mapping_spec_t),
                       16, true, true, true);
-    slabs_[SLAB_ID_TEP] =
-        slab::factory("tep", SLAB_ID_TEP, sizeof(pds_tep_spec_t),
-                      16, true, true, true);
     slabs_[SLAB_ID_ROUTE] =
         slab::factory("route_table", SLAB_ID_ROUTE,
                       sizeof(pds_route_table_spec_t),
@@ -162,7 +153,6 @@ cfg_db::init(void) {
 // (private) constructor method
 //------------------------------------------------------------------------------
 cfg_db::cfg_db() {
-    tep_map_ = NULL;
     vpc_map_ = NULL;
     vpc_peer_map_ = NULL;
     subnet_map_ = NULL;
@@ -199,7 +189,6 @@ cfg_db::factory(void) {
 cfg_db::~cfg_db() {
     uint32_t i;
 
-    FREE(MEM_ALLOC_ID_INFRA, tep_map_);
     FREE(MEM_ALLOC_ID_INFRA, vpc_map_);
     FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
@@ -268,32 +257,6 @@ agent_state::cleanup(void) {
 //------------------------------------------------------------------------------
 agent_state::~agent_state() {
     cleanup();
-}
-
-sdk_ret_t
-agent_state::add_to_tep_db(pds_obj_key_t *key, pds_tep_spec_t *spec) {
-    ADD_TO_OBJ_DB(tep, key, spec);
-}
-
-pds_tep_spec_t *
-agent_state::find_in_tep_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(tep, key);
-}
-
-sdk_ret_t
-agent_state::tep_db_walk(tep_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(tep);
-    auto it_end = DB_END(tep);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_tep_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(tep, key);
 }
 
 sdk_ret_t

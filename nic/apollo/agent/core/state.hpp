@@ -12,7 +12,6 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
-#include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 
 using std::unordered_map;
@@ -27,7 +26,6 @@ typedef sdk_ret_t (*vpc_peer_walk_cb_t)(pds_vpc_peer_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 
 typedef slab *slab_ptr_t;
 
@@ -47,7 +45,6 @@ typedef unordered_map<pds_obj_key_t, pds_vpc_spec_t *, pds_obj_key_hash> vpc_db_
 typedef unordered_map<pds_obj_key_t, pds_vpc_peer_spec_t *, pds_obj_key_hash> vpc_peer_db_t;
 typedef unordered_map<pds_obj_key_t , pds_subnet_spec_t *, pds_obj_key_hash> subnet_db_t;
 typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_mapping_hash_fn> service_db_t;
-typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
 typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
@@ -58,7 +55,6 @@ public:
     static void destroy(cfg_db *cfg_db);
 
     pds_device_spec_t *device(void) { return &device_; }
-    tep_db_t *tep_map(void) { return tep_map_; }
     vpc_db_t *vpc_map(void) { return vpc_map_; }
     vpc_peer_db_t *vpc_peer_map(void) { return vpc_peer_map_; }
     subnet_db_t *subnet_map(void) { return subnet_map_; }
@@ -70,9 +66,6 @@ public:
 
     sdk_ret_t slab_walk(sdk::lib::slab_walk_cb_t walk_cb, void *ctxt);
 
-    slab_ptr_t tep_slab(void) const {
-        return slabs_[SLAB_ID_TEP];
-    }
     slab_ptr_t vpc_slab(void) const {
         return slabs_[SLAB_ID_VPC];
     }
@@ -98,7 +91,6 @@ private:
     bool init(void);
 
 private:
-    tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
     vpc_peer_db_t *vpc_peer_map_;
     pds_obj_key_t underlay_vpc_;
@@ -117,13 +109,6 @@ public:
     agent_state();
     ~agent_state();
     pds_device_spec_t *device(void) { return cfg_db_->device(); }
-
-    pds_tep_spec_t *find_in_tep_db(pds_obj_key_t *key);
-    sdk_ret_t add_to_tep_db(pds_obj_key_t *key,
-                            pds_tep_spec_t *spec);
-    sdk_ret_t tep_db_walk(tep_walk_cb_t cb, void *ctxt);
-    bool del_from_tep_db(pds_obj_key_t *key);
-    slab_ptr_t tep_slab(void) const { return cfg_db_->tep_slab(); }
 
     pds_vpc_spec_t *find_in_vpc_db(pds_obj_key_t *key);
     sdk_ret_t add_to_vpc_db(pds_obj_key_t *key,
@@ -186,7 +171,6 @@ public:
 
 private:
     void cleanup(void);
-    tep_db_t *tep_map(void) const { return cfg_db_->tep_map();  }
     vpc_db_t *vpc_map(void) const { return cfg_db_->vpc_map();  }
     vpc_peer_db_t *vpc_peer_map(void) const { return cfg_db_->vpc_peer_map();  }
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }

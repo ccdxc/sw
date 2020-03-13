@@ -61,6 +61,40 @@ pds_tep_read (_In_ pds_obj_key_t *key, _Out_ pds_tep_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_tep_read_args_s {
+    tep_read_cb_t cb;
+    void *ctxt;
+} pds_tep_read_args_t;
+
+static bool
+pds_tep_info_from_entry (void *entry, void *ctxt)
+{
+    tep_entry *tep = (tep_entry *)entry;
+    pds_tep_read_args_t *args = (pds_tep_read_args_t *)ctxt;
+    pds_tep_info_t info;
+
+    memset(&info, 0, sizeof(pds_tep_info_t));
+
+    // call entry read
+    tep->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_tep_read_all (tep_read_cb_t tep_read_cb, void *ctxt)
+{
+    pds_tep_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = tep_read_cb;
+
+    return tep_db()->walk(pds_tep_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_tep_update (_In_ pds_tep_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {

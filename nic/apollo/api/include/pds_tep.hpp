@@ -113,6 +113,14 @@ sdk_ret_t pds_tep_create(pds_tep_spec_t *spec,
 /// \remark     TEP spec containing a valid tep key should be passed
 sdk_ret_t pds_tep_read(pds_obj_key_t *key, pds_tep_info_t *info);
 
+typedef void (*tep_read_cb_t)(pds_tep_info_t *info, void *ctxt);
+
+/// \brief Read all TEP information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_tep_read_all(tep_read_cb_t tep_read_cb, void *ctxt);
+
 /// \brief     update TEP
 /// \param[in] spec specification
 /// \param[in] bctxt batch context if API is invoked in a batch
