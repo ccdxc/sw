@@ -49,6 +49,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "Make Apulu Venice ISO..."
+make venice-apulu-iso
+if [ $? -ne 0 ]; then
+  exit 1
+fi
+
 echo "Make bundle image..."
 make bundle-image
 if [ $? -ne 0 ]; then
@@ -80,6 +86,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo "Make Apulu ova image..."
+make apulu-ova
+if [ $? -ne 0 ]; then
+  exit 1
+fi
+
 echo "Copy artifacts..."
 mkdir -p /sw/output/bundle
 mkdir -p /sw/output/apulu-bundle
@@ -88,6 +100,8 @@ cp /sw/bin/venice_apidoc.pdf /sw/output
 mv bin/venice.tgz /sw/output
 mv tools/docker-files/ova/output/venice.ova /sw/output
 mv tools/docker-files/ova/output/venice.qcow2 /sw/output
+mv tools/docker-files/ova/output-apulu/venice.ova /sw/output/venice.apulu.ova
+mv tools/docker-files/ova/output-apulu/venice.qcow2 /sw/output/venice.apulu.qcow2
 mv bin/bundle/bundle.tar /sw/output/bundle/
 mv apulu-bundle/bundle.tar /sw/output/apulu-bundle/
 mv bin/venice.apulu.tgz /sw/output
