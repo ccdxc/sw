@@ -215,6 +215,3 @@ platform/src/app/nicmgrd/etc/*.json                                 /platform/et
 
 #process mem scripts
 nic/tools/run_mem_check.sh                                          /nic/tools/
-
-# dhcp server
-nic/dhcp-server/S80dhcp-server-disable                              /etc/init.d/S80dhcp-server

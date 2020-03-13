@@ -242,7 +242,6 @@ nic/apollo/tools/run_cron.sh                                      /nic/tools/
 nic/conf/profiles/qos_profile_default.json                        /nic/conf/profiles/
 
 # dhcp server
-#nic/tools/dhcp-server/S80dhcp-server-disable                      /etc/init.d/S80dhcp-server
 #nic/tools/dhcp-server/S80dhcp-server                              /nic/tools/start-dhcpd.sh
 #nic/dhcp-server/dhcpd                                             /etc/default/dhcpd
 #nic/conf/dhcp-server/dhcpd.conf                                   /etc/dhcp/dhcpd.conf
