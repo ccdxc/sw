@@ -114,6 +114,40 @@ mac2str (uint64_t mac)
     return macaddr2str(mac_addr);
 }
 
+static inline char *
+ethtype2str (uint32_t eth_type)
+{
+    static thread_local char       str[4][6];
+    static thread_local uint8_t    str_next = 0;
+    char                           *buf;
+
+    buf = str[str_next++ & 0x3];
+    switch (eth_type) {
+    case ETH_TYPE_ARP:
+        snprintf(buf, 6, "%-6s", "ARP");
+        break;
+    case ETH_TYPE_RARP:
+        snprintf(buf, 6, "%-6s", "RARP");
+        break;
+    case ETH_TYPE_DOT1Q:
+        snprintf(buf, 6, "%-6s", "DOT1Q");
+        break;
+    case ETH_TYPE_NCSI:
+        snprintf(buf, 6, "%-6s", "NCSI");
+        break;
+    case ETH_TYPE_IPV4:
+        snprintf(buf, 6, "%-6s", "IPV4");
+        break;
+    case ETH_TYPE_IPV6:
+        snprintf(buf, 6, "%-6s", "IPV6");
+        break;
+    default:
+        snprintf(buf, 6, "%-6u", eth_type);
+        break;
+    }
+    return buf; 
+}
+
 // spdlog formatter for mac_addr_t
 inline std::ostream& operator<<(std::ostream& os, mac_addr_t mac) {
     return os << macaddr2str(mac);

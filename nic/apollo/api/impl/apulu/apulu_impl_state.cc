@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
@@ -218,7 +219,11 @@ apulu_impl_state::nacl_dump(int fd) {
                     dprintf(fd, "%-6s", "*");
                 }
                 if (mask.key_metadata_dport_mask) {
-                    dprintf(fd, "%-6u", key.key_metadata_dport);
+                    if (key.key_metadata_ktype == KEY_TYPE_MAC) {
+                        dprintf(fd, "%-6s", ethtype2str(key.key_metadata_dport));
+                    } else {
+                        dprintf(fd, "%-6u", key.key_metadata_dport);
+                    }
                 } else {
                     dprintf(fd, "%-6s", "*");
                 }

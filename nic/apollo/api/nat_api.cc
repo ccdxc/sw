@@ -94,24 +94,24 @@ pds_nat_port_block_read (_In_ pds_obj_key_t *key,
     return SDK_RET_OK;
 }
 
-typedef struct pds_nat_pb_real_all_cb_params_s {
+typedef struct pds_nat_pb_read_all_cb_params_s {
     nat_port_block_read_cb_t cb;
     void *ctxt;
-} pds_nat_pb_real_all_cb_params_t;
+} pds_nat_pb_read_all_cb_params_t;
 
 void
 pds_nat_pb_from_ipc_response (sdk::ipc::ipc_msg_ptr msg, const void *cookie)
 {
     pds_nat_port_block_cmd_ctxt_t *reply = (pds_nat_port_block_cmd_ctxt_t *)msg->data();
-    pds_nat_pb_real_all_cb_params_t *params = (pds_nat_pb_real_all_cb_params_t *)cookie;
+    pds_nat_pb_read_all_cb_params_t *params = (pds_nat_pb_read_all_cb_params_t *)cookie;
     uint16_t num_pb = reply->num_entries;
     pds_nat_port_block_cfg_msg_t *pb;
     pds_nat_port_block_info_t info;
 
     for (uint16_t i = 0; i < num_pb; i ++) {
         pb = &reply->cfg[i];
-        info.spec = pb->spec;       
-        info.status = pb->status;       
+        info.spec = pb->spec;
+        info.status = pb->status;
         info.stats = pb->stats;
         params->cb(&info, params->ctxt);
     }
@@ -121,7 +121,7 @@ sdk_ret_t
 pds_nat_port_block_read_all (nat_port_block_read_cb_t cb, void *ctxt)
 {
     pds_msg_t request;
-    pds_nat_pb_real_all_cb_params_t params;
+    pds_nat_pb_read_all_cb_params_t params;
 
     memset(&request, 0, sizeof(request));
 

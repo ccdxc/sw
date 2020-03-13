@@ -50,7 +50,7 @@ struct pds_obj_key_s {
         static thread_local char key_str[4][PDSM_MAX_KEY_STR_LEN + 1];
 
         buf = key_str[next_str++ & 0x3];
-        sprintf(buf, "%08x", (*(uint32_t *)&id[0]) & 0xFFFFFFFF);
+        sprintf(buf, "%08x", htonl((*(uint32_t *)&id[0]) & 0xFFFFFFFF));
         buf[8] = '-';
         sprintf(&buf[9], "%04x", (*(uint16_t *)&id[4]) & 0xFFFF);
         buf[13] = '-';
