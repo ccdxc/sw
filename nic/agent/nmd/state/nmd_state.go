@@ -975,7 +975,7 @@ func initAllowedCommands() {
 	allowedCommands["penverifyfirmware"] = 42
 	allowedCommands["halctlshowsystemstatisticspbdetail"] = 43
 	allowedCommands["halctlshowqosclassqueues"] = 44
-	allowedCommands["showifconfig"] = 45 // Just a temporary command to expose the ifconfig
+	allowedCommands["showinterfacemanagement"] = 45
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1152,7 +1152,7 @@ func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	} else if req.Executable == "rmpentechsupportdir" {
 		req.Executable = "rm"
 		req.Opts = "-rf /data/techsupport/PenctlTechSupportRequest-penctl-techsupport/"
-	} else if req.Executable == "showifconfig" {
+	} else if req.Executable == "showinterfacemanagement" {
 		req.Executable = "/sbin/ifconfig"
 		req.Opts = "-a"
 	}

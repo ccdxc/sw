@@ -54,6 +54,14 @@ var ifShowCmd = &cobra.Command{
 	Run:   ifShowCmdHandler,
 }
 
+var mgmtIfShowCmd = &cobra.Command{
+	Use:   "management",
+	Short: "Show management interfaces",
+	Long:  "Show management interfaces",
+	Args:  cobra.NoArgs,
+	Run:   mgmtIfShowCmdHandler,
+}
+
 var tunnelShowCmd = &cobra.Command{
 	Use:   "tunnel",
 	Short: "Show tunnel interface",
@@ -72,6 +80,7 @@ var mplsoudpShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(ifShowCmd)
+	ifShowCmd.AddCommand(mgmtIfShowCmd)
 	ifShowCmd.AddCommand(tunnelShowCmd)
 	tunnelShowCmd.AddCommand(mplsoudpShowCmd)
 
@@ -110,18 +119,20 @@ func init() {
 	ifUpdateCmd.MarkFlagRequired("egress-bw")
 }
 
-func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
-	halctlStr := ""
+func handleIfShowCmd(intf bool, mgmt bool, tunnel bool, mpls bool) {
+	str := ""
 	if intf == true {
-		halctlStr = "halctl show interface"
+		str = "halctl show interface"
+	} else if mgmt == true {
+		str = "show interface management"
 	} else if tunnel == true {
-		halctlStr = "halctl show interface tunnel"
+		str = "halctl show interface tunnel"
 	} else if mpls == true {
-		halctlStr = "halctl show interface tunnel mplsoudp"
+		str = "halctl show interface tunnel mplsoudp"
 	}
 
 	v := &nmd.DistributedServiceCardCmdExecute{
-		Executable: strings.Replace(halctlStr, " ", "", -1),
+		Executable: strings.Replace(str, " ", "", -1),
 		Opts:       strings.Join([]string{""}, ""),
 	}
 
@@ -129,15 +140,19 @@ func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
-	handleIfShowCmd(true, false, false)
+	handleIfShowCmd(true, false, false, false)
+}
+
+func mgmtIfShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleIfShowCmd(false, true, false, false)
 }
 
 func ifTunnelShowCmdHandler(cmd *cobra.Command, args []string) {
-	handleIfShowCmd(false, true, false)
+	handleIfShowCmd(false, false, true, false)
 }
 
 func mplsoudpShowCmdHandler(cmd *cobra.Command, args []string) {
-	handleIfShowCmd(false, false, true)
+	handleIfShowCmd(false, false, false, true)
 }
 
 func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
