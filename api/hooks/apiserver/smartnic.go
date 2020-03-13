@@ -112,7 +112,8 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			cl.logger.DebugLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("deleting module: %s", modObj.Name))
 		}
 	case apiintf.UpdateOper:
-		updNIC, ok := i.(cluster.DistributedServiceCard)
+		var ok bool
+		updNIC, ok = i.(cluster.DistributedServiceCard)
 
 		if !ok {
 			cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
@@ -194,6 +195,10 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			if admitted && updNIC.Spec.Admit == false && curNIC.Spec.Admit == true {
 				return i, true, fmt.Errorf("Spec.Admit cannot be changed to false once the DistributedServiceCard is admitted")
 			}
+			// For unified mode, if we are decommissioning, we need to prevent the card from rejoining, so we set admit=false
+			if admitted && updNIC.Spec.MgmtMode == cluster.DistributedServiceCardSpec_HOST.String() && curNIC.Spec.MgmtMode == cluster.DistributedServiceCardSpec_NETWORK.String() {
+				updNIC.Spec.Admit = false
+			}
 			errs := cl.checkNonUserModifiableSmartNICFields(&updNIC, curNIC)
 			if len(errs) > 0 {
 				return i, true, fmt.Errorf("Modification of DistributedServiceCard object fields %s is not allowed", strings.Join(errs, ", "))
@@ -212,7 +217,8 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 	// Add a comparator for CAS
 	txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", curNIC.ResourceVersion))
 
-	return i, true, nil
+	// We need to return updNIC, not i, because updNIC is a copy and we may have modified it
+	return updNIC, true, nil
 }
 
 func getFieldSelector(nic string) string {
