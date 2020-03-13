@@ -35,6 +35,16 @@ type syncFlag struct {
 	flag bool
 }
 
+const (
+	maxOrchSupported = 64
+)
+
+type orchIDMgr struct {
+	sync.Mutex
+	allocOrchID   [maxOrchSupported]bool
+	isInitialized bool
+}
+
 // InstanceManager is the struct which watches for update to vc config objects
 type InstanceManager struct {
 	waitGrp           sync.WaitGroup
@@ -46,6 +56,7 @@ type InstanceManager struct {
 	orchestratorMap   map[string]Orchestrator
 	stateMgr          *statemgr.Statemgr
 	vcenterList       string
+	orchIDMgr         orchIDMgr
 	vcHubOpts         []vchub.Option
 }
 
@@ -146,6 +157,72 @@ func (w *InstanceManager) watchOrchestratorConfig() {
 	}
 }
 
+func (w *InstanceManager) assignOrchestratorID(config *orchestration.Orchestrator) error {
+	w.orchIDMgr.Lock()
+	defer w.orchIDMgr.Unlock()
+
+	// Handle orchhub restarts
+	if w.orchIDMgr.isInitialized == false {
+		opts := api.ListWatchOptions{}
+		orchs, err := w.stateMgr.Controller().Orchestrator().List(w.watchCtx, &opts)
+		if err != nil {
+			w.logger.Errorf("Error retrieving orchestrators: %v", err)
+			return err
+		}
+
+		// When orchhub restarts, we initialize allocOrchID based on the information query from stateMgr
+		for _, orch := range orchs {
+			// On restart, we might get some old and some new orch configs in the List().
+			// Skip the new ones(OrchID equals to 0) and wait for configHandler to be called for those
+			if orch.Status.OrchID != 0 {
+				if w.orchIDMgr.allocOrchID[orch.Status.OrchID] == false {
+					w.orchIDMgr.allocOrchID[orch.Status.OrchID] = true
+				} else {
+					w.logger.Errorf("Stale orchestrator config object, ignored")
+				}
+			}
+		}
+		w.orchIDMgr.isInitialized = true
+	}
+
+	if config.Status.OrchID == 0 {
+		var index int32
+		for index = 1; index < maxOrchSupported; index++ {
+			if w.orchIDMgr.allocOrchID[index] == false {
+				w.orchIDMgr.allocOrchID[index] = true
+				config.Status.OrchID = index
+				break
+			}
+		}
+	} else {
+		// For reconnect situation, existing objects are fetched, and are then processed as create events
+		if w.orchIDMgr.allocOrchID[config.Status.OrchID] == true {
+			// Since config.Status.OrchID is already assigned, we don't need to do anything
+			return nil
+		}
+
+		// w.orchIDMgr.allocOrchID doesn't reflect the current allocation, we need to update
+		w.orchIDMgr.allocOrchID[config.Status.OrchID] = true
+		w.logger.Errorf("orchIDMgr.allocOrchID[%v] is out of sync", config.Status.OrchID)
+		return nil
+	}
+
+	return nil
+}
+
+func (w *InstanceManager) freeOrchestratorID(config *orchestration.Orchestrator) {
+	w.orchIDMgr.Lock()
+	defer w.orchIDMgr.Unlock()
+
+	if config.Status.OrchID != 0 &&
+		w.orchIDMgr.allocOrchID[config.Status.OrchID] == true {
+		w.orchIDMgr.allocOrchID[config.Status.OrchID] = false
+	} else {
+		w.logger.Warnf("Unexpected OrchID free request ignored. OrchID: %v, w.orchIDMgr.allocOrchID[%v]: %v",
+			config.Status.OrchID, config.Status.OrchID, w.orchIDMgr.allocOrchID[config.Status.OrchID])
+	}
+}
+
 func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 	switch config.Spec.Type {
 	case orchestration.OrchestratorSpec_VCenter.String():
@@ -159,6 +236,11 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 	w.logger.Infof("Handle Orchestrator config event. %v", config)
 	switch evtType {
 	case kvstore.Created:
+		err := w.assignOrchestratorID(config)
+		if err != nil {
+			w.logger.Errorf("Failed at assigning OrchID, %v", err)
+			return
+		}
 		w.createOrch(config)
 	case kvstore.Updated:
 		orchInst, ok := w.orchestratorMap[config.GetKey()]
@@ -174,6 +256,7 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 			return
 		}
 		orchInst.Destroy(true)
+		w.freeOrchestratorID(config)
 		delete(w.orchestratorMap, config.GetKey())
 	}
 }

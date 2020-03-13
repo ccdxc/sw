@@ -1,6 +1,9 @@
 package vchub
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -66,6 +69,14 @@ func (v *VCHub) startEventsListener() {
 					v.Log.Infof("Updating orchestrator connection status to %v",
 						orchestration.OrchestratorStatus_Success.String())
 					o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
+
+					orchID, err := strconv.Atoi(strings.TrimPrefix(v.OrchID, "orch-"))
+					if err != nil {
+						// This should never happen as long as we properly set v.OrchID in vchub setup with orch- as prefix
+						v.Log.Errorf("Can't trim prefix and convert v.OrchID: %v", v.OrchID)
+						return
+					}
+					o.Status.OrchID = int32(orchID)
 					o.Write()
 
 					// sync and start watchers, network event watcher

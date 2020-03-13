@@ -409,6 +409,7 @@ func TestVCSyncVM(t *testing.T) {
 
 	// SETTING UP MOCK
 	// Real probe that will be used by mock probe when possible
+	orchConfig.Status.OrchID = 1
 	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
 	mockProbe := mock.NewProbeMock(vcp)
@@ -853,9 +854,11 @@ func TestVCSyncVmkNics(t *testing.T) {
 func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	orchID := fmt.Sprintf("orch-%d", config.Status.OrchID)
 	state := defs.State{
 		VcURL:      vcURL,
 		VcID:       config.GetName(),
+		OrchID:     orchID,
 		Ctx:        ctx,
 		Log:        logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
 		StateMgr:   stateMgr,
