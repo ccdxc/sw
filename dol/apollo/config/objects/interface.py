@@ -113,7 +113,7 @@ class InterfaceObject(base.ConfigObjectBase):
             self.AdminState = spec_json['spec']['admin-status']
             info = InterfaceInfoObject(node, topo.InterfaceTypes.ETH, None, None)
             self.IfInfo = info
-            self.IfInfo.VrfName = 'Vpc1'
+            self.IfInfo.VrfName = self.Tenant
             self.IfInfo.Network = 'Subnet1'
             self.IfInfo.ip_prefix = ''
             self.Status = InterfaceStatus()
@@ -304,7 +304,7 @@ class InterfaceObject(base.ConfigObjectBase):
     def UpdateVrfAndNetwork(self, subnets):
         for subnet in subnets:
             if self.HostIfIdx == subnet.HostIfIdx:
-                self.IfInfo.VrfName = subnet.VPC.GID()
+                self.IfInfo.VrfName = subnet.Tenant
                 self.IfInfo.Network = subnet.GID()
                 return True
         return False
@@ -485,7 +485,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
         if not resp:
             return None
         for r in resp:
-            if r['spec']['type'] == 'HOST_PF' and hasattr(r['status'], 'id'):
+            id = r['status'].get('id', None)
+            if r['spec']['type'] == 'HOST_PF' and id != None:
                 ifspec = InterfaceSpec_()
                 ifinfo = InterfaceSpec_()
                 ifspec.origin = 'fixed'
