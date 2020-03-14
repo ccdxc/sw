@@ -1378,6 +1378,9 @@ func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
 }
 
 func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
+	if resp == nil {
+		return "---"
+	}
 	switch resp.GetSpec().GetType() {
 	case halproto.IfType_IF_TYPE_ENIC:
 		// Get name from Lif
@@ -1400,7 +1403,7 @@ func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
 		return fmt.Sprintf("AppRedir-%d",
 			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 	default:
-		return "Invalid"
+		return "---"
 	}
 }
 

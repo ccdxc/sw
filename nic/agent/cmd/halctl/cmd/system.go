@@ -54,6 +54,13 @@ var systemShowCmd = &cobra.Command{
 	Run:   systemDetailShowCmdHandler,
 }
 
+var systemInbMgmtIfShowCmd = &cobra.Command{
+	Use:   "inb",
+	Short: "show system inb",
+	Long:  "show system inb",
+	Run:   systemInbMgmtShowCmdHandler,
+}
+
 var systemModeShowCmd = &cobra.Command{
 	Use:   "mode",
 	Short: "show system forwarding/policy mode",
@@ -183,6 +190,7 @@ func init() {
 	systemShowCmd.AddCommand(systemFeatProfileShowCmd)
 	systemShowCmd.AddCommand(systemFwdModeShowCmd)
 	systemShowCmd.AddCommand(systemModeShowCmd)
+	systemShowCmd.AddCommand(systemInbMgmtIfShowCmd)
 	systemShowCmd.AddCommand(queueStatsCmd)
 	queueStatsCmd.AddCommand(inputQueueStatsCmd)
 	queueStatsCmd.AddCommand(outputQueueStatsCmd)
@@ -204,6 +212,8 @@ func init() {
 	// System mode show cmd
 	systemModeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	systemModeShowCmd.Flags().Bool("json", false, "Output in json")
+
+	systemInbMgmtIfShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -320,6 +330,42 @@ func systemModeShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Printf("Forwarding Mode: %s\n", resp.GetSpec().GetFwdMode().String())
 		fmt.Printf("Policy Mode: %s\n", resp.GetSpec().GetPolicyMode().String())
+	}
+}
+
+func systemInbMgmtShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_INB_MGMT_IF,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting System Inb mgmt if failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	if cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+	} else {
+		fmt.Printf("Inband Mgmt If: %s\n", utils.IfIndexToStr(uint32(resp.GetInbMgmtIfId())))
 	}
 }
 
@@ -2749,5 +2795,34 @@ func intfStatsShow(c *grpc.ClientConn) {
 
 	// Lif Stats show
 	lifStatsShow(c)
+}
 
+func systemGetInbMgmtIfID() string {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var req *halproto.SystemGetRequest
+	req = &halproto.SystemGetRequest{
+		Request: halproto.SystemGetType_SYSTEM_GET_INB_MGMT_IF,
+	}
+
+	resp, err := client.SystemGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting System Inb mgmt if failed. %v\n", err)
+		return "---"
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return "---"
+	}
+
+	return utils.IfIndexToStr(uint32(resp.GetInbMgmtIfId()))
 }

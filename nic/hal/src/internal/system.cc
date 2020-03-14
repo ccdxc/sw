@@ -513,6 +513,7 @@ system_get (const SystemGetRequest *req, SystemResponse *rsp)
     pd::pd_pb_stats_get_args_t          pb_args;
     pd::pd_func_args_t                  pd_func_args = {0};
     auto                                req_type = req->request();
+    if_t                                *hal_if = NULL;
 
     // HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     // HAL_TRACE_DEBUG("Querying Drop Stats:");
@@ -520,6 +521,13 @@ system_get (const SystemGetRequest *req, SystemResponse *rsp)
 
     pd::pd_system_args_init(&pd_system_args);
     pd_system_args.rsp = rsp;
+
+    if (req_type == sys::SYSTEM_GET_INB_MGMT_IF) {
+        hal_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        rsp->set_inb_mgmt_if_id(hal_if ? hal_if->if_id : 0);
+        rsp->set_api_status(types::API_STATUS_OK);
+        goto end;
+    }
 
     if ((req_type == sys::SYSTEM_GET_DROP_STATS) ||
         (req_type == sys::SYSTEM_GET_ALL_STATS)) {
@@ -604,7 +612,6 @@ system_get (const SystemGetRequest *req, SystemResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
 
 end:
-
     return HAL_RET_OK;
 }
 
