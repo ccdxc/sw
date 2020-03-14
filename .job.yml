@@ -167,9 +167,9 @@ jobs:
   iota/test/standalone/sanity/freebsd:
     labels: ["daily", "2xhourly"]
   iota/test/standalone/sanity/esx:
-    labels: ["precommit", "2xhourly"]
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/linux:
-    labels: ["precommit", "2xhourly"]
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-networking:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-networking-scale:
@@ -271,12 +271,12 @@ dependencies:
     - reference: venice/ui
   minio:
     - reference: test/verify-build
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   nic/apollo:
   #  - reference: iota/test/venice
   #  - reference: iota/test/standalone/sanity/esx
   #  - reference: iota/test/standalone/sanity/freebsd
-  #  - reference: iota/test/standalone/sanity/linux
+  #  - reference: iota/test/standalone/precheckin/linux
      - reference: iota/test/standalone/sanity/apulu-networking
      - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/apollo/tools/dev-docker:
@@ -306,9 +306,9 @@ dependencies:
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/debug_cli:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   nic/delphi:
-    - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/precheckin/linux
   nic/fte:
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/precheckin/esx
@@ -461,7 +461,7 @@ dependencies:
  #     exclude_dirs: ["doc", "drivers/linux", "drivers/freebsd"]
  #   - reference: iota/test/standalone/sanity/freebsd
  #     exclude_dirs: ["doc", "drivers/linux", "drivers/esxi"]
- #   - reference: iota/test/standalone/sanity/linux
+ #   - reference: iota/test/standalone/precheckin/linux
  #     exclude_dirs: ["doc", "drivers/freebsd", "drivers/esxi"]
   platform/src/third-party/app/pciutils:
     - reference: platform/src/app/pciemgrd
