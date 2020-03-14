@@ -6,10 +6,15 @@
 #ifndef __VPP_IMPL_FTL_WRAPPER_H__
 #define __VPP_IMPL_FTL_WRAPPER_H__
 
+typedef struct ftl_base ftl;
 typedef struct ftl_base ftlv4;
 typedef struct ftl_base ftlv6;
+typedef struct ftl_base ftll2;
 typedef struct ipv4_flow_hash_entry_t v4_flow_entry;
-typedef struct flow_hash_entry_t v6_flow_entry;
+typedef struct flow_hash_entry_t flow_entry;
+
+typedef char* (*key2str_t)(void *key);
+typedef char* (*appdata2str_t)(void *data);
 
 #ifdef __cplusplus
 
@@ -17,6 +22,16 @@ typedef struct flow_hash_entry_t v6_flow_entry;
 
 extern "C" {
 #endif
+
+#define FTL_ENTRY_STR_MAX   2048
+
+// max 256 packets are processed by VPP, so 512 flows
+#define MAX_FLOW_ENTRIES_PER_BATCH 512
+
+typedef struct flow_flags_s {
+    uint8_t log : 1;
+    uint8_t update : 1;
+} flow_flags_t;
 
 // Prototypes
 
@@ -26,12 +41,63 @@ void set_skip_ftl_program(int val);
 
 void set_skip_session_program(int val);
 
+int get_skip_ftl_program(void);
+
+int get_skip_session_program(void);
+
 int session_program(uint32_t ses_id, void *action);
 
 void session_insert(uint32_t ses_id, void *ses_info);
 
 void session_get_addr(uint32_t ses_id, uint8_t **ses_addr,
                       uint32_t *entry_size);
+
+void ftl_init_stats_cache(void);
+
+void ftl_cache_stats(ftl *obj);
+
+void ftl_dump_stats_cache(char *buf, int max_len);
+
+void ftl_dump_stats(ftl *obj, char *buf, int max_len);
+
+ftl * ftl_create(void *key2str, void *appdata2str);
+
+int ftl_insert(ftl *obj, flow_entry *entry, uint32_t hash, uint8_t log, 
+               uint8_t update);
+
+int ftl_remove(ftl *obj, flow_entry *entry, uint32_t hash, uint8_t log);
+
+int ftl_clear(ftl *obj, bool clear_global_state, bool clear_thread_local_state);
+
+void ftl_delete(ftl *obj);
+
+int ftl_dump_hw_entries(ftl *obj, char *logfile, uint8_t detail, bool v6);
+
+uint64_t ftl_get_flow_count(ftl *obj, bool v6);
+
+void ftl_set_session_index(flow_entry *entry, uint32_t session);
+
+void ftl_set_epoch(flow_entry *entry, uint8_t val);
+
+uint32_t ftl_get_session_id(flow_entry *entry);
+
+void ftl_set_thread_id(ftl *obj, uint32_t thread_id);
+
+void ftl_set_key_lookup_id(flow_entry *entry, uint16_t lookup_id);
+
+void ftl_set_entry_flow_miss_hit(flow_entry *entry, uint8_t val);
+
+void ftl_set_entry_nexthop(flow_entry *entry, uint32_t nhid, uint32_t nhtype,
+                           uint8_t nhvalid);
+
+void ftlv4_set_entry_nexthop(v4_flow_entry *entry, uint32_t nhid,
+                             uint32_t nhtype, uint8_t nhvalid);
+
+void ftlv4_set_key_lookup_id(v4_flow_entry *entry, uint16_t lookup_id);
+
+uint16_t ftlv4_get_key_lookup_id(v4_flow_entry *entry);
+
+void ftlv4_set_entry_flow_miss_hit(v4_flow_entry *entry, uint8_t val);
 
 ftlv4 * ftlv4_create(void *key2str,
                      void *appdata2str);
@@ -97,8 +163,7 @@ void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
 void ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id);
 
-ftlv6 * ftlv6_create(void *key2str,
-                     void *appdata2str);
+ftl * ftl_create(void *key2str, void *appdata2str);
 
 void ftlv6_delete(ftlv6 *obj);
 
@@ -124,18 +189,21 @@ uint64_t ftlv6_get_flow_count(ftlv6 *obj);
 
 void ftlv6_cache_batch_init(void);
 
-void ftlv6_cache_set_key(
-             uint8_t *sip,
-             uint8_t *dip,
-             uint8_t ip_proto,
-             uint16_t src_port,
-             uint16_t dst_port,
-             uint16_t lookup_id);
+void ftlv6_cache_set_key(uint8_t *sip,
+                         uint8_t *dip,
+                         uint8_t ip_proto,
+                         uint16_t src_port,
+                         uint16_t dst_port,
+                         uint16_t lookup_id);
 
-void ftlv6_cache_set_nexthop(
-             uint32_t nhid,
-             uint32_t nhtype,
-             uint8_t nh_valid);
+void ftll2_cache_set_key(uint8_t *src,
+                         uint8_t *dst,
+                         uint16_t ether_type,
+                         uint16_t lookup_id);
+
+void ftlv6_cache_set_nexthop(uint32_t nhid,
+                             uint32_t nhtype,
+                             uint8_t nh_valid);
 
 int ftlv6_cache_get_count(void);
 
@@ -167,18 +235,23 @@ void ftlv4_set_key(v4_flow_entry *entry,
                    uint16_t dst_port,
                    uint16_t lookup_id);
 
-void ftlv6_set_key(v6_flow_entry *entry,
+void ftlv6_set_key(flow_entry *entry,
                    uint8_t *sip,
                    uint8_t *dip,
                    uint8_t ip_proto,
                    uint16_t src_port,
                    uint16_t dst_port,
-                   uint16_t lookup_id,
-                   uint8_t key_type);
+                   uint16_t lookup_id);
+
+void ftll2_set_key(flow_entry *entry,
+                   uint8_t *src,
+                   uint8_t *dst,
+                   uint16_t ether_type,
+                   uint16_t lookup_id);
 
 int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash, uint8_t log);
 
-int ftlv6_remove(ftlv6 *obj, v6_flow_entry *entry, uint32_t hash, uint8_t log);
+int ftlv6_remove(ftlv6 *obj, flow_entry *entry, uint32_t hash, uint8_t log);
 
 void ftlv6_set_thread_id(ftlv6 *obj, uint32_t thread_id);
 

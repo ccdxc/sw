@@ -227,7 +227,8 @@ private:
 
     /// \brief         read the configured values from the local mapping tables
     /// \param[in]     vpc  pointer to the vpc entry
-    /// \param[in]     subnet    subnet of the mapping
+    /// \param[in]     subnet    subnet of the mapping, if mapping is L2 or
+    //                           else NULL
     /// \param[in/out] info pointer to the info
     /// \return        SDK_RET_OK on success, failure status code on error
     sdk_ret_t read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,

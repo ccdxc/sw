@@ -5,6 +5,7 @@
 #include "includes.h"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
+#include <nic/vpp/infra/utils.h>
 
 pds_flow_main_t pds_flow_main;
 
@@ -465,7 +466,8 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                u32 session_id,
-                               u8 is_ip4, u8 flow_exists)
+                               u8 is_ip4, u8 is_l2, 
+                               u8 flow_exists)
 {
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
@@ -554,48 +556,68 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_advance_count(1);
     } else {
         ip6_header_t *ip60;
-        u8 *src_ip, *dst_ip;
+        ethernet_header_t *e0;
+        static u8 src[16], dst[16];
         u16 sport, dport, r_sport, r_dport;
         u8 protocol;
-        u16 lkp_id;
- 
-        ip60 = vlib_buffer_get_current(p0);
+        u16 lkp_id, ether_type;
 
-        src_ip = ip60->src_address.as_u8;
-        dst_ip = ip60->dst_address.as_u8;
-        protocol = ip60->protocol;
         if (!flow_exists) {
             lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
         } else {
             lkp_id = fm->session_index_pool[session_id].ingress_bd;
         }
 
-        if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP) ||
-                          (ip60->protocol == IP_PROTOCOL_UDP)))) {
-            udp0 = (udp_header_t *)(((u8 *) ip60) +
-                                    (vnet_buffer(p0)->l4_hdr_offset -
-                                     vnet_buffer(p0)->l3_hdr_offset));
-            r_dport = sport = clib_net_to_host_u16(udp0->src_port);
-            r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
-        } else if (ip60->protocol == IP_PROTOCOL_ICMP6) {
-            icmp0 = (icmp46_header_t *) (((u8 *) ip60) +
-                    (vnet_buffer (p0)->l4_hdr_offset -
-                    vnet_buffer (p0)->l3_hdr_offset));
-            sport = *((u16 *) (icmp0 + 1));
-            sport = clib_net_to_host_u16(sport);
-            r_sport = sport;
-            dport = ((u16) (icmp0->type << 8)) | icmp0->code;
-            if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
-                r_dport = (ICMP4_echo_reply << 8) | icmp0->code;
-            } else if (icmp0->type == ICMP4_echo_reply) {
-                r_dport = (ICMP4_echo_request << 8) | icmp0->code;
-            } else {
-                r_dport = dport;
+        if (is_l2) {
+            e0 = vlib_buffer_get_current(p0);
+
+            // Copy the MAC addresses in reverse
+            int j = 0;
+            for (int i = ETH_ADDR_LEN - 1; i >= 0; i--) {
+                src[j] = e0->src_address[i];
+                dst[j] = e0->dst_address[i];
+                j++;
             }
+
+            ether_type = clib_net_to_host_u16(e0->type);
+            lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+            ftll2_cache_set_key(src, dst, ether_type, lkp_id);
         } else {
-            sport = dport = r_sport = r_dport = 0;
+            ip60 = vlib_buffer_get_current(p0);
+
+            clib_memcpy(src, ip60->src_address.as_u8, 16);
+            clib_memcpy(dst, ip60->dst_address.as_u8, 16);
+            protocol = ip60->protocol;
+            lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+
+            if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP) ||
+                             (ip60->protocol == IP_PROTOCOL_UDP)))) {
+                udp0 = (udp_header_t *)(((u8 *) ip60) +
+                                        (vnet_buffer(p0)->l4_hdr_offset -
+                                         vnet_buffer(p0)->l3_hdr_offset));
+                r_dport = sport = clib_net_to_host_u16(udp0->src_port);
+                r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
+            } else if (ip60->protocol == IP_PROTOCOL_ICMP6) {
+                icmp0 = (icmp46_header_t *) (((u8 *) ip60) +
+                        (vnet_buffer (p0)->l4_hdr_offset -
+                         vnet_buffer (p0)->l3_hdr_offset));
+                sport = *((u16 *) (icmp0 + 1));
+                sport = clib_net_to_host_u16(sport);
+                r_sport = sport;
+                dport = ((u16) (icmp0->type << 8)) | icmp0->code;
+                if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
+                    r_dport = (ICMP4_echo_reply << 8) | icmp0->code;
+                } else if (icmp0->type == ICMP4_echo_reply) {
+                    r_dport = (ICMP4_echo_request << 8) | icmp0->code;
+                } else {
+                    r_dport = dport;
+                }
+            } else {
+                sport = dport = r_sport = r_dport = 0;
+            }
+            ftlv6_cache_set_key(src, dst, protocol, sport, dport, lkp_id);
+            pds_flow_extract_nexthop_info(p0, 0, 1);
         }
-        ftlv6_cache_set_key(src_ip, dst_ip, protocol, sport, dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
@@ -603,17 +625,20 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         }
         ftlv6_cache_set_flow_miss_hit(miss_hit);
         ftlv6_cache_set_update_flag(flow_exists);
-        pds_flow_extract_nexthop_info(p0, 0, 1);
         ftlv6_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
         lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
-        ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
+        if (is_l2) {
+            ftll2_cache_set_key(dst, src, ether_type, lkp_id);
+        } else {
+            ftlv6_cache_set_key(dst, src, protocol, r_sport, r_dport, lkp_id);
+            pds_flow_extract_nexthop_info(p0, 0, 0);
+        }
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         ftlv6_cache_set_flow_miss_hit(miss_hit);
         ftlv6_cache_set_update_flag(flow_exists);
-        pds_flow_extract_nexthop_info(p0, 0, 0);
         ftlv6_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
     }
@@ -654,10 +679,10 @@ pds_flow_program_hw_ip4 (u16 *next, u32 *counter)
 }
 
 always_inline void
-pds_flow_program_hw_ip6 (u16 *next, u32 *counter)
+pds_flow_program_hw_ip6_or_l2 (u16 *next, u32 *counter)
 {
     int i, size = ftlv6_cache_get_count();
-    ftlv6 *table = pds_flow_prog_get_table6();
+    ftlv6 *table = pds_flow_prog_get_table6_or_l2();
 
     for (i = 0; i < size; i++) {
         uint32_t session_id = ftlv6_cache_get_session_index(i);
@@ -689,7 +714,7 @@ pds_flow_program_hw_ip6 (u16 *next, u32 *counter)
 always_inline uword
 pds_flow_prog (vlib_main_t *vm,
                vlib_node_runtime_t *node,
-               vlib_frame_t *from_frame, u8 is_ip4)
+               vlib_frame_t *from_frame, u8 is_ip4, u8 is_l2)
 {
     u32 counter[FLOW_PROG_COUNTER_LAST] = {0};
 
@@ -723,10 +748,10 @@ pds_flow_prog (vlib_main_t *vm,
                     flow_exists1 = 0;
                 }
             }
-            pds_flow_extract_prog_args_x1(b0, session_id0,
-                                          is_ip4, flow_exists0);
-            pds_flow_extract_prog_args_x1(b1, session_id1,
-                                          is_ip4, flow_exists1);
+            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2, 
+                                          flow_exists0);
+            pds_flow_extract_prog_args_x1(b1, session_id1, is_ip4, is_l2, 
+                                          flow_exists1);
             offset0 = pds_flow_prog_get_next_offset(b0);
             offset1 = pds_flow_prog_get_next_offset(b1);
             vlib_buffer_advance(b0, offset0);
@@ -745,8 +770,8 @@ pds_flow_prog (vlib_main_t *vm,
                           vnet_buffer(b0)->pds_flow_data.ses_id :
                           pds_session_id_alloc();
             flow_exists0 = vnet_buffer(b0)->pds_flow_data.ses_id ? 1 : 0;
-            pds_flow_extract_prog_args_x1(b0, session_id0,
-                                          is_ip4, flow_exists0);
+            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2, 
+                                          flow_exists0);
             offset0 = pds_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
         } PDS_PACKET_SINGLE_LOOP_END;
@@ -755,7 +780,7 @@ pds_flow_prog (vlib_main_t *vm,
     if (is_ip4) {
         pds_flow_program_hw_ip4(PDS_PACKET_NEXT_NODE_ARR, counter);
     } else {
-        pds_flow_program_hw_ip6(PDS_PACKET_NEXT_NODE_ARR, counter);
+        pds_flow_program_hw_ip6_or_l2(PDS_PACKET_NEXT_NODE_ARR, counter);
     }
     vlib_buffer_enqueue_to_next(vm, node,
                                 PDS_PACKET_BUFFER_INDEX_PTR(0),
@@ -781,7 +806,7 @@ pds_ip6_flow_prog (vlib_main_t * vm,
                    vlib_node_runtime_t * node,
                    vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 0);
+    return pds_flow_prog(vm, node, from_frame, 0, 0);
 }
 
 static char * flow_prog_error_strings[] = {
@@ -814,7 +839,7 @@ pds_ip4_flow_prog (vlib_main_t * vm,
                    vlib_node_runtime_t * node,
                    vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 1, 0);
 }
 
 VLIB_REGISTER_NODE (pds_ip4_flow_prog_node) = {
@@ -837,11 +862,38 @@ VLIB_REGISTER_NODE (pds_ip4_flow_prog_node) = {
 };
 
 static uword
+pds_l2_flow_prog (vlib_main_t * vm,
+                  vlib_node_runtime_t * node,
+                  vlib_frame_t * from_frame)
+{
+    return pds_flow_prog(vm, node, from_frame, 0, 1);
+}
+
+VLIB_REGISTER_NODE (pds_l2_flow_prog_node) = {
+    .function = pds_l2_flow_prog,
+    .name = "pds-l2-flow-program",
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
+
+    .n_errors = FLOW_PROG_COUNTER_LAST,
+    .error_strings = flow_prog_error_strings,
+
+    .n_next_nodes = FLOW_PROG_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [FLOW_PROG_NEXT_##s] = n,
+    foreach_flow_prog_next
+#undef _
+    },
+
+    .format_trace = format_pds_flow_prog_trace,
+};
+
+static uword
 pds_tunnel_ip6_flow_prog (vlib_main_t * vm,
                           vlib_node_runtime_t * node,
                           vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 0);
+    return pds_flow_prog(vm, node, from_frame, 0, 0);
 }
 
 VLIB_REGISTER_NODE (pds_tun_ip6_flow_prog_node) = {
@@ -868,7 +920,7 @@ pds_tunnel_ip4_flow_prog (vlib_main_t * vm,
                           vlib_node_runtime_t * node,
                           vlib_frame_t * from_frame)
 {
-    return pds_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 1, 0);
 }
 
 VLIB_REGISTER_NODE (pds_tun_ip4_flow_prog_node) = {
@@ -971,7 +1023,8 @@ pds_flow_classify (vlib_main_t *vm,
 
     if (PREDICT_FALSE(!ftl_init_done)) {
         ftlv4_set_thread_id(pds_flow_prog_get_table4(), node->thread_index);
-        ftlv6_set_thread_id(pds_flow_prog_get_table6(), node->thread_index);
+        ftlv6_set_thread_id(pds_flow_prog_get_table6_or_l2(), 
+                            node->thread_index);
         ftl_init_done = 1;
     }
 
@@ -1054,8 +1107,8 @@ pds_flow_init (vlib_main_t * vm)
 
     fm->table4 = ftlv4_create((void *) pds_flow4_key2str,
                               (void *) pds_flow_appdata2str);
-    fm->table6 = ftlv6_create((void *) pds_flow6_key2str,
-                              (void *) pds_flow_appdata2str);
+    fm->table6_or_l2 = ftl_create((void *) pds_flow_key2str,
+                                  (void *) pds_flow_appdata2str);
     vec_validate_init_empty(fm->stats_buf, DISPLAY_BUF_SIZE, 0);
 
     for (i = 0; i < no_of_threads; i++) {

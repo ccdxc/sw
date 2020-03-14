@@ -81,7 +81,7 @@ vpp_uds_flow_dump(int fd)
     sdk::table::ftl_base *table4 =
         (sdk::table::ftl_base *)pds_flow_get_table4();
     sdk::table::ftl_base *table6 =
-        (sdk::table::ftl_base *)pds_flow_get_table6();
+        (sdk::table::ftl_base *)pds_flow_get_table6_or_l2();
 
     // Iterate over v4 table and then v6
     params.itercb = ftlv4_entry_iter_cb;

@@ -18,6 +18,7 @@
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
         _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
+        _(L2_FLOW_PROG, "pds-l2-flow-program" )                     \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
         _(IP4_NAT, "pds-nat44" )                                    \
@@ -26,6 +27,7 @@
 #define foreach_flow_classify_counter                               \
         _(IP4_FLOW, "IPv4 flow packets" )                           \
         _(IP6_FLOW, "IPv6 flow packets" )                           \
+        _(L2_FLOW, "L2 flow packets" )                              \
         _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
         _(IP4_NAT, "NAPT flow packets" )                            \
@@ -168,7 +170,7 @@ typedef struct pds_flow_main_s {
     u64 no_threads;
     volatile u32 *flow_prog_lock;
     ftlv4 *table4;
-    ftlv6 *table6;
+    ftlv6 *table6_or_l2;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     pds_flow_rewrite_flags_t *rewrite_flags;
@@ -227,11 +229,11 @@ always_inline void * pds_flow_prog_get_table4(void)
     return fm->table4;
 }
 
-always_inline void * pds_flow_prog_get_table6(void)
+always_inline void * pds_flow_prog_get_table6_or_l2(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table6;
+    return fm->table6_or_l2;
 }
 
 always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)

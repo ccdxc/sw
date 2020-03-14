@@ -89,6 +89,15 @@ namespace impl {
     }                                                                        \
 }
 
+#define PDS_IMPL_FILL_LOCAL_L2_MAPPING_SWKEY(key, bd_hw_id, mac)             \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->key_metadata_local_mapping_lkp_id = (bd_hw_id);                   \
+    (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;               \
+    sdk::lib::memrev((key)->key_metadata_local_mapping_lkp_addr, (mac),      \
+                     ETH_ADDR_LEN);                                          \
+}
+
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,  \
                                                binding_checks_en,            \
                                                binding_idx1, binding_idx2,   \

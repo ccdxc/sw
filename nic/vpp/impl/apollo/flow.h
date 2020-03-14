@@ -101,7 +101,7 @@ pds_flow4_key2str (void *key)
 }
 
 static char *
-pds_flow6_key2str (void *key)
+pds_flow_key2str (void *key)
 {
     static char str[256];
     flow_swkey_t *k = (flow_swkey_t *)key;

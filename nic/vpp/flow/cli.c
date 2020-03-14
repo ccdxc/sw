@@ -80,7 +80,7 @@ get_worker_flow_stats_summary_ftlv6 (vlib_main_t * vm)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    ftlv6_cache_stats(fm->table6);
+    ftlv6_cache_stats(fm->table6_or_l2);
     clib_callback_enable_disable
         (vm->worker_thread_main_loop_callbacks,
          vm->worker_thread_main_loop_callback_tmp,
@@ -106,7 +106,7 @@ get_worker_flow_stats_ftlv6 (vlib_main_t * vm)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    ftlv6_dump_stats(fm->table6, fm->stats_buf, DISPLAY_BUF_SIZE - 1);
+    ftlv6_dump_stats(fm->table6_or_l2, fm->stats_buf, DISPLAY_BUF_SIZE - 1);
     clib_callback_enable_disable
         (vm->worker_thread_main_loop_callbacks,
          vm->worker_thread_main_loop_callback_tmp,
@@ -202,7 +202,7 @@ show_flow_stats_command_fn (vlib_main_t * vm,
             vlib_cli_output(vm, "\nIPv6 flow statistics\n");
             if (detail) {
                 vlib_cli_output(vm, "Total number of IPv6 flow entries in hardware %u",
-                                ftlv6_get_flow_count(fm->table6));
+                                ftlv6_get_flow_count(fm->table6_or_l2));
             }
             for (i = 1; i < no_of_threads; i++) {
                 if ((!all_threads) && (thread_id != i)) {
@@ -261,7 +261,7 @@ show_flow_stats_command_fn (vlib_main_t * vm,
     if (ip6) {
         vlib_cli_output(vm, "\nIPv6 flow statistics summary:\n");
         vlib_cli_output(vm, "Total number of IPv6 flow entries in hardware %u",
-                        ftlv6_get_flow_count(fm->table6));
+                        ftlv6_get_flow_count(fm->table6_or_l2));
         ftlv6_init_stats_cache();
         for (i = 1; i < no_of_threads; i++) {
             clib_callback_enable_disable
@@ -372,7 +372,7 @@ dump_flow_entry_command_fn (vlib_main_t * vm,
                                   (u16)lkp_id,
                                   buf, DISPLAY_BUF_SIZE-1);
     } else {
-        ret = ftlv6_dump_hw_entry(fm->table6,
+        ret = ftlv6_dump_hw_entry(fm->table6_or_l2,
                                   src.ip6.as_u8,
                                   dst.ip6.as_u8,
                                   ip_proto,
@@ -456,7 +456,7 @@ dump_flow_entries_command_fn (vlib_main_t * vm,
     if (ip6) {
         vlib_cli_output(vm, "Reading IPv6 flow entries from HW, Please wait...\n");
         vlib_worker_thread_barrier_sync(vm);
-        ret = ftlv6_dump_hw_entries(fm->table6, logfile, detail);
+        ret = ftlv6_dump_hw_entries(fm->table6_or_l2, logfile, detail);
         vlib_worker_thread_barrier_release(vm);
         if (ret < 0) {
             vlib_cli_output(vm, "Error writing IPv6 to %s\n", logfile);
@@ -528,7 +528,7 @@ static void
 clear_worker_flow_stats_ftlv6(vlib_main_t *vm)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    (void)ftlv6_clear(fm->table6, false, true);
+    (void)ftlv6_clear(fm->table6_or_l2, false, true);
     clib_callback_enable_disable
         (vm->worker_thread_main_loop_callbacks,
          vm->worker_thread_main_loop_callback_tmp,

@@ -31,7 +31,7 @@ void pds_operd_export_flow_ip6(uint8_t *sip,
 
 void pds_operd_export_flow_l2(uint8_t *smac,
                               uint8_t *dmac,
-                              uint8_t proto,
+                              uint8_t ether_type,
                               uint16_t bd_id,
                               uint8_t add,
                               uint8_t allow);

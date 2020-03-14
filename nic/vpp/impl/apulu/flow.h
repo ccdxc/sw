@@ -15,6 +15,7 @@
 #include <nic/vpp/impl/pds_table.h>
 #include "p4_cpu_hdr_utils.h"
 #include "impl_db.h"
+#include <netinet/ether.h>
 
 #define PDS_FLOW_UPLINK0_LIF_ID     0x0
 #define PDS_FLOW_UPLINK1_LIF_ID     0x1
@@ -158,8 +159,22 @@ skip_prog:
 always_inline int
 pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
 {
-    return -(APULU_P4_TO_ARM_HDR_SZ +
-            (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+    if (PREDICT_TRUE(vnet_buffer(p0)->pds_flow_data.flags & 
+                     (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV4_2_VALID |
+                      VPP_CPU_FLAGS_IPV6_1_VALID | VPP_CPU_FLAGS_IPV6_2_VALID))) {
+        return -(APULU_P4_TO_ARM_HDR_SZ +
+                 (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+    }
+
+    // It's an L2 flow
+    if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_RX_PKT_VALID) {
+        // This would be a VXLAN packet
+        return -(APULU_P4_TO_ARM_HDR_SZ +
+                 (vnet_buffer(p0)->pds_flow_data.l2_inner_offset -
+                  vnet_buffer(p0)->l2_hdr_offset));
+    }
+    
+    return -APULU_P4_TO_ARM_HDR_SZ;
 }
 
 always_inline int
@@ -331,19 +346,27 @@ pds_flow4_key2str (void *key)
 }
 
 static char *
-pds_flow6_key2str (void *key)
+pds_flow_key2str (void *key)
 {
     static char str[256] = {0};
     flow_swkey_t *k = (flow_swkey_t *)key;
     char srcstr[INET6_ADDRSTRLEN + 1];
     char dststr[INET6_ADDRSTRLEN + 1];
 
-    inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
-    inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
-    sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
-            srcstr, dststr,
-            k->key_metadata_dport, k->key_metadata_sport,
-            k->key_metadata_proto, k->key_metadata_flow_lkp_id);
+    if (k->key_metadata_ktype == KEY_TYPE_IPV6) {
+        inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
+        sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u VNIC:%u",
+                srcstr, dststr,
+                k->key_metadata_dport, k->key_metadata_sport,
+                k->key_metadata_proto, k->key_metadata_flow_lkp_id);
+    } else {
+        // Key type MAC - L2 flow
+        sprintf(str, "Src:%s Dst:%s EtherType:%u VNIC:%u",
+                ether_ntoa((struct ether_addr *)k->key_metadata_src), 
+                ether_ntoa((struct ether_addr *)k->key_metadata_dst), 
+                k->key_metadata_dport, k->key_metadata_flow_lkp_id);
+    }
     return str;
 }
 
@@ -406,8 +429,22 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
 always_inline int
 pds_flow_classify_get_advance_offset (vlib_buffer_t *b)
 {
-    return (VPP_P4_TO_ARM_HDR_SZ +
-            (vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset));
+    if (PREDICT_TRUE(vnet_buffer(b)->pds_flow_data.flags &
+                     (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV4_2_VALID |
+                      VPP_CPU_FLAGS_IPV6_1_VALID | VPP_CPU_FLAGS_IPV6_2_VALID))) {
+        return (VPP_P4_TO_ARM_HDR_SZ +
+                (vnet_buffer(b)->l3_hdr_offset - vnet_buffer (b)->l2_hdr_offset));
+    }
+
+    // It is an L2 flow
+    if (vnet_buffer(b)->pds_flow_data.flags & VPP_CPU_FLAGS_RX_PKT_VALID) {
+        // This would be a VXLAN packet
+        return (VPP_P4_TO_ARM_HDR_SZ +
+                (vnet_buffer(b)->pds_flow_data.l2_inner_offset -
+                 vnet_buffer(b)->l2_hdr_offset));
+    }
+    
+    return VPP_P4_TO_ARM_HDR_SZ;
 }
 
 void
@@ -559,10 +596,12 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
     u8 flags0 = flag_orig0 &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
-         VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
+         VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID |
+         VPP_CPU_FLAGS_VLAN_VALID);
     u8 flags1 = flag_orig1 &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
-         VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
+         VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID |
+         VPP_CPU_FLAGS_VLAN_VALID);
 
     vnic0 = pds_impl_db_vnic_get(hdr0->vnic_id);
     if (!vnic0) {
@@ -594,6 +633,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
         vnet_buffer(p0)->l4_hdr_offset =
                 hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+        vnet_buffer(p0)->pds_flow_data.l2_inner_offset = hdr0->l2_inner_offset;
         vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
         vnet_buffer2(p0)->pds_nat_data.vnic_id = hdr0->vnic_id;
         if (PREDICT_FALSE(vnic0->max_sessions &&
@@ -641,6 +681,7 @@ next_pak:
                 hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
         vnet_buffer(p1)->l4_hdr_offset =
                 hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+        vnet_buffer(p1)->pds_flow_data.l2_inner_offset = hdr0->l2_inner_offset;
         vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
         vnet_buffer2(p1)->pds_nat_data.vnic_id = hdr1->vnic_id;
         if (PREDICT_FALSE(vnic1->max_sessions &&
@@ -669,17 +710,9 @@ pak_done:
         } else if (flags0 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 2;
-        } else if (flags0 == VPP_CPU_FLAGS_IPV6_1_VALID) {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP6_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 2;
-        } else if (flags0 & VPP_CPU_FLAGS_IPV6_2_VALID) {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP6_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_TUN_FLOW] += 2;
         } else {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 2;
-            vnic0->active_ses_count--;
-            vnic1->active_ses_count--;
+            *next0 = *next1 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            counter[FLOW_CLASSIFY_NEXT_L2_FLOW_PROG] += 2;
         }
         return;
     }
@@ -691,16 +724,9 @@ pak_done:
         } else if (flags0 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next0 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
-        } else if (flags0 == VPP_CPU_FLAGS_IPV6_1_VALID) {
-            *next0 = FLOW_CLASSIFY_NEXT_IP6_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
-        } else if (flags0 & VPP_CPU_FLAGS_IPV6_2_VALID) {
-            *next0 = FLOW_CLASSIFY_NEXT_IP6_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_TUN_FLOW] += 1;
         } else {
-            *next0 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            vnic0->active_ses_count--;
+            *next0 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            counter[FLOW_CLASSIFY_NEXT_L2_FLOW_PROG] += 1;
         }
     }
 
@@ -711,16 +737,9 @@ pak_done:
         } else if (flags1 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
-        } else if (flags1 == VPP_CPU_FLAGS_IPV6_1_VALID) {
-            *next1 = FLOW_CLASSIFY_NEXT_IP6_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
-        } else if (flags1 & VPP_CPU_FLAGS_IPV6_2_VALID) {
-            *next1 = FLOW_CLASSIFY_NEXT_IP6_TUN_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP6_TUN_FLOW] += 1;
         } else {
-            *next1 = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            vnic1->active_ses_count--;
+            *next1 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            counter[FLOW_CLASSIFY_NEXT_L2_FLOW_PROG] += 1;
         }
     }
 }
@@ -789,22 +808,12 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     } else if (flags & VPP_CPU_FLAGS_IPV4_2_VALID) {
         *next = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
         counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
-    } else if (flags == VPP_CPU_FLAGS_IPV6_1_VALID) {
-        *next = FLOW_CLASSIFY_NEXT_IP6_FLOW_PROG;
-        counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
-    } else if (flags & VPP_CPU_FLAGS_IPV6_2_VALID) {
-        *next = FLOW_CLASSIFY_NEXT_IP6_TUN_FLOW_PROG;
-        counter[FLOW_CLASSIFY_COUNTER_IP6_TUN_FLOW] += 1;
     } else {
-        *next = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-        goto err;
-    }
+        *next = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+        counter[FLOW_CLASSIFY_NEXT_L2_FLOW_PROG] += 1;
+    } 
 
 end:
-    return;
-err:
-    vnic->active_ses_count--;
     return;
 }
 

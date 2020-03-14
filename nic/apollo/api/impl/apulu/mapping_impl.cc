@@ -1039,9 +1039,16 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     // read the local mapping
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
-                                         ((vpc_impl *)vpc->impl())->hw_id(),
-                                         &spec->skey.ip_addr);
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                             ((vpc_impl *)vpc->impl())->hw_id(),
+                                             &spec->skey.ip_addr);
+    } else {
+        PDS_IMPL_FILL_LOCAL_L2_MAPPING_SWKEY(&local_mapping_key,
+                                             ((subnet_impl *)subnet->impl())->hw_id(),
+                                             spec->skey.mac_addr);
+    }
+
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                    &local_mapping_data, 0,
                                    sdk::table::handle_t::null());

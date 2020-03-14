@@ -86,7 +86,7 @@ pds_operd_export_flow_ip6 (uint8_t *sip,
 void
 pds_operd_export_flow_l2 (uint8_t *smac,
                           uint8_t *dmac,
-                          uint8_t proto,
+                          uint8_t ether_type,
                           uint16_t bd_id,
                           uint8_t add,
                           uint8_t allow)
@@ -104,7 +104,7 @@ pds_operd_export_flow_l2 (uint8_t *smac,
     flow.op = add ? OPERD_FLOW_OPERATION_ADD : OPERD_FLOW_OPERATION_DEL;
     memcpy(flow.l2.src, smac, ETH_ADDR_LEN);
     memcpy(flow.l2.dst, dmac, ETH_ADDR_LEN);
-    flow.l2.proto = proto;
+    flow.l2.ether_type = ether_type;
     flow.l2.bd_id = bd_id;
 
     g_operd_producer->write(OPERD_DECODER_VPP, sdk::operd::INFO, &flow, sizeof(flow));

@@ -39,7 +39,7 @@ typedef struct operd_flow_v6 {
 typedef struct operd_flow_l2 {
     uint8_t src[ETH_ADDR_LEN];
     uint8_t dst[ETH_ADDR_LEN];
-    uint16_t proto;
+    uint16_t ether_type;
     uint16_t bd_id;
 } operd_flow_l2_t;
 

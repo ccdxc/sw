@@ -16,7 +16,7 @@ void pds_flow_dump_init(void);
 
 // pdsa_vpp_uds_hdlr.c
 void * pds_flow_get_table4(void);
-void * pds_flow_get_table6(void);
+void * pds_flow_get_table6_or_l2(void);
 
 #ifdef __cplusplus
 }

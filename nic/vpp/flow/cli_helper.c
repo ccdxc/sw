@@ -24,7 +24,7 @@ int clear_all_flow_entries()
         ret1 = clear_nat_flows();
     }
     ret2 = ftlv4_clear(fm->table4, true, false);
-    ret3 = ftlv6_clear(fm->table6, true, false);
+    ret3 = ftlv6_clear(fm->table6_or_l2, true, false);
     pds_session_id_flush();
     vlib_worker_thread_barrier_release(vm);
 

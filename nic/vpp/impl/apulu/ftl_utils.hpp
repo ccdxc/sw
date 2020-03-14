@@ -17,10 +17,10 @@ ftlv4_set_nexthop(ipv4_flow_hash_entry_t *entry,
 }
 
 void
-ftlv6_set_nexthop(flow_hash_entry_t *entry,
-                  uint32_t nexthop,
-                  uint32_t nexthop_type,
-                  uint8_t nexthop_valid)
+ftl_set_nexthop(flow_hash_entry_t *entry,
+                uint32_t nexthop,
+                uint32_t nexthop_type,
+                uint8_t nexthop_valid)
 {
     entry->set_nexthop_id(nexthop);
     entry->set_nexthop_type(nexthop_type);
@@ -35,8 +35,8 @@ ftlv4_set_lookup_id(ipv4_flow_hash_entry_t *entry,
 }
 
 void
-ftlv6_set_lookup_id(flow_hash_entry_t *entry, 
-                    uint16_t lookup_id)
+ftl_set_lookup_id(flow_hash_entry_t *entry, 
+                  uint16_t lookup_id)
 {
     entry->set_key_metadata_flow_lkp_id(lookup_id);
 }
@@ -48,7 +48,7 @@ ftlv4_get_lookup_id(ipv4_flow_hash_entry_t *entry)
 }
 
 uint16_t
-ftlv6_get_lookup_id(flow_hash_entry_t *entry)
+ftl_get_lookup_id(flow_hash_entry_t *entry)
 {
     return entry->get_key_metadata_flow_lkp_id();
 }
@@ -60,7 +60,7 @@ ftlv4_set_flow_miss_hit(ipv4_flow_hash_entry_t *entry, uint8_t val)
 }
 
 void
-ftlv6_set_flow_miss_hit(flow_hash_entry_t *entry, uint8_t val)
+ftl_set_flow_miss_hit(flow_hash_entry_t *entry, uint8_t val)
 {
     entry->set_force_flow_miss(val);
 }

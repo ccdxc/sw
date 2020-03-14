@@ -13,9 +13,9 @@ void * pds_flow_get_table4 (void)
 }
 
 // Return pointer to FTL v6 flow table
-void * pds_flow_get_table6 (void)
+void * pds_flow_get_table6_or_l2 (void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table6;
+    return fm->table6_or_l2;
 }
