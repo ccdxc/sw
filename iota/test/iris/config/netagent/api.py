@@ -105,8 +105,8 @@ def RemoveConfigObjects(objects):
 def QueryConfigs(kind, filter=None):
     return cfg_api.QueryConfigs(kind, filter)
 
-def ReadConfigs(directory, file_pattern="*.json"):
-    return cfg_api.ReadConfigs(directory, file_pattern)
+def ReadConfigs(directory, file_pattern="*.json", reset=True):
+    return cfg_api.ReadConfigs(directory, file_pattern, reset)
 
 def AddOneConfig(config_file):
     return cfg_api.AddOneConfig(config_file)
@@ -360,7 +360,7 @@ def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True,
 
     if not push_base_profile:
         if len(objects) == 0:
-            profile_json = api.GetTopologyDirectory() + "/" + "profile.json"
+            profile_json = api.GetTopologyDirectory() + "/profile/" + "profile.json"
             objects = AddOneConfig(profile_json)
 
         for obj in objects:

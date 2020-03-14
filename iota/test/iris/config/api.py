@@ -15,11 +15,11 @@ def AddOneConfig(config):
         objects.append(cfgObject)
     return objects
 
-def ReadConfigs(directory, file_pattern="*.json"):
-    cfg_main.ObjectConfigStore.Reset()
+def ReadConfigs(directory, file_pattern="*.json", reset=True):
+    if reset:
+        cfg_main.ObjectConfigStore.Reset()
     for config in  glob.glob(directory + "/" + file_pattern):
         AddOneConfig(config)
-
 
 #Clone config objects
 def CloneConfigObjects(objects):

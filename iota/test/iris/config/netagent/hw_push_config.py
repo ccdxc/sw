@@ -578,7 +578,7 @@ def Main(args):
     agent_nodes = api.GetNaplesHostnames()
     netagent_api.Init(agent_nodes, hw = True)
 
-    netagent_api.ReadConfigs(api.GetTopologyDirectory())
+    netagent_api.ReadConfigs(api.GetTopologyDirectory(), reset=False)
     #Delete path is not stable yet
     #netagent_api.DeleteBaseConfig()
 
