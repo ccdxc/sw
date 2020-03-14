@@ -116,6 +116,7 @@ copy_files() {
     cp -H nic/include/hal_pd_error.hpp  $DST/nic/include
     cp -H nic/include/trace.hpp  $DST/nic/include
     cp -H nic/include/accel_ring.h  $DST/nic/include
+    cp -r nic/conf/dhcp-server $DST/nic/conf/dhcp-server
 
     # Patch for gen_version
     ./nic/tools/gen_version.py --output-dir $DST/nic/conf
