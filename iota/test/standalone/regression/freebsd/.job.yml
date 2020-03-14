@@ -9,117 +9,117 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
  # baremetal
- e2e-freebsd-regression-rdma:
-   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg"]
-   owners: ["email:rdma-dpath@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 24h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-12
-       count: 2
-       resources:
-         # Freebsd works with only server-d
-         server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl!
-
- e2e-freebsd-regression-rdma-dcqcn:
-   commands: ["sh", "-c", "make regression-rdma-dcqcn && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg_dcqcn"]
-   owners: ["email:rdma-dpath@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 24h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-12
-       count: 2
-       resources:
-         # Freebsd works with only server-d
-         server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl! 
- e2e-freebsd-regression-rdma-stress:
-   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
-   owners: ["email:rdma-dpath@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 24h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-12
-       count: 2
-       resources:
-         # Freebsd works with only server-d
-         server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl!
- e2e-freebsd-regression-storage:
-   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle storage"]
-   owners: ["email:stg-dev@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 12h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-12
-       count: 2
-       resources:
-         # Freebsd works with only server-d
-         server-type: server-d
-         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-         nic-type: naples
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl!
+# e2e-freebsd-regression-rdma:
+#   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg"]
+#   owners: ["email:rdma-dpath@pensando.io"]
+#   area:
+#   sub-area:
+#   feature:
+#   max-duration: 24h
+#   build-dependencies:
+#     - build-iris-arm
+#     - build-iota
+#   clusters:
+#     - image: build-12
+#       count: 2
+#       resources:
+#         # Freebsd works with only server-d
+#         server-type: server-d
+#         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+#         nic-type: naples
+#         constraints:
+#           same-switch: true
+#   provision:
+#       username: vm
+#       password: vm
+#       vars:
+#          BmOs: freebsd
+#          VmOs: freebsd
+#          EsxUsername: root
+#          EsxPassword: Pen0trl!
+#
+# e2e-freebsd-regression-rdma-dcqcn:
+#   commands: ["sh", "-c", "make regression-rdma-dcqcn && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg_dcqcn"]
+#   owners: ["email:rdma-dpath@pensando.io"]
+#   area:
+#   sub-area:
+#   feature:
+#   max-duration: 24h
+#   build-dependencies:
+#     - build-iris-arm
+#     - build-iota
+#   clusters:
+#     - image: build-12
+#       count: 2
+#       resources:
+#         # Freebsd works with only server-d
+#         server-type: server-d
+#         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+#         nic-type: naples
+#         constraints:
+#           same-switch: true
+#   provision:
+#       username: vm
+#       password: vm
+#       vars:
+#          BmOs: freebsd
+#          VmOs: freebsd
+#          EsxUsername: root
+#          EsxPassword: Pen0trl! 
+# e2e-freebsd-regression-rdma-stress:
+#   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
+#   owners: ["email:rdma-dpath@pensando.io"]
+#   area:
+#   sub-area:
+#   feature:
+#   max-duration: 24h
+#   build-dependencies:
+#     - build-iris-arm
+#     - build-iota
+#   clusters:
+#     - image: build-12
+#       count: 2
+#       resources:
+#         # Freebsd works with only server-d
+#         server-type: server-d
+#         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+#         nic-type: naples
+#         constraints:
+#           same-switch: true
+#   provision:
+#       username: vm
+#       password: vm
+#       vars:
+#          BmOs: freebsd
+#          VmOs: freebsd
+#          EsxUsername: root
+#          EsxPassword: Pen0trl!
+# e2e-freebsd-regression-storage:
+#   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle storage"]
+#   owners: ["email:stg-dev@pensando.io"]
+#   area:
+#   sub-area:
+#   feature:
+#   max-duration: 12h
+#   build-dependencies:
+#     - build-iris-arm
+#     - build-iota
+#   clusters:
+#     - image: build-12
+#       count: 2
+#       resources:
+#         # Freebsd works with only server-d
+#         server-type: server-d
+#         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+#         nic-type: naples
+#   provision:
+#       username: vm
+#       password: vm
+#       vars:
+#          BmOs: freebsd
+#          VmOs: freebsd
+#          EsxUsername: root
+#          EsxPassword: Pen0trl!
  e2e-freebsd-regression-eth:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
    owners: ["email:anish@pensando.io"]
