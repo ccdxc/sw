@@ -46,7 +46,8 @@ common:
 
 testbundles:
     precheckin:
-        - networking/telemetry.testbundle
+        - networking/connectivity.testbundle
+        - networking/telemetry_precheckin.testbundle
         - filters/filters.testbundle
         - subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle

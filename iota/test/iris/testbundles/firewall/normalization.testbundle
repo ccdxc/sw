@@ -5,9 +5,11 @@ meta:
     targetcount : 1
 
 testcases:
-    -   name    : IP normalization tests
+    -   name    : IP_normalization
+        ignore  : True   
         testcase: testcases.security.ip_norm
-    -   name    : ICMP normalization tests
+    -   name    : ICMP_normalization
+        ignore  : True     
         testcase: testcases.security.icmp_norm
         args    :
             type: remote_only
