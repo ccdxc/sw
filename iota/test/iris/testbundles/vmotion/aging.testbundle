@@ -1,0 +1,28 @@
+meta:
+    name    : vm_aging
+    nics    : [ pensando ]
+    os      : [  esx ]
+    #targetcount : 20
+
+testcases:
+    #-   name    : AgingICMPSessions
+    #    testcase: testcases.vmotion.icmp_aging
+    #    args    :
+    #        type: local_only
+    #        skip_security_prof: True
+
+    #-   name     : AgingUdpSessions
+    #    testcase : testcases.vmotion.udp_aging
+    #    iterators:
+    #        type              : simple
+    #        timeout           : [30s]
+    #    args     :
+    #        type: local_only
+    #        skip_security_prof: True
+
+    -   name    : AgingTcpSessions
+        testcase: testcases.vmotion.tcp_aging
+        args    :
+            type: local_only 
+            skip_security_prof: True
+

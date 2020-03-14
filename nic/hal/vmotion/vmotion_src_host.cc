@@ -20,7 +20,12 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
 {
     auto ep = vmn_ep->get_ep();
 
-    HAL_TRACE_INFO("Source Host end EP: {:p}, ep_handle:{}", (void *)ep, vmn_ep->get_ep_handle());
+    HAL_TRACE_INFO("Source Host end EP: {:p}, Hdl: {}, MigState:{} exited:{}", (void *)ep,
+                   vmn_ep->get_ep_handle(), migration_state, VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep));
+
+    if (VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep)) {
+        return;
+    }
 
     if (ep) {
         // Remove EP Quiesce NACL entry
@@ -35,6 +40,9 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
 
         ep->vmotion_state = migration_state;
     }
+
+    VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
+
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
 }
@@ -115,7 +123,12 @@ vmotion_src_host_fsm_def::proc_sync_begin(fsm_state_ctx ctx, fsm_event_data data
     unsigned int    sess_count = 0;
     bool            ret = true;
 
-    HAL_TRACE_INFO("Sync Begin EP: {}", macaddr2str(ep->l2_key.mac_addr));
+    HAL_TRACE_INFO("Sync Begin EP: {} Ptr:{:p}", macaddr2str(ep->l2_key.mac_addr), (void *)ep);
+
+    if (!ep) {
+        src_host_end(vmn_ep, MigrationState::FAILED);
+        return false;
+    }
 
     // Record the current time
     vmn_ep->set_last_sync_time();
@@ -180,7 +193,12 @@ vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data d
     unsigned int           sess_count   = 0;
     bool                   ret          = true;
 
-    HAL_TRACE_INFO("Term Sync Req EP: {}", vmn_ep->get_ep_handle());
+    HAL_TRACE_INFO("Term Sync Req EP: {} Ptr:{:p}", vmn_ep->get_ep_handle(), (void *)ep);
+
+    if (!ep) {
+        src_host_end(vmn_ep, MigrationState::FAILED);
+        return false;
+    }
 
     // Add EP Quiesce NACL entry
     ep_quiesce(ep, TRUE);

@@ -44,8 +44,7 @@ vmotion_send_msg (VmotionMessage& msg, int sd)
         ret = HAL_RET_ERR;
         goto end;
     }
-    HAL_TRACE_DEBUG("vmotion msg send. hdr_len: {}, data_len: {}, msg_len: {} Sent: {}",
-                    VMOTION_MSG_HDR_LEN, msg.ByteSize(), msg_len, byte_count);
+    HAL_TRACE_DEBUG("vmotion msg send. msg_len: {} Sent: {}", msg_len, byte_count);
 end:
     HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, pkt);
     free(coded_output);
@@ -63,7 +62,7 @@ vmotion_recv_msg (VmotionMessage& msg, int sd)
 
     if ((byte_count = recv(sd, buff, VMOTION_MSG_HDR_LEN, MSG_PEEK)) == -1) {
         HAL_TRACE_ERR("vmotion msg recv error error: {}", errno);
-    } else if (byte_count == 0){
+    } else if (byte_count == 0) {
         HAL_TRACE_ERR("client closed connection");
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff);
         return HAL_RET_CONN_CLOSED;
@@ -75,19 +74,19 @@ vmotion_recv_msg (VmotionMessage& msg, int sd)
 
     msg_len = data_len + VMOTION_MSG_HDR_LEN;
 
-    HAL_TRACE_DEBUG("vmotion msg recv. hdr_len: {}, data_len: {}, msg_len: {}",
-                    VMOTION_MSG_HDR_LEN, data_len, msg_len);
-
     buff_msg = (char *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION_BUFFER, msg_len);
 
     if ((byte_count = recv(sd, buff_msg, msg_len, MSG_WAITALL)) == -1) {
         HAL_TRACE_ERR("vmotion msg recv error error: {}", errno);
-    } else if (byte_count == 0){
+    } else if (byte_count == 0) {
         HAL_TRACE_ERR("client closed connection");
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff);
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff_msg);
         return HAL_RET_CONN_CLOSED;
     }
+
+    HAL_TRACE_DEBUG("vmotion msg recv. msg_len: {} rcvd: {}", msg_len, byte_count);
+
     uint32_t tmp_data_len;
     ArrayInputStream ais_msg(buff_msg, msg_len);
     CodedInputStream coded_input_msg(&ais_msg);

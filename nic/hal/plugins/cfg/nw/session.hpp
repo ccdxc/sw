@@ -502,7 +502,8 @@ struct session_s {
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
     uint16_t            aging_enqueued:1;         // is session aging action taken already
-    uint16_t            syncing_session:1;        // Session in the midst of syncing by vMotion
+    uint16_t            syncing_session:1;        // Session getting synced by vMotion in New host
+    uint16_t            sync_sent:1;              // Session Sync has been sent to New host (in old host).
     uint16_t            is_in_half_open_state:1;  // TCP Session is in Half-open state
     uint64_t            sfw_rule_id;              // sfw rule id
 
@@ -634,6 +635,7 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
+hal_ret_t updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session);
 void enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p);
 bool session_modified_after_timestamp (session_t *session, uint64_t ts);
 hal_ret_t session_delete_all(void);

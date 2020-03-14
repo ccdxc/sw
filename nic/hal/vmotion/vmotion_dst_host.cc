@@ -36,6 +36,9 @@ dst_host_end (vmotion_ep *vmn_ep)
                 ep_quiesce(ep, FALSE);
                 VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
             }
+
+            endpoint_migration_inp_mac_vlan_pgm(ep, true);
+
             // Loop the sessions, and start aging timer
             endpoint_migration_session_age_reset(ep);
             // Send success/failure notification to Net Agent
@@ -69,33 +72,28 @@ vmotion_dst_host_fsm_def::vmotion_dst_host_fsm_def(void)
 #define SM_FUNC_ARG_1(__func) SM_BIND_NON_STATIC_ARGS_1(vmotion_dst_host_fsm_def, __func)
     FSM_SM_BEGIN((sm_def))
         FSM_STATE_BEGIN(STATE_DST_HOST_INIT, 0, NULL, NULL)
-            FSM_TRANSITION(EVT_START_SYNC, SM_FUNC(process_start_sync), STATE_DST_HOST_SYNC_REQ)
+            FSM_TRANSITION(EVT_START_SYNC, SM_FUNC(process_start_sync), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
         FSM_STATE_END
-        FSM_STATE_BEGIN(STATE_DST_HOST_SYNC_REQ, 0, NULL, NULL)
-            FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_SYNC_REQ)
-            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_SYNC_REQ)
+        FSM_STATE_BEGIN(STATE_DST_HOST_SYNCING, 0, NULL, NULL)
+            FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_TERM_SYNC_START)
+            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
             FSM_TRANSITION(EVT_SYNC, SM_FUNC(process_sync), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_SYNC_END, SM_FUNC(process_sync_end), STATE_DST_HOST_SYNCED)
         FSM_STATE_END
-        FSM_STATE_BEGIN(STATE_DST_HOST_SYNCING, 0, NULL, NULL)
-            FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_SYNCING)
-            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_SYNCING)
-            FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
-            FSM_TRANSITION(EVT_SYNC_END, SM_FUNC(process_sync_end), STATE_DST_HOST_SYNCED)
-        FSM_STATE_END
-        FSM_STATE_BEGIN(STATE_DST_HOST_SYNCED, 0, SM_FUNC_ARG_1(state_dst_host_synced), NULL)
-            FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_send_term_sync_rarp), STATE_DST_HOST_SYNCED)
-            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_send_term_sync_ep_move_done), STATE_DST_HOST_SYNCED)
-            FSM_TRANSITION(EVT_DST_TERM_SYNC_REQ, SM_FUNC(process_send_term_req), STATE_DST_HOST_TERM_SYNC_START)
+        FSM_STATE_BEGIN(STATE_DST_HOST_SYNCED, 0, NULL, NULL)
+            FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_TERM_SYNC_START)
+            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNC_START, 0, NULL, NULL)
+            FSM_TRANSITION(EVT_SYNC, SM_FUNC(process_sync), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_TERM_SYNC, SM_FUNC(process_term_sync), STATE_DST_HOST_TERM_SYNCING)
             FSM_TRANSITION(EVT_TERM_SYNC_END, SM_FUNC(process_term_sync_end), STATE_DST_HOST_TERM_SYNCED)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNCING, 0, NULL, NULL)
+            FSM_TRANSITION(EVT_TERM_SYNC, SM_FUNC(process_term_sync), STATE_DST_HOST_TERM_SYNCING)
             FSM_TRANSITION(EVT_TERM_SYNC_END, SM_FUNC(process_term_sync_end), STATE_DST_HOST_TERM_SYNCED)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNCED, 0, NULL, NULL)
@@ -112,12 +110,17 @@ bool
 vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    ep_t            *ep = vmn_ep->get_ep();
     VmotionMessage   msg_rsp;
 
-    HAL_TRACE_INFO("Dest Host Start Sync EP: {}", vmn_ep->get_ep_handle());
+    HAL_TRACE_INFO("Dest Host Start Sync EP: {} ptr:{:p}", vmn_ep->get_ep_handle(), (void *)ep);
+
+    if (!ep) {
+        return false;
+    }
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_INIT);
-    msg_rsp.mutable_init()->set_mac_address(MAC_TO_UINT64(vmn_ep->get_ep()->l2_key.mac_addr));
+    msg_rsp.mutable_init()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
 
     if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
@@ -125,7 +128,7 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
     }
 
     // Add EP Quiesce NACL entry
-    ep_quiesce(vmn_ep->get_ep(), TRUE);
+    ep_quiesce(ep, TRUE);
     VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     return true;
@@ -135,8 +138,18 @@ bool
 vmotion_dst_host_fsm_def::process_rarp_req(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    VmotionMessage  msg_rsp;
+
     HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
+
     VMOTION_FLAG_SET_RARP_RCVD(vmn_ep);
+
+    msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
+
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+        HAL_TRACE_ERR("vmotion: unable to send sync req message");
+        return false;
+    }
     return true;
 }
 
@@ -144,8 +157,18 @@ bool
 vmotion_dst_host_fsm_def::process_ep_move_done(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    VmotionMessage  msg_rsp;
+
     HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
+
     VMOTION_FLAG_SET_EP_MOV_DONE_RCVD(vmn_ep);
+
+    msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
+
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+        HAL_TRACE_ERR("vmotion: unable to send sync req message");
+        return false;
+    }
     return true;
 }
 
@@ -170,6 +193,7 @@ vmotion_dst_host_fsm_def::process_sync(fsm_state_ctx ctx, fsm_event_data data)
 
     if (!ep) {
         HAL_TRACE_ERR("Dest Host Sync EP is not found");
+        dst_host_end(vmn_ep);
         return false;
     }
 
@@ -204,50 +228,6 @@ vmotion_dst_host_fsm_def::process_sync_end(fsm_state_ctx ctx, fsm_event_data dat
 }
 
 bool
-vmotion_dst_host_fsm_def::process_send_term_req(fsm_state_ctx ctx, fsm_event_data data)
-{
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    VmotionMessage  msg_rsp;
-    msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
-
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
-
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("vmotion: unable to send sync req message");
-        return false;
-    }
-    return true;
-}
-
-bool
-vmotion_dst_host_fsm_def::process_send_term_sync_rarp(fsm_state_ctx ctx, fsm_event_data data)
-{
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
-
-    VMOTION_FLAG_SET_RARP_RCVD(vmn_ep);
-    if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
-        vmn_ep->throw_event(EVT_DST_TERM_SYNC_REQ, NULL);
-    }
-    return true;
-}
-
-bool
-vmotion_dst_host_fsm_def::process_send_term_sync_ep_move_done(fsm_state_ctx ctx, fsm_event_data data)
-{
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-
-    HAL_TRACE_INFO("Dest Host Synced. EP: {}", vmn_ep->get_ep_handle());
-
-    VMOTION_FLAG_SET_EP_MOV_DONE_RCVD(vmn_ep);
-    if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
-        vmn_ep->throw_event(EVT_DST_TERM_SYNC_REQ, NULL);
-    }
-    return true;
-}
-
-bool
 vmotion_dst_host_fsm_def::process_term_sync(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep     *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
@@ -259,6 +239,7 @@ vmotion_dst_host_fsm_def::process_term_sync(fsm_state_ctx ctx, fsm_event_data da
 
     if (!ep) {
         HAL_TRACE_ERR("Dest Host term Sync EP is not found");
+        dst_host_end(vmn_ep);
         return false;
     }
 
@@ -289,10 +270,17 @@ vmotion_dst_host_fsm_def::process_term_sync(fsm_state_ctx ctx, fsm_event_data da
 bool
 vmotion_dst_host_fsm_def::process_term_sync_end(fsm_state_ctx ctx, fsm_event_data data)
 {
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
+    ep_t            *ep = vmn_ep->get_ep();
 
-    HAL_TRACE_INFO("Dest Host Term Sync End EP: {}", vmn_ep->get_ep_handle());
+    HAL_TRACE_INFO("Dest Host Term Sync End EP: {} ptr:{:p}", vmn_ep->get_ep_handle(), (void *)ep);
+
+    if (!ep) {
+        return false;
+    }
+
+    endpoint_migration_normalization_cfg(ep, true);
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_ACK);
 
@@ -348,17 +336,22 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
 {
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     VmotionMessage  msg_rsp;
+    ep_t            *ep = vmn_ep->get_ep();
 
-    HAL_TRACE_INFO("Dest Host EP Moved EP: {}", vmn_ep->get_ep_handle());
+    HAL_TRACE_INFO("Dest Host EP Moved EP: {} ptr:{:p}", vmn_ep->get_ep_handle(), (void *)ep);
+
+    if (!ep) {
+        return false;
+    }
 
     // Remove EP Quiesce NACL entry
     if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
-        ep_quiesce(vmn_ep->get_ep(), FALSE);
+        ep_quiesce(ep, FALSE);
         VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
     }
 
     // send rarp request packet out
-    do_proxy_rarp_send(vmn_ep->get_ep());
+    do_proxy_rarp_send(ep);
 
     // Send EP MOVED ACK message to source host
     msg_rsp.set_type(VMOTION_MSG_TYPE_EP_MOVED_ACK);
@@ -370,20 +363,6 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
     vmn_ep->set_migration_state(MigrationState::SUCCESS);
 
     return true;
-}
-
-void
-vmotion_dst_host_fsm_def::state_dst_host_synced(fsm_state_ctx ctx)
-{
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-
-    HAL_TRACE_INFO("State Host Synced EP: {} Flags: {}", vmn_ep->get_ep_handle(),
-                   *vmn_ep->get_flags());
-
-    if ((VMOTION_FLAG_IS_RARP_SET(vmn_ep) || VMOTION_FLAG_IS_EP_MOV_DONE_SET(vmn_ep))) {
-        vmn_ep->throw_event(EVT_DST_TERM_SYNC_REQ, NULL);
-    }
-    return;
 }
 
 void
@@ -471,6 +450,42 @@ dst_host_thread_rcv_event (void *message, void *ctx)
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
 }
 
+static hal_ret_t
+dst_host_connect_to_old_host(int sock, struct sockaddr_in *addr)
+{
+    struct timeval tv; 
+    int            flags = fcntl(sock, F_GETFL, 0);
+    int            ret = 0;
+    fd_set         wset;
+
+    // Set the socket to non-blocking mode
+    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+    ret = connect(sock, (struct sockaddr *)addr, sizeof(struct sockaddr));
+
+    if (ret == 0) {
+        // Connected successfully
+        HAL_TRACE_DEBUG("connect success");
+        return HAL_RET_OK;
+    }
+
+    if (errno == EINPROGRESS) {
+        FD_ZERO(&wset);
+        FD_SET(sock, &wset);
+        tv.tv_sec  = VMOTION_CONNECT_RETRY_TIME;
+        tv.tv_usec = 0;
+
+        // Add to the select interval to check socket becomes writable
+        if (select(sock + 1, NULL, &wset, NULL, &tv) > 0) {
+            HAL_TRACE_DEBUG("connect success");
+            return HAL_RET_OK;
+        }
+    }
+    HAL_TRACE_ERR("vmotion: connection to old host failed. Addr:{} Error:{}",
+                  addr->sin_addr.s_addr, strerror(errno));
+    return HAL_RET_ERR;
+}
+
 hal_ret_t
 vmotion_ep::dst_host_init()
 {
@@ -493,9 +508,7 @@ vmotion_ep::dst_host_init()
                    addr.sin_addr.s_addr, get_vmotion()->get_vmotion_port());
 
     // Connect to server socket
-    if (connect(sock_fd_, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        HAL_TRACE_ERR("vmotion: connection to old host failed. Addr:{} Error:{}",
-                      addr.sin_addr.s_addr, strerror(errno));
+    if (dst_host_connect_to_old_host(sock_fd_, &addr) != HAL_RET_OK) {
         ret = HAL_RET_ERR;
         goto end;
     }
@@ -512,8 +525,7 @@ end:
         this->set_migration_state(MigrationState::FAILED);
         dst_host_end(this);
     }
-
-    return HAL_RET_OK;
+    return ret;
 }
 
 hal_ret_t

@@ -164,6 +164,8 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
 {
     vmotion_ep *vmn_ep = get_vmotion_ep(ep);
 
+    HAL_TRACE_INFO("vMotion: vmn_ep:{:p} event:{}", (void *)vmn_ep, event);
+
     if (event == VMOTION_EVT_EP_MV_COLD) {
         // vMotion is happening from a non-pensando device to locally here.
         // We do - Disable TCP Normalization for the EP that migrated
@@ -177,6 +179,20 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
         } else {
             HAL_TRACE_ERR("vmotion ep already exists");
         }
+
+        // In the destination host, when vMotion is started, delete the "host" entry of the 
+        // EP in the Input Properties MAC VLAN table. This entry is used to avoid
+        // double count of a packet for statistics, when the packet is arriving back in the
+        // U-Turn traffic. skip_flow_update will be set in this entry.
+        //  For vMotion, this can create problem for scenario where a Local to Remote session
+        //  is getting converted to Local to Local session. So in the middle of the vMotion,
+        //  it is a valid scenario, traffic (with Src MAC as EP MAC) (for the migrating EP)
+        //  could be received in the uplink, this Input Mac Vlan table entry will do skip_flow_update
+        //  for that traffic, and eventually that traffic could get aged out.
+        //
+        //  So, in the start of the vMotion, temporarily delete that entry and when vMotion is over
+        //  add this entry back. 
+        endpoint_migration_inp_mac_vlan_pgm(ep, false);
     }
 
     if (vmn_ep) {
@@ -225,7 +241,7 @@ vmotion::delete_vmotion_ep(vmotion_ep *vmn_ep)
 hal_ret_t
 vmotion::vmotion_handle_ep_del(ep_t *ep)
 {
-    if (ep->vmotion_type != VMOTION_TYPE_MIGRATE_NONE) {
+    if (ep->vmotion_state == MigrationState::IN_PROGRESS) {
         run_vmotion(ep, VMOTION_EVT_EP_MV_ABORT);
 
         // Loop the sessions, and start aging timer
@@ -300,8 +316,7 @@ vmotion_ep::init(ep_t *ep, ep_vmotion_type_t type)
 bool
 vmotion::process_rarp(mac_addr_t mac)
 {
-    auto  vmn = g_hal_state->get_vmotion();
-    if (!vmn) {
+    if (!VMOTION_IS_ENABLED()) {
         HAL_TRACE_VERBOSE("Ignore vMotion event. vMotion not enabled");
         return false;
     }

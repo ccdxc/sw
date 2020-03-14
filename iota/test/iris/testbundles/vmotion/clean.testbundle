@@ -1,0 +1,13 @@
+meta:
+    name    : vmotion_cleanup
+    os      : [ esx ]
+    nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+    -   name    : VM_CLEANUP 
+        testcase: testcases.vmotion.cleanup
+        stress  : True
+        args    :
+            vm_type      : dsc_to_dsc
+            node         : node2

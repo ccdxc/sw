@@ -299,6 +299,7 @@ class _Testbed:
             return
         proc_hdls = []
         logfiles = []
+        logfile  = ''
         naples_host_only = kwargs.get('naples_host_only', False) 
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
@@ -405,14 +406,14 @@ class _Testbed:
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 
-            logfiles.append(logfile)
-            cmdstring = ""
-            for c in cmd: cmdstring += "%s " % c
-            Logger.info("Command = ", cmdstring)
-
-            loghdl = open(logfile, "w")
-            proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=subprocess.PIPE)
-            proc_hdls.append(proc_hdl)
+            if (logfile):
+                logfiles.append(logfile)
+                cmdstring = ""
+                for c in cmd: cmdstring += "%s " % c
+                Logger.info("Command = ", cmdstring)
+                loghdl = open(logfile, "w")
+                proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=subprocess.PIPE)
+                proc_hdls.append(proc_hdl)
 
         result = 0
         try:

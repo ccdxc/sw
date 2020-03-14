@@ -136,6 +136,13 @@ func ValidateIPAddresses(ipAddresses ...string) (err error) {
 		aTrimmed := strings.TrimSpace(a)
 		if len(aTrimmed) > 0 {
 			ip := net.ParseIP(a)
+			if ip == nil {
+				ip, _, err = net.ParseCIDR(a)
+				if err != nil {
+					return
+				}
+			}
+
 			if len(ip) == 0 {
 				err = errors.Wrapf(types.ErrInvalidIP, "IP Address: %s | Err: %v", a, types.ErrBadRequest)
 				return

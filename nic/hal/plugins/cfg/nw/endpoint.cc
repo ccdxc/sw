@@ -179,12 +179,15 @@ find_ep_by_handle (hal_handle_t handle)
     hal_handle *handle_obj;
 
     if (handle == HAL_HANDLE_INVALID) {
+        HAL_TRACE_VERBOSE("Invalid handle :{}", handle);
         return NULL;
     }
 
     // check for object type
     handle_obj = hal_handle_get_from_handle_id(handle);
     if (!handle_obj || handle_obj->obj_id() != HAL_OBJ_ID_ENDPOINT) {
+        HAL_TRACE_VERBOSE("handle :{} Obj:{} ID:{}", handle, (void *)handle_obj,
+                          (handle_obj ? handle_obj->obj_id() : 0));
         return NULL;
     }
     return (ep_t *)hal_handle_get_obj(handle);
@@ -778,11 +781,6 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             goto end;
         }
     }
-
-    if (app_ctxt->vmotion_state != NONE) {
-        ep_handle_vmotion(ep, app_ctxt->vmotion_state);
-    }
-
 end:
     return ret;
 }
@@ -1373,6 +1371,15 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
                              endpoint_create_abort_cb,
                              endpoint_create_cleanup_cb);
 
+    if (ret == HAL_RET_OK) {
+        // vMotion handling is done after hal_handle_add_obj
+        // Because in ep_handle_vmotion, vMotion thread will be spawned, and it will try to
+        // access pointer to EP. So handle vMotion operation is done after hal_handle_add_obj
+        if (app_ctxt.vmotion_state != NONE) {
+            ep_handle_vmotion(ep, app_ctxt.vmotion_state);
+        }
+    }
+
 end:
 
     if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
@@ -1460,11 +1467,23 @@ ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts)
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             session_t *session  = hal::find_session_by_handle(entry->handle_id);
             if (session) {
-                // If timestamp is provided, return the session only if its modified
-                // after the given timestamp
-                if (!ts || session_modified_after_timestamp(session, ts)) {
-                    hal::system_get_fill_rsp(session, rsp->add_response());
+                // If timestamp is provided, then this request is part of TERM SYNC
+                // In case of term sync - Provide term sync only if all the following conditions
+                // met
+                //    * Connection tracking enabled session
+                //    * Session was earlier synced as part of Sync
+                //    * Session got modified after earlier sync
+                if (ts) {
+                    if ((!session->conn_track_en) ||
+                        (!session->sync_sent) ||
+                        (!session_modified_after_timestamp(session, ts))) {
+                        session->sync_sent = false;
+                        continue;
+                    }
+                } else {
+                    session->sync_sent = true;
                 }
+                hal::system_get_fill_rsp(session, rsp->add_response());
             } else {
                 HAL_TRACE_ERR("No session found for session hdl: {}", entry->handle_id);
             }
@@ -1859,8 +1878,8 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                             app_ctxt->new_useg_vlan);
         }
 
-	if ((req.endpoint_attrs().vmotion_state() != MigrationState::NONE) &&
-	   (ep->vmotion_state != req.endpoint_attrs().vmotion_state())) {
+        if ((req.endpoint_attrs().vmotion_state() != MigrationState::NONE) &&
+            (ep->vmotion_state != req.endpoint_attrs().vmotion_state())) {
             app_ctxt->vmotion_state_change = true;
             app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
             HAL_TRACE_DEBUG("vmotion state change {} => {}", ep->vmotion_state,
@@ -3494,6 +3513,26 @@ endpoint_migration_status_update (ep_t *ep, MigrationState migration_state)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+endpoint_migration_inp_mac_vlan_pgm(ep_t *ep, bool create)
+{
+    pd::pd_func_args_t                 pd_func_args = {0};
+    pd::pd_if_inp_mac_vlan_pgm_args_t  pd_inp_mac_vlan_pgm_args = {0};
+    if_t                               *hal_if = find_if_by_handle(ep->if_handle);
+    hal_ret_t                          ret;
+
+    SDK_ASSERT(hal_if != NULL);
+
+    pd_inp_mac_vlan_pgm_args.intf        = hal_if;
+    pd_inp_mac_vlan_pgm_args.create      = create;
+    pd_func_args.pd_if_inp_mac_vlan_pgm  = &pd_inp_mac_vlan_pgm_args;
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_INP_MAC_VLAN_PGM, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("vMotion input mac vlan pgm failed EP {} err : {}", ep_l2_key_to_str(ep), ret);
+    }
+    return ret;
+}
 static void
 endpoint_migration_normalization_timer_cb(void *timer, uint32_t timer_id, void *ctxt)
 {

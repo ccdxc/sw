@@ -22,12 +22,15 @@ namespace hal {
 #define VMOTION_MAX_SESS_PER_MSG     1000
 #define VMOTION_AGE_DELAY            300000000000  // 5 Minutes 
 #define VMOTION_SESS_NORMALIZATION   300000  // 5 Minutes
+#define VMOTION_CONNECT_RETRY_TIME   30 // in Seconds
 
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
 
 #define VMOTION_MAX_THREADS \
         (HAL_THREAD_ID_VMOTION_THREADS_MAX - HAL_THREAD_ID_VMOTION_THREADS_MIN + 1)
+
+#define VMOTION_IS_ENABLED()  (g_hal_state->get_vmotion() ? true : false)
 
 class vmotion;
 

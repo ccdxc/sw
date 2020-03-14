@@ -656,6 +656,11 @@ typedef struct pd_if_make_clone_args_s {
     if_t *clone;
 } __PACK__ pd_if_make_clone_args_t;
 
+typedef struct pd_if_inp_mac_vlan_pgm_args_s {
+    if_t                    *intf;
+    bool                     create;
+} __PACK__ pd_if_inp_mac_vlan_pgm_args_t;
+
 typedef struct pd_if_restore_args_s {
     if_t                    *hal_if;
     const InterfaceStatus   *if_status;
@@ -3716,7 +3721,8 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_SET_CLOCK_MULTIPLIER,       346, "PD_FUNC_ID_SET_CLOCK_MULTIPLIER")\
     ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_INIT,         347, "PD_FUNC_ID_QOS_SWM_QUEUE_INIT")  \
     ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       348, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
-    ENTRY(PD_FUNC_ID_MAX,                        349, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM,        349, "PD_FUNC_ID_IF_INP_MAC_VLAN_PGM") \
+    ENTRY(PD_FUNC_ID_MAX,                        350, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3795,6 +3801,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_if_lif_update);
         PD_UNION_ARGS_FIELD(pd_if_get);
         PD_UNION_ARGS_FIELD(pd_if_restore);
+        PD_UNION_ARGS_FIELD(pd_if_inp_mac_vlan_pgm);
 
         // ep calls
         PD_UNION_ARGS_FIELD(pd_ep_create);
@@ -4288,6 +4295,7 @@ PD_FUNCP_TYPEDEF(pd_if_nwsec_update);
 PD_FUNCP_TYPEDEF(pd_if_lif_update);
 PD_FUNCP_TYPEDEF(pd_if_get);
 PD_FUNCP_TYPEDEF(pd_if_restore);
+PD_FUNCP_TYPEDEF(pd_if_inp_mac_vlan_pgm);
 
 // ep calls
 PD_FUNCP_TYPEDEF(pd_ep_create);

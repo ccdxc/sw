@@ -466,6 +466,27 @@ updt_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t 
 }
 
 //------------------------------------------------------------------------------
+// insert this session in all meta data structures
+//------------------------------------------------------------------------------
+hal_ret_t
+updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session)
+{
+    HAL_TRACE_VERBOSE("sep_hdl:{} dep_hdl:{} sess_sep_hdl:{} sess_dep_hdl:{}",
+                      (sep ? sep->hal_handle : 0), (dep ? dep->hal_handle : 0),
+                      session->sep_handle, session->dep_handle);
+
+    if ((sep) && (session->sep_handle == HAL_HANDLE_INVALID)) {
+        session->sep_handle = sep->hal_handle;
+        ep_add_session(sep, session);
+    }
+    if ((dep) && (session->dep_handle == HAL_HANDLE_INVALID)) {
+        session->dep_handle = dep->hal_handle;
+        ep_add_session(dep, session);
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // remove this session from all meta data structures
 //------------------------------------------------------------------------------
 static inline void

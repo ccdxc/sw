@@ -1,0 +1,17 @@
+meta:
+    name    : vmotion_basic_ping_non_dsc
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+    -   name    : BASIC_PING_VM
+        testcase: testcases.vmotion.basic_ping
+        stress  : True
+        args    :
+            vm_type      : non_dsc_to_dsc
+            type         : both
+            num_sessions : 2 
+            num_moves    : 2
+            #timeout : 60

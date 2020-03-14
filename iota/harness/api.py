@@ -719,8 +719,8 @@ def TriggerMove(req):
                     Logger.info("Workload move success %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
                     wl.node_name = move_resp.dst_node_name
         else:
-            Logger.info("Workload move failed %s %s -> %s, %s" % (wl.workload_name, wl.node_name,
-                 move_resp.dst_node_name, move_resp.api_response.error_msg))
+            # Logger.info("Workload move failed %s %s -> %s, %s" % (wl.workload_name, wl.node_name,
+            #     move_resp.dst_node_name, move_resp.api_response.error_msg))
             result = types.status.FAILURE
     return result
 

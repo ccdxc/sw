@@ -187,7 +187,7 @@ func convertEndpoint(endpoint netproto.Endpoint, mgmtIntf string, vrfID, network
 		},
 	}
 
-	if endpoint.Spec.Migration != netproto.MigrationState_NONE.String() && len(endpoint.Status.NodeUUID) != 0 && endpoint.Spec.NodeUUID != endpoint.Status.NodeUUID {
+	if len(endpoint.Spec.Migration) != 0 && endpoint.Spec.Migration != netproto.MigrationState_NONE.String() && len(endpoint.Status.NodeUUID) != 0 && endpoint.Spec.NodeUUID != endpoint.Status.NodeUUID {
 		log.Infof("Migration in progress")
 		if len(endpoint.Spec.HomingHostAddr) == 0 {
 			log.Errorf("No homing host IP passed. Cannot initiate migration.")

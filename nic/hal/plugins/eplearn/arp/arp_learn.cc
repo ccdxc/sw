@@ -191,8 +191,6 @@ process_vmotion_rarp(fte::ctx_t *ctx) {
                     opcode, macaddr2str(arphead->arp_sha));
         return false;
     }
-    HAL_TRACE_INFO("ARP: Processing RARP type {} , SRC {} ",
-                    opcode, macaddr2str(arphead->arp_sha));
 
     if (opcode == ARPOP_REVREQUEST) {
        if (hal::g_hal_state->get_vmotion()->process_rarp(arphead->arp_sha))
