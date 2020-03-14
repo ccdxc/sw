@@ -398,6 +398,8 @@ dependencies:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciemgrd:
     - reference: platform/src/app/pciemgrd
+  nic/sdk/platform/ncsi:
+    - reference: iota/test/standalone/sanity/swm
   nic/agent/dscagent/pipeline:
     - reference: nic/apollo
       exclude_dirs: ["iris"]
@@ -422,6 +424,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
   platform/src/app/fructl:
     - reference: iota/test/standalone/precheckin/linux
+  platform/src/app/ncsid:
+    - reference: iota/test/standalone/sanity/swm
   platform/src/app/nicmgrd:
     - reference: nic/apollo
     - reference: iota/test/venice

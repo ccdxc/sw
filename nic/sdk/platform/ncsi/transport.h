@@ -18,6 +18,7 @@ public:
     virtual int Init() = 0;
     virtual ssize_t SendPkt(const void *buf, size_t len) = 0;
     virtual ssize_t RecvPkt(void *buf, size_t len) = 0;
+    virtual int GetFd() { return -1; };
 };
 
 } // namespace ncsi

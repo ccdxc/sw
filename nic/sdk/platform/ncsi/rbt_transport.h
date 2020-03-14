@@ -36,6 +36,7 @@ public:
         snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), iface_name);
     };
 
+    int GetFd() { return sock_fd; };
     int Init() {
         int rc;
         const unsigned char ether_broadcast_addr[]=

@@ -1179,6 +1179,7 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     CmdHndler *hndlr = (CmdHndler *)obj;
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
 
+    memset(&resp, 0, sizeof(resp));
     hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status,
             link_speed);
     status = ((link_status ? 1:0) | (link_speed << 1) | (0x3 << 5)/* autoneg */
@@ -1186,8 +1187,11 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
 
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
 
+    //HACK: keep the src mac address as 0x2 as of now. Need to fix in better way
+    memset(resp.rsp.NcsiHdr.eth_hdr.h_source, 0x2, 
+            sizeof(resp.rsp.NcsiHdr.eth_hdr.h_source));
+
     //NCSI_CMD_BEGIN_BANNER();
-    //resp.status = htonl(0x100071);
     resp.status = htonl(status);
     SDK_TRACE_INFO("ncsi_channel: 0x%x, link_status: 0x%x",
             cmd->cmd.NcsiHdr.channel, ntohl(resp.status));
@@ -1909,7 +1913,9 @@ void CmdHndler::GetNcsiStats(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     resp.cmd_type_errs = htonl(hndlr->stats.unsup_cmd_rx_cnt);
     resp.cmd_csum_errs = htonl(hndlr->stats.invalid_chksum_rx_cnt);
     resp.rx_pkts = htonl(hndlr->stats.rx_total_cnt);
-    resp.tx_pkts = htonl(hndlr->stats.tx_total_cnt);
+
+    /* include this response as part os tx stats counter*/
+    resp.tx_pkts = htonl(hndlr->stats.tx_total_cnt + 1);
 
 error_out:
     resp.rsp.NcsiHdr.type = ncsi_cmd_resp_opcode(CMD_GET_NCSI_STATS);

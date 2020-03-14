@@ -5,8 +5,11 @@
 
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/ncsi/ncsi_mgr.h"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "grpc_ipc.h"
+
+#define ALOM_PRESENT           0x20
 
 #define ARRAY_LEN(var)   (int)((sizeof(var)/sizeof(var[0])))
 
@@ -136,9 +139,10 @@ void InitNcsiMgr()
 
 int main(int argc, char* argv[])
 {
-   ncsimgr = new NcsiMgr();
-   grpc_ipc_svc = make_shared<grpc_ipc>();
-   Logger logger_obj;
+    uint32_t cpld_cntl_reg;
+    ncsimgr = new NcsiMgr();
+    grpc_ipc_svc = make_shared<grpc_ipc>();
+    Logger logger_obj;
 
     //Create the logger
     logger_obj = CreateLogger("ncsi.log");
@@ -159,6 +163,17 @@ int main(int argc, char* argv[])
     }
     if (argc > 2)
         strncpy(iface_name, argv[2], sizeof(iface_name));
+
+    /* If listening on oob interface, then we must be connected to ALOM 
+     * in order to receive NCSI packet from BMC */
+    if (!strcmp(iface_name, "oob_mnic0")) {
+        cpld_cntl_reg = cpld_reg_rd(CPLD_REGISTER_CTRL);
+        if (! (cpld_cntl_reg & ALOM_PRESENT)) {
+            SDK_TRACE_INFO("ALOM is not present. NCSI cannot funtion without ALOM."
+                    "Exiting ncsid app !");
+            return 0;
+        }
+    }
 
     grpc_ipc_svc->connect_hal();
     InitNcsiMgr();

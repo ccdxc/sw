@@ -31,6 +31,7 @@ public:
     int Init(transport* xport_obj, shared_ptr<IpcService> ipc);
 private:
     transport *xport;
+    int xport_fd;
     CmdHndler *ncsi_cmd_hndlr;
     EV_P;
     static void RecvNcsiCtrlPkts(void *obj);
