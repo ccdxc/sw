@@ -21,6 +21,7 @@
 #include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 #include "nic/hal/core/event_ipc.hpp"
 #include "upgrade.hpp"
+#include "upgrade_rel_a2b.hpp"
 #include "nicmgr_ncsi.hpp"
 
 // for device::MICRO_SEG_ENABLE  : TODO - fix
@@ -60,6 +61,12 @@ static void
 hal_up_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     NIC_LOG_DEBUG("IPC, HAL UP event handler ...");
+
+    // this is only for delphi upgrade from rel_A to rel_B
+    if (!nicmgr::g_device_restored) {
+        return;
+    }
+
     devmgr->HalEventHandler(true);
 }
 

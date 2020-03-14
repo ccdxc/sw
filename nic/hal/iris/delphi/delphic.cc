@@ -12,6 +12,7 @@
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
+#include "platform/src/app/nicmgrd/src/upgrade_rel_a2b.hpp"
 #include "gen/proto/device.delphi.hpp"
 
 namespace hal {
@@ -37,7 +38,9 @@ delphi_client_start (void *ctxt)
     Status ret = linkmgr::port_svc_init(sdk);
     SDK_ASSERT_TRACE_RETURN(ret.ok(), NULL,
                             "Port service initialization failure");
-    
+    // init nicmgr service. only for rel_A to rel_B
+    nicmgr::nicmgr_delphi_init(sdk);
+
     // register delphi client
     sdk->RegisterService(g_delphic);
 
@@ -88,6 +91,8 @@ delphi_client::OnMountComplete(void)
     if (init_ok && this->mount_ok) {
        sysmgr_->init_done();
     }
+    // inform nicmgr service. only for rel_A to rel_B
+    nicmgr::nicmgr_delphi_mount_complete();
 }
 
 // indicate HAL init done to rest of the system

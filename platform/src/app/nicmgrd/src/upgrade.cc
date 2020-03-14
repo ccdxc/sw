@@ -12,6 +12,7 @@
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 
 #include "upgrade.hpp"
+#include "upgrade_rel_a2b.hpp"
 
 using namespace upgrade;
 using namespace nicmgr;
@@ -157,6 +158,18 @@ copyfile(const char *srcfile, const char *dstfile)
     return -1;
 }
 
+static bool
+file_exist (const char *fname)
+{
+    FILE *fp;
+
+    fp = fopen(fname, "r");
+    if (fp) {
+        fclose(fp);
+        return true;
+    }
+    return false;
+}
 
 
 // Constructor method
@@ -425,6 +438,7 @@ nicmgr_upg_hndlr::upg_restore_states(void)
     EthDeviceInfo proto_devobj;
     UplinkInfo proto_uplinkobj;
     sdk_ret_t ret = SDK_RET_OK;
+
 
     NIC_FUNC_DEBUG("Retrieving saved objects from shm");
 
@@ -778,12 +792,19 @@ nicmgr_upg_init (void)
 {
     sdk_ret_t ret;
     bool shm_create = false;
+    bool states_in_delphi = false;
     upg_handler = new nicmgr_upg_hndlr();
+    std::string src = std::string(NICMGR_BKUP_DIR) + std::string(NICMGR_BKUP_SHM_NAME);
 
     SDK_ASSERT(devmgr);
 
     if (devmgr->GetUpgradeMode() == FW_MODE_NORMAL_BOOT) {
         shm_create = true;
+    } else if (devmgr->GetUpgradeMode() == FW_MODE_UPGRADE) {
+        if (file_exist(src.c_str()) == false) {
+            states_in_delphi = true;
+            shm_create = true;
+        }
     }
 
     ret = upg_handler->upg_shm_alloc(NICMGR_BKUP_SHM_NAME, NICMGR_BKUP_SHM_SIZE, shm_create);
@@ -792,7 +813,11 @@ nicmgr_upg_init (void)
                                   nicmgr_upg_hndlr::upg_ipc_handler_cb, NULL);
 
     if (devmgr->GetUpgradeMode() == FW_MODE_UPGRADE) {
-        upg_handler->upg_restore_states();
+        if (states_in_delphi) {
+            restore_from_delphi();
+        } else {
+            upg_handler->upg_restore_states();
+        }
     }
 }
 

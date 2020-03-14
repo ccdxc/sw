@@ -5,6 +5,7 @@
 #include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
+#include "upgrade_rel_a2b.hpp"
 
 namespace nicmgr {
 
@@ -17,6 +18,19 @@ nicmgr_init (platform_type_t platform,
 
 void
 nicmgr_exit (void)
+{
+
+}
+
+void
+nicmgr_delphi_mount_complete (void)
+{
+
+}
+
+// below function is called from delphi thread
+void
+nicmgr_delphi_init (delphi::SdkPtr sdk)
 {
 
 }
