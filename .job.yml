@@ -57,6 +57,11 @@ builds:
     artifacts:
       - /sw/naples_fw_all_apulu.tgz
       - /sw/naples-protos-apulu.tgz
+  build-custom-athena-image:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw && make PIPELINE=athena ARCH=aarch64 PLATFORM=firmware && pwd && ./apollo/tools/dev-docker/build_dev_docker.sh 0 all athena 1"]
+    owners: ["email:murali@pensando.io"]
+    artifacts:
+      - /sw/customimage.tar.gz
   build-athena-x86:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_athena_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build"]
     owners: ["email:skittur@pensando.io"]

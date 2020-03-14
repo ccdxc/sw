@@ -2,11 +2,14 @@
 version: 2.0
 targets:
  apollo/tools/athena/gtests:
-  commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
+  #commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
+  commands: ["sh", "-c", "cd /sw/nic && JOB_ID=1 make PIPELINE=athena jobd/athena/gtests"]
   owners: ["email:ksmurty@pensando.io"]
   area:
   sub-area:
   feature:
+  build-dependencies:
+    - build-custom-athena-image
 
 cache:
   name: "sw"

@@ -142,11 +142,12 @@ script_exit() {
     rv=$2
     if [ $rb == 1 ];then
         cd /
-        umount /sw
-        umount $SWMNTDIR
-        mount --bind /sw $SWMNTDIR
+        #umount /sw
+        #umount $SWMNTDIR
+        #mount --bind /sw $SWMNTDIR
     fi
     cd $CDIR
+    echo "Done with script_exit"
     exit $rv
 }
 
@@ -240,8 +241,8 @@ rebuild_and_runtest() {
     cp -r --parents -u . $DST/nic/build/
 
     cd /
-    umount $SWMNTDIR
-    mount --bind /sw/apollo_sw $SWMNTDIR
+    #umount $SWMNTDIR
+    #mount --bind /sw/apollo_sw $SWMNTDIR
     mount --bind /sw/apollo_sw /sw
 
     #build 1 /sw/nic
@@ -254,7 +255,20 @@ rebuild_and_runtest() {
     #fi
 }
 
-if [ $# != 3 ];then
+build_docker() {
+    cd $SWMNTDIR
+    tar cf  sw.tar /sw
+    tar cf inc.tar /usr/local/include
+    sh -c "cp /sw/nic/apollo/tools/athena/customer-docker/Dockerfile . && docker build -t customimage:v2 . && docker save customimage:v2 | gzip > customimage.tar.gz"
+    echo "done with Docker Save"
+    docker images
+    docker image rm customimage:v2
+    rm sw.tar
+    rm inc.tar
+    rm -rf $SWMNTDIR/apollo_sw
+}
+
+if [ $# lt 3 ];then
     echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)> <pipeline(apollo/apulu/athena)"
     exit;
 fi
@@ -281,5 +295,12 @@ rebuild_and_runtest
 echo "Invoke remove_build"
 remove_build /sw/nic
 echo "Invoke script_exit"
-script_exit 1 0
+if [ -z "$4" ]; then
+    script_exit 1 0
+else 
+    if [ "$pipeline" == "athena" ]; then
+        build_docker
+        script_exit 1 0
+    fi
+fi
 echo "Post script_exit"

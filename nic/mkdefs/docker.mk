@@ -17,8 +17,11 @@ docker/shell: docker/build-shell-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
-ifeq ($(PIPELINE),$(filter $(PIPELINE),apulu athena))
+ifeq ($(PIPELINE),$(filter $(PIPELINE),apulu))
 docker/customer-shell: docker/build-customer-shell-image
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
+else ifeq ($(PIPELINE),$(filter $(PIPELINE),athena))
+docker/customer-shell: docker/build-athena-customer-shell-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
 else
 docker/customer-shell:
@@ -36,6 +39,11 @@ docker/build-customer-shell-image: docker/install_box
 	echo "custom install_box"
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/apollo/tools/$(PIPELINE)/customer-docker/box.rb
+
+docker/build-athena-customer-shell-image: docker/install_box
+	echo "custom install_box"
+	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
+	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/apollo/tools/$(PIPELINE)/customer-docker/cshell_make_box.rb
 
 docker/coverage: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su  -l $(CUR_USER)  -c 'tools/coverage_script.sh'
