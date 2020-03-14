@@ -34,7 +34,7 @@ type netflowIDs struct {
 
 var netflowSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
 
-var templateContextMap = map[*halapi.CollectorKeyHandle]context.CancelFunc{}
+var templateContextMap = map[string]context.CancelFunc{}
 
 // CollectorToNetflow maps the unique collector to netflowID
 var CollectorToNetflow = map[string]*netflowIDs{}
@@ -61,13 +61,8 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 		var collectorID uint64
 		var foundCollector bool
 		dstIP := c.Destination
-		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), netflow.GetKey())
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
-			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
-			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
-		}
-
 		collectorKey := commonUtils.BuildCollectorKey(netflow.Spec.VrfName, c)
+
 		netflows, ok := CollectorToNetflow[collectorKey]
 		if ok {
 			netflows.NetflowKeys = append(netflows.NetflowKeys, netflow.GetKey())
@@ -79,6 +74,11 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 		collectorKeys = append(collectorKeys, convertCollectorKeyHandle(collectorID))
 		if foundCollector {
 			continue
+		}
+		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), collectorKey)
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
+			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
+			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
 		// Create HAL Collector
 		l2SegID := getL2SegByCollectorIP(infraAPI, dstIP)
@@ -95,7 +95,7 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 			NetflowKeys: []string{netflow.GetKey()},
 		}
 		templateCtx, cancel := context.WithCancel(context.Background())
-		templateContextMap[collectorReqMsg.Request[0].GetKeyOrHandle()] = cancel
+		templateContextMap[collectorKey] = cancel
 		destIP := net.ParseIP(c.Destination)
 		if c.Transport == nil {
 			destPort = types.DefaultNetflowExportPort
@@ -171,11 +171,6 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		dstIP := c.Destination
-		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), netflow.GetKey())
-		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
-			log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
-			return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
-		}
 		cKey := commonUtils.BuildCollectorKey(netflow.Spec.VrfName, c)
 		netflowKeys, ok := CollectorToNetflow[cKey]
 		if !ok {
@@ -197,7 +192,7 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 		}
 		if len(netflowKeys.NetflowKeys) == 0 {
 			collectorKey := convertCollectorKeyHandle(netflowKeys.collectorID)
-			cancel := templateContextMap[collectorKey]
+			cancel := templateContextMap[cKey]
 			if cancel != nil {
 				cancel()
 			}
@@ -215,6 +210,11 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 				}
 			}
 			delete(CollectorToNetflow, cKey)
+			compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), cKey)
+			if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
+				log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
+				return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
+			}
 		} else {
 			log.Infof("NetflowCollector: %s | DstIP: %s | VrfName: %s still referenced by %s", netflow.GetKey(), dstIP, netflow.Spec.VrfName, strings.Join(netflowKeys.NetflowKeys, " "))
 		}
@@ -303,7 +303,7 @@ func sendTemplate(ctx context.Context, infraAPI types.InfraAPI, destIP net.IP, d
 	for {
 		select {
 		case <-ctx.Done():
-			log.Infof("FlowExportPolicy | Collector: %s", types.InfoTemplateSendStop)
+			log.Infof("FlowExportPolicy | %s Collector: %s", types.InfoTemplateSendStop, destIP.String())
 			return
 		case <-templateTicker.C:
 			if _, err := conn.WriteTo(template, &net.UDPAddr{IP: destIP, Port: destPort}); err != nil {

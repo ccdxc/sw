@@ -191,7 +191,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 2 {
 		t.Fatalf("Expected 2 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2", "default/default/testMirror1"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2-default-192.168.100.101", "default/default/testMirror1-default-192.168.100.101"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
@@ -202,7 +202,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 1 {
 		t.Fatalf("Expected 1 entry in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror3"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror3-default-192.168.100.103"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
@@ -224,7 +224,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 1 {
 		t.Fatalf("Expected 1 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2-default-192.168.100.101"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
