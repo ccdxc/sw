@@ -8472,7 +8472,9 @@ func (ct *ctrlerCtx) handleAuditPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 					return err
 				}
 			} else {
-				if ct.resolver != nil && fobj.GetResourceVersion() >= eobj.GetResourceVersion() {
+				fResVer, fErr := strconv.ParseInt(fobj.GetResourceVersion(), 10, 64)
+				eResVer, eErr := strconv.ParseInt(eobj.GetResourceVersion(), 10, 64)
+				if ct.resolver != nil && fErr == nil && eErr == nil && fResVer >= eResVer {
 					// Event already processed.
 					ct.logger.Infof("Skipping update due to old resource version")
 					return nil
@@ -9009,7 +9011,7 @@ func (api *auditpolicyAPI) SyncCreate(obj *monitoring.AuditPolicy) error {
 		}
 
 		newObj, writeErr = apicl.MonitoringV1().AuditPolicy().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(err.Error(), "AlreadyExists") {
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
 			newObj, writeErr = apicl.MonitoringV1().AuditPolicy().Update(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
@@ -9018,11 +9020,6 @@ func (api *auditpolicyAPI) SyncCreate(obj *monitoring.AuditPolicy) error {
 	if writeErr == nil {
 		api.ct.handleAuditPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
 	}
-
-	if writeErr == nil {
-		api.ct.handleAuditPolicyEvent(&kvstore.WatchEvent{Object: newObj, Type: evtType})
-	}
-
 	return writeErr
 }
 
@@ -9145,5 +9142,10 @@ func (api *auditpolicyAPI) StopWatch(handler AuditPolicyHandler) error {
 
 // AuditPolicy returns AuditPolicyAPI
 func (ct *ctrlerCtx) AuditPolicy() AuditPolicyAPI {
-	return &auditpolicyAPI{ct: ct}
+	kind := "AuditPolicy"
+	if _, ok := ct.apiInfMap[kind]; !ok {
+		s := &auditpolicyAPI{ct: ct}
+		ct.apiInfMap[kind] = s
+	}
+	return ct.apiInfMap[kind].(*auditpolicyAPI)
 }
