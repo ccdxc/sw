@@ -23,14 +23,14 @@ private:
     devapi_port() {}
     ~devapi_port() {}
     sdk_ret_t port_get_(PortGetResponse *rsp);
-
+    static sdk_ret_t port_speed_mbps_to_enum(uint32_t speed,
+                                             port::PortSpeed *port_speed);
 public:
     static devapi_port *factory(uint32_t port_num);
     static void destroy(devapi_port *port);
     static devapi_port *find_or_create(uint32_t port_num);
 
     static uint32_t port_speed_enum_to_mbps(port::PortSpeed speed_enum);
-    static port::PortSpeed port_speed_mbps_to_enum(uint32_t speed);
 
     static devapi_port *get_port(uint32_t port_num);
     uint32_t get_port_num(void);

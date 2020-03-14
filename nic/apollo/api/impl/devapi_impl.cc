@@ -366,12 +366,20 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
     return api::port_get(&ifidx, devapi_impl::port_get_status_, status);
 }
 
-void
+sdk_ret_t
 devapi_impl::populate_port_args_(sdk::linkmgr::port_args_t *port_args,
                                  port_config_t *config) {
+    sdk_ret_t ret;
+    port_speed_t port_speed;
+    uint32_t num_lanes;
+
     port_args->user_admin_state = port_args->admin_state =
                     sdk::lib::port_admin_state_uint_to_enum(config->state);
-    port_args->port_speed = sdk::lib::port_speed_mbps_to_enum(config->speed);
+    ret = sdk::lib::port_speed_mbps_to_enum(config->speed, &port_speed);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    port_args->port_speed = port_speed;
     port_args->mtu = config->mtu;
     port_args->auto_neg_cfg = port_args->auto_neg_enable = config->an_enable;
     port_args->fec_type = (port_fec_type_t)config->fec_type;
@@ -381,6 +389,20 @@ devapi_impl::populate_port_args_(sdk::linkmgr::port_args_t *port_args,
     port_args->rx_pause_enable = config->pause_type & PORT_CFG_PAUSE_F_RX;
     port_args->loopback_mode = (port_loopback_mode_t)config->loopback_mode;
     port_args->mac_stats_reset = config->reset_mac_stats;
+
+    // TODO
+    // For NRZ serdes, num_lanes can be assumed based on speed.
+    // However, for PAM4, num_lanes needs to be decided based on how the
+    // link must be brought up - with single lane or multiple lanes.
+    // set the number of lanes based on speed if AN is disabled
+    if (config->an_enable == 0) {
+        ret = sdk::lib::port_num_lanes_speed(config->speed, &num_lanes);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        port_args->num_lanes = num_lanes;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -401,7 +423,10 @@ devapi_impl::port_set_config(pds_ifindex_t ifidx, port_config_t *config) {
         return SDK_RET_ERR;
     }
 
-    populate_port_args_(&port_args, config);
+    ret = populate_port_args_(&port_args, config);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     ret = port_update(intf->port_info(), &port_args);
     if (ret != SDK_RET_OK) {

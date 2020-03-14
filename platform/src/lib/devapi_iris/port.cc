@@ -7,6 +7,7 @@
 #include "utils.hpp"
 #include "hal_grpc.hpp"
 #include "devapi_mem.hpp"
+#include "nic/sdk/lib/utils/port_utils.hpp"
 
 namespace iris {
 
@@ -215,6 +216,8 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     grpc::Status    status;
     PortGetResponse rsp;
     PortResponse    port_rsp;
+    uint32_t num_lanes;
+    port::PortSpeed port_speed;
 
     ret = port_get_(&rsp);
     if (ret != SDK_RET_OK) {
@@ -234,7 +237,11 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     req = req_msg.add_request();
     req->CopyFrom(rsp.spec());
     req->set_admin_state((port::PortAdminState)cfg->state);
-    req->set_port_speed(port_speed_mbps_to_enum(cfg->speed));
+    ret = port_speed_mbps_to_enum(cfg->speed, &port_speed);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    req->set_port_speed(port_speed);
     req->set_mtu(cfg->mtu);
     req->set_auto_neg_enable(cfg->an_enable);
     req->set_fec_type((port::PortFecType)cfg->fec_type);
@@ -243,6 +250,19 @@ devapi_port::port_hal_update_config(port_config_t *cfg)
     req->set_rx_pause_enable(cfg->pause_type & PORT_CFG_PAUSE_F_RX);
     req->set_loopback_mode((port::PortLoopBackMode)cfg->loopback_mode);
     req->set_mac_stats_reset(cfg->reset_mac_stats);
+
+    // TODO
+    // For NRZ serdes, num_lanes can be assumed based on speed.
+    // However, for PAM4, num_lanes needs to be decided based on how the
+    // link must be brought up - with single lane or multiple lanes.
+    // set the number of lanes based on speed if AN is disabled
+    if (cfg->an_enable == 0) {
+        ret = sdk::lib::port_num_lanes_speed(cfg->speed, &num_lanes);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        req->set_num_lanes(num_lanes);
+    }
     VERIFY_HAL();
     status = hal->port_update(req_msg, rsp_msg);
     if (status.ok()) {
@@ -310,39 +330,39 @@ devapi_port::port_speed_enum_to_mbps(port::PortSpeed speed_enum)
     return speed;
 }
 
-port::PortSpeed
-devapi_port::port_speed_mbps_to_enum(uint32_t speed)
+sdk_ret_t
+devapi_port::port_speed_mbps_to_enum (uint32_t speed,
+                                      port::PortSpeed *port_speed)
 {
-    port::PortSpeed speed_enum;
-
     switch (speed) {
     case 0:
-        speed_enum = port::PortSpeed::PORT_SPEED_NONE;
+        *port_speed = port::PortSpeed::PORT_SPEED_NONE;
         break;
     case 1000:
-        speed_enum = port::PortSpeed::PORT_SPEED_1G;
+        *port_speed = port::PortSpeed::PORT_SPEED_1G;
         break;
     case 10000:
-        speed_enum = port::PortSpeed::PORT_SPEED_10G;
+        *port_speed = port::PortSpeed::PORT_SPEED_10G;
         break;
     case 25000:
-        speed_enum = port::PortSpeed::PORT_SPEED_25G;
+        *port_speed = port::PortSpeed::PORT_SPEED_25G;
         break;
     case 40000:
-        speed_enum = port::PortSpeed::PORT_SPEED_40G;
+        *port_speed = port::PortSpeed::PORT_SPEED_40G;
         break;
     case 50000:
-        speed_enum = port::PortSpeed::PORT_SPEED_50G;
+        *port_speed = port::PortSpeed::PORT_SPEED_50G;
         break;
     case 100000:
-        speed_enum = port::PortSpeed::PORT_SPEED_100G;
+        *port_speed = port::PortSpeed::PORT_SPEED_100G;
         break;
     default:
-        NIC_FUNC_ERR("Invalid speed_enum {}", speed);
-        speed_enum = port::PortSpeed::PORT_SPEED_NONE;
+        NIC_FUNC_ERR("Invalid port_speed {}", speed);
+        *port_speed = port::PortSpeed::PORT_SPEED_NONE;
+        return SDK_RET_ERR;
     }
 
-    return speed_enum;
+    return SDK_RET_OK;
 }
 
 }    // namespace iris

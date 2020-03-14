@@ -115,8 +115,8 @@ private:
 
     static void port_get_config_(_In_ sdk::linkmgr::port_args_t *port_args, _Out_ void *ctxt);
     static void port_get_status_(_In_ sdk::linkmgr::port_args_t *port_args, _Out_ void *ctxt);
-    static void populate_port_args_(_Out_ sdk::linkmgr::port_args_t *port_args,
-                                    _In_ port_config_t *config);
+    static sdk_ret_t populate_port_args_(_Out_ sdk::linkmgr::port_args_t *port_args,
+                                         _In_ port_config_t *config);
 
     static uint16_t lif_get_cos_bmp_(lif_info_t *info);
     static uint32_t lif_get_qcount_(lif_info_t *info);
