@@ -114,10 +114,9 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
                                       pds_nexthop_spec_t *spec) {
     sdk_ret_t ret;
     pds_encap_t encap;
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nh_data;
 
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     switch (spec->type) {
     case PDS_NH_TYPE_BLACKHOLE:
         // nothing to program for system-wide blackhole nexthop
@@ -128,9 +127,8 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
         if (ret != SDK_RET_OK) {
             return ret;
         }
-        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
-                                           NULL, NULL, &nh_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        ret = nh_data.write(hw_id_);
+        if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program nexthop %s at idx %u",
                           spec->key.str(), hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -149,16 +147,16 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
 sdk_ret_t
 nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
     pds_obj_key_t key;
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data = { 0 };
+    sdk_ret_t ret;
+    nexthop_info_entry_t nh_data;
 
     key = nh->key();
     if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         return SDK_RET_OK;
     }
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    ret = nh_data.write(hw_id_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program nexthop %s at idx %u",
                       key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -204,21 +202,20 @@ nexthop_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
 }
 void
 nexthop_impl::fill_status_(pds_nexthop_status_t *status,
-                           nexthop_actiondata_t *nh_data) {
+                           nexthop_info_entry_t *nh_data) {
     status->hw_id = hw_id_;
-    status->port = nh_data->nexthop_info.port;
-    status->vlan = nh_data->nexthop_info.vlan;
+    status->port = nh_data->get_port();
+    status->vlan = nh_data->get_vlan();
 }
 
 sdk_ret_t
 nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec,
-                         nexthop_actiondata_t *nh_data) {
+                         nexthop_info_entry_t *nh_data) {
     if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         spec->type = PDS_NH_TYPE_BLACKHOLE;
     } else {
         spec->type = PDS_NH_TYPE_UNDERLAY;
-        sdk::lib::memrev(spec->underlay_mac,
-                         nh_data->nexthop_info.dmaco, ETH_ADDR_LEN);
+        MAC_UINT64_TO_ADDR(spec->underlay_mac, nh_data->get_dmaco());
         // TODO walk if db and identify the l3_if
     }
     return SDK_RET_OK;
@@ -226,12 +223,12 @@ nexthop_impl::fill_spec_(pds_nexthop_spec_t *spec,
 
 sdk_ret_t
 nexthop_impl::fill_info_(pds_nexthop_info_t *info) {
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    sdk_ret_t ret;
+    nexthop_info_entry_t nh_data;
 
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, hw_id_,
-                                      NULL, NULL, &nh_data);
-    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    ret = nh_data.read(hw_id_);
+    if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }

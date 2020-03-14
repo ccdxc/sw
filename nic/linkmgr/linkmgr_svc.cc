@@ -543,8 +543,6 @@ PortServiceImpl::PortGet(ServerContext *context,
     uint32_t i     = 0;
     uint32_t nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("Rcvd Port Get Request");
-
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
     }

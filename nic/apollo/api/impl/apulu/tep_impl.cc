@@ -272,7 +272,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
     nexthop_impl *nh_impl;
     p4pd_error_t p4pd_ret;
     nexthop_group *nhgroup;
-    nexthop_actiondata_t nh_data;
+    nexthop_info_entry_t nh_data;
     nexthop_group_impl *nhgroup_impl;
     tunnel2_actiondata_t tep2_data = { 0 };
 
@@ -300,6 +300,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     // now we need to update/fix the nexthop(s)
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
@@ -311,17 +312,15 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
         for (uint32_t i = 0, nh_idx = nhgroup_impl->nh_base_hw_id();
              i < nhgroup->num_nexthops(); nh_idx++, i++) {
-            p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx,
-                                              NULL, NULL, &nh_data);
-            if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+            ret = nh_data.read(nh_idx);
+            if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to read NEXTHOP table at %u", nh_idx);
                 return sdk::SDK_RET_HW_READ_ERR;
             }
-            nh_data.nexthop_info.tunnel2_id = hw_id1_;
-            nh_data.nexthop_info.vlan = spec->encap.val.value;
-            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx,
-                                               NULL, NULL, &nh_data);
-            if (p4pd_ret != P4PD_SUCCESS) {
+            nh_data.set_tunnel2_id(hw_id1_);
+            nh_data.set_vlan(spec->encap.val.value);
+            ret = nh_data.write(nh_idx);
+            if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to update NEXTHOP table at %u", nh_idx);
                 return sdk::SDK_RET_HW_PROGRAM_ERR;
             }
@@ -334,20 +333,16 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
             SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
         }
         nh_impl = (nexthop_impl *)nh->impl();
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
-                                          nh_impl->hw_id(),
-                                          NULL, NULL, &nh_data);
-        if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        ret = nh_data.read(nh_impl->hw_id());
+        if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to read NEXTHOP table at %u",
                           nh_impl->hw_id());
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        nh_data.nexthop_info.tunnel2_id = hw_id1_;
-        nh_data.nexthop_info.vlan = spec->encap.val.value;
-        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
-                                           nh_impl->hw_id(),
-                                           NULL, NULL, &nh_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        nh_data.set_tunnel2_id(hw_id1_);
+        nh_data.set_vlan(spec->encap.val.value);
+        ret = nh_data.write(nh_impl->hw_id());
+        if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update NEXTHOP table at %u",
                           nh_impl->hw_id());
             return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -408,14 +403,16 @@ tep_impl::activate_delete_tunnel_table_(pds_epoch_t epoch, tep_entry *tep) {
 
 sdk_ret_t
 tep_impl::activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep) {
+    sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nexthop_impl *nh_impl;
     nexthop_group *nhgroup;
     pds_obj_key_t nh_key;
-    nexthop_actiondata_t nh_data;
+    nexthop_info_entry_t nh_data;
     nexthop_group_impl *nhgroup_impl;
     pds_obj_key_t nh_group_key;
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     // update/fix the nexthop(s) to not point to this outer tunnel anymore
     if (tep->nh_type() == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nh_group_key = tep->nh_group();
@@ -423,17 +420,15 @@ tep_impl::activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep) {
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
         for (uint32_t i = 0, nh_idx = nhgroup_impl->nh_base_hw_id();
              i < nhgroup->num_nexthops(); nh_idx++, i++) {
-            p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx,
-                                              NULL, NULL, &nh_data);
-            if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+            ret = nh_data.read(nh_idx);
+            if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to read NEXTHOP table at %u", nh_idx);
                 return sdk::SDK_RET_HW_READ_ERR;
             }
-            nh_data.nexthop_info.tunnel2_id = 0;
-            nh_data.nexthop_info.vlan = 0;
-            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx,
-                                               NULL, NULL, &nh_data);
-            if (p4pd_ret != P4PD_SUCCESS) {
+            nh_data.set_tunnel2_id(0);
+            nh_data.set_vlan(0);
+            ret = nh_data.write(nh_idx);
+            if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to update NEXTHOP table at %u", nh_idx);
                 return sdk::SDK_RET_HW_PROGRAM_ERR;
             }
@@ -441,20 +436,16 @@ tep_impl::activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep) {
     } else if (tep->nh_type() == PDS_NH_TYPE_UNDERLAY) {
         nh_key = tep->nh();
         nh_impl = (nexthop_impl *)nexthop_db()->find(&nh_key)->impl();
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
-                                          nh_impl->hw_id(),
-                                          NULL, NULL, &nh_data);
-        if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        ret = nh_data.read(nh_impl->hw_id());
+        if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to read NEXTHOP table at %u",
                           nh_impl->hw_id());
             return sdk::SDK_RET_HW_READ_ERR;
         }
-        nh_data.nexthop_info.tunnel2_id = 0;
-        nh_data.nexthop_info.vlan = 0;
-        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
-                                           nh_impl->hw_id(),
-                                           NULL, NULL, &nh_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        nh_data.set_tunnel2_id(0);
+        nh_data.set_vlan(0);
+        ret = nh_data.write(nh_impl->hw_id());
+        if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update NEXTHOP table at %u",
                           nh_impl->hw_id());
             return sdk::SDK_RET_HW_PROGRAM_ERR;

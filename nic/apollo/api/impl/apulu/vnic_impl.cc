@@ -585,7 +585,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
     vnic_actiondata_t vnic_data = { 0 };
-    nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nh_data;
     binding_info_entry_t ip_mac_binding_data;
     meter_stats_actiondata_t meter_stats_data = { 0 };
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
@@ -674,24 +674,23 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
 
     // program the nexthop table
-    nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     device = device_find();
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
-        nh_data.nexthop_info.port = 0;
+        nh_data.set_port(0);
     } else {
         lif = lif_impl_db()->find(&spec->host_if);
         if (lif) {
-            nh_data.nexthop_info.lif = lif->id();
+            nh_data.set_lif(lif->id());
         }
-        nh_data.nexthop_info.port = TM_PORT_DMA;
+        nh_data.set_port(TM_PORT_DMA);
     }
     if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-        nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
+        nh_data.set_vlan(spec->vnic_encap.val.vlan_tag);
     }
-    sdk::lib::memrev(nh_data.nexthop_info.dmaci, spec->mac_addr, ETH_ADDR_LEN);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    nh_data.set_dmaci(MAC_TO_UINT64(spec->mac_addr));
+    ret = nh_data.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NEXTHOP table for vnic %s at idx %u",
                       spec->key.str(), nh_idx_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -713,15 +712,15 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     sdk_ret_t ret;
     lif_impl *lif;
     vpc_entry *vpc;
-    p4pd_error_t p4pd_ret;
     device_entry *device;
     subnet_entry *subnet;
     pds_obj_key_t lif_key;
     pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
-    nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nh_data;
     vnic_entry *vnic = (vnic_entry *)curr_obj;
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     spec = &obj_ctxt->api_params->vnic_spec;
     // we don't need to reset the VNIC_TX_STATS and VNIC_RX_STATS
     // table entries because of udpate
@@ -729,24 +728,27 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     if ((obj_ctxt->upd_bmap & PDS_VNIC_UPD_HOST_IFINDEX) ||
         (obj_ctxt->upd_bmap & PDS_VNIC_UPD_VNIC_ENCAP)) {
         device = device_find();
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx_,
-                                           NULL, NULL, &nh_data);
+        ret = nh_data.read(nh_idx_);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read nexthop table for vnic %s at "
+                          "idx %u", spec->key.str(), nh_idx_);
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
         if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
-            nh_data.nexthop_info.port = 0;
+            nh_data.set_port(0);
         } else {
             lif_key = vnic->host_if();
             lif = lif_impl_db()->find(&lif_key);
             if (lif) {
-                nh_data.nexthop_info.lif = lif->id();
+                nh_data.set_lif(lif->id());
             }
-            nh_data.nexthop_info.port = TM_PORT_DMA;
+            nh_data.set_port(TM_PORT_DMA);
         }
         if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-            nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
+            nh_data.set_vlan(spec->vnic_encap.val.vlan_tag);
         }
-        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
-                                           NULL, NULL, &nh_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        ret = nh_data.write(nh_idx_);
+        if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update NEXTHOP table for vnic %s at "
                           "idx %u", spec->key.str(), nh_idx_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
@@ -1137,13 +1139,13 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
 sdk_ret_t
 vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     device_entry *device;
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    sdk_ret_t ret;
+    nexthop_info_entry_t nh_data;
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     // read the nexthop table
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx_,
-                                       NULL, NULL, &nh_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    ret = nh_data.read(nh_idx_);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read NEXTHOP table for vnic %s at idx %u",
                       spec->key.str(), nh_idx_);
         return sdk::SDK_RET_HW_READ_ERR;
@@ -1154,10 +1156,10 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
         return SDK_RET_ERR;
     }
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
-        spec->vnic_encap.val.vlan_tag = nh_data.nexthop_info.vlan;
+        spec->vnic_encap.val.vlan_tag = nh_data.get_vlan();
         spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
     }
-    sdk::lib::memrev(spec->mac_addr, nh_data.nexthop_info.dmaci, ETH_ADDR_LEN);
+    MAC_UINT64_TO_ADDR(spec->mac_addr, nh_data.get_dmaci());
     return SDK_RET_OK;
 }
 

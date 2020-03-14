@@ -23,6 +23,7 @@
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 namespace api {
 namespace impl {
@@ -179,14 +180,14 @@ private:
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification
-    /// \param[in]  nh_data nexthop data
+    /// \param[in]  nh_data nexthop info entry
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t fill_spec_(pds_nexthop_spec_t *spec, nexthop_actiondata_t *nh_data);
+    sdk_ret_t fill_spec_(pds_nexthop_spec_t *spec, nexthop_info_entry_t *nh_data);
 
     /// \brief      populate status with hardware information
     /// \param[out] status status
-    /// \param[in]  nh_data nexthop data
-    void fill_status_(pds_nexthop_status_t *status, nexthop_actiondata_t *nh_data);
+    /// \param[in]  nh_data nexthop info entry
+    void fill_status_(pds_nexthop_status_t *status, nexthop_info_entry_t *nh_data);
 
     /// \brief      populate nh info with hardware information
     /// \param[out] info nexthop info
@@ -202,14 +203,14 @@ private:
 #define nexthop_info    action_u.nexthop_nexthop_info
 static inline sdk_ret_t
 populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
-                            nexthop_actiondata_t *nh_data)
+                            nexthop_info_entry_t *nh_data)
 {
     if_entry *intf, *eth_if;
     lif_impl *lif;
     pds_encap_t encap;
 
-    memset(nh_data, 0, sizeof(*nh_data));
-    nh_data->action_id = NEXTHOP_NEXTHOP_INFO_ID;
+    PDS_TRACE_ERR("l3_if %s", spec->l3_if.str());
+    memset(nh_data, 0, nexthop_info_entry_t::entry_size());
     intf = if_db()->find(&spec->l3_if);
     if (!intf) {
         PDS_TRACE_ERR("L3 intf %s not found for nexthop %s",
@@ -221,13 +222,13 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
                       intf->key().str(), intf->type(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
-    nh_data->nexthop_info.port = if_impl::port(intf);
+    nh_data->set_port(if_impl::port(intf));
     encap = intf->l3_encap();
     if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-        nh_data->nexthop_info.vlan = encap.val.vlan_tag;
+        nh_data->set_vlan(encap.val.vlan_tag);
     }
-    sdk::lib::memrev(nh_data->nexthop_info.dmaco,
-                     spec->underlay_mac, ETH_ADDR_LEN);
+    nh_data->set_dmaco(MAC_TO_UINT64(spec->underlay_mac));
+
     // program the src mac
     if (!is_mac_set(intf->l3_mac())) {
         // if user didn't give MAC explicitly, use the MAC of the corresponding
@@ -235,55 +236,51 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
         eth_if = (if_entry *)if_entry::eth_if(intf);
         lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT,
                                   eth_if->ifindex());
-        sdk::lib::memrev(nh_data->nexthop_info.smaco, lif->mac(), ETH_ADDR_LEN);
+        nh_data->set_smaco(MAC_TO_UINT64(lif->mac()));
     } else {
         // use the MAC coming in the config
-        sdk::lib::memrev(nh_data->nexthop_info.smaco,
-                         intf->l3_mac(), ETH_ADDR_LEN);
+        nh_data->set_smaco(MAC_TO_UINT64(intf->l3_mac()));
     }
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
 fill_nh_spec_ (pds_nexthop_spec_t *spec, uint16_t hw_id) {
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    sdk_ret_t ret;
+    nexthop_info_entry_t nh_data;
 
     if ((unlikely(hw_id == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         spec->type = PDS_NH_TYPE_BLACKHOLE;
         return SDK_RET_OK;
     }
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     spec->type = PDS_NH_TYPE_UNDERLAY;
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
-                                      hw_id,
-                                      NULL, NULL, &nh_data);
-    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+    ret = nh_data.read(hw_id);
+    if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    sdk::lib::memrev(spec->underlay_mac,
-                     nh_data.nexthop_info.dmaco, ETH_ADDR_LEN);
+    MAC_UINT64_TO_ADDR(spec->underlay_mac, nh_data.get_dmaco());
     // TODO walk if db and identify the l3_if
     return SDK_RET_OK;
 }
 
 static inline sdk_ret_t
 fill_nh_status_ (pds_nexthop_status_t *status, uint16_t hw_id) {
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    sdk_ret_t ret;
+    nexthop_info_entry_t nh_data;
 
     if ((unlikely(hw_id == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         return SDK_RET_OK;
     }
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
-                                      hw_id,
-                                      NULL, NULL, &nh_data);
-    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    ret = nh_data.read(hw_id);
+    if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id);
         return sdk::SDK_RET_HW_READ_ERR;
     }
-    status->port = nh_data.nexthop_info.port;
-    status->vlan = nh_data.nexthop_info.vlan;
+    status->port = nh_data.get_port();
+    status->vlan = nh_data.get_vlan();
     return SDK_RET_OK;
 }
 

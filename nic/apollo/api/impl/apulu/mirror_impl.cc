@@ -20,6 +20,7 @@
 #include "nic/apollo/api/impl/apulu/mirror_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
+#include "gen/p4gen/p4/include/ftl.h"
 
 namespace api {
 namespace impl {
@@ -106,8 +107,9 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
     tep_entry *tep;
     uint32_t oport;
     p4pd_error_t p4pd_ret;
+    sdk_ret_t ret;
     mapping_entry *mapping;
-    nexthop_actiondata_t nh_data;
+    nexthop_info_entry_t nh_data;
     mirror_actiondata_t mirror_data = { 0 };
 
     switch (spec->type) {
@@ -122,13 +124,11 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
             mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
             mirror_data.rspan_action.truncate_len = spec->snap_len;
             // program the nexthop entry 1st
-            memset(&nh_data, 0, sizeof(nh_data));
-            nh_data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
-            nh_data.nexthop_info.port = oport;
-            nh_data.nexthop_info.vlan = spec->rspan_spec.encap.val.vlan_tag;
-			p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, oport,
-											   NULL, NULL, &nh_data);
-			if (p4pd_ret != P4PD_SUCCESS) {
+            memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+            nh_data.set_port(oport);
+            nh_data.set_vlan(spec->rspan_spec.encap.val.vlan_tag);
+            ret = nh_data.write(oport);
+			if (ret != SDK_RET_OK) {
 				PDS_TRACE_ERR("Failed to program NEXTHOP table at idx %u, "
                               "RSPAN mirror session %s programming failed",
                               oport, spec->key.str());

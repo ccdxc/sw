@@ -174,11 +174,12 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
                                      pds_nexthop_group_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    nexthop_info_entry_t nh_data;
     ecmp_actiondata_t ecmp_data = { 0 };
 
     ecmp_data.action_id = ECMP_ECMP_INFO_ID;
     ecmp_data.ecmp_info.num_nexthops = spec->num_nexthops;
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     if (spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
         // populate ECMP table entry data
         ecmp_data.ecmp_info.nexthop_type = NEXTHOP_TYPE_TUNNEL;
@@ -196,10 +197,8 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
                               i, spec->key.str(), ret);
                 return ret;
             }
-            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
-                                               nh_base_hw_id_ + i,
-                                               NULL, NULL, &nh_data);
-            if (p4pd_ret != P4PD_SUCCESS) {
+            ret = nh_data.write(nh_base_hw_id_ + i);
+            if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to program nexthop %u of nexthop "
                               "group %s at idx %u", i, spec->key.str(),
                               nh_base_hw_id_ + i);
@@ -226,21 +225,21 @@ sdk_ret_t
 nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
                                      nexthop_group *nh_group) {
     uint8_t num_nexthops;
+    sdk_ret_t ret;
     pds_obj_key_t key;
     pds_nexthop_group_type_t type;
     p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data = { 0 };
+    nexthop_info_entry_t nh_data = { 0 };
     ecmp_actiondata_t ecmp_data = { 0 };
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     key = nh_group->key();
     type = nh_group->type();
     num_nexthops = nh_group->num_nexthops();
     if (type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
         for (uint8_t i = 0; i < num_nexthops; i++) {
-            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
-                                               nh_base_hw_id_ + i,
-                                               NULL, NULL, &nh_data);
-            if (p4pd_ret != P4PD_SUCCESS) {
+            ret = nh_data.write(nh_base_hw_id_ + i);
+            if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to program nexthop %u of nexthop "
                               "group %s at idx %u", i, key.str(),
                               nh_base_hw_id_ + i);
@@ -263,9 +262,9 @@ nexthop_group_impl::activate_update_(pds_epoch_t epoch,
                                      nexthop_group *nh_group,
                                      pds_nexthop_group_spec_t *spec) {
     sdk_ret_t ret;
-    p4pd_error_t p4pd_ret;
-    nexthop_actiondata_t nh_data;
+    nexthop_info_entry_t nh_data;
 
+    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
     // program the nexthops first in NEXTHOP table
     for (uint8_t i = 0; i < spec->num_nexthops; i++) {
         ret = populate_underlay_nh_info_(&spec->nexthops[i], &nh_data);
@@ -275,10 +274,8 @@ nexthop_group_impl::activate_update_(pds_epoch_t epoch,
                           i, spec->key.str(), ret);
             return ret;
         }
-        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
-                                           nh_base_hw_id_ + i,
-                                           NULL, NULL, &nh_data);
-        if (p4pd_ret != P4PD_SUCCESS) {
+        ret = nh_data.write(nh_base_hw_id_ + i);
+        if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program nexthop %u of nexthop "
                           "group %s at idx %u", i, spec->key.str(),
                           nh_base_hw_id_ + i);
