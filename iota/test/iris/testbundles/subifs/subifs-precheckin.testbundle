@@ -1,0 +1,53 @@
+meta:
+    name    : subifs
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 4
+
+testcases:
+    -   name    : Memleak_Subifs
+        testcase: testcases.subifs.memleak_subif
+        stress  : False
+        ignore  : True
+        args    :
+            type: remote_only
+            ipv4: True
+            ipv6: False
+            timeout : 7200
+
+    -   name    : MacValidation_Subifs
+        testcase: testcases.subifs.unimac_validation_subif
+        stress  : False
+        ignore  : True
+        args    :
+            type: remote_only
+            ipv4: True
+            ipv6: False
+            timeout : 7200
+
+    -   name    : MacChange_Subifs
+        testcase: testcases.subifs.unimac_change_subif
+        stress  : False
+        ignore  : True
+        iterators:
+            ipaf : [ ipv4 ]
+            type : simple
+        args    :
+            type: remote_only
+            timeout : 7200
+
+    -   name    : MacChange_Subifs_LifReset
+        testcase: testcases.subifs.unimac_change_subif
+        stress  : False
+        ignore  : True
+        iterators:
+            ipaf : [ ipv4 ]
+            type : simple
+        args    :
+            type: remote_only
+            lif_reset: True
+
+
+
+
+

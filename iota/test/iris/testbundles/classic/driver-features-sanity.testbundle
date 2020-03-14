@@ -156,7 +156,7 @@ testcases:
 
     -   name    : UplinkIntf_TSO
         testcase: testcases.drivers.features
-        disable : False
+        disable : True
         iterators :
             type               : nested
             mtu                : [ '8192']
@@ -177,7 +177,7 @@ testcases:
 
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
-        disable : False
+        disable : True
         ignore  : False
         iterators :
             type               : nested

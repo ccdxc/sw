@@ -50,7 +50,7 @@ testbundles:
     precheckin:
         - networking/lif_telemetry.testbundle
         - filters/filters.testbundle
-        - subifs/subifs.testbundle
+        - subifs/subifs-precheckin.testbundle
         - rx_mode/rx_mode.testbundle
         - classic/driver-features-sanity.testbundle
         - system/obfl_check.testbundle
