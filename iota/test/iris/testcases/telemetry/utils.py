@@ -68,15 +68,13 @@ def generateMirrorCollectorConfig(mirror_objects, num_collectors):
             obj.spec.collectors.append(tmp)
             obj.spec.collectors[c].export_config.destination = "{}".format(obj.spec.collectors[0].export_config.destination)
             obj.spec.collectors[c].type = "{}".format(obj.spec.collectors[0].type)
-            #api.Logger.info("updating collector count: {} dst: {} type: {}".format(c, 
+            #api.Logger.info("updating collector count: {} dst: {} type: {}".format(c,
             #            obj.spec.collectors[c].export_config.destination, obj.spec.collectors[c].type ))
     return api.types.status.SUCCESS
 
 
 def generateMirrorSpecConfig(rule_id, wl1, wl2, proto, port, mirror_objects):
     for obj in mirror_objects:
-        #api.Logger.info("proto: {} ".format(obj.spec.match_rules[0].destination.proto_ports))
-
         obj.meta.name = "test-mirror-{}".format(rule_id)
 
         obj.spec.match_rules[0].source.addresses = [wl1.ip_address]
@@ -87,12 +85,6 @@ def generateMirrorSpecConfig(rule_id, wl1, wl2, proto, port, mirror_objects):
         obj.spec.match_rules[1].destination.addresses = [wl1.ip_address]
         obj.spec.match_rules[1].destination.proto_ports[0].protocol = "{}".format(proto)
         obj.spec.match_rules[1].destination.proto_ports[0].port = "{}".format(port)
-        #api.Logger.info("before updating match rule rule1 src: {} dst: {} rule2 src: {} dst: {}".format
-        #        (obj.spec.match_rules[0].source.addresses,
-        #         obj.spec.match_rules[0].destination.addresses,
-        #         obj.spec.match_rules[1].source.addresses,
-        #         obj.spec.match_rules[1].destination.addresses))
-
     return api.types.status.SUCCESS
 
 def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collector_wls_ip_dict, mirror_objects):
@@ -139,7 +131,6 @@ def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collecto
             coll_ip_list_len += 1
 
     coll_ip_list_len = len(coll_ip_list)
-    #api.Logger.info("Updated Collector (after reusing some) WL list-len: {} ip list-len: {}".format(len(coll_wl_list), coll_ip_list_len))
 
     for obj in mirror_objects:
         for c in range(0, num_collectors):
@@ -148,6 +139,87 @@ def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collecto
             #            obj.spec.collectors[c].export_config.destination, coll_wl_list[c]))
 
     return (coll_wl_list, coll_ip_list)
+
+def generateFlowmonCollectorConfig(flowmon_spec_objects, num_exports):
+    api.Logger.info("Extending number of flow exports to {}".format(num_exports))
+
+    for obj in flowmon_spec_objects:
+        exports_len = len(obj.spec.exports)
+        #api.Logger.info("Existing flow exports list len {}".format(exports_len))
+        for c in range(exports_len, num_exports):
+            tmp = copy.deepcopy(obj.spec.exports[0])
+            obj.spec.exports.append(tmp)
+            obj.spec.exports[c].destination = "{}".format(obj.spec.exports[0].destination)
+            obj.spec.exports[c].proto_port.protocol = "{}".format(obj.spec.exports[0].proto_port.protocol)
+            obj.spec.exports[c].proto_port.port = "{}".format(obj.spec.exports[0].proto_port.port)
+    return api.types.status.SUCCESS
+
+def generateFlowmonSpecConfig(rule_id, wl1, wl2, proto, port, flowmon_objects):
+    for obj in flowmon_objects:
+        obj.meta.name = "test-ipfix-{}".format(rule_id)
+
+        obj.spec.match_rules[0].source.addresses = [wl1.ip_address]
+        obj.spec.match_rules[0].destination.addresses = [wl2.ip_address]
+        obj.spec.match_rules[0].destination.proto_ports[0].protocol = "{}".format(proto)
+        obj.spec.match_rules[0].destination.proto_ports[0].port = "{}".format(port)
+        obj.spec.match_rules[1].source.addresses = [wl2.ip_address]
+        obj.spec.match_rules[1].destination.addresses = [wl1.ip_address]
+        obj.spec.match_rules[1].destination.proto_ports[0].protocol = "{}".format(proto)
+        obj.spec.match_rules[1].destination.proto_ports[0].port = "{}".format(port)
+    return api.types.status.SUCCESS
+
+def updateFlowmonExportConfig(tc_workloads, num_exports, local_wl, collector_wls_ip_dict, coll_dst_port_list, flowmon_objects):
+    api.Logger.info("Updating Flow export config for {} collectors".format(num_exports))
+
+    naples_mgmt_ip = common.PenctlGetNaplesMgtmIp(local_wl.node_name)
+    #api.Logger.info("Naples Mgmt IP {}".format(naples_mgmt_ip))
+
+    coll_wl_list = []
+    coll_ip_list = []
+    export_cfg_list = []
+
+    for wl in tc_workloads:
+        #collector cannot be in local node
+        if wl.node_name == local_wl.node_name:
+            continue
+
+        #collector IP dict for the workloads should not be empty
+        if len(collector_wls_ip_dict[wl.workload_name]) == 0:
+            #api.Logger.info("Collector_wls_ip_dict for wl: {} is empty".format(wl.workload_name))
+            continue
+
+        for ip in collector_wls_ip_dict[wl.workload_name]:
+            if checkCollectorIpInNaplesMgmtSubnet(naples_mgmt_ip, ip) == True:
+                coll_wl_list.append(wl)
+                coll_ip_list.append(ip)
+                api.Logger.info("Adding IP {} to collector ip list".format(ip))
+
+    coll_ip_list_len = len(coll_ip_list)
+    api.Logger.info("Collector WL list-len: {} ip list-len: {}".format(len(coll_wl_list), coll_ip_list_len))
+
+    if coll_ip_list_len == 0:
+        return (coll_wl_list, coll_ip_list, export_cfg_list)
+
+    if coll_ip_list_len < num_exports:
+        api.Logger.info("Number of collector IP's available {} in topology is less than the"
+                        "number of collectors requested {} for this test, "
+                        "reusing some collectors".format(coll_ip_list_len,num_exports))
+        #appending the list for resuing some of collector IP's to reach num_exports
+        idx = 0
+        while coll_ip_list_len < num_exports:
+            coll_ip_list.append(coll_ip_list[idx])
+            coll_wl_list.append(coll_wl_list[idx])
+            idx += 1
+            coll_ip_list_len += 1
+
+    coll_ip_list_len = len(coll_ip_list)
+
+    for obj in flowmon_objects:
+        for c in range(0, num_exports):
+            obj.spec.exports[c].destination = "{}".format(coll_ip_list[c])
+            obj.spec.exports[c].proto_port.port = "{}".format(coll_dst_port_list[c])
+            export_cfg_list.append(obj.spec.exports[c])
+    return (coll_wl_list, coll_ip_list, export_cfg_list)
 
 def GetTcpDumpCmd(intf, protocol = None, port = 0):
     cmd = "tcpdump -nni %s " % intf
@@ -307,9 +379,6 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
             api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
                                    "tcpdump -c 10 -nnSXi %s  ip proto gre and dst %s -U -w mirror-%d.pcap" %
                                    (coll_wl.interface, coll_ip, coll_idx), background=True, timeout=20)
-            #api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
-            #                       "tcpdump -c 10 -nni %s ip proto gre and dst %s" %
-            #                       (coll_wl.interface, coll_ip), background=True, timeout=20)
         elif feature == 'flowmon':
             api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
                                    "tcpdump -c 10 -nni %s udp and dst port %s and dst host %s"%
@@ -367,9 +436,6 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
         if feature == 'mirror':
             pcap_file_name = ('mirror-%d.pcap'%coll_idx)
             api.CopyFromWorkload(coll_wl.node_name, coll_wl.workload_name, [pcap_file_name], dir_path)
-            # For mirror feature, 2 commands are sent to WL.
-            # Only the first command has tcpdump pcap file.
-            cmd_resp_idx = coll_idx*1
         elif feature == 'flowmon':
             proto_port = coll_ip.proto_port.port
 
@@ -387,7 +453,8 @@ def setSourceWorkloadsUpLinkVlan(vlan):
     global local_wls_ignore_vlan_check
     uplink_vlan = vlan
     local_wls_ignore_vlan_check = False
-    api.Logger.info("user config Uplink vlan: {} local_wls_ignore_vlan_check: {}".format(uplink_vlan,local_wls_ignore_vlan_check))
+    api.Logger.info("user config Uplink vlan: {} local_wls_ignore_vlan_check: {}".format(
+                uplink_vlan,local_wls_ignore_vlan_check))
     return
 
 def GetSourceWorkload(verif, tc):
@@ -489,7 +556,8 @@ def RunAll(collector_w, verif_json, tc, feature, collector_ip, is_wl_type_bm=Fal
                 continue
         dest_port = GetDestPort(verif[i]['port'])
         action = verif[i]['result']
-        res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port, collector_count, collector_w, collector_ip, action, feature, is_wl_type_bm)
+        res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port,
+                collector_count, collector_w, collector_ip, action, feature, is_wl_type_bm)
         if (res == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!!")
             break;

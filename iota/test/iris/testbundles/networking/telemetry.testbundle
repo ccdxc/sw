@@ -39,6 +39,18 @@ testcases:
             num_mirror_sessions : [1, 4, 8]
             proto   : [icmp, tcp, udp]
 
+    -   name    : Flowmon_Crud_Policy
+        testcase: testcases.telemetry.flowmon_crud_policy
+        enable  : True
+        ignore  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            num_exports : [1, 2, 4]
+            num_flowmon_sessions : [1, 2, 4]
+            proto   : [tcp, udp, icmp]
+
 #    -   name    : Ping_Mirror_Remote_Workloads
 #        testcase: testcases.telemetry.ping_mirror
 #        args    :
